@@ -51,8 +51,13 @@ long CompOffset(const DERIVED* obj) {
 }
 
 // Interpreter computes offset.
-long InterpOffset(void* obj, const char* derivedClassName, const char* targetClassName) {
-#ifdef USE_CLASSINFO
+long InterpOffsetTClassInterface(void* obj, const char* derivedClassName, const char* targetClassName) {
+   TClass* clDerived = TClass::GetClass(derivedClassName);
+   TClass* clBase = TClass::GetClass(targetClassName);
+   return clDerived->GetBaseClassOffset(clBase, obj);
+}
+
+long InterpOffsetTClassInfoInterface(void* obj, const char* derivedClassName, const char* targetClassName) {
    ClassInfo_t* cliDerived = gInterpreter->ClassInfo_Factory(derivedClassName);
    ClassInfo_t* cliTarget = gInterpreter->ClassInfo_Factory(targetClassName);
    long offset = -1;
@@ -60,11 +65,6 @@ long InterpOffset(void* obj, const char* derivedClassName, const char* targetCla
    gInterpreter->ClassInfo_Delete(cliDerived);
    gInterpreter->ClassInfo_Delete(cliTarget);
    return offset;
-#else
-   TClass* clDerived = TClass::GetClass(derivedClassName);
-   TClass* clBase = TClass::GetClass(targetClassName);
-   return clDerived->GetBaseClassOffset(clBase, obj);
-#endif
 }
 
 template <typename DERIVED, typename TARGET>
@@ -73,7 +73,16 @@ void CheckFor(DERIVED* obj,
    printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
           derivedClassName, targetClassName,
           CompOffset<DERIVED, TARGET>(obj),
-          InterpOffset(obj, derivedClassName, targetClassName));
+          InterpOffsetTClassInterface(obj, derivedClassName, targetClassName));
+}
+
+template <typename DERIVED, typename TARGET>
+void CheckForWithClassInfo(DERIVED* obj,
+              const char* derivedClassName, const char* targetClassName) {
+   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
+          derivedClassName, targetClassName,
+          CompOffset<DERIVED, TARGET>(obj),
+          InterpOffsetTClassInfoInterface(obj, derivedClassName, targetClassName));
 }
 
 void runvbase() {
@@ -82,6 +91,8 @@ void runvbase() {
    CheckFor<Basement, Top>(obj, "Basement", "Top");
    // Check for the caching of the function pointer in TClingClassInfo.
    CheckFor<Basement, Top>(obj, "Basement", "Top");
+   printf("Top does not derive from Basement:\n");
+   CheckFor<Basement, Top>(obj, "Top", "Basement");
    CheckFor<Basement, Fill>(obj, "Basement", "Fill");
    CheckFor<Basement, Mid1>(obj, "Basement", "Mid1");
    // This will result in an error from the Compiler function first.
@@ -119,8 +130,46 @@ void runvbase() {
    //  struct Basement -> struct Mid2
    //  struct Basement -> struct Bottom -> struct Mid2
    cerr << "Multiple paths case:\n";
-   Int_t ambiguousOffset = InterpOffset(obj, "Basement", "Mid2");
+   Int_t ambiguousOffset = InterpOffsetTClassInterface(obj, "Basement", "Mid2");
 
    cerr << "derived Basement -> base Mid2: TClass says "
         << ambiguousOffset << '\n';
+
+   // No multiple generations of the same function when not using the TClass interface
+   CheckForWithClassInfo<Basement, Top>(obj, "Basement", "Top");
+   // Check for the caching of the function pointer in TClingClassInfo.
+   CheckForWithClassInfo<Basement, Top>(obj, "Basement", "Top");
+   printf("Top does not derive from Basement:\n");
+   CheckForWithClassInfo<Basement, Top>(obj, "Top", "Basement");
+   CheckForWithClassInfo<Basement, Fill>(obj, "Basement", "Fill");
+   CheckForWithClassInfo<Basement, Mid1>(obj, "Basement", "Mid1");
+   // This will result in an error from the Compiler function first.
+   // Ambiguous:
+   //   struct Basement -> struct Mid2
+   //   struct Basement -> struct Bottom -> struct Mid2
+   // Also see check for error at the end.
+   //CheckForWithClassInfo<Basement, Mid2>(obj, "Basement", "Mid2");
+   CheckForWithClassInfo<Basement, Bottom>(obj, "Basement", "Bottom");
+   // Basement doesn't derive from Basement, but this should still be
+   // handled (offset 0)
+   CheckForWithClassInfo<Basement, Basement>(obj, "Basement", "Basement");
+
+   CheckForWithClassInfo<Bottom, Top>(obj, "Bottom", "Top");
+   CheckForWithClassInfo<Bottom, Mid1>(obj, "Bottom", "Mid1");
+   CheckForWithClassInfo<Bottom, Mid2>(obj, "Bottom", "Mid2");
+   CheckForWithClassInfo<Bottom, Bottom>(obj, "Bottom", "Bottom");
+
+   CheckForWithClassInfo<Mid1, Top>(obj, "Mid1", "Top");
+   CheckForWithClassInfo<Mid1, Mid1>(obj, "Mid1", "Mid1");
+   // Classes are unrelated so should return -1.
+   cerr << "The derived class does not derive from base, thus we expect "
+      "different results from compiler and cling.\n";
+   CheckForWithClassInfo<Mid1, Mid2>(obj, "Mid1", "Mid2");
+
+   //to Bottom or to Mid2, did we not already check for Bottom?
+   // Need to cast to Bottom or ambiguous:
+   //  struct Basement -> struct Mid2
+   //  struct Basement -> struct Bottom -> struct Mid2
+   CheckForWithClassInfo<Mid2, Top>((Bottom*)obj, "Mid2", "Top");
+   CheckForWithClassInfo<Mid2, Mid2>((Bottom*)obj, "Mid2", "Mid2");
 }
