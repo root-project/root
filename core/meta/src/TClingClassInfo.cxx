@@ -71,7 +71,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetFunctions(0)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -98,7 +98,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp)
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0),
-     fTitle(""), fOffsetFunctions(0)
+     fTitle(""), fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
@@ -120,17 +120,18 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(0), fType(0), 
-     fTitle(""), fOffsetFunctions(0)
+     fTitle(""), fOffsetCache(0)
 {
    Init(tag);
 }
 
-void TClingClassInfo::AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func)
+void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, long offset)
 {
-   // Add a function pointer for the offset from this class to the base class
+   // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
-
-   fOffsetFunctions[decl] = func;
+   
+   OffsetPtrFunc_t executableFunc = 0;
+   fOffsetCache[decl] = std::make_pair(offset, executableFunc);
 }
 
 long TClingClassInfo::ClassProperty() const
@@ -232,14 +233,6 @@ void TClingClassInfo::Destruct(void *arena) const
    }
    TClingCallFunc cf(fInterp);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
-}
-
-OffsetPtrFunc_t TClingClassInfo::FindBaseOffsetFunction(const clang::Decl* decl) const
-{
-   // Find a pointer function for computing the offset to the base class determined 
-   // by the parameter decl.
-   
-   return fOffsetFunctions.lookup(decl);
 }
 
 const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fname) const
@@ -531,6 +524,32 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
       }
    }
    return offset;
+}
+
+ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
+{
+   // Check for the offset in the cache.
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter 
+      = fOffsetCache.find(base->GetDecl());
+   if (iter != fOffsetCache.end()) {
+      std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
+      if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
+         if (address) {
+            return (*executableFunc)(address);
+         }
+         else {
+            Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
+            return -1;
+         }
+      }
+      else {
+         return offsetCache.first;
+      }
+   }
+
+   // Compute the offset.
+   TClingBaseClassInfo binfo(fInterp, this, base);
+   return binfo.Offset(address);
 }
 
 static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)
