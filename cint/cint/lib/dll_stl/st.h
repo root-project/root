@@ -30,7 +30,29 @@ using namespace std;
 #pragma link C++ class set<char*>;
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class set<string>;
+#pragma link C++ operators set<string>::iterator;
 #endif
+
+#pragma link C++ operators set<int>::iterator;
+#pragma link C++ operators set<long>::iterator;
+#pragma link C++ operators set<float>::iterator;
+#pragma link C++ operators set<double>::iterator;
+#pragma link C++ operators set<void*>::iterator;
+#pragma link C++ operators set<char*>::iterator;
+
+#pragma link C++ operators set<int>::const_iterator;
+#pragma link C++ operators set<long>::const_iterator;
+#pragma link C++ operators set<float>::const_iterator;
+#pragma link C++ operators set<double>::const_iterator;
+#pragma link C++ operators set<void*>::const_iterator;
+#pragma link C++ operators set<char*>::const_iterator;
+
+#pragma link C++ operators set<int>::reverse_iterator;
+#pragma link C++ operators set<long>::reverse_iterator;
+#pragma link C++ operators set<float>::reverse_iterator;
+#pragma link C++ operators set<double>::reverse_iterator;
+#pragma link C++ operators set<void*>::reverse_iterator;
+#pragma link C++ operators set<char*>::reverse_iterator;
 
 #endif
 

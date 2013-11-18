@@ -107,6 +107,10 @@ class list {
 	void* _Ptr;
 #endif
   };
+#ifdef G__APPLE_LIBCXX
+   friend bool operator==(const list::iterator& x,const list::iterator& y)const;
+   friend bool operator!=(const list::iterator& x,const list::iterator& y)const;
+#endif
 #ifdef G__HPUX
   friend bool operator!=(const list::iterator& x,const list::iterator& y)const;
 #endif

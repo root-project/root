@@ -34,7 +34,29 @@ using namespace std;
 #pragma link C++ class multiset<char*>;
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class multiset<string>;
+#pragma link C++ operators multiset<string>::iterator;
 #endif
+
+#pragma link C++ operators multiset<int>::iterator;
+#pragma link C++ operators multiset<long>::iterator;
+#pragma link C++ operators multiset<float>::iterator;
+#pragma link C++ operators multiset<double>::iterator;
+#pragma link C++ operators multiset<void*>::iterator;
+#pragma link C++ operators multiset<char*>::iterator;
+
+#pragma link C++ operators multiset<int>::const_iterator;
+#pragma link C++ operators multiset<long>::const_iterator;
+#pragma link C++ operators multiset<float>::const_iterator;
+#pragma link C++ operators multiset<double>::const_iterator;
+#pragma link C++ operators multiset<void*>::const_iterator;
+#pragma link C++ operators multiset<char*>::const_iterator;
+
+#pragma link C++ operators multiset<int>::reverse_iterator;
+#pragma link C++ operators multiset<long>::reverse_iterator;
+#pragma link C++ operators multiset<float>::reverse_iterator;
+#pragma link C++ operators multiset<double>::reverse_iterator;
+#pragma link C++ operators multiset<void*>::reverse_iterator;
+#pragma link C++ operators multiset<char*>::reverse_iterator;
 
 #endif
 

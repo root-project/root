@@ -31,7 +31,29 @@ using namespace std;
 #pragma link C++ class list<char*>;
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class list<string>;
+#pragma link C++ operators list<string>::iterator;
 #endif
+
+#pragma link C++ operators list<int>::iterator;
+#pragma link C++ operators list<long>::iterator;
+#pragma link C++ operators list<float>::iterator;
+#pragma link C++ operators list<double>::iterator;
+#pragma link C++ operators list<void*>::iterator;
+#pragma link C++ operators list<char*>::iterator;
+
+#pragma link C++ operators list<int>::const_iterator;
+#pragma link C++ operators list<long>::const_iterator;
+#pragma link C++ operators list<float>::const_iterator;
+#pragma link C++ operators list<double>::const_iterator;
+#pragma link C++ operators list<void*>::const_iterator;
+#pragma link C++ operators list<char*>::const_iterator;
+
+#pragma link C++ operators list<int>::reverse_iterator;
+#pragma link C++ operators list<long>::reverse_iterator;
+#pragma link C++ operators list<float>::reverse_iterator;
+#pragma link C++ operators list<double>::reverse_iterator;
+#pragma link C++ operators list<void*>::reverse_iterator;
+#pragma link C++ operators list<char*>::reverse_iterator;
 
 #endif
 

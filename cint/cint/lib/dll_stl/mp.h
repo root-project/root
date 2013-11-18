@@ -45,6 +45,51 @@ using namespace std;
 #pragma link C++ class map<double,void*>;
 #pragma link C++ class map<double,char*>;
 
+#pragma link C++ operators map<int,int>::iterator;
+#pragma link C++ operators map<long,int>::iterator;
+#pragma link C++ operators map<long,long>::iterator;
+#pragma link C++ operators map<long,float>::iterator;
+#pragma link C++ operators map<long,double>::iterator;
+#pragma link C++ operators map<long,void*>::iterator;
+#pragma link C++ operators map<long,char*>::iterator;
+
+#pragma link C++ operators map<double,int>::iterator;
+#pragma link C++ operators map<double,long>::iterator;
+#pragma link C++ operators map<double,float>::iterator;
+#pragma link C++ operators map<double,double>::iterator;
+#pragma link C++ operators map<double,void*>::iterator;
+#pragma link C++ operators map<double,char*>::iterator;
+
+#pragma link C++ operators map<int,int>::const_iterator;
+#pragma link C++ operators map<long,int>::const_iterator;
+#pragma link C++ operators map<long,long>::const_iterator;
+#pragma link C++ operators map<long,float>::const_iterator;
+#pragma link C++ operators map<long,double>::const_iterator;
+#pragma link C++ operators map<long,void*>::const_iterator;
+#pragma link C++ operators map<long,char*>::const_iterator;
+
+#pragma link C++ operators map<double,int>::const_iterator;
+#pragma link C++ operators map<double,long>::const_iterator;
+#pragma link C++ operators map<double,float>::const_iterator;
+#pragma link C++ operators map<double,double>::const_iterator;
+#pragma link C++ operators map<double,void*>::const_iterator;
+#pragma link C++ operators map<double,char*>::const_iterator;
+
+#pragma link C++ operators map<int,int>::reverse_iterator;
+#pragma link C++ operators map<long,int>::reverse_iterator;
+#pragma link C++ operators map<long,long>::reverse_iterator;
+#pragma link C++ operators map<long,float>::reverse_iterator;
+#pragma link C++ operators map<long,double>::reverse_iterator;
+#pragma link C++ operators map<long,void*>::reverse_iterator;
+#pragma link C++ operators map<long,char*>::reverse_iterator;
+
+#pragma link C++ operators map<double,int>::reverse_iterator;
+#pragma link C++ operators map<double,long>::reverse_iterator;
+#pragma link C++ operators map<double,float>::reverse_iterator;
+#pragma link C++ operators map<double,double>::reverse_iterator;
+#pragma link C++ operators map<double,void*>::reverse_iterator;
+#pragma link C++ operators map<double,char*>::reverse_iterator;
+
 #pragma link off function pair<const int,int>::operator=;
 #pragma link off function pair<const long,int>::operator=;
 #pragma link off function pair<const long,long>::operator=;
@@ -68,6 +113,27 @@ using namespace std;
 #pragma link C++ class map<char*,void*>;
 #pragma link C++ class map<char*,char*>;
 
+#pragma link C++ operators map<char*,int>::iterator;
+#pragma link C++ operators map<char*,long>::iterator;
+#pragma link C++ operators map<char*,float>::iterator;
+#pragma link C++ operators map<char*,double>::iterator;
+#pragma link C++ operators map<char*,void*>::iterator;
+#pragma link C++ operators map<char*,char*>::iterator;
+
+#pragma link C++ operators map<char*,int>::const_iterator;
+#pragma link C++ operators map<char*,long>::const_iterator;
+#pragma link C++ operators map<char*,float>::const_iterator;
+#pragma link C++ operators map<char*,double>::const_iterator;
+#pragma link C++ operators map<char*,void*>::const_iterator;
+#pragma link C++ operators map<char*,char*>::const_iterator;
+
+#pragma link C++ operators map<char*,int>::reverse_iterator;
+#pragma link C++ operators map<char*,long>::reverse_iterator;
+#pragma link C++ operators map<char*,float>::reverse_iterator;
+#pragma link C++ operators map<char*,double>::reverse_iterator;
+#pragma link C++ operators map<char*,void*>::reverse_iterator;
+#pragma link C++ operators map<char*,char*>::reverse_iterator;
+
 #if defined(G__STRING_DLL) || defined(G__ROOT)
 #pragma link C++ class map<string,int>;
 #pragma link C++ class map<string,long>;
@@ -75,6 +141,28 @@ using namespace std;
 #pragma link C++ class map<string,double>;
 #pragma link C++ class map<string,void*>;
 //#pragma link C++ class map<string,string>;
+
+#pragma link C++ operators map<string,int>::iterator;
+#pragma link C++ operators map<string,long>::iterator;
+#pragma link C++ operators map<string,float>::iterator;
+#pragma link C++ operators map<string,double>::iterator;
+#pragma link C++ operators map<string,void*>::iterator;
+//#pragma link C++ operators map<string,string>::iterator;
+
+#pragma link C++ operators map<string,int>::const_iterator;
+#pragma link C++ operators map<string,long>::const_iterator;
+#pragma link C++ operators map<string,float>::const_iterator;
+#pragma link C++ operators map<string,double>::const_iterator;
+#pragma link C++ operators map<string,void*>::const_iterator;
+//#pragma link C++ operators map<string,string>::const_iterator;
+
+#pragma link C++ operators map<string,int>::reverse_iterator;
+#pragma link C++ operators map<string,long>::reverse_iterator;
+#pragma link C++ operators map<string,float>::reverse_iterator;
+#pragma link C++ operators map<string,double>::reverse_iterator;
+#pragma link C++ operators map<string,void*>::reverse_iterator;
+//#pragma link C++ operators map<string,string>::reverse_iterator;
+
 #if defined(G__GNUC) && (G__GNUC>=3)
 #pragma link off class  pair<const string,int>;
 #pragma link off class  pair<const string,long>;

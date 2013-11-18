@@ -115,7 +115,7 @@ class set {
     bool operator==(const iterator& x) ;
 #endif
   };
-#if defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER) && !(G__GNUC_VER>=3004)
+#if (defined(G__GNUC) && !defined(G__KCC) && !defined(G__INTEL_COMPILER) && !(G__GNUC_VER>=3004)) || defined(G__APPLE_LIBCXX)
   friend bool operator==(const set::iterator& x ,const set::iterator& y) const;
   friend bool operator!=(const set::iterator& x ,const set::iterator& y) const;
 #endif
