@@ -82,7 +82,7 @@ public:
    
    // Takes concrete decl and disables the iterator. 
    // ValueDecl is the common base between enum constant, var decl and field decl
-   TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *);
+   TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *, TClingClassInfo *);
    
    TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
    {

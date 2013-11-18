@@ -302,7 +302,7 @@ public:
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t * /* dminfo */) const {;}
    virtual DataMemberInfo_t  *DataMemberInfo_Factory(ClassInfo_t * /* clinfo */ = 0) const {return 0;}
-   virtual DataMemberInfo_t  *DataMemberInfo_Factory(DeclId_t declid) const = 0;
+   virtual DataMemberInfo_t  *DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const = 0;
    virtual DataMemberInfo_t  *DataMemberInfo_FactoryCopy(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual Bool_t DataMemberInfo_IsValid(DataMemberInfo_t * /* dminfo */) const {return 0;}
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t * /* dminfo */, Int_t  /* dim */) const {return 0;}

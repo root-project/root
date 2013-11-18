@@ -273,7 +273,7 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
          }
 
          // Create the TEnumConstant.
-         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI)
+         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI, (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0))
                                                          , constantName, value, enumType);
          // Check that the constant was created.
          if (!enumConstant) {
@@ -359,7 +359,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       } else {
          gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
                                                     new TClingDataMemberInfo(fInterpreter,
-                                                                             cast<ValueDecl>(ND))));
+                                                                             cast<ValueDecl>(ND), 0)));
       }
 
    }
@@ -4969,11 +4969,11 @@ DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) co
 }
 
 //______________________________________________________________________________
-DataMemberInfo_t* TCling::DataMemberInfo_Factory(DeclId_t declid) const
+DataMemberInfo_t* TCling::DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const
 {
    const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
    const clang::ValueDecl* vd = llvm::dyn_cast_or_null<clang::ValueDecl>(decl);
-   return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, vd);
+   return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, vd, (TClingClassInfo*)clinfo);
 }
 
 //______________________________________________________________________________

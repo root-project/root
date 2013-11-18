@@ -242,7 +242,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
       }
-      DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id);
+      DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(id,fClass ? fClass->GetClassInfo() : 0);
 
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
