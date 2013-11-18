@@ -108,6 +108,7 @@
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
+#include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
 #include "TFunctionTemplate.h"
 
@@ -1250,7 +1251,7 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
 {
    // Return pointer to global variable with address addr. If load is true
-   // force reading of all currently defined globals from CINT (more
+   // force reading of all currently defined globals from the interpreter (more
    // expensive).
 
    if (addr == 0 || ((Long_t)addr) == -1) return 0;
@@ -1366,15 +1367,13 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobals) {
-      fGlobals = new THashTable(100, 3);
-      load = kTRUE;
+      fGlobals = new TListOfDataMembers(0);
    }
 
    if (!fInterpreter)
       Fatal("GetListOfGlobals", "fInterpreter not initialized");
 
-   if (load)
-      gInterpreter->UpdateListOfGlobals();
+   if (load) fGlobals->Load();
 
    return fGlobals;
 }
@@ -2172,8 +2171,8 @@ void TROOT::Reset(Option_t *option)
       } else
          gInterpreter->ResetGlobals();
 
-      if (fGlobals) fGlobals->Delete();
-      if (fGlobalFunctions) fGlobalFunctions->Delete();
+      if (fGlobals) fGlobals->Unload();
+      if (fGlobalFunctions) fGlobalFunctions->Unload();
 
       SaveContext();
    }

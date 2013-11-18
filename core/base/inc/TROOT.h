@@ -53,6 +53,7 @@ class TProcessUUID;
 class TClassGenerator;
 class TVirtualMutex;
 class TROOT;
+class TListOfDataMembers;
 class TListOfFunctions;
 class TFunctionTemplate;
 
@@ -111,7 +112,7 @@ protected:
    TCollection     *fClasses;             //List of classes definition
    TCollection     *fTypes;               //List of data types definition
    TCollection     *fFuncTemplate;        //List of global function templates
-   TCollection     *fGlobals;             //List of global variables
+   TListOfDataMembers*fGlobals;             //List of global variables
    TListOfFunctions*fGlobalFunctions;     //List of global functions
    TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
    TSeqCollection  *fFiles;               //List of files
