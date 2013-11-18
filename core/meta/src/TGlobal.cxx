@@ -131,3 +131,20 @@ Long_t TGlobal::Property() const
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_Property(fInfo);
 }
+
+//______________________________________________________________________________
+Bool_t TGlobal::Update(DataMemberInfo_t *info)
+{
+   // Update the TFunction to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
+   fInfo = info;
+   if (fInfo) {
+      SetName(gCling->DataMemberInfo_Name(fInfo));
+      SetTitle(gCling->DataMemberInfo_Title(fInfo));
+   }
+   return kTRUE;
+}

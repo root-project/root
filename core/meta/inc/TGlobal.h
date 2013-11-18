@@ -44,6 +44,7 @@ public:
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    Long_t         Property() const;
+   virtual bool   Update(DataMemberInfo_t *info);
 
    ClassDef(TGlobal,0)  //Global variable class
 };
