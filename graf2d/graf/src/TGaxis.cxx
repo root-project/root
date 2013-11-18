@@ -1635,11 +1635,11 @@ L110:
                textaxis->SetTextAlign(11);
                if (GetLabelFont()%10 < 2) // force TLatex mode in PaintLatex
                   textaxis->SetTextFont((Int_t)(GetLabelFont()/10)*10+2);
-               if (!strcmp(fAxis->GetName(),"xaxis")) {
+               if (fAxis && !strcmp(fAxis->GetName(),"xaxis")) {
                   xx = xx + fXAxisExpXOffset;
                   yy = yy + fXAxisExpYOffset;
                }
-               if (!strcmp(fAxis->GetName(),"yaxis")) {
+               if (fAxis && !strcmp(fAxis->GetName(),"yaxis")) {
                   xx = xx + fYAxisExpXOffset;
                   yy = yy + fYAxisExpYOffset;
                }
