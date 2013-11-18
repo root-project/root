@@ -3970,7 +3970,7 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
    // FIXME: enables relocatability for experiments' framework headers until PCMs
    // are available.
 
-   const char *cppInclFmt = "echo | %s -xc++ -E -v - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}' | grep c++";
+   const char *cppInclFmt = "echo | %s -xc++ -E -v - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}' | grep -E \"(c|g)\\+\\+\"";
 
    // Get at run-time the C++ std lib include path from the compiler specified in compiledata.h
    char buf[2048];
