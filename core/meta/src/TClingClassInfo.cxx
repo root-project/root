@@ -41,6 +41,7 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/AST/RecordLayout.h"
@@ -258,7 +259,8 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
    const FunctionTemplateDecl *fd = lh.findFunctionTemplate(fDecl, fname, false);
-   return fd;
+   if (fd) return fd->getCanonicalDecl();
+   return 0;
 }
 
 const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
@@ -266,9 +268,10 @@ const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
    // Return the value decl (if any) corresponding to a data member which
    // the given name declared in this scope.
 
-  const cling::LookupHelper &lh = fInterp->getLookupHelper();
-  const ValueDecl *vd = lh.findDataMember(fDecl, name);
-  return vd;
+   const cling::LookupHelper &lh = fInterp->getLookupHelper();
+   const ValueDecl *vd = lh.findDataMember(fDecl, name);
+   if (vd) return llvm::dyn_cast<ValueDecl>(vd->getCanonicalDecl());
+   else return 0;
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
