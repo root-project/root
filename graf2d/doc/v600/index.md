@@ -86,7 +86,25 @@ file `simple.pdf`.
     (timeonaxis3.C)
 -   In some case the format use to build the axis labels was incorrect.
     (cf: Jira report ROOT-5635).
-
+-   New static function to change the position of the "power of 10"
+    near the axis. A static function is used instead of  data members 
+    in `TAxis` in order to keep the `TAxis` class small. Adding two
+    floating point numbers in that class (in fact in `TAttAxis`) would
+    have a none negligible effect on the Root files' sizes as there is
+    at least two axis per histogram and that there is often 1000th 
+    histograms in a single file.
+    So we choose to follow the same mechanism as for the `SetMaxDigits`
+    static method. The new function is: `SetExponentOffset`.
+    Example:
+``` {.cpp}
+...
+   TGaxis::SetMaxDigits(2);
+   TGaxis::SetExponentOffset(-0.01, 0.01, "y"); // X and Y offset for Y axis
+   TGaxis::SetExponentOffset(-0.05, 0.01, "x"); // Y and Y offset for X axis
+...
+   hist->Draw();
+```    
+    
 ### TLegend
 
 -   The line attribute of objects in the legend were not taken into
