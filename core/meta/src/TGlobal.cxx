@@ -27,8 +27,7 @@ ClassImp(TGlobal)
 //______________________________________________________________________________
 TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 {
-   // Default TGlobal ctor. TGlobals are constructed in TROOT via
-   // a call to TCling::UpdateListOfGlobals().
+   // Default TGlobal ctor. 
 
    if (fInfo) {
       SetName(gCling->DataMemberInfo_Name(fInfo));
