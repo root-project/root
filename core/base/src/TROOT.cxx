@@ -1248,33 +1248,28 @@ TGlobal *TROOT::GetGlobal(const char *name, Bool_t load) const
 }
 
 //______________________________________________________________________________
-TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t load) const
+TGlobal *TROOT::GetGlobal(const TObject *addr, Bool_t /* load */) const
 {
-   // Return pointer to global variable with address addr. If load is true
-   // force reading of all currently defined globals from the interpreter (more
-   // expensive).
+   // Return pointer to global variable with address addr.
 
    if (addr == 0 || ((Long_t)addr) == -1) return 0;
 
-   TIter next(gROOT->GetListOfGlobals(load));
-
-   TGlobal *g;
-   while ((g = (TGlobal*) next())) {
-      const char *t = g->GetFullTypeName();
-      if (!strncmp(t, "class", 5) || !strncmp(t, "struct", 6)) {
-         int ptr = 0;
-         if (t[strlen(t)-1] == '*') ptr = 1;
-         void* gAddr = g->GetAddress();
-         if (gAddr == 0 || ((Long_t)gAddr) == -1) continue;
-         if (ptr) {
-            if (*(Long_t *)gAddr == (Long_t)addr) return g;
-         } else {
-            if ((Long_t)gAddr == (Long_t)addr) return g;
-         }
-      }
+   TInterpreter::DeclId_t decl = gInterpreter->GetDataMemberAtAddr(addr);
+   if (decl) {
+      TListOfDataMembers *globals = ((TListOfDataMembers*)(gROOT->GetListOfGlobals(kFALSE)));
+      return (TGlobal*)globals->Get(decl);
+   }
+   // If we are actually looking for a global that is held by a global
+   // pointer (for example gRandom), we need to find a pointer with the
+   // correct value.
+   decl = gInterpreter->GetDataMemberWithValue(addr);
+   if (decl) {
+      TListOfDataMembers *globals = ((TListOfDataMembers*)(gROOT->GetListOfGlobals(kFALSE)));
+      return (TGlobal*)globals->Get(decl);
    }
    return 0;
 }
+
 //______________________________________________________________________________
 TListOfFunctions *TROOT::GetGlobalFunctions()
 {

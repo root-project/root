@@ -27,7 +27,7 @@ ClassImp(TGlobal)
 //______________________________________________________________________________
 TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 {
-   // Default TGlobal ctor. 
+   // Default TGlobal ctor.
 
    if (fInfo) {
       SetName(gCling->DataMemberInfo_Name(fInfo));

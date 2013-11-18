@@ -88,6 +88,11 @@
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
 
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/Module.h"
+
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
@@ -2582,9 +2587,10 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
 }
 
 //______________________________________________________________________________
-TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char *name)
+TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char *name) const
 {
-   // Return pointer to cling DeclId for a data member with a given name.
+   // Return pointer to cling Decl of global/static variable that is located
+   // at the address given by addr.
 
    R__LOCKGUARD2(gInterpreterMutex);
    DeclId_t d;
@@ -2597,6 +2603,117 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
       d = gcl.GetDataMember(name);
    }
    return d;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
+{
+   // Return pointer to cling DeclId for a global value
+
+   if (!gv) return 0;
+
+   llvm::StringRef mangled_name = gv->getName();
+   //
+   //  Use the C++ ABI provided function to demangle the symbol name.
+   //
+   int err = 0;
+   char* demangled_name = abi::__cxa_demangle(mangled_name.str().c_str(), 0, 0, &err);
+   if (err) {
+      free(demangled_name);
+      if (err == -2) {
+         // It might simply be an unmangled global name.
+         DeclId_t d;
+         TClingClassInfo gcl(fInterpreter);
+         d = gcl.GetDataMember(mangled_name.str().c_str());
+         return d;
+      }
+      return 0;
+   }
+   //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
+   //
+   //  Separate out the class or namespace part of the
+   //  function name.
+   //
+   std::string scopename(demangled_name);
+   free(demangled_name);
+
+   std::string dataname;
+
+   if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
+      scopename.erase(0, sizeof("typeinfo for ")-1);
+   } else {
+      // See if it is a function
+      std::string::size_type pos = scopename.rfind('(');
+      if (pos != std::string::npos) {
+         return 0;
+      }
+      // Separate the scope and member name
+      pos = scopename.rfind(':');
+      if (pos != std::string::npos) {
+         if ((pos != 0) && (scopename[pos-1] == ':')) {
+            dataname = scopename.substr(pos+1);
+            scopename.erase(pos-1);
+         }
+      } else {
+         scopename.clear();
+         dataname = scopename;
+      }
+   }
+   //fprintf(stderr, "name: '%s'\n", name.c_str());
+   // Now we have the class or namespace name, so do the lookup.
+
+
+   DeclId_t d;
+   if (scopename.size()) {
+      TClingClassInfo cl(fInterpreter,scopename.c_str());
+      d = cl.GetDataMember(dataname.c_str());
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      d = gcl.GetDataMember(dataname.c_str());
+   }
+   return d;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) const
+{
+   // Return pointer to cling DeclId for a global variable that is a pointer
+   // whose value is 'ptrvalue'.
+
+   llvm::Module* module = fInterpreter->getModule();
+   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
+
+   llvm::Module::global_iterator iter = module->global_begin();
+	llvm::Module::global_iterator end = module->global_end ();
+   while (iter != end) {
+      if ( (*iter).getType()->getElementType()->isPointerTy() ) {
+         void **ptr = (void**)EE->getPointerToGlobalIfAvailable( iter );
+         if (ptr && *ptr == ptrvalue) {
+            // Found it
+            return GetDeclId( iter );
+         }
+      }
+      ++iter;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMemberAtAddr(const void *addr) const
+{
+   // Return pointer to cling DeclId for a data member with a given name.
+
+   if (!addr) return 0;
+
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
+
+   const llvm::GlobalValue *gv = EE->getGlobalValueAtAddress( (void*)addr );
+   if (!gv) return 0;
+   else return GetDeclId(gv);
+
 }
 
 //______________________________________________________________________________
