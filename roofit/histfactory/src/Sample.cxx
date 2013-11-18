@@ -41,14 +41,13 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
 
   fNormalizeByTheory(other.fNormalizeByTheory),
   fStatErrorActivate(other.fStatErrorActivate),
-  fhNominal(),
+  fhNominal(other.fhNominal),
   fhCountingHist(0)
   { 
     if( other.fhCountingHist ) {
       SetValue( other.fhCountingHist->GetBinContent(1) );
     }else{
       fhCountingHist = NULL;
-      SetHisto( (TH1*)other.fhNominal.GetObject() );
     }
   }
 
