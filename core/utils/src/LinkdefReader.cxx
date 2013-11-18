@@ -1041,6 +1041,9 @@ bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::v
    PP.AddPragmaHandler(&pragmaExtraInclude);
    PP.AddPragmaHandler(&pragmaIoReadInclude);
    
+   // Detach PPCallbacks, we don't care, we don't do error-recovery and unloading.
+   // Hard-reset the callbacks.
+   PP.addCallbacks(0);
    // Start parsing the specified input file.
    PP.EnterMainSourceFile();
    clang::Token tok;

@@ -522,6 +522,12 @@ public:
   /// it.
   PPCallbacks *getPPCallbacks() const { return Callbacks; }
   void addPPCallbacks(PPCallbacks *C) {
+    //FIXME: Hack to let us remove callbacks. Revisit.
+    if (!C) {
+      if (Callbacks)
+        delete Callbacks;
+      Callbacks = 0;
+    }
     if (Callbacks)
       C = new PPChainedCallbacks(C, Callbacks);
     Callbacks = C;
