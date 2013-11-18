@@ -402,7 +402,7 @@ Bool_t TFilePrefetch::CheckBlockInCache(char*& path, TFPBlock* block)
 
    Int_t value = 0;
 
-   if (gSystem->OpenDirectory(fullPath) == 0)
+   if (!gSystem->OpenDirectory(fullPath))
       gSystem->mkdir(fullPath);
 
    //dir is SHA1 value modulo 16; filename is the value of the SHA1(offset+len)
