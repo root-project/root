@@ -1025,7 +1025,7 @@ bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::v
    
    // Extract all #pragmas
    llvm::MemoryBuffer* memBuf = llvm::MemoryBuffer::getMemBuffer(code, "CINT #pragma extraction");
-   clang::CompilerInstance* pragmaCI = cling::CIFactory::createCI(memBuf, parserArgsC.size(), &parserArgsC[0], llvmdir);
+   clang::CompilerInstance* pragmaCI = cling::CIFactory::createCI(memBuf, parserArgsC.size(), &parserArgsC[0], llvmdir, /*StateCollector=*/0);
    
    clang::Preprocessor& PP = pragmaCI->getPreprocessor();
    clang::DiagnosticConsumer& DClient = pragmaCI->getDiagnosticClient();
@@ -1043,7 +1043,7 @@ bool LinkdefReader::Parse(SelectionRules& sr, llvm::StringRef code, const std::v
    
    // Detach PPCallbacks, we don't care, we don't do error-recovery and unloading.
    // Hard-reset the callbacks.
-   PP.addCallbacks(0);
+   PP.addPPCallbacks(0);
    // Start parsing the specified input file.
    PP.EnterMainSourceFile();
    clang::Token tok;
