@@ -65,6 +65,8 @@ void TSQLiteStatement::Close(Option_t *)
    }
 
    fStmt->fRes = 0;
+   fStmt->fConn = 0;
+   delete fStmt;
 }
 
 
