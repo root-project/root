@@ -199,38 +199,47 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    fSTLCont     = -1;
    if (!fInfo && !fClass) return; // default ctor is called
 
-   if (fInfo) {
-      fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
-      fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
-      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
-      SetName(gCling->DataMemberInfo_Name(fInfo));
-      const char *t = gCling->DataMemberInfo_Title(fInfo);
-      SetTitle(t);
-      if (t && t[0] != '!') SetBit(kObjIsPersistent);
-      fDataType = 0;
-      if (IsBasic() || IsEnum()) {
-         if (IsBasic()) {
-            const char *name = GetFullTypeName();
-            if (strcmp(name, "unsigned char") != 0 &&
-                strncmp(name, "unsigned short", sizeof ("unsigned short")) != 0 &&
-                strcmp(name, "unsigned int") != 0 &&
-                strncmp(name, "unsigned long", sizeof ("unsigned long")) != 0)
-                // strncmp() also covers "unsigned long long"
-               name = GetTypeName();
-            fDataType = gROOT->GetType(name);
+   Init();
+}
 
-            if (fDataType==0) {
-               // humm we did not find it ... maybe it's a typedef that has not been loaded yet.
-               // (this can happen if the executable does not have a TApplication object).
-               fDataType = gROOT->GetType(name,kTRUE);
-            }
-         } else {
-            fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to the list of types in TROOT, the kTRUE insures it is there.
+//______________________________________________________________________________
+void TDataMember::Init()
+{
+   // Routines called by the constructor and Update to reset the member's
+   // information.
+
+   if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
+
+   fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+   fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+   fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
+   SetName(gCling->DataMemberInfo_Name(fInfo));
+   const char *t = gCling->DataMemberInfo_Title(fInfo);
+   SetTitle(t);
+   if (t && t[0] != '!') SetBit(kObjIsPersistent);
+   fDataType = 0;
+   if (IsBasic() || IsEnum()) {
+      if (IsBasic()) {
+         const char *name = GetFullTypeName();
+         if (strcmp(name, "unsigned char") != 0 &&
+             strncmp(name, "unsigned short", sizeof ("unsigned short")) != 0 &&
+             strcmp(name, "unsigned int") != 0 &&
+             strncmp(name, "unsigned long", sizeof ("unsigned long")) != 0)
+            // strncmp() also covers "unsigned long long"
+            name = GetTypeName();
+         fDataType = gROOT->GetType(name);
+
+         if (fDataType==0) {
+            // humm we did not find it ... maybe it's a typedef that has not been loaded yet.
+            // (this can happen if the executable does not have a TApplication object).
+            fDataType = gROOT->GetType(name,kTRUE);
          }
-//         if (!fDataType)
-//            Error("TDataMember", "basic data type %s not found in list of basic types",
-//                  GetTypeName());
+      } else {
+         fDataType = gROOT->GetType("Int_t", kTRUE); // In rare instance we are called before Int_t has been added to the list of types in TROOT, the kTRUE insures it is there.
       }
+      //         if (!fDataType)
+      //            Error("TDataMember", "basic data type %s not found in list of basic types",
+      //                  GetTypeName());
    }
 
    // If option string exist in comment - we'll parse it and create
@@ -400,7 +409,7 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
                value = (Int_t*)(enumval->GetAddress());
                l     = (Long_t)(*value);
             } else if (IsEnum()) {
-               TObject *obj = fClass->GetListOfDataMembers()->FindObject(ptr1);
+               TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
                if (obj)
                   l = gROOT->ProcessLineFast(Form("%s::%s;",fClass->GetName(),ptr1));
                else
@@ -542,6 +551,12 @@ const char *TDataMember::GetArrayIndex() const
 
    const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
    return (val && IsaPointer() ) ? val : "";
+}
+
+//______________________________________________________________________________
+TDictionary::DeclId_t TDataMember::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
 }
 
 //______________________________________________________________________________
@@ -697,7 +712,7 @@ Long_t TDataMember::Property() const
    if (fProperty!=(-1)) return fProperty;
 
    TDataMember *t = (TDataMember*)this;
-   if (!fInfo) return 0;
+   if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
    int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
    t->fProperty = prop|propt;
@@ -800,6 +815,32 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
    }
 
    return fValueSetter;
+}
+
+//______________________________________________________________________________
+Bool_t TDataMember::Update(DataMemberInfo_t *info)
+{
+   // Update the TFunction to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
+   SafeDelete(fValueSetter);
+   SafeDelete(fValueGetter);
+   if (fOptions) {
+      fOptions->Delete();
+      SafeDelete(fOptions);
+   }
+
+   if (info == 0) {
+      fInfo = 0;
+      return kTRUE;
+   } else {
+      fInfo = info;
+      Init();
+      return kTRUE;
+   }
 }
 
 //______________________________________________________________________________

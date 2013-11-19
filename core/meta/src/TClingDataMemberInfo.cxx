@@ -75,16 +75,25 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 }
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
-                                           const clang::ValueDecl *ValD)
-  : fInterp(interp), fClassInfo(new TClingClassInfo(interp)), fFirstTime(true), 
+                                           const clang::ValueDecl *ValD,
+                                           TClingClassInfo *ci)
+: fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp)), fFirstTime(true),
     fTitle(""), fSingleDecl(ValD), fContextIdx(0U) {
    using namespace llvm;
-   assert((isa<TranslationUnitDecl>(ValD->getDeclContext()) || 
+   assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
            isa<EnumConstantDecl>(ValD)) &&
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
+}
+
+TDictionary::DeclId_t TClingDataMemberInfo::GetDeclId() const
+{
+   if (!IsValid()) {
+      return TDictionary::DeclId_t();
+   }
+   return (const clang::Decl*)(GetDecl()->getCanonicalDecl());
 }
 
 int TClingDataMemberInfo::ArrayDim() const

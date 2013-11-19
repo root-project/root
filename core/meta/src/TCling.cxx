@@ -88,6 +88,11 @@
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
 
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/IR/Module.h"
+
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
@@ -273,7 +278,7 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
          }
 
          // Create the TEnumConstant.
-         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI)
+         TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI, (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0))
                                                          , constantName, value, enumType);
          // Check that the constant was created.
          if (!enumConstant) {
@@ -359,7 +364,7 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       } else {
          gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
                                                     new TClingDataMemberInfo(fInterpreter,
-                                                                             cast<ValueDecl>(ND))));
+                                                                             cast<ValueDecl>(ND), 0)));
       }
 
    }
@@ -452,7 +457,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       }
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
-      ((TCling*)gCling)->UpdateListOfDataMembers(*I);
       ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
@@ -2367,20 +2371,9 @@ void TCling::CreateListOfEnums(TClass* cl) const
 void TCling::CreateListOfDataMembers(TClass* cl) const
 {
    // Create list of pointers to data members for TClass cl.
-   R__LOCKGUARD2(gInterpreterMutex);
-   if (cl->fData) {
-      return;
-   }
-   cl->fData = new TList;
-   cl->fData->SetOwner();
-   TClingDataMemberInfo t(fInterpreter, (TClingClassInfo*)cl->GetClassInfo());
-   while (t.Next()) {
-      // if name cannot be obtained no use to put in list
-      if (t.IsValid() && t.Name()) {
-         TClingDataMemberInfo* a = new TClingDataMemberInfo(t);
-         cl->fData->Add(new TDataMember((DataMemberInfo_t *)a, cl));
-      }
-   }
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfDataMembers.
+
 }
 
 //______________________________________________________________________________
@@ -2413,9 +2406,8 @@ void TCling::UpdateListOfEnums(TClass* cl) const
 void TCling::UpdateListOfDataMembers(TClass* cl) const
 {
    // Update the list of pointers to data members for TClass cl
-   delete cl->fData;
-   cl->fData = 0;
-   CreateListOfDataMembers(cl);
+   // This is now a nop.  The creation and updating is handled in
+   // TListOfDataMembers.
 }
 
 //______________________________________________________________________________
@@ -2594,6 +2586,135 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       std::vector<std::string>(), std::vector<std::string>());
 }
 
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char *name) const
+{
+   // Return pointer to cling Decl of global/static variable that is located
+   // at the address given by addr.
+
+   R__LOCKGUARD2(gInterpreterMutex);
+   DeclId_t d;
+   TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   if (cl) {
+      d = cl->GetDataMember(name);
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      d = gcl.GetDataMember(name);
+   }
+   return d;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
+{
+   // Return pointer to cling DeclId for a global value
+
+   if (!gv) return 0;
+
+   llvm::StringRef mangled_name = gv->getName();
+   //
+   //  Use the C++ ABI provided function to demangle the symbol name.
+   //
+   int err = 0;
+   char* demangled_name = abi::__cxa_demangle(mangled_name.str().c_str(), 0, 0, &err);
+   if (err) {
+      free(demangled_name);
+      if (err == -2) {
+         // It might simply be an unmangled global name.
+         DeclId_t d;
+         TClingClassInfo gcl(fInterpreter);
+         d = gcl.GetDataMember(mangled_name.str().c_str());
+         return d;
+      }
+      return 0;
+   }
+   //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
+   //
+   //  Separate out the class or namespace part of the
+   //  function name.
+   //
+   std::string scopename(demangled_name);
+   free(demangled_name);
+
+   std::string dataname;
+
+   if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
+      scopename.erase(0, sizeof("typeinfo for ")-1);
+   } else {
+      // See if it is a function
+      std::string::size_type pos = scopename.rfind('(');
+      if (pos != std::string::npos) {
+         return 0;
+      }
+      // Separate the scope and member name
+      pos = scopename.rfind(':');
+      if (pos != std::string::npos) {
+         if ((pos != 0) && (scopename[pos-1] == ':')) {
+            dataname = scopename.substr(pos+1);
+            scopename.erase(pos-1);
+         }
+      } else {
+         scopename.clear();
+         dataname = scopename;
+      }
+   }
+   //fprintf(stderr, "name: '%s'\n", name.c_str());
+   // Now we have the class or namespace name, so do the lookup.
+
+
+   DeclId_t d;
+   if (scopename.size()) {
+      TClingClassInfo cl(fInterpreter,scopename.c_str());
+      d = cl.GetDataMember(dataname.c_str());
+   }
+   else {
+      TClingClassInfo gcl(fInterpreter);
+      d = gcl.GetDataMember(dataname.c_str());
+   }
+   return d;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) const
+{
+   // Return pointer to cling DeclId for a global variable that is a pointer
+   // whose value is 'ptrvalue'.
+
+   llvm::Module* module = fInterpreter->getModule();
+   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
+
+   llvm::Module::global_iterator iter = module->global_begin();
+	llvm::Module::global_iterator end = module->global_end ();
+   while (iter != end) {
+      if ( (*iter).getType()->getElementType()->isPointerTy() ) {
+         void **ptr = (void**)EE->getPointerToGlobalIfAvailable( iter );
+         if (ptr && *ptr == ptrvalue) {
+            // Found it
+            return GetDeclId( iter );
+         }
+      }
+      ++iter;
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDataMemberAtAddr(const void *addr) const
+{
+   // Return pointer to cling DeclId for a data member with a given name.
+
+   if (!addr) return 0;
+
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
+
+   const llvm::GlobalValue *gv = EE->getGlobalValueAtAddress( (void*)addr );
+   if (!gv) return 0;
+   else return GetDeclId(gv);
+
+}
 
 //______________________________________________________________________________
 TString TCling::GetMangledName(TClass* cl, const char* method,
@@ -4342,6 +4463,16 @@ TInterpreter::DeclId_t TCling::GetDeclId(ClassInfo_t* cinfo) const
 }
 
 //______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetDeclId(DataMemberInfo_t* data) const
+{
+   // Return a unique identifier of the declaration represented by the
+   // MethodInfo
+
+   if (data) return ((TClingDataMemberInfo*)data)->GetDeclId();
+   return 0;
+}
+
+//______________________________________________________________________________
 TInterpreter::DeclId_t TCling::GetDeclId(MethodInfo_t* method) const 
 {
    // Return a unique identifier of the declaration represented by the
@@ -4601,7 +4732,12 @@ Bool_t TCling::ClassInfo_Contains(ClassInfo_t *info, DeclId_t declid) const
    const clang::Decl *decl = reinterpret_cast<const clang::Decl*>(declid);
    const clang::DeclContext *ctxt = clang::Decl::castToDeclContext(scope);
    if (!decl || !ctxt) return kFALSE;
-   return decl->getDeclContext()->Equals(ctxt);
+   if (decl->getDeclContext()->Equals(ctxt))
+      return kTRUE;
+   else if (decl->getDeclContext()->isTransparentContext() &&
+            decl->getDeclContext()->getParent()->Equals(ctxt))
+      return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
@@ -4947,6 +5083,14 @@ DataMemberInfo_t* TCling::DataMemberInfo_Factory(ClassInfo_t* clinfo /*= 0*/) co
 {
    TClingClassInfo* TClingclass_info = (TClingClassInfo*) clinfo;
    return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, TClingclass_info);
+}
+
+//______________________________________________________________________________
+DataMemberInfo_t* TCling::DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const
+{
+   const clang::Decl* decl = reinterpret_cast<const clang::Decl*>(declid);
+   const clang::ValueDecl* vd = llvm::dyn_cast_or_null<clang::ValueDecl>(decl);
+   return (DataMemberInfo_t*) new TClingDataMemberInfo(fInterpreter, vd, (TClingClassInfo*)clinfo);
 }
 
 //______________________________________________________________________________

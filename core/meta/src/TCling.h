@@ -36,6 +36,10 @@
 #define TWin32SendClass char
 #endif
 
+namespace llvm {
+   class GlobalValue;
+}
+
 namespace clang {
    class CXXRecordDecl;
    class Decl;
@@ -115,6 +119,8 @@ private: // Data Members
    ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
    std::set<TClass*> fModTClasses;
 
+   DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
+
 public: // Public Interface
    virtual ~TCling();
    TCling(const char* name, const char* title);
@@ -192,6 +198,9 @@ public: // Public Interface
    void    UpdateListOfDataMembers(TClass* cl) const;
    void    UpdateListOfEnums(TClass* cl) const;
 
+   virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name) const;
+   virtual DeclId_t GetDataMemberAtAddr(const void *addr) const;
+   virtual DeclId_t GetDataMemberWithValue(const void *ptrvalue) const;
    TString GetMangledName(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    TString GetMangledNameWithPrototype(TClass* cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void*   GetInterfaceMethod(TClass* cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
@@ -338,9 +347,11 @@ public: // Public Interface
    virtual const char* BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) const;
 
    // DataMemberInfo interface
+   virtual DeclId_t GetDeclId(DataMemberInfo_t *info) const;
    virtual int    DataMemberInfo_ArrayDim(DataMemberInfo_t* dminfo) const;
    virtual void   DataMemberInfo_Delete(DataMemberInfo_t* dminfo) const;
    virtual DataMemberInfo_t*  DataMemberInfo_Factory(ClassInfo_t* clinfo = 0) const;
+   virtual DataMemberInfo_t  *DataMemberInfo_Factory(DeclId_t declid, ClassInfo_t* clinfo) const;
    virtual DataMemberInfo_t*  DataMemberInfo_FactoryCopy(DataMemberInfo_t* dminfo) const;
    virtual bool   DataMemberInfo_IsValid(DataMemberInfo_t* dminfo) const;
    virtual int    DataMemberInfo_MaxIndex(DataMemberInfo_t* dminfo, Int_t dim) const;

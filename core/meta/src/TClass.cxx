@@ -76,7 +76,9 @@
 #include <cmath>
 #include <assert.h>
 
+#include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
+#include "TViewPubDataMembers.h"
 #include "TViewPubFunctions.h"
 
 using namespace std;
@@ -2742,36 +2744,22 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
 {
    // Return pointer to datamember object with name "datamember".
 
-   if (!fClassInfo) return 0;
+   if (!fClassInfo || datamember == 0) return 0;
 
    // Strip off leading *'s and trailing [
-   const Int_t size_buffer = 256;
-   char memb[size_buffer];
-   char *s = (char*)datamember;
-   while (*s == '*') s++;
+   const char *start_name = datamember;
+   while (*start_name == '*') ++start_name;
 
-   size_t len = strlen(s);
-   if (len > size_buffer - 2)
-      len = size_buffer - 2;
-   strncpy(memb, s, len);
-   memb[len] = 0;
+   // Empty name are 'legal', they represent anonymous unions.
+   //   if (*start_name == 0) return 0;
 
-   if ((s = strchr(memb, '['))) {
-      *s = 0;
-      len = strlen(memb);
+   if (const char *s = strchr(start_name, '[')){
+      UInt_t len = s-start_name;
+      TString name(start_name,len);
+      return (TDataMember *)((TClass*)this)->GetListOfDataMembers(kFALSE)->FindObject(name.Data());
+   } else {
+      return (TDataMember *)((TClass*)this)->GetListOfDataMembers(kFALSE)->FindObject(start_name);
    }
-
-   TDataMember *dm;
-   TIter   next(((TClass*)this)->GetListOfDataMembers());
-
-   while ((dm = (TDataMember *) next()))
-      if (len >= size_buffer - 2) {
-         if (strncmp(memb, dm->GetName(), len) == 0)
-            return dm;
-      } else
-         if (strcmp(memb, dm->GetName()) == 0)
-            return dm;
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -3023,22 +3011,21 @@ TList *TClass::GetListOfEnums()
 }
 
 //______________________________________________________________________________
-TList *TClass::GetListOfDataMembers()
+TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 {
    // Return list containing the TDataMembers of a class.
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (!fClassInfo) {
-      if (!fData) fData = new TList;
-      return fData;
-   }
 
-   if (!fData) {
-      if (!gInterpreter)
-         Fatal("GetListOfDataMembers", "gInterpreter not initialized");
+   if (!fData) fData = new TListOfDataMembers(this);
+   if (Property() & (kIsClass|kIsStruct|kIsUnion)) {
+      // If the we have a class or struct or union, the order
+      // of data members is the list is essential since it determines their
+      // order on file.  So we must always load.  Also, the list is fixed
+      // since the language does not allow to add members.
+      if (!fData->IsLoaded()) fData->Load();
 
-      gInterpreter->CreateListOfDataMembers(this);
-   }
+   } else if (load) fData->Load();
    return fData;
 }
 
@@ -3078,29 +3065,16 @@ const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
 }
 
 //______________________________________________________________________________
-TList *TClass::GetListOfAllPublicDataMembers()
+TList *TClass::GetListOfAllPublicDataMembers(Bool_t load /* = kTRUE */)
 {
    // Returns a list of all public data members of this class and its base
    // classes. Refers to a subset of the data members in GetListOfDatamembers()
    // so don't do GetListOfAllPublicDataMembers()->Delete().
 
    R__LOCKGUARD(gInterpreterMutex);
-   if (!fAllPubData) {
-      fAllPubData = new TList;
-      TIter next(GetListOfDataMembers());
-      TDataMember *p;
 
-      while ((p = (TDataMember*) next()))
-         if (p->Property() & kIsPublic) fAllPubData->Add(p);
-
-      TIter next_BaseClass(GetListOfBases());
-      TBaseClass *pB;
-      while ((pB = (TBaseClass*) next_BaseClass())) {
-         if (!pB->GetClassPointer()) continue;
-         if (!(pB->Property() & kIsPublic)) continue;
-         fAllPubData->AddAll(pB->GetClassPointer()->GetListOfAllPublicDataMembers() );
-      }
-   }
+   if (!fAllPubData) fAllPubData = new TViewPubDataMembers(this);
+   if (load) fAllPubData->Load();
    return fAllPubData;
 }
 
@@ -3251,10 +3225,6 @@ void TClass::ResetCaches()
    if (fBase)
       fBase->Delete();
    delete fBase; fBase = 0;
-
-   if (fData)
-      fData->Delete();
-   delete fData;   fData = 0;
 
    if (fEnums)
       fEnums->Delete();
@@ -4862,6 +4832,9 @@ void TClass::SetUnloaded()
 
    if (fMethod) {
       fMethod->Unload();
+   }
+   if (fData) {
+      fData->Unload();
    }
 
    SetBit(kUnloaded);

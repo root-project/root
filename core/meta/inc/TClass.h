@@ -54,7 +54,9 @@ class TVirtualIsAProxy;
 class TVirtualRefProxy;
 class THashTable;
 class TListOfFunctions;
+class TListOfDataMembers;
 class TViewPubFunctions;
+class TViewPubDataMembers;
 class TFunctionTemplate;
 
 namespace clang {
@@ -96,11 +98,11 @@ private:
    mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
-   TList             *fData;            //linked list for data members
+   TListOfDataMembers*fData;            //linked list for data members
    TList             *fEnums;           //linked list for the enums
    TList             *fFuncTemplate;    //linked list for function templates [Not public until implemented as active list]
    TListOfFunctions  *fMethod;          //linked list for methods
-   TList             *fAllPubData;      //all public data members (including from base classes)
+   TViewPubDataMembers*fAllPubData;      //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
    mutable TList     *fClassMenuList;   //list of class menu items
 
@@ -263,7 +265,7 @@ public:
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
    Int_t              GetClassSize() const { return Size(); }
    TDataMember       *GetDataMember(const char *datamember) const;
-   Long_t              GetDataMemberOffset(const char *membername) const;
+   Long_t             GetDataMemberOffset(const char *membername) const;
    const char        *GetDeclFileName() const { return fDeclFileName; }
    Short_t            GetDeclFileLine() const { return fDeclFileLine; }
    ROOT::DelFunc_t    GetDelete() const;
@@ -275,13 +277,13 @@ public:
       if (fCurrentInfo) return fCurrentInfo;
       else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
    }
-   TList             *GetListOfDataMembers();
+   TList             *GetListOfDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums();
    TList             *GetListOfBases();
    TList             *GetListOfMethods(Bool_t load = kTRUE);
    TList             *GetListOfRealData() const { return fRealData; }
    const TList       *GetListOfAllPublicMethods(Bool_t load = kTRUE);
-   TList             *GetListOfAllPublicDataMembers();
+   TList             *GetListOfAllPublicDataMembers(Bool_t load = kTRUE);
    const char        *GetImplFileName() const { return fImplFileName; }
    Short_t            GetImplFileLine() const { return fImplFileLine; }
    TClass            *GetActualClass(const void *object) const;

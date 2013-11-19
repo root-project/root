@@ -54,7 +54,7 @@ class TClingDataMemberInfo {
    
 private:
    
-   cling::Interpreter    *fInterp; // Cling interpreter, we do *not* own.
+   cling::Interpreter    *fInterp;    // Cling interpreter, we do *not* own.
    TClingClassInfo       *fClassInfo; // Class we are iterating over, we own.
    bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
    clang::DeclContext::decl_iterator fIter; // Current decl.
@@ -82,7 +82,7 @@ public:
    
    // Takes concrete decl and disables the iterator. 
    // ValueDecl is the common base between enum constant, var decl and field decl
-   TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *);
+   TClingDataMemberInfo(cling::Interpreter *, const clang::ValueDecl *, TClingClassInfo *);
    
    TClingDataMemberInfo(const TClingDataMemberInfo &rhs)
    {
@@ -106,11 +106,13 @@ public:
       }
       return *this;
    }
-   
+
+   typedef TDictionary::DeclId_t DeclId_t;
    
    int                ArrayDim() const;
    TClingClassInfo   *GetClassInfo() const { return fClassInfo; }
    const clang::Decl *GetDecl() const { return fSingleDecl ? fSingleDecl : *fIter; }
+   DeclId_t           GetDeclId() const;
    bool               IsValid() const { return GetDecl(); }
    int                MaxIndex(int dim) const;
    int                InternalNext();

@@ -36,7 +36,6 @@ TListOfFunctions::TListOfFunctions(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0)
 
    fIds = new TExMap;
    fUnloaded = new THashList;
-   TCollection::SetOwner();
 }
 
 //______________________________________________________________________________
@@ -44,6 +43,7 @@ TListOfFunctions::~TListOfFunctions()
 {
    // Destructor.
 
+   THashList::Delete();
    delete fIds;
    fUnloaded->Delete();
    delete fUnloaded;
@@ -189,13 +189,7 @@ void TListOfFunctions::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
-   Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
-
-   if (nodel) {
-      fUnloaded->Clear();
-   } else {
-      fUnloaded->Clear();
-   }
+   fUnloaded->Clear(option);
    fIds->Clear();
    THashList::Clear(option);
 }
@@ -206,6 +200,7 @@ void TListOfFunctions::Delete(Option_t *option /* ="" */)
    // Delete all TFunction object files.
 
    fUnloaded->Delete(option);
+   fIds->Clear();
    THashList::Delete(option);
 }
 
@@ -213,7 +208,7 @@ void TListOfFunctions::Delete(Option_t *option /* ="" */)
 TObject *TListOfFunctions::FindObject(const char *name) const
 {
    // Specialize FindObject to do search for the
-   // a function just by name if its not already in the list
+   // a function just by name or create it if its not already in the list
 
    TObject *result = THashList::FindObject(name);
    if (!result) {

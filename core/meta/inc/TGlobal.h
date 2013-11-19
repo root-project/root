@@ -38,11 +38,13 @@ public:
    
    virtual       ~TGlobal();
    Int_t          GetArrayDim() const;
+   DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;
    void          *GetAddress() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    Long_t         Property() const;
+   virtual bool   Update(DataMemberInfo_t *info);
 
    ClassDef(TGlobal,0)  //Global variable class
 };

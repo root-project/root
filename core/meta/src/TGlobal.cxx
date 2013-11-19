@@ -27,8 +27,7 @@ ClassImp(TGlobal)
 //______________________________________________________________________________
 TGlobal::TGlobal(DataMemberInfo_t *info) : TDictionary(), fInfo(info)
 {
-   // Default TGlobal ctor. TGlobals are constructed in TROOT via
-   // a call to TCling::UpdateListOfGlobals().
+   // Default TGlobal ctor.
 
    if (fInfo) {
       SetName(gCling->DataMemberInfo_Name(fInfo));
@@ -90,6 +89,12 @@ Int_t TGlobal::GetArrayDim() const
 }
 
 //______________________________________________________________________________
+TDictionary::DeclId_t TGlobal::GetDeclId() const
+{
+   return gInterpreter->GetDeclId(fInfo);
+}
+
+//______________________________________________________________________________
 Int_t TGlobal::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
@@ -124,4 +129,21 @@ Long_t TGlobal::Property() const
 
    if (!fInfo) return 0;
    return gCling->DataMemberInfo_Property(fInfo);
+}
+
+//______________________________________________________________________________
+Bool_t TGlobal::Update(DataMemberInfo_t *info)
+{
+   // Update the TFunction to reflect the new info.
+   //
+   // This can be used to implement unloading (info == 0) and then reloading
+   // (info being the 'new' decl address).
+
+   if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
+   fInfo = info;
+   if (fInfo) {
+      SetName(gCling->DataMemberInfo_Name(fInfo));
+      SetTitle(gCling->DataMemberInfo_Title(fInfo));
+   }
+   return kTRUE;
 }
