@@ -1,3 +1,5 @@
+test:
+
 # CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
 # TEST_TARGETS += execLoadLibs
 # 
