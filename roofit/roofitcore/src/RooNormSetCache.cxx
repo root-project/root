@@ -33,7 +33,6 @@
 #include "RooFit.h"
 
 #include "RooNormSetCache.h"
-#include "RooNormSetCache.h"
 #include "RooArgSet.h"
 
 ClassImp(RooNormSetCache)
@@ -44,135 +43,66 @@ ClassImp(RooNormSetCache)
 using namespace std ;
 
 //_____________________________________________________________________________
-RooNormSetCache::RooNormSetCache(Int_t regSize) :
-  _htable(0), _regSize(regSize), _nreg(0), _asArr(0), _set2RangeName(0)
+RooNormSetCache::RooNormSetCache(ULong_t max) :
+  _max(max), _next(0), _set2RangeName(0)
 {
-  // Construct normalization set manager with given initial size
-  //_htable = regSize>16 ? new RooHashTable(regSize,RooHashTable::Intrinsic) : 0 ;
 }
-
-
-
-//_____________________________________________________________________________
-RooNormSetCache::RooNormSetCache(const RooNormSetCache& other) :
-  _htable(0), _regSize(other._regSize), _nreg(0), _asArr(0), _set2RangeName(0)
-{
-  // Copy constructor
-
-  //_htable = _regSize>16 ? new RooHashTable(_regSize,RooHashTable::Intrinsic) : 0 ;
-  initialize(other) ;
-}
-
-
 
 //_____________________________________________________________________________
 RooNormSetCache::~RooNormSetCache() 
 {
   // Destructor
-
-  delete[] _asArr ;
-  if (_htable) delete _htable ;
 }
-
-
 
 //_____________________________________________________________________________
 void RooNormSetCache::clear()
 {
   // Clear contents 
-  _nreg = 0 ;  
-  if (_htable) {
-    delete _htable ;
-    _htable = 0 ;
+  {
+    PairIdxMapType tmpmap;
+    tmpmap.swap(_pairToIdx);
   }
-}
-
-
-
-//_____________________________________________________________________________
-void RooNormSetCache::initialize(const RooNormSetCache& other) 
-{
-  // Initialize cache from contents of given other cache
-  clear() ;
-
-  Int_t i ;
-  for (i=0 ; i<other._nreg ; i++) {
-    add(other._asArr[i]._set1,other._asArr[i]._set2) ;
+  {
+    PairVectType tmppairvect;
+    tmppairvect.swap(_pairs);
   }
-
-  _name1 = other._name1 ;
-  _name2 = other._name2 ;
-
-  _set2RangeName = other._set2RangeName ;
+  _next = 0;
 }
-
-
 
 //_____________________________________________________________________________
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
   // Add given pair of RooArgSet pointers to our store
 
-  // If code list array has never been used, allocate and initialize here
-  if (!_asArr) {
-    _asArr = new RooSetPair[_regSize] ;
+  const Pair pair(set1, set2);
+  PairIdxMapType::iterator it = _pairToIdx.lower_bound(pair);
+  if (_pairToIdx.end() != it && !PairCmp()(it->first, pair) &&
+      !PairCmp()(pair, it->first)) {
+    // not empty, and keys match - nothing to do
+    return;
   }
-
-  if (!contains(set1,set2)) {
-    // Add to cache
-    _asArr[_nreg]._set1 = (RooArgSet*)set1 ;
-    _asArr[_nreg]._set2 = (RooArgSet*)set2 ;
-    if (_htable) _htable->add((TObject*)&_asArr[_nreg]) ;
-    _nreg++ ;
+  // register pair -> index mapping
+  _pairToIdx.insert(it, std::make_pair(pair, ULong_t(_pairs.size())));
+  // save pair at that index
+  _pairs.push_back(pair);
+  // if the cache grew too large, start replacing in a round-robin fashion
+  while (_pairs.size() > _max) {
+    // new index of the pair: replace slot _next
+    it->second = _next;
+    // find and erase mapping of old pair in that slot
+    _pairToIdx.erase(_pairs[_next]);
+    // put new pair into new slot
+    _pairs[_next] = _pairs.back();
+    // and erase the copy we no longer need
+    _pairs.erase(_pairs.end() - 1);
+    ++_next;
+    _next %= _max;
   }
-
-  // Expand cache if full 
-  //if (_nreg==_regSize) expand() ;
-
-  // Cycle when full
-  if (_nreg==_regSize) _nreg = 0 ;
 }
 
-
 //_____________________________________________________________________________
-void RooNormSetCache::expand()
-{
-  // Expand registry size by doubling capacity
-
-  Int_t newSize = _regSize*2 ;
-
-  if (_htable) {
-    delete _htable ;
-    _htable = 0 ;
-  }
-
-  // Allocate increased buffer 
-  RooSetPair* asArr_new = new RooSetPair[newSize] ;
-  if (newSize>16) {
-    //cout << "RooNormSetCache::add() instantiating hash table with size " << newSize << endl ;
-    _htable = new RooHashTable(newSize,RooHashTable::Intrinsic) ;
-  }
-
-  // Copy old buffer 
-  Int_t i ;
-  for (i=0 ; i<_nreg ; i++) {
-    asArr_new[i]._set1 = _asArr[i]._set1 ;
-    asArr_new[i]._set2 = _asArr[i]._set2 ;
-    if (_htable) _htable->add((TObject*)&asArr_new[i]) ;
-  }
-  
-  // Delete old buffers 
-  delete[] _asArr ;
-
-  // Install new buffers
-  _asArr = asArr_new ;
-  _regSize = newSize ;
-}
-
-
-
-//_____________________________________________________________________________
-Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
+Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
+	const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
 {
   // If RooArgSets set1 and set2 or sets with similar contents have
   // been seen by this cache manager before return kFALSE If not,
@@ -183,53 +113,53 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1, 
   // Automated cache management function - Returns kTRUE if cache is invalidated
   
   // A - Check if set1/2 are in cache and range name is identical
-  if (set2RangeName==_set2RangeName && contains(set1,set2)) {
+  if (set2RangeName == _set2RangeName && contains(set1,set2)) {
     return kFALSE ;
   }
 
   // B - Check if dependents(set1/set2) are compatible with current cache
-  RooNameSet nset1d,nset2d ;
+  RooNameSet nset1d, nset2d;
 
-//   cout << "RooNormSetCache::autoCache set1 = " << (set1?*set1:RooArgSet()) << " set2 = " << (set2?*set2:RooArgSet()) << endl ;
-//   if (set1) set1->Print("v") ;
-//   if (set2) set2->Print("v") ;
-  //if (self) self->Print("v") ;
+//   cout << "RooNormSetCache::autoCache set1 = " << (set1?*set1:RooArgSet()) << " set2 = " << (set2?*set2:RooArgSet()) << endl;
+//   if (set1) set1->Print("v");
+//   if (set2) set2->Print("v");
+  //if (self) self->Print("v");
 
   RooArgSet *set1d, *set2d ;
   if (self) {
-    set1d = set1 ? self->getObservables(*set1,kFALSE) : new RooArgSet ;
-    set2d = set2 ? self->getObservables(*set2,kFALSE) : new RooArgSet ;
+    set1d = set1 ? self->getObservables(*set1,kFALSE) : new RooArgSet;
+    set2d = set2 ? self->getObservables(*set2,kFALSE) : new RooArgSet;
   } else {
-    set1d = set1 ? (RooArgSet*)set1->snapshot() : new RooArgSet ;
-    set2d = set2 ? (RooArgSet*)set2->snapshot() : new RooArgSet ;
+    set1d = set1 ? (RooArgSet*)set1->snapshot() : new RooArgSet;
+    set2d = set2 ? (RooArgSet*)set2->snapshot() : new RooArgSet;
   }
 
-//   cout << "RooNormSetCache::autoCache set1d = " << *set1d << " set2 = " << *set2d << endl ;
+//   cout << "RooNormSetCache::autoCache set1d = " << *set1d << " set2 = " << *set2d << endl;
 
-  nset1d.refill(*set1d) ;
-  nset2d.refill(*set2d) ;
+  nset1d.refill(*set1d);
+  nset2d.refill(*set2d);
 
-  if (nset1d==_name1&&nset2d==_name2&&_set2RangeName==set2RangeName) {
+  if (nset1d == _name1 && nset2d == _name2 && _set2RangeName == set2RangeName) {
     // Compatible - Add current set1/2 to cache
-    add(set1,set2) ;
+    add(set1,set2);
 
-    delete set1d ;
-    delete set2d ;
-    return kFALSE ;
+    delete set1d;
+    delete set2d;
+    return kFALSE;
   }
   
   // C - Reset cache and refill with current state
   if (doRefill) {
-    clear() ;
-    add(set1,set2) ;
-    _name1.refill(*set1d) ;
-    _name2.refill(*set2d) ;
-//     cout << "RooNormSetCache::autoCache() _name1 refilled from " << *set1d << " to " ; _name1.printValue(cout) ; cout << endl ;
-//     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl ;
-    _set2RangeName = (TNamed*) set2RangeName ;
+    clear();
+    add(set1,set2);
+    _name1.refill(*set1d);
+    _name2.refill(*set2d);
+//     cout << "RooNormSetCache::autoCache() _name1 refilled from " << *set1d << " to " ; _name1.printValue(cout) ; cout << endl;
+//     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl;
+    _set2RangeName = (TNamed*) set2RangeName;
   }
   
-  delete set1d ;
-  delete set2d ;
-  return kTRUE ;
+  delete set1d;
+  delete set2d;
+  return kTRUE;
 }
