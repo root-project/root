@@ -1844,6 +1844,18 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
+      if (fSTLtype == kSTLmultimap || fSTLtype == kSTLset) {
+         // For a long time those where inverted compared to the other
+         // definitions.   When we move to version 'x', this got standardized,
+         // but we now need to fix it.
+
+         if (fTypeName.BeginsWith("std::set") || fTypeName.BeginsWith("set")) {
+            fSTLtype = kSTLset;
+         } else if (fTypeName.BeginsWith("std::multimap") || fTypeName.BeginsWith("multimap")) {
+            fSTLtype = kSTLmultimap;
+         }
+      }
+
       if (IsaPointer()) fType = TVirtualStreamerInfo::kSTLp;
       else fType = TVirtualStreamerInfo::kSTL;
       if (GetArrayLength() > 0) {
