@@ -273,11 +273,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          // This okay we just keep the old one.
          return;
       }
-
-      // Re-introduce Cintex behaviour: see ROOT-5694
-      bool isDictPresent = NULL != GetDict(shortName.c_str());
-      
-      if (!isDictPresent && splitname.IsSTLCont()==0) {
+      if (splitname.IsSTLCont()==0) {
          // Warn only for class that are not STL containers.
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
