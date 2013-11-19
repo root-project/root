@@ -2710,7 +2710,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberAtAddr(const void *addr) const
 
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
-   const llvm::GlobalValue *gv = EE->getGlobalValueAtAddress( (void*)addr );
+   const llvm::GlobalValue *gv = EE->getGlobalValueAtAddress( const_cast<void*>(addr) );
    if (!gv) return 0;
    else return GetDeclId(gv);
 
