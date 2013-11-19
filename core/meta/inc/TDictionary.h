@@ -45,6 +45,10 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_ESTLType
+#include "ESTLType.h"
+#endif
+
 // The following are opaque type and are never really declared
 // The specific implemenation of TInterpreter will cast the
 // value of pointer to this types to the correct type (possibly
@@ -165,7 +169,17 @@ public:
    static TDictionary* GetDictionary(const type_info &typeinfo);
 
    // Type of STL container (returned by IsSTLContainer).
-   enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
+   enum ESTLType {
+      kNone      = ROOT::kNotSTL,
+      kVector    = ROOT::kSTLvector,
+      kList      = ROOT::kSTLlist,
+      kDeque     = ROOT::kSTLdeque,
+      kMap       = ROOT::kSTLmap,
+      kMultimap  = ROOT::kSTLmultimap,
+      kSet       = ROOT::kSTLset,
+      kMultiset  = ROOT::kSTLmultiset,
+      kBitset    = ROOT::kSTLbitset
+   };
 
    typedef const void *DeclId_t;
    ClassDef(TDictionary,0)  //ABC defining interface to dictionary
