@@ -37,8 +37,16 @@ public:
                            const RooRealVar& scannedVariable,
                            double cl ) ;
 
+   HypoTestInverterResult( const HypoTestInverterResult& other, const char* name );
+
    // destructor
    virtual ~HypoTestInverterResult();
+
+   // operator =
+   HypoTestInverterResult& operator = (const HypoTestInverterResult& other);
+
+   // remove points that appear to have failed.
+   void ExclusionCleanup();
 
    // merge with the content of another HypoTestInverterResult object
    bool Add( const HypoTestInverterResult& otherResult );
@@ -94,6 +102,9 @@ public:
 
    // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
    virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
+
+   // set CLs threshold for exclusion cleanup function 
+   inline void SetCLsCleanupThreshold( Double_t th ) { fCLsCleanupThreshold = th; }
 
    // flag to switch between using CLsb (default) or CLs as confidence level
    void UseCLs( bool on = true ) { fUseCLs = on; }  
@@ -187,6 +198,8 @@ protected:
 
    double fLowerLimitError;
    double fUpperLimitError;
+
+   double fCLsCleanupThreshold;
 
    static double fgAsymptoticMaxSigma;  // max sigma value used to scan asymptotic expected p values 
 

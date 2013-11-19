@@ -51,6 +51,40 @@ SimpleInterval::SimpleInterval(const char* name) :
    // Default constructor
 }
 
+
+//____________________________________________________________________
+SimpleInterval::SimpleInterval(const SimpleInterval& other, const char* name) 
+ : ConfInterval(name)
+ , fParameters(other.fParameters)
+ , fLowerLimit(other.fLowerLimit)
+ , fUpperLimit(other.fUpperLimit)
+ , fConfidenceLevel(other.fConfidenceLevel)
+{
+  //fParameters.add( other.fParameters );
+}
+  
+
+//____________________________________________________________________
+SimpleInterval& 
+SimpleInterval::operator=(const SimpleInterval& other) 
+{
+  if (&other==this) {
+    return *this ;
+  } 
+
+  ConfInterval::operator = (other);
+
+  //fParameters      = other.fParameters;
+  fParameters.removeAll();
+  fParameters.add(other.fParameters);
+  fLowerLimit      = other.fLowerLimit;
+  fUpperLimit      = other.fUpperLimit;
+  fConfidenceLevel = other.fConfidenceLevel;
+
+  return *this ;  
+}
+
+
 //____________________________________________________________________
 SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl) :
    ConfInterval(name), fParameters(var), fLowerLimit(lower), fUpperLimit(upper), fConfidenceLevel(cl)

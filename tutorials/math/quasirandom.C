@@ -7,7 +7,7 @@
 #include "Math/Random.h"
 #include "TH2.h"
 #include "TCanvas.h"
-
+#include "TStopwatch.h"
 
 #include <iostream>
 
@@ -31,22 +31,30 @@ int quasirandom(int n = 10000) {
    // generate n random points
 
    double x[2];
+   TStopwatch w; w.Start();
    for (int i = 0; i < n; ++i)  { 
       r0.RndmArray(2,x);
       h0->Fill(x[0],x[1]);      
    }
+   std::cout << "Time for gRandom ";
+   w.Print();
 
-
+   w.Start();
    for (int i = 0; i < n; ++i)  { 
       r1.Next(x); 
       h1->Fill(x[0],x[1]);      
    }
+   std::cout << "Time for Sobol ";
+   w.Print();
 
 
+   w.Start();
    for (int i = 0; i < n; ++i)  {
       r2.Next(x); 
       h2->Fill(x[0],x[1]);      
    }
+   std::cout << "Time for Niederreiter ";
+   w.Print();
 
 
    TCanvas * c1 = new TCanvas("c1","Random sequence",600,1200); 

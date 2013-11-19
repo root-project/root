@@ -58,11 +58,75 @@ HypoTestInverterResult::HypoTestInverterResult(const char * name ) :
    fFittedUpperLimit(false),
    fInterpolOption(kLinear),
    fLowerLimitError(-1),
-   fUpperLimitError(-1)
+   fUpperLimitError(-1),
+   fCLsCleanupThreshold(0.005)
 {
   // default constructor
    fLowerLimit = TMath::QuietNaN();
    fUpperLimit = TMath::QuietNaN();
+}
+
+
+HypoTestInverterResult::HypoTestInverterResult( const HypoTestInverterResult& other, const char * name ) :
+   SimpleInterval(other,name),
+   fUseCLs(other.fUseCLs),
+   fIsTwoSided(other.fIsTwoSided),
+   fInterpolateLowerLimit(other.fInterpolateLowerLimit),
+   fInterpolateUpperLimit(other.fInterpolateUpperLimit),
+   fFittedLowerLimit(other.fFittedLowerLimit),
+   fFittedUpperLimit(other.fFittedUpperLimit),
+   fInterpolOption(other.fInterpolOption),
+   fLowerLimitError(other.fLowerLimitError),
+   fUpperLimitError(other.fUpperLimitError),
+   fCLsCleanupThreshold(other.fCLsCleanupThreshold)
+{
+   // copy constructor
+   fLowerLimit = TMath::QuietNaN();
+   fUpperLimit = TMath::QuietNaN();
+   int nOther = other.ArraySize();
+
+   fXValues = other.fXValues;
+   for (int i = 0; i < nOther; ++i) 
+     fYObjects.Add( other.fYObjects.At(i)->Clone() );
+   for (int i = 0; i <  fExpPValues.GetSize() ; ++i)
+     fExpPValues.Add( other.fExpPValues.At(i)->Clone() );   
+}
+
+
+HypoTestInverterResult&
+HypoTestInverterResult::operator=(const HypoTestInverterResult& other)
+{
+  if (&other==this) {
+    return *this ;
+  } 
+
+  SimpleInterval::operator = (other);
+  fLowerLimit = other.fLowerLimit;
+  fUpperLimit = other.fUpperLimit;
+  fUseCLs = other.fUseCLs;
+  fIsTwoSided = other.fIsTwoSided;
+  fInterpolateLowerLimit = other.fInterpolateLowerLimit;
+  fInterpolateUpperLimit = other.fInterpolateUpperLimit;
+  fFittedLowerLimit = other.fFittedLowerLimit;
+  fFittedUpperLimit = other.fFittedUpperLimit;
+  fInterpolOption = other.fInterpolOption;
+  fLowerLimitError = other.fLowerLimitError;
+  fUpperLimitError = other.fUpperLimitError;
+  fCLsCleanupThreshold = other.fCLsCleanupThreshold;
+
+  int nOther = other.ArraySize();
+  fXValues = other.fXValues;
+
+  fYObjects.RemoveAll();
+  for (int i=0; i < nOther; ++i) {
+    fYObjects.Add( other.fYObjects.At(i)->Clone() );
+  }
+  fExpPValues.RemoveAll();
+  for (int i=0; i <  fExpPValues.GetSize() ; ++i) {
+    fExpPValues.Add( other.fExpPValues.At(i)->Clone() );   
+  }
+  
+  return *this;
 }
 
 
@@ -78,7 +142,8 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    fFittedUpperLimit(false),
    fInterpolOption(kLinear),
    fLowerLimitError(-1),
-   fUpperLimitError(-1)
+   fUpperLimitError(-1),
+   fCLsCleanupThreshold(0.005)
 {
    // constructor 
    fYObjects.SetOwner();
@@ -88,6 +153,121 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    fParameters.removeAll();
    fParameters.takeOwnership();
    fParameters.addOwned(*((RooRealVar *) scannedVariable.clone(scannedVariable.GetName()) ));
+}
+
+
+void
+HypoTestInverterResult::ExclusionCleanup()
+{
+  const int nEntries  = ArraySize();
+
+  // initialization
+  double nsig1(1.0);
+  double nsig2(2.0);
+  double p[5]; 
+  double q[5];
+  std::vector<double> qv;
+  qv.resize(11,-1.0);
+
+  p[0] = ROOT::Math::normal_cdf(-nsig2);
+  p[1] = ROOT::Math::normal_cdf(-nsig1);
+  p[2] = 0.5;
+  p[3] = ROOT::Math::normal_cdf(nsig1);
+  p[4] = ROOT::Math::normal_cdf(nsig2);
+
+  bool resultIsAsymptotic(false);
+  if (nEntries>=1) {
+    HypoTestResult* r = dynamic_cast<HypoTestResult *> ( GetResult(0) );
+    assert(r!=0);
+    if ( !r->GetNullDistribution() && !r->GetAltDistribution() ) { 
+      resultIsAsymptotic = true;
+    }
+  }
+
+  double CLsobsprev(1.0);
+  std::vector<double>::iterator itr = fXValues.begin();
+
+  for (; itr!=fXValues.end();) {
+
+    double x = (*itr);
+    int i = FindIndex(x);
+    //HypoTestResult* oneresult = GetResult(i);
+
+    SamplingDistribution * s = GetExpectedPValueDist(i);
+    if (!s) break; 
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    const std::vector<double> & values = s->GetSamplingDistribution();
+    
+    /// expected p-values
+    // special case for asymptotic results (cannot use TMath::quantile in that case)
+    if (resultIsAsymptotic) { 
+      double maxSigma = 5; // == HypoTestInverterResult::fgAsymptoticMaxSigma; // MB: HACK
+      double dsig = 2.*maxSigma / (values.size() -1) ;         
+      int  i0 = (int) TMath::Floor ( ( -nsig2 + maxSigma )/dsig + 0.5 );
+      int  i1 = (int) TMath::Floor ( ( -nsig1 + maxSigma )/dsig + 0.5 );
+      int  i2 = (int) TMath::Floor ( ( maxSigma )/dsig + 0.5 );
+      int  i3 = (int) TMath::Floor ( ( nsig1 + maxSigma )/dsig + 0.5 );
+      int  i4 = (int) TMath::Floor ( ( nsig2 + maxSigma )/dsig + 0.5 );
+      //
+      q[0] = values[i0];
+      q[1] = values[i1];
+      q[2] = values[i2];
+      q[3] = values[i3];
+      q[4] = values[i4];
+    } else { 
+      double * z = const_cast<double *>( &values[0] ); // need to change TMath::Quantiles
+      TMath::Quantiles(values.size(), 5, z, q, p, false);
+    }
+    
+    delete s;
+
+    /// store useful quantities for reuse later ...
+    /// http://root.cern.ch/root/html532/src/RooStats__HypoTestInverterPlot.cxx.html#197
+    for (int j=0; j<5; ++j) { qv[j]=q[j]; }
+    qv[5]  = CLs(i) ; //
+    qv[6]  = CLsError(i) ; //
+    qv[7]  = CLb(i) ; //
+    qv[8]  = CLbError(i) ; //
+    qv[9]  = CLsplusb(i) ; //
+    qv[10] = CLsplusbError(i) ; //
+    double CLsobs = qv[5];
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    bool removeThisPoint(false);
+
+    // 1. CLs should drop, else skip this point
+    if (!removeThisPoint && resultIsAsymptotic && i>=1 && CLsobs>CLsobsprev) {
+      //StatToolsLogger << kERROR << "Asymptotic. CLs not dropping: " << CLsobs << ". Remove this point." << GEndl;
+      removeThisPoint = true; 
+    } else { CLsobsprev = CLsobs; }
+      
+    // 2. CLs should not spike, else skip this point
+    if (!removeThisPoint && i>=1 && CLsobs>=0.9999) {
+      //StatToolsLogger << kERROR << "CLs spiking at 1.0: " << CLsobs << ". Remove this point." << GEndl;      
+      removeThisPoint = true; 
+    }
+    // 3. Not interested in CLs values that become too low.
+    if (!removeThisPoint && i>=1 && qv[4]<fCLsCleanupThreshold) { removeThisPoint = true; }
+
+    // to remove or not to remove
+    if (removeThisPoint) {
+      itr = fXValues.erase(itr); // returned itr has been updated.     
+      fYObjects.RemoveAt(i);
+      fExpPValues.RemoveAt(i);
+      continue;
+    } else { // keep
+      CLsobsprev = CLsobs;
+      itr++;
+    }
+  }
+
+  // after cleanup, reset existing limits
+  fFittedUpperLimit = false; 
+  fFittedLowerLimit = false;
+  FindInterpolatedLimit(1-ConfidenceLevel(),true);
 }
 
 

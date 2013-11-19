@@ -27,6 +27,10 @@ namespace RooStats {
     // default constructors
     explicit SimpleInterval(const char* name = 0);
 
+    SimpleInterval(const SimpleInterval& other, const char* name);
+
+    SimpleInterval& operator=(const SimpleInterval& other) ;
+
     // constructor from name, the Parameter of interest and lower/upper bound values 
     SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl);
 
