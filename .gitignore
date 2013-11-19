@@ -198,6 +198,7 @@ AutoDict_*.cxx
 
 # /root/io/customCollection/
 /root/io/customCollection/coll.root
+/root/io/customCollection/tcoll.root
 
 # /root/io/customStreamer/
 
