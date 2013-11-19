@@ -141,21 +141,8 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
          dsi.PrintCorrelationMatrix( className );
       }
       Log() << kINFO << " " << Endl;
-   } else {
-      Log() << kERROR << "There is a problem with one of your training (or testing) data sets" << Endl;
-      Log() << kERROR << "  not having (enough) events. " << Endl;
-      Log() << kERROR << "  please check .. from the name, you might be able to figure out which " << Endl;
-      Log() << kERROR << "  classifier (or category) has not gotten any or too little events" << Endl;
-      Log() << kERROR << "  The program will stop here .. as w/o data for training testing things" << Endl;
-      Log() << kERROR << "  will get very messy later otherwise .. better fix that now! " << Endl;
+   } 
 
-      Log() << kWARNING << " Number of Test Signal: " <<   ds->GetNEvtSigTest() << Endl;
-      Log() << kWARNING << " Number of Test Backgr: " <<   ds->GetNEvtBkgdTest() << Endl;
-      Log() << kWARNING << " Number of Train Signal: " <<   ds->GetNEvtSigTrain() << Endl;
-      Log() << kWARNING << " Nnumber of Train Backgr:" <<   ds->GetNEvtBkgdTrain() << Endl;
-
-      Log() << kFATAL << "Dataset " << std::string(dsi.GetName()) << " does not have training/test events, I better stop here and let you fix that one first " << Endl;
-   }
    return ds;
 }
 
@@ -1367,6 +1354,30 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    ds->SetEventCollection(trainingEventVector, Types::kTraining );
    Log() << kINFO << "Create internal testing tree" << Endl;
    ds->SetEventCollection(testingEventVector,  Types::kTesting  );
+
+   
+      
+   if (ds->GetNEvtSigTest() < 1 || ds->GetNEvtBkgdTest() < 1 || ds->GetNEvtSigTrain() < 1 || ds->GetNEvtBkgdTrain() < 1 ){
+      Log() << kERROR << "There is a problem with one of your training (or testing) data sets" << Endl;
+      Log() << kERROR << "  not having (enough) events. " << Endl;
+      Log() << kERROR << "  please check .. from the name, you might be able to figure out which " << Endl;
+      Log() << kERROR << "  classifier (or category) has not gotten any or too little events" << Endl;
+      Log() << kERROR << "  The program will stop here .. as w/o data for training testing things" << Endl;
+      Log() << kERROR << "  will get very messy later otherwise .. better fix that now! " << Endl;
+
+      Log() << kWARNING << " Number of Test Signal: " <<   ds->GetNEvtSigTest() << Endl;
+      Log() << kWARNING << " Number of Test Backgr: " <<   ds->GetNEvtBkgdTest() << Endl;
+      Log() << kWARNING << " Number of Train Signal: " <<   ds->GetNEvtSigTrain() << Endl;
+      Log() << kWARNING << " Nnumber of Train Backgr:" <<   ds->GetNEvtBkgdTrain() << Endl;
+
+      if (ds->GetNTrainingEvents() < 1){ 
+         Log() << kFATAL << "Dataset " << std::string(dsi.GetName()) << " does not have any training events, I better stop here and let you fix that one first " << Endl;
+      }
+
+      if (ds->GetNTestEvents() < 1) {
+         Log() << kERROR << "Dataset " << std::string(dsi.GetName()) << " does not have any testing events, guess that will cause problems later..but for now, I continue " << Endl;
+      }
+   }
 
 
    return ds;
