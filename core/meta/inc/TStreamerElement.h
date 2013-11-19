@@ -25,6 +25,10 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_ESTLType
+#include "ESTLType.h"
+#endif
+
 class TMethodCall;
 class TClass;
 class TStreamerBasicType;
@@ -54,12 +58,17 @@ protected:
 
 public:
 
-   enum ESTLtype { kSTL       = 300 /* TVirtualStreamerInfo::kSTL */, 
-                   kSTLstring = 365 /* TVirtualStreamerInfo::kSTLstring */,   
-                   kSTLvector =  1,
-                   kSTLlist   =  2,  kSTLdeque   =  3,   kSTLmap      = 4,
-                   kSTLset    =  5,  kSTLmultimap=  6,   kSTLmultiset = 7, 
-                   kSTLbitset =  8
+   enum ESTLtype {
+      kSTL         = ROOT::kSTLany,
+      kSTLstring   = ROOT::kSTLstring,
+      kSTLvector   = ROOT::kSTLvector,
+      kSTLlist     = ROOT::kSTLlist,
+      kSTLdeque    = ROOT::kSTLdeque,
+      kSTLmap      = ROOT::kSTLmap,
+      kSTLmultimap = ROOT::kSTLmultimap,
+      kSTLset      = ROOT::kSTLset,
+      kSTLmultiset = ROOT::kSTLmultiset,
+      kSTLbitset   = ROOT::kSTLbitset
    };
    // TStreamerElement status bits
    enum {

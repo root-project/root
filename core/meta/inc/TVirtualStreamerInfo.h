@@ -25,6 +25,10 @@
 #include "TNamed.h"
 #endif
 
+#ifndef ROOT_ESTLType
+#include "ESTLType.h"
+#endif
+
 class TFile;
 class TClass;
 class TObjArray;
@@ -70,7 +74,8 @@ public:
       kSTLp        = 71,
       kSkip        = 100, kSkipL = 120, kSkipP   = 140,
       kConv        = 200, kConvL = 220, kConvP   = 240,
-      kSTL         = 300, kSTLstring = 365,
+      kSTL         = ROOT::kSTLany /* 300 */,
+      kSTLstring   = ROOT::kSTLstring /* 365 */,
       kStreamer    = 500, kStreamLoop = 501,
       kCache       = 600,  // Cache the value in memory than is not part of the object but is accessible via a SchemaRule
       kArtificial  = 1000, 

@@ -57,6 +57,10 @@ typedef void MethodArgInfo_t;
 typedef void TypeInfo_t;
 typedef void TypedefInfo_t;
 
+#ifndef ROOT_ESTLType
+#include "ESTLType.h"
+#endif
+
 enum EProperty {
    kIsClass        = G__BIT_ISCLASS,
    kIsStruct       = G__BIT_ISSTRUCT,
@@ -95,7 +99,17 @@ public:
    static TDictionary* GetDictionary(const type_info &typeinfo);
 
    // Type of STL container (returned by IsSTLContainer).
-   enum ESTLType {kNone=0, kVector=1, kList, kDeque, kMap, kMultimap, kSet, kMultiset};
+   enum ESTLType {
+      kNone      = ROOT::kNotSTL,
+      kVector    = ROOT::kSTLvector,
+      kList      = ROOT::kSTLlist,
+      kDeque     = ROOT::kSTLdeque,
+      kMap       = ROOT::kSTLmap,
+      kMultimap  = ROOT::kSTLmultimap,
+      kSet       = ROOT::kSTLset,
+      kMultiset  = ROOT::kSTLmultiset,
+      kBitset    = ROOT::kSTLbitset
+   };
 
    ClassDef(TDictionary,0)  //ABC defining interface to dictionary
 };

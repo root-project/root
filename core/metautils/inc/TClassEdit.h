@@ -17,6 +17,10 @@
 #include <string>
 #include <vector>
 
+#ifndef ROOT_ESTLType
+#include "ESTLType.h"
+#endif
+
 #ifdef R__OLDHPACC
 namespace std {
    using ::string;
@@ -46,15 +50,15 @@ namespace TClassEdit {
    };
 
    enum ESTLType {
-      kNotSTL   = 0,
-      kVector   = 1,
-      kList     = 2,
-      kDeque    = 3,
-      kMap      = 4,
-      kMultiMap = 5,
-      kSet      = 6,
-      kMultiSet = 7,
-      kBitSet   = 8,
+      kNotSTL   = ROOT::kNotSTL,
+      kVector   = ROOT::kSTLvector,
+      kList     = ROOT::kSTLlist,
+      kDeque    = ROOT::kSTLdeque,
+      kMap      = ROOT::kSTLmap,
+      kMultiMap = ROOT::kSTLmultimap,
+      kSet      = ROOT::kSTLset,
+      kMultiSet = ROOT::kSTLmultiset,
+      kBitSet   = ROOT::kSTLbitset,
       kEnd      = 9
    };
 
