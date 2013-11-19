@@ -112,6 +112,15 @@ namespace Math {
       return (status == 0);
    }
 
+   bool GSLQuasiRandomEngine::Skip(unsigned int n) const { 
+      // throw away the next n random numbers
+      std::vector<double> xtmp(fQRng->Dimension() );
+      int status = 0;
+      for (unsigned int i = 0; i < n; ++i ) { 
+         status |= gsl_qrng_get(fQRng->Rng(), &xtmp[0] ); 
+      }
+      return status == 0;
+   }
 
    bool GSLQuasiRandomEngine::GenerateArray(double * begin, double * end )  const { 
       // generate array of randoms betweeen 0 and 1. 0 is excluded 

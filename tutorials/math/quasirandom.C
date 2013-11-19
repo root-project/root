@@ -13,7 +13,7 @@
 
 using namespace ROOT::Math;
 
-int quasirandom(int n = 10000) { 
+int quasirandom(int n = 10000, int skip = 0) { 
 
 
    TH2D * h0 = new TH2D("h0","Pseudo-random Sequence",200,0,1,200,0,1);
@@ -40,6 +40,7 @@ int quasirandom(int n = 10000) {
    w.Print();
 
    w.Start();
+   if( skip>0) r1.Skip(skip);
    for (int i = 0; i < n; ++i)  { 
       r1.Next(x); 
       h1->Fill(x[0],x[1]);      
@@ -49,6 +50,7 @@ int quasirandom(int n = 10000) {
 
 
    w.Start();
+   if( skip>0) r2.Skip(skip);
    for (int i = 0; i < n; ++i)  {
       r2.Next(x); 
       h2->Fill(x[0],x[1]);      
