@@ -1804,8 +1804,8 @@ const char *TStreamerSTL::GetInclude() const
    else if (fSTLtype == kSTLdeque)    gIncludeName.Form("<%s>","deque");
    else if (fSTLtype == kSTLmap)      gIncludeName.Form("<%s>","map");
    else if (fSTLtype == kSTLset)      gIncludeName.Form("<%s>","set");
-   else if (fSTLtype == kSTLmultimap) gIncludeName.Form("<%s>","multimap");
-   else if (fSTLtype == kSTLmultiset) gIncludeName.Form("<%s>","multiset");
+   else if (fSTLtype == kSTLmultimap) gIncludeName.Form("<%s>","map");
+   else if (fSTLtype == kSTLmultiset) gIncludeName.Form("<%s>","set");
    else if (fSTLtype == kSTLbitset)   gIncludeName.Form("<%s>","bitset");
    return gIncludeName;
 }
