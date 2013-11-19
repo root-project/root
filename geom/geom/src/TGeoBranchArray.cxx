@@ -44,6 +44,7 @@ TGeoBranchArray::TGeoBranchArray(Int_t level)
 // Constructor. Alocates the array with a size given by level.
    fMaxLevel = (fLevel+1 > 10) ? fLevel+1:10;
    fArray = new TGeoNode*[fMaxLevel];
+   fMatrix = new TGeoHMatrix();
 }
 
 //______________________________________________________________________________
@@ -92,7 +93,7 @@ TGeoBranchArray& TGeoBranchArray::operator=(const TGeoBranchArray& other)
    fLevel = other.fLevel;
    if (fLevel+1) memcpy(fArray, other.fArray, (fLevel+1)*sizeof(TGeoNode*));
    if (other.fMatrix) {
-      fMatrix = new TGeoHMatrix();
+      if (!fMatrix) fMatrix = new TGeoHMatrix();
       fMatrix->CopyFrom(other.fMatrix);
    }
    fClient = other.fClient;
