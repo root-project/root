@@ -103,7 +103,10 @@ namespace Math {
       */
       bool operator() (double * x) const;  
 
-
+      /**
+         Skip the next n random numbers
+       */
+      bool Skip(unsigned int n) const;    
 
       /**
          Generate an array of quasi random numbers 

@@ -44,113 +44,119 @@ namespace Math {
 
 
 //_____________________________________________________________________________________
-  /**
-     User class for MathMore random numbers template on the Engine type. 
-     The API of this class followed that of the class ROOT::Math::Random
-     It must be implemented using as Engine one of the derived classes of 
-     ROOT::Math::GSLQuasiRandomEngine, like ROOT::Math::GSLQrngSobol
+/**
+   User class for MathMore random numbers template on the Engine type. 
+   The API of this class followed that of the class ROOT::Math::Random
+   It must be implemented using as Engine one of the derived classes of 
+   ROOT::Math::GSLQuasiRandomEngine, like ROOT::Math::GSLQrngSobol
 
-     @ingroup Random 
+   @ingroup Random 
 
-   */ 
-  template < class Engine> 
-  class QuasiRandom { 
+*/ 
+template < class Engine> 
+class QuasiRandom { 
 
-  public: 
+public: 
 
 
-    /**
-       Create a QuasiRandom generator. Use default engine constructor. 
-       Engine will  be initialized via Initialize() function in order to 
-       allocate resources
-     */
-    QuasiRandom(unsigned int dimension = 1) {
+   /**
+      Create a QuasiRandom generator. Use default engine constructor. 
+      Engine will  be initialized via Initialize() function in order to 
+      allocate resources
+   */
+   QuasiRandom(unsigned int dimension = 1) {
       fEngine.Initialize(dimension); 
-    }  
+   }  
 
 
-    /**
-       Create a QuasiRandom generator based on a provided generic engine.
-       Engine will  be initialized via Initialize() function in order to 
-       allocate resources
-     */
-     explicit QuasiRandom(const Engine & e, unsigned int dimension = 1) : fEngine(e) {
+   /**
+      Create a QuasiRandom generator based on a provided generic engine.
+      Engine will  be initialized via Initialize() function in order to 
+      allocate resources
+   */
+   explicit QuasiRandom(const Engine & e, unsigned int dimension = 1) : fEngine(e) {
       fEngine.Initialize(dimension); 
-    } 
+   } 
 
-    /**
-       Destructor: call Terminate() function of engine to free any 
-       allocated resource
-     */
-    ~QuasiRandom() { 
+   /**
+      Destructor: call Terminate() function of engine to free any 
+      allocated resource
+   */
+   ~QuasiRandom() { 
       fEngine.Terminate(); 
-    }
+   }
 
-    /**
-       Generate next quasi random numbers points
-     */
-    bool Next(double * x) { 
+   /**
+      Generate next quasi random numbers points
+   */
+   bool Next(double * x) { 
       return fEngine(x); 
-    }
+   }
 
-    /**
-       Generate next quasi random numbers point (1 - dimension)
-     */
-    double Next() { 
+   /**
+      Generate next quasi random numbers point (1 - dimension)
+   */
+   double Next() { 
       return fEngine(); 
-    }
+   }
 
-    /** 
+   /** 
        Generate quasi random numbers between ]0,1[
        0 and 1 are excluded 
        Function to be compatible with  ROOT TRandom compatibility 
-     */  
+   */  
    double Rndm() { 
       return fEngine(); 
-    }
+   }
 
-    /** 
+   /**
+      skip the next n number and jumb directly to the current state + n
+   */
+   bool Skip(unsigned int n) {
+      return fEngine.Skip(n);
+   }
+   /** 
        Generate an array of random numbers between ]0,1[
        Function to preserve ROOT Trandom compatibility 
        The array will be filled as   x1,y1,z1,....x2,y2,z2,...
-     */ 
-    bool RndmArray(int n, double * array) { 
-       return fEngine.GenerateArray(array, array+n*NDim());
-    }
-
-    /**
-       Return the type (name) of the used generator 
-     */
-    std::string Type() const { 
+   */ 
+   bool RndmArray(int n, double * array) { 
+      return fEngine.GenerateArray(array, array+n*NDim());
+   }
+   
+   /**
+      Return the type (name) of the used generator 
+   */
+   std::string Type() const { 
       return fEngine.Name();
-    }
-
-    /**
-       Return the size of the generator state 
-     */
-    unsigned int EngineSize() const { 
+   }
+   
+   /**
+      Return the size of the generator state 
+   */
+   unsigned int EngineSize() const { 
       return fEngine.Size();
-    }
-
-    /**
-       Return the dimension of the generator  
-     */
-    unsigned int NDim() const { 
+   }
+   
+   /**
+      Return the dimension of the generator  
+   */
+   unsigned int NDim() const { 
       return fEngine.NDim();
-    }
+   }
 
-    /**
-       Return the name of the generator  
-     */
-    std::string Name() const { 
-       return fEngine.Name();
-    }
+   /**
+      Return the name of the generator  
+   */
+   std::string Name() const { 
+      return fEngine.Name();
+   }
 
-  private: 
+private: 
 
-    Engine fEngine; 
+   Engine fEngine; 
 
-  }; 
+}; 
 
 
 
