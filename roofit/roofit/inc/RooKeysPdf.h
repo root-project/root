@@ -53,9 +53,10 @@ protected:
   Double_t evaluate() const;
 
 private:
+  // how far you have to go out in a Gaussian until it is smaller than the
+  // machine precision
+  static const Double_t _nSigma; //!
   
-  Double_t evaluateFull(Double_t x) const;
-
   Int_t _nEvents;
   Double_t *_dataPts;  //[_nEvents]
   Double_t *_dataWgts; //[_nEvents]
