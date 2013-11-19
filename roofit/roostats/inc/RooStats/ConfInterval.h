@@ -46,6 +46,13 @@ namespace RooStats {
 
       // destructor
       virtual ~ConfInterval() {}
+
+      // operator=
+      ConfInterval& operator=(const ConfInterval& other) {
+	if (&other==this) { return *this; }
+	TNamed::operator=(other);
+	return *this;
+      }
     
       // check if given point is in the interval
       virtual Bool_t IsInInterval(const RooArgSet&) const = 0; 
