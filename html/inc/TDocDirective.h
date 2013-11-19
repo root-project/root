@@ -102,6 +102,7 @@ private:
    Bool_t  fIsFilename;    // whether the directive is a failename to be executed
 
    virtual void AddParameter(const TString& name, const char* value = 0);
+   TString CreateSubprocessInputFile();
 
 public:
    TDocMacroDirective(): 
@@ -114,6 +115,8 @@ public:
    virtual Bool_t GetResult(TString& result);
    // Delete output for the parser's current class or module.
    virtual void DeleteOutput() const { DeleteOutputFiles(".gif"); }
+
+   static void SubProcess(const TString& what, const TString& out);
 
    ClassDef(TDocMacroDirective, 0); // Handler for "Begin_Macro"/"End_Macro" for code that is executed and that can generate an image for documentation
 };

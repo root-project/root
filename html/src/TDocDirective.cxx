@@ -5,6 +5,7 @@
 #include "TDocInfo.h"
 #include "TDocOutput.h"
 #include "TDocParser.h"
+#include "TError.h"
 #include "THtml.h"
 #include "TInterpreter.h"
 #include "TLatex.h"
@@ -250,7 +251,64 @@ TDocMacroDirective::~TDocMacroDirective()
 
 //______________________________________________________________________________
 void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
-   
+   Int_t error = TInterpreter::kNoError;
+   Long_t ret = gROOT->ProcessLine(what, &error);
+   Int_t sleepCycles = 50; // 50 = 5 seconds
+   while (error == TInterpreter::kProcessing && --sleepCycles > 0)
+      gSystem->Sleep(100);
+
+   gSystem->ProcessEvents(); // in case ret needs to handle some events first
+
+   if (error != TInterpreter::kNoError) {
+      ::Error("TDocMacroDirective::HandleDirective_Macro",
+              "Error processing macro for %s!", out.Data());
+      return;
+   }
+   if (!ret) {
+      return;
+   }
+
+   // Something with a vtable
+   const TObject* objRet = (const TObject*)ret;
+   try {
+      typeid(*objRet).name(); // needed to test whether ret is indeed an object with a vtable!
+      objRet = dynamic_cast<const TObject*>(objRet);
+   }
+   catch (...) {
+      objRet = 0;
+   }
+
+   if (!objRet) {
+      return;
+   }
+
+   if (gDebug > 3)
+      ::Info("TDocMacroDirective::HandleDirective_Macro",
+             "Saving returned %s to file %s.",
+             objRet->IsA()->GetName(), out.Data());
+
+   if (!gROOT->IsBatch()) {
+      // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
+      gSystem->Sleep(1000);
+      gVirtualX->Update(0);
+      gVirtualX->Update(1);
+   }
+
+   gSystem->ProcessEvents();
+   if (!gROOT->IsBatch()) {
+      gVirtualX->Update(0);
+      gVirtualX->Update(1);
+   }
+
+   objRet->SaveAs(out);
+   gSystem->ProcessEvents(); // SaveAs triggers an event
+
+#ifdef R__BEPAEPSTLICHERALSDERPAPST
+   // ensure objRet is not e.g. the TGMainFrame of a new TCanvas: require padSave == gPad
+   if (objRet != gPad && padSave == gPad)
+      delete objRet;
+   }
+#endif
 }
 
 //______________________________________________________________________________
@@ -275,6 +333,89 @@ void TDocMacroDirective::AddLine(const TSubString& line)
    fMacro->AddLine(sLine);
    fIsFilename &= !sLine.Contains('{');
 }
+
+//______________________________________________________________________________
+TString TDocMacroDirective::CreateSubprocessInputFile() {
+   // Create the input file for SubProcess().
+
+   if (!fIsFilename) {
+      TString fileSysName;
+      GetName(fileSysName);
+      gSystem->PrependPathName(gSystem->TempDirectory(), fileSysName);
+      fMacro->Write(fileSysName);
+      return fileSysName;
+   }
+
+   // We have a filename; find it and build the invocation. 
+   TString filename;
+   TIter iLine(fMacro->GetListOfLines());
+   while (filename.Length() == 0)
+      filename = ((TObjString*)iLine())->String().Strip(TString::kBoth);
+
+   TString macroPath;
+   TString modulename;
+   if (GetHtml() && GetDocParser()) {
+      if (GetDocParser()->GetCurrentClass())
+         GetHtml()->GetModuleNameForClass(modulename, GetDocParser()->GetCurrentClass());
+      else GetDocParser()->GetCurrentModule(modulename);
+   }
+   if (modulename.Length()) {
+      GetHtml()->GetModuleMacroPath(modulename, macroPath);
+   } else macroPath = gSystem->pwd();
+
+   const char* pathDelimiter = ":"; // use ":" even on windows
+   TObjArray* arrDirs(macroPath.Tokenize(pathDelimiter));
+   TIter iDir(arrDirs);
+   TObjString* osDir = 0;
+   macroPath = "";
+   TString filenameDirPart(gSystem->DirName(filename));
+   filenameDirPart.Prepend('/'); // as dir delimiter, not as root dir
+   while ((osDir = (TObjString*)iDir())) {
+      if (osDir->String().EndsWith("\\"))
+         osDir->String().Remove(osDir->String().Length() - 1);
+      osDir->String() += filenameDirPart;
+      macroPath += osDir->String() + pathDelimiter;
+   }
+
+   TString plusplus;
+   while (filename.EndsWith("+")) {
+      plusplus += '+';
+      filename.Remove(filename.Length() - 1);
+   }
+
+   TString params;
+   if (filename.EndsWith(")")) {
+      Ssiz_t posOpen = filename.Last('(');
+      if (posOpen != kNPOS) {
+         params = filename(posOpen, filename.Length());
+         filename.Remove(posOpen, filename.Length());
+      }
+   }
+
+   TString fileSysName(gSystem->BaseName(filename));
+   if (!gSystem->FindFile(macroPath, fileSysName)) {
+      Error("GetResult", "Cannot find macro '%s' in path '%s'!", 
+            gSystem->BaseName(filename), macroPath.Data());
+      return "";
+   }
+   fileSysName += params;
+   fileSysName += plusplus;
+      
+
+   if (fShowSource) {
+      // copy macro into fMacro - before running it, in case the macro blocks its file
+      std::ifstream ifMacro(fileSysName);
+      fMacro->GetListOfLines()->Delete();
+      TString line;
+      while (ifMacro) {
+         if (!line.ReadLine(ifMacro, kFALSE) || ifMacro.eof())
+            break;
+         fMacro->AddLine(line);
+      }
+   }
+   return fileSysName;
+}
+
 //______________________________________________________________________________
 Bool_t TDocMacroDirective::GetResult(TString& result)
 {
@@ -309,95 +450,42 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
       }
    }
 
-   Long_t ret = 0;
-   if (fIsFilename) {
-      TString filename;
-      TIter iLine(fMacro->GetListOfLines());
-      while (filename.Length() == 0)
-         filename = ((TObjString*)iLine())->String().Strip(TString::kBoth);
-
-      TString macroPath;
-      TString modulename;
-      if (GetHtml() && GetDocParser()) {
-         if (GetDocParser()->GetCurrentClass())
-            GetHtml()->GetModuleNameForClass(modulename, GetDocParser()->GetCurrentClass());
-         else GetDocParser()->GetCurrentModule(modulename);
-      }
-      if (modulename.Length()) {
-         GetHtml()->GetModuleMacroPath(modulename, macroPath);
-      } else macroPath = gSystem->pwd();
-
-      const char* pathDelimiter = ":"; // use ":" even on windows
-      TObjArray* arrDirs(macroPath.Tokenize(pathDelimiter));
-      TIter iDir(arrDirs);
-      TObjString* osDir = 0;
-      macroPath = "";
-      TString filenameDirPart(gSystem->DirName(filename));
-      filenameDirPart.Prepend('/'); // as dir delimiter, not as root dir
-      while ((osDir = (TObjString*)iDir())) {
-         if (osDir->String().EndsWith("\\"))
-            osDir->String().Remove(osDir->String().Length() - 1);
-         osDir->String() += filenameDirPart;
-         macroPath += osDir->String() + pathDelimiter;
-      }
-
-      TString plusplus;
-      while (filename.EndsWith("+")) {
-         plusplus += '+';
-         filename.Remove(filename.Length() - 1);
-      }
-
-      TString params;
-      if (filename.EndsWith(")")) {
-         Ssiz_t posOpen = filename.Last('(');
-         if (posOpen != kNPOS) {
-            params = filename(posOpen, filename.Length());
-            filename.Remove(posOpen, filename.Length());
-         }
-      }
-
-      TString fileSysName(gSystem->BaseName(filename));
-      if (!gSystem->FindFile(macroPath, fileSysName)) {
-         Error("GetResult", "Cannot find macro '%s' in path '%s'!", 
-               gSystem->BaseName(filename), macroPath.Data());
-         result = "";
-         return kFALSE;
-      }
-
-      if (fShowSource) {
-         // copy macro into fMacro - before running it, in case the macro blocks its file
-         std::ifstream ifMacro(fileSysName);
-         fMacro->GetListOfLines()->Delete();
-         TString line;
-         while (ifMacro) {
-            if (!line.ReadLine(ifMacro, kFALSE) || ifMacro.eof())
-               break;
-            fMacro->AddLine(line);
-         }
-      }
-
-      fileSysName.Prepend(".x ");
-      fileSysName += params;
-      fileSysName += plusplus;
-      fileSysName.ReplaceAll("\\", "\\\\");
-      fileSysName.ReplaceAll("\"", "\\\"");
-      TString invoc("root.exe -l ");
-      if (wantBatch) {
-         invoc += "-b ";
-      }
-      invoc += "-E 'TDocMacroDirective::SubProcess(\""
-         + fileSysName + "\",\"" + outfilename + "\");'";
-      Int_t exitCode = gSystem->Exec(invoc.Data());
-
-   } else {
-      fileSysName = gSystem->TempDirectory();
-      fileSysName += '/';
-      TString directiveFilename;
-      GetName(directiveFilename);
-      fileSysName += directiveFilename;
-      ret = fMacro->Exec(0, &error);
+   TString outFileName;
+   {
+      GetName(outFileName);
+      GetDocOutput()->NameSpace2FileName(outFileName);
+      outFileName += ".gif";
+      outFileName.ReplaceAll(" ", "_");
+      gSystem->PrependPathName(GetOutputDir(), outFileName);
    }
-   ret = gROOT->ProcessLine(fileSysName, &error);
+
+   TString subProcInputFile = CreateSubprocessInputFile();
+   subProcInputFile.ReplaceAll("\\", "\\\\");
+   subProcInputFile.ReplaceAll("\"", "\\\"");
+   TString invoc("root.exe -l ");
+   if (wantBatch) {
+      invoc += "-b ";
+   }
+   invoc += "-E 'TDocMacroDirective::SubProcess(\""
+      + subProcInputFile + "\",\"" + outFileName + "\");'";
+   gSystem->Unlink(outFileName);
+   Int_t exitCode = gSystem->Exec(invoc.Data());
+
+   if (exitCode && gDebug > 0) {
+      Info("GetResult()", "Subprocess exited with status %d\n", exitCode);
+   } else {
+      gSystem->Unlink(subProcInputFile);
+   }
+
+   if (!gSystem->AccessPathName(outFileName)) {
+      // Output file was created
+      result = "<span class=\"macro\"><img class=\"macro\" alt=\"output of ";
+      result += outFileName;
+
+      result += "\" title=\"MACRO\" src=\"";
+      result += gSystem->BaseName(outFileName);
+      result += "\" /></span>";
+   }
 
    if (fShowSource) {
       // convert the macro source
@@ -422,108 +510,26 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
             break;
          fMacro->AddLine(line);
       }
-   }
-         
-   Int_t sleepCycles = 50; // 50 = 5 seconds
-   while (error == TInterpreter::kProcessing && --sleepCycles > 0)
-      gSystem->Sleep(100);
 
-   gSystem->ProcessEvents(); // in case ret needs to handle some events first
-
-   if (error != TInterpreter::kNoError)
-      Error("HandleDirective_Macro", "Error processing macro %s!", fMacro->GetName());
-   else if (ret) {
-      const TObject* objRet = (const TObject*)ret;
-      try {
-         typeid(*objRet).name(); // needed to test whether ret is indeed an object with a vtable!
-         objRet = dynamic_cast<const TObject*>(objRet);
-      }
-      catch (...) {
-         objRet = 0;
-      }
-      if (objRet) {
-         TString filename;
-         GetName(filename);
-
-         if (objRet->GetName() && strlen(objRet->GetName())) {
-            filename += "_";
-            filename += objRet->GetName();
-         }
-         filename.ReplaceAll(" ", "_");
-
-         result = "<span class=\"macro\"><img class=\"macro\" alt=\"output of ";
-         result += filename;
-
-         GetDocOutput()->NameSpace2FileName(filename);
-         TString id(filename);
-         filename += ".gif";
-         TString basename(filename);
-
-         result += "\" title=\"MACRO\" src=\"";
-         result += basename;
-         result += "\" /></span>";
-
-         gSystem->PrependPathName(GetOutputDir(), filename);
-
-         if (gDebug > 3)
-            Info("HandleDirective_Macro", "Saving returned %s to file %s.",
-               objRet->IsA()->GetName(), filename.Data());
-
-         if (fNeedGraphics) {
-            // to get X11 to sync :-( gVirtualX->Update()/Sync() don't do it
-            gSystem->Sleep(1000);
-            gVirtualX->Update(0);
-            gVirtualX->Update(1);
-         }
-
-         gSystem->ProcessEvents();
-         if (fNeedGraphics) {
-            gVirtualX->Update(0);
-            gVirtualX->Update(1);
-         }
-
-         objRet->SaveAs(filename);
-         gSystem->ProcessEvents(); // SaveAs triggers an event
-         
-         // ensure objRet is not e.g. the TGMainFrame of a new TCanvas: require padSave == gPad
-         if (objRet != gPad && padSave == gPad)
-            delete objRet;
-
-         if (fShowSource) {
-            // TODO: we need an accessible version of the source, i.e. visible w/o javascript
-            TString tags("</pre><div class=\"tabs\">\n"
-               "<a id=\"" + id + "_A0\" class=\"tabsel\" href=\"" + basename + "\" onclick=\"javascript:return SetDiv('" + id + "',0);\">Picture</a>\n"
+      TString id(gSystem->BaseName(outFileName));
+      id = id.SubString(0, id.Length()-4); // remove ".gif"
+      // TODO: we need an accessible version of the source, i.e. visible w/o javascript
+      TString tags("</pre><div class=\"tabs\">\n"
+               "<a id=\"" + id + "_A0\" class=\"tabsel\" href=\"" + gSystem->BaseName(outFileName) + "\" onclick=\"javascript:return SetDiv('" + id + "',0);\">Picture</a>\n"
                "<a id=\"" + id + "_A1\" class=\"tab\" href=\"#\" onclick=\"javascript:return SetDiv('" + id + "',1);\">Source</a>\n"
                "<br /></div><div class=\"tabcontent\">\n"
                "<div id=\"" + id + "_0\" class=\"tabvisible\">" + result + "</div>\n"
                "<div id=\"" + id + "_1\" class=\"tabhidden\"><div class=\"listing\"><pre class=\"code\">");
-            TIter iLine(fMacro->GetListOfLines());
-            TObjString* osLine = 0;
-            while ((osLine = (TObjString*) iLine()))
-               if (!TString(osLine->String().Strip()).EndsWith("*HIDE*"))
-                  tags += osLine->String() + "\n";
-            if (tags.EndsWith("\n"))
-               tags.Remove(tags.Length()-1); // trailing line break
-            tags += "</pre></div></div><div class=\"clear\"></div></div><pre>";
-            result = tags;
-         }
-      }
+      iLine.Reset();
+      osLine = 0;
+      while ((osLine = (TObjString*) iLine()))
+         if (!TString(osLine->String().Strip()).EndsWith("*HIDE*"))
+            tags += osLine->String() + "\n";
+      if (tags.EndsWith("\n"))
+         tags.Remove(tags.Length()-1); // trailing line break
+      tags += "</pre></div></div><div class=\"clear\"></div></div><pre>";
+      result = tags;
    }
-
-   // Remove interpreter vars first, so we can check whether we need to delete
-   // gPad ourselves or whether it was a global var in the interpreter.
-   gInterpreter->ResetGlobals();
-   gInterpreter->Reset();
-
-   if (!wasBatch)
-      gROOT->SetBatch(kFALSE);
-   if (padSave != gPad) {
-      delete gPad;
-      gPad = padSave;
-   }
-
-   // in case ret's or gPad's deletion provoke events that should be handled
-   gSystem->ProcessEvents();
 
    return kTRUE;
 }
