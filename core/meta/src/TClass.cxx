@@ -1956,7 +1956,7 @@ Bool_t TClass::CanSplit() const
          if (valueClass->GetCollectionProxy() != 0) return kFALSE;
 
          Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
-         if ((stl==TClassEdit::kMap || stl==TClassEdit::kMultiMap)
+         if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
               && valueClass->GetClassInfo()==0)
          {
             return kFALSE;

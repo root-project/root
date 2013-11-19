@@ -35,6 +35,7 @@ namespace ROOT {
       kSTLset      = 6,
       kSTLmultiset = 7,
       kSTLbitset   = 8,
+      kSTLend      = 9,
       kSTLany      = 300 /* TVirtualStreamerInfo::kSTL */,
       kSTLstring   = 365 /* TVirtualStreamerInfo::kSTLstring */
    };

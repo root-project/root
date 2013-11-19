@@ -37,15 +37,15 @@
 
 // Do not clutter global namespace with shit....
 namespace {
-   static TClassEdit::ESTLType stl_type(const std::string& class_name)  {
+   static ROOT::ESTLType stl_type(const std::string& class_name)  {
       // return the STL type.
       int nested = 0;
       std::vector<std::string> inside;
       int num = TClassEdit::GetSplit(class_name.c_str(),inside,nested);
       if ( num > 1 )  {
-         return (TClassEdit::ESTLType)TClassEdit::STLKind(inside[0].c_str());
+         return (ROOT::ESTLType)TClassEdit::STLKind(inside[0].c_str());
       }
-      return TClassEdit::kNotSTL;
+      return ROOT::kNotSTL;
    }
 
    static TEmulatedCollectionProxy* GenEmulation(const char* class_name, Bool_t silent)  {
@@ -59,10 +59,10 @@ namespace {
             cl.replace(0,16,"std::");
          TEmulatedCollectionProxy * result = 0;
          switch ( stl_type(cl) )  {
-            case TClassEdit::kNotSTL:
+            case ROOT::kNotSTL:
                return 0;
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                result = new TEmulatedMapProxy(class_name,silent);
                break;
             default:

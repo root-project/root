@@ -67,7 +67,7 @@ void ROOT::RStl::GenerateTClassFor(const clang::QualType &type, const cling::Int
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
 
-   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == TClassEdit::kVector ) {
+   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == ROOT::kSTLvector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
@@ -122,7 +122,7 @@ void ROOT::RStl::GenerateTClassFor(const char *requestedName, const clang::CXXRe
    }
    
    
-   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == TClassEdit::kVector ) {
+   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == ROOT::kSTLvector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();

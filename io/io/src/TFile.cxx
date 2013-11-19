@@ -2835,8 +2835,8 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          if (key) {
             TString what;
             switch ( stlkind )  {
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                if (TClass::GetClass(inside[1].c_str())) {
                   what = "std::pair<";
                   what += TMakeProject::UpdateAssociativeToVector( inside[1].c_str() );

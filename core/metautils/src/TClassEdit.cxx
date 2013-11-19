@@ -57,7 +57,7 @@ int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
 
    int kind = STLKind(fElements[0].c_str());
 
-   if (kind==kVector || kind==kList ) {
+   if (kind==ROOT::kSTLvector || kind==ROOT::kSTLlist ) {
 
       int nargs = STLArgs(kind);
       if (testAlloc && (numb-1 > nargs) && !IsDefAlloc(fElements[numb-1].c_str(),fElements[1].c_str())) {
@@ -157,15 +157,15 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
             } else if (mode & kDropDefaultAlloc) {
                switch (kind) {
-                  case kVector:
-                  case kList:
-                  case kDeque:
-                  case kSet:
-                  case kMultiSet:
+                  case ROOT::kSTLvector:
+                  case ROOT::kSTLlist:
+                  case ROOT::kSTLdeque:
+                  case ROOT::kSTLset:
+                  case ROOT::kSTLmultiset:
                      dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str());
                      break;
-                  case kMap:
-                  case kMultiMap:
+                  case ROOT::kSTLmap:
+                  case ROOT::kSTLmultimap:
                      dropAlloc = IsDefAlloc(fElements[iall+1].c_str(),fElements[1].c_str(),fElements[2].c_str());
                      break;
                   default:
@@ -190,14 +190,14 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       } else if ( mode & kDropComparator ) {
 
          switch (kind) {
-            case kVector:
-            case kList:
-            case kDeque:
+            case ROOT::kSTLvector:
+            case ROOT::kSTLlist:
+            case ROOT::kSTLdeque:
                break;
-            case kSet:
-            case kMultiSet:
-            case kMap:
-            case kMultiMap:
+            case ROOT::kSTLset:
+            case ROOT::kSTLmultiset:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                if (!allocRemoved && narg-1 == iall+1) {
                   narg--;
                   allocRemoved = true;
@@ -794,7 +794,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 bool TClassEdit::IsVectorBool(const char *name) {
    TSplitType splitname( name );
 
-   return ( TClassEdit::STLKind( splitname.fElements[0].c_str() ) == TClassEdit::kVector)
+   return ( TClassEdit::STLKind( splitname.fElements[0].c_str() ) == ROOT::kSTLvector)
       && ( splitname.fElements[1] == "bool" || splitname.fElements[1]=="Bool_t");
 }
 

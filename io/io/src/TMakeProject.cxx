@@ -457,28 +457,28 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                } else if ((stlType = TClassEdit::IsSTLCont(incName))) {
                   const char *what = "";
                   switch (TMath::Abs(stlType))  {
-                     case TClassEdit::kVector:
+                     case ROOT::kSTLvector:
                         what = "vector";
                         break;
-                     case TClassEdit::kList:
+                     case ROOT::kSTLlist:
                         what = "list";
                         break;
-                     case TClassEdit::kDeque:
+                     case ROOT::kSTLdeque:
                         what = "deque";
                         break;
-                     case TClassEdit::kMap:
+                     case ROOT::kSTLmap:
                         what = "map";
                         break;
-                     case TClassEdit::kMultiMap:
+                     case ROOT::kSTLmultimap:
                         what = "map";
                         break;
-                     case TClassEdit::kSet:
+                     case ROOT::kSTLset:
                         what = "set";
                         break;
-                     case TClassEdit::kMultiSet:
+                     case ROOT::kSTLmultiset:
                         what = "set";
                         break;
-                     case TClassEdit::kBitSet:
+                     case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
                      default:
@@ -545,8 +545,8 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       if (key) {
          TString what;
          switch (stlkind)  {
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap: {
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap: {
                   what = "pair<";
                   what += UpdateAssociativeToVector( inside[1].c_str() );
                   what += ",";
@@ -592,8 +592,8 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
             what = inside[1].c_str();
          } else if (key) {
             switch (stlkind)  {
-               case TClassEdit::kMap:
-               case TClassEdit::kMultiMap: 
+               case ROOT::kSTLmap:
+               case ROOT::kSTLmultimap: 
                {
                   // Already done (see GenerateIncludeForTemplate
                   break;
@@ -636,17 +636,17 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       }
       // Remove default allocator if any.
       switch (stlkind) {
-         case TClassEdit::kVector:
-         case TClassEdit::kList:
-         case TClassEdit::kDeque:
+         case ROOT::kSTLvector:
+         case ROOT::kSTLlist:
+         case ROOT::kSTLdeque:
             if (narg>2 && strncmp(inside[2].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;
             }
             break;
-         case TClassEdit::kSet:
-         case TClassEdit::kMultiSet:
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
+         case ROOT::kSTLset:
+         case ROOT::kSTLmultiset:
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
             if (narg>4 && strncmp(inside[4].c_str(),"std::allocator<",strlen("std::allocator<"))==0) {
                --narg;
             }
@@ -660,8 +660,8 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
             // (for which we do not know the sorting).
             std::string what;
             switch ( stlkind )  {
-               case TClassEdit::kMap:
-               case TClassEdit::kMultiMap: {
+               case ROOT::kSTLmap:
+               case ROOT::kSTLmultimap: {
                   what = "std::pair<";
                   what += inside[1];
                   what += ",";
@@ -677,8 +677,8 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
                   narg = 2;
                   break;
                }
-               case TClassEdit::kSet:
-               case TClassEdit::kMultiSet:
+               case ROOT::kSTLset:
+               case ROOT::kSTLmultiset:
                   inside[0] = "std::vector";
                   break;
             }

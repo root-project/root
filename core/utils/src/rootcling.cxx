@@ -1027,7 +1027,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       tcl1="R__tcl1";
       fulName1 = ti.getAsString(); // Should we be passing a context?
    }
-   if (stltype==kMap || stltype==kMultiMap) {
+   if (stltype==kSTLmap || stltype==kSTLmultimap) {
       const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
       clang::QualType tmplti = arg1.getAsType();
       if (ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, tmplti, 0, rwmode, interp)) {
@@ -1102,13 +1102,13 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       (*dictSrcOut) << "         int R__i, R__n;" << std::endl
                     << "         R__b >> R__n;" << std::endl;
 
-      if (stltype==kVector) {
+      if (stltype==kSTLvector) {
          (*dictSrcOut) << "         R__stl.reserve(R__n);" << std::endl;
       }
       (*dictSrcOut) << "         for (R__i = 0; R__i < R__n; R__i++) {" << std::endl;
 
       ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, arg0.getAsType(), "R__t", rwmode, interp, tcl1);
-      if (stltype == kMap || stltype == kMultiMap) {     //Second Arg
+      if (stltype == kSTLmap || stltype == kSTLmultimap) {     //Second Arg
          const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
          ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, arg1.getAsType(), "R__t2", rwmode, interp, tcl2);
       }
@@ -1125,8 +1125,8 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       */
       switch (stltype) {
 
-      case kMap:
-      case kMultiMap: {
+      case kSTLmap:
+      case kSTLmultimap: {
          std::string keyName( ti.getAsString() );
          (*dictSrcOut) << "            typedef " << keyName << " Value_t;" << std::endl
                        << "            std::pair<Value_t const, " << tmplt_specialization->getTemplateArgs().get(1).getAsType().getAsString() << " > R__t3(R__t,R__t2);" << std::endl
@@ -1134,13 +1134,13 @@ int STLContainerStreamer(const clang::FieldDecl &m,
          //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
          break;
       }
-      case kSet:
-      case kMultiSet:
+      case kSTLset:
+      case kSTLmultiset:
          (*dictSrcOut) << "            R__stl.insert(R__t);" << std::endl;
          break;
-      case kVector:
-      case kList:
-      case kDeque:
+      case kSTLvector:
+      case kSTLlist:
+      case kSTLdeque:
          (*dictSrcOut) << "            R__stl.push_back(R__t);" << std::endl;
          break;
 
@@ -1195,7 +1195,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
 
       (*dictSrcOut) << "            " << stlType.c_str() << "::iterator R__k;" << std::endl
                     << "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {" << std::endl;
-      if (stltype == kMap || stltype == kMultiMap) {
+      if (stltype == kSTLmap || stltype == kSTLmultimap) {
          const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
          clang::QualType tmplti = arg1.getAsType();
          ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, ti, "((*R__k).first )",rwmode,interp, tcl1);

@@ -1894,17 +1894,17 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
       const char* methodTCP=0;
       switch(stlType)  {
-         case TClassEdit::kVector:
-         case TClassEdit::kList:
-         case TClassEdit::kDeque:
+         case ROOT::kSTLvector:
+         case ROOT::kSTLlist:
+         case ROOT::kSTLdeque:
             methodTCP="Pushback";
             break;
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
             methodTCP="MapInsert";
             break;
-         case TClassEdit::kSet:
-         case TClassEdit::kMultiSet:
+         case ROOT::kSTLset:
+         case ROOT::kSTLmultiset:
             methodTCP="Insert";
             break;
       }
@@ -2533,7 +2533,7 @@ int ROOT::TMetaUtils::IsSTLContainer(const ROOT::TMetaUtils::AnnotatedRecordDecl
 }
 
 //______________________________________________________________________________
-TClassEdit::ESTLType ROOT::TMetaUtils::IsSTLContainer(const clang::FieldDecl &m)
+ROOT::ESTLType ROOT::TMetaUtils::IsSTLContainer(const clang::FieldDecl &m)
 {
    // Is this an STL container?
 
@@ -2541,7 +2541,7 @@ TClassEdit::ESTLType ROOT::TMetaUtils::IsSTLContainer(const clang::FieldDecl &m)
    clang::RecordDecl *decl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(type);
 
    if (decl) return TMetaUtils::IsSTLCont(*decl);
-   else return TClassEdit::kNotSTL;
+   else return ROOT::kNotSTL;
 }
 
 //______________________________________________________________________________
@@ -2553,7 +2553,7 @@ int ROOT::TMetaUtils::IsSTLContainer(const clang::CXXBaseSpecifier &base)
    clang::RecordDecl *decl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(type);
 
    if (decl) return TMetaUtils::IsSTLCont(*decl);
-   else return TClassEdit::kNotSTL;
+   else return ROOT::kNotSTL;
 }
 
 //______________________________________________________________________________
@@ -3773,7 +3773,7 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
 }
 
 //______________________________________________________________________________
-TClassEdit::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
+ROOT::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>
    //  result:    0          : not stl container
@@ -3792,7 +3792,7 @@ TClassEdit::ESTLType ROOT::TMetaUtils::IsSTLCont(const clang::RecordDecl &cl)
    //                           For example: vector<deque<int>> has answer -1
 
    if (!IsStdClass(cl)) {
-      return TClassEdit::kNotSTL;
+      return ROOT::kNotSTL;
    }
 
    return STLKind(cl.getName());
@@ -3918,22 +3918,22 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 }
 
 //______________________________________________________________________________
-TClassEdit::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
+ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
 {
    // Converts STL container name to number. vector -> 1, etc..
 
    static const char *stls[] =                  //container names
       {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
-   static const TClassEdit::ESTLType values[] =
-      {TClassEdit::kNotSTL, TClassEdit::kVector,
-       TClassEdit::kList, TClassEdit::kDeque,
-       TClassEdit::kMap, TClassEdit::kMultiMap,
-       TClassEdit::kSet, TClassEdit::kMultiSet,
-       TClassEdit::kBitSet, TClassEdit::kEnd
+   static const ROOT::ESTLType values[] =
+      {ROOT::kNotSTL, ROOT::kSTLvector,
+       ROOT::kSTLlist, ROOT::kSTLdeque,
+       ROOT::kSTLmap, ROOT::kSTLmultimap,
+       ROOT::kSTLset, ROOT::kSTLmultiset,
+       ROOT::kSTLbitset, ROOT::kNotSTL
       };
    //              kind of stl container
    for(int k=1;stls[k];k++) {if (type.equals(stls[k])) return values[k];}
-   return TClassEdit::kNotSTL;
+   return ROOT::kNotSTL;
 }
 
 //______________________________________________________________________________

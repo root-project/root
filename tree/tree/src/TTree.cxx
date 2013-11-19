@@ -2122,7 +2122,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       }
       if ((splitlevel > 0) && inklass && (inklass->GetCollectionProxy() == 0)) {
          Int_t stl = -TClassEdit::IsSTLCont(cl->GetName(), 0);
-         if ((stl != TClassEdit::kMap) && (stl != TClassEdit::kMultiMap)) {
+         if ((stl != ROOT::kSTLmap) && (stl != ROOT::kSTLmultimap)) {
             void *classinfo = inklass->GetClassInfo();
             if (!classinfo) {
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);

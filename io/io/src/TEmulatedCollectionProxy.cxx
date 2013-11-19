@@ -138,8 +138,8 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          // std::cout << "Initialized " << typeid(*this).name() << ":" << fName << std::endl;
          int slong = sizeof(void*);
          switch ( fSTL_type )  {
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                nam = "pair<"+inside[1]+","+inside[2];
                nam += (nam[nam.length()-1]=='>') ? " >" : ">";
                if (0==TClass::GetClass(nam.c_str())) {
@@ -166,7 +166,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
                   fValOffset += (slong - fKey->fSize%slong)%slong;
                }
                break;
-            case TClassEdit::kBitSet:
+            case ROOT::kSTLbitset:
                inside[1] = "bool";
                // Intentional fall through
             default:
@@ -229,8 +229,8 @@ void TEmulatedCollectionProxy::Shrink(UInt_t nCurr, UInt_t left, Bool_t force )
    size_t i;
 
    switch ( fSTL_type )  {
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
+      case ROOT::kSTLmap:
+      case ROOT::kSTLmultimap:
          addr = ((char*)fEnv->fStart) + fValDiff*left;
          switch(fKey->fCase)  {
             case kIsFundamental:  // Only handle primitives this way
@@ -335,8 +335,8 @@ void TEmulatedCollectionProxy::Expand(UInt_t nCurr, UInt_t left)
 
    char* addr = ((char*)fEnv->fStart) + fValDiff*nCurr;
    switch ( fSTL_type )  {
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
+      case ROOT::kSTLmap:
+      case ROOT::kSTLmultimap:
          switch(fKey->fCase)  {
             case kIsFundamental:  // Only handle primitives this way
             case kIsEnum:

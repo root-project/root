@@ -70,7 +70,7 @@ namespace TClassEdit {
       kSet      = ROOT::kSTLset,
       kMultiSet = ROOT::kSTLmultiset,
       kBitSet   = ROOT::kSTLbitset,
-      kEnd      = 9
+      kEnd      = ROOT::kSTLend
    };
 
    class TInterpreterLookupHelper {

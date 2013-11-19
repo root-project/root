@@ -47,7 +47,10 @@ namespace cling {
 
 #include "cling/Utils/AST.h"
 
-// For TClassEdit::ESTLType and for TClassEdit::TInterpreterLookupHelper
+// For ROOT::ESTLType
+#include "ESTLType.h"
+
+// for TClassEdit::TInterpreterLookupHelper
 #include "TClassEdit.h"
 
 #ifndef ROOT_Varargs
@@ -338,7 +341,7 @@ int GetClassVersion(const clang::RecordDecl *cl);
 int IsSTLContainer(const AnnotatedRecordDecl &annotated);
 
 //______________________________________________________________________________
-TClassEdit::ESTLType IsSTLContainer(const clang::FieldDecl &m);
+ROOT::ESTLType IsSTLContainer(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
 int IsSTLContainer(const clang::CXXBaseSpecifier &base);
@@ -523,7 +526,7 @@ bool IsStdClass(const clang::RecordDecl &cl);
 
 //______________________________________________________________________________
 // Return which kind of STL container the decl is, if any.
-TClassEdit::ESTLType IsSTLCont(const clang::RecordDecl &cl);
+ROOT::ESTLType IsSTLCont(const clang::RecordDecl &cl);
 
 //______________________________________________________________________________
 // Check if 'input' or any of its template parameter was substituted when
@@ -533,7 +536,7 @@ clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *ins
 
 //______________________________________________________________________________
 // Kind of stl container
-TClassEdit::ESTLType STLKind(const llvm::StringRef type);
+ROOT::ESTLType STLKind(const llvm::StringRef type);
 
 //______________________________________________________________________________
 // Set the toolchain and the include paths for the relocatability

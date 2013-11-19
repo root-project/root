@@ -46,13 +46,13 @@ private:
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
    virtual     ~TBaseClass();
-   virtual void Browse(TBrowser *b);
-   const char  *GetTitle() const;
-   TClass      *GetClassPointer(Bool_t load=kTRUE);
-   Int_t        GetDelta() const;
-   Bool_t       IsFolder() const {return kTRUE;}
-   Int_t        IsSTLContainer();
-   Long_t       Property() const;
+   virtual void   Browse(TBrowser *b);
+   const char    *GetTitle() const;
+   TClass        *GetClassPointer(Bool_t load=kTRUE);
+   Int_t          GetDelta() const;
+   Bool_t         IsFolder() const {return kTRUE;}
+   ROOT::ESTLType IsSTLContainer();
+   Long_t         Property() const;
 
    ClassDef(TBaseClass,0)  //Description of a base class
 };

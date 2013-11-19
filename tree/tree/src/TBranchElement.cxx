@@ -149,7 +149,7 @@ TBranchElement::TBranchElement()
 , fType(0)
 , fStreamerType(-1)
 , fMaximum(0)
-, fSTLtype(TClassEdit::kNotSTL)
+, fSTLtype(ROOT::kNotSTL)
 , fNdata(1)
 , fBranchCount(0)
 , fBranchCount2(0)
@@ -189,7 +189,7 @@ TBranchElement::TBranchElement(TTree *tree, const char* bname, TStreamerInfo* si
 , fType(0)
 , fStreamerType(-1)
 , fMaximum(0)
-, fSTLtype(TClassEdit::kNotSTL)
+, fSTLtype(ROOT::kNotSTL)
 , fNdata(1)
 , fBranchCount(0)
 , fBranchCount2(0)
@@ -230,7 +230,7 @@ TBranchElement::TBranchElement(TBranch *parent, const char* bname, TStreamerInfo
 , fType(0)
 , fStreamerType(-1)
 , fMaximum(0)
-, fSTLtype(TClassEdit::kNotSTL)
+, fSTLtype(ROOT::kNotSTL)
 , fNdata(1)
 , fBranchCount(0)
 , fBranchCount2(0)
@@ -548,7 +548,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
             SetReadLeavesPtr();
             SetFillLeavesPtr();
             return;
-         } else if (((fSTLtype >= TClassEdit::kVector) && (fSTLtype < TClassEdit::kEnd)) || ((fSTLtype > -TClassEdit::kEnd) && (fSTLtype <= -TClassEdit::kVector))) {
+         } else if (((fSTLtype >= ROOT::kSTLvector) && (fSTLtype < ROOT::kSTLend)) || ((fSTLtype > -ROOT::kSTLend) && (fSTLtype <= -ROOT::kSTLvector))) {
             // -- We are an STL container element.
             TClass* contCl = TClass::GetClass(elem_type);
             fCollProxy = contCl->GetCollectionProxy()->Generate();
@@ -711,7 +711,7 @@ void TBranchElement::Init(TTree *tree, TBranch *parent, const char* bname, TClon
    fOnfileObject  = 0;
    fMaximum       = 0;
    fBranchOffset  = 0;
-   fSTLtype       = TClassEdit::kNotSTL;
+   fSTLtype       = ROOT::kNotSTL;
    fInitOffsets   = kFALSE;
 
    fTree          = tree;
@@ -1408,7 +1408,7 @@ void TBranchElement::FillLeavesCollection(TBuffer& b)
    }
    b << n;
 
-   if(fSTLtype != TClassEdit::kVector && proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+   if(fSTLtype != ROOT::kSTLvector && proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
       fPtrIterators->CreateIterators(fObject, proxy);
    } else {
       //NOTE: this does not work for not vectors since the CreateIterators expects a TGenCollectionProxy::TStaging as its argument!
@@ -2253,10 +2253,10 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          nbytes += nb;
       }
       switch(fSTLtype) {
-         case TClassEdit::kSet:
-         case TClassEdit::kMultiSet:
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
+         case ROOT::kSTLset:
+         case ROOT::kSTLmultiset:
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
             break;
          default:
             ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
@@ -3452,10 +3452,10 @@ void TBranchElement::ReadLeavesMakeClass(TBuffer& b)
       if (fType == 4)   {
          Int_t nbranches = fBranches.GetEntriesFast();
          switch(fSTLtype) {
-            case TClassEdit::kSet:
-            case TClassEdit::kMultiSet:
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLset:
+            case ROOT::kSTLmultiset:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                for (Int_t i=0; i<nbranches; i++) {
                   TBranch *branch = (TBranch*)fBranches[i];
                   Int_t nb = branch->GetEntry(GetReadEntry(), 1);
@@ -3711,7 +3711,7 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
    TVirtualCollectionProxy* proxy = GetCollectionProxy();
    TVirtualCollectionProxy::TPushPop helper(proxy, fObject);
    void* alternate = proxy->Allocate(fNdata, true);
-   if(fSTLtype != TClassEdit::kVector && proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+   if(fSTLtype != ROOT::kSTLvector && proxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
       fPtrIterators->CreateIterators(alternate, proxy);
    } else {
       fIterators->CreateIterators(alternate, proxy);
@@ -3719,10 +3719,10 @@ void TBranchElement::ReadLeavesCollection(TBuffer& b)
 
    Int_t nbranches = fBranches.GetEntriesFast();
    switch (fSTLtype) {
-      case TClassEdit::kSet:
-      case TClassEdit::kMultiSet:
-      case TClassEdit::kMap:
-      case TClassEdit::kMultiMap:
+      case ROOT::kSTLset:
+      case ROOT::kSTLmultiset:
+      case ROOT::kSTLmap:
+      case ROOT::kSTLmultimap:
          for (Int_t i = 0; i < nbranches; ++i) {
             TBranch *branch = (TBranch*) fBranches[i];
             Int_t nb = branch->GetEntry(GetReadEntry(), 1);
@@ -4480,7 +4480,7 @@ void TBranchElement::SetAddress(void* addr)
             SetReadLeavesPtr();
             SetFillLeavesPtr();
 
-            if(fSTLtype != TClassEdit::kVector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+            if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
             } else {
                fIterators = new TVirtualCollectionIterators(fCollProxy);
@@ -4518,7 +4518,7 @@ void TBranchElement::SetAddress(void* addr)
             SetFillLeavesPtr();
             delete fIterators;
             delete fPtrIterators;
-            if(fSTLtype != TClassEdit::kVector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+            if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
             } else {
                fIterators = new TVirtualCollectionIterators(fCollProxy);
@@ -4551,7 +4551,7 @@ void TBranchElement::SetAddress(void* addr)
                SetFillLeavesPtr();
                delete fIterators;
                delete fPtrIterators;
-               if(fSTLtype != TClassEdit::kVector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+               if(fSTLtype != ROOT::kSTLvector && fCollProxy->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                   fPtrIterators = new TVirtualCollectionPtrIterators(fCollProxy);
                } else {
                   fIterators = new TVirtualCollectionIterators(fCollProxy);
@@ -4616,7 +4616,7 @@ void TBranchElement::SetAddress(void* addr)
          }
       } else {
          if (!fIterators && !fPtrIterators) {
-            if(fSTLtype != TClassEdit::kVector && GetCollectionProxy()->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
+            if(fSTLtype != ROOT::kSTLvector && GetCollectionProxy()->HasPointers() && fSplitLevel > TTree::kSplitCollectionOfPointers ) {
                fPtrIterators = new TVirtualCollectionPtrIterators(GetCollectionProxy());
             } else {
                fIterators = new TVirtualCollectionIterators(GetCollectionProxy());
@@ -4967,7 +4967,7 @@ void TBranchElement::SetReadActionSequence()
    TStreamerInfoActions::TActionSequence *original = 0;
    TStreamerInfoActions::TActionSequence *transient = 0;
    if (fType == 41) {
-      if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == TClassEdit::kVector) {
+      if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == ROOT::kSTLvector) {
          original = fInfo->GetReadMemberWiseActions(kTRUE);
       } else {
          TVirtualStreamerInfo *info = GetInfoImp();
@@ -5010,7 +5010,7 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCollection;
    } else if (fType == 41) {
       if( fSplitLevel >= TTree::kSplitCollectionOfPointers ) {
-         if (fBranchCount->fSTLtype == TClassEdit::kVector) {
+         if (fBranchCount->fSTLtype == ROOT::kSTLvector) {
             fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCollectionSplitVectorPtrMember;
          } else {
             fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCollectionSplitPtrMember;
@@ -5054,7 +5054,7 @@ void TBranchElement::SetFillActionSequence()
    TStreamerInfoActions::TActionSequence *original = 0;
    TStreamerInfoActions::TActionSequence *transient = 0;
    if (fType == 41) {
-      if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == TClassEdit::kVector) {
+      if( fSplitLevel >= TTree::kSplitCollectionOfPointers && fBranchCount->fSTLtype == ROOT::kSTLvector) {
          original = fInfo->GetWriteMemberWiseActions(kTRUE);
       } else {
          TVirtualStreamerInfo *info = GetInfoImp();
@@ -5098,7 +5098,7 @@ void TBranchElement::SetFillLeavesPtr()
       fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollection;
    } else if (fType == 41) {
       if( fSplitLevel >= TTree::kSplitCollectionOfPointers ) {
-         if (fBranchCount->fSTLtype == TClassEdit::kVector) {
+         if (fBranchCount->fSTLtype == ROOT::kSTLvector) {
             fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollectionSplitVectorPtrMember;
          } else {
             fFillLeaves = (FillLeaves_t)&TBranchElement::FillLeavesCollectionSplitPtrMember;

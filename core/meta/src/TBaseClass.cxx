@@ -84,22 +84,22 @@ const char *TBaseClass::GetTitle() const
 }
 
 //______________________________________________________________________________
-int TBaseClass::IsSTLContainer()
+ROOT::ESTLType TBaseClass::IsSTLContainer()
 {
    // Return which type (if any) of STL container the data member is.
 
-   if (!fInfo) return kNone;
+   if (!fInfo) return ROOT::kNotSTL;
    const char *type = gCling->BaseClassInfo_TmpltName(fInfo);
-   if (!type) return kNone;
+   if (!type) return ROOT::kNotSTL;
 
-   if (!strcmp(type, "vector"))   return kVector;
-   if (!strcmp(type, "list"))     return kList;
-   if (!strcmp(type, "deque"))    return kDeque;
-   if (!strcmp(type, "map"))      return kMap;
-   if (!strcmp(type, "multimap")) return kMultimap;
-   if (!strcmp(type, "set"))      return kSet;
-   if (!strcmp(type, "multiset")) return kMultiset;
-   return kNone;
+   if (!strcmp(type, "vector"))   return ROOT::kSTLvector;
+   if (!strcmp(type, "list"))     return ROOT::kSTLlist;
+   if (!strcmp(type, "deque"))    return ROOT::kSTLdeque;
+   if (!strcmp(type, "map"))      return ROOT::kSTLmap;
+   if (!strcmp(type, "multimap")) return ROOT::kSTLmultimap;
+   if (!strcmp(type, "set"))      return ROOT::kSTLset;
+   if (!strcmp(type, "multiset")) return ROOT::kSTLmultiset;
+   return ROOT::kNotSTL;
 }
 
 //______________________________________________________________________________

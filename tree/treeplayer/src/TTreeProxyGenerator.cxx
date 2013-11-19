@@ -385,18 +385,18 @@ namespace ROOT {
       } else if (cl->GetCollectionProxy() && (stlType=TClassEdit::IsSTLCont(cl->GetName()))) {
          const char *what = "";
          switch(stlType)  {
-            case TClassEdit::kVector:   what = "vector"; break;
-            case TClassEdit::kList:     what = "list"; break;
-            case -TClassEdit::kDeque: // same as positive
-            case TClassEdit::kDeque:    what = "deque"; break;
-            case -TClassEdit::kMap: // same as positive
-            case TClassEdit::kMap:      what = "map"; break;
-            case -TClassEdit::kMultiMap: // same as positive
-            case TClassEdit::kMultiMap: what = "map"; break;
-            case -TClassEdit::kSet:  // same as positive
-            case TClassEdit::kSet:      what = "set"; break;
-            case -TClassEdit::kMultiSet: // same as positive
-            case TClassEdit::kMultiSet: what = "set"; break;
+            case ROOT::kSTLvector:   what = "vector"; break;
+            case ROOT::kSTLlist:     what = "list"; break;
+            case -ROOT::kSTLdeque: // same as positive
+            case ROOT::kSTLdeque:    what = "deque"; break;
+            case -ROOT::kSTLmap: // same as positive
+            case ROOT::kSTLmap:      what = "map"; break;
+            case -ROOT::kSTLmultimap: // same as positive
+            case ROOT::kSTLmultimap: what = "map"; break;
+            case -ROOT::kSTLset:  // same as positive
+            case ROOT::kSTLset:      what = "set"; break;
+            case -ROOT::kSTLmultiset: // same as positive
+            case ROOT::kSTLmultiset: what = "set"; break;
          }
          if (what[0]) {
             directive = "#include <";

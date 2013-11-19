@@ -611,8 +611,8 @@ const char* ROOT::TTreeReaderArrayBase::GetBranchContentDataType(TBranch* branch
                Error("GetBranchContentDataType()", "Cannot determine STL collection type of %s stored in branch %s", brElement->GetClassName(), branch->GetName());
                return brElement->GetClassName();
             }
-            bool isMap = isSTLCont == TClassEdit::kMap
-               || isSTLCont == TClassEdit::kMultiMap;
+            bool isMap = isSTLCont == ROOT::kSTLmap
+               || isSTLCont == ROOT::kSTLmultimap;
             if (isMap) contentTypeName = "std::pair< ";
             contentTypeName += splitType.fElements[1];
             if (isMap) {

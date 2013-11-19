@@ -947,7 +947,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
 
    TClass* contcl = el->GetClassPointer();
 
-   Bool_t isstr = (el->GetSTLtype() == TStreamerElement::kSTLstring);
+   Bool_t isstr = (el->GetSTLtype() == ROOT::kSTLstring);
    Bool_t isptr = el->IsaPointer();
    Bool_t isarr = (el->GetArrayLength()>0);
    Bool_t isparent = (strcmp(el->GetName(), contcl->GetName())==0);
@@ -968,13 +968,13 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
 
          stltyp = TClassEdit::STLKind(splitName[0].c_str());
          switch (stltyp) {
-            case TClassEdit::kVector   : narg = 1; break;
-            case TClassEdit::kList     : narg = 1; break;
-            case TClassEdit::kDeque    : narg = 1; break;
-            case TClassEdit::kMap      : narg = 2; break;
-            case TClassEdit::kMultiMap : narg = 2; break;
-            case TClassEdit::kSet      : narg = 1; break;
-            case TClassEdit::kMultiSet : narg = 1; break;
+            case ROOT::kSTLvector   : narg = 1; break;
+            case ROOT::kSTLlist     : narg = 1; break;
+            case ROOT::kSTLdeque    : narg = 1; break;
+            case ROOT::kSTLmap      : narg = 2; break;
+            case ROOT::kSTLmultimap : narg = 2; break;
+            case ROOT::kSTLset      : narg = 1; break;
+            case ROOT::kSTLmultiset : narg = 1; break;
             default: return false;
          }
 
@@ -1163,7 +1163,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
 
          if (akaarrayaccess) {
             fs << std::endl << tabs << tab1 << accname;
-            if ((stltyp==TClassEdit::kSet) || (stltyp==TClassEdit::kMultiSet))
+            if ((stltyp==ROOT::kSTLset) || (stltyp==ROOT::kSTLmultiset))
                fs << "insert"; else fs << "push_back";
             fs << "(arr[k]);" << std::endl;
             fs << tabs << "delete[] arr;" << std::endl;
@@ -1175,7 +1175,7 @@ Bool_t TXMLPlayer::ProduceSTLstreamer(std::ostream& fs, TClass* cl, TStreamerSTL
             fs << tabs << tab1;
             if (ifcond.Length()>0) fs << "if (" << ifcond << ") ";
             fs << accname;
-            if ((stltyp==TClassEdit::kSet) || (stltyp==TClassEdit::kMultiSet))
+            if ((stltyp==ROOT::kSTLset) || (stltyp==ROOT::kSTLmultiset))
                fs << "insert";
             else
                fs << "push_back";

@@ -1570,7 +1570,7 @@ TStreamerSTL::TStreamerSTL() : fSTLtype(0),fCtype(0)
 //______________________________________________________________________________
 TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
                            const char *typeName, const TVirtualCollectionProxy &proxy, Bool_t dmPointer)
-        : TStreamerElement(name,title,offset,kSTL,typeName)
+        : TStreamerElement(name,title,offset,ROOT::kSTLany,typeName)
 {
    // Create a TStreamerSTL object.
 
@@ -1586,7 +1586,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
 
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
-   if (fSTLtype == kSTLbitset) {
+   if (fSTLtype == ROOT::kSTLbitset) {
       // Nothing to check
    } else if (proxy.GetValueClass()) {
       if (proxy.HasPointers()) fCtype = TVirtualStreamerInfo::kObjectp;
@@ -1601,7 +1601,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
 //______________________________________________________________________________
 TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
                            const char *typeName, const char *trueType, Bool_t dmPointer)
-        : TStreamerElement(name,title,offset,kSTL,typeName)
+        : TStreamerElement(name,title,offset,ROOT::kSTLany,typeName)
 {
    // Create a TStreamerSTL object.
 
@@ -1648,14 +1648,14 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
    fCtype   = 0;
    // Any class name that 'contains' the word will be counted
    // as a STL container. Is that really what we want.
-   if      (strstr(s,"vector"))   fSTLtype = kSTLvector;
-   else if (strstr(s,"list"))     fSTLtype = kSTLlist;
-   else if (strstr(s,"deque"))    fSTLtype = kSTLdeque;
-   else if (strstr(s,"multimap")) fSTLtype = kSTLmultimap;
-   else if (strstr(s,"multiset")) fSTLtype = kSTLmultiset;
-   else if (strstr(s,"bitset"))   fSTLtype = kSTLbitset;
-   else if (strstr(s,"map"))      fSTLtype = kSTLmap;
-   else if (strstr(s,"set"))      fSTLtype = kSTLset;
+   if      (strstr(s,"vector"))   fSTLtype = ROOT::kSTLvector;
+   else if (strstr(s,"list"))     fSTLtype = ROOT::kSTLlist;
+   else if (strstr(s,"deque"))    fSTLtype = ROOT::kSTLdeque;
+   else if (strstr(s,"multimap")) fSTLtype = ROOT::kSTLmultimap;
+   else if (strstr(s,"multiset")) fSTLtype = ROOT::kSTLmultiset;
+   else if (strstr(s,"bitset"))   fSTLtype = ROOT::kSTLbitset;
+   else if (strstr(s,"map"))      fSTLtype = ROOT::kSTLmap;
+   else if (strstr(s,"set"))      fSTLtype = ROOT::kSTLset;
    if (fSTLtype == 0) { delete [] s; return;}
    if (dmPointer) fSTLtype += TVirtualStreamerInfo::kOffsetP;
 
@@ -1676,7 +1676,7 @@ TStreamerSTL::TStreamerSTL(const char *name, const char *title, Int_t offset,
 
 
    TDataType *dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(sopen);
-   if (fSTLtype == kSTLbitset) {
+   if (fSTLtype == ROOT::kSTLbitset) {
       // Nothing to check
    } else if (dt) {
       fCtype = dt->GetType();
@@ -1807,14 +1807,14 @@ const char *TStreamerSTL::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if      (fSTLtype == kSTLvector)   gIncludeName.Form("<%s>","vector");
-   else if (fSTLtype == kSTLlist)     gIncludeName.Form("<%s>","list");
-   else if (fSTLtype == kSTLdeque)    gIncludeName.Form("<%s>","deque");
-   else if (fSTLtype == kSTLmap)      gIncludeName.Form("<%s>","map");
-   else if (fSTLtype == kSTLset)      gIncludeName.Form("<%s>","set");
-   else if (fSTLtype == kSTLmultimap) gIncludeName.Form("<%s>","map");
-   else if (fSTLtype == kSTLmultiset) gIncludeName.Form("<%s>","set");
-   else if (fSTLtype == kSTLbitset)   gIncludeName.Form("<%s>","bitset");
+   if      (fSTLtype == ROOT::kSTLvector)   gIncludeName.Form("<%s>","vector");
+   else if (fSTLtype == ROOT::kSTLlist)     gIncludeName.Form("<%s>","list");
+   else if (fSTLtype == ROOT::kSTLdeque)    gIncludeName.Form("<%s>","deque");
+   else if (fSTLtype == ROOT::kSTLmap)      gIncludeName.Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLset)      gIncludeName.Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLmultimap) gIncludeName.Form("<%s>","map");
+   else if (fSTLtype == ROOT::kSTLmultiset) gIncludeName.Form("<%s>","set");
+   else if (fSTLtype == ROOT::kSTLbitset)   gIncludeName.Form("<%s>","bitset");
    return gIncludeName;
 }
 
@@ -1844,15 +1844,15 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
-      if (fSTLtype == kSTLmultimap || fSTLtype == kSTLset) {
+      if (fSTLtype == ROOT::kSTLmultimap || fSTLtype == ROOT::kSTLset) {
          // For a long time those where inverted compared to the other
          // definitions.   When we move to version 'x', this got standardized,
          // but we now need to fix it.
 
          if (fTypeName.BeginsWith("std::set") || fTypeName.BeginsWith("set")) {
-            fSTLtype = kSTLset;
+            fSTLtype = ROOT::kSTLset;
          } else if (fTypeName.BeginsWith("std::multimap") || fTypeName.BeginsWith("multimap")) {
-            fSTLtype = kSTLmultimap;
+            fSTLtype = ROOT::kSTLmultimap;
          }
       }
 
@@ -1864,7 +1864,7 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
       if (R__b.GetParent()) { // Avoid resetting during a cloning.
          if (fCtype==TVirtualStreamerInfo::kObjectp || fCtype==TVirtualStreamerInfo::kAnyp || fCtype==TVirtualStreamerInfo::kObjectP || fCtype==TVirtualStreamerInfo::kAnyP) {
             SetBit(kDoNotDelete); // For backward compatibility
-         } else if ( fSTLtype == kSTLmap || fSTLtype == kSTLmultimap) {
+         } else if ( fSTLtype == ROOT::kSTLmap || fSTLtype == ROOT::kSTLmultimap) {
             // Here we would like to set the bit only if one of the element of the pair is a pointer, 
             // however we have no easy to determine this short of parsing the class name.
             SetBit(kDoNotDelete); // For backward compatibility
@@ -1915,8 +1915,8 @@ TStreamerSTLstring::TStreamerSTLstring(const char *name, const char *title, Int_
 
    fNewType = fType;
    fOffset  = offset;
-   fSTLtype = kSTLstring;
-   fCtype   = kSTLstring;
+   fSTLtype = ROOT::kSTLstring;
+   fCtype   = ROOT::kSTLstring;
    fTypeName= typeName;
 
 }

@@ -261,7 +261,7 @@ void TStreamerInfo::Build()
          TVirtualCollectionProxy *proxy = base->GetClassPointer()->GetCollectionProxy();
          if (proxy) element = new TStreamerSTL(bname, btitle, offset, bname, *proxy, kFALSE);
          else       element = new TStreamerSTL(bname, btitle, offset, bname, 0, kFALSE);
-         if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
+         if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
             if (!element->GetClassPointer()->IsLoaded()) {
                Error("Build","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bname);
                delete element;
@@ -399,7 +399,7 @@ void TStreamerInfo::Build()
             TVirtualCollectionProxy *proxy = TClass::GetClass(dm->GetTypeName() /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
-            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != TClassEdit::kVector) {
+            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
                if (!element->GetClassPointer()->IsLoaded()) {
                   Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
                   delete element;
@@ -1488,7 +1488,7 @@ void TStreamerInfo::BuildOld()
                   continue;
                } else if (bc->GetClassPointer()->GetCollectionProxy()
                           && !bc->GetClassPointer()->IsLoaded() 
-                          && bc->GetClassPointer()->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
+                          && bc->GetClassPointer()->GetCollectionProxy()->GetCollectionType() != ROOT::kSTLvector) {
                   Error("BuildOld","The class \"%s\" is compiled and its base class \"%s\" is a collection and we do not have a dictionary for it, we will not be able to read or write this base class.",GetName(),bc->GetName());
                   offset = kMissing;
                   element->SetOffset(kMissing);
@@ -1588,7 +1588,7 @@ void TStreamerInfo::BuildOld()
             TClass *elemDm = TClass::GetClass(dmClassName.Data());
             if (elemDm && elemDm->GetCollectionProxy()
                 && !elemDm->IsLoaded() 
-                && elemDm->GetCollectionProxy()->GetCollectionType() != TClassEdit::kVector) {
+                && elemDm->GetCollectionProxy()->GetCollectionType() != ROOT::kSTLvector) {
                Error("BuildOld","The class \"%s\" is compiled and for its data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dm->GetName(),elemDm->GetName());
                offset = kMissing;
                element->SetOffset(kMissing);
@@ -1727,8 +1727,8 @@ void TStreamerInfo::BuildOld()
                Int_t oldkind = TMath::Abs(TClassEdit::IsSTLCont( oldClass->GetName() ));
                Int_t newkind = TMath::Abs(TClassEdit::IsSTLCont( newClass->GetName() ));
 
-               if ( (oldkind==TClassEdit::kMap || oldkind==TClassEdit::kMultiMap) &&
-                    (newkind!=TClassEdit::kMap && newkind!=TClassEdit::kMultiMap) ) {
+               if ( (oldkind==ROOT::kSTLmap || oldkind==ROOT::kSTLmultimap) &&
+                    (newkind!=ROOT::kSTLmap && newkind!=ROOT::kSTLmultimap) ) {
 
                   Int_t elemType = element->GetType();
                   Bool_t isPrealloc = (elemType == kObjectp) || (elemType == kAnyp) || (elemType == (kObjectp + kOffsetL)) || (elemType == (kAnyp + kOffsetL));
@@ -1754,8 +1754,8 @@ void TStreamerInfo::BuildOld()
                   }
                   element->Update(oldClass, newClass.GetClass());
 
-               } else if ( (newkind==TClassEdit::kMap || newkind==TClassEdit::kMultiMap) &&
-                           (oldkind!=TClassEdit::kMap && oldkind!=TClassEdit::kMultiMap) ) {
+               } else if ( (newkind==ROOT::kSTLmap || newkind==ROOT::kSTLmultimap) &&
+                           (oldkind!=ROOT::kSTLmap && oldkind!=ROOT::kSTLmultimap) ) {
                   element->SetNewType(-2);
                } else {
                   element->Update(oldClass, newClass.GetClass());
@@ -2811,7 +2811,7 @@ static void R__WriteDestructorBody(FILE *file, TIter &next)
                //fprintf(file,"      %s::iterator end (%s %s).end();\n");
                //fprintf(file,"      for( iter = begin; iter != end; ++iter) { delete *iter; }\n");
             } else {
-               if (stltype == TStreamerElement::kSTLmap || stltype == TStreamerElement::kSTLmultimap) {
+               if (stltype == ROOT::kSTLmap || stltype == ROOT::kSTLmultimap) {
                   TString enamebasic = TMakeProject::UpdateAssociativeToVector(element->GetTypeNameBasic());
                   std::vector<std::string> inside;
                   int nestedLoc;
@@ -2988,10 +2988,10 @@ void TStreamerInfo::GenerateDeclaration(FILE *fp, FILE *sfp, const TList *subCla
             // comparator function.
             Int_t stltype = ((TStreamerSTL*)element)->GetSTLtype();
             switch (stltype) {
-               case TStreamerElement::kSTLmap:
-               case TStreamerElement::kSTLmultimap:
-               case TStreamerElement::kSTLset:
-               case TStreamerElement::kSTLmultiset:
+               case ROOT::kSTLmap:
+               case ROOT::kSTLmultimap:
+               case ROOT::kSTLset:
+               case ROOT::kSTLmultiset:
                {
                   enamebasic = TMakeProject::UpdateAssociativeToVector(enamebasic);
                }

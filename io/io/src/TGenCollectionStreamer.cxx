@@ -224,7 +224,7 @@ void TGenCollectionStreamer::ReadPrimitives(int nElements, TBuffer &b, const TCl
    StreamHelper* itmconv = 0;
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
-      case TClassEdit::kVector:
+      case ROOT::kSTLvector:
          if (fVal->fKind != EDataType(kBOOL_t))  {
             fResize(fEnv->fObject,fEnv->fSize);
             fEnv->fIdx = 0;
@@ -385,7 +385,7 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
-      case TClassEdit::kVector:
+      case ROOT::kSTLvector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
@@ -413,8 +413,8 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
 
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
-      case TClassEdit::kList:
-      case TClassEdit::kDeque:
+      case ROOT::kSTLlist:
+      case ROOT::kSTLdeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
@@ -436,8 +436,8 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
 
          // Rather troublesome case: Objects can only be fed into the container
          // Once they are created. Need to take memory from stack or heap.
-      case TClassEdit::kMultiSet:
-      case TClassEdit::kSet:
+      case ROOT::kSTLmultiset:
+      case ROOT::kSTLset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct(itm,nElements);
@@ -499,7 +499,7 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
    fEnv->fSize = nElements;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
-      case TClassEdit::kVector:
+      case ROOT::kSTLvector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
@@ -522,8 +522,8 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
-      case TClassEdit::kList:
-      case TClassEdit::kDeque:
+      case ROOT::kSTLlist:
+      case ROOT::kSTLdeque:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          fResize(fEnv->fObject,fEnv->fSize);
          fEnv->fIdx = 0;
@@ -544,8 +544,8 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
 
          // Rather troublesome case: Objects can only be fed into the container
          // Once they are created. Need to take memory from stack or heap.
-      case TClassEdit::kMultiSet:
-      case TClassEdit::kSet:
+      case ROOT::kSTLmultiset:
+      case ROOT::kSTLset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
          fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
          fConstruct(itm,nElements);
@@ -915,7 +915,7 @@ void TGenCollectionStreamer::WritePrimitives(int nElements, TBuffer &b)
    void*  memory  = 0;
    StreamHelper* itm = 0;
    switch (fSTL_type)  {
-      case TClassEdit::kVector:
+      case ROOT::kSTLvector:
          if (fVal->fKind != EDataType(kBOOL_t))  {
             itm = (StreamHelper*)(fEnv->fStart = fFirst.invoke(fEnv));
             break;
@@ -990,7 +990,7 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
    StreamHelper* itm = 0;
    switch (fSTL_type)  {
          // Simple case: contiguous memory. get address of first, then jump.
-      case TClassEdit::kVector:
+      case ROOT::kSTLvector:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;} break;}
          itm = (StreamHelper*)fFirst.invoke(fEnv);
          switch (fVal->fCase) {
@@ -1015,10 +1015,10 @@ void TGenCollectionStreamer::WriteObjects(int nElements, TBuffer &b)
 
          // No contiguous memory, but resize is possible
          // Hence accessing objects using At(i) should be not too much an overhead
-      case TClassEdit::kList:
-      case TClassEdit::kDeque:
-      case TClassEdit::kMultiSet:
-      case TClassEdit::kSet:
+      case ROOT::kSTLlist:
+      case ROOT::kSTLdeque:
+      case ROOT::kSTLmultiset:
+      case ROOT::kSTLset:
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)TGenCollectionProxy::At(idx); { x ;} ++idx;} break;}
          switch (fVal->fCase) {
             case kIsClass:
@@ -1263,7 +1263,7 @@ void TGenCollectionStreamer::ReadBufferDefault(TBuffer &b, void *obj, const TCla
    if (!GetFunctionCreateIterators()) {
       Fatal("TGenCollectionStreamer::ReadBufferDefault","No CreateIterators function for %s",fName.c_str());
    }
-   if (fSTL_type == TClassEdit::kVector && ( fVal->fCase == kIsFundamental || fVal->fCase == kIsEnum ) )
+   if (fSTL_type == ROOT::kSTLvector && ( fVal->fCase == kIsFundamental || fVal->fCase == kIsEnum ) )
    {
       // Only handle primitives this way
       switch (int(fVal->fKind))   {
@@ -1338,7 +1338,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
       }
    } else if (nElements > 0)  {
       switch (fSTL_type)  {
-         case TClassEdit::kBitSet:
+         case ROOT::kSTLbitset:
             if (obj) {
                if (fProperties & kNeedDelete)   {
                   TGenCollectionProxy::Clear("force");
@@ -1348,7 +1348,7 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
             }
             ReadPrimitives(nElements, b, onFileClass);
             return;
-         case TClassEdit::kVector:
+         case ROOT::kSTLvector:
             if (obj) {
                if (fProperties & kNeedDelete)   {
                   TGenCollectionProxy::Clear("force");
@@ -1367,10 +1367,10 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
                   return;
             }
             break;
-         case TClassEdit::kList:
-         case TClassEdit::kDeque:
-         case TClassEdit::kMultiSet:
-         case TClassEdit::kSet:
+         case ROOT::kSTLlist:
+         case ROOT::kSTLdeque:
+         case ROOT::kSTLmultiset:
+         case ROOT::kSTLset:
             if (obj) {
                if (fProperties & kNeedDelete)   {
                   TGenCollectionProxy::Clear("force");
@@ -1388,8 +1388,8 @@ void TGenCollectionStreamer::ReadBufferGeneric(TBuffer &b, void *obj, const TCla
                   return;
             }
             break;
-         case TClassEdit::kMap:
-         case TClassEdit::kMultiMap:
+         case ROOT::kSTLmap:
+         case ROOT::kSTLmultimap:
             if (obj) {
                if (fProperties & kNeedDelete)   {
                   TGenCollectionProxy::Clear("force");
@@ -1414,14 +1414,14 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
       }
       if (nElements > 0)  {
          switch (fSTL_type)  {
-            case TClassEdit::kBitSet:
+            case ROOT::kSTLbitset:
                ReadPrimitives(nElements, b, fOnFileClass);
                return;
-            case TClassEdit::kVector:
-            case TClassEdit::kList:
-            case TClassEdit::kDeque:
-            case TClassEdit::kMultiSet:
-            case TClassEdit::kSet:
+            case ROOT::kSTLvector:
+            case ROOT::kSTLlist:
+            case ROOT::kSTLdeque:
+            case ROOT::kSTLmultiset:
+            case ROOT::kSTLset:
                switch (fVal->fCase) {
                   case kIsFundamental:  // Only handle primitives this way
                   case kIsEnum:
@@ -1432,8 +1432,8 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
                      return;
                }
                break;
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                ReadMap(nElements, b, fOnFileClass);
                break;
          }
@@ -1443,14 +1443,14 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
       b << nElements;
       if (nElements > 0)  {
          switch (fSTL_type)  {
-            case TClassEdit::kBitSet:
+            case ROOT::kSTLbitset:
                WritePrimitives(nElements, b);
                return;
-            case TClassEdit::kVector:
-            case TClassEdit::kList:
-            case TClassEdit::kDeque:
-            case TClassEdit::kMultiSet:
-            case TClassEdit::kSet:
+            case ROOT::kSTLvector:
+            case ROOT::kSTLlist:
+            case ROOT::kSTLdeque:
+            case ROOT::kSTLmultiset:
+            case ROOT::kSTLset:
                switch (fVal->fCase) {
                   case kIsFundamental:  // Only handle primitives this way
                   case kIsEnum:
@@ -1461,8 +1461,8 @@ void TGenCollectionStreamer::Streamer(TBuffer &b)
                      return;
                }
                break;
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                WriteMap(nElements, b);
                break;
          }
@@ -1481,15 +1481,15 @@ void TGenCollectionStreamer::StreamerAsMap(TBuffer &b)
       }
       if (nElements > 0)  {
          switch (fSTL_type)  {
-            case TClassEdit::kMap:
-            case TClassEdit::kMultiMap:
+            case ROOT::kSTLmap:
+            case ROOT::kSTLmultimap:
                ReadMap(nElements, b, fOnFileClass);
                break;
-            case TClassEdit::kVector:
-            case TClassEdit::kList:
-            case TClassEdit::kDeque:
-            case TClassEdit::kMultiSet:
-            case TClassEdit::kSet: {
+            case ROOT::kSTLvector:
+            case ROOT::kSTLlist:
+            case ROOT::kSTLdeque:
+            case ROOT::kSTLmultiset:
+            case ROOT::kSTLset: {
                   ReadPairFromMap(nElements, b);
                   break;
                }
