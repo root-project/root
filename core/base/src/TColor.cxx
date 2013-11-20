@@ -208,7 +208,7 @@ Begin_Macro(source)
 End_Macro
 Begin_Html
 
-<p>The function <tt>TColor::CreateGradientColorTable()</tt> automatically 
+<p>The function <tt>TColor::CreateGradientColorTable()</tt> automatically
 calls </tt>gStyle->SetPalette()</tt>, so there is not need to add one.
 <p>
 After a call to <tt>TColor::CreateGradientColorTable()</tt> it is sometimes
@@ -238,13 +238,13 @@ The following macro illustrate this feature.
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphs/multipalette.C
-End_Macro 
+End_Macro
 Begin_Html
 
 <a name="C06"></a><h3>Color transparency</h3>
-To make a graphics object transparent it is enough to set its color to a 
-transparent one. The color transparency is defined via its alpha component. The 
-alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully 
+To make a graphics object transparent it is enough to set its color to a
+transparent one. The color transparency is defined via its alpha component. The
+alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully
 opaque). To set the alpha value of an existing color it is enough to do:
 <pre>
    TColor *col26 = gROOT->GetColor(26);
@@ -256,7 +256,7 @@ A new color can be created transparent the following way:
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
 </pre>
 An example of tranparency usage with parallel coordinates can be found
-in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the 
+in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the
 transparency is implemented only for PDF output, SVG output, and for gif,
 jpg and png outputs.
 
@@ -1608,14 +1608,14 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    Spectrum Violet->Red is created with 50 colors. That's the default rain bow
    pallette.
    <p>
-   Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>. 
+   Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>.
    The following value of <tt>ncolors</tt> give access to:
    <p>
    <pre>
    if ncolors = 51 and colors=0, a Deep Sea palette is used.
    if ncolors = 52 and colors=0, a Grey Scale palette is used.
    if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
-   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow) 
+   if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
    if ncolors = 55 and colors=0, a Rain Bow palette is used.
    if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
    </pre>
@@ -1625,8 +1625,8 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    the item "colors" in the "VIEW" menu of the canvas toolbar.
    The color parameters can be changed via TColor::SetRGB.
    <p>
-   Note that when drawing a 2D histogram <tt>h2</tt> with the option "COL" or 
-   "COLZ" or with any "CONT" options using the color map, the number of colors 
+   Note that when drawing a 2D histogram <tt>h2</tt> with the option "COL" or
+   "COLZ" or with any "CONT" options using the color map, the number of colors
    used is defined by the number of contours <tt>n</tt> specified with:
    <tt>h2->SetContour(n)</tt>
    End_html */
@@ -1659,7 +1659,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set Deep Sea palette
    if (ncolors == 51 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 3) return;
+      if (paletteType == 3) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
@@ -1669,11 +1669,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 3;
       return;
    }
-   
+
    // set Grey Scale palette
    if (ncolors == 52 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 4) return;
+      if (paletteType == 4) return;
       const Int_t nRGBs = 3;
       Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
@@ -1683,11 +1683,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 4;
       return;
    }
-   
+
    // set Dark Body Radiator palette
    if (ncolors == 53 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      if (paletteType == 5) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00, 1.00, 1.00};
@@ -1697,11 +1697,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 5;
       return;
    }
-   
+
    // set two-color hue palette (dark blue through neutral gray to bright yellow)
    if (ncolors == 54 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 6) return;
+      if (paletteType == 6) return;
       const Int_t nRGBs = 3;
       Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
@@ -1711,11 +1711,11 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 6;
       return;
    }
-   
-   // set Rain Bow palette 
+
+   // set Rain Bow palette
    if (ncolors == 55 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 7) return;
+      if (paletteType == 7) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t red[nRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
@@ -1725,18 +1725,18 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 7;
       return;
    }
-   
+ 
    // set Inverted Dark Body Radiator palette
    if (ncolors == 56 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      if (paletteType == 8) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
       Double_t red[nRGBs]   = { 1.00, 1.00, 1.00, 0.50, 0.00};
       Double_t green[nRGBs] = { 1.00, 1.00, 0.55, 0.00, 0.00};
       Double_t blue[nRGBs]  = { 1.00, 0.00, 0.00, 0.00, 0.00};
       TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
-      paletteType = 5;
+      paletteType = 8;
       return;
    }
 
@@ -1744,6 +1744,6 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    fgPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fgPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fgPalette.fArray[i] = palette[i];
-   paletteType = 4;
+   paletteType = 9;
 }
 
