@@ -388,7 +388,7 @@ public:
    void           SetCtype(Int_t t) {fCtype = t;}
    virtual void   SetStreamer(TMemberStreamer *streamer);
 
-   ClassDef(TStreamerSTL,3)  //Streamer element of type STL container
+   ClassDef(TStreamerSTL,4)  //Streamer element of type STL container
 };
 
 //________________________________________________________________________
