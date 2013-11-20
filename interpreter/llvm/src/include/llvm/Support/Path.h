@@ -66,9 +66,9 @@ public:
   reference operator*() const { return Component; }
   pointer   operator->() const { return &Component; }
   const_iterator &operator++();    // preincrement
-  const_iterator &operator++(int); // postincrement
+  const_iterator &operator++(int); // postincrement - not implemented
   const_iterator &operator--();    // predecrement
-  const_iterator &operator--(int); // postdecrement
+  const_iterator &operator--(int); // postdecrement - not implemented
   bool operator==(const const_iterator &RHS) const;
   bool operator!=(const const_iterator &RHS) const;
 
@@ -76,7 +76,50 @@ public:
   ptrdiff_t operator-(const const_iterator &RHS) const;
 };
 
-typedef std::reverse_iterator<const_iterator> reverse_iterator;
+/// @brief Path reverse iterator.
+///
+/// This is a bidirectional iterator that iterates over the individual
+/// components in \a path.   The traversal order is the inverse of the
+/// one followed by const_iterator.
+///
+/// Note: std::reverse_iterator<const_iterator> is not useable here as
+/// const_iterator::operator* returns a reference to a member of the iterator
+/// and std::reverse_iterator<T>::operator* call T::operator* on a temporary.
+///
+/// Iteration examples. Each component is separated by ',':
+/// @code
+///   /          => /
+///   /foo       => foo,/
+///   foo/       => /,foo
+///   /foo/bar   => bar,foo,/
+///   ../        => .,..
+///   C:\foo\bar => bar,foo,/,C:
+/// @endcode
+class reverse_iterator {
+   const_iterator Iter;
+
+public:
+  typedef const StringRef value_type;
+  typedef ptrdiff_t difference_type;
+  typedef value_type &reference;
+  typedef value_type *pointer;
+  typedef std::bidirectional_iterator_tag iterator_category;
+
+  explicit reverse_iterator(const const_iterator &RHS) : Iter(RHS) {}
+  reference operator*() const { return *Iter; }
+  pointer   operator->() const { return &(*Iter); }
+  reverse_iterator &operator++() { --Iter; return *this; } // preincrement
+  reverse_iterator &operator++(int); // postincrement - not implemented
+  reverse_iterator &operator--() { ++Iter; return *this; } // predecrement
+  reverse_iterator &operator--(int); // postdecrement - not implemented
+  bool operator==(const reverse_iterator &RHS) const { return Iter == RHS.Iter; }
+  bool operator!=(const reverse_iterator &RHS) const { return Iter != RHS.Iter; }
+
+  /// @brief Difference in bytes between this and RHS.
+  ptrdiff_t operator-(const reverse_iterator &RHS) const {
+    return Iter - RHS.Iter;
+  }
+};
 
 /// @brief Get begin iterator over \a path.
 /// @param path Input path.
@@ -92,14 +135,14 @@ const_iterator end(StringRef path);
 /// @param path Input path.
 /// @returns Iterator initialized with the first reverse component of \a path.
 inline reverse_iterator rbegin(StringRef path) {
-  return reverse_iterator(end(path));
+  return reverse_iterator(--end(path));
 }
 
 /// @brief Get reverse end iterator over \a path.
 /// @param path Input path.
 /// @returns Iterator initialized to the reverse end of \a path.
 inline reverse_iterator rend(StringRef path) {
-  return reverse_iterator(begin(path));
+  return reverse_iterator(--begin(path));
 }
 
 /// @}
