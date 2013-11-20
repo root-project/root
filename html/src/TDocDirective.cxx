@@ -460,9 +460,11 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    }
 
    TString subProcInputFile = CreateSubprocessInputFile();
+   if (subProcInputFile.IsEmpty()) return kFALSE;
+
    subProcInputFile.ReplaceAll("\\", "\\\\");
    subProcInputFile.ReplaceAll("\"", "\\\"");
-   TString invoc("root.exe -l ");
+   TString invoc("root.exe -l -q ");
    if (wantBatch) {
       invoc += "-b ";
    }
@@ -473,7 +475,8 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
 
    if (exitCode && gDebug > 0) {
       Info("GetResult()", "Subprocess exited with status %d\n", exitCode);
-   } else {
+   } else if (!fIsFilename) {
+      // we have created the input file.
       gSystem->Unlink(subProcInputFile);
    }
 
