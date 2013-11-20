@@ -129,6 +129,7 @@ public: // Public Interface
 
    void    AddIncludePath(const char* path);
    Int_t   AutoLoad(const char* cls);
+   Int_t   AutoLoad(const type_info& typeinfo);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values

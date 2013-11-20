@@ -2712,6 +2712,14 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
       }
    }
 
+   // try autoloading the typeinfo
+   if (gInterpreter->AutoLoad(typeinfo)) {
+      cl = GetClass(typeinfo);
+      if (cl) {
+         return cl;
+      }
+   }
+
    //last attempt. Look in CINT list of all (compiled+interpreted) classes
    //   if (gInterpreter->CheckClassInfo(name)) {
    //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);

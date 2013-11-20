@@ -91,6 +91,7 @@ public:
 
    virtual void     AddIncludePath(const char *path) = 0;
    virtual Int_t    AutoLoad(const char *classname) = 0;
+   virtual Int_t    AutoLoad(const type_info& typeinfo) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;

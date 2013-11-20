@@ -538,6 +538,38 @@ extern "C" void TCling__SplitAclicMode(const char* fileName, string &mode,
 //
 //
 
+#ifdef R__WIN32
+extern "C" {
+   char *__unDName(char *demangled, const char *mangled, int out_len,
+                   void * (* pAlloc )(size_t), void (* pFree )(void *),
+                   unsigned short int flags);
+}
+#endif
+
+//______________________________________________________________________________
+static TString TCling__Demangle(const char *mangled_name, int *err)
+{
+
+   TString demangled = mangled_name;
+   *err = 0;
+#ifdef R__WIN32
+   char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
+   if (!demangled_name) {
+      *err = -1;
+      return demangled;
+   }
+#else
+   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, err);
+   if (*err) {
+      free(demangled_name);
+      return demangled;
+   }
+#endif
+   demangled = demangled_name;
+   free(demangled_name);
+   return demangled;
+}
+
 void* autoloadCallback(const std::string& mangled_name)
 {
    // Autoload a library. Given a mangled symbol name find the
@@ -547,9 +579,8 @@ void* autoloadCallback(const std::string& mangled_name)
    //  Use the C++ ABI provided function to demangle the symbol name.
    //
    int err = 0;
-   char* demangled_name = abi::__cxa_demangle(mangled_name.c_str(), 0, 0, &err);
+   TString demangled_name = TCling__Demangle(mangled_name.c_str(), &err);
    if (err) {
-      free(demangled_name);
       return 0;
    }
    //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
@@ -557,8 +588,7 @@ void* autoloadCallback(const std::string& mangled_name)
    //  Separate out the class or namespace part of the
    //  function name.
    //
-   std::string name(demangled_name);
-   free(demangled_name);
+   std::string name(demangled_name.Data());
 
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
@@ -2617,9 +2647,8 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
    //  Use the C++ ABI provided function to demangle the symbol name.
    //
    int err = 0;
-   char* demangled_name = abi::__cxa_demangle(mangled_name.str().c_str(), 0, 0, &err);
+   TString demangled_name = TCling__Demangle(mangled_name.str().c_str(), &err);
    if (err) {
-      free(demangled_name);
       if (err == -2) {
          // It might simply be an unmangled global name.
          DeclId_t d;
@@ -2634,8 +2663,7 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
    //  Separate out the class or namespace part of the
    //  function name.
    //
-   std::string scopename(demangled_name);
-   free(demangled_name);
+   std::string scopename(demangled_name.Data());
 
    std::string dataname;
 
@@ -3858,6 +3886,18 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    //fMapfile->SetValue(key, libs);
    fMapfile->SetValue(cls, libs);
    return 1;
+}
+
+//______________________________________________________________________________
+Int_t TCling::AutoLoad(const type_info& typeinfo)
+{
+   // Load library containing the specified class. Returns 0 in case of error
+   // and 1 in case if success.
+
+   int err = 0;
+   TString demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   if (err) return 0;
+   return AutoLoad(demangled_name.Data());
 }
 
 //______________________________________________________________________________
