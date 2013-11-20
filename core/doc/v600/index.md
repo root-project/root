@@ -174,6 +174,9 @@ of the `TDataType` describing a typedef.
     independant from ROOT. It is enough to save the object in a file
     with the extension ".cc". The code as to save each objet should be
     implement in each `SavePrimitive` function like in `TF1`.
+    
+-   In `SetPalette` predefined palettes were redefined even if it was
+    not necessary.
 
 ### TAttText
 
