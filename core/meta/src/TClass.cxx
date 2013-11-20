@@ -2713,10 +2713,11 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
    }
 
    // try autoloading the typeinfo
-   static Bool_t once = kTRUE;
+   Size_t lengthOfSharedLibs = strlen(gInterpreter->GetSharedLibs());
    if (gInterpreter->AutoLoad(typeinfo)) {
-      if (once) {
-         once = kFALSE;
+      // call GetClass again only if a library has been loaded
+      // to avoid potential infinite recursion 
+      if (lengthOfSharedLibs != strlen(gInterpreter->GetSharedLibs())) {
          cl = GetClass(typeinfo, load);
          if (cl) {
             return cl;
