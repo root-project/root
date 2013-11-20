@@ -42,5 +42,3 @@ foreach(dict ${stldicts})
   ROOT_GENERATE_ROOTMAP(${dict}Dict LINKDEF ../src/${dict}Linkdef.h DEPENDENCIES Core)
   ROOT_LINKER_LIBRARY(${dict}Dict G__std_${dict}.cxx DEPENDENCIES  Core)
 endforeach()
-
-
