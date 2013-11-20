@@ -52,7 +52,7 @@
 TGClient *gClient = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
-void TriggerDictionaryInitalization_libGui();
+void TriggerDictionaryInitialization_libGui();
 class TGClientInit {
 public:
    TGClientInit() { 
@@ -62,7 +62,7 @@ public:
          // This is required because the dictionaries must be initialized 
          // __before__ the TGClient creation which will induce the creation 
          // of a TClass object which will need the dictionary for TGClient!
-         TriggerDictionaryInitalization_libGui();
+         TriggerDictionaryInitialization_libGui();
          new TGClient();
       }
       TApplication::NeedGraphicsLibs(); 

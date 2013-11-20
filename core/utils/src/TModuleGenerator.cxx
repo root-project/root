@@ -393,36 +393,39 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
    ConvertToCppString(payloadCode);
    
    // Dictionary initialization code for loading the module
-   out << "void TriggerDictionaryInitalization_"
-       << GetDictionaryName() << "() {\n"
-      "      static const char* headers[] = {\n";
+   out << "namespace {\n"
+      "  void TriggerDictionaryInitialization_"
+       << GetDictionaryName() << "_Impl() {\n"
+      "    static const char* headers[] = {\n";
    if ( inlineHeaders ){
       out << 0 ;
    } else {
       WriteHeaderArray(out);
    };
-   out << "      };\n"
-      "      static const char* allHeaders[] = {\n";
+   out << "    };\n"
+      "    static const char* allHeaders[] = {\n";
    WriteAllSeenHeadersArray(out) << 
-      "      };\n"
-      "      static const char* includePaths[] = {\n";
+      "    };\n"
+      "    static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) << 
-      "      };\n"
-      "      static const char* payloadCode = "<< payloadCode << ";\n"
-      "      static bool sInitialized = false;\n"
-      "      if (!sInitialized) {\n"
-      "        TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
-      "          headers, allHeaders, includePaths, payloadCode,\n"
-      "          TriggerDictionaryInitalization_" << GetDictionaryName() << ");\n"
-      "        sInitialized = true;\n"
-      "      }\n"
+      "    };\n"
+      "    static const char* payloadCode = "<< payloadCode << ";\n"
+      "    static bool sInitialized = false;\n"
+      "    if (!sInitialized) {\n"
+      "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
+      "        headers, allHeaders, includePaths, payloadCode,\n"
+      "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl);\n"
+      "      sInitialized = true;\n"
       "    }\n"
-      "namespace {\n"
+      "  }\n"
       "  static struct DictInit {\n"
       "    DictInit() {\n"
-      "      TriggerDictionaryInitalization_" << GetDictionaryName() << "();\n"
+      "      TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl();\n"
       "    }\n"
       "  } __TheDictionaryInitializer;\n"
+      "}\n"
+      "void TriggerDictionaryInitialization_" << GetDictionaryName() << "() {\n"
+      "  TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl();\n"
       "}" << std::endl;
 }
    
