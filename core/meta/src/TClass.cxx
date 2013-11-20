@@ -2713,15 +2713,18 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
    }
 
    // try autoloading the typeinfo
-   Size_t lengthOfSharedLibs = strlen(gInterpreter->GetSharedLibs());
-   if (gInterpreter->AutoLoad(typeinfo)) {
-      // call GetClass again only if a library has been loaded
-      // to avoid potential infinite recursion 
-      if (lengthOfSharedLibs != strlen(gInterpreter->GetSharedLibs())) {
-         cl = GetClass(typeinfo, load);
-         if (cl) {
-            return cl;
-         }
+   int autoload_old = gCling->SetClassAutoloading(1);
+   if (!autoload_old) {
+      // Re-disable, we just meant to test
+      gCling->SetClassAutoloading(0);
+   }
+   if (autoload_old && gInterpreter->AutoLoad(typeinfo)) {
+      // Disable autoload to avoid potential infinite recursion
+      gCling->SetClassAutoloading(0);
+      cl = GetClass(typeinfo, load);
+      gCling->SetClassAutoloading(1);
+      if (cl) {
+         return cl;
       }
    }
 
