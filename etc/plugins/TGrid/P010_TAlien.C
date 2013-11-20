@@ -86,7 +86,7 @@ void P010_TAlien()
    ralienpath += "/lib/"; ralienpath += "libRAliEn.so";
 
    // only if ROOT was compiled with enable-alien we do library setup and configure a handler
-   if ((!gSystem->AccessPathName(ralienpath))) || (configfeatures.contains("alien"))) {
+   if ((!gSystem->AccessPathName(ralienpath)) || (configfeatures.contains("alien"))) {
       // you can enforce
       if ((!gSystem->Getenv("GBBOX_ENVFILE")) ||
           ( gSystem->Getenv("ALIEN_SOURCE_GCLIENT_ENV")) ||
