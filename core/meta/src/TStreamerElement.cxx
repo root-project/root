@@ -1844,17 +1844,15 @@ void TStreamerSTL::Streamer(TBuffer &R__b)
          R__b >> fCtype;
          R__b.CheckByteCount(R__s, R__c, TStreamerSTL::IsA());
       }
-      if (R__v < 4) {
-         if (fSTLtype == ROOT::kSTLmultimap || fSTLtype == ROOT::kSTLset) {
-            // For a long time those where inverted in TStreamerElement
-            // compared to the other definitions.  When we moved to version '4',
-            // this got standardized, but we now need to fix it.
-
-            if (fTypeName.BeginsWith("std::set") || fTypeName.BeginsWith("set")) {
-               fSTLtype = ROOT::kSTLset;
-            } else if (fTypeName.BeginsWith("std::multimap") || fTypeName.BeginsWith("multimap")) {
-               fSTLtype = ROOT::kSTLmultimap;
-            }
+      if (fSTLtype == ROOT::kSTLmultimap || fSTLtype == ROOT::kSTLset) {
+         // For a long time those where inverted in TStreamerElement
+         // compared to the other definitions.  When we moved to version '4',
+         // this got standardized, but we now need to fix it.
+         
+         if (fTypeName.BeginsWith("std::set") || fTypeName.BeginsWith("set")) {
+            fSTLtype = ROOT::kSTLset;
+         } else if (fTypeName.BeginsWith("std::multimap") || fTypeName.BeginsWith("multimap")) {
+            fSTLtype = ROOT::kSTLmultimap;
          }
       }
 
