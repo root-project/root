@@ -252,7 +252,7 @@ TDocMacroDirective::~TDocMacroDirective()
 //______________________________________________________________________________
 void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
    Int_t error = TInterpreter::kNoError;
-   Long_t ret = gROOT->ProcessLine(what, &error);
+   Long_t ret = gROOT->ProcessLine(TString(".x ") + what, &error);
    Int_t sleepCycles = 50; // 50 = 5 seconds
    while (error == TInterpreter::kProcessing && --sleepCycles > 0)
       gSystem->Sleep(100);
@@ -460,7 +460,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    }
 
    TString subProcInputFile = CreateSubprocessInputFile();
-   if (subProcInputFile.IsEmpty()) return kFALSE;
+   if (!subProcInputFile.Length()) return kFALSE;
 
    subProcInputFile.ReplaceAll("\\", "\\\\");
    subProcInputFile.ReplaceAll("\"", "\\\"");
@@ -468,7 +468,7 @@ Bool_t TDocMacroDirective::GetResult(TString& result)
    if (wantBatch) {
       invoc += "-b ";
    }
-   invoc += "-E 'TDocMacroDirective::SubProcess(\""
+   invoc += "-e 'TDocMacroDirective::SubProcess(\""
       + subProcInputFile + "\",\"" + outFileName + "\");'";
    gSystem->Unlink(outFileName);
    Int_t exitCode = gSystem->Exec(invoc.Data());
