@@ -1626,7 +1626,7 @@ int IsSTLContainer(G__DataMemberInfo &m)
    // Is this an STL container?
 
    const char *s = m.Type()->TrueName();
-   if (!s) return kNotSTL;
+   if (!s) return TClassEdit::kNotSTL;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
@@ -1642,7 +1642,7 @@ int IsSTLContainer(G__BaseClassInfo &m)
    // Is this an STL container?
 
    const char *s = m.Name();
-   if (!s) return kNotSTL;
+   if (!s) return TClassEdit::kNotSTL;
 
    string type(s);
    int k = TClassEdit::IsSTLCont(type.c_str(),1);
