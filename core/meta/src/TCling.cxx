@@ -547,10 +547,10 @@ extern "C" {
 #endif
 
 //______________________________________________________________________________
-static TString TCling__Demangle(const char *mangled_name, int *err)
+static string TCling__Demangle(const char *mangled_name, int *err)
 {
 
-   TString demangled = mangled_name;
+   string demangled = mangled_name;
    *err = 0;
 #ifdef R__WIN32
    char *demangled_name = __unDName(0, mangled_name, 0, malloc, free, UNDNAME_COMPLETE);
@@ -579,7 +579,7 @@ void* autoloadCallback(const std::string& mangled_name)
    //  Use the C++ ABI provided function to demangle the symbol name.
    //
    int err = 0;
-   TString demangled_name = TCling__Demangle(mangled_name.c_str(), &err);
+   string name = TCling__Demangle(mangled_name.c_str(), &err);
    if (err) {
       return 0;
    }
@@ -588,7 +588,6 @@ void* autoloadCallback(const std::string& mangled_name)
    //  Separate out the class or namespace part of the
    //  function name.
    //
-   std::string name(demangled_name.Data());
 
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
@@ -2647,7 +2646,7 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
    //  Use the C++ ABI provided function to demangle the symbol name.
    //
    int err = 0;
-   TString demangled_name = TCling__Demangle(mangled_name.str().c_str(), &err);
+   string scopename = TCling__Demangle(mangled_name.str().c_str(), &err);
    if (err) {
       if (err == -2) {
          // It might simply be an unmangled global name.
@@ -2658,13 +2657,10 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
       }
       return 0;
    }
-   //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
    //
    //  Separate out the class or namespace part of the
    //  function name.
    //
-   std::string scopename(demangled_name.Data());
-
    std::string dataname;
 
    if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
@@ -3895,9 +3891,9 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    // and 1 in case if success.
 
    int err = 0;
-   TString demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
    if (err) return 0;
-   return AutoLoad(demangled_name.Data());
+   return AutoLoad(demangled_name.c_str());
 }
 
 //______________________________________________________________________________

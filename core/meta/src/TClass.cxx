@@ -2714,7 +2714,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 
    // try autoloading the typeinfo
    if (gInterpreter->AutoLoad(typeinfo)) {
-      cl = GetClass(typeinfo);
+      cl = GetClass(typeinfo, load);
       if (cl) {
          return cl;
       }
