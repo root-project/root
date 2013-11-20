@@ -1659,7 +1659,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set Deep Sea palette
    if (ncolors == 51 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 3) return;
+      if (paletteType == 3) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t red[nRGBs]   = { 0.00, 0.09, 0.18, 0.09, 0.00 };
@@ -1673,7 +1673,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set Grey Scale palette
    if (ncolors == 52 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 4) return;
+      if (paletteType == 4) return;
       const Int_t nRGBs = 3;
       Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
@@ -1687,7 +1687,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set Dark Body Radiator palette
    if (ncolors == 53 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      if (paletteType == 5) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00, 1.00, 1.00};
@@ -1701,7 +1701,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set two-color hue palette (dark blue through neutral gray to bright yellow)
    if (ncolors == 54 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 6) return;
+      if (paletteType == 6) return;
       const Int_t nRGBs = 3;
       Double_t stops[nRGBs] = { 0.00, 0.50, 1.00};
       Double_t red[nRGBs]   = { 0.00, 0.50, 1.00};
@@ -1715,7 +1715,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // set Rain Bow palette
    if (ncolors == 55 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 7) return;
+      if (paletteType == 7) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       Double_t red[nRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
@@ -1725,18 +1725,18 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 7;
       return;
    }
-
+ 
    // set Inverted Dark Body Radiator palette
    if (ncolors == 56 && colors == 0) {
       TColor::InitializeColors();
-      if (ncolors == fgPalette.fN && paletteType == 5) return;
+      if (paletteType == 8) return;
       const Int_t nRGBs = 5;
       Double_t stops[nRGBs] = { 0.00, 0.25, 0.50, 0.75, 1.00};
       Double_t red[nRGBs]   = { 1.00, 1.00, 1.00, 0.50, 0.00};
       Double_t green[nRGBs] = { 1.00, 1.00, 0.55, 0.00, 0.00};
       Double_t blue[nRGBs]  = { 1.00, 0.00, 0.00, 0.00, 0.00};
       TColor::CreateGradientColorTable(nRGBs, stops, red, green, blue, 255, alpha);
-      paletteType = 5;
+      paletteType = 8;
       return;
    }
 
@@ -1744,6 +1744,6 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    fgPalette.Set(ncolors);
    if (colors)  for (i=0;i<ncolors;i++) fgPalette.fArray[i] = colors[i];
    else         for (i=0;i<ncolors;i++) fgPalette.fArray[i] = palette[i];
-   paletteType = 4;
+   paletteType = 9;
 }
 
