@@ -515,8 +515,8 @@ TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrappe
 
        See -Wambiguous-member-template
 
-       An alternative to disabling the diagnostics is to use a method function
-       pointer:
+       An alternative to disabling the diagnostics is to use a pointer to
+       member function:
 
        #include <set>
        using namespace std;
