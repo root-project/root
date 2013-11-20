@@ -87,7 +87,7 @@ bool XMLReader::GetNextTag(std::ifstream& file, std::string& out, int& lineCount
          if (pattern == "lt;"){
             c = '<';
          }
-         else if (pattern == "rt;"){
+         else if (pattern == "gt;"){
             c = '>';
          }
          else {
