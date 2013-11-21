@@ -36,6 +36,7 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TMath.h"
+#include "KeySymbols.h"
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()
@@ -304,17 +305,47 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    static Int_t pxold, pyold;
    static Int_t px0, py0;
    static Int_t linedrawn;
-   const Int_t kTMAX=100;
-   Int_t i,pxl,pyl;
+   Int_t pxl,pyl;
    Double_t temp;
    Double_t xp0,xp1,yp0,yp1;
-   static char atext[kTMAX];
-   TObject *pave = 0;
+   static TObject *pave = 0;
 
    if (mode == kPaveLabel)
       ((TPad *)gPad)->EventPave();
 
    switch (event) {
+
+   case kKeyPress:
+      if (mode == kPaveLabel) {
+         if ((py == kKey_Return) || (py == kKey_Enter)) {
+            TString s(pave->GetTitle());
+            Int_t l = s.Length();
+            s.Remove(l-1);
+            ((TPaveLabel*)pave)->SetLabel(s.Data());
+            gSystem->ProcessEvents();
+            gPad->Modified(kTRUE);
+            gROOT->SetEditorMode();
+            gPad->Update();
+            pave = 0;
+         } else if (py == kKey_Backspace) {
+            TString s(pave->GetTitle());
+            Int_t l = s.Length();
+            if (l>1) {
+               s.Replace(l-2, 2, "<");
+               ((TPaveLabel*)pave)->SetLabel(s.Data());
+               gPad->Modified(kTRUE);
+               gPad->Update();
+            }
+         } else if (isprint(py)) {
+            TString s(pave->GetTitle());
+            Int_t l = s.Length();
+            s.Insert(l-1,(char)py);
+            ((TPaveLabel*)pave)->SetLabel(s.Data());
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
+      }
+      break;
 
    case kButton1Down:
       gVirtualX->SetLineColor(-1);
@@ -349,31 +380,18 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kPaveText ) pave = new TPaveText(xp0,yp0,xp1,yp1);
       if (mode == kPavesText) pave = new TPavesText(xp0,yp0,xp1,yp1);
       if (mode == kDiamond)   pave = new TDiamond(x0,y0,x1,y1);
-      if (mode == kPaveLabel || mode == kButton) {
+      if (mode == kPaveLabel) {
          ((TPad *)gPad)->StartEditing();
          gSystem->ProcessEvents();
          pxl = (px0 + px)/2;
          pyl = (py0 + py)/2;
-         for (i=0;i<kTMAX;i++) atext[i] = ' ';
-         atext[kTMAX-1] = 0;
-         gVirtualX->RequestString(pxl, pyl, atext);
-         for (i=kTMAX-2;i>=0;i--) {
-            if ((i==0) || (atext[i] != ' ')) {
-               atext[i+1] = 0;
-               break;
-            }
+         if (mode == kPaveLabel) {
+            pave = new TPaveLabel(xp0,yp0,xp1,yp1,"<");
+            pave->Draw();
+            gPad->Modified(kTRUE);
+            gPad->Update();
+            break;
          }
-         if (mode == kPaveLabel) { 
-            pave = new TPaveLabel(xp0,yp0,xp1,yp1,atext);
-            gSystem->ProcessEvents();
-            ((TPad *)gPad)->RecordPave(pave);
-         }
-         if (mode == kButton) pave = new TButton(atext,"",
-                              (x0-gPad->GetX1())/(gPad->GetX2() - gPad->GetX1()),
-                              (y0-gPad->GetY1())/(gPad->GetY2() - gPad->GetY1()),
-                              (x1-gPad->GetX1())/(gPad->GetX2() - gPad->GetX1()),
-                              (y1-gPad->GetY1())/(gPad->GetY2() -
-                              gPad->GetY1()));
       }
       TCanvas *canvas = gPad->GetCanvas();
       if (canvas) canvas->FeedbackMode(kFALSE);
@@ -490,54 +508,70 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    // Click left button to indicate the text position
    //
 
-   const Int_t kTMAX=100;
-   static char atext[kTMAX];
-   Int_t i, lentext;
-   TLatex *newtext;
-   TMarker *marker;
-   Double_t x, y;
-   TCanvas *canvas = gPad->GetCanvas();
+   static TLatex *text = 0;
+   static Double_t x, y;
 
    switch (event) {
 
+   case kKeyPress:
+      if ((py == kKey_Return) || (py == kKey_Enter)) {
+         TString s(text->GetTitle());
+         Int_t l = s.Length();
+         s.Remove(l-1);
+         text->SetText(x,y,s.Data());
+         gSystem->ProcessEvents();
+         gPad->Modified(kTRUE);
+         gROOT->SetEditorMode();
+         gPad->Update();
+         text = 0;
+      } else if (py == kKey_Backspace) {
+         TString s(text->GetTitle());
+         Int_t l = s.Length();
+         if (l>1) {
+            s.Replace(l-2, 2, "<");
+            text->SetText(x,y,s.Data());
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
+      } else if (isprint(py)) {
+         TString s(text->GetTitle());
+         Int_t l = s.Length();
+         s.Insert(l-1,(char)py);
+         text->SetText(x,y,s.Data());
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+      break;
+
    case kButton1Down:
+      if (text) {
+         TString s(text->GetTitle());
+         Int_t l = s.Length();
+         s.Remove(l-1);
+         text->SetText(x,y,s.Data());
+      }
+
       x = gPad->AbsPixeltoX(px);
       y = gPad->AbsPixeltoY(py);
       if (gPad->GetLogx()) x = TMath::Power(10,x);
       if (gPad->GetLogy()) y = TMath::Power(10,y);
+
       if (mode == kMarker) {
+         TMarker *marker;
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
          marker->Draw();
-         if (canvas) canvas->Selected((TPad*)gPad, marker, event);
          gROOT->SetEditorMode();
          break;
       }
+
       ((TPad *)gPad)->StartEditing();
       gSystem->ProcessEvents();
-      for (i=0;i<kTMAX;i++) atext[i] = ' ';
-      atext[kTMAX-1] = 0;
-      lentext = kTMAX;
-      newtext = new TLatex();
-      gVirtualX->SetLineColor(-1);
-      newtext->TAttText::Modify();
-      gVirtualX->RequestString(px, py, atext);
-      lentext = strlen(atext);
-      for (i=lentext-1;i>=0;i--) {
-         if (atext[i] != ' ') {
-            atext[lentext] = 0;
-            break;
-         }
-         lentext--;
-      }
-      if (!lentext) break;
-      TLatex copytext(x, y, atext);
-      gSystem->ProcessEvents();
-      ((TPad *)gPad)->RecordLatex(&copytext);
-      newtext->DrawLatex(x, y, atext);
+
+      text = new TLatex(x,y,"<");
+      text->Draw();
       gPad->Modified(kTRUE);
-      if (canvas) canvas->Selected((TPad*)gPad, newtext, event);
-      gROOT->SetEditorMode();
       gPad->Update();
+
       break;
    }
 }
