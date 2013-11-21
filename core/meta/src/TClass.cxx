@@ -2460,8 +2460,12 @@ TVirtualIsAProxy* TClass::GetIsAProxy() const
 TClass *TClass::GetClassOrAlias(const char *name)
 {
    // Static method returning pointer to TClass of the specified class name.
-   // Also checks for possible templatye alias names (e.g. vector<Int_t>
+   // Also checks for possible template alias names (e.g. vector<Int_t>
    // vs. vector<int>). Otherwise acts like GetClass(name, false).
+
+   if (strncmp(name,"class ",6)==0) name += 6;
+   if (strncmp(name,"struct ",7)==0) name += 7;
+
    Bool_t load = kFALSE;
    if (strchr(name, '<') && TClass::GetClassTypedefHash()) {
       // We have a template which may have duplicates.
@@ -2508,6 +2512,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!name || !name[0]) return 0;
    if (!gROOT->GetListOfClasses())    return 0;
+
+   if (strncmp(name,"class ",6)==0) name += 6;
+   if (strncmp(name,"struct ",7)==0) name += 7;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
