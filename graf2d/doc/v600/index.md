@@ -72,9 +72,13 @@ file `simple.pdf`.
 -   A coverity fix in `Rotated.cxx` had a side effect on rotated text
     drawn with X11 fonts.
 
-### TCanvas
+### TCanvas and Tpad
 
-- 'TPad::SaveAs' produces named macros in .C files.
+-   'TPad::SaveAs' produces named macros in .C files.
+-   Change the way the string input is done in the Pad toolbar for text
+    and Pave Label. It doesn't use anymore the `TGX11` function `RequestString`. 
+    Now the text appears directly as it will show and it is possible to
+    enter several text string. The input is not block in the `RequestString` event loop.
 
 ### TGaxis and TAxis
 
