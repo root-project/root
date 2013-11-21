@@ -156,7 +156,7 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
 }
 
 
-void
+int
 HypoTestInverterResult::ExclusionCleanup()
 {
   const int nEntries  = ArraySize();
@@ -183,6 +183,8 @@ HypoTestInverterResult::ExclusionCleanup()
       resultIsAsymptotic = true;
     }
   }
+
+  int nPointsRemoved(0);
 
   double CLsobsprev(1.0);
   std::vector<double>::iterator itr = fXValues.begin();
@@ -257,6 +259,7 @@ HypoTestInverterResult::ExclusionCleanup()
       itr = fXValues.erase(itr); // returned itr has been updated.     
       fYObjects.RemoveAt(i);
       fExpPValues.RemoveAt(i);
+      nPointsRemoved++;
       continue;
     } else { // keep
       CLsobsprev = CLsobs;
@@ -268,6 +271,8 @@ HypoTestInverterResult::ExclusionCleanup()
   fFittedUpperLimit = false; 
   fFittedLowerLimit = false;
   FindInterpolatedLimit(1-ConfidenceLevel(),true);
+
+  return nPointsRemoved;
 }
 
 

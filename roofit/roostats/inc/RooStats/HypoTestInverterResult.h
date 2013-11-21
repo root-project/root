@@ -46,7 +46,7 @@ public:
    HypoTestInverterResult& operator = (const HypoTestInverterResult& other);
 
    // remove points that appear to have failed.
-   void ExclusionCleanup();
+   int ExclusionCleanup();
 
    // merge with the content of another HypoTestInverterResult object
    bool Add( const HypoTestInverterResult& otherResult );
