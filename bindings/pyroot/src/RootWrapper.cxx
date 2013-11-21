@@ -42,8 +42,6 @@
 #include "TError.h"
 //
 
-#include <iostream>
-
 
 //- data _______________________________________________________________________
 R__EXTERN PyObject* gRootModule;
@@ -447,25 +445,6 @@ PyObject* PyROOT::MakeRootClass( PyObject*, PyObject* args )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::MakeRootClassFromType( TClass* klass )
-{
-// Build a python shadow class for the given ROOT class.
-
-// locate class by full name, if possible to prevent parsing scopes/templates anew
-   PyClassMap_t::iterator pci = gPyClasses.find( (void*)klass );
-   if ( pci != gPyClasses.end() ) {
-      PyObject* pyclass = PyWeakref_GetObject( pci->second );
-      if ( pyclass ) {
-         Py_INCREF( pyclass );
-         return pyclass;
-      }
-   }
-
-// still here ... pyclass not created or no longer valid, need full parsing
-   return MakeRootClassFromString( klass->GetName() );
-}
-
-//____________________________________________________________________________
 PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject* scope )
 {
 // force building of the class if a scope is specified (prevents loops)
@@ -531,6 +510,16 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", lookup.c_str() );
       Py_XDECREF( scope );
       return 0;
+   }
+
+// locate class by TClass*, if possible, to prevent parsing scopes/templates anew
+   PyClassMap_t::iterator pci = gPyClasses.find( (void*)klass.Id() );
+   if ( pci != gPyClasses.end() ) {
+      PyObject* pyclass = PyWeakref_GetObject( pci->second );
+      if ( pyclass ) {
+         Py_INCREF( pyclass );
+         return pyclass;
+      }
    }
 
 // locate the scope, if necessary, for building the class if not specified
@@ -630,7 +619,7 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
       }
    }
 
-   if ( pyclass )                      // store a ref from ROOT TClass to new python class
+   if ( pyclass && ! bClassFound )      // store a ref from ROOT TClass to new python class
       gPyClasses[ klass.Id() ] = PyWeakref_NewRef( pyclass, NULL );
 
    if ( klass.IsNamespace() && klass.Name() != "ROOT" ) {
@@ -725,7 +714,7 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
    }
 
 // retrieve python class
-   PyObject* pyclass = MakeRootClassFromType( klass );
+   PyObject* pyclass = MakeRootClassFromString( klass->GetName() );
    if ( ! pyclass )
       return 0;                    // error has been set in MakeRootClass
 
