@@ -451,7 +451,7 @@ Bool_t PyROOT::TULongLongConverter::SetArg(
    if ( PyErr_Occurred() )
       return kFALSE;
    else if ( func )
-      gInterpreter->CallFunc_SetArg( func,  para.fULongLong );
+      gInterpreter->CallFunc_SetArg( func, para.fULongLong );
    return kTRUE;
 }
 
