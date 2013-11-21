@@ -2544,7 +2544,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
      const char *dictHeaders[] = { "RVersion.h", "RConfig.h", "TClass.h",
        "TClassAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
        "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
-       "TFileMergeInfo.h","CollectionProxyInfo.h"};
+       "TFileMergeInfo.h","TCollectionProxyInfo.h"};
 
       TString rootsysInclude(rootsys);
       rootsysInclude += "/include/";
