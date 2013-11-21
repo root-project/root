@@ -81,6 +81,20 @@ static inline Bool_t VerifyPyBool( PyObject* pyobject )
    return kTRUE;
 }
 
+static inline Bool_t VerifyPyChar( PyObject* pyobject )
+{
+   if ( PyROOT_PyUnicode_Check( pyobject ) && PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 )
+      return kTRUE;
+   PyErr_Format( PyExc_TypeError,
+      "char expected, got string of size " PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
+   return kFALSE;
+}
+
+static inline char PyROOT_PyUnicode_AsChar( PyObject* pyobject ) {
+   return PyROOT_PyUnicode_AsString( pyobject )[0];
+}
+
+
 #if PY_VERSION_HEX >= 0x02070000
 static inline Bool_t VerifyPyLong( PyObject* pyobject )
 #else
@@ -117,14 +131,14 @@ Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
 //_____________________________________________________________________________
 #define PYROOT_IMPLEMENT_BASIC_CHAR_CONVERTER( name, type, low, high )        \
 Bool_t PyROOT::T##name##Converter::SetArg(                                    \
-      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )     \
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )      \
 {                                                                             \
 /* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
    if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
       if ( PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 ) {                     \
-         para.fLong = (Long_t)PyROOT_PyUnicode_AsString( pyobject )[0];       \
+         para.fLong = (Long_t)PyROOT_PyUnicode_AsChar( pyobject );            \
          if ( func )                                                          \
-            gInterpreter->CallFunc_SetArg( func,  para.fLong );                                       \
+            gInterpreter->CallFunc_SetArg( func,  para.fLong );               \
       } else {                                                                \
          PyErr_Format( PyExc_TypeError,                                       \
             #type" expected, got string of size " PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );\
@@ -139,7 +153,7 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
             "integer to character: value %ld not in range [%d,%d]", para.fLong, low, high );\
          return kFALSE;                                                       \
       } else if ( func )                                                      \
-         gInterpreter->CallFunc_SetArg( func,  para.fLong );                                          \
+         gInterpreter->CallFunc_SetArg( func,  para.fLong );                  \
    }                                                                          \
    return kTRUE;                                                              \
 }                                                                             \
@@ -220,6 +234,7 @@ PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyBool )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Char,      Char_t,    PyROOT_PyUnicode_AsChar, VerifyPyChar )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong, VerifyPyLong )
@@ -1115,6 +1130,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Bool )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstBoolRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Char )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstCharRef )
    PYROOT_BASIC_CONVERTER_FACTORY( UChar )
    PYROOT_BASIC_CONVERTER_FACTORY( Short )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstShortRef )
@@ -1168,8 +1184,11 @@ namespace {
       NFp_t( "bool",                      &CreateBoolConverter               ),
       NFp_t( "const bool&",               &CreateConstBoolRefConverter       ),
       NFp_t( "char",                      &CreateCharConverter               ),
+      NFp_t( "const char&",               &CreateConstCharRefConverter       ),
       NFp_t( "signed char",               &CreateCharConverter               ),
+      NFp_t( "const signed char&",        &CreateConstCharRefConverter       ),
       NFp_t( "unsigned char",             &CreateUCharConverter              ),
+      NFp_t( "const unsigned char&",      &CreateConstCharRefConverter       ),
       NFp_t( "short",                     &CreateShortConverter              ),
       NFp_t( "const short&",              &CreateConstShortRefConverter      ),
       NFp_t( "unsigned short",            &CreateUShortConverter             ),
