@@ -37,13 +37,10 @@ public:
    TClassAttributeMap();
    virtual ~TClassAttributeMap();
 
-   void        AddProperty(const char* key, Int_t value);
    void        AddProperty(const char* key, const char* value);
    Bool_t      HasKey(const char* key) const;
    const char  *GetPropertyAsString(const char* key) const;
-   Int_t       GetPropertyAsInt(const char* key) const;
-   Int_t       GetPropertySize() const;
-   Int_t       RemovePropertyInt(const char* key);
+   Int_t       GetPropertySize() const { return fStringProperty.GetSize(); }
    TString     RemovePropertyString(const char* key);
    Bool_t      RemoveProperty(const char* key);
    void        Clear(Option_t* option = "");
@@ -51,7 +48,6 @@ public:
 private:
 
    THashTable     fStringProperty;         //all properties of String type
-   THashTable     fIntProperty;            //all properties of Int type
 
    ClassDef(TClassAttributeMap,1)  // Container for name/value pairs of TClass attributes
 };

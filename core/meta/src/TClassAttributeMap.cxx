@@ -30,7 +30,6 @@ ClassImp(TClassAttributeMap)
 TClassAttributeMap::TClassAttributeMap()
 {
    //Default constructor.
-   fIntProperty.SetOwner(kTRUE);
    fStringProperty.SetOwner(kTRUE);
 }
 
@@ -38,16 +37,6 @@ TClassAttributeMap::TClassAttributeMap()
 TClassAttributeMap::~TClassAttributeMap()
 {
    //Default destructor.
-}
-
-//_____________________________________________________________________________
-void TClassAttributeMap::AddProperty(const char* key, Int_t value)
-{
-   //Add a property with a Int value to the TClassAttributeMap.
-   //Parameters: key and Int value of the property.
-
-   //Add the property pair name - Int value to the hash table.
-   fIntProperty.Add(new TParameter<int>(key, value));
 }
 
 //_____________________________________________________________________________
@@ -68,25 +57,7 @@ Bool_t TClassAttributeMap::HasKey(const char* key) const
 
    if (fStringProperty.FindObject(key))
       return true;
-   if (fIntProperty.FindObject(key))
-      return true;
    return false;
-}
-
-//_____________________________________________________________________________
-Int_t TClassAttributeMap::GetPropertyAsInt(const char* key) const
-{
-   //Access the value of a Int property using the key.
-
-   //Copy object into found to avoid calling the function two times.
-   TObject* found = fIntProperty.FindObject(key);
-   if (found)
-      return ((TParameter<int>*)found)->GetVal();
-   else
-      //Show an error message if the key is not found.
-      Error("GetPropertyAsInt"
-      , "Could not find property with Int value for this key: %s", key);
-   return -1;
 }
 
 //_____________________________________________________________________________
@@ -103,28 +74,6 @@ const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
       Error("GetPropertyAsString"
       , "Could not find property with String value for this key: %s", key);
    return 0;
-}
-
-//_____________________________________________________________________________
-Int_t TClassAttributeMap::GetPropertySize() const
-{
-   //Return the number of properties of the class as Int_t.
-
-   return fIntProperty.GetSize() + fStringProperty.GetSize();
-}
-
-//_____________________________________________________________________________
-Int_t TClassAttributeMap::RemovePropertyInt(const char* key)
-{
-   //Remove a Int property from the attribute map.
-   //Returns the Int property removed or NULL if the property does not exist.
-
-   TParameter<int> *property = (TParameter<int>*)fIntProperty.FindObject(key);
-   if (property) {
-     fIntProperty.Remove(property);
-     return property->GetVal();
-   }
-   return -1;
 }
 
 //_____________________________________________________________________________
@@ -159,6 +108,5 @@ void TClassAttributeMap::Clear(Option_t* /*option = ""*/)
 {
    //Deletes all the properties of the class.
 
-   fIntProperty.Delete();
    fStringProperty.Delete();
 }
