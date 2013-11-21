@@ -20,7 +20,7 @@ UNRDIRS      := $(call stripsrc,$(MODDIRS)/$(UNRVERS))
 UNURANETAG   := $(call stripsrc,$(UNURANDIRS)/headers.d)
 UNRCFG       := $(call stripsrc,$(UNURANDIRS)/$(UNRVERS)/config.h)
 
-ifneq ($(wildcard $(UNRDIRS)/.),)
+ifneq ($(wildcard $(UNRDIRS)),)
 UNRS         := $(wildcard $(UNRDIRS)/src/utils/*.c) \
                 $(wildcard $(UNRDIRS)/src/methods/*.c) \
                 $(wildcard $(UNRDIRS)/src/specfunct/*.c) \
