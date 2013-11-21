@@ -779,8 +779,8 @@ void PyROOT::MethodProxy::Set( const std::string& name, std::vector< PyCallable*
 void PyROOT::MethodProxy::AddMethod( PyCallable* pc )
 {
 // Fill in the data of a freshly created method proxy.
-   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
    fMethodInfo->fMethods.push_back( pc );
+   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
 }
       
 //____________________________________________________________________________
@@ -788,6 +788,7 @@ void PyROOT::MethodProxy::AddMethod( MethodProxy* meth )
 {
    fMethodInfo->fMethods.insert( fMethodInfo->fMethods.end(),
       meth->fMethodInfo->fMethods.begin(), meth->fMethodInfo->fMethods.end() );
+   fMethodInfo->fFlags &= ~MethodInfo_t::kIsSorted;
 }
 
 //____________________________________________________________________________
