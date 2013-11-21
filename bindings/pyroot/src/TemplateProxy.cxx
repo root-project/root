@@ -31,11 +31,20 @@ void TemplateProxy::Set( const std::string& name, PyObject* pyclass )
 }
 
 //____________________________________________________________________________
-void TemplateProxy::AddMethod( PyCallable* pc )
-{
-// Store callables that are overloads of this templated method on name, but are
-// not templated themselves.
+void TemplateProxy::AddOverload( MethodProxy* mp ) {
+// Store overloads of this templated method.
+   fNonTemplated->AddMethod( mp );
+}  
+
+void TemplateProxy::AddOverload( PyCallable* pc ) {
+// Store overload of this templated method.
    fNonTemplated->AddMethod( pc );
+}
+
+void TemplateProxy::AddTemplate( PyCallable* pc )
+{
+// Store know template methods.
+   fTemplated->AddMethod( pc );
 }
 
 
@@ -196,8 +205,6 @@ namespace {
       PyErr_Clear();
 
    // case 3: loop over all previously instantiated templates
-
-   // TODO: this should also contain the pre-instantiated templates
       pymeth = MethodProxy_Type.tp_descr_get(
          (PyObject*)pytmpl->fTemplated, pytmpl->fSelf, (PyObject*)&MethodProxy_Type );
       if ( MethodProxy_Check( pymeth ) ) {

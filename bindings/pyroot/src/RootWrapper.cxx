@@ -265,19 +265,23 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
       Bool_t isStatic = isNamespace || method.IsStatic();
 
    // template members; handled by adding a dispatcher to the class
+      std::string tmplName = "";
       if ( ! (isStatic || isConstructor) && mtName[mtName.size()-1] == '>' ) {
-         std::string tmplname = mtName.substr( 0, mtName.find('<') );
-         PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( tmplname.c_str() ) );
+         tmplName = mtName.substr( 0, mtName.find('<') );
+      // TODO: the following is incorrect if both base and derived have the same
+      // templated method (but that is an unlikely scenario anyway)
+         PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( tmplName.c_str() ) );
          if ( ! TemplateProxy_Check( attr ) ) {
             PyErr_Clear();
-            TemplateProxy* pytmpl = TemplateProxy_New( tmplname, pyclass );
+            TemplateProxy* pytmpl = TemplateProxy_New( tmplName, pyclass );
+            if ( MethodProxy_Check( attr ) ) pytmpl->AddOverload( (MethodProxy*)attr );
             PyObject_SetAttrString(
-               pyclass, const_cast< char* >( tmplname.c_str() ), (PyObject*)pytmpl );
+               pyclass, const_cast< char* >( tmplName.c_str() ), (PyObject*)pytmpl );
             Py_DECREF( pytmpl );
          }
          Py_XDECREF( attr );
       // continue processing to actually add the method so that the proxy can find
-      // it on the class when called
+      // it on the class when called explicitly
       }
 
    // public methods are normally visible, private methods are mangled python-wise
@@ -312,6 +316,13 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
             std::make_pair( std::string( "__setitem__" ), Callables_t() ) ).first)).second;
          setitem.push_back( new TSetItemHolder( klass, method ) );
       }
+
+   // special case for templates, add another call for the template name
+      if ( ! tmplName.empty() ) {
+         PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( tmplName.c_str() ) );
+         ((TemplateProxy*)attr)->AddTemplate( pycall->Clone() );
+         Py_DECREF( attr );
+      }
    }
 
 // add a pseudo-default ctor, if none defined
@@ -324,14 +335,13 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
    // above, as a different proxy object), we'll check and add this method flagged as a generic
    // one (to be picked up by the templated one as appropriate) if a template exists
       PyObject* attr = PyObject_GetAttrString( pyclass, const_cast< char* >( imd->first.c_str() ) );
-      MethodProxy* method = 0;
       if ( TemplateProxy_Check( attr ) ) {
-      // template exists, supply it with the non-templated methods
+      // template exists, supply it with the non-templated method overloads
          for ( Callables_t::iterator cit = imd->second.begin(); cit != imd->second.end(); ++cit )
-            ((TemplateProxy*)attr)->AddMethod( *cit );
+            ((TemplateProxy*)attr)->AddOverload( *cit );
       } else {
       // normal case, add a new method
-         method = MethodProxy_New( imd->first, imd->second );
+         MethodProxy* method = MethodProxy_New( imd->first, imd->second );
          PyObject_SetAttrString(
             pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
          Py_DECREF( method );

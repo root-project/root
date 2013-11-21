@@ -34,7 +34,9 @@ namespace PyROOT {
       MethodProxy* fTemplated;     // holder for templated overloads
 
    public:
-      void AddMethod( PyCallable* pc );
+      void AddOverload( MethodProxy* mp );
+      void AddOverload( PyCallable* pc );
+      void AddTemplate( PyCallable* pc );
 
    private:              // private, as the python C-API will handle creation
       TemplateProxy() {}
