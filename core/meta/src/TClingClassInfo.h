@@ -85,7 +85,6 @@ public:
    void                 Delete(void *arena) const;
    void                 DeleteArray(void *arena, bool dtorOnly) const;
    void                 Destruct(void *arena) const;
-   OffsetPtrFunc_t      FindBaseOffsetFunction(const clang::Decl* decl) const;
    const clang::ValueDecl *GetDataMember(const char *name) const;
    const clang::Decl      *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }

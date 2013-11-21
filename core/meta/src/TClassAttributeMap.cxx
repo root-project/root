@@ -11,10 +11,10 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  The ROOT oject has a list of properties which are stored and       //
+//  The ROOT oject has a list of properties which are stored and        //
 //  retrieved using TClassAttributeMap.                                 //
-//  TClassAttributeMap maps the property keys of the object to their		//	
-//  values.															    //
+//  TClassAttributeMap maps the property keys of the object to their		//
+//  values.                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

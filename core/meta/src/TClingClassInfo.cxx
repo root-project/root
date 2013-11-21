@@ -126,7 +126,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
    Init(tag);
 }
 
-void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, long offset)
+void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offset)
 {
    // Add the offset value from this class to the non-virtual base class
    // determined by the parameter decl.
@@ -541,7 +541,7 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
 ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
 {
    // Check for the offset in the cache.
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, long (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter 
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, ptrdiff_t (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter
       = fOffsetCache.find(base->GetDecl());
    if (iter != fOffsetCache.end()) {
       std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
