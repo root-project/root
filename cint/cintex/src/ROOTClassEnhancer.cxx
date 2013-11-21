@@ -15,6 +15,7 @@
 #include "Cintex/Cintex.h"
 #include "TROOT.h"
 #include "TClass.h"
+#include "TClassAttributeMap.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClassStreamer.h"
@@ -33,6 +34,7 @@
 
 #include <sstream>
 #include <memory>
+#include <string>
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
 #include "TVirtualIsAProxy.h"
@@ -394,6 +396,7 @@ namespace ROOT { namespace Cintex {
 
    TClass* ROOTClassEnhancerInfo::Default_CreateClass( Type typ, ROOT::TGenericClassInfo* info)  {
       // Create root class.
+
       TClass* root_class = 0;
       std::string Name = typ.Name(SCOPED);
       int kind = TClassEdit::IsSTLCont(Name.c_str());
@@ -461,6 +464,26 @@ namespace ROOT { namespace Cintex {
                root_class->SetBit(TClass::kIsForeign);
             }
          }
+         // Add the class properties.
+         PropertyList properties = typ.Properties();
+         if (properties) {
+            size_t noProperties = properties.KeySize();
+            // Add the properties to the map, if any.
+            if (noProperties > 0) {
+               //Create the attribute map.
+               root_class->CreateAttributeMap();
+               TClassAttributeMap* attrMap = root_class->GetAttributeMap();
+               for (size_t i = 1; i < noProperties; ++i) {
+                  // Check if the property is exists and is valid.
+                  if (properties.HasProperty(i)) {
+                     // Get the String value of the property.
+                     std::string stringValue = properties.PropertyAsString(i);
+                     // Add the property to the map.
+                     attrMap->AddProperty(properties.KeyAt(i).c_str(), stringValue.c_str());
+                  }
+               }
+            }
+         } // end of class has properties
       }
       return root_class;
    }
