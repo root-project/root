@@ -2541,13 +2541,23 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
    }
 #endif
    {
-      char *rootVersion = gSystem->Which(incPath,"RVersion.h");
-      if (rootVersion) {
-         R__AddPath(adddictdep,rootVersion);
-         adddictdep += " ";
-         delete [] rootVersion;
-      } else {
-         R__AddPath(adddictdep,rootsys+"/include/RVersion.h ");
+     const char *dictHeaders[] = { "RVersion.h", "RConfig.h", "TClass.h",
+       "TClassAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
+       "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
+       "TFileMergeInfo.h","CollectionProxyInfo.h"};
+
+      TString rootsysInclude(rootsys);
+      rootsysInclude += "/include/";
+      for (unsigned int h=0; h < sizeof(dictHeaders)/sizeof(dictHeaders[0]); ++h)
+      {
+         char *rootVersion = gSystem->Which(incPath,dictHeaders[h]);
+         if (rootVersion) {
+            R__AddPath(adddictdep,rootVersion);
+            adddictdep += " ";
+            delete [] rootVersion;
+         } else {
+            R__AddPath(adddictdep,rootsysInclude + dictHeaders[h]);
+         }
       }
    }
    adddictdep += " >> \""+depfilename+"\"";
