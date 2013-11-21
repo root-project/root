@@ -471,6 +471,8 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address) const
          TString derivedName;
          {
             // Need TNormalizedCtxt otherwise...
+            // Note: should we really be issuing a message here?  Shouldn't
+            // the caller check and issue the message?
             std::string buf;
             PrintingPolicy Policy(fBaseInfo->GetDecl()->getASTContext().
                                   getPrintingPolicy());
