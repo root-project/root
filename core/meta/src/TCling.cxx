@@ -560,7 +560,7 @@ static string TCling__Demangle(const char *mangled_name, int *err)
    }
 #else
    char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, err);
-   if (*err) {
+   if (!demangled_name || *err) {
       free(demangled_name);
       return demangled;
    }
