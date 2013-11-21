@@ -11,3 +11,5 @@ test:
 # include $(ROOTTEST_HOME)/scripts/Reflex.mk
 # 
 # execLoadLibs.log: libOne_dictrflx.$(DllSuf) libTwo_dictrflx.$(DllSuf)
+
+clean:
