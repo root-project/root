@@ -446,7 +446,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
    bool exclEnd = false;
    bool excl = false;
    bool inIoread=false;
-   std::string parent="";
+   bool inClass=false;
    
    BaseSelectionRule *bsr      = 0; // Pointer to the base class, in it is written information about the current sel. rule
    BaseSelectionRule *bsrChild = 0; // The same but keeps information for method or field children of a class
@@ -493,8 +493,14 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kClass:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                 
                if (!IsStandaloneTag(tagStr)){ // if the class tag is not standalone, then it has (probably) some child nodes
-                  parent = tagStr;
+                  inClass = true;
                }
                csr = new ClassSelectionRule(fCount++, fInterp); // create new class selection rule
                bsr = csr; // we could access it through the base class pointer 
@@ -502,8 +508,8 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kEndClass:
             {
-               if (!parent.empty()) { // if this is closing a parent class element, clear the parent information
-                  parent = "";
+               if (inClass) { // if this is closing a parent class element, clear the parent information
+                  inClass = false;
                   out.AddClassSelectionRule(*csr); // if we have a closing tag - we should write the class selection rule to the 
                   // SelectionRules object; for standalone class tags we write the class sel rule at the end of the tag processing
                }
@@ -516,7 +522,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kVersion:
             {
-               if (parent.empty()){
+               if (!inClass){
                   ROOT::TMetaUtils::Error(0,"Version tag not within class element at line %s",lineNumCharp);
                   out.ClearSelectionRules();
                   return false;                  
@@ -582,6 +588,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kSelection:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                sel = true; // we need both selection (indicates that we are in the selection section) and sel (indicates that
                // we had an opening <selection> tag)
                selection = true;
@@ -590,6 +602,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kEndSelection:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                if (selection) { // if we had opening selection tag, everything is OK
                   selection = false; 
                   selEnd = true;
@@ -603,6 +621,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kExclusion:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                excl = true; // we need both exclusion (indicates that we are in the exclusion section) and excl (indicates we had
                // at a certain time an opening <exclusion> tag)
                if (selection) { // if selection is true, we didn't have fEndSelection type of tag
@@ -616,6 +640,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kEndExclusion:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                if (exclusion) { // if exclusion is Set, everything is OK
                   exclusion=false; 
                   exclEnd = true;
@@ -629,7 +659,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kField:
             {
-               if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
+               if (!inClass){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag,
                   //this is an error
                   ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
@@ -646,7 +676,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kMethod:
             {
-               if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
+               if (!inClass){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag,
                   //this is an error
                   ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
@@ -663,7 +693,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kProperties:
             {
-               if (parent.empty()){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag, 
+               if (!inClass){ // if we have a <field>, <method> or <properties> tag outside a parent <clas>s tag,
                   //this is an error
                   ROOT::TMetaUtils::Error(0,"At line %s. Tag %s not inside a <class> element\n", lineNumCharp,tagStrCharp);
                   out.ClearSelectionRules();
@@ -679,18 +709,36 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
             case kFunction:
             {
+               if (inClass){ 
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }               
                fsr = new FunctionSelectionRule(fCount++, fInterp);
                bsr = fsr;
                break;
             }
             case kVariable:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                vsr = new VariableSelectionRule(fCount++, fInterp);
                bsr = vsr;
                break;
             }
             case kEnum:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                esr = new EnumSelectionRule(fCount++, fInterp);
                bsr = esr;
                break;
@@ -699,6 +747,12 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             {}
             case kEndLcgdict:
             {
+               if (inClass){
+                  //this is an error
+                  ROOT::TMetaUtils::Error(0,"At line %s. Tag %s inside a <class> element\n", lineNumCharp,tagStrCharp);
+                  out.ClearSelectionRules();
+                  return false;
+               }                            
                break;
             }
             default: ROOT::TMetaUtils::Error(0,"Unknown tag name: %s \n",tagStrCharp);
@@ -790,22 +844,22 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
                // DEBUG else std::cout<<"Don't care (don't create sel rule)"<<std::endl;
             }
             
-            // DEBUG std::cout<<"Is child: ";
-            if (!parent.empty()){
-               if (((tagKind == kClass) && parent == tagStr) || tagKind == kEndClass) // if this is the same tag as the parent
-                  // or it is a closing tag, the tag is not a child
-                  ;// DEBUG std::cout<<"No"<<std::endl;
-               // else if tagKind is one of the following, it means that we have a missing </class> tag
-               // because these tag kinds cannot be children for a parent <class> tag
-               else if (tagKind == kClass || tagKind == kEnum || tagKind == kVariable || tagKind == kFunction ||
-                        tagKind == kEndSelection || tagKind == kExclusion || tagKind == kEndExclusion){
-                  ROOT::TMetaUtils::Error(0,"XML at line %s. Missing </class> tag\n",lineNumCharp);
-                  out.ClearSelectionRules();
-                  return false;
-               }
-               // DEBUG else std::cout<<"Yes"<<std::endl;
-            }
-            // DEBUG else std::cout<<"No"<<std::endl;
+//             // DEBUG std::cout<<"Is child: ";
+//             if (inClass){
+//                if (((tagKind == kClass)) || tagKind == kEndClass) // if this is the same tag as the parent
+//                   // or it is a closing tag, the tag is not a child
+//                   ;// DEBUG std::cout<<"No"<<std::endl;
+//                // else if tagKind is one of the following, it means that we have a missing </class> tag
+//                // because these tag kinds cannot be children for a parent <class> tag
+//                else if (tagKind == kClass || tagKind == kEnum || tagKind == kVariable || tagKind == kFunction ||
+//                         tagKind == kEndSelection || tagKind == kExclusion || tagKind == kEndExclusion){
+//                   ROOT::TMetaUtils::Error(0,"XML at line %s. Missing </class> tag\n",lineNumCharp);
+//                   out.ClearSelectionRules();
+//                   return false;
+//                }
+//                // DEBUG else std::cout<<"Yes"<<std::endl;
+//             }
+//             // DEBUG else std::cout<<"No"<<std::endl;
             
             
             if (!attr.empty()){               
@@ -868,7 +922,7 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
          // if parent class, don't add here, add when kEndClass is reached
          switch(tagKind) {
             case kClass:
-               if (parent.empty()) out.AddClassSelectionRule(*csr);
+               if (!inClass) out.AddClassSelectionRule(*csr);
                break;
             case kFunction:
                out.AddFunctionSelectionRule(*fsr);
