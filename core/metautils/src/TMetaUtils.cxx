@@ -59,6 +59,7 @@ int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
 std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
 
 namespace {
+   
 //______________________________________________________________________________
 static clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTContext& Ctx,
                                                            clang::NestedNameSpecifier* scope,
@@ -1676,6 +1677,12 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    int stl = TClassEdit::IsSTLCont(classname.c_str());
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
+   bool isStd = TMetaUtils::IsStdClass(*decl);
+   const cling::LookupHelper& lh = interp.getLookupHelper();
+   bool isString = TMetaUtils::IsOfType(*decl,"std::string",lh);
+
+   bool isStdNotString = isStd && !isString;
+
    finalString << "namespace ROOT {" << "\n" << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);" << "\n";
 
    if (!ClassInfo__HasMethod(decl,"Dictionary") || IsTemplate(*decl))
@@ -1934,7 +1941,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "      return &instance;" << "\n" << "   }" << "\n";
 
-   if (!stl && !bset && !ROOT::TMetaUtils::hasOpaqueTypedef(cl, interp, normCtxt)) {
+   if (!isStdNotString && !ROOT::TMetaUtils::hasOpaqueTypedef(cl, interp, normCtxt)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
       finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol.c_str() << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol.c_str() << "*)0);\n   }" << "\n";
    }
@@ -3770,6 +3777,53 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
       }
    }
    return false;
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &cl,
+                                                    const clang::CXXRecordDecl &currentCl)
+{
+   // This is a recursive function
+
+   // We found it: let's return true
+   if (&cl == &currentCl) return true;
+   
+   const  clang::CXXRecordDecl* previous = currentCl.getPreviousDecl();
+
+   // There is no previous decl, so we cannot possibly find it
+   if (NULL == previous){
+      return false;
+   }
+
+   // We try to find it in the previous 
+   return ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(cl, *previous);
+   
+}
+
+//______________________________________________________________________________
+
+bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::string& typ, const cling::LookupHelper& lh)
+{
+   // Return true if the decl is of type.
+   // A proper hashtable for caching results would be the ideal solution
+   // 1) Only one lookup per type
+   // 2) No string comparison  
+   // We may use a map which becomes an unordered map if c++11 is enabled?
+
+   const clang::CXXRecordDecl *thisDecl =
+      llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(typ));
+
+   // this would be probably an assert given that this state is not reachable unless a mistake is somewhere
+   if (! thisDecl){
+      Error("IsOfType","Record decl of type %s not found in the AST.", typ.c_str());
+      return false;
+      }
+
+   // Now loop on all previous decls to seek a match
+   const clang::CXXRecordDecl *mostRecentDecl = thisDecl->getMostRecentDecl();   
+   bool matchFound = MatchWithDeclOrAnyOfPrevious (cl,*mostRecentDecl);
+   
+   return matchFound;
 }
 
 //______________________________________________________________________________

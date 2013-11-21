@@ -525,6 +525,14 @@ const clang::TagDecl* GetAnnotatedRedeclarable(const clang::TagDecl* TND);
 bool IsStdClass(const clang::RecordDecl &cl);
 
 //______________________________________________________________________________
+// See if the CXXRecordDecl matches the current of any of the previous CXXRecordDecls
+bool MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &cl, const clang::CXXRecordDecl &currentCl);
+
+//______________________________________________________________________________
+// Return true if the decl is of type
+bool IsOfType(const clang::CXXRecordDecl &cl, const std::string& type, const cling::LookupHelper& lh);
+
+//______________________________________________________________________________
 // Return which kind of STL container the decl is, if any.
 ROOT::ESTLType IsSTLCont(const clang::RecordDecl &cl);
 
