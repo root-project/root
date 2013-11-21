@@ -81,6 +81,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
     fTitle(""), fSingleDecl(ValD), fContextIdx(0U) {
    using namespace llvm;
    assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
+          (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
