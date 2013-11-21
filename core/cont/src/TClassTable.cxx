@@ -273,8 +273,9 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          // This okay we just keep the old one.
          return;
       }
-      if (splitname.IsSTLCont()==0) {
-         // Warn only for class that are not STL containers.
+//       if (splitname.IsSTLCont()==0) {
+      if (!TClassEdit::IsStdClass(shortName.c_str())) {
+         // Warn only for class that are not STD classes 
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
