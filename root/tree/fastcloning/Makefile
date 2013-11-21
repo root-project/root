@@ -22,17 +22,17 @@ DATAFILES = Event.new.split0.root Event.new.split1.root \
         Event.old.streamed.root Event.old.split.root
 
 REFFILE=dt_reference.root
+export EVENTBUFSIZE = 20
+export size = 20
 
 $(REFFILE) : Event.new.split9.root copiedEvent$(ExeSuf)
-	$(CMDECHO) $(MAKE) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@ > $@.create.log 2>&1
+	$(CMDECHO) touch Event.new.split9.root # to prevent any potential re-build by -f $(EVENTDIR)/dt_Makefile
+	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent $@ > $@.create.log 2>&1
 	$(CMDECHO) $(CALLROOTEXE) -q -b -l 'ctrans.C("Event.new.split9.root")' > event.new.split9.root.clone.log 2>&1 && touch $@
 
 #dt_MakeRef.C dt_DrawTest.C libEvent.$(DllSuf) Event.h Event.new.split9.root
 #        @$(CALLROOTEXE) -l -b -q 'dt_MakeRef.C("Event.new.split9.root",0);' $(OUTPUT) && \
 #        echo "$@ made"
-
-export EVENTBUFSIZE = 20
-export size = 20
 
 Event.new.split0.root: copiedEvent$(ExeSuf)
 	$(CMDECHO) $(MAKE) size=$(size) --no-print-directory -f $(EVENTDIR)/dt_Makefile EVENT=copiedEvent$(ExeSuf) $@ > $@.create.log 2>&1
