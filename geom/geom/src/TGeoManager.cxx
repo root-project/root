@@ -990,8 +990,8 @@ Int_t TGeoManager::ThreadId()
    TThread::Lock();
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(TThread::SelfId());
    if (it != fgThreadId->end()) {
-      return it->second;
       TThread::UnLock();
+      return it->second;
    }
    // Map needs to be updated.
    (*fgThreadId)[TThread::SelfId()] = fgNumThreads;
