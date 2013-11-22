@@ -94,6 +94,7 @@ namespace TClassEdit {
       TSplitType(const char *type2split, EModType mode = TClassEdit::kNone);
 
       int  IsSTLCont(int testAlloc=0) const;
+      ROOT::ESTLType  IsInSTL() const;
       void ShortType(std::string &answer, int mode);
 
    private:
@@ -114,7 +115,7 @@ namespace TClassEdit {
    std::string GetLong64_Name(const char *original);
    std::string GetLong64_Name(const std::string& original);
    int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc, EModType mode = TClassEdit::kNone);
-   int         STLKind   (const char *type);    //Kind of stl container
+   ROOT::ESTLType STLKind   (const char *type);    //Kind of stl container
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);

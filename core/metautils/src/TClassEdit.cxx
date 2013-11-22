@@ -32,6 +32,17 @@ TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fNam
 }
 
 //______________________________________________________________________________
+ROOT::ESTLType TClassEdit::TSplitType::IsInSTL() const
+{
+   //  type     : type name: vector<list<classA,allocator>,allocator>[::iterator]
+   //  result:    0          : not stl container and not declared inside an stl container.
+   //             result: code of container that the type or is the scope of the type
+
+   if (fElements[0].empty()) return ROOT::kNotSTL;
+   return STLKind(fElements[0].c_str());
+}
+
+//______________________________________________________________________________
 int TClassEdit::TSplitType::IsSTLCont(int testAlloc) const
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>
@@ -275,7 +286,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
 
 //______________________________________________________________________________
-int   TClassEdit::STLKind(const char *type)
+ROOT::ESTLType TClassEdit::STLKind(const char *type)
 {
 //      Converts STL container name to number. vector -> 1, etc..
 
@@ -285,10 +296,17 @@ int   TClassEdit::STLKind(const char *type)
 
    static const char *stls[] =                  //container names
    {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
+   static const ROOT::ESTLType values[] =
+   {  ROOT::kNotSTL, ROOT::kSTLvector,
+      ROOT::kSTLlist, ROOT::kSTLdeque,
+      ROOT::kSTLmap, ROOT::kSTLmultimap,
+      ROOT::kSTLset, ROOT::kSTLmultiset,
+      ROOT::kSTLbitset, ROOT::kNotSTL
+   };
 
 //              kind of stl container
-   for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return k;}
-   return 0;
+   for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return values[k];}
+   return ROOT::kNotSTL;
 }
 
 //______________________________________________________________________________
@@ -785,8 +803,16 @@ bool TClassEdit::IsStdClass(const char *classname)
    if ( strncmp(classname,"less<",strlen("less<"))==0) return true;
    if ( strncmp(classname,"auto_ptr<",strlen("auto_ptr<"))==0) return true;
 
-   return IsSTLCont(classname) != 0;
+   if ( strncmp(classname,"vector<",strlen("vector<"))==0) return true;
+   if ( strncmp(classname,"list<",strlen("list<"))==0) return true;
+   if ( strncmp(classname,"deque<",strlen("deque<"))==0) return true;
+   if ( strncmp(classname,"map<",strlen("map<"))==0) return true;
+   if ( strncmp(classname,"multimap<",strlen("multimap<"))==0) return true;
+   if ( strncmp(classname,"set<",strlen("set<"))==0) return true;
+   if ( strncmp(classname,"multiset<",strlen("multiset<"))==0) return true;
+   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
 
+   return false;
 }
 
 
