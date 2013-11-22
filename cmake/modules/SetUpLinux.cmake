@@ -86,8 +86,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   execute_process(COMMAND ${CMAKE_CXX_COMPILER} -v  
                   ERROR_VARIABLE _icc_version_info ERROR_STRIP_TRAILING_WHITESPACE)
 
-  string(REGEX REPLACE "(^V|^icc[ ]v)ersion[ ]([0-9]+)\\.[0-9]+.*" "\\2" ICC_MAJOR "${_icc_version_info}")
-  string(REGEX REPLACE "(^V|^icc[ ]v)ersion[ ][0-9]+\\.([0-9]+).*" "\\2" ICC_MINOR "${_icc_version_info}")
+  string(REGEX REPLACE "(^.*[ ]([0-9]+)\\.[0-9]+.*" "\\1" ICC_MAJOR "${_icc_version_info}")
+  string(REGEX REPLACE "(^.*[ ][0-9]+\\.([0-9]+).*" "\\1" ICC_MINOR "${_icc_version_info}")
 
   message(STATUS "Found ICC major version ${ICC_MAJOR}")
   message(STATUS "Found ICC minor version ${ICC_MINOR}")
