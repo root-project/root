@@ -346,18 +346,29 @@ class DataTypes4RegressionTestCase( MyTestCase ):
       c = ClassWithData()
 
       c.SetBool( False )
-      self.assertEqual( c.GetBoolConst(), False )
+      self.assertEqual( c.GetBoolCR(), False )
 
       c.SetBool( True )
-      self.assertEqual( c.GetBoolConst(), True )
+      self.assertEqual( c.GetBoolCR(), True )
 
    def test2ConstRefReturns( self ):
       """General test of const-ref returns"""
 
       c = ClassWithData()
 
-      c.SetInt( 1 )
-      self.assertEqual( c.GetInt(), 1 )
+      c.SetChar( 'a' );     self.assertEqual( c.GetCharCR(),    'a' )
+      c.SetSChar( 'b' );    self.assertEqual( c.GetSCharCR(),   'b' )
+      c.SetUChar( 'c' );    self.assertEqual( c.GetUCharCR(),   'c' )
+      c.SetShort( -1 );     self.assertEqual( c.GetShortCR(),   -1  )
+      c.SetUShort( 1 );     self.assertEqual( c.GetUShortCR(),   1  )
+      c.SetInt( -2 );       self.assertEqual( c.GetIntCR(),     -2  )
+      c.SetUInt( 2 );       self.assertEqual( c.GetUIntCR(),     2  )
+      c.SetLong( -3 );      self.assertEqual( c.GetLongCR(),    -3  )
+      c.SetULong( 3 );      self.assertEqual( c.GetULongCR(),    3  )
+      c.SetLong64( -4 );    self.assertEqual( c.GetLong64CR(),  -4  )
+      c.SetULong64( 4 );    self.assertEqual( c.GetULong64CR(),  4  )
+      c.SetFloat( 3.14 );   self.assertEqual( round( c.GetFloatCR()  - 3.14, 5 ),0 )
+      c.SetDouble( 2.72 );  self.assertEqual( round( c.GetDoubleCR() - 2.72, 8 ), 0 )
 
 
 ## actual test run

@@ -2,7 +2,7 @@
   File: roottest/python/basic/DataTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 05/11/05
-  Last: 05/16/05
+  Last: 11/22/13
 */
 
 const int N = 5;
@@ -130,9 +130,21 @@ public:
    Double_t* GetDoubleArray()  { return fDoubleArray; }
    Double_t* GetDoubleArray2() { return fDoubleArray2; }
 
-// getters (regression)
-   const Bool_t& GetBoolConst() { return fBool; }
-   const Int_t& GetIntConst()   { return fInt; }
+// getters const-ref
+   const Bool_t&    GetBoolCR()    { return fBool; }
+   const Char_t&    GetCharCR()    { return fChar; }
+   const SChar_t&   GetSCharCR()   { return fSChar; }
+   const UChar_t&   GetUCharCR()   { return fUChar; }
+   const Short_t&   GetShortCR()   { return fShort; }
+   const UShort_t&  GetUShortCR()  { return fUShort; }
+   const Int_t&     GetIntCR()     { return fInt; }
+   const UInt_t&    GetUIntCR()    { return fUInt; }
+   const Long_t&    GetLongCR()    { return fLong; }
+   const ULong_t&   GetULongCR()   { return fULong; }
+   const Long64_t&  GetLong64CR()  { return fLong64; }
+   const ULong64_t& GetULong64CR() { return fULong64; }
+   const Float_t&   GetFloatCR()   { return fFloat; }
+   const Double_t&  GetDoubleCR()  { return fDouble; }
 
 // setters
    void SetBool( Bool_t b )        { fBool   = b;   }
