@@ -14,6 +14,7 @@
 // ROOT
 #include "TDataMember.h"
 #include "TInterpreter.h"
+#include "TList.h"
 
 // Standard
 #include <string.h>
@@ -117,19 +118,11 @@ namespace {
                      }
                   }
 
-               // data members (Cling specific)
+               // tickle lazy lookup of data members
                   if ( ! attr ) {
-                     DataMemberInfo_t* dt = gInterpreter->DataMemberInfo_Factory(
-                        ((TClass*)klass.Id())->GetClassInfo() );
-                     while ( gInterpreter->DataMemberInfo_Next( dt ) ) {
-                        if ( gInterpreter->DataMemberInfo_IsValid( dt ) &&
-                             gInterpreter->DataMemberInfo_Name( dt ) == name ) {
-                        // TODO: the following leaks, but only at program shutdown
-                           attr = (PyObject*)PropertyProxy_New(
-                              new TDataMember( gInterpreter->DataMemberInfo_FactoryCopy( dt ) ) );
-                           break;
-                        }
-                     }
+                     TDataMember* dm =
+                        (TDataMember*)((TClass*)klass.Id())->GetListOfDataMembers()->FindObject( name.c_str() );
+                     if ( dm ) attr = (PyObject*)PropertyProxy_New( dm );
                   }
                }
 
