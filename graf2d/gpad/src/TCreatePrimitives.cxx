@@ -305,7 +305,6 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    static Int_t pxold, pyold;
    static Int_t px0, py0;
    static Int_t linedrawn;
-   Int_t pxl,pyl;
    Double_t temp;
    Double_t xp0,xp1,yp0,yp1;
    static TObject *pave = 0;
@@ -383,8 +382,6 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kPaveLabel) {
          ((TPad *)gPad)->StartEditing();
          gSystem->ProcessEvents();
-         pxl = (px0 + px)/2;
-         pyl = (py0 + py)/2;
          if (mode == kPaveLabel) {
             pave = new TPaveLabel(xp0,yp0,xp1,yp1,"<");
             pave->Draw();
