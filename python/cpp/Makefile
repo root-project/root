@@ -29,7 +29,7 @@ PyROOT_advancedtests:
 	$(WarnFailTest)
 
 else
-PyROOT_cpptests.log: Namespace_C.$(DllSuf) PointerPassing_C.$(DllSuf)
+PyROOT_cpptests.log: Namespace_C.$(DllSuf) Namespace2_C.$(DllSuf) PointerPassing_C.$(DllSuf)
 
 PyROOT_cpptests: PyROOT_cpptests.log PyROOT_advancedtests.log
 	$(TestDiff)

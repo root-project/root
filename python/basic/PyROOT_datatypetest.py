@@ -165,7 +165,9 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       c.SetBoolCR( kTRUE ); self.assertEqual( c.fBool,     kTRUE )
       self.failUnlessRaises( TypeError, c.SetBoolCR, 10 )
 
-    # TODO: char types through const-ref are not implemented
+    # char types
+      c.SetCharCR( 'c' );   self.assertEqual( c.fChar,       'c' )
+      c.SetUCharCR( 'f' );  self.assertEqual( c.fUChar,      'f' )
 
     # integer types
       names = [ 'Short', 'UShort', 'Int', 'UInt', 'Long', 'ULong', 'Long64', 'ULong64' ]
