@@ -740,42 +740,6 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
 } // end namespace TMetaUtils
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::IsInt(const std::string& s){
-
-   size_t minusPos = s.find_first_of("-");
-
-   // Count minuses
-   bool minusFound = false;
-   for (size_t i = 0; i < s.size(); i++){
-      if (s[i] == '-'){
-         if (minusFound) return false;
-         minusFound=true;
-      }
-   }
-
-   bool isNumber = s.find_first_not_of("-0123456789")==std::string::npos &&
-   !s.empty() &&
-   (minusPos == std::string::npos || minusPos == 0);
-
-   // if it is not a number it is not an int
-   if (!isNumber) return false;
-
-   // Is it small enough to be an int?
-   std::istringstream buffer(s);
-   long int value;
-   buffer >> value;
-   const int maxInt = std::numeric_limits<int>::max();
-
-   // If not, well it is not an int
-   if (std::abs(value) > maxInt){ // it is not an int, but a long int
-      return false;
-   }
-
-   return true;
-
-}
-
-//______________________________________________________________________________
 ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh)
 {
    // Initialize the list of typedef to keep (i.e. make them opaque for normalization)
@@ -1993,10 +1957,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
                manipString+="      TClassAttributeMap* attrMap( theClass->GetAttributeMap() );\n";
                attrMapExtracted=true;
             }
-            // If not an int, transform it in a string (for the gen code)
-            if (!ROOT::TMetaUtils::IsInt(attrValue)){
-               attrValue = "\""+attrValue+"\"";
-            }
+
+            // Format property as String
+            attrValue = "\""+attrValue+"\"";
 
             manipString+="      attrMap->AddProperty(\""+attrName +"\","+attrValue+");\n";
          }

@@ -214,9 +214,6 @@ int extractPropertyNameValFromString(const std::string attributeStr,std::string&
 int extractPropertyNameVal(clang::Attr* attribute, std::string& attrName, std::string& attrValue);
 
 //______________________________________________________________________________
-bool IsInt(const std::string& s);
-
-//______________________________________________________________________________
 // Add default template parameters.
 clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const cling::Interpreter &interpret,
