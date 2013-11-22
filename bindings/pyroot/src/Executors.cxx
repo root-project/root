@@ -81,6 +81,7 @@ PyObject* PyROOT::TBoolExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
    return result;
 }
 
+//____________________________________________________________________________
 PyObject* PyROOT::TBoolConstRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python bool return value
@@ -88,12 +89,6 @@ PyObject* PyROOT::TBoolConstRefExecutor::Execute( CallFunc_t* func, void* self, 
       *((Bool_t*)PRCallFuncExecInt( func, self, release_gil )) ? Py_True : Py_False;
    Py_INCREF( result );
    return result;
-}
-
-PyObject* PyROOT::TLongExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
-{
-// execute <func> with argument <self>, construct python long return value
-   return PyLong_FromLong( (Long_t)PRCallFuncExecInt( func, self, release_gil ) );
 }
 
 //____________________________________________________________________________
@@ -104,10 +99,24 @@ PyObject* PyROOT::TCharExecutor::Execute( CallFunc_t* func, void* self, Bool_t r
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TCharConstRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+{
+// execute <func> with argument <self>, construct python string return value with the single char
+   return PyROOT_PyUnicode_FromFormat( "%c", *((Char_t*)PRCallFuncExecInt( func, self, release_gil )) );
+}
+
+//____________________________________________________________________________
 PyObject* PyROOT::TIntExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python int return value
    return PyInt_FromLong( (Int_t)PRCallFuncExecInt( func, self, release_gil ) );
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::TLongExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+{
+// execute <func> with argument <self>, construct python long return value
+   return PyLong_FromLong( (Long_t)PRCallFuncExecInt( func, self, release_gil ) );
 }
 
 //____________________________________________________________________________
@@ -190,6 +199,10 @@ PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Int,    Int_t,    Long_t,   PyInt_FromLong, 
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( UInt,   UInt_t,   ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, PRCallFuncExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Long,   Long_t,   Long_t,   PyLong_FromLong,    PyLong_AsLong,    PRCallFuncExecInt )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( ULong,  ULong_t,  ULong_t,  PyLong_FromUnsignedLong, PyLongOrInt_AsULong, PRCallFuncExecInt )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
+   LongLong,  Long64_t,  Long64_t,   PyLong_FromLongLong,         PyLong_AsLongLong,       PRCallFuncExecInt64 )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
+   ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64,   PRCallFuncExecInt64 )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
 
@@ -470,6 +483,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( Bool )
    PYROOT_EXECUTOR_FACTORY( BoolConstRef )
    PYROOT_EXECUTOR_FACTORY( Char )
+   PYROOT_EXECUTOR_FACTORY( CharConstRef )
    PYROOT_EXECUTOR_FACTORY( ShortRef )
    PYROOT_EXECUTOR_FACTORY( UShortRef )
    PYROOT_EXECUTOR_FACTORY( Int )
@@ -484,7 +498,9 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( DoubleRef )
    PYROOT_EXECUTOR_FACTORY( Void )
    PYROOT_EXECUTOR_FACTORY( LongLong )
+   PYROOT_EXECUTOR_FACTORY( LongLongRef )
    PYROOT_EXECUTOR_FACTORY( ULongLong )
+   PYROOT_EXECUTOR_FACTORY( ULongLongRef )
    PYROOT_EXECUTOR_FACTORY( CString )
    PYROOT_EXECUTOR_FACTORY( VoidArray )
    PYROOT_EXECUTOR_FACTORY( BoolArray )
@@ -510,6 +526,9 @@ namespace {
       NFp_t( "char",               &CreateCharExecutor                ),
       NFp_t( "signed char",        &CreateCharExecutor                ),
       NFp_t( "unsigned char",      &CreateCharExecutor                ),
+      NFp_t( "const char&",        &CreateCharConstRefExecutor        ),
+      NFp_t( "const signed char&", &CreateCharConstRefExecutor        ),
+      NFp_t( "const unsigned char&", &CreateCharConstRefExecutor      ),
       NFp_t( "short",              &CreateIntExecutor                 ),
       NFp_t( "short&",             &CreateShortRefExecutor            ),
       NFp_t( "unsigned short",     &CreateIntExecutor                 ),
@@ -525,8 +544,12 @@ namespace {
       NFp_t( "unsigned long&",     &CreateULongRefExecutor            ),
       NFp_t( "long long",          &CreateLongLongExecutor            ),
       NFp_t( "Long64_t",           &CreateLongLongExecutor            ),
+      NFp_t( "long long&",         &CreateLongLongRefExecutor         ),
+      NFp_t( "Long64_t&",          &CreateLongLongRefExecutor         ),
       NFp_t( "unsigned long long", &CreateULongLongExecutor           ),
       NFp_t( "ULong64_t",          &CreateULongLongExecutor           ),
+      NFp_t( "unsigned long long&", &CreateULongLongRefExecutor       ),
+      NFp_t( "ULong64_t&",         &CreateULongLongRefExecutor        ),
       NFp_t( "float",              &CreateDoubleExecutor              ),
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
