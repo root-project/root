@@ -845,8 +845,9 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 
    TThread::Lock();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
-   if (it == fNavigators.end()) return 0;
+   bool notfound = (it == fNavigators.end());
    TThread::UnLock();
+   if (notfound) return 0;
 
    TGeoNavigatorArray *array = it->second;
    nav = array->GetCurrentNavigator();
@@ -918,6 +919,7 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
       if (arr) {
          if ((TGeoNavigator*)arr->Remove((TObject*)nav)) {
             delete nav;
+            if (fMultiThread) TThread::UnLock();
             return;
          }
       }   
