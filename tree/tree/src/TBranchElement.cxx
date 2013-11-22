@@ -2735,21 +2735,21 @@ void TBranchElement::InitializeOffsets()
          TVirtualStreamerInfo* sinfo = subBranch->GetInfoImp();
          if (!sinfo) {
             Warning("InitializeOffsets", "No streamer info for branch: %s subbranch: %s", GetName(), subBranch->GetName());
-            fInitOffsets = kTRUE;
-            return;
+            fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+            continue;
          }
          ULong_t* subBranchElems = sinfo->GetElems();
          if (!subBranchElems) {
             Warning("InitializeOffsets", "No elements array for branch: %s subbranch: %s", GetName(), subBranch->GetName());
-            fInitOffsets = kTRUE;
-            return;
+            fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+            continue;
          }
          // FIXME: Make sure subBranch->fID is in range.
          TStreamerElement* subBranchElement = (TStreamerElement*) subBranchElems[subBranch->fID];
          if (!subBranchElement) {
             Warning("InitializeOffsets", "No streamer element for branch: %s subbranch: %s", GetName(), subBranch->GetName());
-            fInitOffsets = kTRUE;
-            return;
+            fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+            continue;
          } else if (subBranchElement->TestBit(TStreamerElement::kRepeat)) {
             // If we have a repeating streamerElement, use the next
             // one as it actually hold the 'real' data member('s offset)
@@ -2803,8 +2803,8 @@ void TBranchElement::InitializeOffsets()
          TBranch* mother = GetMother();
          if (!mother) {
             Warning("InitializeOffsets", "Branch '%s' has no mother!", GetName());
-            fInitOffsets = kTRUE;
-            return;
+            fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+            continue;
          }
          TString motherName(mother->GetName());
          Bool_t motherDot = kFALSE;
@@ -3046,9 +3046,9 @@ void TBranchElement::InitializeOffsets()
                   pClass = fClonesClass;
                   if (!pClass) {
                      Warning("InitializeOffsets", "subBranch: '%s' has no parent class, and cannot get class for clones class: '%s'!", subBranch->GetName(), GetClonesName());
-                     fInitOffsets = kTRUE;
-                     return;
-                  }
+                     fBranchOffset[subBranchIdx] = TStreamerInfo::kMissing;
+                     continue;
+                 }
                   Warning("InitializeOffsets", "subBranch: '%s' has no parent class!  Assuming parent class is: '%s'.", subBranch->GetName(), pClass->GetName());
                }
                if (fBranchCount && fBranchCount->fCollProxy && fBranchCount->fCollProxy->GetValueClass()) {
