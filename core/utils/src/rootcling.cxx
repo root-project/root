@@ -2442,6 +2442,7 @@ void ManipForRootmap(std::string& name)
    // file
    // * "::" becomes "@@"
    // * "{const,unsigned,signed} " become "{const,unsigned,signed}-"
+   // * "*const" becomes "*-const"
    // * "short int" becomes "short"
    // * "long int" becomes "long"
    // * "long long" becomes "long-long"
@@ -2462,6 +2463,9 @@ void ManipForRootmap(std::string& name)
    ReplaceAll(name,"const ","const-");
    ReplaceAll(name,"signed ","signed-");
 
+   // * "*const" becomes "*-const"
+   ReplaceAll(name,"*const","*-const");
+   
    // * "short int" becomes "short"
    ReplaceAll(name,"short int","short");
 
@@ -2530,6 +2534,9 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 
    rootmapFile << "#--Begin " << rootmapFileName << std::endl;
 
+   // The number used to have the same alignment of ROOT5
+   const int alignment=49;
+   
    // Loop on selected classes and insert them in the rootmap
    std::string thisClassName;
    for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
@@ -2537,7 +2544,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
       thisClassName = *classNameIt;
       ManipForRootmap(thisClassName);
       rootmapFile << "Library." << thisClassName << ": "
-                  << std::setw(35-classNameIt->size()) << rootmapLibName
+                  << std::setw(alignment-thisClassName.size()) << rootmapLibName
                   << std::endl;
       }
 
@@ -2547,9 +2554,9 @@ int CreateRootMapFile(const std::string& rootmapFileName,
         nsNameIt!=nsNames.end();++nsNameIt){
       thisNsName=*nsNameIt ;
       ManipForRootmap(thisNsName);
-   rootmapFile << "Library." << thisNsName << ": "
-      << std::setw(35-nsNameIt->size()) << rootmapLibName
-      << std::endl;
+      rootmapFile << "Library." << thisNsName << ": "
+                  << std::setw(alignment-thisClassName.size()) << rootmapLibName
+                  << std::endl;
         }
 
    rootmapFile << "#--End " << rootmapFileName << std::endl;
