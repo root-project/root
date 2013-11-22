@@ -451,6 +451,7 @@ function(ROOT_INSTALL_HEADERS)
     install(DIRECTORY ${d} DESTINATION include
                            COMPONENT headers 
                            PATTERN ".svn" EXCLUDE
+                           PATTERN "X11" EXCLUDE
                            REGEX "LinkDef" EXCLUDE )
     set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
   endforeach()
