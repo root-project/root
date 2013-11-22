@@ -8,9 +8,10 @@
 #include "TMethodArg.h"
 #include "TClassAttributeMap.h"
 #include <iostream>
+#include <vector>
+#include <string>
 
-enum propType {kString, kInt};
-typedef std::vector<std::pair<std::string,int> > strIntPairs;
+typedef std::vector<std::string> propertiesNames;
 
 //______________________________________________________________________________
 void loadLib(const char* libname)
@@ -74,7 +75,7 @@ void printMethodNames(const std::string& className,const std::string indent="")
 }
 //______________________________________________________________________________
 void printClassInfo(const std::string& className,
-                    const strIntPairs& properties = strIntPairs())
+                    const propertiesNames& properties = propertiesNames())
 {
    TClass* theClass = TClass::GetClass(className.c_str());
    if (!theClass){
@@ -89,18 +90,12 @@ void printClassInfo(const std::string& className,
    // Get the attribute map
    TClassAttributeMap* attrMap = theClass->GetAttributeMap();
    if (attrMap) {
-      for (strIntPairs::const_iterator propValType=properties.begin(); 
+      for (propertiesNames::const_iterator propValType=properties.begin(); 
            propValType!=properties.end();propValType++){
-         std::string prop (propValType->first);
+         const std::string& prop (*propValType);
          if (attrMap->HasKey(prop.c_str())){
-            if (propValType->second==kString){
-               const char* propVals = attrMap->GetPropertyAsString(prop.c_str());
-               std::cout << "  - " << prop << ": " << propVals <<  std::endl;
-               }
-            else{
-               long int propVali = attrMap->GetPropertyAsInt(prop.c_str());
-               std::cout << "  - " << prop << ": " <<  propVali <<  std::endl;
-               }
+            const char* propVals = attrMap->GetPropertyAsString(prop.c_str());
+            std::cout << "  - " << prop << ": " << propVals <<  std::endl;
          } else
             std::cout << " - " << prop << " not found!\n";
       }
@@ -126,13 +121,16 @@ int execbasic()
    loadLib("libbasic_allClasses_dictrflx.so");
 
    // Start the tests
-   strIntPairs properties1; properties1.push_back(make_pair("checksum",kString));
+   propertiesNames properties1;
+   properties1.push_back("checksum");
    printClassInfo("class1",properties1);
    printClassInfo("class2");
    printClassInfo("class3");
    printClassInfo("class3_1");
    printClassInfo("class3_2");
-   strIntPairs properties4; properties4.push_back(make_pair("id",kString)); properties4.push_back(make_pair("myProp",kInt));
+   propertiesNames properties4;
+   properties4.push_back("id");
+   properties4.push_back("myProp");
    printClassInfo("class4", properties4);
    printClassInfo("class5");
 
