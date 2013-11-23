@@ -724,7 +724,7 @@ Long_t PyROOT::Utility::GetObjectOffset(
    }
 
    Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clCurrent, clDesired, obj );
-   if ( 0 <= offset )
+   if ( offset != -1 )
       sOffsets[ clCurrent ].push_back( std::make_pair( clDesired, offset ) );
    else
       offset = 0;
