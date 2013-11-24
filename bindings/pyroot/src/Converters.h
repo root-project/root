@@ -234,6 +234,11 @@ namespace PyROOT {
    PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
    PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
 
+   class TNotImplementedConverter : public TConverter {
+   public:
+      virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );
+   };
+
 // factories
    typedef TConverter* (*ConverterFactory_t) ( Long_t user );
    typedef std::map< std::string, ConverterFactory_t > ConvFactories_t;

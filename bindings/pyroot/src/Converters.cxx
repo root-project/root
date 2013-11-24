@@ -1017,6 +1017,14 @@ Bool_t PyROOT::TPyObjectConverter::ToMemory( PyObject* value, void* address )
    return kTRUE;
 }
 
+//____________________________________________________________________________
+Bool_t PyROOT::TNotImplementedConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Long_t )
+{
+// raise a NotImplemented exception to take a method out of overload resolution
+   PyErr_SetString( PyExc_NotImplementedError, "this method can not (yet) be called" );
+   return kFALSE;
+}
+
 
 //- factories -----------------------------------------------------------------
 PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t user )
@@ -1079,6 +1087,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
          result = new TStrictRootObjectConverter( klass, control );
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
+      else if ( cpd == "&&" )             // move constructor
+         result = new TNotImplementedConverter();
 
    } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
    // special case (Cling): represent enums as unsigned integers
