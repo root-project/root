@@ -192,6 +192,16 @@ void PadStub::SetAttTextPS(Int_t, Float_t, Color_t, Style_t, Float_t)
 }
 
 //______________________________________________________________________________
+void PadStub::PaintText(Double_t, Double_t, const wchar_t *)
+{
+}
+
+//______________________________________________________________________________
+void PadStub::PaintTextNDC(Double_t, Double_t, const wchar_t *)
+{
+}
+
+//______________________________________________________________________________
 void PadStub::PaintBorderPS(Double_t, Double_t, Double_t, Double_t, Int_t, Int_t, Int_t, Int_t)
 {
 }

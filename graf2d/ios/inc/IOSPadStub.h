@@ -66,6 +66,12 @@ public:
    void SetAttMarkerPS(Color_t, Style_t, Size_t);
    void SetAttTextPS(Int_t, Float_t, Color_t, Style_t, Float_t);
    void PaintBorderPS(Double_t, Double_t, Double_t, Double_t, Int_t, Int_t, Int_t, Int_t);
+   //PaintText with a parameter of a type wchar_t is a special version
+   //used by mathtext. It relies strongly on ttf and actually requires
+   //ttf. NOOP at the moment (whence it's here, in a 'stub' class).
+   virtual void     PaintText(Double_t, Double_t, const wchar_t *);
+   virtual void     PaintTextNDC(Double_t, Double_t, const wchar_t *);
+   //
    Int_t GetGLDevice();
    void SetCopyGLDevice(Bool_t);
    void Pop();
