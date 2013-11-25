@@ -645,6 +645,26 @@ if(globus)
   endif()
 endif()
 
+#---Check for ftgl if needed----------------------------------------------------------
+if(NOT builtin_ftgl)
+  find_package(FTGL)
+  if(NOT FTGL_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "ftgl library not found and is required ('builtin_ftgl' is OFF). Set varible FTGL_ROOT_DIR to installation location")
+    else()
+      message(STATUS "ftgl library not found. Set variable FTGL_ROOT_DIR to point to your installation")
+      message(STATUS "For the time being switching ON 'builtin_ftgl' option")
+      set(builtin_ftgl ON CACHE BOOL "" FORCE)
+    endif()
+  endif()
+endif()
+if(builtin_ftgl)
+  set(FTGL_INCLUDE_DIR ${CMAKE_SOURCE_DIR}/graf3d/ftgl/inc)
+  set(FTGL_CFLAGS -DBUILTIN_FTGL)
+  set(FTGL_LIBRARIES FTGL)
+endif()
+
+
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp)
   if(${opt})
