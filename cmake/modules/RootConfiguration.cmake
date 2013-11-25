@@ -129,7 +129,7 @@ set(dcaplibdir ${DCAP_LIBRARY_DIR})
 set(dcaplib ${DCAP_LIBRARY})
 set(dcapincdir ${DCAP_INCLUDE_DIR})
 
-set(buildftgl ${value${ftgl}})
+set(buildftgl ${value${builtin_ftgl}})
 set(ftgllibdir ${FTGL_LIBRARY_DIR})
 set(ftgllibs ${FTGL_LIBRARIES})
 set(ftglincdir ${FTGL_INCLUDE_DIR})
