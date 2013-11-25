@@ -576,11 +576,7 @@ void TClingCallbacks::Initialize(ASTContext& Ctx) {
 // The callback is used to update the list of globals in ROOT.
 //
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {
-   // Even empty transactions must go through; any transaction even empty
-   // will flush the deserialized decls into Meta.
-   //if (!T.size())
-   //   return;
-   if (fFirstRun && T.size())
+   if (fFirstRun && T.empty())
       Initialize(const_cast<clang::ASTContext&>(T.getASTContext()));
 
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
@@ -589,7 +585,7 @@ void TClingCallbacks::TransactionCommitted(const Transaction &T) {
 // The callback is used to update the list of globals in ROOT.
 //
 void TClingCallbacks::TransactionUnloaded(const Transaction &T) {
-   if (!T.size())
+   if (T.empty())
       return;
 
    TCling__UpdateListsOnUnloaded(T);

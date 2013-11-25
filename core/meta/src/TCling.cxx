@@ -377,7 +377,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
    std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
 
    bool isTUTransaction = false;
-   if (T.size() == 1 && !T.hasNestedTransactions()) {
+   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
       clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
       if (clang::TranslationUnitDecl* TU
           = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
@@ -399,7 +399,7 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
    }
 
    std::set<const void*> TransactionDeclSet;
-   if (!isTUTransaction && T.size()) {
+   if (!isTUTransaction && T.decls_end() - T.decls_begin()) {
       const clang::Decl* WrapperFD = T.getWrapperFD();
       for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
