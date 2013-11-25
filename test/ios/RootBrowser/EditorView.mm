@@ -91,7 +91,7 @@ enum {
       //It's completely transparent.
       const CGRect titleRect = CGRectMake(10.f, 10.f, 250.f, 35.f);
       editorTitle = [[UILabel alloc] initWithFrame : titleRect];
-      editorTitle.textAlignment = UITextAlignmentCenter;
+      editorTitle.textAlignment = NSTextAlignmentCenter;
       editorTitle.textColor = [UIColor blackColor];
       editorTitle.backgroundColor = [UIColor clearColor];
       [self addSubview : editorTitle];

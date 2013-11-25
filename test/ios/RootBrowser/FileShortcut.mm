@@ -71,7 +71,7 @@
    //Draw the file name.
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [FileShortcut iconHeight] - [FileShortcut textHeight], [FileShortcut iconWidth], [FileShortcut textHeight]);
-   [fileName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : UILineBreakModeWordWrap alignment : UITextAlignmentCenter];
+   [fileName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
 }
 
 //____________________________________________________________________________________________________

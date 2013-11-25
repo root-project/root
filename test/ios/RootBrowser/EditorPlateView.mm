@@ -33,7 +33,7 @@
       editorLabel = [[UILabel alloc] initWithFrame : CGRectMake(frame.size.width / 2 - 60.f, 10.f, 120.f, 30.f)];
       editorLabel.backgroundColor = [UIColor clearColor];
       editorLabel.font = [UIFont systemFontOfSize : 14];
-      editorLabel.textAlignment = UITextAlignmentCenter;
+      editorLabel.textAlignment = NSTextAlignmentCenter;
       editorLabel.textColor = [UIColor whiteColor];
       [self addSubview : editorLabel];
       editorLabel.text = name;

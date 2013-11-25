@@ -123,7 +123,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    const CGRect textRect = CGRectMake(0.f, [ObjectShortcut iconHeight], [ObjectShortcut iconWidth], [ObjectShortcut textHeight]);
-   [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : UILineBreakModeWordWrap alignment : UITextAlignmentCenter];
+   [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode :  NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
 }
 
 //____________________________________________________________________________________________________

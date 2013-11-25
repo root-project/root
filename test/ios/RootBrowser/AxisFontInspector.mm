@@ -165,7 +165,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = fixedFontNames[row];
    label.font = [UIFont fontWithName : fixedFonts[row] size : 14.f];
-   label.textAlignment = UITextAlignmentCenter;
+   label.textAlignment = NSTextAlignmentCenter;
    label.backgroundColor = [UIColor colorWithPatternImage : [UIImage imageNamed : @"text_cell_bkn.png"]];
    
    return label;
