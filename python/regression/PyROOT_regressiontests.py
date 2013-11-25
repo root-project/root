@@ -52,10 +52,10 @@ class Regression02PyExceptionTestcase( MyTestCase ):
    def test1RaiseAndTrapPyException( self ):
       """Test thrown TPyException object processing"""
 
-      gROOT.LoadMacro( "Scott.C+" )
-
       if FIXCLING:      # fails due to ROOT-5603
          return
+
+      gROOT.LoadMacro( "Scott.C+" )
 
     # test of not overloaded global function
       self.assertRaises( SyntaxError, ThrowPyException )

@@ -19,8 +19,8 @@ export LIB:=$(pylibpath);$(LIB)
 endif
 
 # special case for Scott.C: link with python library
-Scott_C.$(DllSuf): Scott.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
-	$(CMDECHO) $(CALLROOTEXE) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"$(pylib)\"\) > Scott_C.build.log 2>&1 || handleError.sh --result=$$? --log=Scott_C.build.log --test=$@
+#Scott_C.$(DllSuf): Scott.C $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+#	$(CMDECHO) $(CALLROOTEXE) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\",\"$(pylib)\"\) > Scott_C.build.log 2>&1 || handleError.sh --result=$$? --log=Scott_C.build.log --test=$@
 
 
 testWithFailure:
@@ -34,7 +34,8 @@ endif
 LoKiNamespace_C.clean.log: LoKiNamespace_C.$(DllSuf)
 	$(CMDECHO) rm -f LoKiNamespace_C.rootmap > LoKiNamespace_C.clean.log
 
-PyROOT_regressiontests.log: LoKiNamespace_C.clean.log Marco_C.$(DllSuf) MuonTileID_C.$(DllSuf) Scott3_C.$(DllSuf) Scott2_C.$(DllSuf) Scott_C.$(DllSuf) ULongLong_C.$(DllSuf) Till_C.$(DllSuf) CoralAttributeList_C.$(DllSuf)
+PyROOT_regressiontests.log: LoKiNamespace_C.clean.log Marco_C.$(DllSuf) MuonTileID_C.$(DllSuf) Scott3_C.$(DllSuf) Scott2_C.$(DllSuf) ULongLong_C.$(DllSuf) Till_C.$(DllSuf) CoralAttributeList_C.$(DllSuf)
+# Scott_C.$(DllSuf) 
 
 ifeq ($(shell root-config --arch),win32)
 # don't run the python file; it doesn't work on Windows:
