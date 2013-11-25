@@ -285,7 +285,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
          Log() << kINFO << "Note: This number will be taken as absolute minimum in the node, " << Endl;
          Log() << kINFO << "      in terms of 'weighted events' and unweighted ones !! " << Endl;
       }
-  }
+   }
 
    UInt_t nevents = eventSample.size();
 

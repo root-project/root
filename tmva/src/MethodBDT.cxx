@@ -1174,6 +1174,16 @@ void TMVA::MethodBDT::Train()
    //for (int itree=0; itree<fNTrees; itree++) {
    while (itree < fNTrees && continueBoost){
       timer.DrawProgressBar( itree );
+      // Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
+      // TH1 *hxx = new TH1F(Form("swdist%d",itree),Form("swdist%d",itree),10000,0,15);
+      // results->Store(hxx,Form("swdist%d",itree));
+      // TH1 *hxy = new TH1F(Form("bwdist%d",itree),Form("bwdist%d",itree),10000,0,15);
+      // results->Store(hxy,Form("bwdist%d",itree));
+      // for (Int_t iev=0; iev<fEventSample.size(); iev++) {
+      //    if (fEventSample[iev]->GetClass()!=0) hxy->Fill((fEventSample[iev])->GetWeight());
+      //    else          hxx->Fill((fEventSample[iev])->GetWeight());
+      // }
+
       if(DoMulticlass()){
          if (fBoostType!="Grad"){
             Log() << kFATAL << "Multiclass is currently only supported by gradient boost. "
@@ -1194,7 +1204,7 @@ void TMVA::MethodBDT::Train()
             // the minimum linear correlation between two variables demanded for use in fisher criterion in node splitting
 
             nNodesBeforePruning = fForest.back()->BuildTree(*fTrainSample);
-            Double_t bw = this->Boost(fEventSample, fForest.back(),i);
+            Double_t bw = this->Boost(*fTrainSample, fForest.back(),i);
             if (bw > 0) {
                fBoostWeights.push_back(bw);
             }else{
@@ -1231,7 +1241,7 @@ void TMVA::MethodBDT::Train()
          std::vector<const Event*> * validationSample = NULL;
          if(fAutomatic) validationSample = &fValidationSample;
          
-         Double_t bw = this->Boost(fEventSample, fForest.back());
+         Double_t bw = this->Boost(*fTrainSample, fForest.back());
          if (bw > 0) {
             fBoostWeights.push_back(bw);
          }else{
@@ -1740,9 +1750,9 @@ Double_t TMVA::MethodBDT::AdaBoost( std::vector<const TMVA::Event*>& eventSample
       err = TMath::Abs(err);
    }
    if (fUseYesNoLeaf)
-     boostWeight = TMath::Log((1.-err)/err)*fAdaBoostBeta;
+      boostWeight = TMath::Log((1.-err)/err)*fAdaBoostBeta;
    else
-     boostWeight = TMath::Log((1.+err)/(1-err))*fAdaBoostBeta;
+      boostWeight = TMath::Log((1.+err)/(1-err))*fAdaBoostBeta;
    
    
    Log() << kDEBUG << "BDT AdaBoos  wrong/all: " << sumGlobalwfalse << "/" << sumGlobalw << " 1-err/err="<<boostWeight<< " log.."<<TMath::Log(boostWeight)<<Endl;
