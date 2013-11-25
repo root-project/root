@@ -12,13 +12,6 @@ int execLibLoad()
       std::cout << "Dictionary found for B\n";
    }
    
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
-
-   if (NULL != TClass::GetDict("C")){
-      std::cout << "Dictionary found for C\n";
-   }     
-
-#endif
 
    return 0;
 }
