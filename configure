@@ -1863,9 +1863,9 @@ macosx*)
       # get most recent SDK version
       macosxminor=`sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2`
       macosxvers=10.$macosxminor
-      # make available to conftest.mk scripts
-      export MACOSXVERS=$macosxvers
    fi
+   # make available to conftest.mk scripts
+   export MACOSXVERS=$macosxvers
    ;;
 ios*)
    logmsg "Will check iOS SDK libraries"
@@ -1874,8 +1874,15 @@ ios*)
       # get most recent SDK version
       iosvers=`xcodebuild -showsdks | sed -n '/iphoneos/s/.*iOS //p' | sed 's/ .*//'|awk 'END{print}'`
    fi
+   if [ `echo $iosvers | cut -d . -f 1` -ge 7 ]; then
+      ios7=yes
+   fi
    xcodepath=`/usr/bin/xcode-select -print-path`
-   iossdk=$xcodepath/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$iosvers.sdk
+   if test "x$arch" = "xios"; then
+      iossdk=$xcodepath/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$iosvers.sdk
+   else
+      iossdk=$xcodepath/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator$iosvers.sdk
+   fi
    result "$iossdk"
    if [ ! -d $iossdk ]; then
        result "`basename $0`: no iOS SDK found at $iossdk"
@@ -1883,6 +1890,9 @@ ios*)
        result "or make sure the desired SDK version is installed"
        exit 1
    fi
+   # make available to conftest.mk scripts
+   export IOSSDK=$iossdk
+   export IOSVERS=$iosvers
    enable_cintex="no"
    enable_reflex="no"
    enable_genvector="no"
@@ -2465,6 +2475,10 @@ fi
 
 # OSX 10.9 only has libc++ with clang so make sure this option is turned on
 if test "x$macosx109" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
+    enable_libcxx="yes"
+fi
+# iOS 7.0 only has libc++ with clang so make sure this option is turned on
+if test "x$ios7" = "xyes" && echo $altcxx | grep 'clang++' > /dev/null 2>&1; then
     enable_libcxx="yes"
 fi
 

@@ -134,12 +134,10 @@ else
 			FREE_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
-			FREECC="$$FREECC -arch i386"; \
 			FREE_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
 			FREE_HOST="--host=i686-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
-			FREECC="$$FREECC -arch armv7"; \
 			FREE_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
 			FREE_HOST="--host=arm-apple-darwin10"; \
 		fi; \

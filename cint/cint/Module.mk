@@ -211,7 +211,7 @@ endif
 endif
 
 # used in the main Makefile
-ALLHDRS     += $(CINTHT)
+ALLHDRS     += $(CINTHT) $(CINTINCLUDES)
 
 CINTSIZEFLAGS :=
 ifneq ($(CINTMAXSTRUCT),)

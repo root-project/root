@@ -111,9 +111,9 @@ XLIBS         = $(XPMLIBDIR) $(XPMLIB) $(X11LIBDIR) -lXext -lX11
 CILIBS        = -lm $(EXTRA_LDFLAGS) -ldl
 
 # Fortran:
-ifeq ($(F77),ifort)
-F77           = ifort
+F77ORG        = ifort
 F77FLAGS      = -fPIC
+ifneq ($(F77),)
 ifeq ($(findstring $(ICC_MAJOR),11 10 9),)
 ifneq ($(subst ia32,,$(shell which ifort)),$(shell which ifort))
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/ia32/ifort|compiler/lib|') \

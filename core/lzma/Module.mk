@@ -142,12 +142,10 @@ else
 			LZMA_CFLAGS="-m64"; \
 		fi; \
 		if [ $(ARCH) = "iossim" ]; then \
-			LZMACC="$$LZMACC -arch i386"; \
 			LZMA_CFLAGS="-arch i386 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
 			LZMA_HOST="--host=i686-apple-darwin10"; \
 		fi; \
 		if [ $(ARCH) = "ios" ]; then \
-			LZMACC="$$LZMACC -arch armv7"; \
 			LZMA_CFLAGS="-arch armv7 -isysroot $(IOSSDK) -miphoneos-version-min=$(IOSVERS)"; \
 			LZMA_HOST="--host=arm-apple-darwin10"; \
 		fi; \
