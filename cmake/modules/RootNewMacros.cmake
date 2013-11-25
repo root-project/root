@@ -1,10 +1,10 @@
 #---------------------------------------------------------------------------------------------------
 #  RootNewMacros.cmake
 #---------------------------------------------------------------------------------------------------
-cmake_minimum_required(VERSION 2.4.6)
 cmake_policy(SET CMP0003 NEW) # See "cmake --help-policy CMP0003" for more details
 cmake_policy(SET CMP0011 NEW) # See "cmake --help-policy CMP0011" for more details
 cmake_policy(SET CMP0009 NEW) # See "cmake --help-policy CMP0009" for more details
+cmake_policy(SET CMP0022 OLD) # See "cmake --help-policy CMP0022" for more details
 
 set(lib lib)
 set(bin bin)
@@ -253,7 +253,7 @@ endfunction()
 
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT] LIBRARIES library1 library2 ...)
+#---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT] LIBRARIES lib1 lib2 ... DEPENDENCIES lib3 l1b4)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
   PARSE_ARGUMENTS(ARG "TYPE;LIBRARIES;DEPENDENCIES" "DLLEXPORT;CMAKENOEXPORT" ${ARGN})
