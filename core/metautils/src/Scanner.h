@@ -83,9 +83,11 @@ public:
    bool VisitFunctionDecl(clang::FunctionDecl* D); //Visitor for every FunctionDecl i.e. function node in the AST
    bool VisitNamespaceDecl(clang::NamespaceDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
    bool VisitRecordDecl(clang::RecordDecl* D); // Visitor for every RecordDecl i.e. class node in the AST
-   bool VisitTypedefDecl(clang::TypedefDecl* D); // Visitor for every TypedefDecl i.e. class node in the AST
+   bool VisitTypedefNameDecl(clang::TypedefNameDecl* D); // Visitor for every TypedefNameDecl i.e. class node in the AST
    bool VisitVarDecl(clang::VarDecl* D); //Visitor for every VarDecl i.e. variable node in the AST
 
+   bool TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl); //Function called by VisitTypedefNameDecl and VisitRecordDecl
+   
    bool TraverseDeclContextHelper(clang::DeclContext *DC); // Here is the code magic :) - every Decl
    // according to its type is processed by the corresponding Visitor method
 

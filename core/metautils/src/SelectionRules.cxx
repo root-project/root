@@ -277,6 +277,14 @@ const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::RecordDecl *D) c
    return IsClassSelected(D, qual_name);
 }
 
+const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::TypedefNameDecl *D) const
+{
+   std::string str_name;    // name of the Decl
+   std::string qual_name;   // name of the Decl
+   GetDeclName(D, str_name, qual_name);
+   return IsClassSelected(D, qual_name);
+}
+
 const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D) const
 {  
    std::string str_name;    // name of the Decl
@@ -709,14 +717,28 @@ const ClassSelectionRule *SelectionRules::IsNamespaceSelected(clang::Decl* D, co
 
 const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const std::string& qual_name) const
 {
-   clang::TagDecl* T = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
-
-   if (T==NULL) {
-      ROOT::TMetaUtils::Error(0,"Couldn't cast Decl to NamespaceDecl");
+   clang::TagDecl* tagDecl = llvm::dyn_cast<clang::TagDecl> (D); //TagDecl has methods to understand of what kind is the Decl
+   clang::TypedefNameDecl* typeDefNameDecl = llvm::dyn_cast<clang::TypedefNameDecl> (D);
+   
+   if (!tagDecl && !typeDefNameDecl) { // Ill posed
+      ROOT::TMetaUtils::Error("SelectionRules::IsClassSelected",
+            "Cannot cast Decl to TagDecl and Decl is not a typedef.\n");
       return 0;
+      }
+
+   if (!tagDecl && typeDefNameDecl){ // Let's try to fetch the underlying RecordDecl
+      clang::RecordDecl* recordDecl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(typeDefNameDecl->getUnderlyingType());
+      if (!recordDecl){
+         ROOT::TMetaUtils::Error("SelectionRules::IsClassSelected",
+                                 "Cannot get RecordDecl behind TypedefDecl.\n");
+         return 0;
+      }
+      tagDecl = recordDecl;
    }
 
-   if (not ( IsLinkdefFile() || T->isClass() || T->isStruct() ))
+   // At this point tagDecl must be well defined   
+   
+   if (not ( IsLinkdefFile() || tagDecl->isClass() || tagDecl->isStruct() ))
       return 0; // Union for Genreflex
    
    const ClassSelectionRule *selector = 0;

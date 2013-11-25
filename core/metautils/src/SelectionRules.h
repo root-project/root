@@ -75,13 +75,14 @@ public:
    
    // These method are called from clr-scan and return true if the Decl selected, false otherwise
    //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const; 
-   const ClassSelectionRule *IsDeclSelected(clang::RecordDecl* D) const; 
+   const ClassSelectionRule *IsDeclSelected(clang::RecordDecl* D) const;
+   const ClassSelectionRule *IsDeclSelected(clang::TypedefNameDecl* D) const;
    const ClassSelectionRule *IsDeclSelected(clang::NamespaceDecl* D) const; 
    const BaseSelectionRule *IsDeclSelected(clang::EnumDecl* D) const; 
    const BaseSelectionRule *IsDeclSelected(clang::VarDecl* D) const; 
    const BaseSelectionRule *IsDeclSelected(clang::FieldDecl* D) const; 
    const BaseSelectionRule *IsDeclSelected(clang::FunctionDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::Decl* D) const; 
+   const BaseSelectionRule *IsDeclSelected(clang::Decl* D) const;   
 
    const ClassSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
    const ClassSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected

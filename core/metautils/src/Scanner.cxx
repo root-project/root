@@ -659,48 +659,75 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
 
-   // This method visits a class node - for every class is created a new class buider
-   // irrespectful of weather the class is internal for another class declaration or not.
-   // For every class the class builder is put on top of the fClassBuilders stack
+   // This method visits a class node
 
-   if (D && fRecordDeclCallback) {
+   return TreatRecordDeclOrTypedefNameDecl(D);
+   
+
+}
+
+//______________________________________________________________________________
+bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
+{
+
+   // For every class is created a new class buider irrespectful of weather the
+   // class is internal for another class declaration or not.
+   // For every class the class builder is put on top of the fClassBuilders
+   // stack.
+   // RecordDecls and TypedefDecls (or RecordDecls!) are treated.   
+   // We follow two different codepaths if the typeDecl is a RecordDecl or
+   // a TypedefDecl. If typeDecl is a TypedefDecl, recordDecl becomes the
+   // underlying RecordDecl.
+   // This is done to leverage the selections rule matching in SelectionRules
+   // which works basically with names.
+   // At the end of the method, if the typedef name is matched, an AnnotatedRecordDecl
+   // with the underlying RecordDecl is fed to the machinery.
+
+   clang::RecordDecl* recordDecl = clang::dyn_cast<clang::RecordDecl>(typeDecl);
+   clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl>(typeDecl);
+
+   // If typeDecl is not a RecordDecl, try to fetch the RecordDecl behind the TypedefDecl
+   if (!recordDecl && typedefNameDecl) {
+      recordDecl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
+      }
+
+   // If at this point recordDecl is still NULL, we have a problem
+   if (!recordDecl) {
+      ROOT::TMetaUtils::Warning("RScanner::TreatRecordDeclOrTypeNameDecl",
+       "Could not cast typeDecl either to RecordDecl or could not get RecordDecl underneath typedef.\n");
+      return true;
+   }
+
+   // At this point, recordDecl must be a RecordDecl pointer.
+   
+   if (recordDecl && fRecordDeclCallback) {
       // Pass on any declaration.   This is usually used to record dependency.
       // Since rootcint see C++ compliant header files, we can assume that
       // if a forward declaration or declaration has been inserted, the
       // classes for which we are creating a dictionary will be using
       // them either directly or indirectly.   Any false positive can be
-      // resolved by removing the spurrious dependency in the (user) header 
+      // resolved by removing the spurrious dependency in the (user) header
       // files.
       std::string qual_name;
-      GetDeclQualName(D,qual_name);
+      GetDeclQualName(recordDecl,qual_name);
       fRecordDeclCallback(qual_name.c_str());
    }
-   
+
    // in case it is implicit or a forward declaration, we are not interested.
-   if(D && (D->isImplicit() || !D->isCompleteDefinition()) ) {
+   if(recordDecl && (recordDecl->isImplicit() || !recordDecl->isCompleteDefinition()) ) {
       return true;
    }
-
+   
    // Never select the class templates themselves.
-   const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(D);
+   const clang::CXXRecordDecl *cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(recordDecl);
    if (cxxdecl && cxxdecl->getDescribedClassTemplate ()) {
       return true;
    }
    
-   DumpDecl(D, "");
-
-   #ifdef SELECTION_DEBUG   
-   if (fVerboseLevel > 3) {
-      std::string qual_name2;   
-      if (GetDeclQualName(D, qual_name2))
-         std::cout<<"\tLooking at " << qual_name2 << "\n";
-      if (qual_name2 == "TemplateClass") {
-         std::cout<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
-      }
-   }
-   #endif
+   DumpDecl(recordDecl, "");
    
-   const ClassSelectionRule *selected = fSelectionRules.IsDeclSelected(D);
+   const ClassSelectionRule *selected = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) :
+                                                      fSelectionRules.IsDeclSelected(recordDecl);
    if (selected && selected->GetSelected() == BaseSelectionRule::kYes) {
       // For the case kNo, we could (but don't) remove the node from the pcm
       // For the case kDontCare, the rule is just a place holder and we are actually trying to exclude some of its children
@@ -708,25 +735,40 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       
       // Reject the selection of std::pair on the ground that it is trivial
       // and can easily be recreated from the AST information.
-      if (D->getName() == "pair") {
-         const clang::NamespaceDecl *ctxt = llvm::dyn_cast<clang::NamespaceDecl>(D->getDeclContext())->getCanonicalDecl();
-         if (ctxt && ctxt == fInterpreter.getCI()->getSema().getStdNamespace()) { 
+      if (recordDecl->getName() == "pair") {
+         const clang::NamespaceDecl *ctxt = llvm::dyn_cast<clang::NamespaceDecl>(recordDecl->getDeclContext())->getCanonicalDecl();
+         if (ctxt && ctxt == fInterpreter.getCI()->getSema().getStdNamespace()) {
             if (selected->HasAttributeWithName("file_name") || selected->HasAttributeWithName("file_pattern")) {
                return true;
             }
          }
       }
+      
 
-      std::string qual_name;
-      GetDeclQualName(D,qual_name);
-      if (fVerboseLevel > 0) std::cout<<"\tSelected class -> " << qual_name << "\n";
+      
+      if (fVerboseLevel > 0) {
+         std::string qual_name;
+         GetDeclQualName(recordDecl,qual_name);
+         std::string typedef_qual_name;
+         std::string typedefMsg;
+         if (typedefNameDecl){
+            GetDeclQualName(typedefNameDecl,typedef_qual_name);
+            typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
+         }
+         
+         std::cout <<"\tSelected class "
+                   << typedefMsg
+                   << "-> "
+                   << qual_name << "\n";
+         
+      }
       
       std::string name_value;
       if (selected->GetAttributeValue("name", name_value)) {
          fSelectedClasses.push_back(
             ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
                                                   selected->GetRequestedType(),
-                                                  D,
+                                                  recordDecl,
                                                   name_value.c_str(),
                                                   selected->RequestStreamerInfo(),
                                                   selected->RequestNoStreamer(),
@@ -738,7 +780,7 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
       } else {
          fSelectedClasses.push_back(
             ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
-                                                  D,
+                                                  recordDecl,
                                                   selected->RequestStreamerInfo(),
                                                   selected->RequestNoStreamer(),
                                                   selected->RequestNoInputOperator(),
@@ -746,28 +788,37 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
                                                   selected->RequestedVersionNumber(),
                                                   fInterpreter,
                                                   fNormCtxt));
-      }         
+      }
    }
    
-   return true;
+   return true;   
 }
 
 //______________________________________________________________________________
-bool RScanner::VisitTypedefDecl(clang::TypedefDecl* D)
+bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 {
-   // Visitor for every TypedefDecl i.e. class node in the AST
-
-//   std::string qual_name2;
-//   
-//   if (GetDeclQualName(D, qual_name2)) {
-//      std::cerr<<"\tLooking at typedef -> " << qual_name2 << "\n";
-//      std::cerr<<"  "<<D->clang::Decl::getDeclKindName()<<"\n";
-//   }
-//   D->dump();
-//   std::cerr <<'\n';
-//   clang::RecordDecl *cl = R__GetUnderlyingRecordDecl(D->getUnderlyingType());
+   // Visitor for every TypedefNameDecl, i.e. aliases and typedefs
+   // We check three conditions before trying to match the name:
+   // 1) If we are using a selection XML
+   // 2) If the underlying decl is a RecordDecl
+   // 3) If the typedef is eventually contained in the std namespace
    
-   return true;
+   
+   const clang::DeclContext *ctx = D->getDeclContext();
+
+   bool isInStd=false;
+   if (ctx) {
+      const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
+      isInStd = parent && 0 == parent->getQualifiedNameAsString().compare(0,5,"std::");
+      }
+
+   if (fSelectionRules.IsSelectionXMLFile() &&
+       ROOT::TMetaUtils::GetUnderlyingRecordDecl(D->getUnderlyingType()) &&
+       !isInStd){
+      TreatRecordDeclOrTypedefNameDecl(D);
+   }
+
+    return true;
 }
 
 //______________________________________________________________________________
