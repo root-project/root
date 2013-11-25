@@ -69,7 +69,7 @@ static TStreamerBasicType *InitCounter(const char *countClass, const char *count
       counter = TVirtualStreamerInfo::GetElementCounter(countName,cl);
    }
        
-   //at this point the counter may be declared to skip
+   //at this point the counter may be declared to be skipped
    if (counter) {
       if (counter->GetType() < TVirtualStreamerInfo::kCounter) counter->SetType(TVirtualStreamerInfo::kCounter);
    }
