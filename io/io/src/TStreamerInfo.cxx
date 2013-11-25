@@ -2139,6 +2139,12 @@ namespace {
                } else if ( (fDataType == 14 && other.fDataType == 17) 
                            || (fDataType == 17 && other.fDataType == 14) ) {
                   // unsigned long and 'unsigned long long' have the same  file format
+               } else if ( (fDataType == 3 && other.fDataType == 6)
+                          ||(fDataType == 6 && other.fDataType == 3) ){
+                  // Int_t and kCounter.  As the switch from Int_t (3) to
+                  // kCounter (6) might be triggered by a derived class using
+                  // the field as an array size, the class itself has no
+                  // control on what the field type really use.
                } else {
                   return kTRUE;
                }
@@ -2385,7 +2391,16 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             other.SetClassName( tdm->GetTrueTypeName() );
             other.SetComment( tdm->GetTitle() );
             if (tdm->GetDataType()) {
-               other.SetDataType( tdm->GetDataType()->GetType() );
+               // Need to update the type for arrays.
+               if (tdm->IsaPointer()) {
+                  other.SetDataType( tdm->GetDataType()->GetType() + TVirtualStreamerInfo::kOffsetP);
+               } else {
+                  if (tdm->GetArrayDim()) {
+                     other.SetDataType( tdm->GetDataType()->GetType() + TVirtualStreamerInfo::kOffsetL);
+                  } else {
+                     other.SetDataType( tdm->GetDataType()->GetType() );
+                  }
+               }
             }
          } else if (el==0) {
             done = kTRUE;
