@@ -5004,7 +5004,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
    // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.
    //            This is needed for backward compatibility.
    //
-   // WARNING: this function must be kept in sync with TClass::GetCheckSum.
+   // WARNING: this function must be kept in sync with TStreamerInfo::GetCheckSum.
    // They are both used to handle backward compatibility and should both return the same values.
    // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
