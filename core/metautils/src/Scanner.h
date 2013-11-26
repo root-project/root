@@ -163,6 +163,7 @@ private:
    static int fgBadClassCounter;
    const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    const SelectionRules &fSelectionRules;
+   std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
 
 
 

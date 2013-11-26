@@ -743,12 +743,46 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             }
          }
       }
-      
 
+      // Insert in the selected classes if not already there
+      // We need this check since the same class can be selected through its name or typedef         
+      if (0 != fselectedRecordDecls.count(recordDecl)){
+         return true;
+      }
+      
+      fselectedRecordDecls.insert(recordDecl);
+
+      
+      std::string name_value;
+      if (selected->GetAttributeValue("name", name_value)) {                  
+         ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
+                                                          selected->GetRequestedType(),
+                                                          recordDecl,
+                                                          name_value.c_str(),
+                                                          selected->RequestStreamerInfo(),
+                                                          selected->RequestNoStreamer(),
+                                                          selected->RequestNoInputOperator(),
+                                                          selected->RequestOnlyTClass(),
+                                                          selected->RequestedVersionNumber(),
+                                                          fInterpreter,
+                                                          fNormCtxt);
+         fSelectedClasses.push_back(annRecDecl);
+      } else {
+         ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
+                                                          recordDecl,
+                                                          selected->RequestStreamerInfo(),
+                                                          selected->RequestNoStreamer(),
+                                                          selected->RequestNoInputOperator(),
+                                                          selected->RequestOnlyTClass(),
+                                                          selected->RequestedVersionNumber(),
+                                                          fInterpreter,
+                                                          fNormCtxt);
+         fSelectedClasses.push_back(annRecDecl);
+      }
       
       if (fVerboseLevel > 0) {
          std::string qual_name;
-         GetDeclQualName(recordDecl,qual_name);
+         GetDeclQualName(recordDecl,qual_name);         
          std::string typedef_qual_name;
          std::string typedefMsg;
          if (typedefNameDecl){
@@ -757,39 +791,13 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          
          std::cout <<"\tSelected class "
-                   << typedefMsg
-                   << "-> "
-                   << qual_name << "\n";
+         << typedefMsg
+         << "-> "
+         << qual_name << "\n";
          
-      }
-      
-      std::string name_value;
-      if (selected->GetAttributeValue("name", name_value)) {
-         fSelectedClasses.push_back(
-            ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
-                                                  selected->GetRequestedType(),
-                                                  recordDecl,
-                                                  name_value.c_str(),
-                                                  selected->RequestStreamerInfo(),
-                                                  selected->RequestNoStreamer(),
-                                                  selected->RequestNoInputOperator(),
-                                                  selected->RequestOnlyTClass(),
-                                                  selected->RequestedVersionNumber(),
-                                                  fInterpreter,
-                                                  fNormCtxt));
-      } else {
-         fSelectedClasses.push_back(
-            ROOT::TMetaUtils::AnnotatedRecordDecl(selected->GetIndex(),
-                                                  recordDecl,
-                                                  selected->RequestStreamerInfo(),
-                                                  selected->RequestNoStreamer(),
-                                                  selected->RequestNoInputOperator(),
-                                                  selected->RequestOnlyTClass(),
-                                                  selected->RequestedVersionNumber(),
-                                                  fInterpreter,
-                                                  fNormCtxt));
-      }
+      }      
    }
+
    
    return true;   
 }
