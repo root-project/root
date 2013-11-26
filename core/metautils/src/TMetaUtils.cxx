@@ -59,7 +59,7 @@ int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
 std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
 
 namespace {
-   
+
 //______________________________________________________________________________
 static clang::NestedNameSpecifier* AddDefaultParametersNNS(const clang::ASTContext& Ctx,
                                                            clang::NestedNameSpecifier* scope,
@@ -2873,13 +2873,13 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
           I!=E ? ++I : 0, ++Idecl, ++Param) {
 
          if (I != E) {
-               
+
             if (I->getKind() == clang::TemplateArgument::Template) {
                clang::TemplateName templateName = I->getAsTemplate();
                clang::TemplateDecl* templateDecl = templateName.getAsTemplateDecl();
                if (templateDecl) {
                   clang::DeclContext* declCtxt = templateDecl->getDeclContext();
-               
+
                   if (declCtxt && !templateName.getAsQualifiedTemplateName()){
                      clang::NamespaceDecl* ns = clang::dyn_cast<clang::NamespaceDecl>(declCtxt);
                      clang::NestedNameSpecifier* nns;
@@ -2892,7 +2892,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                   }
                }
             }
-            
+
             if (I->getKind() != clang::TemplateArgument::Type) {
                desArgs.push_back(*I);
                continue;
@@ -3750,7 +3750,7 @@ bool ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &
 
    // We found it: let's return true
    if (&cl == &currentCl) return true;
-   
+
    const  clang::CXXRecordDecl* previous = currentCl.getPreviousDecl();
 
    // There is no previous decl, so we cannot possibly find it
@@ -3758,9 +3758,9 @@ bool ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(const clang::CXXRecordDecl &
       return false;
    }
 
-   // We try to find it in the previous 
+   // We try to find it in the previous
    return ROOT::TMetaUtils::MatchWithDeclOrAnyOfPrevious(cl, *previous);
-   
+
 }
 
 //______________________________________________________________________________
@@ -3770,7 +3770,7 @@ bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::strin
    // Return true if the decl is of type.
    // A proper hashtable for caching results would be the ideal solution
    // 1) Only one lookup per type
-   // 2) No string comparison  
+   // 2) No string comparison
    // We may use a map which becomes an unordered map if c++11 is enabled?
 
    const clang::CXXRecordDecl *thisDecl =
@@ -3783,9 +3783,9 @@ bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::strin
       }
 
    // Now loop on all previous decls to seek a match
-   const clang::CXXRecordDecl *mostRecentDecl = thisDecl->getMostRecentDecl();   
+   const clang::CXXRecordDecl *mostRecentDecl = thisDecl->getMostRecentDecl();
    bool matchFound = MatchWithDeclOrAnyOfPrevious (cl,*mostRecentDecl);
-   
+
    return matchFound;
 }
 
@@ -4019,4 +4019,43 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
          clingArgs.push_back(inclPath);
       }
    }
+
+   // For the time being check for ABI compatibility here
+   CheckABICompatibility();
+}
+
+//______________________________________________________________________________
+bool ROOT::TMetaUtils::CheckABICompatibility()
+{
+   // Check the C++ compile-time and run-time ABI version compatibility.
+   // Returns true if ABI versions are compatible.
+
+   bool ret = true;
+   int cppABIVersion = -1;
+   const char *runABIFmt = 0;
+#ifdef _LIBCPP_ABI_VERSION
+   cppABIVersion = _LIBCPP_ABI_VERSION;
+   runABIFmt = "echo '#include <vector>' | %s -xc++ -dM -E - | grep 'define _LIBCPP_ABI_VERSION' | awk '{print $3}'";
+#elif __GXX_ABI_VERSION
+   cppABIVersion = __GXX_ABI_VERSION;
+   runABIFmt = "echo '#include <vector>' | %s -xc++ -dM -E - | grep 'define __GXX_ABI_VERSION' | awk '{print $3}'";
+#endif
+   if (cppABIVersion != -1) {
+      char buf[2048];
+      snprintf(buf, sizeof(buf), runABIFmt, CXX);   // CXX is defined in compiledata.h
+      if (FILE *pf = ::popen(buf, "r")) {
+         if (fgets(buf, 2048, pf)) {
+            buf[strlen(buf)-1] = 0;   // remove trailing \n
+            int runABIVersion = ::atoi(buf);
+            if (runABIVersion != cppABIVersion) {
+               Error("CheckABICompatibility", "C++ ABI mismatch, compiled with v%d, running with v%d\n", cppABIVersion, runABIVersion);
+               ret = false;
+            }
+         }
+         ::pclose(pf);
+      }
+   } else {
+      Error("CheckABICompatibility", "ABI compatibility check needs still to be implemented for this platform");
+   }
+   return ret;
 }

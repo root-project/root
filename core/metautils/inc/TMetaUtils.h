@@ -544,8 +544,13 @@ clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *ins
 ROOT::ESTLType STLKind(const llvm::StringRef type);
 
 //______________________________________________________________________________
-// Set the toolchain and the include paths for the relocatability
+// Set the toolchain and the include paths for relocatability
 void SetPathsForRelocatability(std::vector<std::string>& clingArgs);
+
+//______________________________________________________________________________
+// Check the compile-time C++ ABI version vs the run-time ABI version,
+// a mismatch could cause havoc. Returns true if ABI versions are compatible.
+bool CheckABICompatibility();
 
 // Functions for the printouts -------------------------------------------------
 
