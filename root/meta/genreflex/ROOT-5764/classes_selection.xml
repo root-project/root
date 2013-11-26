@@ -1,0 +1,7 @@
+
+<lcgdict>
+   <class pattern="MyClass*" />
+   <exclusion>
+      <class name="MyClassList"/>
+   </exclusion>
+</lcgdict>
