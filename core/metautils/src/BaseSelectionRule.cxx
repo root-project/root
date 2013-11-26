@@ -223,8 +223,13 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    bool has_name_attribute = GetAttributeValue("name", name_value);
    std::string pattern_value;
    bool has_pattern_attribute = GetAttributeValue("pattern", pattern_value);
+
+   // Check if we have in hands a typedef to a RecordDecl
+   const clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl> (decl);
+   bool isTypedefNametoRecordDecl = typedefNameDecl &&
+                                    ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
    
-   if (GetCXXRecordDecl() !=0 && GetCXXRecordDecl() != (void*)-1) {
+   if (! isTypedefNametoRecordDecl && GetCXXRecordDecl() !=0 && GetCXXRecordDecl() != (void*)-1) {
       const clang::CXXRecordDecl *target = GetCXXRecordDecl();
       const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
       if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
@@ -232,7 +237,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
       }
-   } else if (has_name_attribute) {
+   } else if (has_name_attribute) {      
       if (name_value == name) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
@@ -358,7 +363,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    }
 }
 #endif
-      
+
    return kNoMatch;
 }
 
