@@ -16,21 +16,21 @@ if(WIN32)
   set(libprefix lib)
   set(ld_library_path PATH)
   set(libsuffix .dll)
-  set(runtimedir bin)
+  set(runtimedir ${BIN_INSTALL_DIR})
 elseif(APPLE)
   set(ld_library_path DYLD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
   set(libprefix lib)
   set(libsuffix .so)
-  set(runtimedir lib)
+  set(runtimedir ${LIB_INSTALL_DIR})
 else()
   set(ld_library_path LD_LIBRARY_PATH)
   set(ssuffix .csh)
   set(scomment \#)
   set(libprefix lib)
   set(libsuffix .so) 
-  set(runtimedir lib) 
+  set(runtimedir ${LIB_INSTALL_DIR}) 
 endif()
 
 if(soversion)
@@ -321,32 +321,31 @@ function(ROOT_LINKER_LIBRARY library)
   set_target_properties(${library} PROPERTIES LINK_INTERFACE_LIBRARIES "${ARG_DEPENDENCIES}")
   #----Installation details-------------------------------------------------------
   if(ARG_CMAKENOEXPORT)
-    install(TARGETS ${library} RUNTIME DESTINATION bin
-                               LIBRARY DESTINATION lib
-                               ARCHIVE DESTINATION lib
+    install(TARGETS ${library} RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+                               LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+                               ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
                                COMPONENT libraries)
   else()
     install(TARGETS ${library} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                               RUNTIME DESTINATION bin
-                               LIBRARY DESTINATION lib
-                               ARCHIVE DESTINATION lib
+                               RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+                               LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+                               ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
                                COMPONENT libraries)
-    #install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED)
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/Debug/lib${library}.pdb 
               CONFIGURATIONS Debug
-              DESTINATION bin
+              DESTINATION ${BIN_INSTALL_DIR}
               COMPONENT libraries) 
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/RelWithDebInfo/lib${library}.pdb 
               CONFIGURATIONS RelWithDebInfo 
-              DESTINATION bin
+              DESTINATION ${BIN_INSTALL_DIR}
               COMPONENT libraries) 
     else()
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb 
               CONFIGURATIONS Debug RelWithDebInfo 
-              DESTINATION bin
+              DESTINATION ${BIN_INSTALL_DIR}
               COMPONENT libraries) 
     endif()
   endif()
@@ -363,9 +362,9 @@ function(ROOT_MODULE_LIBRARY library)
   set_target_properties(${library}  PROPERTIES ${ROOT_LIBRARY_PROPERTIES})
   target_link_libraries(${library} ${ARG_LIBRARIES})
   #----Installation details-------------------------------------------------------
-  install(TARGETS ${library} RUNTIME DESTINATION bin
-                             LIBRARY DESTINATION lib
-                             ARCHIVE DESTINATION lib
+  install(TARGETS ${library} RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+                             LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+                             ARCHIVE DESTINATION ${LIB_INSTALL_DIR}
                              COMPONENT libraries)
 endfunction()
 
@@ -437,7 +436,7 @@ function(ROOT_GENERATE_ROOTMAP library)
   add_custom_target( ${libprefix}${library}.rootmap ALL DEPENDS  ${outfile})
   set_target_properties(${libprefix}${library}.rootmap PROPERTIES FOLDER RootMaps )
   #---Install the rootmap file------------------------------------
-  install(FILES ${outfile} DESTINATION lib COMPONENT libraries)
+  install(FILES ${outfile} DESTINATION ${LIB_INSTALL_DIR} COMPONENT libraries)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -450,7 +449,7 @@ function(ROOT_INSTALL_HEADERS)
     set(dirs inc/)
   endif()
   foreach(d ${dirs})  
-    install(DIRECTORY ${d} DESTINATION include
+    install(DIRECTORY ${d} DESTINATION ${INCLUDE_INSTALL_DIR}
                            COMPONENT headers 
                            PATTERN ".svn" EXCLUDE
                            PATTERN "X11" EXCLUDE
@@ -474,7 +473,7 @@ endfunction()
 #---ROOT_EXECUTABLE( <name> source1 source2 ... LIBRARIES library1 library2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_EXECUTABLE executable)
-  PARSE_ARGUMENTS(ARG "LIBRARIES" "CMAKENOEXPORT" ${ARGN})
+  PARSE_ARGUMENTS(ARG "LIBRARIES" "CMAKENOEXPORT;NOINSTALL" ${ARGN})
   ROOT_GET_SOURCES(exe_srcs src ${ARG_DEFAULT_ARGS})
   set(executable_name ${executable})
   if(TARGET ${executable})
@@ -490,10 +489,12 @@ function(ROOT_EXECUTABLE executable)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${executable})
   set_target_properties(${executable} PROPERTIES OUTPUT_NAME ${executable_name})
   #----Installation details------------------------------------------------------
-  if(ARG_CMAKENOEXPORT)
-    install(TARGETS ${executable} RUNTIME DESTINATION ${bin} COMPONENT applications)
-  else()
-    install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${bin} COMPONENT applications)
+  if(NOT ARG_NOINSTALL)
+    if(ARG_CMAKENOEXPORT)
+      install(TARGETS ${executable} RUNTIME DESTINATION ${BIN_INSTALL_DIR} COMPONENT applications)
+    else()
+      install(TARGETS ${executable} EXPORT ${CMAKE_PROJECT_NAME}Exports RUNTIME DESTINATION ${BIN_INSTALL_DIR} COMPONENT applications)
+    endif()
   endif()
 endfunction()
 
@@ -506,7 +507,7 @@ function(REFLEX_BUILD_DICTIONARY dictionary headerfiles selectionfile )
   add_library(${dictionary}Dict MODULE ${gensrcdict})
   target_link_libraries(${dictionary}Dict ${ARG_LIBRARIES} ${ROOT_Reflex_LIBRARY})
   #----Installation details-------------------------------------------------------
-  install(TARGETS ${dictionary}Dict LIBRARY DESTINATION ${lib})
+  install(TARGETS ${dictionary}Dict LIBRARY DESTINATION ${LIB_INSTALL_DIR})
   set(mergedRootMap ${CMAKE_INSTALL_PREFIX}/${lib}/${CMAKE_PROJECT_NAME}Dict.rootmap)
   set(srcRootMap ${CMAKE_CURRENT_BINARY_DIR}/${rootmapname})
   install(CODE "EXECUTE_PROCESS(COMMAND ${merge_rootmap_cmd} --do-merge --input-file ${srcRootMap} --merged-file ${mergedRootMap})")

@@ -13,5 +13,5 @@ elseif(cocoa)
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root.exe ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root)
   add_dependencies(root root.exe)
   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root
-          DESTINATION ${bin} COMPONENT applications)
+          DESTINATION ${BIN_INSTALL_DIR} COMPONENT applications)
 endif()

@@ -4,10 +4,7 @@ if(builtin_gsl)
     add_dependencies(MathMore GSL)
   endif()
   ExternalProject_Get_Property(GSL install_dir)
-  install(DIRECTORY ${install_dir}/lib/ DESTINATION lib FILES_MATCHING PATTERN "libgsl*")
-  #install(FILES ${install_dir}/lib/libgslcblas.so  
-  #              ${install_dir}/lib/libgsl.so  
-  #              DESTINATION lib)
+  install(DIRECTORY ${install_dir}/lib/ DESTINATION ${LIB_INSTALL_DIR} FILES_MATCHING PATTERN "libgsl*")
 endif()
 
 #---Post actions to use builtin CFITSIO------------------------------------------------
@@ -15,6 +12,4 @@ if(builtin_cfitsio)
   if(TARGET FITSIO)
     add_dependencies(FITSIO CFITSIO)
   endif()
-  #install(FILES ${install_dir}/lib/libcfitsio.so  
-  #              DESTINATION lib)
 endif()

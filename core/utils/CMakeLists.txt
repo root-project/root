@@ -29,7 +29,7 @@ ROOT_EXECUTABLE(rootcint_tmp  rootcint_tmp.cxx RStl_tmp.cxx loadfile_tmp.cxx
                               ${METAUTILS_CXX_SOURCES}
                               ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c 
                               ${CMAKE_SOURCE_DIR}/core/clib/src/strlcat.c 
-                              LIBRARIES Cint_static ${CMAKE_DL_LIBS})
+                              LIBRARIES Cint_static ${CMAKE_DL_LIBS} NOINSTALL)
 add_dependencies(rootcint_tmp IOSENUM_H)
 
 #---Trick to avoid building all dictionaties when CINT is changed-------------

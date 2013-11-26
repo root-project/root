@@ -139,9 +139,9 @@ foreach(_name ${CINTSTLDLLNAMES})
                                 
     add_Library(${_name}Dict SHARED ${Dictionary}.cxx )
     set_Target_properties(${_name}Dict PROPERTIES PREFIX ${libprefix} SUFFIX ${libsuffix} FOLDER Dictionaries)
-	install(TARGETS ${_name}Dict RUNTIME DESTINATION bin
-                                 LIBRARY DESTINATION lib
-                                 ARCHIVE DESTINATION lib)
+	install(TARGETS ${_name}Dict RUNTIME DESTINATION ${BIN_INSTALL_DIR}
+                                 LIBRARY DESTINATION ${LIB_INSTALL_DIR}
+                                 ARCHIVE DESTINATION ${LIB_INSTALL_DIR})
 
     if(explicitlink)
       target_link_libraries(${_name}Dict Cint Core)
@@ -160,7 +160,7 @@ foreach(_name ${CINTSTLDLLNAMES})
   if(explicitlink)
     target_link_libraries(${_name} Cint)
   endif()
-  install(TARGETS ${_name} DESTINATION cint/cint/stl)
+  install(TARGETS ${_name} DESTINATION ${CINTINC_INSTALL_DIR}/cint/stl)
 endforeach()
 
 
@@ -185,7 +185,7 @@ foreach(_name ${CINTINCDLLNAMES})
     if(explicitlink)
       target_link_libraries(${_name} Cint ${CMAKE_M_LIBS})
     endif()
-    install(TARGETS ${_name} DESTINATION cint/cint/include)
+    install(TARGETS ${_name} DESTINATION ${CINTINC_INSTALL_DIR}/cint/include)
 
   elseif(_name MATCHES ipc)
     add_custom_command(OUTPUT ${OutFileName} 
@@ -203,7 +203,7 @@ foreach(_name ${CINTINCDLLNAMES})
     if(explicitlink)
       target_link_libraries(${_name} Cint)
     endif()
-    install(TARGETS ${_name} DESTINATION cint/cint/include)
+    install(TARGETS ${_name} DESTINATION ${CINTINC_INSTALL_DIR}/cint/include)
 
   elseif(_name MATCHES posix)
     
@@ -243,6 +243,6 @@ foreach(_name ${CINTINCDLLNAMES})
     if(explicitlink)
       target_link_libraries(${_name} Cint)
     endif()
-    install(TARGETS ${_name} DESTINATION cint/cint/include)
+    install(TARGETS ${_name} DESTINATION ${CINTINC_INSTALL_DIR}/cint/include)
   endif()
 endforeach()

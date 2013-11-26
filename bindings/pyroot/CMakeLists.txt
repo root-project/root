@@ -17,9 +17,12 @@ if(MACOSX_MINOR EQUAL 5)
 endif()
 
 #---Install python modules--------------------------------------------------
-install(FILES ROOT.py DESTINATION ${runtimedir})
-install(CODE "execute_process(COMMAND python -m py_compile ${CMAKE_INSTALL_PREFIX}/${runtimedir}/ROOT.py )")
-install(CODE "execute_process(COMMAND python -O -m py_compile ${CMAKE_INSTALL_PREFIX}/${runtimedir}/ROOT.py )")
+file(GLOB pyfiles RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
+foreach(pyfile ${pyfiles})
+  install(FILES ${pyfile} DESTINATION ${runtimedir})
+  install(CODE "execute_process(COMMAND python -m py_compile ${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
+  install(CODE "execute_process(COMMAND python -O -m py_compile ${CMAKE_INSTALL_PREFIX}/${runtimedir}/${pyfile} )")
+endforeach()
 
 #---Install headers----------------------------------------------------------
 ROOT_INSTALL_HEADERS()

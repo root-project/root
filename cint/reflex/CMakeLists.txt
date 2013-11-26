@@ -20,14 +20,17 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   #---Reflex library---------------------------------------------------------
   ROOT_LINKER_LIBRARY(Reflex *.cxx LIBRARIES ${CMAKE_DL_LIBS})  
   #---genreflex files--------------------------------------------------------
-  install(CODE "file(WRITE \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python/genreflex/gccxmlpath.py \"gccxmlpath = '${GCCXML_EXECUTABLE}'\n\")")
-  install(DIRECTORY python/genreflex DESTINATION lib/python FILES_MATCHING PATTERN "*.py" PATTERN ".svn" EXCLUDE)
-  install(CODE "execute_process(COMMAND python -m compileall  \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/lib/python/genreflex)")
+  install(CODE "file(WRITE \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/python/genreflex/gccxmlpath.py \"gccxmlpath = '${GCCXML_EXECUTABLE}'\n\")")
+  install(DIRECTORY python/genreflex DESTINATION ${LIB_INSTALL_DIR}/python FILES_MATCHING PATTERN "*.py" PATTERN ".svn" EXCLUDE)
+  install(CODE "execute_process(COMMAND python -m compileall  \$ENV{DESTDIR}${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/python/genreflex)")
   #---genmap executable------------------------------------------------------
   ROOT_EXECUTABLE(genmap genmap/genmap.cxx LIBRARIES Reflex ${CMAKE_DL_LIBS})
   #---install headers--------------------------------------------------------
-  ROOT_INSTALL_HEADERS()
-    
+  #ROOT_INSTALL_HEADERS()
+  install(DIRECTORY inc/Reflex/ DESTINATION ${INCLUDE_INSTALL_DIR}/Reflex
+                            PATTERN ".svn" EXCLUDE
+                            PATTERN "Makefile.am" EXCLUDE
+                            REGEX "LinkDef" EXCLUDE )
 else()
   PROJECT(Reflex)
   CMAKE_MINIMUM_REQUIRED(VERSION 2.6.0 FATAL_ERROR)

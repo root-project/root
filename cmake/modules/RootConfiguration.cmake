@@ -359,7 +359,7 @@ execute_process(COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/t
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION include)
+install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${INCLUDE_INSTALL_DIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -414,8 +414,8 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake
-              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION cmake)
-install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION cmake)               
+              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_DIR})
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_DIR})
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
@@ -435,6 +435,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config/genreflex.in ${CMAKE_RUNTIME_OUTPUT_DI
 configure_file(${CMAKE_SOURCE_DIR}/config/genreflex-rootcint.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex-rootcint @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY)
 
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
@@ -456,19 +457,22 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
                           GROUP_EXECUTE GROUP_READ 
                           WORLD_EXECUTE WORLD_READ 
-              DESTINATION bin)
+              DESTINATION ${BIN_INSTALL_DIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/include/compiledata.h 
-              DESTINATION include)
+              DESTINATION ${INCLUDE_INSTALL_DIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
-              DESTINATION etc)
+              DESTINATION ${ETC_INSTALL_DIR})
+              
+install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${ELISP_INSTALL_DIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
-              ${CMAKE_BINARY_DIR}/config/Makefile.config
-              DESTINATION config)
+
+#install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
+#              ${CMAKE_BINARY_DIR}/config/Makefile.config
+#              DESTINATION config)
 
 
 endfunction()
