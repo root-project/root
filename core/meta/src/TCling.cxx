@@ -243,7 +243,7 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
    const char* name = buf.c_str();
 
    // Create the enum type.
-   TEnum* enumType = new TEnum(name, false /*!global*/, &D);
+   TEnum* enumType = new TEnum(name, false /*!global*/, &D, cl);
    // Check TEnum is created.
    if (!enumType) {
       Error ("HandleEnumDecl", "The enum type %s was not created.", name);

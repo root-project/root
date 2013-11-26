@@ -30,6 +30,7 @@
 #include "TString.h"
 #endif
 
+class TClass;
 class TEnumConstant;
 
 class TEnum : public TNamed {
@@ -37,20 +38,22 @@ class TEnum : public TNamed {
 private:
    THashList fConstantList;     //list of constants the enum type
    void*     fInfo;             //interpreter implementation provided declaration
+   TClass*   fClass;            //owning class
 
 public:
 
    TEnum(): fInfo(0) {}
-   TEnum(const char* name, bool isGlobal, void* info);
+   TEnum(const char* name, bool isGlobal, void* info, TClass* cls);
    virtual ~TEnum();
 
    void AddConstant(TEnumConstant* constant);
+   TClass* GetClass() const { return fClass; }
    const TSeqCollection* GetConstants() const { return &fConstantList; }
    const TEnumConstant* GetConstant(const char* name) const {
       return (TEnumConstant*) fConstantList.FindObject(name);
    }
 
-   ClassDef(TEnum,1)  //Enum type class
+   ClassDef(TEnum,2)  //Enum type class
 };
 
 #endif

@@ -18,19 +18,21 @@
 #include "TEnum.h"
 #include "TEnumConstant.h"
 
-
 ClassImp(TEnum)
+
 //______________________________________________________________________________
-TEnum::TEnum(const char* name, bool isGlobal, void* info)
-: TNamed(name, "An enum type"), fInfo(info) {
+TEnum::TEnum(const char* name, bool isGlobal, void* info, TClass* cls)
+   : TNamed(name, "An enum type"), fInfo(info), fClass(cls)
+{
    //Constructor for TEnum class.
    //It take the name of the TEnum type, specification if it is global
    //and interpreter info.
    //Constant List is owner if enum not on global scope (thus constants not
    //in TROOT::GetListOfGlobals).
 
-   if (!isGlobal)
+   if (!isGlobal) {
       fConstantList.SetOwner(kTRUE);
+   }
 }
 
 //______________________________________________________________________________
