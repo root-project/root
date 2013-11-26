@@ -231,7 +231,6 @@ public: // Public Interface
    }
    const char* TypeName(const char* typeDesc);
 
-   static int   AutoLoadCallback(const char* cls, const char* lib);
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);
           void  UpdateClassInfoWithDecl(const void* vTD);
