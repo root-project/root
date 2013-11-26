@@ -318,14 +318,10 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
    TInterpreterValue *value = gInterpreter->CreateTemporary();
    PRCallFuncExecValue( func, self, *value, release_gil );
 
-// TODO: there's no guarantee that bit-wise copy is correct ...
-   void* result = malloc( fClass->Size() );
-   std::memcpy( result, value->GetAsPointer(), fClass->Size() );
-   delete value;
-
-   if ( ! result ) {
+   if ( ! value->GetAsPointer() ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
+      delete value;
       return 0;
    }
 
@@ -333,7 +329,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
    gInterpreter->ClearStack();
 
 // the result can then be bound
-   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( result, fClass );
+   ObjectProxy* pyobj = (ObjectProxy*)BindRootObjectNoCast( value, fClass, kFALSE, kTRUE );
    if ( ! pyobj )
       return 0;
 

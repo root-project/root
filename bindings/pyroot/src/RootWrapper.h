@@ -35,7 +35,8 @@ namespace PyROOT {
    PyObject* GetRootGlobalFromString( const std::string& name );
 
 // bind a ROOT object into a Python object
-   PyObject* BindRootObjectNoCast( void* object, TClass* klass, Bool_t isRef = kFALSE );
+   PyObject* BindRootObjectNoCast(
+      void* object, TClass* klass, Bool_t isRef = kFALSE, Bool_t isValue = kFALSE );
    PyObject* BindRootObject( void* object, TClass* klass, Bool_t isRef = kFALSE );
    PyObject* BindRootGlobal( TGlobal* );
 

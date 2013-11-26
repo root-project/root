@@ -19,8 +19,17 @@ R__EXTERN PyObject* gRootModule;
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
-      pyobj->ObjectIsA()->Destructor( pyobj->fObject );
-   }
+      if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
+         pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+      else {
+      // CLING WORKAROUND this dtor call should not be needed
+         void* ptr = ((TInterpreterValue*)pyobj->fObject)->GetAsPointer();
+         pyobj->ObjectIsA()->Destructor( ptr, kTRUE );
+      // -- CLING WORKAROUND
+         delete (TInterpreterValue*)pyobj->fObject;
+      }
+   } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
+      delete (TInterpreterValue*)pyobj->fObject;
    pyobj->fObject = NULL;
 }
 
@@ -133,7 +142,7 @@ namespace {
 
    // type + held pointer value defines identity (will cover if other is not
    // actually an ObjectProxy, as ob_type will be unequal)
-      else if ( Py_TYPE(self) == Py_TYPE(other) && self->fObject == other->fObject )
+      else if ( Py_TYPE(self) == Py_TYPE(other) && self->GetObject() == other->GetObject() )
          bIsEq = true;
 
       if ( ( op == Py_EQ && bIsEq ) || ( op == Py_NE && ! bIsEq ) ) {

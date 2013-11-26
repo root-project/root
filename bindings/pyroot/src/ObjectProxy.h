@@ -10,6 +10,7 @@
 // ROOT
 #include "DllImport.h"
 #include "TClassRef.h"
+#include "TInterpreterValue.h"
 class TClass;
 
 
@@ -18,27 +19,20 @@ namespace PyROOT {
 /** Object proxy object to hold ROOT instance
       @author  WLAV
       @date    01/04/2005
-      @date    03/31/2008
-      @version 2.0
+      @date    11/25/2013
+      @version 3.0
  */
 
    class ObjectProxy {
    public:
-      enum EFlags { kNone = 0x0, kIsOwner = 0x0001, kIsReference = 0x0002 };
+      enum EFlags { kNone = 0x0, kIsOwner = 0x0001, kIsReference = 0x0002, kIsValue = 0x0004 };
 
    public:
-      void Set( void** address, EFlags flags = kNone )
+      void Set( void* address, EFlags flags = kNone )
       {
       // Initialize the proxy with the pointer value 'address.'
-         fObject = (void*) address;
-         fFlags  = flags | kIsReference;
-      }
- 
-      void Set( void* object, EFlags flags = kNone )
-      {
-      // Initialize the proxy with the given 'object.'
-         fObject = object;
-         fFlags  = flags & ~kIsReference;
+         fObject = address;
+         fFlags  = flags;
       }
 
       void* GetObject() const
@@ -46,6 +40,8 @@ namespace PyROOT {
       // Retrieve a pointer to the held C++ object.
          if ( fObject && ( fFlags & kIsReference ) )
             return *(reinterpret_cast< void** >( const_cast< void* >( fObject ) ));
+         else if ( fObject && ( fFlags & kIsValue ) )
+            return ((TInterpreterValue*)fObject)->GetAsPointer();
          else
             return const_cast< void* >( fObject );          // may be null
       }

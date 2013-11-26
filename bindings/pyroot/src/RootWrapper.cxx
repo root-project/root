@@ -706,7 +706,8 @@ PyObject* PyROOT::GetRootGlobalFromString( const std::string& name )
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isRef ) {
+PyObject* PyROOT::BindRootObjectNoCast(
+      void* address, TClass* klass, Bool_t isRef, Bool_t isValue ) {
 // only known or knowable objects will be bound (null object is ok)
    if ( ! klass ) {
       PyErr_SetString( PyExc_TypeError, "attempt to bind ROOT object w/o class" );
@@ -726,12 +727,10 @@ PyObject* PyROOT::BindRootObjectNoCast( void* address, TClass* klass, Bool_t isR
    Py_DECREF( pyclass );
 
 // bind, register and return if successful
-   if ( pyobj != 0 ) {
-   // fill proxy values
-      if ( ! isRef )
-         pyobj->Set( address );
-      else
-         pyobj->Set( (void**)address );
+   if ( pyobj != 0 ) { // fill proxy value?
+   // TODO: take flags directly instead of separate Bool_t args
+      unsigned flags = (isRef ? ObjectProxy::kIsReference : 0) | (isValue ? ObjectProxy::kIsValue : 0);
+      pyobj->Set( address, (ObjectProxy::EFlags)flags );
    }
 
 // successful completion
