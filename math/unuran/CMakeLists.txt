@@ -40,7 +40,7 @@ else()
 
   #---configure unuran (required for creating the config.h used by unuran source files)----------------
   add_custom_command(OUTPUT ${UNR_UNTARDIR}/config.h  
-                     COMMAND GNUMAKE=make ./configure CC=${UNR_CC} CFLAGS=${UNR_CFLAGS}
+                     COMMAND GNUMAKE=make ./configure CC=${UNR_CC} CFLAGS=${UNR_CFLAGS} > /dev/null 2>& 1
                      WORKING_DIRECTORY ${UNR_UNTARDIR})
 endif()
 
