@@ -106,6 +106,7 @@
 #include <stdint.h>
 #include <fstream>
 #include <string>
+#include <typeinfo>
 #include <utility>
 #include <vector>
 
@@ -844,7 +845,7 @@ namespace {
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fHaveSinglePCM(kFALSE)
+   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0)
 {
    // Initialize the cling interpreter interface.
 
@@ -3892,7 +3893,9 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
 
    int err = 0;
    string demangled_name = TCling__Demangle(typeinfo.name(), &err);
-   if (err) return 0;
+   if (err) {
+      return 0;
+   }
    return AutoLoad(demangled_name.c_str());
 }
 
@@ -3908,34 +3911,46 @@ Int_t TCling::AutoLoad(const char* cls)
    }
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = SetClassAutoloading(false);
+   // Try using externally provided callback first.
+   if (fAutoLoadCallBack) {
+      int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
+      if (success) {
+         SetClassAutoloading(oldvalue);
+         return success;
+      }
+   }
    // lookup class to find list of dependent libraries
    TString deplibs = GetClassSharedLibs(cls);
    if (!deplibs.IsNull()) {
       TString delim(" ");
       TObjArray* tokens = deplibs.Tokenize(delim);
-      for (Int_t i = tokens->GetEntriesFast() - 1; i > 0; i--) {
+      for (Int_t i = (tokens->GetEntriesFast() - 1); i > 0; --i) {
          const char* deplib = ((TObjString*)tokens->At(i))->GetName();
          if (gROOT->LoadClass(cls, deplib) == 0) {
-            if (gDebug > 0)
-               ::Info("TCling::AutoLoad",
-                      "loaded dependent library %s for class %s", deplib, cls);
+            if (gDebug > 0) {
+               Info("TCling::AutoLoad",
+                    "loaded dependent library %s for class %s", deplib, cls);
+            }
          }
-         else
-            ::Error("TCling::AutoLoad",
-                    "failure loading dependent library %s for class %s",
-                    deplib, cls);
+         else {
+            Error("TCling::AutoLoad",
+                  "failure loading dependent library %s for class %s",
+                  deplib, cls);
+         }
       }
       const char* lib = ((TObjString*)tokens->At(0))->GetName();
-      if (lib[0]) {
+      if (lib && lib[0]) {
          if (gROOT->LoadClass(cls, lib) == 0) {
-            if (gDebug > 0)
-               ::Info("TCling::AutoLoad",
-                      "loaded library %s for class %s", lib, cls);
+            if (gDebug > 0) {
+               Info("TCling::AutoLoad",
+                    "loaded library %s for class %s", lib, cls);
+            }
             status = 1;
          }
-         else
-            ::Error("TCling::AutoLoad",
-                    "failure loading library %s for class %s", lib, cls);
+         else {
+            Error("TCling::AutoLoad",
+                  "failure loading library %s for class %s", lib, cls);
+         }
       }
       delete tokens;
    }
@@ -3943,7 +3958,9 @@ Int_t TCling::AutoLoad(const char* cls)
    return status;
 }
 
-Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name) {
+//______________________________________________________________________________
+Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name)
+{
    if (fMapNamespaces)
       return fMapNamespaces->FindObject(name);
    return false;

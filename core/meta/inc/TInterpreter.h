@@ -32,6 +32,8 @@
 #include "TMethodCall.h"
 #endif
 
+#include <typeinfo>
+
 class TClass;
 class TEnv;
 class TFunction;
@@ -85,13 +87,17 @@ public:
       };
    };
 
+   typedef int (*AutoLoadCallBack_t)(const char*);
+
    TInterpreter() { }   // for Dictionary
    TInterpreter(const char *name, const char *title = "Generic Interpreter");
    virtual ~TInterpreter() { }
 
    virtual void     AddIncludePath(const char *path) = 0;
+   virtual void    *SetAutoLoadCallBack(void* /*cb*/) { return 0; }
+   virtual void    *GetAutoLoadCallBack() const { return 0; }
    virtual Int_t    AutoLoad(const char *classname) = 0;
-   virtual Int_t    AutoLoad(const type_info& typeinfo) = 0;
+   virtual Int_t    AutoLoad(const std::type_info& typeinfo) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;

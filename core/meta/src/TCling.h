@@ -29,6 +29,7 @@
 #endif
 
 #include <set>
+#include <typeinfo>
 #include <map>
 #include <vector>
 
@@ -118,6 +119,7 @@ private: // Data Members
       ModuleForHeader_t;
    ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
    std::set<TClass*> fModTClasses;
+   void* fAutoLoadCallBack;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
@@ -128,8 +130,10 @@ public: // Public Interface
    cling::Interpreter *GetInterpreter() { return fInterpreter; }
 
    void    AddIncludePath(const char* path);
+   void   *GetAutoLoadCallBack() const { return fAutoLoadCallBack; }
+   void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
    Int_t   AutoLoad(const char* cls);
-   Int_t   AutoLoad(const type_info& typeinfo);
+   Int_t   AutoLoad(const std::type_info& typeinfo);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
