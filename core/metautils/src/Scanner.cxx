@@ -735,9 +735,15 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       
       // Reject the selection of std::pair on the ground that it is trivial
       // and can easily be recreated from the AST information.
-      if (recordDecl->getName() == "pair") {
-         const clang::NamespaceDecl *ctxt = llvm::dyn_cast<clang::NamespaceDecl>(recordDecl->getDeclContext())->getCanonicalDecl();
-         if (ctxt && ctxt == fInterpreter.getCI()->getSema().getStdNamespace()) {
+      if (recordDecl && recordDecl->getName() == "pair") {
+         const clang::NamespaceDecl *nsDecl = llvm::dyn_cast<clang::NamespaceDecl>(recordDecl->getDeclContext());
+         if (!nsDecl){
+            ROOT::TMetaUtils::Error("RScanner::TreatRecordDeclOrTypedefNameDecl",
+                                    "Cannot convert context of RecordDecl called pair into a namespace.\n");
+            return true;
+         }
+         const clang::NamespaceDecl *nsCanonical = nsDecl->getCanonicalDecl();
+         if (nsCanonical && nsCanonical == fInterpreter.getCI()->getSema().getStdNamespace()) {
             if (selected->HasAttributeWithName("file_name") || selected->HasAttributeWithName("file_pattern")) {
                return true;
             }
