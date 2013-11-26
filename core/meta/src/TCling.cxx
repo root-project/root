@@ -571,10 +571,9 @@ static string TCling__Demangle(const char *mangled_name, int *err)
    return demangled;
 }
 
-void* autoloadCallback(const std::string& mangled_name)
+void* llvmLazyFunctionCreator(const std::string& mangled_name)
 {
-   // Autoload a library. Given a mangled symbol name find the
-   // library which provides the symbol and load it.
+   // Autoload a library providing a given a mangled function name.
    //--
    //
    //  Use the C++ ABI provided function to demangle the symbol name.
@@ -876,7 +875,7 @@ TCling::TCling(const char *name, const char *title)
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
-   fInterpreter->installLazyFunctionCreator(autoloadCallback);
+   fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
 
    // Add include path to etc/cling. FIXME: This is a short term solution. The
    // llvm/clang header files shouldn't be there at all. We have to get rid of
@@ -3542,8 +3541,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    // specific rootmap file can be added (typically used by ACLiC).
    // In case of error -1 is returned, 0 otherwise.
    // The interpreter uses this information to automatically load the shared
-   // library for a class (autoload mechanism).
-   // See also the AutoLoadCallback() method below.
+   // library for a class (autoload mechanism), see the AutoLoad() methods below.
    R__LOCKGUARD(gInterpreterMutex);
    // open the [system].rootmap files
    if (!fMapfile) {
