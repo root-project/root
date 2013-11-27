@@ -186,7 +186,17 @@ class STL3MapTestCase( MyTestCase ):
       mui = std.map( str, 'unsigned int' )()
       mui[ 'one' ] = 1
       self.assertEqual( mui[ 'one' ], 1 )
-      self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
+      if not USECPP11:
+         self.assertRaises( ValueError, mui.__setitem__, 'minus one', -1 )
+      else:
+       # this test is rejigged like this for the time being, as the string&&
+       # argument converter will always fail before the setter is called
+         try:
+            mui.__setitem__( 'minus one', -1 )
+         except TypeError, e:
+            self.assert_( "can't convert negative value to unsigned long" in str(e) )
+         else:
+            self.assert_( not "no exception raised" )
 
     # UInt_t is always 32b, sys.maxint follows system int
       maxint32 = int(math.pow(2,31)-1)
@@ -199,7 +209,17 @@ class STL3MapTestCase( MyTestCase ):
       mul[ 'maxint' ] = maxvalue + 3
       self.assertEqual( mul[ 'maxint' ], maxvalue + 3 )
 
-      self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
+      if not USECPP11:
+         self.assertRaises( ValueError, mul.__setitem__, 'minus two', -2 )
+      else:
+       # as above for assigning -1 ...
+         try:
+            mui.__setitem__( 'minus two', -2 )
+         except TypeError, e:
+            self.assert_( "can't convert negative value to unsigned long" in str(e) )
+         else:
+            self.assert_( not "no exception raised" )
+
 
 
 ### Protocol mapping for an STL like class ===================================
