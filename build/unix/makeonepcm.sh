@@ -191,7 +191,7 @@ echo '#include "cling/Interpreter/DynamicLookupRuntimeUniverse.h"' >> all.h
 
 mv all.h include/allHeaders.h
 
-cxxflags="-D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling"
+cxxflags="-D_LIBCPP_EXTERN_TEMPLATE(...)= -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling"
 # generate the pch to test if all includes are consistent
 # clang++ -x c++-header $cxxflags include/allHeaders.h -o include/allHeaders.h.pch
 
