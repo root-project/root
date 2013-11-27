@@ -107,6 +107,9 @@ private:
    void exec(void* address, void* ret) const;
    void exec_with_valref_return(void* address,
                                 cling::StoredValueRef* ret) const;
+   void exec_with_args_and_return(void* address,
+                                  const std::vector<void*>& args,
+                                  void* ret) const;
 
    void EvaluateArgList(const std::string& ArgList);
 
@@ -147,6 +150,9 @@ public:
    void ExecDestructor(const TClingClassInfo* info, void* address = 0,
                        unsigned long nary = 0UL, bool withFree = true);
    void ExecWithReturn(void* address, void* ret = 0);
+   void ExecWithArgsAndReturn(void* address,
+                              const std::vector<void*>& args = std::vector<void*>(),
+                              void* ret = 0);
    void Exec(void* address, TInterpreterValue* interpVal = 0);
    long ExecInt(void* address);
    long long ExecInt64(void* address);

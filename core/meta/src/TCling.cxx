@@ -3256,6 +3256,23 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
 }
 
 //______________________________________________________________________________
+void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
+                                      const std::vector<void*>& args
+                                      /*= std::vector()*/,
+                                      void* ret/*= 0*/) const
+{
+   if (!method) {
+      Error("ExecuteWithArgsAndReturn", "No method was defined");
+      return;
+   }
+   R__LOCKGUARD2(gInterpreterMutex);
+   TClingCallFunc func(fInterpreter);
+   TClingMethodInfo* minfo = (TClingMethodInfo*) method->fInfo;
+   func.Init(minfo);
+   func.ExecWithArgsAndReturn(address, args, ret);
+}
+
+//______________________________________________________________________________
 Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
    // Execute a cling macro.
@@ -4573,6 +4590,16 @@ void TCling::CallFunc_ExecWithReturn(CallFunc_t* func, void* address, void* ret)
 {
    TClingCallFunc* f = (TClingCallFunc*) func;
    f->ExecWithReturn(address, ret);
+}
+
+//______________________________________________________________________________
+void TCling::CallFunc_ExecWithArgsAndReturn(CallFunc_t* func, void* address,
+                                            const std::vector<void*>& args
+                                            /*=std::vector<void*>()*/,
+                                            void* ret/*=0*/) const
+{
+   TClingCallFunc* f = (TClingCallFunc*) func;
+   f->ExecWithArgsAndReturn(address, args, ret);
 }
 
 //______________________________________________________________________________

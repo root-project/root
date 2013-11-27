@@ -219,6 +219,7 @@ public: // Public Interface
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, const char* method, const char* params, Bool_t objectIsConst, int* error = 0);
    void    Execute(TObject* obj, TClass* cl, TMethod* method, TObjArray* params, int* error = 0);
+   void    ExecuteWithArgsAndReturn(TMethod* method, void* address, const std::vector<void*>& args = std::vector<void*>(), void* ret= 0) const;
    Long_t  ExecuteMacro(const char* filename, EErrorCode* error = 0);
    void    RecursiveRemove(TObject* obj);
    Bool_t  IsErrorMessagesEnabled() const;
@@ -274,6 +275,7 @@ public: // Public Interface
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address) const;
    virtual void   CallFunc_Exec(CallFunc_t* func, void* address, TInterpreterValue& val) const;
    virtual void   CallFunc_ExecWithReturn(CallFunc_t* func, void* address, void* ret) const;
+   virtual void   CallFunc_ExecWithArgsAndReturn(CallFunc_t* func, void* address, const std::vector<void*>& args = std::vector<void*>(), void* ret = 0) const;
    virtual Long_t    CallFunc_ExecInt(CallFunc_t* func, void* address) const;
    virtual Long64_t  CallFunc_ExecInt64(CallFunc_t* func, void* address) const;
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t* func, void* address) const;

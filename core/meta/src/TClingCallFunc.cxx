@@ -2808,6 +2808,17 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
 }
 
 void
+TClingCallFunc::exec_with_args_and_return(void* address,
+                                          const vector<void*>& args,
+                                          void* ret) const
+{
+   //const FunctionDecl* FD = fMethod->GetMethodDecl();
+   //unsigned num_params = FD->getNumParams();
+   unsigned num_args = args.size();
+   (*fWrapper)(address, (int)num_args, const_cast<void**>(args.data()), ret);
+}
+
+void
 TClingCallFunc::EvaluateArgList(const string& ArgList)
 {
    SmallVector<Expr*, 4> exprs;
@@ -2904,6 +2915,20 @@ TClingCallFunc::ExecDouble(void* address)
       return 0.0;
    }
    return sv_to<double>(ret);
+}
+
+void
+TClingCallFunc::ExecWithArgsAndReturn(void* address, const vector<void*>& args
+                                      /*= vector<void*>()*/, void* ret/*= 0*/)
+{
+   IFacePtr();
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecWithArgsAndReturn(address, args, ret)",
+            "Called with no wrapper, not implemented!");
+      return;
+   }
+   exec_with_args_and_return(address, args, ret);
+   return;
 }
 
 void
