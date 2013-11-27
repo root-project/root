@@ -1,14 +1,19 @@
-CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
-TEST_TARGETS += execLibLoad
+#Disable until boost is not present in the headers
+test:
 
-ifeq ($(strip $(ROOTTEST_HOME)),)
-	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
-endif
+clean:
 
-include $(ROOTTEST_HOME)/scripts/Rules.mk
-include $(ROOTTEST_HOME)/scripts/Reflex.mk
+#CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
+#TEST_TARGETS += execLibLoad
 
-GENREFLEXCXXFLAGS += --interpreteronly -I ./ -I CoralBase
-CXXFLAGS += -I ./ -I CoralBase 
+#ifeq ($(strip $(ROOTTEST_HOME)),)
+#	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
+#endif
 
-execLibLoad.log: PyCool_rflx.$(ObjSuf)
+#include $(ROOTTEST_HOME)/scripts/Rules.mk
+#include $(ROOTTEST_HOME)/scripts/Reflex.mk
+
+#GENREFLEXCXXFLAGS += --interpreteronly -I ./ -I CoralBase
+#CXXFLAGS += -I ./ -I CoralBase 
+
+#execLibLoad.log: PyCool_rflx.$(ObjSuf)
