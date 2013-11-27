@@ -412,7 +412,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
       "    static const char* includePaths[] = {\n";
    WriteIncludePathArray(out) << 
       "    };\n"
-      "    static const char* payloadCode = "<< payloadCode << ";\n"
+      "    static const char* payloadCode = \n" << payloadCode << ";\n"
       "    static bool sInitialized = false;\n"
       "    if (!sInitialized) {\n"
       "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
