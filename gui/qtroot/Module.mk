@@ -52,7 +52,7 @@ $(call pcmrule,QTROOT)
 $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(QTROOTH) $(QTROOTL)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
 
 $(QTROOTMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QTROOTL)
 		$(RLIBMAP) -o $@ -l $(QTROOTLIB) \
