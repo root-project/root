@@ -17,6 +17,6 @@ ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
                                          Graf Gpad Minuit Foam RooStats XMLParser)
 
 #ROOT_INSTALL_HEADERS()
-install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION include/RooStats/HistFactory 
+install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION ${INCLUDE_INSTALL_DIR}/RooStats/HistFactory 
                        PATTERN ".svn" EXCLUDE
                        REGEX "LinkDef" EXCLUDE )

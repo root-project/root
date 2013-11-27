@@ -24,24 +24,30 @@ set(winrtdebug ${value${winrtdebug}})
 set(exceptions ${value${exceptions}})
 set(explicitlink ${value${explicitlink}})
 
-set(prefix "$(ROOTSYS)")
-set(bindir "$(ROOTSYS)/bin")
-set(libdir "$(ROOTSYS)/lib")
-set(incdir "$(ROOTSYS)/include")
-set(mandir "$(ROOTSYS)/man/man1")
-set(etcdir "$(ROOTSYS)/etc")
+if(sysinstall)
+  set(prefix ${ROOT_INSTALL_DIR})
+  set(etcdir ${ETC_INSTALL_DIR})
+else()
+  set(prefix $(ROOTSYS))
+  set(etcdir ${prefix}/${ETC_INSTALL_DIR})
+endif()
+set(bindir ${prefix}/${BIN_INSTALL_DIR})
+set(libdir ${prefix}/${LIB_INSTALL_DIR})
+set(incdir ${prefix}/${INCLUDE_INSTALL_DIR})
+set(mandir ${prefix}/${MAN_INSTALL_DIR})
 set(plugindir ${etcdir}/plugins)
-set(datadir "$(ROOTSYS)")
-set(elispdir "$(ROOTSYS)/build/misc")
-set(ttffontdir "$(ROOTSYS)/fonts")
-set(macrodir "$(ROOTSYS)/macros")
-set(srcdir "$(ROOTSYS)/src")
-set(iconpath ${datadir}/icons)
-set(cintincdir "$(ROOTSYS)/cint")
-set(docdir "$(ROOTSYS)")
-set(testdir "$(ROOTSYS)/test")
-set(tutdir "$(ROOTSYS)/tutorials")
-set(aclocaldir "$(ROOTSYS)/build/misc")
+set(datadir ${prefix}/${DATA_INSTALL_DIR})
+set(elispdir ${prefix}/${ELISP_INSTALL_DIR})
+set(ttffontdir ${prefix}/${FONT_INSTALL_DIR})
+set(macrodir ${prefix}/${MACRO_INSTALL_DIR})
+set(srcdir ${prefix}/${SRC_INSTALL_DIR})
+set(iconpath ${prefix}/${ICON_INSTALL_DIR})
+set(cintincdir ${prefix}/${CINTINC_INSTALL_DIR})
+set(docdir ${prefix}/${DOC_INSTALL_DIR})
+set(testdir ${prefix}/${TEST_INSTALL_DIR})
+set(tutdir ${prefix}/${TUT_INSTALL_DIR})
+set(aclocaldir  ${prefix}/${ACLOCAL_INSTALL_DIR})
+
 set(LibSuffix ${SOEXT})
 
 set(buildx11 ${value${x11}})
@@ -353,7 +359,7 @@ get_filename_component(cxx ${CMAKE_CXX_COMPILER} NAME)
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION include)
+install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${INCLUDE_INSTALL_DIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -407,17 +413,12 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake
-              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION cmake)
-install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION cmake)               
+              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_DIR})
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_DIR})
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
-set(prefix $ROOTSYS)
-set(bindir $ROOTSYS/bin)
-set(libdir $ROOTSYS/lib)
-set(incdir $ROOTSYS/include)
-set(etcdir $ROOTSYS/etc)
-set(mandir $ROOTSYS/man/man1)
+
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY)
@@ -426,6 +427,7 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRE
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY)
+configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY)
 
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
@@ -445,19 +447,22 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
                           GROUP_EXECUTE GROUP_READ 
                           WORLD_EXECUTE WORLD_READ 
-              DESTINATION bin)
+              DESTINATION ${BIN_INSTALL_DIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/include/compiledata.h 
-              DESTINATION include)
+              DESTINATION ${INCLUDE_INSTALL_DIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
-              DESTINATION etc)
+              DESTINATION ${ETC_INSTALL_DIR})
+              
+install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${ELISP_INSTALL_DIR})
 
-install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
-              ${CMAKE_BINARY_DIR}/config/Makefile.config
-              DESTINATION config)
+
+#install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
+#              ${CMAKE_BINARY_DIR}/config/Makefile.config
+#              DESTINATION config)
 
 
 endfunction()

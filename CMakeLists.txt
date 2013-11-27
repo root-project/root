@@ -28,8 +28,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
-include(RootNewMacros)
 include(RootBuildOptions)
+include(RootNewMacros)
 include(CheckCompiler)
 include(MacroEnsureVersion)
 
@@ -90,7 +90,7 @@ add_custom_command(OUTPUT etc/allDict.cxx.pch
                   COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -c ${__cxxflags} include/allHeaders.h include/allLinkDef.h
                   COMMAND ${CMAKE_COMMAND} -E copy etc/allDict_rdict.pch etc/allDict.cxx.pch
                   DEPENDS include/allLinkDef.h include/allHeaders.h rootcling_tmp)
-install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION etc)
+install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${ETC_INSTALL_DIR})
 
 #------------------------------------------------------------------------------------------------
 
@@ -103,19 +103,20 @@ include(RootConfiguration)
 
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
-  install(FILES LICENSE DESTINATION .)
-  install(DIRECTORY README/ DESTINATION README PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY etc/ DESTINATION etc USE_SOURCE_PERMISSIONS 
+  install(FILES LICENSE DESTINATION ${DOC_INSTALL_DIR})
+  install(DIRECTORY README/ DESTINATION ${DOC_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY etc/ DESTINATION ${ETC_INSTALL_DIR} USE_SOURCE_PERMISSIONS
                          PATTERN ".svn" EXCLUDE 
                          REGEX system.rootrc EXCLUDE 
                          REGEX root.mimes EXCLUDE)
-  install(DIRECTORY fonts/  DESTINATION fonts PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY icons/  DESTINATION icons PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY macros/ DESTINATION macros PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY man/    DESTINATION man PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY test/      DESTINATION test COMPONENT tests PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY tutorials/ DESTINATION tutorials COMPONENT tutorials PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY cmake/modules DESTINATION cmake PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY fonts/  DESTINATION ${FONT_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY icons/  DESTINATION ${ICON_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY macros/ DESTINATION ${MACRO_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY man/    DESTINATION ${MAN_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY test/      DESTINATION ${TEST_INSTALL_DIR} COMPONENT tests PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY tutorials/ DESTINATION ${TUT_INSTALL_DIR} COMPONENT tests PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY cmake/modules DESTINATION ${CMAKE_INSTALL_DIR} PATTERN ".svn" EXCLUDE)
+  install(FILES build/misc/root.m4 DESTINATION ${ACLOCAL_INSTALL_DIR})
 endif()
 
 #---Configure Testing using CTest----------------------------------------------------------------

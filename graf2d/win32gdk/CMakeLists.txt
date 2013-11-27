@@ -105,6 +105,6 @@ endif()
 install(FILES  ${gdkdlla}
 			   ${glibdlla}
 			   ${iconvdlla}
-			   DESTINATION bin)
+			   DESTINATION ${BIN_INSTALL_DIR})
 
 ROOT_INSTALL_HEADERS()
