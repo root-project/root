@@ -251,7 +251,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
   
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h ${pcm_name}
+  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name}
                      COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs}
                                              -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
