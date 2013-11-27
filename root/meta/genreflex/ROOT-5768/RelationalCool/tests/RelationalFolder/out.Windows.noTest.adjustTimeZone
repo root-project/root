@@ -1,0 +1,183 @@
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-1-3 12:1:2
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-1-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-1-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-1-3 11:1:2 (DST=0)
+aTm = 1970-1-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 216062
+aTmM1 = 1970-1-3 12:1:2 (DST=0)
+aTimet0 = 216062
+aTm0 = 1970-1-3 12:1:2 (DST=0)
+aTimetP1 = 212462
+aTmP1 = 1970-1-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-2-3 12:1:2
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-2-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-2-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-2-3 11:1:2 (DST=0)
+aTm = 1970-2-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 2894462
+aTmM1 = 1970-2-3 12:1:2 (DST=0)
+aTimet0 = 2894462
+aTm0 = 1970-2-3 12:1:2 (DST=0)
+aTimetP1 = 2890862
+aTmP1 = 1970-2-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-3-3 12:1:2
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-3-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-3-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-3-3 11:1:2 (DST=0)
+aTm = 1970-3-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 5313662
+aTmM1 = 1970-3-3 12:1:2 (DST=0)
+aTimet0 = 5313662
+aTm0 = 1970-3-3 12:1:2 (DST=0)
+aTimetP1 = 5310062
+aTmP1 = 1970-3-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-4-3 12:1:2
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-4-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-4-3 12:1:2 (DST=1)
+aTm = 1970-4-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 7988462
+aTmM1 = 1970-4-3 11:1:2 (DST=0)
+aTimet0 = 7992062
+aTm0 = 1970-4-3 12:1:2 (DST=0)
+aTimetP1 = 7988462
+aTmP1 = 1970-4-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-5-3 12:1:2
+Before calling timegm: aTm = 1970-5-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-5-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-5-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-5-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-5-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-5-3 12:1:2 (DST=1)
+aTm = 1970-5-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 10580462
+aTmM1 = 1970-5-3 11:1:2 (DST=0)
+aTimet0 = 10584062
+aTm0 = 1970-5-3 12:1:2 (DST=0)
+aTimetP1 = 10580462
+aTmP1 = 1970-5-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-6-3 12:1:2
+Before calling timegm: aTm = 1970-6-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-6-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-6-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-6-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-6-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-6-3 12:1:2 (DST=1)
+aTm = 1970-6-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 13258862
+aTmM1 = 1970-6-3 11:1:2 (DST=0)
+aTimet0 = 13262462
+aTm0 = 1970-6-3 12:1:2 (DST=0)
+aTimetP1 = 13258862
+aTmP1 = 1970-6-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-7-3 12:1:2
+Before calling timegm: aTm = 1970-7-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-7-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-7-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-7-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-7-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-7-3 12:1:2 (DST=1)
+aTm = 1970-7-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 15850862
+aTmM1 = 1970-7-3 11:1:2 (DST=0)
+aTimet0 = 15854462
+aTm0 = 1970-7-3 12:1:2 (DST=0)
+aTimetP1 = 15850862
+aTmP1 = 1970-7-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-8-3 12:1:2
+Before calling timegm: aTm = 1970-8-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-8-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-8-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-8-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-8-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-8-3 12:1:2 (DST=1)
+aTm = 1970-8-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 18529262
+aTmM1 = 1970-8-3 11:1:2 (DST=0)
+aTimet0 = 18532862
+aTm0 = 1970-8-3 12:1:2 (DST=0)
+aTimetP1 = 18529262
+aTmP1 = 1970-8-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-9-3 12:1:2
+Before calling timegm: aTm = 1970-9-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-9-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-9-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-9-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-9-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-9-3 12:1:2 (DST=1)
+aTm = 1970-9-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 21207662
+aTmM1 = 1970-9-3 11:1:2 (DST=0)
+aTimet0 = 21211262
+aTm0 = 1970-9-3 12:1:2 (DST=0)
+aTimetP1 = 21207662
+aTmP1 = 1970-9-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-10-3 12:1:2
+Before calling timegm: aTm = 1970-10-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-10-3 12:1:2 (DST=1)
+Before calling timegm: aTm = 1970-10-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-10-3 13:1:2 (DST=1)
+Before calling timegm: aTm = 1970-10-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-10-3 12:1:2 (DST=1)
+aTm = 1970-10-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 23799662
+aTmM1 = 1970-10-3 11:1:2 (DST=0)
+aTimet0 = 23803262
+aTm0 = 1970-10-3 12:1:2 (DST=0)
+aTimetP1 = 23799662
+aTmP1 = 1970-10-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-11-3 12:1:2
+Before calling timegm: aTm = 1970-11-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-11-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-11-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-11-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-11-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-11-3 11:1:2 (DST=0)
+aTm = 1970-11-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 26481662
+aTmM1 = 1970-11-3 12:1:2 (DST=0)
+aTimet0 = 26481662
+aTm0 = 1970-11-3 12:1:2 (DST=0)
+aTimetP1 = 26478062
+aTmP1 = 1970-11-3 11:1:2 (DST=0)
+Test test_gmtime_timegm
+Before setting isdst:  aTm = 1970-12-3 12:1:2
+Before calling timegm: aTm = 1970-12-3 12:1:2 (DST=-1)
+After  calling timegm: aTm = 1970-12-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-12-3 12:1:2 (DST=0)
+After  calling timegm: aTm = 1970-12-3 12:1:2 (DST=0)
+Before calling timegm: aTm = 1970-12-3 12:1:2 (DST=1)
+After  calling timegm: aTm = 1970-12-3 11:1:2 (DST=0)
+aTm = 1970-12-3 12:1:2 (DST=-1,0,+1)
+aTimetM1 = 29073662
+aTmM1 = 1970-12-3 12:1:2 (DST=0)
+aTimet0 = 29073662
+aTm0 = 1970-12-3 12:1:2 (DST=0)
+aTimetP1 = 29070062
+aTmP1 = 1970-12-3 11:1:2 (DST=0)
+
+OK (1)
+[OVAL] Cppunit-result =0
