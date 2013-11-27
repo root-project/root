@@ -1087,8 +1087,6 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
          result = new TStrictRootObjectConverter( klass, control );
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
-      else if ( cpd == "&&" )             // move constructor
-         result = new TNotImplementedConverter();
 
    } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
    // special case (Cling): represent enums as unsigned integers
@@ -1101,6 +1099,10 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    // TODO: a converter that generates wrappers as appropriate
       h = gConvFactories.find( "void*" );
    }
+
+   if ( ! result and cpd == "&&" )                 // moves
+      result = new TNotImplementedConverter();
+   
 
    if ( ! result && h != gConvFactories.end() )
    // converter factory available, use it to create converter
