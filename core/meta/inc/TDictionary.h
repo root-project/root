@@ -122,7 +122,8 @@ enum EFunctionProperty {
 */
    kIsConstructor = 0x00000001,
    kIsConversion  = 0x00000002,
-   kIsDestructor  = 0x00000004
+   kIsDestructor  = 0x00000004,
+   kIsOperator    = 0x00000008
 };
 
 enum EClassProperty {

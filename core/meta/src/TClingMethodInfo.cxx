@@ -412,8 +412,10 @@ long TClingMethodInfo::ExtraProperty() const
    }
    long property = 0;
    const clang::FunctionDecl *fd = GetMethodDecl();
-   
-   if (llvm::isa<clang::CXXConversionDecl>(fd)) {
+   if (fd->isOverloadedOperator()) {
+      property |= kIsOperator;
+   }
+   else if (llvm::isa<clang::CXXConversionDecl>(fd)) {
       property |= kIsConversion;
    } else if (llvm::isa<clang::CXXConstructorDecl>(fd)) {
       property |= kIsConstructor;
