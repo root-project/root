@@ -35,8 +35,8 @@ endif()
 
 if(soversion)
   set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}
+      VERSION ${ROOT_MAJOR_VERSION}.${ROOT_MINOR_VERSION}
+      #SOVERSION ${ROOT_MAJOR_VERSION}
       SUFFIX ${libsuffix}
       PREFIX ${libprefix} )
 else()
