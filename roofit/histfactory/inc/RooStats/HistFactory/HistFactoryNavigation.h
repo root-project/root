@@ -1,3 +1,5 @@
+#ifndef INCLUDE_HISTFACTORYNAVIGATION_H
+#define INCLUDE_HISTFACTORYNAVIGATION_H
 
 #include <map>
 
@@ -199,3 +201,4 @@ namespace RooStats {
 
   }
 }
+#endif // INCLUDE_HISTFACTORYNAVIGATION_H
