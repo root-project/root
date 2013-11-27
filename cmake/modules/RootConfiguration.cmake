@@ -425,6 +425,14 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTIN
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
+if(prefix STREQUAL "$(ROOTSYS)")
+  set(prefix $ROOTSYS)
+  set(bindir $ROOTSYS/bin)
+  set(libdir $ROOTSYS/lib)
+  set(incdir $ROOTSYS/include)
+  set(etcdir $ROOTSYS/etc)
+  set(mandir $ROOTSYS/man/man1)
+endif()
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY)
