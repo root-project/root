@@ -24,24 +24,30 @@ set(winrtdebug ${value${winrtdebug}})
 set(exceptions ${value${exceptions}})
 set(explicitlink ${value${explicitlink}})
 
-set(prefix "$(ROOTSYS)")
-set(bindir "$(ROOTSYS)/bin")
-set(libdir "$(ROOTSYS)/lib")
-set(incdir "$(ROOTSYS)/include")
-set(mandir "$(ROOTSYS)/man/man1")
-set(etcdir "$(ROOTSYS)/etc")
+if(sysinstall)
+  set(prefix ${ROOT_INSTALL_DIR})
+  set(etcdir ${ETC_INSTALL_DIR})
+else()
+  set(prefix $(ROOTSYS))
+  set(etcdir ${prefix}/${ETC_INSTALL_DIR})
+endif()
+set(bindir ${prefix}/${BIN_INSTALL_DIR})
+set(libdir ${prefix}/${LIB_INSTALL_DIR})
+set(incdir ${prefix}/${INCLUDE_INSTALL_DIR})
+set(mandir ${prefix}/${MAN_INSTALL_DIR})
 set(plugindir ${etcdir}/plugins)
-set(datadir "$(ROOTSYS)")
-set(elispdir "$(ROOTSYS)/build/misc")
-set(ttffontdir "$(ROOTSYS)/fonts")
-set(macrodir "$(ROOTSYS)/macros")
-set(srcdir "$(ROOTSYS)/src")
-set(iconpath ${datadir}/icons)
-set(cintincdir "$(ROOTSYS)/cint")
-set(docdir "$(ROOTSYS)")
-set(testdir "$(ROOTSYS)/test")
-set(tutdir "$(ROOTSYS)/tutorials")
-set(aclocaldir "$(ROOTSYS)/build/misc")
+set(datadir ${prefix}/${DATA_INSTALL_DIR})
+set(elispdir ${prefix}/${ELISP_INSTALL_DIR})
+set(ttffontdir ${prefix}/${FONT_INSTALL_DIR})
+set(macrodir ${prefix}/${MACRO_INSTALL_DIR})
+set(srcdir ${prefix}/${SRC_INSTALL_DIR})
+set(iconpath ${prefix}/${ICON_INSTALL_DIR})
+set(cintincdir ${prefix}/${CINTINC_INSTALL_DIR})
+set(docdir ${prefix}/${DOC_INSTALL_DIR})
+set(testdir ${prefix}/${TEST_INSTALL_DIR})
+set(tutdir ${prefix}/${TUT_INSTALL_DIR})
+set(aclocaldir  ${prefix}/${ACLOCAL_INSTALL_DIR})
+
 set(LibSuffix ${SOEXT})
 
 set(buildx11 ${value${x11}})
@@ -355,7 +361,7 @@ set(pythonvers ${PYTHON_VERSION})
 include(WriteConfigCint)
 WRITE_CONFIG_CINT( ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h)
 execute_process(COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h ${HEADER_OUTPUT_PATH}/configcint.h)
-#install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION include)
+#install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION ${INCLUDE_INSTALL_DIR})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
@@ -419,12 +425,6 @@ install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTIN
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
-set(prefix $ROOTSYS)
-set(bindir $ROOTSYS/bin)
-set(libdir $ROOTSYS/lib)
-set(incdir $ROOTSYS/include)
-set(etcdir $ROOTSYS/etc)
-set(mandir $ROOTSYS/man/man1)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY)
@@ -468,12 +468,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               DESTINATION ${ETC_INSTALL_DIR})
               
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${ELISP_INSTALL_DIR})
-
-
-#install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp
-#              ${CMAKE_BINARY_DIR}/config/Makefile.config
-#              DESTINATION config)
-
 
 endfunction()
 RootConfigure()
