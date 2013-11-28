@@ -451,35 +451,43 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     findCommands = new TList();
     findCommands->SetOwner(kTRUE);
 
+    TString basePathSim;
+
+    if (sim) {
+      // Montecarlo init.
+      // Check whether this period is in /alice/sim/<period> or in
+      // /alice/sim/<year>/<period> and act properly, since naming convention
+      // is unclear!
+      if (!gGrid) {
+        TGrid::Connect("alien:");
+        if (!gGrid) {
+          delete findCommands;
+          delete runList;
+          return NULL;
+        }
+      }
+
+      // Check once for all
+      basePathSim.Form("/alice/sim/%s", lhcPeriod.Data());  // no year
+      if (!gGrid->Cd(basePathSim.Data())) {
+        basePathSim.Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
+      }
+    }
+    else {
+      // Real data init.
+      // Parse the pass string: if it starts with a number, prepend "pass"
+      if ((pass[0] >= '0') && (pass[0] <= '9')) pass.Prepend("pass");
+    }
+
     for (UInt_t i=0; i<runList->size(); i++) {
 
       // Here we need to assemble the find string
       TString basePath, fileName, temp;
 
       if (sim) {
-
-        //
         // Montecarlo
-        //
-
-        // Check whether this period is in /alice/sim/<period> or in
-        // /alice/sim/<year>/<period> and act properly, since naming convention
-        // is unclear!
-        if (!gGrid) {
-          TGrid::Connect("alien:");
-          if (!gGrid) {
-            delete findCommands;
-            delete runList;
-            return NULL;
-          }
-        }
-
-        basePath.Form("/alice/sim/%s", lhcPeriod.Data());  // no year
-        if (!gGrid->Cd(basePath.Data())) {
-          basePath.Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
-        }
         temp.Form("/%06d", runList->at(i));
-        basePath.Append(temp);
+        basePath = basePathSim + temp;
 
         if (!esd) {
           temp.Form("/AOD%03d", aodNum);
@@ -487,15 +495,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
         }
       }
       else {
-
-        //
         // Real data
-        //
-
-        // Parse the pass string: if it starts with a number, prepend "pass"
-        if ((pass[0] >= '0') && (pass[0] <= '9')) pass.Prepend("pass");
-
-        // Data
         basePath.Form("/alice/data/%d/%s/%09d/ESDs/%s", year,
           lhcPeriod.Data(), runList->at(i), pass.Data());
         if (esd) {
