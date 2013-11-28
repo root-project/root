@@ -13,13 +13,23 @@ fi
 
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
 
-# Need to ignore Qt because of its "#define emit" in qobjectdefs.h
-for dict in `find ./*/ -name 'G__*.cxx' | grep -v '/qt' | grep -v /G__Cling.cxx`; do
+for dict in `find ./*/ -name 'G__*.cxx' | grep -v /G__Cling.cxx`; do
+    dirname=`dirname $dict` # to get foo/inc
+    dirname=`dirname $dirname` # to get foo
     awk 'BEGIN{START=-1} /includePaths\[\] = {/, /0/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> cppflags.txt
+    echo "// $dict" >> all.h
     awk 'BEGIN{START=-1} /payloadCode =/, /^;$/ { if (START==-1) START=NR; else if ($1 != ";") { code=substr($0,2); sub(/\\n"/,"",code); print code } }' $dict >> all.h
     awk 'BEGIN{START=-1} /headers\[\] = {/, /0/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/,/,"",$0); print "#include",$0 } }' $dict >> all.h
-    dirname=`dirname $dict`
-    dirname=`dirname $dirname`
+
+    if ! test "$dirname" = "`echo $dirname| sed 's,/qt,,'`"; then
+        # something qt; undef emit afterwards
+        cat <<EOF >> all.h
+#ifdef emit
+# undef emit
+#endif
+EOF
+    fi
+
     find $srcdir/$dirname/inc/ -name '*LinkDef*.h' | \
         sed -e 's|^|#include "|' -e 's|$|"|' >> alldefs.h
 done
