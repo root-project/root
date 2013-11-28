@@ -116,14 +116,14 @@ class TDataSetManagerAliEn : public TDataSetManager {
       virtual void Init(TString cacheDir, TString urlTpl,
          ULong_t cacheExpire_s);
 
+      virtual TList *GetFindCommandsFromUri(TString &uri, EDataMode &dataMode, Bool_t &forceUpdate);
+
    public:
 
       TDataSetManagerAliEn() : TDataSetManager(0, 0, 0) {}
       TDataSetManagerAliEn(const char *cacheDir, const char *urlTpl,
          ULong_t cacheExpire_s);
       TDataSetManagerAliEn(const char *, const char *, const char *cfgStr);
-
-      virtual TList *GetFindCommandsFromUri(TString &uri, EDataMode &dataMode, Bool_t &forceUpdate);
 
       virtual ~TDataSetManagerAliEn();
       virtual TFileCollection *GetDataSet(const char *uri, const char * = 0);
