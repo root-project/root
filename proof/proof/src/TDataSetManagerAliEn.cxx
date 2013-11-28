@@ -546,6 +546,14 @@ Bool_t TDataSetManagerAliEn::ParseCustomFindUri(TString &uri,
   // part is known ("Find;") and stripped
   TString checkUri = uri(5, uri.Length());
 
+  // Mode and ForceUpdate (strip them from the check string)
+  TPMERegexp reMode("(^|;)(Mode=[A-Za-z]+)(;|$)");
+  if (reMode.Match(uri) == 4)
+    checkUri.ReplaceAll(reMode[2], "");
+  TPMERegexp reForceUpdate("(^|;)(ForceUpdate)(;|$)");
+  if (reForceUpdate.Match(uri) == 4)
+    checkUri.ReplaceAll(reForceUpdate[2], "");
+
   // Base path
   TPMERegexp reBasePath("(^|;)(BasePath=([^; ]+))(;|$)");
   if (reBasePath.Match(uri) != 5) {
@@ -618,6 +626,14 @@ Bool_t TDataSetManagerAliEn::ParseOfficialDataUri(TString &uri, Bool_t sim,
     Ssiz_t idx = uri.Index(";");
     checkUri = uri(idx, uri.Length());
   }
+
+  // Mode and ForceUpdate (strip them from the check string)
+  TPMERegexp reMode("(^|;)(Mode=[A-Za-z]+)(;|$)");
+  if (reMode.Match(uri) == 4)
+    checkUri.ReplaceAll(reMode[2], "");
+  TPMERegexp reForceUpdate("(^|;)(ForceUpdate)(;|$)");
+  if (reForceUpdate.Match(uri) == 4)
+    checkUri.ReplaceAll(reForceUpdate[2], "");
 
   //
   // Parse LHC period
