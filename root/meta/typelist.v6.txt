@@ -330,7 +330,6 @@ bool
 Bool_t
 Byte_t
 caddr_t
-cfCAST_FUNCTION
 char
 char*
 Char_t
@@ -385,8 +384,6 @@ Drawable_t
 EDataMode
 EGetLineMode
 ErrorHandlerFunc_t
-ErrorHandler_t
-extent
 fd_mask
 fd_set
 FILE
@@ -417,9 +414,6 @@ GContext_t
 gid_t
 GlobusAuth_t
 Handle_t
-HEPEVT_DEF
-Hoption_t
-Hparam_t
 Html_16_t
 Html_32_t
 Html_u16_t
@@ -734,7 +728,6 @@ lldiv_t
 long
 Long64_t
 long long
-LONGLONG
 Long_t
 Marker_t
 Mask_t
@@ -1110,7 +1103,6 @@ Short_t
 ShowMembersFunc_t
 SigHandler_t
 sigjmp_buf
-SigPipe_t
 sigset_t
 Size3D
 size_t
