@@ -30,7 +30,6 @@
 #  include "qlist.h"
 #  include "q3vbox.h"
 typedef Q3VBox QVBox;
-using namespace Qt;
 # else
 #  include "qvbox.h"
 # endif
@@ -53,7 +52,7 @@ class QList<QLineEdit*>;
 class QVBox;
 #if QTVERS > 3
 class WindowFlags;
-typedef WindowFlags WFlags;
+typedef WindowFlags Qt::WFlags;
 #endif
 #endif
 
@@ -67,7 +66,7 @@ private:
    TQRootDialog& operator=(const TQRootDialog &);
       
 public:
-   TQRootDialog(QWidget *parent, const char *name, WFlags f=0,
+   TQRootDialog(QWidget *parent, const char *name, Qt::WFlags f=0,
                 TObject *obj=0,TMethod *meth=0);
    virtual ~TQRootDialog();
    void Add(const char* argname, const char* value, const char* type);

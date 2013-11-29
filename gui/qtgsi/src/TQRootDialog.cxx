@@ -28,6 +28,8 @@ typedef Q3HBox QHBox;
 #include "TClass.h"
 #include "TObjString.h"
 
+using namespace Qt;
+
 ClassImp(TQRootDialog)
 
 //______________________________________________________________________________
