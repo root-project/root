@@ -30,7 +30,7 @@
 #define PARAMS(paramlist)   paramlist
 
 #ifdef WIN32
-   extern struct mstats mmstats PARAMS ((PTR));
+   extern struct mmstats_t mmstats PARAMS ((PTR));
 #endif
 
 #ifdef  __cplusplus
@@ -68,17 +68,17 @@ extern int mmcheck PARAMS ((PTR, void (*) (void)));
 
 /* Pick up the current statistics is no longer supported via mmstats. (see FIXME elsewhere) */
 /* This cause a problem with VC++ (warning C4190) if extern "C" and with clang:
-include/mmalloc.h:73:25: warning: 'mmstats' has C-linkage specified, but returns user-defined type 'struct mstats' which is incompatible with C [-Wreturn-type-c-linkage]
-   This is because mstats is only (intentionally see the FIXME) declared in mmprivate.h
+include/mmalloc.h:73:25: warning: 'mmstats' has C-linkage specified, but returns user-defined type 'struct mmstats_t' which is incompatible with C [-Wreturn-type-c-linkage]
+   This is because mmstats_t is only (intentionally see the FIXME) declared in mmprivate.h
    and C (or just VC++ and clang in extern "C" mode) requires the struct to be fully 
    declared before it is used (likely so that it can know whether it is a POD or not).
    Since mmprivate.h first include mmalloc.h, even including expliclty mmprivate.h
-   we still can not get in a position where struct mstats is fully declared before
+   we still can not get in a position where struct mmstats_t is fully declared before
    the next line is parsed ... Since the FIXME in mmprivate.h says that anyhow
-   the data should not be provided using this struct mstats ... we just comment
+   the data should not be provided using this struct mmstats_t ... we just comment
    this comment it out.
 */
-   // extern struct mstats mmstats PARAMS ((PTR));
+   // extern struct mmstats_t mmstats PARAMS ((PTR));
 
 #ifndef WIN32
    extern PTR mmalloc_attach PARAMS ((int, PTR, int));

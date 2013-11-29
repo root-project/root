@@ -27,15 +27,15 @@ Boston, MA 02111-1307, USA.
 
 #include "mmprivate.h"
 
-/* FIXME:  See the comment in mmprivate.h where struct mstats is defined.
+/* FIXME:  See the comment in mmprivate.h where struct mmstats_t is defined.
    None of the internal mmalloc structures should be externally visible
    outside the library. */
 
-struct mstats
+struct mmstats_t
 mmstats (md)
   PTR md;
 {
-  struct mstats result;
+  struct mmstats_t result;
   struct mdesc *mdp;
 
   mdp = MD_TO_MDP (md);

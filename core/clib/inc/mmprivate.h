@@ -166,7 +166,7 @@ struct mmlist
    to be via some other mechanism, such as mmstat_<something> where the
    return value is the <something> the user is interested in. */
 
-struct mstats
+struct mmstats_t
   {
     size_t bytes_total;		/* Total size of the heap. */
     size_t chunks_used;		/* Chunks allocated by the user. */
@@ -271,7 +271,7 @@ struct mdesc
 
   /* Instrumentation.  */
 
-  struct mstats heapstats;
+  struct mmstats_t heapstats;
 
   /* Free list headers for each fragment size.  */
   /* Free lists for each fragment size.  */
