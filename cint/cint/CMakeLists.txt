@@ -90,7 +90,7 @@ add_custom_target(IOSENUM_H
    COMMAND cmake -E copy ${CMAKE_CURRENT_BINARY_DIR}/iosenum.h  ${HEADER_OUTPUT_PATH}/iosenum.h
    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/iosenum.h 
 )
-install(FILES ${HEADER_OUTPUT_PATH}/iosenum.h DESTINATION ${CINTINC_INSTALL_DIR}/cint/include)
+install(FILES ${HEADER_OUTPUT_PATH}/iosenum.h DESTINATION ${CMAKE_INSTALL_CINTINCDIR}/cint/include)
 
 set_target_properties(IOSENUM_H PROPERTIES FOLDER Builtins)
 #---special compile settings------------------------------------------------------------------------------
@@ -153,9 +153,9 @@ ROOT_EXECUTABLE(makecint ${CMAKE_SOURCE_DIR}/cint/tool/makecint.cxx LIBRARIES ${
 #---Installation--------------------------------------------------------------------------------------------
 ROOT_INSTALL_HEADERS()
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
-  install(DIRECTORY lib     DESTINATION ${CINTINC_INSTALL_DIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY include DESTINATION ${CINTINC_INSTALL_DIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE)
-  install(DIRECTORY stl     DESTINATION ${CINTINC_INSTALL_DIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE) 
+  install(DIRECTORY lib     DESTINATION ${CMAKE_INSTALL_CINTINCDIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY include DESTINATION ${CMAKE_INSTALL_CINTINCDIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE)
+  install(DIRECTORY stl     DESTINATION ${CMAKE_INSTALL_CINTINCDIR}/cint PATTERN ".dll" EXCLUDE PATTERN ".svn" EXCLUDE)
 endif()
 
 

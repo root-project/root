@@ -67,10 +67,10 @@ ENDIF (WIN32)
 #####################   install   ####################
 
 INSTALL(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/genreflex
-        DESTINATION ${LIB_INSTALL_DIR}/python
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/python
         FILES_MATCHING PATTERN "*.py"
         PATTERN "gccxmlpath.py" EXCLUDE)
 
 INSTALL(PROGRAMS ${_genreflex_filename}
-        DESTINATION ${BIN_INSTALL_DIR})
+        DESTINATION ${CMAKE_INSTALL_BINDIR})
 

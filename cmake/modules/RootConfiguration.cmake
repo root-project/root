@@ -24,29 +24,45 @@ set(winrtdebug ${value${winrtdebug}})
 set(exceptions ${value${exceptions}})
 set(explicitlink ${value${explicitlink}})
 
-if(sysinstall)
-  set(prefix ${ROOT_INSTALL_DIR})
-  set(etcdir ${ETC_INSTALL_DIR})
+if(gnuinstall)
+  set(prefix ${CMAKE_INSTALL_PREFIX})
+  set(etcdir ${CMAKE_INSTALL_FULL_ETCDIR})
+  set(bindir ${CMAKE_INSTALL_FULL_BINDIR})
+  set(libdir ${CMAKE_INSTALL_FULL_LIBDIR})
+  set(incdir ${CMAKE_INSTALL_FULL_INCDIR})
+  set(mandir ${CMAKE_INSTALL_FULL_MANDIR})
+  set(plugindir ${CMAKE_INSTALL_FULL_ETCDIR}/plugins)
+  set(datadir ${CMAKE_INSTALL_FULL_DATADIR})
+  set(elispdir ${CMAKE_INSTALL_FULL_ELISPDIR})
+  set(ttffontdir ${CMAKE_INSTALL_FULL_FONTDIR})
+  set(macrodir ${CMAKE_INSTALL_FULL_MACRODIR})
+  set(srcdir ${CMAKE_INSTALL_FULL_SRCDIR})
+  set(iconpath ${CMAKE_INSTALL_FULL_ICONDIR})
+  set(cintincdir ${CMAKE_INSTALL_FULL_CINTINCDIR})
+  set(docdir ${CMAKE_INSTALL_FULL_DOCDIR})
+  set(testdir ${CMAKE_INSTALL_FULL_TESTDIR})
+  set(tutdir ${CMAKE_INSTALL_FULL_TUTDIR})
+  set(aclocaldir ${CMAKE_INSTALL_FULL_ACLOCALDIR})
 else()
   set(prefix $(ROOTSYS))
-  set(etcdir ${prefix}/${ETC_INSTALL_DIR})
+  set(etcdir ${prefix}/${CMAKE_INSTALL_ETCDIR})
+  set(bindir ${prefix}/${CMAKE_INSTALL_BINDIR})
+  set(libdir ${prefix}/${CMAKE_INSTALL_LIBDIR})
+  set(incdir ${prefix}/${CMAKE_INSTALL_INCDIR})
+  set(mandir ${prefix}/${CMAKE_INSTALL_MANDIR})
+  set(plugindir ${prefix}/${CMAKE_INSTALL_ETCDIR}/plugins)
+  set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
+  set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
+  set(ttffontdir ${prefix}/${CMAKE_INSTALL_FONTDIR})
+  set(macrodir ${prefix}/${CMAKE_INSTALL_MACRODIR})
+  set(srcdir ${prefix}/${CMAKE_INSTALL_SRCDIR})
+  set(iconpath ${prefix}/${CMAKE_INSTALL_ICONDIR})
+  set(cintincdir ${prefix}/${CMAKE_INSTALL_CINTINCDIR})
+  set(docdir ${prefix}/${CMAKE_INSTALL_DOCDIR})
+  set(testdir ${prefix}/${CMAKE_INSTALL_TESTDIR})
+  set(tutdir ${prefix}/${CMAKE_INSTALL_TUTDIR})
+  set(aclocaldir ${prefix}/${CMAKE_INSTALL_ACLOCALDIR})
 endif()
-set(bindir ${prefix}/${BIN_INSTALL_DIR})
-set(libdir ${prefix}/${LIB_INSTALL_DIR})
-set(incdir ${prefix}/${INCLUDE_INSTALL_DIR})
-set(mandir ${prefix}/${MAN_INSTALL_DIR})
-set(plugindir ${etcdir}/plugins)
-set(datadir ${prefix}/${DATA_INSTALL_DIR})
-set(elispdir ${prefix}/${ELISP_INSTALL_DIR})
-set(ttffontdir ${prefix}/${FONT_INSTALL_DIR})
-set(macrodir ${prefix}/${MACRO_INSTALL_DIR})
-set(srcdir ${prefix}/${SRC_INSTALL_DIR})
-set(iconpath ${prefix}/${ICON_INSTALL_DIR})
-set(cintincdir ${prefix}/${CINTINC_INSTALL_DIR})
-set(docdir ${prefix}/${DOC_INSTALL_DIR})
-set(testdir ${prefix}/${TEST_INSTALL_DIR})
-set(tutdir ${prefix}/${TUT_INSTALL_DIR})
-set(aclocaldir  ${prefix}/${ACLOCAL_INSTALL_DIR})
 
 set(LibSuffix ${SOEXT})
 
@@ -361,11 +377,11 @@ set(pythonvers ${PYTHON_VERSION})
 include(WriteConfigCint)
 WRITE_CONFIG_CINT( ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h)
 execute_process(COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/tmp/configcint.h ${HEADER_OUTPUT_PATH}/configcint.h)
-#install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION ${INCLUDE_INSTALL_DIR})
+#install(FILES ${HEADER_OUTPUT_PATH}/configcint.h DESTINATION ${CMAKE_INSTALL_INCDIR})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${INCLUDE_INSTALL_DIR})
+install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCDIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -420,8 +436,8 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
                ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake @ONLY)
 install(FILES ${CMAKE_BINARY_DIR}/ROOTConfig-version.cmake
               ${CMAKE_BINARY_DIR}/ROOTUseFile.cmake
-              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_DIR})
-install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_DIR})
+              ${CMAKE_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
@@ -465,17 +481,17 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ 
                           GROUP_EXECUTE GROUP_READ 
                           WORLD_EXECUTE WORLD_READ 
-              DESTINATION ${BIN_INSTALL_DIR})
+              DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/include/compiledata.h 
-              DESTINATION ${INCLUDE_INSTALL_DIR})
+              DESTINATION ${CMAKE_INSTALL_INCDIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
-              DESTINATION ${ETC_INSTALL_DIR})
+              DESTINATION ${CMAKE_INSTALL_ETCDIR})
               
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${ELISP_INSTALL_DIR})
+install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 endfunction()
 RootConfigure()

@@ -76,7 +76,7 @@ endif()
 if(c++11)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declaration")
 endif()
-if(sysinstall)
+if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
