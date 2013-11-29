@@ -36,6 +36,7 @@
 
 
 
+
 using namespace std;
 
 ClassImp(RooTrace)
@@ -46,7 +47,9 @@ Bool_t RooTrace::_active(kFALSE) ;
 Bool_t RooTrace::_verbose(kFALSE) ;
 RooLinkedList RooTrace::_list ;
 RooLinkedList RooTrace::_markList ;
-
+map<TClass*,int> RooTrace::_objectCount ;
+map<string,int> RooTrace::_specialCount ;
+map<string,int> RooTrace::_specialSize ;
 
 
 //_____________________________________________________________________________
@@ -54,7 +57,7 @@ void RooTrace::create(const TObject* obj)
 { 
   // Register creation of object 'obj' 
 
-  if (_active) create2(obj) ; 
+  if (_active) create3(obj) ; 
 }
 
 
@@ -63,8 +66,28 @@ void RooTrace::destroy(const TObject* obj)
 { 
   // Register deletion of object 'obj'
 
-  if (_active) destroy2(obj) ; 
+  if (_active) destroy3(obj) ; 
 }
+
+
+//_____________________________________________________________________________
+void RooTrace::createSpecial(const char* name, int size) 
+{
+  if (_active) {
+    _specialCount[name]++ ;
+    _specialSize[name] = size ;
+  }
+}
+
+
+//_____________________________________________________________________________
+void RooTrace::destroySpecial(const char* name) 
+{
+  if (_active) {
+    _specialCount[name]++ ;
+  }
+}
+
 
 
 //_____________________________________________________________________________
@@ -117,6 +140,27 @@ void RooTrace::destroy2(const TObject* obj)
 
 
 //_____________________________________________________________________________
+void RooTrace::create3(const TObject* obj) 
+{
+  // Back end function of create(), register creation of object 'obj' 
+  _objectCount[obj->IsA()]++ ;
+}
+
+
+  
+
+//_____________________________________________________________________________
+void RooTrace::destroy3(const TObject* obj) 
+{
+  // Back end function of destroy(), register deletion of object 'obj' 
+  _objectCount[obj->IsA()]-- ;
+}
+
+
+
+
+
+//_____________________________________________________________________________
 void RooTrace::mark()
 {
   // Put marker in object list, that allows to dump contents of list
@@ -155,6 +199,27 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked)
   if (sinceMarked) os << nMarked << " marked objects suppressed" << endl ;
 }
 
+
+
+//_____________________________________________________________________________
+void RooTrace::printObjectCounts() 
+{
+  Double_t total(0) ;
+  for (map<TClass*,int>::iterator iter = _objectCount.begin() ; iter != _objectCount.end() ; ++iter) {
+    Double_t tot= 1.0*(iter->first->Size()*iter->second)/(1024*1024) ;
+    cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.1f",tot) << " Mb" << endl ;
+    total+=tot ;
+  }
+
+  for (map<string,int>::iterator iter = _specialCount.begin() ; iter != _specialCount.end() ; ++iter) {
+    int size = _specialSize[iter->first] ;
+    Double_t tot=1.0*(size*iter->second)/(1024*1024) ;
+    cout << " special " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.1f",tot) << " Mb" << endl ;
+    total+=tot ;
+  }
+  cout << "grand total memory = " << total << endl ;
+
+}
 
 
 //_____________________________________________________________________________

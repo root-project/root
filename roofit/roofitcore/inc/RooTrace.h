@@ -17,8 +17,14 @@
 #define ROO_TRACE
 
 #include <assert.h>
+#include <map>
 #include "Riosfwd.h"
 #include "RooLinkedList.h"
+
+#ifndef __CINT__
+#define TRACE_CREATE  RooTrace::create(this); 
+#define TRACE_DESTROY RooTrace::destroy(this); 
+#endif
 
 class RooTrace {
 public:
@@ -27,6 +33,10 @@ public:
 
   static void create(const TObject* obj) ;
   static void destroy(const TObject* obj) ;
+
+  static void createSpecial(const char* name, int size) ;
+  static void destroySpecial(const char* name) ;
+
   
   static void active(Bool_t flag) ;
   static void verbose(Bool_t flag) ;
@@ -34,14 +44,20 @@ public:
   static void dump() ;
   static void dump(std::ostream& os, Bool_t sinceMarked=kFALSE) ;
   static void mark() ;
+
+  static void printObjectCounts() ;
   
   static void callgrind_zero() ;
   static void callgrind_dump() ;
+  
 
 protected:
 
   static void create2(const TObject* obj) ;
   static void destroy2(const TObject* obj) ;
+
+  static void create3(const TObject* obj) ;
+  static void destroy3(const TObject* obj) ;
 
   void addPad(const TObject* ref, Bool_t doPad) ;
   Bool_t removePad(const TObject* ref) ;
@@ -51,6 +67,11 @@ protected:
   
   static RooLinkedList _list ;
   static RooLinkedList _markList ;
+
+  static std::map<TClass*,int> _objectCount ;
+
+  static std::map<std::string,int> _specialCount ;
+  static std::map<std::string,int> _specialSize ;
 
   ClassDef(RooTrace,0) // Memory tracer utility for RooFit objects
 };
