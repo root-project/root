@@ -15,17 +15,6 @@
 // Include the definition of pairs
 #include <utility>
 
-// Import pairs (and string) into the global namespace to satisfy
-// the current CINT implementation of dictionary generation.
-#if defined(R__SOLARIS)
-using std::pair;
-using std::string;
-#else
-namespace std {}
-using namespace std;
-#endif
-
-
 #endif
 
 
