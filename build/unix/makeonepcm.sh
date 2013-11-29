@@ -28,7 +28,15 @@ for dict in `find ./*/ -name 'G__*.cxx' | grep -v /G__Cling.cxx`; do
 # undef emit
 #endif
 EOF
+    elif ! test "$dirname" = "`echo $dirname| sed 's,net/ldap,,'`"; then
+        # ldap; undef Debug afterwards
+        cat <<EOF >> all.h
+#ifdef Debug
+# undef Debug
+#endif
+EOF
     fi
+
 
     find $srcdir/$dirname/inc/ -name '*LinkDef*.h' | \
         sed -e 's|^|#include "|' -e 's|$|"|' >> alldefs.h
