@@ -312,6 +312,9 @@ int TClingBaseClassInfo::InternalNext(int onlyDirect)
       else if (!onlyDirect && fDescend) {
          // We previously processed a base class which itself has bases,
          // now we process the bases of that base class.
+
+         // At least getASTRecordLayout() might deserialize.
+         cling::Interpreter::PushTransactionRAII RAII(fInterp);
          fDescend = false;
          const clang::RecordType *Ty = fIter->getType()->
                                        getAs<clang::RecordType>();
@@ -395,8 +398,9 @@ int TClingBaseClassInfo::Next()
 // This function is updating original one on http://clang.llvm.org/doxygen/CGExprCXX_8cpp_source.html#l01647
 // To fit the needs.
 static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
-                                   const clang::CXXRecordDecl *Src,
-                                   const clang::CXXRecordDecl *Dst)
+                                          const clang::CXXRecordDecl *Src,
+                                          const clang::CXXRecordDecl *Dst,
+                                          cling::Interpreter* interp)
 {
    clang::CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
                       /*DetectVirtual=*/false);
@@ -425,6 +429,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
          continue;
 
        // Accumulate the base class offsets.
+       cling::Interpreter::PushTransactionRAII RAII(interp);
        const clang::ASTRecordLayout &L = Context.getASTRecordLayout(J->Class);
        Offset += L.getBaseClassOffset(J->Base->getType()->getAsCXXRecordDecl());
      }
@@ -465,7 +470,7 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address) const
          // No RecordDecl for the class.
          return -1;
       }
-      long clang_val = computeOffsetHint(Context, Base, RD).getQuantity();
+      long clang_val = computeOffsetHint(Context, Base, RD, fInterp).getQuantity();
       if (clang_val == -2 || clang_val == -3) {
          TString baseName;
          TString derivedName;

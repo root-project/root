@@ -1104,6 +1104,7 @@ int TClingClassInfo::Size() const
       return 0;
    }
    ASTContext &Context = fDecl->getASTContext();
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    const ASTRecordLayout &Layout = Context.getASTRecordLayout(RD);
    int64_t size = Layout.getSize().getQuantity();
    int clang_size = static_cast<int>(size);
