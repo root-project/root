@@ -159,5 +159,17 @@ void *DynamicLibrary::getAddressOfSymbol(const char *symbolName) {
   return (void *)(intptr_t)GetProcAddress((HMODULE)Data, symbolName);
 }
 
+DynamicLibrary DynamicLibrary::addPermanentLibrary(void *handle) {
+  if (OpenedHandles == 0)
+    OpenedHandles = new DenseSet<HMODULE>();
+
+  // If we've already loaded this library, dlclose() the handle in order to
+  // keep the internal refcount at +1.
+  if (!OpenedHandles->insert((const HMODULE)handle).second)
+    FreeLibrary((HMODULE)handle);
+
+  return DynamicLibrary((HMODULE)handle);
+}
+
 
 }
