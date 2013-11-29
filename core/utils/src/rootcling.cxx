@@ -3032,7 +3032,7 @@ std::ostream* CreateStreamPtrForSplitDict(const std::string& dictpathname,
    const size_t dotPos = splitDictName.find_last_of(".");
    splitDictName.insert(dotPos,"_classdef");
    tmpCatalog.addFileName(splitDictName);
-   return new std::ofstream(splitDictName);
+   return new std::ofstream(splitDictName.c_str());
 }
 
 //______________________________________________________________________________
