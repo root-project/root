@@ -77,7 +77,7 @@ if(builtin_lzma)
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
 	  INSTALL_COMMAND cmake -E copy lib/liblzma.dll <INSTALL_DIR>/bin/${CMAKE_CFG_INTDIR}
 	  BUILD_IN_SOURCE 1)
-    install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${BIN_INSTALL_DIR})
+    install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else() 

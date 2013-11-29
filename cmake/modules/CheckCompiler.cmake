@@ -92,8 +92,8 @@ endif()
 if(libcxx11)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif()
-if(sysinstall)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
+if(gnuinstall)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
 #---Print the final compiler flags--------------------------------------------------------------------

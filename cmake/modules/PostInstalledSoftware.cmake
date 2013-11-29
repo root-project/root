@@ -4,7 +4,7 @@ if(builtin_gsl)
     add_dependencies(MathMore GSL)
   endif()
   ExternalProject_Get_Property(GSL install_dir)
-  install(DIRECTORY ${install_dir}/lib/ DESTINATION ${LIB_INSTALL_DIR} FILES_MATCHING PATTERN "libgsl*")
+  install(DIRECTORY ${install_dir}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} FILES_MATCHING PATTERN "libgsl*")
 endif()
 
 #---Post actions to use builtin CFITSIO------------------------------------------------

@@ -117,4 +117,4 @@ if(builtin_freetype)
   add_dependencies(AFTERIMAGE FREETYPE)
 endif()
 
-install(FILES ${afterimagelib} DESTINATION ${LIB_INSTALL_DIR})
+install(FILES ${afterimagelib} DESTINATION ${CMAKE_INSTALL_LIBDIR})

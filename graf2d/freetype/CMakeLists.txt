@@ -110,4 +110,4 @@ endif()
 # build directory.
 add_custom_target(FREETYPE DEPENDS ${freetypelib})
 set_target_properties(FREETYPE PROPERTIES FOLDER Builtins)
-install(FILES ${freetypelib} DESTINATION ${LIB_INSTALL_DIR})
+install(FILES ${freetypelib} DESTINATION ${CMAKE_INSTALL_LIBDIR})
