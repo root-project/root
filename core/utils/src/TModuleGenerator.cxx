@@ -229,8 +229,8 @@ std::ostream& TModuleGenerator::WritePPDefines(std::ostream& out) const
            e = fCompD.end(); i != e; ++i) {
       std::string cppname(i->first);
       size_t pos = cppname.find('(');
-      if (pos != std::string::npos) cppname.erase(pos); 
-      out << "#ifndef " << i->first << "\n"
+      if (pos != std::string::npos) cppname.erase(pos);
+      out << "#ifndef " << cppname << "\n"
          "  #define " << i->first;
       if (!i->second.empty()) {
          out << " " << i->second;
