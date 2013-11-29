@@ -2654,7 +2654,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
                                       const AnnotatedRecordDecl &cl,
                                       const cling::Interpreter &interp,
                                       const TNormalizedCtxt &normCtxt,
-                                      std::ostream& finalString,
+                                      std::ostream& dictStream,
                                       bool isGenreflex=false)
 {
    // Generate the code of the class
@@ -2676,7 +2676,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer")) {
       if (cl.RootFlag()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
-         (*WriteStreamerFunc)(cl, interp, normCtxt, isGenreflex || cl.RequestStreamerInfo());
+         (*WriteStreamerFunc)(cl, interp, normCtxt, dictStream, isGenreflex || cl.RequestStreamerInfo());
       } else
          ROOT::TMetaUtils::Info(0, "Class %s: Do not generate Streamer() [*** custom streamer ***]\n",fullname.c_str());
    } else {
@@ -2685,13 +2685,13 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
       if (cl.RequestStreamerInfo()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
    }
    if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"ShowMembers")) {
-      ROOT::TMetaUtils::WriteShowMembers(finalString, cl, decl, interp, normCtxt);
+      ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt);
    } else {
       if (ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, normCtxt)) {
-         ROOT::TMetaUtils::WriteShowMembers(finalString, cl, decl, interp, normCtxt, true);
+         ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt, true);
       }
    }
-   ROOT::TMetaUtils::WriteAuxFunctions(finalString, cl, decl, interp, normCtxt);
+   ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, normCtxt);
 }
 
 //______________________________________________________________________________

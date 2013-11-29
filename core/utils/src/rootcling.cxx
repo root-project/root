@@ -252,8 +252,6 @@ namespace genreflex {
    bool verbose = false;
 }
 
-std::ostream* dictSrcOut = &std::cout;
-
 //______________________________________________________________________________
 static void GetCurrentDirectory(std::string &output)
 {
@@ -485,19 +483,6 @@ size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
    return len.getLimitedValue();
 }
 
-
-class FDVisitor : public clang::RecursiveASTVisitor<FDVisitor> {
-private:
-   clang::FunctionDecl* fFD;
-public:
-   clang::FunctionDecl* getFD() const { return fFD; }
-   bool VisitDeclRefExpr(clang::DeclRefExpr* DRE) {
-      fFD = llvm::dyn_cast<clang::FunctionDecl>(DRE->getDecl());
-      return true;
-   }
-   FDVisitor() : fFD(0) {}
-};
-
 //______________________________________________________________________________
 bool InheritsFromTObject(const clang::RecordDecl *cl,
                          const cling::Interpreter &interp)
@@ -515,13 +500,6 @@ bool InheritsFromTSelector(const clang::RecordDecl *cl,
    static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TSelector", interp);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
-}
-
-//______________________________________________________________________________
-inline bool R__IsTemplate(const clang::Decl &cl)
-{
-   return (cl.getKind() == clang::Decl::ClassTemplatePartialSpecialization
-           || cl.getKind() == clang::Decl::ClassTemplateSpecialization);
 }
 
 //______________________________________________________________________________
@@ -961,36 +939,11 @@ string GetNonConstMemberName(const clang::FieldDecl &m, const string &prefix = "
 }
 
 //______________________________________________________________________________
-bool NeedExternalShowMember(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl_input)
-{
-   if (TMetaUtils::IsStdClass(*cl_input.GetRecordDecl())) {
-      // getName() return the template name without argument!
-      llvm::StringRef name = (*cl_input).getName();
-
-      if (name == "pair") return true;
-      if (name == "complex") return true;
-      if (name == "auto_ptr") return true;
-      if (STLKind(name.str().c_str())) return false;
-      if (name == "string" || name == "basic_string") return false;
-   }
-
-   // This means templated classes hiding members won't have
-   // a proper shadow class, and the user has no chance of
-   // veto-ing a shadow, as we need it for ShowMembers :-/
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl_input,"ShowMembers"))
-      return R__IsTemplate(*cl_input);
-
-   // no streamer, no shadow
-   if (cl_input.RequestNoStreamer()) return false;
-
-   return (cl_input.RequestStreamerInfo());
-}
-
-//______________________________________________________________________________
 int STLContainerStreamer(const clang::FieldDecl &m,
                          int rwmode,
                          const cling::Interpreter &interp,
-                         const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+                         const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                         std::ostream& dictStream)
 {
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
@@ -1023,14 +976,14 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    const clang::TemplateArgument &arg0( tmplt_specialization->getTemplateArgs().get(0) );
    clang::QualType ti = arg0.getAsType();
 
-   if (ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, ti, 0, rwmode, interp)) {
+   if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, ti, 0, rwmode, interp)) {
       tcl1="R__tcl1";
       fulName1 = ti.getAsString(); // Should we be passing a context?
    }
    if (stltype==kSTLmap || stltype==kSTLmultimap) {
       const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
       clang::QualType tmplti = arg1.getAsType();
-      if (ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, tmplti, 0, rwmode, interp)) {
+      if (ROOT::TMetaUtils::ElementStreamer(dictStream, m, tmplti, 0, rwmode, interp)) {
          tcl2="R__tcl2";
          fulName2 = tmplti.getAsString(); // Should we be passing a context?
       }
@@ -1056,34 +1009,34 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    }
    if (rwmode == 0) {
       // create read code
-      (*dictSrcOut) << "      {" << std::endl;
+      dictStream << "      {" << std::endl;
       if (isArr) {
-         (*dictSrcOut) << "         for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
+         dictStream << "         for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
       }
 
       switch (pa) {
       case 0:         //No pointer && No array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
          break;
       case 1:         //No pointer && array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
          break;
       case 2:         //pointer && No array
-         (*dictSrcOut) << "         delete *" << stlName.c_str() << ";"<< std::endl
+         dictStream << "         delete *" << stlName.c_str() << ";"<< std::endl
                        << "         *" << stlName.c_str() << " = new " << stlType.c_str() << ";" << std::endl
                        << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
          break;
       case 3:         //pointer && array
-         (*dictSrcOut) << "         delete " << stlName.c_str() << "[R__l];" << std::endl
+         dictStream << "         delete " << stlName.c_str() << "[R__l];" << std::endl
                        << "         " << stlName.c_str() << "[R__l] = new " << stlType.c_str() << ";" << std::endl
                        << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
          break;
       }
 
-      (*dictSrcOut) << "         R__stl.clear();" << std::endl;
+      dictStream << "         R__stl.clear();" << std::endl;
 
       if (tcl1) {
-         (*dictSrcOut) << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
+         dictStream << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
                        << "         if (R__tcl1==0) {" << std::endl
                        << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
                        << fulName1.c_str() << "!\");"  << std::endl
@@ -1091,7 +1044,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
                        << "         }" << std::endl;
       }
       if (tcl2) {
-         (*dictSrcOut) << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
+         dictStream << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
                        << "         if (R__tcl2==0) {" << std::endl
                        << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
                        << fulName2.c_str() <<"!\");" << std::endl
@@ -1099,18 +1052,18 @@ int STLContainerStreamer(const clang::FieldDecl &m,
                        << "         }" << std::endl;
       }
 
-      (*dictSrcOut) << "         int R__i, R__n;" << std::endl
+      dictStream << "         int R__i, R__n;" << std::endl
                     << "         R__b >> R__n;" << std::endl;
 
       if (stltype==kSTLvector) {
-         (*dictSrcOut) << "         R__stl.reserve(R__n);" << std::endl;
+         dictStream << "         R__stl.reserve(R__n);" << std::endl;
       }
-      (*dictSrcOut) << "         for (R__i = 0; R__i < R__n; R__i++) {" << std::endl;
+      dictStream << "         for (R__i = 0; R__i < R__n; R__i++) {" << std::endl;
 
-      ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, arg0.getAsType(), "R__t", rwmode, interp, tcl1);
+      ROOT::TMetaUtils::ElementStreamer(dictStream, m, arg0.getAsType(), "R__t", rwmode, interp, tcl1);
       if (stltype == kSTLmap || stltype == kSTLmultimap) {     //Second Arg
          const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
-         ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, arg1.getAsType(), "R__t2", rwmode, interp, tcl2);
+         ROOT::TMetaUtils::ElementStreamer(dictStream, m, arg1.getAsType(), "R__t2", rwmode, interp, tcl2);
       }
 
       /* Need to go from
@@ -1128,7 +1081,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       case kSTLmap:
       case kSTLmultimap: {
          std::string keyName( ti.getAsString() );
-         (*dictSrcOut) << "            typedef " << keyName << " Value_t;" << std::endl
+         dictStream << "            typedef " << keyName << " Value_t;" << std::endl
                        << "            std::pair<Value_t const, " << tmplt_specialization->getTemplateArgs().get(1).getAsType().getAsString() << " > R__t3(R__t,R__t2);" << std::endl
                        << "            R__stl.insert(R__t3);" << std::endl;
          //fprintf(fp, "            R__stl.insert(%s::value_type(R__t,R__t2));\n",stlType.c_str());
@@ -1136,49 +1089,49 @@ int STLContainerStreamer(const clang::FieldDecl &m,
       }
       case kSTLset:
       case kSTLmultiset:
-         (*dictSrcOut) << "            R__stl.insert(R__t);" << std::endl;
+         dictStream << "            R__stl.insert(R__t);" << std::endl;
          break;
       case kSTLvector:
       case kSTLlist:
       case kSTLdeque:
-         (*dictSrcOut) << "            R__stl.push_back(R__t);" << std::endl;
+         dictStream << "            R__stl.push_back(R__t);" << std::endl;
          break;
 
       default:
          assert(0);
       }
-      (*dictSrcOut) << "         }" << std::endl
+      dictStream << "         }" << std::endl
                     << "      }" << std::endl;
-      if (isArr) (*dictSrcOut) << "    }" << std::endl;
+      if (isArr) dictStream << "    }" << std::endl;
 
    } else {
 
       // create write code
       if (isArr) {
-         (*dictSrcOut) << "         for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
+         dictStream << "         for (Int_t R__l = 0; R__l < " << len << "; R__l++) {" << std::endl;
       }
-      (*dictSrcOut) << "      {" << std::endl;
+      dictStream << "      {" << std::endl;
       switch (pa) {
       case 0:         //No pointer && No array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << ";" << std::endl;
          break;
       case 1:         //No pointer && array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl =  " << stlName.c_str() << "[R__l];" << std::endl;
          break;
       case 2:         //pointer && No array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl = **" << stlName.c_str() << ";" << std::endl;
          break;
       case 3:         //pointer && array
-         (*dictSrcOut) << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
+         dictStream << "         " << stlType.c_str() << " &R__stl = *" << stlName.c_str() << "[R__l];" << std::endl;
          break;
       }
 
-      (*dictSrcOut) << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
+      dictStream << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
                     << "         R__b << R__n;" << std::endl
                     << "         if(R__n) {" << std::endl;
 
       if (tcl1) {
-         (*dictSrcOut) << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
+         dictStream << "         TClass *R__tcl1 = TBuffer::GetClass(typeid(" << fulName1.c_str() << "));" << std::endl
                        << "         if (R__tcl1==0) {" << std::endl
                        << "            Error(\"" << stlName.c_str() << " streamer\",\"Missing the TClass object for "
                        << fulName1.c_str() << "!\");" << std::endl
@@ -1186,34 +1139,34 @@ int STLContainerStreamer(const clang::FieldDecl &m,
                        << "         }" << std::endl;
       }
       if (tcl2) {
-         (*dictSrcOut) << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
+         dictStream << "         TClass *R__tcl2 = TBuffer::GetClass(typeid(" << fulName2.c_str() << "));" << std::endl
                        << "         if (R__tcl2==0) {" << std::endl
                        << "            Error(\"" << stlName.c_str() << "streamer\",\"Missing the TClass object for " << fulName2.c_str() << "!\");" << std::endl
                        << "            return;" << std::endl
                        << "         }" << std::endl;
       }
 
-      (*dictSrcOut) << "            " << stlType.c_str() << "::iterator R__k;" << std::endl
+      dictStream << "            " << stlType.c_str() << "::iterator R__k;" << std::endl
                     << "            for (R__k = R__stl.begin(); R__k != R__stl.end(); ++R__k) {" << std::endl;
       if (stltype == kSTLmap || stltype == kSTLmultimap) {
          const clang::TemplateArgument &arg1( tmplt_specialization->getTemplateArgs().get(1) );
          clang::QualType tmplti = arg1.getAsType();
-         ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, ti, "((*R__k).first )",rwmode,interp, tcl1);
-         ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, tmplti, "((*R__k).second)",rwmode,interp, tcl2);
+         ROOT::TMetaUtils::ElementStreamer(dictStream, m, ti, "((*R__k).first )",rwmode,interp, tcl1);
+         ROOT::TMetaUtils::ElementStreamer(dictStream, m, tmplti, "((*R__k).second)",rwmode,interp, tcl2);
       } else {
-         ROOT::TMetaUtils::ElementStreamer(*dictSrcOut, m, ti, "(*R__k)"         ,rwmode,interp,tcl1);
+         ROOT::TMetaUtils::ElementStreamer(dictStream, m, ti, "(*R__k)"         ,rwmode,interp,tcl1);
       }
 
-      (*dictSrcOut) << "            }" << std::endl
+      dictStream << "            }" << std::endl
                     << "         }" << std::endl
                     << "      }" << std::endl;
-      if (isArr) (*dictSrcOut) << "    }" << std::endl;
+      if (isArr) dictStream << "    }" << std::endl;
    }
    return 1;
 }
 
 //______________________________________________________________________________
-int STLStringStreamer(const clang::FieldDecl &m, int rwmode)
+int STLStringStreamer(const clang::FieldDecl &m, int rwmode, std::ostream& dictStream)
 {
    // Create Streamer code for a standard string object. Returns 1 if data
    // member was a standard string and if Streamer code has been created,
@@ -1230,48 +1183,48 @@ int STLStringStreamer(const clang::FieldDecl &m, int rwmode)
          // create read mode
          if (m.getType()->isConstantArrayType()) {
             if (m.getType().getTypePtr()->getArrayElementTypeNoTypeQual()->isPointerType()) {
-               (*dictSrcOut) << "// Array of pointer to std::string are not supported (" << fieldname << "\n";
+               dictStream << "// Array of pointer to std::string are not supported (" << fieldname << "\n";
             } else {
                std::stringstream fullIdx;
                const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
                int dim = 0;
                while (arrayType) {
-                  (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
+                  dictStream << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
                                 << arrayType->getSize().getLimitedValue() << "; ++R__i" << dim << " )" << std::endl;
                   fullIdx << "[R__i" << dim << "]";
                   arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
                   ++dim;
                }
-               (*dictSrcOut) << "         { TString R__str; R__str.Streamer(R__b); "
+               dictStream << "         { TString R__str; R__str.Streamer(R__b); "
                              << fieldname << fullIdx.str() << " = R__str.Data();}" << std::endl;
             }
          } else {
-            (*dictSrcOut) << "      { TString R__str; R__str.Streamer(R__b); ";
+            dictStream << "      { TString R__str; R__str.Streamer(R__b); ";
             if (m.getType()->isPointerType())
-               (*dictSrcOut) << "if (*" << fieldname << ") delete *" << fieldname << "; (*"
+               dictStream << "if (*" << fieldname << ") delete *" << fieldname << "; (*"
                              << fieldname << " = new string(R__str.Data())); }" << std::endl;
             else
-               (*dictSrcOut) << fieldname << " = R__str.Data(); }" << std::endl;
+               dictStream << fieldname << " = R__str.Data(); }" << std::endl;
          }
       } else {
          // create write mode
          if (m.getType()->isPointerType())
-            (*dictSrcOut) << "      { TString R__str; if (*" << fieldname << ") R__str = (*"
+            dictStream << "      { TString R__str; if (*" << fieldname << ") R__str = (*"
                           << fieldname << ")->c_str(); R__str.Streamer(R__b);}" << std::endl;
          else if (m.getType()->isConstantArrayType()) {
             std::stringstream fullIdx;
             const clang::ConstantArrayType *arrayType = llvm::dyn_cast<clang::ConstantArrayType>(m.getType().getTypePtr());
             int dim = 0;
             while (arrayType) {
-               (*dictSrcOut) << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
+               dictStream << "      for (int R__i" << dim << "=0; R__i" << dim << "<"
                              << arrayType->getSize().getLimitedValue() << "; ++R__i" << dim << " )" << std::endl;
                fullIdx << "[R__i" << dim << "]";
                arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
                ++dim;
             }
-            (*dictSrcOut) << "         { TString R__str(" << fieldname << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
+            dictStream << "         { TString R__str(" << fieldname << fullIdx.str() << ".c_str()); R__str.Streamer(R__b);}" << std::endl;
          } else
-            (*dictSrcOut) << "      { TString R__str = " << fieldname << ".c_str(); R__str.Streamer(R__b);}" << std::endl;
+            dictStream << "      { TString R__str = " << fieldname << ".c_str(); R__str.Streamer(R__b);}" << std::endl;
       }
       return 1;
    }
@@ -1290,7 +1243,7 @@ bool isPointerToPointer(const clang::FieldDecl &m)
 }
 
 //______________________________________________________________________________
-void WriteArrayDimensions(const clang::QualType &type)
+void WriteArrayDimensions(const clang::QualType &type, std::ostream& dictStream)
 {
    // Write "[0]" for all but the 1st dimension.
 
@@ -1298,14 +1251,14 @@ void WriteArrayDimensions(const clang::QualType &type)
    if (arrayType) {
       arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
       while(arrayType) {
-         (*dictSrcOut) << "[0]";
+         dictStream << "[0]";
          arrayType = llvm::dyn_cast<clang::ConstantArrayType>(arrayType->getArrayElementTypeNoTypeQual());
       }
    }
 }
 
 //______________________________________________________________________________
-void WriteClassFunctions(const clang::CXXRecordDecl *cl)
+void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStream, bool autoLoad=false)
 {
    // Write the code to set the class name and the initialization object.
 
@@ -1317,61 +1270,75 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl)
    int enclSpaceNesting = 0;
 
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,cl)) {
-      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
+      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
-   (*dictSrcOut) << "//_______________________________________"
-                 << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "TClass *" << clsname.c_str() << "::fgIsA = 0;  // static to hold class pointer" << std::endl
+   if (autoLoad)      
+      dictStream << "#include \"TInterpreter.h\"\n";
+   
+   dictStream << "//_______________________________________"
+              << "_______________________________________" << std::endl;
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "TClass *" << clsname.c_str() << "::fgIsA = 0;  // static to hold class pointer" << std::endl
                  << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
-                 << "   return \"" << fullname.c_str() << "\";"  << std::endl <<"}" << std::endl << std::endl;
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
+                 << "   return \"" << fullname << "\";"  << std::endl <<"}" << std::endl << std::endl;
 
-   (*dictSrcOut) << "//_______________________________________"
+   dictStream << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) <<"template <> ";
-   (*dictSrcOut) << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
-                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
+   if (add_template_keyword) dictStream <<"template <> ";
+   dictStream << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
+                 << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl
-                 << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname.c_str()
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl;
+
+   // Trigger autoloading if dictionary is split
+   if (autoLoad)
+      dictStream << "   gInterpreter->EnableAutoLoading();\n"
+                 << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
+   dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetClass();" << std::endl
                  << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
-   (*dictSrcOut) << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-   (*dictSrcOut) << fullname.c_str() << "*)0x0)->GetClass();" << std::endl
-                 << "   return fgIsA;" << std::endl
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
+   if (autoLoad){
+      dictStream << "   A::Dictionary();\n";
+   } 
+   else{
+      dictStream << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << fullname << "*)0x0)->GetClass();" << std::endl;
+      }
+   dictStream    << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
-      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+      dictStream << "} // namespace " << nsname << std::endl;
       --enclSpaceNesting;
    }
 }
 
 //______________________________________________________________________________
 void WriteNamespaceInit(const clang::NamespaceDecl *cl,
-                        cling::Interpreter& interp)
+                        cling::Interpreter& interp,
+                        std::ostream& dictStream)
 {
    // Write the code to initialize the namespace name and the initialization object.
 
@@ -1399,22 +1366,22 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
          right = right.substr(pos+2);
          pos = right.find(":");
          ++nesting;
-         (*dictSrcOut) << "namespace " << left << " {" << std::endl;
+         dictStream << "namespace " << left << " {" << std::endl;
       }
 
       ++nesting;
-      (*dictSrcOut) << "namespace " << right << " {" << std::endl;
+      dictStream << "namespace " << right << " {" << std::endl;
    }
 
-   (*dictSrcOut) << "   namespace ROOT {" << std::endl;
+   dictStream << "   namespace ROOT {" << std::endl;
 
 #if !defined(R__AIX)
-   (*dictSrcOut) << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
+   dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
 #endif
 
    if (!Namespace__HasMethod(cl,"Dictionary"))
-      (*dictSrcOut) << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
-   (*dictSrcOut) << std::endl
+      dictStream << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
+   dictStream << std::endl
 
    << "      // Function generating the singleton type initializer" << std::endl
 
@@ -1431,26 +1398,26 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    << "            instance(\"" << classname.c_str() << "\", ";
 
    if (Namespace__HasMethod(cl,"Class_Version")) {
-      (*dictSrcOut) << "::" << classname.c_str() << "::Class_Version(), ";
+      dictStream << "::" << classname.c_str() << "::Class_Version(), ";
    } else {
-      (*dictSrcOut) << "0 /*version*/, ";
+      dictStream << "0 /*version*/, ";
    }
 
    std::string filename = ROOT::TMetaUtils::GetFileName(cl, interp);
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
-   (*dictSrcOut) << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
+   dictStream << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << std::endl
                  << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
                  << "                     ";
 
    if (Namespace__HasMethod(cl,"Dictionary")) {
-      (*dictSrcOut) << "&::" << classname.c_str() << "::Dictionary, ";
+      dictStream << "&::" << classname.c_str() << "::Dictionary, ";
    } else {
-      (*dictSrcOut) << "&" << mappedname.c_str() << "_Dictionary, ";
+      dictStream << "&" << mappedname.c_str() << "_Dictionary, ";
    }
 
-   (*dictSrcOut) << 0 << ");" << std::endl
+   dictStream << 0 << ");" << std::endl
 
    << "         return &instance;" << std::endl
    << "      }" << std::endl
@@ -1462,17 +1429,17 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
 
    if (!Namespace__HasMethod(cl,"Dictionary")) {
-      (*dictSrcOut) <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
+      dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
       << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
       << "         GenerateInitInstance()->GetClass();" << std::endl
       << "      }" << std::endl << std::endl;
    }
 
-   (*dictSrcOut) << "   }" << std::endl;
+   dictStream << "   }" << std::endl;
    while(nesting--) {
-      (*dictSrcOut) << "}" << std::endl;
+      dictStream << "}" << std::endl;
    }
-   (*dictSrcOut) <<  std::endl;
+   dictStream <<  std::endl;
 }
 
 //______________________________________________________________________________
@@ -1520,7 +1487,8 @@ const char *GrabIndex(const clang::FieldDecl &member, int printError)
 //______________________________________________________________________________
 void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                    const cling::Interpreter &interp,
-                   const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+                   const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                   std::ostream& dictStream)
 {
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (clxx == 0) return;
@@ -1533,13 +1501,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    int enclSpaceNesting = 0;
 
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
-      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
+      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
-   (*dictSrcOut) << "//_______________________________________"
+   dictStream << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)"  << std::endl << "{" << std::endl
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "void " << clsname << "::Streamer(TBuffer &R__b)"  << std::endl << "{" << std::endl
                  << "   // Stream an object of class " << fullname << "." << std::endl << std::endl;
 
    // In case of VersionID<=0 write dummy streamer only calling
@@ -1559,23 +1527,23 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 
             if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
-               (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
+               dictStream << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
                              << "   typedef " << base_fullname << " baseClass" << basestreamer << ";" << std::endl
                              << "   baseClass" << basestreamer << "::Streamer(R__b);" << std::endl;
             }
             else {
-               (*dictSrcOut) << "   " << base_fullname << "::Streamer(R__b);" << std::endl;
+               dictStream << "   " << base_fullname << "::Streamer(R__b);" << std::endl;
             }
             basestreamer++;
          }
       }
       if (!basestreamer) {
-         (*dictSrcOut) << "   ::Error(\"" << fullname << "::Streamer\", \"version id <=0 in ClassDef,"
+         dictStream << "   ::Error(\"" << fullname << "::Streamer\", \"version id <=0 in ClassDef,"
             " dummy Streamer() called\"); if (R__b.IsReading()) { }" << std::endl;
       }
-      (*dictSrcOut) << "}" << std::endl << std::endl;
+      dictStream << "}" << std::endl << std::endl;
       while (enclSpaceNesting) {
-         (*dictSrcOut) << "} // namespace " << nsname.c_str() << std::endl;
+         dictStream << "} // namespace " << nsname.c_str() << std::endl;
          --enclSpaceNesting;
       }
       return;
@@ -1585,7 +1553,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    string classname = fullname;
    if (strstr(fullname.c_str(),"::")) {
       // there is a namespace involved, trigger MS VC bug workaround
-      (*dictSrcOut) << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
+      dictStream << "   //This works around a msvc bug and should be harmless on other platforms" << std::endl
                     << "   typedef ::" << fullname << " thisClass;" << std::endl;
       classname = "thisClass";
    }
@@ -1594,13 +1562,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
       int decli = 0;
 
       if (i == 0) {
-         (*dictSrcOut) << "   UInt_t R__s, R__c;" << std::endl;
-         (*dictSrcOut) << "   if (R__b.IsReading()) {" << std::endl;
-         (*dictSrcOut) << "      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }" << std::endl;
+         dictStream << "   UInt_t R__s, R__c;" << std::endl;
+         dictStream << "   if (R__b.IsReading()) {" << std::endl;
+         dictStream << "      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }" << std::endl;
       } else {
-         (*dictSrcOut) << "      R__b.CheckByteCount(R__s, R__c, " << classname.c_str() << "::IsA());" << std::endl;
-         (*dictSrcOut) << "   } else {" << std::endl;
-         (*dictSrcOut) << "      R__c = R__b.WriteVersion(" << classname.c_str() << "::IsA(), kTRUE);" << std::endl;
+         dictStream << "      R__b.CheckByteCount(R__s, R__c, " << classname.c_str() << "::IsA());" << std::endl;
+         dictStream << "   } else {" << std::endl;
+         dictStream << "      R__c = R__b.WriteVersion(" << classname.c_str() << "::IsA(), kTRUE);" << std::endl;
       }
 
       // Stream base class(es) when they have the Streamer() method
@@ -1615,13 +1583,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 
             if (strstr(base_fullname.c_str(),"::")) {
                // there is a namespace involved, trigger MS VC bug workaround
-               (*dictSrcOut) << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
+               dictStream << "      //This works around a msvc bug and should be harmless on other platforms" << std::endl
                              << "      typedef " << base_fullname << " baseClass" << base << ";" << std::endl
                              << "      baseClass" << base << "::Streamer(R__b);" << std::endl;
                ++base;
             }
             else {
-               (*dictSrcOut) << "      " << base_fullname << "::Streamer(R__b);" << std::endl;
+               dictStream << "      " << base_fullname << "::Streamer(R__b);" << std::endl;
             }
          }
       }
@@ -1662,49 +1630,49 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
-                     (*dictSrcOut) << "      int R__i;" << std::endl;
+                     dictStream << "      int R__i;" << std::endl;
                      decli = 1;
                   }
-                  (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
+                  dictStream << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0) {
                      ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: array of pointers to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
-                     (*dictSrcOut) << "         ;//R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
+                     dictStream << "         ;//R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                   } else {
-                     (*dictSrcOut) << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
+                     dictStream << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                   }
                } else if (type.getTypePtr()->isPointerType()) {
                   const char *indexvar = GrabIndex(**field_iter, i==0);
                   if (indexvar==0) {
                      if (i == 0) {
                         ROOT::TMetaUtils::Error(0,"*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
+                        dictStream << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
+                        dictStream << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                      }
                   } else {
                      if (i == 0) {
-                        (*dictSrcOut) << "      delete [] " << field_iter->getName().str() << ";" << std::endl
+                        dictStream << "      delete [] " << field_iter->getName().str() << ";" << std::endl
                                       << "      " << GetNonConstMemberName(**field_iter) << " = new "
                                       << ROOT::TMetaUtils::ShortTypeName(**field_iter) << "[" << indexvar << "];" << std::endl;
                         if (isFloat16) {
-                           (*dictSrcOut) << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(**field_iter)
+                           dictStream << "      R__b.ReadFastArrayFloat16(" <<  GetNonConstMemberName(**field_iter)
                                          << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
-                           (*dictSrcOut) << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(**field_iter)
+                           dictStream << "      R__b.ReadFastArrayDouble32(" <<  GetNonConstMemberName(**field_iter)
                                          << "," << indexvar << ");" << std::endl;
                         } else {
-                           (*dictSrcOut) << "      R__b.ReadFastArray(" << GetNonConstMemberName(**field_iter)
+                           dictStream << "      R__b.ReadFastArray(" << GetNonConstMemberName(**field_iter)
                                          << "," << indexvar << ");" << std::endl;
                         }
                      } else {
                         if (isFloat16) {
-                           (*dictSrcOut) << "      R__b.WriteFastArrayFloat16("
+                           dictStream << "      R__b.WriteFastArrayFloat16("
                                          << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         } else if (isDouble32) {
-                           (*dictSrcOut) << "      R__b.WriteFastArrayDouble32("
+                           dictStream << "      R__b.WriteFastArrayDouble32("
                                          << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         } else {
-                           (*dictSrcOut) << "      R__b.WriteFastArray("
+                           dictStream << "      R__b.WriteFastArray("
                                          << field_iter->getName().str() << "," << indexvar << ");" << std::endl;
                         }
                      }
@@ -1713,29 +1681,29 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   if (i == 0) {
                      if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) { // if (m.ArrayDim() > 1) {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
+                           dictStream << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
                         else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.ReadStaticArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.ReadStaticArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
                      } else {
                         if ( underling_type->isEnumeralType() ) {
-                           (*dictSrcOut) << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
+                           dictStream << "      R__b.ReadStaticArray((Int_t*)" << field_iter->getName().str() << ");" << std::endl;
                         } else {
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayFloat16(" << field_iter->getName().str() << ");" << std::endl;
+                              dictStream << "      R__b.ReadStaticArrayFloat16(" << field_iter->getName().str() << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().str() << ");" << std::endl;
+                              dictStream << "      R__b.ReadStaticArrayDouble32(" << field_iter->getName().str() << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.ReadStaticArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ");" << std::endl;
                            }
                         }
@@ -1746,67 +1714,67 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 
                      if (type.getTypePtr()->getArrayElementTypeNoTypeQual()->isArrayType()) {// if (m.ArrayDim() > 1) {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", "
+                           dictStream << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", "
                                          << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.WriteArrayFloat16((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.WriteArrayDouble32((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
+                              dictStream << "      R__b.WriteArray((" << ROOT::TMetaUtils::TrueName(**field_iter)
                                             << "*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            }
                      } else {
                         if ( underling_type->isEnumeralType() )
-                           (*dictSrcOut) << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
+                           dictStream << "      R__b.WriteArray((Int_t*)" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                         else
                            if (isFloat16) {
-                              (*dictSrcOut) << "      R__b.WriteArrayFloat16(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
+                              dictStream << "      R__b.WriteArrayFloat16(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else if (isDouble32) {
-                              (*dictSrcOut) << "      R__b.WriteArrayDouble32(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
+                              dictStream << "      R__b.WriteArrayDouble32(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            } else {
-                              (*dictSrcOut) << "      R__b.WriteArray(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
+                              dictStream << "      R__b.WriteArray(" << field_iter->getName().str() << ", " << s << ");" << std::endl;
                            }
                      }
                   }
                } else if ( underling_type->isEnumeralType() ) {
                   if (i == 0) {
-                     (*dictSrcOut) << "      void *ptr_" << field_iter->getName().str() << " = (void*)&" << field_iter->getName().str() << ";\n";
-                     (*dictSrcOut) << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << field_iter->getName().str() << ");" << std::endl;
+                     dictStream << "      void *ptr_" << field_iter->getName().str() << " = (void*)&" << field_iter->getName().str() << ";\n";
+                     dictStream << "      R__b >> *reinterpret_cast<Int_t*>(ptr_" << field_iter->getName().str() << ");" << std::endl;
                   } else
-                     (*dictSrcOut) << "      R__b << (Int_t)" << field_iter->getName().str() << ";" << std::endl;
+                     dictStream << "      R__b << (Int_t)" << field_iter->getName().str() << ";" << std::endl;
                } else {
                   if (isFloat16) {
                      if (i == 0)
-                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(**field_iter)
+                        dictStream << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(**field_iter)
                                       << "=Float16_t(R_Dummy);}" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(**field_iter) << ");" << std::endl;
+                        dictStream << "      R__b << float(" << GetNonConstMemberName(**field_iter) << ");" << std::endl;
                   } else if (isDouble32) {
                      if (i == 0)
-                        (*dictSrcOut) << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(**field_iter)
+                        dictStream << "      {float R_Dummy; R__b >> R_Dummy; " << GetNonConstMemberName(**field_iter)
                                       << "=Double32_t(R_Dummy);}" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << float(" << GetNonConstMemberName(**field_iter) << ");" << std::endl;
+                        dictStream << "      R__b << float(" << GetNonConstMemberName(**field_iter) << ");" << std::endl;
                   } else {
                      if (i == 0)
-                        (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
+                        dictStream << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                      else
-                        (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
+                        dictStream << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                   }
                }
             } else {
                // we have an object...
 
                // check if object is a standard string
-               if (STLStringStreamer(**field_iter, i))
+               if (STLStringStreamer(**field_iter, i, dictStream))
                   continue;
 
                // check if object is an STL container
-               if (STLContainerStreamer(**field_iter, i, interp, normCtxt))
+               if (STLContainerStreamer(**field_iter, i, interp, normCtxt, dictStream))
                   continue;
 
                // handle any other type of objects
@@ -1817,20 +1785,20 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
-                     (*dictSrcOut) << "      int R__i;" << std::endl;
+                     dictStream << "      int R__i;" << std::endl;
                      decli = 1;
                   }
-                  (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
+                  dictStream << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   if (i == 0)
-                     (*dictSrcOut) << "         R__b >> " << GetNonConstMemberName(**field_iter);
+                     dictStream << "         R__b >> " << GetNonConstMemberName(**field_iter);
                   else {
                      if (ROOT::TMetaUtils::IsBase(**field_iter,"TObject", interp) && ROOT::TMetaUtils::IsBase(**field_iter,"TArray", interp))
-                        (*dictSrcOut) << "         R__b << (TObject*)" << field_iter->getName().str();
+                        dictStream << "         R__b << (TObject*)" << field_iter->getName().str();
                      else
-                        (*dictSrcOut) << "         R__b << " << GetNonConstMemberName(**field_iter);
+                        dictStream << "         R__b << " << GetNonConstMemberName(**field_iter);
                   }
-                  WriteArrayDimensions(field_iter->getType());
-                  (*dictSrcOut) << "[R__i];" << std::endl;
+                  WriteArrayDimensions(field_iter->getType(), dictStream);
+                  dictStream << "[R__i];" << std::endl;
                } else if (type.getTypePtr()->isPointerType()) {
                   // This is always good. However, in case of a pointer
                   // to an object that is guarenteed to be there and not
@@ -1840,13 +1808,13 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   if (isPointerToPointer(**field_iter)) {
                      if (i == 0) {
                         ROOT::TMetaUtils::Error(0, "*** Datamember %s::%s: pointer to pointer (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
-                        (*dictSrcOut) << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
+                        dictStream << "      //R__b.ReadArray(" << field_iter->getName().str() << ");" << std::endl;
                      } else {
-                        (*dictSrcOut) << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
+                        dictStream << "      //R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);";
                      }
                   } else {
                      if (ROOT::TMetaUtils::GetQualifiedName(*ROOT::TMetaUtils::GetUnderlyingType(field_iter->getType()),**field_iter) == "TClonesArray") {
-                        (*dictSrcOut) << "      " << field_iter->getName().str() << "->Streamer(R__b);" << std::endl;
+                        dictStream << "      " << field_iter->getName().str() << "->Streamer(R__b);" << std::endl;
                      } else {
                         if (i == 0) {
                            // The following:
@@ -1857,12 +1825,12 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                            // here to and should not (technically) rely on TStreamerInfo for it, so for now we leave it as is.
                            // Note that the leak should happen from here only if the object is stored in an unsplit object
                            // and either the user request an old branch or the streamer has been customized.
-                           (*dictSrcOut) << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
+                           dictStream << "      R__b >> " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                         } else {
                            if (ROOT::TMetaUtils::IsBase(**field_iter,"TObject",interp) && ROOT::TMetaUtils::IsBase(**field_iter,"TArray",interp))
-                              (*dictSrcOut) << "      R__b << (TObject*)" << field_iter->getName().str() << ";" << std::endl;
+                              dictStream << "      R__b << (TObject*)" << field_iter->getName().str() << ";" << std::endl;
                            else
-                              (*dictSrcOut) << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
+                              dictStream << "      R__b << " << GetNonConstMemberName(**field_iter) << ";" << std::endl;
                         }
                      }
                   }
@@ -1871,29 +1839,29 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                   int s = GetFullArrayLength(arrayType);
 
                   if (!decli) {
-                     (*dictSrcOut) << "      int R__i;" << std::endl;
+                     dictStream << "      int R__i;" << std::endl;
                      decli = 1;
                   }
-                  (*dictSrcOut) << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
+                  dictStream << "      for (R__i = 0; R__i < " << s << "; R__i++)" << std::endl;
                   std::string mTypeNameStr;
                   ROOT::TMetaUtils::GetQualifiedName(mTypeNameStr,field_iter->getType(),**field_iter);
                   const char *mTypeName = mTypeNameStr.c_str();
                   const char *constwd = "const ";
                   if (strncmp(constwd,mTypeName,strlen(constwd))==0) {
                      mTypeName += strlen(constwd);
-                     (*dictSrcOut) << "         const_cast< " << mTypeName << " &>(" << field_iter->getName().str();
-                     WriteArrayDimensions(field_iter->getType());
-                     (*dictSrcOut) << "[R__i]).Streamer(R__b);" << std::endl;
+                     dictStream << "         const_cast< " << mTypeName << " &>(" << field_iter->getName().str();
+                     WriteArrayDimensions(field_iter->getType(), dictStream);
+                     dictStream << "[R__i]).Streamer(R__b);" << std::endl;
                   } else {
-                     (*dictSrcOut) << "         " << GetNonConstMemberName(**field_iter);
-                     WriteArrayDimensions(field_iter->getType());
-                     (*dictSrcOut) << "[R__i].Streamer(R__b);" << std::endl;
+                     dictStream << "         " << GetNonConstMemberName(**field_iter);
+                     WriteArrayDimensions(field_iter->getType(), dictStream);
+                     dictStream << "[R__i].Streamer(R__b);" << std::endl;
                   }
                } else {
                   if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer"))
-                     (*dictSrcOut) << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
+                     dictStream << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
                   else {
-                     (*dictSrcOut) << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
+                     dictStream << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
                                    << field_iter->getName().str() << "));" << std::endl;               //R__t.Streamer(R__b);\n");
                      //VP                     if (i == 0)
                      //VP                        Error(0, "*** Datamember %s::%s: object has no Streamer() method (need manual intervention)\n",
@@ -1905,12 +1873,12 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
          }
       }
    }
-   (*dictSrcOut) << "      R__b.SetByteCount(R__c, kTRUE);" << std::endl;
-   (*dictSrcOut) << "   }" << std::endl
-                 << "}" << std::endl << std::endl;
+   dictStream << "      R__b.SetByteCount(R__c, kTRUE);" << std::endl
+              << "   }" << std::endl
+              << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
-      (*dictSrcOut) << "} // namespace " << nsname.c_str() << std::endl;
+      dictStream << "} // namespace " << nsname.c_str() << std::endl;
       --enclSpaceNesting;
    }
 }
@@ -1918,7 +1886,8 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 //______________________________________________________________________________
 void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                        const cling::Interpreter &interp,
-                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                       std::ostream& dictStream)
 {
 
    // Write Streamer() method suitable for automatic schema evolution.
@@ -1945,13 +1914,13 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    int enclSpaceNesting = 0;
 
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname,clsname,nsname,clxx)) {
-      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(*dictSrcOut, cl);
+      enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
-   (*dictSrcOut) << "//_______________________________________"
+   dictStream << "//_______________________________________"
                  << "_______________________________________" << std::endl;
-   if (add_template_keyword) (*dictSrcOut) << "template <> ";
-   (*dictSrcOut) << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
+   if (add_template_keyword) dictStream << "template <> ";
+   dictStream << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
                  << "{" << std::endl
                  << "   // Stream an object of class " << fullname << "." << std::endl << std::endl
                  << "   if (R__b.IsReading()) {" << std::endl
@@ -1962,7 +1931,7 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                  << "}" << std::endl << std::endl;
 
    while (enclSpaceNesting) {
-      (*dictSrcOut) << "} // namespace " << nsname << std::endl;
+      dictStream << "} // namespace " << nsname << std::endl;
       --enclSpaceNesting;
    }
 }
@@ -1971,42 +1940,12 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
 void CallWriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                        const cling::Interpreter &interp,
                        const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                       std::ostream& dictStream,
                        bool isAutoStreamer) {
    if (isAutoStreamer) {
-      WriteAutoStreamer(cl, interp, normCtxt);
+      WriteAutoStreamer(cl, interp, normCtxt, dictStream);
    } else {
-      WriteStreamer(cl, interp, normCtxt);
-   }
-}
-
-//______________________________________________________________________________
-void WriteBodyShowMembers(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
-                          bool outside)
-{
-   string csymbol;
-   ROOT::TMetaUtils::GetQualifiedName(csymbol,cl);
-
-   if ( !TMetaUtils::IsStdClass(*cl) ) {
-
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      csymbol.insert(0,"::");
-   }
-
-   std::string getClass;
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"IsA") && !outside) {
-      getClass = csymbol + "::IsA()";
-   } else {
-      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
-      getClass += csymbol + "*)0x0)->GetClass()";
-   }
-   if (outside) {
-      (*dictSrcOut) << "   gInterpreter->InspectMembers(R__insp, obj, "
-                    << getClass << ");" << std::endl;
-   } else {
-      (*dictSrcOut) << "   gInterpreter->InspectMembers(R__insp, this, "
-                    << getClass << ");" << std::endl;
+      WriteStreamer(cl, interp, normCtxt, dictStream);
    }
 }
 
@@ -2180,6 +2119,7 @@ static bool InjectModuleUtilHeader(const char* argv0,
 static int GenerateModule(TModuleGenerator& modGen,
                           clang::CompilerInstance* CI,
                           const std::string &currentDirectory,
+                          std::ostream& dictStream,
                           bool inlineInputHeader)
 {
    // Generate the clang module given the arguments.
@@ -2190,12 +2130,12 @@ static int GenerateModule(TModuleGenerator& modGen,
    // Returns != 0 on error.
 
    if (inlineInputHeader){
-      modGen.WriteRegistrationSource(*dictSrcOut,true);
+      modGen.WriteRegistrationSource(dictStream,true);
       return 0;
    }
 
 
-   modGen.WriteRegistrationSource(*dictSrcOut);
+   modGen.WriteRegistrationSource(dictStream);
 
    if (!modGen.IsPCH()) {
       CI->getPreprocessor().getHeaderSearchInfo().
@@ -2324,14 +2264,7 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 //______________________________________________________________________________
 void ExtractFileName(const std::string& path, std::string& filename)
 {
-   // Extract the filename from a fullpath finding the last \ or /
-   // according to the content in gPathSeparator
-//    const size_t pos = path.find_last_of(gPathSeparator);
-//    if(std::string::npos != pos){
-//       filename.assign(path.begin() + pos + 1, path.end());
-//    } else {
-//       filename.assign(path);
-//    }
+   // Extract the filename from a fullpath 
    filename = llvm::sys::path::filename (path);
 }
 
@@ -2758,6 +2691,7 @@ int GenerateFullDict(std::ostream& dictStream,
                      SelectionRules& selectionRules,
                      bool onepcm,
                      bool interpreteronly,
+                     bool isSplit,
                      bool isGenreflex)
 {
 
@@ -2796,7 +2730,7 @@ int GenerateFullDict(std::ostream& dictStream,
          RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
          RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
          for( ; ns_iter != ns_end; ++ns_iter) {
-            WriteNamespaceInit(*ns_iter, interp);
+            WriteNamespaceInit(*ns_iter, interp, dictStream);
          }
 
          for( ; iter != end; ++iter)
@@ -2849,9 +2783,9 @@ int GenerateFullDict(std::ostream& dictStream,
          }
          const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
          if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name")) {
-            if (!interpreteronly)
-               WriteClassFunctions(cxxdecl);
-            else {
+            if (!interpreteronly){
+               WriteClassFunctions(cxxdecl,dictStream,isSplit);
+            } else {
                ROOT::TMetaUtils::Error("GenerateFullDict",
                                        "Interactivity only dictionaries are not supported for classes with ClassDef\n");
                return 1;
@@ -2914,6 +2848,58 @@ int GenerateFullDict(std::ostream& dictStream,
       }
    
    return 0;
+}
+
+//______________________________________________________________________________
+void CreateDictHeader(std::ostream& dictStream, const std::string& main_dictname)
+{
+   dictStream  << "// Do NOT change. Changes will be lost next time file is generated\n\n"
+               << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
+
+               // Now that CINT is not longer there to write the header file,
+               // write one and include in there a few things for backward
+               // compatibility.
+               << "\n/*******************************************************************/\n"
+               << "#include <stddef.h>\n"
+               << "#include <stdio.h>\n"
+               << "#include <stdlib.h>\n"
+               << "#include <math.h>\n"
+               << "#include <string.h>\n"
+               << "#include <assert.h>\n"
+               << "#define G__DICTIONARY\n"
+               << "#include \"RConfig.h\"\n"
+               << "#include \"TClass.h\"\n"
+               << "#include \"TClassAttributeMap.h\"\n"
+               << "#include \"TInterpreter.h\"\n"
+               << "#include \"TROOT.h\"\n"
+               << "#include \"TBuffer.h\"\n"
+               << "#include \"TMemberInspector.h\"\n"
+               << "#include \"TError.h\"\n\n"
+               << "#ifndef G__ROOT\n"
+               << "#define G__ROOT\n"
+               << "#endif\n\n"
+               << "#include \"RtypesImp.h\"\n"
+               << "#include \"TIsAProxy.h\"\n"
+               << "#include \"TFileMergeInfo.h\"\n"
+               << "#include <algorithm>\n"
+               << "#include \"TCollectionProxyInfo.h\"\n"
+               << "/*******************************************************************/\n\n"
+               << "#include \"TDataMember.h\"\n\n"; // To set their transiency
+   #ifndef R__SOLARIS
+   dictStream  << "// Since CINT ignores the std namespace, we need to do so in this file.\n"
+               << "namespace std {} using namespace std;\n\n";
+   #endif   
+}
+
+//______________________________________________________________________________
+void GenerateNecessaryIncludes(std::ostream& dictStream,
+                               const std::string& includeForSource,
+                               const std::string& extraIncludes)
+{
+   dictStream << "// Header files passed as explicit arguments\n"
+              << includeForSource << std::endl
+              << "// Header files passed via #pragma extra_include\n"
+              << extraIncludes << std::endl;
 }
 
 //______________________________________________________________________________
@@ -3036,6 +3022,18 @@ private:
    std::vector<std::string> m_names;
    std::vector<std::string> m_tempNames;
 };
+
+//______________________________________________________________________________
+std::ostream* CreateStreamPtrForSplitDict(const std::string& dictpathname,
+                                          tempFileNamesCatalog& tmpCatalog)
+{
+   // Transform name of dictionary
+   std::string splitDictName (tmpCatalog.getFileName(dictpathname));
+   const size_t dotPos = splitDictName.find_last_of(".");
+   splitDictName.insert(dotPos,"_classdef");
+   tmpCatalog.addFileName(splitDictName);
+   return new std::ofstream(splitDictName);
+}
 
 //______________________________________________________________________________
 int RootCling(int argc,
@@ -3243,6 +3241,7 @@ int RootCling(int argc,
 
    bool inlineInputHeader = false;
    bool interpreteronly = false;
+   bool doSplit = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = false;
@@ -3286,6 +3285,13 @@ int RootCling(int argc,
             continue;
          }         
 
+         if (strcmp("-split", argv[ic]) == 0) {
+            // name for the rootmap file
+            doSplit = true;
+            ic+=1;
+            continue;
+         }         
+         
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             sharedLibraryPathName = argv[ic+1];
@@ -3501,18 +3507,24 @@ int RootCling(int argc,
    std::ofstream fileout;
    std::ofstream headerout;
    string main_dictname(dictpathname);
+   std::ostream* dictStreamPtr = NULL;
    if (!dictpathname.empty()) {
       tmpCatalog.addFileName(dictpathname);
       fileout.open(dictpathname.c_str());
-      dictSrcOut = &fileout;
-      if (!(*dictSrcOut)) {
+      dictStreamPtr = &fileout;
+      if (!(*dictStreamPtr)) {
          ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
                                  dictpathname.c_str());
          return 1;
       }
    } else {
-      dictSrcOut = &std::cout;
+      dictStreamPtr = &std::cout;
    }
+
+   // Now generate a second stream for the split dictionary if it is necessary
+   std::ostream* splitDictStreamPtr = doSplit ? CreateStreamPtrForSplitDict(dictpathname, tmpCatalog) : dictStreamPtr;
+   std::ostream& dictStream = *dictStreamPtr;
+   std::ostream& splitDictStream = *splitDictStreamPtr;
 
    size_t dh = main_dictname.rfind('.');
    if (dh != std::string::npos) {
@@ -3522,59 +3534,9 @@ int RootCling(int argc,
    std::string main_dictname_copy(main_dictname);
    TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
 
-
-   time_t t = time(0);
-   char* theTime =   ctime(&t);
-   (*dictSrcOut) << "//"  << std::endl
-                 << "// File generated by " << argv[0] << " at "
-                 << (theTime ? theTime : "TIME ERROR") << std::endl
-                 << "// With commandline ";
-   for (int i=0;i<argc;++i){
-      (*dictSrcOut) << argv[i] << " ";
-   }
-   (*dictSrcOut) << std::endl
-                 << "// Do NOT change. Changes will be lost next time file is generated" << std::endl
-                 << "//" << std::endl << std::endl
-                 << "#define R__DICTIONARY_FILENAME " << main_dictname << std::endl
-
-                 // Now that CINT is not longer there to write the header file,
-                 // write one and include in there a few things for backward
-                 // compatibility.
-                 << "\n/*******************************************************************/\n"
-                 << "#include <stddef.h>\n"
-                 << "#include <stdio.h>\n"
-                 << "#include <stdlib.h>\n"
-                 << "#include <math.h>\n"
-                 << "#include <string.h>\n"
-                 << "#include <assert.h>\n"
-                 << "#define G__DICTIONARY\n"
-                 << "#include \"RConfig.h\"\n"
-                 << "#include \"TClass.h\"\n"
-                 << "#include \"TClassAttributeMap.h\"\n"
-                 << "#include \"TInterpreter.h\"\n"
-                 << "#include \"TROOT.h\"\n"
-                 << "#include \"TBuffer.h\"\n"
-                 << "#include \"TMemberInspector.h\"\n"
-                 << "#include \"TError.h\"\n\n"
-                 << "#ifndef G__ROOT\n"
-                 << "#define G__ROOT\n"
-                 << "#endif\n\n"
-                 << "#include \"RtypesImp.h\"\n"
-                 << "#include \"TIsAProxy.h\"\n"
-                 << "#include \"TFileMergeInfo.h\""
-                 << std::endl;
-   //if (needsCollectionProxy) {   // too bad, include always
-      (*dictSrcOut) << "#include <algorithm>\n"
-                    << "#include \"TCollectionProxyInfo.h\""
-                    << std::endl;
-   //}
-   (*dictSrcOut) << "/*******************************************************************/\n\n"
-                 << "#include \"TDataMember.h\"\n" // To set their transiency
-                 << std::endl;
-#ifndef R__SOLARIS
-   (*dictSrcOut) << "// Since CINT ignores the std namespace, we need to do so in this file." << std::endl
-                 << "namespace std {} using namespace std;" << std::endl << std::endl;
-#endif
+   CreateDictHeader(dictStream,main_dictname);
+   if (doSplit)
+      CreateDictHeader(splitDictStream,main_dictname);
 
    //---------------------------------------------------------------------------
    // Parse the linkdef or selection.xml file.
@@ -3679,28 +3641,18 @@ int RootCling(int argc,
    // Write schema evolution related headers and declarations
    //---------------------------------------------------------------------------
    if( !gReadRules.empty() || !gReadRawRules.empty() ) {
-      (*dictSrcOut) << "#include \"TBuffer.h\"\n"
-                    << "#include \"TVirtualObject.h\"\n"
-                    << "#include <vector>\n"
-                    << "#include \"TSchemaHelper.h\"\n\n";
+      dictStream << "#include \"TBuffer.h\"\n"
+                 << "#include \"TVirtualObject.h\"\n"
+                 << "#include <vector>\n"
+                 << "#include \"TSchemaHelper.h\"\n\n";
 
-      std::list<std::string>           includes;
+      std::list<std::string> includes;
       std::list<std::string>::iterator it;
       GetRuleIncludes( includes );
       for( it = includes.begin(); it != includes.end(); ++it ){
-         (*dictSrcOut) << "#include <" << *it << ">" << std::endl;
+         dictStream << "#include <" << *it << ">" << std::endl;
       }
-      (*dictSrcOut) << std::endl;
-   }
-
-   //---------------------------------------------------------------------------
-   // Write all the necessary #include
-   //---------------------------------------------------------------------------
-   if (!onepcm) {
-      (*dictSrcOut) << "// Header files passed as explicit arguments\n"
-                    << includeForSource << std::endl
-                    << "// Header files passed via #pragma extra_include\n"
-                    << extraIncludes << std::endl;
+      dictStream << std::endl;
    }
 
    selectionRules.SearchNames(interp);
@@ -3749,23 +3701,36 @@ int RootCling(int argc,
       // Be a little bit makefile friendly and remove the dictionary in case of error.
       // We could add an option -k to keep the file even in case of error.
       exit(1);
-   }
+   }   
 
-   int retCode = GenerateFullDict(*dictSrcOut,
+   //---------------------------------------------------------------------------
+   // Write all the necessary #include
+   //---------------------------------------------------------------------------
+   if (!onepcm) {
+      GenerateNecessaryIncludes(dictStream,includeForSource,extraIncludes);
+      if (doSplit){
+         GenerateNecessaryIncludes(splitDictStream,includeForSource,extraIncludes);
+      }
+   }
+   
+   int retCode = GenerateFullDict(splitDictStream,
                                   interp,
                                   scan,
                                   selectionRules,
                                   onepcm,
                                   interpreteronly,
+                                  doSplit,
                                   isGenreflex);
    if (retCode!=0){
       return retCode;
    }
 
+   if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
+
    
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
-   GenerateModule(modGen, CI, currentDirectory,inlineInputHeader);
+   GenerateModule(modGen, CI, currentDirectory, dictStream, inlineInputHeader);
 
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";
@@ -4021,6 +3986,7 @@ int invokeRootCling(const std::string& verbosity,
                     const std::string& rootmapLibName,
                     const std::string& capaFileName,
                     bool interpreteronly,
+                    bool doSplit,
                     bool isDeep,
                     const std::vector<std::string>& headersNames,
                     const std::string& ofilename){
@@ -4091,6 +4057,10 @@ int invokeRootCling(const std::string& verbosity,
    // Interpreter only dictionaries
    if (interpreteronly)
       argvVector.push_back(string2charptr("-interpreteronly"));
+
+   // Split dictionaries
+      if (doSplit)
+         argvVector.push_back(string2charptr("-split"));
    
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
@@ -4148,6 +4118,7 @@ int invokeManyRootCling(const std::string& verbosity,
                         const std::string& rootmapLibName,
                         const std::string& capaFileName,
                         bool interpreteronly,
+                        bool doSplit,
                         bool isDeep,
                         const std::vector<std::string>& headersNames,
                         const std::string& outputDirName_const="")
@@ -4179,6 +4150,7 @@ int invokeManyRootCling(const std::string& verbosity,
                                        rootmapLibName,
                                        capaFileName,
                                        interpreteronly,
+                                       doSplit,
                                        isDeep,
                                        namesSingleton,
                                        outputDirName+ofilesNames[i]);
@@ -4284,6 +4256,7 @@ int GenReflex(int argc, char **argv)
                        HELP,
                        CAPABILITIESFILENAME,
                        INTERPRETERONLY,
+                       SPLIT,
                        NOMEMBERTYPEDEFS,
                        NOTEMPLATETYPEDEFS,
                        // Don't show up in the help
@@ -4390,14 +4363,20 @@ int GenReflex(int argc, char **argv)
         STRING ,
         "c" , "capabilities" ,
         option::FullArg::Required,
-        "-c, --capabilities\t Name of the output capabilities file"},
+        "-c, --capabilities\t Name of the output capabilities file\n"},
 
       {INTERPRETERONLY,
         NOTYPE,
         "" , "interpreteronly",
         option::Arg::None,
-        "--interpreteronly  \tGenerate minimal dictionary required for interactivity (no I/O)\n"},
-        
+        "--interpreteronly\tGenerate minimal dictionary required for interactivity (no I/O)\n"},
+
+      {SPLIT,
+        NOTYPE,
+        "" , "split",
+        option::Arg::None,
+        "--split\tSplit the dictionary in two, isolating the part with ClassDef related functions in a separate file\n"},
+       
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
@@ -4560,6 +4539,10 @@ int GenReflex(int argc, char **argv)
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly=true;
+
+   bool doSplit = false;
+   if (options[SPLIT])
+      doSplit=true;
    
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName,gLibraryExtension)){
@@ -4614,6 +4597,7 @@ int GenReflex(int argc, char **argv)
                                     rootmapLibName,
                                     capaFileName,
                                     interpreteronly,
+                                    doSplit,
                                     isDeep,
                                     headersNames,
                                     ofileName);
@@ -4631,6 +4615,7 @@ int GenReflex(int argc, char **argv)
                                         rootmapLibName,
                                         capaFileName,
                                         interpreteronly,
+                                        doSplit,
                                         isDeep,
                                         headersNames,
                                         ofileName);

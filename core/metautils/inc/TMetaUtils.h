@@ -76,6 +76,7 @@ enum DataMemberInfo__ValidArrayIndex_error_code { VALID, NOT_INT, NOT_DEF, IS_PR
 typedef void (*CallWriteStreamer_t)(const AnnotatedRecordDecl &cl,
                                     const cling::Interpreter &interp,
                                     const TNormalizedCtxt &normCtxt,
+                                    std::ostream& dictStream,
                                     bool isAutoStreamer);
 
 const int kInfo     =      0;
