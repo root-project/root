@@ -103,7 +103,13 @@ void THnBase::Init(const char* name, const char* title,
       TAxis* reqaxis = (TAxis*)axis->Clone();
       if (!keepTargetAxis && axis->TestBit(TAxis::kAxisRange)) {
          Int_t binFirst = axis->GetFirst();
+	 // The lowest egde of the underflow is meaningless.
+	 if (binFirst == 0)
+	   binFirst = 1;
          Int_t binLast = axis->GetLast();
+	 // The overflow edge is implicit.
+	 if (binLast > axis->GetNbins())
+	   binLast = axis->GetNbins();
          Int_t nBins = binLast - binFirst + 1;
          if (axis->GetXbins()->GetSize()) {
             // non-uniform bins:
