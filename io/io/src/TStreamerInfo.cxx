@@ -2387,7 +2387,11 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
             if (tdm->GetDataType()) {
                // Need to update the type for arrays.
                if (tdm->IsaPointer()) {
-                  other.SetDataType( tdm->GetDataType()->GetType() + TVirtualStreamerInfo::kOffsetP);
+                  if (tdm->GetDataType()->GetType() == TVirtualStreamerInfo::kChar && !tdm->GetArrayDim() && tdm->GetArrayIndex()[0]==0) {
+                     other.SetDataType( TVirtualStreamerInfo::kCharStar );
+                  } else {
+                     other.SetDataType( tdm->GetDataType()->GetType() + TVirtualStreamerInfo::kOffsetP);
+                  }
                } else {
                   if (tdm->GetArrayDim()) {
                      other.SetDataType( tdm->GetDataType()->GetType() + TVirtualStreamerInfo::kOffsetL);
