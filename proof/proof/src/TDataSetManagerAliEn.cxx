@@ -451,35 +451,77 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     findCommands = new TList();
     findCommands->SetOwner(kTRUE);
 
-    TString basePathSim;
+    TString basePathRun;
+
+    if (!gGrid) {
+      TGrid::Connect("alien:");
+      if (!gGrid) {
+        delete findCommands;
+        delete runList;
+        return NULL;
+      }
+    }
 
     if (sim) {
       // Montecarlo init.
       // Check whether this period is in /alice/sim/<period> or in
       // /alice/sim/<year>/<period> and act properly, since naming convention
       // is unclear!
-      if (!gGrid) {
-        TGrid::Connect("alien:");
-        if (!gGrid) {
-          delete findCommands;
-          delete runList;
-          return NULL;
-        }
-      }
 
       // Check once for all
-      basePathSim.Form("/alice/sim/%s", lhcPeriod.Data());  // no year
-      if (!gGrid->Cd(basePathSim.Data())) {
-        basePathSim.Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
+      basePathRun.Form("/alice/sim/%s", lhcPeriod.Data());  // no year
+      if (!gGrid->Cd(basePathRun.Data())) {
+        basePathRun.Form("/alice/sim/%d/%s", year, lhcPeriod.Data());
       }
     }
     else {
       // Real data init.
       // Parse the pass string: if it starts with a number, prepend "pass"
       if ((pass[0] >= '0') && (pass[0] <= '9')) pass.Prepend("pass");
+      basePathRun.Form("/alice/data/%d/%s", year, lhcPeriod.Data());
+    }
+
+    // Form a list of valid runs (to avoid unnecessary queries when run ranges
+    // are specified)
+    std::vector<Int_t> validRuns;
+    {
+      TGridResult *validRunDirs = gGrid->Ls( basePathRun.Data() );
+      if (!validRunDirs) return NULL;
+
+      TIter nrd(validRunDirs);
+      TMap *dir;
+      TObjString *os;
+      validRuns.resize( (size_t)(validRunDirs->GetEntries()) );
+
+      while (( dir = dynamic_cast<TMap *>(nrd()) ) != NULL) {
+        os = dynamic_cast<TObjString *>( dir->GetValue("name") );
+        if (!os) continue;
+        Int_t run = (os->String()).Atoi();
+        if (run > 0) validRuns.push_back(run);
+      }
     }
 
     for (UInt_t i=0; i<runList->size(); i++) {
+
+      // Check if current run is valid
+      Bool_t valid = kFALSE;
+      for (UInt_t j=0; j<validRuns.size(); j++) {
+        if (validRuns[j] == (*runList)[i]) {
+          valid = kTRUE;
+          break;
+        }
+      }
+      if (!valid) {
+        //if (gDebug >=1) {
+          Warning("TDataSetManagerAliEn::GetFindCommandsFromUri",
+            "Avoiding unnecessary find on run %d: not found", (*runList)[i]);
+        //}
+        continue;
+      }
+      else {
+        Info("TDataSetManagerAliEn::GetFindCommandsFromUri",
+          "Run found: %d", (*runList)[i]);
+      }
 
       // Here we need to assemble the find string
       TString basePath, fileName, temp;
@@ -487,7 +529,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
       if (sim) {
         // Montecarlo
         temp.Form("/%06d", runList->at(i));
-        basePath = basePathSim + temp;
+        basePath = basePathRun + temp;
 
         if (!esd) {
           temp.Form("/AOD%03d", aodNum);
@@ -496,8 +538,8 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
       }
       else {
         // Real data
-        basePath.Form("/alice/data/%d/%s/%09d/ESDs/%s", year,
-          lhcPeriod.Data(), runList->at(i), pass.Data());
+        temp.Form("/%09d/ESDs/%s", runList->at(i), pass.Data());
+        basePath = basePathRun + temp;
         if (esd) {
           basePath.Append("/*.*");
         }
