@@ -3375,7 +3375,7 @@ void TFile::ReadStreamerInfo()
          if ( (!isstl && mode ==0) || (isstl && mode ==1) ) {
                // Skip the STL container the first time around
                // Skip the regular classes the second time around;
-            info->BuildCheck();
+            info->BuildCheck(this);
             Int_t uid = info->GetNumber();
             Int_t asize = fClassIndex->GetSize();
             if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);

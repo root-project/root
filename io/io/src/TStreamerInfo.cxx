@@ -546,7 +546,7 @@ void TStreamerInfo::Build()
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::BuildCheck()
+void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
 {
    // Check if built and consistent with the class dictionary.
    // This method is called by TFile::ReadStreamerInfo.
@@ -847,7 +847,7 @@ void TStreamerInfo::BuildCheck()
          TString origin;
          if (!match && !fClass->TestBit(TClass::kWarned)) {
             if (oldIsNonVersioned) {
-               if (gDirectory && gDirectory->GetFile()) {
+               if (file) {
                   Warning("BuildCheck", "\n\
    The class %s transitioned from not having a specified class version\n\
    to having a specified class version (the current class version is %d).\n\
@@ -856,7 +856,7 @@ void TStreamerInfo::BuildCheck()
    the class layout version %d, in particular from the file:\n\
    %s.\n\
    To work around this issue, load fewer 'old' files in the same ROOT session.",
-                          GetName(),fClass->GetClassVersion(),fClassVersion,gDirectory->GetFile()->GetName());
+                          GetName(),fClass->GetClassVersion(),fClassVersion,file->GetName());
                } else {
                   Warning("BuildCheck", "\n\
    The class %s transitioned from not having a specified class version\n\
@@ -868,7 +868,7 @@ void TStreamerInfo::BuildCheck()
                           GetName(),fClass->GetClassVersion(),fClassVersion);
                }
             } else {
-               if (gDirectory && gDirectory->GetFile()) {
+               if (file) {
                   if (done) {
                      Warning("BuildCheck", "\n\
    The StreamerInfo for version %d of class %s read from the file %s\n\
@@ -877,7 +877,7 @@ void TStreamerInfo::BuildCheck()
    (and potentially other files) might not work correctly.\n\
    Most likely the version number of the class was not properly\n\
    updated [See ClassDef(%s,%d)].",
-                             fClassVersion, GetName(), gDirectory->GetFile()->GetName(), GetName(), gDirectory->GetFile()->GetName(), GetName(), fClassVersion);
+                             fClassVersion, GetName(), file->GetName(), GetName(), file->GetName(), GetName(), fClassVersion);
                   } else {
                      Warning("BuildCheck", "\n\
    The StreamerInfo from %s does not match existing one (%s:%d)\n\
@@ -885,7 +885,7 @@ void TStreamerInfo::BuildCheck()
    Reading the file %s will work properly, however writing object of\n\
    type %s will not work properly.  Most likely the version number\n\
    of the class was not properly updated [See ClassDef(%s,%d)].",
-                             gDirectory->GetFile()->GetName(), GetName(), fClassVersion,gDirectory->GetFile()->GetName(),GetName(), GetName(), fClassVersion);
+                             file->GetName(), GetName(), fClassVersion,file->GetName(),GetName(), GetName(), fClassVersion);
                   }
                } else {
                   if (done) {
@@ -904,7 +904,7 @@ void TStreamerInfo::BuildCheck()
    Reading should work properly, however writing object of\n\
    type %s will not work properly.  Most likely the version number\n\
    of the class was not properly updated [See ClassDef(%s,%d)].",
-                             gDirectory->GetFile()->GetName(), GetName(), fClassVersion, GetName(), GetName(), fClassVersion);
+                             file->GetName(), GetName(), fClassVersion, GetName(), GetName(), fClassVersion);
                   }
                }
             }
@@ -948,13 +948,13 @@ void TStreamerInfo::BuildCheck()
                }
             }
             if (warn) {
-               if (gDirectory && gDirectory->GetFile()) {
+               if (file) {
                   Warning("BuildCheck", "\n\
    The StreamerInfo of class %s read from file %s\n\
    has the same version (=%d) as the active class but a different checksum.\n\
    You should update the version to ClassDef(%s,%d).\n\
    Do not try to write objects with the current class definition,\n\
-   the files will not be readable.\n", GetName(), gDirectory->GetFile()->GetName(), fClassVersion, GetName(), fClassVersion + 1);
+   the files will not be readable.\n", GetName(), file->GetName(), fClassVersion, GetName(), fClassVersion + 1);
                } else {
                   Warning("BuildCheck", "\n\
    The StreamerInfo of class %s \n\

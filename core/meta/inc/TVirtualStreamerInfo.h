@@ -109,7 +109,7 @@ public:
    TVirtualStreamerInfo(TClass * /*cl*/);
    virtual            ~TVirtualStreamerInfo();
    virtual void        Build() = 0;
-   virtual void        BuildCheck() = 0;
+   virtual void        BuildCheck(TFile *file = 0) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
    virtual Bool_t      BuildFor( const TClass *cl ) = 0;
