@@ -525,7 +525,10 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = iter.GetCoord(dim[d]);
          if (!keepTargetAxis && GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
-            bins[d] -= GetAxis(dim[d])->GetFirst() - 1;
+            Int_t binOffset = GetAxis(dim[d])->GetFirst();
+            // Don't subtract even more if underflow is alreday included:
+            if (binOffset > 0) --binOffset;
+            bins[d] -= binOffset;
          }
       }
 
