@@ -1038,7 +1038,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-onepcm: $(ROOTCINTTMPDEP) $(ORDER_) $(ALLIBS)
+onepcm: $(ROOTCINTTMPDEP) $(ORDER_) $(ALLLIBS)
 	@$(MAKEONEPCM)
 
 ifeq ($(BUILDX11),yes)
