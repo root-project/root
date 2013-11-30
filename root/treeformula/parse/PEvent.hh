@@ -44,16 +44,16 @@ class QRawTriggerPulse : public QRawPulse {
 };
 
  
-class QEvent : public TObject {
+class PEvent : public TObject {
     public:
 
-        QEvent();	
-        QEvent(const QRawTriggerPulse&);
-        virtual ~QEvent () {};
+        PEvent();	
+        PEvent(const QRawTriggerPulse&);
+        virtual ~PEvent () {};
 
         QRawTriggerPulse fRawTriggerPulse;      // triggering pulse
 
-        ClassDef (QEvent, 1) 
+        ClassDef (PEvent, 1) 
 };
 
 #endif

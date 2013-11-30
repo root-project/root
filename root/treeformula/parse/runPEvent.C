@@ -1,7 +1,7 @@
-void runQEvent() {
+void runPEvent() {
 
 #ifndef ClingWorkAroundMissingDynamicScope
-   gROOT->ProcessLine(".L QEvent.cc+");
+   gROOT->ProcessLine(".L PEvent.cc+");
 #endif
 
     const Int_t n = 100;
@@ -19,8 +19,8 @@ void runQEvent() {
     TFile *f = new TFile("myTest.root","recreate");
     TTree *t = new TTree("t","mytree");
 
-    QEvent *q = new QEvent(*tp);
-    t->Branch("event.","QEvent",&q);
+    PEvent *q = new PEvent(*tp);
+    t->Branch("event.","PEvent",&q);
     //t->Branch("thepulse",&tp);
 
 

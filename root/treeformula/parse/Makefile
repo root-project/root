@@ -4,7 +4,7 @@
 CLEAN_TARGETS +=  *.log generatedSel* $(ALL_LIBRARIES) cmake* test.root *.clog  speedtest.root myTest.root
 
 #Set the list of target to make while testing
-TEST_TARGETS += QEvent functca cscan gaus aliases templateName BoolOrder \
+TEST_TARGETS += PEvent functca cscan gaus aliases templateName BoolOrder \
 				testStringFormula testBoolOpt expotest NonFormulaMean \
 				templateBase strings base form nodot
 
@@ -83,12 +83,12 @@ functca: functca.log
 	$(TestDiff)
 
 ifneq ($(ClingWorkAroundMissingDynamicScope),)
-QEvent.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L QEvent.cc+");'
+PEvent.log: CALLROOTEXE += -e 'gROOT->ProcessLine(".L PEvent.cc+");'
 endif
 
-QEvent.log: QEvent_cc.$(DllSuf)
+PEvent.log: PEvent_cc.$(DllSuf)
 
-QEvent: QEvent.log
+PEvent: PEvent.log
 	$(TestDiff)
 
 strings: strings.log

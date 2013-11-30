@@ -1,6 +1,6 @@
-#include "QEvent.hh"
+#include "PEvent.hh"
 
-ClassImp(QEvent);
+ClassImp(PEvent);
 ClassImp(QRawPulse);
 ClassImp(QRawTriggerPulse);
 
@@ -102,14 +102,14 @@ QRawTriggerPulse::QRawTriggerPulse(Int_t nsamples, UInt_t* s) : QRawPulse(nsampl
 
 
 //_____________________________________________________________________
-QEvent::QEvent(){
+PEvent::PEvent(){
   //
   //default  ctor
   //
 }
 
 //_____________________________________________________________________
-QEvent::QEvent(const QRawTriggerPulse& rawPulse) : fRawTriggerPulse(rawPulse) {
+PEvent::PEvent(const QRawTriggerPulse& rawPulse) : fRawTriggerPulse(rawPulse) {
   //
   // ctor
   //
