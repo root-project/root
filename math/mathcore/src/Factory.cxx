@@ -173,6 +173,8 @@ ROOT::Math::DistSampler * ROOT::Math::Factory::CreateDistSampler(const std::stri
    const char * typeName = type.c_str();
    if (type.empty() )  typeName = ROOT::Math::DistSamplerOptions::DefaultSampler().c_str();
 
+   R__LOCKGUARD2(gROOTMutex);
+
    TPluginManager *pm = gROOT->GetPluginManager(); 
    assert(pm != 0);
    TPluginHandler *h = pm->FindHandler("ROOT::Math::DistSampler", typeName );
