@@ -3400,6 +3400,11 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // This routine might actually belong in the interpreter because
    // cache the clang::Type might be intepreter specific.
 
+   if (type.isNull()) {
+      norm_name = "";
+      return;
+   }
+
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
