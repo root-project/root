@@ -46,7 +46,7 @@
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
-
+#include "RooTrace.h"
 
 
 using namespace std;
@@ -141,7 +141,7 @@ Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) con
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   // Propagate server change information to embedded RooFormula object
-  return _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : kFALSE ;
+  return formula().changeDependents(newServerList,mustReplaceAll,nameChange) ;
 }
 
 
