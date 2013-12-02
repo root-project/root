@@ -55,7 +55,7 @@ void rf507_debugtools()
   RooAddPdf model("model","model",RooArgSet(gauss,poly),f) ;
 
   // Show object added to memory since marker
-  RooTrace::dump(cout,kTRUE) ;
+  RooTrace::printObjectCounts() ;
 
   // Since verbose mode is still on, you will see messages
   // pertaining to destructor calls of all RooFit objects

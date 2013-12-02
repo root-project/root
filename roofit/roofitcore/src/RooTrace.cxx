@@ -207,17 +207,17 @@ void RooTrace::printObjectCounts()
   Double_t total(0) ;
   for (map<TClass*,int>::iterator iter = _objectCount.begin() ; iter != _objectCount.end() ; ++iter) {
     Double_t tot= 1.0*(iter->first->Size()*iter->second)/(1024*1024) ;
-    cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.1f",tot) << " Mb" << endl ;
+    cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
     total+=tot ;
   }
 
   for (map<string,int>::iterator iter = _specialCount.begin() ; iter != _specialCount.end() ; ++iter) {
     int size = _specialSize[iter->first] ;
     Double_t tot=1.0*(size*iter->second)/(1024*1024) ;
-    cout << " special " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.1f",tot) << " Mb" << endl ;
+    cout << " speeial " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
     total+=tot ;
   }
-  cout << "grand total memory = " << total << endl ;
+  cout << "Grand total memory = " << Form("%5.2f",total) << " Mb" << endl ;
 
 }
 
