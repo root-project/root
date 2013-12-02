@@ -167,14 +167,9 @@ RooKeysPdf::~RooKeysPdf() {
 }
 
 
-void
 
 //_____________________________________________________________________________
-RooKeysPdf::LoadDataSet( RooDataSet& data) {
-  delete[] _dataPts;
-  delete[] _dataWgts;
-  delete[] _weights;
-
+namespace {
   // small helper structure
   struct Data {
     Double_t x;
@@ -185,6 +180,12 @@ RooKeysPdf::LoadDataSet( RooDataSet& data) {
     inline bool operator()(const struct Data& a, const struct Data& b) const
     { return a.x < b.x; }
   };
+}
+void RooKeysPdf::LoadDataSet( RooDataSet& data) {
+  delete[] _dataPts;
+  delete[] _dataWgts;
+  delete[] _weights;
+
   std::vector<Data> tmp;
   tmp.reserve((1 + _mirrorLeft + _mirrorRight) * data.numEntries());
   Double_t x0 = 0., x1 = 0., x2 = 0.;
