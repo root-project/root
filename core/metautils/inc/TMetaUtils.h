@@ -193,15 +193,16 @@ public:
 //______________________________________________________________________________
 class RConstructorType {
 private:
-   std::string           fArgTypeName;
+   const std::string           fArgTypeName;
    const clang::CXXRecordDecl *fArgType;
 
 public:
    RConstructorType(const char *type_of_arg, const cling::Interpreter&);
 
-   const char *GetName();
-   const clang::CXXRecordDecl *GetType();
+   const char *GetName() const ;
+   const clang::CXXRecordDecl *GetType() const;
 };
+typedef std::list<RConstructorType> RConstructorTypes;
       
 // Functions -------------------------------------------------------------------
 
@@ -228,7 +229,7 @@ const char* DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errn
 std::string GetROOTIncludeDir(bool rootbuild);
 
 //______________________________________________________________________________
-bool CheckConstructor(const clang::CXXRecordDecl*, RConstructorType&);
+bool CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
 
 //______________________________________________________________________________
 bool ClassInfo__HasMethod(const clang::RecordDecl *cl, char const*);
@@ -264,7 +265,7 @@ bool HasCustomOperatorNewPlacement(clang::RecordDecl const&, const cling::Interp
 bool HasDirectoryAutoAdd(clang::CXXRecordDecl const*, const cling::Interpreter&);
 
 //______________________________________________________________________________
-bool HasIOConstructor(clang::CXXRecordDecl const*, std::string*, const cling::Interpreter&);
+bool HasIOConstructor(clang::CXXRecordDecl const*, std::string&, const RConstructorTypes&, const cling::Interpreter&);
 
 //______________________________________________________________________________
 bool HasNewMerge(clang::CXXRecordDecl const*, const cling::Interpreter&);
@@ -363,13 +364,11 @@ std::string TrueName(const clang::FieldDecl &m);
 const clang::CXXRecordDecl *ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
 
 //______________________________________________________________________________
-void AddConstructorType(const char *arg, const cling::Interpreter &interp);
-
-//______________________________________________________________________________
 void WriteAuxFunctions(std::ostream& finalString,
                        const AnnotatedRecordDecl &cl,
                        const clang::CXXRecordDecl *decl,
                        const cling::Interpreter &interp,
+                       const RConstructorTypes& ctorTypes,
                        const TNormalizedCtxt &normCtxt);
 
 
@@ -398,6 +397,7 @@ void WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
                     const cling::Interpreter &interp,
                     const TNormalizedCtxt &normCtxt,
                     std::ostream& finalString,
+                    const RConstructorTypes& ctorTypes,
                     bool isGenreflex);
 
 //______________________________________________________________________________
@@ -406,6 +406,7 @@ void WriteClassInit(std::ostream& finalString,
                     const clang::CXXRecordDecl *decl,
                     const cling::Interpreter &interp,
                     const TNormalizedCtxt &normCtxt,
+                    const RConstructorTypes& ctorTypes,
                     bool& needCollectionProxy);
 
 //______________________________________________________________________________

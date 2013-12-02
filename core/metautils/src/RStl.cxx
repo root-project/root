@@ -180,8 +180,11 @@ void ROOT::RStl::Print()
    }
 }
 
-void ROOT::RStl::WriteClassInit(std::ostream &ostr, const cling::Interpreter &interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
-   bool &needCollectionProxy)
+void ROOT::RStl::WriteClassInit(std::ostream &ostr,
+                                const cling::Interpreter &interp,
+                                const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+                                const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
+                                bool &needCollectionProxy)
 {
    // This function writes the TGeneraticClassInfo initialiser
    // and the auxiliary functions (new and delete wrappers) for
@@ -210,9 +213,9 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr, const cling::Interpreter &in
 
       // std::string fullname = R__GetQualifiedName(*iter->GetRecordDecl());      
       // fprintf(stderr,"RStl is generating TClass for %ld %s %s %s\n",iter->GetRuleIndex(),iter->GetRequestedName(),iter->GetNormalizedName(),fullname.c_str());
-
-      ROOT::TMetaUtils::WriteClassInit(ostr, *iter, result, interp, normCtxt, needCollectionProxy);
-      ROOT::TMetaUtils::WriteAuxFunctions(ostr, *iter, result, interp, normCtxt);
+     
+      ROOT::TMetaUtils::WriteClassInit(ostr, *iter, result, interp, normCtxt, ctorTypes, needCollectionProxy);
+      ROOT::TMetaUtils::WriteAuxFunctions(ostr, *iter, result, interp, ctorTypes, normCtxt);
    }
 }
 

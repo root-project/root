@@ -100,7 +100,9 @@ void LinkdefReader::PopulateCppMap(){
    LinkdefReader::fgMapCppNames["#else"] = kElse;
 }
 
-LinkdefReader::LinkdefReader(cling::Interpreter &interp) : fLine(1), fCount(0), fIOCtorTypeCallback(0), fInterp(interp)
+LinkdefReader::LinkdefReader(cling::Interpreter &interp,
+                             ROOT::TMetaUtils::RConstructorTypes& IOConstructorTypes):
+                             fLine(1), fCount(0), fIOConstructorTypesPtr(&IOConstructorTypes), fInterp(interp)
 {
    PopulatePragmaMap();
    PopulateCppMap();
@@ -469,8 +471,7 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
          break;
       case kIOCtorType:
          // #pragma link C++ IOCtorType typename;
-         if (fIOCtorTypeCallback) 
-            fIOCtorTypeCallback(identifier.c_str(), fInterp);
+         fIOConstructorTypesPtr->push_back(ROOT::TMetaUtils::RConstructorType(identifier.c_str(), fInterp));
          break;
       case kIgnore:
          // All the pragma that were supported in CINT but are currently not relevant for CLING
@@ -619,14 +620,6 @@ bool LinkdefReader::ProcessOperators(std::string& pattern)
    }
    pattern = "operator*(*"+pattern+"*)";
    return true;
-}
-
-void LinkdefReader::SetIOCtorTypeCallback(IOCtorTypeCallback callback)
-{
-   // Set the callback function to be call for every
-   // #pragma link C++ ioctortype typename;
-
-   fIOCtorTypeCallback = callback;
 }
 
 class LinkdefReaderPragmaHandler : public clang::PragmaHandler {

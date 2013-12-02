@@ -56,7 +56,7 @@
 #include "TMetaUtils.h"
 
 int ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError;
-std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
+// std::vector<ROOT::TMetaUtils::RConstructorType> gIoConstructorTypes;
 
 namespace {
 
@@ -1029,7 +1029,8 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
 }
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl, RConstructorType &ioctortype)
+bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
+                                        const RConstructorType &ioctortype)
 {
    const char *arg = ioctortype.GetName();
    if ( (arg == 0 || arg[0] == '\0') && !cl->hasUserDeclaredConstructor() ) {
@@ -1119,14 +1120,16 @@ namespace ROOT {
          if (!instanceType.isNull())
             fArgType = instanceType->getAsCXXRecordDecl();
       }
-      const char *RConstructorType::GetName() { return fArgTypeName.c_str(); }
-      const clang::CXXRecordDecl *RConstructorType::GetType() { return fArgType; }
+      const char *RConstructorType::GetName() const { return fArgTypeName.c_str(); }
+      const clang::CXXRecordDecl *RConstructorType::GetType() const { return fArgType; }
    }
 }
 
-
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::string *arg, const cling::Interpreter &interp)
+bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
+                                        std::string& arg,
+                                        const RConstructorTypes& ctorTypes,
+                                        const cling::Interpreter &interp)
 {
    // return true if we can find an constructor calleable without any arguments
    // or with one the IOCtor special types.
@@ -1135,8 +1138,9 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::str
 
    if (cl->isAbstract()) return false;
 
-   for(unsigned int i = 0; i < gIoConstructorTypes.size(); ++i) {
-      std::string proto( gIoConstructorTypes[i].GetName() );
+   for(RConstructorTypes::const_iterator ctorTypeIt=ctorTypes.begin();
+       ctorTypeIt!=ctorTypes.end();++ctorTypeIt){
+      std::string proto( ctorTypeIt->GetName() );
       int extra = (proto.size()==0) ? 0 : 1;
       if (extra==0) {
          // Looking for default constructor
@@ -1145,11 +1149,11 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl, std::str
          proto += " *";
       }
 
-      result = ROOT::TMetaUtils::CheckConstructor(cl, gIoConstructorTypes[i]);
-      if (result && extra && arg) {
-         *arg = "( (";
-         *arg += proto;
-         *arg += ")0 )";
+      result = ROOT::TMetaUtils::CheckConstructor(cl,*ctorTypeIt);
+      if (result && extra) {
+         arg = "( (";
+         arg += proto;
+         arg += ")0 )";
       }
 
       // Check for private operator new
@@ -1620,6 +1624,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
                                       const clang::CXXRecordDecl *decl,
                                       const cling::Interpreter &interp,
                                       const TNormalizedCtxt &normCtxt,
+                                      const RConstructorTypes& ctorTypes,
                                       bool& needCollectionProxy)
 {
    // FIXME: a function of ~300 lines!
@@ -1657,7 +1662,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    }
 
-   if (HasIOConstructor(decl,&args, interp)) {
+   if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << "\n";
 
       if (args.size()==0 && NeedDestructor(decl))
@@ -1835,7 +1840,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       rootflag = rootflag | TClassTable__kHasCustomStreamerMember;
    }
    finalString << "isa_proxy, " << rootflag << "," << "\n" << "                  sizeof(" << csymbol.c_str() << ") );" << "\n";
-   if (HasIOConstructor(decl,&args, interp)) {
+   if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       finalString << "      instance.SetNew(&new_" << mappedname.c_str() << ");" << "\n";
       if (args.size()==0 && NeedDestructor(decl))
          finalString << "      instance.SetNewArray(&newArray_" << mappedname.c_str() << ");" << "\n";
@@ -2264,6 +2269,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
                                          const AnnotatedRecordDecl &cl,
                                          const clang::CXXRecordDecl *decl,
                                          const cling::Interpreter &interp,
+                                         const RConstructorTypes& ctorTypes,
                                          const TNormalizedCtxt &normCtxt)
 {
    // std::string NormalizedName;
@@ -2295,7 +2301,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
    finalString << "namespace ROOT {" << "\n";
 
    std::string args;
-   if (HasIOConstructor(decl, &args, interp)) {
+   if (HasIOConstructor(decl, args, ctorTypes, interp)) {
       // write the constructor wrapper only for concrete classes
       finalString << "   // Wrappers around operator new" << "\n";
       finalString << "   static void *new_" << mappedname.c_str() << "(void *p) {" << "\n" << "      return  p ? ";
@@ -2655,6 +2661,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
                                       const cling::Interpreter &interp,
                                       const TNormalizedCtxt &normCtxt,
                                       std::ostream& dictStream,
+                                      const RConstructorTypes& ctorTypes,
                                       bool isGenreflex=false)
 {
    // Generate the code of the class
@@ -2691,13 +2698,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
          ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt, true);
       }
    }
-   ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, normCtxt);
-}
-
-//______________________________________________________________________________
-void ROOT::TMetaUtils::AddConstructorType(const char *arg, const cling::Interpreter &interp)
-{
-   if (arg) gIoConstructorTypes.push_back(ROOT::TMetaUtils::RConstructorType(arg, interp));
+   ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, ctorTypes, normCtxt);
 }
 
 //______________________________________________________________________________

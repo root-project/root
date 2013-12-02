@@ -2689,6 +2689,7 @@ int GenerateFullDict(std::ostream& dictStream,
                      cling::Interpreter& interp,
                      RScanner& scan,
                      SelectionRules& selectionRules,
+                     const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
                      bool onepcm,
                      bool interpreteronly,
                      bool isSplit,
@@ -2715,13 +2716,6 @@ int GenerateFullDict(std::ostream& dictStream,
       //
 
       if (!interpreteronly){
-      
-         // The order of addition to the list of constructor type
-         // is significant.  The list is sorted by with the highest
-         // priority first.
-         ROOT::TMetaUtils::AddConstructorType("TRootIOCtor", interp);
-         ROOT::TMetaUtils::AddConstructorType("", interp);
-
          //
          // Loop over all classes and create Streamer() & Showmembers() methods
          //
@@ -2759,7 +2753,7 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
-                  ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, needsCollectionProxy);
+                  ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
          }
@@ -2812,7 +2806,7 @@ int GenerateFullDict(std::ostream& dictStream,
             const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
 
             if (!ROOT::TMetaUtils::IsSTLContainer(*iter)) {
-               ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, needsCollectionProxy);
+               ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
             }
          }
          // Loop to write all the ClassCode
@@ -2825,6 +2819,7 @@ int GenerateFullDict(std::ostream& dictStream,
                                              interp,
                                              normCtxt,
                                              dictStream,
+                                             ctorTypes,
                                              isGenreflex);
          }
       }
@@ -2844,7 +2839,7 @@ int GenerateFullDict(std::ostream& dictStream,
 
    if (!interpreteronly){
       // coverity[fun_call_w_exception] - that's just fine.
-      ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, needsCollectionProxy);
+      ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
       }
    
    return 0;
@@ -3557,6 +3552,8 @@ int RootCling(int argc,
    SelectionRules selectionRules(interp);
    std::string extraIncludes;
 
+   ROOT::TMetaUtils::RConstructorTypes constructorTypes;
+   
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
    if (requestAllSymbols && !isSelXML) {
@@ -3565,8 +3562,7 @@ int RootCling(int argc,
       // There is no linkdef file, we added the 'default' #pragma to
       // interpPragmaSource.
 
-      LinkdefReader ldefr(interp);
-      ldefr.SetIOCtorTypeCallback(ROOT::TMetaUtils::AddConstructorType);
+      LinkdefReader ldefr(interp,constructorTypes);
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
@@ -3616,8 +3612,7 @@ int RootCling(int argc,
 
       selectionRules.SetSelectionFileType(SelectionRules::kLinkdefFile);
 
-      LinkdefReader ldefr(interp);
-      ldefr.SetIOCtorTypeCallback(ROOT::TMetaUtils::AddConstructorType);
+      LinkdefReader ldefr(interp,constructorTypes);
       clingArgs.push_back("-Ietc/cling/cint"); // For multiset and multimap
 
       if (!ldefr.Parse(selectionRules, interpPragmaSource, clingArgs,
@@ -3713,11 +3708,20 @@ int RootCling(int argc,
          GenerateNecessaryIncludes(splitDictStream,includeForSource,extraIncludes);
       }
    }
+
+   if (!onepcm && !interpreteronly){
+      // The order of addition to the list of constructor type
+      // is significant.  The list is sorted by with the highest
+      // priority first.
+      constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
+      constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
+      }
    
    int retCode = GenerateFullDict(splitDictStream,
                                   interp,
                                   scan,
                                   selectionRules,
+                                  constructorTypes,
                                   onepcm,
                                   interpreteronly,
                                   doSplit,
