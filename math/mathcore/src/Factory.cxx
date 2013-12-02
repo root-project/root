@@ -21,10 +21,17 @@
 #include "Math/DistSampler.h"
 #include "Math/DistSamplerOptions.h"
 
+// uncomment these if you dont want to use the plugin manager
+// but you need to link also  the needed minimization libraries (e.g Minuit and/or Minuit2)
+// #define MATH_NO_PLUGIN_MANAGER
+// #define HAS_MINUIT
+// #define HAS_MINUIT2
+
 #ifndef MATH_NO_PLUGIN_MANAGER
 // use ROOT Plug-in manager
 #include "TPluginManager.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 #else 
 // all the minimizer implementation classes 
 //#define HAS_MINUIT2
@@ -75,6 +82,8 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
    }
 
    if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(); 
+
+   R__LOCKGUARD2(gROOTMutex);
 
    // create Minimizer using the PM
    TPluginHandler *h; 
@@ -128,7 +137,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
 #ifdef HAS_MINUIT
    // use TMinuit
    if (minimizerType ==  "Minuit" || minimizerType ==  "TMinuit")        
-      min = new ROOT::Fit::TMinuitMinimizer(algoType.c_str());        
+      min = new TMinuitMinimizer(algoType.c_str());        
 #endif
 
 #ifdef R__HAS_MATHMORE
