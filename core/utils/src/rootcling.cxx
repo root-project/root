@@ -3366,6 +3366,7 @@ int RootCling(int argc,
 #endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
+   interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 // CINT uses to define a few header implicitly, we need to do it explicitly.
