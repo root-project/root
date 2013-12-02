@@ -40,6 +40,7 @@
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
 
 using namespace std;
 
@@ -186,7 +187,7 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
   // Change used variables to those with the same name in given list
   // If mustReplaceAll is true and error is generated if one of the
   // elements of newDeps is not found as a server
-  
+
   //Change current servers to new servers with the same name given in list
   Bool_t errorStat(kFALSE) ;
   int i ;
@@ -208,6 +209,11 @@ Bool_t RooFormula::changeDependents(const RooAbsCollection& newDeps, Bool_t must
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.Replace(arg,replace) ;
+      if (arg->getStringAttribute("origName")) {
+	replace->setStringAttribute("origName",arg->getStringAttribute("origName")) ;
+      } else {
+	replace->setStringAttribute("origName",arg->GetName()) ;
+      }
     } else if (mustReplaceAll) {
       errorStat = kTRUE ;
     }

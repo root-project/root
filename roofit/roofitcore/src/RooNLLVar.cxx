@@ -115,6 +115,9 @@ RooNLLVar::RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbs
 
   // Retrieve and cache bin widths needed to convert unnormalized binnedPdf values back to yields
   if (_binnedPdf) {
+
+    // The Active label will disable pdf integral calculations
+    _binnedPdf->setAttribute("BinnedLikelihoodActive") ;
     
     RooArgSet* obs = _funcClone->getObservables(_dataClone) ;
     if (obs->getSize()!=1) {
