@@ -187,6 +187,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
 
    Sema &SemaR = m_Interpreter->getSema();
    LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
+   R.suppressDiagnostics();
    std::string qualName 
       = fDeclContextToLookIn->getQualifiedNameAsString() + "::" + Name.getAsString();
    fDeclContextToLookIn = 0;
