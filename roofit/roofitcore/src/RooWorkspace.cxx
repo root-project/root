@@ -525,8 +525,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
       string tag = Form("ORIGNAME:%s",origName.c_str()) ;
       cnode2->setAttribute(tag.c_str()) ;
-      string tag2 = Form("%s",origName.c_str()) ;
-      cnode2->setStringAttribute("origName",tag2.c_str()) ;
+      if (!cnode2->getStringAttribute("origName")) {
+	string tag2 = Form("%s",origName.c_str()) ;
+	cnode2->setStringAttribute("origName",tag2.c_str()) ;
+      }
       
       // Save name of new top level node for later use
       if (cnode2==cloneTop) {
@@ -550,9 +552,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
       string origName = cnode->GetName() ;
       RooAbsArg* wsnode = _allOwnedNodes.find(origName.c_str()) ;      
       if (wsnode) {	
-
-	wsnode->setStringAttribute("origName",wsnode->GetName()) ;
-
+	
+	if (!wsnode->getStringAttribute("origName")) {
+	  wsnode->setStringAttribute("origName",wsnode->GetName()) ;
+	}
+	
 	if (!_allOwnedNodes.find(Form("%s_%s",cnode->GetName(),suffix))) {
 	  wsnode->SetName(Form("%s_%s",cnode->GetName(),suffix)) ;
 	  wsnode->SetTitle(Form("%s (%s)",cnode->GetTitle(),suffix)) ;
@@ -597,8 +601,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 	cnode->SetName(varMap[cnode->GetName()].c_str()) ;
 	string tag = Form("ORIGNAME:%s",origName.c_str()) ;
 	cnode->setAttribute(tag.c_str()) ;
-	string tag2 = Form("%s",origName.c_str()) ;
-	cnode->setStringAttribute("origName",tag2.c_str()) ;
+	if (!cnode->getStringAttribute("origName")) {
+	  string tag2 = Form("%s",origName.c_str()) ;
+	  cnode->setStringAttribute("origName",tag2.c_str()) ;
+	}
 
 	if (!silence) {
 	  coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") Changing name of variable " 

@@ -42,22 +42,32 @@ using namespace std;
 ClassImp(RooTrace)
 ;
 
+RooTrace* RooTrace::_instance=0 ;
 
-Bool_t RooTrace::_active(kFALSE) ;
-Bool_t RooTrace::_verbose(kFALSE) ;
-RooLinkedList RooTrace::_list ;
-RooLinkedList RooTrace::_markList ;
-map<TClass*,int> RooTrace::_objectCount ;
-map<string,int> RooTrace::_specialCount ;
-map<string,int> RooTrace::_specialSize ;
+
+
+//_____________________________________________________________________________
+RooTrace& RooTrace::instance() 
+{
+  if (_instance==0) _instance = new RooTrace() ;
+  return *_instance ;
+}
+
+
+//_____________________________________________________________________________
+RooTrace::RooTrace() : _active(kFALSE), _verbose(kFALSE) 
+{
+}
 
 
 //_____________________________________________________________________________
 void RooTrace::create(const TObject* obj) 
 { 
   // Register creation of object 'obj' 
-
-  if (_active) create3(obj) ; 
+  RooTrace& instance = RooTrace::instance() ;
+  if (instance._active) {
+    instance.create3(obj) ; 
+  }
 }
 
 
@@ -65,17 +75,19 @@ void RooTrace::create(const TObject* obj)
 void RooTrace::destroy(const TObject* obj) 
 { 
   // Register deletion of object 'obj'
-
-  if (_active) destroy3(obj) ; 
+  RooTrace& instance = RooTrace::instance() ;
+  if (instance._active) {
+    instance.destroy3(obj) ; 
+  }
 }
 
 
 //_____________________________________________________________________________
 void RooTrace::createSpecial(const char* name, int size) 
 {
-  if (_active) {
-    _specialCount[name]++ ;
-    _specialSize[name] = size ;
+  RooTrace& instance = RooTrace::instance() ;
+  if (instance._active) {
+    instance.createSpecial3(name,size) ;
   }
 }
 
@@ -83,9 +95,26 @@ void RooTrace::createSpecial(const char* name, int size)
 //_____________________________________________________________________________
 void RooTrace::destroySpecial(const char* name) 
 {
-  if (_active) {
-    _specialCount[name]++ ;
+  RooTrace& instance = RooTrace::instance() ;
+  if (instance._active) {
+    instance.destroySpecial3(name) ;
   }
+}
+
+
+
+//_____________________________________________________________________________
+void RooTrace::createSpecial3(const char* name, int size) 
+{
+  _specialCount[name]++ ;
+  _specialSize[name] = size ;
+}
+
+
+//_____________________________________________________________________________
+void RooTrace::destroySpecial3(const char* name) 
+{
+  _specialCount[name]-- ;
 }
 
 
@@ -94,8 +123,8 @@ void RooTrace::destroySpecial(const char* name)
 void RooTrace::active(Bool_t flag) 
 { 
   // If flag is true, memory tracing is activated
-
-  _active = flag ; 
+  
+  RooTrace::instance()._active = flag ; 
 }
 
 
@@ -105,8 +134,10 @@ void RooTrace::verbose(Bool_t flag)
   // If flag is true, a message will be printed at each
   // object creation or deletion
 
-  _verbose = flag ; 
+  RooTrace::instance()._verbose = flag ; 
 }
+
+
 
 
 
@@ -158,10 +189,18 @@ void RooTrace::destroy3(const TObject* obj)
 
 
 
+//_____________________________________________________________________________
+void RooTrace::mark()
+{
+  // Put marker in object list, that allows to dump contents of list
+  // relative to this marker
+  RooTrace::instance().mark3() ;
+}
+
 
 
 //_____________________________________________________________________________
-void RooTrace::mark()
+void RooTrace::mark3()
 {
   // Put marker in object list, that allows to dump contents of list
   // relative to this marker
@@ -175,12 +214,19 @@ void RooTrace::mark()
 void RooTrace::dump() 
 {
   // Dump contents of object registry to stdout
-  dump(cout,kFALSE) ;
+  RooTrace::instance().dump3(cout,kFALSE) ;
 }
 
 
 //_____________________________________________________________________________
 void RooTrace::dump(ostream& os, Bool_t sinceMarked) 
+{
+  RooTrace::instance().dump3(os,sinceMarked) ;
+}
+
+
+//_____________________________________________________________________________
+void RooTrace::dump3(ostream& os, Bool_t sinceMarked) 
 {
   // Dump contents of object register to stream 'os'. If sinceMarked is
   // true, only object created after the last call to mark() are shown.
@@ -200,9 +246,14 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked)
 }
 
 
-
 //_____________________________________________________________________________
 void RooTrace::printObjectCounts() 
+{
+  RooTrace::instance().printObjectCounts3() ;
+}
+
+//_____________________________________________________________________________
+void RooTrace::printObjectCounts3() 
 {
   Double_t total(0) ;
   for (map<TClass*,int>::iterator iter = _objectCount.begin() ; iter != _objectCount.end() ; ++iter) {

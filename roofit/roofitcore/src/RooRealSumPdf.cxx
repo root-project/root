@@ -458,24 +458,13 @@ Double_t RooRealSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
 //_____________________________________________________________________________
 Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 {
-  Double_t n(0) ;
-  if (getAttribute("BinnedLikelihood")) {
-
-    // need special handling as default integral is disabled    
-    const_cast<RooRealSumPdf*>(this)->setAttribute("BinnedLikelihood",kFALSE) ;
-    RooAbsReal* integral = createIntegral(*nset) ;
-    n = integral->getVal() ;
-    delete integral ;
-    const_cast<RooRealSumPdf*>(this)->setAttribute("BinnedLikelihood") ;
-    
-  } else {
-    n = getNorm(nset) ;  
-  }
+  Double_t n = getNorm(nset) ;  
   if (n<0) {
     logEvalError("Expected number of events is negative") ;
   }
   return n ;
 }
+
 
 //_____________________________________________________________________________
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const

@@ -441,7 +441,12 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 	TString nameAttrib("ORIGNAME:") ;
 	nameAttrib.Append(node->GetName()) ;
 	specNode->setAttribute(nameAttrib) ;
-	specNode->setStringAttribute("ORIGNAME",node->GetName()) ;
+	
+	if (!specNode->getStringAttribute("origName")) {
+	  specNode->setStringAttribute("origName",node->GetName()) ;
+	}
+
+
 
       } else {
 
@@ -464,7 +469,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
 	TString nameAttrib("ORIGNAME:") ;
 	nameAttrib.Append(node->GetName()) ;
 	clone->setAttribute(nameAttrib) ;
-	//specNode->setStringAttribute("ORIGNAME",node->GetName()) ;
+
+	if (!clone->getStringAttribute("origName")) {
+	  clone->setStringAttribute("origName",node->GetName()) ;
+	}
 
 	// Add to one-time use list and life-time use list
 	clonedMasterNodes.add(*clone) ;
@@ -554,7 +562,10 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, Bool_t verbose)
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(branch->GetName()) ;
     clone->setAttribute(nameAttrib) ;
-    clone->setStringAttribute("ORIGNAME",branch->GetName()) ;
+
+    if (!clone->getStringAttribute("origName")) {
+      clone->setStringAttribute("origName",branch->GetName()) ;
+    }
     
     clonedMasterBranches.add(*clone) ;      
 

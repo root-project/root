@@ -46,7 +46,7 @@
 #include "RooNLLVar.h"
 #include "RooChi2Var.h"
 #include "RooMsgService.h"
-
+#include "RooTrace.h"
 
 
 using namespace std;
@@ -66,6 +66,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
   _actualVars.add(dependents) ; 
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  TRACE_CREATE
 }
 
 
@@ -81,6 +82,7 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   _actualVars.add(dependents) ; 
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
+  TRACE_CREATE
 }
 
 
@@ -92,6 +94,7 @@ RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
   _formula(0), _formExpr(other._formExpr)
 {
   // Copy constructor
+  TRACE_CREATE
 }
 
 
@@ -102,6 +105,7 @@ RooFormulaVar::~RooFormulaVar()
   // Destructor
 
   if (_formula) delete _formula ;
+  TRACE_DESTROY
 }
 
 
@@ -141,7 +145,7 @@ Bool_t RooFormulaVar::isValidReal(Double_t /*value*/, Bool_t /*printError*/) con
 Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   // Propagate server change information to embedded RooFormula object
-  return _formula ? _formula->changeDependents(newServerList,mustReplaceAll,nameChange) : kFALSE ;
+  return formula().changeDependents(newServerList,mustReplaceAll,nameChange) ;
 }
 
 
