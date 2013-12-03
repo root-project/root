@@ -46,6 +46,8 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       self.assertEqual( c.fULong64, pylong( 44) )
       self.assertEqual( round( c.fFloat  + 55., 5 ), 0 )
       self.assertEqual( round( c.fDouble + 66., 8 ), 0 )
+      self.assertEqual( c.fEnum,    ClassWithData.kNothing )
+      self.assertEqual( c.fEnum,    c.kNothing )
 
       for i in range(N):
          self.assertEqual( c.fBoolArray[i],         i%2 )
@@ -137,6 +139,10 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
       c.fDouble = 0.456;    self.assertEqual( round( c.GetDouble() - 0.456, 8 ), 0 )
       c.SetDouble( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
 
+    # enum types
+      c.fEnum = ClassWithData.kSomething; self.assertEqual( c.GetEnum(), c.kSomething )
+      c.SetEnum( ClassWithData.kLots );   self.assertEqual( c.fEnum, c.kLots )
+
     # arrays; there will be pointer copies, so destroy the current ones
       c.DestroyArrays()
 
@@ -178,6 +184,9 @@ class DataTypes1InstanceDataTestCase( MyTestCase ):
     # float types
       c.SetFloatCR( 0.234 );  self.assertEqual( round( c.fFloat      - 0.234, 5 ), 0 )
       c.SetDoubleCR( 0.567 ); self.assertEqual( round( c.fDouble     - 0.567, 8 ), 0 )
+
+    # enum types
+      c.SetEnumCR( ClassWithData.kLots );   self.assertEqual( c.fEnum, c.kLots )
 
     # arrays; there will be pointer copies, so destroy the current ones
       c.DestroyArrays()
@@ -243,6 +252,8 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
       self.assertEqual( round( c.sFloat              + 505., 5 ), 0 )
       self.assertEqual( round( ClassWithData.sDouble + 606., 8 ), 0 )
       self.assertEqual( round( c.sDouble             + 606., 8 ), 0 )
+      self.assertEqual( ClassWithData.sEnum,    kApple )
+      self.assertEqual( c.sEnum,                kApple )
 
    def test2WriteAccess( self ):
       """Test write access to class public data and verify values"""
@@ -314,6 +325,11 @@ class DataTypes2ClassDataTestCase( MyTestCase ):
       self.assertEqual( ClassWithData.sDouble, -math.pi )
       ClassWithData.sDouble                  =  math.pi
       self.assertEqual( c.sDouble,              math.pi )
+      if not FIXCLING:
+         c.sEnum                                = kBanana
+         self.assertEqual( ClassWithData.sEnum,   kBanana )
+         ClassWithData.sEnum                    = kCitrus
+         self.assertEqual( c.sEnum ,              kCitrus )
 
 
 ### access to data through buffer interface ==================================
@@ -367,8 +383,9 @@ class DataTypes4RegressionTestCase( MyTestCase ):
       c.SetULong( 3 );      self.assertEqual( c.GetULongCR(),    3  )
       c.SetLong64( -4 );    self.assertEqual( c.GetLong64CR(),  -4  )
       c.SetULong64( 4 );    self.assertEqual( c.GetULong64CR(),  4  )
-      c.SetFloat( 3.14 );   self.assertEqual( round( c.GetFloatCR()  - 3.14, 5 ),0 )
+      c.SetFloat( 3.14 );   self.assertEqual( round( c.GetFloatCR()  - 3.14, 5 ), 0 )
       c.SetDouble( 2.72 );  self.assertEqual( round( c.GetDoubleCR() - 2.72, 8 ), 0 )
+      c.SetEnum( c.kLots ); self.assertEqual( c.GetEnumCR(), c.kLots )
 
 
 ## actual test run

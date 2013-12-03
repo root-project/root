@@ -12,10 +12,14 @@ struct Pod {
    Double_t fDouble;
 };
 
+enum EFruit { kApple = 78, kBanana = 29, kCitrus = 34 };
+
 typedef signed char SChar_t;
 
 class ClassWithData {
 public:
+   enum EWhat { kNothing = 6, kSomething = 111, kLots = 42 };
+
    ClassWithData() : fOwnsArrays( false )
    {
       fBool    = kFALSE;
@@ -32,6 +36,7 @@ public:
       fULong64 =  44ul;
       fFloat   = -55.f;
       fDouble  = -66.;
+      fEnum    = kNothing;
 
       fBoolArray2   = new Bool_t[N];
       fShortArray2  = new Short_t[N];
@@ -109,6 +114,7 @@ public:
    ULong64_t GetULong64() { return fULong64; }
    Float_t   GetFloat()   { return fFloat; }
    Double_t  GetDouble()  { return fDouble; }
+   EWhat     GetEnum()    { return fEnum; }
 
    Bool_t*   GetBoolArray()    { return fBoolArray; }
    Bool_t*   GetBoolArray2()   { return fBoolArray2; }
@@ -145,6 +151,7 @@ public:
    const ULong64_t& GetULong64CR() { return fULong64; }
    const Float_t&   GetFloatCR()   { return fFloat; }
    const Double_t&  GetDoubleCR()  { return fDouble; }
+   const EWhat&     GetEnumCR()    { return fEnum; }
 
 // setters
    void SetBool( Bool_t b )        { fBool   = b;   }
@@ -161,6 +168,7 @@ public:
    void SetULong64( ULong64_t ul ) { fULong64 = ul; }
    void SetFloat( Float_t f )      { fFloat  = f;   }
    void SetDouble( Double_t d )    { fDouble = d;   }
+   void SetEnum( EWhat e )         { fEnum   = e;   }
 
 // setters const-ref
    void SetBoolCR( const Bool_t& b )        { fBool   = b;   }
@@ -177,6 +185,7 @@ public:
    void SetULong64CR( const ULong64_t& ul ) { fULong64 = ul; }
    void SetFloatCR( const Float_t& f )      { fFloat  = f;   }
    void SetDoubleCR( const Double_t& d )    { fDouble = d;   }
+   void SetEnumCR( const EWhat& e )         { fEnum   = e;   }
 
 public:
 // basic types
@@ -194,6 +203,7 @@ public:
    ULong64_t fULong64;
    Float_t   fFloat;
    Double_t  fDouble;
+   EWhat     fEnum;
 
 // array types
    Bool_t    fBoolArray[N];
@@ -234,6 +244,7 @@ public:
    static Long64_t  sLong64;
    static ULong64_t sULong64;
    static Double_t  sDouble;
+   static EFruit    sEnum;
 
 private:
    bool fOwnsArrays;
@@ -253,6 +264,7 @@ Long64_t  ClassWithData::sLong64  = -404l;
 ULong64_t ClassWithData::sULong64 = 404ul;
 Float_t   ClassWithData::sFloat   = -505.f;
 Double_t  ClassWithData::sDouble  = -606.;
+EFruit    ClassWithData::sEnum    = kApple;
 
 long GetPodAddress( ClassWithData& c )
 {
