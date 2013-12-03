@@ -99,7 +99,7 @@ namespace {
 
          // namespaces may have seen updates in their list of global functions, which
          // are available as "methods" even though they're not really that
-            if ( ! attr && PyType_Check( pyclass ) ) {
+            if ( ! attr && ! PyRootType_CheckExact( pyclass ) && PyType_Check( pyclass ) ) {
                PyErr_Clear();
  
                TScopeAdapter klass = TScopeAdapter::ByName( ((PyTypeObject*)pyclass)->tp_name );
@@ -127,7 +127,7 @@ namespace {
                }
 
             // function templates that have not been instantiated
-               if ( ! attr ) {
+               if ( ! attr && klass ) {
                   TFunctionTemplate* tmpl = ((TClass*)klass.Id())->GetFunctionTemplate( name.c_str() );
                   if ( tmpl )
                      attr = (PyObject*)TemplateProxy_New( name, pyclass );
