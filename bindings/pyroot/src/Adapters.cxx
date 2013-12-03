@@ -113,7 +113,9 @@ std::string PyROOT::TMemberAdapter::Name( unsigned int mod ) const
    } else if ( mod & Rflx::FINAL )
       return Utility::ResolveTypedef( fMember->GetName() );
 
-   return fMember->GetName();
+   if ( fMember )
+      return fMember->GetName();
+   return "<unknown>";   // happens for classes w/o dictionary
 }
 
 //____________________________________________________________________________
