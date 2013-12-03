@@ -1154,7 +1154,7 @@ public:
 
   /// Print a Macro to an ostream used for ClangInternalState
   /// Same as dump, but without orinting source location.
-  void printMacro(const MacroInfo &MI, raw_ostream &OS) const;
+  void printMacros(raw_ostream &OS) const;
 
   /// AdvanceToTokenCharacter - Given a location that specifies the start of a
   /// token, return a new location that specifies a character within the token.

@@ -226,31 +226,36 @@ void Preprocessor::DumpMacro(const MacroInfo &MI) const {
   llvm::errs() << "\n";
 }
 
-void Preprocessor::printMacro(const MacroInfo &MI, raw_ostream &OS) const {
-  OS << "MACRO: ";
-  for (unsigned i = 0, e = MI.getNumTokens(); i != e; ++i) {
-    const Token &Tok = MI.getReplacementToken(i);
-    OS << tok::getTokenName(Tok.getKind()) << " '"
-               << getSpelling(Tok) << "'";
-    OS << "\t";
-    if (Tok.isAtStartOfLine())
-      OS << " [StartOfLine]";
-    if (Tok.hasLeadingSpace())
-      OS << " [LeadingSpace]";
-    if (Tok.isExpandDisabled())
-      OS << " [ExpandDisabled]";
-    if (Tok.needsCleaning()) {
-      const char *Start = SourceMgr.getCharacterData(Tok.getLocation());
-      OS << " [UnClean='" << StringRef(Start, Tok.getLength())
-                 << "']";
+void Preprocessor::printMacros(raw_ostream &OS) const {
+  for (macro_iterator I = macro_begin(), E = macro_end(); I != E; ++I) {
+    OS << "<MD: " << I->second << ">";
+    OS << I->first->getName() << " ";
+    OS << "(Tokens:)";
+    MacroInfo* MI = I->second->getMacroInfo();
+    for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
+      const Token &Tok = MI->getReplacementToken(i);
+      OS << tok::getTokenName(Tok.getKind()) << " '"
+         << getSpelling(Tok) << "'";
+      OS << "\t";
+      if (Tok.isAtStartOfLine())
+        OS << " [StartOfLine]";
+      if (Tok.hasLeadingSpace())
+        OS << " [LeadingSpace]";
+      if (Tok.isExpandDisabled())
+        OS << " [ExpandDisabled]";
+      if (Tok.needsCleaning()) {
+        const char *Start = SourceMgr.getCharacterData(Tok.getLocation());
+        OS << " [UnClean='" << StringRef(Start, Tok.getLength())
+           << "']";
+      }
+      //Do not print location it uses the SourceManager dump to llvm::errs.
+      OS << "\tLoc=<";
+      Tok.getLocation().print(OS, SourceMgr);
+      OS << ">";
+      OS << "  ";
     }
-    //Do not print location it uses the SourceManager dump to llvm::errs.
-    OS << "\tLoc=<";
-    Tok.getLocation().print(OS, SourceMgr);
-    OS << ">";
-    OS<< "  ";
+    OS << "\n";
   }
-  OS << "\n";
 }
 
 void Preprocessor::PrintStats() {
