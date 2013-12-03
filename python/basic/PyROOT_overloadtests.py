@@ -57,10 +57,17 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
+
+    # first verify that BB and DD are indeed unknown
+      self.assertRaises( RuntimeError, BB )
+      self.assertRaises( RuntimeError, DD )
+
+    # then try overloads based on them
       self.assertEqual( MyOverloads().call( AA() ),    "AA" )
       self.assertEqual( MyOverloads().call( GetBB() ), "DD" ) # <- BB is unknown + void*
       self.assertEqual( MyOverloads().call( CC() ),    "CC" )
       self.assertEqual( MyOverloads().call( GetDD() ), "DD" ) # <- DD is unknown
+
       ROOT.gErrorIgnoreLevel = oldval
 
    def test3ClassOverloadsAmongUnknowns( self ):
