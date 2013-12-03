@@ -7,6 +7,10 @@
 #  ROOT_LIBRARIES    - libraries to link against
 #  ROOT_USE_FILE     - path to a CMake module which may be included to help
 #                      setup CMake variables and useful Macros 
+# Addional variables:
+#  ROOT_${lib}_LIBRARY - library <lib> full path
+#  ROOT_${tool}_CMD    - executable <tool> full path
+#  ROOT_EXECUTABLE     - same as ${ROOT_root_CMD}
 #
 # You may supply a version number through find_package which will be checked
 # against the version of this build. Standard CMake logic is used so that
