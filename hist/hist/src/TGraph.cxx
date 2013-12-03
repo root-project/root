@@ -589,7 +589,7 @@ void TGraph::Browse(TBrowser *b)
 
 
 //______________________________________________________________________________
-Double_t TGraph::Chisquare(const TF1 *f1, Option_t * option) const
+Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
 {
    // Return the chisquare of this graph with respect to f1.
    // The chisquare is computed as the sum of the quantity below at each point:
@@ -605,8 +605,6 @@ Double_t TGraph::Chisquare(const TF1 *f1, Option_t * option) const
    // By default the range of the graph is used whatever function range.
    //  Use option "R" to use the function range
 
-   // need to cast away the const - since it requires evaluating the function which is not const
-   TF1 * func = const_cast<TF1*>(f1);
    if (!func) { 
       Error("Chisquare","Function pointer is Null - return -1");
       return -1;
