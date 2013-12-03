@@ -18,23 +18,20 @@ from common import *
 __all__ = [
    'Regression01TwiceImportStar',
    'Regression02PyException',
-   'Regression03UserDefinedNewOperator',
+   'Regression03OldCrashers',
    'Regression04Threading',
    'Regression05LoKiNamespace',
    'Regression06Int64Conversion',
    'Regression07MatchConstWithProperReturn',
-   'Regression08UseNamespaceProperlyInPythonize',
-   'Regression09CheckEnumExactMatch',
-   'Regression10BreakSmartPtrCircularLoop',
-   'Regression10TVector3Pythonize',
-   'Regression11CoralAttributeListIterators',
-   'Regression12GlobalsLookup',
-   'Regression13WriteTGraph',
-   'Regression14BaseClassUsing',
-   'Regression15TPyException',
-   'Regression16ConsRef',
-   'Regression17NestedNamespace',
-   'Regression18TQClass',
+   'Regression08CheckEnumExactMatch',
+   'Regression09TVector3Pythonize',
+   'Regression10CoralAttributeListIterators',
+   'Regression11GlobalsLookup',
+   'Regression12WriteTGraph',
+   'Regression13BaseClassUsing',
+   'Regression14TPyException',
+   'Regression15ConsRef',
+   'Regression16NestedNamespace',
 ]
 
 
@@ -73,15 +70,38 @@ class Regression02PyException( MyTestCase ):
          self.assertEqual( str(sys.exc_info()[1]), "overloaded int test error message" )
 
 
-### By-value return for class that defines operator new ======================
-class Regression03UserDefinedNewOperator( MyTestCase ):
+### Several tests that used to cause crashes =================================
+class Regression03OldCrashers( MyTestCase ):
    def test1CreateTemporary( self ):
-      """Test handling of a temporary for user defined operator new"""
+      """Handling of a temporary for user defined operator new"""
 
       gROOT.LoadMacro( "MuonTileID.C+" )
 
       getID()
       getID()                 # used to crash
+
+   def test2UsageOfTQClassInstance( self ):
+      """Calls on a TQClass instance"""
+
+      self.assertEqual( TClass.GetClass("TQClass").GetName(), "TQClass" )
+
+   def test3UseNamespaceInIteratorPythonization( self ):
+      """Classes with iterators in a namespace"""
+
+      gROOT.LoadMacro( "Marco.C" )
+      self.assert_( ns.MyClass )
+
+   def test4VerifyNoLoop( self ):
+      """Smart class that returns itself on dereference should not loop"""
+
+      gROOT.LoadMacro( "Scott3.C+" )
+      a = MyTooSmartClass()
+      self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
+
+   def test5DirectMetaClassAccess( self ):
+      """Direct access on the meta class"""
+
+      self.assertRaises( AttributeError, getattr, TObject.__class__, "nosuch" )
 
 
 ### Test the condition under which to (not) start the GUI thread =============
@@ -211,17 +231,8 @@ class Regression07MatchConstWithProperReturn( MyTestCase ):
       self.assertEqual( MyOverloadTheOtherWay().gime(), "aap" )
 
 
-### Don't forget namespace when looking up a class in Pythonize! =============
-class Regression08UseNamespaceProperlyInPythonize( MyTestCase ):
-   def test1UseNamespaceInIteratorPythonization( self ):
-      """Do not crash on classes with iterators in a namespace"""
-
-      gROOT.LoadMacro( "Marco.C" )
-      self.assert_( ns.MyClass )
-
-
 ### enum type conversions (used to fail exact match in CINT) =================
-class Regression09CheckEnumExactMatch( MyTestCase ):
+class Regression08CheckEnumExactMatch( MyTestCase ):
    def test1CheckEnumCalls( self ):
       """Be able to pass enums as function arguments"""
 
@@ -233,18 +244,9 @@ class Regression09CheckEnumExactMatch( MyTestCase ):
       self.assertEqual( marsupilami, a.testEnum4( marsupilami ) )
       self.assertEqual( marsupilami, a.testEnum4( Long(marsupilami) ) )
 
-### "smart" classes that return themselves on dereference cause a loop =======
-class Regression10BreakSmartPtrCircularLoop( MyTestCase ):
-   def test1VerifyNoLoopt( self ):
-      """Smart class that returns itself on dereference should not loop"""
-
-      gROOT.LoadMacro( "Scott3.C+" )
-      a = MyTooSmartClass()
-      self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
-
 
 ### test pythonization of TVector3 ===========================================
-class Regression10TVector3Pythonize( MyTestCase ):
+class Regression09TVector3Pythonize( MyTestCase ):
    def test1TVector3( self ):
       """Verify TVector3 pythonization"""
 
@@ -253,7 +255,7 @@ class Regression10TVector3Pythonize( MyTestCase ):
 
 
 ### test pythonization coral::AttributeList iterators ========================
-class Regression11CoralAttributeListIterators( MyTestCase ):
+class Regression10CoralAttributeListIterators( MyTestCase ):
    def test1IterateWithBaseIterator( self ):
       """Verify that the correct base class iterators is picked up"""
 
@@ -276,7 +278,7 @@ class Regression11CoralAttributeListIterators( MyTestCase ):
 
 
 ### importing cout should not result in printed errors =======================
-class Regression12GlobalsLookup( MyTestCase ):
+class Regression11GlobalsLookup( MyTestCase ):
    def test1GetCout( self ):
       """Test that ROOT.cout does not cause error messages"""
 
@@ -291,7 +293,7 @@ class Regression12GlobalsLookup( MyTestCase ):
 
 
 ### importing cout should not result in printed errors =======================
-class Regression13WriteTGraph( MyTestCase ):
+class Regression12WriteTGraph( MyTestCase ):
    def test1WriteTGraph( self ):
       """Write a TGraph object and read it back correctly"""
 
@@ -304,7 +306,7 @@ class Regression13WriteTGraph( MyTestCase ):
 
 
 ### 'using' base class data members should make them accessible ==============
-class Regression14BaseClassUsing( MyTestCase ):
+class Regression13BaseClassUsing( MyTestCase ):
    def test1AccessUsingBaseClassDataMember( self ):
       """Access a base class data member made availabe by 'using'"""
 
@@ -316,7 +318,7 @@ class Regression14BaseClassUsing( MyTestCase ):
 
 
 ### TPyException had troubles due to its base class of std::exception ========
-class Regression15TPyException( MyTestCase ):
+class Regression14TPyException( MyTestCase ):
    def test1PythonAccessToTPyException( self ):
       """Load TPyException into python and make sure its usable"""
 
@@ -326,7 +328,7 @@ class Regression15TPyException( MyTestCase ):
 
 
 ### const-ref passing differs between CINT and Cling =========================
-class Regression16ConsRef( MyTestCase ):
+class Regression15ConsRef( MyTestCase ):
    def test1PassByConstRef( self ):
       """Test passing arguments by const reference"""
 
@@ -340,20 +342,12 @@ class Regression16ConsRef( MyTestCase ):
 
 
 ### nested namespace had a bug in the lookup loop ============================
-class Regression17NestedNamespace( MyTestCase ):
+class Regression16NestedNamespace( MyTestCase ):
    def test1NestedNamespace( self ):
       """Test nested namespace lookup"""
 
       gROOT.ProcessLine('#include "NestedNamespace.h"')
       self.assert_( ABCDEFG.ABCD.Nested )
-
-
-### getting TQClass* instances used to crash =================================
-class Regression18TQClass( MyTestCase ):
-   def test1UsageOfTQClassInstance( self ):
-      """Calls on a TQClass instance used to crash"""
-
-      self.assertEqual( TClass.GetClass("TQClass").GetName(), "TQClass" )
 
 
 ## actual test run
