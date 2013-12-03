@@ -73,12 +73,6 @@ inline PyObject* PyROOT::TMethodHolder::CallFast( void* self, Bool_t release_gil
 
    PyObject* result = 0;
 
-// CLING WORKAROUND -- this happens for various cases, so allow them to fail
-// here (return 0) rather than blocked from being called at all
-   if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) )
-      return 0;
-// -- CLING WORKAROUND
-
    try {       // C++ try block
       result = fExecutor->Execute( fMethodCall, (void*)((Long_t)self + fOffset), release_gil );
    } catch ( TPyException& ) {
@@ -187,12 +181,6 @@ Bool_t PyROOT::TMethodHolder::InitCallFunc_()
 // -- CLING WORKAROUND
 
    if ( ! gInterpreter->CallFunc_IsValid( fMethodCall ) ) {
-   // CLING WORKAROUND -- checking (Bool_t)fMethod (i.e. whether this is a method
-   //                     rather than a ctor), remains necessary (for ctors, there
-   //                     is another workaround later using TClass::New())
-      if ( (Bool_t)fMethod == false || fMethod.Name() == fClass.Name() )
-         return kTRUE;
-   // -- CLING WORKAROUND
       PyErr_Format( PyExc_RuntimeError, "could not resolve %s::%s(%s)",
          fClass.Name().c_str(), fMethod.Name().c_str(), callString.c_str() );
       gInterpreter->CallFunc_Delete( fMethodCall );
