@@ -280,13 +280,13 @@ PyObject* PyROOT::TSTLStringExecutor::Execute( CallFunc_t* func, void* self, Boo
 // execute <func> with argument <self>, construct python string return value
    TInterpreterValue* value = gInterpreter->CreateTemporary();
    PRCallFuncExecValue( func, self, *value, release_gil );
-   std::string* result = (std::string*)value->GetAsPointer();
-   if ( ! result ) {
+   if ( ! value->IsValid() ) {
       delete value;
       Py_INCREF( PyStrings::gEmptyString );
       return PyStrings::gEmptyString;
    }
 
+   std::string* result = (std::string*)value->GetAsPointer();
    PyObject* pyresult =
       PyROOT_PyUnicode_FromStringAndSize( result->c_str(), result->size() );
    delete value;
@@ -318,7 +318,7 @@ PyObject* PyROOT::TRootObjectByValueExecutor::Execute( CallFunc_t* func, void* s
    TInterpreterValue *value = gInterpreter->CreateTemporary();
    PRCallFuncExecValue( func, self, *value, release_gil );
 
-   if ( ! value->GetAsPointer() ) {
+   if ( ! value->IsValid() ) {
       if ( ! PyErr_Occurred() )         // callee may have set a python error itself
          PyErr_SetString( PyExc_ValueError, "NULL result where temporary expected" );
       delete value;
