@@ -570,7 +570,7 @@ public:
   /// \brief Remove a IdentifierInfo and MacroDirective from the history.
   /// Given an IdentifierInfo and a MacroDirective we can remove them from
   /// the macros vector.
-  void removeMacro(IdentifierInfo *II, const MacroDirective *MD);
+  void removeMacro(IdentifierInfo *II, MacroDirective *MD);
 
   /// \brief Set a MacroDirective that was loaded from a PCH file.
   void setLoadedMacroDirective(IdentifierInfo *II, MacroDirective *MD);

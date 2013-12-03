@@ -55,6 +55,23 @@ void Preprocessor::appendMacroDirective(IdentifierInfo *II, MacroDirective *MD){
     II->setChangedSinceDeserialization();
 }
 
+void Preprocessor::removeMacro(IdentifierInfo *II, MacroDirective *MD) {
+  assert(II && MD);
+  Macros.erase(II);
+  if (MacroDirective* prevMD = MD->getPrevious()) {
+    // Avoid assertion in appendMacroDirective.
+    MacroDirective* prevPrevMD = prevMD->getPrevious();
+    prevMD->setPrevious(0);
+    appendMacroDirective(II, prevMD);
+    prevMD->setPrevious(prevPrevMD);
+  }
+  // Release the MacroInfo allocated space so it can be reused.
+  if (MacroInfo* MI = MD->getMacroInfo()) {
+    ReleaseMacroInfo(MI);
+  }
+}
+
+
 void Preprocessor::setLoadedMacroDirective(IdentifierInfo *II,
                                            MacroDirective *MD) {
   assert(II && MD);
