@@ -175,6 +175,14 @@
 -   The option "A" in the `Draw()` was not cleaning properly the 
     current pad.
 
+### THStack
+
+-    By default the background of the histograms is erased before drawing the 
+     histograms. The new option `noclear` avoid this behaviour. This is useful
+     when drawing a `THStack` on top of an other plot. If the patterns used to
+     draw the histograms in the stack are transparents, then the plot behind
+     will be visible.
+   
 ### TF1
 
 -   Implement the possibility to save a `TF1` as C code indenpant from
