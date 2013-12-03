@@ -4,7 +4,6 @@
 const Int_t noChains = 4;
 const char* chainNames[noChains] = {"a", "b", "c", "d"};
 const Int_t chainConstatns[noChains] = {1, 2, 3, 4};
-TString path = ""; //  "/home/mbiskup/myroottest/TDSetFriends/";
 
 const Int_t noTrees = 5;
 Int_t size[noTrees] = {100, 150, 200, 120, 30};
@@ -46,7 +45,7 @@ void testChainFriends(bool recreate = true) {
    {
       chains[i] = new TChain(chainNames[i]);
       for (Int_t j = 0; j < noTrees; j++) {
-         chains[i]->Add(Form("%s%s%d.root",path.Data(),chainNames[i],j));
+         chains[i]->Add(Form("%s%d.root",chainNames[i],j));
 //      chains[i]->Print();
       }
    }
@@ -85,7 +84,7 @@ void testChainFriends(bool recreate = true) {
 //      dsets[i] = new TDSet("TTree",chainNames[i]);
 //      printf("%s\n", chainNames[i]);
 //      for (Int_t j = 0; j < noTrees; j++)
-//         dsets[i]->Add(path + chainNames[i] + j + ".root");
+//         dsets[i]->Add(chainNames[i] + j + ".root");
 ////      chains[i]->Print();
 //   }
 //   dsets[0]->AddFriend(dsets[1], "");

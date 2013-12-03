@@ -11,8 +11,6 @@
 const Int_t noChains = 2;
 const char* chainNames[noChains] = {"e", "f"};
 const Float_t chainConstants[noChains] = {1, 2};
-//TString path = "/home/mbiskup/myroottest/index/";
-TString path = "";
 
 const Int_t noTrees = 5;
 Int_t size[noTrees] = {100, 150, 200, 120, 30};  // real sizes of the trees is 2x these values
@@ -38,7 +36,7 @@ void createFiles(TString name, Float_t valConst)
       }
       random_shuffle(data.begin(), data.end());
 
-      TString filename = path;
+      TString filename;
       filename += name;
       filename += treeNo;
       filename += ".root";
@@ -86,7 +84,7 @@ void testChainFriendsWithIndex(int what = 3) {
          {
             chains[i] = new TChain(chainNames[i]);
             for (Int_t j = 0; j < noTrees; j++) {
-               TString filename = path;
+               TString filename;
                filename += chainNames[i];
                filename += j;
                filename += ".root";
@@ -112,7 +110,7 @@ void testTDSetFriends() {
       dsets[i] = new TDSet("TTree",chainNames[i]);
       printf("%s\n", chainNames[i]);
       for (Int_t j = 0; j < noTrees; j++) {
-         TString filename = path;
+         TString filename;
          filename += chainNames[i];
          filename += j;
          filename += ".root";
