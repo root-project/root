@@ -162,19 +162,21 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDataMember.h"
-#include "TDataType.h"
-#include "TROOT.h"
-#include "TGlobal.h"
-#include "TInterpreter.h"
+
 #include "Strlen.h"
-#include "TMethodCall.h"
 #include "TClass.h"
 #include "TClassEdit.h"
-#include "TMethod.h"
+#include "TDataType.h"
+#include "TEnum.h"
+#include "TEnumConstant.h"
+#include "TGlobal.h"
+#include "TInterpreter.h"
 #include "TIterator.h"
 #include "TList.h"
-#include "TGlobal.h"
+#include "TMethod.h"
+#include "TMethodCall.h"
 #include "TRealData.h"
+#include "TROOT.h"
  
 #include <stdlib.h>
 
@@ -435,27 +437,32 @@ void TDataMember::Init()
       for (i=0;i<token_cnt;i++) if(tokens[i]) delete [] tokens[i];
 
    // if option string does not exist but it's an Enum - parse it!!!!
-   //} else if (!strncmp(GetFullTypeName(),"enum",4)) {
    } else if (IsEnum()) {
-
-      TGlobal *global = 0;
-      TDataMember::fOptions = new TList();
-      char etypename[65];
-      strlcpy(etypename,this->GetTypeName(),65); //save the typename!!! must do it!
-      const char *gtypename = 0;
-      TList *globals = (TList*)(gROOT->GetListOfGlobals(kTRUE)); //get all globals
-      if (!globals) return;
-
-      TIter nextglobal(globals);                //iterate through all global to find
-      while ((global=(TGlobal*)nextglobal())) { // values belonging to this enum type
-         if (global->Property() & kIsEnum) {
-            gtypename = global->GetTypeName();
-            if (strcmp(gtypename,etypename)==0) {
-               Int_t *value = (Int_t*)(global->GetAddress());
-               Long_t l     = (Long_t)(*value);
-               TOptionListItem *it = new TOptionListItem(this,l,0,0,global->GetName(),global->GetName());
-               fOptions->Add(it);
+      fOptions = new TList();
+      TEnum* enumDict = 0;
+      {
+         // We need to find "A" in "A::E". A can be complex, E not.
+         const char* typeName = GetTypeName();
+         if (const char* posCol = strrchr(typeName, ':')) {
+            TString declContext(typeName, posCol - typeName - 1);
+            TClass* clDeclContext = TClass::GetClass(declContext);
+            if (clDeclContext && clDeclContext->GetListOfEnums()) {
+               enumDict = (TEnum*)clDeclContext->GetListOfEnums()
+                  ->FindObject(posCol + 1);
             }
+         }
+         if (!enumDict) {
+            enumDict = (TEnum*) gROOT->GetListOfEnums()->FindObject(typeName);
+         }
+      }
+
+      if (enumDict) {
+         TIter iEnumConst(enumDict->GetConstants());
+         while (TEnumConstant* enumConst = (TEnumConstant*)iEnumConst()) {
+            TOptionListItem *it
+               = new TOptionListItem(this, enumConst->GetValue(),0,0,
+                                     enumConst->GetName(),enumConst->GetName());
+            fOptions->Add(it);
          }
       }
 
