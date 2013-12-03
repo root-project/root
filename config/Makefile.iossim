@@ -33,12 +33,12 @@ CXX          := $(shell xcrun -find g++)
 CC           := $(shell xcrun -find gcc)
 endif
 CXXFLAGS      = -arch i386 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common -fvisibility-inlines-hidden \
+                -fsigned-char -fno-common \
                 $(EXTRA_CXXFLAGS) -isysroot $(IOSSDK) $(CXX11FLAGS)
 CFLAGS        = -arch i386 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) -isysroot $(IOSSDK)
 CINTCXXFLAGS  = -arch i386 -pipe -W -Wall -Woverloaded-virtual \
-                -fsigned-char -fno-common -fvisibility-inlines-hidden \
+                -fsigned-char -fno-common \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__ROOT -DG__REDIRECTIO -DG__OSFDLL \
                 -DG__STD_EXCEPTION $(CXX11FLAGS) \
