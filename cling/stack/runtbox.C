@@ -2,7 +2,7 @@
 #include "TCanvas.h"
 #include "TBox.h"
 
-void box(Int_t pat, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
+void thebox(Int_t pat, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 {
    TBox b;
    Double_t dx = (x2-x1)/3;
@@ -20,7 +20,7 @@ void runtbox()
    Int_t i,j=3001;
 
    for (i=1; i<=5; i++) {
-      box(j++, 0.81, y-bh, 0.99, y);
+      thebox(j++, 0.81, y-bh, 0.99, y);
       y = y-bh-db;
    }
    fprintf(stdout,"all box were created without a crash\n");
