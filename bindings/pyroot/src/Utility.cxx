@@ -724,10 +724,21 @@ Long_t PyROOT::Utility::GetObjectOffset(
    }
 
    Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clCurrent, clDesired, obj );
-   if ( offset != -1 )
-      sOffsets[ clCurrent ].push_back( std::make_pair( clDesired, offset ) );
-   else
-      offset = 0;
+   if ( offset == -1 ) {
+   // CLING WORKAROUND (ROOT-5781) -- offset should not fail; note that the names
+   // MUST be copied over (still that static data lurking in there somehow?)
+      std::string clNameCurrent = gInterpreter->ClassInfo_FullName( clCurrent );
+      std::string clNameDesired = gInterpreter->ClassInfo_FullName( clDesired );
+      std::ostringstream interpcast;
+      interpcast << "(long)(" << clNameDesired << "*)("
+                 << clNameCurrent << "*)" << (void*)obj
+                 << " - (long)(" << clNameCurrent << "*)" << (void*)obj
+                 << ";";
+      offset = (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
+   // -- CLING WORKAROUND
+   }
+
+   sOffsets[ clCurrent ].push_back( std::make_pair( clDesired, offset ) );
    return offset;
 }
 
