@@ -157,6 +157,16 @@ namespace ROOT {
       */
       bool GetConfidenceIntervals(const TH1 * h1, const ROOT::Fit::FitResult & r, TGraphErrors * gr, double cl = 0.95); 
       
+      /**
+         compute the chi2 value for an histogram given a function  (see TH1::Chisquare for the documentation)
+      */
+      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange); 
+
+      /**
+         compute the chi2 value for a graph given a function (see TGraph::Chisquare)
+      */
+      double Chisquare(const TGraph & h1, TF1 & f1, bool useRange); 
+
 
    } // end namespace Fit
 

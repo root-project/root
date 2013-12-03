@@ -98,7 +98,7 @@ public:
 
    virtual void          Apply(TF1 *f);
    virtual void          Browse(TBrowser *b);
-   virtual Double_t      Chisquare(const TF1 *f1) const;
+   virtual Double_t      Chisquare(const TF1 *f1, Option_t *option="") const;
    static Bool_t         CompareArg(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareX(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareY(const TGraph* gr, Int_t left, Int_t right);

@@ -217,9 +217,9 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
             // need to evaluate function to know about rejected points
             // hugly but no other solutions
             if (func != 0) { 
-               func->RejectPoint(false);
+               TF1::RejectPoint(false);
                (*func)( &x[0] );  // evaluate using stored function parameters
-               if (func->RejectedPoint() ) continue; 
+               if (TF1::RejectedPoint() ) continue; 
             }
 
 
@@ -608,9 +608,9 @@ void DoFillData ( BinData  & dv,  const TGraph * gr,  BinData::ErrorType type, T
       // need to evaluate function to know about rejected points
       // hugly but no other solutions
       if (func) { 
-         func->RejectPoint(false);
+         TF1::RejectPoint(false);
          (*func)( x ); // evaluate using stored function parameters 
-         if (func->RejectedPoint() ) continue; 
+         if (TF1::RejectedPoint() ) continue; 
       }
 
 
@@ -933,9 +933,9 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
       // need to evaluate function to know about rejected points
       // hugly but no other solutions
       if (func) { 
-         func->RejectPoint(false);
+         TF1::RejectPoint(false);
          (*func)( x ); // evaluate using stored function parameters 
-         if (func->RejectedPoint() ) continue; 
+         if (TF1::RejectedPoint() ) continue; 
       }
 
 

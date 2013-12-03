@@ -185,7 +185,8 @@ public:
    virtual void     Browse(TBrowser *b);
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
    virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
-
+   
+   virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual Double_t ComputeIntegral();
    virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);

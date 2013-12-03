@@ -16,6 +16,7 @@
 #include "Fit/Fitter.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
+#include "Fit/Chi2FCN.h"
 #include "HFitInterface.h"
 #include "Math/MinimizerOptions.h"
 #include "Math/Minimizer.h"
@@ -52,6 +53,8 @@ namespace HFit {
 
    int CheckFitFunction(const TF1 * f1, int hdim);
 
+   void GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range);
+
    void FitOptionsMake(const char *option, Foption_t &fitOption);
 
    void CheckGraphFitOptions(Foption_t &fitOption);
@@ -69,6 +72,10 @@ namespace HFit {
 
    template <class FitObject>
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
+
+   template <class FitObject>
+   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange ); 
+
 
 } 
 
@@ -104,6 +111,19 @@ int HFit::CheckFitFunction(const TF1 * f1, int dim) {
    return 0; 
 
 }
+
+
+void HFit::GetFunctionRange(const TF1 & f1, ROOT::Fit::DataRange & range) {   
+   // get the range form the function and fill and return the DataRange object
+   Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
+   f1.GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
+   // support only one range - so add only if was not set before
+   if (range.Size(0) == 0) range.AddRange(0,fxmin,fxmax);
+   if (range.Size(1) == 0) range.AddRange(1,fymin,fymax);
+   if (range.Size(2) == 0) range.AddRange(2,fzmin,fzmax);
+   return;
+}
+
 
 template<class FitObject>
 TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const ROOT::Math::MinimizerOptions & minOption, const char *goption, ROOT::Fit::DataRange & range)
@@ -159,13 +179,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 #ifdef DEBUG
       printf("use range \n" ); 
 #endif
-      // check if function has range 
-      Double_t fxmin, fymin, fzmin, fxmax, fymax, fzmax;
-      f1->GetRange(fxmin, fymin, fzmin, fxmax, fymax, fzmax);
-      // support only one range - so add only if was not set before
-      if (range.Size(0) == 0) range.AddRange(0,fxmin,fxmax);
-      if (range.Size(1) == 0) range.AddRange(1,fymin,fymax);
-      if (range.Size(2) == 0) range.AddRange(2,fzmin,fzmax);
+      HFit::GetFunctionRange(*f1,range);
    }
 #ifdef DEBUG
    printf("range  size %d\n", range.Size(0) ); 
@@ -890,3 +904,34 @@ TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption ,
 //    return ROOT::Fit::FitObject(this, f2 , fitOption , minOption, goption, range); 
 // }
 
+
+// function to compute the simple chi2 for graphs and histograms
+
+double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange) { 
+   return HFit::ComputeChi2(h1,f1,useRange);
+}
+
+double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) { 
+   return HFit::ComputeChi2(g,f1, useRange);
+}
+
+template<class FitObject>
+double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange ) { 
+   
+   // implement using the fitting classes 
+   ROOT::Fit::DataOptions opt; 
+   ROOT::Fit::DataRange range; 
+   // get range of function
+   if (useRange) HFit::GetFunctionRange(f1,range);
+   // fill the data set
+   ROOT::Fit::BinData data(opt,range);
+   ROOT::Fit::FillData(data, &obj, &f1); 
+   if (data.Size() == 0 ) { 
+      Warning("Chisquare","data set is empty - return -1");
+      return -1;
+   }
+   ROOT::Math::WrappedMultiTF1  wf1(f1);
+   ROOT::Fit::Chi2Function chi2(data, wf1);
+   return chi2(f1.GetParameters() );
+
+}

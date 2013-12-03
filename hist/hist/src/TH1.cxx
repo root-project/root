@@ -2308,7 +2308,25 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
    return 0;
 }
+//______________________________________________________________________________
+Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
+{
+   // Compute and return the chisquare of this histogram with respect to a function
+   // The chisquare is computed by weighting each histogram point by the bin error
+   // By default the full range of the histogram is used. 
+   // Use option "R" for restricting the chisquare calculation to the given range of the function
 
+   if (!func) { 
+      Error("Chisquare","Function pointer is Null - return -1");
+      return -1;
+   }
+
+   TString opt(option); opt.ToUpper(); 
+   bool useRange = opt.Contains("R");
+   
+   return ROOT::Fit::Chisquare(*this, *func, useRange);
+
+}
 //______________________________________________________________________________
 Double_t TH1::ComputeIntegral()
 {
