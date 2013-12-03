@@ -358,6 +358,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
          continue;
 
    // enums (static enums are the defined values, non-static are data members, i.e. properties)
+   // TODO: this leaves static enum variables to be read-only
       if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
          if ( ! GetDataMemberAddress( mb ) )
             continue;                   // happens for implementation-specific data
