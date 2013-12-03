@@ -567,7 +567,7 @@ Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 {
    // Merge the THStack in the TList into this stack.
    // Returns the total number of histograms in the result or -1 in case of an error.
-   
+
    if (li==0 || li->GetEntries()==0) {
       return fHists->GetEntries();
    }
@@ -614,6 +614,12 @@ void THStack::Paint(Option_t *option)
    // a number of pads equal to the number of histograms and each histogram
    // is paint into a separate pad.
    //
+   // By default the background of the histograms is erased before drawing the 
+   // histograms. The option "noclear" avoid this behaviour. This is useful
+   // when drawing a THStack on top of an other plot. If the patterns used to
+   // draw the histograms in the stack are transparents, then the plot behind
+   // will be visible.
+   //
    // See THistPainter::Paint for a list of valid options.
 
    if (!fHists) return;
@@ -625,6 +631,11 @@ void THStack::Paint(Option_t *option)
    if (opt.Contains("same")) {
       lsame = kTRUE;
       opt.ReplaceAll("same","");
+   }
+   Bool_t lclear = kTRUE;
+   if (opt.Contains("noclear")) {
+      lclear = kFALSE;
+      opt.ReplaceAll("noclear","");
    }
    if (opt.Contains("pads")) {
       Int_t npads = fHists->GetSize();
@@ -797,7 +808,7 @@ void THStack::Paint(Option_t *option)
             snprintf(loption,31,"%ssame%s",noption,lnk->GetOption());
          }
          h1 = (TH1*)fStack->At(nhists-i-1);
-         if (i>0) {
+         if (i>0 && lclear) {
             // Erase before drawing the histogram
             h1col  = h1->GetFillColor();
             h1fill = h1->GetFillStyle();
@@ -806,7 +817,7 @@ void THStack::Paint(Option_t *option)
             h1->Paint(loption);
             static TClassRef clTFrame = TClass::GetClass("TFrame",kFALSE);
             TAttFill *frameFill = (TAttFill*)clTFrame->DynamicCast(TAttFill::Class(),gPad->GetFrame());
-            if (frameFill) { 
+            if (frameFill) {
                h1->SetFillColor(frameFill->GetFillColor());
                h1->SetFillStyle(frameFill->GetFillStyle());
             }
