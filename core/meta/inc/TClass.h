@@ -156,6 +156,7 @@ private:
 
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
+   TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,

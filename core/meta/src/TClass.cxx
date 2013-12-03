@@ -3456,6 +3456,24 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 }
 
 //______________________________________________________________________________
+TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
+   // Find a method with decl id in this class or its bases.
+   TFunction *f = GetMethodList()->Get(declId);
+   if (f) return (TMethod*)f;
+
+   TBaseClass *base;
+   TIter       next(GetListOfBases());
+   while ((base = (TBaseClass *) next())) {
+      TClass *clBase = base->GetClassPointer();
+      if (clBase) {
+         f = clBase->FindClassOrBaseMethodWithId(declId);
+         if (f) return (TMethod*)f;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
                                         Bool_t objectIsConst /* = kFALSE */,
                                         ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
@@ -3473,20 +3491,8 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
                                                             objectIsConst, mode);
    
    if (!decl) return 0;
-   
-   TFunction *f = GetMethodList()->Get(decl);
-   if (f) return (TMethod*)f;
-   
-   
-   TBaseClass *base;
-   TIter       next(GetListOfBases());
-   while ((base = (TBaseClass *) next())) {
-      TClass *c = base->GetClassPointer();
-      if (c) {
-         f = c->GetMethodList()->Get(decl);
-         if (f) return (TMethod*)f;
-      }
-   }
+   TMethod* f = FindClassOrBaseMethodWithId(decl);
+   if (f) return f;
    Error("GetMethodWithPrototype",
          "\nDid not find matching TMethod <%s> with \"%s\" %sfor %s",
          method,proto,objectIsConst ? "const " : "", GetName());
