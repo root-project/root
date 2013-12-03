@@ -20,6 +20,8 @@
 
 #include "TGlobal.h"
 #include "TInterpreter.h"
+#include "TList.h"
+#include "TROOT.h"
 
 
 ClassImp(TGlobal)
@@ -165,4 +167,24 @@ Bool_t TGlobal::Update(DataMemberInfo_t *info)
       SetTitle(gCling->DataMemberInfo_Title(fInfo));
    }
    return kTRUE;
+}
+
+TList& TGlobalMappedFunction::GetEarlyRegisteredGlobals()
+{
+   // Used to storeTGlobalMappedFunctions from other libs, before gROOT was inistialized
+   static TList fEarlyRegisteredGlobals;
+   return fEarlyRegisteredGlobals;
+}
+
+void TGlobalMappedFunction::Add(TGlobalMappedFunction* gmf)
+{
+   // Add to GetEarlyRegisteredGlobals() if gROOT is not yet initialized; add to
+   // gROOT->GetListOfGlobals() otherwise.
+
+   // Use "gCling" as synonym for "gROOT is initialized"
+   if (gCling) {
+      gROOT->GetListOfGlobals()->Add(gmf);
+   } else {
+      GetEarlyRegisteredGlobals().Add(gmf);
+   }
 }

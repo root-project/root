@@ -113,6 +113,10 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
+#include "TGClient.h"
+#include "X3DBuffer.h"
+#include "TFile.h"
+#include "TVirtualGL.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -1389,7 +1393,22 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
    // you can set load=kFALSE (default).
 
    if (!fGlobals) {
+      // We add to the list the "funcky-fake" globals.
       fGlobals = new TListOfDataMembers(0);
+      fGlobals->Add(new TGlobalMappedFunction("gROOT", "TROOT*",
+                                              (TGlobalMappedFunction::GlobalFunc_t)&ROOT::GetROOT));
+      fGlobals->Add(new TGlobalMappedFunction("gPad", "TVirtualPad*",
+                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualPad::Pad));
+      fGlobals->Add(new TGlobalMappedFunction("gInterpreter", "TInterpreter*",
+                                            (TGlobalMappedFunction::GlobalFunc_t)&TInterpreter::Instance));
+      fGlobals->Add(new TGlobalMappedFunction("gVirtualX", "TTVirtualX*",
+                                            (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
+      fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
+                                            (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
+      fGlobals->Add(new TGlobalMappedFunction("gGLManager", "TTGLManager*",
+                                              (TGlobalMappedFunction::GlobalFunc_t)&TGLManager::Instance));
+      fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
+      TGlobalMappedFunction::GetEarlyRegisteredGlobals().Clear();
    }
 
    if (!fInterpreter)

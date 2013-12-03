@@ -170,7 +170,6 @@ TTabCom::TTabCom()
    // Default constructor.
    fpDirectives = 0;
    fpPragmas = 0;
-   fpGlobals = 0;
    fpGlobalFuncs = 0;
    fpClasses = 0;
    fpNamespaces = 0;
@@ -275,11 +274,7 @@ void TTabCom::ClearGlobalFunctions()
 void TTabCom::ClearGlobals()
 {
    // Forget all global variables seen so far.
-   if (!fpGlobals)
-      return;
-   fpGlobals->Delete(0);
-   delete fpGlobals;
-   fpGlobals = 0;
+   // With teh new implamentation the list is gROOT->GetListOfGlobals(true).
 }
 
 //______________________________________________________________________________
@@ -611,38 +606,7 @@ const TSeqCollection *TTabCom::GetListOfEnvVars()
 const TSeqCollection *TTabCom::GetListOfGlobals()
 {
    // Return the list of globals.
-   if (!fpGlobals) {
-
-      fpGlobals = new TContainer;
-
-      DataMemberInfo_t *a;
-      int last = 0;
-      int nglob = 0;
-
-      // find the number of global objects
-      DataMemberInfo_t *t = gCling->DataMemberInfo_Factory();
-      while (gCling->DataMemberInfo_Next(t))
-         nglob++;
-
-      for (int i = 0; i < nglob; i++) {
-         a = gCling->DataMemberInfo_Factory();
-         gCling->DataMemberInfo_Next(a);             // initial positioning
-
-         for (int j = 0; j < last; j++)
-            gCling->DataMemberInfo_Next(a);
-
-         // if name cannot be obtained no use to put in list
-         if (gCling->DataMemberInfo_IsValid(a) && gCling->DataMemberInfo_Name(a)) {
-            fpGlobals->Add(new TGlobal(a));
-         } else
-            gCling->DataMemberInfo_Delete(a);
-
-         last++;
-      }
-      gCling->DataMemberInfo_Delete(t);
-   }
-
-   return fpGlobals;
+   return (TSeqCollection*)gROOT->GetListOfGlobals(true);
 }
 
 //______________________________________________________________________________
