@@ -65,37 +65,37 @@ ClingWorkAroundLackOfModule = yes
 ClingWorkAroundExtraParensWithImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
 ClingWorkAroundMissingUnloading = yes
-#ClingWorkAroundCallfuncReturnInt = yes         # See http://savannah.cern.ch/bugs/?100652 
-#ClingWorkAroundCallfuncAndConversion = yes     # See https://savannah.cern.ch/bugs/index.php?99517
+#ClingWorkAroundCallfuncReturnInt = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4963
+#ClingWorkAroundCallfuncAndConversion = yes     # See https://sft.its.cern.ch/jira/browse/ROOT-4827
 #ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
 #ClingWorkAroundMissingAutoLoadingForTemplates = yes  # See: https://sft.its.cern.ch/jira/browse/ROOT-4786
 #ClingWorkAroundMissingAutoLoading = yes        # See *also* the problem namespace and templates:
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4786
                                                #     https://sft.its.cern.ch/jira/browse/ROOT-4779
-ClingWorkAroundJITfullSymbolResolution = yes   # See https://savannah.cern.ch/bugs/index.php?98898
+ClingWorkAroundJITfullSymbolResolution = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-4691
 #ClingWorkAroundMissingSmartInclude = yes
-ClingWorkAroundBrokenUnnamedReturn = yes       # See https://savannah.cern.ch/bugs/index.php?99032
-ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://savannah.cern.ch/bugs/index.php?99236
-#ClingWorkAroundCallfuncAndInline = yes        # see https://savannah.cern.ch/bugs/index.php?98425
-#ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://savannah.cern.ch/bugs/index.php?98317 and https://savannah.cern.ch/bugs/?98148
-ClingWorkAroundDeletedSourceFile = yes         # See https://savannah.cern.ch/bugs/index.php?100082 
-ClingWorkAroundUnnamedInclude = yes            # See https://savannah.cern.ch/bugs/index.php?99246
+ClingWorkAroundBrokenUnnamedReturn = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-4719
+ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://sft.its.cern.ch/jira/browse/ROOT-4760
+#ClingWorkAroundCallfuncAndInline = yes        # see https://sft.its.cern.ch/jira/browse/ROOT-4615
+#ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://sft.its.cern.ch/jira/browse/ROOT-4601 and https://sft.its.cern.ch/jira/browse/ROOT-4587
+ClingWorkAroundDeletedSourceFile = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4894
+ClingWorkAroundUnnamedInclude = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4763
 ClingWorkAroundBrokenRecovery = yes
-ClingWorkAroundNoDotNamespace = yes            # See https://savannah.cern.ch/bugs/index.php?99288
+ClingWorkAroundNoDotNamespace = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4773
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
-ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://savannah.cern.ch/bugs/index.php?99290
+ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://sft.its.cern.ch/jira/browse/ROOT-4774
 ClingWorkAroundNoDotInclude = yes              # See trello card about .include
-ClingWorkAroundScriptClassDef = yes            # See https://savannah.cern.ch/bugs/index.php?99268
+ClingWorkAroundScriptClassDef = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4769
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
-ClingWorkAroundNoDotOptimization = yes         # See https://savannah.cern.ch/bugs/index.php?99339
-ClingWorkAroundUnnamedDetection = yes          # See https://savannah.cern.ch/bugs/index.php?99341
-#ClingWorkAroundIncorrectTearDownOrder = yes    # See https://savannah.cern.ch/bugs/index.php?99266
-ClingWorkAroundNoPrivateClassIO = yes          # See https://savannah.cern.ch/bugs/index.php?99860 
-#ClingWorkAroundCallfuncAndVirtual = yes        # See https://savannah.cern.ch/bugs/index.php?99910
+ClingWorkAroundNoDotOptimization = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4790
+ClingWorkAroundUnnamedDetection = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4791
+#ClingWorkAroundIncorrectTearDownOrder = yes    # See https://sft.its.cern.ch/jira/browse/ROOT-4768
+ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4865
+#ClingWorkAroundCallfuncAndVirtual = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-4869
 # Most likely no longer supported.
-# ClingReinstateRedeclarationAllowed = yes     # See https://savannah.cern.ch/bugs/index.php?99396 
-# ClingReinstateImplicitDynamicCast = yes      # See https://savannah.cern.ch/bugs/index.php?99395
+# ClingReinstateRedeclarationAllowed = yes     # See https://sft.its.cern.ch/jira/browse/ROOT-4803
+# ClingReinstateImplicitDynamicCast = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-4802
 # ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
 ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 
