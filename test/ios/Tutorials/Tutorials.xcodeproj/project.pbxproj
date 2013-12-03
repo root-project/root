@@ -368,6 +368,12 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = CERN;
+				TargetAttributes = {
+					70BA9B3E13C5F89100102BC9 = {
+						DevelopmentTeam = V5WJKFTQN5;
+					};
+				};
 			};
 			buildConfigurationList = 70BA9B3913C5F89100102BC9 /* Build configuration list for PBXProject "Tutorials" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -536,13 +542,15 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tutorials/Tutorials-Prefix.pch";
 				"HEADER_SEARCH_PATHS[arch=*]" = ../../../include;
 				INFOPLIST_FILE = "Tutorials/Tutorials-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = ../../../lib;
 				"LIBRARY_SEARCH_PATHS[arch=*]" = "$(inherited)";
 				OTHER_LDFLAGS = (
@@ -565,12 +573,13 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tutorials/Tutorials-Prefix.pch";
 				"HEADER_SEARCH_PATHS[arch=*]" = ../../../include;
 				INFOPLIST_FILE = "Tutorials/Tutorials-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = ../../../lib;
 				"LIBRARY_SEARCH_PATHS[arch=*]" = "$(inherited)";
 				OTHER_LDFLAGS = (
