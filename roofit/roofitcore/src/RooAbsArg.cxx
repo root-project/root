@@ -79,7 +79,7 @@ Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
 Bool_t RooAbsArg::inhibitDirty() { return _inhibitDirty ; }
 
 std::map<RooAbsArg*,TRefArray*> RooAbsArg::_ioEvoList ;
-
+std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 
 
 //_____________________________________________________________________________
@@ -101,7 +101,6 @@ RooAbsArg::RooAbsArg() :
 
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
-  RooTrace::create(this) ;
 }
 
 //_____________________________________________________________________________
@@ -126,7 +125,6 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
 
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
-  RooTrace::create(this) ;
 
 }
 
@@ -176,7 +174,6 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
   //setAttribute(Form("CloneOf(%08x)",&other)) ;
   //cout << "RooAbsArg::cctor(" << this << ") #bools = " << _boolAttrib.size() << " #strings = " << _stringAttrib.size() << endl ;
 
-  RooTrace::create(this) ;
 }
 
 
@@ -224,7 +221,6 @@ RooAbsArg::~RooAbsArg()
     _ownedComponents = 0 ;
   }
 
-  RooTrace::destroy(this) ;
 }
 
 
@@ -501,6 +497,10 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 {
   // Fill supplied list with nodes of the arg tree, following all server links,
   // starting with ourself as top node.
+
+//   if (arg==0) {
+//     cout << "treeNodeServerList(" << GetName() << ") doBranch=" << (doBranch?"T":"F") << " doLeaf = " << (doLeaf?"T":"F") << " valueOnly=" << (valueOnly?"T":"F") << endl ;
+//   }
 
   if (!arg) {
 //     if (list->getHashTableSize()==0) {
@@ -2370,11 +2370,13 @@ void RooAbsArg::Streamer(TBuffer &R__b)
    // Stream an object of class RooAbsArg.
 
    if (R__b.IsReading()) {
-      R__b.ReadClassBuffer(RooAbsArg::Class(),this);
-      _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;  
-      _isConstant = getAttribute("Constant") ;
+     _ioReadStack.push(this) ;
+     R__b.ReadClassBuffer(RooAbsArg::Class(),this);
+     _ioReadStack.pop() ;
+     _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;  
+     _isConstant = getAttribute("Constant") ;
    } else {
-      R__b.WriteClassBuffer(RooAbsArg::Class(),this);
+     R__b.WriteClassBuffer(RooAbsArg::Class(),this);
    }
 }
 
@@ -2454,14 +2456,12 @@ void RooRefArray::Streamer(TBuffer &R__b)
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }      
 
       // Make temporary refArray and read that from the streamer 
-      TRefArray refArray ;
-      refArray.Streamer(R__b) ;
-      R__b.CheckByteCount(R__s, R__c, refArray.IsA());
-
-      // Transfer contents to ourselves
-      TIterator* iter = refArray.MakeIterator() ; 
-      TObject* tmpObj ; while ((tmpObj = iter->Next())) { Add(tmpObj) ; } 
-      delete iter ; 
+      TRefArray* refArray = new TRefArray ;
+      refArray->Streamer(R__b) ;
+      R__b.CheckByteCount(R__s, R__c, refArray->IsA());
+      
+      // Schedule deferred processing of TRefArray into proxy list
+      RooAbsArg::_ioEvoList[RooAbsArg::_ioReadStack.top()] = refArray ;
       
    } else {
 
@@ -2470,7 +2470,9 @@ void RooRefArray::Streamer(TBuffer &R__b)
      // Make a temporary refArray and write that to the streamer
      TRefArray refArray ;
      TIterator* iter = MakeIterator() ; 
-     TObject* tmpObj ; while ((tmpObj = iter->Next())) { refArray.Add(tmpObj) ; } 
+     TObject* tmpObj ; while ((tmpObj = iter->Next())) { 
+       refArray.Add(tmpObj) ; 
+     } 
      delete iter ; 
 
      refArray.Streamer(R__b) ;

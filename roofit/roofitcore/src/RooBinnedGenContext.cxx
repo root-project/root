@@ -136,7 +136,6 @@ void RooBinnedGenContext::setExpectedData(Bool_t flag)
 RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bool_t extended)
 {
   
-
   // Scale to number of events and introduce Poisson fluctuations
   _hist->reset() ;
 
@@ -232,18 +231,7 @@ RooDataSet *RooBinnedGenContext::generate(Double_t nEvt, Bool_t /*skipInit*/, Bo
       wudata->add(*_hist->get(),histOut[i]) ;      
     }    
 
-  } else if (_expectedData) {
-
-    // Second pass for expectedData mode -- Normalize to exact number of requested events
-    // Minor difference may be present in first round due to difference between 
-    // bin average and bin integral in sampling bins
-    Double_t corr = nEvents/_hist->sumEntries() ;
-    for (int i=0 ; i<_hist->numEntries() ; i++) {
-      _hist->get(i) ;
-      wudata->add(*_hist->get(),_hist->weight()*corr) ;
-    }
-
-  }
+  } 
 
   return wudata ;
 

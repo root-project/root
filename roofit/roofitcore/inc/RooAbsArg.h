@@ -28,6 +28,7 @@
 #include <map>
 #include <set>
 #include <deque>
+#include <stack>
 
 #include <iostream>
 
@@ -570,10 +571,14 @@ public:
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
   Bool_t _isConstant ; //! Cached isConstant status 
 
+/*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
+/*   RooArgSet _branchNodeCache //! Cached branch nodes     */
+
  public:  
   virtual void ioStreamerPass2() ;
   static void ioStreamerPass2Finalize() ;
   static std::map<RooAbsArg*,TRefArray*> _ioEvoList ; // temporary holding list for proxies needed in schema evolution  
+  static std::stack<RooAbsArg*> _ioReadStack ; // reading stack 
   
   ClassDef(RooAbsArg,6) // Abstract variable
 };
