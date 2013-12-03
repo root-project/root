@@ -446,8 +446,8 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
       else
          result = new TRootObjectExecutor( klass );
    } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
-   // could still be an enum ...
-      h = gExecFactories.find( "UInt_t" );
+   // enums don't resolve to unsigned ints, but that's what they are ...
+      h = gExecFactories.find( "UInt_t" + cpd );
    } else {
    // handle (with warning) unknown types
       std::stringstream s;
@@ -533,7 +533,8 @@ namespace {
       NFp_t( "int&",               &CreateIntRefExecutor              ),
       NFp_t( "unsigned int",       &CreateULongExecutor               ),
       NFp_t( "unsigned int&",      &CreateUIntRefExecutor             ),
-      NFp_t( "UInt_t", /* enum */  &CreateULongExecutor               ),
+      NFp_t( "UInt_t",  /* enum */ &CreateULongExecutor               ),
+      NFp_t( "UInt_t&", /* enum */ &CreateUIntRefExecutor             ),
       NFp_t( "long",               &CreateLongExecutor                ),
       NFp_t( "long&",              &CreateLongRefExecutor             ),
       NFp_t( "unsigned long",      &CreateULongExecutor               ),
