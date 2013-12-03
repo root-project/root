@@ -414,10 +414,19 @@ set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
 set(ROOT_INCLUDE_DIRS ${buildtree_include_dirs})
 ")
+set(ROOT_LIBRARY_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_LIBRARY_DIR ${CMAKE_BINARY_DIR}/lib)
+")
+set(ROOT_BINARY_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_BINARY_DIR ${CMAKE_BINARY_DIR}/bin)
+")
 set(ROOT_MODULE_PATH_SETUP "
 # ROOT configured for use CMake modules from source tree
 set(CMAKE_MODULE_PATH \${CMAKE_MODULE_PATH} ${CMAKE_MODULE_PATH})
 ")
+
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
 export(TARGETS ${exported_targets} FILE ${PROJECT_BINARY_DIR}/ROOTConfig-targets.cmake)
 configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
@@ -427,6 +436,14 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig.cmake.in
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for the install with relative paths, so use these
 get_filename_component(ROOT_INCLUDE_DIRS \"\${_thisdir}/../include\" ABSOLUTE)
+")
+set(ROOT_LIBRARY_DIR_SETUP "
+# ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_LIBRARY_DIR \"\${_thisdir}/../lib\" ABSOLUTE)
+")
+set(ROOT_BINARY_DIR_SETUP "
+# ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_BINARY_DIR \"\${_thisdir}/../bin\" ABSOLUTE)
 ")
 set(ROOT_MODULE_PATH_SETUP "
 # ROOT configured for use CMake modules from installation tree

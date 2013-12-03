@@ -1,9 +1,9 @@
 # ROOT CMake Configuration File for External Projects
-# This file is configured by Geant4 for use by an external project
+# This file is configured by ROOT for use by an external project
 # As this file is configured by ROOT's CMake system it SHOULD NOT BE EDITED
 # It defines the following variables
-#  ROOT_INCLUDE_DIRS - include directories for Geant4
-#  ROOT_DEFINITIONS  - compile definitions needed to use Geant4
+#  ROOT_INCLUDE_DIRS - include directories for ROOT
+#  ROOT_DEFINITIONS  - compile definitions needed to use ROOT
 #  ROOT_LIBRARIES    - libraries to link against
 #  ROOT_USE_FILE     - path to a CMake module which may be included to help
 #                      setup CMake variables and useful Macros 
@@ -16,19 +16,15 @@
 #  VERSION_OF_THIS_BUILD >= VERSION_REQUESTED
 #
 #
-# In Geant4, components can be optional subcomponents of an always available
-# library. In that case there will be no Geant4_{COMPONENT}_LIBRARY variable.
-# These non-library components are generally activated by compile definitions, 
-# and in these cases the appropriate definition will be added to the
-# Geant4_DEFINITIONS component
-#
 # If you specify components and use the REQUIRED option to find_package, then
-# the module will issue a FATAL_ERROR if this build of Genat4 does not have 
-# the requested component(s).
+# the module will issue a FATAL_ERROR if this build of ROOT does not have
+# the requested component(s). Components are any optional ROOT library, which
+# will be added into the ROOT_LIBRARIES variable.
 #
 # The list of options available generally corresponds to the optional extras
 # that ROOT can be built are also made available to the dependent project as
 # ROOT_{option}_FOUND
+#
 #
 # ===========================================================================
 
@@ -52,10 +48,12 @@ endif()
 get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 #----------------------------------------------------------------------------
-# Configure the path to the Geant4 headers, using a relative path if possible.
+# Configure the path to the ROOT headers, using a relative path if possible.
 # This is only known at CMake time, so we expand a CMake supplied variable.
 #
 @ROOT_INCLUDE_DIR_SETUP@
+@ROOT_LIBRARY_DIR_SETUP@
+@ROOT_BINARY_DIR_SETUP@
 @ROOT_MODULE_PATH_SETUP@
 
 #----------------------------------------------------------------------------
@@ -74,11 +72,36 @@ endforeach()
 
 #----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
-set(ROOT_LIBRARIES Core Cint)
+set(ROOT_LIBRARIES)
+foreach(_cpt Core Cint ${ROOT_FIND_COMPONENTS})
+  find_library(ROOT_${_cpt}_LIBRARY ${_cpt} HINTS ${ROOT_LIBRARY_DIR})
+  if(ROOT_${_cpt}_LIBRARY)
+    mark_as_advanced(ROOT_${_cpt}_LIBRARY)
+    list(APPEND ROOT_LIBRARIES ${ROOT_${_cpt}_LIBRARY})
+    list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+  endif()
+endforeach()
 
 #----------------------------------------------------------------------------
-# Point the user to the UseGeant4.cmake file which they may wish to include
-# to help them with setting up Geant4
+# Locate the tools
+set(ROOT_ALL_TOOLS genreflex genmap root rootcint)
+foreach(_cpt ${ROOT_ALL_TOOLS})
+  if(NOT ROOT_${_cpt}_CMD)
+    find_program(ROOT_${_cpt}_CMD ${_cpt} HINTS ${ROOT_BINARY_DIR})
+    if(ROOT_${_cpt}_CMD)
+      mark_as_advanced(ROOT_${_cpt}_CMD)
+      list(REMOVE_ITEM ROOT_FIND_COMPONENTS ${_cpt})
+    endif()
+  endif()
+endforeach()
+
+#----------------------------------------------------------------------------
+set(ROOT_DEFINITIONS @cflags@)
+set(ROOT_EXECUTABLE ${ROOT_root_CMD})
+
+#----------------------------------------------------------------------------
+# Point the user to the ROOTUseFile.cmake file which they may wish to include
+# to help them with setting up ROOT
 #
 set(ROOT_USE_FILE ${_thisdir}/ROOTUseFile.cmake)
 
@@ -90,10 +113,10 @@ set(ROOT_USE_FILE ${_thisdir}/ROOTUseFile.cmake)
 #
 list(REMOVE_DUPLICATES ROOT_FIND_COMPONENTS)
 foreach(_remaining ${ROOT_FIND_COMPONENTS})
-    if(ROOT_FIND_REQUIRED)
+    if(ROOT_FIND_REQUIRED_${_remaining})
         message(FATAL_ERROR "ROOT component ${_remaining} not found")
     elseif(NOT ROOT_FIND_QUIETLY)
         message(WARNING " ROOT component ${_remaining} not found")
     endif()
-    unset(Geant4_FIND_REQUIRED_${_remaining})
+    unset(ROOT_FIND_REQUIRED_${_remaining})
 endforeach()
