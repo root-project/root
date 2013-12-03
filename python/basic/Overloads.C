@@ -95,3 +95,6 @@ public:
    std::string call( const DD*, int ) { return "DDptr"; }
    std::string call( const DD&, int ) { return "DDref"; }
 };
+
+BB* GetBB() { return (BB*)0; }
+DD* GetDD() { return (DD*)0; }

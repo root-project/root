@@ -57,10 +57,10 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
-      self.assertEqual( MyOverloads().call( AA() ), "AA" )
-      self.assertEqual( MyOverloads().call( BB() ), "DD" ) # <- BB has an unknown + void*
-      self.assertEqual( MyOverloads().call( CC() ), "CC" )
-      self.assertEqual( MyOverloads().call( DD() ), "DD" ) # <- DD has an unknown
+      self.assertEqual( MyOverloads().call( AA() ),    "AA" )
+      self.assertEqual( MyOverloads().call( GetBB() ), "DD" ) # <- BB is unknown + void*
+      self.assertEqual( MyOverloads().call( CC() ),    "CC" )
+      self.assertEqual( MyOverloads().call( GetDD() ), "DD" ) # <- DD is unknown
       ROOT.gErrorIgnoreLevel = oldval
 
    def test3ClassOverloadsAmongUnknowns( self ):
@@ -69,8 +69,8 @@ class Overloads1ClassArrayTestCase( MyTestCase ):
       import ROOT
       oldval = ROOT.gErrorIgnoreLevel
       ROOT.gErrorIgnoreLevel = ROOT.kError
-      self.assertEqual( MyOverloads2().call( BB() ), "BBptr" )
-      self.assertEqual( MyOverloads2().call( DD(), 1 ), "DDptr" )
+      self.assertEqual( MyOverloads2().call( GetBB() ), "BBptr" )
+      self.assertEqual( MyOverloads2().call( GetDD(), 1 ), "DDptr" )
       ROOT.gErrorIgnoreLevel = oldval
 
    def test4ArrayOverloads( self ):
