@@ -6165,6 +6165,11 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
    // based on algorithm 353QH twice presented by J. Friedman
    // in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
+   if (nn < 3 ) { 
+      if (gROOT) gROOT->Error("SmoothArray","Need at least 3 points for smoothing: n = %d",nn);
+      return; 
+   }
+
    Int_t ii, jj, ik, jk, kk, nn2;
    Double_t hh[6] = {0,0,0,0,0,0};
    Double_t *yy = new Double_t[nn];
@@ -6335,10 +6340,15 @@ void  TH1::Smooth(Int_t ntimes, Option_t *option)
       Error("Smooth","Smooth only supported for 1-d histograms");
       return;
    }
+   Int_t nbins = fXaxis.GetNbins();
+   if (nbins < 3) { 
+      Error("Smooth","Smooth only supported for histograms with >= 3 bins. Nbins = %d",nbins);
+      return;
+   }
+
    // delete buffer if it is there since it will become invalid
    if (fBuffer) BufferEmpty(1);
 
-   Int_t nbins = fXaxis.GetNbins();
    Int_t firstbin = 1, lastbin = nbins;
    TString opt = option;
    opt.ToLower();
