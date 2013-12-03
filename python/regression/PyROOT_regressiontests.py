@@ -16,12 +16,12 @@ from ROOT import *
 from common import *
 
 __all__ = [
-   'Regression01TwiceImportStarTestCase',
-   'Regression02PyExceptionTestcase',
-   'Regression03UserDefinedNewOperatorTestCase',
-   'Regression04ThreadingTestCase',
-   'Regression05LoKiNamespaceTestCase',
-   'Regression06Int64ConversionTestCase',
+   'Regression01TwiceImportStar',
+   'Regression02PyException',
+   'Regression03UserDefinedNewOperator',
+   'Regression04Threading',
+   'Regression05LoKiNamespace',
+   'Regression06Int64Conversion',
    'Regression07MatchConstWithProperReturn',
    'Regression08UseNamespaceProperlyInPythonize',
    'Regression09CheckEnumExactMatch',
@@ -34,13 +34,14 @@ __all__ = [
    'Regression15TPyException',
    'Regression16ConsRef',
    'Regression17NestedNamespace',
+   'Regression18TQClass',
 ]
 
 
 ### "from ROOT import *" done in import-*-ed module ==========================
 from Amir import *
 
-class Regression01TwiceImportStarTestCase( MyTestCase ):
+class Regression01TwiceImportStar( MyTestCase ):
    def test1FromROOTImportStarInModule( self ):
       """Test handling of twice 'from ROOT import*'"""
 
@@ -48,7 +49,7 @@ class Regression01TwiceImportStarTestCase( MyTestCase ):
 
 
 ### TPyException thrown from C++ code ========================================
-class Regression02PyExceptionTestcase( MyTestCase ):
+class Regression02PyException( MyTestCase ):
    def test1RaiseAndTrapPyException( self ):
       """Test thrown TPyException object processing"""
 
@@ -73,7 +74,7 @@ class Regression02PyExceptionTestcase( MyTestCase ):
 
 
 ### By-value return for class that defines operator new ======================
-class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
+class Regression03UserDefinedNewOperator( MyTestCase ):
    def test1CreateTemporary( self ):
       """Test handling of a temporary for user defined operator new"""
 
@@ -84,7 +85,7 @@ class Regression03UserDefinedNewOperatorTestCase( MyTestCase ):
 
 
 ### Test the condition under which to (not) start the GUI thread =============
-class Regression04ThreadingTestCase( MyTestCase ):
+class Regression04Threading( MyTestCase ):
 
    hasThread = gROOT.IsBatch() and 5 or 6   # can't test if no display ...
    noThread  = 5
@@ -163,7 +164,7 @@ class Regression04ThreadingTestCase( MyTestCase ):
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
-class Regression05LoKiNamespaceTestCase( MyTestCase ):
+class Regression05LoKiNamespace( MyTestCase ):
    def test1TemplateWithNamespaceParameter( self ):
       """Test name resolution of template with namespace parameter"""
 
@@ -176,7 +177,7 @@ class Regression05LoKiNamespaceTestCase( MyTestCase ):
          LoKi.BooleanConstant( rcp ).__name__, 'LoKi::BooleanConstant<%s>' % rcp )
 
 ### Test conversion of int64 objects to ULong64_t and ULong_t ================
-class Regression06Int64ConversionTestCase( MyTestCase ):
+class Regression06Int64Conversion( MyTestCase ):
    limit1  = 4294967295
    limit1L = pylong(4294967295)
 
@@ -337,6 +338,7 @@ class Regression16ConsRef( MyTestCase ):
          self.assert_( eval( "PyROOT_Regression_TakesRef%d(1)" % (i,) ) )
       self.assertEqual( len(tnames)-1, i )
 
+
 ### nested namespace had a bug in the lookup loop ============================
 class Regression17NestedNamespace( MyTestCase ):
    def test1NestedNamespace( self ):
@@ -344,6 +346,14 @@ class Regression17NestedNamespace( MyTestCase ):
 
       gROOT.ProcessLine('#include "NestedNamespace.h"')
       self.assert_( ABCDEFG.ABCD.Nested )
+
+
+### getting TQClass* instances used to crash =================================
+class Regression18TQClass( MyTestCase ):
+   def test1UsageOfTQClassInstance( self ):
+      """Calls on a TQClass instance used to crash"""
+
+      self.assertEqual( TClass.GetClass("TQClass").GetName(), "TQClass" )
 
 
 ## actual test run
