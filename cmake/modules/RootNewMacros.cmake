@@ -239,7 +239,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endforeach()
   #---Get the library and module dependencies-----------------
   if(ARG_MODULE)
-    set(newargs -s ${libprefix}${ARG_MODULE}${libsuffix})
+    set(target_lib_common ${libprefix}${ARG_MODULE})
+    set(rootmap_name ${targetLibCommon}.rootmap)
+    set(library_name ${targetLibCommon}${libsuffix})
+    set(newargs -s ${library_name})
+    set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
     set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)
   else()
     set(pcm_name ${dictionary}_rdict.pcm)
@@ -251,8 +255,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
   
   #---call rootcint------------------------------------------
-  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name}
-                     COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs}
+  add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
+                     COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                              -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} DESTINATION lib COMPONENT libraries)

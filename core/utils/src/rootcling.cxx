@@ -2461,9 +2461,6 @@ int CreateRootMapFile(const std::string& rootmapFileName,
    // Preamble
    time_t rawtime;
    time (&rawtime);
-   char* theTime = ctime(&rawtime);
-   rootmapFile << "# Automatically generated with genreflex on "
-               << (theTime ? theTime : "TIME ERROR");
 
    rootmapFile << "#--Begin " << rootmapFileName << std::endl;
 
@@ -2673,6 +2670,7 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          classesListForRootmap.push_back(normalizedName);
       }
    }
+   classesListForRootmap.sort();
 }
 
 //_____________________________________________________________________________
@@ -3048,6 +3046,7 @@ int RootCling(int argc,
    std::string dictname;
    std::string dictpathname;
    int ic, force = 0, onepcm = 0;
+	bool ignoreExistingDict = false;
    bool requestAllSymbols = isDeep;
 
    std::string currentDirectory;
@@ -3092,7 +3091,7 @@ int RootCling(int argc,
    std::string liblistPrefix;
 
    while (ic < argc && strncmp(argv[ic], "-",1)==0
-          && strcmp(argv[ic], "-f")!=0 ) {
+      && strcmp(argv[ic], "-f")!=0  && strcmp(argv[ic], "-r")!=0 )  {
       if (!strcmp(argv[ic], "-l")) {
          ic++;
       } else if (!strcmp(argv[ic], "-1")) {
@@ -3118,6 +3117,10 @@ int RootCling(int argc,
 
    if (ic < argc && !strcmp(argv[ic], "-f")) {
       force = 1;
+      ic++;
+   } else if (ic < argc && !strcmp(argv[ic], "-r")) {
+      std::cout << "Ignoring ofile\n";
+      ignoreExistingDict = true;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {
       fprintf(stderr, "%s\n", rootClingHelp);
@@ -3153,9 +3156,9 @@ int RootCling(int argc,
 
    if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
        strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
-       strstr(argv[ic],".cc") || strstr(argv[ic],".c++"))) {
+       strstr(argv[ic],".cc") || strstr(argv[ic],".c++") )) {
       FILE *fp;
-      if ((fp = fopen(argv[ic], "r")) != 0) {
+      if (!ignoreExistingDict &&(fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
          if (!force) {
             ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", argv[0], argv[ic]);
@@ -3501,20 +3504,24 @@ int RootCling(int argc,
 
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
-   std::ofstream headerout;
    string main_dictname(dictpathname);
    std::ostream* dictStreamPtr = NULL;
-   if (!dictpathname.empty()) {
-      tmpCatalog.addFileName(dictpathname);
-      fileout.open(dictpathname.c_str());
-      dictStreamPtr = &fileout;
-      if (!(*dictStreamPtr)) {
-         ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
-                                 dictpathname.c_str());
-         return 1;
+   if (!ignoreExistingDict){
+      if (!dictpathname.empty()) {
+         tmpCatalog.addFileName(dictpathname);
+         fileout.open(dictpathname.c_str());
+         dictStreamPtr = &fileout;
+         if (!(*dictStreamPtr)) {
+            ROOT::TMetaUtils::Error(0, "rootcling: failed to open %s in main\n",
+                                    dictpathname.c_str());
+            return 1;
+         }
+      } else{
+         dictStreamPtr = &std::cout;
       }
-   } else {
-      dictStreamPtr = &std::cout;
+   } else{
+      fileout.open("/dev/null");
+      dictStreamPtr = &fileout;
    }
 
    // Now generate a second stream for the split dictionary if it is necessary
@@ -3735,7 +3742,8 @@ int RootCling(int argc,
    
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
-   GenerateModule(modGen, CI, currentDirectory, dictStream, inlineInputHeader);
+   if (!ignoreExistingDict)
+      GenerateModule(modGen, CI, currentDirectory, dictStream, inlineInputHeader);
 
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";

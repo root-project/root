@@ -363,6 +363,14 @@ int LibMap(const string &solib, const vector<string> &solibdeps,
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
+  
+   fprintf(stdout, "*** Important information: rlibmap is deprecated. "
+   "Rootmaps are now built with rootcling, using the options -rmf and -rml to "
+   "specify the rootmap file name and target library name.\n"
+   "The program will return 0 not to disturb your build system, but please take an action.\n");
+   
+   return 0;
+   
    string         solib;
    vector<string> solibdeps;
    vector<string> linkdefs;
