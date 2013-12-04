@@ -564,8 +564,8 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    //  One can also call TF2::GetRandom2 to get a random variate from a function.
 
    Int_t bin, binx, biny, ibin, loop;
-   Double_t r1, x, y, xv[2];
-   // Search for fname in the list of ROOT defined functions
+   Double_t r1, x, y;
+   //*-*- Search for fname in the list of ROOT defined functions
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
    if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
 
@@ -578,9 +578,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    ibin = 0;
    integral[ibin] = 0;
    for (biny=1;biny<=nbinsy;biny++) {
-      xv[1] = fYaxis.GetBinCenter(biny);
       for (binx=1;binx<=nbinsx;binx++) {
-         xv[0] = fXaxis.GetBinCenter(binx);
          ibin++;
          Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx), fYaxis.GetBinLowEdge(biny), fYaxis.GetBinUpEdge(biny));
          integral[ibin] = integral[ibin-1] + fint;
