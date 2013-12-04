@@ -582,7 +582,8 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
       for (binx=1;binx<=nbinsx;binx++) {
          xv[0] = fXaxis.GetBinCenter(binx);
          ibin++;
-         integral[ibin] = integral[ibin-1] + f1->Eval(xv[0],xv[1]);
+         Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx), fYaxis.GetBinLowEdge(biny), fYaxis.GetBinUpEdge(biny));
+         integral[ibin] = integral[ibin-1] + fint;
       }
    }
 
