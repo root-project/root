@@ -1,15 +1,14 @@
-# Find the Pythia6 includes and library.
-# 
-# This module defines
-# PYTHIA6_LIBRARIES, the libraries to link against to use Pythia6
-# PYTHIA6_FOUND.  If false, you cannot build anything that requires Pythia6.
-# PYTHIA6_LIBRARY, where to find the libPythia6 library.
+# - Locate pythia6 library
+# Defines:
+#
+#  PYTHIA6_FOUND
+#  PYTHIA6_INCLUDE_DIR
+#  PYTHIA6_INCLUDE_DIRS (not cached)
+#  PYTHIA6_LIBRARY
+#  PYTHIA6_LIBRARY_DIR (not cached)
+#  PYTHIA6_LIBRARIES (not cached)
 
-set(PYTHIA6_FOUND 0)
-
-
-find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6 PATHS
-  ${PYTHIA6_DIR}/lib $ENV{PYTHIA6_DIR}/lib
+set(CMAKE_LIBRARY_PATH
   /cern/pro/lib
   /opt/pythia 
   /opt/pythia6
@@ -18,16 +17,19 @@ find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6 PATHS
   /usr/lib/pythia6
   /usr/local/lib/pythia6
   /usr/lib
-  /usr/local/lib
-  DOC "Specify the Pythia6 library here."
-)
+  /usr/local/lib)
 
-if(PYTHIA6_LIBRARY)
-  message(STATUS "Found Pythia6 library at ${PYTHIA6_LIBRARY}")
-  set(PYTHIA6_FOUND 1 )
-endif()
 
+find_library(PYTHIA6_LIBRARY NAMES pythia6 Pythia6
+             HINTS $ENV{PYTHIA6_DIR}/lib ${PYTHIA6_DIR}/lib)
 
 set(PYTHIA6_LIBRARIES ${PYTHIA6_LIBRARY})
+get_filename_component(PYTHIA6_LIBRARY_DIR ${PYTHIA6_LIBRARY} PATH)
 
-MARK_AS_ADVANCED( PYTHIA6_FOUND PYTHIA6_LIBRARY)
+# handle the QUIETLY and REQUIRED arguments and set PHOTOS_FOUND to TRUE if
+# all listed variables are TRUE
+
+INCLUDE(FindPackageHandleStandardArgs)
+FIND_PACKAGE_HANDLE_STANDARD_ARGS(Pythia6 DEFAULT_MSG PYTHIA6_LIBRARY)
+
+mark_as_advanced(PYTHIA6_FOUND PYTHIA6_LIBRARY)
