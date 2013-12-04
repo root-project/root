@@ -43,7 +43,8 @@ bool deviceIsiPad3 = false;
    navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
    navigationController.delegate = rootController;
    
-   [self.window addSubview : navigationController.view];
+//   [self.window addSubview : navigationController.view];
+   [self.window setRootViewController : navigationController];
    [self.window makeKeyAndVisible];
 }
 
