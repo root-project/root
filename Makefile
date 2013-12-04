@@ -19,6 +19,13 @@ ORDER_ := $(shell test $(MAKE_VERSION_MAJOR) -gt 3 || \
 
 include config/Makefile.config
 
+##### Prevent propagation of user flags to autoconf        #####
+##### configure  in bundled autotools projects since we    #####
+##### are trying to set all compiler flags ourself and     #####
+##### including them could lead to e.g. conflicting 32/64  #####
+##### bit build options.
+CONFIG_SITE =
+
 ##### Include compiler overrides specified via ./configure #####
 ##### However, if we are building packages or cleaning, we #####
 ##### don't include this file since it may screw up things #####
