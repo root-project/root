@@ -539,20 +539,24 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tutorials/Tutorials-Prefix.pch";
+				GCC_VERSION = "";
 				"HEADER_SEARCH_PATHS[arch=*]" = ../../../include;
 				INFOPLIST_FILE = "Tutorials/Tutorials-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				LIBRARY_SEARCH_PATHS = ../../../lib;
 				"LIBRARY_SEARCH_PATHS[arch=*]" = "$(inherited)";
+				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					../../../io/io/src/G__IO.o,
 					../../../net/net/src/G__Net.o,
@@ -561,6 +565,7 @@
 					../../../graf3d/g3d/src/G__G3D.o,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = YES;
 				USER_HEADER_SEARCH_PATHS = ../../../lib;
 				WRAPPER_EXTENSION = app;
 			};
@@ -570,13 +575,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGN_IDENTITY = "iPhone Developer";
+				CODE_SIGN_IDENTITY = "iPhone Distribution";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Tutorials/Tutorials-Prefix.pch";
+				GCC_VERSION = "";
 				"HEADER_SEARCH_PATHS[arch=*]" = ../../../include;
 				INFOPLIST_FILE = "Tutorials/Tutorials-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
@@ -590,6 +598,7 @@
 					../../../graf3d/g3d/src/G__G3D.o,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = YES;
 				USER_HEADER_SEARCH_PATHS = ../../../lib;
 				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = app;

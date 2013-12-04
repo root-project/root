@@ -28,7 +28,7 @@
 	<key>CFBundleIconFile</key>
 	<string>app_icon.png</string>
 	<key>CFBundleIdentifier</key>
-	<string>ch.cern.ROOTBrowser</string>
+	<string>ch.cern.ROOT.RootBrowser</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
