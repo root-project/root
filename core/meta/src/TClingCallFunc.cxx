@@ -111,7 +111,7 @@ EvaluateExpr(cling::Interpreter* interp, const Expr* E)
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
       GenericValue gv;
       gv.IntVal = res;
-      return cling::StoredValueRef::bitwiseCopy(C, cling::Value(gv, C.IntTy));
+      return cling::StoredValueRef::bitwiseCopy(*interp, cling::Value(gv, C.IntTy));
    }
    // TODO: Build a wrapper around the expression to avoid decompilation and
    // compilation and other string operations.
@@ -2119,7 +2119,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       QualType QT = Context.getLValueReferenceType(ClassTy);
       GenericValue gv;
       exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(Context,
+      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                 cling::Value(gv, QT));
       return;
    }
@@ -2127,7 +2127,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
    if (QT->isReferenceType()) {
       GenericValue gv;
       exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(Context,
+      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                 cling::Value(gv, QT));
       return;
    }
@@ -2140,14 +2140,14 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
          // storage to the storage for the designated data member.
          GenericValue gv;
          exec(address, &gv.PointerVal);
-         *ret = cling::StoredValueRef::bitwiseCopy(Context,
+         *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                    cling::Value(gv, QT));
          return;
       }
       // We are a function member pointer.
       GenericValue gv;
       exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(Context,
+      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                 cling::Value(gv, QT));
       return;
    }
@@ -2155,7 +2155,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       // Note: ArrayType is an illegal function return value type.
       GenericValue gv;
       exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(Context,
+      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                 cling::Value(gv, QT));
       return;
    }
@@ -2163,7 +2163,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       uint64_t size = Context.getTypeSizeInChars(QT).getQuantity();
       void* p = ::operator new(size);
       exec(address, p);
-      *ret = cling::StoredValueRef::bitwiseCopy(Context,
+      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                 cling::Value(PTOGV(p),
                                                 QT));
       return;
@@ -2179,7 +2179,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       GenericValue gv;
       gv.IntVal = APInt(numBits, (uint64_t) retVal,
                               true/*isSigned*/);
-      *ret =  cling::StoredValueRef::bitwiseCopy(Context,
+      *ret =  cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                  cling::Value(gv, QT));
       return;
    }
@@ -2205,7 +2205,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2216,7 +2216,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2227,7 +2227,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2238,7 +2238,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2279,7 +2279,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2290,7 +2290,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2301,7 +2301,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2312,7 +2312,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2344,7 +2344,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2355,7 +2355,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2366,7 +2366,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2377,7 +2377,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2388,7 +2388,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2399,7 +2399,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2410,7 +2410,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                exec(address, &retVal);
                GenericValue gv;
                gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2450,7 +2450,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                // float
                GenericValue gv;
                exec(address, &gv.FloatVal);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2459,7 +2459,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                // double
                GenericValue gv;
                exec(address, &gv.DoubleVal);
-               *ret = cling::StoredValueRef::bitwiseCopy(Context,
+               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT));
                return;
             }
@@ -2920,7 +2920,7 @@ TClingCallFunc::SetArg(long param)
    GenericValue gv;
    QualType QT = C.LongTy;
    gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT)));
 }
 
@@ -2931,7 +2931,7 @@ TClingCallFunc::SetArg(double param)
    GenericValue gv;
    QualType QT = C.DoubleTy;
    gv.DoubleVal = param;
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT)));
 }
 
@@ -2942,7 +2942,7 @@ TClingCallFunc::SetArg(long long param)
    GenericValue gv;
    QualType QT = C.LongLongTy;
    gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT)));
 }
 
@@ -2953,7 +2953,7 @@ TClingCallFunc::SetArg(unsigned long long param)
    GenericValue gv;
    QualType QT = C.UnsignedLongLongTy;
    gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(C,
+   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
                                                          cling::Value(gv, QT)));
 }
 
