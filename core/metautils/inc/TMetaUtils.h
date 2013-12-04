@@ -456,16 +456,6 @@ void GetCppName(std::string &output, const char *input);
 
 //______________________________________________________________________________
 // Return the type with all parts fully qualified (most typedefs),
-// including template arguments.
-clang::QualType GetFullyQualifiedType(const clang::QualType &type, const cling::Interpreter &interpreter);
-
-//______________________________________________________________________________
-// Return the type with all parts fully qualified (most typedefs),
-// including template arguments, without the interpreter
-clang::QualType GetFullyQualifiedType(const clang::QualType &type, const clang::ASTContext &);
-
-//______________________________________________________________________________
-// Return the type with all parts fully qualified (most typedefs),
 // including template arguments, appended to name.
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const cling::Interpreter &interpreter);
 
