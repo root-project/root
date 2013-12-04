@@ -2402,6 +2402,13 @@ Double_t TLatex::GetXsize()
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
+
+   // The text is a TMathText.
+   if ( newText.Contains("\\") ) {
+      TMathText tm(0., 0., newText.Data());
+      return tm.GetXsize();
+   }
+
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
@@ -2427,6 +2434,14 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    if (!gPad) return;
    TString newText = GetTitle();
    if( newText.Length() == 0) return;
+
+   // The text is a TMathText.
+   if ( newText.Contains("\\") ) {
+      TMathText tm(0., 0., newText.Data());
+      tm.GetBoundingBox(w, h);
+      return;
+   }
+
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
@@ -2476,6 +2491,13 @@ Double_t TLatex::GetYsize()
    if (!gPad) return 0;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
+
+   // The text is a TMathText.
+   if ( newText.Contains("\\") ) {
+      TMathText tm(0., 0., newText.Data());
+      return tm.GetYsize();
+   }
+
    fError = 0 ;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
