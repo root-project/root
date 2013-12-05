@@ -21,15 +21,12 @@
    BOOL processTap;
 }
 
-- (void) handlePanGesture : (UIPanGestureRecognizer *)panGesture;
-- (void) handleTapGesture : (UITapGestureRecognizer *)tapGesture;
-
 @end
 
 @implementation PadView
 
 //_________________________________________________________________
-- (id) initWithFrame:(CGRect)frame forPad : (ROOT::iOS::Pad*)pd
+- (id) initWithFrame : (CGRect) frame forPad : (ROOT::iOS::Pad*) pd
 {
    self = [super initWithFrame : frame];
 
@@ -44,7 +41,7 @@
 }
 
 //_________________________________________________________________
-- (void)drawRect : (CGRect)rect
+- (void) drawRect : (CGRect)rect
 {
    // Drawing code
    CGContextRef ctx = UIGraphicsGetCurrentContext();

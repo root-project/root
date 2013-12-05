@@ -15,7 +15,7 @@
 }
 
 //______________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame
+- (id) initWithFrame : (CGRect) frame
 {
    if (self = [super initWithFrame : frame]) {
       // Initialization code
@@ -26,7 +26,7 @@
 }
 
 //______________________________________________________________________________
-- (void) setPad : (ROOT::iOS::Pad *)newPad
+- (void) setPad : (ROOT::iOS::Pad *) newPad
 {
    pad = newPad;
 }
@@ -40,7 +40,7 @@
 }
 
 //______________________________________________________________________________
-- (void) drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    if (!pad)
       return;
@@ -70,8 +70,9 @@
 }
 
 //______________________________________________________________________________
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event 
+- (BOOL) pointInside : (CGPoint) point withEvent : (UIEvent *) event
 {
+#pragma unused(point, event)
    //Thanks to gyim, 
    //http://stackoverflow.com/questions/1694529/allowing-interaction-with-a-uiview-under-another-uiview
    return NO;
