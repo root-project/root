@@ -419,18 +419,21 @@ void stress4()
    ntotout += f.GetBytesWritten();
 
    //Compare results of fit with expected parameters
-   Double_t th0=395.085, th5=620.957, th10=151.308;
-   Double_t dp0  = TMath::Abs((f2form->GetParameter(0) -th0)/th0);
-   Double_t dp5  = TMath::Abs((f2form->GetParameter(5) -th5)/th5);
-   Double_t dp10 = TMath::Abs((f2form->GetParameter(10)-th10)/th10);
    Bool_t OK = kTRUE;
-   if (dp0 > 1.e-2 || dp5 > 1.e-2 || dp10 > 1.e-2) OK = kFALSE;
-   if (OK) printf("OK\n");
-   else    {
-      printf("failed\n");
-      printf("%-8s dp0=%g, dp5=%g, dp10=%g\n"," ",dp0,dp5,dp10);
-      printf("%-8s  p0=%g,  p5=%g,  p10=%g\n"," ",f2form->GetParameter(0),f2form->GetParameter(5),f2form->GetParameter(10));
+   for (int k = 0; k < 3; ++k) { 
+      for (int  l = 1; l < 5; ++l) { 
+         int idx = k*5+l;
+         Double_t dp0  = TMath::Abs((f2form->GetParameter(idx) -f2params[idx]));
+         if (f2params[idx] != 0.) dp0 /=  f2params[idx];
+         bool testok =  (dp0 < 5.e-2); 
+         if (!testok) {
+            printf("\nfailed:   ipar=%d delta=%g, par=%g, nom=%g",idx,dp0,f2form->GetParameter(idx),f2params[idx]);
+         }
+         OK &= testok;
+      }
    }
+   if (OK) printf("OK\n");
+   else    printf("\ntest failed !\n");
    if (gPrintSubBench) { printf("Test  4 : "); gBenchmark->Show("stress");gBenchmark->Start("stress"); }
 }
 
