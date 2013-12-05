@@ -1,7 +1,6 @@
-#import <CoreGraphics/CGContext.h>
+#import <cassert>
 
 #import "IOSFillPatterns.h"
-
 #import "PatternCell.h"
 
 @implementation PatternCell {
@@ -9,10 +8,16 @@
    BOOL solid;
 }
 
+//Pattern index must be in [0, kPredefinedFillPatterns) range +, probably,
+//index is ignored if it's a 'solid' fill pattern.
+
 //______________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame andPattern : (unsigned) index
+- (id) initWithFrame : (CGRect) frame andPattern : (unsigned) index
 {
    if (self = [super initWithFrame : frame]) {
+      assert(index < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns &&
+             "initWithFrame:andPattern:, parameter 'index' is out of bounds");
+   
       // Initialization code
       patternIndex = index;
       solid = NO;
@@ -22,13 +27,23 @@
 }
 
 //______________________________________________________________________________
+- (void) setPattern : (unsigned) index
+{
+   assert(index < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns &&
+          "setPattern:, parameter 'index' is out of bounds");
+   
+   patternIndex = index;
+   solid = NO;
+}
+
+//______________________________________________________________________________
 - (void) setAsSolid
 {
    solid = YES;
 }
 
 //______________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
 

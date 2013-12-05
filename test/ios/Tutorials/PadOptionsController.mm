@@ -1,13 +1,19 @@
+#import <cassert>
+
 #import "PadOptionsController.h"
 #import "PatternCell.h"
-#import "ColorCell.h"
 #import "PadView.h"
 
 //C++ code (ROOT)
 #import "IOSFillPatterns.h"
 #import "IOSPad.h"
 
-const double predefinedFillColors[16][3] = {
+const CGFloat defaultCellWidth = 80.f;
+const CGFloat defaultCellHeight = 44.f;
+const CGRect defaultCellFrame = CGRectMake(0.f, 0.f, defaultCellWidth, defaultCellHeight);
+
+const NSInteger nPredefinedColors = 16;
+const CGFloat predefinedFillColors[nPredefinedColors][3] = {
 {1., 1., 1.},
 {0., 0., 0.},
 {251 / 255., 0., 24 / 255.},
@@ -36,75 +42,18 @@ const unsigned colorIndices[16] = {
 
 
 @implementation PadOptionsController {
-   NSMutableArray *colors_;
-   NSMutableArray *patterns_;
-   
    ROOT::iOS::Pad *pad;
    PadView *padView;
-}
-
-//_________________________________________________________________
-- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
-{
-   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-
-   if (self) {
-      //Color views.
-      colors_ = [[NSMutableArray alloc] init];
-      for (unsigned i = 0; i < 16; ++i) {
-         ColorCell *newCell = [[ColorCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f)];
-         [newCell setRGB : predefinedFillColors[i]];
-         [colors_ addObject : newCell];
-      }
-      
-      //Patterns.
-      patterns_ = [[NSMutableArray alloc] init];
-      //The first pattern - solid fill.
-      PatternCell *solidFill = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : 0];
-      [solidFill setAsSolid];
-      [patterns_ addObject : solidFill];
-      
-      for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
-         PatternCell *newCell = [[PatternCell alloc] initWithFrame : CGRectMake(0.f, 0.f, 80.f, 44.f) andPattern : i];
-         [patterns_ addObject : newCell];
-      }
-
-      //Pattern views.
-   }
-   
-   return self;
-}
-
-//_________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
 }
 
 #pragma mark - View lifecycle
 
 //_________________________________________________________________
-- (void)viewDidLoad
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma unused(interfaceOrientation)
 
-//_________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
-
-//_________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
-	return YES;
+    return YES;
 }
 
 #pragma mark - editing.
@@ -170,30 +119,40 @@ const unsigned colorIndices[16] = {
 
 #pragma mark - color/pattern picker dataSource.
 //_________________________________________________________________
-- (CGFloat)pickerView:(UIPickerView *)pickerView widthForComponent:(NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView widthForComponent : (NSInteger) component
 {
-   return 80.;
+#pragma unused(pickerView, component)
+
+   return defaultCellWidth;
 }
 
 //_________________________________________________________________
-- (CGFloat)pickerView:(UIPickerView *)pickerView rowHeightForComponent:(NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView rowHeightForComponent : (NSInteger) component
 {
-   return 44.;
+#pragma unused(pickerView, component)
+
+   return defaultCellHeight;
 }
 
 //_________________________________________________________________
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
+- (NSInteger) pickerView : (UIPickerView *) pickerView numberOfRowsInComponent : (NSInteger) component
 {
+#pragma unused(component)
+
    if (pickerView == colorPicker_)
-      return [colors_ count];
+      return nPredefinedColors;
    else if (pickerView == patternPicker_)
-      return [patterns_ count];
+      return ROOT::iOS::GraphicUtils::kPredefinedFillPatterns + 1;//+ 1 for a 'solid'.
+
+   assert(0 && "pickerView:numberOfRowsInComponent:, parameter 'pickerView' is invalid");
+
    return 0;
 }
 
 //_________________________________________________________________
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+- (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
+   //We have two pickers, each with exactly one 'wheel'.
 	return 1;
 }
 
@@ -201,29 +160,59 @@ const unsigned colorIndices[16] = {
 
 // tell the picker which view to use for a given component and row, we have an array of views to show
 //_________________________________________________________________
-- (UIView *)pickerView:(UIPickerView *)pickerView viewForRow:(NSInteger)row
-		  forComponent:(NSInteger)component reusingView:(UIView *)view
+- (UIView *) pickerView : (UIPickerView *) pickerView viewForRow : (NSInteger) row
+		  forComponent : (NSInteger) component reusingView : (UIView *) view
 {
-   if (pickerView == colorPicker_)
-      return [colors_ objectAtIndex : row];
-   else if (pickerView == patternPicker_)
-      return [patterns_ objectAtIndex : row];
+#pragma unused(component)
 
-   return 0;
+   if (pickerView == colorPicker_) {
+      assert(row < nPredefinedColors && row >= 0 &&
+             "pickerView:viewForRow:forComponent:reusingView:, row is out of bounds");
+      const CGFloat * const rgb = predefinedFillColors[row];
+      UIView * newCell = view;
+      if (!newCell)
+         newCell = [[UIView alloc] initWithFrame:defaultCellFrame];
+      newCell.backgroundColor = [UIColor colorWithRed : rgb[0] green : rgb[1] blue : rgb[2] alpha : 1.f];
+
+      return newCell;
+   } else if (pickerView == patternPicker_) {
+      //Row 0 is a special case - I have to call the setAsSolid method.
+      assert(row >= 0 && row <= ROOT::iOS::GraphicUtils::kPredefinedFillPatterns &&
+             "pickerView:viewForRow:forCoponent:reusingView:, row is out of bounds");//<= -> +1 for 'solid'.
+      
+      if (view && [view isKindOfClass : [PatternCell class]]) {
+         PatternCell * const reuseCell = (PatternCell *)view;
+         if (!row)
+            [reuseCell setAsSolid];
+         else
+            [reuseCell setPattern : row - 1];
+         return reuseCell;
+      } else {
+         PatternCell * const newCell = [[PatternCell alloc] initWithFrame : defaultCellFrame andPattern : row ? row - 1 : 0];
+         if (!row)
+            [newCell setAsSolid];
+         return newCell;
+      }
+   }
+
+   assert(0 && "pickerView:viewForRow:forCoponent:reusingView:, parameter 'pickerView' is invalid");
+
+   return nil;
 }
 
 //_________________________________________________________________
-- (void)pickerView:(UIPickerView *)thePickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
-   
-   if (thePickerView == colorPicker_) {
+- (void) pickerView : (UIPickerView *) pickerView didSelectRow : (NSInteger) row inComponent : (NSInteger) component
+{
+#pragma unused(component)
+
+   if (pickerView == colorPicker_) {
       if (row >= 0 && row < 16) {
          pad->SetFillColor(colorIndices[row]);
          [padView setNeedsDisplay];
       }
-   } else if (thePickerView == patternPicker_) {
+   } else if (pickerView == patternPicker_) {
       //<= because of solid fill pattern.
       if (row > 0 && row <= ROOT::iOS::GraphicUtils::kPredefinedFillPatterns) {
-       //  NSLog(@"%p", pad);
          pad->SetFillStyle(3000 + row);
          [padView setNeedsDisplay];
       } else if (!row) {

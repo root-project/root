@@ -33,8 +33,8 @@ const unsigned stippleBase = 3000;
 //______________________________________________________________________________
 void draw_pattern_1(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 0.f, 1.f, 1.f));
@@ -42,7 +42,7 @@ void draw_pattern_1(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_1(float *rgb)
+CGPatternRef create_pattern_1(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -55,8 +55,8 @@ CGPatternRef create_pattern_1(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_2(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(2.f, 0.f, 1.f, 1.f));
@@ -66,7 +66,7 @@ void draw_pattern_2(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_2(float *rgb)
+CGPatternRef create_pattern_2(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -79,8 +79,8 @@ CGPatternRef create_pattern_2(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_3(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 0.f, 1.f, 1.f));
@@ -88,7 +88,7 @@ void draw_pattern_3(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_3(float *rgb)
+CGPatternRef create_pattern_3(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -101,8 +101,8 @@ CGPatternRef create_pattern_3(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_4(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 7.f, 1.f, 1.f));
@@ -116,7 +116,7 @@ void draw_pattern_4(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_4(float *rgb)
+CGPatternRef create_pattern_4(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -129,8 +129,8 @@ CGPatternRef create_pattern_4(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_5(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 0.f, 1.f, 1.f));
@@ -144,7 +144,7 @@ void draw_pattern_5(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_5(float *rgb)
+CGPatternRef create_pattern_5(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -157,8 +157,8 @@ CGPatternRef create_pattern_5(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_6(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(2.f, 0.f, 1.f, 1.f));
@@ -168,7 +168,7 @@ void draw_pattern_6(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_6(float *rgb)
+CGPatternRef create_pattern_6(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -181,8 +181,8 @@ CGPatternRef create_pattern_6(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_7(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 1.f, 1.f, 1.f));
@@ -192,7 +192,7 @@ void draw_pattern_7(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_7(float *rgb)
+CGPatternRef create_pattern_7(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -205,8 +205,8 @@ CGPatternRef create_pattern_7(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_8(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    //0x11   
@@ -257,7 +257,7 @@ void draw_pattern_8(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_8(float *rgb)
+CGPatternRef create_pattern_8(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -270,8 +270,8 @@ CGPatternRef create_pattern_8(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_9(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 0.f, 1.f, 1.f));
@@ -298,7 +298,7 @@ void draw_pattern_9(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_9(float *rgb)
+CGPatternRef create_pattern_9(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -311,8 +311,8 @@ CGPatternRef create_pattern_9(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_10(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 0.f, 1.f, 1.f));
@@ -344,7 +344,7 @@ void draw_pattern_10(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_10(float *rgb)
+CGPatternRef create_pattern_10(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -357,8 +357,8 @@ CGPatternRef create_pattern_10(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_11(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
 
    CGContextFillRect(ctx, CGRectMake(0.f, 4.f, 1.f, 1.f));
@@ -400,7 +400,7 @@ void draw_pattern_11(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_11(float *rgb)
+CGPatternRef create_pattern_11(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -413,8 +413,8 @@ CGPatternRef create_pattern_11(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_12(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
 
    CGContextFillRect(ctx, CGRectMake(0.f, 1.f,  1.f, 1.f));
@@ -459,7 +459,7 @@ void draw_pattern_12(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_12(float *rgb)
+CGPatternRef create_pattern_12(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -472,8 +472,8 @@ CGPatternRef create_pattern_12(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_13(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
 
    CGContextFillRect(ctx, CGRectMake(0.f, 7.f,  1.f, 1.f));
@@ -500,7 +500,7 @@ void draw_pattern_13(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_13(float *rgb)
+CGPatternRef create_pattern_13(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -513,8 +513,8 @@ CGPatternRef create_pattern_13(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_14(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
 
    for (unsigned i = 0; i < 16; ++i) {
@@ -535,7 +535,7 @@ void draw_pattern_14(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_14(float *rgb)
+CGPatternRef create_pattern_14(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -548,8 +548,8 @@ CGPatternRef create_pattern_14(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_15(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
 
    CGContextFillRect(ctx, CGRectMake(0.f, 2.f, 1.f, 1.f));
@@ -578,7 +578,7 @@ void draw_pattern_15(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_15(float *rgb)
+CGPatternRef create_pattern_15(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -591,8 +591,8 @@ CGPatternRef create_pattern_15(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_16(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 2.f, 1.f, 1.f));
@@ -617,7 +617,7 @@ void draw_pattern_16(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_16(float *rgb)
+CGPatternRef create_pattern_16(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -630,8 +630,8 @@ CGPatternRef create_pattern_16(float *rgb)
 //______________________________________________________________________________
 void draw_pattern_17(void *color, CGContextRef ctx)
 {
-   const float *rgb = static_cast<float *>(color);
-   const float alpha = 1.f;
+   const CGFloat *rgb = static_cast<CGFloat *>(color);
+   const CGFloat alpha = 1.f;
    CGContextSetRGBFillColor(ctx, rgb[0], rgb[1], rgb[2], alpha);
    
    CGContextFillRect(ctx, CGRectMake(0.f, 3.f, 1.f, 1.f));
@@ -640,7 +640,7 @@ void draw_pattern_17(void *color, CGContextRef ctx)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_17(float *rgb)
+CGPatternRef create_pattern_17(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;
@@ -651,7 +651,7 @@ CGPatternRef create_pattern_17(float *rgb)
 }
 
 //______________________________________________________________________________
-CGPatternRef create_pattern_18(float *rgb)
+CGPatternRef create_pattern_18(CGFloat *rgb)
 {
    CGPatternCallbacks patternCallbacks;
    patternCallbacks.version = 0;

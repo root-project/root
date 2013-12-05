@@ -10,7 +10,6 @@
 		700542EE13E5B2F40093B598 /* zoom_mode_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 700542ED13E5B2F40093B598 /* zoom_mode_icon.png */; };
 		700B010F13F3D40A00F84650 /* PadOptionsController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 700B010D13F3D40A00F84650 /* PadOptionsController.mm */; };
 		700B011013F3D40A00F84650 /* PadOptionsController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 700B010E13F3D40A00F84650 /* PadOptionsController.xib */; };
-		700B013013F3FD6700F84650 /* ColorCell.m in Sources */ = {isa = PBXBuildFile; fileRef = 700B012F13F3FD6600F84650 /* ColorCell.m */; };
 		700B013313F4051000F84650 /* PatternCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 700B013213F4051000F84650 /* PatternCell.mm */; };
 		7010C3691455B64100018E6D /* tutorials_app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 7010C3681455B64100018E6D /* tutorials_app_icon.png */; };
 		701EC32513D9762200FE395E /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 701EC32413D9762200FE395E /* SelectionView.mm */; };
@@ -79,8 +78,6 @@
 		700B010C13F3D40A00F84650 /* PadOptionsController.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PadOptionsController.h; sourceTree = "<group>"; };
 		700B010D13F3D40A00F84650 /* PadOptionsController.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PadOptionsController.mm; sourceTree = "<group>"; };
 		700B010E13F3D40A00F84650 /* PadOptionsController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = PadOptionsController.xib; path = ../PadOptionsController.xib; sourceTree = "<group>"; };
-		700B012E13F3FD6600F84650 /* ColorCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ColorCell.h; path = Tutorials.xcodeproj/ColorCell.h; sourceTree = "<group>"; };
-		700B012F13F3FD6600F84650 /* ColorCell.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ColorCell.m; path = Tutorials.xcodeproj/ColorCell.m; sourceTree = "<group>"; };
 		700B013113F4051000F84650 /* PatternCell.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PatternCell.h; sourceTree = "<group>"; };
 		700B013213F4051000F84650 /* PatternCell.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = PatternCell.mm; sourceTree = "<group>"; };
 		7010C3681455B64100018E6D /* tutorials_app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = tutorials_app_icon.png; path = Pictures/tutorials_app_icon.png; sourceTree = "<group>"; };
@@ -232,8 +229,6 @@
 		7099E64713CB2BF000D31765 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				700B012E13F3FD6600F84650 /* ColorCell.h */,
-				700B012F13F3FD6600F84650 /* ColorCell.m */,
 				700B013113F4051000F84650 /* PatternCell.h */,
 				700B013213F4051000F84650 /* PatternCell.mm */,
 				700B010C13F3D40A00F84650 /* PadOptionsController.h */,
@@ -459,7 +454,6 @@
 				70DF816513DDBA6400AD2F4D /* SurfaceDemo.cxx in Sources */,
 				707644B113EFC6AA00C302F9 /* H2PolyDemo.cxx in Sources */,
 				700B010F13F3D40A00F84650 /* PadOptionsController.mm in Sources */,
-				700B013013F3FD6700F84650 /* ColorCell.m in Sources */,
 				700B013313F4051000F84650 /* PatternCell.mm in Sources */,
 				70CC7E4A1456A7050036FF4C /* DemoHelper.cxx in Sources */,
 			);
