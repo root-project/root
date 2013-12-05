@@ -16,12 +16,12 @@ namespace Demos {
 bool CreateTutorials(DemoBase **demos, const char *filePath)
 {
    try {
-      std::auto_ptr<HsimpleDemo> demo0(new HsimpleDemo);
-      std::auto_ptr<SurfaceDemo> demo1(new SurfaceDemo);
-      std::auto_ptr<PolarGraphDemo> demo2(new PolarGraphDemo);
-      std::auto_ptr<LegoDemo> demo3(new LegoDemo);
-      std::auto_ptr<ExclusionGraphDemo> demo4(new ExclusionGraphDemo);
-      std::auto_ptr<H2PolyDemo> demo5(new H2PolyDemo(filePath));
+      std::unique_ptr<HsimpleDemo> demo0(new HsimpleDemo);
+      std::unique_ptr<SurfaceDemo> demo1(new SurfaceDemo);
+      std::unique_ptr<PolarGraphDemo> demo2(new PolarGraphDemo);
+      std::unique_ptr<LegoDemo> demo3(new LegoDemo);
+      std::unique_ptr<ExclusionGraphDemo> demo4(new ExclusionGraphDemo);
+      std::unique_ptr<H2PolyDemo> demo5(new H2PolyDemo(filePath));
       
       demos[0] = demo0.release();
       demos[1] = demo1.release();

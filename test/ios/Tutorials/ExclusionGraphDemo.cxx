@@ -27,36 +27,35 @@ ExclusionGraphDemo::ExclusionGraphDemo()
       y3[i] = 10 * TMath::Sin(x1[i]) - 2;
    }
 
-   std::auto_ptr<TGraph> graph1(new TGraph(kNPoints, x1, y1));
+   std::unique_ptr<TGraph> graph1(new TGraph(kNPoints, x1, y1));
    graph1->SetLineColor(2);
    graph1->SetLineWidth(1504);
    graph1->SetFillStyle(3005);
 
-   std::auto_ptr<TGraph> graph2(new TGraph(kNPoints, x2, y2));
+   std::unique_ptr<TGraph> graph2(new TGraph(kNPoints, x2, y2));
    graph2->SetLineColor(4);
    graph2->SetLineWidth(-2002);
    graph2->SetFillStyle(3004);
    graph2->SetFillColor(9);
 
-   std::auto_ptr<TGraph> graph3(new TGraph(kNPoints, x3, y3));
+   std::unique_ptr<TGraph> graph3(new TGraph(kNPoints, x3, y3));
    graph3->SetLineColor(5);
    graph3->SetLineWidth(-802);
    graph3->SetFillStyle(3002);
    graph3->SetFillColor(2);
 
    fMultiGraph->Add(graph1.get());
-   fMultiGraph->Add(graph2.get());
-   fMultiGraph->Add(graph3.get());
-   
    graph1.release();
+   fMultiGraph->Add(graph2.get());
    graph2.release();
+   fMultiGraph->Add(graph3.get());
    graph3.release();
 }
 
 //______________________________________________________________________________
 ExclusionGraphDemo::~ExclusionGraphDemo()
 {
-   //Just for auto_ptr's dtor.
+   //Just for unique_ptr's dtor.
 }
 
 //______________________________________________________________________________

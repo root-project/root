@@ -32,10 +32,10 @@ public:
    
    bool Supports3DRotation() const {return true;}
 private:
-   std::auto_ptr<TF2> fSurface;
+   std::unique_ptr<TF2> fSurface;
    
-   SurfaceDemo(const SurfaceDemo &rhs);
-   SurfaceDemo &operator = (const SurfaceDemo &rhs);
+   SurfaceDemo(const SurfaceDemo &rhs) = delete;
+   SurfaceDemo &operator = (const SurfaceDemo &rhs) = delete;
 };
 
 }

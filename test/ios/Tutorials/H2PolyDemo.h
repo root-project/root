@@ -18,13 +18,13 @@ public:
    
    //overriders.
    void ResetDemo() {}
-   bool IsAnimated()const {return false;}
-   unsigned NumOfFrames()const {return 1;}
-   double AnimationTime()const {return 0.;}
+   bool IsAnimated() const {return false;}
+   unsigned NumOfFrames() const {return 1;}
+   double AnimationTime() const {return 0.;}
    
-   void StartAnimation(){}
-   void NextStep(){}
-   void StopAnimation(){}
+   void StartAnimation() {}
+   void NextStep() {}
+   void StopAnimation() {}
 
    void AdjustPad(Pad * /*pad*/) {}
 
@@ -32,10 +32,10 @@ public:
    
    bool Supports3DRotation() const {return false;}
 private:
-   std::auto_ptr<TH2Poly> fPoly;
+   std::unique_ptr<TH2Poly> fPoly;
    
-   H2PolyDemo(const H2PolyDemo &rhs);
-   H2PolyDemo &operator = (const H2PolyDemo &rhs);
+   H2PolyDemo(const H2PolyDemo &rhs) = delete;
+   H2PolyDemo &operator = (const H2PolyDemo &rhs) = delete;
 };
 
 }

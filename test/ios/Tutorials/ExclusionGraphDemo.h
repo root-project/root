@@ -22,13 +22,13 @@ public:
    
    //overriders.
    void ResetDemo() {}
-   bool IsAnimated()const {return false;}
-   unsigned NumOfFrames()const {return 1;}
-   double AnimationTime()const {return 0.;}
+   bool IsAnimated() const {return false;}
+   unsigned NumOfFrames() const {return 1;}
+   double AnimationTime() const {return 0.;}
    
-   void StartAnimation(){}
-   void NextStep(){}
-   void StopAnimation(){}
+   void StartAnimation() {}
+   void NextStep() {}
+   void StopAnimation() {}
 
    void AdjustPad(Pad *);
    
@@ -36,10 +36,10 @@ public:
    
    bool Supports3DRotation() const {return false;}
 private:
-   std::auto_ptr<TMultiGraph> fMultiGraph;
+   std::unique_ptr<TMultiGraph> fMultiGraph;
    
-   ExclusionGraphDemo(const ExclusionGraphDemo &rhs);
-   ExclusionGraphDemo &operator = (const ExclusionGraphDemo &rhs);
+   ExclusionGraphDemo(const ExclusionGraphDemo &rhs) = delete;
+   ExclusionGraphDemo &operator = (const ExclusionGraphDemo &rhs) = delete;
 };
 
 }

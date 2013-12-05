@@ -13,7 +13,7 @@ namespace Demos {
 //______________________________________________________________________________
 H2PolyDemo::H2PolyDemo(const char *fileName)
 {
-   std::auto_ptr<TFile> inputFile(TFile::Open(fileName, "read"));
+   std::unique_ptr<TFile> inputFile(TFile::Open(fileName, "read"));
    if (!inputFile.get())
       return;
       
@@ -25,7 +25,7 @@ H2PolyDemo::H2PolyDemo(const char *fileName)
 //______________________________________________________________________________
 H2PolyDemo::~H2PolyDemo()
 {
-   //For auto_ptr's dtor only.
+   //For unique_ptr's dtor only.
 }
 
 //______________________________________________________________________________

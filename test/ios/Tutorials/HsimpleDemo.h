@@ -18,7 +18,7 @@ public:
    
    //Overriders.
    void ResetDemo();
-   bool IsAnimated()const;
+   bool IsAnimated() const;
    
    unsigned NumOfFrames() const;
    double AnimationTime() const;
@@ -34,10 +34,10 @@ public:
    bool Supports3DRotation() const {return false;}
 
 private:
-   std::auto_ptr<TH1F> fHist;
+   std::unique_ptr<TH1F> fHist;
    
-   HsimpleDemo(const HsimpleDemo &rhs);
-   HsimpleDemo &operator = (const HsimpleDemo &rhs);
+   HsimpleDemo(const HsimpleDemo &rhs) = delete;
+   HsimpleDemo &operator = (const HsimpleDemo &rhs) = delete;
 };
 
 }

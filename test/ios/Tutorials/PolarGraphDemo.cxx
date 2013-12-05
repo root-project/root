@@ -59,7 +59,7 @@ PolarGraphDemo::PolarGraphDemo()
 //______________________________________________________________________________
 PolarGraphDemo::~PolarGraphDemo()
 {
-   //Just for std::auto_ptr's dtor.
+   //Just for unique_ptr's dtor.
 }
 
 //______________________________________________________________________________

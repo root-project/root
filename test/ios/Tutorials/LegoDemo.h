@@ -18,13 +18,13 @@ public:
    
    //overriders.
    void ResetDemo() {}
-   bool IsAnimated()const {return false;}
-   unsigned NumOfFrames()const {return 1;}
-   double AnimationTime()const {return 0.;}
+   bool IsAnimated() const {return false;}
+   unsigned NumOfFrames() const {return 1;}
+   double AnimationTime() const {return 0.;}
    
-   void StartAnimation(){}
-   void NextStep(){}
-   void StopAnimation(){}
+   void StartAnimation() {}
+   void NextStep() {}
+   void StopAnimation() {}
 
    void AdjustPad(Pad *pad);
    
@@ -32,10 +32,10 @@ public:
    
    bool Supports3DRotation() const {return true;}
 private:
-   std::auto_ptr<TF2> fLego;
+   std::unique_ptr<TF2> fLego;
    
-   LegoDemo(const LegoDemo &rhs);
-   LegoDemo &operator = (const LegoDemo &rhs);
+   LegoDemo(const LegoDemo &rhs) = delete;
+   LegoDemo &operator = (const LegoDemo &rhs) = delete;
 
 };
 

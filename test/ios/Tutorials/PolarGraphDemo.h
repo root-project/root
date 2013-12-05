@@ -23,7 +23,7 @@ public:
    
    //overriders.
    void ResetDemo() {}
-   bool IsAnimated()const {return false;}
+   bool IsAnimated() const {return false;}
    unsigned NumOfFrames() const {return 1;}
    double AnimationTime() const {return 0.;}
 
@@ -37,11 +37,11 @@ public:
    
    bool Supports3DRotation() const {return false;}
 private:
-   std::auto_ptr<TGraphPolar> fPolarAFL; //polar graph with draw option "AFL"
-   std::auto_ptr<TGraphPolar> fPolarCP;  //polar graph with draw option "CP"
-   
-   PolarGraphDemo(const PolarGraphDemo &rhs);
-   PolarGraphDemo &operator = (const PolarGraphDemo &rhs);
+   std::unique_ptr<TGraphPolar> fPolarAFL; //polar graph with draw option "AFL"
+   std::unique_ptr<TGraphPolar> fPolarCP;  //polar graph with draw option "CP"
+
+   PolarGraphDemo(const PolarGraphDemo &rhs) = delete;
+   PolarGraphDemo &operator = (const PolarGraphDemo &rhs) = delete;
 };
 
 }
