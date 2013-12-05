@@ -60,14 +60,19 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(call pcmrule,HIST)
 	$(noop)
 
-$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
-		$(MAKEDIR)
-		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+$(HISTDS) $(HISTMAP):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
+	$(MAKEDIR)
+	@echo "Generating $(subst .cxx,dictionary,$(subst .rootmap,rootmap file,$(suffix $@))) $@..."
+	$(ROOTCINTTMP) $(subst .rootmap,-r,$(subst .cxx,-f,$(suffix $@))) $(HISTDS) $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
 
-$(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
-		$(RLIBMAP) -o $@ -l $(HISTLIB) \
-		   -d $(HISTLIBDEPM) -c $(HISTL)
+#$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
+#		$(MAKEDIR)
+#		@echo "Generating dictionary $@..."
+#		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+
+#$(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
+#		$(RLIBMAP) -o $@ -l $(HISTLIB) \
+#		   -d $(HISTLIBDEPM) -c $(HISTL)
 
 all-$(MODNAME): $(HISTLIB) $(HISTMAP)
 
