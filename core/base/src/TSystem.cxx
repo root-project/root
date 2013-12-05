@@ -3327,43 +3327,47 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
    mapfileStream.close();
 
-   // ======= Generate the rootcint command line
-   TString rcint;
+   // ======= Generate the rootcling command line
+   TString rcling;
 #ifndef ROOTBINDIR
-   rcint = gSystem->Getenv("ROOTSYS");
+   rcling = gSystem->Getenv("ROOTSYS");
 #ifndef R__WIN32
-   rcint += "/bin/";
+   rcling += "/bin/";
 #else
-   rcint += "\\bin\\";
+   rcling += "\\bin\\";
 #endif
 #else
-   rcint = ROOTBINDIR;
+   rcling = ROOTBINDIR;
 #ifndef R__WIN32
-   rcint += "/";
+   rcling += "/";
 #else
-   rcint += "\\";
+   rcling += "\\";
 #endif
 #endif
-   rcint += "rootcint \"--lib-list-prefix=";
-   rcint += mapfile;
-   rcint += "\" -f \"";
-   rcint.Append(dict).Append("\" -c -p ").Append(GetIncludePath()).Append(" -D__ACLIC__ ");
+   rcling += "rootcling \"--lib-list-prefix=";
+   rcling += mapfile;
+   rcling += "\" -f \"";
+   rcling.Append(dict).Append("\" -c -p ");
    if (produceRootmap) {
-      rcint.Append("-DR__ACLIC_ROOTMAP ");
+      rcling += " -rml " + libname + " -rmf " + libmapfilename + " ";
+   }
+   rcling.Append(GetIncludePath()).Append(" -D__ACLIC__ ");
+   if (produceRootmap) {
+      rcling.Append("-DR__ACLIC_ROOTMAP ");
    }
    if (gEnv) {
       TString fromConfig = gEnv->GetValue("ACLiC.IncludePaths","");
-      rcint.Append(fromConfig).Append(" \"");
+      rcling.Append(fromConfig).Append(" \"");
    }
-   rcint.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
+   rcling.Append(filename_fullpath).Append("\" \"").Append(linkdef).Append("\"");;
 
    // ======= Run rootcint
    if (gDebug>3) {
       ::Info("ACLiC","creating the dictionary files");
-      if (gDebug>4)  ::Info("ACLiC", "%s", rcint.Data());
+      if (gDebug>4)  ::Info("ACLiC", "%s", rcling.Data());
    }
 
-   Int_t dictResult = gSystem->Exec(rcint);
+   Int_t dictResult = gSystem->Exec(rcling);
    if (dictResult) {
       if (dictResult==139) ::Error("ACLiC","Dictionary generation failed with a core dump!");
       else ::Error("ACLiC","Dictionary generation failed!");
@@ -3378,12 +3382,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       TString libtoload;
       TString all_libtoload;
       std::ifstream liblist(mapfileout);
-
-      std::ofstream libmapfile;
-      if (produceRootmap) {
-         libmapfile.open(libmapfilename);
-         libmapfile << "Library." << libname << ": " << libname;
-      }
 
       while ( liblist >> libtoload ) {
          // Load the needed library except for the library we are currently building!
@@ -3403,7 +3401,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                   }
                }
                if (!linkedlibs.Contains(libtoload)) {
-                  libmapfile << " " << libtoload;
                   all_libtoload.Append(" ").Append(libtoload);
                   depLibraries.Append(" ");
                   depLibraries.Append(GetLibraries(libtoload,"DSL",kFALSE));
@@ -3420,23 +3417,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
             break;
          }
       }
-      if (produceRootmap) {
 
-         std::string clname;
-         while ( std::getline(liblist,clname) ) {
-            if (clname[0] == '#') {
-               // Skip comments.
-               continue;
-            }
-            std::replace(clname.begin(), clname.end(), ':', '@');
-            std::replace(clname.begin(), clname.end(), ' ', '_');
-            libmapfile << std::endl;
-            libmapfile << "Library." << clname << ": " << libname << " " << all_libtoload;
-         }
-
-         libmapfile << std::endl;
-         libmapfile.close();
-      }
 //      depLibraries = all_libtoload;
 //      depLibraries.ReplaceAll(" lib"," -l");
 //      depLibraries.ReplaceAll(TString::Format(".%s",fSoExt.Data()),"");
@@ -3609,8 +3590,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          if (!compilationResult) {
             ::Info("ACLiC","The compiler has not found any problem with your macro.\n"
-            "\tProbably your macro uses something rootcint can't parse.\n"
-            "\tCheck http://root.cern.ch/viewvc/trunk/cint/doc/limitati.txt for Cint's limitations.");
+            "\tProbably your macro uses something rootcling can't parse.\n");
             TString objfile=expFileName;
             Ssiz_t len=objfile.Length();
             objfile.Replace(len-extension.Length(), len, GetObjExt());
@@ -3657,10 +3637,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       gSystem->Unlink( exec );
    }
    if (gDebug>6) {
-      rcint.Prepend("echo ");
+      rcling.Prepend("echo ");
       cmd.Prepend("echo \" ").Append(" \" ");
       testcmd.Prepend("echo \" ").Append(" \" ");
-      gSystem->Exec(rcint);
+      gSystem->Exec(rcling);
       gSystem->Exec( cmd );
       gSystem->Exec(testcmd);
    }
