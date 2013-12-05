@@ -3165,43 +3165,18 @@ int RootCling(int argc,
             return 1;
          }
       }
-      string header( argv[ic] );
-      header = argv[ic];
-      int loc = strrchr(argv[ic],'.') - argv[ic];
-      header[loc+1] = 'h';
-      header[loc+2] = '\0';
-      if ((fp = fopen(header.c_str(), "r")) != 0) {
-         fclose(fp);
-         if (!force) {
-            ROOT::TMetaUtils::Error(0, "%s: output file %s already exists\n", argv[0], header.c_str());
-            return 1;
-         } else {
-            for (int k = ic+1; k < argc; ++k) {
-               if (*argv[k] != '-' && *argv[k] != '+') {
-                  if (strcmp(header.c_str(),argv[k])==0) {
-                     ROOT::TMetaUtils::Error(0, "%s: output file %s would overwrite one of the input files!\n", argv[0], header.c_str());
-                     return 1;
-                  }
-                  if (strcmp(argv[ic],argv[k])==0) {
-                     ROOT::TMetaUtils::Error(0, "%s: output file %s would overwrite one of the input files!\n", argv[0],argv[ic]);
-                     return 1;
-                  }
-               }
-            }
-         }
-      }
 
-      // remove possible pathname to get the dictionary name
-      if (strlen(argv[ic]) > (PATH_MAX-1)) {
-         ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
-               (PATH_MAX-1),argv[ic]);
-         return 1;
-      }
+   // remove possible pathname to get the dictionary name
+   if (strlen(argv[ic]) > (PATH_MAX-1)) {
+      ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
+            (PATH_MAX-1),argv[ic]);
+      return 1;
+   }
 
-      dictpathname = argv[ic];
-      dictname = llvm::sys::path::filename(dictpathname);
+   dictpathname = argv[ic];
+   dictname = llvm::sys::path::filename(dictpathname);
 
-      ic++;
+   ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", rootClingHelp);
