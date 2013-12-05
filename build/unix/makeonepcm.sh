@@ -9,11 +9,16 @@
 srcdir=.
 if [ $# -eq 1 ]; then
    srcdir=$1
+   modules=./*/
+fi
+if [ $# -eq 2 ]; then
+   srcdir=$1
+   modules=$2
 fi
 
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
 
-for dict in `find ./*/ -name 'G__*.cxx' | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
+for dict in `find $modules -name 'G__*.cxx' | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict` # to get foo/inc
     dirname=`dirname $dirname` # to get foo
     awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> cppflags.txt

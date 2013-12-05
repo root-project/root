@@ -489,7 +489,7 @@ STATICOBJLIST := $(ROOT_SRCDIR)/build/unix/staticobjectlist.sh
 MAKESTATICLIB := $(ROOT_SRCDIR)/build/unix/makestaticlib.sh
 MAKESTATIC    := $(ROOT_SRCDIR)/build/unix/makestatic.sh
 RECONFIGURE   := $(ROOT_SRCDIR)/build/unix/reconfigure.sh
-MAKEONEPCM    := $(ROOT_SRCDIR)/build/unix/makeonepcm.sh $(ROOT_SRCDIR)
+MAKEONEPCM    := $(ROOT_SRCDIR)/build/unix/makeonepcm.sh $(ROOT_SRCDIR) "$(MODULES)"
 ifeq ($(PLATFORM),win32)
 MAKELIB       := $(ROOT_SRCDIR)/build/win/makelib.sh
 MAKECOMPDATA  := $(ROOT_SRCDIR)/build/win/compiledata.sh
