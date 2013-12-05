@@ -1,3 +1,8 @@
+#import <stdexcept>
+#import <cstdlib>
+#import <cassert>
+#import <cmath>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "PadOptionsController.h"
@@ -23,15 +28,13 @@ in parent view). Actually, I do not need all these view, but there's no serious 
 modify this code already. This was a testbed.
 */
 
+const unsigned nPadViews = 2;
+
 namespace {
 
-enum ETutorialsMode {
-   kTAZoom,
-   kTASelect
-};
-
-enum ETutorialsDefaults {
-   kTDNOfPads = 2
+enum class AppMode {
+   zoom,
+   select
 };
 
 }
@@ -40,7 +43,7 @@ enum ETutorialsDefaults {
 @interface DetailViewController () {
 
    //"Editor"
-   PadOptionsController * padController;
+   PadOptionsController *padController;
    UIPopoverController *editorPopover;
 
    //Transparent view with a text
@@ -59,17 +62,15 @@ enum ETutorialsDefaults {
 
    ROOT::iOS::Pad *pad;
 
-   //Depending on more, either parentView of
-   //scrollViews is/are parent(s) of padViews.
    UIView *parentView;
-   UIScrollView *scrollViews[kTDNOfPads];
-   PadView *padViews[kTDNOfPads];
+   UIScrollView *scrollViews[nPadViews];
+   PadView *padViews[nPadViews];
 
    //Transparent view with selected object.
-   SelectionView *selectionViews[kTDNOfPads];
+   SelectionView *selectionViews[nPadViews];
 
-   UIPanGestureRecognizer *padPanGestures[kTDNOfPads];
-   UITapGestureRecognizer *padTapGestures[kTDNOfPads];
+   UIPanGestureRecognizer *padPanGestures[nPadViews];
+   UITapGestureRecognizer *padTapGestures[nPadViews];
    
    unsigned activeView;
    
@@ -78,9 +79,11 @@ enum ETutorialsDefaults {
    ROOT::iOS::Demos::DemoBase *activeDemo;
    
    //Either zoom or selection.
-   ETutorialsMode appMode;
+   AppMode appMode;
    
    BOOL activeAnimation;
+
+   BOOL inTransition;
 }
 
 @property (nonatomic, retain) UIPopoverController *popoverController;
@@ -106,12 +109,23 @@ enum ETutorialsDefaults {
 @synthesize help;
 @synthesize tabBar;
 
-#pragma mark - Managing the detail item
+//_________________________________________________________________
+- (void)dealloc
+{
+   delete pad;
+}
+
+#pragma mark - initialization.
 
 //_________________________________________________________________
 - (void) initCPPObjects
 {
-   pad = new ROOT::iOS::Pad(640, 640);
+   //Translate C++ exception into the bad C exit.
+   try {
+      pad = new ROOT::iOS::Pad(640, 640);
+   } catch (const std::exception &e) {
+      std::exit(1);//WOW???
+   }
 }
 
 //_________________________________________________________________
@@ -123,10 +137,11 @@ enum ETutorialsDefaults {
    oldSizes.width = 640.f;
    oldSizes.height = 640.f;
    
-   parentView = [[UIView alloc] initWithFrame:padRect];
-   parentView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   parentView = [[UIView alloc] initWithFrame : padRect];
+   parentView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                                 UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
 
-   [self.view addSubview:parentView];
+   [self.view addSubview : parentView];
 
    //Trick with shadow and shadow path: 
    //http://nachbaur.com/blog/fun-shadow-effects-using-custom-calayer-shadowpaths
@@ -134,22 +149,23 @@ enum ETutorialsDefaults {
    parentView.layer.shadowColor = [UIColor blackColor].CGColor;
    parentView.layer.shadowOpacity = 0.7f;
    parentView.layer.shadowOffset = CGSizeMake(10.f, 10.f);
-   UIBezierPath *path = [UIBezierPath bezierPathWithRect:parentView.bounds];
+   UIBezierPath *path = [UIBezierPath bezierPathWithRect : parentView.bounds];
    parentView.layer.shadowPath = path.CGPath;
    ///
    padRect.origin.x = 0.f, padRect.origin.y = 0.f;
-   for (unsigned i = 0; i < 2; ++i) {// < kTDNOfPads
-      scrollViews[i] = [[UIScrollView alloc] initWithFrame:padRect];
+   for (unsigned i = 0; i < nPadViews; ++i) {
+      scrollViews[i] = [[UIScrollView alloc] initWithFrame : padRect];
       scrollViews[i].backgroundColor = [UIColor darkGrayColor];
       scrollViews[i].delegate = self;
+      
       padViews[i] = [[PadView alloc] initWithFrame : padRect forPad : pad];
       scrollViews[i].contentSize = padViews[i].frame.size;
-      [scrollViews[i] addSubview:padViews[i]];
+      [scrollViews[i] addSubview : padViews[i]];
       //
       scrollViews[i].minimumZoomScale = 1.f;
       scrollViews[i].maximumZoomScale = 1280.f / 640.f;
-      [scrollViews[i] setZoomScale:1.f];
-      [parentView addSubview:scrollViews[i]];
+      [scrollViews[i] setZoomScale : 1.f];
+      [parentView addSubview : scrollViews[i]];
    }
 
    parentView.hidden = YES;
@@ -158,10 +174,11 @@ enum ETutorialsDefaults {
    
    padRect = CGRectMake(padCenter.x - 320.f, padCenter.y - 310.f, 640.f, 640.f);
    
-   for (unsigned i = 0; i < 2; ++i) { // < kTDNOfPads
-      selectionViews[i] = [[SelectionView alloc] initWithFrame:padRect];
-      selectionViews[i].autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-      [self.view addSubview:selectionViews[i]];
+   for (unsigned i = 0; i < nPadViews; ++i) {
+      selectionViews[i] = [[SelectionView alloc] initWithFrame : padRect];
+      selectionViews[i].autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                                           UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+      [self.view addSubview : selectionViews[i]];
       selectionViews[i].hidden = YES;   
       selectionViews[i].opaque = NO;
    }
@@ -174,106 +191,62 @@ enum ETutorialsDefaults {
    //Pictogramms.
    CGRect pictRect = CGRectMake(670.f, 450.f, 50.f, 50.f);
    pinchPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"pinch_gesture_icon_small.png"];
-   pinchPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:pinchPic];
-   UITapGestureRecognizer *pinchTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showPinchHint)];
-   [pinchPic addGestureRecognizer:pinchTap];
+   pinchPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                               UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : pinchPic];
+   UITapGestureRecognizer * const pinchTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(showPinchHint)];
+   [pinchPic addGestureRecognizer : pinchTap];
    pinchPic.hidden = YES;
 
    pictRect.origin.y = 520;
-   panPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"pan_gesture_icon_small.png"];
-   panPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:panPic];
-   UITapGestureRecognizer *panTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showPanHint)];
-   [panPic addGestureRecognizer:panTap];
+   panPic = [[PictView alloc] initWithFrame:pictRect andIcon : @"pan_gesture_icon_small.png"];
+   panPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                             UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : panPic];
+   UITapGestureRecognizer * const panTap = [[UITapGestureRecognizer alloc]initWithTarget : self action : @selector(showPanHint)];
+   [panPic addGestureRecognizer : panTap];
    panPic.hidden = YES;
    
    pictRect.origin.y = 590;
-   doubleTapPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"double_tap_gesture_icon_small.png"];
-   doubleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:doubleTapPic];
-   UITapGestureRecognizer *dtapTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showDoubleTapHint)];
-   [doubleTapPic addGestureRecognizer:dtapTap];
+   doubleTapPic = [[PictView alloc] initWithFrame : pictRect andIcon : @"double_tap_gesture_icon_small.png"];
+   doubleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                                   UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : doubleTapPic];
+   UITapGestureRecognizer * const dtapTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(showDoubleTapHint)];
+   [doubleTapPic addGestureRecognizer : dtapTap];
    doubleTapPic.hidden = YES;
 
-   rotatePic = [[PictView alloc] initWithFrame:pictRect andIcon:@"rotate_icon_small.png"];
-   rotatePic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:rotatePic];
-   UITapGestureRecognizer *rotTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showRotationHint)];
-   [rotatePic addGestureRecognizer:rotTap];
+   rotatePic = [[PictView alloc] initWithFrame : pictRect andIcon : @"rotate_icon_small.png"];
+   rotatePic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                                UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : rotatePic];
+   UITapGestureRecognizer * const rotTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(showRotationHint)];
+   [rotatePic addGestureRecognizer : rotTap];
    rotatePic.hidden = YES;
    
-   singleTapPic = [[PictView alloc] initWithFrame:pictRect andIcon:@"single_tap_icon_small.png"];
-   singleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:singleTapPic];
-   UITapGestureRecognizer *singleTapTap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(showSingleTapHint)];
-   [singleTapPic addGestureRecognizer:singleTapTap];
+   singleTapPic = [[PictView alloc] initWithFrame : pictRect andIcon : @"single_tap_icon_small.png"];
+   singleTapPic.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                                   UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : singleTapPic];
+   UITapGestureRecognizer *singleTapTap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(showSingleTapHint)];
+   [singleTapPic addGestureRecognizer : singleTapTap];
    singleTapPic.hidden = YES;
 
    const CGPoint center = self.view.center;
    CGRect rect = CGRectMake(center.x - 300.f, center.y - 290.f, 600.f, 600.f);
-   hintView = [[HintView alloc] initWithFrame:rect];
-   hintView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
-   [self.view addSubview:hintView];
-   UITapGestureRecognizer *hintTap = [[UITapGestureRecognizer alloc] initWithTarget:hintView action:@selector(handleTap:)];
-   [hintView addGestureRecognizer:hintTap];
+   hintView = [[HintView alloc] initWithFrame : rect];
+   hintView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
+                               UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+   [self.view addSubview : hintView];
+   UITapGestureRecognizer *hintTap = [[UITapGestureRecognizer alloc] initWithTarget : hintView action : @selector(handleTap:)];
+   [hintView addGestureRecognizer : hintTap];
    hintView.hidden = YES;
 }
 
-//_________________________________________________________________
-- (void)viewWillAppear:(BOOL)animated
-{
-   [super viewWillAppear:animated];
-}
+#pragma mark - view lifecycle.
 
 //_________________________________________________________________
-- (void)viewDidAppear:(BOOL)animated
-{
-   [super viewDidAppear:animated];
-}
-
-//_________________________________________________________________
-- (void)viewWillDisappear:(BOOL)animated
-{
-	[super viewWillDisappear:animated];
-}
-
-//_________________________________________________________________
-- (void)viewDidDisappear:(BOOL)animated
-{  
-	[super viewDidDisappear:animated];
-}
-
-//_________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    return YES;
-}
-
-#pragma mark - Split view support
-
-//_________________________________________________________________
-- (void)splitViewController:(UISplitViewController *)svc willHideViewController:(UIViewController *)aViewController withBarButtonItem:(UIBarButtonItem *)barButtonItem forPopoverController: (UIPopoverController *)pc
-{
-   barButtonItem.title = @"Tutorials";
-   NSMutableArray *items = [[self.toolbar items] mutableCopy];
-   [items insertObject:barButtonItem atIndex:0];
-   [self.toolbar setItems:items animated:YES];
-   self.popoverController = pc;
-}
-
-//_________________________________________________________________
-- (void)splitViewController:(UISplitViewController *)svc willShowViewController:(UIViewController *)aViewController invalidatingBarButtonItem:(UIBarButtonItem *)barButtonItem
-{
-   // Called when the view is shown again in the split view, invalidating the button and popover controller.
-   NSMutableArray *items = [[self.toolbar items] mutableCopy];
-   [items removeObjectAtIndex:0];
-   [self.toolbar setItems:items animated:YES];
-   self.popoverController = nil;
-}
-
-//_________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
    self.view.backgroundColor = [UIColor lightGrayColor];
    
@@ -281,7 +254,9 @@ enum ETutorialsDefaults {
    [self initMainViews];
    [self initHints];
    
-   appMode = kTAZoom;
+   inTransition = NO;
+   
+   appMode = AppMode::zoom;
   
    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleDoubleTapPad:)];
    [parentView addGestureRecognizer:tapGesture];
@@ -305,67 +280,69 @@ enum ETutorialsDefaults {
    [super viewDidLoad];
 }
 
-//_________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
-
-	// Release any retained subviews of the main view.
-	// e.g. self.myOutlet = nil;
-	self.popoverController = nil;
-}
-
-#pragma mark - Memory management
+#pragma mark - Split view support
 
 //_________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) splitViewController : (UISplitViewController *) svc willHideViewController : (UIViewController *) aViewController
+         withBarButtonItem : (UIBarButtonItem *) barButtonItem forPopoverController : (UIPopoverController *) pc
 {
-	// Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-	
-	// Release any cached data, images, etc that aren't in use.
+   barButtonItem.title = @"Tutorials";
+   NSMutableArray * const items = [[self.toolbar items] mutableCopy];
+   [items insertObject : barButtonItem atIndex : 0];
+   [self.toolbar setItems : items animated : YES];
+   self.popoverController = pc;
 }
 
 //_________________________________________________________________
-- (void)dealloc
+- (void) splitViewController : (UISplitViewController *) svc willShowViewController : (UIViewController *) aViewController
+   invalidatingBarButtonItem : (UIBarButtonItem *) barButtonItem
 {
-   //
-   delete pad;
-   //
+   // Called when the view is shown again in the split view, invalidating the button and popover controller.
+   NSMutableArray * const items = [[self.toolbar items] mutableCopy];
+   [items removeObjectAtIndex : 0];
+   [self.toolbar setItems : items animated:YES];
+   self.popoverController = nil;
 }
+
+#pragma mark - App's logic.
 
 //_________________________________________________________________
 - (void) prepareHints
 {
-   if (appMode == kTAZoom) {
+   if (appMode == AppMode::zoom) {
+      //In 'zoom' mode, pinch, double tap,
+      //pan gestures are activated and
+      //we show the corresponding hints.
       panPic.hidden = NO;
       pinchPic.hidden = NO;
       doubleTapPic.hidden = NO;
-      
+
       singleTapPic.hidden = YES;
       rotatePic.hidden = YES;
-//      emptyPic.hidden = YES;
-      //Hide selection pictograms.
    } else {
-      //Show selection or rotate pictogram.
-      
       //Hide zoom mode's pictograms.
       panPic.hidden = YES;
       pinchPic.hidden = YES;
       doubleTapPic.hidden = YES;
 
+      //Show selection or rotation pictogram.
       rotatePic.hidden = !activeDemo->Supports3DRotation();
       singleTapPic.hidden = !rotatePic.hidden;
    }
 }
 
 //_________________________________________________________________
-- (void) setActiveDemo:(ROOT::iOS::Demos::DemoBase *)demo
+- (void) setActiveDemo : (ROOT::iOS::Demos::DemoBase *) demo
 {
+   assert(demo != nullptr && "setActiveDemo:, parameter 'demo' is null");
+   
+   if (inTransition)
+      return;
+
    help.hidden = YES;
-   
+   hintView.hidden = YES;
+
    if (demo != activeDemo) {
-   
       selectionViews[0].hidden = YES;
       selectionViews[1].hidden = YES;
    
@@ -373,8 +350,9 @@ enum ETutorialsDefaults {
       //Stop any animated demo (previously active).
       if (animationTimer) {
          [animationTimer invalidate];
-         animationTimer = 0;
+         animationTimer = nil;
       }
+      
       currentFrame = 0;
       //
       
@@ -389,7 +367,9 @@ enum ETutorialsDefaults {
       const unsigned show = !hide;
       activeView = show;
    
-      if (appMode == kTAZoom) {
+      //Pad's parent is different in 'zoom' and 'select' mode.
+   
+      if (appMode == AppMode::zoom) {
          showView = scrollViews[show];
          hideView = scrollViews[hide];
       } else {
@@ -398,8 +378,8 @@ enum ETutorialsDefaults {
       }
 
       //This is temporary hack.
-      [padViews[activeView] setProcessPan:activeDemo->Supports3DRotation()];
-      [padViews[activeView] setProcessTap:!activeDemo->Supports3DRotation()];
+      [padViews[activeView] setProcessPan : activeDemo->Supports3DRotation()];
+      [padViews[activeView] setProcessTap : !activeDemo->Supports3DRotation()];
 
       //Remove old contents of pad, 
       //set pad's parameters (if required by demo)
@@ -411,11 +391,11 @@ enum ETutorialsDefaults {
       
       //Repaint active view's content.
       [padViews[activeView] setNeedsDisplay];
-      
+
       if (activeDemo->IsAnimated()) {
          //Start timer for animated demo.
          activeDemo->StartAnimation();
-         animationTimer = [NSTimer scheduledTimerWithTimeInterval:0.5 / 25 target:self selector:@selector(onTimer) userInfo:nil repeats:YES];
+         animationTimer = [NSTimer scheduledTimerWithTimeInterval : 0.5 / 25 target : self selector : @selector(onTimer) userInfo : nil repeats : YES];
       }
       
       //Make an animation: hide one view (demo), show another one.
@@ -426,16 +406,16 @@ enum ETutorialsDefaults {
       // Animate over 3/4 of a second
       transition.duration = 0.75;
       // using the ease in/out timing function
-      transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+      transition.timingFunction = [CAMediaTimingFunction functionWithName : kCAMediaTimingFunctionEaseInEaseOut];
       // Now to set the type of transition.
       transition.type = kCATransitionReveal;
 		transition.subtype = kCATransitionFromLeft;
       // Finally, to avoid overlapping transitions we assign ourselves as the delegate for the animation and wait for the
       // -animationDidStop:finished: message. When it comes in, we will flag that we are no longer transitioning.
-      //transitioning = YES;
+      inTransition = YES;
       transition.delegate = self;
       // Next add it to the containerView's layer. This will perform the transition based on how we change its contents.
-      [parentView.layer addAnimation : transition forKey:nil];
+      [parentView.layer addAnimation : transition forKey : nil];
    }
 }
 
@@ -448,9 +428,12 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (void) onTimer
 {
+   assert(activeDemo != nullptr && "onTimer, activeDemo is null");
+   assert(animationTimer != nil && "onTimer, animationTimer is nil");
+
    if (currentFrame == activeDemo->NumOfFrames()) {
       [animationTimer invalidate];
-      animationTimer = 0;
+      animationTimer = nil;
    } else {
       ++currentFrame;
       activeDemo->NextStep();      
@@ -459,57 +442,68 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (void) resizePadView:(unsigned)view
+- (void) resetPadView : (unsigned) view
 {
-   UIScrollView *scroll = (UIScrollView *)padViews[view].superview;
-   CGRect oldRect = padViews[view].frame;
+   //Reset the pad view to its original dimensions (640x640) to
+   //avoid different ugly donwscaling effects.
+
+   UIScrollView * const scroll = (UIScrollView *)padViews[view].superview;
+   const CGRect oldRect = padViews[view].frame;
    
-   if (abs(640.f - oldRect.size.width) < 0.01 && (abs(640.f - oldRect.size.height) < 0.01))
+   if (std::abs(640.f - oldRect.size.width) < 0.01 && std::abs(640.f - oldRect.size.height) < 0.01)
       return;
       
-   CGRect padRect = CGRectMake(0.f, 0.f, 640.f, 640.f);
+   const CGRect padRect = CGRectMake(0.f, 0.f, 640.f, 640.f);
    [padViews[view] removeFromSuperview];
    padViews[view] = [[PadView alloc] initWithFrame : padRect forPad : pad];
-   [scroll addSubview:padViews[view]];
+   [scroll addSubview : padViews[view]];
   
    scroll.minimumZoomScale = 1.f;
    scroll.maximumZoomScale = 2.f;
-   [scroll setZoomScale:1.f];
+   [scroll setZoomScale : 1.f];
    scroll.contentSize = padRect.size;
    scroll.contentOffset = CGPointMake(0.f, 0.f);
-      
+
    oldSizes.width = 640.f;
    oldSizes.height = 640.f;
 }
 
+#pragma mark - delegate for a transition animation.
+
 //_________________________________________________________________
--(void)animationDidStop:(CAAnimation *)theAnimation finished:(BOOL)flag
+-(void) animationDidStop : (CAAnimation *) animation finished : (BOOL) flag
 {
+#pragma unused(animation)
+
    //After one view was hidden, resize it's scale to 1 and
    //view itself to original size.
-   if (appMode == kTAZoom) {
-      unsigned inactiveView = activeView ? 0 : 1;
-      [self resizePadView : inactiveView];
+   if (flag) {
+      inTransition = NO;
+      if (appMode == AppMode::zoom)
+         [self resetPadView : activeView ? 0 : 1];
    }
 }
 
 #pragma mark - That's what I call action :)
 
+//zoomButtonPressed/selectButtonPressed - legacy code (before I really had buttons), now they are
+//simply called from tabs' tap gestures.
 //_________________________________________________________________
-- (IBAction)zoomButtonPressed
+- (void) zoomButtonPressed
 {
-   if (appMode == kTAZoom)
+   if (appMode == AppMode::zoom)
       return;
  
    //Zoom mode was selected.
-   appMode = kTAZoom;
-   //The mode was kTASelect previously.
+   appMode = AppMode::zoom;
+   //The mode was 'select' previously.
    //Reparent pad views, now scrollview is a parent for a pad view.
-   for (unsigned i = 0; i < 2; ++i) { // < kTDNOfPads.
+   
+   for (unsigned i = 0; i < nPadViews; ++i) {
       selectionViews[i].hidden = YES;
       [padViews[i] removeGestureRecognizer : padPanGestures[i]];
       [padViews[i] removeGestureRecognizer : padTapGestures[i]];
-      
+
       padViews[i].hidden = NO;
       [padViews[i] removeFromSuperview];
       [scrollViews[i] addSubview : padViews[i]];
@@ -522,18 +516,18 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (IBAction) selectButtonPressed
+- (void) selectButtonPressed
 {
-   if (appMode == kTASelect)// || !activeDemo)
+   if (appMode == AppMode::select)
       return;
 
-   appMode = kTASelect;
+   appMode = AppMode::select;
 
    //hide both scroll views, re-parent pad-views.
-   for (unsigned i = 0; i < 2; ++i) { // < kTDNOfPads
+   for (unsigned i = 0; i < nPadViews; ++i) {
       scrollViews[i].hidden = YES;
-      //1. Check, if views must be resized (unscaled).
-      [self resizePadView : i];
+      //1. Check, if views must be reset (unzoom).
+      [self resetPadView : i];
 
       [padViews[i] removeFromSuperview];
       
@@ -541,19 +535,19 @@ enum ETutorialsDefaults {
       [padViews[i] addGestureRecognizer:padPanGestures[i]];
       
       padTapGestures[i] = [[UITapGestureRecognizer alloc] initWithTarget:padViews[i] action:@selector(handleTapGesture:)];
-      [padViews[i] addGestureRecognizer:padTapGestures[i]];
+      [padViews[i] addGestureRecognizer : padTapGestures[i]];
 
-      [padViews[i] setSelectionView:selectionViews[i]];
+      [padViews[i] setSelectionView : selectionViews[i]];
    
-      [parentView addSubview:padViews[i]];
+      [parentView addSubview : padViews[i]];
  
       if (activeDemo) //In case no demo was selected - nothing to show yet.
          padViews[i].hidden = i == activeView ? NO : YES;
    }
 
    if (activeDemo) {
-      [padViews[activeView] setProcessPan:activeDemo->Supports3DRotation()];
-      [padViews[activeView] setProcessTap:!activeDemo->Supports3DRotation()];
+      [padViews[activeView] setProcessPan : activeDemo->Supports3DRotation()];
+      [padViews[activeView] setProcessTap : !activeDemo->Supports3DRotation()];
       [self prepareHints];
    }
 }
@@ -561,9 +555,10 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (IBAction) editButtonPressed : (id) sender
 {
+#pragma unsued(sender)
+
    if (editorPopover && editorPopover.popoverVisible) {
       [editorPopover dismissPopoverAnimated : YES];
-      return;
    } else {
       if (!padController) {
          padController = [[PadOptionsController alloc] initWithNibName : @"PadOptionsController" bundle : nil];
@@ -575,7 +570,8 @@ enum ETutorialsDefaults {
          editorPopover.popoverContentSize = CGSizeMake(250.f, 650.f);
       }
 
-      [editorPopover presentPopoverFromBarButtonItem : sender permittedArrowDirections:UIPopoverArrowDirectionAny animated : YES];
+      assert(pad != nullptr && "editButtonPressed:, pad is null");
+      [editorPopover presentPopoverFromBarButtonItem : sender permittedArrowDirections : UIPopoverArrowDirectionAny animated : YES];
       [padController setView : padViews[activeView] andPad : pad];
    }
 }
@@ -583,19 +579,31 @@ enum ETutorialsDefaults {
 //_________________________________________________________________
 - (IBAction) showHelp
 {
-   CATransition *transition = [CATransition animation];
+   CATransition * const transition = [CATransition animation];
    transition.duration = 0.25;
-   transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+   transition.timingFunction = [CAMediaTimingFunction functionWithName : kCAMediaTimingFunctionEaseInEaseOut];
    transition.type = kCATransitionReveal;
    transition.subtype = kCATransitionFade;
    help.hidden = !help.hidden;
-   [help.layer addAnimation:transition forKey:nil];
+   [help.layer addAnimation : transition forKey : nil];
+}
+
+
+#pragma mark - Tab bar delegate.
+
+//_________________________________________________________________
+- (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *) item
+{
+   if (item.tag == 1)
+      [self zoomButtonPressed];
+   else
+      [self selectButtonPressed];
 }
 
 #pragma mark - UIScrollView's delegate.
 
 //_________________________________________________________________
-- (UIView *) viewForZoomingInScrollView : (UIScrollView *)scrollView
+- (UIView *) viewForZoomingInScrollView : (UIScrollView *) scrollView
 {
    if (scrollView == scrollViews[0])
       return padViews[0];
@@ -604,27 +612,31 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (CGRect) centeredFrameForScrollView : (UIScrollView *)scroll andUIView : (UIView *)rView 
+- (CGRect) centeredFrameForScrollView : (UIScrollView *)scroll andUIView : (UIView *) rView
 {
-   CGSize boundsSize = scroll.bounds.size;
+   const CGSize boundsSize = scroll.bounds.size;
    CGRect frameToCenter = rView.frame;
    // center horizontally
    if (frameToCenter.size.width < boundsSize.width)
       frameToCenter.origin.x = (boundsSize.width - frameToCenter.size.width) / 2;
    else
-      frameToCenter.origin.x = 0;
+      frameToCenter.origin.x = 0.f;
    // center vertically
    if (frameToCenter.size.height < boundsSize.height)
       frameToCenter.origin.y = (boundsSize.height - frameToCenter.size.height) / 2;
    else
-      frameToCenter.origin.y = 0;
+      frameToCenter.origin.y = 0.f;
 
    return frameToCenter;
 }
 
 //_________________________________________________________________
-- (void)scrollViewDidEndZooming:(UIScrollView *)scrollView withView:(UIView *)view atScale:(float)scale
+- (void) scrollViewDidEndZooming : (UIScrollView *) scrollView withView : (UIView *) view atScale : (float) scale
 {
+   //The problem with a scrollview: it scales the original 'image', making it look badly.
+   //At the end of zoom I'm recreating the pad view and it must be re-rendered, creating
+   //a new nice image.
+
    const CGPoint off = [scrollView contentOffset];
    CGRect oldRect = padViews[activeView].frame;
    oldRect.origin.x = 0.f;
@@ -637,9 +649,9 @@ enum ETutorialsDefaults {
    
    [padViews[activeView] removeFromSuperview];
    padViews[activeView] = [[PadView alloc] initWithFrame : oldRect forPad : pad];
-   [scrollView addSubview:padViews[activeView]];
+   [scrollView addSubview : padViews[activeView]];
   
-   [scrollView setZoomScale:1.f];
+   [scrollView setZoomScale : 1.f];
    scrollView.contentSize = oldRect.size;   
    scrollView.contentOffset = off;
 
@@ -648,43 +660,32 @@ enum ETutorialsDefaults {
 }
 
 //_________________________________________________________________
-- (void)scrollViewDidZoom:(UIScrollView *)scrollView 
+- (void) scrollViewDidZoom : (UIScrollView *) scrollView
 {
-   padViews[activeView].frame = [self centeredFrameForScrollView:scrollView andUIView:padViews[activeView]];
-}
-
-#pragma mark - Tab bar delegate.
-
-//_________________________________________________________________
-- (void) tabBar : (UITabBar *) tb didSelectItem:(UITabBarItem *)item
-{
-   if (item.tag == 1)
-      [self zoomButtonPressed];
-   else
-      [self selectButtonPressed];
+   padViews[activeView].frame = [self centeredFrameForScrollView : scrollView andUIView : padViews[activeView]];
 }
 
 #pragma mark - Tap gesture handler.
 
 //_________________________________________________________________
-- (void) handleDoubleTapPad:(UITapGestureRecognizer *)tap
+- (void) handleDoubleTapPad : (UITapGestureRecognizer *) tap
 {
-   if (appMode != kTAZoom || !activeDemo)
+   if (appMode != AppMode::zoom || !activeDemo)
       return;
 
    if (oldSizes.width > 640.f)
-      [self resizePadView : activeView];
+      [self resetPadView : activeView];
    else {
       //Zoom to maximum.
       oldSizes = CGSizeMake(1280.f, 1280.f);
-      CGRect newRect = CGRectMake(0.f, 0.f, 1280.f, 1280.f);
+      const CGRect newRect = CGRectMake(0.f, 0.f, 1280.f, 1280.f);
       
       [padViews[activeView] removeFromSuperview];
 
       padViews[activeView] = [[PadView alloc] initWithFrame : newRect forPad : pad];
-      [scrollViews[activeView] addSubview:padViews[activeView]];
+      [scrollViews[activeView] addSubview : padViews[activeView]];
   
-      [scrollViews[activeView] setZoomScale:1.f];
+      [scrollViews[activeView] setZoomScale : 1.f];
       scrollViews[activeView].contentSize = newRect.size;
 
       scrollViews[activeView].minimumZoomScale = 1.f;
@@ -736,5 +737,16 @@ enum ETutorialsDefaults {
    [hintView setNeedsDisplay];
    hintView.hidden = NO;
 }
+
+#pragma mark - Interface orientation.
+
+//_________________________________________________________________
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
+{
+#pragma unused(interfaceOrientation)
+
+    return YES;
+}
+
 
 @end

@@ -19,9 +19,7 @@ class DemoBase;
 - (void) setActiveDemo : (ROOT::iOS::Demos::DemoBase *)demo;
 - (void) dismissPopover;
 
-- (IBAction) zoomButtonPressed;
 - (IBAction) editButtonPressed : (id) sender;
-- (IBAction) selectButtonPressed;
 - (IBAction) showHelp;
 
 @end

@@ -6,7 +6,7 @@
 #import "DemoHelper.h"
 #import "DemoBase.h"
 
-const unsigned nROOTDemos = 6;
+const NSInteger nROOTDemos = 6;
 
 @implementation RootViewController {
    NSMutableArray *tutorialNames;
@@ -26,10 +26,12 @@ const unsigned nROOTDemos = 6;
       delete demos[i];
 }
 
+#pragma mark - view lifecycle.
+
 //_________________________________________________________________
 - (void) viewDidLoad
 {
-   NSString *filePath = [[NSBundle mainBundle] pathForResource : @"h2poly" ofType : @"root"];
+   NSString * const filePath = [[NSBundle mainBundle] pathForResource : @"h2poly" ofType : @"root"];
    if (!ROOT::iOS::Demos::CreateTutorials(demos, [filePath cStringUsingEncoding : [NSString defaultCStringEncoding]])) {
       NSLog(@"Failed to create demos");
       std::exit(1);//WOW???
@@ -66,13 +68,7 @@ const unsigned nROOTDemos = 6;
    self.preferredContentSize = CGSizeMake(320.0, 500.0);
 }
 
-//_________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
-{
-#pragma unused(interfaceOrientation)
-
-   return YES;
-}
+#pragma mark - Table view delegate and data source.
 
 //_________________________________________________________________
 - (NSInteger) numberOfSectionsInTableView : (UITableView *) tableView
@@ -87,7 +83,7 @@ const unsigned nROOTDemos = 6;
 {
 #pragma unused(tableView, section)
 
-   return [tutorialNames count];   		
+   return nROOTDemos;
 }
 
 //_________________________________________________________________
@@ -95,7 +91,7 @@ const unsigned nROOTDemos = 6;
 {
    assert(tableView != nil && "tableView:cellForRowAtIndexPath:, parameter 'tableView' is nil");
    assert(indexPath != nil && "tableView:cellForRowAtIndexPath:, parameter 'indexPath' is nil");
-   assert(indexPath.row >= 0 && indexPath.row < NSInteger(tutorialNames.count) &&
+   assert(indexPath.row >= 0 && indexPath.row < nROOTDemos &&
           "tableView:cellForRowAtIndexPath:, row is out of bounds");
 
    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier : cellReuseIdentifier];
@@ -104,9 +100,9 @@ const unsigned nROOTDemos = 6;
 
    // Configure the cell.
    const bool useDarkBackground = indexPath.row % 2;
-   NSString *backgroundImagePath = [[NSBundle mainBundle] pathForResource : useDarkBackground ? @"DarkBackground" : @"LightBackground" ofType : @"png"];
+   NSString * const backgroundImagePath = [[NSBundle mainBundle] pathForResource : useDarkBackground ? @"DarkBackground" : @"LightBackground" ofType : @"png"];
 
-   UIImage *backgroundImage = [[UIImage imageWithContentsOfFile : backgroundImagePath] stretchableImageWithLeftCapWidth : 0.f topCapHeight : 1.f];
+   UIImage * const backgroundImage = [[UIImage imageWithContentsOfFile : backgroundImagePath] stretchableImageWithLeftCapWidth : 0.f topCapHeight : 1.f];
    cell.backgroundView = [[UIImageView alloc] initWithImage : backgroundImage];
    cell.backgroundView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
    cell.backgroundView.frame = cell.bounds;
@@ -123,10 +119,29 @@ const unsigned nROOTDemos = 6;
 }
 
 //_________________________________________________________________
-- (void) tableView : (UITableView *)tableView didSelectRowAtIndexPath : (NSIndexPath *)indexPath
+- (void) tableView : (UITableView *) tableView didSelectRowAtIndexPath : (NSIndexPath *) indexPath
 {
+#pragma unused(tableView)
+
+   assert(indexPath != nil && "tableView:didSelectRowAtIndexPath:, parameter 'indexPath' is nil");
+   assert(indexPath.row >= 0 && indexPath.row < nROOTDemos &&
+          "tableView:didSelectRowAtIndexPath:, row is out of bounds");
    [self.detailViewController dismissPopover];
    [self.detailViewController setActiveDemo : demos[indexPath.row]];
+
+//
+   [self.tableView deselectRowAtIndexPath:indexPath animated : NO];
 }
+
+#pragma mark - Interface rotation.
+
+//_________________________________________________________________
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
+{
+#pragma unused(interfaceOrientation)
+
+   return YES;
+}
+
 
 @end
