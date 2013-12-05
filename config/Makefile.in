@@ -224,7 +224,7 @@ FPYTHIA6LIB      := @pythia6lib@
 FPYTHIA6CPPFLAGS := @pythia6cppflags@
 
 BUILDFPYTHIA8    := @buildpythia8@
-FPYTHIA8INCDIR   := @pythia8incdir@
+FPYTHIA8INCDIR   := $(filter-out /usr/include, @pythia8incdir@)
 FPYTHIA8LIBDIR   := @pythia8libdir@
 FPYTHIA8LIB      := @pythia8lib@
 
