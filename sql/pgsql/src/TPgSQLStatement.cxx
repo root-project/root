@@ -600,12 +600,12 @@ void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_
    Bool_t hasZone = kFALSE;
    Ssiz_t tzP = PQvalue.Last('+');
    if ((tzP != kNPOS) && (tzP > p) ) {
-      s_zone = new TSubString(PQvalue(tzP,PQvalue.Length()-tzP+1));
+      s_zone = new TSubString(PQvalue(tzP+1,PQvalue.Length()-tzP));
       hasZone=kTRUE;
    } else {
       Ssiz_t tzM = PQvalue.Last('-');
       if ((tzM != kNPOS) && (tzM > p) ) {
-         s_zone = new TSubString(PQvalue(tzM,PQvalue.Length()-tzM+1));
+         s_zone = new TSubString(PQvalue(tzM+1,PQvalue.Length()-tzM));
          hasZone = kTRUE;
       }
    }
