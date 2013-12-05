@@ -284,9 +284,10 @@ Double_t TVector3::Theta() const
 TVector3 TVector3::Unit() const 
 {
    // return unit vector parallel to this.
-   Double_t  tot = Mag2();
-   TVector3 p(fX,fY,fZ);
-   return tot > 0.0 ? p *= (1.0/TMath::Sqrt(tot)) : p;
+   Double_t  tot2 = Mag2();
+   Double_t tot = (tot2 > 0) ?  1.0/TMath::Sqrt(tot2) : 1.0;
+   TVector3 p(fX*tot,fY*tot,fZ*tot);
+   return p;
 }
 
 //______________________________________________________________________________
