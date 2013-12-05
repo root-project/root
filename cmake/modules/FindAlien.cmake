@@ -12,7 +12,7 @@ if(ALIEN_LIBRARY AND ALIEN_INCLUDE_DIR)
 endif()
 
 find_path(ALIEN_INCLUDE_DIR gapiUI.h
-  ${ALIEN_DIR}/include
+  ${ALIEN_DIR}/include $ENV{ALIEN_DIR}/include
   /usr/local/include 
   /opt/alien/api/include 
   /opt/monalisa/include 
@@ -21,7 +21,7 @@ find_path(ALIEN_INCLUDE_DIR gapiUI.h
 )
 
 find_library(ALIEN_LIBRARY NAMES gapiUI PATHS
-  ${ALIEN_DIR}/lib
+  ${ALIEN_DIR}/lib $ENV{ALIEN_DIR}/lib
   /usr/local/lib 
   /opt/alien/api/lib
   /opt/monalisa/lib 
