@@ -53,7 +53,7 @@ $(call pcmrule,PYTHIA8)
 $(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA8)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA8) -c -I$(FPYTHIA8INCDIR) $(PYTHIA8H) $(PYTHIA8L)
+		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
 
 $(PYTHIA8MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA8L)
 		$(RLIBMAP) -o $@ -l $(PYTHIA8LIB) \
