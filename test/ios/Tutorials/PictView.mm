@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "PictView.h"
@@ -5,10 +7,10 @@
 @implementation PictView
 
 //_________________________________________________________________
-- (id) initWithFrame : (CGRect)frame andIcon : (NSString *)iconName
+- (id) initWithFrame : (CGRect) frame andIcon : (NSString *) iconName
 {
-   //self = [super initWithFrame:frame];
-   
+   assert(iconName != nil && "initWithFrame:andIcon:, parameter 'iconName' is nil");
+
    self = [super initWithImage : [UIImage imageNamed : iconName]];
    
    if (self) {

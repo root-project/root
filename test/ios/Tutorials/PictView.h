@@ -5,5 +5,7 @@
 */
 
 @interface PictView : UIImageView
-- (id) initWithFrame : (CGRect)frame andIcon:(NSString *)iconName;
+
+- (id) initWithFrame : (CGRect) frame andIcon : (NSString *) iconName;
+
 @end
