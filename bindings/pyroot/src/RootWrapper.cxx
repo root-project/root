@@ -767,9 +767,7 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 // memory regulator
    TObject* object = 0;
    if ( ! isRef && klass->IsTObject() ) {
-      object = (TObject*)((Long_t)address +
-         Utility::GetObjectOffset(
-            klass->GetClassInfo(), TObject::Class()->GetClassInfo(), address ) );
+      object = (TObject*)((Long_t)address + Utility::UpcastOffset( klass, TObject::Class(), address ) );
 
    // use the old reference if the object already exists
       PyObject* oldPyObject = TMemoryRegulator::RetrieveObject( object, clActual ? clActual : klass );
@@ -777,10 +775,9 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
          return oldPyObject;
    }
                        
-// upgrade to real class for object returns
+// downcast to real class for object returns
    if ( clActual && klass != clActual ) {
-      address = (void*)((Long_t)address +
-         Utility::GetObjectOffset( klass->GetClassInfo(), clActual->GetClassInfo(), address ) );
+      address = (void*)((Long_t)address + Utility::DowncastOffset( clActual, klass, address ) );
       klass = clActual;
    }
 

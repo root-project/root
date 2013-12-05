@@ -40,7 +40,7 @@ namespace PyROOT {
       Long_t       fOffset;
       Long_t       fProperty;
       TConverter*  fConverter;
-      ClassInfo_t* fParent;
+      ClassInfo_t* fEnclosingScope;
       std::string  fName;
 
    private:              // private, as the python C-API will handle creation

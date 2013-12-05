@@ -80,8 +80,17 @@ namespace PyROOT {
       const std::string ClassName( PyObject* pyobj );
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 
-   // the inconsistent interface of the next call is to be fixed once #100740 resolves
-      Long_t GetObjectOffset( ClassInfo_t* clCurrent, ClassInfo_t* clDesired, void* obj );
+   // offsets to move between classes
+      Long_t UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj );
+      inline Long_t UpcastOffset( TClass* clDerived, TClass* clBase, void* obj ) {
+         return UpcastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj );
+      }
+      inline Long_t DowncastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj ) {
+         return -UpcastOffset( clDerived, clBase, obj );
+      }
+      inline Long_t DowncastOffset( TClass* clDerived, TClass* clBase, void* obj ) {
+         return DowncastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj );
+      }
 
    // CINT integration
       void ErrMsgCallback( char* msg );

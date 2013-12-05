@@ -40,6 +40,8 @@
 #include <map>
 //
 
+#include <iostream>
+
 
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;
@@ -707,38 +709,33 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 
 //____________________________________________________________________________
 static std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > > sOffsets;
-Long_t PyROOT::Utility::GetObjectOffset(
-      ClassInfo_t* clCurrent, ClassInfo_t* clDesired, void* obj ) {
+Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj ) {
 // Forwards to TInterpreter->ClassInfo_GetBaseOffset(), just adds caching
-   if ( clCurrent == clDesired || !(clCurrent && clDesired) )
+   if ( clBase == clDerived || !(clBase && clDerived) )
       return 0;
 
    std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > >::iterator
-      mit1 = sOffsets.find( clCurrent );
+      mit1 = sOffsets.find( clBase );
    if ( mit1 != sOffsets.end() ) {
       for ( std::vector< std::pair< ClassInfo_t*, Long_t > >::iterator ioff = mit1->second.begin();
             ioff != mit1->second.end(); ++ioff ) {
-         if ( ioff->first == clDesired )
+         if ( ioff->first == clDerived )
             return ioff->second;
       }
    }
 
-   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clCurrent, clDesired, obj );
+   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clDerived, clBase, obj );
    if ( offset == -1 ) {
-   // CLING WORKAROUND (ROOT-5781) -- offset should not fail; note that the names
-   // MUST be copied over (still that static data lurking in there somehow?)
-      std::string clNameCurrent = gInterpreter->ClassInfo_FullName( clCurrent );
-      std::string clNameDesired = gInterpreter->ClassInfo_FullName( clDesired );
-      std::ostringstream interpcast;
-      interpcast << "(long)(" << clNameDesired << "*)("
-                 << clNameCurrent << "*)" << (void*)obj
-                 << " - (long)(" << clNameCurrent << "*)" << (void*)obj
-                 << ";";
-      offset = (Long_t)gInterpreter->ProcessLine( interpcast.str().c_str() );
-   // -- CLING WORKAROUND
+   // warn to allow diagnostics, but 0 offset is often good, so use that and continue
+      std::string bName = gInterpreter->ClassInfo_FullName( clBase );    // collect first b/c
+      std::string dName = gInterpreter->ClassInfo_FullName( clDerived ); //  of static buffer
+      std::ostringstream msg;
+      msg << "failed offset calculation between " << bName << " and " << dName << std::endl;
+      PyErr_Warn( PyExc_RuntimeWarning, msg.str().c_str() );
+      return 0;
    }
 
-   sOffsets[ clCurrent ].push_back( std::make_pair( clDesired, offset ) );
+   sOffsets[ clBase ].push_back( std::make_pair( clDerived, offset ) );
    return offset;
 }
 

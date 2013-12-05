@@ -103,7 +103,11 @@ namespace {
    {
    // Create and initialize a new property descriptor.
       PropertyProxy* pyprop = (PropertyProxy*)pytype->tp_alloc( pytype, 0 );
-      pyprop->fConverter = 0;
+
+      pyprop->fOffset         = 0;
+      pyprop->fProperty       = 0;
+      pyprop->fConverter      = 0;
+      pyprop->fEnclosingScope = 0;
       new ( &pyprop->fName ) std::string();
 
       return pyprop;
@@ -114,8 +118,9 @@ namespace {
    {
    // Deallocate memory held by this descriptor.
       using namespace std;
-      pyprop->fName.~string();
       delete pyprop->fConverter;
+      pyprop->fName.~string();
+
       Py_TYPE(pyprop)->tp_free( (PyObject*)pyprop );
    }
 
@@ -186,19 +191,20 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
 {
 // initialize from <dm> info
    fOffset    = dm->GetOffsetCint();
+   fProperty  = (Long_t)dm->Property();
+
    std::string fullType = dm->GetFullTypeName();
    if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
       fullType.append( "*" );
    }
-   fProperty  = (Long_t)dm->Property();
-
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
-   fName      = dm->GetName();
 
    if ( dm->GetClass() )
-      fParent = dm->GetClass()->GetClassInfo();
+      fEnclosingScope = dm->GetClass()->GetClassInfo();
    else
-      fParent = NULL;    // namespaces
+      fEnclosingScope = NULL;    // namespaces
+
+   fName      = dm->GetName();
 }
 
 //____________________________________________________________________________
@@ -207,6 +213,7 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
 // initialize from <gbl> info
    fOffset    = (Long_t)gbl->GetAddress();
    fProperty  = gbl->Property() | kIsStatic;    // force static flag
+
    std::string fullType = gbl->GetFullTypeName();
    if ( fullType == "void*" ) // actually treated as address to void*
       fullType = "void**";
@@ -214,16 +221,15 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
       fullType.append( "*" );
    }
    fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
-   fName      = gbl->GetName();
 
-// no parent (global scope)
-   fParent = 0;
+   fEnclosingScope = 0;            // no enclosure (global scope)
+   fName      = gbl->GetName();
 }
 
 //____________________________________________________________________________
 Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 // class attributes, global properties
-   if ( (fProperty & kIsStatic) || fParent == 0 )
+   if ( (fProperty & kIsStatic) || fEnclosingScope == 0 )
       return fOffset;
 
 // special case: non-static lookup through class
@@ -243,8 +249,9 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
       return 0;
    }
 
-   Long_t offset = Utility::GetObjectOffset(
-      pyobj->ObjectIsA()->GetClassInfo(), fParent, obj );
+// the proxy's internal offset is calculated from the enclosing class
+   Long_t offset = Utility::UpcastOffset(
+      pyobj->ObjectIsA()->GetClassInfo(), fEnclosingScope, obj );
 
    return (Long_t)obj + offset + fOffset;
 }
