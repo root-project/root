@@ -3681,7 +3681,7 @@ TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xx
 //     =====================
 //     The status of the fit can be obtained converting the TFitResultPtr to an integer
 //     independently if the fit option "S" is used or not:
-//     TFitResultPtr r = h=>Fit(myFunc,opt);
+//     TFitResultPtr r = h->Fit(myFunc,opt);
 //     Int_t fitStatus = r;
 //
 //     The fitStatus is 0 if the fit is OK (i.e no error occurred).

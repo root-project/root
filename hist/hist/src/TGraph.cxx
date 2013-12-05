@@ -1302,7 +1302,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
    //  =====================
    //  The status of the fit can be obtained converting the TFitResultPtr to an integer
    //  indipendently if the fit option "S" is used or not:
-   //  TFitResultPtr r = h=>Fit(myFunc,opt);
+   //  TFitResultPtr r = h->Fit(myFunc,opt);
    //  Int_t fitStatus = r;
    //
    //  The fitStatus is 0 if the fit is OK (i.e. no error occurred).
