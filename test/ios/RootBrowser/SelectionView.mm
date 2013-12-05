@@ -76,7 +76,7 @@
 
    //Selected object will cast a shadow.
    //if (useShadows)
-   if (!ROOT::iOS::Browser::deviceIsiPad3) {
+   if (true) {//!ROOT::iOS::Browser::deviceIsiPad3) {
       [SelectionView setShadowColor : ctx];
       pad->PaintSelected();
    } else {

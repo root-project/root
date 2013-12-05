@@ -567,7 +567,7 @@ enum ETutorialsDefaults {
    } else {
       if (!padController) {
          padController = [[PadOptionsController alloc] initWithNibName : @"PadOptionsController" bundle : nil];
-         padController.contentSizeForViewInPopover = CGSizeMake(250.f, 650.f);
+         padController.preferredContentSize = CGSizeMake(250.f, 650.f);
       }
 
       if (!editorPopover) {

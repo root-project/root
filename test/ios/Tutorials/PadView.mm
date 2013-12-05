@@ -68,7 +68,7 @@
 }
 
 //_________________________________________________________________
-- (void) handlePanGesture : (UIPanGestureRecognizer *)panGesture
+- (void) handlePanGesture : (UIPanGestureRecognizer *) panGesture
 {
    if (!processPan)
       return;

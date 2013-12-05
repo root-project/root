@@ -37,16 +37,26 @@
 
    //Draw the hint's text.
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
-   [hintText drawInRect:CGRectMake(0.f, 350.f, rect.size.width, rect.size.height) withFont:[UIFont systemFontOfSize:32] lineBreakMode:UILineBreakModeWordWrap alignment:UITextAlignmentCenter];
+   
+   //
+   const CGRect textRect = CGRectMake(0.f, 350.f, rect.size.width, rect.size.height);
+   UIFont * const font = [UIFont systemFontOfSize : 32.f];
+   NSMutableParagraphStyle * const paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+   paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
+   paragraphStyle.alignment = NSTextAlignmentCenter;
+   NSDictionary * const attributes = @{ NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle};
+   //
+   
+   [hintText drawInRect : textRect withAttributes : attributes];
 
    const CGPoint iconPlace = CGPointMake(rect.size.width / 2.f - 40.f, rect.size.height / 2.f - 40.f);
    CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
    CGContextFillRect(ctx, CGRectMake(iconPlace.x, iconPlace.y, 80.f, 80.f));
-   [iconImage drawAtPoint:iconPlace];
+   [iconImage drawAtPoint : iconPlace];
 }
 
 //_________________________________________________________________
-- (void) handleTap : (UITapGestureRecognizer *)tap
+- (void) handleTap : (UITapGestureRecognizer *) tap
 {
    self.hidden = YES;
 }

@@ -59,7 +59,7 @@ enum {
    
 
    self.clearsSelectionOnViewWillAppear = NO;
-   self.contentSizeForViewInPopover = CGSizeMake(320.0, 500.0);//Default height was 600., I've changed it to 500.
+   self.preferredContentSize = CGSizeMake(320.0, 500.0);
 }
 
 //_________________________________________________________________

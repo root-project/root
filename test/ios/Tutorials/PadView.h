@@ -17,12 +17,15 @@ class Pad;
 
 @interface PadView : UIView 
 
-- (id) initWithFrame : (CGRect)frame forPad : (ROOT::iOS::Pad*)pad;
+- (id) initWithFrame : (CGRect)frame forPad : (ROOT::iOS::Pad*) pad;
 
 - (void) clearPad;
 - (void) setSelectionView : (SelectionView *) sv;
-- (void) setProcessPan : (BOOL)p;
-- (void) setProcessTap : (BOOL)t;
+- (void) setProcessPan : (BOOL) p;
+- (void) setProcessTap : (BOOL) t;
 
+
+- (void) handlePanGesture : (UIPanGestureRecognizer *) panGesture;
+- (void) handleTapGesture : (UITapGestureRecognizer *) tapGesture;
 
 @end
