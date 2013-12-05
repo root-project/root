@@ -61,6 +61,9 @@ const unsigned colorIndices[16] = {
 //_________________________________________________________________
 - (void) setView : (PadView *) view andPad : (ROOT::iOS::Pad *) newPad
 {
+   assert(view != nil && "setView:andPad:, parameter 'view' is nil");
+   assert(newPad != nullptr && "setView:andPad:, parameter 'newPad' is null");
+
    padView = view;
    pad = newPad;
    
@@ -77,12 +80,15 @@ const unsigned colorIndices[16] = {
 //_________________________________________________________________
 - (IBAction) tickActivated : (id) control
 {
-   const unsigned on = [control isOn];
-   if (control == tickX_) {
+   assert([control isKindOfClass : [UISwitch class]] &&
+          "tickActivated:, parameter 'control' has a wrong type");
+
+   const unsigned on = [(UISwitch *)control isOn];
+   if (control == tickX_)
       pad->SetTickx(on);
-   } else if (control == tickY_) {
+   else if (control == tickY_)
       pad->SetTicky(on);
-   }
+   //else assert.
    
    [padView setNeedsDisplay];
 }
@@ -90,29 +96,35 @@ const unsigned colorIndices[16] = {
 //_________________________________________________________________
 - (IBAction) gridActivated : (id) control
 {
-   const unsigned on = [control isOn];
-   if (control == gridX_) {
+   assert([control isKindOfClass : [UISwitch class]] &&
+          "gridActivated:, parameter 'control' has a wrong type");
+
+   const unsigned on = [(UISwitch *)control isOn];
+   if (control == gridX_)
       pad->SetGridx(on);
-   } else if (control == gridY_) {
+   else if (control == gridY_)
       pad->SetGridy(on);
-   }
-   
+   //else assert.
+
    [padView setNeedsDisplay];
 }
 
 //_________________________________________________________________
 - (IBAction) logActivated : (id) control
 {
-   const unsigned on = [control isOn];
-   
+   assert([control isKindOfClass : [UISwitch class]] &&
+          "logActivated:, parameter 'control' has a wrong type");
+
+   const unsigned on = [(UISwitch *)control isOn];
    if (control == logX_)
       pad->SetLogx(on);
-   
    if (control == logY_)
       pad->SetLogy(on);
-      
    if (control == logZ_)
       pad->SetLogz(on);
+
+
+   //Else of all ifs must be an assert.
 
    [padView setNeedsDisplay];
 }
@@ -186,6 +198,7 @@ const unsigned colorIndices[16] = {
             [reuseCell setAsSolid];
          else
             [reuseCell setPattern : row - 1];
+
          return reuseCell;
       } else {
          PatternCell * const newCell = [[PatternCell alloc] initWithFrame : defaultCellFrame andPattern : row ? row - 1 : 0];
@@ -205,6 +218,9 @@ const unsigned colorIndices[16] = {
 {
 #pragma unused(component)
 
+   assert(pad != nullptr && "pickerView:didSelectRow:inComponent:, pad is null");
+   assert(padView != nil && "pickerView:didSelectRow:inComponent:, padView is nil");
+
    if (pickerView == colorPicker_) {
       if (row >= 0 && row < 16) {
          pad->SetFillColor(colorIndices[row]);
@@ -219,7 +235,7 @@ const unsigned colorIndices[16] = {
          pad->SetFillStyle(1001);
          [padView setNeedsDisplay];
       }
-   }
+   } //else must be an assert.
 }
 
 @end
