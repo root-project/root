@@ -135,6 +135,7 @@ public:
    virtual void      SetBinEntries(Int_t bin, Double_t w);
    virtual void      SetBins(Int_t nbinsx, Double_t xmin, Double_t xmax, Int_t nbinsy, Double_t ymin, Double_t ymax);
    virtual void      SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins);
+   virtual void      SetBinsLength(Int_t n=-1);
    virtual void      SetBuffer(Int_t buffersize, Option_t *option="");
    virtual void      SetErrorOption(Option_t *option=""); // *MENU*
    virtual void      Sumw2(Bool_t flag = kTRUE);

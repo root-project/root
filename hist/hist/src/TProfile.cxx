@@ -236,12 +236,8 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 
    SetErrorOption(option);
 
-   fBinEntries.Set(fNcells);  //*-* create number of entries per bin array
-
-   // TH1::Sumw2 create sum of square of weights array times y (fSumw2) . This is always created for a TProfile
-   TH1::Sumw2();                   //*-* create sum of squares of weights array times y
-   // TProfile::Sumw2 create sum of square of weight2 (fBinSumw2). This is needed only for profile filled with weights not 1
-   if (fgDefaultSumw2) Sumw2();    // optionally create sum of squares of weights / bin 
+   // create extra profile data structire (bin entries/ y^2 and sum of weight square)
+   TProfileHelper::BuildArray(this);
 
    fYmin = ymin;
    fYmax = ymax;
@@ -1674,9 +1670,6 @@ void TProfile::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
    fXaxis.Set(nx,xmin,xmax);
    fNcells = nx+2;
    SetBinsLength(fNcells);
-   fBinEntries.Set(fNcells);
-   fSumw2.Set(fNcells);
-   if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
 //______________________________________________________________________________
@@ -1688,11 +1681,16 @@ void TProfile::SetBins(Int_t nx, const Double_t *xbins)
    fXaxis.Set(nx,xbins);
    fNcells = nx+2;
    SetBinsLength(fNcells);
-   fBinEntries.Set(fNcells);
-   fSumw2.Set(fNcells);
-   if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
+//______________________________________________________________________________
+void TProfile::SetBinsLength(Int_t n)
+{
+   // Set total number of bins including under/overflow
+   // Reallocate bin contents array
+   TH1D::SetBinsLength(n);
+   TProfileHelper::BuildArray(this);   
+}
 
 //______________________________________________________________________________
 void TProfile::SetBuffer(Int_t buffersize, Option_t *)

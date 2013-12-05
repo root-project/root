@@ -532,10 +532,12 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-**-*-*-*-*-*-*-*
 
    Int_t bin, binx, biny, ibin, loop;
-   Double_t r1, x, y, xv[2];
+   Double_t r1, x, y;
    //*-*- Search for fname in the list of ROOT defined functions
-   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
+   TObject *fobj = gROOT->GetFunction(fname);
+   if (!fobj) { Error("FillRandom", "Unknown function: %s",fname); return; }
+   TF2 * f1 = dynamic_cast<TF2*>(fobj);
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF2",fname); return; }
 
    //*-*- Allocate temporary space to store the integral and compute integral
    Int_t nbinsx = GetNbinsX();
@@ -546,11 +548,10 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    ibin = 0;
    integral[ibin] = 0;
    for (biny=1;biny<=nbinsy;biny++) {
-      xv[1] = fYaxis.GetBinCenter(biny);
       for (binx=1;binx<=nbinsx;binx++) {
-         xv[0] = fXaxis.GetBinCenter(binx);
          ibin++;
-         integral[ibin] = integral[ibin-1] + f1->Eval(xv[0],xv[1]);
+         Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx), fYaxis.GetBinLowEdge(biny), fYaxis.GetBinUpEdge(biny));
+         integral[ibin] = integral[ibin-1] + fint;
       }
    }
 

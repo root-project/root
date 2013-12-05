@@ -179,10 +179,8 @@ void TProfile2D::BuildOptions(Double_t zmin, Double_t zmax, Option_t *option)
 
    SetErrorOption(option);
 
-   fBinEntries.Set(fNcells);  //*-* create number of entries per cell array
-
-   TH1::Sumw2();                   //*-* create sum of squares of weights array times y
-   if (fgDefaultSumw2) Sumw2();    // optionally create sum of squares of weights
+   // create extra profile data structire (bin entries/ y^2 and sum of weight square)
+   TProfileHelper::BuildArray(this);
 
    fZmin = zmin;
    fZmax = zmax;
@@ -1756,6 +1754,14 @@ void TProfile2D::SetBins(Int_t nx,  const Double_t *xbins, Int_t ny, const Doubl
    if (fBinSumw2.fN) fBinSumw2.Set(fNcells);
 }
 
+//______________________________________________________________________________
+void TProfile2D::SetBinsLength(Int_t n)
+{
+   // Set total number of bins including under/overflow
+   // Reallocate bin contents array
+   TH2D::SetBinsLength(n);
+   TProfileHelper::BuildArray(this);   
+}
 
 //______________________________________________________________________________
 void TProfile2D::SetBuffer(Int_t buffersize, Option_t *)

@@ -8166,11 +8166,11 @@ void TH1::Sumw2(Bool_t flag)
       return;
    }
 
-      if (fSumw2.fN == fNcells) {
-         if (!fgDefaultSumw2 )
-            Warning("Sumw2","Sum of squares of weights structure already created");
-         return;
-      }
+   if (fSumw2.fN == fNcells) {
+      if (!fgDefaultSumw2 )
+         Warning("Sumw2","Sum of squares of weights structure already created");
+      return;
+   }
 
    fSumw2.Set(fNcells);
 
