@@ -21,13 +21,8 @@ void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
       if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
          pyobj->ObjectIsA()->Destructor( pyobj->fObject );
-      else {
-      // CLING WORKAROUND this dtor call should not be needed
-         void* ptr = ((TInterpreterValue*)pyobj->fObject)->GetAsPointer();
-         pyobj->ObjectIsA()->Destructor( ptr, kTRUE );
-      // -- CLING WORKAROUND
+      else
          delete (TInterpreterValue*)pyobj->fObject;
-      }
    } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
       delete (TInterpreterValue*)pyobj->fObject;
    pyobj->fObject = NULL;
