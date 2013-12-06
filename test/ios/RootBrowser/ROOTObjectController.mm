@@ -783,14 +783,16 @@ enum Mode {
       [mailComposer addAttachmentData : myData mimeType : @"application/octet-stream" fileName : saveFileName];
    }
 
-   [self presentModalViewController : mailComposer animated : YES];
+   [self presentViewController : mailComposer animated : YES completion : nil];
 }
 
 //___________________________________________________________
-- (void) mailComposeController : (MFMailComposeViewController *)controller didFinishWithResult : (MFMailComposeResult)result error : (NSError *)error
+- (void) mailComposeController : (MFMailComposeViewController *) controller didFinishWithResult : (MFMailComposeResult)result error : (NSError *) error
 {
+#pragma unused(controller, result, error)
+
    [self becomeFirstResponder];
-   [self dismissModalViewControllerAnimated : YES];
+   [self dismissViewControllerAnimated : YES completion : nil];
 }
 
 @end

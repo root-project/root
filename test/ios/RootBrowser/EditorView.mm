@@ -120,8 +120,7 @@ enum {
       return;
    }
 
-   UIColor *background = [[UIColor scrollViewTexturedBackgroundColor] colorWithAlphaComponent : [EditorView editorAlpha]];
-//   UIColor *background = [[UIColor colorWithPatternImage:[UIImage imageNamed:@"inspector_bkn.png"]] colorWithAlphaComponent : [EditorView editorAlpha]];
+   UIColor *background = [[UIColor lightGrayColor] colorWithAlphaComponent : [EditorView editorAlpha]];
    CGContextSetFillColorWithColor(ctx, background.CGColor);
    CGContextSetPatternPhase(ctx, CGSizeMake(-8.f, 0.f));
    

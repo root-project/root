@@ -112,8 +112,6 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 //____________________________________________________________________________________________________
 - (void) drawRect : (CGRect)rect
 {
-   CGContextRef ctx = UIGraphicsGetCurrentContext();
-
    if (isDirectory) {
       //Directory's icon is 128 x 128 < than thumbnail.
       CGPoint topLeft = CGPointMake([ObjectShortcut iconWidth] / 2 - folderIconSize.width / 2, [ObjectShortcut iconHeight] / 2 - folderIconSize.height / 2);
@@ -121,9 +119,16 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
    } else
       [icon drawAtPoint : CGPointZero];
 
-   CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
+   //
+   UIFont * const font = [UIFont systemFontOfSize : 16];
+   NSMutableParagraphStyle * const paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+   paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
+   paragraphStyle.alignment = NSTextAlignmentCenter;
+   NSDictionary * const attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle,
+                                       NSForegroundColorAttributeName : [UIColor whiteColor]};
+   //
    const CGRect textRect = CGRectMake(0.f, [ObjectShortcut iconHeight], [ObjectShortcut iconWidth], [ObjectShortcut textHeight]);
-   [objectName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode :  NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
+   [objectName drawInRect : textRect withAttributes : attributes];
 }
 
 //____________________________________________________________________________________________________

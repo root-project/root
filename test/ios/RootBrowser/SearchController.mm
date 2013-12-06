@@ -21,7 +21,7 @@
    [super viewDidLoad];
 
    self.title = @"Objects and directories";
-   self.contentSizeForViewInPopover = CGSizeMake(600.f, 280.f);
+   self.preferredContentSize = CGSizeMake(600.f, 280.f);
 }
 
 

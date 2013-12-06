@@ -60,18 +60,19 @@
 //____________________________________________________________________________________________________
 - (void) drawRect : (CGRect)rect
 {
-   // Drawing code
-   CGContextRef ctx = UIGraphicsGetCurrentContext();
-
    //Draw the pictogram for ROOT's file.
    const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2, 
                                                 (rect.size.height - [FileShortcut textHeight]) / 2 - filePictogram.size.height / 2);
-   [filePictogram drawAtPoint:topLeftPicCorner];
+   [filePictogram drawAtPoint : topLeftPicCorner];
    
-   //Draw the file name.
-   CGContextSetRGBFillColor(ctx, 1.f, 1.f, 1.f, 1.f);
+   UIFont * const font = [UIFont systemFontOfSize : 16];
+   NSMutableParagraphStyle * const paragraphStyle = [[NSParagraphStyle defaultParagraphStyle] mutableCopy];
+   paragraphStyle.lineBreakMode = NSLineBreakByWordWrapping;
+   paragraphStyle.alignment = NSTextAlignmentCenter;
+   NSDictionary * const attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle,
+                                       NSForegroundColorAttributeName : [UIColor whiteColor]};
    const CGRect textRect = CGRectMake(0.f, [FileShortcut iconHeight] - [FileShortcut textHeight], [FileShortcut iconWidth], [FileShortcut textHeight]);
-   [fileName drawInRect : textRect withFont : [UIFont systemFontOfSize : 16] lineBreakMode : NSLineBreakByWordWrapping alignment : NSTextAlignmentCenter];
+   [fileName drawInRect : textRect withAttributes : attributes];
 }
 
 //____________________________________________________________________________________________________
