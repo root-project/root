@@ -42,6 +42,21 @@ const unsigned colorIndices[16] = {
 
 
 @implementation PadOptionsController {
+   //UI:
+   __weak IBOutlet UISwitch *tickX_;
+   __weak IBOutlet UISwitch *tickY_;
+
+   __weak IBOutlet UISwitch *gridX_;
+   __weak IBOutlet UISwitch *gridY_;
+
+   __weak IBOutlet UISwitch *logX_;
+   __weak IBOutlet UISwitch *logY_;
+   __weak IBOutlet UISwitch *logZ_;
+   
+   __weak IBOutlet UIPickerView *colorPicker_;
+   __weak IBOutlet UIPickerView *patternPicker_;
+
+   //Controlled objects:
    ROOT::iOS::Pad *pad;
    PadView *padView;
 }
