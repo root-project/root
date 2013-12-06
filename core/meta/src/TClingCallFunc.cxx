@@ -464,176 +464,8 @@ void*
 TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrapper,
                 bool withAccessControl/*=true*/)
 {
-   //
-   //  Compile the wrapper code.
-   //
-   const FunctionDecl* WFD = 0;
-   {
-      DiagnosticsEngine& Diag = fInterp->getCI()->getDiagnostics();
-      /*
-       In CallFunc we currently always (intentionally and somewhat necessarily)
-       always fully specify member function template, however this can lead to
-       an ambiguity with a class template.  For example in
-       roottest/cling/functionTemplate we get:
-
-       input_line_171:3:15: warning: lookup of 'set' in member access expression is ambiguous; using member of 't'
-       ((t*)obj)->set<int>(*(int*)args[0]);
-                  ^
-       /local2/pcanal/cint_working/rootcling/root/roottest/cling/functionTemplate/t.h:19:9: note: lookup in the object type 't' refers here
-       void set(T targ) {
-            ^
-       /usr/lib/gcc/x86_64-redhat-linux/4.4.5/../../../../include/c++/4.4.5/bits/stl_set.h:87:11: note: lookup from the current scope refers here
-       class set
-             ^
-       This is an intention warning implemented in clang, see
-       http://llvm.org/viewvc/llvm-project?view=revision&revision=105518
-
-       which 'should have been' an error:
-
-       C++ [basic.lookup.classref] requires this to be an error, but,
-       because it's hard to work around, Clang downgrades it to a warning as
-       an extension.</p>
-
-       // C++98 [basic.lookup.classref]p1:
-       // In a class member access expression (5.2.5), if the . or -> token is
-       // immediately followed by an identifier followed by a <, the identifier must
-       // be looked up to determine whether the < is the beginning of a template
-       // argument list (14.2) or a less-than operator. The identifier is first
-       // looked up in the class of the object expression. If the identifier is not
-       // found, it is then looked up in the context of the entire postfix-expression
-       // and shall name a class or function template. If the lookup in the class of
-       // the object expression finds a template, the name is also looked up in the
-       // context of the entire postfix-expression and
-       // -- if the name is not found, the name found in the class of the object
-       // expression is used, otherwise
-       // -- if the name is found in the context of the entire postfix-expression
-       // and does not name a class template, the name found in the class of the
-       // object expression is used, otherwise
-       // -- if the name found is a class template, it must refer to the same
-       // entity as the one found in the class of the object expression,
-       // otherwise the program is ill-formed.
-
-       See -Wambiguous-member-template
-
-       An alternative to disabling the diagnostics is to use a pointer to
-       member function:
-
-       #include <set>
-       using namespace std;
-
-       extern "C" int printf(const char*,...);
-
-       struct S {
-          template <typename T>
-          void set(T) {};
-
-          virtual void virtua() { printf("S\n"); }
-       };
-
-       struct T: public S {
-          void virtua() { printf("T\n"); }
-       };
-
-       int main() {
-          S *s = new T();
-          typedef void (S::*Func_p)(int);
-          Func_p p = &S::set<int>;
-          (s->*p)(12);
-
-          typedef void (S::*Vunc_p)(void);
-          Vunc_p q = &S::virtua;
-          (s->*q)(); // prints "T"
-          return 0;
-       }
-      */
-      Diag.setDiagnosticMapping(clang::diag::ext_nested_name_member_ref_lookup_ambiguous,
-                                clang::diag::MAP_IGNORE, SourceLocation());
-
-      LangOptions& LO = const_cast<LangOptions&>(
-         fInterp->getCI()->getLangOpts());
-
-      bool savedAccessControl = LO.AccessControl;
-      LO.AccessControl = withAccessControl;
-      cling::Transaction* T = 0;
-      cling::Interpreter::CompilationResult CR = fInterp->declare(wrapper, &T);
-      LO.AccessControl = savedAccessControl;
-      if (CR != cling::Interpreter::kSuccess) {
-         Error("TClingCallFunc::compile_wrapper", "Wrapper compile failed!");
-         return 0;
-      }
-      for (cling::Transaction::const_iterator I = T->decls_begin(),
-            E = T->decls_end(); I != E; ++I) {
-         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl) {
-            continue;
-         }
-         const FunctionDecl* D = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
-         if (!isa<TranslationUnitDecl>(D->getDeclContext())) {
-            continue;
-         }
-         DeclarationName N = D->getDeclName();
-         const IdentifierInfo* II = N.getAsIdentifierInfo();
-         if (!II) {
-            continue;
-         }
-         if (II->getName() == wrapper_name) {
-            WFD = D;
-            break;
-         }
-      }
-      if (!WFD) {
-         Error("TClingCallFunc::compile_wrapper", 
-               "Wrapper compile did not return a function decl!");
-         return 0;
-      }
-   }
-   //
-   //  Lookup the new wrapper declaration.
-   //
-   string MN;
-   GlobalDecl GD;
-   if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(WFD))
-     GD = GlobalDecl(Ctor, Ctor_Complete);
-   else if (const CXXDestructorDecl* Dtor = dyn_cast<CXXDestructorDecl>(WFD))
-     GD = GlobalDecl(Dtor, Dtor_Deleting);
-   else
-     GD = GlobalDecl(WFD);
-
-   cling::utils::Analyze::maybeMangleDeclName(GD, MN);
-   const NamedDecl* WND = dyn_cast<NamedDecl>(WFD);
-   if (!WND) {
-      Error("TClingCallFunc::make_wrapper", "Wrapper named decl is null!");
-      return 0;
-   }
-   {
-      //WND->dump();
-      //fInterp->getModule()->dump();
-      //gROOT->ProcessLine(".printIR");
-   }
-   //
-   //  Get the wrapper function pointer
-   //  from the ExecutionEngine (the JIT).
-   //
-   const GlobalValue* GV = fInterp->getModule()->getNamedValue(MN);
-   if (!GV) {
-      Error("TClingCallFunc::make_wrapper",
-            "Wrapper function name not found in Module!");
-      return 0;
-   }
-   ExecutionEngine* EE = fInterp->getExecutionEngine();
-   void* F = EE->getPointerToGlobalIfAvailable(GV);
-   if (!F) {
-      //
-      //  Wrapper function not yet codegened by the JIT,
-      //  force this to happen now.
-      //
-      F = EE->getPointerToGlobal(GV);
-      if (!F) {
-         Error("TClingCallFunc::make_wrapper", "Wrapper function has no "
-               "mapping in Module after forced codegen!");
-         return 0;
-      }
-   }
-   return F;
+   return fInterp->compileFunction(wrapper_name, wrapper, false /*ifUnique*/,
+                                   withAccessControl);
 }
 
 void
@@ -1444,7 +1276,7 @@ TClingCallFunc::make_wrapper()
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void* obj, int nargs, void** args, void* ret)\n";
    buf << "{\n";
@@ -1566,7 +1398,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void** ret, void* arena, unsigned long nary)\n";
    buf << "{\n";
@@ -1718,7 +1550,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void* obj, unsigned long nary, int withFree)\n";
    buf << "{\n";
