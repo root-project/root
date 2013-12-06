@@ -5,19 +5,16 @@
 
 @interface ObjectShortcut : UIView
 
-@property (nonatomic, retain) SpotView *spot;
-@property (nonatomic, assign) BOOL isDirectory;
-@property (nonatomic, retain) UIImage *icon;
+@property (nonatomic, readonly) SpotView *spot;
+@property (nonatomic, readonly) BOOL isDirectory;
 @property (nonatomic, readonly) unsigned objectIndex;
-@property (nonatomic, retain) NSString *objectName;
 
 + (CGFloat) iconWidth;
 + (CGFloat) iconHeight;
 + (CGFloat) textHeight;
 + (CGRect) defaultRect;
 
-
-- (id) initWithFrame : (CGRect)frame controller : (FileContentController*) c forObjectAtIndex : (unsigned)objIndex withThumbnail : (UIImage *)thumbnail;
-- (id) initWithFrame : (CGRect)frame controller : (FileContentController*) c forFolderAtIndex : (unsigned)index;
+- (id) initWithFrame : (CGRect) frame controller : (FileContentController *) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail;
+- (id) initWithFrame : (CGRect) frame controller : (FileContentController *) c forFolderAtIndex : (unsigned) index;
 
 @end

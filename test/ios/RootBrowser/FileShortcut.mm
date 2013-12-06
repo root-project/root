@@ -1,5 +1,4 @@
-#import <CoreGraphics/CGContext.h>
-#import <QuartzCore/QuartzCore.h>
+#import <cassert>
 
 #import "RootFileController.h"
 #import "FileShortcut.h"
@@ -36,25 +35,36 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)viewController fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
+- (id) initWithFrame : (CGRect) frame controller : (UIViewController *)viewController
+       fileContainer : (ROOT::iOS::Browser::FileContainer *) container;
 {
-   self = [super initWithFrame : frame];
-   
-   if (self) {
+   assert(viewController != nil && "initWithFrame:controller:fileContainer:, parameter 'viewController' is nil");
+   assert(container != nullptr && "initWithFrame:controller:fileContainer:, parameter 'container' is nil");
+
+   if (self = [super initWithFrame : frame]) {
+      //
       controller = viewController;
       fileContainer = container;
-      
-      self.fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
+      //
+      fileName = [NSString stringWithFormat : @"%s", fileContainer->GetFileName()];
+      //
       filePictogram = [UIImage imageNamed : @"file_icon.png"];
-      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
+      UITapGestureRecognizer * const tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(handleTap)];
       [self addGestureRecognizer : tap];
-      UILongPressGestureRecognizer *longPress = [[UILongPressGestureRecognizer alloc] initWithTarget: self action:@selector(handleLongPress:)];
+      UILongPressGestureRecognizer * const longPress = [[UILongPressGestureRecognizer alloc] initWithTarget : self action : @selector(handleLongPress:)];
       [self addGestureRecognizer : longPress];
-   
+
       self.opaque = NO;
    }
    
    return self;
+}
+
+//____________________________________________________________________________________________________
+- (void) dealloc
+{
+   //Crazy name qualification :(
+   ROOT::iOS::Browser::FileContainer::DeleteFileContainer(fileContainer);
 }
 
 //____________________________________________________________________________________________________
@@ -76,26 +86,20 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)dealloc
-{
-   //Crazy name qualification :(
-   ROOT::iOS::Browser::FileContainer::DeleteFileContainer(fileContainer);
-}
-
-//____________________________________________________________________________________________________
 - (void) handleTap 
 {
-   RootFileController *parentController = (RootFileController *)controller;
-   [parentController fileWasSelected : self];
+   assert(controller != nil && "handleTap, controller is nil");
+   [(RootFileController *)controller fileWasSelected : self];
 }
 
 //____________________________________________________________________________________________________
-- (void) handleLongPress : (UILongPressGestureRecognizer *)longPress
+- (void) handleLongPress : (UILongPressGestureRecognizer *) longPress
 {
-   if (longPress.state == UIGestureRecognizerStateBegan) {
-      RootFileController *parentController = (RootFileController *)controller;
-      [parentController tryToDelete : self];
-   }
+   assert(longPress != nil && "handleLongPress:, parameter 'longPress' is nil");
+   assert(controller != nil && "handleLongPress:, controller is nil");
+
+   if (longPress.state == UIGestureRecognizerStateBegan)
+      [(RootFileController *)controller tryToDelete : self];
 }
 
 //____________________________________________________________________________________________________

@@ -8,6 +8,7 @@
 @synthesize delegate;
 @synthesize keys;
 
+//____________________________________________________________________________________________________
 - (void) setKeys : (NSMutableArray *)k
 {  
    keys = k;
@@ -16,6 +17,7 @@
    [self.tableView reloadData];
 }
 
+//____________________________________________________________________________________________________
 - (void) viewDidLoad
 {
    [super viewDidLoad];
@@ -24,7 +26,7 @@
    self.preferredContentSize = CGSizeMake(600.f, 280.f);
 }
 
-
+//____________________________________________________________________________________________________
 - (void) viewWillAppear : (BOOL)animated
 {
  
@@ -32,19 +34,19 @@
    [super viewWillAppear : animated];
 }
 
-
+//____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
 {
     return YES;
 }
 
-
+//____________________________________________________________________________________________________
 - (void)viewDidUnload
 {
    [super viewDidUnload];
 }
 
-
+//____________________________________________________________________________________________________
 - (void) filterResultsUsingString : (NSString *) filterString
 {
    // If the search string is zero-length, then restore the full list
@@ -62,11 +64,13 @@
 
 #pragma mark Table view methods
 
+//____________________________________________________________________________________________________
 - (NSInteger) tableView : (UITableView *)tableView numberOfRowsInSection : (NSInteger)section 
 {    
    return [visibleKeys count];
 }
 
+//____________________________________________________________________________________________________
 - (UITableViewCell *) tableView : (UITableView *)tableView cellForRowAtIndexPath : (NSIndexPath *)indexPath
 {
    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier : @"Cell"];
@@ -78,7 +82,7 @@
    return cell;
 }
 
-
+//____________________________________________________________________________________________________
 - (void) tableView : (UITableView *)tableView didSelectRowAtIndexPath : (NSIndexPath *)indexPath
 {
    // Notify the delegate if a row is selected.

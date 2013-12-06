@@ -6,10 +6,10 @@
 //____________________________________________________________________________________________________
 - (UIView *) hitTest : (CGPoint)point withEvent : (UIEvent *)event
 {  
-   UIView * v = [super hitTest : point withEvent : event];
+   UIView * const v = [super hitTest : point withEvent : event];
    
    if ([v isKindOfClass : [PadView class]]) {
-      PadView *padView = (PadView *)v;
+      PadView * const padView = (PadView *)v;
 
       if ([padView pointOnSelectedObject : [self convertPoint : point toView : padView]]) {
          self.canCancelContentTouches = NO;

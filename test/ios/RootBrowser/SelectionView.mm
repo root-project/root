@@ -1,4 +1,5 @@
-#import <CoreGraphics/CGContext.h>
+#import <cassert>
+#import <cstring>
 
 #import "IOSSelectionMarkers.h"
 #import "SelectionView.h"
@@ -8,6 +9,18 @@
 
 //C++ (ROOT) imports.
 #import "IOSPad.h"
+
+namespace {
+
+//____________________________________________________________________________________________________
+void SetShadowColor(CGContextRef ctx)
+{
+   assert(ctx != nullptr && "SetShadowColor, parameter 'ctx' is null");
+   UIColor * const shadowColor = [UIColor colorWithRed : 0.f green : 0.f blue : 0.f alpha : 0.7f];
+   CGContextSetShadowWithColor(ctx, CGSizeMake(3.f, 3.f), 4.f, shadowColor.CGColor);
+}
+
+}
 
 @implementation SelectionView {
    ROOT::iOS::Pad *pad;
@@ -19,18 +32,11 @@
 @synthesize verticalPanDirection;
 
 //____________________________________________________________________________________________________
-+ (void) setShadowColor : (CGContextRef) ctx
+- (id) initWithFrame : (CGRect) frame withPad : (ROOT::iOS::Pad *) p
 {
-   UIColor *shadowColor = [UIColor colorWithRed : 0.f green : 0.f blue : 0.f alpha : 0.7f];
-   CGContextSetShadowWithColor(ctx, CGSizeMake(3.f, 3.f), 4.f, shadowColor.CGColor);
-}
+   assert(p != nullptr && "initWithFrame:withPad:, parameter 'p' is null");
 
-//____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame withPad : (ROOT::iOS::Pad *) p
-{
-   self = [super initWithFrame:frame];
-
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       pad = p;
       self.opaque = NO;
    }
@@ -39,29 +45,37 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) showSelectedAxis : (CGContextRef)ctx withRect : (CGRect)rect
+- (void) showSelectedAxis : (CGContextRef) ctx withRect : (CGRect)rect
 {
    //"Special case" function to show axis selection.
    using namespace ROOT::iOS;
-   const CGFloat xMin = pad->GetUxmin();
-   const CGFloat xMax = pad->GetUxmax();
-   const CGFloat yMin = pad->GetUymin();
-   const CGFloat yMax = pad->GetUymax();
 
-   ROOT::iOS::SpaceConverter converter(rect.size.width, pad->GetX1(), pad->GetX2(), rect.size.height, pad->GetY1(), pad->GetY2());
+   assert(ctx != nullptr && "showSelectedAxis:withRect:, parameter 'ctx' is null");
+   assert(pad != nullptr && "showSelectedAxis:withRect:, pad is null");
+
+   const CGFloat xMin = CGFloat(pad->GetUxmin());
+   const CGFloat xMax = CGFloat(pad->GetUxmax());
+   const CGFloat yMin = CGFloat(pad->GetUymin());
+   const CGFloat yMax = CGFloat(pad->GetUymax());
+
+   const SpaceConverter converter(rect.size.width, pad->GetX1(), pad->GetX2(),
+                                  rect.size.height, pad->GetY1(), pad->GetY2());
+
    GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMin), converter.YToView(yMin)));
 
    const TAxis *axis = static_cast<TAxis *>(pad->GetSelected());
-   if (!strcmp(axis->GetName(), "xaxis")) {
+   if (!std::strcmp(axis->GetName(), "xaxis")) {
       GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMax), converter.YToView(yMin)));
-   } else if (!strcmp(axis->GetName(), "yaxis")){
+   } else if (!std::strcmp(axis->GetName(), "yaxis")){
       GraphicUtils::DrawSelectionMarker(ctx, CGPointMake(converter.XToView(xMin), converter.YToView(yMax)));
    }//else is "Z" but we do not care.
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect : (CGRect)rect
+- (void) drawRect : (CGRect)rect
 {
+   assert(pad != nullptr && "drawRect:, pad is null");
+
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    
    CGContextSaveGState(ctx);
@@ -75,9 +89,8 @@
    pad->SetContext(ctx);
 
    //Selected object will cast a shadow.
-   //if (useShadows)
-   if (true) {//!ROOT::iOS::Browser::deviceIsiPad3) {
-      [SelectionView setShadowColor : ctx];
+   if (!ROOT::iOS::Browser::deviceIsiPad3) {
+      SetShadowColor(ctx);
       pad->PaintSelected();
    } else {
       CGContextTranslateCTM(ctx, 2.5f, 2.5f);
@@ -105,7 +118,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)pointInside:(CGPoint)point withEvent:(UIEvent *) event 
+- (BOOL) pointInside : (CGPoint) point withEvent : (UIEvent *) event
 {
    //Thanks to gyim, 
    //http://stackoverflow.com/questions/1694529/allowing-interaction-with-a-uiview-under-another-uiview
@@ -113,7 +126,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setPad : (ROOT::iOS::Pad *)p
+- (void) setPad : (ROOT::iOS::Pad *) p
 {
    pad = p;
 }

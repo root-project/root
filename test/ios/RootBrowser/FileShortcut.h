@@ -13,12 +13,12 @@ class FileContainer;
 
 @interface FileShortcut : UIView
 
-@property (nonatomic, retain) NSString *fileName;
+@property (nonatomic, readonly) NSString *fileName;
 
 + (CGFloat) iconWidth;
 + (CGFloat) iconHeight;
 
-- (id) initWithFrame : (CGRect)frame controller : (UIViewController *)controller fileContainer : (ROOT::iOS::Browser::FileContainer *)container;
+- (id) initWithFrame : (CGRect) frame controller : (UIViewController *) controller fileContainer : (ROOT::iOS::Browser::FileContainer *) container;
 - (ROOT::iOS::Browser::FileContainer *) getFileContainer;
 
 @end
