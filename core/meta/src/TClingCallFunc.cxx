@@ -1276,7 +1276,7 @@ TClingCallFunc::make_wrapper()
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void* obj, int nargs, void** args, void* ret)\n";
    buf << "{\n";
@@ -1398,7 +1398,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void** ret, void* arena, unsigned long nary)\n";
    buf << "{\n";
@@ -1550,7 +1550,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    int indent_level = 0;
    ostringstream buf;
    buf << "__attribute__((used)) ";
-   buf << "void ";
+   buf << "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void* obj, unsigned long nary, int withFree)\n";
    buf << "{\n";
