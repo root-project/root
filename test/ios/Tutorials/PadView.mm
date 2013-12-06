@@ -97,7 +97,7 @@
 }
 
 //_________________________________________________________________
-- (CGImageRef) initCGImageForPicking
+- (UIImage *) createImageForPicking
 {
    assert(pad != nullptr && "initCGImageForPicking, pad is null");
 
@@ -121,20 +121,18 @@
    pad->PaintForSelection();
    
    UIImage * const uiImageForPicking = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
-   CGImageRef cgImageForPicking = uiImageForPicking.CGImage;
-   //
-   CGImageRetain(cgImageForPicking);//It must live as long, as I need :)
-   //
    UIGraphicsEndImageContext();
    
-   return cgImageForPicking;
-
+   return uiImageForPicking;
 } 
 
 //_________________________________________________________________
-- (BOOL) fillPickingBufferFromCGImage : (CGImageRef) cgImage
+- (BOOL) fillPickingBufferFromImage : (UIImage *) image
 {
-   assert(pad != nullptr && "fillPickingBufferFromCGImage:, pad is null");
+   assert(image != nil && "fillPickingBufferFromImage:, parameter 'image' is nil");
+   assert(pad != nullptr && "fillPickingBufferFromImage:, pad is null");
+
+   CGImageRef cgImage = image.CGImage;
 
 	const size_t pixelsW = CGImageGetWidth(cgImage);
 	const size_t pixelsH = CGImageGetHeight(cgImage);
@@ -182,14 +180,11 @@
 //_________________________________________________________________
 - (BOOL) initPadPicking
 {
-   CGImageRef cgImage = [self initCGImageForPicking];
-   if (!cgImage)
+   UIImage * const pickImage = [self createImageForPicking];
+   if (!pickImage)
       return NO;
-
-   const BOOL res = [self fillPickingBufferFromCGImage : cgImage];
-   CGImageRelease(cgImage);
    
-   return res;
+   return [self fillPickingBufferFromImage : pickImage];
 }
 
 //_________________________________________________________________
