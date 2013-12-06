@@ -27,6 +27,9 @@
    // Add the split view controller's view to the window and display.
    rootApp = new TApplication("iosApp", 0, 0);
 
+   //
+   self.splitViewController.presentsWithGesture = NO;
+   //
    self.window.rootViewController = self.splitViewController;
    [self.window makeKeyAndVisible];
 
