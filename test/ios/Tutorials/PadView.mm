@@ -1,7 +1,7 @@
 #import <cstddef>
-#import <cstdlib>
 #import <vector>
 #import <cmath>
+#import <new>
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <CoreGraphics/CGContext.h>
@@ -150,43 +150,33 @@
       //Log error: color space allocation failed.
       return NO;
    }
-	
-   //TODO: change the logic to use std::vector.
-   unsigned char *buffer = (unsigned char*)std::malloc(bitmapByteCount);
-   if (!buffer) {
-      //Log error: memory allocation failed.
+
+   try {
+      std::vector<unsigned char> buffer(bitmapByteCount);
+      CGContextRef ctx = CGBitmapContextCreate(&buffer[0], pixelsW, pixelsH, 8, bitmapBytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
       CGColorSpaceRelease(colorSpace);
-      return NO;
-   }
+      
+      if (!ctx)
+         return NO;
 
-	// Create the bitmap context. We want pre-multiplied ARGB, 8-bits 
-	// per component. Regardless of what the source image format is 
-	// (CMYK, Grayscale, and so on) it will be converted over to the format
-	// specified here by CGBitmapContextCreate.
-   CGContextRef ctx = CGBitmapContextCreate(buffer, pixelsW, pixelsH, 8, bitmapBytesPerRow, colorSpace, kCGImageAlphaPremultipliedFirst);
-
-   CGColorSpaceRelease(colorSpace);
-
-	if (!ctx) {
-      //Log error: bitmap context creation failed.
-      free(buffer);
-      return NO;
-   }
-	
-	const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH); 
-	//Draw the image to the bitmap context. Once we draw, the memory 
-	//allocated for the context for rendering will then contain the 
-	//raw image data in the specified color space.
+      const CGRect rect = CGRectMake(0.f, 0.f, pixelsW, pixelsH);
+      //Draw the image to the bitmap context. Once we draw, the memory
+      //allocated for the context for rendering will then contain the 
+      //raw image data in the specified color space.
    
-   CGContextSetAllowsAntialiasing(ctx, 0);//Check, if I need this for a bitmap.
-	CGContextDrawImage(ctx, rect, cgImage);
+      CGContextSetAllowsAntialiasing(ctx, false);//Check, if I need this for a bitmap.
+      CGContextDrawImage(ctx, rect, cgImage);
 
-   pad->SetSelectionBuffer(pixelsW, pixelsH, buffer);
-	// When finished, release the context
-	CGContextRelease(ctx); 
-   free(buffer);
+      pad->SetSelectionBuffer(pixelsW, pixelsH, &buffer[0]);
+      // When finished, release the context
+      CGContextRelease(ctx); 
 
-   return YES;
+      return YES;
+   } catch (const std::bad_alloc &e) {
+      CGColorSpaceRelease(colorSpace);
+   }
+
+   return NO;
 }
 
 //_________________________________________________________________
