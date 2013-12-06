@@ -1,5 +1,6 @@
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
-#import <CoreGraphics/CGContext.h>
 
 #import "SlideView.h"
 
@@ -25,11 +26,9 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame
+- (id) initWithFrame : (CGRect) frame
 {
-   self = [super initWithFrame : frame];
-
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       self.layer.shadowOpacity = 0.3f;
       self.layer.shadowColor = [UIColor blackColor].CGColor;
       self.layer.shadowOffset = CGSizeMake(10.f, 10.f);
@@ -39,8 +38,11 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
    return self;
 }
 
-- (void) setPad : (ROOT::iOS::Pad *)newPad
+//____________________________________________________________________________________________________
+- (void) setPad : (ROOT::iOS::Pad *) newPad
 {
+   assert(newPad != nullptr && "setPad:, parameter 'newPad' is null");
+
    pad = newPad;
 }
 
