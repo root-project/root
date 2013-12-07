@@ -53,6 +53,7 @@ PHYSICSLIBDEPM         = $(MATRIXLIB) $(MATHCORELIB)
 PYTHIA6LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 PYTHIA8LIBDEPM         = $(EGLIB) $(GRAFLIB) $(VMCLIB) $(PHYSICSLIB)
 XMLLIBDEPM             = $(IOLIB)
+DAVIXLIBDEPM           = $(NETLIB) $(IOLIB) $(THREADLIB)
 TABLELIBDEPM           = $(TREELIB) $(GPADLIB) $(G3DLIB) $(GRAFLIB) $(HISTLIB) \
                          $(IOLIB) $(MATHCORELIB)
 MLPLIBDEPM             = $(HISTLIB) $(MATRIXLIB) $(TREELIB) $(GRAFLIB) \
@@ -198,6 +199,7 @@ GQTLIBDEP              = $(GQTLIBDEPM)
 RUBYLIBDEP             = $(RUBYLIBDEPM)
 GUIBLDLIBDEP           = $(GUIBLDLIBDEPM)
 XMLLIBDEP              = $(XMLLIBDEPM)
+DAVIXLIBDEP            = $(DAVIXLIBDEPM)
 FOAMLIBDEP             = $(FOAMLIBDEPM)
 ALIENLIBDEP            = $(ALIENLIBDEPM)
 ROOFITCORELIBDEP       = $(ROOFITCORELIBDEPM)
@@ -344,6 +346,7 @@ RUBYLIBEXTRA            = lib/libHist.lib lib/libMathCore.lib
 GUIBLDLIBEXTRA          = lib/libGui.lib lib/libGraf.lib lib/libMathCore.lib
 GUIHTMLLIBEXTRA         = lib/libGui.lib lib/libGraf.lib lib/libNet.lib
 XMLLIBEXTRA             = lib/libRIO.lib
+DAVIXLIBEXTRA           = lib/libNet.lib lib/libRIO.lib lib/libThread.lib
 FOAMLIBEXTRA            = lib/libHist.lib lib/libMathCore.lib
 ALIENLIBEXTRA           = lib/libXMLIO.lib lib/libNetx.lib lib/libTree.lib \
                           lib/libProof.lib lib/libProofPlayer.lib \
@@ -487,6 +490,7 @@ RUBYLIBEXTRA            = -Llib -lHist -lMathCore
 GUIBLDLIBEXTRA          = -Llib -lGui -lGraf -lMathCore
 GUIHTMLLIBEXTRA         = -Llib -lGui -lGraf -lNet
 XMLLIBEXTRA             = -Llib -lRIO
+DAVIXLIBEXTRA           = -Llib -lNet -lRIO -lThread
 FOAMLIBEXTRA            = -Llib -lHist -lMathCore
 ALIENLIBEXTRA           = -Llib -lXMLIO -lNetx -lTree -lProof -lProofPlayer \
                           -lNet -lRIO

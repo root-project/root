@@ -57,6 +57,7 @@ options="                    \
    enable_cintex             \
    enable_cling              \
    enable_cocoa              \
+   enable_davix              \
    enable_dcache             \
    enable_explicitlink       \
    enable_fink               \
@@ -227,6 +228,7 @@ MINUIT2          \
 TABLE            \
 XMLDIR           \
 ROOTDICTTYPE     \
+DAVIX            \
 "
 configenvvars=
 for c in $envvars ; do
@@ -1586,6 +1588,7 @@ enable/disable options, prefix with either --enable- or --disable-
   cintex             Build the libCintex Reflex interface library
   cling              Use cling as interpreter backend (experimental!), needs --with-llvm-config
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
+  davix              DavIx library for HTTP/WEBDAV access
   dcache             dCache support, requires libdcap from DESY
   explicitlink       Explicitly link with all dependent libraries
   fink               Use libraries from an extra MacOS X package manager (Fink, MacPorts, ...) (default: enabled)
@@ -1662,6 +1665,8 @@ with options, prefix with --with-, enables corresponding support
   chirp-incdir       Chirp support, location of chirp_reli.h
   chirp-libdir       Chirp support, location of libchirp_client
   cppunit            Cppunit testing, directory of the cppunit installation
+  davix-incdir       DavIx support, location of davix.hpp
+  davix-libdir       DavIx support, location of libdavix
   dcap-incdir        dCache support, location of dcap.h
   dcap-libdir        dCache support, location of libdcap
   dicttype           dictionary type: "cint" (default), "reflex", or "gccxml"
@@ -2035,6 +2040,8 @@ if test $# -gt 0 ; then
       --with-cint-maxtypedef=*) cintmaxtypedef=$optarg;;
       --with-cint-longline=*)  cintlongline=$optarg  ;;
       --with-cppunit=*)        cppunit=$optarg       ;;
+      --with-davix-incdir=*)   davixincdir=$optarg   ; enable_davix="yes"   ;;
+      --with-davix-libdir=*)   davixlibdir=$optarg   ; enable_davix="yes"   ;;
       --with-dcap-incdir=*)    dcapincdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dcap-libdir=*)    dcaplibdir=$optarg    ; enable_dcache="yes"  ;;
       --with-dicttype=*)       dicttype=$optarg      ;;
@@ -4058,6 +4065,40 @@ if test ! "x$enable_dcache" = "xno" ; then
 fi
 check_explicit "$enable_dcache" "$enable_dcache_explicit" \
      "Explicitly required dCache dependencies not fulfilled"
+
+######################################################################
+#
+### echo %%% DavIx Support - Third party libraries
+#
+if test ! "x$enable_davix" = "xno" ; then
+    check_header "davix.hpp" "$davixincdir" \
+        $DAVIX ${DAVIX:+$DAVIX/include/davix} \
+        /usr/local/include/davix \
+        /usr/include/davix
+    davixincdir=$found_dir
+
+    check_library "libdavix" "$enable_shared" "$davixlibdir" \
+        $DAVIX ${DAVIX:+$DAVIX/lib} ${DAVIX:+$DAVIX/lib64} \
+        /usr/lib /usr/lib64 /usr/local/lib64
+    davixlib=$found_lib
+    davixlibdir=$found_dir
+
+    if test ! "x$davixlib" = "x" ; then
+        check_symbol davix_logger "$davixlib" "$davixlibdir"
+        if test  $found_symbol -eq 0 ; then
+            result "### Need davix_posix_stat in libdavix"
+            davixlib=
+            davixlibdir=
+            davixincdir=
+        fi
+    fi
+
+    if test "x$davixincdir" = "x" || test "x$davixlib" = "x"; then
+        enable_davix="no"
+    fi
+fi
+check_explicit "$enable_davix" "$enable_davix_explicit" \
+     "Explicitly required DavIx dependencies not fulfilled"
 
 ######################################################################
 #
@@ -6384,6 +6425,7 @@ if test "x$show_pkglist" = "xyes" ; then
     test "x$enable_castor"   = "xyes" && pl="$pl root-plugin-io-castor"
     test "x$enable_chirp"    = "xyes" && pl="$pl root-plugin-io-chirp"
     test "x$enable_dcache"   = "xyes" && pl="$pl root-plugin-io-dcache"
+    test "x$enable_davix"    = "xyes" && pl="$pl root-plugin-io-davix"
     test "x$enable_gfal"     = "xyes" && pl="$pl root-plugin-io-gfal"
     test "x$enable_hdfs"     = "xyes" && pl="$pl root-plugin-io-hdfs"
     test "x$enable_rfio"     = "xyes" && pl="$pl root-plugin-io-rfio"
@@ -6798,11 +6840,14 @@ sed -e "s|@aclocaldir@|$aclocaldir|"            \
     -e "s|@cintincdir@|$cintincdir|"            \
     -e "s|@cppunit@|$cppunit|"                  \
     -e "s|@datadir@|$datadir|"                  \
+    -e "s|@davixincdir@|$davixincdir|"          \
     -e "s|@dcapincdir@|$dcapincdir|"            \
     -e "s|@comerrlib@|$comerrlib|"              \
     -e "s|@comerrlibdir@|$comerrlibdir|"        \
     -e "s|@cryptolib@|$cryptolib|"              \
     -e "s|@cryptolibdir@|$cryptolibdir|"        \
+    -e "s|@davixlib@|$davixlib|"                \
+    -e "s|@davixlibdir@|$davixlibdir|"          \
     -e "s|@dcaplib@|$dcaplib|"                  \
     -e "s|@dcaplibdir@|$dcaplibdir|"            \
     -e "s|@dicttype@|$dicttype|"                \
@@ -7002,6 +7047,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildrfio@|$enable_rfio|"            \
     -e "s|@buildcastor@|$enable_castor|"        \
     -e "s|@builddcap@|$enable_dcache|"          \
+    -e "s|@builddavix@|$enable_davix|"          \
     -e "s|@buildfftw3@|$enable_fftw3|"          \
     -e "s|@buildgviz@|$enable_gviz|"            \
     -e "s|@buildgfal@|$enable_gfal|"            \

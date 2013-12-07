@@ -31,3 +31,7 @@ endif()
 if(globus)
    add_subdirectory(globusauth)
 endif()
+
+if(davix)
+   add_subdirectory(davix)
+endif()

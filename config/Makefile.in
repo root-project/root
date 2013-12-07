@@ -148,6 +148,11 @@ CASTORCLILIB   := @castorlib@
 CASTORINCDIR   := $(filter-out /usr/include, @castorincdir@)
 CASTORCFLAGS   := @castorcflags@
 
+BUILDDAVIX      := @builddavix@
+DAVIXLIBDIR     := @davixlibdir@
+DAVIXCLILIB     := @davixlib@
+DAVIXINCDIR     := $(filter-out /usr/include, @davixincdir@)
+
 BUILDDCAP      := @builddcap@
 DCAPLIBDIR     := @dcaplibdir@
 DCAPLIB        := @dcaplib@
