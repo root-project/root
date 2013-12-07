@@ -7,6 +7,7 @@
 # This software is provided "as is" without express or implied warranty.
 
 import sys, os, gendict, selclass, gencapa, genrootmap, string, getopt, subprocess
+import re
 
 class genreflex:
 #----------------------------------------------------------------------------------
@@ -256,7 +257,7 @@ class genreflex:
 #----------------------------------------------------------------------------------
   def genGccxmlInfo(self):
     s = ''
-    p = subprocess.Popen('"' + self.gccxml + '" --print', shell=True,
+    p = subprocess.Popen('"' + self.gccxml + '" ' + self.gccxmlopt + ' --print', shell=True,
                          bufsize=-1, stdin=subprocess.PIPE,
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE,
@@ -287,7 +288,7 @@ class genreflex:
     bcomp = os.path.basename(compiler)
     vopt = ''
     if   bcomp in ('msvc7','msvc71','msvc8')  : return s
-    elif bcomp in ('gcc','g++','c++') : vopt = '--version'
+    elif bcomp in ('gcc','g++','c++') or re.match(r'lcg-g\+\+', bcomp): vopt = '--version'
     elif bcomp in ('cl.exe','cl')     : vopt = '' # there is no option to print only the version with cl
     else :
       print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknown compiler %s' % compiler
