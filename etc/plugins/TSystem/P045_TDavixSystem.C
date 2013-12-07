@@ -2,7 +2,7 @@ void P045_TDavixSystem()
 {
    TString configfeatures = gROOT->GetConfigFeatures();
 
-   // only if ROOT was compiled with davix enabled we configure a handler
+   // only if ROOT was compiled with davix enabled do we configure a handler
    if ( configfeatures.Contains("davix") ) {
 
       gPluginMgr->AddHandler("TSystem", "^http[s]?:", "TDavixSystem",
@@ -15,6 +15,6 @@ void P045_TDavixSystem()
          "RDAVIX", "TDavixSystem()");
 
    } else {
-      Error("P045_TDavixSystem","Please fix your ROOT config to be able to load libdavix.so");
+      //Error("P045_TDavixSystem","Please fix your ROOT config to be able to load libdavix.so");
    }
 }
