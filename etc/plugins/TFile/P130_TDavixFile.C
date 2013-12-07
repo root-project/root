@@ -2,7 +2,7 @@ void P130_TDavixFile()
 {
    TString configfeatures = gROOT->GetConfigFeatures();
 
-   // only if ROOT was compiled with davix enabled we configure a handler
+   // only if ROOT was compiled with davix enabled do we configure a handler
    if ( configfeatures.Contains("davix") ) {
 
       gPluginMgr->AddHandler("TFile", "^http[s]?:", "TDavixFile",
@@ -15,6 +15,6 @@ void P130_TDavixFile()
       "RDAVIX", "TDavixFile(const char*, Option_t *, const char *,Int_t)");
 
    } else {
-      Error("P130_TDavixFile","Please fix your ROOT config to be able to load libdavix.so");
+      //Error("P130_TDavixFile","Please fix your ROOT config to be able to load libdavix.so");
    }
 }
