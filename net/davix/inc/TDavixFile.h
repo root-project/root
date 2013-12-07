@@ -1,8 +1,16 @@
+// @(#)root/net:$Id$
+// Author: Adrien Devresse and Tigran Mkrtchyan
+
+/*************************************************************************
+ * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_TDavixFile
 #define ROOT_TDavixFile
-
-
-
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -18,7 +26,7 @@
 // Authors:     Adrien Devresse (CERN IT/SDC)                           //
 //              Tigran Mkrtchyan (DESY)                                 //
 //                                                                      //
-// Checks, refactoring and ROOT5 porting:                                            //
+// Checks, refactoring and ROOT5 porting:                               //
 //              Fabrizio Furano (CERN IT/SDC)                           //
 //                                                                      //
 // September 2013                                                       //
@@ -49,9 +57,6 @@ class TDavixFileInternal;
 struct Davix_fd;
 
 
-
-
-
 class TDavixFile : public TFile {
 private:
     TDavixFileInternal* d_ptr;
@@ -60,7 +65,7 @@ private:
     Long64_t DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len);
     Long64_t DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int_t len);
     Long64_t DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-	Long64_t DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len);      
+    Long64_t DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len);
     Int_t DavixStat(struct stat *st) const;
 
     // perfStats
@@ -80,9 +85,9 @@ public:
     ///
     /// Several parameters can be used if separated with whitespace
 
-	TDavixFile(const char* url, Option_t *option="", const char *ftitle="", Int_t compress=1);
-    
-    ~TDavixFile();
+   TDavixFile(const char* url, Option_t *option="", const char *ftitle="", Int_t compress=1);
+
+   ~TDavixFile();
 
     // TFile interface.
     virtual Long64_t GetSize() const;
@@ -92,7 +97,6 @@ public:
     virtual Bool_t ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
     virtual Bool_t ReadBufferAsync(Long64_t offs, Int_t len);
     virtual Bool_t WriteBuffer(const char *buffer, Int_t bufferLength);
-  
 
     // TDavixFile options
     /// Enable or disable certificate authority check
@@ -105,7 +109,5 @@ public:
 
     ClassDef(TDavixFile, 0)
 };
-
-
 
 #endif
