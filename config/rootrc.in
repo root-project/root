@@ -636,3 +636,43 @@ XNet.ParStreamsPerPhyConn: 0
 # This overrides the default specified above for a generic application.
 # Color 5 is yellow.
 Rint.Canvas.HighLightColor:      5
+
+
+# Parameters that influence the behavior of TDavixFile/TDavixSystem. These
+# classes give a comprehensive client side support for HTTP and WebDAV,
+# with all the goodies (session caching, flexible authentication, support
+# for different dialects like S3, and others)
+
+# Verbosity level of the external Davix library
+# Davix.Debug: 0
+
+# Path to the X.509 user proxy
+# Davix.GSI.UserProxy: /my/path/my_proxy
+
+# Paths to the X.509 user certificate and key, in PEM format
+# Davix.GSI.UserCert: /my/path/my_cert
+# Davix.GSI.UserKey: /my/path/my_key
+
+# Path to the directory containing the CAs
+# Davix.GSI.CAdir: /etc/grid-security/certificates
+
+# Enable/disable the Check on the peer's certificate
+# Davix.GSI.CACheck: y
+
+# Sets the HTTP client in Grid mode, to talk to Grid HTTP SEs
+# without having to set additional parameters
+# Grid mode enable the following action:
+# - Auto-detect and use the available voms proxy certificate
+# - Add the standard grid security CAs as valid CAs
+# - Use the grid specific extensions if needed.
+# Davix.GSI.GridMode: y
+
+# Sets the Amazon S3 authentication parameters
+# Davix.S3.SecretKey: secret
+# Davix.S3.AccessKey: token
+
+# NOTE: The authentication of TDavixFile/TDavixSystem can be influenced
+# through some well known environment variables:
+# X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY
+# They have the usual meaning for the X509 Grid things. The gEnv vars
+# have higher priority over the these envvars.
