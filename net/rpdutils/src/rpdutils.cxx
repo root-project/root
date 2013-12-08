@@ -1504,7 +1504,8 @@ int RpdCheckOffSet(int Sec, const char *User, const char *Host, int RemId,
 
       // Reset original IDs
       if (getuid() != fromUid)
-         setresuid(fromUid,fromEUid,pw->pw_uid);
+         if (setresuid(fromUid, fromEUid, pw->pw_uid) == -1)
+            goodOfs = 0;
 
    } else {
       // Since we could not set the user IDs, we will
