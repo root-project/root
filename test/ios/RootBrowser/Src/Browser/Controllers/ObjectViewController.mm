@@ -131,6 +131,25 @@ enum Mode {
    self.navigationItem.title = [NSString stringWithFormat : @"%s", fileContainer->GetObject(currentObject)->GetName()];
 }
 
+//____________________________________________________________________________________________________
+- (void) viewWillAppear : (BOOL) animated
+{
+   [super viewWillAppear : animated];
+   
+   //This is done intentionally: unfortunately,
+   //it takes quite a long time to render several (max. 3)
+   //objects into pad views. If this code is in viewDidAppear,
+   //you can see an empty view for a couple of seconds.
+   //Instead, I place this code here and now after you selected and object,
+   //you have to wait.
+   if (!viewDidAppear) {
+      viewDidAppear = YES;
+      [self setupScrollForEditablePadView];
+      [self setupNavigationScrollView];
+      [self initPadViews];
+      [self correctFramesForOrientation : self.interfaceOrientation];
+   }
+}
 
 //____________________________________________________________________________________________________
 - (void) viewDidAppear : (BOOL)animated
@@ -139,14 +158,15 @@ enum Mode {
    
    if (!viewDidAppear) {
       viewDidAppear = YES;
-      //This many-phase initialization from Apple/UKit is ONE BIG PIECE OF SHIT.
-      [self setupScrollForEditablePadView];
-      [self setupNavigationScrollView];
-      [self initPadViews];
-      [self correctFramesForOrientation : self.interfaceOrientation];
+      //The code moved to viewWillAppear and viewDidLayout.
    }
 }
 
+//____________________________________________________________________________________________________
+- (void) viewDidLayoutSubviews
+{
+   [self correctFramesForOrientation : self.interfaceOrientation];
+}
 
 //____________________________________________________________________________________________________
 - (void) resetEditorButton
