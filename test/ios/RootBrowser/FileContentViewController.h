@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-#import "SearchController.h"
+#import "SearchViewController.h"
 
 @class FileContainerElement;
 @class ObjectShortcut;
@@ -15,7 +15,7 @@ class FileContainer;
 }
 }
 
-@interface FileContentViewController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchDelegate> {
+@interface FileContentViewController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchViewDelegate> {
 @private
    ROOT::iOS::Browser::FileContainer *fileContainer;
    __weak IBOutlet UIScrollView *scrollView;
@@ -27,6 +27,6 @@ class FileContainer;
 - (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;
 - (void) selectObjectFromFile : (ObjectShortcut *)obj;
 
-- (void) searchesController : (SearchController *)controller didSelectKey:(FileContainerElement *)key;
+- (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key;
 
 @end

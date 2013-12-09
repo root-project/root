@@ -123,7 +123,7 @@
 		70E16B091455CBC00050C281 /* app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E16B081455CBC00050C281 /* app_icon.png */; };
 		70E36B571472965E004AEB6A /* FileContainerElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70E36B561472965E004AEB6A /* FileContainerElement.mm */; };
 		70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 70E4FE5114715ABD00296BFF /* TransparentToolbar.m */; };
-		70E4FE5B1471685700296BFF /* SearchController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70E4FE5A1471685700296BFF /* SearchController.mm */; };
+		70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70E4FE5A1471685700296BFF /* SearchViewController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -293,8 +293,8 @@
 		70E36B561472965E004AEB6A /* FileContainerElement.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContainerElement.mm; sourceTree = "<group>"; };
 		70E4FE5014715ABD00296BFF /* TransparentToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransparentToolbar.h; sourceTree = "<group>"; };
 		70E4FE5114715ABD00296BFF /* TransparentToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransparentToolbar.m; sourceTree = "<group>"; };
-		70E4FE591471685700296BFF /* SearchController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchController.h; sourceTree = "<group>"; };
-		70E4FE5A1471685700296BFF /* SearchController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchController.mm; sourceTree = "<group>"; };
+		70E4FE591471685700296BFF /* SearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchViewController.h; sourceTree = "<group>"; };
+		70E4FE5A1471685700296BFF /* SearchViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchViewController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -528,8 +528,8 @@
 		70E0B5DB1414E2FD0077E4A8 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				70E4FE591471685700296BFF /* SearchController.h */,
-				70E4FE5A1471685700296BFF /* SearchController.mm */,
+				70E4FE591471685700296BFF /* SearchViewController.h */,
+				70E4FE5A1471685700296BFF /* SearchViewController.mm */,
 				7077905F13FE847600C0FFA1 /* ObjectViewController.h */,
 				7077906013FE847600C0FFA1 /* ObjectViewController.mm */,
 				7077903713FE51B400C0FFA1 /* FileCollectionViewController.h */,
@@ -822,7 +822,7 @@
 				70C1D67D1468166100514DC0 /* SlideView.mm in Sources */,
 				70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */,
 				70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */,
-				70E4FE5B1471685700296BFF /* SearchController.mm in Sources */,
+				70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */,
 				70E36B571472965E004AEB6A /* FileContainerElement.mm in Sources */,
 				70989EFD1473E73200515FC5 /* SpotView.mm in Sources */,
 			);

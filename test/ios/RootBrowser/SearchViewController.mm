@@ -1,7 +1,7 @@
 #import "FileContainerElement.h"
-#import "SearchController.h"
+#import "SearchViewController.h"
 
-@implementation SearchController {
+@implementation SearchViewController {
    NSArray *visibleKeys;
 }
 
@@ -35,15 +35,9 @@
 }
 
 //____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
     return YES;
-}
-
-//____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
 }
 
 //____________________________________________________________________________________________________

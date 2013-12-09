@@ -1,4 +1,4 @@
-#import <stdlib.h>
+//#import <stdlib.h>
 
 #import <CoreGraphics/CGGeometry.h>
 #import <QuartzCore/QuartzCore.h>
@@ -8,7 +8,6 @@
 #import "ObjectViewController.h"
 #import "FileContainerElement.h"
 #import "TransparentToolbar.h"
-#import "SearchController.h"
 #import "ObjectShortcut.h"
 #import "Shortcuts.h"
 #import "SpotView.h"
@@ -23,7 +22,7 @@
    NSMutableArray *objectShortcuts;
    UISearchBar *searchBar;
    UIPopoverController *searchPopover;
-   SearchController *searchController;
+   SearchViewController *searchController;
    UIBarButtonItem *slideShowBtn;
    
    BOOL animateDirAfterLoad;
@@ -68,7 +67,7 @@
    if (self) {
       [self view];
       [self initToolbarItems];
-      searchController = [[SearchController alloc] initWithStyle : UITableViewStylePlain];
+      searchController = [[SearchViewController alloc] initWithStyle : UITableViewStylePlain];
       searchController.delegate = self;
    }
 
@@ -358,7 +357,7 @@
 #pragma mark - Search delegate.
 
 //____________________________________________________________________________________________________
-- (void) searchesController : (SearchController *)controller didSelectKey : (FileContainerElement *)key
+- (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key
 {
    //NSLog(@"selected %@ with index %d", key.elementName, key.elementIndex);
    assert(key.elementIndex < fileContainer->GetNumberOfDescriptors());
