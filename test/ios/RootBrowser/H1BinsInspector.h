@@ -1,19 +1,8 @@
 #import "ObjectInspectorComponent.h"
 
-@interface H1BinsInspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UITextField *titleField;
-   __weak IBOutlet UILabel *minLabel;
-   __weak IBOutlet UILabel *maxLabel;
-   __weak IBOutlet UISwitch *showMarkers;
-}
+@interface H1BinsInspector : UIViewController <ObjectInspectorComponent>
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
-
-- (IBAction) textFieldDidEndOnExit : (id) sender;
-- (IBAction) textFieldEditingDidEnd : (id) sender;
-- (IBAction) toggleMarkers;
-
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) o;
 
 @end

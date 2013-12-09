@@ -2,15 +2,13 @@
 
 #import "ObjectInspectorComponent.h"
 
-@interface AxisInspector : UIViewController <ObjectInspectorComponent, UITabBarDelegate> {
-@private
-   __weak IBOutlet UITabBar *tabBar;
-}
+@interface AxisInspector : UIViewController <ObjectInspectorComponent, UITabBarDelegate>
 
 + (CGRect) inspectorFrame;
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) o;
+
 - (NSString *) getComponentName;
 - (void) resetInspector;
 

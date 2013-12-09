@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "AxisFontInspector.h"
 
@@ -49,6 +51,9 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 }
 
 @implementation AxisFontInspector {
+   __weak IBOutlet UILabel *titleLabel;
+   __weak IBOutlet UIPickerView *fontPicker;
+
    ROOT_IOSObjectInspector::AxisFontInspectorMode mode;
    __weak ObjectViewController *controller;
    TAxis *object;
@@ -86,39 +91,37 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
    [super viewDidLoad];
    // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    using namespace ROOT_IOSObjectInspector;
 
    object = dynamic_cast<TAxis *>(o);
+   //The result of cast is checked one level up.
    Font_t fontIndex = 0;
 
    if (mode == afimTitleFont)

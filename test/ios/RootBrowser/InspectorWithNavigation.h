@@ -4,8 +4,8 @@
 
 @interface InspectorWithNavigation : UINavigationController <ObjectInspectorComponent>
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)obj;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) obj;
 - (NSString *) getComponentName;
 - (void) resetInspector;
 

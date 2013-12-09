@@ -4,6 +4,6 @@
 
 @protocol HorizontalPickerDelegate <NSObject>
 
-- (void) item : (unsigned)item wasSelectedInPicker : (HorizontalPickerView *)picker;
+- (void) item : (unsigned) item wasSelectedInPicker : (HorizontalPickerView *) picker;
 
 @end

@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "H1BinsInspector.h"
 #import "RangeSlider.h"
@@ -6,6 +8,11 @@
 #import "TH1.h"
 
 @implementation H1BinsInspector {
+   __weak IBOutlet UITextField *titleField;
+   __weak IBOutlet UILabel *minLabel;
+   __weak IBOutlet UILabel *maxLabel;
+   __weak IBOutlet UISwitch *showMarkers;
+
    RangeSlider *axisRangeSlider;
    __weak ObjectViewController *controller;
    TH1 *object;
@@ -73,16 +80,19 @@
 
 #pragma mark - ObjectInspectorComponent protocol.
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *)o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = static_cast<TH1 *>(o);
-   //
+   //I do not use dynamic cast.
    const char *histTitle = object->GetTitle();
    if (!histTitle || !*histTitle)
       titleField.text = @"";

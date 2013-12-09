@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "AxisLabelsInspector.h"
 #import "AxisFontInspector.h"
@@ -19,6 +21,16 @@ const float tabBarHeight = 49.f;
 const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
 @implementation AxisLabelsInspector {
+   __weak IBOutlet UIButton *plusSize;
+   __weak IBOutlet UIButton *minusSize;
+   __weak IBOutlet UILabel *sizeLabel;
+   
+   __weak IBOutlet UIButton *plusOffset;
+   __weak IBOutlet UIButton *minusOffset;
+   __weak IBOutlet UILabel *offsetLabel;
+   
+   __weak IBOutlet UISwitch *noExp;
+
    __weak ObjectViewController *controller;
    TAxis *object;
 }
@@ -43,7 +55,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
@@ -54,37 +66,34 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = dynamic_cast<TAxis *>(o);
+   //The result of a cast is checked one level up.
    
    sizeLabel.text = [NSString stringWithFormat : @"%.2f", object->GetLabelSize()];
    offsetLabel.text = [NSString stringWithFormat : @"%.3f", object->GetLabelOffset()];
@@ -97,8 +106,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 {
    AxisFontInspector *fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" mode : ROOT_IOSObjectInspector::afimLabelFont];
 
-   [fontInspector setROOTObjectController : controller];
-   [fontInspector setROOTObject : object];
+   [fontInspector setObjectController : controller];
+   [fontInspector setObject : object];
    
    [self.navigationController pushViewController : fontInspector animated : YES];
 }

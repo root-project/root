@@ -6,8 +6,8 @@
 
 @interface ObjectInspector : UIViewController <ObjectInspectorComponent> 
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *)o;
 - (void) resetInspector;
 
 - (EditorView *) getEditorView;

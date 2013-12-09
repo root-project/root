@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "H1ErrorsInspector.h"
 #import "H1BinsInspector.h"
 #import "H1Inspector.h"
@@ -7,23 +9,19 @@ const CGFloat totalHeight = 399.f;
 const CGFloat tabBarHeight = 49.f;
 const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
-@interface H1Inspector () {
+@implementation H1Inspector {
+   __weak IBOutlet UITabBar *tabBar;
+   
    H1ErrorsInspector *errorInspector;
    H1BinsInspector *binsInspector;
    
    TObject *object;
    __weak ObjectViewController *controller;
+
 }
 
-- (void) showBinsInspector;
-- (void) showErrorInspector;
-
-@end
-
-@implementation H1Inspector 
-
 //____________________________________________________________________________________________________
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
    
@@ -47,7 +45,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
@@ -58,35 +56,40 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
+
 	return YES;
 }
 
 #pragma mark - ObjectInspectorComponent protocol.
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObjectController : (ObjectViewController *) c
 {
-   object = o;
-   [errorInspector setROOTObject : o];
-   [binsInspector setROOTObject : o];
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
+   controller = c;
+   [errorInspector setObjectController : c];
+   [binsInspector setObjectController : c];
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObject : (TObject *) o
 {
-   controller = c;
-   [errorInspector setROOTObjectController : c];
-   [binsInspector setROOTObjectController : c];
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
+   object = o;
+   [errorInspector setObject : o];
+   [binsInspector setObject : o];
 }
 
 //____________________________________________________________________________________________________

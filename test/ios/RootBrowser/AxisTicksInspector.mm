@@ -1,4 +1,5 @@
-#import <string.h>
+#import <cassert>
+#import <cstring>
 
 #import "ObjectViewController.h"
 #import "AxisTicksInspector.h"
@@ -17,6 +18,25 @@ const CGFloat totalHeight = 400.f;
 const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
 @implementation AxisTicksInspector {
+   __weak IBOutlet UILabel *tickLengthLabel;
+   __weak IBOutlet UIButton *plusLengthBtn;
+   __weak IBOutlet UIButton *minusLengthBtn;
+
+   __weak IBOutlet UIButton *plusPrim;
+   __weak IBOutlet UIButton *minusPrim;
+   __weak IBOutlet UILabel *primLabel;
+
+   __weak IBOutlet UIButton *plusSec;
+   __weak IBOutlet UIButton *minusSec;
+   __weak IBOutlet UILabel *secLabel;
+
+   __weak IBOutlet UIButton *plusTer;
+   __weak IBOutlet UIButton *minusTer;
+   __weak IBOutlet UILabel *terLabel;
+
+   __weak IBOutlet UISegmentedControl *ticksNegPos;
+
+
    float tickLength;
    unsigned primaryTicks;
    unsigned secondaryTicks;
@@ -43,7 +63,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
    // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
@@ -53,24 +73,17 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
    [super viewDidLoad];
    // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
    return YES;
 }
 
@@ -102,7 +115,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 {
    const char *option = object->GetTicks();
    
-   if (!strcmp("+-", option))
+   if (!std::strcmp("+-", option))
       [ticksNegPos setSelectedSegmentIndex : 1];
    else 
       [ticksNegPos setSelectedSegmentIndex : 0];
@@ -110,20 +123,23 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    [self setTicksWidgets];
 }
 
+//____________________________________________________________________________________________________
+- (void) setObjectController : (ObjectViewController *) c
+{
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
+   controller = c;
+}
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    //The result of a cast is not checked here, it's done on top level.
    object = dynamic_cast<TAxis *>(o);
 
    [self setupInspector];
-}
-
-//____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) c
-{
-   controller = c;
 }
 
 //____________________________________________________________________________________________________
@@ -185,7 +201,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) minusTick :(UIButton *)sender
+- (IBAction) minusTick : (UIButton *) sender
 {
    if (sender == minusLengthBtn) {
       if (tickLength - tickLengthStep > minTickLength) {

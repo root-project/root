@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "HorizontalPickerView.h"
 #import "ObjectViewController.h"
 #import "LineWidthPicker.h"
@@ -16,7 +18,8 @@ const int minLineWidth = 1;
 const int maxLineWidth = 15;
 const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 
-@interface LineInspector () {
+@implementation LineInspector {
+   __weak IBOutlet LineWidthPicker *lineWidthPicker;
    NSMutableArray *lineStyles;
    NSMutableArray *lineColors;
 
@@ -28,10 +31,6 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
    __weak ObjectViewController *controller;
    TAttLine *object;
 }
-
-@end
-
-@implementation LineInspector
 
 //____________________________________________________________________________________________________
 - (id)initWithNibName : (NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
@@ -105,17 +104,21 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    using namespace ROOT::iOS::Browser;
 
    object = dynamic_cast<TAttLine *>(o);
+   assert("setObject:, object has a wrong type, TAttLine expected");
    
    unsigned item = 0;
    const Style_t lineStyle = object->GetLineStyle();

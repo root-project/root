@@ -1,10 +1,14 @@
+#import <cassert>
+
 #import "InspectorWithNavigation.h"
 #import "AxisLabelsInspector.h"
 #import "AxisTitleInspector.h"
 #import "AxisTicksInspector.h"
 #import "AxisInspector.h"
 
-@interface AxisInspector () {
+@implementation AxisInspector {
+   __weak IBOutlet UITabBar *tabBar;
+
    AxisTicksInspector *ticksInspector;
 
    InspectorWithNavigation *titleInspector;
@@ -13,15 +17,6 @@
    __weak ObjectViewController *controller;
    TObject *object;
 }
-
-- (void) showTicksInspector;
-- (void) showAxisTitleInspector;
-- (void) showAxisLabelsInspector;
-
-@end
-
-
-@implementation AxisInspector
 
 //____________________________________________________________________________________________________
 + (CGRect) inspectorFrame
@@ -61,7 +56,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
    // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
@@ -71,44 +66,41 @@
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
    [super viewDidLoad];
    // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
 	return YES;
 }
 
 #pragma mark - ObjectInspectorComponent's protocol.
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
    controller = c;
-   [ticksInspector setROOTObjectController : c];
-   [titleInspector setROOTObjectController : c];
-   [labelInspector setROOTObjectController : c];
+   [ticksInspector setObjectController : c];
+   [titleInspector setObjectController : c];
+   [labelInspector setObjectController : c];
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = o;
-   [ticksInspector setROOTObject : o];
-   [titleInspector setROOTObject : o];
-   [labelInspector setROOTObject : o];
+   [ticksInspector setObject : o];
+   [titleInspector setObject : o];
+   [labelInspector setObject : o];
 }
 
 //____________________________________________________________________________________________________
@@ -154,7 +146,7 @@
 #pragma mark - Tabbar delegate.
 
 //____________________________________________________________________________________________________
-- (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *)item
+- (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *) item
 {
    if (item.tag == 1)
       [self showTicksInspector];

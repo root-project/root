@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "PadTicksGridInspector.h"
 #import "PadLogScaleInspector.h"
 #import "PadInspector.h"
@@ -7,20 +9,14 @@ const CGFloat totalHeight = 250.f;
 const CGFloat tabBarHeight = 49.f;
 const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
-@interface PadInspector () {
+@implementation PadInspector {
+   __weak IBOutlet UITabBar *tabBar;
    PadTicksGridInspector *gridInspector;
    PadLogScaleInspector *logScaleInspector;
    
    __weak ObjectViewController *controller;
    TObject *object;
 }
-
-- (void) showTicksAndGridInspector;
-- (void) showLogScaleInspector;
-
-@end
-
-@implementation PadInspector
 
 //____________________________________________________________________________________________________
 + (CGRect) inspectorFrame
@@ -72,34 +68,32 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
+
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
    controller = c;
-   [gridInspector setROOTObjectController : c];
-   [logScaleInspector setROOTObjectController : c];
+   [gridInspector setObjectController : c];
+   [logScaleInspector setObjectController : c];
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = o;
-   [gridInspector setROOTObject : o];
-   [logScaleInspector setROOTObject : o];
+   [gridInspector setObject : o];
+   [logScaleInspector setObject : o];
 }
 
 //____________________________________________________________________________________________________

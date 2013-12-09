@@ -9,16 +9,12 @@ afimLabelFont
 
 }
 
-@interface AxisFontInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UILabel *titleLabel;
-   __weak IBOutlet UIPickerView *fontPicker;
-}
+@interface AxisFontInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent>
 
-- (id)initWithNibName : (NSString *)nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode)m;
+- (id)initWithNibName : (NSString *) nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode) m;
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) o;
 
 - (IBAction) back;
 

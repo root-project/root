@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "H1ErrorsInspector.h"
 
@@ -31,6 +33,7 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 @implementation H1ErrorsInspector {
+   __weak IBOutlet UIPickerView *errorTypePicker;
    __weak ObjectViewController *controller;
 
    TH1 *object;
@@ -60,16 +63,16 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
 
@@ -121,17 +124,22 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 #pragma mark ObjectInspectorComponent protocol.
+
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObjectController : (ObjectViewController *) c
 {
-   object = static_cast<TH1*>(o);
-   //Read error type from hist.
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+   controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) c
+- (void) setObject : (TObject *) o
 {
-   controller = c;
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
+   //The type was checked on one level up.
+   object = static_cast<TH1*>(o);
+   //Read error type from hist.
 }
 
 @end

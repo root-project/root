@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "AxisTitleInspector.h"
 #import "AxisFontInspector.h"
@@ -19,6 +21,14 @@ const float totalHeight = 400.f;
 const float tabBarHeight = 49.f;
 
 @implementation AxisTitleInspector {
+   __weak IBOutlet UITextField *titleField;
+   __weak IBOutlet UISwitch *centered;
+   __weak IBOutlet UISwitch *rotated;
+   __weak IBOutlet UILabel *offsetLabel;
+   __weak IBOutlet UILabel *sizeLabel;
+   __weak IBOutlet UIButton *plusSizeBtn;
+   __weak IBOutlet UIButton *minusSizeBtn;
+
    __weak ObjectViewController *controller;
    
    TAxis *object;
@@ -34,7 +44,7 @@ const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
@@ -46,7 +56,7 @@ const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
@@ -57,29 +67,34 @@ const float tabBarHeight = 49.f;
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
+
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = dynamic_cast<TAxis *>(o);
+   //I do not test the result of cast, it's done one level up.
 
    const char *axisTitle = object->GetTitle();
    if (!axisTitle || !*axisTitle)
@@ -108,8 +123,8 @@ const float tabBarHeight = 49.f;
 {
    AxisFontInspector *fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" mode : ROOT_IOSObjectInspector::afimTitleFont];
 
-   [fontInspector setROOTObjectController : controller];
-   [fontInspector setROOTObject : object];
+   [fontInspector setObjectController : controller];
+   [fontInspector setObject : object];
    
    [self.navigationController pushViewController : fontInspector animated : YES];
 }

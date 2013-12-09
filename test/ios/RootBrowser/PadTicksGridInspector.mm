@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "PadTicksGridInspector.h"
 #import "ObjectViewController.h"
 
@@ -5,6 +7,11 @@
 #import "TObject.h"
 
 @implementation PadTicksGridInspector {
+   __weak IBOutlet UISwitch *gridX;
+   __weak IBOutlet UISwitch *gridY;
+   __weak IBOutlet UISwitch *ticksX;
+   __weak IBOutlet UISwitch *ticksY;
+
    __weak ObjectViewController *controller;
    TVirtualPad *object;
 }
@@ -23,8 +30,18 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+   
+   controller = c;
+}
+
+//____________________________________________________________________________________________________
+- (void) setObject : (TObject *) o
+{
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = static_cast<TVirtualPad *>(o);
    
    //I do not check the result of cast here, it's done on upper level.
@@ -32,12 +49,6 @@
    gridY.on = object->GetGridy();
    ticksX.on = object->GetTickx();
    ticksY.on = object->GetTicky();
-}
-
-//____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
-{
-   controller = c;
 }
 
 //____________________________________________________________________________________________________
@@ -58,17 +69,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
 	return YES;
 }
 

@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "HorizontalPickerView.h"
 #import "ObjectViewController.h"
 #import "MarkerInspector.h"
@@ -37,6 +39,10 @@ BOOL canScaleMarker(Style_t style)
 }
 
 @implementation MarkerInspector {
+   __weak IBOutlet UIButton *plusBtn;
+   __weak IBOutlet UIButton *minusBtn;
+   __weak IBOutlet UILabel *sizeLabel;
+
    HorizontalPickerView *markerStylePicker;
    HorizontalPickerView *markerColorPicker;
 
@@ -48,7 +54,7 @@ BOOL canScaleMarker(Style_t style)
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    using namespace ROOT::iOS::Browser;
 
@@ -102,17 +108,9 @@ BOOL canScaleMarker(Style_t style)
 }
 
 //____________________________________________________________________________________________________
-- (void) viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
 
@@ -148,17 +146,22 @@ BOOL canScaleMarker(Style_t style)
 #pragma mark ObjectInspectorComponent protocol.
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
    using namespace ROOT::iOS::Browser;
+   
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
 
    object = dynamic_cast<TAttMarker *>(o);
+   //The result is tested one level up, no check here.
 
    unsigned item = 0;
    const EMarkerStyle style = EMarkerStyle(object->GetMarkerStyle());//Mess with all these styles and EMarkerStyles.

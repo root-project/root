@@ -3,18 +3,10 @@
 #import "ObjectInspectorComponent.h"
 #import "HorizontalPickerDelegate.h"
 
-@interface MarkerInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate> {
-@private
-   __weak IBOutlet UIButton *plusBtn;
-   __weak IBOutlet UIButton *minusBtn;
-   __weak IBOutlet UILabel *sizeLabel;
-}
+@interface MarkerInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate>
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *)o;
 - (NSString *) getComponentName;
-
-- (IBAction) plusPressed;
-- (IBAction) minusPressed;
 
 @end

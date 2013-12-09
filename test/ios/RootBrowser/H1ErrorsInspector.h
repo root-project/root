@@ -1,13 +1,8 @@
 #import "ObjectInspectorComponent.h"
 
-@interface H1ErrorsInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UIPickerView *errorTypePicker;
-}
+@interface H1ErrorsInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent>
 
-//@property (nonatomic, retain) UIPickerView *errorTypePicker;
-
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) o;
 
 @end

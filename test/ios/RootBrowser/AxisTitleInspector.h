@@ -2,21 +2,12 @@
 
 #import "ObjectInspectorComponent.h"
 
-@interface AxisTitleInspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UITextField *titleField;
-   __weak IBOutlet UISwitch *centered;
-   __weak IBOutlet UISwitch *rotated;
-   __weak IBOutlet UILabel *offsetLabel;
-   __weak IBOutlet UILabel *sizeLabel;
-   __weak IBOutlet UIButton *plusSizeBtn;
-   __weak IBOutlet UIButton *minusSizeBtn;
-}
+@interface AxisTitleInspector : UIViewController <ObjectInspectorComponent>
 
 + (CGRect) inspectorFrame;
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *)o;
 
 - (IBAction) showTitleFontInspector;
 - (IBAction) textFieldDidEndOnExit : (id) sender;

@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "InspectorWithNavigation.h"
 #import "FilledAreaInspector.h"
 #import "ObjectInspector.h"
@@ -69,7 +71,7 @@ namespace {
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
    if (self) {
@@ -80,7 +82,7 @@ namespace {
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
    // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
@@ -105,25 +107,41 @@ namespace {
 */
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
     // Return YES for supported orientations
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+   
    for (unsigned i = 0; i < nActiveEditors; ++i)
-      [activeEditors[i] setROOTObjectController : c];
+      [activeEditors[i] setObjectController : c];
+}
+
+//____________________________________________________________________________________________________
+- (void) setObject : (TObject *) o
+{
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
+   if (o != object) {
+      //Initialize.
+      object = o;
+      
+      [self setTitle];
+      [self setActiveEditors];
+   
+      for (unsigned i = 0; i < nActiveEditors; ++i)
+         [activeEditors[i] setObject : o];
+      
+      [editorView removeAllEditors];
+
+      for (unsigned i = 0; i < nActiveEditors; ++i)
+         [editorView addSubEditor : activeEditors[i].view withName : [activeEditors[i] getComponentName]];
+   }
 }
 
 //____________________________________________________________________________________________________
@@ -161,26 +179,6 @@ namespace {
 
    if (dynamic_cast<TH1 *>(object))
       activeEditors[nActiveEditors++] = cachedEditors[kAttH1];
-}
-
-//____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
-{
-   if (o != object) {
-      //Initialize.
-      object = o;
-      
-      [self setTitle];
-      [self setActiveEditors];
-   
-      for (unsigned i = 0; i < nActiveEditors; ++i)
-         [activeEditors[i] setROOTObject : o];
-      
-      [editorView removeAllEditors];
-
-      for (unsigned i = 0; i < nActiveEditors; ++i)
-         [editorView addSubEditor : activeEditors[i].view withName : [activeEditors[i] getComponentName]];
-   }
 }
 
 //____________________________________________________________________________________________________

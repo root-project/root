@@ -2,32 +2,14 @@
 
 #import "ObjectInspectorComponent.h"
 
-@interface AxisTicksInspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UILabel *tickLengthLabel;
-   __weak IBOutlet UIButton *plusLengthBtn;
-   __weak IBOutlet UIButton *minusLengthBtn;
+@interface AxisTicksInspector : UIViewController <ObjectInspectorComponent>
 
-   __weak IBOutlet UIButton *plusPrim;
-   __weak IBOutlet UIButton *minusPrim;
-   __weak IBOutlet UILabel *primLabel;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) object;
 
-   __weak IBOutlet UIButton *plusSec;
-   __weak IBOutlet UIButton *minusSec;
-   __weak IBOutlet UILabel *secLabel;
 
-   __weak IBOutlet UIButton *plusTer;
-   __weak IBOutlet UIButton *minusTer;
-   __weak IBOutlet UILabel *terLabel;
-
-   __weak IBOutlet UISegmentedControl *ticksNegPos;
-}
-
-- (void) setROOTObject : (TObject *)object;
-- (void) setROOTObjectController : (ObjectViewController *)c;
-
-- (IBAction) plusTick : (UIButton *)sender;
-- (IBAction) minusTick :(UIButton *)sender;
+- (IBAction) plusTick : (UIButton *) sender;
+- (IBAction) minusTick :(UIButton *) sender;
 - (IBAction) ticksNegPosPressed;
 
 @end

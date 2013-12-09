@@ -10,9 +10,10 @@
 class TObject;
 
 @protocol ObjectInspectorComponent <NSObject>
+@required
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *)o;
 
 @optional
 

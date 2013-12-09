@@ -2,16 +2,10 @@
 
 #import "ObjectInspectorComponent.h"
 
-@interface PadTicksGridInspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UISwitch *gridX;
-   __weak IBOutlet UISwitch *gridY;
-   __weak IBOutlet UISwitch *ticksX;
-   __weak IBOutlet UISwitch *ticksY;
-}
+@interface PadTicksGridInspector : UIViewController <ObjectInspectorComponent>
 
-- (void) setROOTObjectController : (ObjectViewController *) c;
-- (void) setROOTObject : (TObject *) obj;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) obj;
 
 - (IBAction) gridActivated : (UISwitch *) g;
 - (IBAction) ticksActivated : (UISwitch *) t;

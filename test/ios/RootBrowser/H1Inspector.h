@@ -1,12 +1,9 @@
 #import "ObjectInspectorComponent.h"
 
-@interface H1Inspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UITabBar *tabBar;
-}
+@interface H1Inspector : UIViewController <ObjectInspectorComponent>
 
-- (void) setROOTObject : (TObject *)o;
-- (void) setROOTObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *) o;
+- (void) setObjectController : (ObjectViewController *) c;
 - (NSString *) getComponentName;
 - (void) resetInspector;
 

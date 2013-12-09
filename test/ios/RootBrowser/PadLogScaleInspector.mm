@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "PadLogScaleInspector.h"
 
@@ -6,6 +8,10 @@
 #import "TObject.h"
 
 @implementation PadLogScaleInspector {
+   __weak IBOutlet UISwitch *logX;
+   __weak IBOutlet UISwitch *logY;
+   __weak IBOutlet UISwitch *logZ;
+
    __weak ObjectViewController *controller;
    TVirtualPad *object;
 }
@@ -19,14 +25,18 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *)c
+- (void) setObjectController : (ObjectViewController *) c
 {
+   assert(c != nil && "setObjectController:, parameter 'c' is nil");
+
    controller = c;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
+   assert(o != nullptr && "setObject:, parameter 'o' is null");
+
    object = static_cast<TVirtualPad *>(o);
    //Result of cast is not checked here, it's done at the upper level.
    logX.on = object->GetLogx();
@@ -52,17 +62,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
    return YES;
 }
 

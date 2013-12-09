@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import "ObjectViewController.h"
 #import "HorizontalPickerView.h"
 #import "FilledAreaInspector.h"
@@ -70,19 +72,21 @@ const CGFloat defaultCellH = 50.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
    [super didReceiveMemoryWarning];
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ObjectViewController *) p
+- (void) setObjectController : (ObjectViewController *) p
 {
+   assert(p != nil && "setObjectController:, parameter 'p' is nil");
+
    parentController = p;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObject : (TObject *)obj
+- (void) setObject : (TObject *) obj
 {
    //ROOT's standard color pick has 16 colors,
    //I have 16 rows in a color picker.
@@ -94,6 +98,9 @@ const CGFloat defaultCellH = 50.f;
    //If the object color is one of 16 standard colors,
    //I find the correct row in a picker and rotate picker 
    //to this row. If not - it's on zero.
+   
+   assert(obj != nullptr && "setObject:, parameter 'obj' is null");
+   
    using namespace ROOT::iOS::Browser;
 
    //I do not check the result of dynamic_cast here. This is done at upper level.
@@ -173,22 +180,17 @@ const CGFloat defaultCellH = 50.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidUnload];
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
 	return YES;
 }
 
 #pragma mark - Color/pattern picker's delegate.
 
 //____________________________________________________________________________________________________
-- (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
+- (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *)picker
 {
    if (picker == colorPicker) {
       [self setNewColor : item];

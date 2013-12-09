@@ -622,8 +622,8 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) setupObjectInspector
 {
-   [objectInspector setROOTObject : selectedObject];
-   [objectInspector setROOTObjectController : self];
+   [objectInspector setObject : selectedObject];
+   [objectInspector setObjectController : self];
 }
 
 //____________________________________________________________________________________________________

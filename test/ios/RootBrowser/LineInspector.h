@@ -10,16 +10,13 @@
 //Line inspector is a composition of two sub-inspectors: line color and width inspector + 
 //line style inspector.
 
-@interface LineInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate> {
-@private
-   __weak IBOutlet LineWidthPicker *lineWidthPicker;
-}
+@interface LineInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate>
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *) c;
+- (void) setObject : (TObject *) o;
 - (NSString *) getComponentName;
 
-- (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker;
+- (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *) picker;
 
 - (IBAction) decLineWidth;
 - (IBAction) incLineWidth;

@@ -2,15 +2,10 @@
 
 #import "ObjectInspectorComponent.h"
 
-@interface PadLogScaleInspector : UIViewController <ObjectInspectorComponent> {
-@private
-   __weak IBOutlet UISwitch *logX;
-   __weak IBOutlet UISwitch *logY;
-   __weak IBOutlet UISwitch *logZ;
-}
+@interface PadLogScaleInspector : UIViewController <ObjectInspectorComponent>
 
-- (void) setROOTObjectController : (ObjectViewController *)c;
-- (void) setROOTObject : (TObject *)o;
+- (void) setObjectController : (ObjectViewController *)c;
+- (void) setObject : (TObject *)o;
 
 - (IBAction) logActivated : (UISwitch *) log;
 
