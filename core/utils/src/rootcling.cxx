@@ -2597,8 +2597,20 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
    clang::SourceLocation sourceEnd = sr.getEnd();
    clang::SourceManager& srcMgr = compilerInstance.getSourceManager();
 
-   const char* sourceBeginChar = srcMgr.getCharacterData(sourceBegin);
-   const char* sourceEndChar = srcMgr.getCharacterData(sourceEnd);
+   // Protect the source retrival
+   if (sourceBegin.isInvalid() || sourceEnd.isInvalid() )
+      return 1;
+
+   bool srcMgrValid=true;
+   
+   const char* sourceBeginChar = srcMgr.getCharacterData(sourceBegin,&srcMgrValid);
+   if (!srcMgrValid)
+      return 1;
+   
+   const char* sourceEndChar = srcMgr.getCharacterData(sourceEnd,&srcMgrValid);
+   if (!srcMgrValid)
+      return 1;
+   
    std::string fullTemplateDefSrcStr(sourceBeginChar, sourceEndChar-sourceBeginChar +1);
 
    // Remove everything after the first { included since the
