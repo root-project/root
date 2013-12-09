@@ -1,7 +1,5 @@
 #import <cassert>
 
-#import <QuartzCore/QuartzCore.h>
-
 #import "FileCollectionViewController.h"
 #import "FileContentViewController.h"
 #import "FileShortcutView.h"
@@ -32,83 +30,77 @@
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
-{
-   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   
-   if (self) {
-      [self view];
-      
-      fileContainers = [[NSMutableArray alloc] init];
-   
-      self.navigationItem.title = @"ROOT files";
-      self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Back to ROOT files" style:UIBarButtonItemStylePlain target : nil action : nil];
-      self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Open file" style:UIBarButtonItemStylePlain target : self action : @selector(showFileOpenView)];
-
-      scrollView.bounces = NO;
-      
-      [self.view bringSubviewToFront : fileOpenView];
-      
-      fileNameField.clearButtonMode = UITextFieldViewModeAlways;
-      
-      UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideFileOpenView)];
-      [self.view addGestureRecognizer : tap];
-   }
-
-   return self;
-}
-
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
 - (void) placeFileShortcuts
 {
+   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
+   
    if ([scrollView.subviews count])
-      [ShorcutUtil placeShortcuts : fileContainers inScrollView : scrollView withSize : CGSizeMake([FileShortcutView iconWidth], [FileShortcutView iconHeight]) andSpace : 25.f];
+      //25.f - is an additional 'pad' space between shortcuts.
+      PlaceShortcutsInScrollView(fileContainers, scrollView, CGSizeMake([FileShortcutView iconWidth], [FileShortcutView iconHeight]), 25.f);
 }
 
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
 {
-   CGRect mainFrame;
-   CGRect scrollFrame;
-   CGRect fileViewFrame;
+#pragma unused(orientation)
 
-   if (UIInterfaceOrientationIsPortrait(orientation)) {
-      mainFrame = CGRectMake(0.f, 0.f, 768.f, 1004.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 768.f, 960.f);
-      fileViewFrame = CGRectMake(0.f, 44.f, 768.f, 120.f);
-   } else {
-      mainFrame = CGRectMake(0.f, 0.f, 1024.f, 748.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);   
-      fileViewFrame = CGRectMake(0.f, 44.f, 1024.f, 120.f);
-   }
-   
-   self.view.frame = mainFrame;
-   scrollView.frame = scrollFrame;
-   
-   fileOpenView.frame = fileViewFrame;
-   
+   //This is the legacy code: before I was resetting views geometry manually, now no
+   //need in this nightmare anymore, just place shortcuts in correct places.
+
    [self placeFileShortcuts];
-}
-
-//____________________________________________________________________________________________________
-- (void) viewWillAppear : (BOOL)animated
-{
-   [self correctFramesForOrientation : self.interfaceOrientation];
-   [fileNameField resignFirstResponder];
-   //Check if I have to call [super viewWillAppear];
 }
 
 //____________________________________________________________________________________________________
 - (void) viewDidLoad
 {
    [super viewDidLoad];
-   //
+
    //Setup additional views here.
+   self.navigationItem.title = @"ROOT files";
+   self.navigationItem.backBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Back to ROOT files"
+                                             style : UIBarButtonItemStylePlain target : nil action : nil];
+   self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle : @"Open file" style : UIBarButtonItemStylePlain target : self action : @selector(showFileOpenView)];
+
+   scrollView.bounces = NO;
    
-   //
+   [self.view bringSubviewToFront : fileOpenView];
+   
+   fileNameField.clearButtonMode = UITextFieldViewModeAlways;
+   
+   UITapGestureRecognizer * const tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(hideFileOpenView)];
+   [self.view addGestureRecognizer : tap];
+}
+
+//____________________________________________________________________________________________________
+- (void) viewWillAppear : (BOOL)animated
+{
+   [super viewWillAppear : animated];
+   [fileNameField resignFirstResponder];//? TODO: check why do I have it here at all.
+}
+
+//____________________________________________________________________________________________________
+- (void) viewDidLayoutSubviews
+{
+   [self correctFramesForOrientation : self.interfaceOrientation];
+}
+
+//____________________________________________________________________________________________________
+- (void) viewDidAppear : (BOOL) animated
+{
+   [super viewDidAppear : animated];
+
+   if (!viewDidAppear) {
+      //The first time this method is called, add the 'demos.root'.
+      NSString * const demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];
+      if (demosPath) {
+         [self addRootFile : demosPath];
+         [self correctFramesForOrientation : self.interfaceOrientation];
+         viewDidAppear = YES;
+      }
+   }
 }
 
 //____________________________________________________________________________________________________

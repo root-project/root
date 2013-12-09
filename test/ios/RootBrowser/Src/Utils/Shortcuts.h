@@ -17,3 +17,13 @@
 @end
 
 
+namespace ROOT {
+namespace iOS {
+namespace Browser {
+
+//We assume, that 'shortcuts' (some views) are already subviews of a scrollview, I do not check it.
+void PlaceShortcutsInScrollView(NSMutableArray *shortcuts, UIScrollView *scrollView, const CGSize &shortCutSize, CGFloat padSpace);
+
+}
+}
+}

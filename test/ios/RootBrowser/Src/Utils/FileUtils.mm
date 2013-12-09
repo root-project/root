@@ -314,7 +314,7 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
    try {
       std::set<TString> visibleTypes;
       FillVisibleTypes(visibleTypes);
-   
+
       std::auto_ptr<TFile> inputFile(TFile::Open(fullPath, "read"));
       if (!inputFile.get())
          return 0;

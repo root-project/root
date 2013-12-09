@@ -1,4 +1,5 @@
 #import <cstddef>
+#import <cassert>
 #import <vector>
 
 #import <sys/sysctl.h>
@@ -31,19 +32,13 @@ bool deviceIsiPad3 = false;
 //____________________________________________________________________________________________________
 - (void) initRootController
 {
-   FileCollectionViewController *rootController = [[FileCollectionViewController alloc] initWithNibName : @"RootFileController" bundle : nil];
-   rc = rootController;
-   
-   NSString *demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];
-   if (demosPath)
-      [rootController addRootFile : demosPath];
+   UIStoryboard * const storyboard = [UIStoryboard storyboardWithName : @"Browser_iPad" bundle : nil];
+   navigationController = (UINavigationController *)[storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::ROOTBrowserViewControllerID];
+   assert([navigationController.topViewController isKindOfClass : [FileCollectionViewController class]] &&
+          "initRootController, top view controller is either nil or has a wrong type");
+  
+   rc = (FileCollectionViewController *)navigationController.topViewController;
 
-   navigationController = [[UINavigationController alloc] initWithRootViewController : rootController];
-   
-   navigationController.navigationBar.barStyle = UIBarStyleBlackTranslucent;
-   navigationController.delegate = rootController;
-   
-//   [self.window addSubview : navigationController.view];
    [self.window setRootViewController : navigationController];
    [self.window makeKeyAndVisible];
 }
