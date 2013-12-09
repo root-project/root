@@ -1,6 +1,6 @@
 #import <UIKit/UIKit.h>
 
-@class FileContentController;
+@class FileContentViewController;
 @class SpotView;
 
 @interface ObjectShortcut : UIView
@@ -14,7 +14,7 @@
 + (CGFloat) textHeight;
 + (CGRect) defaultRect;
 
-- (id) initWithFrame : (CGRect) frame controller : (FileContentController *) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail;
-- (id) initWithFrame : (CGRect) frame controller : (FileContentController *) c forFolderAtIndex : (unsigned) index;
+- (id) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail;
+- (id) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forFolderAtIndex : (unsigned) index;
 
 @end

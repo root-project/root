@@ -15,7 +15,7 @@ class FileContainer;
 }
 }
 
-@interface FileContentController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchDelegate> {
+@interface FileContentViewController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchDelegate> {
 @private
    ROOT::iOS::Browser::FileContainer *fileContainer;
    __weak IBOutlet UIScrollView *scrollView;

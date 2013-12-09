@@ -3,7 +3,7 @@
 #import <CoreGraphics/CGGeometry.h>
 #import <QuartzCore/QuartzCore.h>
 
-#import "FileContentController.h"
+#import "FileContentViewController.h"
 #import "ROOTObjectController.h"
 #import "FileContainerElement.h"
 #import "SlideshowController.h"
@@ -19,7 +19,7 @@
 
 #import "FileUtils.h"
 
-@interface FileContentController () {
+@implementation FileContentViewController {
    NSMutableArray *objectShortcuts;
    UISearchBar *searchBar;
    UIPopoverController *searchPopover;
@@ -30,14 +30,6 @@
    BOOL animateObjAfterLoad;
    unsigned spotElement;
 }
-
-- (void) highlightDirectory : (unsigned)tag;
-- (void) highlightObject : (unsigned)tag;
-
-@end
-
-
-@implementation FileContentController
 
 @synthesize fileContainer;
 
@@ -69,7 +61,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id)initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
@@ -288,7 +280,7 @@
 {
    if (shortcut.isDirectory) {
       //Create another FileContentController and push it on stack.
-      FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
       [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
@@ -380,7 +372,7 @@
       descriptor.fIsDir ? [self highlightDirectory : descriptor.fIndex] : [self highlightObject : descriptor.fIndex];
    } else {
       //Create another FileContentController and push it on stack.
-      FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
       [contentController activateForFile : descriptor.fOwner];
 
       if (descriptor.fIsDir)

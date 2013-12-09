@@ -3,7 +3,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileCollectionViewController.h"
-#import "FileContentController.h"
+#import "FileContentViewController.h"
 #import "FileShortcut.h"
 #import "Shortcuts.h"
 
@@ -162,7 +162,7 @@
 //____________________________________________________________________________________________________
 - (void) fileWasSelected : (FileShortcut*) shortcut
 {
-   FileContentController *contentController = [[FileContentController alloc] initWithNibName : @"FileContentController" bundle : nil];
+   FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
    [contentController activateForFile : [shortcut getFileContainer]];
    [self.navigationController pushViewController : contentController animated : YES];
 }
