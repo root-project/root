@@ -2,7 +2,7 @@
 #import <cstring>
 #import <vector>
 
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "SelectionView.h"
 #import "Constants.h"
 #import "PadView.h"
@@ -15,7 +15,7 @@
 const CGFloat tapInterval = 0.15f;
 
 @implementation PadView {
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
 
    ROOT::iOS::Pad *pad;
 
@@ -31,7 +31,7 @@ const CGFloat tapInterval = 0.15f;
 @synthesize zoomed;
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame controller : (ROOTObjectController *) c forPad : (ROOT::iOS::Pad*) pd
+- (id) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pd
 {
    assert(c != nil && "initWithFrame:forPad:, parameter 'c' is nil");
    assert(pd != nullptr && "initWithFrame:forPad:, parameter 'pd' is null");

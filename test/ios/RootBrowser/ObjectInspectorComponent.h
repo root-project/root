@@ -5,13 +5,13 @@
 //"object-inspector".
 //
 
-@class ROOTObjectController;
+@class ObjectViewController;
 
 class TObject;
 
 @protocol ObjectInspectorComponent <NSObject>
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 @optional

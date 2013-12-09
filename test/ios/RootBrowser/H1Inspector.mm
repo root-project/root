@@ -12,7 +12,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
    H1BinsInspector *binsInspector;
    
    TObject *object;
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
 }
 
 - (void) showBinsInspector;
@@ -65,14 +65,6 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     // Return YES for supported orientations
@@ -90,7 +82,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
    [errorInspector setROOTObjectController : c];

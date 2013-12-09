@@ -120,7 +120,7 @@ namespace {
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    for (unsigned i = 0; i < nActiveEditors; ++i)
       [activeEditors[i] setROOTObjectController : c];

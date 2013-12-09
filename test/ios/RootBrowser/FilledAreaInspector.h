@@ -5,7 +5,7 @@
 
 @interface FilledAreaInspector : UIViewController <HorizontalPickerDelegate, ObjectInspectorComponent>
 
-- (void) setROOTObjectController : (ROOTObjectController *) p;
+- (void) setROOTObjectController : (ObjectViewController *) p;
 - (void) setROOTObject : (TObject*) obj;
 - (NSString *) getComponentName;
 

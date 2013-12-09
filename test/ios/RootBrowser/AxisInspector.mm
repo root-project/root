@@ -10,7 +10,7 @@
    InspectorWithNavigation *titleInspector;
    InspectorWithNavigation *labelInspector;
 
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TObject *object;
 }
 
@@ -94,7 +94,7 @@
 
 #pragma mark - ObjectInspectorComponent's protocol.
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *) c
 {
    controller = c;
    [ticksInspector setROOTObjectController : c];

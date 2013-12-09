@@ -17,7 +17,7 @@ afimLabelFont
 
 - (id)initWithNibName : (NSString *)nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode)m;
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 - (IBAction) back;

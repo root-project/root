@@ -1,11 +1,11 @@
 #import "PadTicksGridInspector.h"
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 
 #import "TVirtualPad.h"
 #import "TObject.h"
 
 @implementation PadTicksGridInspector {
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TVirtualPad *object;
 }
 
@@ -35,7 +35,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

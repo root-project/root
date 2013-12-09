@@ -15,7 +15,7 @@ class Pad;
 }
 }
 
-@class ROOTObjectController;
+@class ObjectViewController;
 @class SelectionView;
 
 @interface PadView : UIView
@@ -23,7 +23,7 @@ class Pad;
 @property (nonatomic, readonly) SelectionView *selectionView;
 @property (nonatomic) BOOL zoomed;
 
-- (id) initWithFrame : (CGRect)frame controller : (ROOTObjectController *)c forPad : (ROOT::iOS::Pad*)pad;
+- (id) initWithFrame : (CGRect)frame controller : (ObjectViewController *)c forPad : (ROOT::iOS::Pad*)pad;
 - (id) initImmutableViewWithFrame : (CGRect)frame;
 
 - (void) setPad : (ROOT::iOS::Pad *) newPad;

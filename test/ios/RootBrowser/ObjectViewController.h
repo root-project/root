@@ -7,11 +7,7 @@
 
 class TObject;
 
-@interface ROOTObjectController : UIViewController <UIScrollViewDelegate, MFMailComposeViewControllerDelegate> {
-@private
-   __weak IBOutlet ScrollViewWithPadView *padScrollView;
-   __weak IBOutlet UIScrollView *navigationScrollView;
-}
+@interface ObjectViewController : UIViewController <UIScrollViewDelegate, MFMailComposeViewControllerDelegate>
 
 - (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::Browser::FileContainer *)fileContainer;
 - (void) handleDoubleTapOnPad : (CGPoint)tapPt;

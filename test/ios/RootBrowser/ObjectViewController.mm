@@ -3,7 +3,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import "ScrollViewWithPadView.h"
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "PadImageScrollView.h"
 #import "TransparentToolbar.h"
 #import "ObjectInspector.h"
@@ -35,7 +35,10 @@ enum Mode {
 
 }
 
-@implementation ROOTObjectController {
+@implementation ObjectViewController {
+   __weak IBOutlet ScrollViewWithPadView *padScrollView;
+   __weak IBOutlet UIScrollView *navigationScrollView;
+
    Mode mode;
 
    __weak EditorView *editorView;

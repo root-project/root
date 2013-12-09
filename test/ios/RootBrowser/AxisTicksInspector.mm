@@ -1,6 +1,6 @@
 #import <string.h>
 
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "AxisTicksInspector.h"
 
 #import "TObject.h"
@@ -22,7 +22,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    unsigned secondaryTicks;
    unsigned tertiaryTicks;
    
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
 
    TAxis *object;
 }
@@ -121,7 +121,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController:(ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *) c
 {
    controller = c;
 }

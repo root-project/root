@@ -9,7 +9,7 @@
    __weak IBOutlet UISwitch *logZ;
 }
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 - (IBAction) logActivated : (UISwitch *) log;

@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "H1BinsInspector.h"
 #import "RangeSlider.h"
 
@@ -7,7 +7,7 @@
 
 @implementation H1BinsInspector {
    RangeSlider *axisRangeSlider;
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TH1 *object;
 }
 
@@ -73,7 +73,7 @@
 
 #pragma mark - ObjectInspectorComponent protocol.
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

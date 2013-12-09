@@ -1,5 +1,5 @@
 #import "HorizontalPickerView.h"
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "MarkerInspector.h"
 #import "MarkerStyleCell.h"
 #import "ColorCell.h"
@@ -43,7 +43,7 @@ BOOL canScaleMarker(Style_t style)
    NSMutableArray *styleCells;
    NSMutableArray *colorCells;
    
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TAttMarker *object;
 }
 
@@ -148,7 +148,7 @@ BOOL canScaleMarker(Style_t style)
 #pragma mark ObjectInspectorComponent protocol.
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

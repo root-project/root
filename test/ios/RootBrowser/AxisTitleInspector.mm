@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "AxisTitleInspector.h"
 #import "AxisFontInspector.h"
 
@@ -19,8 +19,8 @@ const float totalHeight = 400.f;
 const float tabBarHeight = 49.f;
 
 @implementation AxisTitleInspector {
-
-   ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
+   
    TAxis *object;
    float offset;
    float titleSize;
@@ -64,14 +64,6 @@ const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
     // Return YES for supported orientations
@@ -79,7 +71,7 @@ const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *) c
 {
    controller = c;
 }

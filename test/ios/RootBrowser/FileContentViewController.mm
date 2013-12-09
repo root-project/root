@@ -4,7 +4,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileContentViewController.h"
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "FileContainerElement.h"
 #import "SlideshowController.h"
 #import "TransparentToolbar.h"
@@ -270,7 +270,7 @@
 - (void) doTest
 {
    const unsigned testIndex = 1 + rand() % (fileContainer->GetNumberOfObjects() - 1);
-   ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName:@"ROOTObjectController" bundle : nil];
+   ObjectViewController *objectController = [[ObjectViewController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
    [objectController setNavigationForObjectWithIndex : testIndex fromContainer : fileContainer];
    [self.navigationController pushViewController : objectController animated : YES];
 }
@@ -284,7 +284,7 @@
       [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
-      ROOTObjectController *objectController = [[ROOTObjectController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
+      ObjectViewController *objectController = [[ObjectViewController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
       [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
       [self.navigationController pushViewController : objectController animated : YES];
    }

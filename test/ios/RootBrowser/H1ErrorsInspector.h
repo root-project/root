@@ -7,7 +7,7 @@
 
 //@property (nonatomic, retain) UIPickerView *errorTypePicker;
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 @end

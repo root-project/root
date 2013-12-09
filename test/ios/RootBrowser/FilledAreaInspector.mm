@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "HorizontalPickerView.h"
 #import "FilledAreaInspector.h"
 #import "PatternCell.h"
@@ -23,11 +23,11 @@ const CGFloat defaultCellH = 50.f;
    
    TAttFill *filledObject;
    
-   __weak ROOTObjectController *parentController;
+   __weak ObjectViewController *parentController;
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id)initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    using namespace ROOT::iOS::Browser;
 
@@ -76,7 +76,7 @@ const CGFloat defaultCellH = 50.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *) p
+- (void) setROOTObjectController : (ObjectViewController *) p
 {
    parentController = p;
 }

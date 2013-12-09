@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "AxisLabelsInspector.h"
 #import "AxisFontInspector.h"
 
@@ -19,7 +19,7 @@ const float tabBarHeight = 49.f;
 const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
 
 @implementation AxisLabelsInspector {
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TAxis *object;
 }
 
@@ -76,7 +76,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

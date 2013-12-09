@@ -54,7 +54,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    UIViewController<ObjectInspectorComponent> *rootController = (UIViewController<ObjectInspectorComponent> *)[self.viewControllers objectAtIndex : 0];
    [rootController setROOTObjectController : c];

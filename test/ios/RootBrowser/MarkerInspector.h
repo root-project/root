@@ -10,7 +10,7 @@
    __weak IBOutlet UILabel *sizeLabel;
 }
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 - (NSString *) getComponentName;
 

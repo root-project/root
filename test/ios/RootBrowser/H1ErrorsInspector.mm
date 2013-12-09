@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "H1ErrorsInspector.h"
 
 //C++ imports.
@@ -31,7 +31,7 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 @implementation H1ErrorsInspector {
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
 
    TH1 *object;
 }
@@ -64,14 +64,6 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
-}
-
-//____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
 }
 
 //____________________________________________________________________________________________________
@@ -137,7 +129,7 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *) c
 {
    controller = c;
 }

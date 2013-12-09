@@ -1,5 +1,5 @@
 #import "HorizontalPickerView.h"
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "LineWidthPicker.h"
 #import "LineInspector.h"
 #import "LineStyleCell.h"
@@ -25,7 +25,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 
    int lineWidth;
 
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TAttLine *object;
 }
 
@@ -105,7 +105,7 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

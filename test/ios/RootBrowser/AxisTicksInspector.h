@@ -24,7 +24,7 @@
 }
 
 - (void) setROOTObject : (TObject *)object;
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 
 - (IBAction) plusTick : (UIButton *)sender;
 - (IBAction) minusTick :(UIButton *)sender;

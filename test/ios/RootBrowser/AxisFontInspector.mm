@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "AxisFontInspector.h"
 
 //C++ (ROOT) imports.
@@ -50,7 +50,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 
 @implementation AxisFontInspector {
    ROOT_IOSObjectInspector::AxisFontInspectorMode mode;
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TAxis *object;
 }
 
@@ -108,7 +108,7 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *) c
 {
    controller = c;
 }

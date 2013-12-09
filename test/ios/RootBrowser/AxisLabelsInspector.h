@@ -21,7 +21,7 @@ class TAxis;
 
 + (CGRect) inspectorFrame;
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 - (IBAction) showLabelFontInspector;

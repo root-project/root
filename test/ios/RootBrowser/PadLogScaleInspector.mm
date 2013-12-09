@@ -1,4 +1,4 @@
-#import "ROOTObjectController.h"
+#import "ObjectViewController.h"
 #import "PadLogScaleInspector.h"
 
 //C++ (ROOT) imports.
@@ -6,7 +6,7 @@
 #import "TObject.h"
 
 @implementation PadLogScaleInspector {
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TVirtualPad *object;
 }
 
@@ -19,7 +19,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
 }

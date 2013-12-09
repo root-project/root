@@ -6,7 +6,7 @@
 }
 
 - (void) setROOTObject : (TObject *)o;
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (NSString *) getComponentName;
 - (void) resetInspector;
 

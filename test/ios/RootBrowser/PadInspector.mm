@@ -11,7 +11,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
    PadTicksGridInspector *gridInspector;
    PadLogScaleInspector *logScaleInspector;
    
-   __weak ROOTObjectController *controller;
+   __weak ObjectViewController *controller;
    TObject *object;
 }
 
@@ -87,7 +87,7 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (void) setROOTObjectController : (ROOTObjectController *)c
+- (void) setROOTObjectController : (ObjectViewController *)c
 {
    controller = c;
    [gridInspector setROOTObjectController : c];

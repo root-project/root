@@ -8,7 +8,7 @@
    __weak IBOutlet UISwitch *showMarkers;
 }
 
-- (void) setROOTObjectController : (ROOTObjectController *)c;
+- (void) setROOTObjectController : (ObjectViewController *)c;
 - (void) setROOTObject : (TObject *)o;
 
 - (IBAction) textFieldDidEndOnExit : (id) sender;

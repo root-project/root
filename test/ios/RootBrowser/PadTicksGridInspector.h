@@ -10,7 +10,7 @@
    __weak IBOutlet UISwitch *ticksY;
 }
 
-- (void) setROOTObjectController : (ROOTObjectController *) c;
+- (void) setROOTObjectController : (ObjectViewController *) c;
 - (void) setROOTObject : (TObject *) obj;
 
 - (IBAction) gridActivated : (UISwitch *) g;
