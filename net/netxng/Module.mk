@@ -82,5 +82,5 @@ distclean::     distclean-$(MODNAME)
 $(NETXNGO) $(NETXNGDO): CXXFLAGS += $(NETXNGINCEXTRA)
 ifneq ($(findstring gnu,$(COMPILER)),)
 # problem in xrootd 3.3.5 headers
-$(NETXNGO) $(NETXNGDO): CXXFLAGS += -Wno-unused-parameter
+$(NETXNGO) $(NETXNGDO): CXXFLAGS += -Wno-unused-parameter -Wno-shadow
 endif
