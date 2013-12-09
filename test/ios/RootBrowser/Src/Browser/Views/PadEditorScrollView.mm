@@ -4,7 +4,7 @@
 @implementation PadEditorScrollView
 
 //____________________________________________________________________________________________________
-- (UIView *) hitTest : (CGPoint) point withEvent : (UIEvent *)event
+- (UIView *) hitTest : (CGPoint) point withEvent : (UIEvent *) event
 {  
    UIView * const v = [super hitTest : point withEvent : event];
    

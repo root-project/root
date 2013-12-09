@@ -33,7 +33,7 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) initPadView : (CGRect)frame
+- (void) initPadView : (CGRect) frame
 {
    CGRect padFrame = [PadScrollView defaultImageFrame];
    padFrame.origin = [self adjustOriginForFrame : frame withSize : padFrame.size];
@@ -46,7 +46,7 @@ static const CGFloat minZoom = 1.f;
 
 
 //____________________________________________________________________________________________________
-- (void) setContentSize : (CGSize) size contentOffset : (CGPoint)offset minScale : (CGFloat)min maxScale : (CGFloat)max scale : (CGFloat)scale
+- (void) setContentSize : (CGSize) size contentOffset : (CGPoint) offset minScale : (CGFloat) min maxScale : (CGFloat) max scale : (CGFloat) scale
 {
    self.maximumZoomScale = max;
    self.minimumZoomScale = min;
@@ -56,7 +56,7 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame
+- (id) initWithFrame : (CGRect) frame
 {
    if (self = [super initWithFrame : frame]) {
       self.delegate = self; //hehehehe
@@ -87,7 +87,7 @@ static const CGFloat minZoom = 1.f;
 #pragma mark - Image/pad/geometry management.
 
 //____________________________________________________________________________________________________
-- (void) setPad : (ROOT::iOS::Pad *)p
+- (void) setPad : (ROOT::iOS::Pad *) p
 {
    pad = p;
    pad->SetViewWH(defaultImageW, defaultImageH);
@@ -118,7 +118,7 @@ static const CGFloat minZoom = 1.f;
 }
 
 //_________________________________________________________________
-- (CGRect)centeredFrameForScrollView:(UIScrollView *)scroll andUIView:(UIView *)rView 
+- (CGRect) centeredFrameForScrollView : (UIScrollView *) scroll andUIView : (UIView *) rView
 {
    CGSize boundsSize = scroll.bounds.size;
    CGRect frameToCenter = rView.frame;
@@ -198,7 +198,7 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) handleDoubleTap : (UITapGestureRecognizer *)tap
+- (void) handleDoubleTap : (UITapGestureRecognizer *) tap
 {
    //Identify, if we should unzoom.
    if (std::abs(nestedView.frame.size.width - maxZoom * defaultImageW) < 10) {

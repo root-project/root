@@ -112,7 +112,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    if (isDirectory) {
       //Directory's icon is 128 x 128 < than thumbnail.
