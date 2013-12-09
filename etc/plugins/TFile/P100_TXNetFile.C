@@ -1,7 +1,10 @@
 void P100_TXNetFile()
 {
-   gPluginMgr->AddHandler("TFile", "^root:", "TXNetFile",
-      "Netx", "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)");
-   gPluginMgr->AddHandler("TFile", "^xroot:", "TXNetFile",
-      "Netx", "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)");
+   if (!gEnv->GetValue( "XNet.UseOldClient", 0)) {
+      gPluginMgr->AddHandler("TFile", "^[x]?root:", "TNetXNGFile",
+         "NetXNG", "TNetXNGFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)");
+   } else {
+      gPluginMgr->AddHandler("TFile", "^[x]?root:", "TXNetFile",
+         "Netx", "TXNetFile(const char*,Option_t*,const char*,Int_t,Int_t,Bool_t)");
+   }
 }

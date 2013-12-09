@@ -5090,6 +5090,18 @@ if test "x$enable_xrootd" = "xyes" ; then
          fi
       fi
    fi
+
+   #
+   # Build the new client interface (libNetxNG) only for xrootd >= 3.3.5
+   decrefng=300030005
+   buildnetxng="no"
+   useoldnetx="yes"
+   message "Checking whether new xrootd client (libNetxNG) should be build"
+   if [ $decver -ge $decrefng ] ; then
+      buildnetxng="yes"
+      useoldnetx="no"
+   fi
+   result $buildnetxng
 fi
 
 check_explicit "$enable_xrootd" "$enable_xrootd_explicit" \
@@ -7343,6 +7355,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@afdsmgrdapmon@|$afdsmgrdapmon|"      \
     -e "s|@buildglite@|$enable_glite|"          \
     -e "s|@buildcocoa@|$enable_cocoa|"          \
+    -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
     < Makefile.tmp > $MAKEOUT
@@ -7541,6 +7554,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@iconpath@|$iconpath|"           \
     -e "s|@hasxrd@|$hasxrd|"               \
     -e "s|@hasnotxrd@|$hasnotxrd|"         \
+    -e "s|@useoldnetx@|$useoldnetx|"       \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
 result "done"
