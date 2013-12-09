@@ -1,6 +1,6 @@
-#import "SpotView.h"
+#import "SpotObjectView.h"
 
-@implementation SpotView
+@implementation SpotObjectView
 
 //____________________________________________________________________________________________________
 - (id) initWithFrame : (CGRect) frame

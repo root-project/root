@@ -1,5 +1,3 @@
-//#import <stdlib.h>
-
 #import <CoreGraphics/CGGeometry.h>
 #import <QuartzCore/QuartzCore.h>
 
@@ -8,10 +6,9 @@
 #import "ObjectViewController.h"
 #import "FileContainerElement.h"
 #import "TransparentToolbar.h"
+#import "SpotObjectView.h"
 #import "ObjectShortcut.h"
 #import "Shortcuts.h"
-#import "SpotView.h"
-
 
 //C++ imports.
 #import "IOSPad.h"

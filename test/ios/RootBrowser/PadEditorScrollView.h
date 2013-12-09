@@ -9,5 +9,5 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ScrollViewWithPadView : UIScrollView
+@interface PadEditorScrollView : UIScrollView
 @end

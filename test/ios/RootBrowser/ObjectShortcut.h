@@ -1,11 +1,11 @@
 #import <UIKit/UIKit.h>
 
 @class FileContentViewController;
-@class SpotView;
+@class SpotObjectView;
 
 @interface ObjectShortcut : UIView
 
-@property (nonatomic, readonly) SpotView *spot;
+@property (nonatomic, readonly) SpotObjectView *spot;
 @property (nonatomic, readonly) BOOL isDirectory;
 @property (nonatomic, readonly) unsigned objectIndex;
 

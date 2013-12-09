@@ -2,7 +2,7 @@
 
 #import "FileContentViewController.h"
 #import "ObjectShortcut.h"
-#import "SpotView.h"
+#import "SpotObjectView.h"
 
 //C++ (ROOT) imports.
 #import "FileUtils.h"
@@ -57,7 +57,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
       frame.origin = CGPointZero;
       frame.size.height = [ObjectShortcut iconHeight];
       
-      spot = [[SpotView alloc] initWithFrame : frame];
+      spot = [[SpotObjectView alloc] initWithFrame : frame];
       [self addSubview : spot];
 
       controller = c;
@@ -89,7 +89,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
       frame.origin = CGPointZero;
       frame.size.height = [ObjectShortcut iconHeight];
       
-      spot = [[SpotView alloc] initWithFrame : frame];
+      spot = [[SpotObjectView alloc] initWithFrame : frame];
       [self addSubview : spot];
    
       //ROOT's staff.

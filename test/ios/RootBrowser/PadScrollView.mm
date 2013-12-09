@@ -1,8 +1,8 @@
-#import <stdlib.h>
+#import <cmath>
 
 #import <QuartzCore/QuartzCore.h>
 
-#import "PadImageScrollView.h"
+#import "PadScrollView.h"
 #import "PadView.h"
 
 //C++ (ROOT) imports.
@@ -14,7 +14,7 @@ static const CGFloat defaultImageH = 700.f;
 static const CGFloat maxZoom = 2.f;
 static const CGFloat minZoom = 1.f;
 
-@implementation PadImageScrollView {
+@implementation PadScrollView {
    ROOT::iOS::Pad *pad;
 
    PadView *nestedView;
@@ -35,7 +35,7 @@ static const CGFloat minZoom = 1.f;
 //____________________________________________________________________________________________________
 - (void) initPadView : (CGRect)frame
 {
-   CGRect padFrame = [PadImageScrollView defaultImageFrame];
+   CGRect padFrame = [PadScrollView defaultImageFrame];
    padFrame.origin = [self adjustOriginForFrame : frame withSize : padFrame.size];
 
    nestedView = [[PadView alloc] initImmutableViewWithFrame : padFrame];
@@ -79,7 +79,7 @@ static const CGFloat minZoom = 1.f;
 //____________________________________________________________________________________________________
 - (void) clearScroll
 {
-   [self setContentSize : [PadImageScrollView defaultImageFrame].size contentOffset : CGPointZero minScale : minZoom maxScale : maxZoom scale : 1];
+   [self setContentSize : [PadScrollView defaultImageFrame].size contentOffset : CGPointZero minScale : minZoom maxScale : maxZoom scale : 1];
    [nestedView removeFromSuperview];
    nestedView = nil;
 }
@@ -141,20 +141,20 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)scrollViewDidZoom:(UIScrollView *)scroll
+- (void) scrollViewDidZoom : (UIScrollView *) scroll
 {
    nestedView.frame = [self centeredFrameForScrollView : scroll andUIView : nestedView];
 }
 
 //____________________________________________________________________________________________________
-- (void)scrollViewDidEndZooming : (UIScrollView *)scroll withView : (UIView *)view atScale : (float)scale
+- (void) scrollViewDidEndZooming : (UIScrollView *) scroll withView : (UIView *) view atScale : (float) scale
 {
    const CGPoint offset = [scroll contentOffset];
    const CGRect newFrame = nestedView.frame;
   
    [scroll setZoomScale : 1.f];
    
-   const unsigned base = [PadImageScrollView defaultImageFrame].size.width;
+   const unsigned base = [PadScrollView defaultImageFrame].size.width;
 
    scroll.minimumZoomScale = base / newFrame.size.width;
    scroll.maximumZoomScale = maxZoom * base / newFrame.size.width;
@@ -173,13 +173,14 @@ static const CGFloat minZoom = 1.f;
 }
 
 //____________________________________________________________________________________________________
-- (UIView *) viewForZoomingInScrollView:(UIScrollView *)scrollView
+- (UIView *) viewForZoomingInScrollView : (UIScrollView *) scrollView
 {
    return nestedView;
 }
 
 //____________________________________________________________________________________________________
-- (CGRect)zoomRectForScale:(float)scale withCenter:(CGPoint)center {
+- (CGRect) zoomRectForScale : (float) scale withCenter : (CGPoint) center
+{
     
     CGRect zoomRect;
     
@@ -200,7 +201,7 @@ static const CGFloat minZoom = 1.f;
 - (void) handleDoubleTap : (UITapGestureRecognizer *)tap
 {
    //Identify, if we should unzoom.
-   if (fabs(nestedView.frame.size.width - maxZoom * defaultImageW) < 10) {
+   if (std::abs(nestedView.frame.size.width - maxZoom * defaultImageW) < 10) {
       [self resetToFrame : self.frame];
    } else {
       //Zoom in.

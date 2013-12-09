@@ -2,9 +2,10 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#import "ScrollViewWithPadView.h"
+
 #import "ObjectViewController.h"
-#import "PadImageScrollView.h"
+#import "PadEditorScrollView.h"
+#import "PadScrollView.h"
 #import "TransparentToolbar.h"
 #import "PadSelectionView.h"
 #import "ObjectInspector.h"
@@ -36,7 +37,7 @@ enum Mode {
 }
 
 @implementation ObjectViewController {
-   __weak IBOutlet ScrollViewWithPadView *padScrollView;
+   __weak IBOutlet PadEditorScrollView *padScrollView;
    __weak IBOutlet UIScrollView *navigationScrollView;
 
    Mode mode;
@@ -52,7 +53,7 @@ enum Mode {
    
    BOOL zoomed;
    
-   PadImageScrollView *navScrolls[3];
+   PadScrollView *navScrolls[3];
 
    unsigned currentObject;
    unsigned nextObject;
@@ -469,7 +470,7 @@ enum Mode {
    
    CGRect scrollFrame = navigationScrollView.frame;
    scrollFrame.origin = CGPointZero;
-   navScrolls[0] = [[PadImageScrollView alloc] initWithFrame : scrollFrame];
+   navScrolls[0] = [[PadScrollView alloc] initWithFrame : scrollFrame];
    if (fileContainer->GetNumberOfObjects() == 1) {
       [navScrolls[0] setPad : fileContainer->GetPadAttached(currentObject)];
    } else {
@@ -481,13 +482,13 @@ enum Mode {
    if (fileContainer->GetNumberOfObjects() > 1) {
       //The [1] contains the current object.
       scrollFrame.origin.x = scrollFrame.size.width;
-      navScrolls[1] = [[PadImageScrollView alloc] initWithFrame : scrollFrame];
+      navScrolls[1] = [[PadScrollView alloc] initWithFrame : scrollFrame];
       [navScrolls[1] setPad : fileContainer->GetPadAttached(currentObject)];
       [navigationScrollView addSubview : navScrolls[1]];
       
       //The [2] contains the next object (can be the same as previous).
       scrollFrame.origin.x = scrollFrame.size.width * 2;
-      navScrolls[2] = [[PadImageScrollView alloc] initWithFrame : scrollFrame];
+      navScrolls[2] = [[PadScrollView alloc] initWithFrame : scrollFrame];
       [navScrolls[2] setPad : fileContainer->GetPadAttached(nextObject)];
       [navigationScrollView addSubview : navScrolls[2]];
       
@@ -643,9 +644,9 @@ enum Mode {
    currentObject + 1 < fileContainer->GetNumberOfObjects() ? ++currentObject : currentObject = 0;
    [self adjustPrevNextIndices];
    //Current is becoming prev, next is becoming current, load new into prev, which is becoming next.
-   PadImageScrollView *prevView = navScrolls[1];
-   PadImageScrollView *currentView = navScrolls[2];
-   PadImageScrollView *nextView = navScrolls[0];
+   PadScrollView *prevView = navScrolls[1];
+   PadScrollView *currentView = navScrolls[2];
+   PadScrollView *nextView = navScrolls[0];
    
    CGRect prevFrame = prevView.frame;
    prevFrame.origin = CGPointZero;
@@ -677,9 +678,9 @@ enum Mode {
    [self adjustPrevNextIndices];
    //Current is becoming next, prev - current, prev must be loaded.
  
-   PadImageScrollView *nextView = navScrolls[1];
-   PadImageScrollView *currView = navScrolls[0];
-   PadImageScrollView *prevView = navScrolls[2];
+   PadScrollView *nextView = navScrolls[1];
+   PadScrollView *currView = navScrolls[0];
+   PadScrollView *prevView = navScrolls[2];
 
    CGRect currFrame = currView.frame;
    currFrame.origin.x = navigationScrollView.frame.size.width;

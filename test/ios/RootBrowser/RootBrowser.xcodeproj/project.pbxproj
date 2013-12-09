@@ -36,9 +36,9 @@
 		702DDD1C1415FEA1009FC6F3 /* LineInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702DDD1A1415FEA1009FC6F3 /* LineInspector.xib */; };
 		702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */; };
 		70360B1A142C7AC6001F77E1 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70360B19142C7AC6001F77E1 /* MessageUI.framework */; };
-		7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadImageScrollView.mm */; };
+		7044980D1429D13D00E83799 /* PadScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
-		705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* ScrollViewWithPadView.mm */; };
+		705A503614066421004C1C8B /* PadEditorScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* PadEditorScrollView.mm */; };
 		706241D01435F86700202121 /* RangeSlider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706241CE1435F86700202121 /* RangeSlider.mm */; };
 		706241D51435F94500202121 /* bar-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D11435F94500202121 /* bar-background.png */; };
 		706241D61435F94500202121 /* bar-highlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D21435F94500202121 /* bar-highlight.png */; };
@@ -113,7 +113,7 @@
 		709594A213FE978C00B9E8B6 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 709594A113FE978C00B9E8B6 /* libz.dylib */; };
 		709594A513FE97AF00B9E8B6 /* system.rootrc in Resources */ = {isa = PBXBuildFile; fileRef = 709594A313FE97AF00B9E8B6 /* system.rootrc */; };
 		709594A613FE97AF00B9E8B6 /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 709594A413FE97AF00B9E8B6 /* system.plugins-ios */; };
-		70989EFD1473E73200515FC5 /* SpotView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70989EFC1473E73200515FC5 /* SpotView.mm */; };
+		70989EFD1473E73200515FC5 /* SpotObjectView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70989EFC1473E73200515FC5 /* SpotObjectView.mm */; };
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
 		70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67A1468162600514DC0 /* LineWidthCell.mm */; };
@@ -170,13 +170,13 @@
 		702DDD2714161789009FC6F3 /* InspectorWithNavigation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorWithNavigation.h; sourceTree = "<group>"; };
 		702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = InspectorWithNavigation.mm; sourceTree = "<group>"; };
 		70360B19142C7AC6001F77E1 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
-		7044980B1429D13D00E83799 /* PadImageScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadImageScrollView.h; sourceTree = "<group>"; };
-		7044980C1429D13D00E83799 /* PadImageScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadImageScrollView.mm; sourceTree = "<group>"; };
+		7044980B1429D13D00E83799 /* PadScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadScrollView.h; sourceTree = "<group>"; };
+		7044980C1429D13D00E83799 /* PadScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadScrollView.mm; sourceTree = "<group>"; };
 		704B5A211520CC8D00FEF9C8 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
 		7053E8B4143B076F001C364D /* MarkerStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkerStyleCell.h; sourceTree = "<group>"; };
 		7053E8B5143B076F001C364D /* MarkerStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MarkerStyleCell.mm; sourceTree = "<group>"; };
-		705A503414066421004C1C8B /* ScrollViewWithPadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPadView.h; sourceTree = "<group>"; };
-		705A503514066421004C1C8B /* ScrollViewWithPadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPadView.mm; sourceTree = "<group>"; };
+		705A503414066421004C1C8B /* PadEditorScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadEditorScrollView.h; sourceTree = "<group>"; };
+		705A503514066421004C1C8B /* PadEditorScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadEditorScrollView.mm; sourceTree = "<group>"; };
 		705F1A66142347CA003045D9 /* PadSlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSlideView.h; sourceTree = "<group>"; };
 		706241CE1435F86700202121 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
 		706241CF1435F86700202121 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
@@ -278,8 +278,8 @@
 		709594A113FE978C00B9E8B6 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		709594A313FE97AF00B9E8B6 /* system.rootrc */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.rootrc; path = ../../../etc/system.rootrc; sourceTree = "<group>"; };
 		709594A413FE97AF00B9E8B6 /* system.plugins-ios */ = {isa = PBXFileReference; lastKnownFileType = text; name = "system.plugins-ios"; path = "../../../etc/system.plugins-ios"; sourceTree = "<group>"; };
-		70989EFB1473E73200515FC5 /* SpotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpotView.h; sourceTree = "<group>"; };
-		70989EFC1473E73200515FC5 /* SpotView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SpotView.mm; sourceTree = "<group>"; };
+		70989EFB1473E73200515FC5 /* SpotObjectView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpotObjectView.h; sourceTree = "<group>"; };
+		70989EFC1473E73200515FC5 /* SpotObjectView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SpotObjectView.mm; sourceTree = "<group>"; };
 		709CD05214025148005B2AF4 /* demos.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = demos.root; sourceTree = "<group>"; };
 		709CD0961402768B005B2AF4 /* Shortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shortcuts.h; sourceTree = "<group>"; };
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
@@ -553,16 +553,16 @@
 				7014410E140E18390070459F /* PadSelectionView.mm */,
 				704B5A211520CC8D00FEF9C8 /* PadView.h */,
 				70249BDA1403D644006A19E6 /* PadView.mm */,
-				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
-				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,
+				705A503414066421004C1C8B /* PadEditorScrollView.h */,
+				705A503514066421004C1C8B /* PadEditorScrollView.mm */,
 				705F1A66142347CA003045D9 /* PadSlideView.h */,
 				70C1D67C1468166100514DC0 /* PadSlideView.mm */,
-				7044980B1429D13D00E83799 /* PadImageScrollView.h */,
-				7044980C1429D13D00E83799 /* PadImageScrollView.mm */,
+				7044980B1429D13D00E83799 /* PadScrollView.h */,
+				7044980C1429D13D00E83799 /* PadScrollView.mm */,
 				70E36B551472965E004AEB6A /* FileContainerElement.h */,
 				70E36B561472965E004AEB6A /* FileContainerElement.mm */,
-				70989EFB1473E73200515FC5 /* SpotView.h */,
-				70989EFC1473E73200515FC5 /* SpotView.mm */,
+				70989EFB1473E73200515FC5 /* SpotObjectView.h */,
+				70989EFC1473E73200515FC5 /* SpotObjectView.mm */,
 			);
 			name = Views;
 			sourceTree = "<group>";
@@ -793,7 +793,7 @@
 				7077908813FE96C300C0FFA1 /* ColorCell.mm in Sources */,
 				709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */,
 				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
-				705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */,
+				705A503614066421004C1C8B /* PadEditorScrollView.mm in Sources */,
 				70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */,
 				7014410F140E18390070459F /* PadSelectionView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
@@ -809,7 +809,7 @@
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,
 				7068FF24141A0EAF003560A1 /* AxisFontInspector.mm in Sources */,
 				7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */,
-				7044980D1429D13D00E83799 /* PadImageScrollView.mm in Sources */,
+				7044980D1429D13D00E83799 /* PadScrollView.mm in Sources */,
 				702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */,
 				702357E11434658900A95000 /* H1Inspector.mm in Sources */,
 				70235803143494F400A95000 /* MarkerInspector.mm in Sources */,
@@ -824,7 +824,7 @@
 				70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */,
 				70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */,
 				70E36B571472965E004AEB6A /* FileContainerElement.mm in Sources */,
-				70989EFD1473E73200515FC5 /* SpotView.mm in Sources */,
+				70989EFD1473E73200515FC5 /* SpotObjectView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

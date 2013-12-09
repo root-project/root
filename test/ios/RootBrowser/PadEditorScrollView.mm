@@ -1,7 +1,7 @@
-#import "ScrollViewWithPadView.h"
+#import "PadEditorScrollView.h"
 #import "PadView.h"
 
-@implementation ScrollViewWithPadView
+@implementation PadEditorScrollView
 
 //____________________________________________________________________________________________________
 - (UIView *) hitTest : (CGPoint) point withEvent : (UIEvent *)event
