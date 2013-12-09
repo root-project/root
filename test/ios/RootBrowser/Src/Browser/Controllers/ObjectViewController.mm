@@ -152,17 +152,6 @@ enum Mode {
 }
 
 //____________________________________________________________________________________________________
-- (void) viewDidAppear : (BOOL)animated
-{
-   [super viewDidAppear : animated];
-   
-   if (!viewDidAppear) {
-      viewDidAppear = YES;
-      //The code moved to viewWillAppear and viewDidLayout.
-   }
-}
-
-//____________________________________________________________________________________________________
 - (void) viewDidLayoutSubviews
 {
    [self correctFramesForOrientation : self.interfaceOrientation];
@@ -175,7 +164,7 @@ enum Mode {
    editBtn.title = mode == ocmEdit ? @"Done" : @"Edit";
 }
 
-#pragma mark - Initialization code, called from initWithNibname
+#pragma mark - Initialization code, called from viewDidLoad/viewWillAppear.
 
 //____________________________________________________________________________________________________
 - (void) loadObjectInspector
@@ -336,15 +325,7 @@ enum Mode {
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation duration : (NSTimeInterval) duration
@@ -359,6 +340,8 @@ enum Mode {
 #pragma unused(interfaceOrientation)
 	return YES;
 }
+
+#pragma mark - editor (object inspector) related methods.
 
 //____________________________________________________________________________________________________
 - (void) animateEditor
@@ -558,10 +541,9 @@ enum Mode {
 }
 
 //____________________________________________________________________________________________________
-- (CGRect)zoomRectForScale:(float)scale withCenter:(CGPoint)center {
-    
-    CGRect zoomRect;
-    
+- (CGRect) zoomRectForScale : (float) scale withCenter : (CGPoint) center
+{
+    CGRect zoomRect = {};
     // the zoom rect is in the content view's coordinates. 
     //    At a zoom scale of 1.0, it would be the size of the imageScrollView's bounds.
     //    As the zoom scale decreases, so more content is visible, the size of the rect grows.
@@ -613,10 +595,10 @@ enum Mode {
 #pragma mark - picking and editing.
 
 //____________________________________________________________________________________________________
-- (void) objectWasSelected : (TObject *)object
+- (void) objectWasSelected : (TObject *) object
 {
    if (object != selectedObject) {//New object was selected.
-      object ? selectedObject = object : (selectedObject = fileContainer->GetPadAttached(currentObject));
+      object ? selectedObject = object : selectedObject = fileContainer->GetPadAttached(currentObject);
       [self setupObjectInspector];
       [objectInspector resetInspector];
    }
@@ -726,8 +708,10 @@ enum Mode {
 #pragma mark - Save modified object as pdf and root files.
 
 //___________________________________________________________
-- (void) createPDFFileWithPage :(CGRect)pageRect fileName : (const char*)filename
-{	
+- (void) createPDFFileWithPage :(CGRect) pageRect fileName : (const char*) filename
+{
+   assert(filename != nullptr && "createPDFFileWithPage:fileName, parameter 'filename' is null");
+
 	CFStringRef path = CFStringCreateWithCString (NULL, filename, kCFStringEncodingUTF8);
 	CFURLRef url = CFURLCreateWithFileSystemPath (NULL, path, kCFURLPOSIXPathStyle, 0);
 	CFRelease(path);
@@ -766,32 +750,22 @@ enum Mode {
 //___________________________________________________________
 - (void) sendEmail
 {
-	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-	NSString *saveDirectory = [paths objectAtIndex : 0];
-   NSString *saveFileName = [NSString stringWithFormat:@"%s.pdf", fileContainer->GetObject(currentObject)->GetName()];
-	NSString *newFilePath = [saveDirectory stringByAppendingPathComponent : saveFileName];
+	NSArray * const paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+	NSString * const saveDirectory = [paths objectAtIndex : 0];
+   NSString * const saveFileName = [NSString stringWithFormat:@"%s.pdf", fileContainer->GetObject(currentObject)->GetName()];
+	NSString * const newFilePath = [saveDirectory stringByAppendingPathComponent : saveFileName];
 	const char *filename = [newFilePath UTF8String];
    
    [self createPDFFileWithPage: CGRectMake(0, 0, 600, 600) fileName : filename];
-//
-/*
-   NSString *rootFileName = [NSString stringWithFormat:@"%s.root", fileContainer->GetObject(currentObject)->GetName()];
-	NSString *rootFilePath = [saveDirectory stringByAppendingPathComponent : rootFileName];
-   const char *cFileName = [rootFilePath UTF8String];
-   TFile f(cFileName, "recreate");
-   f.cd();
-   fileContainer->GetObject(currentObject)->Write();
-*/
-//
 
-   MFMailComposeViewController * mailComposer = [[MFMailComposeViewController alloc] init];
+   MFMailComposeViewController * const mailComposer = [[MFMailComposeViewController alloc] init];
    [mailComposer setSubject:@"E-mail from ROOT's iPad"];
    [mailComposer setMessageBody : @"This is a test message sent to you by ROOT browser for iPad" isHTML : NO];
    mailComposer.mailComposeDelegate = self;
 
-   NSString *path = [NSString stringWithFormat : @"%s", filename];
+   NSString * const path = [NSString stringWithFormat : @"%s", filename];
    if ([[NSFileManager defaultManager] fileExistsAtPath : path]) {
-      NSData *myData = [NSData dataWithContentsOfFile : path];
+      NSData * const myData = [NSData dataWithContentsOfFile : path];
       [mailComposer addAttachmentData : myData mimeType : @"application/octet-stream" fileName : saveFileName];
    }
 
