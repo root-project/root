@@ -13,7 +13,7 @@ if(NOT WIN32)
   find_program(MYSQL_CONFIG_EXECUTABLE mysql_config
     /usr/bin/
     /usr/local/bin
-    $ENV{MYSQL_DIR}/bin
+    ${MYSQL_DIR}/bin $ENV{MYSQL_DIR}/bin 
   )
 endif()
 
@@ -22,6 +22,9 @@ if(MYSQL_CONFIG_EXECUTABLE)
   separate_arguments(MYSQL_CFLAGS)
   string( REGEX MATCH "-I[^;]+" MYSQL_INCLUDE_DIR "${MYSQL_CFLAGS}" )
   string( REPLACE "-I" "" MYSQL_INCLUDE_DIR "${MYSQL_INCLUDE_DIR}")
+  if(NOT EXISTS ${MYSQL_INCLUDE_DIR})
+    set(MYSQL_INCLUDE_DIR MYSQL_INCLUDE_DIR-NOTFOUND)
+  endif()
   string( REGEX REPLACE "-I[^;]+;" "" MYSQL_CFLAGS "${MYSQL_CFLAGS}" )
   execute_process(COMMAND ${MYSQL_CONFIG_EXECUTABLE} --libs OUTPUT_VARIABLE MYSQL_LIBRARIES OUTPUT_STRIP_TRAILING_WHITESPACE)
 else()
@@ -41,28 +44,10 @@ else()
   set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
 endif()
 
-if(MYSQL_INCLUDE_DIR AND MYSQL_LIBRARIES)
-  set(MYSQL_FOUND TRUE)
-  if(WIN32)
-    string(REPLACE mysqlclient libmysql libmysql ${MYSQL_LIBRARY})
-    set(MYSQL_LIBRARIES ${libmysql} ${MYSQL_LIBRARIES})
-  endif()
-else()
-  set(MYSQL_FOUND FALSE)
-  set(MYSQL_LIBRARIES )
-endif()
-
-if(MYSQL_FOUND)
-  if(NOT MYSQL_FIND_QUIETLY)
-    message(STATUS "Found MySQL libraries: ${MYSQL_LIBRARIES}")
-    message(STATUS "Found MySQL includes: ${MYSQL_INCLUDE_DIR}")
-  endif()
-else()
-  if(MYSQL_FIND_REQUIRED)
-    message(STATUS "Looked for MySQL libraries named ${MYSQL_NAMES}.")
-    message(FATAL_ERROR "Could NOT find MySQL library")
-  endif()
-endif()
+# handle the QUIETLY and REQUIRED arguments and set DCAP_FOUND to TRUE if
+# all listed variables are TRUE
+INCLUDE(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(MYSQL DEFAULT_MSG MYSQL_INCLUDE_DIR MYSQL_LIBRARIES)
 
 mark_as_advanced(
   MYSQL_CONFIG_EXECUTABLE

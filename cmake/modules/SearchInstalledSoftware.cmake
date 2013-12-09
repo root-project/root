@@ -664,6 +664,22 @@ if(builtin_ftgl)
   set(FTGL_LIBRARIES FTGL)
 endif()
 
+#---Check for DavIx library-----------------------------------------------------------
+if(davix)
+  set(DAVIX_VERSION 0.2.7)
+  message(STATUS "Downloading and building Davix version ${DAVIX_VERSION}")
+    ExternalProject_Add(
+      DAVIX
+      URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-${DAVIX_VERSION}.tar.gz
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    )
+    set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/davix)
+    set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/lib64 -ldavix)
+    set(DAVIX_INCLUDE_DIRS ${DAVIX_INCLUDE_DIR})
+    set(DAVIX_LIBRARIES ${DAVIX_LIBRARY})
+endif()
+
 
 #---Report non implemented options---------------------------------------------------
 foreach(opt afs chirp clarens glite hdfs pch peac sapdb srp)
