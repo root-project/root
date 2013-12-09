@@ -268,7 +268,12 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                              -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${CMAKE_CURRENT_BINARY_DIR}/${rootmap_name} DESTINATION lib COMPONENT libraries)
+  get_filename_component(dictname ${dictionary} NAME)
+  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
+  set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} DESTINATION lib COMPONENT libraries)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${CMAKE_CURRENT_BINARY_DIR}/${rootmap_name} 
+                DESTINATION ${LIB_INSTALL_DIR} COMPONENT libraries)
 endfunction()
 
 
@@ -434,6 +439,7 @@ endmacro()
 #---ROOT_GENERATE_ROOTMAP( library LINKDEF linkdef LIBRRARY lib DEPENDENCIES lib1 lib2 )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_ROOTMAP library)
+  return()   #--- No needed anymore
   CMAKE_PARSE_ARGUMENTS(ARG "" "LIBRARY" "LINKDEF;DEPENDENCIES" ${ARGN})
   get_filename_component(libname ${library} NAME_WE)
   get_filename_component(path ${library} PATH)

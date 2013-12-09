@@ -19,7 +19,8 @@ add_custom_command(TARGET rootcling POST_BUILD
                    COMMAND ln -f ../../bin/rootcling ../../bin/genreflex)
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
-                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx )
+                   COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx
+                   DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
 set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOTBUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx 
                               src/TModuleGenerator.cxx rootcling_tmp.cxx

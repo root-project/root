@@ -76,13 +76,14 @@ endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 #---Global PCH-----------------------------------------------------------------------------------
+get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h
-                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/genonepcm.sh ${CMAKE_SOURCE_DIR}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/genonepcm.sh)
+                   COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${CMAKE_SOURCE_DIR} '*'
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allTargets})
 get_property(__include_dirs GLOBAL PROPERTY ROOT_INCLUDE_DIRS)
 list(REMOVE_DUPLICATES __include_dirs)
-set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
+set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
 foreach(incdir ${__include_dirs})
   set(__cxxflags ${__cxxflags} -I${incdir})
 endforeach()

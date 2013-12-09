@@ -19,8 +19,8 @@ fi
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
 
 for dict in `find $modules -name 'G__*.cxx' | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
-    dirname=`dirname $dict` # to get foo/inc
-    dirname=`dirname $dirname` # to get foo
+    dirname=`dirname $dict`                   # to get foo/src
+    dirname=`echo $dirname | sed 's,/src$,,'` # to get foo
     awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> cppflags.txt
     echo "// $dict" >> all.h
     awk 'BEGIN{START=-1} /payloadCode =/, /^;$/ { if (START==-1) START=NR; else if ($1 != ";") { code=substr($0,2); sub(/\\n"/,"",code); print code } }' $dict >> all.h
@@ -52,6 +52,11 @@ mv alldefs.h include/allLinkDef.h
 
 cxxflags="-D_LIBCPP_EXTERN_TEMPLATE(...)= -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling `cat cppflags.txt | sort | uniq`"
 #rm cppflags.txt
+
+# check if rootcling_tmp exists in the expected location (not the case for CMake builds)
+if [ ! -x core/utils/src/rootcling_tmp ]; then
+  exit 0
+fi
 
 # generate one large pcm
 rm -f allDict.* lib/allDict_rdict.pc*

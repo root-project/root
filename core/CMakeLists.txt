@@ -62,7 +62,7 @@ endforeach()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/textinput/src)
 
-ROOT_GENERATE_DICTIONARY(G__Core
+ROOT_GENERATE_DICTIONARY(base/G__Core
                          ${Base_dict_headers}
                          ${Clib_dict_headers}
                          ${Cont_dict_headers}
@@ -78,7 +78,7 @@ ROOT_GENERATE_DICTIONARY(G__Core
 
 ROOT_GENERATE_ROOTMAP(Core LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/base/inc/LinkDef.h)
 
-ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} G__Core.cxx
+ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} base/G__Core.cxx
                     $<TARGET_OBJECTS:Base>
                     $<TARGET_OBJECTS:Clib>
                     $<TARGET_OBJECTS:Cont>
