@@ -66,6 +66,8 @@
 		7068FF2B141A2F6A003560A1 /* text_cell_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF2A141A2F6A003560A1 /* text_cell_bkn.png */; };
 		7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */; };
 		7068FF32141A3944003560A1 /* AxisLabelsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */; };
+		706EA5431855F5290043AAA6 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5401855F5290043AAA6 /* main.mm */; };
+		706EA5441855F5290043AAA6 /* root_browserAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */; };
 		7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */; };
 		7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */; };
 		7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A27C14177A03001A0FE2 /* AxisInspector.mm */; };
@@ -84,8 +86,6 @@
 		7077902013FE50EB00C0FFA1 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7077901F13FE50EB00C0FFA1 /* Foundation.framework */; };
 		7077902213FE50EB00C0FFA1 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7077902113FE50EB00C0FFA1 /* CoreGraphics.framework */; };
 		7077902813FE50EB00C0FFA1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7077902613FE50EB00C0FFA1 /* InfoPlist.strings */; };
-		7077902B13FE50EB00C0FFA1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7077902A13FE50EB00C0FFA1 /* main.m */; };
-		7077902E13FE50EB00C0FFA1 /* root_browserAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077902D13FE50EB00C0FFA1 /* root_browserAppDelegate.mm */; };
 		7077903113FE50EB00C0FFA1 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077902F13FE50EB00C0FFA1 /* MainWindow.xib */; };
 		7077903A13FE51B400C0FFA1 /* FileCollectionViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077903813FE51B400C0FFA1 /* FileCollectionViewController.mm */; };
 		7077903B13FE51B400C0FFA1 /* RootFileController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077903913FE51B400C0FFA1 /* RootFileController.xib */; };
@@ -213,6 +213,9 @@
 		7068FF2E141A3943003560A1 /* AxisLabelsInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisLabelsInspector.h; sourceTree = "<group>"; };
 		7068FF2F141A3943003560A1 /* AxisLabelsInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisLabelsInspector.mm; sourceTree = "<group>"; };
 		7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisLabelsInspector.xib; sourceTree = "<group>"; };
+		706EA5401855F5290043AAA6 /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		706EA5411855F5290043AAA6 /* root_browserAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = root_browserAppDelegate.h; sourceTree = "<group>"; };
+		706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = root_browserAppDelegate.mm; sourceTree = "<group>"; };
 		7073A272141757BB001A0FE2 /* AxisTicksInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisTicksInspector.h; sourceTree = "<group>"; };
 		7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = AxisTicksInspector.mm; sourceTree = "<group>"; };
 		7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisTicksInspector.xib; sourceTree = "<group>"; };
@@ -237,9 +240,6 @@
 		7077902513FE50EB00C0FFA1 /* root_browser-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "root_browser-Info.plist"; sourceTree = "<group>"; };
 		7077902713FE50EB00C0FFA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7077902913FE50EB00C0FFA1 /* RootBrowser-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RootBrowser-Prefix.pch"; sourceTree = "<group>"; };
-		7077902A13FE50EB00C0FFA1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		7077902C13FE50EB00C0FFA1 /* root_browserAppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = root_browserAppDelegate.h; sourceTree = "<group>"; };
-		7077902D13FE50EB00C0FFA1 /* root_browserAppDelegate.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = root_browserAppDelegate.mm; sourceTree = "<group>"; };
 		7077903013FE50EB00C0FFA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainWindow.xib; sourceTree = "<group>"; };
 		7077903713FE51B400C0FFA1 /* FileCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileCollectionViewController.h; sourceTree = "<group>"; };
 		7077903813FE51B400C0FFA1 /* FileCollectionViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileCollectionViewController.mm; sourceTree = "<group>"; };
@@ -330,9 +330,28 @@
 			name = "Custom controls";
 			sourceTree = "<group>";
 		};
+		706EA53E1855F5290043AAA6 /* Src */ = {
+			isa = PBXGroup;
+			children = (
+				706EA53F1855F5290043AAA6 /* Core */,
+			);
+			path = Src;
+			sourceTree = "<group>";
+		};
+		706EA53F1855F5290043AAA6 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				706EA5401855F5290043AAA6 /* main.mm */,
+				706EA5411855F5290043AAA6 /* root_browserAppDelegate.h */,
+				706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
 		7077900E13FE50EB00C0FFA1 = {
 			isa = PBXGroup;
 			children = (
+				706EA53E1855F5290043AAA6 /* Src */,
 				706241CC1435F84400202121 /* Custom controls */,
 				70E0B5E31414E4B80077E4A8 /* General */,
 				70E0B5D81414E2B50077E4A8 /* Top level view controllers */,
@@ -367,8 +386,6 @@
 		7077902313FE50EB00C0FFA1 /* root_browser */ = {
 			isa = PBXGroup;
 			children = (
-				7077902C13FE50EB00C0FFA1 /* root_browserAppDelegate.h */,
-				7077902D13FE50EB00C0FFA1 /* root_browserAppDelegate.mm */,
 				7077902F13FE50EB00C0FFA1 /* MainWindow.xib */,
 				7077902413FE50EB00C0FFA1 /* Supporting Files */,
 			);
@@ -381,7 +398,6 @@
 				7077902513FE50EB00C0FFA1 /* root_browser-Info.plist */,
 				7077902613FE50EB00C0FFA1 /* InfoPlist.strings */,
 				7077902913FE50EB00C0FFA1 /* RootBrowser-Prefix.pch */,
-				7077902A13FE50EB00C0FFA1 /* main.m */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -778,8 +794,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7077902B13FE50EB00C0FFA1 /* main.m in Sources */,
-				7077902E13FE50EB00C0FFA1 /* root_browserAppDelegate.mm in Sources */,
 				7077903A13FE51B400C0FFA1 /* FileCollectionViewController.mm in Sources */,
 				7077903F13FE549300C0FFA1 /* FileContentViewController.mm in Sources */,
 				7077904313FE554E00C0FFA1 /* FileShortcutView.mm in Sources */,
@@ -790,6 +804,7 @@
 				7077908013FE96C300C0FFA1 /* ScrollViewWithPickers.mm in Sources */,
 				7077908113FE96C300C0FFA1 /* EditorPlateView.mm in Sources */,
 				7077908713FE96C300C0FFA1 /* PatternCell.mm in Sources */,
+				706EA5431855F5290043AAA6 /* main.mm in Sources */,
 				7077908813FE96C300C0FFA1 /* ColorCell.mm in Sources */,
 				709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */,
 				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
@@ -819,6 +834,7 @@
 				702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */,
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
 				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
+				706EA5441855F5290043AAA6 /* root_browserAppDelegate.mm in Sources */,
 				70C1D67D1468166100514DC0 /* PadSlideView.mm in Sources */,
 				70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */,
 				70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */,
