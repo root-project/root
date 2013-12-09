@@ -1,7 +1,7 @@
 #import <cassert>
 
 #import "FileContentViewController.h"
-#import "ObjectShortcut.h"
+#import "ObjectShortcutView.h"
 #import "SpotObjectView.h"
 
 //C++ (ROOT) imports.
@@ -10,7 +10,7 @@
 
 const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 
-@implementation ObjectShortcut  {
+@implementation ObjectShortcutView  {
    __weak FileContentViewController *controller;
    
    NSString *objectName;
@@ -42,7 +42,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 //____________________________________________________________________________________________________
 + (CGRect) defaultRect
 {
-   return CGRectMake(0.f, 0.f, [ObjectShortcut iconWidth], [ObjectShortcut iconHeight] + [ObjectShortcut textHeight]);
+   return CGRectMake(0.f, 0.f, [ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]);
 }
 
 //____________________________________________________________________________________________________
@@ -55,7 +55,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
    
    if (self = [super initWithFrame : frame]) {
       frame.origin = CGPointZero;
-      frame.size.height = [ObjectShortcut iconHeight];
+      frame.size.height = [ObjectShortcutView iconHeight];
       
       spot = [[SpotObjectView alloc] initWithFrame : frame];
       [self addSubview : spot];
@@ -87,7 +87,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 
    if (self = [super initWithFrame : frame]) {
       frame.origin = CGPointZero;
-      frame.size.height = [ObjectShortcut iconHeight];
+      frame.size.height = [ObjectShortcutView iconHeight];
       
       spot = [[SpotObjectView alloc] initWithFrame : frame];
       [self addSubview : spot];
@@ -116,7 +116,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 {
    if (isDirectory) {
       //Directory's icon is 128 x 128 < than thumbnail.
-      CGPoint topLeft = CGPointMake([ObjectShortcut iconWidth] / 2 - folderIconSize.width / 2, [ObjectShortcut iconHeight] / 2 - folderIconSize.height / 2);
+      CGPoint topLeft = CGPointMake([ObjectShortcutView iconWidth] / 2 - folderIconSize.width / 2, [ObjectShortcutView iconHeight] / 2 - folderIconSize.height / 2);
       [icon drawAtPoint : topLeft];   
    } else
       [icon drawAtPoint : CGPoint()];
@@ -129,7 +129,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
    NSDictionary * const attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle,
                                        NSForegroundColorAttributeName : [UIColor whiteColor]};
    //
-   const CGRect textRect = CGRectMake(0.f, [ObjectShortcut iconHeight], [ObjectShortcut iconWidth], [ObjectShortcut textHeight]);
+   const CGRect textRect = CGRectMake(0.f, [ObjectShortcutView iconHeight], [ObjectShortcutView iconWidth], [ObjectShortcutView textHeight]);
    [objectName drawInRect : textRect withAttributes : attributes];
 }
 

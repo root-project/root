@@ -3,7 +3,7 @@
 #import "SearchViewController.h"
 
 @class FileContainerElement;
-@class ObjectShortcut;
+@class ObjectShortcutView;
 
 namespace ROOT {
 namespace iOS {
@@ -25,7 +25,7 @@ class FileContainer;
 @property (nonatomic, readonly) ROOT::iOS::Browser::FileContainer *fileContainer;
 
 - (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;
-- (void) selectObjectFromFile : (ObjectShortcut *)obj;
+- (void) selectObjectFromFile : (ObjectShortcutView *)obj;
 
 - (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key;
 

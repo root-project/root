@@ -6,8 +6,8 @@
 #import "ObjectViewController.h"
 #import "FileContainerElement.h"
 #import "TransparentToolbar.h"
+#import "ObjectShortcutView.h"
 #import "SpotObjectView.h"
-#import "ObjectShortcut.h"
 #import "Shortcuts.h"
 
 //C++ imports.
@@ -103,7 +103,7 @@
    scrollView.frame = scrollFrame;
    
    if ([[scrollView subviews] count])
-      [ShorcutUtil placeShortcuts : objectShortcuts inScrollView : scrollView withSize : CGSizeMake([ObjectShortcut iconWidth], [ObjectShortcut iconHeight] + [ObjectShortcut textHeight]) andSpace : 100.f];
+      [ShorcutUtil placeShortcuts : objectShortcuts inScrollView : scrollView withSize : CGSizeMake([ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]) andSpace : 100.f];
 }
 
 //____________________________________________________________________________________________________
@@ -181,7 +181,7 @@
 //____________________________________________________________________________________________________
 - (void) addShortcutForObjectAtIndex : (unsigned) objIndex
 {
-   const CGRect rect = CGRectMake(0.f, 0.f, [ObjectShortcut iconWidth], [ObjectShortcut iconHeight]);
+   const CGRect rect = CGRectMake(0.f, 0.f, [ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight]);
    UIGraphicsBeginImageContext(rect.size);
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    if (!ctx) {
@@ -206,7 +206,8 @@
    UIImage *thumbnailImage = UIGraphicsGetImageFromCurrentImageContext();//autoreleased UIImage.
    UIGraphicsEndImageContext();
        
-   ObjectShortcut *shortcut = [[ObjectShortcut alloc] initWithFrame : [ObjectShortcut defaultRect] controller : self forObjectAtIndex:objIndex withThumbnail : thumbnailImage];
+   ObjectShortcutView * const shortcut = [[ObjectShortcutView alloc] initWithFrame : [ObjectShortcutView defaultRect]
+                                          controller : self forObjectAtIndex : objIndex withThumbnail : thumbnailImage];
    shortcut.layer.shadowColor = [UIColor blackColor].CGColor;
    shortcut.layer.shadowOffset = CGSizeMake(20.f, 20.f);
    shortcut.layer.shadowOpacity = 0.3f;
@@ -221,7 +222,8 @@
 //____________________________________________________________________________________________________
 - (void) addShortcutForFolderAtIndex : (unsigned) index
 {
-   ObjectShortcut *shortcut = [[ObjectShortcut alloc] initWithFrame : [ObjectShortcut defaultRect] controller : self forFolderAtIndex : index];
+   ObjectShortcutView * const shortcut = [[ObjectShortcutView alloc] initWithFrame : [ObjectShortcutView defaultRect]
+                                          controller : self forFolderAtIndex : index];
    [scrollView addSubview : shortcut];
    [objectShortcuts addObject : shortcut];
 }
@@ -272,7 +274,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) selectObjectFromFile : (ObjectShortcut *) shortcut
+- (void) selectObjectFromFile : (ObjectShortcutView *) shortcut
 {
    if (shortcut.isDirectory) {
       //Create another FileContentController and push it on stack.
@@ -385,7 +387,7 @@
 #pragma mark - adjust file container to show search result
 
 //____________________________________________________________________________________________________
-- (void) animateShortcut : (ObjectShortcut *) sh
+- (void) animateShortcut : (ObjectShortcutView *) sh
 {
    CGAffineTransform originalTransform = sh.transform;
    CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.2f, 1.2f);
@@ -410,7 +412,7 @@
 //____________________________________________________________________________________________________
 - (void) highlightDirectory : (unsigned)tag
 {
-   for (ObjectShortcut *sh in objectShortcuts) {
+   for (ObjectShortcutView *sh in objectShortcuts) {
       if (sh.objectIndex == tag && sh.isDirectory) {
          const CGRect thumbFrame = sh.frame;
          const CGRect scrollBounds = scrollView.bounds;
@@ -433,7 +435,7 @@
 //____________________________________________________________________________________________________
 - (void) highlightObject : (unsigned)tag
 {
-   for (ObjectShortcut *sh in objectShortcuts) {
+   for (ObjectShortcutView *sh in objectShortcuts) {
       if (sh.objectIndex == tag && !sh.isDirectory) {
          CGRect thumbFrame = sh.frame;
          const CGRect scrollBounds = scrollView.bounds;

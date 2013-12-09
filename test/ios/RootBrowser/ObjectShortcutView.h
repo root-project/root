@@ -3,7 +3,7 @@
 @class FileContentViewController;
 @class SpotObjectView;
 
-@interface ObjectShortcut : UIView
+@interface ObjectShortcutView : UIView
 
 @property (nonatomic, readonly) SpotObjectView *spot;
 @property (nonatomic, readonly) BOOL isDirectory;

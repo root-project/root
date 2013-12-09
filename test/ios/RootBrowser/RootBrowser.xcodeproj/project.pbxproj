@@ -97,7 +97,7 @@
 		7077905E13FE840000C0FFA1 /* SlideshowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077905C13FE840000C0FFA1 /* SlideshowController.xib */; };
 		7077906213FE847600C0FFA1 /* ObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906013FE847600C0FFA1 /* ObjectViewController.mm */; };
 		7077906313FE847600C0FFA1 /* ROOTObjectController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077906113FE847600C0FFA1 /* ROOTObjectController.xib */; };
-		7077906613FE87D000C0FFA1 /* ObjectShortcut.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */; };
+		7077906613FE87D000C0FFA1 /* ObjectShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */; };
 		7077907E13FE96C300C0FFA1 /* EditorView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906B13FE96C200C0FFA1 /* EditorView.mm */; };
 		7077908013FE96C300C0FFA1 /* ScrollViewWithPickers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906E13FE96C200C0FFA1 /* ScrollViewWithPickers.mm */; };
 		7077908113FE96C300C0FFA1 /* EditorPlateView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906F13FE96C200C0FFA1 /* EditorPlateView.mm */; };
@@ -256,8 +256,8 @@
 		7077905F13FE847600C0FFA1 /* ObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectViewController.h; sourceTree = "<group>"; };
 		7077906013FE847600C0FFA1 /* ObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectViewController.mm; sourceTree = "<group>"; };
 		7077906113FE847600C0FFA1 /* ROOTObjectController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ROOTObjectController.xib; sourceTree = "<group>"; };
-		7077906413FE87D000C0FFA1 /* ObjectShortcut.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectShortcut.h; sourceTree = "<group>"; };
-		7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectShortcut.mm; sourceTree = "<group>"; };
+		7077906413FE87D000C0FFA1 /* ObjectShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectShortcutView.h; sourceTree = "<group>"; };
+		7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectShortcutView.mm; sourceTree = "<group>"; };
 		7077906B13FE96C200C0FFA1 /* EditorView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EditorView.mm; sourceTree = "<group>"; };
 		7077906C13FE96C200C0FFA1 /* EditorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorView.h; sourceTree = "<group>"; };
 		7077906E13FE96C200C0FFA1 /* ScrollViewWithPickers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPickers.mm; sourceTree = "<group>"; };
@@ -547,8 +547,8 @@
 			children = (
 				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
 				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
-				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
-				7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */,
+				7077906413FE87D000C0FFA1 /* ObjectShortcutView.h */,
+				7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */,
 				7014410D140E18390070459F /* PadSelectionView.h */,
 				7014410E140E18390070459F /* PadSelectionView.mm */,
 				704B5A211520CC8D00FEF9C8 /* PadView.h */,
@@ -785,7 +785,7 @@
 				7077904313FE554E00C0FFA1 /* FileShortcut.mm in Sources */,
 				7077905D13FE840000C0FFA1 /* SlideshowViewController.mm in Sources */,
 				7077906213FE847600C0FFA1 /* ObjectViewController.mm in Sources */,
-				7077906613FE87D000C0FFA1 /* ObjectShortcut.mm in Sources */,
+				7077906613FE87D000C0FFA1 /* ObjectShortcutView.mm in Sources */,
 				7077907E13FE96C300C0FFA1 /* EditorView.mm in Sources */,
 				7077908013FE96C300C0FFA1 /* ScrollViewWithPickers.mm in Sources */,
 				7077908113FE96C300C0FFA1 /* EditorPlateView.mm in Sources */,

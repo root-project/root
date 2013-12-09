@@ -1,15 +1,15 @@
-#import <stdlib.h>
+#import <cmath>
 
 #import <QuartzCore/QuartzCore.h>
 
 
 #import "ObjectViewController.h"
 #import "PadEditorScrollView.h"
-#import "PadScrollView.h"
+#import "ObjectShortcutView.h"
 #import "TransparentToolbar.h"
 #import "PadSelectionView.h"
 #import "ObjectInspector.h"
-#import "ObjectShortcut.h"
+#import "PadScrollView.h"
 #import "EditorView.h"
 #import "Constants.h"
 #import "PadView.h"
@@ -573,7 +573,7 @@ enum Mode {
 
    BOOL scaleToMax = YES;
    
-   if (fabs(editablePadView.frame.size.width - padW * maximumZoom) < scaledToMaxEpsilon)
+   if (std::abs(editablePadView.frame.size.width - padW * maximumZoom) < scaledToMaxEpsilon)
       scaleToMax = NO;
 
    if (scaleToMax) {
