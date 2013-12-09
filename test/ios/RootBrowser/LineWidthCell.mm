@@ -1,19 +1,19 @@
-#import <CoreGraphics/CGContext.h>
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "LineWidthCell.h"
-
 
 @implementation LineWidthCell {
    CGFloat lineWidth;
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame width : (CGFloat)w
+- (id) initWithFrame : (CGRect) frame width : (CGFloat) w
 {
-   self = [super initWithFrame:frame];
+   assert(w >= 0.f && "initWithFrame:width:, parameter 'w' is negative");
 
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       lineWidth = w;
       
       self.layer.shadowOpacity = 0.4f;
@@ -47,8 +47,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setLineWidth : (CGFloat)width
+- (void) setLineWidth : (CGFloat) width
 {
+   assert(lineWidth > 0.f && "setLineWidth:, parameter 'width' must be a positive number");
+
    lineWidth = width;
 }
 

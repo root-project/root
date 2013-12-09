@@ -1,4 +1,5 @@
-#import <CoreGraphics/CGContext.h>
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
 //C++ (ROOT) imports.
@@ -39,7 +40,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    rect.origin.x = 10.f;
    rect.origin.y = 10.f;
@@ -53,6 +54,10 @@
    CGContextFillRect(ctx, rect);
 
    if (!solid) { //Solid fill - no pattern.
+      //TODO: check results (CG API calls)???
+      assert(patternIndex < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns &&
+             "drawRect:, patternIndex is out of bounds");
+   
       float rgb[] = {0.f, 0.f, 0.f};
       CGPatternRef pattern = ROOT::iOS::GraphicUtils::gPatternGenerators[patternIndex](rgb);
    

@@ -1,3 +1,5 @@
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "ColorCell.h"
@@ -7,11 +9,9 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame
+- (id) initWithFrame : (CGRect) frame
 {
-   self = [super initWithFrame:frame];
-   
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       self.backgroundColor = [UIColor clearColor];
       self.layer.shadowColor = [UIColor darkGrayColor].CGColor;
       self.layer.shadowOffset = CGSizeMake(4.f, 4.f);
@@ -30,13 +30,15 @@
 //____________________________________________________________________________________________________
 - (void) setRGB : (const double *) newRgb
 {
+   assert(newRgb != nullptr && "setRGN:, parameter 'newRgb' is null");
+
    rgb[0] = newRgb[0];
    rgb[1] = newRgb[1];
    rgb[2] = newRgb[2];
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    if (!ctx) {

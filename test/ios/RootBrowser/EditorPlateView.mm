@@ -25,7 +25,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame:(CGRect)frame editorName : (NSString *)name topView : (EditorView *) tv
+- (id)initWithFrame : (CGRect) frame editorName : (NSString *) name topView : (EditorView *) tv
 {
    self = [super initWithFrame:frame];
 
@@ -59,7 +59,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect : (CGRect)rect
+- (void) drawRect : (CGRect)rect
 {
    [plateImage drawAtPoint : CGPointZero];
    //Draw the triangle.

@@ -1,5 +1,3 @@
-#import <CoreGraphics/CGContext.h>
-
 #import "MarkerStyleCell.h"
 
 #import "IOSMarkers.h"
@@ -22,7 +20,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect : (CGRect)rect
+- (void) drawRect : (CGRect)rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    

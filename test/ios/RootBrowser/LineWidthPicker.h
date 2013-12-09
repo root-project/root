@@ -2,6 +2,6 @@
 
 @interface LineWidthPicker : UIView
 
-- (void) setLineWidth : (float)width;
+- (void) setLineWidth : (float) width;
 
 @end

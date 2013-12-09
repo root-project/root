@@ -4,6 +4,6 @@
 
 @interface MarkerStyleCell : UIView
 
-- (id) initWithFrame : (CGRect)frame andMarkerStyle : (EMarkerStyle)style;
+- (id) initWithFrame : (CGRect) frame andMarkerStyle : (EMarkerStyle) style;
 
 @end

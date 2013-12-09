@@ -1,5 +1,4 @@
 #import <QuartzCore/QuartzCore.h>
-#import <CoreGraphics/CGContext.h>
 
 #import "LineStyleCell.h"
 
@@ -29,7 +28,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    
