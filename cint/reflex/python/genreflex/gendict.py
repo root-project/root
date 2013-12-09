@@ -319,7 +319,7 @@ class genDictionary(object) :
       f = name.find(tdname)
       if f != -1 :
         g = f + len(tdname)
-        if (f == 0 or name[f-1] in notname) and (g == len(tdname) or name[g] in notname) :
+        if (f == 0 or name[f-1] in notname) and (g == len(name) or name[g] in notname) :
           defname = self.genTypeName(td['type'])
           if defname[len(defname)-1] == '>' : defname += ' '
           name = self.resolveTypedefName(name.replace(tdname, defname, 1))
