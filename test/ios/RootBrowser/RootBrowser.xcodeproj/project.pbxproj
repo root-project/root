@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70078C2C146AC4C400C19F4D /* FileUtils.cxx */; };
 		700ED6CB146BCDF200526D1C /* directory.png in Resources */ = {isa = PBXBuildFile; fileRef = 700ED6CA146BCDF100526D1C /* directory.png */; };
-		7014410F140E18390070459F /* PadSelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* PadSelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
 		702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702357D914345C0A00A95000 /* H1ErrorsInspector.mm */; };
@@ -23,11 +22,9 @@
 		7023580B1434ACC700A95000 /* h1_errors_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023580A1434ACC700A95000 /* h1_errors_tab.png */; };
 		7023580D1434B48C00A95000 /* h1_tab.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023580C1434B48C00A95000 /* h1_tab.png */; };
 		7023805E140514C8002A5331 /* file_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 7023805D140514C8002A5331 /* file_icon.png */; };
-		70249BDC1403D644006A19E6 /* PadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70249BDA1403D644006A19E6 /* PadView.mm */; };
 		70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70252F7A140CDD8D00F3660F /* Constants.cxx */; };
 		702BB9D714482E2200D3842F /* picker_arrow.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D514482E2200D3842F /* picker_arrow.png */; };
 		702BB9D814482E2200D3842F /* picker_frame_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9D614482E2200D3842F /* picker_frame_bkn.png */; };
-		702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702BB9DA14482E3C00D3842F /* HorizontalPickerView.mm */; };
 		702BB9E01448559A00D3842F /* line_width_bkn.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9DF1448559A00D3842F /* line_width_bkn.png */; };
 		702BB9E21448584E00D3842F /* dec_line_width.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9E11448584E00D3842F /* dec_line_width.png */; };
 		702BB9E414485E4200D3842F /* inc_line_width.png in Resources */ = {isa = PBXBuildFile; fileRef = 702BB9E314485E4200D3842F /* inc_line_width.png */; };
@@ -36,10 +33,7 @@
 		702DDD1C1415FEA1009FC6F3 /* LineInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 702DDD1A1415FEA1009FC6F3 /* LineInspector.xib */; };
 		702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */; };
 		70360B1A142C7AC6001F77E1 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70360B19142C7AC6001F77E1 /* MessageUI.framework */; };
-		7044980D1429D13D00E83799 /* PadScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7044980C1429D13D00E83799 /* PadScrollView.mm */; };
 		7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7053E8B5143B076F001C364D /* MarkerStyleCell.mm */; };
-		705A503614066421004C1C8B /* PadEditorScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 705A503514066421004C1C8B /* PadEditorScrollView.mm */; };
-		706241D01435F86700202121 /* RangeSlider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706241CE1435F86700202121 /* RangeSlider.mm */; };
 		706241D51435F94500202121 /* bar-background.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D11435F94500202121 /* bar-background.png */; };
 		706241D61435F94500202121 /* bar-highlight.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D21435F94500202121 /* bar-highlight.png */; };
 		706241D71435F94500202121 /* handle-hover.png in Resources */ = {isa = PBXBuildFile; fileRef = 706241D31435F94500202121 /* handle-hover.png */; };
@@ -68,6 +62,24 @@
 		7068FF32141A3944003560A1 /* AxisLabelsInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7068FF30141A3944003560A1 /* AxisLabelsInspector.xib */; };
 		706EA5431855F5290043AAA6 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5401855F5290043AAA6 /* main.mm */; };
 		706EA5441855F5290043AAA6 /* root_browserAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */; };
+		706EA55D1855F6DA0043AAA6 /* HorizontalPickerView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5561855F6DA0043AAA6 /* HorizontalPickerView.mm */; };
+		706EA55E1855F6DA0043AAA6 /* RangeSlider.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5581855F6DA0043AAA6 /* RangeSlider.mm */; };
+		706EA55F1855F6DA0043AAA6 /* ScrollViewWithPickers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA55A1855F6DA0043AAA6 /* ScrollViewWithPickers.mm */; };
+		706EA5601855F6DA0043AAA6 /* TransparentToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 706EA55C1855F6DA0043AAA6 /* TransparentToolbar.m */; };
+		706EA5741855F7E50043AAA6 /* FileShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5651855F7E50043AAA6 /* FileShortcutView.mm */; };
+		706EA5751855F7E50043AAA6 /* ObjectShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5671855F7E50043AAA6 /* ObjectShortcutView.mm */; };
+		706EA5761855F7E50043AAA6 /* PadEditorScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5691855F7E50043AAA6 /* PadEditorScrollView.mm */; };
+		706EA5771855F7E50043AAA6 /* PadScrollView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA56B1855F7E50043AAA6 /* PadScrollView.mm */; };
+		706EA5781855F7E50043AAA6 /* PadSelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA56D1855F7E50043AAA6 /* PadSelectionView.mm */; };
+		706EA5791855F7E50043AAA6 /* PadSlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA56F1855F7E50043AAA6 /* PadSlideView.mm */; };
+		706EA57A1855F7E50043AAA6 /* PadView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5711855F7E50043AAA6 /* PadView.mm */; };
+		706EA57B1855F7E50043AAA6 /* SpotObjectView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5731855F7E50043AAA6 /* SpotObjectView.mm */; };
+		706EA57E1855F8570043AAA6 /* FileContainerElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA57D1855F8570043AAA6 /* FileContainerElement.mm */; };
+		706EA5891855F8CC0043AAA6 /* FileCollectionViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA57F1855F8CC0043AAA6 /* FileCollectionViewController.mm */; };
+		706EA58A1855F8CC0043AAA6 /* FileContentViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5811855F8CC0043AAA6 /* FileContentViewController.mm */; };
+		706EA58B1855F8CC0043AAA6 /* ObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */; };
+		706EA58C1855F8CC0043AAA6 /* SlideshowViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */; };
+		706EA58D1855F8CC0043AAA6 /* SearchViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5861855F8CC0043AAA6 /* SearchViewController.mm */; };
 		7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */; };
 		7073A276141757BC001A0FE2 /* AxisTicksInspector.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */; };
 		7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7073A27C14177A03001A0FE2 /* AxisInspector.mm */; };
@@ -87,19 +99,12 @@
 		7077902213FE50EB00C0FFA1 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7077902113FE50EB00C0FFA1 /* CoreGraphics.framework */; };
 		7077902813FE50EB00C0FFA1 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 7077902613FE50EB00C0FFA1 /* InfoPlist.strings */; };
 		7077903113FE50EB00C0FFA1 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077902F13FE50EB00C0FFA1 /* MainWindow.xib */; };
-		7077903A13FE51B400C0FFA1 /* FileCollectionViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077903813FE51B400C0FFA1 /* FileCollectionViewController.mm */; };
 		7077903B13FE51B400C0FFA1 /* RootFileController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077903913FE51B400C0FFA1 /* RootFileController.xib */; };
-		7077903F13FE549300C0FFA1 /* FileContentViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077903D13FE549300C0FFA1 /* FileContentViewController.mm */; };
 		7077904013FE549300C0FFA1 /* FileContentController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077903E13FE549300C0FFA1 /* FileContentController.xib */; };
-		7077904313FE554E00C0FFA1 /* FileShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077904213FE554E00C0FFA1 /* FileShortcutView.mm */; };
 		7077905113FE6B8F00C0FFA1 /* file_shortcut_background.png in Resources */ = {isa = PBXBuildFile; fileRef = 7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */; };
-		7077905D13FE840000C0FFA1 /* SlideshowViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077905B13FE840000C0FFA1 /* SlideshowViewController.mm */; };
 		7077905E13FE840000C0FFA1 /* SlideshowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077905C13FE840000C0FFA1 /* SlideshowController.xib */; };
-		7077906213FE847600C0FFA1 /* ObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906013FE847600C0FFA1 /* ObjectViewController.mm */; };
 		7077906313FE847600C0FFA1 /* ROOTObjectController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077906113FE847600C0FFA1 /* ROOTObjectController.xib */; };
-		7077906613FE87D000C0FFA1 /* ObjectShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */; };
 		7077907E13FE96C300C0FFA1 /* EditorView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906B13FE96C200C0FFA1 /* EditorView.mm */; };
-		7077908013FE96C300C0FFA1 /* ScrollViewWithPickers.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906E13FE96C200C0FFA1 /* ScrollViewWithPickers.mm */; };
 		7077908113FE96C300C0FFA1 /* EditorPlateView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077906F13FE96C200C0FFA1 /* EditorPlateView.mm */; };
 		7077908713FE96C300C0FFA1 /* PatternCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077907913FE96C300C0FFA1 /* PatternCell.mm */; };
 		7077908813FE96C300C0FFA1 /* ColorCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077907B13FE96C300C0FFA1 /* ColorCell.mm */; };
@@ -113,25 +118,18 @@
 		709594A213FE978C00B9E8B6 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 709594A113FE978C00B9E8B6 /* libz.dylib */; };
 		709594A513FE97AF00B9E8B6 /* system.rootrc in Resources */ = {isa = PBXBuildFile; fileRef = 709594A313FE97AF00B9E8B6 /* system.rootrc */; };
 		709594A613FE97AF00B9E8B6 /* system.plugins-ios in Resources */ = {isa = PBXBuildFile; fileRef = 709594A413FE97AF00B9E8B6 /* system.plugins-ios */; };
-		70989EFD1473E73200515FC5 /* SpotObjectView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70989EFC1473E73200515FC5 /* SpotObjectView.mm */; };
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
 		70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67A1468162600514DC0 /* LineWidthCell.mm */; };
-		70C1D67D1468166100514DC0 /* PadSlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67C1468166100514DC0 /* PadSlideView.mm */; };
 		70E0B62114150F630077E4A8 /* back_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B62014150F630077E4A8 /* back_btn.png */; };
 		70E0B624141510880077E4A8 /* forward_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B623141510880077E4A8 /* forward_btn.png */; };
 		70E16B091455CBC00050C281 /* app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E16B081455CBC00050C281 /* app_icon.png */; };
-		70E36B571472965E004AEB6A /* FileContainerElement.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70E36B561472965E004AEB6A /* FileContainerElement.mm */; };
-		70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */ = {isa = PBXBuildFile; fileRef = 70E4FE5114715ABD00296BFF /* TransparentToolbar.m */; };
-		70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70E4FE5A1471685700296BFF /* SearchViewController.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		70078C2B146AC4C400C19F4D /* FileUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtils.h; sourceTree = "<group>"; };
 		70078C2C146AC4C400C19F4D /* FileUtils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cxx; sourceTree = "<group>"; };
 		700ED6CA146BCDF100526D1C /* directory.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = directory.png; sourceTree = "<group>"; };
-		7014410D140E18390070459F /* PadSelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSelectionView.h; sourceTree = "<group>"; };
-		7014410E140E18390070459F /* PadSelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSelectionView.mm; sourceTree = "<group>"; };
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
 		7014411F140E3F1D0070459F /* LineStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineStyleCell.mm; sourceTree = "<group>"; };
 		70144121140E3F320070459F /* LineWidthCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineWidthCell.h; sourceTree = "<group>"; };
@@ -151,13 +149,10 @@
 		7023580A1434ACC700A95000 /* h1_errors_tab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = h1_errors_tab.png; sourceTree = "<group>"; };
 		7023580C1434B48C00A95000 /* h1_tab.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = h1_tab.png; sourceTree = "<group>"; };
 		7023805D140514C8002A5331 /* file_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = file_icon.png; sourceTree = "<group>"; };
-		70249BDA1403D644006A19E6 /* PadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadView.mm; sourceTree = "<group>"; };
 		70252F7A140CDD8D00F3660F /* Constants.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Constants.cxx; sourceTree = "<group>"; };
 		70252F7B140CDD8D00F3660F /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		702BB9D514482E2200D3842F /* picker_arrow.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_arrow.png; sourceTree = "<group>"; };
 		702BB9D614482E2200D3842F /* picker_frame_bkn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = picker_frame_bkn.png; sourceTree = "<group>"; };
-		702BB9DA14482E3C00D3842F /* HorizontalPickerView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HorizontalPickerView.mm; sourceTree = "<group>"; };
-		702BB9DB14482E3C00D3842F /* HorizontalPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerView.h; sourceTree = "<group>"; };
 		702BB9DF1448559A00D3842F /* line_width_bkn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = line_width_bkn.png; sourceTree = "<group>"; };
 		702BB9E11448584E00D3842F /* dec_line_width.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = dec_line_width.png; sourceTree = "<group>"; };
 		702BB9E314485E4200D3842F /* inc_line_width.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = inc_line_width.png; sourceTree = "<group>"; };
@@ -170,16 +165,8 @@
 		702DDD2714161789009FC6F3 /* InspectorWithNavigation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InspectorWithNavigation.h; sourceTree = "<group>"; };
 		702DDD2814161789009FC6F3 /* InspectorWithNavigation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = InspectorWithNavigation.mm; sourceTree = "<group>"; };
 		70360B19142C7AC6001F77E1 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
-		7044980B1429D13D00E83799 /* PadScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadScrollView.h; sourceTree = "<group>"; };
-		7044980C1429D13D00E83799 /* PadScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadScrollView.mm; sourceTree = "<group>"; };
-		704B5A211520CC8D00FEF9C8 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
 		7053E8B4143B076F001C364D /* MarkerStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MarkerStyleCell.h; sourceTree = "<group>"; };
 		7053E8B5143B076F001C364D /* MarkerStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MarkerStyleCell.mm; sourceTree = "<group>"; };
-		705A503414066421004C1C8B /* PadEditorScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadEditorScrollView.h; sourceTree = "<group>"; };
-		705A503514066421004C1C8B /* PadEditorScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadEditorScrollView.mm; sourceTree = "<group>"; };
-		705F1A66142347CA003045D9 /* PadSlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSlideView.h; sourceTree = "<group>"; };
-		706241CE1435F86700202121 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
-		706241CF1435F86700202121 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
 		706241D11435F94500202121 /* bar-background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bar-background.png"; sourceTree = "<group>"; };
 		706241D21435F94500202121 /* bar-highlight.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bar-highlight.png"; sourceTree = "<group>"; };
 		706241D31435F94500202121 /* handle-hover.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "handle-hover.png"; sourceTree = "<group>"; };
@@ -216,6 +203,43 @@
 		706EA5401855F5290043AAA6 /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		706EA5411855F5290043AAA6 /* root_browserAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = root_browserAppDelegate.h; sourceTree = "<group>"; };
 		706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = root_browserAppDelegate.mm; sourceTree = "<group>"; };
+		706EA5541855F6DA0043AAA6 /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
+		706EA5551855F6DA0043AAA6 /* HorizontalPickerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerView.h; sourceTree = "<group>"; };
+		706EA5561855F6DA0043AAA6 /* HorizontalPickerView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HorizontalPickerView.mm; sourceTree = "<group>"; };
+		706EA5571855F6DA0043AAA6 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
+		706EA5581855F6DA0043AAA6 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
+		706EA5591855F6DA0043AAA6 /* ScrollViewWithPickers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPickers.h; sourceTree = "<group>"; };
+		706EA55A1855F6DA0043AAA6 /* ScrollViewWithPickers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPickers.mm; sourceTree = "<group>"; };
+		706EA55B1855F6DA0043AAA6 /* TransparentToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransparentToolbar.h; sourceTree = "<group>"; };
+		706EA55C1855F6DA0043AAA6 /* TransparentToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransparentToolbar.m; sourceTree = "<group>"; };
+		706EA5641855F7E50043AAA6 /* FileShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileShortcutView.h; sourceTree = "<group>"; };
+		706EA5651855F7E50043AAA6 /* FileShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileShortcutView.mm; sourceTree = "<group>"; };
+		706EA5661855F7E50043AAA6 /* ObjectShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectShortcutView.h; sourceTree = "<group>"; };
+		706EA5671855F7E50043AAA6 /* ObjectShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectShortcutView.mm; sourceTree = "<group>"; };
+		706EA5681855F7E50043AAA6 /* PadEditorScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadEditorScrollView.h; sourceTree = "<group>"; };
+		706EA5691855F7E50043AAA6 /* PadEditorScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadEditorScrollView.mm; sourceTree = "<group>"; };
+		706EA56A1855F7E50043AAA6 /* PadScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadScrollView.h; sourceTree = "<group>"; };
+		706EA56B1855F7E50043AAA6 /* PadScrollView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadScrollView.mm; sourceTree = "<group>"; };
+		706EA56C1855F7E50043AAA6 /* PadSelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSelectionView.h; sourceTree = "<group>"; };
+		706EA56D1855F7E50043AAA6 /* PadSelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSelectionView.mm; sourceTree = "<group>"; };
+		706EA56E1855F7E50043AAA6 /* PadSlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSlideView.h; sourceTree = "<group>"; };
+		706EA56F1855F7E50043AAA6 /* PadSlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSlideView.mm; sourceTree = "<group>"; };
+		706EA5701855F7E50043AAA6 /* PadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadView.h; sourceTree = "<group>"; };
+		706EA5711855F7E50043AAA6 /* PadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadView.mm; sourceTree = "<group>"; };
+		706EA5721855F7E50043AAA6 /* SpotObjectView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpotObjectView.h; sourceTree = "<group>"; };
+		706EA5731855F7E50043AAA6 /* SpotObjectView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SpotObjectView.mm; sourceTree = "<group>"; };
+		706EA57C1855F8570043AAA6 /* FileContainerElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContainerElement.h; sourceTree = "<group>"; };
+		706EA57D1855F8570043AAA6 /* FileContainerElement.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContainerElement.mm; sourceTree = "<group>"; };
+		706EA57F1855F8CC0043AAA6 /* FileCollectionViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileCollectionViewController.mm; sourceTree = "<group>"; };
+		706EA5801855F8CC0043AAA6 /* FileCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileCollectionViewController.h; sourceTree = "<group>"; };
+		706EA5811855F8CC0043AAA6 /* FileContentViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContentViewController.mm; sourceTree = "<group>"; };
+		706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectViewController.mm; sourceTree = "<group>"; };
+		706EA5831855F8CC0043AAA6 /* FileContentViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContentViewController.h; sourceTree = "<group>"; };
+		706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideshowViewController.mm; sourceTree = "<group>"; };
+		706EA5851855F8CC0043AAA6 /* SearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchViewController.h; sourceTree = "<group>"; };
+		706EA5861855F8CC0043AAA6 /* SearchViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchViewController.mm; sourceTree = "<group>"; };
+		706EA5871855F8CC0043AAA6 /* SlideshowViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowViewController.h; sourceTree = "<group>"; };
+		706EA5881855F8CC0043AAA6 /* ObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectViewController.h; sourceTree = "<group>"; };
 		7073A272141757BB001A0FE2 /* AxisTicksInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisTicksInspector.h; sourceTree = "<group>"; };
 		7073A273141757BB001A0FE2 /* AxisTicksInspector.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 4; path = AxisTicksInspector.mm; sourceTree = "<group>"; };
 		7073A274141757BB001A0FE2 /* AxisTicksInspector.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = AxisTicksInspector.xib; sourceTree = "<group>"; };
@@ -241,28 +265,14 @@
 		7077902713FE50EB00C0FFA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		7077902913FE50EB00C0FFA1 /* RootBrowser-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "RootBrowser-Prefix.pch"; sourceTree = "<group>"; };
 		7077903013FE50EB00C0FFA1 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/MainWindow.xib; sourceTree = "<group>"; };
-		7077903713FE51B400C0FFA1 /* FileCollectionViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileCollectionViewController.h; sourceTree = "<group>"; };
-		7077903813FE51B400C0FFA1 /* FileCollectionViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileCollectionViewController.mm; sourceTree = "<group>"; };
 		7077903913FE51B400C0FFA1 /* RootFileController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = RootFileController.xib; sourceTree = "<group>"; };
-		7077903C13FE549300C0FFA1 /* FileContentViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContentViewController.h; sourceTree = "<group>"; };
-		7077903D13FE549300C0FFA1 /* FileContentViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContentViewController.mm; sourceTree = "<group>"; };
 		7077903E13FE549300C0FFA1 /* FileContentController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FileContentController.xib; sourceTree = "<group>"; };
-		7077904113FE554E00C0FFA1 /* FileShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileShortcutView.h; sourceTree = "<group>"; };
-		7077904213FE554E00C0FFA1 /* FileShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileShortcutView.mm; sourceTree = "<group>"; };
 		7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = file_shortcut_background.png; sourceTree = "<group>"; };
-		7077905A13FE840000C0FFA1 /* SlideshowViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowViewController.h; sourceTree = "<group>"; };
-		7077905B13FE840000C0FFA1 /* SlideshowViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideshowViewController.mm; sourceTree = "<group>"; };
 		7077905C13FE840000C0FFA1 /* SlideshowController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SlideshowController.xib; sourceTree = "<group>"; };
-		7077905F13FE847600C0FFA1 /* ObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectViewController.h; sourceTree = "<group>"; };
-		7077906013FE847600C0FFA1 /* ObjectViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectViewController.mm; sourceTree = "<group>"; };
 		7077906113FE847600C0FFA1 /* ROOTObjectController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ROOTObjectController.xib; sourceTree = "<group>"; };
-		7077906413FE87D000C0FFA1 /* ObjectShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectShortcutView.h; sourceTree = "<group>"; };
-		7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ObjectShortcutView.mm; sourceTree = "<group>"; };
 		7077906B13FE96C200C0FFA1 /* EditorView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EditorView.mm; sourceTree = "<group>"; };
 		7077906C13FE96C200C0FFA1 /* EditorView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorView.h; sourceTree = "<group>"; };
-		7077906E13FE96C200C0FFA1 /* ScrollViewWithPickers.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPickers.mm; sourceTree = "<group>"; };
 		7077906F13FE96C200C0FFA1 /* EditorPlateView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EditorPlateView.mm; sourceTree = "<group>"; };
-		7077907013FE96C200C0FFA1 /* ScrollViewWithPickers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPickers.h; sourceTree = "<group>"; };
 		7077907713FE96C200C0FFA1 /* EditorPlateView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EditorPlateView.h; sourceTree = "<group>"; };
 		7077907913FE96C300C0FFA1 /* PatternCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PatternCell.mm; sourceTree = "<group>"; };
 		7077907A13FE96C300C0FFA1 /* PatternCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PatternCell.h; sourceTree = "<group>"; };
@@ -278,23 +288,13 @@
 		709594A113FE978C00B9E8B6 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		709594A313FE97AF00B9E8B6 /* system.rootrc */ = {isa = PBXFileReference; lastKnownFileType = text; name = system.rootrc; path = ../../../etc/system.rootrc; sourceTree = "<group>"; };
 		709594A413FE97AF00B9E8B6 /* system.plugins-ios */ = {isa = PBXFileReference; lastKnownFileType = text; name = "system.plugins-ios"; path = "../../../etc/system.plugins-ios"; sourceTree = "<group>"; };
-		70989EFB1473E73200515FC5 /* SpotObjectView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SpotObjectView.h; sourceTree = "<group>"; };
-		70989EFC1473E73200515FC5 /* SpotObjectView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SpotObjectView.mm; sourceTree = "<group>"; };
 		709CD05214025148005B2AF4 /* demos.root */ = {isa = PBXFileReference; lastKnownFileType = file; path = demos.root; sourceTree = "<group>"; };
 		709CD0961402768B005B2AF4 /* Shortcuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Shortcuts.h; sourceTree = "<group>"; };
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
-		70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
 		70C1D67A1468162600514DC0 /* LineWidthCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineWidthCell.mm; sourceTree = "<group>"; };
-		70C1D67C1468166100514DC0 /* PadSlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSlideView.mm; sourceTree = "<group>"; };
 		70E0B62014150F630077E4A8 /* back_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back_btn.png; sourceTree = "<group>"; };
 		70E0B623141510880077E4A8 /* forward_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = forward_btn.png; sourceTree = "<group>"; };
 		70E16B081455CBC00050C281 /* app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = app_icon.png; sourceTree = "<group>"; };
-		70E36B551472965E004AEB6A /* FileContainerElement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContainerElement.h; sourceTree = "<group>"; };
-		70E36B561472965E004AEB6A /* FileContainerElement.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContainerElement.mm; sourceTree = "<group>"; };
-		70E4FE5014715ABD00296BFF /* TransparentToolbar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransparentToolbar.h; sourceTree = "<group>"; };
-		70E4FE5114715ABD00296BFF /* TransparentToolbar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TransparentToolbar.m; sourceTree = "<group>"; };
-		70E4FE591471685700296BFF /* SearchViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SearchViewController.h; sourceTree = "<group>"; };
-		70E4FE5A1471685700296BFF /* SearchViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchViewController.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -319,20 +319,11 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		706241CC1435F84400202121 /* Custom controls */ = {
-			isa = PBXGroup;
-			children = (
-				706241CE1435F86700202121 /* RangeSlider.mm */,
-				706241CF1435F86700202121 /* RangeSlider.h */,
-				70E4FE5014715ABD00296BFF /* TransparentToolbar.h */,
-				70E4FE5114715ABD00296BFF /* TransparentToolbar.m */,
-			);
-			name = "Custom controls";
-			sourceTree = "<group>";
-		};
 		706EA53E1855F5290043AAA6 /* Src */ = {
 			isa = PBXGroup;
 			children = (
+				706EA5611855F7E50043AAA6 /* Browser */,
+				706EA5531855F6DA0043AAA6 /* CustomUI */,
 				706EA53F1855F5290043AAA6 /* Core */,
 			);
 			path = Src;
@@ -348,11 +339,77 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
+		706EA5531855F6DA0043AAA6 /* CustomUI */ = {
+			isa = PBXGroup;
+			children = (
+				706EA5541855F6DA0043AAA6 /* HorizontalPickerDelegate.h */,
+				706EA5551855F6DA0043AAA6 /* HorizontalPickerView.h */,
+				706EA5561855F6DA0043AAA6 /* HorizontalPickerView.mm */,
+				706EA5571855F6DA0043AAA6 /* RangeSlider.h */,
+				706EA5581855F6DA0043AAA6 /* RangeSlider.mm */,
+				706EA5591855F6DA0043AAA6 /* ScrollViewWithPickers.h */,
+				706EA55A1855F6DA0043AAA6 /* ScrollViewWithPickers.mm */,
+				706EA55B1855F6DA0043AAA6 /* TransparentToolbar.h */,
+				706EA55C1855F6DA0043AAA6 /* TransparentToolbar.m */,
+			);
+			path = CustomUI;
+			sourceTree = "<group>";
+		};
+		706EA5611855F7E50043AAA6 /* Browser */ = {
+			isa = PBXGroup;
+			children = (
+				706EA57C1855F8570043AAA6 /* FileContainerElement.h */,
+				706EA57D1855F8570043AAA6 /* FileContainerElement.mm */,
+				706EA5621855F7E50043AAA6 /* Controllers */,
+				706EA5631855F7E50043AAA6 /* Views */,
+			);
+			path = Browser;
+			sourceTree = "<group>";
+		};
+		706EA5621855F7E50043AAA6 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				706EA57F1855F8CC0043AAA6 /* FileCollectionViewController.mm */,
+				706EA5801855F8CC0043AAA6 /* FileCollectionViewController.h */,
+				706EA5811855F8CC0043AAA6 /* FileContentViewController.mm */,
+				706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */,
+				706EA5831855F8CC0043AAA6 /* FileContentViewController.h */,
+				706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */,
+				706EA5851855F8CC0043AAA6 /* SearchViewController.h */,
+				706EA5861855F8CC0043AAA6 /* SearchViewController.mm */,
+				706EA5871855F8CC0043AAA6 /* SlideshowViewController.h */,
+				706EA5881855F8CC0043AAA6 /* ObjectViewController.h */,
+			);
+			path = Controllers;
+			sourceTree = "<group>";
+		};
+		706EA5631855F7E50043AAA6 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				706EA5641855F7E50043AAA6 /* FileShortcutView.h */,
+				706EA5651855F7E50043AAA6 /* FileShortcutView.mm */,
+				706EA5661855F7E50043AAA6 /* ObjectShortcutView.h */,
+				706EA5671855F7E50043AAA6 /* ObjectShortcutView.mm */,
+				706EA5681855F7E50043AAA6 /* PadEditorScrollView.h */,
+				706EA5691855F7E50043AAA6 /* PadEditorScrollView.mm */,
+				706EA56A1855F7E50043AAA6 /* PadScrollView.h */,
+				706EA56B1855F7E50043AAA6 /* PadScrollView.mm */,
+				706EA56C1855F7E50043AAA6 /* PadSelectionView.h */,
+				706EA56D1855F7E50043AAA6 /* PadSelectionView.mm */,
+				706EA56E1855F7E50043AAA6 /* PadSlideView.h */,
+				706EA56F1855F7E50043AAA6 /* PadSlideView.mm */,
+				706EA5701855F7E50043AAA6 /* PadView.h */,
+				706EA5711855F7E50043AAA6 /* PadView.mm */,
+				706EA5721855F7E50043AAA6 /* SpotObjectView.h */,
+				706EA5731855F7E50043AAA6 /* SpotObjectView.mm */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
 		7077900E13FE50EB00C0FFA1 = {
 			isa = PBXGroup;
 			children = (
 				706EA53E1855F5290043AAA6 /* Src */,
-				706241CC1435F84400202121 /* Custom controls */,
 				70E0B5E31414E4B80077E4A8 /* General */,
 				70E0B5D81414E2B50077E4A8 /* Top level view controllers */,
 				70E0B5D41414E0F10077E4A8 /* Object Inspector */,
@@ -483,7 +540,6 @@
 				70235801143494F400A95000 /* MarkerInspector.mm */,
 				702358051434A93B00A95000 /* H1BinsInspector.h */,
 				702358061434A93B00A95000 /* H1BinsInspector.mm */,
-				70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */,
 			);
 			name = "Classes and protocols";
 			sourceTree = "<group>";
@@ -512,8 +568,6 @@
 		70E0B5D81414E2B50077E4A8 /* Top level view controllers */ = {
 			isa = PBXGroup;
 			children = (
-				70E0B5DE1414E3FC0077E4A8 /* Views */,
-				70E0B5DB1414E2FD0077E4A8 /* Classes */,
 				70E0B5DA1414E2F00077E4A8 /* xibs */,
 				70E0B5D91414E2E00077E4A8 /* Icons and pictures */,
 			);
@@ -541,55 +595,9 @@
 			name = xibs;
 			sourceTree = "<group>";
 		};
-		70E0B5DB1414E2FD0077E4A8 /* Classes */ = {
-			isa = PBXGroup;
-			children = (
-				70E4FE591471685700296BFF /* SearchViewController.h */,
-				70E4FE5A1471685700296BFF /* SearchViewController.mm */,
-				7077905F13FE847600C0FFA1 /* ObjectViewController.h */,
-				7077906013FE847600C0FFA1 /* ObjectViewController.mm */,
-				7077903713FE51B400C0FFA1 /* FileCollectionViewController.h */,
-				7077903813FE51B400C0FFA1 /* FileCollectionViewController.mm */,
-				7077903C13FE549300C0FFA1 /* FileContentViewController.h */,
-				7077903D13FE549300C0FFA1 /* FileContentViewController.mm */,
-				7077905A13FE840000C0FFA1 /* SlideshowViewController.h */,
-				7077905B13FE840000C0FFA1 /* SlideshowViewController.mm */,
-			);
-			name = Classes;
-			sourceTree = "<group>";
-		};
-		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
-			isa = PBXGroup;
-			children = (
-				7077904113FE554E00C0FFA1 /* FileShortcutView.h */,
-				7077904213FE554E00C0FFA1 /* FileShortcutView.mm */,
-				7077906413FE87D000C0FFA1 /* ObjectShortcutView.h */,
-				7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */,
-				7014410D140E18390070459F /* PadSelectionView.h */,
-				7014410E140E18390070459F /* PadSelectionView.mm */,
-				704B5A211520CC8D00FEF9C8 /* PadView.h */,
-				70249BDA1403D644006A19E6 /* PadView.mm */,
-				705A503414066421004C1C8B /* PadEditorScrollView.h */,
-				705A503514066421004C1C8B /* PadEditorScrollView.mm */,
-				705F1A66142347CA003045D9 /* PadSlideView.h */,
-				70C1D67C1468166100514DC0 /* PadSlideView.mm */,
-				7044980B1429D13D00E83799 /* PadScrollView.h */,
-				7044980C1429D13D00E83799 /* PadScrollView.mm */,
-				70E36B551472965E004AEB6A /* FileContainerElement.h */,
-				70E36B561472965E004AEB6A /* FileContainerElement.mm */,
-				70989EFB1473E73200515FC5 /* SpotObjectView.h */,
-				70989EFC1473E73200515FC5 /* SpotObjectView.mm */,
-			);
-			name = Views;
-			sourceTree = "<group>";
-		};
 		70E0B5E11414E4710077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				702BB9DA14482E3C00D3842F /* HorizontalPickerView.mm */,
-				702BB9DB14482E3C00D3842F /* HorizontalPickerView.h */,
-				7077906E13FE96C200C0FFA1 /* ScrollViewWithPickers.mm */,
-				7077907013FE96C200C0FFA1 /* ScrollViewWithPickers.h */,
 				7077906B13FE96C200C0FFA1 /* EditorView.mm */,
 				7077906C13FE96C200C0FFA1 /* EditorView.h */,
 				70144121140E3F320070459F /* LineWidthCell.h */,
@@ -794,53 +802,53 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7077903A13FE51B400C0FFA1 /* FileCollectionViewController.mm in Sources */,
-				7077903F13FE549300C0FFA1 /* FileContentViewController.mm in Sources */,
-				7077904313FE554E00C0FFA1 /* FileShortcutView.mm in Sources */,
-				7077905D13FE840000C0FFA1 /* SlideshowViewController.mm in Sources */,
-				7077906213FE847600C0FFA1 /* ObjectViewController.mm in Sources */,
-				7077906613FE87D000C0FFA1 /* ObjectShortcutView.mm in Sources */,
+				706EA5761855F7E50043AAA6 /* PadEditorScrollView.mm in Sources */,
+				706EA55D1855F6DA0043AAA6 /* HorizontalPickerView.mm in Sources */,
+				706EA58A1855F8CC0043AAA6 /* FileContentViewController.mm in Sources */,
+				706EA55F1855F6DA0043AAA6 /* ScrollViewWithPickers.mm in Sources */,
 				7077907E13FE96C300C0FFA1 /* EditorView.mm in Sources */,
-				7077908013FE96C300C0FFA1 /* ScrollViewWithPickers.mm in Sources */,
 				7077908113FE96C300C0FFA1 /* EditorPlateView.mm in Sources */,
 				7077908713FE96C300C0FFA1 /* PatternCell.mm in Sources */,
 				706EA5431855F5290043AAA6 /* main.mm in Sources */,
+				706EA5741855F7E50043AAA6 /* FileShortcutView.mm in Sources */,
+				706EA58C1855F8CC0043AAA6 /* SlideshowViewController.mm in Sources */,
 				7077908813FE96C300C0FFA1 /* ColorCell.mm in Sources */,
+				706EA5771855F7E50043AAA6 /* PadScrollView.mm in Sources */,
+				706EA57E1855F8570043AAA6 /* FileContainerElement.mm in Sources */,
 				709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */,
-				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
-				705A503614066421004C1C8B /* PadEditorScrollView.mm in Sources */,
+				706EA55E1855F6DA0043AAA6 /* RangeSlider.mm in Sources */,
 				70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */,
-				7014410F140E18390070459F /* PadSelectionView.mm in Sources */,
+				706EA5601855F6DA0043AAA6 /* TransparentToolbar.m in Sources */,
+				706EA5791855F7E50043AAA6 /* PadSlideView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
+				706EA5891855F8CC0043AAA6 /* FileCollectionViewController.mm in Sources */,
 				702DDD1B1415FEA1009FC6F3 /* LineInspector.mm in Sources */,
 				702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */,
+				706EA58D1855F8CC0043AAA6 /* SearchViewController.mm in Sources */,
 				70681C0D1416365900F8338A /* PadInspector.mm in Sources */,
+				706EA58B1855F8CC0043AAA6 /* ObjectViewController.mm in Sources */,
 				70681C1514163D3F00F8338A /* PadTicksGridInspector.mm in Sources */,
 				70681C1914163F0C00F8338A /* PadLogScaleInspector.mm in Sources */,
 				70681C1E1416474000F8338A /* FilledAreaInspector.mm in Sources */,
+				706EA57A1855F7E50043AAA6 /* PadView.mm in Sources */,
 				70681C221416586D00F8338A /* ObjectInspector.mm in Sources */,
 				7073A275141757BC001A0FE2 /* AxisTicksInspector.mm in Sources */,
 				7073A27E14177A03001A0FE2 /* AxisInspector.mm in Sources */,
 				7073A2871417AA10001A0FE2 /* AxisTitleInspector.mm in Sources */,
 				7068FF24141A0EAF003560A1 /* AxisFontInspector.mm in Sources */,
 				7068FF31141A3944003560A1 /* AxisLabelsInspector.mm in Sources */,
-				7044980D1429D13D00E83799 /* PadScrollView.mm in Sources */,
 				702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */,
 				702357E11434658900A95000 /* H1Inspector.mm in Sources */,
+				706EA5781855F7E50043AAA6 /* PadSelectionView.mm in Sources */,
 				70235803143494F400A95000 /* MarkerInspector.mm in Sources */,
 				702358081434A93C00A95000 /* H1BinsInspector.mm in Sources */,
-				706241D01435F86700202121 /* RangeSlider.mm in Sources */,
 				7053E8B6143B076F001C364D /* MarkerStyleCell.mm in Sources */,
-				702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */,
+				706EA5751855F7E50043AAA6 /* ObjectShortcutView.mm in Sources */,
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
 				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
 				706EA5441855F5290043AAA6 /* root_browserAppDelegate.mm in Sources */,
-				70C1D67D1468166100514DC0 /* PadSlideView.mm in Sources */,
 				70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */,
-				70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */,
-				70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */,
-				70E36B571472965E004AEB6A /* FileContainerElement.mm in Sources */,
-				70989EFD1473E73200515FC5 /* SpotObjectView.mm in Sources */,
+				706EA57B1855F7E50043AAA6 /* SpotObjectView.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
