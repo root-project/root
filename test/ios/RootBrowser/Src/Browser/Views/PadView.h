@@ -24,7 +24,7 @@ class Pad;
 @property (nonatomic) BOOL zoomed;
 
 - (id) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pad;
-- (id) initImmutableViewWithFrame : (CGRect)frame;
+- (id) initImmutableViewWithFrame : (CGRect) frame;
 
 - (void) setPad : (ROOT::iOS::Pad *) newPad;
 - (void) clearPad;

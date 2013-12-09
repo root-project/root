@@ -8,15 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-
-@interface ShorcutUtil : NSObject {
-}
-
-+(void) placeShortcuts :(NSMutableArray *)shortcuts inScrollView : (UIScrollView *) scrollView withSize : (CGSize) size andSpace : (CGFloat) space;
-
-@end
-
-
 namespace ROOT {
 namespace iOS {
 namespace Browser {

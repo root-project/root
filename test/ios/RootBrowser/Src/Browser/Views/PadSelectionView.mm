@@ -45,7 +45,7 @@ void SetShadowColor(CGContextRef ctx)
 }
 
 //____________________________________________________________________________________________________
-- (void) showSelectedAxis : (CGContextRef) ctx withRect : (CGRect)rect
+- (void) showSelectedAxis : (CGContextRef) ctx withRect : (CGRect) rect
 {
    //"Special case" function to show axis selection.
    using namespace ROOT::iOS;
@@ -72,7 +72,7 @@ void SetShadowColor(CGContextRef ctx)
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    assert(pad != nullptr && "drawRect:, pad is null");
 

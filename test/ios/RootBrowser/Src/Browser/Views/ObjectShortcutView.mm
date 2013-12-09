@@ -78,7 +78,7 @@ const CGSize folderIconSize = CGSizeMake(128.f, 128.f);
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame controller : (FileContentViewController*) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail
+- (id) initWithFrame : (CGRect) frame controller : (FileContentViewController*) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail
 {
    assert(c != nil && "initWithFrame:controller:forObjectAtIndex:withThumbnail:, parameter 'c' is nil");
    assert(c.fileContainer != nullptr && "initWithFrame:controller:forObjectAtIndex:withThumbnail:, fileContainer is null");

@@ -80,7 +80,7 @@ const CGFloat tapInterval = 0.15f;
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    // Drawing code
    if (!pad)//assert instead???
@@ -335,7 +335,7 @@ const CGFloat tapInterval = 0.15f;
 }
 
 //____________________________________________________________________________________________________
-- (void) touchesEnded : (NSSet *)touches withEvent : (UIEvent *)event
+- (void) touchesEnded : (NSSet *) touches withEvent : (UIEvent *) event
 {
 #pragma unused(event)
 

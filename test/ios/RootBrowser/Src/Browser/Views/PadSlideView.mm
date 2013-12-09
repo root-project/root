@@ -47,7 +47,7 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
 
