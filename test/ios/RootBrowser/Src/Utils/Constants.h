@@ -82,6 +82,9 @@ extern const unsigned stippleBase;
 //This does not have const qualifier, but set only once during startup (by application delegate).
 extern bool deviceIsiPad3;
 
+
+extern NSString * const ROOTBrowserViewControllerID;
+
 }//namespace Browser
 }//namespace iOS
 }//namespace ROOT

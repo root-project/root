@@ -16,6 +16,9 @@
 #import "FileUtils.h"
 
 @implementation FileContentViewController {
+   ROOT::iOS::Browser::FileContainer *fileContainer;
+   __weak IBOutlet UIScrollView *scrollView;
+
    NSMutableArray *objectShortcuts;
    UISearchBar *searchBar;
    UIPopoverController *searchPopover;

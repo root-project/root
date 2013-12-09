@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="4514" systemVersion="13A598" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="D3a-KN-BfX">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3747"/>
+    </dependencies>
+    <scenes>
+        <!--Navigation Controller-->
+        <scene sceneID="Ksh-qd-IUf">
+            <objects>
+                <navigationController storyboardIdentifier="ROOTBrowserViewControllerID" definesPresentationContext="YES" id="D3a-KN-BfX" sceneMemberID="viewController">
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" barStyle="black" translucent="NO" prompted="NO"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" barStyle="black" translucent="NO" id="cb2-5A-hfW">
+                        <rect key="frame" x="0.0" y="0.0" width="0.0" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <connections>
+                        <segue destination="dqz-jH-zJZ" kind="relationship" relationship="rootViewController" id="W0R-cI-hHV"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dvm-Us-BIV" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="73" y="69"/>
+        </scene>
+        <!--File Collection View Controller-->
+        <scene sceneID="GWb-Xy-erb">
+            <objects>
+                <viewController id="dqz-jH-zJZ" customClass="FileCollectionViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="bK7-hq-q0B"/>
+                        <viewControllerLayoutGuide type="bottom" id="Gb7-C5-cRz"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="1kY-e5-3bZ">
+                        <rect key="frame" x="0.0" y="64" width="768" height="960"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Wbb-F6-9Wc">
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="146"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Enter the file name:" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7bq-85-g5B">
+                                        <rect key="frame" x="253" y="22" width="262" height="21"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="262" id="mTf-xL-9Rf"/>
+                                        </constraints>
+                                        <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                        <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                        <nil key="highlightedColor"/>
+                                    </label>
+                                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="kQR-XR-yFP">
+                                        <rect key="frame" x="43" y="74" width="682" height="30"/>
+                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                        <textInputTraits key="textInputTraits" enablesReturnKeyAutomatically="YES"/>
+                                    </textField>
+                                </subviews>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                                <constraints>
+                                    <constraint firstAttribute="trailing" secondItem="kQR-XR-yFP" secondAttribute="trailing" constant="43" id="Au4-VA-6St"/>
+                                    <constraint firstAttribute="height" constant="146" id="HSO-Ge-p63"/>
+                                    <constraint firstItem="7bq-85-g5B" firstAttribute="top" secondItem="Wbb-F6-9Wc" secondAttribute="top" constant="22" id="OJc-PJ-Ygm"/>
+                                    <constraint firstItem="kQR-XR-yFP" firstAttribute="top" secondItem="Wbb-F6-9Wc" secondAttribute="top" constant="74" id="YGC-Dc-nVU"/>
+                                    <constraint firstItem="7bq-85-g5B" firstAttribute="centerX" secondItem="Wbb-F6-9Wc" secondAttribute="centerX" id="ii6-cx-4CO"/>
+                                    <constraint firstItem="kQR-XR-yFP" firstAttribute="leading" secondItem="Wbb-F6-9Wc" secondAttribute="leading" constant="43" id="sD4-h9-wag"/>
+                                    <constraint firstAttribute="bottom" secondItem="kQR-XR-yFP" secondAttribute="bottom" constant="42" id="vBw-Ej-tyG"/>
+                                </constraints>
+                            </view>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" showsHorizontalScrollIndicator="NO" translatesAutoresizingMaskIntoConstraints="NO" id="VQe-h5-t1L">
+                                <rect key="frame" x="-1" y="0.0" width="768" height="960"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="Wbb-F6-9Wc" firstAttribute="leading" secondItem="1kY-e5-3bZ" secondAttribute="leading" id="0qu-o6-73X"/>
+                            <constraint firstAttribute="trailing" secondItem="VQe-h5-t1L" secondAttribute="trailing" constant="1" id="ILB-do-5Yv"/>
+                            <constraint firstAttribute="trailing" secondItem="Wbb-F6-9Wc" secondAttribute="trailing" id="IXU-ZN-3g7"/>
+                            <constraint firstItem="VQe-h5-t1L" firstAttribute="top" secondItem="1kY-e5-3bZ" secondAttribute="top" id="JFJ-c1-UXo"/>
+                            <constraint firstItem="VQe-h5-t1L" firstAttribute="leading" secondItem="1kY-e5-3bZ" secondAttribute="leading" constant="-1" id="Jj0-8I-wyn"/>
+                            <constraint firstAttribute="bottom" secondItem="VQe-h5-t1L" secondAttribute="bottom" id="hjP-hV-AeU"/>
+                            <constraint firstItem="Wbb-F6-9Wc" firstAttribute="top" secondItem="1kY-e5-3bZ" secondAttribute="top" id="kWo-yK-0pj"/>
+                        </constraints>
+                    </view>
+                    <navigationItem key="navigationItem" id="LDB-bR-MXC"/>
+                    <connections>
+                        <outlet property="fileNameField" destination="kQR-XR-yFP" id="9xS-0o-Iox"/>
+                        <outlet property="fileOpenView" destination="Wbb-F6-9Wc" id="gFo-ZO-ve6"/>
+                        <outlet property="scrollView" destination="VQe-h5-t1L" id="Sby-eC-aOv"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="DUY-qO-KGi" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1015" y="69"/>
+        </scene>
+    </scenes>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedStatusBarMetrics key="statusBar" statusBarStyle="lightContent"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination"/>
+    </simulatedMetricsContainer>
+</document>

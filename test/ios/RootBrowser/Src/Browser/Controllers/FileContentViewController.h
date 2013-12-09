@@ -15,13 +15,8 @@ class FileContainer;
 }
 }
 
-@interface FileContentViewController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchViewDelegate> {
-@private
-   ROOT::iOS::Browser::FileContainer *fileContainer;
-   __weak IBOutlet UIScrollView *scrollView;
-}
+@interface FileContentViewController : UIViewController <UISearchBarDelegate, UIPopoverControllerDelegate, SearchViewDelegate>
 
-//@property (nonatomic, assign) id<UITableViewDataSource> *
 @property (nonatomic, readonly) ROOT::iOS::Browser::FileContainer *fileContainer;
 
 - (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container;

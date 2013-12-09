@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7025582F1856060E00403763 /* Browser_iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7025582E1856060E00403763 /* Browser_iPad.storyboard */; };
 		70360B1A142C7AC6001F77E1 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 70360B19142C7AC6001F77E1 /* MessageUI.framework */; };
 		706EA5431855F5290043AAA6 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5401855F5290043AAA6 /* main.mm */; };
 		706EA5441855F5290043AAA6 /* root_browserAppDelegate.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5421855F5290043AAA6 /* root_browserAppDelegate.mm */; };
@@ -127,6 +128,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7025582E1856060E00403763 /* Browser_iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Browser_iPad.storyboard; sourceTree = "<group>"; };
 		70360B19142C7AC6001F77E1 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
 		706EA5401855F5290043AAA6 /* main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		706EA5411855F5290043AAA6 /* root_browserAppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = root_browserAppDelegate.h; sourceTree = "<group>"; };
@@ -374,8 +376,8 @@
 				706EA57F1855F8CC0043AAA6 /* FileCollectionViewController.mm */,
 				706EA5801855F8CC0043AAA6 /* FileCollectionViewController.h */,
 				706EA5811855F8CC0043AAA6 /* FileContentViewController.mm */,
-				706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */,
 				706EA5831855F8CC0043AAA6 /* FileContentViewController.h */,
+				706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */,
 				706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */,
 				706EA5851855F8CC0043AAA6 /* SearchViewController.h */,
 				706EA5861855F8CC0043AAA6 /* SearchViewController.mm */,
@@ -425,6 +427,7 @@
 				706EA5911855F9AB0043AAA6 /* RootFileController.xib */,
 				706EA5921855F9AB0043AAA6 /* ROOTObjectController.xib */,
 				706EA5931855F9AB0043AAA6 /* SlideshowController.xib */,
+				7025582E1856060E00403763 /* Browser_iPad.storyboard */,
 			);
 			path = Browser;
 			sourceTree = "<group>";
@@ -764,6 +767,7 @@
 				706EA644185601F30043AAA6 /* editor_plate.png in Resources */,
 				706EA653185601F30043AAA6 /* ticks_tab.png in Resources */,
 				706EA64C185601F30043AAA6 /* line_cell.png in Resources */,
+				7025582F1856060E00403763 /* Browser_iPad.storyboard in Resources */,
 				706EA6171855FE610043AAA6 /* app_icon.png in Resources */,
 				706EA646185601F30043AAA6 /* forward_btn.png in Resources */,
 				706EA5961855F9AC0043AAA6 /* ROOTObjectController.xib in Resources */,
