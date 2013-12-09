@@ -29,7 +29,6 @@
 		706EA58B1855F8CC0043AAA6 /* ObjectViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */; };
 		706EA58C1855F8CC0043AAA6 /* SlideshowViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */; };
 		706EA58D1855F8CC0043AAA6 /* SearchViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5861855F8CC0043AAA6 /* SearchViewController.mm */; };
-		706EA5961855F9AC0043AAA6 /* ROOTObjectController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 706EA5921855F9AB0043AAA6 /* ROOTObjectController.xib */; };
 		706EA59A1855FA310043AAA6 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 706EA5991855FA310043AAA6 /* MainWindow.xib */; };
 		706EA5BF1855FBA30043AAA6 /* AxisFontInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA59E1855FBA30043AAA6 /* AxisFontInspector.mm */; };
 		706EA5C01855FBA30043AAA6 /* AxisInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 706EA5A01855FBA30043AAA6 /* AxisInspector.mm */; };
@@ -167,7 +166,6 @@
 		706EA5861855F8CC0043AAA6 /* SearchViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SearchViewController.mm; sourceTree = "<group>"; };
 		706EA5871855F8CC0043AAA6 /* SlideshowViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowViewController.h; sourceTree = "<group>"; };
 		706EA5881855F8CC0043AAA6 /* ObjectViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectViewController.h; sourceTree = "<group>"; };
-		706EA5921855F9AB0043AAA6 /* ROOTObjectController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ROOTObjectController.xib; sourceTree = "<group>"; };
 		706EA5991855FA310043AAA6 /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
 		706EA59D1855FBA30043AAA6 /* AxisFontInspector.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AxisFontInspector.h; sourceTree = "<group>"; };
 		706EA59E1855FBA30043AAA6 /* AxisFontInspector.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = AxisFontInspector.mm; sourceTree = "<group>"; };
@@ -417,7 +415,6 @@
 		706EA58F1855F9AB0043AAA6 /* Browser */ = {
 			isa = PBXGroup;
 			children = (
-				706EA5921855F9AB0043AAA6 /* ROOTObjectController.xib */,
 				7025582E1856060E00403763 /* Browser_iPad.storyboard */,
 			);
 			path = Browser;
@@ -761,7 +758,6 @@
 				7025582F1856060E00403763 /* Browser_iPad.storyboard in Resources */,
 				706EA6171855FE610043AAA6 /* app_icon.png in Resources */,
 				706EA646185601F30043AAA6 /* forward_btn.png in Resources */,
-				706EA5961855F9AC0043AAA6 /* ROOTObjectController.xib in Resources */,
 				706EA64E185601F30043AAA6 /* line_width_bkn.png in Resources */,
 				706EA647185601F30043AAA6 /* h1_errors_tab.png in Resources */,
 				706EA654185601F30043AAA6 /* title_tab.png in Resources */,
