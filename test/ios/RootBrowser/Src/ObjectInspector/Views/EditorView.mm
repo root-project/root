@@ -82,7 +82,7 @@ enum {
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame
+- (id) initWithFrame : (CGRect) frame
 {
    self = [super initWithFrame : frame];
 
@@ -109,7 +109,7 @@ enum {
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    //Draw main editor's view as a semi-transparent
    //gray view with rounded corners.
@@ -214,7 +214,7 @@ enum {
 }
 
 //____________________________________________________________________________________________________
-- (void) addSubEditor:(UIView *)element withName : (NSString *)name
+- (void) addSubEditor : (UIView *) element withName : (NSString *) name
 {
    if (nEditors == evMaxComponents) {
       NSLog(@"Could not add more editors");

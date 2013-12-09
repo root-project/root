@@ -13,7 +13,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame andPattern : (unsigned) index
+- (id) initWithFrame : (CGRect) frame andPattern : (unsigned) index
 {
    self = [super initWithFrame : frame];
     

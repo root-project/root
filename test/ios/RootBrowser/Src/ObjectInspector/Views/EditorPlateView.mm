@@ -59,7 +59,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    [plateImage drawAtPoint : CGPointZero];
    //Draw the triangle.

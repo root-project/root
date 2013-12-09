@@ -8,7 +8,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame andMarkerStyle : (EMarkerStyle)style
+- (id) initWithFrame : (CGRect) frame andMarkerStyle : (EMarkerStyle) style
 {
    self = [super initWithFrame : frame];
    if (self) {
@@ -20,7 +20,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) drawRect : (CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    
