@@ -143,6 +143,48 @@
             </objects>
             <point key="canvasLocation" x="1914" y="575"/>
         </scene>
+        <!--Object View Controller-->
+        <scene sceneID="4HE-ht-8z5">
+            <objects>
+                <viewController storyboardIdentifier="ObjectViewControllerID" id="G3D-MN-xnE" customClass="ObjectViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Fte-7l-ykP"/>
+                        <viewControllerLayoutGuide type="bottom" id="Ln1-pP-yz2"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="7AV-HU-M2v">
+                        <rect key="frame" x="0.0" y="64" width="768" height="960"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" pagingEnabled="YES" showsHorizontalScrollIndicator="NO" showsVerticalScrollIndicator="NO" delaysContentTouches="NO" canCancelContentTouches="NO" translatesAutoresizingMaskIntoConstraints="NO" id="GmB-A2-zyh">
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="960"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                            </scrollView>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" fixedFrame="YES" bounces="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tdX-Bl-hSf" customClass="PadEditorScrollView">
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="960"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="GmB-A2-zyh" firstAttribute="top" secondItem="7AV-HU-M2v" secondAttribute="top" id="BOJ-LD-GLr"/>
+                            <constraint firstAttribute="bottom" secondItem="GmB-A2-zyh" secondAttribute="bottom" id="EvP-YY-Her"/>
+                            <constraint firstAttribute="trailing" secondItem="GmB-A2-zyh" secondAttribute="trailing" id="gxE-LT-Bsl"/>
+                            <constraint firstItem="GmB-A2-zyh" firstAttribute="leading" secondItem="7AV-HU-M2v" secondAttribute="leading" id="hjK-ZH-4TC"/>
+                        </constraints>
+                    </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" barStyle="black" translucent="NO" prompted="NO"/>
+                    <connections>
+                        <outlet property="navigationScrollView" destination="GmB-A2-zyh" id="J9F-fL-hXm"/>
+                        <outlet property="padScrollView" destination="tdX-Bl-hSf" id="nGI-jB-CAh"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="cCl-us-tRS" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1908" y="1802"/>
+        </scene>
         <!--File Content View Controller-->
         <scene sceneID="RZv-bU-X66">
             <objects>

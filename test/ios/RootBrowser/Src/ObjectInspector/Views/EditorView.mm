@@ -82,7 +82,7 @@ enum {
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame : (CGRect)frame
+- (id) initWithFrame : (CGRect)frame
 {
    self = [super initWithFrame : frame];
 
@@ -120,7 +120,7 @@ enum {
       return;
    }
 
-   UIColor *background = [[UIColor lightGrayColor] colorWithAlphaComponent : [EditorView editorAlpha]];
+   UIColor * const background = [UIColor colorWithRed : 102 / 255.f green : 140 / 255.f blue : 189 / 255.f alpha : [EditorView editorAlpha]];
    CGContextSetFillColorWithColor(ctx, background.CGColor);
    CGContextSetPatternPhase(ctx, CGSizeMake(-8.f, 0.f));
    

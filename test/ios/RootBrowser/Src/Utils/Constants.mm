@@ -88,6 +88,7 @@ bool deviceIsiPad3 = false;
 NSString * const ROOTBrowserViewControllerID = @"ROOTBrowserViewControllerID";
 NSString * const FileContentViewControllerID = @"FileContentViewControllerID";
 NSString * const SlideshowViewControllerID = @"SlideshowViewControllerID";
+NSString * const ObjectViewControllerID = @"ObjectViewControllerID";
 
 }//namespace Browser
 }//namespace iOS

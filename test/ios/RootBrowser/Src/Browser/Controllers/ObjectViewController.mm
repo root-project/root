@@ -1,3 +1,4 @@
+#import <cassert>
 #import <cmath>
 
 #import <QuartzCore/QuartzCore.h>
@@ -59,7 +60,8 @@ enum Mode {
    unsigned nextObject;
    unsigned previousObject;
    
-   UIBarButtonItem *editBtn;   
+   UIBarButtonItem *editBtn;
+   BOOL viewDidAppear;
 }
 
 
@@ -120,9 +122,31 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (void) viewDidLoad 
 {
-   [self initToolbarItems];
    [super viewDidLoad];
+   
+   [self initToolbarItems];
+   [self loadObjectInspector];
+   
+   assert(fileContainer != nullptr && "viewDidLoad, fileContainer is null");
+   self.navigationItem.title = [NSString stringWithFormat : @"%s", fileContainer->GetObject(currentObject)->GetName()];
 }
+
+
+//____________________________________________________________________________________________________
+- (void) viewDidAppear : (BOOL)animated
+{
+   [super viewDidAppear : animated];
+   
+   if (!viewDidAppear) {
+      viewDidAppear = YES;
+      //This many-phase initialization from Apple/UKit is ONE BIG PIECE OF SHIT.
+      [self setupScrollForEditablePadView];
+      [self setupNavigationScrollView];
+      [self initPadViews];
+      [self correctFramesForOrientation : self.interfaceOrientation];
+   }
+}
+
 
 //____________________________________________________________________________________________________
 - (void) resetEditorButton
@@ -158,8 +182,6 @@ enum Mode {
 {
    navigationScrollView.delegate = self;
    
-//   navigationScrollView.canCancelContentTouches = NO;
-//   navigationScrollView.delaysContentTouches = NO;
    navigationScrollView.decelerationRate = UIScrollViewDecelerationRateFast;
    navigationScrollView.bounces = NO;
    navigationScrollView.bouncesZoom = NO;
@@ -254,26 +276,17 @@ enum Mode {
 {
    using namespace ROOT::iOS::Browser;
 
-   CGRect mainFrame;
-   CGRect scrollFrame;
+   const CGRect mainFrame = self.view.frame;
+   CGRect scrollFrame = mainFrame;
+   scrollFrame.origin = CGPoint();
 
-   if (UIInterfaceOrientationIsPortrait(orientation)) {
-      mainFrame = CGRectMake(viewX, viewY, viewWP, viewHP);
-      scrollFrame = CGRectMake(scrollX, scrollY, scrollWP, scrollHP);
-   } else {
-      mainFrame = CGRectMake(viewX, viewY, viewWL, viewHL);
-      scrollFrame = CGRectMake(scrollX, scrollY, scrollWL, scrollHL);
-   }
-   
-   self.view.frame = mainFrame;
    padScrollView.frame = scrollFrame;
-   navigationScrollView.frame = scrollFrame;
-   
-   scrollFrame.origin = CGPointZero;
+
    for (unsigned i = 0; i < 3; ++i) {
       scrollFrame.origin.x = i * scrollFrame.size.width;
       [navScrolls[i] resetToFrame : scrollFrame];
    }
+
    scrollFrame.origin = CGPointZero;
    
    if (fileContainer && fileContainer->GetNumberOfObjects() > 1) {
@@ -295,26 +308,16 @@ enum Mode {
 #pragma mark - Controller's lifecycle.
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id) initWithCoder : (NSCoder *) aDecoder
 {
-   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   
-   if (self) {
-      [self view];//force view loading.
-      
+   if (self = [super initWithCoder : aDecoder])
       mode = ocmNavigation;
-
-      [self loadObjectInspector];
-      [self setupScrollForEditablePadView];
-      [self setupNavigationScrollView];
-      //[self createEditablePad];
-   }
    
    return self;
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
     // Releases the view if it doesn't have a superview.
     [super didReceiveMemoryWarning];
@@ -324,33 +327,16 @@ enum Mode {
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration : (NSTimeInterval) duration
+- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation duration : (NSTimeInterval) duration
 {
+#pragma unused(duration)
    [self correctFramesForOrientation : interfaceOrientation];
 }
 
 //____________________________________________________________________________________________________
-- (void) didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   //Now, after rotation is finished we can show the shadow again.
-}
-
-//____________________________________________________________________________________________________
-- (void) viewWillAppear : (BOOL)animated
-{
-   [self correctFramesForOrientation : self.interfaceOrientation];
-}
-
-//____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
-}
-
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
 
@@ -454,20 +440,10 @@ enum Mode {
 }
 
 //____________________________________________________________________________________________________
-- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::Browser::FileContainer *)container;
+- (void) initPadViews
 {
-   //This method is called after initWithNibName was called, so it's the second step
-   //of controller's construction. The default mode is ocmNavigation, so setup navigation
-   //views/pad etc.
-   mode = ocmNavigation;
-
-   
-   fileContainer = container;
-   self.navigationItem.title = [NSString stringWithFormat : @"%s", fileContainer->GetObject(index)->GetName()];
-
-   currentObject = index;
-   [self adjustPrevNextIndices];
-   
+   assert(fileContainer != nullptr && "initPadViews, fileContainer is null");
+   //
    CGRect scrollFrame = navigationScrollView.frame;
    scrollFrame.origin = CGPointZero;
    navScrolls[0] = [[PadScrollView alloc] initWithFrame : scrollFrame];
@@ -501,24 +477,38 @@ enum Mode {
    [self createEditablePad];
 }
 
+//____________________________________________________________________________________________________
+- (void) setNavigationForObjectWithIndex : (unsigned) index fromContainer : (ROOT::iOS::Browser::FileContainer *) container;
+{
+   //This method is called after initWithNibName was called, so it's the second step
+   //of controller's construction. The default mode is ocmNavigation, so setup navigation
+   //views/pad etc.
+   mode = ocmNavigation;
+   
+   fileContainer = container;
+   currentObject = index;
+
+   [self adjustPrevNextIndices];
+}
+
 #pragma mark - delegate for editable pad's scroll-view.
 
 //____________________________________________________________________________________________________
-- (UIView *)viewForZoomingInScrollView : (UIScrollView *)scrollView
+- (UIView *) viewForZoomingInScrollView : (UIScrollView *)scrollView
 {
    //For ocmEdit mode.
    return editablePadView;
 }
 
 //____________________________________________________________________________________________________
-- (void)scrollViewDidZoom:(UIScrollView *)scroll
+- (void) scrollViewDidZoom : (UIScrollView *) scroll
 {
    //For ocmEdit mode.
    editablePadView.frame = [self centeredFrameForScrollView : scroll andUIView : editablePadView];
 }
 
 //____________________________________________________________________________________________________
-- (void)scrollViewDidEndZooming:(UIScrollView *)scroll withView:(UIView *)view atScale:(float)scale
+- (void) scrollViewDidEndZooming : (UIScrollView *) scroll withView : (UIView *) view atScale : (float) scale
 {
    //For ocmEdit mode.
    using namespace ROOT::iOS::Browser;
@@ -582,7 +572,6 @@ enum Mode {
       const CGFloat newScale = padW * maximumZoom / editablePadView.frame.size.width;
       CGRect zoomRect = [self zoomRectForScale : newScale withCenter : tapPt];
       [padScrollView zoomToRect : zoomRect animated : YES];
-//      [self scrollViewDidEndZooming : scrollView withView : padView atScale : maximumZoom];
    } else {
       zoomed = NO;
       editablePadView.frame = CGRectMake(0.f, 0.f, padW, padH);
@@ -595,8 +584,7 @@ enum Mode {
       padScrollView.minimumZoomScale = 1.f;
       padScrollView.contentOffset = CGPointZero;
       padScrollView.contentSize = editablePadView.frame.size;
-      //[scrollView addSubview : padView];
-      //[padView release];
+
       [editablePadView setNeedsDisplay];
       [self correctFramesForOrientation : self.interfaceOrientation];
    }

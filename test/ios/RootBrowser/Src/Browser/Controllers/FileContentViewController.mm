@@ -265,10 +265,10 @@
 {
    assert(shortcut != nil && "selectObjectFromFile:, parameter shortcut is nil");
    assert(fileContainer != nullptr && "selectObjectFromFile:, fileContainer is null");
+   assert(self.storyboard != nil && "selectObjectFromFile:, self.storyboard is nil");
 
    if (shortcut.isDirectory) {
       //Create another FileContentController and push it on stack.
-      assert(self.storyboard != nil && "selectObjectFromFile:, self.storyboard is nil");
       UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::FileContentViewControllerID];
       assert([c isKindOfClass : [FileContentViewController class]] && "file content controller has a wrong type");
       FileContentViewController * const contentController = (FileContentViewController *)c;
@@ -276,7 +276,10 @@
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
       //TODO: replace the obsolete xib.
-      ObjectViewController * const objectController = [[ObjectViewController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
+      UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::ObjectViewControllerID];
+      assert([c isKindOfClass : [ObjectViewController class]] &&
+             "object view controller has a wrong type");
+      ObjectViewController * const objectController = (ObjectViewController *)c;
       [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
       [self.navigationController pushViewController : objectController animated : YES];
    }
@@ -285,7 +288,7 @@
 #pragma mark - Search delegate.
 
 //____________________________________________________________________________________________________
-- (void) searchBarTextDidBeginEditing : (UISearchBar *)aSearchBar
+- (void) searchBarTextDidBeginEditing : (UISearchBar *) aSearchBar
 {
    typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
 
