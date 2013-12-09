@@ -3,7 +3,7 @@
 #import <vector>
 
 #import "ObjectViewController.h"
-#import "SelectionView.h"
+#import "PadSelectionView.h"
 #import "Constants.h"
 #import "PadView.h"
 
@@ -43,7 +43,7 @@ const CGFloat tapInterval = 0.15f;
       isMutable = YES;
       
       frame.origin = CGPointZero;
-      selectionView = [[SelectionView alloc] initWithFrame : frame withPad : pad];
+      selectionView = [[PadSelectionView alloc] initWithFrame : frame withPad : pad];
       selectionView.autoresizingMask = UIViewAutoresizingFlexibleBottomMargin | UIViewAutoresizingFlexibleTopMargin |
                                        UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
       selectionView.hidden = YES;

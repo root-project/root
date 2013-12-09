@@ -2,7 +2,7 @@
 #import <cstring>
 
 #import "IOSSelectionMarkers.h"
-#import "SelectionView.h"
+#import "PadSelectionView.h"
 #import "Constants.h"
 #import "PadView.h"
 #import "TAxis.h"
@@ -22,7 +22,7 @@ void SetShadowColor(CGContextRef ctx)
 
 }
 
-@implementation SelectionView {
+@implementation PadSelectionView {
    ROOT::iOS::Pad *pad;
 }
 

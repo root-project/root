@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */ = {isa = PBXBuildFile; fileRef = 70078C2C146AC4C400C19F4D /* FileUtils.cxx */; };
 		700ED6CB146BCDF200526D1C /* directory.png in Resources */ = {isa = PBXBuildFile; fileRef = 700ED6CA146BCDF100526D1C /* directory.png */; };
-		7014410F140E18390070459F /* SelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* SelectionView.mm */; };
+		7014410F140E18390070459F /* PadSelectionView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014410E140E18390070459F /* PadSelectionView.mm */; };
 		70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7014411F140E3F1D0070459F /* LineStyleCell.mm */; };
 		70144129140E553C0070459F /* line_cell.png in Resources */ = {isa = PBXBuildFile; fileRef = 70144128140E553C0070459F /* line_cell.png */; };
 		702357DB14345C0A00A95000 /* H1ErrorsInspector.mm in Sources */ = {isa = PBXBuildFile; fileRef = 702357D914345C0A00A95000 /* H1ErrorsInspector.mm */; };
@@ -130,8 +130,8 @@
 		70078C2B146AC4C400C19F4D /* FileUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileUtils.h; sourceTree = "<group>"; };
 		70078C2C146AC4C400C19F4D /* FileUtils.cxx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = FileUtils.cxx; sourceTree = "<group>"; };
 		700ED6CA146BCDF100526D1C /* directory.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = directory.png; sourceTree = "<group>"; };
-		7014410D140E18390070459F /* SelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SelectionView.h; sourceTree = "<group>"; };
-		7014410E140E18390070459F /* SelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SelectionView.mm; sourceTree = "<group>"; };
+		7014410D140E18390070459F /* PadSelectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSelectionView.h; sourceTree = "<group>"; };
+		7014410E140E18390070459F /* PadSelectionView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSelectionView.mm; sourceTree = "<group>"; };
 		7014411E140E3F1D0070459F /* LineStyleCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineStyleCell.h; sourceTree = "<group>"; };
 		7014411F140E3F1D0070459F /* LineStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineStyleCell.mm; sourceTree = "<group>"; };
 		70144121140E3F320070459F /* LineWidthCell.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LineWidthCell.h; sourceTree = "<group>"; };
@@ -549,8 +549,8 @@
 				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
 				7077906413FE87D000C0FFA1 /* ObjectShortcut.h */,
 				7077906513FE87D000C0FFA1 /* ObjectShortcut.mm */,
-				7014410D140E18390070459F /* SelectionView.h */,
-				7014410E140E18390070459F /* SelectionView.mm */,
+				7014410D140E18390070459F /* PadSelectionView.h */,
+				7014410E140E18390070459F /* PadSelectionView.mm */,
 				704B5A211520CC8D00FEF9C8 /* PadView.h */,
 				70249BDA1403D644006A19E6 /* PadView.mm */,
 				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
@@ -795,7 +795,7 @@
 				70249BDC1403D644006A19E6 /* PadView.mm in Sources */,
 				705A503614066421004C1C8B /* ScrollViewWithPadView.mm in Sources */,
 				70252F7C140CDD8D00F3660F /* Constants.cxx in Sources */,
-				7014410F140E18390070459F /* SelectionView.mm in Sources */,
+				7014410F140E18390070459F /* PadSelectionView.mm in Sources */,
 				70144120140E3F1D0070459F /* LineStyleCell.mm in Sources */,
 				702DDD1B1415FEA1009FC6F3 /* LineInspector.mm in Sources */,
 				702DDD2914161789009FC6F3 /* InspectorWithNavigation.mm in Sources */,
