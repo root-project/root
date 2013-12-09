@@ -91,7 +91,7 @@
 		7077903B13FE51B400C0FFA1 /* RootFileController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077903913FE51B400C0FFA1 /* RootFileController.xib */; };
 		7077903F13FE549300C0FFA1 /* FileContentViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077903D13FE549300C0FFA1 /* FileContentViewController.mm */; };
 		7077904013FE549300C0FFA1 /* FileContentController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077903E13FE549300C0FFA1 /* FileContentController.xib */; };
-		7077904313FE554E00C0FFA1 /* FileShortcut.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077904213FE554E00C0FFA1 /* FileShortcut.mm */; };
+		7077904313FE554E00C0FFA1 /* FileShortcutView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077904213FE554E00C0FFA1 /* FileShortcutView.mm */; };
 		7077905113FE6B8F00C0FFA1 /* file_shortcut_background.png in Resources */ = {isa = PBXBuildFile; fileRef = 7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */; };
 		7077905D13FE840000C0FFA1 /* SlideshowViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 7077905B13FE840000C0FFA1 /* SlideshowViewController.mm */; };
 		7077905E13FE840000C0FFA1 /* SlideshowController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 7077905C13FE840000C0FFA1 /* SlideshowController.xib */; };
@@ -247,8 +247,8 @@
 		7077903C13FE549300C0FFA1 /* FileContentViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileContentViewController.h; sourceTree = "<group>"; };
 		7077903D13FE549300C0FFA1 /* FileContentViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileContentViewController.mm; sourceTree = "<group>"; };
 		7077903E13FE549300C0FFA1 /* FileContentController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = FileContentController.xib; sourceTree = "<group>"; };
-		7077904113FE554E00C0FFA1 /* FileShortcut.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileShortcut.h; sourceTree = "<group>"; };
-		7077904213FE554E00C0FFA1 /* FileShortcut.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileShortcut.mm; sourceTree = "<group>"; };
+		7077904113FE554E00C0FFA1 /* FileShortcutView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FileShortcutView.h; sourceTree = "<group>"; };
+		7077904213FE554E00C0FFA1 /* FileShortcutView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FileShortcutView.mm; sourceTree = "<group>"; };
 		7077905013FE6B8F00C0FFA1 /* file_shortcut_background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = file_shortcut_background.png; sourceTree = "<group>"; };
 		7077905A13FE840000C0FFA1 /* SlideshowViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideshowViewController.h; sourceTree = "<group>"; };
 		7077905B13FE840000C0FFA1 /* SlideshowViewController.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideshowViewController.mm; sourceTree = "<group>"; };
@@ -545,8 +545,8 @@
 		70E0B5DE1414E3FC0077E4A8 /* Views */ = {
 			isa = PBXGroup;
 			children = (
-				7077904113FE554E00C0FFA1 /* FileShortcut.h */,
-				7077904213FE554E00C0FFA1 /* FileShortcut.mm */,
+				7077904113FE554E00C0FFA1 /* FileShortcutView.h */,
+				7077904213FE554E00C0FFA1 /* FileShortcutView.mm */,
 				7077906413FE87D000C0FFA1 /* ObjectShortcutView.h */,
 				7077906513FE87D000C0FFA1 /* ObjectShortcutView.mm */,
 				7014410D140E18390070459F /* PadSelectionView.h */,
@@ -782,7 +782,7 @@
 				7077902E13FE50EB00C0FFA1 /* root_browserAppDelegate.mm in Sources */,
 				7077903A13FE51B400C0FFA1 /* FileCollectionViewController.mm in Sources */,
 				7077903F13FE549300C0FFA1 /* FileContentViewController.mm in Sources */,
-				7077904313FE554E00C0FFA1 /* FileShortcut.mm in Sources */,
+				7077904313FE554E00C0FFA1 /* FileShortcutView.mm in Sources */,
 				7077905D13FE840000C0FFA1 /* SlideshowViewController.mm in Sources */,
 				7077906213FE847600C0FFA1 /* ObjectViewController.mm in Sources */,
 				7077906613FE87D000C0FFA1 /* ObjectShortcutView.mm in Sources */,

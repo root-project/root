@@ -11,7 +11,7 @@ class FileContainer;
 }
 }
 
-@interface FileShortcut : UIView
+@interface FileShortcutView : UIView
 
 @property (nonatomic, readonly) NSString *fileName;
 

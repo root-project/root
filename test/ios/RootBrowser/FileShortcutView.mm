@@ -1,12 +1,12 @@
 #import <cassert>
 
 #import "FileCollectionViewController.h"
-#import "FileShortcut.h"
+#import "FileShortcutView.h"
 
 //C++ imports.
 #import "FileUtils.h"
 
-@implementation FileShortcut {
+@implementation FileShortcutView {
    __weak UIViewController *controller;
 
    UIImage *filePictogram;
@@ -31,7 +31,7 @@
 //____________________________________________________________________________________________________
 + (CGFloat) iconHeight
 {
-   return [FileShortcut iconWidth] + [FileShortcut textHeight];
+   return [FileShortcutView iconWidth] + [FileShortcutView textHeight];
 }
 
 //____________________________________________________________________________________________________
@@ -72,7 +72,7 @@
 {
    //Draw the pictogram for ROOT's file.
    const CGPoint topLeftPicCorner = CGPointMake(rect.size.width / 2 - filePictogram.size.width / 2, 
-                                                (rect.size.height - [FileShortcut textHeight]) / 2 - filePictogram.size.height / 2);
+                                                (rect.size.height - [FileShortcutView textHeight]) / 2 - filePictogram.size.height / 2);
    [filePictogram drawAtPoint : topLeftPicCorner];
    
    UIFont * const font = [UIFont systemFontOfSize : 16];
@@ -81,7 +81,7 @@
    paragraphStyle.alignment = NSTextAlignmentCenter;
    NSDictionary * const attributes = @{NSFontAttributeName : font, NSParagraphStyleAttributeName : paragraphStyle,
                                        NSForegroundColorAttributeName : [UIColor whiteColor]};
-   const CGRect textRect = CGRectMake(0.f, [FileShortcut iconHeight] - [FileShortcut textHeight], [FileShortcut iconWidth], [FileShortcut textHeight]);
+   const CGRect textRect = CGRectMake(0.f, [FileShortcutView iconHeight] - [FileShortcutView textHeight], [FileShortcutView iconWidth], [FileShortcutView textHeight]);
    [fileName drawInRect : textRect withAttributes : attributes];
 }
 

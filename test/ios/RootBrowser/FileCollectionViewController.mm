@@ -4,7 +4,7 @@
 
 #import "FileCollectionViewController.h"
 #import "FileContentViewController.h"
-#import "FileShortcut.h"
+#import "FileShortcutView.h"
 #import "Shortcuts.h"
 
 //C++ imports.
@@ -18,7 +18,7 @@
    
    NSMutableArray *fileContainers;
    BOOL viewDidAppear;
-   __weak FileShortcut *fileToDelete;
+   __weak FileShortcutView *fileToDelete;
 }
 
 //____________________________________________________________________________________________________
@@ -65,7 +65,7 @@
 - (void) placeFileShortcuts
 {
    if ([scrollView.subviews count])
-      [ShorcutUtil placeShortcuts : fileContainers inScrollView : scrollView withSize : CGSizeMake([FileShortcut iconWidth], [FileShortcut iconHeight]) andSpace : 25.f];
+      [ShorcutUtil placeShortcuts : fileContainers inScrollView : scrollView withSize : CGSizeMake([FileShortcutView iconWidth], [FileShortcutView iconHeight]) andSpace : 25.f];
 }
 
 //____________________________________________________________________________________________________
@@ -149,8 +149,8 @@
       return;
    }
 
-   const CGRect shortcutFrame = CGRectMake(0.f, 0.f, [FileShortcut iconWidth], [FileShortcut iconHeight]);
-   FileShortcut *newShortcut = [[FileShortcut alloc] initWithFrame : shortcutFrame controller : self fileContainer : fileContainer];
+   const CGRect shortcutFrame = CGRectMake(0.f, 0.f, [FileShortcutView iconWidth], [FileShortcutView iconHeight]);
+   FileShortcutView * const newShortcut = [[FileShortcutView alloc] initWithFrame : shortcutFrame controller : self fileContainer : fileContainer];
    if (newShortcut) {//What if alloc returned nil?
       [fileContainers addObject : newShortcut];
       [scrollView addSubview : newShortcut];   
@@ -160,7 +160,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) fileWasSelected : (FileShortcut*) shortcut
+- (void) fileWasSelected : (FileShortcutView *) shortcut
 {
    FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
    [contentController activateForFile : [shortcut getFileContainer]];
@@ -168,7 +168,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) tryToDelete : (FileShortcut*)shortcut
+- (void) tryToDelete : (FileShortcutView *) shortcut
 {
    NSString *message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
    UIActionSheet *dialog = [[UIActionSheet alloc] initWithTitle : message delegate : self cancelButtonTitle : @"Cancel" destructiveButtonTitle : @"Yes" otherButtonTitles : nil];

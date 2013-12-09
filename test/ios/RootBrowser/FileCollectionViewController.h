@@ -1,11 +1,11 @@
 #import <UIKit/UIKit.h>
 
-@class FileShortcut;
+@class FileShortcutView;
 
 @interface FileCollectionViewController : UIViewController <UINavigationControllerDelegate, UINavigationBarDelegate, UIActionSheetDelegate>
 
-- (void) fileWasSelected : (FileShortcut*) shortcut;
-- (void) tryToDelete : (FileShortcut*) shortcut;
+- (void) fileWasSelected : (FileShortcutView*) shortcut;
+- (void) tryToDelete : (FileShortcutView*) shortcut;
 - (void) addRootFile : (NSString *) fileName;
 
 @end
