@@ -86,6 +86,7 @@ ROOT_BUILD_OPTION(chirp ON "Chirp support (Condor remote I/O), requires libchirp
 ROOT_BUILD_OPTION(clarens ON "Clarens RPC support, optionally used by PROOF")
 ROOT_BUILD_OPTION(cling ON "Enable new CLING C++ interpreter")
 ROOT_BUILD_OPTION(cocoa ${cocoa_defvalue} "Use native Cocoa/Quartz graphics backend (MacOS X only)")
+ROOT_BUILD_OPTION(davix ON "DavIx library for HTTP/WEBDAV access")
 ROOT_BUILD_OPTION(dcache ON "dCache support, requires libdcap from DESY")
 ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability")
 ROOT_BUILD_OPTION(explicitlink ${explicitlink_defvalue} "Explicitly link with all dependent libraries")
