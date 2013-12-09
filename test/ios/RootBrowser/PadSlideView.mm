@@ -2,14 +2,14 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#import "SlideView.h"
+#import "PadSlideView.h"
 
 //C++ (ROOT) imports.
 #import "IOSPad.h"
 
 const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 
-@implementation SlideView {
+@implementation PadSlideView {
    ROOT::iOS::Pad *pad;
 }
 

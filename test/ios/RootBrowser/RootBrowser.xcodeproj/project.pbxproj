@@ -117,7 +117,7 @@
 		709CD05314025148005B2AF4 /* demos.root in Resources */ = {isa = PBXBuildFile; fileRef = 709CD05214025148005B2AF4 /* demos.root */; };
 		709CD0981402768B005B2AF4 /* Shortcuts.mm in Sources */ = {isa = PBXBuildFile; fileRef = 709CD0971402768B005B2AF4 /* Shortcuts.mm */; };
 		70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67A1468162600514DC0 /* LineWidthCell.mm */; };
-		70C1D67D1468166100514DC0 /* SlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67C1468166100514DC0 /* SlideView.mm */; };
+		70C1D67D1468166100514DC0 /* PadSlideView.mm in Sources */ = {isa = PBXBuildFile; fileRef = 70C1D67C1468166100514DC0 /* PadSlideView.mm */; };
 		70E0B62114150F630077E4A8 /* back_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B62014150F630077E4A8 /* back_btn.png */; };
 		70E0B624141510880077E4A8 /* forward_btn.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E0B623141510880077E4A8 /* forward_btn.png */; };
 		70E16B091455CBC00050C281 /* app_icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 70E16B081455CBC00050C281 /* app_icon.png */; };
@@ -177,7 +177,7 @@
 		7053E8B5143B076F001C364D /* MarkerStyleCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = MarkerStyleCell.mm; sourceTree = "<group>"; };
 		705A503414066421004C1C8B /* ScrollViewWithPadView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScrollViewWithPadView.h; sourceTree = "<group>"; };
 		705A503514066421004C1C8B /* ScrollViewWithPadView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = ScrollViewWithPadView.mm; sourceTree = "<group>"; };
-		705F1A66142347CA003045D9 /* SlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SlideView.h; sourceTree = "<group>"; };
+		705F1A66142347CA003045D9 /* PadSlideView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PadSlideView.h; sourceTree = "<group>"; };
 		706241CE1435F86700202121 /* RangeSlider.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = RangeSlider.mm; sourceTree = "<group>"; };
 		706241CF1435F86700202121 /* RangeSlider.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RangeSlider.h; sourceTree = "<group>"; };
 		706241D11435F94500202121 /* bar-background.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bar-background.png"; sourceTree = "<group>"; };
@@ -285,7 +285,7 @@
 		709CD0971402768B005B2AF4 /* Shortcuts.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Shortcuts.mm; sourceTree = "<group>"; };
 		70B2B408144C274800FAE3DD /* HorizontalPickerDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HorizontalPickerDelegate.h; sourceTree = "<group>"; };
 		70C1D67A1468162600514DC0 /* LineWidthCell.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = LineWidthCell.mm; sourceTree = "<group>"; };
-		70C1D67C1468166100514DC0 /* SlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = SlideView.mm; sourceTree = "<group>"; };
+		70C1D67C1468166100514DC0 /* PadSlideView.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = PadSlideView.mm; sourceTree = "<group>"; };
 		70E0B62014150F630077E4A8 /* back_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = back_btn.png; sourceTree = "<group>"; };
 		70E0B623141510880077E4A8 /* forward_btn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = forward_btn.png; sourceTree = "<group>"; };
 		70E16B081455CBC00050C281 /* app_icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = app_icon.png; sourceTree = "<group>"; };
@@ -555,8 +555,8 @@
 				70249BDA1403D644006A19E6 /* PadView.mm */,
 				705A503414066421004C1C8B /* ScrollViewWithPadView.h */,
 				705A503514066421004C1C8B /* ScrollViewWithPadView.mm */,
-				705F1A66142347CA003045D9 /* SlideView.h */,
-				70C1D67C1468166100514DC0 /* SlideView.mm */,
+				705F1A66142347CA003045D9 /* PadSlideView.h */,
+				70C1D67C1468166100514DC0 /* PadSlideView.mm */,
 				7044980B1429D13D00E83799 /* PadImageScrollView.h */,
 				7044980C1429D13D00E83799 /* PadImageScrollView.mm */,
 				70E36B551472965E004AEB6A /* FileContainerElement.h */,
@@ -819,7 +819,7 @@
 				702BB9DC14482E3C00D3842F /* HorizontalPickerView.mm in Sources */,
 				702BB9E71448680200D3842F /* LineWidthPicker.mm in Sources */,
 				70C1D67B1468162600514DC0 /* LineWidthCell.mm in Sources */,
-				70C1D67D1468166100514DC0 /* SlideView.mm in Sources */,
+				70C1D67D1468166100514DC0 /* PadSlideView.mm in Sources */,
 				70078C2D146AC4C400C19F4D /* FileUtils.cxx in Sources */,
 				70E4FE5214715ABD00296BFF /* TransparentToolbar.m in Sources */,
 				70E4FE5B1471685700296BFF /* SearchViewController.mm in Sources */,

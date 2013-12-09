@@ -3,7 +3,7 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import "SlideshowViewController.h"
-#import "SlideView.h"
+#import "PadSlideView.h"
 
 //C++ imports.
 #import "IOSPad.h"
@@ -14,7 +14,7 @@
    __weak IBOutlet UIView *parentView;
    __weak IBOutlet UIView *padParentView;
 
-   SlideView *padViews[2];//The current and the next in a slide show.
+   PadSlideView *padViews[2];//The current and the next in a slide show.
 
    unsigned visiblePad;
    unsigned nCurrentObject;
@@ -34,7 +34,7 @@
    
    parentView.frame = mainFrame;
    
-   CGRect padFrame = [SlideView slideFrame];
+   CGRect padFrame = [PadSlideView slideFrame];
    padFrame.origin = CGPointMake(mainFrame.size.width / 2 - padFrame.size.width / 2, mainFrame.size.height / 2 - padFrame.size.height / 2);
    
    padParentView.frame = padFrame;
@@ -49,14 +49,14 @@
 //____________________________________________________________________________________________________
 - (void) initPadViews
 {
-   const CGRect padFrame = [SlideView slideFrame];
+   const CGRect padFrame = [PadSlideView slideFrame];
 
    unsigned nObjects = fileContainer->GetNumberOfObjects();
    if (nObjects > 2)
       nObjects = 2;
 
    for (unsigned i = 0; i < nObjects; ++i) {
-      padViews[i] = [[SlideView alloc] initWithFrame : padFrame];
+      padViews[i] = [[PadSlideView alloc] initWithFrame : padFrame];
       [padParentView addSubview : padViews[i]];
       padViews[i].hidden = YES;
    }
