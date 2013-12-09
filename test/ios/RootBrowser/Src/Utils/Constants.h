@@ -84,6 +84,8 @@ extern bool deviceIsiPad3;
 
 
 extern NSString * const ROOTBrowserViewControllerID;
+extern NSString * const FileContentViewControllerID;
+extern NSString * const SlideshowViewControllerID;
 
 }//namespace Browser
 }//namespace iOS

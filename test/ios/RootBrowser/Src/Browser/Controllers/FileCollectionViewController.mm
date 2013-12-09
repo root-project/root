@@ -4,6 +4,7 @@
 #import "FileContentViewController.h"
 #import "FileShortcutView.h"
 #import "Shortcuts.h"
+#import "Constants.h"
 
 //C++ imports.
 #import "FileUtils.h"
@@ -84,6 +85,7 @@
 //____________________________________________________________________________________________________
 - (void) viewDidLayoutSubviews
 {
+   //I only have to set correct positions for the shortcuts.
    [self correctFramesForOrientation : self.interfaceOrientation];
 }
 
@@ -154,7 +156,11 @@
 //____________________________________________________________________________________________________
 - (void) fileWasSelected : (FileShortcutView *) shortcut
 {
-   FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
+   assert(self.storyboard != nil && "fileWasSelected:, self.storyboard is nil");   
+   UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::FileContentViewControllerID];
+   assert([c isKindOfClass : [FileContentViewController class]] &&
+          "fileWasSelected:, file content view controller has a wrong type");
+   FileContentViewController * const contentController = (FileContentViewController *)c;
    [contentController activateForFile : [shortcut getFileContainer]];
    [self.navigationController pushViewController : contentController animated : YES];
 }

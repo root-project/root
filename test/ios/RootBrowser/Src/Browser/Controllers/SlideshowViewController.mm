@@ -1,4 +1,4 @@
-#import <stdlib.h>
+#import <cassert>
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -22,18 +22,16 @@
    ROOT::iOS::Browser::FileContainer *fileContainer;
    
    NSTimer *timer;
+
+   BOOL viewDidAppear;
 }
 
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
 {
-   CGRect mainFrame;
-   UIInterfaceOrientationIsPortrait(orientation) ? mainFrame = CGRectMake(0.f, 44.f, 768.f, 960.f)
-                                                 : (mainFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f));
+#pragma unused(orientation)
 
-   
-   parentView.frame = mainFrame;
-   
+   const CGRect mainFrame = self.view.frame;
    CGRect padFrame = [PadSlideView slideFrame];
    padFrame.origin = CGPointMake(mainFrame.size.width / 2 - padFrame.size.width / 2, mainFrame.size.height / 2 - padFrame.size.height / 2);
    
@@ -63,34 +61,22 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil fileContainer : (ROOT::iOS::Browser::FileContainer *)container
+- (id) initWithCoder : (NSCoder *) aDecoder
 {
-   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-
-   if (self) {
-      [self view];
-
-      fileContainer = container;
-      
-      if (fileContainer->GetNumberOfObjects()) {
-         [self initPadViews];
-
-         nCurrentObject = 0;
-         visiblePad = 0;
-
-         [padViews[0] setPad : fileContainer->GetPadAttached(0)];
-         [padViews[0] setNeedsDisplay];
-
-         if (fileContainer->GetNumberOfObjects() > 1) {
-            [padViews[1] setPad:fileContainer->GetPadAttached(1)];
-            [padParentView addSubview : padViews[1]];
-         }
-
-         //Ready for show now.
-      }
+   if (self = [super initWithCoder : aDecoder]) {
+      fileContainer = nullptr;
+      viewDidAppear = NO;
    }
-
+   
    return self;
+}
+
+//____________________________________________________________________________________________________
+- (void) setFileContainer : (ROOT::iOS::Browser::FileContainer *) container
+{
+   assert(container != nullptr && "setFileContainer:, parameter 'container' is null");
+   
+   fileContainer = container;
 }
 
 //____________________________________________________________________________________________________
@@ -101,7 +87,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
+- (void) didReceiveMemoryWarning
 {
    // Releases the view if it doesn't have a superview.
    [super didReceiveMemoryWarning];
@@ -111,38 +97,53 @@
 #pragma mark - View lifecycle
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (void) viewDidLoad
 {
    [super viewDidLoad];
    
-   [self correctFramesForOrientation : self.interfaceOrientation];
+   assert(fileContainer != nullptr && "viewDidLoad, fileContainer is null");
+   [self initPadViews];
 }
 
 //____________________________________________________________________________________________________
-- (void)viewDidUnload
+- (void) viewDidAppear : (BOOL) animated
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+   [super viewDidAppear : animated];
 
-//____________________________________________________________________________________________________
-- (void) viewWillAppear : (BOOL)animated
-{
-   [self correctFramesForOrientation : self.interfaceOrientation];
-   padViews[0].hidden = NO;
-}
+   assert(fileContainer != nullptr && "viewDidAppera:, fileContainer is null");
 
-//____________________________________________________________________________________________________
-- (void) viewDidAppear : (BOOL)animated
-{
+   if (!viewDidAppear) {
+      if (fileContainer->GetNumberOfObjects()) {
+         nCurrentObject = 0;
+         visiblePad = 0;
+
+         [padViews[0] setPad : fileContainer->GetPadAttached(0)];
+         [padViews[0] setNeedsDisplay];
+
+         if (fileContainer->GetNumberOfObjects() > 1) {
+            [padViews[1] setPad : fileContainer->GetPadAttached(1)];
+            [padViews[1] setNeedsDisplay];
+            [padParentView addSubview : padViews[1]];
+         }
+
+         padViews[0].hidden = NO;
+      }
+      
+      viewDidAppear = YES;
+   }
+
    if (fileContainer->GetNumberOfObjects() > 1)
       timer = [NSTimer scheduledTimerWithTimeInterval : 2.f target : self selector : @selector(changeViews) userInfo : nil repeats : YES];
 }
 
+//____________________________________________________________________________________________________
+- (void) viewDidLayoutSubviews
+{
+   [self correctFramesForOrientation : self.interfaceOrientation];
+}
 
 //____________________________________________________________________________________________________
-- (void) viewDidDisappear:(BOOL)animated
+- (void) viewDidDisappear : (BOOL)animated
 {
    if (timer) {
       [timer invalidate];
@@ -151,15 +152,17 @@
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   // Return YES for supported orientations
-	
+#pragma unused(interfaceOrientation)
    return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void)willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration : (NSTimeInterval)duration {
+- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation duration : (NSTimeInterval) duration
+{
+#pragma unused(duration)
+
    [self correctFramesForOrientation : interfaceOrientation];
 }
 

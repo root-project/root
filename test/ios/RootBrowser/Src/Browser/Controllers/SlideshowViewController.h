@@ -12,6 +12,6 @@ class FileContainer;
 
 @interface SlideshowViewController : UIViewController <UIScrollViewDelegate>
 
-- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil fileContainer : (ROOT::iOS::Browser::FileContainer *) container;
+- (void) setFileContainer : (ROOT::iOS::Browser::FileContainer *) container;
 
 @end

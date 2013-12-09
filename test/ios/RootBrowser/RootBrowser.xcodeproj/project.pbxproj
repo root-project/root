@@ -379,9 +379,9 @@
 				706EA5831855F8CC0043AAA6 /* FileContentViewController.h */,
 				706EA5821855F8CC0043AAA6 /* ObjectViewController.mm */,
 				706EA5841855F8CC0043AAA6 /* SlideshowViewController.mm */,
+				706EA5871855F8CC0043AAA6 /* SlideshowViewController.h */,
 				706EA5851855F8CC0043AAA6 /* SearchViewController.h */,
 				706EA5861855F8CC0043AAA6 /* SearchViewController.mm */,
-				706EA5871855F8CC0043AAA6 /* SlideshowViewController.h */,
 				706EA5881855F8CC0043AAA6 /* ObjectViewController.h */,
 			);
 			path = Controllers;

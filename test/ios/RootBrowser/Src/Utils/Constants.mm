@@ -86,6 +86,8 @@ const unsigned stippleBase = 3000;
 bool deviceIsiPad3 = false;
 
 NSString * const ROOTBrowserViewControllerID = @"ROOTBrowserViewControllerID";
+NSString * const FileContentViewControllerID = @"FileContentViewControllerID";
+NSString * const SlideshowViewControllerID = @"SlideshowViewControllerID";
 
 }//namespace Browser
 }//namespace iOS

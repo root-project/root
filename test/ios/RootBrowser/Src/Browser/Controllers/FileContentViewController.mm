@@ -1,4 +1,5 @@
-#import <CoreGraphics/CGGeometry.h>
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileContentViewController.h"
@@ -9,6 +10,7 @@
 #import "ObjectShortcutView.h"
 #import "SpotObjectView.h"
 #import "Shortcuts.h"
+#import "Constants.h"
 
 //C++ imports.
 #import "IOSPad.h"
@@ -28,6 +30,8 @@
    BOOL animateDirAfterLoad;
    BOOL animateObjAfterLoad;
    unsigned spotElement;
+   
+   BOOL viewDidAppear;
 }
 
 @synthesize fileContainer;
@@ -55,80 +59,64 @@
    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithCustomView : toolbar];
    rightItem.style = UIBarButtonItemStylePlain;
    self.navigationItem.rightBarButtonItem = rightItem;
-   
-   
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
+- (id) initWithCoder : (NSCoder *) aDecoder
 {
-   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-
-   if (self) {
-      [self view];
-      [self initToolbarItems];
-      searchController = [[SearchViewController alloc] initWithStyle : UITableViewStylePlain];
-      searchController.delegate = self;
+   if (self = [super initWithCoder : aDecoder]) {
+      //
+      viewDidAppear = NO;
    }
-
+   
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-    
-   // Release any cached data, images, etc that aren't in use.
 }
 
 #pragma mark - View lifecycle
 
-
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
 {
-   //TODO: all this staff with manual geometry management should be deleted, as soon as I switch to
-   //ThumbnailView class.
-   CGRect mainFrame;
-   CGRect scrollFrame;
+   //It's a legacy code - in the past I was resetting view's geometry manually.
+   //Now it's done with automatic layout + I'm setting shortcuts myself.
 
-   if (orientation == UIInterfaceOrientationPortrait || orientation == UIInterfaceOrientationPortraitUpsideDown) {
-      mainFrame = CGRectMake(0.f, 0.f, 768.f, 1004.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 768.f, 960.f);
-   } else {
-      mainFrame = CGRectMake(0.f, 0.f, 1024.f, 748.f);
-      scrollFrame = CGRectMake(0.f, 44.f, 1024.f, 704.f);   
+   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
+   
+   if ([[scrollView subviews] count]) {
+      PlaceShortcutsInScrollView(objectShortcuts, scrollView,
+                                 CGSizeMake([ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]),
+                                 100.f);
    }
-   
-   self.view.frame = mainFrame;
-   scrollView.frame = scrollFrame;
-   
-   if ([[scrollView subviews] count])
-      [ShorcutUtil placeShortcuts : objectShortcuts inScrollView : scrollView withSize : CGSizeMake([ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]) andSpace : 100.f];
 }
 
 //____________________________________________________________________________________________________
-- (void) viewWillAppear:(BOOL)animated
+- (void) viewWillAppear : (BOOL) animated
 {
-   //TODO: all this staff with manual geometry management should be deleted, as soon as I switch to
-   //ThumbnailView class.
-   //self.interfaceOrientation ?
-   [self correctFramesForOrientation : [UIApplication sharedApplication].statusBarOrientation];
+   [super viewWillAppear : animated];
+   [self correctFramesForOrientation : self.interfaceOrientation];
 }
 
 //____________________________________________________________________________________________________
 - (void) viewDidLoad
 {
    [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
+   //
+   [self initToolbarItems];
+   searchController = [[SearchViewController alloc] initWithStyle : UITableViewStylePlain];
+   searchController.delegate = self;
+   //
+   assert(fileContainer != nil && "viewDidLoad, fileContainer is nil");
+   //Create object shortcuts.
+   self.navigationItem.title = [NSString stringWithFormat : @"Contents of %s", fileContainer->GetFileName()];
+   slideShowBtn.enabled = fileContainer->GetNumberOfObjects() > 1 ? YES : NO;
+   [self addObjectsIntoScrollview];
 }
 
 //____________________________________________________________________________________________________
-- (void) viewDidAppear:(BOOL)animated
+- (void) viewDidAppear : (BOOL)animated
 {
    [super viewDidAppear : animated];
+   
    if (animateDirAfterLoad) {
       [self highlightDirectory : spotElement];
       animateDirAfterLoad = NO;
@@ -139,32 +127,29 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) viewDidUnload
+- (void) viewDidLayoutSubviews
 {
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
+   [self correctFramesForOrientation : self.interfaceOrientation];
 }
 
 //____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation) interfaceOrientation
 {
-   // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration:(NSTimeInterval)duration 
+- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration : (NSTimeInterval) duration
 {
-   //TODO: all this staff with manual geometry management should be deleted, as soon as I switch to
-   //ThumbnailView class.
-
+#pragma unused(duration)
    [self correctFramesForOrientation : interfaceOrientation];
 }
 
 //____________________________________________________________________________________________________
-- (void) didRotateFromInterfaceOrientation : (UIInterfaceOrientation)fromInterfaceOrientation 
+- (void) didRotateFromInterfaceOrientation : (UIInterfaceOrientation) fromInterfaceOrientation
 {
+#pragma unused(fromInterfaceOrientation)
    //Bring back the popover after rotating.
    if (searchPopover) {
       [searchPopover presentPopoverFromRect : searchBar.bounds inView : searchBar
@@ -175,10 +160,9 @@
 //____________________________________________________________________________________________________
 - (void) clearScrollview
 {
-   NSArray *viewsToRemove = [scrollView subviews];
+   NSArray * const viewsToRemove = [scrollView subviews];
    for (UIView *v in viewsToRemove)
       [v removeFromSuperview];
-
 }
 
 //____________________________________________________________________________________________________
@@ -249,21 +233,21 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) activateForFile : (ROOT::iOS::Browser::FileContainer *)container
+- (void) activateForFile : (ROOT::iOS::Browser::FileContainer *) container
 {
+   assert(container != nullptr && "activateForFile:, parameter 'container' is null");
+
    fileContainer = container;
-   self.navigationItem.title = [NSString stringWithFormat : @"Contents of %s", container->GetFileName()];
-   slideShowBtn.enabled = fileContainer->GetNumberOfObjects() > 1 ? YES : NO;
-   
-   //Prepare objects' thymbnails.
-   [self addObjectsIntoScrollview];
-   [self correctFramesForOrientation : [UIApplication sharedApplication].statusBarOrientation];
 }
 
 //____________________________________________________________________________________________________
 - (void) startSlideshow
 {
-   SlideshowViewController *slideshowController = [[SlideshowViewController alloc] initWithNibName : @"SlideshowController" bundle : nil fileContainer : fileContainer];
+   assert(self.storyboard != nil && "startSlideshow, self.storyboard is nil");
+   assert(fileContainer != nullptr && "startSlideshow, fileContainer is null");
+
+   SlideshowViewController * const slideshowController = [self.storyboard instantiateViewControllerWithIdentifier:ROOT::iOS::Browser::SlideshowViewControllerID];
+   [slideshowController setFileContainer : fileContainer];
    [self.navigationController pushViewController : slideshowController animated : YES];
 }
 
@@ -279,13 +263,20 @@
 //____________________________________________________________________________________________________
 - (void) selectObjectFromFile : (ObjectShortcutView *) shortcut
 {
+   assert(shortcut != nil && "selectObjectFromFile:, parameter shortcut is nil");
+   assert(fileContainer != nullptr && "selectObjectFromFile:, fileContainer is null");
+
    if (shortcut.isDirectory) {
       //Create another FileContentController and push it on stack.
-      FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      assert(self.storyboard != nil && "selectObjectFromFile:, self.storyboard is nil");
+      UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::FileContentViewControllerID];
+      assert([c isKindOfClass : [FileContentViewController class]] && "file content controller has a wrong type");
+      FileContentViewController * const contentController = (FileContentViewController *)c;
       [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
-      ObjectViewController *objectController = [[ObjectViewController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
+      //TODO: replace the obsolete xib.
+      ObjectViewController * const objectController = [[ObjectViewController alloc] initWithNibName : @"ROOTObjectController" bundle : nil];
       [objectController setNavigationForObjectWithIndex : shortcut.objectIndex fromContainer : fileContainer];
       [self.navigationController pushViewController : objectController animated : YES];
    }
@@ -361,8 +352,11 @@
 //____________________________________________________________________________________________________
 - (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key
 {
-   //NSLog(@"selected %@ with index %d", key.elementName, key.elementIndex);
-   assert(key.elementIndex < fileContainer->GetNumberOfDescriptors());
+#pragma unused(controller)
+
+   assert(key != nil && "searchesController:didSelectKey:, parameter 'key' is nil");
+   assert(key.elementIndex < fileContainer->GetNumberOfDescriptors() &&
+          "searchesController:didSelectKey:, key.elementIndex is out of bounds");
 
    [searchPopover dismissPopoverAnimated : YES];
    searchPopover = nil;
@@ -373,7 +367,11 @@
       descriptor.fIsDir ? [self highlightDirectory : descriptor.fIndex] : [self highlightObject : descriptor.fIndex];
    } else {
       //Create another FileContentController and push it on stack.
-      FileContentViewController *contentController = [[FileContentViewController alloc] initWithNibName : @"FileContentController" bundle : nil];
+      assert(self.storyboard != nil && "searchesController:didSelectKey:, self.storyboard is nil");
+      UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier:ROOT::iOS::Browser::FileContentViewControllerID];
+      assert([c isKindOfClass : [FileContentViewController class]] &&
+             "searchesController:didSelectKey, file content controller has a wrong type");
+      FileContentViewController * const contentController = (FileContentViewController *)c;
       [contentController activateForFile : descriptor.fOwner];
 
       if (descriptor.fIsDir)

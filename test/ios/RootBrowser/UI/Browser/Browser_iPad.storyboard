@@ -87,6 +87,7 @@
                             <constraint firstItem="Wbb-F6-9Wc" firstAttribute="top" secondItem="1kY-e5-3bZ" secondAttribute="top" id="kWo-yK-0pj"/>
                         </constraints>
                     </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
                     <navigationItem key="navigationItem" id="LDB-bR-MXC"/>
                     <connections>
                         <outlet property="fileNameField" destination="kQR-XR-yFP" id="9xS-0o-Iox"/>
@@ -97,6 +98,86 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="DUY-qO-KGi" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1015" y="69"/>
+        </scene>
+        <!--Slideshow View Controller-->
+        <scene sceneID="S8h-ph-5Rl">
+            <objects>
+                <viewController storyboardIdentifier="SlideshowViewControllerID" id="Xaz-dL-Ftk" customClass="SlideshowViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="xaV-YV-Rv5"/>
+                        <viewControllerLayoutGuide type="bottom" id="iB5-We-sni"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="F18-J4-uVw">
+                        <rect key="frame" x="0.0" y="64" width="768" height="960"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QaI-T0-MFv">
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="960"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <subviews>
+                                    <view contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="PVs-3Y-1Tg">
+                                        <rect key="frame" x="0.0" y="0.0" width="768" height="960"/>
+                                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                    </view>
+                                </subviews>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="QaI-T0-MFv" secondAttribute="trailing" id="EkC-hg-afg"/>
+                            <constraint firstItem="QaI-T0-MFv" firstAttribute="leading" secondItem="F18-J4-uVw" secondAttribute="leading" id="fYW-X0-4CW"/>
+                            <constraint firstAttribute="bottom" secondItem="QaI-T0-MFv" secondAttribute="bottom" id="lw3-Ca-1F9"/>
+                            <constraint firstItem="QaI-T0-MFv" firstAttribute="top" secondItem="F18-J4-uVw" secondAttribute="top" id="yJ1-Ly-gQY"/>
+                        </constraints>
+                    </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" barStyle="black" translucent="NO" prompted="NO"/>
+                    <connections>
+                        <outlet property="padParentView" destination="PVs-3Y-1Tg" id="NbA-y4-hLM"/>
+                        <outlet property="parentView" destination="QaI-T0-MFv" id="jYe-wj-cra"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="Vgd-aM-r7p" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1914" y="575"/>
+        </scene>
+        <!--File Content View Controller-->
+        <scene sceneID="RZv-bU-X66">
+            <objects>
+                <viewController storyboardIdentifier="FileContentViewControllerID" id="Njf-pO-o0x" customClass="FileContentViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="RFt-Vy-am8"/>
+                        <viewControllerLayoutGuide type="bottom" id="ob3-F0-rfy"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="hq3-JD-UzQ">
+                        <rect key="frame" x="0.0" y="64" width="768" height="960"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <scrollView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HmI-Cn-O1u">
+                                <rect key="frame" x="0.0" y="0.0" width="768" height="960"/>
+                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                            </scrollView>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="HmI-Cn-O1u" firstAttribute="top" secondItem="hq3-JD-UzQ" secondAttribute="top" id="8XF-yV-I57"/>
+                            <constraint firstAttribute="bottom" secondItem="HmI-Cn-O1u" secondAttribute="bottom" id="HDc-Ez-nMz"/>
+                            <constraint firstAttribute="trailing" secondItem="HmI-Cn-O1u" secondAttribute="trailing" id="mru-DY-Ope"/>
+                            <constraint firstItem="HmI-Cn-O1u" firstAttribute="leading" secondItem="hq3-JD-UzQ" secondAttribute="leading" id="ngp-qi-2QU"/>
+                        </constraints>
+                    </view>
+                    <extendedEdge key="edgesForExtendedLayout" bottom="YES"/>
+                    <simulatedNavigationBarMetrics key="simulatedTopBarMetrics" barStyle="black" translucent="NO" prompted="NO"/>
+                    <connections>
+                        <outlet property="scrollView" destination="HmI-Cn-O1u" id="Sky-a8-6Ty"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="6Yy-Nm-GSY" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1838" y="-580"/>
         </scene>
     </scenes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
