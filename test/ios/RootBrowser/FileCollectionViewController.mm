@@ -1,24 +1,36 @@
+#import <cassert>
+
 #import <QuartzCore/QuartzCore.h>
 
+#import "FileCollectionViewController.h"
 #import "FileContentController.h"
-#import "RootFileController.h"
 #import "FileShortcut.h"
 #import "Shortcuts.h"
 
 //C++ imports.
 #import "FileUtils.h"
 
-@interface RootFileController () <UIActionSheetDelegate> {
-@private
+
+@implementation FileCollectionViewController {
+   __weak IBOutlet UIScrollView *scrollView;
+   __weak IBOutlet UIView *fileOpenView;
+   __weak IBOutlet UITextField *fileNameField;
+   
    NSMutableArray *fileContainers;
+   BOOL viewDidAppear;
    __weak FileShortcut *fileToDelete;
 }
 
-- (void) hideFileOpenView;
-
-@end
-
-@implementation RootFileController
+//____________________________________________________________________________________________________
+- (id) initWithCoder : (NSCoder *) aDecoder
+{
+   if (self = [super initWithCoder : aDecoder]) {
+      fileContainers = [[NSMutableArray alloc] init];
+      viewDidAppear = NO;
+   }
+   
+   return self;
+}
 
 //____________________________________________________________________________________________________
 - (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
@@ -45,14 +57,6 @@
    }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
 }
 
 #pragma mark - View lifecycle
@@ -101,26 +105,25 @@
 - (void) viewDidLoad
 {
    [super viewDidLoad];
+   //
+   //Setup additional views here.
+   
+   //
 }
 
 //____________________________________________________________________________________________________
-- (void) viewDidUnload
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-    [super viewDidUnload];
-    // Release any retained subviews of the main view.
-    // e.g. self.myOutlet = nil;
-}
+#pragma unused(interfaceOrientation)
 
-//____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
-{
-    // Return YES for supported orientations
 	return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void)willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation duration : (NSTimeInterval) duration
+- (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation duration : (NSTimeInterval) duration
 {
+#pragma unused(duration)
+
    [self correctFramesForOrientation : interfaceOrientation];
 }
 
@@ -130,9 +133,11 @@
 - (void) addRootFile : (NSString *) fileName
 {
    //Open the file and read its contents.
+   assert(fileName != nil && "addRootFile:, parameter 'fileName' is nil");
+   
    using namespace ROOT::iOS::Browser;
    
-   FileContainer *fileContainer = FileContainer::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
+   FileContainer * const fileContainer = FileContainer::CreateFileContainer([fileName cStringUsingEncoding : [NSString defaultCStringEncoding]]);
 
    if (!fileContainer) {
       UIAlertView *alert = [[UIAlertView alloc] initWithTitle : @"File Open Error:"

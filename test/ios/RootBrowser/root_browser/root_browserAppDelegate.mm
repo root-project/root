@@ -6,8 +6,8 @@
 
 #import "TApplication.h"
 
+#import "FileCollectionViewController.h"
 #import "root_browserAppDelegate.h"
-#import "RootFileController.h"
 #import "Constants.h"
 
 
@@ -23,7 +23,7 @@ bool deviceIsiPad3 = false;
    TApplication *rootApp;
 
    UINavigationController *navigationController;
-   __weak RootFileController *rc;
+   __weak FileCollectionViewController *rc;
 }
 
 @synthesize window=_window;
@@ -31,7 +31,7 @@ bool deviceIsiPad3 = false;
 //____________________________________________________________________________________________________
 - (void) initRootController
 {
-   RootFileController *rootController = [[RootFileController alloc] initWithNibName : @"RootFileController" bundle : nil];
+   FileCollectionViewController *rootController = [[FileCollectionViewController alloc] initWithNibName : @"RootFileController" bundle : nil];
    rc = rootController;
    
    NSString *demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];

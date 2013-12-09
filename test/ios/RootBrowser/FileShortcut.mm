@@ -1,6 +1,6 @@
 #import <cassert>
 
-#import "RootFileController.h"
+#import "FileCollectionViewController.h"
 #import "FileShortcut.h"
 
 //C++ imports.
@@ -89,7 +89,7 @@
 - (void) handleTap 
 {
    assert(controller != nil && "handleTap, controller is nil");
-   [(RootFileController *)controller fileWasSelected : self];
+   [(FileCollectionViewController *)controller fileWasSelected : self];
 }
 
 //____________________________________________________________________________________________________
@@ -99,7 +99,7 @@
    assert(controller != nil && "handleLongPress:, controller is nil");
 
    if (longPress.state == UIGestureRecognizerStateBegan)
-      [(RootFileController *)controller tryToDelete : self];
+      [(FileCollectionViewController *)controller tryToDelete : self];
 }
 
 //____________________________________________________________________________________________________
