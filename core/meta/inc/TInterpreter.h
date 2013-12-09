@@ -269,7 +269,7 @@ public:
    virtual ClassInfo_t  *ClassInfo_Factory(ClassInfo_t * /* cl */) const = 0;
    virtual ClassInfo_t  *ClassInfo_Factory(const char * /* name */) const = 0; 
    virtual Long_t   ClassInfo_GetBaseOffset(ClassInfo_t* /* derived */,
-                                            ClassInfo_t* /* target */, void* /* address */ = 0) const {return 0;}
+                                            ClassInfo_t* /* base */, void* /* address */ = 0) const {return 0;}
    virtual int    ClassInfo_GetMethodNArg(ClassInfo_t * /* info */, const char * /* method */,const char * /* proto */, Bool_t /* objectIsConst */ = false, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) const {return 0;}
    virtual Bool_t ClassInfo_HasDefaultConstructor(ClassInfo_t * /* info */) const {return 0;}
    virtual Bool_t ClassInfo_HasMethod(ClassInfo_t * /* info */, const char * /* name */) const {return 0;}

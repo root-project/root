@@ -5090,15 +5090,15 @@ Long_t TCling::BaseClassInfo_Offset(BaseClassInfo_t* bcinfo, void * address) con
 }
 
 //______________________________________________________________________________
-Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* derived, ClassInfo_t* target, void * address) const
+Long_t TCling::ClassInfo_GetBaseOffset(ClassInfo_t* derived, ClassInfo_t* base, void * address) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) derived;
-   TClingClassInfo* TClinginfoTarget = (TClingClassInfo*) target;
+   TClingClassInfo* TClinginfoBase = (TClingClassInfo*) base;
    // Offset to the class itself.
-   if (TClinginfo->GetDecl() == TClinginfoTarget->GetDecl()) {
+   if (TClinginfo->GetDecl() == TClinginfoBase->GetDecl()) {
       return 0;
    }
-   return TClinginfo->GetBaseOffset(TClinginfoTarget, address);
+   return TClinginfo->GetBaseOffset(TClinginfoBase, address);
 }
 
 //______________________________________________________________________________
