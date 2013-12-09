@@ -271,6 +271,9 @@ MODULES      += misc/minicern hist/hbook
 endif
 ifeq ($(HASXRD),yes)
 MODULES      += net/netx
+ifeq ($(BUILDNETXNG),yes)
+MODULES      += net/netxng
+endif
 ifeq ($(BUILDALIEN),yes)
 MODULES      += net/alien
 endif
@@ -301,7 +304,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 rootx net/rootd io/dcache io/chirp hist/hbook graf2d/asimage \
                 net/ldap net/krb5auth net/rpdutils net/globusauth \
                 bindings/pyroot bindings/ruby io/gfal misc/minicern \
-                graf2d/qt gui/qtroot gui/qtgsi net/netx net/alien \
+                graf2d/qt gui/qtroot gui/qtgsi net/netx net/netxng net/alien \
                 proof/proofd proof/proofx proof/pq2 graf3d/x3d net/davix \
                 sql/oracle io/xmlparser math/mathmore cint/reflex cint/cintex \
                 tmva math/genetic io/hdfs graf2d/fitsio roofit/roofitcore \

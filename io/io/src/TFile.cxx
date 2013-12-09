@@ -4023,7 +4023,8 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       if (type == kNet) {
          // Network files
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            !strcmp(h->GetClass(),"TXNetFile") && h->LoadPlugin() == 0) {
+            (!strcmp(h->GetClass(),"TXNetFile") || !strcmp(h->GetClass(),"TNetXNGFile"))
+            && h->LoadPlugin() == 0) {
             f = (TFile*) h->ExecPlugin(6, name.Data(), option, ftitle, compress, netopt, kTRUE);
             notfound = kFALSE;
          }

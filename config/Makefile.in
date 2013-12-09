@@ -272,6 +272,7 @@ EXTRA_XRDFLAGS := @extraxrdflags@
 XRDVERSION     := @xrdversion@
 HASXRDUTILS    := @hasxrdutils@
 XRDINCPRIVATE  := @xrdincprivate@
+BUILDNETXNG    := @buildnetxng@
 
 SRPLIBDIR      := @srplibdir@
 SRPLIB         := @srplib@

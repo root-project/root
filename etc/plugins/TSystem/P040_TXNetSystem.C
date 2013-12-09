@@ -1,5 +1,10 @@
 void P040_TXNetSystem()
 {
-   gPluginMgr->AddHandler("TSystem", "^root:", "TXNetSystem",
-      "Netx", "TXNetSystem(const char *,Bool_t)");
+   if (!gEnv->GetValue("XNet.UseOldClient", 0)) {
+      gPluginMgr->AddHandler("TSystem", "^[x]?root:", "TNetXNGSystem",
+         "NetXNG", "TNetXNGSystem(const char *,Bool_t)");
+   } else {
+      gPluginMgr->AddHandler("TSystem", "^[x]?root:", "TXNetSystem",
+         "Netx", "TXNetSystem(const char *,Bool_t)");
+   }
 }

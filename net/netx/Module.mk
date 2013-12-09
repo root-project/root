@@ -37,21 +37,8 @@ ALLMAPS      += $(NETXMAP)
 INCLUDEFILES += $(NETXDEP)
 endif
 
-# When using an external XROOTD distribution XROOTDDIRI and XROOTDDIRL
-# are undefined and have to point to the specified inc and lib dirs.
-ifneq ($(XRDINCDIR),)
-ifeq ($(XROOTDDIRI),)
-XROOTDDIRI   := $(XRDINCDIR)
-endif
-endif
-ifneq ($(XRDLIBDIR),)
-ifeq ($(XROOTDDIRL),)
-XROOTDDIRL   := $(XRDLIBDIR)
-endif
-endif
-
 # Xrootd includes
-NETXINCEXTRA := $(XROOTDDIRI:%=-I%)
+NETXINCEXTRA := $(XRDINCDIR:%=-I%)
 ifneq ($(EXTRA_XRDFLAGS),)
 NETXINCEXTRA += -I$(ROOT_SRCDIR)/proof/proofd/inc
 endif
@@ -61,12 +48,12 @@ endif
 
 # Xrootd client libs
 ifeq ($(PLATFORM),win32)
-NETXLIBEXTRA += $(XROOTDDIRL)/libXrdClient.lib
+NETXLIBEXTRA += $(XRDLIBDIR)/libXrdClient.lib
 else
 ifeq ($(HASXRDUTILS),no)
-NETXLIBEXTRA += $(XROOTDDIRL) -lXrdOuc -lXrdSys -lXrdClient -lpthread
+NETXLIBEXTRA += $(XRDLIBDIR) -lXrdOuc -lXrdSys -lXrdClient -lpthread
 else
-NETXLIBEXTRA += $(XROOTDDIRL) -lXrdUtils -lXrdClient
+NETXLIBEXTRA += $(XRDLIBDIR) -lXrdUtils -lXrdClient
 endif
 endif
 
@@ -76,13 +63,12 @@ endif
 include/%.h:    $(NETXDIRI)/%.h $(XROOTDMAKE)
 		cp $< $@
 
-$(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP) \
-                $(XRDNETXD)
+$(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libNetx.$(SOEXT) $@ "$(NETXO) $(NETXDO)" \
 		   "$(NETXLIBEXTRA)"
 
-$(NETXDS):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(XRDPLUGINS)
+$(NETXDS):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
