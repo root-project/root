@@ -22,9 +22,9 @@
 
 - (void) removeAllEditors;
 - (void) propertyUpdated;
-- (void) addSubEditor : (UIView *)element withName : (NSString *)editorName;
+- (void) addSubEditor : (UIView *) element withName : (NSString *) editorName;
 - (void) correctFrames;
 - (void) plateTapped : (EditorPlateView *) plate;
-- (void) setEditorTitle : (const char*)title;
+- (void) setEditorTitle : (const char*) title;
 
 @end

@@ -4,9 +4,9 @@
 #import <QuartzCore/QuartzCore.h>
 
 #import "FileContentViewController.h"
+#import "SlideshowViewController.h"
 #import "ObjectViewController.h"
 #import "FileContainerElement.h"
-#import "SlideshowController.h"
 #import "TransparentToolbar.h"
 #import "SearchController.h"
 #import "ObjectShortcut.h"
@@ -262,7 +262,7 @@
 //____________________________________________________________________________________________________
 - (void) startSlideshow
 {
-   SlideshowController *slideshowController = [[SlideshowController alloc] initWithNibName : @"SlideshowController" bundle : nil fileContainer : fileContainer];
+   SlideshowViewController *slideshowController = [[SlideshowViewController alloc] initWithNibName : @"SlideshowController" bundle : nil fileContainer : fileContainer];
    [self.navigationController pushViewController : slideshowController animated : YES];
 }
 

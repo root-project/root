@@ -2,7 +2,7 @@
 
 #import <QuartzCore/QuartzCore.h>
 
-#import "SlideshowController.h"
+#import "SlideshowViewController.h"
 #import "SlideView.h"
 
 //C++ imports.
@@ -10,7 +10,10 @@
 
 #import "FileUtils.h"
 
-@implementation SlideshowController {
+@implementation SlideshowViewController {
+   __weak IBOutlet UIView *parentView;
+   __weak IBOutlet UIView *padParentView;
+
    SlideView *padViews[2];//The current and the next in a slide show.
 
    unsigned visiblePad;
