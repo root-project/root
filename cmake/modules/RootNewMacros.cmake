@@ -240,14 +240,23 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_MODULE)
     set(target_lib_common ${libprefix}${ARG_MODULE})
-    set(rootmap_name ${target_lib_common}.rootmap)
-    set(library_name ${target_lib_common}${libsuffix})
-    set(newargs -s ${library_name})
-    set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
-    set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)
+  else()
+    get_filename_component(dict_base_name ${dictionary} NAME_WE)
+    string(SUBSTRING ${dictionary} 3 -1 deduced_arg_module)
+    set(target_lib_common ${libprefix}${deduced_arg_module})
+  endif()
+
+  set(rootmap_name ${target_lib_common}.rootmap)
+  set(library_name ${target_lib_common}${libsuffix})
+  set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
+  
+  if(ARG_MODULE)
+    set(newargs -s ${libprefix}${ARG_MODULE}${libsuffix})
+    set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)    
   else()
     set(pcm_name ${dictionary}_rdict.pcm)
   endif()
+  
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
       set(newargs ${newargs} -m  ${libprefix}${dep}_rdict.pcm)
@@ -259,7 +268,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
                      COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                              -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} DESTINATION lib COMPONENT libraries)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${CMAKE_CURRENT_BINARY_DIR}/${rootmap_name} DESTINATION lib COMPONENT libraries)
 endfunction()
 
 
