@@ -41,81 +41,81 @@ AutoDict_*.cxx
 # /
 /root_version
 
-# /cint/cintex/
-/cint/cintex/data.root
-/cint/cintex/tree.root
-/cint/cintex/CintexTest_rflx.cpp
+# /cling/cintex/
+/cling/cintex/data.root
+/cling/cintex/tree.root
+/cling/cintex/CintexTest_rflx.cpp
 
-# /cint/dict
-/cint/dict/AutoDict_*.cxx
-/cint/dict/*.shortlog
+# /cling/dict
+/cling/dict/AutoDict_*.cxx
+/cling/dict/*.shortlog
 
 #cint/dict/typedefs
-/cint/dict/typedefs/cmsdict*
+/cling/dict/typedefs/cmsdict*
 
-# /cint/other/
-/cint/other/runStaticDataMemberDict.C
-/cint/other/runStaticDataMemberDict.h
-/cint/other/assertBaseMembers.ref
+# /cling/other/
+/cling/other/runStaticDataMemberDict.C
+/cling/other/runStaticDataMemberDict.h
+/cling/other/assertBaseMembers.ref
 
-# /cint/parsing/
-/cint/parsing/*Dict.*
-/cint/parsing/*Dict2.*
+# /cling/parsing/
+/cling/parsing/*Dict.*
+/cling/parsing/*Dict2.*
 
-# /cint/reflex/
-/cint/reflex/*_rflx_tmp1.C
-/cint/reflex/*_rflx_tmp2.C
-/cint/reflex/iotype.root
+# /cling/reflex/
+/cling/reflex/*_rflx_tmp1.C
+/cling/reflex/*_rflx_tmp2.C
+/cling/reflex/iotype.root
 
-# /cint/reflex_standalone
-/cint/reflex_standalone/cmake-build
+# /cling/reflex_standalone
+/cling/reflex_standalone/cmake-build
 
-# /cint/specialobj/
-/cint/specialobj/assertGPad.ref
-/cint/specialobj/tmp.root
+# /cling/specialobj/
+/cling/specialobj/assertGPad.ref
+/cling/specialobj/tmp.root
 
-# /cint/stl/default
-/cint/stl/default/*Dict.*
-/cint/stl/default/dict*
+# /cling/stl/default
+/cling/stl/default/*Dict.*
+/cling/stl/default/dict*
 
-# /cint/stl/map
-/cint/stl/map/dict*
+# /cling/stl/map
+/cling/stl/map/dict*
 
-# /cint/stl/dicts/
-/cint/stl/dicts/*Dict?.*
+# /cling/stl/dicts/
+/cling/stl/dicts/*Dict?.*
 
-# /cint/stl/string/
-/cint/stl/string/*Dict.*
-/cint/stl/string/*.out
+# /cling/stl/string/
+/cling/stl/string/*Dict.*
+/cling/stl/string/*.out
 
-# /cint/template/
-/cint/template/*Dict.C
-/cint/template/*Dict.h
-/cint/template/*.out
+# /cling/template/
+/cling/template/*Dict.C
+/cling/template/*Dict.h
+/cling/template/*.out
 
-# /cint/template/separateDict/
-/cint/template/separateDict/*Dict*
+# /cling/template/separateDict/
+/cling/template/separateDict/*Dict*
 
-# /cint/template/separateDictNamespace/
-/cint/template/separateDictNamespace/*Dict*
+# /cling/template/separateDictNamespace/
+/cling/template/separateDictNamespace/*Dict*
 
-# /cint/templateMembers/
-/cint/templateMembers/opdict.*
-/cint/templateMembers/templateMembersDict.*
-/cint/templateMembers/templateMembers.ref
-/cint/templateMembers/templateMembersNoMem.ref
-/cint/templateMembers/*Dict.*
+# /cling/templateMembers/
+/cling/templateMembers/opdict.*
+/cling/templateMembers/templateMembersDict.*
+/cling/templateMembers/templateMembers.ref
+/cling/templateMembers/templateMembersNoMem.ref
+/cling/templateMembers/*Dict.*
 
-# /cint/typedef/
-/cint/typedef/*Dict.*
-/cint/typedef/ptrptr
-/cint/typedef/*_timestamp
+# /cling/typedef/
+/cling/typedef/*Dict.*
+/cling/typedef/ptrptr
+/cling/typedef/*_timestamp
 
-# /cint/typedef_global/
-/cint/typedef_global/*dict*
-/cint/typedef_global/*Dict*
-/cint/typedef_global/output[0-9]
-/cint/typedef_global/*_timestamp
+# /cling/typedef_global/
+/cling/typedef_global/*dict*
+/cling/typedef_global/*Dict*
+/cling/typedef_global/output[0-9]
+/cling/typedef_global/*_timestamp
 
 /python/ttree/test.root
 
