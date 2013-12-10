@@ -18,6 +18,8 @@
    NSMutableArray *fileContainers;
    BOOL viewDidAppear;
    __weak FileShortcutView *fileToDelete;
+   
+   BOOL locked;
 }
 
 //____________________________________________________________________________________________________
@@ -26,33 +28,13 @@
    if (self = [super initWithCoder : aDecoder]) {
       fileContainers = [[NSMutableArray alloc] init];
       viewDidAppear = NO;
+      locked = NO;
    }
    
    return self;
 }
 
 #pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) placeFileShortcuts
-{
-   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
-   
-   if ([scrollView.subviews count])
-      //25.f - is an additional 'pad' space between shortcuts.
-      PlaceShortcutsInScrollView(fileContainers, scrollView, CGSizeMake([FileShortcutView iconWidth], [FileShortcutView iconHeight]), 25.f);
-}
-
-//____________________________________________________________________________________________________
-- (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
-{
-#pragma unused(orientation)
-
-   //This is the legacy code: before I was resetting views geometry manually, now no
-   //need in this nightmare anymore, just place shortcuts in correct places.
-
-   [self placeFileShortcuts];
-}
 
 //____________________________________________________________________________________________________
 - (void) viewDidLoad
@@ -81,7 +63,8 @@
 - (void) viewWillAppear : (BOOL)animated
 {
    [super viewWillAppear : animated];
-   [fileNameField resignFirstResponder];//? TODO: check why do I have it here at all.
+
+   [fileNameField resignFirstResponder];//? TODO: check why do I have this here at all.
 }
 
 //____________________________________________________________________________________________________
@@ -110,6 +93,30 @@
    }
 }
 
+#pragma mark - View's geometry, interface orientation, etc.
+
+//____________________________________________________________________________________________________
+- (void) placeFileShortcuts
+{
+   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
+   
+   if ([scrollView.subviews count])
+      //25.f - is an additional 'pad' space between shortcuts.
+      PlaceShortcutsInScrollView(fileContainers, scrollView, CGSizeMake([FileShortcutView iconWidth], [FileShortcutView iconHeight]), 25.f);
+}
+
+//____________________________________________________________________________________________________
+- (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
+{
+#pragma unused(orientation)
+
+   //This is the legacy code: before I was resetting views geometry manually, now no
+   //need in this nightmare anymore, just place shortcuts in correct places.
+
+   [self placeFileShortcuts];
+}
+
+
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
@@ -126,7 +133,7 @@
    [self correctFramesForOrientation : interfaceOrientation];
 }
 
-#pragma mark - View management.
+#pragma mark - File shortcuts.
 
 //____________________________________________________________________________________________________
 - (void) addRootFile : (NSString *) fileName
@@ -164,10 +171,17 @@
 //____________________________________________________________________________________________________
 - (void) fileWasSelected : (FileShortcutView *) shortcut
 {
-   assert(self.storyboard != nil && "fileWasSelected:, self.storyboard is nil");   
+   assert(shortcut != nil && "fileWasSelected:, parameter 'shortcut' is nil");
+
+   if (locked || fileNameField.isFirstResponder)
+      return;
+
+   assert(self.storyboard != nil && "fileWasSelected:, self.storyboard is nil");
+
    UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::FileContentViewControllerID];
    assert([c isKindOfClass : [FileContentViewController class]] &&
           "fileWasSelected:, file content view controller has a wrong type");
+
    FileContentViewController * const contentController = (FileContentViewController *)c;
    [contentController activateForFile : [shortcut getFileContainer]];
    [self.navigationController pushViewController : contentController animated : YES];
@@ -176,7 +190,12 @@
 //____________________________________________________________________________________________________
 - (void) tryToDelete : (FileShortcutView *) shortcut
 {
-   NSString *message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
+   assert(shortcut != nil && "tryToDelete:, parameter 'shortcut' is nil");
+   
+   if (locked)
+      return;
+
+   NSString * const message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
    UIActionSheet * const dialog = [[UIActionSheet alloc] initWithTitle : message delegate : self
                                    cancelButtonTitle : @"Cancel" destructiveButtonTitle : @"Yes" otherButtonTitles : nil];
    fileToDelete = shortcut;
@@ -188,6 +207,8 @@
 //____________________________________________________________________________________________________
 - (void) actionSheet : (UIActionSheet *) actionSheet didDismissWithButtonIndex : (NSInteger) buttonIndex
 {
+#pragma unused(actionSheet)
+
    if (!buttonIndex) {
       [fileContainers removeObject:fileToDelete];
       [fileToDelete removeFromSuperview];
@@ -195,14 +216,15 @@
    }
 }
 
-#pragma mark - File open operations.
+#pragma mark - File open operations + text filed handling.
 
 //____________________________________________________________________________________________________
 - (void) animateFileOpenView
 {
+   assert(locked == NO && "animateFileOpenView, called while an animation is still active");
    //Do animation.
    // First create a CATransition object to describe the transition
-   CATransition *transition = [CATransition animation];
+   CATransition * const transition = [CATransition animation];
    transition.duration = 0.15;
    // using the ease in/out timing function
    transition.timingFunction = [CAMediaTimingFunction functionWithName : kCAMediaTimingFunctionEaseInEaseOut];
@@ -221,8 +243,10 @@
 //____________________________________________________________________________________________________
 - (void) showFileOpenView
 {
+   if (locked)//We're animating this view already.
+      return;
+
    fileOpenView.hidden = !fileOpenView.hidden;
-   //
    [self animateFileOpenView];
 
    if (!fileOpenView.hidden)
@@ -234,15 +258,16 @@
 //____________________________________________________________________________________________________
 - (IBAction) textFieldDidEndOnExit : (id) sender
 {
-   NSString *filePath = fileNameField.text;
-   if (filePath) {//TODO - do I need this check?
+#pragma unused(sender)
+   NSString * const filePath = fileNameField.text;
+   if (filePath)
       [self addRootFile : filePath];
-   }
 }
 
 //____________________________________________________________________________________________________
 - (IBAction) textFieldEditingDidEnd : (id) sender
 {
+#pragma unused(sender)
    [sender resignFirstResponder];
    fileOpenView.hidden = YES;
    [self animateFileOpenView];
@@ -256,11 +281,32 @@
    [self animateFileOpenView];
 }
 
+#pragma mark - CAAnimationDelegate.
+
+//____________________________________________________________________________________________________
+- (void) animationDidStart : (CAAnimation *) anim
+{
+#pragma unused(anim)
+   locked = YES;
+}
+
+//____________________________________________________________________________________________________
+- (void) animationDidStop : (CAAnimation *) anim finished : (BOOL) flag
+{
+#pragma unused(anim)
+   if (flag)
+      locked = NO;
+}
+
 #pragma mark - Standard f..p with gestures.
 
 //____________________________________________________________________________________________________
 - (BOOL) gestureRecognizer : (UIGestureRecognizer *) gestureRecognizer shouldReceiveTouch : (UITouch *) touch
 {
+#pragma unused(gestureRecognizer)
+   if (locked)
+      return NO;
+
    if ([touch.view isKindOfClass : [FileShortcutView class]])
       return NO;
    
