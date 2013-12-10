@@ -768,8 +768,8 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                // with enums changed over time, so verify the checksum ignoring
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.
-               if (  (fCheckSum == fClass->GetCheckSum() || fCheckSum == fClass->GetCheckSum(1) || fCheckSum == fClass->GetCheckSum(2))
-                     &&(info->GetCheckSum() == fClass->GetCheckSum() || info->GetCheckSum() == fClass->GetCheckSum(1) || info->GetCheckSum() == fClass->GetCheckSum(2))
+               if (  (fCheckSum == fClass->GetCheckSum() || fClass->MatchLegacyCheckSum(fCheckSum) )
+                     &&(info->GetCheckSum() == fClass->GetCheckSum() || fClass->MatchLegacyCheckSum(info->GetCheckSum()))
                      )
                   {
                      match = kTRUE;
@@ -796,8 +796,10 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                // with enums changed over time, so verify the checksum ignoring
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.
-               if (fCheckSum == info->GetCheckSum(0) || fCheckSum == info->GetCheckSum(1) || fCheckSum == info->GetCheckSum(2)
-                   || GetCheckSum(0) == info->GetCheckSum() || GetCheckSum(1) == info->GetCheckSum() || GetCheckSum(2) == info->GetCheckSum()
+               if (fCheckSum == info->GetCheckSum(0)
+                   || info->MatchLegacyCheckSum(fCheckSum)
+                   || GetCheckSum(0) == info->fCheckSum
+                   || MatchLegacyCheckSum(info->GetCheckSum())
                    || GetCheckSum(0) == info->GetCheckSum(0))
                   {
                      match = kTRUE;
@@ -930,7 +932,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
          //   - ignore the comments annotation (//[xyz])
          // we can accept the old TStreamerInfo.
 
-         if (fCheckSum != fClass->GetCheckSum(1) && fCheckSum != fClass->GetCheckSum(2)) {
+         if (!fClass->MatchLegacyCheckSum(fCheckSum)) {
 
             Bool_t warn = !fClass->TestBit(TClass::kWarned);
             if (warn) {
@@ -2562,6 +2564,18 @@ TClass *TStreamerInfo::GetActualClass(const void *obj) const
       if (allocator) return allocator->GetClass();
    }
    return (TClass*)fClass;
+}
+
+//______________________________________________________________________________
+Bool_t TStreamerInfo::MatchLegacyCheckSum(UInt_t checksum) const
+{
+   // Return true if the checksum passed as argument is one of the checksum
+   // value produced by the older checksum calulcation algorithm.
+
+   for(UInt_t i = 1; i < TClass::kLegacyCheckSum; ++i) {
+      if ( checksum == GetCheckSum(i) ) return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________

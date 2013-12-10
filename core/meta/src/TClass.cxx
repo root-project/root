@@ -4619,7 +4619,7 @@ void TClass::PostLoadCheck()
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
       if (info && GetListOfDataMembers() && !GetCollectionProxy()
-          && (info->GetCheckSum()!=GetCheckSum() && !info->CompareContent(this,0,kFALSE,kFALSE) && info->GetCheckSum()!=GetCheckSum(1) && info->GetCheckSum()!=GetCheckSum(2)))
+          && (info->GetCheckSum()!=GetCheckSum() && !info->CompareContent(this,0,kFALSE,kFALSE) && !(MatchLegacyCheckSum(info->GetCheckSum()))))
       {
          Bool_t warn = ! TestBit(kWarned);
          if (warn && info->GetOldVersion()<=2) {
@@ -4962,6 +4962,18 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
    delete [] temp;
 */
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
+{
+   // Return true if the checksum passed as argument is one of the checksum
+   // value produced by the older checksum calulcation algorithm.
+
+   for(UInt_t i = 1; i < kLegacyCheckSum; ++i) {
+      if ( checksum == GetCheckSum(i) ) return kTRUE;
+   }
+   return kFALSE;
 }
 
 //______________________________________________________________________________

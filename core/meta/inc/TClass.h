@@ -83,6 +83,13 @@ public:
           kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
+   enum ELegacyCheckSum {
+      kCurrent        = 0,
+      kNoEnum         = 1,
+      kNoRange        = 2,
+      kWithTypeDef    = 3, // Up to v5.34/13 and v5.99/03
+      kLegacyCheckSum = 4
+   };
 
 private:
 
@@ -320,6 +327,7 @@ public:
    Bool_t             IsTObject() const;
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
+   Bool_t             MatchLegacyCheckSum(UInt_t checksum) const;
    void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew) const;
    void              *New(void *arena, ENewType defConstructor = kClassNew) const;

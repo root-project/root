@@ -229,6 +229,7 @@ public:
    Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTL<Double_t>(cont, i, j, k, eoffset); }
    Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTLP<Double_t>(cont, i, j, k, eoffset); }
    void                ls(Option_t *option="") const;
+   Bool_t              MatchLegacyCheckSum(UInt_t checksum) const;
    TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl);}
    void               *New(void *obj = 0);
    void               *NewArray(Long_t nElements, void* ary = 0);
