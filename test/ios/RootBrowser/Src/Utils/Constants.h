@@ -80,7 +80,7 @@ extern const unsigned colorIndices[nROOTDefaultColors];
 extern const unsigned stippleBase;
 
 //This does not have const qualifier, but set only once during startup (by application delegate).
-extern bool deviceIsiPad3;
+extern bool deviceHasRetina;
 
 
 extern NSString * const ROOTBrowserViewControllerID;

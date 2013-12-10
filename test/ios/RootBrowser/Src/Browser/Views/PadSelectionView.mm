@@ -89,7 +89,7 @@ void SetShadowColor(CGContextRef ctx)
    pad->SetContext(ctx);
 
    //Selected object will cast a shadow.
-   if (!ROOT::iOS::Browser::deviceIsiPad3) {
+   if (!ROOT::iOS::Browser::deviceHasRetina) {
       SetShadowColor(ctx);
       pad->PaintSelected();
    } else {

@@ -11,15 +11,6 @@
 #import "root_browserAppDelegate.h"
 #import "Constants.h"
 
-
-namespace ROOT {
-namespace iOS {
-
-bool deviceIsiPad3 = false;
-
-}
-}
-
 @implementation root_browserAppDelegate {
    TApplication *rootApp;
 
@@ -38,34 +29,32 @@ bool deviceIsiPad3 = false;
           "initRootController, top view controller is either nil or has a wrong type");
   
    rc = (FileCollectionViewController *)navigationController.topViewController;
+   
+   NSString * const demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];
+   if (demosPath)
+      [rc addRootFile : demosPath];
 
    [self.window setRootViewController : navigationController];
    [self.window makeKeyAndVisible];
 }
 
 //____________________________________________________________________________________________________
-- (BOOL) application : (UIApplication *)application didFinishLaunchingWithOptions : (NSDictionary *)launchOptions
+- (BOOL) application : (UIApplication *) application didFinishLaunchingWithOptions : (NSDictionary *) launchOptions
 {
-   // Override point for customization after application launch.
+#pragma unused(application, launchOptions)
+
    rootApp = new TApplication("iosApp", 0, 0);
    [self initRootController];
 
-   std::size_t dataSize = 0;
-   sysctlbyname("hw.machine", nullptr, &dataSize, nullptr, 0);
-   if (dataSize) {
-      std::vector<char> line(dataSize);
-      sysctlbyname("hw.machine", &line[0], &dataSize, nullptr, 0);
-      NSString *machineName = [NSString stringWithCString : &line[0] encoding : NSASCIIStringEncoding];
-      if ([machineName hasPrefix : @"iPad3,"])
-         ROOT::iOS::Browser::deviceIsiPad3 = true;
-   }
+   ROOT::iOS::Browser::deviceHasRetina = [UIScreen mainScreen].scale > 1.f ? true : false;
 
    return YES;
 }
 
 //____________________________________________________________________________________________________
-- (void) applicationWillResignActive : (UIApplication *)application
+- (void) applicationWillResignActive : (UIApplication *) application
 {
+#pragma unused(application)
    /*
    Sent when the application is about to move from active to inactive state. This can occur for certain 
    types of temporary interruptions (such as an incoming phone call or SMS message) or when the user 
@@ -76,8 +65,9 @@ bool deviceIsiPad3 = false;
 }
 
 //____________________________________________________________________________________________________
-- (void) applicationDidEnterBackground : (UIApplication *)application
+- (void) applicationDidEnterBackground : (UIApplication *) application
 {
+#pragma unused(application)
    /*
    Use this method to release shared resources, save user data, invalidate timers, and store enough application 
    state information to restore your application to its current state in case it is terminated later. 
@@ -87,8 +77,9 @@ bool deviceIsiPad3 = false;
 }
 
 //____________________________________________________________________________________________________
-- (void) applicationWillEnterForeground : (UIApplication *)application
+- (void) applicationWillEnterForeground : (UIApplication *) application
 {
+#pragma unused(application)
    /*
    Called as part of the transition from the background to the inactive state;
    here you can undo many of the changes made on entering the background.
@@ -96,8 +87,9 @@ bool deviceIsiPad3 = false;
 }
 
 //____________________________________________________________________________________________________
-- (void) applicationDidBecomeActive : (UIApplication *)application
+- (void) applicationDidBecomeActive : (UIApplication *) application
 {
+#pragma unused(application)
    /*
    Restart any tasks that were paused (or not yet started) while the application was inactive. 
    If the application was previously in the background, optionally refresh the user interface.
@@ -105,8 +97,9 @@ bool deviceIsiPad3 = false;
 }
 
 //____________________________________________________________________________________________________
-- (void) applicationWillTerminate : (UIApplication *)application
+- (void) applicationWillTerminate : (UIApplication *) application
 {
+#pragma unused(application)
    /*
    Called when the application is about to terminate.
    Save data if appropriate.
@@ -115,12 +108,16 @@ bool deviceIsiPad3 = false;
 }
 
 //____________________________________________________________________________________________________
-- (BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+- (BOOL) application : (UIApplication *) application openURL : (NSURL *) url
+         sourceApplication : (NSString *) sourceApplication annotation : (id) annotation
 {
+#pragma unused(application, sourceApplication, annotation)
+
    while ([navigationController.viewControllers count] > 1)
       [navigationController popViewControllerAnimated : NO];
 
    [rc addRootFile : [url path]];
+
    return YES;
 }
 

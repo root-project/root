@@ -83,7 +83,7 @@ const unsigned colorIndices[nROOTDefaultColors] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 
 const unsigned stippleBase = 3000;
 
-bool deviceIsiPad3 = false;
+bool deviceHasRetina = false;
 
 NSString * const ROOTBrowserViewControllerID = @"ROOTBrowserViewControllerID";
 NSString * const FileContentViewControllerID = @"FileContentViewControllerID";

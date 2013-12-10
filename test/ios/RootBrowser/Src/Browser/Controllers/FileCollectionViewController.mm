@@ -96,12 +96,15 @@
 
    if (!viewDidAppear) {
       //The first time this method is called, add the 'demos.root'.
-      NSString * const demosPath = [[NSBundle mainBundle] pathForResource : @"demos" ofType : @"root"];
-      if (demosPath) {
-         [self addRootFile : demosPath];
+      if (fileContainers.count) {
+         for (UIView *shortcut in fileContainers)
+            if (!shortcut.superview)
+               [scrollView addSubview : shortcut];
+
          [self correctFramesForOrientation : self.interfaceOrientation];
-         viewDidAppear = YES;
       }
+      
+      viewDidAppear = YES;
    }
 }
 
@@ -145,10 +148,13 @@
 
    const CGRect shortcutFrame = CGRectMake(0.f, 0.f, [FileShortcutView iconWidth], [FileShortcutView iconHeight]);
    FileShortcutView * const newShortcut = [[FileShortcutView alloc] initWithFrame : shortcutFrame controller : self fileContainer : fileContainer];
-   if (newShortcut) {//What if alloc returned nil?
+   if (newShortcut) {
       [fileContainers addObject : newShortcut];
-      [scrollView addSubview : newShortcut];   
-      [self placeFileShortcuts];
+      
+      if ([self isViewLoaded]) {
+         [scrollView addSubview : newShortcut];
+         [self placeFileShortcuts];
+      }//else we'll do it later.
    }  else
       FileContainer::DeleteFileContainer(fileContainer);
 }
