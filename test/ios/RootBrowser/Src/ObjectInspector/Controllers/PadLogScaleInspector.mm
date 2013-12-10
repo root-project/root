@@ -17,12 +17,29 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   [self view];
+   if (self) {
+      //Force a view load.
+      [self view];
+   }
+
    return self;
 }
+
+#pragma mark - Interface orientation.
+
+//____________________________________________________________________________________________________
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
+{
+#pragma unused(interfaceOrientation)
+
+   return YES;
+}
+
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -45,33 +62,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void)viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
-
-//____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
-{
-#pragma unused(interfaceOrientation)
-
-   return YES;
-}
-
-//____________________________________________________________________________________________________
 - (IBAction) logActivated : (UISwitch *) log
 {
+   assert(object != nullptr && "logActivated:, object is null");
+
    if (log == logX)
       object->SetLogx(log.on);
    if (log == logY)

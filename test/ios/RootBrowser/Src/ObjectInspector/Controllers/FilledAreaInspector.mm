@@ -182,6 +182,8 @@ const CGFloat defaultCellH = 50.f;
 //____________________________________________________________________________________________________
 - (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *) picker
 {
+   assert(picker != nil && "item:wasSelectedInPicker:, parameter 'picker' is nil");
+
    if (picker == colorPicker) {
       [self setNewColor : item];
    } else {

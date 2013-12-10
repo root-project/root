@@ -7,8 +7,10 @@
 @class HorizontalPickerView;
 @class LineWidthPicker;
 
-//Line inspector is a composition of two sub-inspectors: line color and width inspector + 
-//line style inspector.
+//
+//LineInspector: object inspector for a TAttLine, contains 2 horizontal pickers (color and dash style) +
+//line width control.
+//
 
 @interface LineInspector : UIViewController <ObjectInspectorComponent, HorizontalPickerDelegate>
 
@@ -17,8 +19,5 @@
 - (NSString *) getComponentName;
 
 - (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *) picker;
-
-- (IBAction) decLineWidth;
-- (IBAction) incLineWidth;
 
 @end

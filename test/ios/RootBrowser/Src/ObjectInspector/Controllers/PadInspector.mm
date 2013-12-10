@@ -4,7 +4,6 @@
 #import "PadLogScaleInspector.h"
 #import "PadInspector.h"
 
-//It's mm file == C++, consts have internal linkage.
 const CGFloat totalHeight = 250.f;
 const CGFloat tabBarHeight = 49.f;
 const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight - tabBarHeight);
@@ -25,13 +24,15 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
-   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+   self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
     
-   [self view];
+
     
    if (self) {
+      //Force views load.
+      [self view];
       //Load inspectors from nib files.
       gridInspector = [[PadTicksGridInspector alloc] initWithNibName : @"PadTicksGridInspector" bundle : nil];
       gridInspector.view.frame = nestedComponentFrame;
@@ -50,31 +51,16 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void)viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   // Return YES for supported orientations
 #pragma unused(interfaceOrientation)
-
 	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -124,9 +110,12 @@ const CGRect nestedComponentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHe
 }
 
 #pragma mark - Tabbar delegate.
+
 //____________________________________________________________________________________________________
-- (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *)item
+- (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *) item
 {
+#pragma unused(tb)
+
    if (item.tag == 1)
       [self showTicksAndGridInspector];
    else if (item.tag == 2)

@@ -33,13 +33,14 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
    if (self) {
+      //Force views load.
       [self view];
       //Array with cells for "Line style" picker.
       lineStyles = [[NSMutableArray alloc] init];
@@ -71,35 +72,12 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];    
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
-- (void)viewDidLoad
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
-
-//____________________________________________________________________________________________________
-- (void)viewDidUnload
-{
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
-
-//____________________________________________________________________________________________________
-- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
-{
-   // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
 
@@ -167,21 +145,21 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 #pragma mark - Horizontal picker delegate.
 
 //____________________________________________________________________________________________________
-- (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
+- (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *) picker
 {
+   assert(picker != nil && "item:wasSelectedInPicker:, parameter 'picker' is nil");
+   assert(object != nullptr && "item:wasSelectedInPicker:, object is null");
+
    using namespace ROOT::iOS::Browser;
 
    if (picker == lineColorPicker) {
-      if (item < nROOTDefaultColors) {
-         const unsigned colorIndex = colorIndices[item];
-         object->SetLineColor(colorIndex);
-      } else
-         NSLog(@"check the code, bad item index from horizontal picker: %u, must be < %u", item, nROOTDefaultColors);
+      assert(item < nROOTDefaultColors && "item:wasSelectedInPicker:, parameter 'item' is out of bounds");
+      const unsigned colorIndex = colorIndices[item];
+      object->SetLineColor(colorIndex);
    } else {
-      if (item < 10)
-         object->SetLineStyle(item + 1);
-      else
-         NSLog(@"check the code, bad item index from horizontal picker: %u must be < 11", item);
+      //why 10 is hardcoded?
+      assert(item < 10 && "item:wasSelectedInPicker:, parameter 'item' is out of bounds");
+      object->SetLineStyle(item + 1);
    }
    
    [controller objectWasModifiedUpdateSelection : NO];
@@ -192,6 +170,8 @@ const CGRect cellFrame = CGRectMake(0.f, 0.f, 50.f, 50.f);
 //____________________________________________________________________________________________________
 - (void) updateROOTLineWidth
 {
+   assert(object != nullptr && "updateROOTLineWidth, object is null");
+
    if (dynamic_cast<TGraph *>(object)) {
       const int fakeLineWidth = int(object->GetLineWidth()) / 100 * 100;
       if (fakeLineWidth >= 0)

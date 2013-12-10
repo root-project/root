@@ -18,22 +18,20 @@ const CGRect cellRect = CGRectMake(0.f, 0.f, 50.f, 50.f);
 const CGFloat maxMarkerSize = 5.f;
 const CGFloat sizeStep = 0.1f;
 
-EMarkerStyle markerStyles[] = {kDot, kPlus, kStar, kCircle, kMultiply,
-                               kFullDotSmall, kFullDotMedium, kFullDotLarge,
-                               kFullCircle, kFullSquare, kFullTriangleUp,
-                               kFullTriangleDown, kOpenCircle, kOpenSquare,
-                               kOpenTriangleUp, kOpenDiamond, kOpenCross,
-                               kFullStar, kOpenStar, kOpenTriangleDown,
-                               kFullDiamond, kFullCross};
+EMarkerStyle const markerStyles[] = {kDot, kPlus, kStar, kCircle, kMultiply,
+                                     kFullDotSmall, kFullDotMedium, kFullDotLarge,
+                                     kFullCircle, kFullSquare, kFullTriangleUp,
+                                     kFullTriangleDown, kOpenCircle, kOpenSquare,
+                                     kOpenTriangleUp, kOpenDiamond, kOpenCross,
+                                     kFullStar, kOpenStar, kOpenTriangleDown,
+                                     kFullDiamond, kFullCross};
 
 const unsigned nMarkers = sizeof markerStyles / sizeof markerStyles[0];
 
 //____________________________________________________________________________________________________
-BOOL canScaleMarker(Style_t style)
+bool CanScaleMarker(Style_t style)
 {
-   if (style == kDot || style == kFullDotSmall || style == kFullDotMedium)
-      return NO;
-   return YES;
+   return !(style == kDot || style == kFullDotSmall || style == kFullDotMedium);
 }
 
 }
@@ -54,34 +52,35 @@ BOOL canScaleMarker(Style_t style)
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
    
    if (self) {
+      //Force views load.
       [self view];
       
       styleCells = [[NSMutableArray alloc] init];//]WithCapacity : nMarkers];
       for (unsigned i = 0; i < nMarkers; ++i) {
-         MarkerStyleCell *newCell = [[MarkerStyleCell alloc] initWithFrame : cellRect andMarkerStyle : markerStyles[i]];
+         MarkerStyleCell * const newCell = [[MarkerStyleCell alloc] initWithFrame : cellRect andMarkerStyle : markerStyles[i]];
          [styleCells addObject : newCell];
       }
       
-      markerStylePicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 15.f, 220.f, 70.f)];
+      markerStylePicker = [[HorizontalPickerView alloc] initWithFrame : CGRectMake(15.f, 15.f, 220.f, 70.f)];
       [markerStylePicker addItems : styleCells];
       [self.view addSubview : markerStylePicker];
       markerStylePicker.pickerDelegate = self;
       
       colorCells = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
-         ColorCell *newCell = [[ColorCell alloc] initWithFrame : cellRect];
+         ColorCell * const newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
       }
       
-      markerColorPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 110.f, 220.f, 70.f)];
+      markerColorPicker = [[HorizontalPickerView alloc] initWithFrame : CGRectMake(15.f, 110.f, 220.f, 70.f)];
       [markerColorPicker addItems : colorCells];
       [self.view addSubview : markerColorPicker];
       markerColorPicker.pickerDelegate = self;
@@ -90,22 +89,7 @@ BOOL canScaleMarker(Style_t style)
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -114,9 +98,14 @@ BOOL canScaleMarker(Style_t style)
 	return YES;
 }
 
+#pragma mark - Horizontal picker delegate.
+
 //____________________________________________________________________________________________________
-- (void) item : (unsigned int)item wasSelectedInPicker : (HorizontalPickerView *)picker
+- (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *) picker
 {
+   assert(picker != nil && "item:wasSelectedInPicker:, parameter 'picker' is nil");
+   assert(object != nullptr && "item:wasSelectedInPicker:, object is null");
+
    if (picker == markerColorPicker) {
       const unsigned colorIndex = ROOT::iOS::Browser::colorIndices[item];
       object->SetMarkerColor(colorIndex);
@@ -124,7 +113,7 @@ BOOL canScaleMarker(Style_t style)
    } else if (picker == markerStylePicker) {
       if (item < nMarkers) {
          EMarkerStyle style = markerStyles[item];
-         if (canScaleMarker(style)) {
+         if (CanScaleMarker(style)) {
             plusBtn.enabled = YES;
             minusBtn.enabled = YES;
             sizeLabel.text = [NSString stringWithFormat : @"%.2g", object->GetMarkerSize()];
@@ -188,7 +177,7 @@ BOOL canScaleMarker(Style_t style)
    
    [markerColorPicker setSelectedItem : item];
 
-   if (!canScaleMarker(object->GetMarkerStyle())) {
+   if (!CanScaleMarker(object->GetMarkerStyle())) {
       plusBtn.enabled = NO;
       minusBtn.enabled = NO;
       sizeLabel.text = @"1";
@@ -205,9 +194,12 @@ BOOL canScaleMarker(Style_t style)
    return @"Marker attributes";
 }
 
+#pragma mark - UI interactions.
+
 //____________________________________________________________________________________________________
 - (IBAction) plusPressed
 {
+   assert(object != nullptr && "plusPressed, object is null");
 
    if (object->GetMarkerSize() + sizeStep > maxMarkerSize)
       return;
@@ -220,6 +212,8 @@ BOOL canScaleMarker(Style_t style)
 //____________________________________________________________________________________________________
 - (IBAction) minusPressed
 {
+   assert(object != nullptr && "minusPressed, object is null");
+
    if (object->GetMarkerSize() - sizeStep < 1.)
       return;
    

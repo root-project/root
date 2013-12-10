@@ -7,7 +7,4 @@
 - (void) setObjectController : (ObjectViewController *) c;
 - (void) setObject : (TObject *) obj;
 
-- (IBAction) gridActivated : (UISwitch *) g;
-- (IBAction) ticksActivated : (UISwitch *) t;
-
 @end

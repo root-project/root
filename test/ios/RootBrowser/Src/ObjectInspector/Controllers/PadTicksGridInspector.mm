@@ -17,17 +17,17 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
-   [self view];
-
-   if (self) {
-   }
+   if (self)
+      [self view];
    
    return self;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -51,22 +51,7 @@
    ticksY.on = object->GetTicky();
 }
 
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void)viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -81,6 +66,8 @@
 //____________________________________________________________________________________________________
 - (IBAction) gridActivated : (UISwitch *) g
 {
+   assert(object != nullptr && "gridActivated:, object is null");
+
    if (g == gridX)
       object->SetGridx(g.on);
    else if (g == gridY)
@@ -92,6 +79,8 @@
 //____________________________________________________________________________________________________
 - (IBAction) ticksActivated : (UISwitch *) t
 {
+   assert(object != nullptr && "ticksActivated:, object is null");
+
    if (t == ticksX)
       object->SetTickx(t.on);
    else if (t == ticksY)
