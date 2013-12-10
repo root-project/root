@@ -23,7 +23,6 @@
 #import "FileUtils.h"
 
 namespace {
-//Ugly Obj-C, implementation block is not a scope, so either static or unnamed namespace :(
 
 //This constant is used to check, if pad was
 //scaled to possible maximum or still can be zoomed in.
@@ -70,12 +69,16 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (ROOT::iOS::Browser::EHistogramErrorOption) getErrorOption
 {
+   assert(fileContainer != nullptr && "getErrorOption, fileContainer is null");
+
    return fileContainer->GetErrorDrawOption(currentObject);
 }
 
 //____________________________________________________________________________________________________
 - (void) setErrorOption : (ROOT::iOS::Browser::EHistogramErrorOption) errorOption
 {
+   assert(fileContainer != nullptr && "setErrorOption:, fileContainer is null");
+
    fileContainer->SetErrorDrawOption(currentObject, errorOption);
    //Ugly as hell :(( But ROOT holds draw options inside TObjLink in a pad.
    fileContainer->GetPadAttached(currentObject)->cd();
@@ -85,28 +88,34 @@ enum Mode {
 //____________________________________________________________________________________________________
 - (BOOL) markerIsOn
 {
+   assert(fileContainer != nullptr && "markerIsOn, fileContainer is null");
+
    return fileContainer->GetMarkerDrawOption(currentObject);
 }
 
 //____________________________________________________________________________________________________
-- (void) setMarker : (BOOL)on
+- (void) setMarker : (BOOL) on
 {
+   assert(fileContainer != nullptr && "setMarker:, fileContainer is null");
+
    fileContainer->SetMarkerDrawOption(currentObject, bool(on));
    //Ugly as hell :(( But ROOT holds draw options inside TObjLink in a pad.
    fileContainer->GetPadAttached(currentObject)->cd();
    fileContainer->GetObject(currentObject)->SetDrawOption(fileContainer->GetDrawOption(currentObject));
 }
 
+#pragma mark - View lifecycle.
+
 //____________________________________________________________________________________________________
 - (void) initToolbarItems
 {
-   UIToolbar *toolbar = [[TransparentToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 180.f, 44.f)];
+   UIToolbar * const toolbar = [[TransparentToolbar alloc] initWithFrame : CGRectMake(0.f, 0.f, 180.f, 44.f)];
    toolbar.barStyle = UIBarStyleBlackTranslucent;
 
 
-   NSMutableArray *buttons = [[NSMutableArray alloc] initWithCapacity : 2];
+   NSMutableArray * const buttons = [[NSMutableArray alloc] initWithCapacity : 2];
    
-   UIBarButtonItem *saveBtn = [[UIBarButtonItem alloc] initWithTitle:@"Save and send" style : UIBarButtonItemStyleBordered target : self action : @selector(sendEmail)];
+   UIBarButtonItem * const saveBtn = [[UIBarButtonItem alloc] initWithTitle : @"Save and send" style : UIBarButtonItemStyleBordered target : self action : @selector(sendEmail)];
    [buttons addObject : saveBtn];
    
    editBtn = [[UIBarButtonItem alloc] initWithTitle:@"Edit" style : UIBarButtonItemStyleBordered target:self action:@selector(toggleEditor)];
@@ -497,7 +506,7 @@ enum Mode {
 #pragma mark - delegate for editable pad's scroll-view.
 
 //____________________________________________________________________________________________________
-- (UIView *) viewForZoomingInScrollView : (UIScrollView *)scrollView
+- (UIView *) viewForZoomingInScrollView : (UIScrollView *) scrollView
 {
    //For ocmEdit mode.
    return editablePadView;
@@ -618,7 +627,7 @@ enum Mode {
 }
 
 //____________________________________________________________________________________________________
-- (void) objectWasModifiedUpdateSelection : (BOOL)needUpdate
+- (void) objectWasModifiedUpdateSelection : (BOOL) needUpdate
 {
    if (needUpdate)
       fileContainer->GetPadAttached(currentObject)->InvalidateSelection(kTRUE);//invalidate selection buffer only. the selected object is the same.
@@ -632,6 +641,7 @@ enum Mode {
 - (void) scrollToLeft
 {
    currentObject + 1 < fileContainer->GetNumberOfObjects() ? ++currentObject : currentObject = 0;
+
    [self adjustPrevNextIndices];
    //Current is becoming prev, next is becoming current, load new into prev, which is becoming next.
    PadScrollView *prevView = navScrolls[1];
@@ -733,7 +743,9 @@ enum Mode {
    CGContextSetRGBFillColor(ctx, 1.f, 0.4f, 0.f, 1.f);
    CGContextFillRect(ctx, pageRect);
 
-   ROOT::iOS::Pad *padToSave = fileContainer->GetPadAttached(currentObject);//mode == ROOT_IOSObjectController::ocmEdit ? pad : navPad;
+   ROOT::iOS::Pad * const padToSave = fileContainer->GetPadAttached(currentObject);
+   
+   assert(padToSave != nullptr && "createPDFFileWithPage:fileName:, pad to save is null");
    
    padToSave->cd();
    padToSave->SetContext(ctx);
