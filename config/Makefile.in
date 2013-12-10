@@ -36,7 +36,7 @@ pcmdep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
 # This macro builds the rootmap name starting from the library full path
 #    $(call rmfName, TREELIB)
 # the argument is the upper case name of the library (see the Module.mk)
-rmfName = $(dir  $1 )$(subst .$(SOEXT),_RootCling.rootmap,$(notdir $1) )
+rmfName = $(dir  $1 )$(subst .$(SOEXT),.rootmap,$(notdir $1) )
 
 # This macro returns the arguments to be passed to rootcling to properly
 # generate the rootmap file
