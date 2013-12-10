@@ -2703,7 +2703,17 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      type = el->GetTypeName();
+      if (code != TClass::kWithTypeDef ) {
+         // humm ... In the streamerInfo we only have the desugared/normalized
+         // names, so we are unable to calculate the name with typedefs ...
+         // except for the case of the ROOT typedef (Int_t, etc.) which are
+         // kept by TClassEdit::ResolveTypedef(typeName) but not by TCling's
+         // normalization ...
+         //
+         type = el->GetTypeName();
+      } else {
+         type = TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE);
+      }
       if (TClassEdit::IsSTLCont(type)) {
          type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
       }

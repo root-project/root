@@ -5043,9 +5043,16 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
-         type = tdm->GetFullTypeName();
-         if (TClassEdit::IsSTLCont(type))
-            type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+
+         if (code != kWithTypeDef ) {
+            type = tdm->GetTrueTypeName();
+            if (TClassEdit::IsSTLCont(type))
+               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+         } else {
+            type = tdm->GetFullTypeName();
+            if (TClassEdit::IsSTLCont(type))
+               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+         }
 
          il = type.Length();
          for (i=0; i<il; i++) id = id*3+type[i];
