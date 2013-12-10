@@ -403,7 +403,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "Options:\n");
          fprintf(stderr, "  -b : run in batch mode without graphics\n");
          fprintf(stderr, "  -x : exit on exception\n");
-         fprintf(stderr, "  -e expression: request execution of the given C++ expression");
+         fprintf(stderr, "  -e expression: request execution of the given C++ expression\n");
          fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
          fprintf(stderr, "  -q : exit after processing command line macro files\n");
          fprintf(stderr, "  -l : do not show splash screen\n");
