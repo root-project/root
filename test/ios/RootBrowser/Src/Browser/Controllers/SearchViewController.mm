@@ -80,7 +80,7 @@
 - (void) tableView : (UITableView *)tableView didSelectRowAtIndexPath : (NSIndexPath *)indexPath
 {
    // Notify the delegate if a row is selected.
-   [delegate searchesController : self didSelectKey : (FileContainerElement *)[visibleKeys objectAtIndex : indexPath.row]];
+   [delegate searchController : self didSelectKey : (FileContainerElement *)[visibleKeys objectAtIndex : indexPath.row]];
 }
 
 @end

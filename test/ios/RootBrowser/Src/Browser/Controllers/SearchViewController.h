@@ -4,7 +4,7 @@
 @class SearchViewController;
 
 @protocol SearchViewDelegate
-- (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key;
+- (void) searchController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key;
 @end
 
 

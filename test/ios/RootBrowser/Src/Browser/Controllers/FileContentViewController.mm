@@ -1,4 +1,5 @@
 #import <cassert>
+#import <cmath>
 
 #import <QuartzCore/QuartzCore.h>
 
@@ -19,19 +20,25 @@
 
 @implementation FileContentViewController {
    ROOT::iOS::Browser::FileContainer *fileContainer;
+   
    __weak IBOutlet UIScrollView *scrollView;
 
    NSMutableArray *objectShortcuts;
+   
    UISearchBar *searchBar;
    UIPopoverController *searchPopover;
    SearchViewController *searchController;
+   
    UIBarButtonItem *slideShowBtn;
    
    BOOL animateDirAfterLoad;
    BOOL animateObjAfterLoad;
+
    unsigned spotElement;
    
    BOOL viewDidAppear;
+   
+   BOOL animating;
 }
 
 @synthesize fileContainer;
@@ -67,27 +74,13 @@
    if (self = [super initWithCoder : aDecoder]) {
       //
       viewDidAppear = NO;
+      animating = NO;
    }
    
    return self;
 }
 
 #pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
-{
-   //It's a legacy code - in the past I was resetting view's geometry manually.
-   //Now it's done with automatic layout + I'm setting shortcuts myself.
-
-   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
-   
-   if ([[scrollView subviews] count]) {
-      PlaceShortcutsInScrollView(objectShortcuts, scrollView,
-                                 CGSizeMake([ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]),
-                                 100.f);
-   }
-}
 
 //____________________________________________________________________________________________________
 - (void) viewWillAppear : (BOOL) animated
@@ -132,6 +125,26 @@
    [self correctFramesForOrientation : self.interfaceOrientation];
 }
 
+#pragma mark - Views' geometry + interface orientation.
+
+//____________________________________________________________________________________________________
+- (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
+{
+#pragma unused(orientation)
+
+   //It's a legacy code - in the past I was resetting view's geometry manually.
+   //Now it's done with automatic layout + I'm setting shortcuts myself.
+
+   using ROOT::iOS::Browser::PlaceShortcutsInScrollView;
+   
+   if ([[scrollView subviews] count]) {
+      PlaceShortcutsInScrollView(objectShortcuts, scrollView,
+                                 CGSizeMake([ObjectShortcutView iconWidth], [ObjectShortcutView iconHeight] + [ObjectShortcutView textHeight]),
+                                 100.f);
+   }
+}
+
+
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation) interfaceOrientation
 {
@@ -156,6 +169,8 @@
       permittedArrowDirections : UIPopoverArrowDirectionAny animated : NO];
    }
 }
+
+#pragma mark - objects and folders (shortcut views).
 
 //____________________________________________________________________________________________________
 - (void) clearScrollview
@@ -243,6 +258,9 @@
 //____________________________________________________________________________________________________
 - (void) startSlideshow
 {
+   if (animating)
+      return;
+
    assert(self.storyboard != nil && "startSlideshow, self.storyboard is nil");
    assert(fileContainer != nullptr && "startSlideshow, fileContainer is null");
 
@@ -263,6 +281,9 @@
 //____________________________________________________________________________________________________
 - (void) selectObjectFromFile : (ObjectShortcutView *) shortcut
 {
+   if (animating)
+      return;
+
    assert(shortcut != nil && "selectObjectFromFile:, parameter shortcut is nil");
    assert(fileContainer != nullptr && "selectObjectFromFile:, fileContainer is null");
    assert(self.storyboard != nil && "selectObjectFromFile:, self.storyboard is nil");
@@ -344,22 +365,21 @@
 #pragma mark - Popover controller delegate.
 
 //____________________________________________________________________________________________________
-- (void) popoverControllerDidDismissPopover : (UIPopoverController *)popoverController 
+- (void) popoverControllerDidDismissPopover : (UIPopoverController *) popoverController
 {
-   //NSLog(@"popover dismiss");
    [searchBar resignFirstResponder];
 }
 
 #pragma mark - Search delegate.
 
 //____________________________________________________________________________________________________
-- (void) searchesController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key
+- (void) searchController : (SearchViewController *) controller didSelectKey : (FileContainerElement *) key
 {
 #pragma unused(controller)
 
-   assert(key != nil && "searchesController:didSelectKey:, parameter 'key' is nil");
+   assert(key != nil && "searcheController:didSelectKey:, parameter 'key' is nil");
    assert(key.elementIndex < fileContainer->GetNumberOfDescriptors() &&
-          "searchesController:didSelectKey:, key.elementIndex is out of bounds");
+          "searcheController:didSelectKey:, key.elementIndex is out of bounds");
 
    [searchPopover dismissPopoverAnimated : YES];
    searchPopover = nil;
@@ -370,10 +390,10 @@
       descriptor.fIsDir ? [self highlightDirectory : descriptor.fIndex] : [self highlightObject : descriptor.fIndex];
    } else {
       //Create another FileContentController and push it on stack.
-      assert(self.storyboard != nil && "searchesController:didSelectKey:, self.storyboard is nil");
+      assert(self.storyboard != nil && "searcheController:didSelectKey:, self.storyboard is nil");
       UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier:ROOT::iOS::Browser::FileContentViewControllerID];
       assert([c isKindOfClass : [FileContentViewController class]] &&
-             "searchesController:didSelectKey, file content controller has a wrong type");
+             "searcheController:didSelectKey, file content controller has a wrong type");
       FileContentViewController * const contentController = (FileContentViewController *)c;
       [contentController activateForFile : descriptor.fOwner];
 
@@ -393,29 +413,43 @@
 //____________________________________________________________________________________________________
 - (void) animateShortcut : (ObjectShortcutView *) sh
 {
-   CGAffineTransform originalTransform = sh.transform;
-   CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.2f, 1.2f);
+   assert(sh != nil && "animateShortcut:, parameter 'sh' is nil");
+   
+   const CGRect oldFrame = sh.frame;
+   const CGAffineTransform originalTransform = sh.transform;
+   const CGAffineTransform newTransform = CGAffineTransformScale(originalTransform, 1.2f, 1.2f);
 
-   [UIView beginAnimations : @"hide_object" context : nil];
-   [UIView setAnimationDuration : 1.5f];
-   [UIView setAnimationCurve : UIViewAnimationCurveLinear];
-   [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
    sh.transform = newTransform;
    sh.spot.alpha = 0.8f;
-   [UIView commitAnimations];
+   
+   animating = YES;
 
    [UIView beginAnimations : @"show_object" context : nil];
-   [UIView setAnimationDuration : 1.f];
+   [UIView setAnimationDuration : 0.5f];
    [UIView setAnimationCurve : UIViewAnimationCurveLinear];
    [UIView setAnimationTransition : UIViewAnimationTransitionNone forView : sh cache : YES];
+   [UIView setAnimationDelegate : self];
+   [UIView setAnimationDidStopSelector : @selector(animationDidStop:finished:context:)];
    sh.transform = originalTransform;
    sh.spot.alpha = 0.f;
+   sh.frame = oldFrame;
    [UIView commitAnimations];
 }
 
 //____________________________________________________________________________________________________
-- (void) highlightDirectory : (unsigned)tag
+- (void) animationDidStop : (NSString *) animationID finished : (NSNumber *) finished context : (void *) context
 {
+#pragma unused(animationID, context)
+   if ([finished boolValue])
+      animating = NO;
+}
+
+//____________________________________________________________________________________________________
+- (void) highlightDirectory : (unsigned) tag
+{
+   if (animating)
+      return;
+
    for (ObjectShortcutView *sh in objectShortcuts) {
       if (sh.objectIndex == tag && sh.isDirectory) {
          const CGRect thumbFrame = sh.frame;
@@ -437,8 +471,11 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) highlightObject : (unsigned)tag
+- (void) highlightObject : (unsigned) tag
 {
+   if (animating)
+      return;
+
    for (ObjectShortcutView *sh in objectShortcuts) {
       if (sh.objectIndex == tag && !sh.isDirectory) {
          CGRect thumbFrame = sh.frame;
