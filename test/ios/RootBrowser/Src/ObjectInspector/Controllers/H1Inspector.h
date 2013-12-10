@@ -1,6 +1,10 @@
 #import "ObjectInspectorComponent.h"
 
-@interface H1Inspector : UIViewController <ObjectInspectorComponent>
+//
+//Object inspector with nested object inspectors (inside tab bar).
+//
+
+@interface H1Inspector : UIViewController <ObjectInspectorComponent, UITabBarDelegate>
 
 - (void) setObject : (TObject *) o;
 - (void) setObjectController : (ObjectViewController *) c;

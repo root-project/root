@@ -19,22 +19,13 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
-   if (self) {
+   if (self)//Force views load (not necessary??).
       [self view];
-   }
 
    return self;
-}
-
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
 }
 
 #pragma mark - View lifecycle
@@ -50,35 +41,33 @@
    [axisRangeSlider addTarget:self action:@selector(axisRangeChanged) forControlEvents : UIControlEventValueChanged];
 }
 
-//____________________________________________________________________________________________________
-- (void) viewDidUnload
-{
-   [super viewDidUnload];
-   // Release any retained subviews of the main view.
-   // e.g. self.myOutlet = nil;
-}
+#pragma mark - interface orientation.
 
 //____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation)interfaceOrientation
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   // Return YES for supported orientations
+#pragma unused(interfaceOrientation)
 	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent protocol.
+
 
 //____________________________________________________________________________________________________
 -(void) axisRangeChanged
 {
+   assert(object != nullptr && "axisRangeChanged, object is null");
+
    minLabel.center = CGPointMake([axisRangeSlider getMinThumbX], minLabel.center.y);
-   minLabel.text = [NSString stringWithFormat:@"%.3g", axisRangeSlider.selectedMinimumValue];
+   minLabel.text = [NSString stringWithFormat : @"%.3g", axisRangeSlider.selectedMinimumValue];
    maxLabel.center = CGPointMake([axisRangeSlider getMaxThumbX], maxLabel.center.y);
-   maxLabel.text = [NSString stringWithFormat:@"%.3g", axisRangeSlider.selectedMaximumValue];
+   maxLabel.text = [NSString stringWithFormat : @"%.3g", axisRangeSlider.selectedMaximumValue];
    
    //Update the histogram.
    object->GetXaxis()->SetRangeUser(axisRangeSlider.selectedMinimumValue, axisRangeSlider.selectedMaximumValue);
    [controller objectWasModifiedUpdateSelection : YES];
 }
 
-#pragma mark - ObjectInspectorComponent protocol.
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
 {
@@ -87,7 +76,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setObject : (TObject *)o
+- (void) setObject : (TObject *) o
 {
    assert(o != nullptr && "setObject:, parameter 'o' is null");
 
@@ -119,6 +108,8 @@
 //____________________________________________________________________________________________________
 - (IBAction) textFieldDidEndOnExit : (id) sender
 {
+   assert(object != nullptr && "textFieldDidEndOnExit:, object is null");
+   
    object->SetTitle([titleField.text cStringUsingEncoding : [NSString defaultCStringEncoding]]);
    [controller objectWasModifiedUpdateSelection : NO];
 }
@@ -132,7 +123,6 @@
 //____________________________________________________________________________________________________
 - (IBAction) toggleMarkers
 {
-//   showMarkers.on ? controller.markerDrawOption = @"P" : controller.markerDrawOption = @"";
    [controller setMarker : showMarkers.on];
    [controller objectWasModifiedUpdateSelection : YES];
 }

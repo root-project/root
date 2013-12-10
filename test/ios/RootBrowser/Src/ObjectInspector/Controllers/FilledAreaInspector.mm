@@ -29,20 +29,21 @@ const CGFloat defaultCellH = 50.f;
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    using namespace ROOT::iOS::Browser;
 
    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
-   [self view];
 
    if (self) {
+      //Force view/subviews load.
+      [self view];
+
       const CGRect cellRect = CGRectMake(0.f, 0.f, defaultCellW, defaultCellH);
    
       colorCells = [[NSMutableArray alloc] init];
       for (unsigned i = 0; i < nROOTDefaultColors; ++i) {
-         ColorCell * newCell = [[ColorCell alloc] initWithFrame : cellRect];
+         ColorCell * const newCell = [[ColorCell alloc] initWithFrame : cellRect];
          [newCell setRGB : predefinedFillColors[i]];
          [colorCells addObject : newCell];
       }
@@ -53,15 +54,15 @@ const CGFloat defaultCellH = 50.f;
       colorPicker.pickerDelegate = self;
 
       patternCells = [[NSMutableArray alloc] init];
-      PatternCell *solidFill = [[PatternCell alloc] initWithFrame : cellRect andPattern : 0];
+      PatternCell * const solidFill = [[PatternCell alloc] initWithFrame : cellRect andPattern : 0];
       [solidFill setAsSolid];
       [patternCells addObject : solidFill];
       
       for (unsigned i = 0; i < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns; ++i) {
-         PatternCell *newCell = [[PatternCell alloc] initWithFrame : cellRect andPattern : i];
+         PatternCell * const newCell = [[PatternCell alloc] initWithFrame : cellRect andPattern : i];
          [patternCells addObject : newCell];
       }
-      
+
       patternPicker = [[HorizontalPickerView alloc] initWithFrame:CGRectMake(15.f, 90.f, 220.f, 70.f)];
       [patternPicker addItems : patternCells];
       [self.view addSubview : patternPicker];
@@ -71,11 +72,16 @@ const CGFloat defaultCellH = 50.f;
    return self;
 }
 
+#pragma mark - Interface orientation.
+
 //____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
+- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
 {
-   [super didReceiveMemoryWarning];
+#pragma unused(interfaceOrientation)
+	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) p
@@ -171,26 +177,10 @@ const CGFloat defaultCellH = 50.f;
    }
 }
 
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void)viewDidLoad
-{
-   [super viewDidLoad];
-}
-
-//____________________________________________________________________________________________________
-- (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
-{
-#pragma unused(interfaceOrientation)
-
-	return YES;
-}
-
 #pragma mark - Color/pattern picker's delegate.
 
 //____________________________________________________________________________________________________
-- (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *)picker
+- (void) item : (unsigned int) item wasSelectedInPicker : (HorizontalPickerView *) picker
 {
    if (picker == colorPicker) {
       [self setNewColor : item];

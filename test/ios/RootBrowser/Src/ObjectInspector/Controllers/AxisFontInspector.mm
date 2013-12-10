@@ -12,7 +12,7 @@ namespace {
 const CGFloat defaultCellW = 180.f;
 const CGFloat defaultCellH = 44.f;
 
-NSString *fixedFonts[] =  //These are the strings with font names to use with UILabel.
+NSString * const fixedFonts[] =  //These are the strings with font names to use with UILabel.
                                      {
                                       @"TimesNewRomanPS-ItalicMT",
                                       @"TimesNewRomanPS-BoldMT",
@@ -29,7 +29,7 @@ NSString *fixedFonts[] =  //These are the strings with font names to use with UI
                                       @"TimesNewRomanPSMT"
                                      };
 
-NSString *fixedFontNames[] = //these are the strings to show in a picker view.
+NSString * const fixedFontNames[] = //these are the strings to show in a picker view.
                                      {
                                       @"Times New Roman",
                                       @"Times New Roman",

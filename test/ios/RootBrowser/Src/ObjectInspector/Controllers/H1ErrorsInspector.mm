@@ -25,7 +25,7 @@ enum H1ErrorType {
    kTotalNumOfTypes
 };
 
-NSString *errorTypesStrings[] = {@"No error", @"Simple", @"Edges", @"Rectangles", @"Fill", @"Contour"};
+NSString * const errorTypesStrings[] = {@"No error", @"Simple", @"Edges", @"Rectangles", @"Fill", @"Contour"};
 
 namespace RIB = ROOT::iOS::Browser;
 RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::hetE1, RIB::hetE2, RIB::hetE3, RIB::hetE4};
@@ -40,34 +40,17 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *)nibNameOrNil bundle : (NSBundle *)nibBundleOrNil
+- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
 
-   if (self) {
-      [self view];
-   }
+   if (self)
+      [self view];//Force a view load.
 
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    
-    // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-    [super viewDidLoad];
-    // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -79,33 +62,39 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 #pragma mark - Pickerview delegate/data source.
 
 //____________________________________________________________________________________________________
-- (CGFloat)pickerView : (UIPickerView *)pickerView widthForComponent : (NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView widthForComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
    return defaultCellW;
 }
 
 //____________________________________________________________________________________________________
-- (CGFloat)pickerView : (UIPickerView *)pickerView rowHeightForComponent : (NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView rowHeightForComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
    return defaultCellH;
 }
 
 //____________________________________________________________________________________________________
-- (NSInteger)pickerView : (UIPickerView *)pickerView numberOfRowsInComponent : (NSInteger)component
+- (NSInteger) pickerView : (UIPickerView *) pickerView numberOfRowsInComponent : (NSInteger)component
 {
+#pragma unused(pickerView, component)
    return kTotalNumOfTypes;
 }
 
 //____________________________________________________________________________________________________
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+- (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
+#pragma unused(pickerView)
 	return 1;
 }
 
 //____________________________________________________________________________________________________
-- (UIView *)pickerView : (UIPickerView *)pickerView viewForRow : (NSInteger)row forComponent : (NSInteger)component reusingView : (UIView *)view
+- (UIView *) pickerView : (UIPickerView *) pickerView viewForRow : (NSInteger) row forComponent : (NSInteger) component reusingView : (UIView *) view
 {
-   UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
+#pragma unused(pickerView, component, view)
+
+   UILabel * const label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = errorTypesStrings[row];
    label.font = [UIFont fontWithName : @"TimesNewRomanPS-BoldMT" size : 14.f];
    label.textAlignment = NSTextAlignmentCenter;
@@ -115,8 +104,10 @@ RIB::EHistogramErrorOption histErrorTypes[] = {RIB::hetNoError, RIB::hetE, RIB::
 }
 
 //____________________________________________________________________________________________________
-- (void)pickerView : (UIPickerView *)thePickerView didSelectRow : (NSInteger)row inComponent : (NSInteger)component
+- (void)pickerView : (UIPickerView *) pickerView didSelectRow : (NSInteger) row inComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
+
    if (row >= 0) {
       [controller setErrorOption : histErrorTypes[row]];
       [controller objectWasModifiedUpdateSelection : YES];
