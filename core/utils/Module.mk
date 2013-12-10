@@ -12,7 +12,6 @@ ifneq ($(HOST),)
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 all-$(MODNAME):
-
 clean-$(MODNAME):
 
 distclean-$(MODNAME):
@@ -43,25 +42,17 @@ $(ROOTCINTEXE): $(ROOTCLINGEXE)
 $(GENREFLEXEXE): $(ROOTCLINGEXE)
 	ln -f $(ROOTCLINGEXE) $(GENREFLEXEXE)
 
-ifneq ($(PLATFORM),win32)
-$(RLIBMAP): $(RLIBMAPO)
-	$(LD) $(LDFLAGS) -o $@ $<
-else
-$(RLIBMAP): $(RLIBMAPO)
-	$(LD) $(LDFLAGS) -o $@ $< imagehlp.lib
-endif
-
 all-$(MODNAME): $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) $(ROOTCINTEXE) \
-                $(GENREFLEXEXE) $(RLIBMAP)
+                $(GENREFLEXEXE)
 
 clean-$(MODNAME):
-	@rm -f $(ROOTCLINGTMPO) $(ROOTCLINGO) $(ROOTCLINGUTILO) $(RLIBMAPO)
+	@rm -f $(ROOTCLINGTMPO) $(ROOTCLINGO) $(ROOTCLINGUTILO)
 
 clean:: clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 	@rm -f $(ROOTCLINGDEP) $(ROOTCLINGTMPEXE) $(ROOTCLINGEXE) \
-	   $(ROOTCINTEXE) $(GENREFLEXEXE) $(RLIBMAPDEP) $(RLIBMAP) \
+	   $(ROOTCINTEXE) $(GENREFLEXEXE) \
 	   $(call stripsrc,$(UTILSDIRS)/*.exp $(UTILSDIRS)/*.lib \
 	      $(UTILSDIRS)/*_tmp.cxx)
 

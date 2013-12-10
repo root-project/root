@@ -76,12 +76,12 @@ $(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcmdep,EVE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
 
-$(EVEMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(EVEL0) $(EVELS)
-		$(RLIBMAP) -o $@ -l $(EVELIB) \
-		   -d $(EVELIBDEPM) -c $(EVELS)
+$(EVEMAP):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcmdep,EVE)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(EVEDS) $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
 
-all-$(MODNAME): $(EVELIB) $(EVEMAP)
-
+all-$(MODNAME): $(EVELIB)
 clean-$(MODNAME):
 		@rm -f $(EVEO) $(EVEDO)
 

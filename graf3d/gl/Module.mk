@@ -88,12 +88,12 @@ $(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP) $(call pcmdep,GL)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
-$(GLMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(GLL)
-		$(RLIBMAP) -o $@ -l $(GLLIB) \
-		   -d $(GLLIBDEPM) -c $(GLL)
+$(GLMAP):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP) $(call pcmdep,GL)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GLDS) $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
-all-$(MODNAME): $(GLLIB) $(GLMAP)
-
+all-$(MODNAME): $(GLLIB)
 clean-$(MODNAME):
 		@rm -f $(GLO) $(GLDO)
 

@@ -61,13 +61,13 @@ $(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcmdep,MEMSTAT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
 
-$(MEMSTATMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(MEMSTATL)
-		$(RLIBMAP) -o $@ -l $(MEMSTATLIB) \
-		   -d $(MEMSTATLIBDEPM) -c $(MEMSTATL)
+$(MEMSTATMAP):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcmdep,MEMSTAT)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(MEMSTATDS) $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
 
 
-all-$(MODNAME): $(MEMSTATLIB) $(MEMSTATMAP)
-
+all-$(MODNAME): $(MEMSTATLIB)
 clean-$(MODNAME):
 		@rm -f $(MEMSTATO) $(MEMSTATDO)
 

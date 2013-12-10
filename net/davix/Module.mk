@@ -53,12 +53,12 @@ $(DAVIXDS):     $(DAVIXH) $(DAVIXL) $(ROOTCINTTMPDEP) $(call pcmdep,DAVIX)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
 
-$(DAVIXMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(DAVIXL)
-		$(RLIBMAP) -o $@ -l $(DAVIXLIB) \
-		   -d $(DAVIXLIBDEPM) -c $(DAVIXL)
+$(DAVIXMAP):     $(DAVIXH) $(DAVIXL) $(ROOTCINTTMPDEP) $(call pcmdep,DAVIX)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(DAVIXDS) $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
 
-all-$(MODNAME): $(DAVIXLIB) $(DAVIXMAP)
-
+all-$(MODNAME): $(DAVIXLIB)
 clean-$(MODNAME):
 		@rm -f $(DAVIXO) $(DAVIXDO)
 

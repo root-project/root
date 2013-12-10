@@ -78,9 +78,11 @@ $(CLINGLIB):    $(CLINGO) $(CLINGDO) $(METAOLLVM) $(METAUTILSOLLVM) \
 		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA)" \
 		   ""
 
-$(CLINGMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CLINGL)
-		$(RLIBMAP) -o $@ -l $(CLINGLIB) \
-		   -d $(CLINGLIBDEPM) -c $(CLINGL)
+$(CLINGMAP): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(CLINGDS) $(call dictModule,CLING) -c $(CLINGH) \
+		   $(CLINGL)
 
 $(call pcmrule,CLING)
 	$(noop)
@@ -91,8 +93,7 @@ $(CLINGDS): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CLING) -c $(CLINGH) \
 		   $(CLINGL)
 
-all-$(MODNAME): $(METAO) $(METAOLLVM) $(CLINGLIB) $(CLINGMAP)
-
+all-$(MODNAME): $(METAO) $(METAOLLVM) $(CLINGLIB)
 clean-$(MODNAME):
 		@rm -f $(METAO) $(METAOLLVM) $(GLINGDO)
 

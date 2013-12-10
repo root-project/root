@@ -62,12 +62,12 @@ $(GENETICDS):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCINTTMPDEP) $(call
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GENETIC) -c $(GENETICDH1) $(GENETICL)
 
-$(GENETICMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(GENETICL) $(GENETICLINC)
-		$(RLIBMAP) -o $@ -l $(GENETICLIB) \
-		   -d $(GENETICLIBDEPM) -c $(GENETICL) $(GENETICLINC)
+$(GENETICMAP):  $(GENETICDH1) $(GENETICL) $(GENETICLINC) $(ROOTCINTTMPDEP) $(call pcmdep,GENETIC)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GENETICDS) $(call dictModule,GENETIC) -c $(GENETICDH1) $(GENETICL)
 
-all-$(MODNAME): $(GENETICLIB) $(GENETICMAP)
-
+all-$(MODNAME): $(GENETICLIB)
 clean-$(MODNAME):
 		@rm -f $(GENETICO) $(GENETICDO)
 

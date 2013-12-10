@@ -54,12 +54,12 @@ $(SAPDBDS):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP) $(call pcmdep,SAPDB)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SAPDB) -c $(SAPDBH) $(SAPDBL)
 
-$(SAPDBMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(SAPDBL)
-		$(RLIBMAP) -o $@ -l $(SAPDBLIB) \
-		   -d $(SAPDBLIBDEPM) -c $(SAPDBL)
+$(SAPDBMAP):     $(SAPDBH) $(SAPDBL) $(ROOTCINTTMPDEP) $(call pcmdep,SAPDB)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(SAPDBDS) $(call dictModule,SAPDB) -c $(SAPDBH) $(SAPDBL)
 
-all-$(MODNAME): $(SAPDBLIB) $(SAPDBMAP)
-
+all-$(MODNAME): $(SAPDBLIB)
 clean-$(MODNAME):
 		@rm -f $(SAPDBO) $(SAPDBDO)
 

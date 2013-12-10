@@ -54,12 +54,12 @@ $(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,MYSQL)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-$(MYSQLMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(MYSQLL)
-		$(RLIBMAP) -o $@ -l $(MYSQLLIB) \
-		   -d $(MYSQLLIBDEPM) -c $(MYSQLL)
+$(MYSQLMAP):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,MYSQL)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(MYSQLDS) $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-all-$(MODNAME): $(MYSQLLIB) $(MYSQLMAP)
-
+all-$(MODNAME): $(MYSQLLIB)
 clean-$(MODNAME):
 		@rm -f $(MYSQLO) $(MYSQLDO)
 

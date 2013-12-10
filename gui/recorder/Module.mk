@@ -54,12 +54,12 @@ $(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcmdep,REC)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)
 
-$(RECMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(RECL)
-		$(RLIBMAP) -o $@ -l $(RECLIB) \
-		   -d $(RECLIBDEPM) -c $(RECL)
+$(RECMAP):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcmdep,REC)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(RECDS) $(call dictModule,REC) -c $(RECH) $(RECL)
 
-all-$(MODNAME): $(RECLIB) $(RECMAP)
-
+all-$(MODNAME): $(RECLIB)
 clean-$(MODNAME):
 		@rm -f $(RECO) $(RECDO)
 

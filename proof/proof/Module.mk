@@ -64,12 +64,12 @@ $(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOF)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
-$(PROOFMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(PROOFL)
-		$(RLIBMAP) -o $@ -l $(PROOFLIB) \
-		   -d $(PROOFLIBDEPM) -c $(PROOFL)
+$(PROOFMAP):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOF)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(PROOFDS) $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
-all-$(MODNAME): $(PROOFLIB) $(PROOFMAP)
-
+all-$(MODNAME): $(PROOFLIB)
 clean-$(MODNAME):
 		@rm -f $(PROOFO) $(PROOFDO)
 

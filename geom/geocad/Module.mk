@@ -58,12 +58,12 @@ $(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcmd
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
 
-$(GEOCADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(GEOCADL) 
-		$(RLIBMAP) -o $@ -l $(GEOCADLIB) \
-		   -d $(GEOCADLIBDEPM) -c $(GEOCADL)
+$(GEOCADMAP):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcmdep,GEOCAD)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GEOCADDS) $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
 
-all-$(MODNAME): $(GEOCADLIB) $(GEOCADMAP)
-
+all-$(MODNAME): $(GEOCADLIB)
 clean-$(MODNAME):
 		@rm -f $(GEOCADO) $(GEOCADDO)
 

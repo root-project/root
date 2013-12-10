@@ -55,12 +55,12 @@ $(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcmdep,VMC)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
 
-$(VMCMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(VMCL)
-		$(RLIBMAP) -o $@ -l $(VMCLIB) \
-		   -d $(VMCLIBDEPM) -c $(VMCL)
+$(VMCMAP):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcmdep,VMC)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(VMCDS) $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
 
-all-$(MODNAME): $(VMCLIB) $(VMCMAP)
-
+all-$(MODNAME): $(VMCLIB)
 clean-$(MODNAME):
 		@rm -f $(VMCO) $(VMCDO)
 

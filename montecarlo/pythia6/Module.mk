@@ -69,12 +69,12 @@ $(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA6)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
 
-$(PYTHIA6MAP):  $(RLIBMAP) $(MAKEFILEDEP) $(PYTHIA6L)
-		$(RLIBMAP) -o $@ -l $(PYTHIA6LIB) \
-		   -d $(PYTHIA6LIBDEPM) -c $(PYTHIA6L)
+$(PYTHIA6MAP):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA6)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(PYTHIA6DS) $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
 
-all-$(MODNAME): $(PYTHIA6LIB) $(PYTHIA6MAP)
-
+all-$(MODNAME): $(PYTHIA6LIB)
 clean-$(MODNAME):
 		@rm -f $(PYTHIA6O) $(PYTHIA6DO)
 

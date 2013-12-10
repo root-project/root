@@ -54,12 +54,12 @@ $(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
-$(ODBCMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(ODBCL)
-		$(RLIBMAP) -o $@ -l $(ODBCLIB) \
-		   -d $(ODBCLIBDEPM) -c $(ODBCL)
+$(ODBCMAP):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(ODBCDS) $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
-all-$(MODNAME): $(ODBCLIB) $(ODBCMAP)
-
+all-$(MODNAME): $(ODBCLIB)
 clean-$(MODNAME):
 		@rm -f $(ODBCO) $(ODBCDO)
 

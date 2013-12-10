@@ -89,12 +89,12 @@ $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP) $(call pcmdep,THREAD)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
 
-$(THREADMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(THREADL)
-		$(RLIBMAP) -o $@ -l $(THREADLIB) \
-		   -d $(THREADLIBDEPM) -c $(THREADL)
+$(THREADMAP):    $(THREADH) $(THREADL) $(ROOTCINTTMPDEP) $(call pcmdep,THREAD)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(THREADDS) $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
 
-all-$(MODNAME): $(THREADLIB) $(THREADMAP)
-
+all-$(MODNAME): $(THREADLIB)
 clean-$(MODNAME):
 		@rm -f $(THREADO) $(THREADDO)
 

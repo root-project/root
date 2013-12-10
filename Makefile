@@ -789,7 +789,7 @@ endif
 $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCINTTMP) -f $@ -s lib/libCore.so -c $(COREDICTCXXFLAGS) \
+	$(ROOTCINTTMP) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
 $(call pcmname,$(CORELIB)): $(COREDS)
@@ -801,8 +801,12 @@ $(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	   "$(COREDO) $(COREO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 
-$(COREMAP): $(RLIBMAP) $(MAKEFILEDEP) $(COREL)
-	$(RLIBMAP) -o $@ -l $(CORELIB) -d $(CORELIBDEPM) -c $(COREL)
+$(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+	$(MAKEDIR)
+	@echo "Generating dictionary $@..."
+	$(ROOTCINTTMP) -r $(COREDS) -s lib/libCore.$(SOEXT) \
+	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
+	   $(COREDICTH) $(COREL0)
 
 map::   $(ALLMAPS)
 

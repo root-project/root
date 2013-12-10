@@ -65,11 +65,12 @@ $(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
 
-$(HISTMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HISTL)
-		$(RLIBMAP) -o $@ -l $(HISTLIB) \
-		   -d $(HISTLIBDEPM) -c $(HISTL)
+$(HISTMAP):     $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(HISTDS) $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
 
-all-$(MODNAME): $(HISTLIB) $(HISTMAP)
+all-$(MODNAME): $(HISTLIB)
 
 clean-$(MODNAME):
 		@rm -f $(HISTO) $(HISTDO)

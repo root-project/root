@@ -79,9 +79,10 @@ $(PROOFBENCHDS): $(PROOFBENCHH) $(PROOFBENCHL) $(ROOTCINTTMPDEP) $(call pcmdep,P
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOFBENCH) -c $(PROOFBENCHH) $(PROOFBENCHL)
 
-$(PROOFBENCHMAP): $(RLIBMAP) $(MAKEFILEDEP) $(PROOFBENCHL)
-		$(RLIBMAP) -o $@ -l $(PROOFBENCHLIB) \
-		   -d $(PROOFBENCHLIBDEPM) -c $(PROOFBENCHL)
+$(PROOFBENCHMAP): $(PROOFBENCHH) $(PROOFBENCHL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOFBENCH)
+		   $(MAKEDIR)
+		   @echo "Generating rootmap $@..."
+		   $(ROOTCINTTMP) -r $(PROOFBENCHDS) $(call dictModule,PROOFBENCH) -c $(PROOFBENCHH) $(PROOFBENCHL)
 
 $(PBDPAR):   $(PBDPARH) $(PBDPARS)
 		$(MAKEDIR)
@@ -145,7 +146,7 @@ $(PBCPAR):   $(PBCPARH) $(PBCPARS)
 		cd $$builddir; \
 		rm -fr $(PBCPARDIR))
 
-all-$(MODNAME): $(PROOFBENCHLIB) $(PROOFBENCHMAP) $(PBDPAR) $(PBCPAR)
+all-$(MODNAME): $(PROOFBENCHLIB) $(PBDPAR) $(PBCPAR)
 
 clean-$(MODNAME):
 		@rm -f $(PROOFBENCHO) $(PROOFBENCHDO)

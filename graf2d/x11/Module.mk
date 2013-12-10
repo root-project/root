@@ -56,12 +56,12 @@ $(X11DS):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP) $(call pcmdep,X11)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
 
-$(X11MAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X11L)
-		$(RLIBMAP) -o $@ -l $(X11LIB) \
-		   -d $(X11LIBDEPM) -c $(X11L)
+$(X11MAP):       $(X11H1) $(X11L) $(ROOTCINTTMPDEP) $(call pcmdep,X11)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(X11DS) $(call dictModule,X11) -c $(X11INCDIR:%=-I%) $(X11H1) $(X11L)
 
-all-$(MODNAME): $(X11LIB) $(X11MAP)
-
+all-$(MODNAME): $(X11LIB)
 clean-$(MODNAME):
 		@rm -f $(X11O) $(X11DO)
 

@@ -65,12 +65,12 @@ $(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcmdep,COCOA)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
-$(COCOAMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(COCOAL)
-		$(RLIBMAP) -o $@ -l $(COCOALIB) \
-		   -d $(COCOALIBDEPM) -c $(COCOAL)
+$(COCOAMAP):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcmdep,COCOA)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(COCOADS) $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
-all-$(MODNAME): $(COCOALIB) $(COCOAMAP)
-
+all-$(MODNAME): $(COCOALIB)
 clean-$(MODNAME):
 		@rm -f $(COCOAO) $(COCOADO) $(COCOAOBJCPPO)
 

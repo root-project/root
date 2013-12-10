@@ -56,12 +56,12 @@ $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
-$(GRAFMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GRAFL)
-		$(RLIBMAP) -o $@ -l $(GRAFLIB) \
-		   -d $(GRAFLIBDEPM) -c $(GRAFL)
+$(GRAFMAP):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GRAFDS) $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
-all-$(MODNAME): $(GRAFLIB) $(GRAFMAP)
-
+all-$(MODNAME): $(GRAFLIB)
 clean-$(MODNAME):
 		@rm -f $(GRAFO) $(GRAFDO)
 

@@ -117,9 +117,10 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
-$(RAUTHMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(RAUTHL)
-		$(RLIBMAP) -o $@ -l $(RAUTHLIB) \
-		   -d $(RAUTHLIBDEPM) -c $(RAUTHL)
+$(RAUTHMAP):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(RAUTHDS) $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
 $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -135,11 +136,12 @@ $(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,AFSAUTH)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
 
-$(AFSAUTHMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(AFSAUTHL)
-		$(RLIBMAP) -o $(AFSAUTHMAP) -l $(AFSAUTHLIB) \
-		   -d $(AFSAUTHLIBDEPM) -c $(AFSAUTHL)
+$(AFSAUTHMAP):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,AFSAUTH)
+		$(MAKEDIR)
+		@echo "Generating dictionary $@..."
+		$(ROOTCINTTMP) -r $(AFSAUTHMAP) $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
 
-all-$(MODNAME): $(RAUTHLIB) $(AFSAUTHLIB) $(RAUTHMAP) $(AFSAUTHMAP)
+all-$(MODNAME): $(RAUTHLIB) $(AFSAUTHLIB)
 
 clean-$(MODNAME):
 		@rm -f $(RAUTHO) $(RAUTHDO) $(DAEMONUTILSO) $(AFSAUTHO) \

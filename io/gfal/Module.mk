@@ -54,12 +54,12 @@ $(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcmdep,GFAL)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
 
-$(GFALMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GFALL)
-		$(RLIBMAP) -o $@ -l $(GFALLIB) \
-		   -d $(GFALLIBDEPM) -c $(GFALL)
+$(GFALMAP):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcmdep,GFAL)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GFALDS) $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
 
-all-$(MODNAME): $(GFALLIB) $(GFALMAP)
-
+all-$(MODNAME): $(GFALLIB)
 clean-$(MODNAME):
 		@rm -f $(GFALO) $(GFALDO)
 

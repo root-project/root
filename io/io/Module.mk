@@ -54,11 +54,12 @@ $(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcmdep,IO)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)
 
-$(IOMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(IOL)
-		$(RLIBMAP) -o $@ -l $(IOLIB) -d $(IOLIBDEPM) -c $(IOL)
+$(IOMAP):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcmdep,IO)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(IODS) $(call dictModule,IO) -c $(IOH) $(IOL)
 
-all-$(MODNAME): $(IOLIB) $(IOMAP)
-
+all-$(MODNAME): $(IOLIB)
 clean-$(MODNAME):
 		@rm -f $(IOO) $(IODO)
 

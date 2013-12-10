@@ -64,12 +64,12 @@ $(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcmdep,QUARTZ)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
 
-$(QUARTZMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(QUARTZL)
-		$(RLIBMAP) -o $@ -l $(QUARTZLIB) \
-		   -d $(QUARTZLIBDEPM) -c $(QUARTZL)
+$(QUARTZMAP):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcmdep,QUARTZ)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(QUARTZDS) $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
 
-all-$(MODNAME): $(QUARTZLIB) $(QUARTZMAP)
-
+all-$(MODNAME): $(QUARTZLIB)
 clean-$(MODNAME):
 		@rm -f $(QUARTZO) $(QUARTZDO) $(QUARTZOBJCPPO)
 

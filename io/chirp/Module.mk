@@ -53,12 +53,12 @@ $(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcmdep,CHIRP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
 
-$(CHIRPMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(CHIRPL)
-		$(RLIBMAP) -o $@ -l $(CHIRPLIB) \
-		   -d $(CHIRPLIBDEPM) -c $(CHIRPL)
+$(CHIRPMAP):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcmdep,CHIRP)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(CHIRPDS) $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
 
-all-$(MODNAME): $(CHIRPLIB) $(CHIRPMAP)
-
+all-$(MODNAME): $(CHIRPLIB)
 clean-$(MODNAME):
 		@rm -f $(CHIRPO) $(CHIRPDO)
 

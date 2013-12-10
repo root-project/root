@@ -90,12 +90,12 @@ $(TMVADS):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP) $(call pcmdep,TMV
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)
 
-$(TMVAMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(TMVALS) $(TMVAL0)
-		$(RLIBMAP) -o $@ -l $(TMVALIB) \
-		   -d $(TMVALIBDEPM) -c $(TMVALS)
+$(TMVAMAP):      $(TMVAH) $(TMVAL0) $(TMVALS) $(ROOTCINTTMPDEP) $(call pcmdep,TMVA)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(TMVADS) $(call dictModule,TMVA) -c -I$(ROOT_SRCDIR) $(TMVAH) $(TMVAL0)
 
-all-$(MODNAME): $(TMVALIB) $(TMVAMAP)
-
+all-$(MODNAME): $(TMVALIB)
 clean-$(MODNAME):
 		@rm -f $(TMVADIRS)/*.o
 

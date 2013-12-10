@@ -54,12 +54,12 @@ $(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GDML)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
 
-$(GDMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GDMLL)
-		$(RLIBMAP) -o $@ -l $(GDMLLIB) \
-		   -d $(GDMLLIBDEPM) -c $(GDMLL)
+$(GDMLMAP):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GDML)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GDMLDS) $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
 
-all-$(MODNAME): $(GDMLLIB) $(GDMLMAP)
-
+all-$(MODNAME): $(GDMLLIB)
 clean-$(MODNAME):
 		@rm -f $(GDMLO) $(GDMLDO)
 

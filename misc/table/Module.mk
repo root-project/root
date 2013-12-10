@@ -54,12 +54,12 @@ $(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcmdep,TABLE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
 
-$(TABLEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(TABLEL)
-		$(RLIBMAP) -o $@ -l $(TABLELIB) \
-		   -d $(TABLELIBDEPM) -c $(TABLEL)
+$(TABLEMAP):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcmdep,TABLE)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(TABLEDS) $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
 
-all-$(MODNAME): $(TABLELIB) $(TABLEMAP)
-
+all-$(MODNAME): $(TABLELIB)
 clean-$(MODNAME):
 		@rm -f $(TABLEO) $(TABLEDO)
 

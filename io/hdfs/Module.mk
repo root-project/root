@@ -54,12 +54,12 @@ $(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcmdep,HDFS)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
 
-$(HDFSMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HDFSL)
-		$(RLIBMAP) -o $@ -l $(HDFSLIB) \
-		   -d $(HDFSLIBDEPM) -c $(HDFSL)
+$(HDFSMAP):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcmdep,HDFS)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(HDFSDS) $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
 
-all-$(MODNAME): $(HDFSLIB) $(HDFSMAP)
-
+all-$(MODNAME): $(HDFSLIB)
 clean-$(MODNAME):
 		@rm -f $(HDFSO) $(HDFSDO)
 

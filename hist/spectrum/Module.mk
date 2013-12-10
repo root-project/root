@@ -56,12 +56,12 @@ $(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcmdep,SPECTR
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
 
-$(SPECTRUMMAP): $(RLIBMAP) $(MAKEFILEDEP) $(SPECTRUML)
-		$(RLIBMAP) -o $@ -l $(SPECTRUMLIB) \
-		   -d $(SPECTRUMLIBDEPM) -c $(SPECTRUML)
+$(SPECTRUMMAP):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcmdep,SPECTRUM)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(SPECTRUMDS) $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
 
-all-$(MODNAME): $(SPECTRUMLIB) $(SPECTRUMMAP)
-
+all-$(MODNAME): $(SPECTRUMLIB)
 clean-$(MODNAME):
 		@rm -f $(SPECTRUMO) $(SPECTRUMDO)
 

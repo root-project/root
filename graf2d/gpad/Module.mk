@@ -54,12 +54,12 @@ $(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcmdep,GPAD)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
 
-$(GPADMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(GPADL)
-		$(RLIBMAP) -o $@ -l $(GPADLIB) \
-		   -d $(GPADLIBDEPM) -c $(GPADL)
+$(GPADMAP):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcmdep,GPAD)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GPADDS) $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
 
-all-$(MODNAME): $(GPADLIB) $(GPADMAP)
-
+all-$(MODNAME): $(GPADLIB)
 clean-$(MODNAME):
 		@rm -f $(GPADO) $(GPADDO)
 

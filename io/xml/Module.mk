@@ -54,12 +54,12 @@ $(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcmdep,XML)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)
 
-$(XMLMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(XMLL)
-		$(RLIBMAP) -o $@ -l $(XMLLIB) \
-		   -d $(XMLLIBDEPM) -c $(XMLL)
+$(XMLMAP):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcmdep,XML)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(XMLDS) $(call dictModule,XML) -c $(XMLH) $(XMLL)
 
-all-$(MODNAME): $(XMLLIB) $(XMLMAP)
-
+all-$(MODNAME): $(XMLLIB)
 clean-$(MODNAME):
 		@rm -f $(XMLO) $(XMLDO)
 

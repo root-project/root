@@ -73,12 +73,12 @@ $(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcmdep,QTGSI)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
 
-$(QTGSIMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(QTGSIL)
-		$(RLIBMAP) -o $@ -l $(QTGSILIB) \
-		   -d $(QTGSILIBDEPM) -c $(QTGSIL)
+$(QTGSIMAP):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcmdep,QTGSI)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(QTGSIDS) $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
 
-all-$(MODNAME): $(QTGSILIB) $(QTGSIMAP)
-
+all-$(MODNAME): $(QTGSILIB)
 test-$(MODNAME): all-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(INSTALL) $(QTGSIDIR)/test $(QTGSIDIRT)

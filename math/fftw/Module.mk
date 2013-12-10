@@ -54,12 +54,12 @@ $(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcmdep,FFTW)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
 
-$(FFTWMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(FFTWL)
-		$(RLIBMAP) -o $@ -l $(FFTWLIB) \
-		   -d $(FFTWLIBDEPM) -c $(FFTWL)
+$(FFTWMAP):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcmdep,FFTW)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(FFTWDS) $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
 
-all-$(MODNAME): $(FFTWLIB) $(FFTWMAP)
-
+all-$(MODNAME): $(FFTWLIB)
 clean-$(MODNAME):
 		@rm -f $(FFTWO) $(FFTWDO)
 

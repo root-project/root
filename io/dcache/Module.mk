@@ -53,12 +53,12 @@ $(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcmdep,DCACHE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
 
-$(DCACHEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(DCACHEL)
-		$(RLIBMAP) -o $@ -l $(DCACHELIB) \
-		   -d $(DCACHELIBDEPM) -c $(DCACHEL)
+$(DCACHEMAP):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcmdep,DCACHE)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(DCACHEDS) $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
 
-all-$(MODNAME): $(DCACHELIB) $(DCACHEMAP)
-
+all-$(MODNAME): $(DCACHELIB)
 clean-$(MODNAME):
 	@rm -f $(DCACHEO) $(DCACHEDO)
 

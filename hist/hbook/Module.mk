@@ -54,12 +54,12 @@ $(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminice
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
 
-$(HBOOKMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(HBOOKL)
-		$(RLIBMAP) -o $@ -l $(HBOOKLIB) \
-		   -d $(HBOOKLIBDEPM) -c $(HBOOKL)
+$(HBOOKMAP):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(HBOOKDS) $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
 
-all-$(MODNAME): $(HBOOKLIB) $(HBOOKMAP)
-
+all-$(MODNAME): $(HBOOKLIB)
 clean-$(MODNAME):
 		@rm -f $(HBOOKO) $(HBOOKDO)
 

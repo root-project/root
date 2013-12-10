@@ -54,12 +54,12 @@ $(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,GLITE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
 
-$(GLITEMAP):    $(RLIBMAP) $(MAKEFILEDEP) $(GLITEL)
-		$(RLIBMAP) -o $@ -l $(GLITELIB) \
-		   -d $(GLITELIBDEPM) -c $(GLITEL)
+$(GLITEMAP):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,GLITE)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(GLITEDS) $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
 
-all-$(MODNAME): $(GLITELIB) $(GLITEMAP)
-
+all-$(MODNAME): $(GLITELIB)
 clean-$(MODNAME):
 		@rm -f $(GLITEO) $(GLITEDO)
 

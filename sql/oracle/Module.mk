@@ -54,12 +54,12 @@ $(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcmdep,ORACLE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
 
-$(ORACLEMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(ORACLEL)
-		$(RLIBMAP) -o $@ -l $(ORACLELIB) \
-		   -d $(ORACLELIBDEPM) -c $(ORACLEL)
+$(ORACLEMAP):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcmdep,ORACLE)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(ORACLEDS) $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
 
-all-$(MODNAME): $(ORACLELIB) $(ORACLEMAP)
-
+all-$(MODNAME): $(ORACLELIB)
 clean-$(MODNAME):
 		@rm -f $(ORACLEO) $(ORACLEDO)
 

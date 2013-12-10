@@ -55,12 +55,12 @@ $(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcmdep,EG)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)
 
-$(EGMAP):       $(RLIBMAP) $(MAKEFILEDEP) $(EGL)
-		$(RLIBMAP) -o $@ -l $(EGLIB) \
-		   -d $(EGLIBDEPM) -c $(EGL)
+$(EGMAP):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcmdep,EG)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(EGDS) $(call dictModule,EG) -c $(EGH1) $(EGL)
 
-all-$(MODNAME): $(EGLIB) $(EGMAP)
-
+all-$(MODNAME): $(EGLIB)
 clean-$(MODNAME):
 		@rm -f $(EGO) $(EGDO)
 

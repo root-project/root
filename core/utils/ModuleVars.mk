@@ -17,9 +17,6 @@ ROOTCINTTMP     := $(ROOTCLINGTMPEXE)
 ##### Dependencies for all dictionaries
 ROOTCINTTMPDEP   = $(ROOTCLINGTMPO) $(ROOTCLINGTMPEXE)
 
-##### rlibmap #####
-RLIBMAP      := $(BUILDTOOLSDIR)/bin/rlibmap$(EXEEXT)
-
 else # ifneq ($(HOST),)
 
 MODNAME      := utils
@@ -33,7 +30,7 @@ UTILSDIRS    := $(UTILSDIR)/src
 UTILSDIRI    := $(UTILSDIR)/inc
 
 ##### rootcling #####
-ROOTCLINGUTILS  := $(filter-out %/rlibmap.cxx %/rootcling.cxx %/RStl.cxx %_tmp.cxx,\
+ROOTCLINGUTILS  := $(filter-out %/rootcling.cxx %/RStl.cxx %_tmp.cxx,\
                    $(wildcard $(UTILSDIRS)/*.cxx))
 ROOTCLINGUTILO  := $(call stripsrc,$(ROOTCLINGUTILS:.cxx=.o))
 ROOTCLINGS      := $(wildcard $(UTILSDIRS)/rootcling.cxx)
@@ -51,14 +48,8 @@ ROOTCINTTMP     := $(ROOTCLINGTMPEXE)
 ##### Dependencies for all dictionaries
 ROOTCINTTMPDEP  = $(ROOTCLINGTMPO) $(ROOTCLINGTMPEXE)
 
-##### rlibmap #####
-RLIBMAPS     := $(UTILSDIRS)/rlibmap.cxx
-RLIBMAPO     := $(call stripsrc,$(RLIBMAPS:.cxx=.o))
-RLIBMAPDEP   := $(RLIBMAPO:.o=.d)
-RLIBMAP      := bin/rlibmap$(EXEEXT)
-
 # include all dependency files
-INCLUDEFILES += $(ROOTCLINGDEP) $(RLIBMAPDEP)
+INCLUDEFILES += $(ROOTCLINGDEP)
 
 ROOTCLINGCXXFLAGS = $(filter-out -Wcast-qual,$(CLINGCXXFLAGS))
 ifneq ($(CXX:g++=),$(CXX))

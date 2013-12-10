@@ -80,18 +80,17 @@ $(call pcmrule,SMATRIX)
 $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
 
 $(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(MAKEDIR)
 		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
 
-$(SMATRIXMAP):  $(RLIBMAP) $(MAKEFILEDEP) $(SMATRIXL) $(SMATRIXLINC)
-		$(RLIBMAP) -o $@ -l $(SMATRIXLIB) \
-		   -d $(SMATRIXLIBDEPM) -c $(SMATRIXL) $(SMATRIXLINC)
+$(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcmdep,SMATRIX)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
@@ -102,7 +101,7 @@ $(SMATRIXDO):   CXXFLAGS += -I$(SMATRIXDIRI)
 $(SMATRIXDO32): CXXFLAGS += -I$(SMATRIXDIRI)
 endif
 
-all-$(MODNAME): $(SMATRIXLIB) $(SMATRIXMAP)
+all-$(MODNAME): $(SMATRIXLIB)
 
 clean-$(MODNAME):
 		@rm -f $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32)

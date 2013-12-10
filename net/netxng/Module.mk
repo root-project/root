@@ -64,11 +64,12 @@ $(NETXNGDS):    $(NETXNGH) $(NETXNGL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NETXNG) -c $(NETXNGINCEXTRA) $(NETXNGH) $(NETXNGL)
 
-$(NETXNGMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(NETXNGL)
-		$(RLIBMAP) -o $@ -l $(NETXNGLIB) -d $(NETXNGLIBDEPM) -c $(NETXNGL)
+$(NETXNGMAP):    $(NETXNGH) $(NETXNGL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(NETXNGDS) $(call dictModule,NETXNG) -c $(NETXNGINCEXTRA) $(NETXNGH) $(NETXNGL)
 
-all-$(MODNAME): $(NETXNGLIB) $(NETXNGMAP)
-
+all-$(MODNAME): $(NETXNGLIB)
 clean-$(MODNAME):
 		@rm -f $(NETXNGO) $(NETXNGDO)
 

@@ -57,12 +57,12 @@ $(X3DDS):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP) $(call pcmdep,X3D)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X3D) -c $(X3DH1) $(X3DL)
 
-$(X3DMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(X3DL)
-		$(RLIBMAP) -o $@ -l $(X3DLIB) \
-		   -d $(X3DLIBDEPM) -c $(X3DL)
+$(X3DMAP):       $(X3DH1) $(X3DL) $(ROOTCINTTMPDEP) $(call pcmdep,X3D)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(X3DDS) $(call dictModule,X3D) -c $(X3DH1) $(X3DL)
 
-all-$(MODNAME): $(X3DLIB) $(X3DMAP)
-
+all-$(MODNAME): $(X3DLIB)
 clean-$(MODNAME):
 		@rm -f $(X3DO) $(X3DDO)
 

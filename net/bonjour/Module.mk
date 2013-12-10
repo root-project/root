@@ -54,12 +54,12 @@ $(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcmdep,BONJ)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
 
-$(BONJMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(BONJL)
-		$(RLIBMAP) -o $@ -l $(BONJLIB) \
-		   -d $(BONJLIBDEPM) -c $(BONJL)
+$(BONJMAP):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcmdep,BONJ)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(BONJDS) $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
 
-all-$(MODNAME): $(BONJLIB) $(BONJMAP)
-
+all-$(MODNAME): $(BONJLIB)
 clean-$(MODNAME):
 		@rm -f $(BONJO) $(BONJDO)
 

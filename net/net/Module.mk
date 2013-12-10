@@ -76,11 +76,12 @@ $(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcmdep,NET)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
-$(NETMAP):      $(RLIBMAP) $(MAKEFILEDEP) $(NETL)
-		$(RLIBMAP) -o $@ -l $(NETLIB) -d $(NETLIBDEPM) -c $(NETL)
+$(NETMAP):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcmdep,NET)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(NETDS) $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
-all-$(MODNAME): $(NETLIB) $(NETMAP)
-
+all-$(MODNAME): $(NETLIB)
 clean-$(MODNAME):
 		@rm -f $(NETO) $(NETDO)
 

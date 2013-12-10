@@ -54,12 +54,12 @@ $(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,HTML)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
-$(HTMLMAP):     $(RLIBMAP) $(MAKEFILEDEP) $(HTMLL)
-		$(RLIBMAP) -o $@ -l $(HTMLLIB) \
-		   -d $(HTMLLIBDEPM) -c $(HTMLL)
+$(HTMLMAP):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,HTML)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(HTMLDS) $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
-all-$(MODNAME): $(HTMLLIB) $(HTMLMAP)
-
+all-$(MODNAME): $(HTMLLIB)
 clean-$(MODNAME):
 		@rm -f $(HTMLO) $(HTMLDO)
 

@@ -54,12 +54,12 @@ $(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcmdep,FITSIO)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
 
-$(FITSIOMAP):   $(RLIBMAP) $(MAKEFILEDEP) $(FITSIOL)
-		$(RLIBMAP) -o $@ -l $(FITSIOLIB) \
-		   -d $(FITSIOLIBDEPM) -c $(FITSIOL)
+$(FITSIOMAP):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcmdep,FITSIO)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCINTTMP) -r $(FITSIODS) $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
 
-all-$(MODNAME): $(FITSIOLIB) $(FITSIOMAP)
-
+all-$(MODNAME): $(FITSIOLIB)
 clean-$(MODNAME):
 		@rm -f $(FITSIOO) $(FITSIODO)
 
