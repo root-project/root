@@ -189,9 +189,6 @@ cint/cint/src/loadfile_tmp.cxx
 /main/src/roots.sh
 /main/src/proofserv.sh
 
-# /math/genetic/
-/math/genetic/
-
 # /math/genetic/test/
 /math/genetic/test/testGAMinimizer
 /math/genetic/test/GAMinTutorial
