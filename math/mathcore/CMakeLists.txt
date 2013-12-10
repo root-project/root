@@ -23,7 +23,7 @@ ROOT_GENERATE_DICTIONARY(G__Math     TComplex.h TMath.h  LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__MathCore ${MATHCORE_HEADERS} LINKDEF LinkDef2.h)
 ROOT_GENERATE_DICTIONARY(G__MathFit  Fit/*.h LINKDEF LinkDef3.h)
 
-ROOT_GENERATE_ROOTMAP(MathCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef_Func.h)
+
 
 add_definitions(-DUSE_ROOT_ERROR )
 

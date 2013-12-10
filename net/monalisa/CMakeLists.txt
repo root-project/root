@@ -11,7 +11,7 @@ include_directories(${MONALISA_INCLUDE_DIR})
 
 
 ROOT_GENERATE_DICTIONARY(G__Monalisa *.h LINKDEF LinkDef.h)
-ROOT_GENERATE_ROOTMAP(Monalisa LINKDEF LinkDef.h DEPENDENCIES Net RIO MathCore)
+
 ROOT_LINKER_LIBRARY(Monalisa *.cxx G__Monalisa.cxx LIBRARIES ${MONALISA_LIBRARIES} 
                                                    DEPENDENCIES Net RIO MathCore )
 

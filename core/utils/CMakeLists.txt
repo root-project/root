@@ -88,6 +88,3 @@ add_custom_target(LLVMRES COMMAND cmake -E make_directory
 #---Trick to avoid building all dictionaties when CINT is changed-------------
 add_custom_target(ROOTCINTTARGET DEPENDS rootcling rootcling_tmp LLVMRES)
 
-#---rlibmap executable--------------------------------------------------------
-ROOT_EXECUTABLE(rlibmap rlibmap.cxx LIBRARIES ${CMAKE_THREAD_LIBS_INIT})
-

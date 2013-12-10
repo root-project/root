@@ -21,7 +21,7 @@ link_directories(${XROOTD_LIBRARY_DIR})
 add_definitions(${XROOTD_CFLAGS})
 
 ROOT_GENERATE_DICTIONARY(G__Proofx ${headers} LINKDEF LinkDef.h)
-ROOT_GENERATE_ROOTMAP(Proofx LINKDEF LinkDef.h DEPENDENCIES Net Proof Thread)
+
 ROOT_LINKER_LIBRARY(Proofx ${sources} G__Proofx.cxx LIBRARIES ${XROOTD_LIBRARIES} XrdProofd DEPENDENCIES Net Proof Thread )
 
 ROOT_INSTALL_HEADERS()

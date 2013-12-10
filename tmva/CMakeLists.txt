@@ -55,8 +55,7 @@ ROOT_GENERATE_DICTIONARY(G__TMVA2 ${theaders2} LINKDEF LinkDef2.h)
 ROOT_GENERATE_DICTIONARY(G__TMVA3 ${theaders3} LINKDEF LinkDef3.h)
 ROOT_GENERATE_DICTIONARY(G__TMVA4 ${theaders4} LINKDEF LinkDef4.h)
 
-ROOT_GENERATE_ROOTMAP(TMVA LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
-                           DEPENDENCIES RIO Hist Matrix Tree Graf Gpad TreePlayer MLP Minuit MathCore XMLIO)
+
 
 ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA1.cxx G__TMVA2.cxx G__TMVA3.cxx G__TMVA4.cxx LIBRARIES Core
                     DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)

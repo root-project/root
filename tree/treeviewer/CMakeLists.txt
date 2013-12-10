@@ -23,7 +23,7 @@ endif()
 
 
 ROOT_GENERATE_DICTIONARY(G__${libname} ${headers} LINKDEF ${linkdef})
-ROOT_GENERATE_ROOTMAP(${libname} LINKDEF ${linkdef} DEPENDENCIES  Tree Gpad Graf Hist Gui TreePlayer Ged RIO MathCore)
+
 
 ROOT_LINKER_LIBRARY(${libname} ${sources} G__${libname}.cxx LIBRARIES TreePlayer DEPENDENCIES Gui Ged)
 ROOT_INSTALL_HEADERS()

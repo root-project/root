@@ -30,7 +30,7 @@ set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${F
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 
 ROOT_GENERATE_DICTIONARY(G__GL ${headers} LINKDEF LinkDef.h)
-ROOT_GENERATE_ROOTMAP(RGL LINKDEF LinkDef.h DEPENDENCIES Graf3d Gui Graf Hist Ged MathCore Tree TreePlayer)
+
 ROOT_LINKER_LIBRARY(RGL ${sources} G__GL.cxx  LIBRARIES ${gllibs} GLEW ${FTGL_LIBRARIES} DEPENDENCIES Hist Gui Ged)
 
 ROOT_INSTALL_HEADERS()

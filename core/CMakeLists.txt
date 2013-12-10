@@ -76,7 +76,7 @@ ROOT_GENERATE_DICTIONARY(base/G__Core
                          OPTIONS ${dict_opts}
                          LINKDEF base/inc/LinkDef.h)
 
-ROOT_GENERATE_ROOTMAP(Core LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/base/inc/LinkDef.h)
+
 
 ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} base/G__Core.cxx
                     $<TARGET_OBJECTS:Base>

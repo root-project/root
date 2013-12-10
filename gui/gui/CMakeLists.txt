@@ -38,7 +38,7 @@ set(headers3 TRootGuiFactory.h TRootApplication.h TRootCanvas.h
 include_directories(${CMAKE_SOURCE_DIR}/)
 ROOT_GENERATE_DICTIONARY(libGui ${headers1} ${headers2} ${headers3} LINKDEF LinkDef.h)
 
-ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef1.h  LinkDef2.h LinkDef3.h DEPENDENCIES Gpad Graf RIO MathCore)
+
 ROOT_LINKER_LIBRARY(${libname} *.cxx libGui.cxx LIBRARIES Core DEPENDENCIES Gpad Graf MathCore) #Use 1 big dict
 ROOT_INSTALL_HEADERS()
 
