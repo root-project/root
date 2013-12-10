@@ -877,9 +877,15 @@ Bool_t PyROOT::TRootObjectConverter::ToMemory( PyObject* value, void* address )
       if ( ! KeepControl() && Utility::gMemoryPolicy != Utility::kStrict )
          ((ObjectProxy*)value)->Release();
 
-   // TODO: fix this, as this is sooo wrong ...
-      memcpy( (void*)address, ((ObjectProxy*)value)->GetObject(), fClass->Size() );
-      return kTRUE;
+   // call assignment operator through a temporarily wrapped object proxy
+      PyObject* pyobj = BindRootObjectNoCast( address, fClass.GetClass() );
+      ((ObjectProxy*)pyobj)->Release();     // TODO: might be recycled (?)
+      PyObject* result = PyObject_CallMethod( pyobj, (char*)"__assign__", (char*)"O", value );
+      Py_DECREF( pyobj );
+      if ( result ) {
+         Py_DECREF( result );
+         return kTRUE;
+      }
    }
 
    return kFALSE;
