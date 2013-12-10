@@ -46,6 +46,7 @@ namespace Davix {
    class RequestParams;
    class DavPosix;
 }
+struct Davix_fd;
 
 
 class TDavixFileInternal {
