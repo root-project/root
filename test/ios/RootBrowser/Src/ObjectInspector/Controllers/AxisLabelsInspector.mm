@@ -42,35 +42,17 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
-   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
-   [self view];
-   
-   if (self)
+   if (self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil]) {
+      //Force loading self.view and subviews.
       [self view];
+   }
 
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    
-    // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-    [super viewDidLoad];
-    // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -79,6 +61,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 
 	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -101,10 +85,12 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    noExp.on = object->GetNoExponent();
 }
 
+#pragma mark - UI interactions.
+
 //____________________________________________________________________________________________________
-- (void) showLabelFontInspector
+- (IBAction) showLabelFontInspector
 {
-   AxisFontInspector *fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" mode : ROOT_IOSObjectInspector::afimLabelFont];
+   AxisFontInspector * const fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" isTitle : NO];
 
    [fontInspector setObjectController : controller];
    [fontInspector setObject : object];
@@ -113,8 +99,10 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) plusBtn : (UIButton *)sender
+- (IBAction) plusBtn : (UIButton *) sender
 {
+   assert(object != nullptr && "plusBtn:, object is null");
+
    if (sender == plusSize) {
       if (object->GetLabelSize() + sizeStep > maxSize)
          return;
@@ -133,8 +121,10 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) minusBtn : (UIButton *)sender
+- (IBAction) minusBtn : (UIButton *) sender
 {
+   assert(object != nullptr && "minusBtn:, object is null");
+
    if (sender == minusSize) {
       if (object->GetLabelSize() - sizeStep < minSize)
          return;
@@ -155,6 +145,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (IBAction) noExpPressed
 {
+   assert(object != nullptr && "noExpPressed, object is null");
+
    object->SetNoExponent(noExp.on);
    [controller objectWasModifiedUpdateSelection : NO];
 }

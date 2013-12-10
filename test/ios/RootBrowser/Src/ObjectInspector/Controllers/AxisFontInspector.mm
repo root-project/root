@@ -54,48 +54,30 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    __weak IBOutlet UILabel *titleLabel;
    __weak IBOutlet UIPickerView *fontPicker;
 
-   ROOT_IOSObjectInspector::AxisFontInspectorMode mode;
+   BOOL isTitleFont;
    __weak ObjectViewController *controller;
    TAxis *object;
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName : (NSString *)nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode)m
+- (instancetype) initWithNibName : (NSString *) nibName isTitle : (BOOL) isTitle
 {
-   using namespace ROOT_IOSObjectInspector;
-
-   self = [super initWithNibName : nibName bundle : nil];
-   
-   [self view];
-   
-   if (self) {
+   if (self = [super initWithNibName : nibName bundle : nil]) {
+      [self view];
       // Custom initialization
-      mode = m;
-      if (mode == afimTitleFont)
+      isTitleFont = isTitle;
+      
+      if (isTitleFont)
          titleLabel.text = @"Title font:";
-      else if (mode == afimLabelFont)
+      else
          titleLabel.text = @"Label font:";
    }
 
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void)didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
+#pragma mark - Interface orientation.
 
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -104,6 +86,8 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 
 	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -118,15 +102,13 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 {
    assert(o != nullptr && "setObject:, parameter 'o' is null");
 
-   using namespace ROOT_IOSObjectInspector;
-
    object = dynamic_cast<TAxis *>(o);
    //The result of cast is checked one level up.
    Font_t fontIndex = 0;
 
-   if (mode == afimTitleFont)
+   if (isTitleFont)
       fontIndex = object->GetTitleFont() / 10 - 1;
-   else if (mode == afimLabelFont)
+   else
       fontIndex = object->GetLabelFont() / 10 - 1;
    
    if (fontIndex < 0 || fontIndex > nFixedFonts)
@@ -135,37 +117,43 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
    [fontPicker selectRow : fontIndex inComponent : 0 animated : NO];
 }
 
-#pragma mark - color/pattern picker's dataSource.
+#pragma mark - font name picker's dataSource.
 //____________________________________________________________________________________________________
-- (CGFloat)pickerView : (UIPickerView *)pickerView widthForComponent : (NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView widthForComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
    return defaultCellW;
 }
 
 //____________________________________________________________________________________________________
-- (CGFloat)pickerView : (UIPickerView *)pickerView rowHeightForComponent : (NSInteger)component
+- (CGFloat) pickerView : (UIPickerView *) pickerView rowHeightForComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
    return defaultCellH;
 }
 
 //____________________________________________________________________________________________________
-- (NSInteger)pickerView : (UIPickerView *)pickerView numberOfRowsInComponent : (NSInteger)component
+- (NSInteger) pickerView : (UIPickerView *) pickerView numberOfRowsInComponent : (NSInteger) component
 {
+#pragma unused(pickerView, component)
    return nFixedFonts;
 }
 
 //____________________________________________________________________________________________________
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
+- (NSInteger) numberOfComponentsInPickerView : (UIPickerView *) pickerView
 {
+#pragma unused(pickerView)
 	return 1;
 }
 
-#pragma mark color/pattern picker's delegate.
+#pragma mark font name picker's delegate.
 
 //____________________________________________________________________________________________________
-- (UIView *) pickerView : (UIPickerView *)pickerView viewForRow : (NSInteger)row forComponent : (NSInteger)component reusingView : (UIView *)view
+- (UIView *) pickerView : (UIPickerView *) pickerView viewForRow : (NSInteger)row forComponent : (NSInteger) component reusingView : (UIView *) view
 {
-   UILabel *label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
+#pragma unused(pickerView, component, view)
+
+   UILabel * const label = [[UILabel alloc] initWithFrame : CGRectMake(0.f, 0.f, defaultCellW, defaultCellH)];
    label.text = fixedFontNames[row];
    label.font = [UIFont fontWithName : fixedFonts[row] size : 14.f];
    label.textAlignment = NSTextAlignmentCenter;
@@ -175,14 +163,16 @@ const unsigned nFixedFonts = sizeof fixedFonts / sizeof fixedFonts[0];
 }
 
 //____________________________________________________________________________________________________
-- (void) pickerView : (UIPickerView *)thePickerView didSelectRow : (NSInteger)row inComponent : (NSInteger)component
+- (void) pickerView : (UIPickerView *) pickerView didSelectRow : (NSInteger) row inComponent : (NSInteger) component
 {
-   using namespace ROOT_IOSObjectInspector;
+#pragma unused(pickerView, component)
+
+   assert(object != nullptr && "pickerView:didSelectRow:component:, object is null");
 
    const Font_t fontIndex = (row + 1) * 10;
-   if (mode == afimTitleFont)
+   if (isTitleFont)
       object->SetTitleFont(fontIndex);
-   else if (mode == afimLabelFont)
+   else
       object->SetLabelFont(fontIndex);
 
    [controller objectWasModifiedUpdateSelection : NO];

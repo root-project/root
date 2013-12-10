@@ -48,13 +48,11 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString * ) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
-   self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-   
-   [self view];
-   
-   if (self) {
+   if (self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil]) {
+      //Force view/subviews load.
+      [self view];
       // Custom initialization
       self.view.frame = componentFrame;
    }
@@ -62,22 +60,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -92,8 +75,7 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (void) setTicksWidgets
 {
-//   object->SetNdivisions(int(primaryTicks.value), int(secondaryTicks.value), int(tertiaryTicks.value), 1);
-//   [controller objectWasModifiedByEditor];
+   assert(object != nullptr && "setTicksWidgets, object is null");
 
    const int nDivisions = object->GetNdivisions();
    //Hardcoded constants from TAttAxis, never defined as named values in ROOT.
@@ -113,6 +95,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (void) setupInspector
 {
+   assert(object != nullptr && "setupInspector, object is null");
+
    const char *option = object->GetTicks();
    
    if (!std::strcmp("+-", option))
@@ -142,9 +126,13 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
    [self setupInspector];
 }
 
+#pragma mark - UI interactions.
+
 //____________________________________________________________________________________________________
 - (IBAction) ticksNegPosPressed
 {
+   assert(object != nullptr && "ticksNegPosPressed, object is null");
+
    if (ticksNegPos.selectedSegmentIndex == 0)
       object->SetTicks("");
    else
@@ -156,19 +144,24 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (void) setTicks
 {
+   assert(object != nullptr && "setTicks, object is null");
+
    object->SetNdivisions(primaryTicks, secondaryTicks, tertiaryTicks);
 }
 
 //____________________________________________________________________________________________________
-- (IBAction) plusTick : (UIButton *)sender
+- (IBAction) plusTick : (UIButton *) sender
 {
+   assert(object != nullptr && "plusTick:, object is null");
+
    if (sender == plusLengthBtn) {
       if (tickLength + tickLengthStep < maxTickLength) {
          tickLength += tickLengthStep;
-         tickLengthLabel.text = [NSString stringWithFormat:@"%.2f", tickLength];
+         tickLengthLabel.text = [NSString stringWithFormat : @"%.2f", tickLength];
          object->SetTickLength(tickLength);
          [controller objectWasModifiedUpdateSelection : NO];
       }
+
       return;
    }
    
@@ -203,6 +196,8 @@ const CGRect componentFrame = CGRectMake(0.f, tabBarHeight, 250.f, totalHeight -
 //____________________________________________________________________________________________________
 - (IBAction) minusTick : (UIButton *) sender
 {
+   assert(object != nullptr && "minusTick:, object is null");
+
    if (sender == minusLengthBtn) {
       if (tickLength - tickLengthStep > minTickLength) {
          tickLength -= tickLengthStep;

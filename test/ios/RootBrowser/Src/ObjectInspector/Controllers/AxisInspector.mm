@@ -25,18 +25,19 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
    self = [super initWithNibName : nibNameOrNil bundle:nibBundleOrNil];
 
    if (self) {
-      [self view];
+      [self view];//Force load. Do not want to wait.
 
       ticksInspector = [[AxisTicksInspector alloc] initWithNibName : @"AxisTicksInspector" bundle : nil];
       [self.view addSubview : ticksInspector.view];
    
       //
       AxisTitleInspector *titleInspectorCompositor = [[AxisTitleInspector alloc] initWithNibName : @"AxisTitleInspector" bundle : nil];
+      //Title inspector is the first in the nested navigation stack.
       titleInspector = [[InspectorWithNavigation alloc] initWithRootViewController : titleInspectorCompositor];
       titleInspector.view.frame = [AxisTitleInspector inspectorFrame];
       [self.view addSubview : titleInspector.view];
@@ -44,6 +45,7 @@
       //
       
       AxisLabelsInspector *labelInspectorCompositor = [[AxisLabelsInspector alloc] initWithNibName : @"AxisLabelsInspector" bundle : nil];
+      //Label inspector is the first in the nested navigation stack.      
       labelInspector = [[InspectorWithNavigation alloc] initWithRootViewController : labelInspectorCompositor];
       labelInspector.view.frame = [AxisLabelsInspector inspectorFrame];
       [self.view addSubview : labelInspector.view];
@@ -55,22 +57,7 @@
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-   [super viewDidLoad];
-   // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -148,6 +135,8 @@
 //____________________________________________________________________________________________________
 - (void) tabBar : (UITabBar *) tb didSelectItem : (UITabBarItem *) item
 {
+#pragma unused(tb)
+
    if (item.tag == 1)
       [self showTicksInspector];
    else if (item.tag == 2)

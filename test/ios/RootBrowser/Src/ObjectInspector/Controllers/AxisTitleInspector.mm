@@ -44,7 +44,7 @@ const float tabBarHeight = 49.f;
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
+- (instancetype) initWithNibName : (NSString *) nibNameOrNil bundle : (NSBundle *) nibBundleOrNil
 {
 
    self = [super initWithNibName : nibNameOrNil bundle : nibBundleOrNil];
@@ -55,23 +55,7 @@ const float tabBarHeight = 49.f;
    return self;
 }
 
-//____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-    // Releases the view if it doesn't have a superview.
-    [super didReceiveMemoryWarning];
-    
-    // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
-- (void) viewDidLoad
-{
-    [super viewDidLoad];
-    // Do any additional setup after loading the view from its nib.
-}
+#pragma mark - Interface orientation.
 
 //____________________________________________________________________________________________________
 - (BOOL) shouldAutorotateToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation
@@ -80,6 +64,8 @@ const float tabBarHeight = 49.f;
 
 	return YES;
 }
+
+#pragma mark - ObjectInspectorComponent.
 
 //____________________________________________________________________________________________________
 - (void) setObjectController : (ObjectViewController *) c
@@ -118,10 +104,12 @@ const float tabBarHeight = 49.f;
    sizeLabel.text = [NSString stringWithFormat:@"%.2f", titleSize];
 }
 
+#pragma mark - UI interactions.
+
 //____________________________________________________________________________________________________
 - (IBAction) showTitleFontInspector
 {
-   AxisFontInspector *fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" mode : ROOT_IOSObjectInspector::afimTitleFont];
+   AxisFontInspector * const fontInspector = [[AxisFontInspector alloc] initWithNibName : @"AxisFontInspector" isTitle : YES];
 
    [fontInspector setObjectController : controller];
    [fontInspector setObject : object];
@@ -132,6 +120,10 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) textFieldDidEndOnExit : (id) sender
 {
+#pragma unused(sender)
+
+   assert(object != nullptr && "textFieldDidEndOnExits:, object is null");
+
    object->SetTitle([titleField.text cStringUsingEncoding : [NSString defaultCStringEncoding]]);
    [controller objectWasModifiedUpdateSelection : NO];
 }
@@ -139,12 +131,15 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) textFieldEditingDidEnd : (id) sender
 {
+#pragma unused(sender)
    [sender resignFirstResponder];
 }
 
 //____________________________________________________________________________________________________
 - (IBAction) centerTitle
 {
+   assert(object != nullptr && "centerTitle, object is null");
+
    object->CenterTitle(centered.on);
    [controller objectWasModifiedUpdateSelection : NO];
 }
@@ -152,6 +147,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) rotateTitle
 {
+   assert(object != nullptr && "rotateTitle, object is null");
+
    object->RotateTitle(rotated.on);
    [controller objectWasModifiedUpdateSelection : NO];
 }
@@ -159,6 +156,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) plusOffset
 {
+   assert(object != nullptr && "plusOffset, object is null");
+
    if (offset + titleOffsetStep > maxTitleOffset)
       return;
    
@@ -172,6 +171,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) minusOffset
 {
+   assert(object != nullptr && "minusOffset, object is null");
+
    if (offset - titleOffsetStep < minTitleOffset)
       return;
    
@@ -185,6 +186,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) plusSize
 {
+   assert(object != nullptr && "plusSize, object is null");
+
    if (titleSize + titleSizeStep > maxTitleSize)
       return;
    
@@ -198,6 +201,8 @@ const float tabBarHeight = 49.f;
 //____________________________________________________________________________________________________
 - (IBAction) minusSize
 {
+   assert(object != nullptr && "minusSize, object is null");
+
    if (titleSize - titleSizeStep < minTitleSize)
       return;
    

@@ -1,17 +1,13 @@
 #import "ObjectInspectorComponent.h"
 
-namespace ROOT_IOSObjectInspector {
-
-enum AxisFontInspectorMode{
-afimTitleFont,
-afimLabelFont
-};
-
-}
+//A simple view/controller.
+//AxisFontInspector's view contains a picker with font names and a 'back' button.
+//New font is set for either axis title or axis labels.
 
 @interface AxisFontInspector : UIViewController <UIPickerViewDelegate, UIPickerViewDataSource, ObjectInspectorComponent>
 
-- (id)initWithNibName : (NSString *) nibName mode : (ROOT_IOSObjectInspector::AxisFontInspectorMode) m;
+//For for axis title or labels.
+- (instancetype) initWithNibName : (NSString *) nibName isTitle : (BOOL) isTitle;
 
 - (void) setObjectController : (ObjectViewController *) c;
 - (void) setObject : (TObject *) o;

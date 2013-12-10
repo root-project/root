@@ -1,7 +1,12 @@
 #import "ObjectInspectorComponent.h"
 
-@class ROOTObjectController;
+//
+//AxisLabelInspector, placed in a tab inside an AxisInspector's view.
+//Has several controlls and is a part of a nested navigation stack -
+//label font (AxisFontInspector) is pushed into the navigation stack.
+//
 
+@class ROOTObjectController;
 
 class TObject;
 class TAxis;
@@ -12,11 +17,5 @@ class TAxis;
 
 - (void) setObjectController : (ObjectViewController *) c;
 - (void) setObject : (TObject *) o;
-
-- (IBAction) showLabelFontInspector;
-
-- (IBAction) plusBtn : (UIButton *)sender;
-- (IBAction) minusBtn : (UIButton *)sender;
-- (IBAction) noExpPressed;
 
 @end
