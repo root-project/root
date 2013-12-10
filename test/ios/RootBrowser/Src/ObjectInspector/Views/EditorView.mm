@@ -1,13 +1,16 @@
-#import <math.h>
-
-#import <CoreGraphics/CGContext.h>
+#import <cassert>
+#import <cmath>
 
 #import "ScrollViewWithPickers.h"
 #import "EditorPlateView.h"
 #import "EditorView.h"
 
-
-//Hoho! As soon as I use Objective-C++, I can use namespaces! "Yeaaahhh, that's good!" (c) Duke Nukem.
+//
+//This implementation of shrinking/extending views is quite a strange
+//(for me today) - instead of some recursive structure [item [subitems:[item .....
+//I have ... this. It work ok though, so let it be :)
+//CERN.app has a better implementation :)
+//
 
 namespace {
 
@@ -84,9 +87,7 @@ enum {
 //____________________________________________________________________________________________________
 - (id) initWithFrame : (CGRect) frame
 {
-   self = [super initWithFrame : frame];
-
-   if (self) {
+   if (self = [super initWithFrame : frame]) {
       //Scroll view is a container for all sub-editors.
       //It's completely transparent.
       const CGRect titleRect = CGRectMake(10.f, 10.f, 250.f, 35.f);
@@ -113,6 +114,13 @@ enum {
 {
    //Draw main editor's view as a semi-transparent
    //gray view with rounded corners.
+   
+   //I can have round corner by using self.layer.cornerRadius ...
+   //but I do not want all 4 corners rounded, only top left and bottom left.
+   //I can use self.layer.mask and create a bezier path for this ...
+   //but I'll have later to reset it manually and ... geometry starts
+   //jumping during a device rotation. So ... ugly but the
+   //best solution is to implement this drawRect: with non-opaque view!
 
    CGContextRef ctx = UIGraphicsGetCurrentContext();
    if (!ctx) {
@@ -216,6 +224,8 @@ enum {
 //____________________________________________________________________________________________________
 - (void) addSubEditor : (UIView *) element withName : (NSString *) name
 {
+   assert(element != nil && "addSubEditor:withName:, parameter 'element' is nil");
+
    if (nEditors == evMaxComponents) {
       NSLog(@"Could not add more editors");
       return;
