@@ -1504,6 +1504,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       if (ic == 834) ichar = 8747;
       if (ic == 769) ichar =  177;
       if (ic == 772) ichar =  215;
+      if (ic == 768) ichar =  176;
 
       // Greek characters
       if (ic == 918) ichar = 934;
