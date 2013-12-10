@@ -728,7 +728,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    ftsize *= 2.22097;
 
    TString t(chars);
-   if (t.Index("\\")>=0) {
+   if (t.Index("\\")>=0 || t.Index("^")>=0) {
       t.Prepend("$");
       t.Append("$");
    } else {
