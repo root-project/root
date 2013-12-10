@@ -796,11 +796,11 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                // with enums changed over time, so verify the checksum ignoring
                // members of type enum. We also used to not count the //[xyz] comment
                // in the checksum, so test for that too.
-               if (fCheckSum == info->GetCheckSum(0)
+               if (fCheckSum == info->GetCheckSum(TClass::kCurrentCheckSum)
                    || info->MatchLegacyCheckSum(fCheckSum)
-                   || GetCheckSum(0) == info->fCheckSum
+                   || GetCheckSum(TClass::kCurrentCheckSum) == info->fCheckSum
                    || MatchLegacyCheckSum(info->GetCheckSum())
-                   || GetCheckSum(0) == info->GetCheckSum(0))
+                   || GetCheckSum(TClass::kCurrentCheckSum) == info->GetCheckSum(TClass::kCurrentCheckSum))
                   {
                      match = kTRUE;
                   }
@@ -2573,13 +2573,13 @@ Bool_t TStreamerInfo::MatchLegacyCheckSum(UInt_t checksum) const
    // value produced by the older checksum calulcation algorithm.
 
    for(UInt_t i = 1; i < TClass::kLegacyCheckSum; ++i) {
-      if ( checksum == GetCheckSum(i) ) return kTRUE;
+      if ( checksum == GetCheckSum( (TClass::ECheckSum) i) ) return kTRUE;
    }
    return kFALSE;
 }
 
 //______________________________________________________________________________
-UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const
+UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 {
    // Recalculate the checksum of this TStreamerInfo based on its code.
    //
@@ -2587,11 +2587,15 @@ UInt_t TStreamerInfo::GetCheckSum(UInt_t code) const
    // to uniquely identify a class version.
    // The check sum is built from the names/types of base classes and
    // data members.
-   // Algorithm from Victor Perevovchikov (perev@bnl.gov).
+   // Original algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
-   // if code==1 data members of type enum are not counted in the checksum
-   // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.
-   //            This is needed for backward compatibility.
+   // The valid range of code is determined by ECheckSum
+   //
+   // kNoEnum:  data members of type enum are not counted in the checksum
+   // kNoRange: return the checksum of data members and base classes, not including the ranges and array size found in comments.
+   // kWithTypeDef: use the sugared type name in the calculation.
+   //
+   // This is needed for backward compatibility.
    //
    // WARNING: this function must be kept in sync with TClass::GetCheckSum.
    // They are both used to handle backward compatibility and should both return the same values.

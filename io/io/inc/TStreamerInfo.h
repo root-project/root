@@ -197,7 +197,7 @@ public:
    TClass             *GetActualClass(const void *obj) const;
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
-   UInt_t              GetCheckSum(UInt_t code) const;
+   UInt_t              GetCheckSum(TClass::ECheckSum code) const;
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}

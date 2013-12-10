@@ -4971,24 +4971,28 @@ Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
    // value produced by the older checksum calulcation algorithm.
 
    for(UInt_t i = 1; i < kLegacyCheckSum; ++i) {
-      if ( checksum == GetCheckSum(i) ) return kTRUE;
+      if ( checksum == GetCheckSum( (ECheckSum) i ) ) return kTRUE;
    }
    return kFALSE;
 }
 
 //______________________________________________________________________________
-UInt_t TClass::GetCheckSum(UInt_t code) const
+UInt_t TClass::GetCheckSum(ECheckSum code) const
 {
    // Compute and/or return the class check sum.
    // The class ckecksum is used by the automatic schema evolution algorithm
    // to uniquely identify a class version.
    // The check sum is built from the names/types of base classes and
    // data members.
-   // Algorithm from Victor Perevovchikov (perev@bnl.gov).
+   // Original algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
-   // if code==1 data members of type enum are not counted in the checksum
-   // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.  
-   //            This is needed for backward compatibility.
+   // The valid range of code is determined by ECheckSum
+   //
+   // kNoEnum:  data members of type enum are not counted in the checksum
+   // kNoRange: return the checksum of data members and base classes, not including the ranges and array size found in comments.
+   // kWithTypeDef: use the sugared type name in the calculation.
+   //
+   // This is needed for backward compatibility.
    //
    // WARNING: this function must be kept in sync with TClass::GetCheckSum.
    // They are both used to handle backward compatibility and should both return the same values.
@@ -4997,7 +5001,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
    R__LOCKGUARD(gCINTMutex);
    
-   if (fCheckSum && code == 0) return fCheckSum;
+   if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
 
    UInt_t id = 0;
 
@@ -5035,7 +5039,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
          if ( prop&kIsStatic)             continue;
          name = tdm->GetName(); il = name.Length();
-         if ( (code != 1) && prop&kIsEnum) id = id*3 + 1;
+         if ( (code != kNoEnum) && prop&kIsEnum) id = id*3 + 1;
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
@@ -5050,7 +5054,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          if (prop&kIsArray) {
             for (int ii=0;ii<dim;ii++) id = id*3+tdm->GetMaxIndex(ii);
          }
-         if (code != 2) {
+         if (code != kNoRange) {
             const char *left = strstr(tdm->GetTitle(),"[");
             if (left) {
                const char *right = strstr(left,"]");
@@ -5065,7 +5069,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          }
       }/*EndMembLoop*/
    }
-   if (code==0) fCheckSum = id;
+   if (code==kCurrentCheckSum) fCheckSum = id;
    return id;
 }
 

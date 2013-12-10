@@ -83,12 +83,12 @@ public:
           kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
-   enum ELegacyCheckSum {
-      kCurrent        = 0,
-      kNoEnum         = 1, // Used since v3.3
-      kNoRange        = 2, // Up to v5.17
-      kWithTypeDef    = 3, // Up to v5.34/13 and v5.99/03
-      kLegacyCheckSum = 4
+   enum ECheckSum {
+      kCurrentCheckSum = 0,
+      kNoEnum          = 1, // Used since v3.3
+      kNoRange         = 2, // Up to v5.17
+      kWithTypeDef     = 3, // Up to v5.99/03
+      kLegacyCheckSum  = 4
    };
 
 private:
@@ -258,7 +258,7 @@ public:
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
    Bool_t             HasDefaultConstructor() const;
-   UInt_t             GetCheckSum(UInt_t code=0) const;
+   UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    Version_t          GetClassVersion() const { fVersionUsed = kTRUE; return fClassVersion; }
