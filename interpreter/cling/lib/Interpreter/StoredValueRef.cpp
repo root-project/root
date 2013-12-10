@@ -5,19 +5,26 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/ValuePrinter.h"
-#include "clang/AST/ASTContext.h"
-#include "llvm/ExecutionEngine/GenericValue.h"
+#include "cling/Utils/AST.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/IR/Module.h"
+#include "clang/AST/ASTContext.h"
+#include "clang/AST/DeclCXX.h"
+#include "clang/Frontend/CompilerInstance.h"
 
 using namespace cling;
 using namespace clang;
 using namespace llvm;
 
-StoredValueRef::StoredValue::StoredValue(const ASTContext& ctx, 
+StoredValueRef::StoredValue::StoredValue(Interpreter& interp,
                                          QualType clangTy, 
                                          const llvm::Type* llvm_Ty)
-    : Value(GenericValue(), clangTy, llvm_Ty), m_Mem(0) {
+  : Value(GenericValue(), clangTy, llvm_Ty), m_Interp(interp), m_Mem(0){
   if (clangTy->isIntegralOrEnumerationType() ||
       clangTy->isRealFloatingType() ||
       clangTy->hasPointerRepresentation()) {
@@ -29,7 +36,7 @@ StoredValueRef::StoredValue::StoredValue(const ASTContext& ctx,
     }
   }
   m_Mem = m_Buf;
-  const uint64_t size = (uint64_t) getAllocSizeInBytes(ctx);
+  const uint64_t size = (uint64_t) getAllocSizeInBytes();
   if (size > sizeof(m_Buf)) {
     m_Mem = new char[size];
   }
@@ -37,29 +44,88 @@ StoredValueRef::StoredValue::StoredValue(const ASTContext& ctx,
 }
 
 StoredValueRef::StoredValue::~StoredValue() {
+  // Destruct the object, then delete the memory if needed.
+  Destruct();
   if (m_Mem != m_Buf)
     delete [] m_Mem;
 }
 
-long long StoredValueRef::StoredValue::getAllocSizeInBytes(
-                                                  const ASTContext& ctx) const {
-   return (long long) ctx.getTypeSizeInChars(getClangType()).getQuantity();
+void* StoredValueRef::StoredValue::GetDtorWrapperPtr(CXXRecordDecl* CXXRD) {
+   std::string funcname;
+  {
+    llvm::raw_string_ostream namestr(funcname);
+    namestr << "__cling_StoredValue_Destruct_" << CXXRD;
+  }
+
+  std::string code("extern \"C\" void ");
+  {
+    std::string typeName
+      = utils::TypeName::GetFullyQualifiedName(getClangType(),
+                                               CXXRD->getASTContext());
+    clang::PrintingPolicy Policy(CXXRD->getASTContext().getPrintingPolicy());
+    Policy.SuppressTagKeyword = true; // no "class" in "class A"
+    Policy.SuppressScope = true; // no "A::" in "A::B"
+    Policy.PolishForDeclaration = true; // no attributes
+    std::string dtorName = getClangType().getAsString(Policy);
+    code += funcname + "(void* obj){((" + typeName + "*)obj)->~"
+      + dtorName + "();}";
+  }
+
+  return m_Interp.compileFunction(funcname, code, true /*ifUniq*/,
+                                  false /*withAccessControl*/);
+}
+
+void StoredValueRef::StoredValue::Destruct() {
+  // If applicable, call addr->~Type() to destruct the object.
+  // template <typename T> void destr(T* obj = 0) { (T)obj->~T(); }
+  // |-FunctionDecl destr 'void (struct XB *)'
+  // |-TemplateArgument type 'struct XB'
+  // |-ParmVarDecl obj 'struct XB *'
+  // `-CompoundStmt
+  //   `-CXXMemberCallExpr 'void'
+  //     `-MemberExpr '<bound member function type>' ->~XB
+  //       `-ImplicitCastExpr 'struct XB *' <LValueToRValue>
+  //         `-DeclRefExpr  'struct XB *' lvalue ParmVar 'obj' 'struct XB *'
+
+  if (getClangType().isConstQualified())
+    return;
+  const RecordType* RT = dyn_cast<RecordType>(getClangType());
+  if (!RT)
+    return;
+  CXXRecordDecl* CXXRD = dyn_cast<CXXRecordDecl>(RT->getDecl());
+  if (!CXXRD || CXXRD->hasTrivialDestructor() || !CXXRD->getDeclName())
+    return;
+
+  CXXRD = CXXRD->getCanonicalDecl();
+  void* funcPtr = GetDtorWrapperPtr(CXXRD);
+  if (!funcPtr)
+    return;
+
+  typedef void (*DtorWrapperFunc_t)(void* obj);
+  DtorWrapperFunc_t wrapperFuncPtr = (DtorWrapperFunc_t) funcPtr;
+  (*wrapperFuncPtr)(getAs<void*>());
+}
+
+long long StoredValueRef::StoredValue::getAllocSizeInBytes() const {
+  const ASTContext& ctx = m_Interp.getCI()->getASTContext();
+  return (long long) ctx.getTypeSizeInChars(getClangType()).getQuantity();
 }
 
 
-void StoredValueRef::dump(ASTContext& ctx) const {
+void StoredValueRef::dump() const {
+  ASTContext& ctx = m_Value->m_Interp.getCI()->getASTContext();
   valuePrinterInternal::StreamStoredValueRef(llvm::errs(), this, ctx);
 }
 
-StoredValueRef StoredValueRef::allocate(const ASTContext& ctx, QualType t, 
+StoredValueRef StoredValueRef::allocate(Interpreter& interp, QualType t,
                                         const llvm::Type* llvmTy) {
-  return new StoredValue(ctx, t, llvmTy);
+  return new StoredValue(interp, t, llvmTy);
 }
 
-StoredValueRef StoredValueRef::bitwiseCopy(const ASTContext& ctx,
+StoredValueRef StoredValueRef::bitwiseCopy(Interpreter& interp,
                                            const Value& value) {
   StoredValue* SValue 
-    = new StoredValue(ctx, value.getClangType(), value.getLLVMType());
+    = new StoredValue(interp, value.getClangType(), value.getLLVMType());
   if (SValue->m_Mem) {
     const char* src = (const char*)value.getGV().PointerVal;
     // It's not a pointer. LLVM stores a char[5] (i.e. 5 x i8) as an i40,
@@ -69,7 +135,7 @@ StoredValueRef StoredValueRef::bitwiseCopy(const ASTContext& ctx,
     uint64_t IntVal = value.getGV().IntVal.getSExtValue();
     if (!src) src = (const char*)&IntVal;
     memcpy(SValue->m_Mem, src,
-           SValue->getAllocSizeInBytes(ctx));
+           SValue->getAllocSizeInBytes());
   } else {
     SValue->setGV(value.getGV());
   }
