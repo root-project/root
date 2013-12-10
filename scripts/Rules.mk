@@ -258,7 +258,7 @@ $(EVENTDIR)/bigeventTest.success: $(ROOTCORELIBS)
 
 $(TEST_TARGETS_DIR): %.test:  $(EVENTDIR)/$(SUCCESS_FILE) utils
 	@(echo Running test in $(CALLDIR)/$*)
-	@(cd $*; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
+	@(cd $*; if [ "$(filter -j,$(MAKEFLAGS))" = "-j" ] ; then export ROOT_HIST=0; fi; $(TESTTIMEPRE) $(MAKE) CURRENTDIR=$* --no-print-directory $(TESTGOAL) $(TESTTIMEPOST) ; \
      result=$$?; \
      if [ $$result -ne 0 ] ; then \
         if [ "x$(SUMMARY)" != "x" ] ; then \
