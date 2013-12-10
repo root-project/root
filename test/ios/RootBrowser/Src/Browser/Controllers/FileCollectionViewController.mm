@@ -67,11 +67,13 @@
 
    scrollView.bounces = NO;
    
-   [self.view bringSubviewToFront : fileOpenView];
-   
+   [self.view bringSubviewToFront : fileOpenView];//it's still hidden.
+
    fileNameField.clearButtonMode = UITextFieldViewModeAlways;
    
    UITapGestureRecognizer * const tap = [[UITapGestureRecognizer alloc] initWithTarget : self action : @selector(hideFileOpenView)];
+   //Usual Apple's fu..up with gestures.
+   tap.delegate = self;
    [self.view addGestureRecognizer : tap];
 }
 
@@ -175,7 +177,8 @@
 - (void) tryToDelete : (FileShortcutView *) shortcut
 {
    NSString *message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
-   UIActionSheet *dialog = [[UIActionSheet alloc] initWithTitle : message delegate : self cancelButtonTitle : @"Cancel" destructiveButtonTitle : @"Yes" otherButtonTitles : nil];
+   UIActionSheet * const dialog = [[UIActionSheet alloc] initWithTitle : message delegate : self
+                                   cancelButtonTitle : @"Cancel" destructiveButtonTitle : @"Yes" otherButtonTitles : nil];
    fileToDelete = shortcut;
    [dialog showInView : self.view];
 }
@@ -183,7 +186,7 @@
 #pragma mark - Action sheet delegate, delete the file.
 
 //____________________________________________________________________________________________________
-- (void)actionSheet : (UIActionSheet *)actionSheet didDismissWithButtonIndex : (NSInteger)buttonIndex
+- (void) actionSheet : (UIActionSheet *) actionSheet didDismissWithButtonIndex : (NSInteger) buttonIndex
 {
    if (!buttonIndex) {
       [fileContainers removeObject:fileToDelete];
@@ -202,7 +205,7 @@
    CATransition *transition = [CATransition animation];
    transition.duration = 0.15;
    // using the ease in/out timing function
-   transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+   transition.timingFunction = [CAMediaTimingFunction functionWithName : kCAMediaTimingFunctionEaseInEaseOut];
    // Now to set the type of transition.
    transition.type = kCATransitionPush;
    
@@ -251,6 +254,17 @@
    [fileNameField resignFirstResponder];
    fileOpenView.hidden = YES;
    [self animateFileOpenView];
+}
+
+#pragma mark - Standard f..p with gestures.
+
+//____________________________________________________________________________________________________
+- (BOOL) gestureRecognizer : (UIGestureRecognizer *) gestureRecognizer shouldReceiveTouch : (UITouch *) touch
+{
+   if ([touch.view isKindOfClass : [FileShortcutView class]])
+      return NO;
+   
+   return YES;
 }
 
 @end

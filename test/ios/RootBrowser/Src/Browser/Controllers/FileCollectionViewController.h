@@ -6,7 +6,8 @@
 
 @class FileShortcutView;
 
-@interface FileCollectionViewController : UIViewController <UINavigationControllerDelegate, UINavigationBarDelegate, UIActionSheetDelegate>
+@interface FileCollectionViewController : UIViewController <UINavigationControllerDelegate, UINavigationBarDelegate,
+                                                            UIActionSheetDelegate, UIGestureRecognizerDelegate>
 
 - (void) fileWasSelected : (FileShortcutView*) shortcut;
 - (void) tryToDelete : (FileShortcutView*) shortcut;
