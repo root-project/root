@@ -719,7 +719,7 @@ if(davix)
       DAVIX
       URL http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-${DAVIX_VERSION}.tar.gz
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DLIB_SUFFIX=
     )
     set(DAVIX_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/davix)
     set(DAVIX_LIBRARY -L${CMAKE_BINARY_DIR}/lib64 -ldavix)
