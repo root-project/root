@@ -192,7 +192,7 @@
 {
    assert(shortcut != nil && "tryToDelete:, parameter 'shortcut' is nil");
    
-   if (locked)
+   if (locked || fileNameField.isFirstResponder)
       return;
 
    NSString * const message = [NSString stringWithFormat : @"Do you really want to close %@?", shortcut.fileName];
