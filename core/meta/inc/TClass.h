@@ -85,8 +85,8 @@ public:
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ELegacyCheckSum {
       kCurrent        = 0,
-      kNoEnum         = 1,
-      kNoRange        = 2,
+      kNoEnum         = 1, // Used since v3.3
+      kNoRange        = 2, // Up to v5.17
       kWithTypeDef    = 3, // Up to v5.34/13 and v5.99/03
       kLegacyCheckSum = 4
    };
