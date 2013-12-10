@@ -296,7 +296,6 @@
       [contentController activateForFile : fileContainer->GetDirectory(shortcut.objectIndex)];
       [self.navigationController pushViewController : contentController animated : YES];
    } else {
-      //TODO: replace the obsolete xib.
       UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::ObjectViewControllerID];
       assert([c isKindOfClass : [ObjectViewController class]] &&
              "object view controller has a wrong type");
@@ -311,6 +310,8 @@
 //____________________________________________________________________________________________________
 - (void) searchBarTextDidBeginEditing : (UISearchBar *) aSearchBar
 {
+#pragma unused(aSearchBar)
+
    typedef ROOT::iOS::Browser::FileContainer::size_type size_type;
 
    if (auto nEntities = fileContainer->GetNumberOfDescriptors()) {
@@ -337,10 +338,10 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) searchBarTextDidEndEditing : (UISearchBar *)aSearchBar
+- (void) searchBarTextDidEndEditing : (UISearchBar *) aSearchBar
 {
    if (searchPopover) {
-      [searchPopover dismissPopoverAnimated:YES];
+      [searchPopover dismissPopoverAnimated : YES];
       searchPopover = nil;
    }  
 
@@ -348,16 +349,18 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) searchBar : (UISearchBar *)searchBar textDidChange : (NSString *)searchText 
+- (void) searchBar : (UISearchBar *) searchBar textDidChange : (NSString *) searchText
 {
+#pragma unused(searchBar)
    // When the search string changes, filter the recents list accordingly.
    [searchController filterResultsUsingString : searchText];
 }
 
 //____________________________________________________________________________________________________
-- (void) searchBarSearchButtonClicked : (UISearchBar *)aSearchBar 
+- (void) searchBarSearchButtonClicked : (UISearchBar *) aSearchBar
 {
-   //NSLog(@"search clicked");
+#pragma unused(aSearchBar)
+
    [searchPopover dismissPopoverAnimated : YES];
    [searchBar resignFirstResponder];
 }
@@ -367,6 +370,7 @@
 //____________________________________________________________________________________________________
 - (void) popoverControllerDidDismissPopover : (UIPopoverController *) popoverController
 {
+#pragma unused(popoverController)
    [searchBar resignFirstResponder];
 }
 
@@ -391,7 +395,7 @@
    } else {
       //Create another FileContentController and push it on stack.
       assert(self.storyboard != nil && "searcheController:didSelectKey:, self.storyboard is nil");
-      UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier:ROOT::iOS::Browser::FileContentViewControllerID];
+      UIViewController * const c = (UIViewController *)[self.storyboard instantiateViewControllerWithIdentifier : ROOT::iOS::Browser::FileContentViewControllerID];
       assert([c isKindOfClass : [FileContentViewController class]] &&
              "searcheController:didSelectKey, file content controller has a wrong type");
       FileContentViewController * const contentController = (FileContentViewController *)c;

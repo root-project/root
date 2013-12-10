@@ -26,6 +26,8 @@
    BOOL viewDidAppear;
 }
 
+#pragma mark - Geometry/views/subviews.
+
 //____________________________________________________________________________________________________
 - (void) correctFramesForOrientation : (UIInterfaceOrientation) orientation
 {
@@ -60,6 +62,8 @@
    }
 }
 
+#pragma mark - Fugly two-phase initialization.
+
 //____________________________________________________________________________________________________
 - (id) initWithCoder : (NSCoder *) aDecoder
 {
@@ -79,6 +83,8 @@
    fileContainer = container;
 }
 
+#pragma mark - View lifecycle
+
 //____________________________________________________________________________________________________
 - (void) dealloc
 {
@@ -87,21 +93,11 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) didReceiveMemoryWarning
-{
-   // Releases the view if it doesn't have a superview.
-   [super didReceiveMemoryWarning];
-   // Release any cached data, images, etc that aren't in use.
-}
-
-#pragma mark - View lifecycle
-
-//____________________________________________________________________________________________________
 - (void) viewDidLoad
 {
-   [super viewDidLoad];
-   
    assert(fileContainer != nullptr && "viewDidLoad, fileContainer is null");
+   
+   [super viewDidLoad];
    [self initPadViews];
 }
 
@@ -123,17 +119,16 @@
          if (fileContainer->GetNumberOfObjects() > 1) {
             [padViews[1] setPad : fileContainer->GetPadAttached(1)];
             [padViews[1] setNeedsDisplay];
-            [padParentView addSubview : padViews[1]];
          }
 
          padViews[0].hidden = NO;
       }
+
+      if (fileContainer->GetNumberOfObjects() > 1)
+         timer = [NSTimer scheduledTimerWithTimeInterval : 2.f target : self selector : @selector(changeViews) userInfo : nil repeats : YES];
       
       viewDidAppear = YES;
    }
-
-   if (fileContainer->GetNumberOfObjects() > 1)
-      timer = [NSTimer scheduledTimerWithTimeInterval : 2.f target : self selector : @selector(changeViews) userInfo : nil repeats : YES];
 }
 
 //____________________________________________________________________________________________________
@@ -162,7 +157,6 @@
 - (void) willAnimateRotationToInterfaceOrientation : (UIInterfaceOrientation) interfaceOrientation duration : (NSTimeInterval) duration
 {
 #pragma unused(duration)
-
    [self correctFramesForOrientation : interfaceOrientation];
 }
 
