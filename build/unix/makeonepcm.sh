@@ -18,7 +18,7 @@ fi
 
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
 
-for dict in `find $modules -name 'G__*.cxx' | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
+for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict`                   # to get foo/src
     dirname=`echo $dirname | sed 's,/src$,,'` # to get foo
     awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> cppflags.txt
