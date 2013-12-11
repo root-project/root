@@ -118,6 +118,18 @@ Double_t TLeafL::GetValue(Int_t i) const
 }
 
 
+//______________________________________________________________________________
+LongDouble_t TLeafL::GetValueLongDouble(Int_t i) const
+{
+// Returns current value of leaf
+// if leaf is a simple type, i must be set to 0
+// if leaf is an array, i is the array element number to be returned
+
+   if (fIsUnsigned) return (LongDouble_t)((ULong64_t)fValue[i]);
+   return fValue[i];
+}
+
+
 
 //______________________________________________________________________________
 void TLeafL::Import(TClonesArray *list, Int_t n)

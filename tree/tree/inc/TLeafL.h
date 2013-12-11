@@ -44,7 +44,9 @@ public:
    const char     *GetTypeName() const;
    virtual Int_t   GetMaximum() const {return (Int_t)fMaximum;}
    virtual Int_t   GetMinimum() const {return (Int_t)fMinimum;}
-   Double_t        GetValue(Int_t i=0) const;
+   virtual Double_t     GetValue(Int_t i=0) const;
+   virtual Long64_t     GetValueLong64(Int_t i = 0) const ;
+   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const;
    virtual void   *GetValuePointer() const {return fValue;}
    virtual void    Import(TClonesArray *list, Int_t n);
    virtual void    PrintValue(Int_t i=0) const;
@@ -57,5 +59,9 @@ public:
    
    ClassDef(TLeafL,1);  //A TLeaf for a 64 bit Integer data type.
 };
+
+// if leaf is a simple type, i must be set to 0
+// if leaf is an array, i is the array element number to be returned
+inline Long64_t TLeafL::GetValueLong64(Int_t i) const { return fValue[i]; }
 
 #endif

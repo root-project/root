@@ -50,6 +50,10 @@ protected:
    TLeaf(const TLeaf&);
    TLeaf& operator=(const TLeaf&);
 
+  template <typename T> struct GetValueHelper {
+    static T Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValue(i); }
+  };
+
 public:
    enum {
       kIndirectAddress = BIT(11), // Data member is a pointer to an array of basic types.
@@ -75,7 +79,12 @@ public:
    virtual Int_t    GetOffset() const { return fOffset; }
    virtual void    *GetValuePointer() const { return 0; }
    virtual const char *GetTypeName() const { return ""; }
+  
    virtual Double_t GetValue(Int_t i = 0) const;
+   virtual Long64_t GetValueLong64(Int_t i = 0) const { return GetValue(i); } //overload only when it matters.
+   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters. 
+   template <typename T > T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
+
    virtual void     Import(TClonesArray*, Int_t) {}
    virtual Bool_t   IsOnTerminalBranch() const { return kTRUE; }
    virtual Bool_t   IsRange() const { return fIsRange; }
@@ -97,6 +106,19 @@ public:
 
    ClassDef(TLeaf,2);  //Leaf: description of a Branch data type
 };
+
+
+template <> struct TLeaf::GetValueHelper<Long64_t> {
+    static Long64_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLong64(i); }
+}; 
+template <> struct TLeaf::GetValueHelper<ULong64_t> {
+  static ULong64_t Exec(const TLeaf *leaf, Int_t i = 0) { return (ULong64_t)leaf->GetValueLong64(i); }
+}; 
+template <> struct TLeaf::GetValueHelper<LongDouble_t> {
+  static LongDouble_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLongDouble(i); }
+}; 
+
+
 
 inline Double_t TLeaf::GetValue(Int_t /*i = 0*/) const { return 0.0; }
 inline void     TLeaf::PrintValue(Int_t /* i = 0*/) const {}

@@ -76,6 +76,7 @@ typedef float          Float_t;     //Float 4 bytes (float)
 typedef float          Float16_t;   //Float 4 bytes written with a truncated mantissa
 typedef double         Double_t;    //Double 8 bytes
 typedef double         Double32_t;  //Double 8 bytes in memory, written as a 4 bytes float
+typedef long double    LongDouble_t;//Long Double
 typedef char           Text_t;      //General string (char)
 typedef bool           Bool_t;      //Boolean (0=false, 1=true) (bool)
 typedef unsigned char  Byte_t;      //Byte (8 bits) (unsigned char)

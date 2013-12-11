@@ -48,8 +48,12 @@ public:
    virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
    virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
-   virtual Double_t GetValue(Int_t i=0) const {return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
-   virtual Double_t GetValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetValue(i, j, kTRUE);}
+
+   virtual Double_t     GetValue(Int_t i=0) const { return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
+   virtual Long64_t     GetValueLong64(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
+   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
+   template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
+  
    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
    virtual Bool_t   IsOnTerminalBranch() const;
    virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}

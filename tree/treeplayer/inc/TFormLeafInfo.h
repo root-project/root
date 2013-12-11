@@ -26,6 +26,30 @@
 #include "TStreamerElement.h"
 
 
+// declare the extra versions of GetValue() plus templated implementation
+#define DECLARE_GETVAL \
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0)          \
+       { return GetValueImpl<Double_t>(leaf, instance); }               \
+   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t instance = 0)    \
+       { return GetValueImpl<Long64_t>(leaf, instance); }               \
+   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t instance = 0) \
+       { return GetValueImpl<LongDouble_t>(leaf, instance); }                \
+   template<typename T> T  GetValueImpl(TLeaf *leaf, Int_t instance = 0)   // no semicolon
+  
+
+// declare the extra versions of ReadValue() plus templated implementation
+#define DECLARE_READVAL \
+   virtual Double_t ReadValue(char *where, Int_t instance = 0)          \
+       { return ReadValueImpl<Double_t>(where, instance); }             \
+   virtual Long64_t ReadValueLong64(char *where, Int_t instance = 0)    \
+       { return ReadValueImpl<Long64_t>(where, instance); }             \
+   virtual LongDouble_t ReadValueLongDouble(char *where, Int_t instance = 0)  \
+       { return ReadValueImpl<LongDouble_t>(where, instance); }               \
+   template<typename T> T  ReadValueImpl(char *where, Int_t instance = 0)  // no semicolon
+
+
+
+
 class TFormLeafInfo : public TObject {
 public:
    // Constructors
@@ -69,8 +93,6 @@ public:
    Int_t GetNdata(TLeaf* leaf);
    virtual Int_t GetNdata();
 
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(char  *from, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
@@ -94,12 +116,50 @@ public:
    virtual void  SetSize(Int_t index, Int_t val);
    virtual void  SetBranch(TBranch* br)  { if ( fNext ) fNext->SetBranch(br); }
    virtual void  UpdateSizes(TArrayI *garr);
+  
+   virtual Bool_t    Update();  
 
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
+   DECLARE_GETVAL;
+   DECLARE_READVAL;
+     
+   template <typename T> struct ReadValueHelper {
+     static T Exec(TFormLeafInfo *leaf, char *where, Int_t instance)
+        { return leaf->ReadValue(where, instance); }
+   };
+   template <typename T > T ReadTypedValue(char *where, Int_t instance = 0)
+      { return ReadValueHelper<T>::Exec(this, where, instance); }
 
-   virtual Bool_t    Update();
-
+   template <typename T> struct GetValueHelper {
+     static T Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance)
+        { return linfo->GetValue(leaf, instance); }
+   };
+   template <typename T > T GetTypedValue(TLeaf *leaf, Int_t instance = 0)
+      { return GetValueHelper<T>::Exec(this, leaf, instance); }
 };
+
+
+template <> struct TFormLeafInfo::ReadValueHelper<Long64_t> {
+    static Long64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLong64(where, instance); }
+}; 
+template <> struct TFormLeafInfo::ReadValueHelper<ULong64_t> {
+  static ULong64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return (ULong64_t)leaf->ReadValueLong64(where, instance); }
+}; 
+template <> struct TFormLeafInfo::ReadValueHelper<LongDouble_t> {
+  static LongDouble_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLongDouble(where, instance); }
+}; 
+
+
+template <> struct TFormLeafInfo::GetValueHelper<Long64_t> {
+    static Long64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLong64(leaf, instance); }
+}; 
+template <> struct TFormLeafInfo::GetValueHelper<ULong64_t> {
+  static ULong64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return (ULong64_t)linfo->GetValueLong64(leaf, instance); }
+}; 
+template <> struct TFormLeafInfo::GetValueHelper<LongDouble_t> {
+  static LongDouble_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLongDouble(leaf, instance); }
+}; 
+
+
 
 //______________________________________________________________________________
 //
@@ -113,10 +173,14 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
-   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   DECLARE_GETVAL;
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(char *thisobj, Int_t instance = 0);
+
+   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/= 0);
+   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
+
 };
 
 
@@ -162,9 +226,11 @@ public:
       return new TFormLeafInfoCollectionObject(*this);
    }
 
+   DECLARE_GETVAL;
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
@@ -193,10 +259,10 @@ public:
       return new TFormLeafInfoClones(*this);
    }
 
+   DECLARE_GETVAL;
+   DECLARE_READVAL;
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Int_t     ReadCounterValue(char *where);
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
@@ -240,12 +306,12 @@ public:
 
    virtual Bool_t    Update();
 
+   DECLARE_GETVAL;   
+   DECLARE_READVAL;   
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Int_t     ReadCounterValue(char* where);
    virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
    virtual Bool_t    HasCounter() const;
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetValuePointer(char  *thisobj, Int_t instance = 0);
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
@@ -280,6 +346,8 @@ public:
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
    virtual void     *GetLocalValuePointer( char *from, Int_t instance = 0);
    virtual Double_t  ReadValue(char *where, Int_t instance = 0);
+   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
 };
 
 //______________________________________________________________________________
@@ -295,8 +363,8 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   DECLARE_GETVAL;   
+   DECLARE_READVAL;   
 };
 
 //______________________________________________________________________________
@@ -326,12 +394,12 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
+   DECLARE_READVAL;
    virtual TClass*  GetClass() const;
    virtual void    *GetLocalValuePointer( TLeaf *from, Int_t instance = 0);
    virtual void    *GetLocalValuePointer(char *from, Int_t instance = 0);
    virtual Bool_t   IsInteger() const;
    virtual Bool_t   IsString() const;
-   virtual Double_t ReadValue(char *where, Int_t instance = 0);
    virtual Bool_t   Update();
 };
 
@@ -382,6 +450,8 @@ public:
    virtual Int_t    GetSize(Int_t index);
    virtual Int_t    GetSumOfSizes();
    virtual Double_t GetValue(TLeaf * /*leaf*/, Int_t /*instance*/ = 0);
+   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
+   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
    virtual Int_t    GetVarDim();
    virtual Int_t    GetVirtVarDim();
    virtual Bool_t   Update();
@@ -400,8 +470,10 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
+   DECLARE_GETVAL;
    virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
+   virtual Long64_t  ReadValueLong64(char *where, Int_t i= 0) { return ReadValue(where, i); }
+   virtual LongDouble_t  ReadValueLongDouble(char *where, Int_t i= 0) { return ReadValue(where, i); }
 };
 
 //______________________________________________________________________________
@@ -423,7 +495,9 @@ public:
    virtual Int_t GetArrayLength() { return 0; }
    virtual void      LoadSizes(TBranch* branch);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
+   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
+   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
+   DECLARE_READVAL;
 };
 
 //______________________________________________________________________________
@@ -445,7 +519,9 @@ public:
    virtual Int_t GetArrayLength() { return 0; }
    virtual void      LoadSizes(TBranch* branch);
    virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual Double_t  ReadValue(char * /*where*/, Int_t /*instance*/ = 0);
+   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
+   virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t i= 0) { return GetValue(leaf, i); }
+   DECLARE_READVAL;
 };
 
 //______________________________________________________________________________
@@ -469,9 +545,9 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
+   DECLARE_READVAL;
    // Currently only implemented in TFormLeafInfoCast
    virtual Int_t GetNdata();
-   virtual Double_t  ReadValue(char *where, Int_t instance = 0);
    virtual Bool_t    Update();
 };
 
@@ -497,9 +573,9 @@ public:
    using TFormLeafInfo::GetLocalValuePointer;
    using TFormLeafInfo::GetValue;
 
+   DECLARE_GETVAL;
+   DECLARE_READVAL;
    virtual void     *GetLocalValuePointer(TLeaf *leaf, Int_t instance = 0);
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0);
-   virtual Double_t  ReadValue(char *thisobj, Int_t instance);
    virtual Bool_t    Update();
 };
 

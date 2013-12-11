@@ -80,10 +80,10 @@ public:
    // Return the current size of the array container
    virtual Int_t GetCounterValue(TLeaf* leaf);
 
-   // Access value of referenced object
-   virtual Double_t GetValue(TLeaf *leaf, Int_t instance);
+   // Access value of referenced object (macro from TFormLeafInfo.g)
+   DECLARE_GETVAL;
    // Read value of referenced object
-   virtual Double_t ReadValue(char *where, Int_t instance = 0);
+   DECLARE_READVAL;
    // TFormLeafInfo overload: Update (and propagate) cached information
    virtual Bool_t   Update();
 };
