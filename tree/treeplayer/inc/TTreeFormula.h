@@ -124,6 +124,8 @@ protected:
    TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
    std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
 
+   LongDouble_t*        fConstLD;   // local version of fConsts able to store bigger numbers
+
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
    Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
@@ -159,6 +161,8 @@ private:
    // Not implemented yet
    TTreeFormula(const TTreeFormula&);
    TTreeFormula& operator=(const TTreeFormula&);
+  
+   template<typename T> T GetConstant(Int_t k) ;
 
 public:
    TTreeFormula();
@@ -167,7 +171,12 @@ public:
 
    virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
    virtual TClass*     EvalClass() const;
-   virtual Double_t    EvalInstance(Int_t i=0, const char *stringStack[]=0);
+
+   template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[]=0);
+   virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Double_t>(i, stringStack); }
+   virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Long64_t>(i, stringStack); }
+   virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<LongDouble_t>(i, stringStack); }
+
    virtual const char *EvalStringInstance(Int_t i=0);
    virtual void*       EvalObject(Int_t i=0);
    // EvalInstance should be const.  See comment on GetNdata()

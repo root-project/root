@@ -55,6 +55,17 @@
 #include "TVirtualCollectionProxy.h"
 
 
+#define INSTANTIATE_READVAL(CLASS) \
+   template Double_t CLASS::ReadValueImpl<Double_t>(char*, Int_t);  \
+   template Long64_t CLASS::ReadValueImpl<Long64_t>(char*, Int_t);  \
+   template LongDouble_t CLASS::ReadValueImpl<LongDouble_t>(char*, Int_t)  // no semicolon
+
+
+#define INSTANTIATE_GETVAL(CLASS) \
+   template Double_t CLASS::GetValueImpl<Double_t>(TLeaf*, Int_t); \
+   template Long64_t CLASS::GetValueImpl<Long64_t>(TLeaf*, Int_t); \
+   template LongDouble_t CLASS::GetValueImpl<LongDouble_t>(TLeaf*, Int_t)  // no semicolon
+
 //______________________________________________________________________________
 //
 // This class is a small helper class to implement reading a data member
@@ -761,10 +772,11 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
    }
 
 }
-
+      
 
 //______________________________________________________________________________
-Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfo::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return result of a leafobject method.
 
@@ -775,11 +787,15 @@ Double_t TFormLeafInfo::GetValue(TLeaf *leaf, Int_t instance)
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
    }
    if (thisobj==0) return 0;
-   return ReadValue(thisobj,instance);
+   return ReadTypedValue<T>(thisobj,instance);
 }
 
+INSTANTIATE_GETVAL(TFormLeafInfo);
+INSTANTIATE_READVAL(TFormLeafInfo);
+
 //______________________________________________________________________________
-Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
+template <typename T>
+T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
 {
    // Read the value at the given memory location
    if ( !thisobj )  {
@@ -804,65 +820,64 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
          }
          nextobj += index*fElement->GetClassPointer()->Size();
       }
-      return fNext->ReadValue(nextobj,sub_instance);
+      return fNext->ReadTypedValue<T>(nextobj,sub_instance);
    }
    //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetNewType(),instance,1);
    switch (fElement->GetNewType()) {
          // basic types
-      case TStreamerInfo::kBool:       return (Double_t)(*(Bool_t*)(thisobj+fOffset));
-      case TStreamerInfo::kChar:       return (Double_t)(*(Char_t*)(thisobj+fOffset));
-      case TStreamerInfo::kUChar:      return (Double_t)(*(UChar_t*)(thisobj+fOffset));
-      case TStreamerInfo::kShort:      return (Double_t)(*(Short_t*)(thisobj+fOffset));
-      case TStreamerInfo::kUShort:     return (Double_t)(*(UShort_t*)(thisobj+fOffset));
-      case TStreamerInfo::kInt:        return (Double_t)(*(Int_t*)(thisobj+fOffset));
-      case TStreamerInfo::kUInt:       return (Double_t)(*(UInt_t*)(thisobj+fOffset));
-      case TStreamerInfo::kLong:       return (Double_t)(*(Long_t*)(thisobj+fOffset));
-      case TStreamerInfo::kULong:      return (Double_t)(*(ULong_t*)(thisobj+fOffset));
-      case TStreamerInfo::kLong64:     return (Double_t)(*(Long64_t*)(thisobj+fOffset));
-      case TStreamerInfo::kULong64:    return (Double_t)(*(Long64_t*)(thisobj+fOffset)); //cannot cast to ULong64_t with VC++6
-      case TStreamerInfo::kFloat:      return (Double_t)(*(Float_t*)(thisobj+fOffset));
-      case TStreamerInfo::kFloat16:    return (Double_t)(*(Float_t*)(thisobj+fOffset));
-      case TStreamerInfo::kDouble:     return (Double_t)(*(Double_t*)(thisobj+fOffset));
-      case TStreamerInfo::kDouble32:   return (Double_t)(*(Double_t*)(thisobj+fOffset));
-      case TStreamerInfo::kLegacyChar: return (Double_t)(*(char*)(thisobj+fOffset));
-      case TStreamerInfo::kCounter:
-         return (Double_t)(*(Int_t*)(thisobj+fOffset));
+      case TStreamerInfo::kBool:       return (T)(*(Bool_t*)(thisobj+fOffset));
+      case TStreamerInfo::kChar:       return (T)(*(Char_t*)(thisobj+fOffset));
+      case TStreamerInfo::kUChar:      return (T)(*(UChar_t*)(thisobj+fOffset));
+      case TStreamerInfo::kShort:      return (T)(*(Short_t*)(thisobj+fOffset));
+      case TStreamerInfo::kUShort:     return (T)(*(UShort_t*)(thisobj+fOffset));
+      case TStreamerInfo::kInt:        return (T)(*(Int_t*)(thisobj+fOffset));
+      case TStreamerInfo::kUInt:       return (T)(*(UInt_t*)(thisobj+fOffset));
+      case TStreamerInfo::kLong:       return (T)(*(Long_t*)(thisobj+fOffset));
+      case TStreamerInfo::kULong:      return (T)(*(ULong_t*)(thisobj+fOffset));
+      case TStreamerInfo::kLong64:     return (T)(*(Long64_t*)(thisobj+fOffset));
+      case TStreamerInfo::kULong64:    return (T)(*(Long64_t*)(thisobj+fOffset)); //cannot cast to ULong64_t with VC++6
+      case TStreamerInfo::kFloat:      return (T)(*(Float_t*)(thisobj+fOffset));
+      case TStreamerInfo::kFloat16:    return (T)(*(Float_t*)(thisobj+fOffset));
+      case TStreamerInfo::kDouble:     return (T)(*(Double_t*)(thisobj+fOffset));
+      case TStreamerInfo::kDouble32:   return (T)(*(Double_t*)(thisobj+fOffset));
+      case TStreamerInfo::kLegacyChar: return (T)(*(char*)(thisobj+fOffset));
+      case TStreamerInfo::kCounter:    return (T)(*(Int_t*)(thisobj+fOffset));
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:
-         {Bool_t *val    = (Bool_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+         {Bool_t *val    = (Bool_t*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
-         {Char_t *val    = (Char_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+         {Char_t *val    = (Char_t*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:
-         {Short_t *val   = (Short_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Short_t *val   = (Short_t*)(thisobj+fOffset);   return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kInt:
-         {Int_t *val     = (Int_t*)(thisobj+fOffset);     return Double_t(val[instance]);}
+         {Int_t *val     = (Int_t*)(thisobj+fOffset);     return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kLong:
-         {Long_t *val    = (Long_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+         {Long_t *val    = (Long_t*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kLong64:
-         {Long64_t *val  = (Long64_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Long64_t *val  = (Long64_t*)(thisobj+fOffset);  return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat16:
-         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kFloat:
-         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Float_t *val   = (Float_t*)(thisobj+fOffset);   return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble:
-         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kDouble32:
-         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {Double_t *val  = (Double_t*)(thisobj+fOffset);  return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kUChar:
-         {UChar_t *val   = (UChar_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {UChar_t *val   = (UChar_t*)(thisobj+fOffset);   return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kUShort:
-         {UShort_t *val  = (UShort_t*)(thisobj+fOffset);  return Double_t(val[instance]);}
+         {UShort_t *val  = (UShort_t*)(thisobj+fOffset);  return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kUInt:
-         {UInt_t *val    = (UInt_t*)(thisobj+fOffset);    return Double_t(val[instance]);}
+         {UInt_t *val    = (UInt_t*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kULong:
-         {ULong_t *val   = (ULong_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {ULong_t *val   = (ULong_t*)(thisobj+fOffset);   return T(val[instance]);}
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
       case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:
-         {Long64_t *val = (Long64_t*)(thisobj+fOffset);   return Double_t(val[instance]);}
+         {Long64_t *val = (Long64_t*)(thisobj+fOffset);   return T(val[instance]);}
 #else
       case TStreamerInfo::kOffsetL + kULong64_t:
-         {ULong64_t *val = (ULong64_t*)(thisobj+fOffset); return Double_t(val[instance]);}
+         {ULong64_t *val = (ULong64_t*)(thisobj+fOffset); return T(val[instance]);}
 #endif
 
 #define READ_ARRAY(TYPE_t)                               \
@@ -877,7 +892,7 @@ Double_t TFormLeafInfo::ReadValue(char *thisobj, Int_t instance)
                sub_instance = 0;                         \
             }                                            \
             TYPE_t **val =(TYPE_t**)(thisobj+fOffset);   \
-            return Double_t((val[sub_instance])[index]); \
+            return T((val[sub_instance])[index]); \
          }
 
          // pointer to an array of basic types  array[n]
@@ -935,11 +950,15 @@ Double_t TFormLeafInfoDirect::ReadValue(char * /*where*/, Int_t /*instance*/)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoDirect:: GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoDirect::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the underlying value.
-   return leaf->GetValue(instance);
+   return leaf->GetTypedValue<T>(instance);
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoDirect);
+
 
 //______________________________________________________________________________
 void* TFormLeafInfoDirect::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
@@ -1148,7 +1167,8 @@ Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance)
+template <typename T>
+T TFormLeafInfoClones::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying data member inside the
    // clones array.
@@ -1168,8 +1188,11 @@ Double_t TFormLeafInfoClones::ReadValue(char *where, Int_t instance)
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
-   return fNext->ReadValue(obj,sub_instance);
+   return fNext->ReadTypedValue<T>(obj,sub_instance);
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoClones);
+INSTANTIATE_READVAL(TFormLeafInfoClones);
 
 //______________________________________________________________________________
 void* TFormLeafInfoClones::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
@@ -1197,7 +1220,8 @@ void* TFormLeafInfoClones::GetLocalValuePointer(char *where, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoClones::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the value of the underlying data member inside the
    // clones array.
@@ -1222,7 +1246,7 @@ Double_t TFormLeafInfoClones::GetValue(TLeaf *leaf, Int_t instance)
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)clones->UncheckedAt(index);
-   return fNext->ReadValue(obj,sub_instance);
+   return fNext->ReadTypedValue<T>(obj,sub_instance);
 }
 
 //______________________________________________________________________________
@@ -1351,7 +1375,8 @@ void* TFormLeafInfoCollectionObject::GetLocalValuePointer(char *where, Int_t ins
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollectionObject::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoCollectionObject::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the value of the underlying data member inside the
    // clones array.
@@ -1359,8 +1384,11 @@ Double_t TFormLeafInfoCollectionObject::GetValue(TLeaf *leaf, Int_t instance)
    char * obj = (char*)GetLocalValuePointer(leaf);
 
    if (fNext==0) return 0;
-   return fNext->ReadValue(obj,instance);
+   return fNext->ReadTypedValue<T>(obj,instance);
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoCollectionObject);
+
 
 //______________________________________________________________________________
 void * TFormLeafInfoCollectionObject::GetValuePointer(TLeaf *leaf, Int_t instance)
@@ -1583,7 +1611,8 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance)
+template <typename T> 
+T TFormLeafInfoCollection::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying data member inside the
    // clones array.
@@ -1612,9 +1641,13 @@ Double_t TFormLeafInfoCollection::ReadValue(char *where, Int_t instance)
 
    char * obj = (char*)fCollProxy->At(index);
    if (fCollProxy->HasPointers()) obj = *(char**)obj;
-   return fNext->ReadValue(obj,sub_instance);
+   return fNext->ReadTypedValue<T>(obj,sub_instance);
 }
 
+INSTANTIATE_GETVAL(TFormLeafInfoCollection);
+INSTANTIATE_READVAL(TFormLeafInfoCollection);
+
+   
 //______________________________________________________________________________
 void* TFormLeafInfoCollection::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
 {
@@ -1641,7 +1674,8 @@ void* TFormLeafInfoCollection::GetLocalValuePointer(char *where, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoCollection::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the value of the underlying data member inside the
    // clones array.
@@ -1671,7 +1705,7 @@ Double_t TFormLeafInfoCollection::GetValue(TLeaf *leaf, Int_t instance)
    if (obj==0) return 0;
    if (fCollProxy->HasPointers()) obj = *(char**)obj;
    if (obj==0) return 0;
-   return fNext->ReadValue(obj,sub_instance);
+   return fNext->ReadTypedValue<T>(obj,sub_instance);
 }
 
 //______________________________________________________________________________
@@ -1913,7 +1947,8 @@ TFormLeafInfo* TFormLeafInfoPointer::DeepCopy() const
 
 
 //______________________________________________________________________________
-Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
+template <typename T>
+T  TFormLeafInfoPointer::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying pointer data member
 
@@ -1927,7 +1962,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
       case TStreamerInfo::kAnyP:
       case TStreamerInfo::kSTLp:
       {TObject **obj = (TObject**)(whereoffset);
-      return obj && *obj ? fNext->ReadValue((char*)*obj,instance) : 0; }
+      return obj && *obj ? fNext->ReadTypedValue<T>((char*)*obj,instance) : 0; }
 
       case TStreamerInfo::kObject:
       case TStreamerInfo::kTString:
@@ -1938,7 +1973,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
       case TStreamerInfo::kSTL:
          {
             TObject *obj = (TObject*)(whereoffset);
-            return fNext->ReadValue((char*)obj,instance);
+            return fNext->ReadTypedValue<T>((char*)obj,instance);
          }
 
       case TStreamerInfo::kOffsetL + TStreamerInfo::kTObject:
@@ -1960,7 +1995,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
             whereoffset += index*fElement->GetClassPointer()->Size();
 
             TObject *obj = (TObject*)(whereoffset);
-            return fNext->ReadValue((char*)obj,sub_instance);
+            return fNext->ReadTypedValue<T>((char*)obj,sub_instance);
          }
 
       case TStreamerInfo::kOffsetL + TStreamerInfo::kObjectp:
@@ -1970,7 +2005,7 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
       case TStreamerInfo::kOffsetL + TStreamerInfo::kSTLp:
          {
             TObject *obj = (TObject*)(whereoffset);
-            return fNext->ReadValue((char*)obj,instance);
+            return fNext->ReadTypedValue<T>((char*)obj,instance);
          }
 
       case kOther_t:
@@ -1980,15 +2015,21 @@ Double_t  TFormLeafInfoPointer::ReadValue(char *where, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t  TFormLeafInfoPointer::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T  TFormLeafInfoPointer::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the value of the underlying pointer data member
 
    if (!fNext) return 0;
    char * where = (char*)GetLocalValuePointer(leaf,instance);
    if (where==0) return 0;
-   return fNext->ReadValue(where,instance);
+   return fNext->ReadTypedValue<T>(where,instance);
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoPointer);
+INSTANTIATE_READVAL(TFormLeafInfoPointer);
+
+
 
 //______________________________________________________________________________
 //
@@ -2203,7 +2244,8 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
+template <typename T>
+T TFormLeafInfoMethod::ReadValueImpl(char *where, Int_t instance)
 {
    // Execute the method on the given address
 
@@ -2211,27 +2253,27 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
    if (!thisobj) return 0;
 
    TMethodCall::EReturnType r = fMethod->ReturnType();
-   Double_t result = 0;
+   T result = 0;
 
    if (r == TMethodCall::kLong) {
       Long_t l = 0;
       fMethod->Execute(thisobj, l);
-      result = (Double_t) l;
+      result = (T) l;
 
    } else if (r == TMethodCall::kDouble) {
       Double_t d = 0;
       fMethod->Execute(thisobj, d);
-      result = (Double_t) d;
+      result = (T) d;
 
    } else if (r == TMethodCall::kString) {
       char *returntext = 0;
       fMethod->Execute(thisobj,&returntext);
-      result = (Long_t) returntext;
+      result = T((Long_t) returntext);
 
    } else if (fNext) {
       char * char_result = 0;
       fMethod->Execute(thisobj, &char_result);
-      result = fNext->ReadValue(char_result,instance);
+      result = fNext->ReadTypedValue<T>(char_result,instance);
 
    } else fMethod->Execute(thisobj);
 
@@ -2239,6 +2281,9 @@ Double_t TFormLeafInfoMethod::ReadValue(char *where, Int_t instance)
    gInterpreter->ClearStack();
    return result;
 }
+
+INSTANTIATE_READVAL(TFormLeafInfoMethod);
+
 
 //______________________________________________________________________________
 //
@@ -2483,11 +2528,15 @@ TFormLeafInfo* TFormLeafInfoMultiVarDimDirect::DeepCopy() const
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoMultiVarDimDirect::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoMultiVarDimDirect::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return the undersying value.
-   return ((TLeafElement*)leaf)->GetValueSubArray(fPrimaryIndex,instance);
+   return ((TLeafElement*)leaf)->GetTypedValueSubArray<T>(fPrimaryIndex,instance);
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoMultiVarDimDirect);
+
 
 //______________________________________________________________________________
 Double_t TFormLeafInfoMultiVarDimDirect::ReadValue(char * /*where*/, Int_t /*instance*/)
@@ -2585,7 +2634,8 @@ void TFormLeafInfoMultiVarDimCollection::LoadSizes(TBranch* branch)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoMultiVarDimCollection::ReadValue(char *where, Int_t instance)
+template <typename T>
+T TFormLeafInfoMultiVarDimCollection::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying data.
    if (fSecondaryIndex>=0) {
@@ -2596,8 +2646,11 @@ Double_t TFormLeafInfoMultiVarDimCollection::ReadValue(char *where, Int_t instan
          instance = fSecondaryIndex;
       }
    }
-   return fNext->ReadValue(where,instance);
+   return fNext->ReadTypedValue<T>(where,instance);
 }
+
+INSTANTIATE_READVAL(TFormLeafInfoMultiVarDimCollection);
+
 
 //______________________________________________________________________________
 //
@@ -2691,7 +2744,8 @@ void TFormLeafInfoMultiVarDimClones::LoadSizes(TBranch* branch)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoMultiVarDimClones::ReadValue(char *where, Int_t instance)
+template <typename T>
+T TFormLeafInfoMultiVarDimClones::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying data.
 
@@ -2703,8 +2757,11 @@ Double_t TFormLeafInfoMultiVarDimClones::ReadValue(char *where, Int_t instance)
          instance = fSecondaryIndex;
       }
    }
-   return fNext->ReadValue(where,instance);
+   return fNext->ReadTypedValue<T>(where,instance);
 }
+
+INSTANTIATE_READVAL(TFormLeafInfoMultiVarDimClones);
+
 
 //______________________________________________________________________________
 //
@@ -2780,7 +2837,8 @@ Int_t TFormLeafInfoCast::GetNdata()
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoCast::ReadValue(char *where, Int_t instance)
+template <typename T>
+T TFormLeafInfoCast::ReadValueImpl(char *where, Int_t instance)
 {
    // Read the value at the given memory location
 
@@ -2797,8 +2855,11 @@ Double_t TFormLeafInfoCast::ReadValue(char *where, Int_t instance)
       // real class name.
    }
    fGoodCast = kTRUE;
-   return fNext->ReadValue(where,instance);
+   return fNext->ReadTypedValue<T>(where,instance);
 }
+
+INSTANTIATE_READVAL(TFormLeafInfoCast);
+
 
 //______________________________________________________________________________
 Bool_t TFormLeafInfoCast::Update()
@@ -2856,22 +2917,27 @@ void* TFormLeafInfoTTree::GetLocalValuePointer(TLeaf *, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoTTree::GetValue(TLeaf *, Int_t instance)
+template <typename T>
+T TFormLeafInfoTTree::GetValueImpl(TLeaf *, Int_t instance)
 {
    // Return result of a leafobject method.
 
-   return ReadValue((char*)fCurrent,instance);
+   return ReadTypedValue<T>((char*)fCurrent,instance);
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoTTree::ReadValue(char *thisobj, Int_t instance)
+template <typename T>
+T TFormLeafInfoTTree::ReadValueImpl(char *thisobj, Int_t instance)
 {
    // Return result of a leafobject method.
 
-   if (fElement) return TFormLeafInfo::ReadValue(thisobj,instance);
-   else if (fNext) return fNext->ReadValue(thisobj,instance);
+   if (fElement) return TFormLeafInfo::ReadTypedValue<T>(thisobj,instance);
+   else if (fNext) return fNext->ReadTypedValue<T>(thisobj,instance);
    else return 0;
 }
+
+INSTANTIATE_GETVAL(TFormLeafInfoTTree);
+INSTANTIATE_READVAL(TFormLeafInfoTTree);
 
 //______________________________________________________________________________
 Bool_t TFormLeafInfoTTree::Update() 

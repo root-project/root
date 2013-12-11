@@ -113,7 +113,7 @@ private:
 
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
-   static Double_t   GetValueAux(Int_t type, void *ladd, int k, Int_t len);
+   template <typename T> static T GetTypedValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
    UInt_t            GenerateIncludes(FILE *fp, char *inclist, const TList *extrainfos);
@@ -220,10 +220,14 @@ public:
    TStreamerElement   *GetStreamerElement(const char*datamember, Int_t& offset) const;
    TStreamerElement   *GetStreamerElementReal(Int_t i, Int_t j) const;
    Int_t              *GetTypes()   const {return fType;}
-   Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
-   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
-   Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
-   Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   template <typename T> T GetTypedValue(char *pointer, Int_t i, Int_t j, Int_t len) const;
+   template <typename T> T GetTypedValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   template <typename T> T GetTypedValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   template <typename T> T GetTypedValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const;
+   Double_t            GetValue(char *pointer, Int_t i, Int_t j, Int_t len) const { return GetTypedValue<Double_t>(pointer, i, j, len); }
+   Double_t            GetValueClones(TClonesArray *clones, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueClones<Double_t>(clones, i, j, k, eoffset); }
+   Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTL<Double_t>(cont, i, j, k, eoffset); }
+   Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTLP<Double_t>(cont, i, j, k, eoffset); }
    void                ls(Option_t *option="") const;
    TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl);}
    void               *New(void *obj = 0);
