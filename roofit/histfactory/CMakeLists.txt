@@ -17,7 +17,7 @@ ROOT_EXECUTABLE(hist2workspace MakeModelAndMeasurements.cxx hist2workspace.cxx
                                          Graf Gpad Minuit Foam RooStats XMLParser)
 
 #ROOT_INSTALL_HEADERS()
-install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION ${CMAKE_INSTALL_INCDIR}/RooStats/HistFactory 
+install(DIRECTORY inc/RooStats/HistFactory/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/RooStats/HistFactory 
                        PATTERN ".svn" EXCLUDE
                        REGEX "LinkDef" EXCLUDE )
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)

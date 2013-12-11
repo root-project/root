@@ -26,12 +26,12 @@ set(explicitlink ${value${explicitlink}})
 
 if(gnuinstall)
   set(prefix ${CMAKE_INSTALL_PREFIX})
-  set(etcdir ${CMAKE_INSTALL_FULL_ETCDIR})
+  set(etcdir ${CMAKE_INSTALL_FULL_SYSCONFDIR})
   set(bindir ${CMAKE_INSTALL_FULL_BINDIR})
   set(libdir ${CMAKE_INSTALL_FULL_LIBDIR})
-  set(incdir ${CMAKE_INSTALL_FULL_INCDIR})
+  set(incdir ${CMAKE_INSTALL_FULL_INCLUDEDIR})
   set(mandir ${CMAKE_INSTALL_FULL_MANDIR})
-  set(plugindir ${CMAKE_INSTALL_FULL_ETCDIR}/plugins)
+  set(plugindir ${CMAKE_INSTALL_FULL_SYSCONFDIR}/plugins)
   set(datadir ${CMAKE_INSTALL_FULL_DATADIR})
   set(elispdir ${CMAKE_INSTALL_FULL_ELISPDIR})
   set(ttffontdir ${CMAKE_INSTALL_FULL_FONTDIR})
@@ -45,12 +45,12 @@ if(gnuinstall)
   set(aclocaldir ${CMAKE_INSTALL_FULL_ACLOCALDIR})
 else()
   set(prefix $(ROOTSYS))
-  set(etcdir ${prefix}/${CMAKE_INSTALL_ETCDIR})
+  set(etcdir ${prefix}/${CMAKE_INSTALL_SYSCONFDIR})
   set(bindir ${prefix}/${CMAKE_INSTALL_BINDIR})
   set(libdir ${prefix}/${CMAKE_INSTALL_LIBDIR})
-  set(incdir ${prefix}/${CMAKE_INSTALL_INCDIR})
+  set(incdir ${prefix}/${CMAKE_INSTALL_INCLUDEDIR})
   set(mandir ${prefix}/${CMAKE_INSTALL_MANDIR})
-  set(plugindir ${prefix}/${CMAKE_INSTALL_ETCDIR}/plugins)
+  set(plugindir ${prefix}/${CMAKE_INSTALL_SYSCONFDIR}/plugins)
   set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
   set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
   set(ttffontdir ${prefix}/${CMAKE_INSTALL_FONTDIR})
@@ -381,7 +381,7 @@ get_filename_component(cxx ${CMAKE_CXX_COMPILER} NAME)
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCDIR})
+install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -480,11 +480,11 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
 
 install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/include/compiledata.h 
-              DESTINATION ${CMAKE_INSTALL_INCDIR})
+              DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes 
               ${CMAKE_BINARY_DIR}/etc/system.rootrc
-              DESTINATION ${CMAKE_INSTALL_ETCDIR})
+              DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
               
 install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 

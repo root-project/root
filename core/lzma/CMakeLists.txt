@@ -19,4 +19,4 @@ if(builtin_lzma)
 endif()
 
 ROOT_INSTALL_HEADERS()
-install(FILES ${LZMA_headers} DESTINATION ${CMAKE_INSTALL_INCDIR})
+install(FILES ${LZMA_headers} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

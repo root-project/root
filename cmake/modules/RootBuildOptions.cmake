@@ -196,5 +196,12 @@ endif()
 #---Add Installation Variables------------------------------------------------------------------
 include(RootInstallDirs)
 
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#  if(_variableName MATCHES "^CMAKE_INSTALL_")
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#  endif()
+#endforeach()
+
 
 
