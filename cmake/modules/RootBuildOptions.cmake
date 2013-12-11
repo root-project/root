@@ -59,7 +59,7 @@ else()
   set(x11_defvalue ON)
   set(memstat_defvalue ON)
   set(explicitlink_defvalue ON)
-  set(davix_defvalue ON)
+  set(davix_defvalue OFF)
 endif()
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")
