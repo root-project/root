@@ -50,7 +50,7 @@ LLVMOPTFLAGS := --enable-optimized --disable-assertions
 else
 ROOT_NOCLANG := "ROOT_NOCLANG=no"
 ifeq (,$(findstring debug,$(ROOTBUILD)))
-LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols
+LLVMOPTFLAGS := --enable-optimized --enable-debug-symbols --disable-assertions
 else
 LLVMOPTFLAGS := --disable-optimized
 endif
