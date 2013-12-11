@@ -62,7 +62,7 @@ else()
   set(memstat_defvalue ON)
   set(explicitlink_defvalue ON)
   set(cocoa_defvalue OFF)
-  set(davix_defvalue ON)
+  set(davix_defvalue OFF)
 endif()
 
 ROOT_BUILD_OPTION(afdsmgrd OFF "Dataset manager for PROOF-based analysis facilities")

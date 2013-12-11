@@ -585,28 +585,22 @@ if(cling)
       PREFIX LLVM
       SOURCE_DIR ${LLVM_SOURCE_DIR}
       INSTALL_DIR ${CMAKE_BINARY_DIR}/LLVM-install
-      CMAKE_ARGS -DLLVM_INCLUDE_TESTS=OFF 
-                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} 
-                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> 
+      CMAKE_ARGS -DLLVM_INCLUDE_TESTS=OFF
+                 -DLLVM_INCLUDE_EXAMPLES=OFF
+                 -DLLVM_BUILD_TOOLS=OFF
+                 -DLLVM_TARGETS_TO_BUILD=X86
+                 -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                 -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+      BUILD_COMMAND $(MAKE) libclang
     )
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
     set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
     set(LLVM_LIBRARIES -L${CMAKE_BINARY_DIR}/LLVM-install/lib -lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen
                        -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangBasic -lclangEdit -lclangLex
                        -lLLVMInstrumentation -lLLVMIRReader -lLLVMAsmParser -lLLVMDebugInfo -lLLVMOption -lLLVMLTO -lLLVMLinker 
-                       -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMBitReader -lLLVMTableGen -lLLVMXCoreDisassembler
-                       -lLLVMXCoreCodeGen -lLLVMXCoreDesc -lLLVMXCoreInfo -lLLVMXCoreAsmPrinter -lLLVMX86Disassembler 
+                       -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMBitReader -lLLVMTableGen -lLLVMX86Disassembler
                        -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter -lLLVMX86Utils
-                       -lLLVMSystemZDisassembler -lLLVMSystemZCodeGen -lLLVMSystemZAsmParser -lLLVMSystemZDesc -lLLVMSystemZInfo 
-                       -lLLVMSystemZAsmPrinter -lLLVMSparcCodeGen -lLLVMSparcDesc -lLLVMSparcInfo -lLLVMR600CodeGen -lLLVMR600Desc
-                       -lLLVMR600Info -lLLVMR600AsmPrinter -lLLVMPowerPCCodeGen -lLLVMPowerPCAsmParser -lLLVMPowerPCDesc 
-                       -lLLVMPowerPCInfo -lLLVMPowerPCAsmPrinter -lLLVMNVPTXCodeGen -lLLVMNVPTXDesc -lLLVMNVPTXInfo -lLLVMNVPTXAsmPrinter
-                       -lLLVMMSP430CodeGen -lLLVMMSP430Desc -lLLVMMSP430Info -lLLVMMSP430AsmPrinter -lLLVMMipsDisassembler 
-                       -lLLVMMipsCodeGen -lLLVMMipsAsmParser -lLLVMMipsDesc -lLLVMMipsInfo -lLLVMMipsAsmPrinter -lLLVMHexagonCodeGen
-                       -lLLVMHexagonAsmPrinter -lLLVMHexagonDesc -lLLVMHexagonInfo -lLLVMCppBackendCodeGen -lLLVMCppBackendInfo 
-                       -lLLVMARMDisassembler -lLLVMARMCodeGen -lLLVMARMAsmParser -lLLVMARMDesc -lLLVMARMInfo -lLLVMARMAsmPrinter
-                       -lLLVMAArch64Disassembler -lLLVMAArch64CodeGen -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMAArch64AsmParser 
-                       -lLLVMAArch64Desc -lLLVMAArch64Info -lLLVMAArch64AsmPrinter -lLLVMAArch64Utils -lLLVMMCDisassembler
+                       -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMMCDisassembler
                        -lLLVMMCParser -lLLVMInterpreter -lLLVMMCJIT -lLLVMJIT -lLLVMCodeGen -lLLVMObjCARCOpts -lLLVMScalarOpts 
                        -lLLVMInstCombine -lLLVMTransformUtils -lLLVMipa -lLLVMAnalysis -lLLVMRuntimeDyld -lLLVMExecutionEngine
                        -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport)
