@@ -21,8 +21,6 @@
 
 ClassImp(TTreeIndex)
 
-#include <iostream>
-using namespace std;
 
 struct IndexSortComparator {
 
@@ -171,8 +169,8 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
       }
-      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance();
-      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance();
+      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
+      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
    }
    fIndex = new Long64_t[fN];   
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
@@ -294,7 +292,7 @@ bool TTreeIndex::ConvertOldToNew()
    // return true if index was converted
    if( !fIndexValuesMinor && fN ) {
       fIndexValuesMinor = new Long64_t[fN];
-      for(size_t i=0; i<fN; i++) {
+      for(int i=0; i<fN; i++) {
          fIndexValuesMinor[i] = (fIndexValues[i] & 0x7fffffff);
          fIndexValues[i] >>= 31;
       }

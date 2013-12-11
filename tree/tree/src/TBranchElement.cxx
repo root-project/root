@@ -2428,7 +2428,12 @@ const char* TBranchElement::GetTypeName() const
 }
 
 //______________________________________________________________________________
-Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
+template Double_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
+template Long64_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
+template LongDouble_t TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const;
+
+template <typename T>
+T TBranchElement::GetTypedValue(Int_t j, Int_t len, Bool_t subarr) const
 {
    // -- Returns the branch value.
    //
@@ -2470,22 +2475,22 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
       }
       if ((fType == 3) || (fType == 4)) {
          // Top-level branch of a TClonesArray.
-         return (Double_t) fNdata;
+         return fNdata;
       } else if ((fType == 31) || (fType == 41)) {
          // sub branch of a TClonesArray
          Int_t atype = fStreamerType;
          if (atype < 20) {
             atype += 20;
          }
-         return GetInfoImp()->GetValue(fAddress, atype, j, 1);
+         return GetInfoImp()->GetTypedValue<T>(fAddress, atype, j, 1);
       } else if (fType <= 2) {
          // branch in split mode
          // FIXME: This should probably be < 60 instead!
          if ((fStreamerType > 40) && (fStreamerType < 55)) {
             Int_t atype = fStreamerType - 20;
-            return GetInfoImp()->GetValue(fAddress, atype, j, 1);
+            return GetInfoImp()->GetTypedValue<T>(fAddress, atype, j, 1);
          } else {
-            return GetInfoImp()->GetValue(object, prID, j, -1);
+            return GetInfoImp()->GetTypedValue<T>(object, prID, j, -1);
          }
       }
    }
@@ -2500,27 +2505,27 @@ Double_t TBranchElement::GetValue(Int_t j, Int_t len, Bool_t subarr) const
    if (fType == 31) {
       TClonesArray* clones = (TClonesArray*) object;
       if (subarr) {
-         return GetInfoImp()->GetValueClones(clones, prID, j, len, fOffset);
+         return GetInfoImp()->GetTypedValueClones<T>(clones, prID, j, len, fOffset);
       }
-      return GetInfoImp()->GetValueClones(clones, prID, j/len, j%len, fOffset);
+      return GetInfoImp()->GetTypedValueClones<T>(clones, prID, j/len, j%len, fOffset);
    } else if (fType == 41) {
       TVirtualCollectionProxy::TPushPop helper(((TBranchElement*) this)->GetCollectionProxy(), object);
       if( fSplitLevel < TTree::kSplitCollectionOfPointers )
       {
          if (subarr)
-            return GetInfoImp()->GetValueSTL(((TBranchElement*) this)->GetCollectionProxy(), prID, j, len, fOffset);
+            return GetInfoImp()->GetTypedValueSTL<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j, len, fOffset);
 
-         return GetInfoImp()->GetValueSTL(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
+         return GetInfoImp()->GetTypedValueSTL<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
       }
       else
       {
          if (subarr)
-            return GetInfoImp()->GetValueSTLP(((TBranchElement*) this)->GetCollectionProxy(), prID, j, len, fOffset);
-         return GetInfoImp()->GetValueSTLP(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
+            return GetInfoImp()->GetTypedValueSTLP<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j, len, fOffset);
+         return GetInfoImp()->GetTypedValueSTLP<T>(((TBranchElement*) this)->GetCollectionProxy(), prID, j/len, j%len, fOffset);
       }
    } else {
       if (GetInfoImp()) {
-         return GetInfoImp()->GetValue(object, prID, j, -1);
+         return GetInfoImp()->GetTypedValue<T>(object, prID, j, -1);
       }
       return 0;
    }
