@@ -36,12 +36,6 @@
 #include <sstream>
 #include <utility>
 
-//- FOR CLING WORKAROUND
-#include <map>
-//
-
-#include <iostream>
-
 
 //- data _____________________________________________________________________
 dict_lookup_func PyROOT::gDictLookupOrg = 0;
@@ -708,21 +702,10 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 }
 
 //____________________________________________________________________________
-static std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > > sOffsets;
 Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj ) {
 // Forwards to TInterpreter->ClassInfo_GetBaseOffset(), just adds caching
    if ( clBase == clDerived || !(clBase && clDerived) )
       return 0;
-
-   std::map< ClassInfo_t*, std::vector< std::pair< ClassInfo_t*, Long_t > > >::iterator
-      mit1 = sOffsets.find( clBase );
-   if ( mit1 != sOffsets.end() ) {
-      for ( std::vector< std::pair< ClassInfo_t*, Long_t > >::iterator ioff = mit1->second.begin();
-            ioff != mit1->second.end(); ++ioff ) {
-         if ( ioff->first == clDerived )
-            return ioff->second;
-      }
-   }
 
    Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clDerived, clBase, obj );
    if ( offset == -1 ) {
@@ -735,7 +718,6 @@ Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBas
       return 0;
    }
 
-   sOffsets[ clBase ].push_back( std::make_pair( clDerived, offset ) );
    return offset;
 }
 
