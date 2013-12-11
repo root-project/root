@@ -27,7 +27,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
   ROOT_EXECUTABLE(genmap genmap/genmap.cxx LIBRARIES Reflex ${CMAKE_DL_LIBS})
   #---install headers--------------------------------------------------------
   #ROOT_INSTALL_HEADERS()
-  install(DIRECTORY inc/Reflex/ DESTINATION ${CMAKE_INSTALL_INCDIR}/Reflex
+  install(DIRECTORY inc/Reflex/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Reflex
                             PATTERN ".svn" EXCLUDE
                             PATTERN "Makefile.am" EXCLUDE
                             REGEX "LinkDef" EXCLUDE )

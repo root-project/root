@@ -10,7 +10,7 @@ ROOT_LINKER_LIBRARY(RooStats  *.cxx G__RooStats.cxx LIBRARIES Core Cint
                                DEPENDENCIES RooFit RooFitCore Tree RIO Hist Matrix MathCore Minuit Foam Graf Gpad )
 
 #ROOT_INSTALL_HEADERS()
-install(DIRECTORY inc/RooStats/ DESTINATION ${CMAKE_INSTALL_INCDIR}/RooStats
+install(DIRECTORY inc/RooStats/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/RooStats
                        COMPONENT headers
                        PATTERN ".svn" EXCLUDE
                        REGEX "LinkDef" EXCLUDE )

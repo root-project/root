@@ -455,7 +455,7 @@ function(ROOT_INSTALL_HEADERS)
     set(dirs inc/)
   endif()
   foreach(d ${dirs})  
-    install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCDIR}
+    install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers 
                            PATTERN ".svn" EXCLUDE
                            PATTERN "X11" EXCLUDE
