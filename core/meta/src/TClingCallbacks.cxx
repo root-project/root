@@ -298,6 +298,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
            cling::Transaction* T = 0;
            cling::Interpreter::CompilationResult CR
               = m_Interpreter->declare("namespace " + Name.str() + "{}", &T);
+           (void) CR;
            assert(CR != cling::Interpreter::kFailure && "Must not happen!");
            pushedDCAndS.pop();
            cleanupRAII.pop();
