@@ -943,7 +943,7 @@ struct G__funcentry {
 **************************************************************************/
 struct G__paramfunc {
   short p_tagtable;
-  short p_typetable;
+  int   p_typetable;
   char  reftype;
   char  type;
   char  isconst;
@@ -1081,7 +1081,7 @@ struct G__ifunc_table_internal {
   /* type of return value */
   G__SIGNEDCHAR_T type[G__MAXIFUNC];
   short p_tagtable[G__MAXIFUNC];
-  short p_typetable[G__MAXIFUNC];
+  int p_typetable[G__MAXIFUNC];
   G__SIGNEDCHAR_T reftype[G__MAXIFUNC];
   short para_nu[G__MAXIFUNC];
   G__SIGNEDCHAR_T isconst[G__MAXIFUNC];
@@ -1224,7 +1224,7 @@ struct G__var_array {
   G__SIGNEDCHAR_T  type[G__MEMDEPTH];
   G__SIGNEDCHAR_T constvar[G__MEMDEPTH];
   short p_tagtable[G__MEMDEPTH];        /* tagname if struct,union */
-  short p_typetable[G__MEMDEPTH];       /* typename if typedef */
+  int p_typetable[G__MEMDEPTH];       /* typename if typedef */
   short statictype[G__MEMDEPTH];
   G__SIGNEDCHAR_T reftype[G__MEMDEPTH];
 
