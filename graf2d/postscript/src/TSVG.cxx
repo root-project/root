@@ -85,6 +85,7 @@ TSVG::TSVG() : TVirtualPS()
    fXsize       = 0.;
    fYsize       = 0.;
    fYsizeSVG    = 0;
+   SetTitle("SVG");
 }
 
 
@@ -100,6 +101,7 @@ TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    //          has a default value (which is ignore in the SVG case).
 
    fStream = 0;
+   SetTitle("SVG");
    Open(fname, wtype);
 }
 
@@ -132,7 +134,7 @@ void TSVG::Open(const char *fname, Int_t wtype)
    }
 
    // Open OS file
-   fStream   = new std::ofstream(fname,ios::out);
+   fStream   = new std::ofstream(fname,std::ios::out);
    if (fStream == 0 || !fStream->good()) {
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
       if (fStream == 0) return;
@@ -235,13 +237,13 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
       if (fillsi == -3) {
          PrintStr("@");
          PrintFast(9,"<rect x=\"");
-         WriteInteger(ix1, 0);
+         WriteInteger(ix1, kFALSE);
          PrintFast(5,"\" y=\"");
-         WriteInteger(iy2, 0);
+         WriteInteger(iy2, kFALSE);
          PrintFast(9,"\" width=\"");
-         WriteInteger(ix2-ix1, 0);
+         WriteInteger(ix2-ix1, kFALSE);
          PrintFast(10,"\" height=\"");
-         WriteInteger(iy1-iy2, 0);
+         WriteInteger(iy1-iy2, kFALSE);
          PrintFast(7,"\" fill=");
          SetColor(5);
          PrintFast(2,"/>");
@@ -250,13 +252,13 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    if (fillis == 1) {
       PrintStr("@");
       PrintFast(9,"<rect x=\"");
-      WriteInteger(ix1, 0);
+      WriteInteger(ix1, kFALSE);
       PrintFast(5,"\" y=\"");
-      WriteInteger(iy2, 0);
+      WriteInteger(iy2, kFALSE);
       PrintFast(9,"\" width=\"");
-      WriteInteger(ix2-ix1, 0);
+      WriteInteger(ix2-ix1, kFALSE);
       PrintFast(10,"\" height=\"");
-      WriteInteger(iy1-iy2, 0);
+      WriteInteger(iy1-iy2, kFALSE);
       PrintFast(7,"\" fill=");
       SetColor(fFillColor);
       PrintFast(2,"/>");
@@ -264,13 +266,13 @@ void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
    if (fillis == 0) {
       PrintStr("@");
       PrintFast(9,"<rect x=\"");
-      WriteInteger(ix1, 0);
+      WriteInteger(ix1, kFALSE);
       PrintFast(5,"\" y=\"");
-      WriteInteger(iy2, 0);
+      WriteInteger(iy2, kFALSE);
       PrintFast(9,"\" width=\"");
-      WriteInteger(ix2-ix1, 0);
+      WriteInteger(ix2-ix1, kFALSE);
       PrintFast(10,"\" height=\"");
-      WriteInteger(iy1-iy2, 0);
+      WriteInteger(iy1-iy2, kFALSE);
       PrintFast(21,"\" fill=\"none\" stroke=");
       SetColor(fLineColor);
       PrintFast(2,"/>");
@@ -307,9 +309,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    iyd0 = yps[0];
    PrintStr("@");
    PrintFast(10,"<path d=\"M");
-   WriteInteger(ixd0, 0);
+   WriteInteger(ixd0, kFALSE);
    PrintFast(1,",");
-   WriteInteger(iyd0, 0);
+   WriteInteger(iyd0, kFALSE);
 
    idx = 0;
    idy = 0;
@@ -371,9 +373,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
    iyd0 = yps[0];
    PrintStr("@");
    PrintFast(10,"<path d=\"M");
-   WriteInteger(ixd0, 0);
+   WriteInteger(ixd0, kFALSE);
    PrintFast(1,",");
-   WriteInteger(iyd0, 0);
+   WriteInteger(iyd0, kFALSE);
 
    idx = 0;
    idy = 0;
@@ -604,7 +606,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteInteger(fLineWidth,0);
+      WriteInteger(fLineWidth, kFALSE);
       PrintStr("\" fill=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(">");
@@ -612,7 +614,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteInteger(fLineWidth,0);
+      WriteInteger(fLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }
@@ -624,117 +626,118 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       // Dot (.)
       if (ms == 1) {
          PrintStr("<line x1=\"");
-         WriteInteger(int(ix-1),0);
+         WriteInteger(int(ix-1), kFALSE);
          PrintStr("\" y1=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\" x2=\"");
-         WriteInteger(int(ix),0);
+         WriteInteger(int(ix), kFALSE);
          PrintStr("\" y2=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\"/>");
       // Plus (+)
       } else if (ms == 2) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
          PrintStr("<circle cx=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" cy=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" r=\"");
-         WriteReal(m2);
+         if (m2<=0) m2=1;
+         WriteReal(m2, kFALSE);
          PrintStr("\" fill=\"none\"");
          PrintStr("/>");
       // Square
       } else if (ms == 25 || ms == 21) {
          PrintStr("<rect x=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" width=\"");
-         WriteReal(m);
+         WriteReal(m, kFALSE);
          PrintStr("\" height=\"");
-         WriteReal(m);
+         WriteReal(m, kFALSE);
          PrintStr("\" fill=\"none\"");
          PrintStr("/>");
       // Down triangle
@@ -790,13 +793,13 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
          PrintStr("\"/>");
       } else {
          PrintStr("<line x1=\"");
-         WriteInteger(int(ix-1),0);
+         WriteInteger(int(ix-1), kFALSE);
          PrintStr("\" y1=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\" x2=\"");
-         WriteInteger(int(ix),0);
+         WriteInteger(int(ix), kFALSE);
          PrintStr("\" y2=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\"/>");
       }
    }
@@ -837,7 +840,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteInteger(fLineWidth,0);
+      WriteInteger(fLineWidth, kFALSE);
       PrintStr("\" fill=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(">");
@@ -845,7 +848,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintStr("<g stroke=");
       SetColor(Int_t(fMarkerColor));
       PrintStr(" stroke-width=\"");
-      WriteInteger(fLineWidth,0);
+      WriteInteger(fLineWidth, kFALSE);
       PrintStr("\" fill=\"none\"");
       PrintStr(">");
    }
@@ -857,116 +860,117 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       // Dot (.)
       if (ms == 1) {
          PrintStr("<line x1=\"");
-         WriteInteger(int(ix-1),0);
+         WriteInteger(int(ix-1), kFALSE);
          PrintStr("\" y1=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\" x2=\"");
-         WriteInteger(int(ix),0);
+         WriteInteger(int(ix), kFALSE);
          PrintStr("\" y2=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\"/>");
       // Plus (+)
       } else if (ms == 2) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
       // X shape (X)
       } else if (ms == 5) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\"/>");
       // Asterisk shape (*)
       } else if (ms == 3 || ms == 31) {
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\"/>");
 
          PrintStr("<line x1=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y1=\"");
-         WriteReal(iy+m2);
+         WriteReal(iy+m2, kFALSE);
          PrintStr("\" x2=\"");
-         WriteReal(ix+m2);
+         WriteReal(ix+m2, kFALSE);
          PrintStr("\" y2=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\"/>");
       // Circle
       } else if (ms == 24 || ms == 20) {
          PrintStr("<circle cx=\"");
-         WriteReal(ix);
+         WriteReal(ix, kFALSE);
          PrintStr("\" cy=\"");
-         WriteReal(iy);
+         WriteReal(iy, kFALSE);
          PrintStr("\" r=\"");
-         WriteReal(m2);
+         if (m2<=0) m2=1;
+         WriteReal(m2, kFALSE);
          PrintStr("\"/>");
       // Square
       } else if (ms == 25 || ms == 21) {
          PrintStr("<rect x=\"");
-         WriteReal(ix-m2);
+         WriteReal(ix-m2, kFALSE);
          PrintStr("\" y=\"");
-         WriteReal(iy-m2);
+         WriteReal(iy-m2, kFALSE);
          PrintStr("\" width=\"");
-         WriteReal(m);
+         WriteReal(m, kFALSE);
          PrintStr("\" height=\"");
-         WriteReal(m);
+         WriteReal(m, kFALSE);
          PrintStr("\"/>");
       // Down triangle
       } else if (ms == 26 || ms == 22) {
@@ -1021,13 +1025,13 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
          PrintStr("\"/>");
       } else {
          PrintStr("<line x1=\"");
-         WriteInteger(int(ix-1),0);
+         WriteInteger(int(ix-1), kFALSE);
          PrintStr("\" y1=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\" x2=\"");
-         WriteInteger(int(ix),0);
+         WriteInteger(int(ix), kFALSE);
          PrintStr("\" y2=\"");
-         WriteInteger(int(iy),0);
+         WriteInteger(int(iy), kFALSE);
          PrintStr("\"/>");
       }
    }
@@ -1073,9 +1077,9 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
    PrintStr("@");
    PrintFast(10,"<path d=\"M");
-   WriteInteger(ixd0, 0);
+   WriteInteger(ixd0, kFALSE);
    PrintFast(1,",");
-   WriteInteger(iyd0, 0);
+   WriteInteger(iyd0, kFALSE);
 
    idx = idy = 0;
    for (Int_t i=1;i<n;i++) {
@@ -1110,7 +1114,7 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       SetColor(fLineColor);
       if(fLineWidth > 1.) {
          PrintFast(15," stroke-width=\"");
-         WriteInteger(Int_t(fLineWidth), 0);
+         WriteInteger(Int_t(fLineWidth), kFALSE);
          PrintFast(1,"\"");
       }
       if (fLineStyle > 1) {
@@ -1218,10 +1222,10 @@ void TSVG::NewPage()
    if(!fBoundingBox) {
       PrintStr("@<?xml version=\"1.0\" standalone=\"no\"?>");
       PrintStr("@<svg width=\"");
-      WriteInteger(CMtoSVG(fXsize), 0);
+      WriteInteger(CMtoSVG(fXsize), kFALSE);
       PrintStr("\" height=\"");
       fYsizeSVG = CMtoSVG(fYsize);
-      WriteInteger(fYsizeSVG, 0);
+      WriteInteger(fYsizeSVG, kFALSE);
       PrintStr("\" viewBox=\"0 0");
       WriteInteger(CMtoSVG(fXsize));
       WriteInteger(fYsizeSVG);
@@ -1444,19 +1448,19 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    if (fTextAngle != 0.) {
       PrintStr("@");
       PrintFast(21,"<g transform=\"rotate(");
-      WriteInteger(-Int_t(fTextAngle), 0);
+      WriteInteger(-Int_t(fTextAngle), kFALSE);
       PrintFast(1,",");
-      WriteInteger(ix, 0);
+      WriteInteger(ix, kFALSE);
       PrintFast(1,",");
-      WriteInteger(iy, 0);
+      WriteInteger(iy, kFALSE);
       PrintFast(3,")\">");
    }
 
    PrintStr("@");
    PrintFast(9,"<text x=\"");
-   WriteInteger(ix, 0);
+   WriteInteger(ix, kFALSE);
    PrintFast(5,"\" y=\"");
-   WriteInteger(iy, 0);
+   WriteInteger(iy, kFALSE);
    PrintFast(1,"\"");
    if (txalh == 2) {
       PrintFast(21," text-anchor=\"middle\"");
@@ -1466,7 +1470,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
    PrintFast(6," fill=");
    SetColor(Int_t(fTextColor));
    PrintFast(12," font-size=\"");
-   WriteInteger(fontsize, 0);
+   WriteInteger(fontsize, kFALSE);
    PrintFast(15,"\" font-family=\"");
    PrintStr(fontFamily[ifont]);
    if (strcmp(fontWeight[ifont],"normal")) {
