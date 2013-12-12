@@ -6,23 +6,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface RangeSlider : UIControl {
-@private
-   float minimumValue;
-   float maximumValue;
-   float minimumRange;
-   float selectedMinimumValue;
-   float selectedMaximumValue;
-
-   float padding;
-    
-   BOOL maxThumbOn;
-   BOOL minThumbOn;
-    
-   UIImageView *minThumb;
-   UIImageView *maxThumb;
-   UIImageView *track;
-}
+@interface RangeSlider : UIControl
 
 @property(nonatomic) float minimumValue;
 @property(nonatomic) float maximumValue;
@@ -30,7 +14,7 @@
 @property(nonatomic) float selectedMinimumValue;
 @property(nonatomic) float selectedMaximumValue;
 
-- (void) setSliderMin : (float)min max : (float)max selectedMin : (float)sMin selectedMax : (float)sMax;
+- (void) setSliderMin : (float) min max : (float) max selectedMin : (float) sMin selectedMax : (float) sMax;
 
 - (CGFloat) getMinThumbX;
 - (CGFloat) getMaxThumbX;

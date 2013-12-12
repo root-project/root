@@ -26,7 +26,7 @@ const CGRect slideFrame = CGRectMake(0.f, 0.f, 650.f, 650.f);
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame
+- (instancetype) initWithFrame : (CGRect) frame
 {
    if (self = [super initWithFrame : frame]) {
       self.layer.shadowOpacity = 0.3f;

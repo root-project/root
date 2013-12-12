@@ -14,7 +14,7 @@
 + (CGFloat) textHeight;
 + (CGRect) defaultRect;
 
-- (id) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail;
-- (id) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forFolderAtIndex : (unsigned) index;
+- (instancetype) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forObjectAtIndex : (unsigned) objIndex withThumbnail : (UIImage *) thumbnail;
+- (instancetype) initWithFrame : (CGRect) frame controller : (FileContentViewController *) c forFolderAtIndex : (unsigned) index;
 
 @end

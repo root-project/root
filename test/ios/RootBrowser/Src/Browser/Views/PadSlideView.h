@@ -19,7 +19,7 @@ class Pad;
 + (CGSize) slideSize;
 + (CGRect) slideFrame;
 
-- (id) initWithFrame : (CGRect) rect;
+- (instancetype) initWithFrame : (CGRect) rect;
 - (void) setPad : (ROOT::iOS::Pad *) pad;
 
 @end

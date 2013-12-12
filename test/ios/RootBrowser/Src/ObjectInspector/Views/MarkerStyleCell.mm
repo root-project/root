@@ -8,7 +8,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame andMarkerStyle : (EMarkerStyle) style
+- (instancetype) initWithFrame : (CGRect) frame andMarkerStyle : (EMarkerStyle) style
 {
    self = [super initWithFrame : frame];
    if (self) {

@@ -1,17 +1,26 @@
 #import "RangeSlider.h"
 
-@interface RangeSlider (PrivateMethods)
--(float) xForValue : (float)value;
--(float) valueForX : (float)x;
--(void)updateTrackHighlight;
-@end
+@implementation RangeSlider {
+   float minimumValue;
+   float maximumValue;
+   float minimumRange;
+   float selectedMinimumValue;
+   float selectedMaximumValue;
 
-@implementation RangeSlider
+   float padding;
+    
+   BOOL maxThumbOn;
+   BOOL minThumbOn;
+    
+   UIImageView *minThumb;
+   UIImageView *maxThumb;
+   UIImageView *track;
+}
 
 @synthesize minimumValue, maximumValue, minimumRange, selectedMinimumValue, selectedMaximumValue;
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame
+- (instancetype) initWithFrame : (CGRect) frame
 {
    self = [super initWithFrame : frame];
 
@@ -57,7 +66,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (void) setSliderMin : (float)min max : (float)max selectedMin : (float)sMin selectedMax : (float)sMax
+- (void) setSliderMin : (float) min max : (float) max selectedMin : (float) sMin selectedMax : (float) sMax
 {
    minimumValue = min;
    maximumValue = max;
@@ -86,7 +95,7 @@
 }
 
 //____________________________________________________________________________________________________
--(float) xForValue : (float)value
+-(float) xForValue : (float) value
 {
    return (self.frame.size.width-(padding * 2))*((value - minimumValue) / (maximumValue - minimumValue)) + padding;
 }
@@ -98,7 +107,7 @@
 }
 
 //____________________________________________________________________________________________________
--(BOOL) continueTrackingWithTouch : (UITouch *)touch withEvent : (UIEvent *)event
+-(BOOL) continueTrackingWithTouch : (UITouch *) touch withEvent : (UIEvent *) event
 {
    if(!minThumbOn && !maxThumbOn)
       return NO;
@@ -123,7 +132,7 @@
 }
 
 //____________________________________________________________________________________________________
--(BOOL) beginTrackingWithTouch : (UITouch *)touch withEvent : (UIEvent *)event
+-(BOOL) beginTrackingWithTouch : (UITouch *) touch withEvent : (UIEvent *) event
 {
    CGPoint touchPoint = [touch locationInView : self];
    if (CGRectContainsPoint(minThumb.frame, touchPoint)) {
@@ -136,7 +145,7 @@
 }
 
 //____________________________________________________________________________________________________
--(void) endTrackingWithTouch : (UITouch *)touch withEvent : (UIEvent *)event
+-(void) endTrackingWithTouch : (UITouch *) touch withEvent : (UIEvent *) event
 {
    minThumbOn = false;
    maxThumbOn = false;

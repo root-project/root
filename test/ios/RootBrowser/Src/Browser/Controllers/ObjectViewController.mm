@@ -326,7 +326,7 @@ enum Mode {
 #pragma mark - Controller's lifecycle.
 
 //____________________________________________________________________________________________________
-- (id) initWithCoder : (NSCoder *) aDecoder
+- (instancetype) initWithCoder : (NSCoder *) aDecoder
 {
    if (self = [super initWithCoder : aDecoder])
       mode = ocmNavigation;

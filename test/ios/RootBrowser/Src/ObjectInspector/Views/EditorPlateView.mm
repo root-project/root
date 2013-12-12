@@ -25,7 +25,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id)initWithFrame : (CGRect) frame editorName : (NSString *) name topView : (EditorView *) tv
+- (instancetype) initWithFrame : (CGRect) frame editorName : (NSString *) name topView : (EditorView *) tv
 {
    self = [super initWithFrame:frame];
 

@@ -35,7 +35,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame controller : (UIViewController *) viewController
+- (instancetype) initWithFrame : (CGRect) frame controller : (UIViewController *) viewController
        fileContainer : (ROOT::iOS::Browser::FileContainer *) container;
 {
    assert(viewController != nil && "initWithFrame:controller:fileContainer:, parameter 'viewController' is nil");

@@ -10,7 +10,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame lineStyle : (unsigned) style
+- (instancetype) initWithFrame : (CGRect)frame lineStyle : (unsigned) style
 {
    self = [super initWithFrame:frame];
 

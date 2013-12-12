@@ -2,6 +2,6 @@
 
 @interface LineStyleCell : UIView
 
-- (id) initWithFrame : (CGRect)frame lineStyle : (unsigned) style;
+- (instancetype) initWithFrame : (CGRect)frame lineStyle : (unsigned) style;
 
 @end

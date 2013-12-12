@@ -31,7 +31,7 @@ const CGFloat tapInterval = 0.15f;
 @synthesize zoomed;
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pd
+- (instancetype) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pd
 {
    assert(c != nil && "initWithFrame:forPad:, parameter 'c' is nil");
    assert(pd != nullptr && "initWithFrame:forPad:, parameter 'pd' is null");
@@ -54,7 +54,7 @@ const CGFloat tapInterval = 0.15f;
 }
 
 //____________________________________________________________________________________________________
-- (id) initImmutableViewWithFrame : (CGRect) frame
+- (instancetype) initImmutableViewWithFrame : (CGRect) frame
 {
    if (self = [super initWithFrame : frame]) {
       controller = nil;

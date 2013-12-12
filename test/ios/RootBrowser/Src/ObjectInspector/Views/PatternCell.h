@@ -2,7 +2,7 @@
 
 @interface PatternCell : UIView
 
-- (id) initWithFrame : (CGRect) frame andPattern : (unsigned) index;
+- (instancetype) initWithFrame : (CGRect) frame andPattern : (unsigned) index;
 - (void) setAsSolid;
 
 @end

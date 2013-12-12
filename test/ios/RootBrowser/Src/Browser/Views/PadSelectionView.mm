@@ -32,7 +32,7 @@ void SetShadowColor(CGContextRef ctx)
 @synthesize verticalPanDirection;
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame withPad : (ROOT::iOS::Pad *) p
+- (instancetype) initWithFrame : (CGRect) frame withPad : (ROOT::iOS::Pad *) p
 {
    assert(p != nullptr && "initWithFrame:withPad:, parameter 'p' is null");
 

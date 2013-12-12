@@ -6,7 +6,7 @@
 
 @property (nonatomic, weak) id<HorizontalPickerDelegate> pickerDelegate;
 
-- (void) addItems : (NSMutableArray *)items;
+- (void) addItems : (NSMutableArray *) items;
 - (void) setSelectedItem : (unsigned) item;
 
 @end

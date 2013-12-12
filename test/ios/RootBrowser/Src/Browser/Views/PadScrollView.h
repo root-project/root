@@ -18,7 +18,7 @@ class Pad;
 
 + (CGRect) defaultImageFrame;
 
-- (id) initWithFrame : (CGRect)frame;
+- (instancetype) initWithFrame : (CGRect)frame;
 
 - (void) setPad : (ROOT::iOS::Pad *) pad;
 - (void) resetToFrame : (CGRect) frame;

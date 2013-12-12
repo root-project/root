@@ -8,6 +8,6 @@
 @property (nonatomic) UIImageView *arrowImageView;
 
 + (CGFloat) plateHeight;
-- (id) initWithFrame : (CGRect) frame editorName : (NSString *) name topView : (EditorView *) tv;
+- (instancetype) initWithFrame : (CGRect) frame editorName : (NSString *) name topView : (EditorView *) tv;
 
 @end

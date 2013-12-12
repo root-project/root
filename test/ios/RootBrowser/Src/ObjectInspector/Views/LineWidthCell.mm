@@ -9,7 +9,7 @@
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame width : (CGFloat) w
+- (instancetype) initWithFrame : (CGRect) frame width : (CGFloat) w
 {
    assert(w >= 0.f && "initWithFrame:width:, parameter 'w' is negative");
 

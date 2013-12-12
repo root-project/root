@@ -23,8 +23,8 @@ class Pad;
 @property (nonatomic, readonly) PadSelectionView *selectionView;
 @property (nonatomic) BOOL zoomed;
 
-- (id) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pad;
-- (id) initImmutableViewWithFrame : (CGRect) frame;
+- (instancetype) initWithFrame : (CGRect) frame controller : (ObjectViewController *) c forPad : (ROOT::iOS::Pad*) pad;
+- (instancetype) initImmutableViewWithFrame : (CGRect) frame;
 
 - (void) setPad : (ROOT::iOS::Pad *) newPad;
 - (void) clearPad;

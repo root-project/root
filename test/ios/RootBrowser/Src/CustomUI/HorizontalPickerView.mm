@@ -2,15 +2,11 @@
 
 #import "HorizontalPickerView.h"
 
-namespace {
-//Obj-C class is not a scope :((( UGLY LANGUAGE!
 const CGFloat pickerWidth = 200.f;
 const CGFloat cellWidth = 50.f;
 const CGFloat cellHeight = 50.f;
 const CGFloat xPad = 1.5 * cellWidth;
 const CGFloat markerPos = 100.f;
-
-}
 
 @implementation HorizontalPickerView {
    UIScrollView *contentScroll;
@@ -25,7 +21,7 @@ const CGFloat markerPos = 100.f;
 @synthesize pickerDelegate;
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect)frame
+- (instancetype) initWithFrame : (CGRect)frame
 {
    self = [super initWithFrame : frame];
    if (self) {
@@ -98,10 +94,10 @@ const CGFloat markerPos = 100.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)drawRect:(CGRect)rect
+- (void) drawRect : (CGRect) rect
 {
    [frameImage drawInRect : rect];
-   [backgroundImage drawInRect:CGRectMake(10.f, 10.f, 200.f, 50.f)];
+   [backgroundImage drawInRect : CGRectMake(10.f, 10.f, 200.f, 50.f)];
 }
 
 //____________________________________________________________________________________________________
@@ -117,7 +113,7 @@ const CGFloat markerPos = 100.f;
 }
 
 //____________________________________________________________________________________________________
-- (void) setSelectedItem:(unsigned int)item
+- (void) setSelectedItem : (unsigned int) item
 {
    selectedItem = item;
    const CGFloat x = xPad + selectedItem * cellWidth + 0.5f * cellWidth - markerPos;
@@ -138,8 +134,10 @@ const CGFloat markerPos = 100.f;
 }
 
 //____________________________________________________________________________________________________
-- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+- (void) scrollViewDidEndDragging : (UIScrollView *) scrollView willDecelerate : (BOOL) decelerate
 {
+#pragma unused(scrollView)
+
    if (!decelerate) {
       [self adjustScroll];
       [self notify];
@@ -149,9 +147,9 @@ const CGFloat markerPos = 100.f;
 #pragma mark - Picker's content management.
 
 //____________________________________________________________________________________________________
-- (void) addItems : (NSMutableArray *)items
+- (void) addItems : (NSMutableArray *) items
 {
-   NSEnumerator *enumerator = [items objectEnumerator];
+   NSEnumerator * const enumerator = [items objectEnumerator];
    UIView *v = [enumerator nextObject];
    for (unsigned i = 0; v; v = [enumerator nextObject], ++i) {
       //Adjust view position inside a scroll:

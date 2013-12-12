@@ -85,7 +85,7 @@ enum {
 }
 
 //____________________________________________________________________________________________________
-- (id) initWithFrame : (CGRect) frame
+- (instancetype) initWithFrame : (CGRect) frame
 {
    if (self = [super initWithFrame : frame]) {
       //Scroll view is a container for all sub-editors.
