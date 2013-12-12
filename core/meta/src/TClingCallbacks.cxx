@@ -148,7 +148,9 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
 // returns true when a declaration is found and no error should be emitted.
 //
 bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
-
+   // Don't do any extra work if an error that is not still recovered occurred.
+   if (m_Interpreter->getSema().getDiagnostics().hasErrorOccurred())
+      return false;
    if (tryAutoloadInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
 
@@ -294,15 +296,9 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
            // 'neutral' token, this will force clang to create the so called in
            // C++11 EmptyDecl. It is not a big issue, but still suboptimal.
            cling::Transaction* T = 0;
-           // For now rely on a side effect in cling. When there was an error
-           // all subsequent transaction coming from the autoloading will be 
-           // unsuccessful, because cling is on the error path, before trying
-           // to recover.
-           // FIXME: In future that might change so heads up.
            cling::Interpreter::CompilationResult CR
               = m_Interpreter->declare("namespace " + Name.str() + "{}", &T);
-           if (CR == cling::Interpreter::kFailure)
-              return false;
+           assert(CR != cling::Interpreter::kFailure && "Must not happen!");
            pushedDCAndS.pop();
            cleanupRAII.pop();
            // The first decl in T will be EmptyDecl unless the FIXME above gets
