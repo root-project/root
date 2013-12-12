@@ -79,8 +79,13 @@ else()
   else()
     set(TIFFINCLUDE "--with-tiff=no")
   endif()
-  set(TTFINCLUDE "--with-ttf-includes=-I${FREETYPE_INCLUDE_DIR}")
-
+  foreach(_incdir ${FREETYPE_INCLUDE_DIRS})
+    if(NOT DEFINED TTFINCLUDE) 
+      set(TTFINCLUDE "--with-ttf-includes=-I${_incdir}")
+    else()
+      set(TTFINCLUDE "${TTFINCLUDE}\ -I${_incdir}")
+    endif()
+  endforeach()
   #---copy files from source directory to build directory------------------------------
   add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/libAfterImage
                      COMMAND cmake -E copy_directory  ${CMAKE_CURRENT_SOURCE_DIR}/src/libAfterImage libAfterImage)
