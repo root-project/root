@@ -2612,23 +2612,23 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                clang::sema::HackForDefaultTemplateArg raii;
                bool HasDefaultArgs;
                clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
-                                                             Template,
-                                                             TemplateLoc,
-                                                             RAngleLoc,
-                                                             TTP,
-                                                             desArgs,
-                                                             HasDefaultArgs);
-          // The substition can fail, in which case there would have been compilation
-          // error printed on the screen.
-          if (ArgType.getArgument().isNull()
-         || ArgType.getArgument().getKind() != clang::TemplateArgument::Type) {
-       ROOT::TMetaUtils::Error("ROOT::TMetaUtils::AddDefaultParameters",
-                "Template parameter substitution failed for %s around %s",
-                instanceType.getAsString().c_str(),
-                SubTy.getAsString().c_str()
-                );
-         break;
-          }
+                                                                                              Template,
+                                                                                              TemplateLoc,
+                                                                                              RAngleLoc,
+                                                                                              TTP,
+                                                                                              desArgs,
+                                                                                              HasDefaultArgs);
+               // The substition can fail, in which case there would have been compilation
+               // error printed on the screen.
+               if (ArgType.getArgument().isNull()
+                   || ArgType.getArgument().getKind() != clang::TemplateArgument::Type) {
+                  ROOT::TMetaUtils::Error("ROOT::TMetaUtils::AddDefaultParameters",
+                                          "Template parameter substitution failed for %s around %s",
+                                          instanceType.getAsString().c_str(),
+                                          SubTy.getAsString().c_str()
+                                          );
+                  break;
+               }
                clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
                SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetConfig(),/*fullyQualified=*/ true);
             }
