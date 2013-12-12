@@ -17,6 +17,9 @@
     
 ### TImageDump
 -   Fix a `TBox` clipping issue.
+
+### TSVG
+-   Some markers did not show in Google-Chrome.
     
 ### New class TTeXDump: Graphics interface to TeX
 
@@ -72,7 +75,7 @@ file `simple.pdf`.
 -   A coverity fix in `Rotated.cxx` had a side effect on rotated text
     drawn with X11 fonts.
 
-### TCanvas and Tpad
+### TCanvas and TPad
 
 -   'TPad::SaveAs' produces named macros in .C files.
 -   Change the way the string input is done in the Pad toolbar for text
