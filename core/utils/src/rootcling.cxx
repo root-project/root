@@ -4486,8 +4486,8 @@ int GenReflex(int argc, char **argv)
    ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kNote;
 
    // The verbosity: debug wins over quiet
-   std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
-   //std::string verbosityOption("-v");
+   //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
+   std::string verbosityOption("-v");
    if (options[QUIET]) verbosityOption="-v1";
    if (options[DEBUG]) verbosityOption="-v4";
 
