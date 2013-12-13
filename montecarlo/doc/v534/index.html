@@ -8,8 +8,13 @@
 <li> 
 Update of the VMC interfaces for multi-threading: 
 TVirtualMC and TVirtualMCApplication instances are now declared thread local.
-Added new functions in TVirtualMCApplication for multi-threading applications
-with default implementation:
+Added new functions in TVirtualMC and TVirtualMCApplication for multi-threading
+applications with default implementation. <br>
+In TVirtualMC:
+<pre>
+ virtual Bool_t IsMT() const { return kFALSE; }
+</pre>
+In TVirtualMCApplication:
 <pre>
   virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
   virtual void InitForWorker() const {}
@@ -22,6 +27,7 @@ with default implementation:
 <li>
 Removed default implementation of newly added functions in TVirtualMC:
 <pre>
+  virtual Bool_t IsRootGeometrySupported() const = 0;
   virtual Bool_t GetMaterial(Int_t imat, TString& name,...) = 0;
   virtual Bool_t CurrentBoundaryNormal(..) = 0;
 </pre>
