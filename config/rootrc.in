@@ -684,6 +684,10 @@ Rint.Canvas.HighLightColor:      5
 # with all the goodies (session caching, flexible authentication, support
 # for different dialects like S3, and others)
 
+# Use old TWebFile as long as Davix is experimental
+# Davix.UseOldClient: @useoldwebfile@
+Davix.UseOldClient: yes
+
 # Verbosity level of the external Davix library
 # Davix.Debug: 0
 

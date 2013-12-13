@@ -4070,6 +4070,7 @@ check_explicit "$enable_dcache" "$enable_dcache_explicit" \
 #
 ### echo %%% DavIx Support - Third party libraries
 #
+useoldwebfile="yes"
 if test ! "x$enable_davix" = "xno" ; then
     check_header "davix.hpp" "$davixincdir" \
         $DAVIX ${DAVIX:+$DAVIX/include/davix} \
@@ -4078,8 +4079,8 @@ if test ! "x$enable_davix" = "xno" ; then
     davixincdir=$found_dir
 
     check_library "libdavix" "$enable_shared" "$davixlibdir" \
-        $DAVIX ${DAVIX:+$DAVIX/lib} ${DAVIX:+$DAVIX/lib64} \
-        /usr/lib /usr/lib64 /usr/local/lib64
+        $DAVIX ${DAVIX:+$DAVIX/lib} \
+        /usr/lib /usr/local
     davixlib=$found_lib
     davixlibdir=$found_dir
 
@@ -4095,6 +4096,8 @@ if test ! "x$enable_davix" = "xno" ; then
 
     if test "x$davixincdir" = "x" || test "x$davixlib" = "x"; then
         enable_davix="no"
+    else
+        useoldwebfile="no"
     fi
 fi
 check_explicit "$enable_davix" "$enable_davix_explicit" \
@@ -7279,6 +7282,7 @@ sed -e "s|@libdir@|$libdir|"               \
     -e "s|@iconpath@|$iconpath|"           \
     -e "s|@hasxrd@|$hasxrd|"               \
     -e "s|@hasnotxrd@|$hasnotxrd|"         \
+    -e "s|@useoldwebfile@|$useoldwebfile|" \
     -e "s|@useoldnetx@|$useoldnetx|"       \
    < rootrc.tmp > $ROOTRCOUT
 rm -f rootrc.tmp
