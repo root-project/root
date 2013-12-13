@@ -4016,6 +4016,8 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    // loaded ... let's now tell the autoloader to do the work
    // yet another time.
    int storedAutoloading = SetClassAutoloading(false);
+   // FIXME: There can be more than one TClass for a single decl.
+   // for example vector<double> and vector<Double32_t>
    TClass* cl = TClass::GetClassOrAlias(name.c_str());
    if (cl && GetModTClasses().find(cl) == GetModTClasses().end()) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
