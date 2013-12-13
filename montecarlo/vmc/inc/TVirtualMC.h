@@ -368,10 +368,10 @@ public:
                          TString& shapeType, TArrayD& par) = 0;
 
    // Return the material parameters for the material specified by 
-   // the material Id - NEW
+   // the material Id
    virtual Bool_t GetMaterial(Int_t imat, TString& name,
                                Double_t& a, Double_t& z, Double_t& density,
-                               Double_t& radl, Double_t& inter, TArrayD& par);
+                               Double_t& radl, Double_t& inter, TArrayD& par) = 0;
 
    // Return the material parameters for the volume specified by
    // the volumeName.
@@ -636,9 +636,9 @@ public:
    virtual const char* CurrentVolPath() = 0;
    
    // If track is on a geometry boundary, fill the normal vector of the crossing
-   // volume surface and return true, return false otherwise - NEW
+   // volume surface and return true, return false otherwise
    virtual Bool_t   CurrentBoundaryNormal(
-                       Double_t &x, Double_t &y, Double_t &z) const;
+                       Double_t &x, Double_t &y, Double_t &z) const = 0;
 
    // Return the parameters of the current material during transport
    virtual Int_t    CurrentMaterial(Float_t &a, Float_t &z,
@@ -801,9 +801,6 @@ public:
    // Initialize MC
    virtual void Init() = 0;
 
-    // Initialize MC in a multi-threaded application
-   virtual void InitMT(Int_t threadRank);
-
   // Initialize MC physics
    virtual void BuildPhysics() = 0;
 
@@ -880,30 +877,6 @@ private:
 
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
-
-// new functions
-
-inline Bool_t TVirtualMC::CurrentBoundaryNormal(
-                     Double_t& /*x*/, Double_t& /*y*/, Double_t& /*z*/) const {
-   // If track is on a geometry boundary, fill the normal vector of the crossing 
-   // volume surface and return true, return false otherwise
-   Warning("CurrentBoundaryNormal", "New function - not yet implemented.");
-   return kFALSE;
-}
-
-inline Bool_t TVirtualMC::GetMaterial(Int_t /*imat*/, TString& /*name*/,
-                      Double_t& /*a*/, Double_t& /*z*/, Double_t& /*density*/,
-                      Double_t& /*radl*/, Double_t& /*inter*/, TArrayD& /*par*/) {
-   // Return the material parameters for the material specified by 
-   // the material Id
-   Warning("GetMaterial(Int_t imat, ...)", "New function - not yet implemented.");
-   return kFALSE;           
-}
-
-inline void TVirtualMC::InitMT(Int_t /*threadRank*/) {
-   // Initialize MC in a multi-threaded application
-   Warning("InitMT(Int_t threadRank)", "New function - not yet implemented.");
-}
 
 #if defined(__linux__) && !defined(__CINT__)
 R__EXTERN __thread TVirtualMC *gMC;
