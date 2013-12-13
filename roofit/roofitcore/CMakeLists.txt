@@ -43,14 +43,11 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
              RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h)
 
-ROOT_GENERATE_DICTIONARY(G__RooFitCore1 ${headers1} LINKDEF LinkDef1.h)
-ROOT_GENERATE_DICTIONARY(G__RooFitCore2 ${headers2} LINKDEF LinkDef2.h)
-ROOT_GENERATE_DICTIONARY(G__RooFitCore3 ${headers3} LINKDEF LinkDef3.h)
-ROOT_GENERATE_DICTIONARY(G__RooFitCore4 ${headers4} LINKDEF LinkDef4.h)
+ROOT_GENERATE_DICTIONARY(G__RooFitCore ${headers1} ${headers2} ${headers3} ${headers4} LINKDEF LinkDef.h)
 
-ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef1.h LinkDef2.h LinkDef3.h LinkDef4.h
+ROOT_GENERATE_ROOTMAP(RooFitCore LINKDEF LinkDef.h
                                  DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam )
-ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore1.cxx G__RooFitCore2.cxx G__RooFitCore3.cxx G__RooFitCore4.cxx LIBRARIES Core
+ROOT_LINKER_LIBRARY(RooFitCore *.cxx G__RooFitCore.cxx LIBRARIES Core
                     DEPENDENCIES Hist Graf Matrix Tree Minuit RIO MathCore Foam)
 ROOT_INSTALL_HEADERS()
 
