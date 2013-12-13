@@ -66,8 +66,7 @@ public:
    //
 
    // Info about supporting geometry defined via Root
-   virtual Bool_t IsRootGeometrySupported() const { return kFALSE; }
-                     // make this function =0 with next release
+   virtual Bool_t IsRootGeometrySupported() const = 0;
 
    //
    // functions from GCONS
@@ -820,6 +819,9 @@ public:
 
    // Return the info if collecting tracks is activated
    virtual Bool_t IsCollectTracks() const = 0;
+
+   // Return the info if multi-threading is supported/activated
+   virtual Bool_t IsMT() const { return kFALSE; }
 
    //
    // ------------------------------------------------
