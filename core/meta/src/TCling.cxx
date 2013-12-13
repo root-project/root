@@ -3911,7 +3911,32 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    if (err) {
       return 0;
    }
-   return AutoLoad(demangled_name.c_str());
+   // AutoLoad expects (because TClass::GetClass already prepares it that way) a
+   // shortened name.
+   TClassEdit::TSplitType splitname( demangled_name.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
+   splitname.ShortType(demangled_name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
+
+   // No need to worry anout typedef, they aren't any ...
+   // But we need to replace basic_string with string.
+   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
+   static const unsigned int full_string_name_len = strlen(full_string_name);
+   static const char* basic_string_s = "basic_string<char>";
+   static const unsigned int basic_string_len = strlen(basic_string_s);
+
+   int pos = 0;
+   while( (pos = demangled_name.find( basic_string_s,pos) ) >=0 ) {
+      demangled_name.replace(pos,basic_string_len, "string");
+   }
+   while( (pos = demangled_name.find( full_string_name,pos) ) >=0 ) {
+      demangled_name.replace(pos,full_string_name_len, "string");
+   }
+
+   Int_t result = AutoLoad(demangled_name.c_str());
+   if (result == 0) {
+      demangled_name = TClassEdit::GetLong64_Name(demangled_name);
+      result = AutoLoad(demangled_name.c_str());
+   }
+   return result;
 }
 
 //______________________________________________________________________________
