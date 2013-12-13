@@ -98,10 +98,17 @@ public:
    virtual Double_t TrackingZmax() const { return DBL_MAX; }
 
    // Calculate user field \a b at point \a x
-   virtual void     Field(const Double_t* x, Double_t* b) const;
+   virtual void Field(const Double_t* x, Double_t* b) const;
 
    // Define action at each step for Geane
    virtual void GeaneStepping() {;}
+
+   // New functions for multi-threading applications
+   virtual TVirtualMCApplication* CloneForWorker() const { return 0;}
+   virtual void InitForWorker() const {}
+   virtual void BeginWorkerRun() const {}
+   virtual void FinishWorkerRun() const {}
+   virtual void Merge(TVirtualMCApplication* /*localMCApplication*/) {}
 
 private:
    // static data members
