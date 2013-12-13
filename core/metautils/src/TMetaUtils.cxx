@@ -3081,7 +3081,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    std::string normalizedNameStep1;
    normalizedType.getAsStringInternal(normalizedNameStep1,policy);
 
-   // Still remove the std:: and default template argument and insert the Long64_t
+   // Still remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
    TClassEdit::TSplitType splitname(normalizedNameStep1.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
 
@@ -3090,14 +3090,6 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    // part of the result string.  For consistency, we must remove it.
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
-   }
-
-   // And replace basic_string<char>.  NOTE: we should probably do this at the same time as the GetPartiallyDesugaredType ... but were do we stop ?
-   static const char* basic_string_s = "basic_string<char>";
-   static const unsigned int basic_string_len = strlen(basic_string_s);
-   int pos = 0;
-   while( (pos = norm_name.find( basic_string_s,pos) ) >=0 ) {
-      norm_name.replace(pos,basic_string_len, "string");
    }
 
 }

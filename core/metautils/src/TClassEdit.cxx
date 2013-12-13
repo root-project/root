@@ -559,6 +559,76 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
    string full( mode & kLong64 ? TClassEdit::GetLong64_Name( CleanType(type, cleantypeMode) )
                : CleanType(type, cleantypeMode) );
 
+   // We need to replace basic_string with string.
+   bool isString = false;
+   bool isStdString = false;
+   static const char* basic_string_std = "std::basic_string<char";
+   static const unsigned int basic_string_std_len = strlen(basic_string_std);
+
+   if (full.compare(0,basic_string_std_len,basic_string_std) == 0
+       && full.size() > basic_string_std_len) {
+      isString = true;
+      isStdString = true;
+   } else if (full.compare(0,basic_string_std_len-5,basic_string_std+5) == 0
+              && full.size() > (basic_string_std_len-5)) {
+      // no std.
+      isString = true;
+   }
+   if (isString) {
+      ssize_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
+      if ( full[offset] == '>' ) {
+         // done.
+      } else if (full[offset] == ',') {
+         ++offset;
+         if (full.compare(offset, 5, "std::") == 0) {
+            offset += 5;
+         }
+         static const char* char_traits_s = "char_traits<char>";
+         static const unsigned int char_traits_len = strlen(char_traits_s);
+         if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
+            offset += char_traits_len;
+            if ( full[offset] == '>' ||
+                (full[offset] == ' ' && full[offset+1] == '>')) {
+               // done.
+            } else if (full[offset] == ',') {
+               ++offset;
+               if (full.compare(offset, 5, "std::") == 0) {
+                  offset += 5;
+               }
+               static const char* allocator_s = "allocator<char>";
+               static const unsigned int allocator_len = strlen(allocator_s);
+               if (full.compare(offset, allocator_len, allocator_s) == 0) {
+                  offset += allocator_len;
+                  if ( full[offset] == '>' ||
+                      (full[offset] == ' ' && full[offset+1] == '>')) {
+                     // done.
+                  } else {
+                     // Not std::string
+                     isString = false;
+                  }
+               }
+            } else {
+               // Not std::string
+               isString = false;
+            }
+         } else {
+            // Not std::string.
+            isString = false;
+         }
+      } else {
+         // Not std::string.
+         isString = false;
+      }
+      if (isString) {
+         output.push_back(string());
+         if (isStdString && !(mode & kDropStd)) {
+            output.push_back("std::string");
+         } else {
+            output.push_back("string");
+         }
+         return output.size();
+      }
+   }
 
    if ( mode & kDropStd) {
       unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;

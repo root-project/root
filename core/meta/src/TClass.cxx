@@ -2617,11 +2617,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (cl) return cl;  // If we found the class but we already have a dummy class use it.
 
-   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   if (strcmp(name,full_string_name)==0
-      || ( strncmp(name,"std::",5)==0 && ((strcmp(name+5,"string")==0)||(strcmp(name+5,full_string_name)==0)))) {
-      return TClass::GetClass("string");
-   }
    if (splitname.IsSTLCont()) {
 
       return gROOT->FindSTLClass(name,kTRUE,silent);

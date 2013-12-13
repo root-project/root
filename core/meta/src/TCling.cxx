@@ -2948,12 +2948,6 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
    TClassEdit::TSplitType splitname( cl.Name(), TClassEdit::kDropStd );
    splitname.ShortType(output, TClassEdit::kDropStd );
 
-   static const char* basic_string_s = "basic_string<char>";
-   static const unsigned int basic_string_len = strlen(basic_string_s);
-   int pos = 0;
-   while( (pos = output.find( basic_string_s,pos) ) >=0 ) {
-      output.replace(pos,basic_string_len, "string");
-   }
    return;
 }
 
@@ -3917,19 +3911,6 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
    splitname.ShortType(demangled_name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
 
    // No need to worry anout typedef, they aren't any ...
-   // But we need to replace basic_string with string.
-   static const char *full_string_name = "basic_string<char,char_traits<char>,allocator<char> >";
-   static const unsigned int full_string_name_len = strlen(full_string_name);
-   static const char* basic_string_s = "basic_string<char>";
-   static const unsigned int basic_string_len = strlen(basic_string_s);
-
-   int pos = 0;
-   while( (pos = demangled_name.find( basic_string_s,pos) ) >=0 ) {
-      demangled_name.replace(pos,basic_string_len, "string");
-   }
-   while( (pos = demangled_name.find( full_string_name,pos) ) >=0 ) {
-      demangled_name.replace(pos,full_string_name_len, "string");
-   }
 
    Int_t result = AutoLoad(demangled_name.c_str());
    if (result == 0) {
