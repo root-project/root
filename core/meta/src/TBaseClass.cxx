@@ -62,7 +62,10 @@ TClass *TBaseClass::GetClassPointer(Bool_t load)
 {
    // Get pointer to the base class TClass.
 
-   if (!fClassPtr) fClassPtr = TClass::GetClass(fName, load);
+   if (!fClassPtr) {
+      if (fInfo) fClassPtr = TClass::GetClass(gCling->BaseClassInfo_ClassInfo(fInfo),load);
+      else fClassPtr = TClass::GetClass(fName, load);
+   }
    return fClassPtr;
 }
 

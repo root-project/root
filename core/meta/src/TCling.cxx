@@ -2554,13 +2554,13 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 #endif
       if (cl == 0) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
-         cl = new TClass(classname.c_str(), version, 0, 0, -1, -1, silent);
+         cl = new TClass(classinfo, version, 0, 0, -1, -1, silent);
          cl->SetBit(TClass::kIsEmulation);
       }
    } else {
       // For regular class, just create a TClass on the fly ...
       // Not quite useful yet, but that what CINT used to do anyway.
-      cl = new TClass(classname.c_str(), 1, 0, 0, -1, -1, silent);
+      cl = new TClass(classinfo, 1, 0, 0, -1, -1, silent);
    }
    return cl;
 }
@@ -5114,6 +5114,13 @@ Long_t TCling::BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const
 {
    TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
    return TClinginfo->Property();
+}
+
+//______________________________________________________________________________
+ClassInfo_t *TCling::BaseClassInfo_ClassInfo(BaseClassInfo_t *bcinfo) const
+{
+   TClingBaseClassInfo* TClinginfo = (TClingBaseClassInfo*) bcinfo;
+   return (ClassInfo_t *)TClinginfo->GetBase();
 }
 
 //______________________________________________________________________________

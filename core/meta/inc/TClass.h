@@ -162,6 +162,7 @@ private:
              TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il,
+             ClassInfo_t *classInfo,
              Bool_t silent);
    void ForceReload (TClass* oldcl);
 
@@ -221,6 +222,9 @@ protected:
 public:
    TClass();
    TClass(const char *name, Bool_t silent = kFALSE);
+   TClass(ClassInfo_t *info, Version_t cversion,
+          const char *dfil = 0, const char *ifil = 0,
+          Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const char *dfil = 0, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
@@ -380,6 +384,7 @@ public:
    static TClass        *GetClassOrAlias(const char *name);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static VoidFuncPtr_t  GetDict (const char *cname);
    static VoidFuncPtr_t  GetDict (const type_info &info);
 

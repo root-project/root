@@ -848,6 +848,61 @@ TClass::TClass(const char *name, Bool_t silent) :
 }
 
 //______________________________________________________________________________
+TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
+               const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
+   TDictionary(""),
+   fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
+   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
+   fInstanceCount(0), fOnHeap(0),
+   fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
+   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fSchemaRules(0), fAttributeMap(0), fStreamerImpl(&TClass::StreamerDefault)
+{
+   // Create a TClass object. This object contains the full dictionary
+   // of a class. It has list to baseclasses, datamembers and methods.
+   // Use this ctor to create a standalone TClass object. Most useful
+   // to get a TClass interface to an interpreted class. Used by TTabCom.
+   // Normally you would use TClass::GetClass("class") to get access to a
+   // TClass object for a certain class.
+   //
+   // This copies the ClassInfo (i.e. does *not* take ownership of it).
+
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   if (!gROOT)
+      ::Fatal("TClass::TClass", "ROOT system not initialized");
+
+   fDeclFileLine   = -2;    // -2 for standalone TClass (checked in dtor)
+
+   SetBit(kLoading);
+   if (!gInterpreter)
+      ::Fatal("TClass::TClass", "gInterpreter not initialized");
+
+   if (!classInfo || !gInterpreter->ClassInfo_IsValid(classInfo)) {
+      MakeZombie();
+   } else {
+      fName = gInterpreter->ClassInfo_FullName(classInfo);
+
+      R__LOCKGUARD2(gInterpreterMutex);
+      Init(fName, cversion, 0, 0, 0, dfil, ifil, dl, il, classInfo, silent);
+      SetBit(kUnloaded);
+
+   }
+   ResetBit(kLoading);
+
+   fConversionStreamerInfo = 0;
+}
+
+
+//______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(name),
@@ -869,7 +924,7 @@ TClass::TClass(const char *name, Version_t cversion,
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
    R__LOCKGUARD2(gInterpreterMutex);
-   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il,silent);
+   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il, 0, silent);
    SetBit(kUnloaded);
 }
 
@@ -901,7 +956,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
    R__LOCKGUARD2(gInterpreterMutex);
    // use info
-   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, silent);
+   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, 0, silent);
 }
 
 //______________________________________________________________________________
@@ -934,6 +989,7 @@ void TClass::Init(const char *name, Version_t cversion,
                   const type_info *typeinfo, TVirtualIsAProxy *isa,
                   ShowMembersFunc_t showmembers,
                   const char *dfil, const char *ifil, Int_t dl, Int_t il,
+                  ClassInfo_t *givenInfo,
                   Bool_t silent)
 {
    // Initialize a TClass object. This object contains the full dictionary
@@ -998,6 +1054,19 @@ void TClass::Init(const char *name, Version_t cversion,
 
    Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
+   if (givenInfo) {
+      if (!gInterpreter->ClassInfo_IsValid(givenInfo) ||
+          !(gInterpreter->ClassInfo_Property(givenInfo) & (kIsClass | kIsStruct | kIsNamespace)) ||
+          (!gInterpreter->ClassInfo_IsLoaded(givenInfo) && (gInterpreter->ClassInfo_Property(givenInfo) & (kIsNamespace))) )
+      {
+         if (!TClassEdit::IsSTLCont(fName.Data())) {
+            MakeZombie();
+            TClass::RemoveClass(this);
+            return;
+         }
+      }
+      fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
+   }
    if (!fClassInfo) {
       Bool_t shouldLoad = kFALSE;
 
@@ -1010,11 +1079,11 @@ void TClass::Init(const char *name, Version_t cversion,
          // This is because we do not expect the CINT dictionary
          // to be present for all STL classes (and we can handle
          // the lack of CINT dictionary in that cases).
-	 // However, we cling the dictionary no longer carries
-	 // an instantiation with it, unless we request the loading
-	 // here *or* the user explicitly instantiate the template
-	 // we would not have a ClassInfo for the template
-	 // instantiation.
+         // However, we cling the dictionary no longer carries
+         // an instantiation with it, unless we request the loading
+         // here *or* the user explicitly instantiate the template
+         // we would not have a ClassInfo for the template
+         // instantiation.
          shouldLoad = true; // ! isStl;
       }
 
@@ -1043,7 +1112,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // We only make entries if the typedef-expanded name
    // is different from the original name.
    TString resolvedThis;
-   if (strchr (name, '<')) {
+   if (!givenInfo && strchr (name, '<')) {
       if ( fName != name) {
          if (!fgClassTypedefHash) {
             fgClassTypedefHash = new THashTable (100, 5);
@@ -1075,7 +1144,7 @@ void TClass::Init(const char *name, Version_t cversion,
       oldcl->ReplaceWith(this);
       delete oldcl;
 
-   } else if (resolvedThis.Length() > 0 && fgClassTypedefHash) {
+   } else if (!givenInfo && resolvedThis.Length() > 0 && fgClassTypedefHash) {
 
       // Check for existing equivalent.
 
@@ -2737,6 +2806,53 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
    //      delete ncl;
    //   }
    return 0;
+}
+
+//______________________________________________________________________________
+TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
+{
+   // Static method returning pointer to TClass of the specified ClassInfo.
+   // If load is true an attempt is made to obtain the class by loading
+   // the appropriate shared library (directed by the rootmap file).
+   // If silent is 'true', do not warn about missing dictionary for the class.
+   // (typically used for class that are used only for transient members)
+   // Returns 0 in case class is not found.
+
+   if (!info || !gCling->ClassInfo_IsValid(info)) return 0;
+   if (!gROOT->GetListOfClasses())    return 0;
+
+   // Get the normalized name.
+   TString name( gCling->ClassInfo_FullName(info) );
+
+   TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
+
+   if (cl) {
+      if (cl->IsLoaded()) return cl;
+      
+      //we may pass here in case of a dummy class created by TVirtualStreamerInfo
+      load = kTRUE;
+      
+   }
+
+   if (!load) return 0;
+
+   TClass *loadedcl = 0;
+   if (cl) loadedcl = gROOT->LoadClass(cl->GetName(),silent);
+   else    loadedcl = gROOT->LoadClass(name,silent);
+
+   if (loadedcl) return loadedcl;
+
+   if (cl) return cl;  // If we found the class but we already have a dummy class use it.
+
+   // We did not find a proper TClass but we do know (we have a valid
+   // ClassInfo) that the class is known to the interpreter.
+   TClass *ncl = gInterpreter->GenerateTClass(info, silent);
+   if (!ncl->IsZombie()) {
+      return ncl;
+   } else {
+      delete ncl;
+      return 0;
+   }
 }
 
 //______________________________________________________________________________

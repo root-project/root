@@ -348,6 +348,7 @@ public: // Public Interface
    virtual Long_t BaseClassInfo_Offset(BaseClassInfo_t* bcinfo, void * address) const;
    virtual Long_t BaseClassInfo_Property(BaseClassInfo_t* bcinfo) const;
    virtual Long_t BaseClassInfo_Tagnum(BaseClassInfo_t* bcinfo) const;
+   virtual ClassInfo_t*BaseClassInfo_ClassInfo(BaseClassInfo_t * /* bcinfo */) const;
    virtual const char* BaseClassInfo_FullName(BaseClassInfo_t* bcinfo) const;
    virtual const char* BaseClassInfo_Name(BaseClassInfo_t* bcinfo) const;
    virtual const char* BaseClassInfo_TmpltName(BaseClassInfo_t* bcinfo) const;
