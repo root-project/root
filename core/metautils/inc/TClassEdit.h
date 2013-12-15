@@ -108,6 +108,7 @@ namespace TClassEdit {
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
    bool        IsDefComp (const char *comp , const char *classname);
+   bool        IsInterpreterDetail(const char *type);
    bool        IsSTLBitset(const char *type);
    int         IsSTLCont (const char *type,int testAlloc=0);
    bool        IsStdClass(const char *type);

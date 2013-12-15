@@ -830,6 +830,25 @@ string TClassEdit::ShortType(const char *typeDesc, int mode)
 }
 
 //______________________________________________________________________________
+bool TClassEdit::IsInterpreterDetail(const char *type)
+{
+   // Return true if the type is one the interpreter details which are
+   // only forward declared (ClassInfo_t etc..)
+
+   ssize_t len = strlen(type);
+   if (len < 2 || strncmp(type+len-2,"_t",2) != 0) return false;
+
+   unsigned char offset = 0;
+   if (strncmp(type,"const ",6)==0) { offset += 6; }
+   static const char *names[] = { "CallFunc_t","ClassInfo_t","BaseClassInfo_t",
+      "DataMemberInfo_t","FuncTempInfo_t","MethodInfo_t","MethodArgInfo_t",
+      "TypeInfo_t","TypedefInfo_t",0};
+
+   for(int k=1;names[k];k++) {if (strcmp(type+offset,names[k])==0) return true;}
+   return false;
+}
+
+//______________________________________________________________________________
 bool TClassEdit::IsSTLBitset(const char *classname)
 {
    // Return true is the name is std::bitset<number> or bitset<number>
