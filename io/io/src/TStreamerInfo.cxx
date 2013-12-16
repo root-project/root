@@ -782,6 +782,28 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                if (!match && CompareContent(0,info,kFALSE,kFALSE)) {
                   match = kTRUE;
                }
+#ifdef TEST_FOR_BACKWARD_COMPATIBILITY_ABSTRACT_CLASSES
+               if (!match && file->GetVersion() < 51800 && fClass && (fClass->Property() & kIsAbstract)
+                   && fClass->GetListOfDataMembers()->GetEntries() != 0)
+               {
+                  // In some instances of old files (v5.17 and less), some StreamerInfo for
+                  // an abstract class where not written correctly, and add no
+                  // data member listed.  If in addition one of the data member
+                  // was declared using a typedef _and_ the current class definition
+                  // uses a different typedef, we are unable to recalculate the
+                  // checksum as it was, because the information is missing from
+                  // the StreamerInfo, and for the same reason CompareContent can
+                  // not know whether this is okay or not ...
+                  //
+                  // Since this is such an unlikely scenario, let's complain
+                  // about it anyway (The class layout *may* have changed, we
+                  // don't know).
+
+                  // if (this has only base classes) {
+                  //    match = kTRUE;
+                  // }
+               }
+#endif
             } else {
                // The on-file TStreamerInfo's checksum differs from the checksum of a TStreamerInfo on another file.
 
@@ -938,6 +960,28 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
             if (warn) {
                warn = !CompareContent(fClass,0,kFALSE,kFALSE);
             }
+#ifdef TEST_FOR_BACKWARD_COMPATIBILITY_ABSTRACT_CLASSES
+            if (warn && file->GetVersion() < 51800 && fClass && (fClass->Property() & kIsAbstract)
+                && fClass->GetListOfDataMembers()->GetEntries() != 0)
+            {
+               // In some instances of old files (v5.17 and less), some StreamerInfo for
+               // an abstract class where not written correctly, and add no
+               // data member listed.  If in addition one of the data member
+               // was declared using a typedef _and_ the current class definition
+               // uses a different typedef, we are unable to recalculate the
+               // checksum as it was, because the information is missing from
+               // the StreamerInfo, and for the same reason CompareContent can
+               // not know whether this is okay or not ...
+               //
+               // Since this is such an unlikely scenario, let's complain
+               // about it anyway (The class layout *may* have changed, we
+               // don't know).
+
+               // if (this has only base classes) {
+               //    warn = kFALSE;
+               // }
+            }
+#endif // TEST_FOR_BACKWARD_COMPATIBILITY
             if (warn && (fOldVersion <= 2)) {
                // Names of STL base classes was modified in vers==3. Allocators removed
                //
