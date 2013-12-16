@@ -155,7 +155,6 @@ const char *rootClingHelp =
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include <time.h>
 #include <stdio.h>
 
 #ifdef _WIN32
@@ -168,7 +167,6 @@ const char *rootClingHelp =
 #endif
 
 #include <errno.h>
-#include <time.h>
 #include <string>
 #include <list>
 #include <vector>
@@ -2459,9 +2457,6 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 
 
    // Preamble
-   time_t rawtime;
-   time (&rawtime);
-
    rootmapFile << "#--Begin " << rootmapFileName << std::endl;
 
    // The number used to have the same alignment of ROOT5
@@ -2516,13 +2511,6 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       ROOT::TMetaUtils::Error(0,"Opening new rootmap file %s\n",rootmapFileName.c_str());
       return 1;
    }
-
-   // Preamble
-   time_t rawtime;
-   time (&rawtime);
-   char* theTime = ctime(&rawtime);
-   rootmapFile << "# Automatically generated with genreflex on "
-               << (theTime ? theTime : "TIME ERROR");
 
    // Add the template definitions
    if (!templateDefsList.empty()){
