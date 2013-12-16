@@ -206,6 +206,10 @@ D: Implementation of multiple columns in TLegend class
 D: Implementation of TClonesArray::MultiSort
 D: TTree support for csv files
 
+N: Adrien Devresse
+E: adrien.devresse@cern.ch
+D: libRDAVIX, the davix client code
+
 N: Mat Dobbs
 E: Matthew.Adam.Dobbs@cern.ch
 D: TLegend class
@@ -286,6 +290,7 @@ D: port to MacOS X
 N: Fabrizio Furano
 E: furano@pd.infn.it
 D: libNetx, the xrootd client code
+D: libRDAVIX, the davix client code
 
 N: Nikolai Gagunashvili
 E: nikolai@unak.is
@@ -416,6 +421,7 @@ D: the FOAM classes
 N: Lukasz Janyst
 E: ljanyst@cern.ch
 D: split vector<T*> and schema evolution
+D: new xrootd client plugin TNetXNGFile
 
 N: Chris Jones
 E: cdj@fnal.gov
@@ -569,6 +575,11 @@ N: Akiya Miyamoto
 E: akiya.miyamoto@kek.jp
 D: port to IBM AIX with xlC v5.x
 
+N: Tgiran Mkrtchyan
+E: tigran.mkrtchyan@desy.de
+D: class TDCacheFile, interface to DESY's dCache system
+D: libRDAVIX, the davix client code
+
 N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
 D: Math libraries
@@ -716,6 +727,10 @@ D: Improvements in I/O
 N: Sangsu Ryu
 E: sangsuryu@kisti.re.kr
 D: PROOF contributions
+
+N: Justin Salmon
+E: mccrustin@gmail.com
+D: new xrootd client plugin TNetXNGFile
 
 N: Pawel Sawicki
 E: Pawel.Sawicki@ifj.edu.pl
