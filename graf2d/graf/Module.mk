@@ -62,6 +62,7 @@ $(GRAFMAP):     $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
 		$(ROOTCINTTMP) -r $(GRAFDS) $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
 all-$(MODNAME): $(GRAFLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GRAFO) $(GRAFDO)
 
