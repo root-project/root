@@ -38,3 +38,4 @@ solarisCC5           for Solaris with CC 5.0
 solaris64CC5         for Solaris with CC 5.0 64 bits
 win32                for Win32 with VC++ and gdk based GUI
 win32gcc             for Win32 with cygwin/gcc
+win64gcc             for Win64 with cygwin/gcc

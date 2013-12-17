@@ -422,8 +422,8 @@ win32)
    forceglibs=$rootuglibs
    forceevelibs=$rootuevelibs
    ;;
-win32gcc)
-   # Win32 with cygwin gcc
+win32gcc | win64gcc)
+   # Windows (32 or 64) with cygwin gcc
    auxcflags=
    auxlibs=
    forcelibs=$rootulibs
