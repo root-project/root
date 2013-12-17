@@ -30,6 +30,7 @@ if test $# -gt 0 ; then
 fi
 
 if [ "x$SUMMARY" != "x" ] ; then
+   testname=`echo $testname | tr / .`
    SUMMARY_FILE=`echo $SUMMARY.$testname.summary | sed -e 's:/:_:g' `
 fi
 
