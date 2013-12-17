@@ -59,12 +59,13 @@ $(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
 
-$(G3DMAP):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
+$(G3DMAP):      $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(G3DDS) $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
 
 all-$(MODNAME): $(G3DLIB)
+
 clean-$(MODNAME):
 		@rm -f $(G3DO) $(G3DDO)
 

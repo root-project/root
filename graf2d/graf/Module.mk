@@ -56,7 +56,7 @@ $(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
-$(GRAFMAP):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
+$(GRAFMAP):     $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GRAFDS) $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)

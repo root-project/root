@@ -6941,7 +6941,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libmapDict.rootmap lib/libmultimap2Dict.rootmap \
  lib/libmultimapDict.rootmap lib/libmultisetDict.rootmap \
  lib/libsetDict.rootmap lib/libvalarrayDict.rootmap lib/libvectorDict.rootmap \
- include/TListOfTypes.h
+ include/TListOfTypes.h lib/*_RootCling.rootmap bin/rlibmap
 
 ######################################################################
 #

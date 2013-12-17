@@ -54,12 +54,13 @@ $(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
 
-$(LDAPMAP):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
+$(LDAPMAP):     $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(LDAPDS) $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
 
 all-$(MODNAME): $(LDAPLIB)
+
 clean-$(MODNAME):
 		@rm -f $(LDAPO) $(LDAPDO)
 

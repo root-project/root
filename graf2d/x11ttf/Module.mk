@@ -57,12 +57,13 @@ $(X11TTFDS):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP) $(call pcmdep,X11TTF)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,X11TTF) -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
-$(X11TTFMAP):    $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP) $(call pcmdep,X11TTF)
+$(X11TTFMAP):   $(X11TTFH) $(X11TTFL) $(ROOTCINTTMPDEP) $(call pcmdep,X11TTF)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(X11TTFDS) $(call dictModule,X11TTF) -c $(FREETYPEINC) $(X11TTFH) $(X11TTFL)
 
 all-$(MODNAME): $(X11TTFLIB)
+
 clean-$(MODNAME):
 		@rm -f $(X11TTFO) $(X11TTFDO)
 

@@ -54,12 +54,13 @@ $(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcmdep,PHYSICS)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
 
-$(PHYSICSMAP):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcmdep,PHYSICS)
+$(PHYSICSMAP):  $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcmdep,PHYSICS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(PHYSICSDS) $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
 
 all-$(MODNAME): $(PHYSICSLIB)
+
 clean-$(MODNAME):
 		@rm -f $(PHYSICSO) $(PHYSICSDO)
 

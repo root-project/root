@@ -78,11 +78,11 @@ $(CLINGLIB):    $(CLINGO) $(CLINGDO) $(METAOLLVM) $(METAUTILSOLLVM) \
 		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA)" \
 		   ""
 
-$(CLINGMAP): $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
+$(CLINGMAP):    $(CLINGL) $(ROOTCINTTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(CLINGDS) $(call dictModule,CLING) -c $(CLINGH) \
-		   $(CLINGL)
+		$(ROOTCINTTMP) -r $(CLINGDS) $(call dictModule,CLING) -c \
+		   $(CLINGH) $(CLINGL)
 
 $(call pcmrule,CLING)
 	$(noop)

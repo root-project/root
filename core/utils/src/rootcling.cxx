@@ -3119,7 +3119,6 @@ int RootCling(int argc,
       force = 1;
       ic++;
    } else if (ic < argc && !strcmp(argv[ic], "-r")) {
-      std::cout << "Ignoring ofile\n";
       ignoreExistingDict = true;
       ic++;
    } else if (argc > 1 && (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h"))) {

@@ -36,25 +36,25 @@ pcmdep = lib/libCore_rdict.pcm $(subst .$(SOEXT),_rdict.pcm,$($1LIBDEPM))
 # This macro builds the rootmap name starting from the library full path
 #    $(call rmfName, TREELIB)
 # the argument is the upper case name of the library (see the Module.mk)
-rmfName = $(dir  $1 )$(subst .$(SOEXT),.rootmap,$(notdir $1) )
+rmfName = $(dir $1)$(subst .$(SOEXT),.rootmap,$(notdir $1))
 
 # This macro returns the arguments to be passed to rootcling to properly
 # generate the rootmap file
 #    $(call rootmapModule, TREELIB)
 # the argument is the upper case name of the library (see the Module.mk)
-rootmapModule = -rml $(notdir $1 ) -rmf $(call rmfName, $1)
+rootmapModule = -rml $(notdir $1) -rmf $(call rmfName, $1)
 
 # This macro returns the argument to be passed to rootcling to
 # properly setup the pcm
 #    $(call dictModule,TREE)
 # the argument is the upper case name of the library (see the Module.mk)
-dictModule = -s $($1LIB) $(call rootmapModule, $($1LIB) ) $(call pcm_rootcling_opt,$($1LIBDEPM))
+dictModule = -s $($1LIB) $(call rootmapModule, $($1LIB)) $(call pcm_rootcling_opt, $($1LIBDEPM))
 
 # This macro is used to setup the rule where the pcm depends on the
 # dictionary and the library's dependent pcm's
 #    $(call pcmrule,TREE)
 # the argument is the upper case name of the library (see the Module.mk)
-pcmrule = $(call pcmname,$($1LIB)): $(call pcmdep,$1) $($1DS)
+pcmrule = $(call pcmname, $($1LIB)): $(call pcmdep, $1) $($1DS)
 
 noop = @true # "Do nothing really, this is just to make the rule stick"
 

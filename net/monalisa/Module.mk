@@ -54,12 +54,13 @@ $(MONALISADS):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP) $(call pcmdep,MONALI
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MONALISA) -c $(MONALISAINCDIR:%=-I%) $(MONALISAH) $(MONALISAL)
 
-$(MONALISAMAP):  $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP) $(call pcmdep,MONALISA)
+$(MONALISAMAP): $(MONALISAH) $(MONALISAL) $(ROOTCINTTMPDEP) $(call pcmdep,MONALISA)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(MONALISADS) $(call dictModule,MONALISA) -c $(MONALISAINCDIR:%=-I%) $(MONALISAH) $(MONALISAL)
 
 all-$(MODNAME): $(MONALISALIB)
+
 clean-$(MODNAME):
 		@rm -f $(MONALISAO) $(MONALISADO)
 

@@ -54,12 +54,13 @@ $(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
 
-$(RFIOMAP):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
+$(RFIOMAP):     $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(RFIODS) $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
 
 all-$(MODNAME): $(RFIOLIB)
+
 clean-$(MODNAME):
 		@rm -f $(RFIOO) $(RFIODO)
 

@@ -59,12 +59,13 @@ $(KRB5AUTHDS):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,KRB5A
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,KRB5AUTH) -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)
 
-$(KRB5AUTHMAP):  $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,KRB5AUTH)
+$(KRB5AUTHMAP): $(KRB5AUTHH1) $(KRB5AUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,KRB5AUTH)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(KRB5AUTHDS) $(call dictModule,KRB5AUTH) -c $(KRB5INCDIR:%=-I%) $(KRB5AUTHH1) $(KRB5AUTHL)
 
 all-$(MODNAME): $(KRB5AUTHLIB)
+
 clean-$(MODNAME):
 		@rm -f $(KRB5AUTHO) $(KRB5AUTHDO)
 

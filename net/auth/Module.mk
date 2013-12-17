@@ -117,7 +117,7 @@ $(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
-$(RAUTHMAP):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
+$(RAUTHMAP):    $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(RAUTHDS) $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)

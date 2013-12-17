@@ -76,12 +76,13 @@ $(NETXDS):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
-$(NETXMAP):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+$(NETXMAP):     $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(NETXDS) $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
 all-$(MODNAME): $(NETXLIB)
+
 clean-$(MODNAME):
 		@rm -f $(NETXO) $(NETXDO)
 

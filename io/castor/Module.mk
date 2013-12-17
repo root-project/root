@@ -55,12 +55,13 @@ $(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
 
-$(CASTORMAP):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
+$(CASTORMAP):   $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(CASTORDS) $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
 
 all-$(MODNAME): $(CASTORLIB)
+
 clean-$(MODNAME):
 		@rm -f $(CASTORO) $(CASTORDO)
 

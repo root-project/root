@@ -54,12 +54,13 @@ $(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)
 
-$(TREEMAP):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
+$(TREEMAP):     $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(TREEDS) $(call dictModule,TREE) -c $(TREEH) $(TREEL)
 
 all-$(MODNAME): $(TREELIB)
+
 clean-$(MODNAME):
 		@rm -f $(TREEO) $(TREEDO)
 

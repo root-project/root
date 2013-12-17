@@ -54,12 +54,13 @@ $(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SQL) -c $(SQLH) $(SQLL)
 
-$(SQLMAP):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
+$(SQLMAP):      $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(SQLDS) $(call dictModule,SQL) -c $(SQLH) $(SQLL)
 
 all-$(MODNAME): $(SQLLIB)
+
 clean-$(MODNAME):
 		@rm -f $(SQLO) $(SQLDO)
 

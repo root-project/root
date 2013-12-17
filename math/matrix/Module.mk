@@ -54,12 +54,13 @@ $(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
 
-$(MATRIXMAP):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
+$(MATRIXMAP):   $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(MATRIXDS) $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
 
 all-$(MODNAME): $(MATRIXLIB)
+
 clean-$(MODNAME):
 		@rm -f $(MATRIXO) $(MATRIXDO)
 

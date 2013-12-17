@@ -102,12 +102,13 @@ $(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcmdep,GQT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
 
-$(GQTMAP):       $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcmdep,GQT)
+$(GQTMAP):      $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcmdep,GQT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GQTDS) $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
 
 all-$(MODNAME): $(GQTLIB)
+
 clean-$(MODNAME):
 		@rm  -f $(GQTO) $(GQTDO) $(GQTMOCO) $(GQTMOC)
 

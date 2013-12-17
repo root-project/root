@@ -54,12 +54,13 @@ $(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
-$(GVIZMAP):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
+$(GVIZMAP):     $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GVIZDS) $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
 all-$(MODNAME): $(GVIZLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GVIZO) $(GVIZDO)
 

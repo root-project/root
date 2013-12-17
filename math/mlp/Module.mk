@@ -54,12 +54,13 @@ $(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcmdep,MLP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MLP) -c $(MLPH) $(MLPL)
 
-$(MLPMAP):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcmdep,MLP)
+$(MLPMAP):      $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcmdep,MLP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(MLPDS) $(call dictModule,MLP) -c $(MLPH) $(MLPL)
 
 all-$(MODNAME): $(MLPLIB)
+
 clean-$(MODNAME):
 		@rm -f $(MLPO) $(MLPDO)
 

@@ -91,12 +91,13 @@ $(MINUIT2DS):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT2)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT2) -c $(MINUIT2H) $(MINUIT2L)
 
-$(MINUIT2MAP):   $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT2)
+$(MINUIT2MAP):  $(MINUIT2H) $(MINUIT2L) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT2)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(MINUIT2DS) $(call dictModule,MINUIT2) -c $(MINUIT2H) $(MINUIT2L)
 
 all-$(MODNAME): $(MINUIT2LIB)
+
 test-$(MODNAME): all-$(MODNAME)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@$(INSTALL) $(MINUIT2DIR)/test $(MINUIT2DIRT)

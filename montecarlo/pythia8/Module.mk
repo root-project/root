@@ -55,12 +55,13 @@ $(PYTHIA8DS):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA8)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
 
-$(PYTHIA8MAP):   $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA8)
+$(PYTHIA8MAP):  $(PYTHIA8H) $(PYTHIA8L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA8)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(PYTHIA8DS) $(call dictModule,PYTHIA8) -c $(FPYTHIA8INCDIR:%=-I%) $(PYTHIA8H) $(PYTHIA8L)
 
 all-$(MODNAME): $(PYTHIA8LIB)
+
 clean-$(MODNAME):
 		@rm -f $(PYTHIA8O) $(PYTHIA8DO)
 

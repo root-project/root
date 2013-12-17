@@ -112,12 +112,13 @@ $(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcm
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
-$(PROOFXMAP):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcmdep,PROOFX)
+$(PROOFXMAP):   $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcmdep,PROOFX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(PROOFXDS) $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
 all-$(MODNAME): $(PROOFXLIB)
+
 clean-$(MODNAME):
 		@rm -f $(PROOFXO) $(PROOFXDO)
 

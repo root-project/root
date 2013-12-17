@@ -54,12 +54,13 @@ $(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
 
-$(SPLOTMAP):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
+$(SPLOTMAP):    $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(SPLOTDS) $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
 
 all-$(MODNAME): $(SPLOTLIB)
+
 clean-$(MODNAME):
 		@rm -f $(SPLOTO) $(SPLOTDO)
 

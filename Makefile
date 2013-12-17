@@ -803,7 +803,7 @@ $(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 
 $(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
 	$(MAKEDIR)
-	@echo "Generating dictionary $@..."
+	@echo "Generating rootmap $@..."
 	$(ROOTCINTTMP) -r $(COREDS) -s lib/libCore.$(SOEXT) \
 	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)

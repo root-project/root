@@ -99,7 +99,7 @@ $(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
-$(PYROOTMAP):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
+$(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(PYROOTDS) $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
@@ -109,6 +109,7 @@ $(PYTHON64):    $(PYTHON64O)
 		   $(PYTHONLIBDIR) $(PYTHONLIB)
 
 all-$(MODNAME): $(PYROOTLIB) $(PYTHON64)
+
 clean-$(MODNAME):
 		@rm -f $(PYROOTO) $(PYROOTDO) $(PYTHON64O)
 

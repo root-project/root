@@ -62,12 +62,13 @@ $(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTA
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
 
-$(ROOSTATSMAP):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
+$(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
 
 all-$(MODNAME): $(ROOSTATSLIB)
+
 clean-$(MODNAME):
 		@rm -f $(ROOSTATSO) $(ROOSTATSDO)
 

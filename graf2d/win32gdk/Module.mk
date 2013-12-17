@@ -157,12 +157,13 @@ $(WIN32GDKDS):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP) $(call pcmdep,WIN32
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,WIN32GDK) -c $(WIN32GDKH1) $(WIN32GDKL)
 
-$(WIN32GDKMAP):  $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP) $(call pcmdep,WIN32GDK)
+$(WIN32GDKMAP): $(WIN32GDKH1) $(WIN32GDKL) $(ROOTCINTTMPDEP) $(call pcmdep,WIN32GDK)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(WIN32GDKDS) $(call dictModule,WIN32GDK) -c $(WIN32GDKH1) $(WIN32GDKL)
 
 all-$(MODNAME): $(WIN32GDKLIB)
+
 clean-$(MODNAME):
 		@rm -f $(WIN32GDKO) $(WIN32GDKDO)
 

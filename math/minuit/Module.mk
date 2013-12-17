@@ -54,12 +54,13 @@ $(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
 
-$(MINUITMAP):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
+$(MINUITMAP):   $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(MINUITDS) $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
 
 all-$(MODNAME): $(MINUITLIB)
+
 clean-$(MODNAME):
 		@rm -f $(MINUITO) $(MINUITDO)
 

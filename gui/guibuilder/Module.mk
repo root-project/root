@@ -54,12 +54,13 @@ $(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
 
-$(GUIBLDMAP):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
+$(GUIBLDMAP):   $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GUIBLDDS) $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
 
 all-$(MODNAME): $(GUIBLDLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GUIBLDO) $(GUIBLDDO)
 

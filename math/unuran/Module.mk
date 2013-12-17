@@ -146,12 +146,13 @@ $(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmd
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
-$(UNURANMAP):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmdep,UNURAN)
+$(UNURANMAP):   $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmdep,UNURAN)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(UNURANDS) $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
 all-$(MODNAME): $(UNURANLIB)
+
 clean-$(MODNAME):
 		@rm -f $(UNURANO) $(UNURANDO)
 		-@(if [ -d $(UNRDIRS) ]; then \

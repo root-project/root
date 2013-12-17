@@ -68,7 +68,7 @@ $(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYRO
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
 
-$(RUBYROOTMAP):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYROOT)
+$(RUBYROOTMAP): $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(RUBYROOTDS) $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
@@ -78,6 +78,7 @@ $(RUBY64):      $(RUBY64O)
 		   $(RUBYLIBDIR) $(RUBYLIB)
 
 all-$(MODNAME): $(RUBYROOTLIB) $(RUBY64)
+
 clean-$(MODNAME):
 		@rm -f $(RUBYROOTO) $(RUBYROOTDO) $(RUBY64O)
 

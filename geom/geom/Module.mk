@@ -74,12 +74,13 @@ $(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcmdep,GEO
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
 
-$(GEOMMAP):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcmdep,GEOM)
+$(GEOMMAP):     $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcmdep,GEOM)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GEOMDS) $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
 
 all-$(MODNAME): $(GEOMLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GEOMO) $(GEOMDO)
 

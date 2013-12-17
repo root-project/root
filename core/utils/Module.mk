@@ -12,6 +12,7 @@ ifneq ($(HOST),)
 .PHONY: all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 all-$(MODNAME):
+
 clean-$(MODNAME):
 
 distclean-$(MODNAME):

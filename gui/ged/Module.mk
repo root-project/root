@@ -54,12 +54,13 @@ $(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GED) -c $(GEDH) $(GEDL)
 
-$(GEDMAP):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
+$(GEDMAP):      $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GEDDS) $(call dictModule,GED) -c $(GEDH) $(GEDL)
 
 all-$(MODNAME): $(GEDLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GEDO) $(GEDDO)
 

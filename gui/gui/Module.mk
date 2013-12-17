@@ -86,12 +86,13 @@ $(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcmdep,GUI)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
-$(GUIMAP):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcmdep,GUI)
+$(GUIMAP):      $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcmdep,GUI)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GUIDS) $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
 all-$(MODNAME): $(GUILIB)
+
 clean-$(MODNAME):
 		@rm -f $(GUIO) $(GUIDO)
 

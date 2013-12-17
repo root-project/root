@@ -56,13 +56,14 @@ $(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,SQLITE)
 		$(ROOTCINTTMP) -f $@ $(call dictModule,SQLITE) \
 		   -c $(SQLITEH) $(SQLITEL)
 
-$(SQLITEMAP):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,SQLITE)
+$(SQLITEMAP):   $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,SQLITE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(SQLITEDS) $(call dictModule,SQLITE) \
 		   -c $(SQLITEH) $(SQLITEL)
 
 all-$(MODNAME): $(SQLITELIB)
+
 clean-$(MODNAME):
 		@rm -f $(SQLITEO) $(SQLITEDO)
 

@@ -54,12 +54,13 @@ $(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
 
-$(FUMILIMAP):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
+$(FUMILIMAP):   $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(FUMILIDS) $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
 
 all-$(MODNAME): $(FUMILILIB)
+
 clean-$(MODNAME):
 		@rm -f $(FUMILIO) $(FUMILIDO)
 

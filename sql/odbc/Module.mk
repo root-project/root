@@ -60,6 +60,7 @@ $(ODBCMAP):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
 		$(ROOTCINTTMP) -r $(ODBCDS) $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
 all-$(MODNAME): $(ODBCLIB)
+
 clean-$(MODNAME):
 		@rm -f $(ODBCO) $(ODBCDO)
 

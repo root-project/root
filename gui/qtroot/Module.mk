@@ -54,12 +54,13 @@ $(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
 
-$(QTROOTMAP):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
+$(QTROOTMAP):   $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(QTROOTDS) $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
 
 all-$(MODNAME): $(QTROOTLIB)
+
 clean-$(MODNAME):
 		@rm -f $(QTROOTO) $(QTROOTDO)
 

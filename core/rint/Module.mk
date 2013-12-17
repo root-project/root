@@ -54,12 +54,13 @@ $(RINTDS):      $(RINTH) $(RINTL) $(ROOTCINTTMPDEP) $(call pcmdep,RINT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,RINT) -c $(RINTH) $(RINTL)
 
-$(RINTMAP):      $(RINTH) $(RINTL) $(ROOTCINTTMPDEP) $(call pcmdep,RINT)
+$(RINTMAP):     $(RINTH) $(RINTL) $(ROOTCINTTMPDEP) $(call pcmdep,RINT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(RINTDS) $(call dictModule,RINT) -c $(RINTH) $(RINTL)
 
 all-$(MODNAME): $(RINTLIB)
+
 clean-$(MODNAME):
 		@rm -f $(RINTO) $(RINTDO)
 

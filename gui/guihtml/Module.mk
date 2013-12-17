@@ -54,12 +54,13 @@ $(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIHTML)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
 
-$(GUIHTMLMAP):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIHTML)
+$(GUIHTMLMAP):  $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIHTML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(GUIHTMLDS) $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
 
 all-$(MODNAME): $(GUIHTMLLIB)
+
 clean-$(MODNAME):
 		@rm -f $(GUIHTMLO) $(GUIHTMLDO)
 

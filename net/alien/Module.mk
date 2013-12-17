@@ -64,12 +64,13 @@ $(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
 
-$(ALIENMAP):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
+$(ALIENMAP):    $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(ALIENDS) $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
 
 all-$(MODNAME): $(ALIENLIB)
+
 clean-$(MODNAME):
 		@rm -f $(ALIENO) $(ALIENDO)
 

@@ -54,12 +54,13 @@ $(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,PGSQL)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
 
-$(PGSQLMAP):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,PGSQL)
+$(PGSQLMAP):    $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,PGSQL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(PGSQLDS) $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
 
 all-$(MODNAME): $(PGSQLLIB)
+
 clean-$(MODNAME):
 		@rm -f $(PGSQLO) $(PGSQLDO)
 

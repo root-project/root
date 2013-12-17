@@ -54,12 +54,13 @@ $(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
 
-$(ROOFITMAP):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
+$(ROOFITMAP):   $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(ROOFITDS) $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
 
 all-$(MODNAME): $(ROOFITLIB)
+
 clean-$(MODNAME):
 		@rm -f $(ROOFITO) $(ROOFITDO)
 

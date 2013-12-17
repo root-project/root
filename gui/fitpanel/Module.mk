@@ -54,12 +54,13 @@ $(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPAN
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
 
-$(FITPANELMAP):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPANEL)
+$(FITPANELMAP): $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(FITPANELDS) $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
 
 all-$(MODNAME): $(FITPANELLIB)
+
 clean-$(MODNAME):
 		@rm -f $(FITPANELO) $(FITPANELDO)
 

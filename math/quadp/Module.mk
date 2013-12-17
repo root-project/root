@@ -54,12 +54,13 @@ $(QUADPDS):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcmdep,QUADP)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,QUADP) -c $(QUADPH) $(QUADPL)
 
-$(QUADPMAP):     $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcmdep,QUADP)
+$(QUADPMAP):    $(QUADPH) $(QUADPL) $(ROOTCINTTMPDEP) $(call pcmdep,QUADP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(QUADPDS) $(call dictModule,QUADP) -c $(QUADPH) $(QUADPL)
 
 all-$(MODNAME): $(QUADPLIB)
+
 clean-$(MODNAME):
 		@rm -f $(QUADPO) $(QUADPDO)
 

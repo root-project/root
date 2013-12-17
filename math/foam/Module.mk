@@ -54,12 +54,13 @@ $(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
 		@echo "Generating dictionary $@..."
 		$(ROOTCINTTMP) -f $@ $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
 
-$(FOAMMAP):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
+$(FOAMMAP):     $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCINTTMP) -r $(FOAMDS) $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
 
 all-$(MODNAME): $(FOAMLIB)
+
 clean-$(MODNAME):
 		@rm -f $(FOAMO) $(FOAMDO)
 
