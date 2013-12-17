@@ -16,7 +16,7 @@ MAINDIRI     := $(MAINDIR)/inc
 ROOTEXES     := $(MODDIRS)/rmain.cxx
 ROOTEXEO     := $(call stripsrc,$(ROOTEXES:.cxx=.o))
 ROOTEXEDEP   := $(ROOTEXEO:.o=.d)
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 ROOTEXE      := bin/root_exe.exe
 else
 ROOTEXE      := bin/root.exe
@@ -63,7 +63,7 @@ XPDTESTLIBSDEP = $(IOLIB) $(TREELIB) $(NETLIB) $(HISTLIB) $(PROOFLIB) \
 ROOTSEXES   := $(MODDIRS)/roots.cxx
 ROOTSEXEO   := $(call stripsrc,$(ROOTSEXES:.cxx=.o))
 ROOTSEXEDEP := $(ROOTSEXEO:.o=.d)
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 ROOTSEXE    := bin/roots_exe.exe
 else
 ROOTSEXE    := bin/roots.exe

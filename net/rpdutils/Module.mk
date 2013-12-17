@@ -82,7 +82,7 @@ AUTHLIBS      := $(SHADOWLIBS) $(AFSLIBS) \
                  $(SRPLIBS) $(KRB5LIBS) $(GLBSLIBS) \
                  $(COMERRLIBDIR) $(COMERRLIB) $(RESOLVLIB) \
                  $(CRYPTOLIBDIR) $(CRYPTOLIB)
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 AUTHLIBS      += -lz
 endif
 
