@@ -1,4 +1,4 @@
-#ifndef __MAKECINT__
+#if !defined( __MAKECINT__ ) && !defined(__CLING__)
 # error Not for compilation
 #else
 
