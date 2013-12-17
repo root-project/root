@@ -607,6 +607,8 @@ AutoDict_*.cxx
 # /root/meta/tclass/
 /root/meta/tclass/pairs.root
 /root/meta/tclass/myclass.root
+/root/meta/tclass/tmpltd.root
+/root/meta/tclass/tmpltd32.root
 
 # /root/selector/
 /root/selector/*.root

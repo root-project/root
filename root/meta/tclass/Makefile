@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog myclass.root pairs.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog myclass.root pairs.root tmpltd32.root tmpltd.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -39,3 +39,7 @@ pairs: pairs.clog
 execProperties.success: EXTRA_DIFFOPTS += -w
 
 execInterpClassNew.log: classlib_cxx.$(DllSuf)
+
+execReadTmplt.clog: execTmpltD.success execTmpltD32.success 
+
+
