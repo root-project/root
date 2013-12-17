@@ -3093,8 +3093,10 @@ void TBranchElement::InitializeOffsets()
                dataName.Replace(dotpos,endpos-dotpos,subBranchElement->GetFullName());
             }
             TRealData* rd = pClass->GetRealData(dataName);
-            if (rd && !rd->TestBit(TRealData::kTransient)) {
+            if (rd && (!rd->TestBit(TRealData::kTransient) || alternateElement)) {
                // -- Data member exists in the dictionary meta info, get the offset.
+               // If we are using an alternateElement, it is the target of a rule
+               // and might be indeed transient.
                offset = rd->GetThisOffset();
             } else if (subBranchElement->TestBit(TStreamerElement::kWholeObject)) {
                // We are a rule with no specific target, it applies to the whole
