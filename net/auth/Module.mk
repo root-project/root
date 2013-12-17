@@ -77,7 +77,7 @@ EXTRA_RAUTHFLAGS += -DOPENSSL_NO_TLSEXT
 EXTRA_RAUTHLIBS  += WSock32.lib Ws2_32.lib
 endif
 
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 EXTRA_RAUTHLIBS  += -lz
 endif
 

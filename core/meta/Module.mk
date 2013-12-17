@@ -115,7 +115,7 @@ $(call stripsrc,$(patsubst %.cxx,%.o,$(wildcard $(MODDIRS)/TInterpreter*.cxx))):
 $(call stripsrc,$(MODDIRS)/TClingCallbacks.o): \
    CXXFLAGS += -fno-rtti
 
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 # for EnumProcessModules():
 CORELIBEXTRA += -lpsapi
 endif

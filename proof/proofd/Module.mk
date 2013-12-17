@@ -25,7 +25,7 @@ XROOTDDIRL   := $(XRDLIBDIR)
 endif
 endif
 
-ifneq (,$(findstring $(ARCH),win32gcc win64gcc))
+ifneq (,$(filter $(ARCH),win32gcc win64gcc))
 AUTHLIBS      += -lz
 endif
 
