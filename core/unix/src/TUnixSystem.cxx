@@ -4524,14 +4524,10 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
    char *res = realpath(sLib.Data(), buf);
    if (res) sLib = buf;
    TString searchFor = sLib;
-#ifdef __APPLE__
-   // On a MAC, a library might not have any extensions, so let's try the raw
-   // name first.
    if (gSystem->FindFile(GetDynamicPath(), sLib, kReadPermission)) {
       return sLib;
    }
    sLib = searchFor;
-#endif
    const char* lib = sLib.Data();
    int len = sLib.Length();
    if (len > 3 && (!strcmp(lib+len-3, ".so")    ||
