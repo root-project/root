@@ -686,31 +686,31 @@ ifeq ($(PLATFORM),win32)
 endif
 
 %.o: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@  
 
 %.o: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@  
 
 %.o: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cxx.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_o_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cxx.build.log --test=$@  
 
 %.o: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cpp.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_o_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cpp.build.log --test=$@  
 
 %.$(ObjSuf): %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_o_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_cc.build.log --test=$@
 
 %.obj: %.C
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_obj_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_C.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_obj_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_C.build.log --test=$@  
 
 %.obj: %.cc
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_obj_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cc.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_obj_cc.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cc.build.log --test=$@  
 
 %.obj: %.cxx
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_obj_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cxx.build.log --test=$@  
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_obj_cxx.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cxx.build.log --test=$@  
 
 %.obj: %.cpp
-	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$@ 
+	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< -o $@ > $*_obj_cpp.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_obj_cpp.build.log --test=$@ 
 
 %_cpp.$(DllSuf) : %.cpp $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b $(ROOTTEST_HOME)/scripts/build.C\(\"$<\"\) > $*_cpp.build.log 2>&1 || handleError.sh --cmd='Call to build.C' --result=$$? --log=$*_cpp.build.log 
