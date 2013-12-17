@@ -686,7 +686,6 @@ ifeq ($(PLATFORM),win32)
 endif
 
 %.o: %.C
-<<<<<<< HEAD
 	$(CMDECHO) $(CXX) $(CXXFLAGS) -I. -I$(dir $<) -c $< > $*_o_C.build.log 2>&1 || handleError.sh --cmd='Compilation with $(CXX)' --result=$$? --log=$*_o_C.build.log --test=$@  
 
 %.o: %.cc
