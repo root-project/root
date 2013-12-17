@@ -44,6 +44,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
+CALLROOTEXE += -e "\#define ClingWorkAroundTClassUpdateDouble32"
 # Most likely no longer supported.
 # CALLROOTEXE += -e "\#define ClingReinstateRedeclarationAllowed"
 # CALLROOTEXE += -e "\#define ClingReinstateImplicitDynamicCast"
@@ -58,6 +59,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundJITandInline"
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 CALLROOTEXEBUILD += -e "\#define ClingWorkAroundNoPrivateClassIO"
+CALLROOTEXEBUILD += -e "\#define ClingWorkAroundTClassUpdateDouble32"
 
 # variable to be used in Makefiles.
 ClingWorkAroundLackOfModule = yes
@@ -98,6 +100,7 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jir
 # ClingReinstateImplicitDynamicCast = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-4802
 # ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
 ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
+ClingWorkAroundTClassUpdateDouble32 = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration

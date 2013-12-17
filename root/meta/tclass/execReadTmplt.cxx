@@ -99,9 +99,11 @@ int execReadTmplt() {
       Error("execReadTmplt","TClass for Wrapper<Long64_t> does not have a classinfo!");
       return 14;
    }
+#ifndef ClingWorkAroundTClassUpdateDouble32
    if (!cl32->GetClassInfo()) {
       Error("execReadTmplt","TClass for Wrapper<Double32_t> does not have a classinfo!");
       return 15;
    }
+#endif
    return 0;
 }
