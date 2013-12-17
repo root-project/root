@@ -8,7 +8,9 @@
 #include "algorithm"
 #include "set"
 
+#ifndef ClingWorkAroundStripDefaultArg
 namespace std {
+#endif
   template <typename key, typename value, 
     typename compare_operation = less<key>, 
     typename alloc = allocator<pair<const key, value> > >
@@ -33,15 +35,25 @@ namespace std {
       return item->second;
     }
   };
+#ifndef ClingWorkAroundStripDefaultArg
 }
+#endif
 
 class foo: public TObject { 
 public: 
+#ifndef ClingWorkAroundStripDefaultArg
   std::cmap<int,int> & get_table () { return m_map; } 
+#else
+  cmap<int,int> & get_table () { return m_map; }
+#endif
   foo (): TObject (), m_map("foo") {} 
   virtual ~foo() {}
 private: 
+#ifndef ClingWorkAroundStripDefaultArg
   std::cmap<int,int> m_map; 
+#else
+  cmap<int,int> m_map;
+#endif
    std::set<std::string> m_string;
   ClassDef(foo,1);
 }; 
