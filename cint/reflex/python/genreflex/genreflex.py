@@ -288,7 +288,7 @@ class genreflex:
     bcomp = os.path.basename(compiler)
     vopt = ''
     if   bcomp in ('msvc7','msvc71','msvc8')  : return s
-    elif bcomp in ('gcc','g++','c++') or re.match(r'lcg-g\+\+', bcomp): vopt = '--version'
+    elif bcomp in ('gcc','g++','c++','icpc') or re.match(r'lcg-g\+\+', bcomp): vopt = '--version'
     elif bcomp in ('cl.exe','cl')     : vopt = '' # there is no option to print only the version with cl
     else :
       print '--->> genreflex: WARNING: While trying to retrieve compiler version, found unknown compiler %s' % compiler
