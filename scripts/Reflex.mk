@@ -19,7 +19,7 @@ endif
 %_rflx.cpp: %_selection.xml %.h
 	$(CMDECHO) $(GENREFLEX) $*.h -s $*_selection.xml $(GENREFLEXFLAGS) -I"$(ROOTSYS)/include" $(GENREFLEXCXXFLAGS) > $@.log 2>&1 || (cat $@.log && exit 1)
 
-%_cint.cpp: %.h %LinkDef.h
+%_cling.cpp: %.h %LinkDef.h
 	$(CMDECHO) rootcint -f $@ -c $^  > $@.log 2>&1 || (cat $@.log && exit 1)
 
 lib%_dictrflx.$(DllSuf): %_rflx.$(ObjSuf)

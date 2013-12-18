@@ -34,6 +34,7 @@ AutoDict_*.cxx
 *_rflx.h
 *_rflx.cpp
 *_rflxdriver.C
+*_cling.cpp
 *~
 *_dictContent.h
 *_dictUmbrella.h
@@ -264,6 +265,9 @@ AutoDict_*.cxx
 
 # /root/io/evolution/array/
 /root/io/evolution/array/oldArrayObject.root
+
+# /root/io/evolution/pragma_read
+/root/io/evolution/pragma_read/test.root
 
 # /root/io/evolution/versions/
 /root/io/evolution/versions/*.root
