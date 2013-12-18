@@ -4962,7 +4962,7 @@ Long64_t TTree::GetEntryNumber(Long64_t entry) const
 }
 
 //______________________________________________________________________________
-Long64_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
+Long64_t TTree::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const
 {
    // Return entry number corresponding to major and minor number.
    // Note that this function returns only the entry number, not the data
@@ -4986,7 +4986,7 @@ Long64_t TTree::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
 }
 
 //______________________________________________________________________________
-Long64_t TTree::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
+Long64_t TTree::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 {
    // Return entry number corresponding to major and minor number.
    // Note that this function returns only the entry number, not the data
