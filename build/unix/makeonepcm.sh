@@ -39,6 +39,9 @@ EOF
 #ifdef Debug
 # undef Debug
 #endif
+#ifdef GSL_SUCCESS
+# undef GSL_SUCCESS
+#endif
 EOF
     fi
 
