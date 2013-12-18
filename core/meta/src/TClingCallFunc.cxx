@@ -1708,6 +1708,22 @@ TClingCallFunc::exec(void* address, void* ret) const
    //
    unsigned num_params = FD->getNumParams();
    unsigned num_args = fArgVals.size();
+
+   if (num_args < FD->getMinRequiredArguments ()) {
+      Error("TClingCallFunc::exec",
+            "Not enough arguments provided for %s (%d instead of the minimum %d)",
+            fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())),
+            num_args,FD->getMinRequiredArguments ());
+      return;
+   }
+   if (address == 0 && dyn_cast<CXXMethodDecl>(FD)
+       && !(dyn_cast<CXXMethodDecl>(FD))->isStatic()
+       && !dyn_cast<CXXConstructorDecl>(FD)) {
+      Error("TClingCallFunc::exec",
+            "The method %s is called without an object.",
+            fMethod->Name(ROOT::TMetaUtils::TNormalizedCtxt(fInterp->getLookupHelper())));
+      return;
+   }
    vh_ary.reserve(num_args);
    vp_ary.reserve(num_args);
    for (unsigned i = 0U; i < num_args; ++i) {
