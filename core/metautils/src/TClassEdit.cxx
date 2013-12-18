@@ -523,6 +523,32 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
 }
 
 //______________________________________________________________________________
+void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
+{
+   // Return the normalized name.  See TMetaUtils::GetNormalizedName.
+   //
+   // Return the type name normalized for ROOT,
+   // keeping only the ROOT opaque typedef (Double32_t, etc.) and
+   // removing the STL collections default parameter if any.
+   //
+   // Compare to TMetaUtils::GetNormalizedName, this routines does not
+   // and can not add default template parameters.
+
+   norm_name = name;
+
+   // Remove the std:: and default template argument and insert the Long64_t and change basic_string to string.
+   TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
+   splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
+
+   // Depending on how the user typed his/her code, in particular typedef
+   // declarations, we may end up with an explicit '::' being
+   // part of the result string.  For consistency, we must remove it.
+   if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
+      norm_name.erase(0,2);
+   }
+}
+
+//______________________________________________________________________________
 string TClassEdit::GetLong64_Name(const char* original)
 {
    // Replace 'long long' and 'unsigned long long' by 'Long64_t' and 'ULong64_t'
