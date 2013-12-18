@@ -697,7 +697,7 @@ endif
 
 rootcling:      all-cling all-utils compiledata
 
-rootlibs:       rootcling $(ALLLIBS) $(ALLMAPS)
+rootlibs:       rootcling $(ALLLIBS)
 
 rootexecs:      rootlibs $(ALLEXECS)
 
