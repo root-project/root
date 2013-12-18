@@ -13,6 +13,10 @@
 
 //#include "TNamed.h"
 
+#ifndef ROOT_Rtypes
+#include "Rtypes.h"
+#endif
+
 //_________________________________________________
 /*
 BEGIN_HTML

@@ -20,6 +20,7 @@
 #define MATHTEXT_H_
 
 #include <vector>
+#include <string>
 
 namespace mathtext {
 

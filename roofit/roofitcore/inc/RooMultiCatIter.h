@@ -22,6 +22,7 @@
 #include "TObjString.h"
 class RooCategory ;
 class RooCatType ;
+class RooAbsCategoryLValue ;
 
 typedef TIterator* pTIterator ;
 typedef RooAbsCategoryLValue* pRooCategory ;

@@ -11,6 +11,10 @@
 #ifndef ROOSTATS_DetailedOutputAggregator
 #define ROOSTATS_DetailedOutputAggregator
 
+#ifndef ROOT_TString
+#include "TString.h"
+#endif
+
 //_________________________________________________
 /*
    BEGIN_HTML

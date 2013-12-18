@@ -16,6 +16,8 @@
 #ifndef ROOT_TMemStatHook
 #define ROOT_TMemStatHook
 
+#include <stddef.h>
+
 #if defined(__APPLE__)
 #ifndef __CINT__
 #include <malloc/malloc.h>

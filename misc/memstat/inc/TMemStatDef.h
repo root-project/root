@@ -11,6 +11,8 @@
 #ifndef ROOT_TMemStatDef
 #define ROOT_TMemStatDef
 
+#include <stddef.h>
+
 namespace memstat {
    const size_t g_BTStackLevel = 50;
 }

@@ -11,6 +11,10 @@
 #ifndef ROOT_TMemStat
 #define ROOT_TMemStat
 
+#ifndef ROOT_TObject
+#include "TObject.h"
+#endif
+
 class TMemStat: public TObject {
 private:
    Bool_t fIsActive;    // is object attached to MemStat
