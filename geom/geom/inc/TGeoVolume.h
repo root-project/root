@@ -68,6 +68,7 @@ protected :
    TObjArray         *fNodes;          // array of nodes inside this volume
    TGeoShape         *fShape;          // shape
    TGeoMedium        *fMedium;         // tracking medium
+   static TGeoMedium *fgDummyMedium;   //! dummy medium
    TGeoPatternFinder *fFinder;         // finder object for divisions
    TGeoVoxelFinder   *fVoxels;         // finder object for bounding boxes
    TGeoManager       *fGeoManager;     //! pointer to TGeoManager owning this volume
@@ -120,6 +121,8 @@ public:
    void            CheckShape(Int_t testNo, Int_t nsamples=10000, Option_t *option=""); // *MENU*
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
    Bool_t          Contains(const Double_t *point) const {return fShape->Contains(point);}
+   static void     CreateDummyMedium();
+   static TGeoMedium *DummyMedium() {return fgDummyMedium;}
    virtual Bool_t  IsAssembly() const;
    virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
@@ -175,8 +178,8 @@ public:
    Int_t           GetNtotal() const {return fNtotal;}
    virtual Int_t   GetByteCount() const;
    TGeoManager    *GetGeoManager() const {return fGeoManager;}
-   TGeoMaterial   *GetMaterial() const               {return fMedium->GetMaterial();}
-   TGeoMedium     *GetMedium() const                 {return fMedium;}
+   TGeoMaterial   *GetMaterial() const               {return GetMedium()->GetMaterial();}
+   TGeoMedium     *GetMedium() const                 {return (fMedium)?fMedium:DummyMedium();}
    TObject        *GetField() const                  {return fField;}
    TGeoPatternFinder *GetFinder() const              {return fFinder;}
    TGeoVoxelFinder   *GetVoxels() const;

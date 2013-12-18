@@ -359,6 +359,20 @@
 
 ClassImp(TGeoVolume)
 
+TGeoMedium *TGeoVolume::fgDummyMedium = 0;
+
+//______________________________________________________________________________
+void TGeoVolume::CreateDummyMedium()
+{
+// Create a dummy medium 
+   if (fgDummyMedium) return;
+   fgDummyMedium = new TGeoMedium();
+   fgDummyMedium->SetName("dummy");
+   TGeoMaterial *dummyMaterial = new TGeoMaterial();
+   dummyMaterial->SetName("dummy");
+   fgDummyMedium->SetMaterial(dummyMaterial);
+}   
+
 //______________________________________________________________________________
 void TGeoVolume::ClearThreadData() const
 {
@@ -788,7 +802,7 @@ Bool_t TGeoVolume::IsRaytracing() const
 void TGeoVolume::InspectMaterial() const
 {
 // Inspect the material for this volume.
-   fMedium->GetMaterial()->Print();
+   GetMaterial()->Print();
 }
 
 //_____________________________________________________________________________
@@ -1426,7 +1440,9 @@ void TGeoVolume::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       if (!IsAssembly()) {
          fShape->SavePrimitive(out,option);      
          out << "   // Volume: " << GetName() << std::endl;
-         out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << std::endl;
+         if (fMedium) out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() << ", "<< fMedium->GetPointerName() << ");" << std::endl;
+         else out << "   " << GetPointerName() << " = new TGeoVolume(\"" << GetName() << "\"," << fShape->GetPointerName() <<  ");" << std::endl;
+            
       } else {
          out << "   // Assembly: " << GetName() << std::endl;
          out << "   " << GetPointerName() << " = new TGeoVolumeAssembly(\"" << GetName() << "\"" << ");" << std::endl;
