@@ -3641,29 +3641,6 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
    // It treats the gcc toolchain and the root include path
    // FIXME: enables relocatability for experiments' framework headers until PCMs
    // are available.
-
-   const char *cppInclFmt = "echo | %s -xc++ -E -v - 2>&1 >/dev/null | awk '/^#include </,/^End of search/{if (!/^#include </ && !/^End of search/){ print }}' | grep -E \"(c|g)\\+\\+\"";
-
-   // Get at run-time the C++ std lib include path from the compiler specified in compiledata.h
-   char buf[2048];
-   snprintf(buf, sizeof(buf), cppInclFmt, CXX);   // CXX is defined in compiledata.h
-   if (FILE *pf = ::popen(buf, "r")) {
-
-      clingArgs.push_back("-nostdinc++");
-
-      while (fgets(buf, 2048, pf)) {
-         buf[strlen(buf)-1] = 0;   // remove trailing \n
-         size_t i;
-         for (i = 0; i < strlen(buf); i++)
-            if (buf[i] != ' ')
-               break;
-
-         clingArgs.push_back("-I");
-         clingArgs.push_back(&buf[i]);
-      }
-      ::pclose(pf);
-   }
-
    const char* envInclPath = getenv("ROOT_INCLUDE_PATH");
 
    if (envInclPath) {
@@ -3674,43 +3651,4 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
          clingArgs.push_back(inclPath);
       }
    }
-
-   // For the time being check for ABI compatibility here
-   CheckABICompatibility();
-}
-
-//______________________________________________________________________________
-bool ROOT::TMetaUtils::CheckABICompatibility()
-{
-   // Check the C++ compile-time and run-time ABI version compatibility.
-   // Returns true if ABI versions are compatible.
-
-   bool ret = true;
-   int cppABIVersion = -1;
-   const char *runABIFmt = 0;
-#ifdef _LIBCPP_ABI_VERSION
-   cppABIVersion = _LIBCPP_ABI_VERSION;
-   runABIFmt = "echo '#include <vector>' | %s -xc++ -dM -E - | grep 'define _LIBCPP_ABI_VERSION' | awk '{print $3}'";
-#elif __GXX_ABI_VERSION
-   cppABIVersion = __GXX_ABI_VERSION;
-   runABIFmt = "echo '#include <vector>' | %s -xc++ -dM -E - | grep 'define __GXX_ABI_VERSION' | awk '{print $3}'";
-#endif
-   if (cppABIVersion != -1) {
-      char buf[2048];
-      snprintf(buf, sizeof(buf), runABIFmt, CXX);   // CXX is defined in compiledata.h
-      if (FILE *pf = ::popen(buf, "r")) {
-         if (fgets(buf, 2048, pf)) {
-            buf[strlen(buf)-1] = 0;   // remove trailing \n
-            int runABIVersion = ::atoi(buf);
-            if (runABIVersion != cppABIVersion) {
-               Error("CheckABICompatibility", "C++ ABI mismatch, compiled with v%d, running with v%d\n", cppABIVersion, runABIVersion);
-               ret = false;
-            }
-         }
-         ::pclose(pf);
-      }
-   } else {
-      Error("CheckABICompatibility", "ABI compatibility check needs still to be implemented for this platform");
-   }
-   return ret;
 }
