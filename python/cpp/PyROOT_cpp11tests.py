@@ -13,12 +13,13 @@ from common import *
 
 __all__ = [
    'Cpp1Cpp11StandardClassesTestCase',
+   'Cpp2Cpp11LanguageConstructsTestCase'
 ]
 
 gROOT.LoadMacro( "Cpp11Features.C+" )
 
 
-### C++11 language constructs test cases =====================================
+### C++11 standard library classes ===========================================
 class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
    def test01SharedPtr( self ):
       """Test usage and access of std::shared_ptr<>"""
@@ -30,16 +31,33 @@ class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
       self.assertEqual( MyCounterClass.counter, 0 )
 
       ptr1 = CreateMyCounterClass()
-      self.assert_( not not ptr1 )
+      if not FIXCLING:
+         self.assert_( not not ptr1 )
       self.assertEqual( MyCounterClass.counter, 1 )
 
       ptr2 = CreateMyCounterClass()
-      self.assert_( not not ptr2 )
+      if not FIXCLING:
+         self.assert_( not not ptr2 )
       self.assertEqual( MyCounterClass.counter, 2 )
 
       del ptr2, ptr1
       import gc; gc.collect()
       self.assertEqual( MyCounterClass.counter, 0 )
+
+
+### C++11 language constructs test cases =====================================
+class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
+   def test01StaticEnum( self ):
+      """Test usage and access of a const static enum defined in header"""
+
+      if not USECPP11:
+         return
+
+      # TODO: this will fail
+      # self.assert_( hasattr( PyTest, '_Lock_policy' ) )
+      if not FIXCLING:
+         self.assert_( hasattr( PyTest, '_S_single' ) )
+         self.assert_( hasattr( PyTest, '__default_lock_policy' ) )
 
 
 ## actual test run

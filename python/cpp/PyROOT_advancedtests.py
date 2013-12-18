@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 10/17/13
+# Last: 12/16/13
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -12,23 +12,24 @@ from ROOT import *
 from common import *
 
 __all__ = [
-   'Cpp01VirtualInheritenceTestCase',
-   'Cpp02TemplateLookupTestCase',
-   'Cpp03PassByNonConstRefTestCase',
-   'Cpp04HandlingAbstractClassesTestCase',
-   'Cpp05AssignToRefArbitraryClassTestCase',
-   'Cpp06MathConvertersTestCase',
-   'Cpp07GloballyOverloadedComparatorTestCase',
-   'Cpp08GlobalArraysTestCase',
-   'Cpp09LongExpressionsTestCase',
-   'Cpp10StandardExceptionsTestCase',
+   'Cpp01VirtualInheritence',
+   'Cpp02TemplateLookup',
+   'Cpp03PassByNonConstRef',
+   'Cpp04HandlingAbstractClasses',
+   'Cpp05AssignToRefArbitraryClass',
+   'Cpp06MathConverters',
+   'Cpp07GloballyOverloadedComparator',
+   'Cpp08GlobalArrays',
+   'Cpp09LongExpressions',
+   'Cpp10StandardExceptions',
+   'Cpp11PointerContainers',
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
 
 
 ### C++ virtual inheritence test cases =======================================
-class Cpp01InheritenceTestCase( MyTestCase ):
+class Cpp01Inheritence( MyTestCase ):
    def test1DataMembers( self ):
       """Test data member access when using virtual inheritence"""
 
@@ -136,7 +137,7 @@ class Cpp01InheritenceTestCase( MyTestCase ):
 
 
 ### C++ template tests =======================================================
-class Cpp02TemplateLookupTestCase( MyTestCase ):
+class Cpp02TemplateLookup( MyTestCase ):
    def test1SingleInstantiatedTemplate( self ):
       """Test data member access for a templated class"""
 
@@ -263,7 +264,7 @@ class Cpp02TemplateLookupTestCase( MyTestCase ):
 
 
 ### C++ by-non-const-ref arguments tests =====================================
-class Cpp03PassByNonConstRefTestCase( MyTestCase ):
+class Cpp03PassByNonConstRef( MyTestCase ):
    def test1TestPlaceHolders( self ):
       """Test usage of Long/Double place holders"""
 
@@ -301,7 +302,7 @@ class Cpp03PassByNonConstRefTestCase( MyTestCase ):
 
 
 ### C++ abstract classes should behave normally, but be non-instatiatable ====
-class Cpp04HandlingAbstractClassesTestCase( MyTestCase ):
+class Cpp04HandlingAbstractClasses( MyTestCase ):
    def test1ClassHierarchy( self ):
       """Test abstract class in a hierarchy"""
 
@@ -318,7 +319,7 @@ class Cpp04HandlingAbstractClassesTestCase( MyTestCase ):
 
 
 ### Return by reference should call assignment operator ======================
-class Cpp05AssignToRefArbitraryClassTestCase( MyTestCase ):
+class Cpp05AssignToRefArbitraryClass( MyTestCase ):
    def test1AssignToReturnByRef( self ):
       """Test assignment to an instance returned by reference"""
 
@@ -346,7 +347,7 @@ class Cpp05AssignToRefArbitraryClassTestCase( MyTestCase ):
 
 
 ### Check availability of math conversions ===================================
-class Cpp06MathConvertersTestCase( MyTestCase ):
+class Cpp06MathConverters( MyTestCase ):
    def test1MathConverters( self ):
       """Test operator int/long/double incl. typedef"""
 
@@ -363,7 +364,7 @@ class Cpp06MathConvertersTestCase( MyTestCase ):
 
 
 ### Check global operator== overload =========================================
-class Cpp07GloballyOverloadedComparatorTestCase( MyTestCase ):
+class Cpp07GloballyOverloadedComparator( MyTestCase ):
    def test1Comparator( self ):
       """Check that the global operator!=/== is picked up"""
 
@@ -382,7 +383,7 @@ class Cpp07GloballyOverloadedComparatorTestCase( MyTestCase ):
 
 
 ### Check access to global array variables ===================================
-class Cpp08GlobalArraysTestCase( MyTestCase ):
+class Cpp08GlobalArrays( MyTestCase ):
    def test1DoubleArray( self ):
       """Verify access to array of doubles"""
 
@@ -391,7 +392,7 @@ class Cpp08GlobalArraysTestCase( MyTestCase ):
 
 
 ### Verify temporary handling for long expressions ===========================
-class Cpp09LongExpressionsTestCase( MyTestCase ):
+class Cpp09LongExpressions( MyTestCase ):
    def test1LongExpressionWithTemporary( self ):
       """Test life time of temporary in long expression"""
 
@@ -408,13 +409,36 @@ class Cpp09LongExpressionsTestCase( MyTestCase ):
 
 
 ### Test usability of standard exceptions ====================================
-class Cpp10StandardExceptionsTestCase( MyTestCase ):
+class Cpp10StandardExceptions( MyTestCase ):
    def test1StandardExceptionsAccessFromPython( self ):
       """Access C++ standard exception objects from python"""
 
       e = std.runtime_error( "runtime pb!!" )
       self.assert_( e )
       self.assertEqual( e.what(), "runtime pb!!" )
+
+
+### Test handing over of pointer variables from containers ===================
+class Cpp11PointerContainers( MyTestCase ):
+   def test1MapAssignment( self ):
+      """Assignment operator on pointers"""
+
+      def fill( self ):
+         v = std.vector( 'PR_ValClass*' )()
+         n = fillVect( v )
+
+         self.assertEqual( n, len(v) )
+         self.assertEqual( v[0].m_val, "aap" )
+
+         m = {}
+         for i in range( n ):
+            m[i] = v[i]
+
+         self.assertEqual( len(m), len(v) )
+         return m
+
+      m = fill( self )
+      self.assertEqual( m[0].m_val, "aap" )
 
 
 ## actual test run

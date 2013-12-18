@@ -250,6 +250,7 @@ class STL5StringHandlingTestCase( MyTestCase ):
 
     # pass through const std::string&
       c.SetString1( s )
+      self.assertEqual( type(c.GetString1()), str )
       self.assertEqual( c.GetString1(), s )
 
       c.SetString1( "test2" )

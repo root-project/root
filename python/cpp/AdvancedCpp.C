@@ -2,9 +2,10 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 10/17/13
+  Last: 12/16/13
 */
 
+#include <string>
 #include <vector>
 
 
@@ -187,3 +188,18 @@ public:
 };
 
 int SomeClassWithData::SomeData::s_numData = 0;
+
+
+// helpers for containers of pointers testing
+class PR_ValClass {
+public:
+   std::string m_val;
+};
+
+size_t fillVect( std::vector< PR_ValClass* >& v ) {
+   v.clear();
+   PR_ValClass* m = new PR_ValClass();
+   m->m_val = "aap";
+   v.push_back(m);
+   return v.size();
+}

@@ -10,6 +10,7 @@
 #include <memory>
 
 
+// for shared_ptr testing
 class MyCounterClass {
 public:
    static int counter;
@@ -25,5 +26,15 @@ int MyCounterClass::counter = 0;
 std::shared_ptr< MyCounterClass > CreateMyCounterClass() {
   return std::shared_ptr< MyCounterClass >( new MyCounterClass );
 }
+
+
+// from gcc's ext/concurrence.h, typed enum static defined in header
+namespace PyTest {
+
+  enum _Lock_policy { _S_single, _S_mutex, _S_atomic };
+  static const _Lock_policy __default_lock_policy = _S_mutex;
+
+} // PyTest namespace
+
 
 #endif
