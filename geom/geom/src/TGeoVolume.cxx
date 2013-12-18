@@ -387,6 +387,12 @@ void TGeoVolume::CreateThreadData(Int_t nthreads)
    if (fShape)  fShape->CreateThreadData(nthreads);
 }   
 
+//______________________________________________________________________________
+TGeoMedium *TGeoVolume::DummyMedium()
+{
+   return fgDummyMedium;
+}
+
 //_____________________________________________________________________________
 TGeoVolume::TGeoVolume()
 { 

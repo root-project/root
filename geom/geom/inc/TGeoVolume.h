@@ -122,7 +122,7 @@ public:
    Int_t           CountNodes(Int_t nlevels=1000, Int_t option=0);
    Bool_t          Contains(const Double_t *point) const {return fShape->Contains(point);}
    static void     CreateDummyMedium();
-   static TGeoMedium *DummyMedium() {return fgDummyMedium;}
+   static TGeoMedium *DummyMedium();
    virtual Bool_t  IsAssembly() const;
    virtual Bool_t  IsFolder() const;
    Bool_t          IsRunTime() const {return fShape->IsRunTimeShape();}
