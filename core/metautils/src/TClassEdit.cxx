@@ -10,7 +10,8 @@
 #include <ctype.h>
 #include "Rstrstream.h"
 #include <set>
-
+// for shared_ptr
+#include <memory>
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = 0;
@@ -150,6 +151,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       mode&=(~8);
    }
 
+   if (mode & kDropAllDefault) mode |= kDropStlDefault;
    if (mode & kDropStlDefault) mode |= kDropDefaultAlloc;
 
    if (kind) {
@@ -220,6 +222,24 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
       }
    }
+#if __cplusplus >= 201103L
+   else {
+      if ((mode & kDropStlDefault) &&
+          (fElements[0] == "std::__shared_ptr"
+           || fElements[0] == "__shared_ptr"))
+      {
+#ifdef _CONCURRENCE_H
+         static const std::string sharedPtrDef = std::to_string(__gnu_cxx::__default_lock_policy); // to_string is C++11
+#else
+         static const std::string sharedPtrDef = std::to_string(2); // to_string is C++11
+#endif
+         if ( (narg >= 3) &&
+             fElements[2] == sharedPtrDef) {
+            narg--;
+         }
+      }
+   }
+#endif
 
    //   do the same for all inside
    for (int i=1;i<narg; i++) {
