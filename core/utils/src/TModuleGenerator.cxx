@@ -33,6 +33,8 @@
 #include <unistd.h>
 #endif
 
+#include <iostream>
+
 using namespace ROOT;
 using namespace clang;
 
@@ -59,8 +61,11 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 
-   fUmbrellaName = fModuleDirName + fDictionaryName + "_dictUmbrella.h";
-   fContentName = fModuleDirName + fDictionaryName + "_dictContent.h";
+   // Add a random string to the filename to avoid races
+   llvm::SmallString<10> resultPath("%%%%%%%%%%");
+   llvm::sys::fs::createUniqueFile(resultPath.str(),resultPath);
+   fUmbrellaName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictUmbrella.h";
+   fContentName = fModuleDirName + fDictionaryName + resultPath.c_str() + "_dictContent.h";
 }
 
 TModuleGenerator::~TModuleGenerator() {
