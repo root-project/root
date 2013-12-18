@@ -38,10 +38,10 @@ TEST_TARGETS += $(XMLTARGETS)
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-dicts:
-	$(CMDECHO) mkdir dicts
+dicts/.log:
+	$(CMDECHO) mkdir -p dicts; touch dicts/.log
 
-$(XMLLOGFILES): genreflex_%.log: experimentsSelectionXMLs/%.xml dicts
+$(XMLLOGFILES): genreflex_%.log: experimentsSelectionXMLs/%.xml dicts/.log 
 	$(CMDECHO) genreflex emptyHeader.h  --quiet -o dicts/$*.cxx -s experimentsSelectionXMLs/$*.xml >$@ 2>&1
 
 $(XMLSUCCESS): %.success: %.log %.ref
