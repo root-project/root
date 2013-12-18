@@ -114,9 +114,15 @@ namespace PyROOT {
       TClassRef fClass;
    };
 
-   class TRootObjectPtrExecutor : public TRootObjectExecutor {
+   class TRootObjectPtrPtrExecutor : public TRootObjectExecutor {
    public:
-      TRootObjectPtrExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
+      TRootObjectPtrPtrExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+   };
+
+   class TRootObjectPtrRefExecutor : public TRootObjectExecutor {
+   public:
+      TRootObjectPtrRefExecutor( const TClassRef& klass ) : TRootObjectExecutor ( klass ) {}
       virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
    };
 

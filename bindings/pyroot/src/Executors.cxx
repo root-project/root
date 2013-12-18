@@ -380,10 +380,17 @@ PyObject* PyROOT::TRootObjectRefExecutor::Execute( CallFunc_t* func, void* self,
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TRootObjectPtrExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+PyObject* PyROOT::TRootObjectPtrPtrExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python ROOT object return ptr value
    return BindRootObject( (void*)PRCallFuncExecInt( func, self, release_gil ), fClass, kTRUE );
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::TRootObjectPtrRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+{
+// execute <func> with argument <self>, construct python ROOT object (ignoring ref) return ptr value
+   return BindRootObject( *(void**)PRCallFuncExecInt( func, self, release_gil ), fClass, kFALSE );
 }
 
 //____________________________________________________________________________
@@ -441,8 +448,10 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
          result = new TRootObjectByValueExecutor( klass );
       else if ( cpd == "&" )
          result = new TRootObjectRefExecutor( klass );
-      else if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
-         result = new TRootObjectPtrExecutor( klass );
+      else if ( cpd == "**" ) 
+         result = new TRootObjectPtrPtrExecutor( klass );
+      else if ( cpd == "*&" || cpd == "&*" )
+         result = new TRootObjectPtrRefExecutor( klass );
       else
          result = new TRootObjectExecutor( klass );
    } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {
