@@ -327,12 +327,8 @@ std::string PyROOT::TScopeAdapter::Name( unsigned int mod ) const
 size_t PyROOT::TScopeAdapter::BaseSize() const
 {
 // get the total number of base classes that this class has
-   if ( fClass.GetClass() && fClass->GetListOfBases() != 0 ) {
-// CLING WORKAROUND (ROOT-5761)
-      if ( Name().find( "shared_ptr" ) == 0 ) return 0;
-// -- CLING WORKAROUND
+   if ( fClass.GetClass() && fClass->GetListOfBases() != 0 )
       return fClass->GetListOfBases()->GetSize();
-   }
 
    return 0;
 }
