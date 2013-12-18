@@ -3174,6 +3174,7 @@ void TGeoManager::BuildDefaultMaterials()
 {
 // Now just a shortcut for GetElementTable.
    GetElementTable();
+   TGeoVolume::CreateDummyMedium();
 }
 
 //_____________________________________________________________________________
@@ -3385,9 +3386,12 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    if (has_runtime) fTopNode->CheckShapes();
    else if (fgVerboseLevel>0) Info("CheckGeometry","...Nothing to fix");
    // Compute bounding  box for assemblies
+   TGeoMedium *dummy = TGeoVolume::DummyMedium();
    while ((vol = (TGeoVolume*)nextv())) {
       if (vol->IsAssembly()) vol->GetShape()->ComputeBBox();
-   }   
+      if (vol->GetMedium() == dummy)
+         Warning("CheckGeometry", "Volume \"%s\" has no medium: assigned dummy medium and material", vol->GetName());
+   }
 }
 
 //_____________________________________________________________________________
