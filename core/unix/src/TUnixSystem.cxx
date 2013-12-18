@@ -37,6 +37,7 @@
 #include "TVirtualMutex.h"
 #include "TObjArray.h"
 #include <map>
+#include <algorithm>
 
 //#define G__OLDEXPAND
 
@@ -4475,6 +4476,28 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
       } else
          initialized = kFALSE;
+
+      // trick to get the system search path
+      std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
+      FILE *pf = popen(cmd.c_str (), "r");
+      std::string result = "";
+      char buffer[128];
+      while (!feof(pf)) {
+         if (fgets(buffer, 128, pf) != NULL)
+            result += buffer;
+      }
+      pclose(pf);
+      std::size_t from = result.find("search path=", result.find("(LD_LIBRARY_PATH)"));
+      std::size_t to = result.find("(system search path)");
+      if (from != std::string::npos && to != std::string::npos) {
+         from += 12;
+         std::string sys_path = result.substr(from, to-from);
+         sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
+         if (!dynpath.EndsWith(":")) dynpath += ":";
+         dynpath += sys_path.c_str();
+      }
+      dynpath.ReplaceAll("::", ":");
+      if (gDebug > 0) std::cout << "dynpath = " << dynpath.Data() << std::endl;
    }
    return dynpath;
 }
