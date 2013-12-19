@@ -57,6 +57,12 @@ int execSharedPtr()
       TMethodCall callswap((TFunction*)m);
       callswap.Execute(&ptr);
    }
+#else
+   // Emulated expected errors
+  Error("TClingCallFunc::exec","The method get is called without an object.");
+  Error("TClingCallFunc::exec","Not enough arguments provided for operator= (0 instead of the minimum 1)");
+  Error("TClingCallFunc::exec","Not enough arguments provided for swap (0 instead of the minimum 1)");
+
 #endif
    return 0;
 }
