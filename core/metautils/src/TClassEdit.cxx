@@ -224,18 +224,19 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    }
 #if __cplusplus >= 201103L
    else {
-      if ((mode & kDropStlDefault) &&
-          (fElements[0] == "std::__shared_ptr"
-           || fElements[0] == "__shared_ptr"))
-      {
+      if ( (mode & kDropStlDefault) && (narg >= 3)) {
+         unsigned int offset = (0==strncmp("const ",fElements[0].c_str(),6)) ? 6 : 0;
+         offset += (0==strncmp("std::",fElements[0].c_str()+offset,5)) ? 5 : 0;
+         if (0 == strcmp(fElements[0].c_str()+offset,"__shared_ptr"))
+         {
 #ifdef _CONCURRENCE_H
-         static const std::string sharedPtrDef = std::to_string(__gnu_cxx::__default_lock_policy); // to_string is C++11
+            static const std::string sharedPtrDef = std::to_string(__gnu_cxx::__default_lock_policy); // to_string is C++11
 #else
-         static const std::string sharedPtrDef = std::to_string(2); // to_string is C++11
+            static const std::string sharedPtrDef = std::to_string(2); // to_string is C++11
 #endif
-         if ( (narg >= 3) &&
-             fElements[2] == sharedPtrDef) {
-            narg--;
+            if (fElements[2] == sharedPtrDef) {
+               narg--;
+            }
          }
       }
    }
