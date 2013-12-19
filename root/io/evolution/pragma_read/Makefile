@@ -23,4 +23,4 @@ libTestv2.$(DllSuf):v2/AliAODForwardHeader.$(ObjSuf)
 
 execTestv1.log: libTestv1.$(DllSuf)
 
-execTestv2.log: libTestv2.$(DllSuf)
+execTestv2.log: libTestv2.$(DllSuf) execTestv1.success
