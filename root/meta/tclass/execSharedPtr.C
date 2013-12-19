@@ -6,7 +6,7 @@
 
 int execSharedPtr()
 {
-#if __cplusplusDISABLED >= 201103L
+#if __cplusplus >= 201103L
    string output;
    gInterpreter->GetInterpreterTypeName("std::__shared_ptr<int>",output,kTRUE);
    if ( output != "__shared_ptr<int>" ) {
