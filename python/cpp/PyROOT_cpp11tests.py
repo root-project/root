@@ -31,13 +31,11 @@ class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
       self.assertEqual( MyCounterClass.counter, 0 )
 
       ptr1 = CreateMyCounterClass()
-      if not FIXCLING:
-         self.assert_( not not ptr1 )
+      self.assert_( not not ptr1 )
       self.assertEqual( MyCounterClass.counter, 1 )
 
       ptr2 = CreateMyCounterClass()
-      if not FIXCLING:
-         self.assert_( not not ptr2 )
+      self.assert_( not not ptr2 )
       self.assertEqual( MyCounterClass.counter, 2 )
 
       del ptr2, ptr1
