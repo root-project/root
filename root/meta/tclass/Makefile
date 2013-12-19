@@ -42,4 +42,4 @@ execInterpClassNew.log: classlib_cxx.$(DllSuf)
 
 execReadTmplt.clog: execTmpltD.success execTmpltD32.success 
 
-
+execSharedPtr.log: $(shell echo 'execSharedPtr is disabled over Christmas (see execSharedPtr.C).' 1>&2)
