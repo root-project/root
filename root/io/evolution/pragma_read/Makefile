@@ -21,9 +21,6 @@ libTest%.$(DllSuf):%/AliAODForwardMult_cling.$(ObjSuf) %/AliAODForwardMult.$(Obj
 
 libTestv2.$(DllSuf):v2/AliAODForwardHeader.$(ObjSuf)
 
-# Re-enable by uncommenting the dependencies and removing the commands:
-execTestv1.log: #libTestv1.$(DllSuf)
-	cp ${@:.log=.ref} $@
+execTestv1.log: libTestv1.$(DllSuf)
 
-execTestv2.log: #libTestv2.$(DllSuf) execTestv1.success
-	cp ${@:.log=.ref} $@
+execTestv2.log: libTestv2.$(DllSuf) execTestv1.success
