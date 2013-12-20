@@ -40,6 +40,35 @@ public:
    std::string m_string;
 };
 
+
+// helper classes to test downcasting of pointer returns
+namespace PR_Test {
+
+   struct Base {
+      virtual ~Base() {}
+   };
+
+   struct Derived: public Base {
+      virtual ~Derived() {}
+   };
+
+   std::vector<Base*> mkVect() {
+      std::vector<Base*> vb;
+      vb.push_back( new Derived );
+      return vb;
+   }
+
+   Base* check() {
+      return new Derived;
+   }
+
+   std::string checkType(Base *p) {
+      return typeid(*p).name();
+   }
+
+} // namespace PR_Test
+
+
 // explicit instantiations to make all methods available
 template class std::vector< JustAClass >;
 template class STLLikeClass< int >;

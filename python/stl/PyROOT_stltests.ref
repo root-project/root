@@ -3,6 +3,7 @@ Test access to a vector<double> (part of cintdlls) ... ok
 Test access to a ACLiC generated vector type ... ok
 Test behavior of empty vector<int> (part of cintdlls) ... ok
 Test usage of += of iterable on push_back-able container ... ok
+Pointer returns of vector indexing must be down cast ... ok
 Test access to a list<int> (part of cintdlls) ... ok
 Test behavior of empty list<int> (part of cintdlls) ... ok
 Test access to a map<int,int> (part of cintdlls) ... ok

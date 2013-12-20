@@ -100,6 +100,19 @@ class STL1VectorTestCase( MyTestCase ):
 
       self.assertRaises( TypeError, a.__iadd__, ( 7, '8' ) )
 
+   def test6VectorReturnDowncasting( self ):
+      """Pointer returns of vector indexing must be down cast"""
+
+      v = PR_Test.mkVect()
+      self.assertEqual( type(v), std.vector( 'PR_Test::Base*' ) )
+      self.assertEqual( len(v), 1 )
+      self.assertEqual( type(v[0]), PR_Test.Derived )
+      self.assertEqual( PR_Test.checkType(v[0]), PR_Test.checkType(PR_Test.Derived()) )
+
+      p = PR_Test.check()
+      self.assertEqual( type(p), PR_Test.Derived )
+      self.assertEqual( PR_Test.checkType(p), PR_Test.checkType(PR_Test.Derived()) )
+
 
 ### STL list test case =======================================================
 class STL2ListTestCase( MyTestCase ):
