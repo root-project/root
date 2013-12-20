@@ -19,8 +19,8 @@
 #include "TVirtualPS.h"
 #include "TText.h"
 
-#include "mathtext.h"
-#include "mathrender.h"
+#include "../../../graf2d/mathtext/inc/mathtext.h"
+#include "../../../graf2d/mathtext/inc/mathrender.h"
 
 //______________________________________________________________________________
 /* Begin_Html

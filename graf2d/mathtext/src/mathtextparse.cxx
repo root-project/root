@@ -20,7 +20,7 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-#include "mathtext.h"
+#include "../inc/mathtext.h"
 
 /////////////////////////////////////////////////////////////////////
 

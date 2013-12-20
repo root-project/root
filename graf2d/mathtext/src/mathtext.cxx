@@ -19,7 +19,7 @@
 #include <limits.h>
 #include <cmath>
 #include <iostream>
-#include "mathtext.h"
+#include "../inc/mathtext.h"
 
 /////////////////////////////////////////////////////////////////////
 

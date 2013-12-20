@@ -18,7 +18,7 @@
 
 #include <math.h>
 #include <algorithm>
-#include "mathrender.h"
+#include "../inc/mathrender.h"
 
 /////////////////////////////////////////////////////////////////////
 
