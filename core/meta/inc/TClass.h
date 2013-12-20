@@ -254,7 +254,7 @@ public:
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
    void               Dump() const { TDictionary::Dump(); }
-   void               Dump(void *obj) const;
+   void               Dump(void *obj, Bool_t noAddr = kFALSE) const;
    char              *EscapeChars(const char *text) const;
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;

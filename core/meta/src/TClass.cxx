@@ -294,9 +294,9 @@ void TClass::RemoveClass(TClass *oldcl)
 //______________________________________________________________________________
 
 class TDumpMembers : public TMemberInspector {
-
+   bool fNoAddr;
 public:
-   TDumpMembers() { }
+   TDumpMembers(bool noAddr): fNoAddr(noAddr) { }
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
 };
 
@@ -399,9 +399,11 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       char **p3pointer = (char**)(*ppointer);
       if (!p3pointer)
          snprintf(&line[kvalue],kline-kvalue,"->0");
-      else if (!isbasic)
-         snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
-      else if (membertype) {
+      else if (!isbasic) {
+         if (!fNoAddr) {
+            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
+         }
+      } else if (membertype) {
          if (!strcmp(membertype->GetTypeName(), "char")) {
             i = strlen(*ppointer);
             if (kvalue+i > kline) i=kline-1-kvalue;
@@ -439,7 +441,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
             line[kvalue] = 0;
          }
       } else {
-         snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
+         if (!fNoAddr) {
+            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)p3pointer);
+         }
       }
    } else if (membertype) {
       if (isdate) {
@@ -459,7 +463,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
          TString *str = (TString*)pointer;
          snprintf(&line[kvalue],kline-kvalue,"%s",str->Data());
       } else {
-         snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
+         if (!fNoAddr) {
+            snprintf(&line[kvalue],kline-kvalue,"->%lx ", (Long_t)pointer);
+         }
       }
    }
    // Encode data member title
@@ -2164,7 +2170,7 @@ void TClass::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TClass::Dump(void *obj) const
+void TClass::Dump(void *obj, Bool_t noAddr /*=kFALSE*/) const
 {
    // Dump contents of object on stdout.
    // Using the information in the object dictionary
@@ -2187,9 +2193,11 @@ void TClass::Dump(void *obj) const
    //   fLineWidth               1           line width
    //   fFillColor               19          fill area color
    //   fFillStyle               1001        fill area style
+   //
+   // If noAddr is true, printout of all pointer values is skipped.
 
    Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
-   TDumpMembers dm;
+   TDumpMembers dm(noAddr);
    if (!CallShowMembers(obj, dm)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
    }
