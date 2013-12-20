@@ -4477,7 +4477,11 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       } else
          initialized = kFALSE;
 
-#ifndef R__WINGCC
+#if defined(R__WINGCC) || defined(R__MACOSX)
+      if (!dynpath.EndsWith(":")) dynpath += ":";
+      dynpath += "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
+      dynpath += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
+#else
       // trick to get the system search path
       std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
       FILE *pf = popen(cmd.c_str (), "r");
@@ -4498,10 +4502,6 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          dynpath += sys_path.c_str();
       }
       dynpath.ReplaceAll("::", ":");
-#else
-      if (!dynpath.EndsWith(":")) dynpath += ":";
-      dynpath += "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
-      dynpath += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
 #endif
       if (gDebug > 0) std::cout << "dynpath = " << dynpath.Data() << std::endl;
    }
