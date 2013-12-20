@@ -3171,3 +3171,21 @@ void TMVA::MethodBase::ResetThisBase()
    // reset required for RootFinder
    fgThisBase = this; 
 }
+//_______________________________________________________________________
+Double_t TMVA::MethodBase::GetKSTrainingVsTest(Char_t SorB, TString opt){
+
+   ResultsClassification* mvaRes = dynamic_cast<ResultsClassification*>
+      ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
+
+   TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
+   TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
+   TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));
+   TH1D *mva_b_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_B"));
+
+   if ( !mva_s || !mva_b || !mva_s_tr || !mva_b_tr) return -1;
+ 
+   if (SorB == 's' || SorB == 'S')
+      return mva_s->KolmogorovTest( mva_s_tr, opt.Data() );
+   else
+      return mva_b->KolmogorovTest( mva_b_tr, opt.Data() );
+}

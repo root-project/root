@@ -144,6 +144,7 @@ namespace TMVA {
 
       // performs classifier testing
       virtual void     TestClassification();
+      virtual Double_t GetKSTrainingVsTest(Char_t SorB, TString opt="X");
 
       // performs multiclass classifier testing
       virtual void     TestMulticlass();
