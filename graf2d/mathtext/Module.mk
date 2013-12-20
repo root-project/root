@@ -30,7 +30,7 @@ endif
 MATHTEXTLIBDEP := $(MATHTEXTLIB)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(MATHTEXTH))
+# ALLHDRS     +=
 ALLLIBS     += $(MATHTEXTLIB)
 
 # include all dependency files

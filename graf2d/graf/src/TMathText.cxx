@@ -12,9 +12,9 @@
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include "TTF.h"
 #include "TMathText.h"
 #include "TMath.h"
@@ -22,8 +22,8 @@
 #include "TVirtualPS.h"
 #include "TText.h"
 
-#include "mathtext.h"
-#include "mathrender.h"
+#include "../../../graf2d/mathtext/inc/mathtext.h"
+#include "../../../graf2d/mathtext/inc/mathrender.h"
 
 //______________________________________________________________________________
 /* Begin_Html

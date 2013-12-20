@@ -19,7 +19,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
-#include "mathtext.h"
+#include "../inc/mathtext.h"
 
 /////////////////////////////////////////////////////////////////////
 

@@ -1,4 +1,4 @@
-// @(#)root/postscript:$Id: 4c9e20215831a232ab6d17c5544a4026c83c9388 $
+// @(#)root/postscript:$Id$
 // Author: Rene Brun, Olivier Couet, Pierre Juillot, Oleksandr Grebenyuk, Yue Shi Lai
 
 /*************************************************************************
@@ -252,7 +252,7 @@ End_Html */
 #include "TSystem.h"
 #include "TEnv.h"
 
-#include "fontembed.h"
+#include "../../../graf2d/mathtext/inc/fontembed.h"
 
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
