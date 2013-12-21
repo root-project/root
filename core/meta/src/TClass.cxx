@@ -2196,7 +2196,8 @@ void TClass::Dump(void *obj, Bool_t noAddr /*=kFALSE*/) const
    //
    // If noAddr is true, printout of all pointer values is skipped.
 
-   Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
+   Printf("==>Dumping object at:%lx, class=%s\n",
+          (noAddr ? 0 : (Long_t)obj), GetName());
    TDumpMembers dm(noAddr);
    if (!CallShowMembers(obj, dm)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
