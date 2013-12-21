@@ -35,7 +35,7 @@ StreamerInfo for class: Outer::Inner::Cl, version=1, checksum=0xc5ae9b03
   Outer::Second::InSecond<int> OS              offset=  0 type=62                     
   Outer::Second::InSecond<Outer::Second::InSecond<int> > OS_S            offset=  0 type=62                     
   Outer::Second::InSecond<Outer::Second::InSecond<int> > OS_OS           offset=  0 type=62                     
-==>Dumping object at:7fff0c8f0e28, class=Outer::Inner::Cl
+==>Dumping object at:0, class=Outer::Inner::Cl
 
 I                                                 
 I.S                                               
