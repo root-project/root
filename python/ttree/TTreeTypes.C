@@ -2,11 +2,14 @@
   File: roottest/python/ttree/TTreeTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 11/17/06
-  Last: 04/22/08
+  Last: 12/23/13
 */
 
+#include <algorithm>
 #include <vector>
 
+#include "TH1D.h"
+#include "TTree.h"
 
 #ifdef __MAKECINT__
 #pragma link C++ class std::vector< vector< float > >;
@@ -39,3 +42,27 @@ struct SomeDataStruct {
    Char_t   Label[3];
    Int_t    NLabel;
 };
+
+
+struct Output_Vars {
+   Double_t t0[28];
+};
+
+void CreateArrayTree() {
+   static Output_Vars output_vars;
+
+   TTree* outtree = new TTree( "Proto2Analyzed","Proto2 Data with First-Level Analysis" );
+   outtree->Branch( "output_vars", &output_vars, 32000, 1 );
+
+   std::fill_n( output_vars.t0, 28, 0 );
+
+   double vals[] = { -1 , -1 , 428 , 0 , -1 ,
+                    167 , 0 , 0 , 0 , 403 ,
+                    -1 , -1 , 270 , -1 , 0 ,
+                     -1 , 408 , 0 , -1 , 198 };
+   for ( int i = 0; i < (int)(sizeof(vals)/sizeof(vals[0])); ++i ) {
+      output_vars.t0[i] = vals[i];
+   }
+
+   outtree->Fill();
+}

@@ -23,7 +23,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    N, M = 5, 10
    fname, tname, ttitle = 'test.root', 'test', 'test tree'
 
-   def test1WriteStdVector( self ):
+   def test01WriteStdVector( self ):
       """Test writing of a single branched TTree with an std::vector<double>"""
 
       f = TFile( self.fname, 'RECREATE' )
@@ -39,7 +39,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f.Write()
       f.Close()
 
-   def test2ReadStdVector( self ):
+   def test02ReadStdVector( self ):
       """Test reading of a single branched TTree with an std::vector<double>"""
 
       f = TFile( self.fname )
@@ -54,7 +54,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
-   def test3WriteSomeDataObject( self ):
+   def test03WriteSomeDataObject( self ):
       """Test writing of a complex data object"""
 
       f = TFile( self.fname, 'RECREATE' )
@@ -75,7 +75,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f.Close()
 
 
-   def test4ReadSomeDataObject( self ):
+   def test04ReadSomeDataObject( self ):
       """Test reading of a complex data object"""
 
       f = TFile( self.fname )
@@ -95,7 +95,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
-   def test5WriteSomeDataObjectBranched( self ):
+   def test05WriteSomeDataObjectBranched( self ):
       """Test writing of a complex object across different branches"""
 
       f = TFile( self.fname, 'RECREATE' )
@@ -124,7 +124,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
       f.Write()
       f.Close()
 
-   def test6ReadSomeDataObjectBranched( self ):
+   def test06ReadSomeDataObjectBranched( self ):
       """Test reading of a complex object across different branches"""
 
       f = TFile( self.fname )
@@ -141,7 +141,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
-   def test7WriteNonTObject( self ):
+   def test07WriteNonTObject( self ):
       """Test writing of a non-TObject derived instance"""
 
       f = TFile( self.fname, 'RECREATE' )
@@ -151,7 +151,7 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       f.Close()
 
-   def test8ReadNonTObject( self ):
+   def test08ReadNonTObject( self ):
       """Test reading of a non-TObject derived instance"""
 
       f = TFile( self.fname )
@@ -161,6 +161,38 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       myarray = MakeNullPointer( TArrayI )
       f.GetObject( 'myarray', myarray )
+
+      f.Close()
+
+   def test09WriteBuiltinArray( self ):
+      """Test writing of a builtin array"""
+
+      f = TFile( self.fname, 'RECREATE' )
+
+      CreateArrayTree()
+
+      f.Write()
+      f.Close()
+
+   def test10ReadBuiltinArray( self ):
+      """Test reading of a builtin array"""
+
+      f = TFile( self.fname )
+
+      t = f.Proto2Analyzed
+      self.assertEqual( type(t), TTree )
+      self.assertEqual( t.GetEntriesFast(), 1 )
+
+      t.GetEntry( 0 )
+      vals = [ -1 ,  -1 , 428 ,  0 ,  -1 ,
+              167 ,   0 ,   0 ,  0 , 403 ,
+               -1 ,  -1 , 270 , -1 ,   0 ,
+               -1 , 408 ,   0 , -1 , 198 ]
+
+      self.assertEqual( len(t.t0), 28 )
+
+      for i in xrange(len(vals)):
+         self.assertEqual( vals[i], t.t0[i] )
 
       f.Close()
 
