@@ -1257,7 +1257,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          // array types
             std::string typeName = leaf->GetTypeName();
             TConverter* pcnv = CreateConverter( typeName + '*', leaf->GetNdata() );
-            void* address = (void*)leaf->GetValuePointer();
+
+            void* address = 0;
+            if ( leaf->GetBranch() ) address = (void*)leaf->GetBranch()->GetAddress();
+            if ( ! address ) address = (void*)leaf->GetValuePointer();
+
             PyObject* value = pcnv->FromMemory( &address );
             delete pcnv;
 
