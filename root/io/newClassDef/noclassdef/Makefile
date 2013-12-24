@@ -72,7 +72,7 @@ MODE_FILE = pass.mode
 CFLAGS += -DSKIP_FAILURE
 else
 #Make sure the failing code is included
-exec1 := $(shell if test -e pass.mode; then rm -f pass.mode *. omydict.*; fi )
+exec1 := $(shell if test -e pass.mode; then rm -f pass.mode *.o mydict.*; fi )
 exec2 := $(shell if test ! -e fail.mode ; then touch fail.mode; fi 1>&2 )
 MODE_FILE = fail.mode
 CFLAGS += -DINC_FAILURE
