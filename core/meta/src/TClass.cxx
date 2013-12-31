@@ -3914,8 +3914,9 @@ void *TClass::New(ENewType defConstructor) const
       // FIXME: Partial Answer: Is this because we may never actually deregister them???
 
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
-
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
@@ -3928,7 +3929,9 @@ void *TClass::New(ENewType defConstructor) const
 
       // FIXME: Mistake?  See note above at the GetObjectStat() call.
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -3997,7 +4000,9 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4011,7 +4016,9 @@ void *TClass::New(void *arena, ENewType defConstructor) const
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -4081,7 +4088,9 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4095,7 +4104,9 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -4164,7 +4175,9 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4178,7 +4191,9 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       if (fStreamerType & kEmulated) {
          // We always register emulated objects, we need to always
