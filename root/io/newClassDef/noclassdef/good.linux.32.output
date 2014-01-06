@@ -1,3 +1,6 @@
+THIS FILE NEEDS TO BE ADAPTED TO NEW Dump() LAYOUT
+SEE ROOT @ 6883a7fe83 / roottest @ aa20b1e
+
 Writing Hit
 Warning in <Build:>: RootCaloHit: RootPCnodict has no streamer or dictionary, data member "mynocell" will not be saved
 Warning in <Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved

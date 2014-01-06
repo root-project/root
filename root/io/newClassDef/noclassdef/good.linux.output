@@ -1,3 +1,6 @@
+THIS FILE NEEDS TO BE ADAPTED TO NEW Dump() LAYOUT
+SEE ROOT @ 6883a7fe83 / roottest @ aa20b1e
+
 Writing Hit
 Warning in <TClass::TClass>: no dictionary for class crap is available
 Warning in <TClass::TClass>: no dictionary for class RootPCnodict is available
