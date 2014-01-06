@@ -3530,7 +3530,14 @@ int RootCling(int argc,
       }
    }
 
-   SelectionRules selectionRules(interp);
+   // Exclude string not to re-generatre the dictionary
+   std::vector<std::string> namesForExclusion;
+   if (!ROOTBUILDVAL){
+      namesForExclusion.push_back("std::string");
+   }
+   
+   SelectionRules selectionRules(interp,namesForExclusion);
+   
    std::string extraIncludes;
 
    ROOT::TMetaUtils::RConstructorTypes constructorTypes;

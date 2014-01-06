@@ -41,11 +41,21 @@ public:
       kNumSelectionFileTypes
    };
    
-   SelectionRules(cling::Interpreter &interp):
+   SelectionRules(cling::Interpreter &interp,
+                  const std::vector<std::string>& namesForExclusion):
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
       fHasFileNameRule(false),
-      fInterp(interp) {}
+      fInterp(interp) {
+         long counter=1;
+         for (std::vector<std::string>::const_iterator nameIt=namesForExclusion.begin();
+              nameIt!=namesForExclusion.end();++nameIt){
+            ClassSelectionRule csr(counter++, fInterp);
+            csr.SetAttributeValue("name", *nameIt);
+            csr.SetSelected(BaseSelectionRule::kNo);
+            AddClassSelectionRule(csr);
+            }
+      }
    
    void AddClassSelectionRule(const ClassSelectionRule& classSel);
    bool HasClassSelectionRules() const;
