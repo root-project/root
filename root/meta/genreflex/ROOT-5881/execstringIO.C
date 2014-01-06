@@ -30,7 +30,10 @@ int writeTree(){
   theTree.Branch("myString",&myString);
 
   for (int i=0;i<100;i++){
-    myString=myStringTempl+std::to_string(i);
+    myString=myStringTempl;
+    char c[3];
+    sprintf(c, "%d", i);
+    myString+=c;
     theTree.Fill();
     }
   theTree.Write();
