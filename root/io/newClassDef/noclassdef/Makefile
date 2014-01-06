@@ -8,7 +8,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
-local_all: test
+local_all: test driver$(ExeSuf) libIotest.$(DllSuf)
 .PHONY: main
 
 #include $(ROOTSYS)/test/Makefile.arch
@@ -80,8 +80,6 @@ endif
 
 test2:
 	echo $(arch)
-
-all:	driver$(ExeSuf) libIotest.$(DllSuf)
 
 shared: libIotest.$(DllSuf)
 
