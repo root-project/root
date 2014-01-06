@@ -3,7 +3,14 @@
 
 Normal_objects::Normal_objects() {}
 Normal_objects::~Normal_objects() {}
-void Normal_objects::initData(int ind) { emb.initData(ind); }
+void Normal_objects::initData(int ind) {
+   i = 0;
+   j = -1;
+   k = -2;
+   l = -3;
+   m = -4;
+   emb.initData(ind);
+}
 void Normal_objects::dump() const { emb.dump(); }
 
 Embedded_objects::Embedded_objects() {}
