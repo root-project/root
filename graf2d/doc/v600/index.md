@@ -82,6 +82,8 @@ file `simple.pdf`.
     and Pave Label. It doesn't use anymore the `TGX11` function `RequestString`. 
     Now the text appears directly as it will show and it is possible to
     enter several text string. The input is not block in the `RequestString` event loop.
+-   `TPad::Print()` really works on `TCanvas` only. A protection has been added
+    in case it is called on a pure `TPad`.
 
 ### TGaxis and TAxis
 
