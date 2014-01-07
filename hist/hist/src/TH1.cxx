@@ -2876,9 +2876,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 //  of histograms in the current directory in memory.
 //  It is the user's responsability to delete this histogram.
 //  The kCanDelete bit is set for the returned object. If a pad containing
-//  this copy is cleared, the histogram will be automatically deleted.
-//  See also remark about calling Sumw2 before scaling a histogram to get
-//  a correct computation of the error bars.
+//  this copy is cleared, the histogram will be automatically deleted
 //
 //     See Draw for the list of options
 //
@@ -2893,10 +2891,15 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    TH1::AddDirectory(kFALSE);
    TH1 *h = (TH1*)Clone();
    h->SetBit(kCanDelete);
+   // in case of drawing with error options - scale correctly the error
+   h->Sumw2();
    h->Scale(norm/sum);
    if (TMath::Abs(fMaximum+1111) > 1e-3) h->SetMaximum(fMaximum*norm/sum);
    if (TMath::Abs(fMinimum+1111) > 1e-3) h->SetMinimum(fMinimum*norm/sum);
-   h->Draw(option);
+   // do not use the "Error option " which is eanbled by default in case of default or "same"
+   TString opt(option); opt.ToUpper(); 
+   if (opt.IsNull() || opt == "SAME") opt += "HIST";
+   h->Draw(opt);
    TH1::AddDirectory(addStatus);
    return h;
 }
