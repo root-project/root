@@ -3216,7 +3216,7 @@ int RootCling(int argc,
    bool doSplit = false;
 
    // Temporary to decide if the new format is to be used
-   bool useNewRmfFormat = false;
+   bool useNewRmfFormat = true;
 
    int nextStart = 0;
    while (ic < argc) {
@@ -3243,9 +3243,9 @@ int RootCling(int argc,
             continue;
          }
 
-         if (strcmp("-newRmfFormat", argv[ic]) == 0) {
+         if (strcmp("-oldRmfFormat", argv[ic]) == 0) {
             // name for the rootmap file
-            useNewRmfFormat = true;
+            useNewRmfFormat = false;
             ic+=1;
             continue;
          }
@@ -4029,8 +4029,8 @@ int invokeRootCling(const std::string& verbosity,
    }
 
    // Switch for the new format
-   if (newRmfFormat)
-      argvVector.push_back(string2charptr("-newRmfFormat"));
+   if (!newRmfFormat)
+      argvVector.push_back(string2charptr("-oldRmfFormat"));
 
    // RootMap Lib filename
    if (!newRootmapLibName.empty()){
@@ -4244,7 +4244,7 @@ int GenReflex(int argc, char **argv)
                        ROOTMAPLIB,
                        PCMFILENAME,
                        DEEP,
-                       NEWRMFFORMAT,
+                       OLDRMFFORMAT,
                        DEBUG,
                        QUIET,
                        HELP,
@@ -4383,9 +4383,9 @@ int GenReflex(int argc, char **argv)
         option::Arg::None,
         "--deep  \tGenerate dictionaries for all dependent classes (ignored).\n"},
 
-      {NEWRMFFORMAT,
+      {OLDRMFFORMAT,
         NOTYPE ,
-        "" , "newRmfFormat",
+        "" , "oldRmfFormat",
         option::Arg::None,
         ""},
 
@@ -4526,9 +4526,9 @@ int GenReflex(int argc, char **argv)
       rootmapLibName = options[TARGETLIB].arg;
    }
 
-   bool newRmfFormat = false;
-   if (options[NEWRMFFORMAT])
-      newRmfFormat=true;
+   bool newRmfFormat = true;
+   if (options[OLDRMFFORMAT])
+      newRmfFormat=false;
 
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
