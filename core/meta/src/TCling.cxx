@@ -3437,8 +3437,16 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             // forward declarations
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
+               if (line == "") continue;
                cling::Transaction* T = 0;
-               fInterpreter->declare(line.c_str(), &T);
+               cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
+               assert(cling::Interpreter::CompilationResult::kSuccess == compRes &&
+                      "A declaration in a rootmap could not be compiled");
+               if (T==NULL || compRes!=cling::Interpreter::CompilationResult::kSuccess){
+                  Warning("LoadLibraryMap",
+                          "Problems declaring string '%s' were encountered.", line.c_str()) ;
+                  continue;
+               }
                // Annotate all template params with default args to come from
                // a rootmap file, such that we avoid diagnostics about duplicate
                // default arguments.
