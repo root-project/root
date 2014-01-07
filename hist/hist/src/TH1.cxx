@@ -2797,13 +2797,15 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    TH1 *h = (TH1*)Clone();
    h->SetBit(kCanDelete);
    // in case of drawing with error options - scale correctly the error
-   h->Sumw2();
+   TString opt(option); opt.ToUpper(); 
+   if (fSumw2.fN == 0) { 
+      h->Sumw2();
+      // do not use in this case the "Error option " for drawing which is enabled by default since the normalized histogram has now errors
+      if (opt.IsNull() || opt == "SAME") opt += "HIST";
+   }
    h->Scale(norm/sum);
    if (TMath::Abs(fMaximum+1111) > 1e-3) h->SetMaximum(fMaximum*norm/sum);
    if (TMath::Abs(fMinimum+1111) > 1e-3) h->SetMinimum(fMinimum*norm/sum);
-   // do not use the "Error option " which is eanbled by default in case of default or "same"
-   TString opt(option); opt.ToUpper(); 
-   if (opt.IsNull() || opt == "SAME") opt += "HIST";
    h->Draw(opt);
    TH1::AddDirectory(addStatus);
    return h;
