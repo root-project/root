@@ -22,11 +22,13 @@ FTGLDEP      := $(FTGLO:.o=.d)
 FTGLLIB      := $(LPATH)/libFTGL.$(SOEXT)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(FTGLH))
+# ALLHDRS     +=
 ALLLIBS     += $(FTGLLIB)
 
 # include all dependency files
 INCLUDEFILES += $(FTGLDEP)
+
+FTGLINC		:= -I$(MODDIRI)
 
 ifeq ($(MACOSX_MINOR),3)
 FTGLLIBEXTRA += -lz
@@ -59,7 +61,7 @@ distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
 $(FTGLO):     $(FREETYPEDEP)
-$(FTGLO):     CXXFLAGS += $(FREETYPEINC) $(OPENGLINCDIR:%=-I%)
+$(FTGLO):     CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(OPENGLINCDIR:%=-I%)
 ifeq ($(MACOSX_GLU_DEPRECATED),yes)
 $(FTGLO):     CXXFLAGS += -Wno-deprecated-declarations
 endif
