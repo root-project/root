@@ -11,7 +11,7 @@ void rebin() {
    TH1F *h = new TH1F("h","test rebin",100,-3,3);
    Int_t nentries = 1000;
    h->FillRandom("gaus",nentries);
-   Double_t xbins[1000];
+   Double_t xbins[1001];
    Int_t k=0;
    TAxis *axis = h->GetXaxis();
    for (Int_t i=1;i<=100;i++) {
@@ -24,9 +24,10 @@ void rebin() {
          k++;
       }
    }
+   xbins[k] = axis->GetXmax();
    //create a variable binwidth histogram out of fix bin histogram
    //new rebinned histogram should have about 10 entries per bin
-   TH1F *hnew = new TH1F("hnew","rebinned",k-1,xbins);
+   TH1F *hnew = new TH1F("hnew","rebinned",k,xbins);
    hnew->FillRandom("gaus",10*nentries);
    
    //rebin hnew keeping only 50% of the bins
@@ -37,7 +38,7 @@ void rebin() {
       kk++;
    }
    xbins2[kk] = xbins[k];
-   TH1F *hnew2 = (TH1F*)hnew->Rebin(kk-1,"hnew2",xbins2);
+   TH1F *hnew2 = (TH1F*)hnew->Rebin(kk,"hnew2",xbins2);
 
    //draw the 3 histograms
    TCanvas *c1 = new TCanvas("c1","c1",800,1000);
