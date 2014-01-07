@@ -331,7 +331,8 @@ const FileEntry *FileManager::getFile(StringRef Filename, bool openFile,
       UniqueRealFiles.getFile(Data.UniqueID, Data.IsNamedPipe, Data.InPCH);
 
   NamedFileEnt.setValue(&UFE);
-  if (UFE.getName()) { // Already have an entry with this inode, return it.
+  if (UFE.getName() && Data.ModTime == UFE.ModTime) {
+    // Already have an entry with this inode, return it.
     // If the stat process opened the file, close it to avoid a FD leak.
     if (FileDescriptor != -1)
       close(FileDescriptor);
