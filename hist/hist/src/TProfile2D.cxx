@@ -1729,8 +1729,7 @@ void TProfile2D::SetBinEntries(Int_t bin, Double_t w)
 //*-*-*-*-*-*-*-*-*Set the number of entries in bin*-*-*-*-*-*-*-*-*-*-*-*
 //*-*              ================================
 
-   if (bin < 0 || bin >= fNcells) return;
-   fBinEntries.fArray[bin] = w;
+   TProfileHelper::SetBinEntries(this, bin, w);
 }
 
 //______________________________________________________________________________

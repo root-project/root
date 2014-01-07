@@ -61,6 +61,9 @@ public:
    static Double_t GetBinError(T* p, Int_t bin);
 
    template <typename T>
+   static void SetBinEntries(T* p, Int_t bin, Double_t w);
+
+   template <typename T>
    static void SetErrorOption(T* p, Option_t * opt);
 };
 
@@ -704,7 +707,21 @@ Double_t TProfileHelper::GetBinError(T* p, Int_t bin)
 
    // default case : fErrorMode = kERRORMEAN 
    // return standard error on the mean of y 
+   //if (neff == 0) std::cerr << "NEFF = 0 for bin " << bin << "   " << eprim << "  " << neff << "  " << std::endl;
    return eprim/TMath::Sqrt(neff);
+
+}
+
+
+template <typename T>
+void TProfileHelper::SetBinEntries(T* p, Int_t bin, Double_t w) { 
+//    Set the number of entries in bin for the profile 
+//    In case the profile stores the sum of weight squares - set the sum of weight square to the number entries  
+//    (i.e. assume the entries have been filled all with a weight == 1 )   
+
+   if (bin < 0 || bin >= p->fNcells) return;
+   p->fBinEntries.fArray[bin] = w;
+   if (p->fBinSumw2.fN) p->fBinSumw2.fArray[bin] = w;
 
 }
 
