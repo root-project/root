@@ -539,8 +539,10 @@ void TCanvas::Build()
       fCanvasID = fCanvasImp->InitWindow();
    if (fCanvasID == -1) return;
 
-   if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
-   else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+   if (fCw !=0 && fCh !=0) {
+      if (fCw < fCh) fXsizeReal = fYsizeReal*Float_t(fCw)/Float_t(fCh);
+      else           fYsizeReal = fXsizeReal*Float_t(fCh)/Float_t(fCw);
+   }
 
    // Set Pad parameters
    gPad            = this;
