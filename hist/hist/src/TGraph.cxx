@@ -2125,14 +2125,28 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveFillAttributes(out, "graph", 0, 1001);
    SaveLineAttributes(out, "graph", 1, 1, 1);
    SaveMarkerAttributes(out, "graph", 1, 1, 1);
-
+   
    if (fNpoints >= 1) {
-      std::streamsize prec = out.precision();
+
       out.precision(10);
+      
+      TString fXName = TString(GetName()) + "_fx";
+      TString fYName = TString(GetName()) + "_fy";
+
+      // Init the vectors to avoid a stack smash
+      out << "   std::vector<double> " << fXName << ";" << std::endl;
+      out << "   std::vector<double> " << fYName << ";" << std::endl;
+
+      // fill them
       for (Int_t i = 0; i < fNpoints; i++) {
-         out << "   graph->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << std::endl;
+         out << "   " << fXName << ".push_back("<< fX[i] <<");" << std::endl;
+         out << "   " << fYName << ".push_back("<< fY[i] <<");" << std::endl;
       }
-      out.precision(prec);
+
+      // Now fill the graph      
+      out << "   for (Int_t i = 0; i <" << fNpoints << "; i++) {" << std::endl;
+      out << "      graph->SetPoint(i," << fXName << "[i]," << fYName << "[i]);" << std::endl;
+      out << "   }" << std::endl;
    }
 
    static Int_t frameNumber = 0;

@@ -154,6 +154,7 @@
      `TGraph::Draw()` is invoked without parameter and if there is no
      axis defined in the current canvas, the option `ALP` is automatically
      set.
+-    Change `SavePrimtive()` to improve speed compilation on generated macros.
 
 ### TGraph2D
 
