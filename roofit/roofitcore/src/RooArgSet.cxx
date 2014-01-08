@@ -112,6 +112,8 @@ void* RooArgSet::operator new (size_t bytes)
       oocxcoutD((TObject*)0,Caching) << "RooArgSet::operator new(), starting new 1MB memory pool" << endl ;
     }
 
+    RooTrace::createSpecial("RooArgSet_pool",POOLSIZE) ;
+
     // Start pruning empty memory pools if number exceeds 3
     if (_memPoolList.size()>3) {
       
@@ -125,6 +127,8 @@ void* RooArgSet::operator new (size_t bytes)
 
 	  toFree = poolIter->_base ;
 	  _memPoolList.erase(poolIter) ;
+	  RooTrace::destroySpecial("RooArgSet_pool") ;
+	  
 	  break ;
 	}
       }      
@@ -194,6 +198,7 @@ RooArgSet::RooArgSet() :
   RooAbsCollection()
 {
   // Default constructor
+  TRACE_CREATE
 }
 
 
@@ -207,6 +212,7 @@ RooArgSet::RooArgSet(const RooArgList& list) :
   // Warning messages will be printed for dropped items.
 
   add(list,kTRUE) ; // verbose to catch duplicate errors
+  TRACE_CREATE
 }
 
 
@@ -223,6 +229,7 @@ RooArgSet::RooArgSet(const RooArgList& list, const RooAbsArg* var1) :
     add(*var1,kTRUE) ;
   }
   add(list,kTRUE) ; // verbose to catch duplicate errors
+  TRACE_CREATE
 }
 
 
@@ -232,6 +239,7 @@ RooArgSet::RooArgSet(const char *name) :
   RooAbsCollection(name)
 {
   // Empty set constructor
+  TRACE_CREATE
 }
 
 
@@ -243,7 +251,7 @@ RooArgSet::RooArgSet(const RooArgSet& set1, const RooArgSet& set2, const char *n
   // Construct a set from two existing sets
   add(set1) ;
   add(set2) ;
-    
+  TRACE_CREATE    
 }
 
 
@@ -257,6 +265,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
   // Constructor for set containing 1 initial object
 
   add(var1);
+  TRACE_CREATE
 }
 
 
@@ -269,6 +278,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 2 initial objects
 
   add(var1); add(var2);
+  TRACE_CREATE
 }
 
 
@@ -282,6 +292,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 3 initial objects
 
   add(var1); add(var2); add(var3);
+  TRACE_CREATE
 }
 
 
@@ -295,6 +306,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 4 initial objects
 
   add(var1); add(var2); add(var3); add(var4);
+  TRACE_CREATE
 }
 
 
@@ -309,6 +321,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1,
   // Constructor for set containing 5 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5);
+  TRACE_CREATE
 }
 
 
@@ -323,6 +336,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 6 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6);
+  TRACE_CREATE
 }
 
 
@@ -338,6 +352,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 7 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;
+  TRACE_CREATE
 }
 
 
@@ -353,6 +368,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 8 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7) ;add(var8) ;
+  TRACE_CREATE
 }
 
 
@@ -368,6 +384,7 @@ RooArgSet::RooArgSet(const RooAbsArg& var1, const RooAbsArg& var2,
   // Constructor for set containing 9 initial objects
 
   add(var1); add(var2); add(var3); add(var4); add(var5); add(var6); add(var7); add(var8); add(var9);
+  TRACE_CREATE
 }
 
 
@@ -391,6 +408,7 @@ RooArgSet::RooArgSet(const TCollection& tcoll, const char* name) :
     add(*(RooAbsArg*)obj) ;
   }
   delete iter ;
+  TRACE_CREATE
 }
 
 
@@ -402,6 +420,7 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
   // Copy constructor. Note that a copy of a set is always non-owning,
   // even the source set is owning. To create an owning copy of
   // a set (owning or not), use the snaphot() method.
+  TRACE_CREATE
 }
 
 
@@ -410,7 +429,7 @@ RooArgSet::RooArgSet(const RooArgSet& other, const char *name)
 RooArgSet::~RooArgSet() 
 {
   // Destructor
-  
+  TRACE_DESTROY  
 }
 
 

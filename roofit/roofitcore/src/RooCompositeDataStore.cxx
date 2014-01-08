@@ -33,6 +33,7 @@
 #include "TROOT.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
+#include "RooTrace.h"
 #include "RooCategory.h"
 #include <iomanip>
 using namespace std ;
@@ -44,6 +45,7 @@ ClassImp(RooCompositeDataStore)
 //_____________________________________________________________________________
 RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
+  TRACE_CREATE
 }
 
 
@@ -56,6 +58,7 @@ RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title
   for (map<string,RooAbsDataStore*>::iterator iter=inputData.begin() ; iter!=inputData.end() ; ++iter) {
     _dataMap[indexCat.lookupType(iter->first.c_str())->getVal()] = iter->second ;
   }
+  TRACE_CREATE
 }
 
 
@@ -70,6 +73,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = iter->second->clone() ;
     _dataMap[iter->first] = clonedata ;
   }
+  TRACE_CREATE
 }
 
 
@@ -88,6 +92,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
     RooAbsDataStore* clonedata = iter->second->clone(vars) ;
     _dataMap[iter->first] = clonedata ;
   }  
+  TRACE_CREATE
 }
 
 
@@ -103,6 +108,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
       delete iter->second ;
     }
   }
+  TRACE_DESTROY
 }
 
 

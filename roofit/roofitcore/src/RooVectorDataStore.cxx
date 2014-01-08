@@ -37,6 +37,7 @@
 #include "RooCategory.h"
 #include "RooNameSet.h"
 #include "RooHistError.h"
+#include "RooTrace.h"
 
 #include <iomanip>
 #include <algorithm>
@@ -74,6 +75,7 @@ RooVectorDataStore::RooVectorDataStore() :
   _cache(0),
   _cacheOwner(0)
 {
+  TRACE_CREATE
 }
 
 
@@ -111,6 +113,7 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   delete iter ;
   
   setAllBuffersNative() ;
+  TRACE_CREATE
 }
 
 
@@ -218,6 +221,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _firstReal = _realStoreList.size()>0 ? &_realStoreList.front() : 0 ;
   _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
   _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
+  TRACE_CREATE
 }
 
 
@@ -262,6 +266,7 @@ RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooA
     _varsww = other._varsww ;
     fill() ;
   }
+  TRACE_CREATE
   
 }
 
@@ -329,6 +334,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
   _firstReal = _realStoreList.size()>0 ? &_realStoreList.front() : 0 ;
   _firstRealF = _realfStoreList.size()>0 ? &_realfStoreList.front() : 0 ;
   _firstCat = _catStoreList.size()>0 ? &_catStoreList.front() : 0 ;
+  TRACE_CREATE
 
 }
 
@@ -387,6 +393,7 @@ RooVectorDataStore::RooVectorDataStore(const char *name, const char *title, RooA
   loadValues(&tds,cloneVar,cutRange,nStart,nStop);
 
   delete cloneVar ;
+  TRACE_CREATE
 }
 
 
@@ -414,6 +421,7 @@ RooVectorDataStore::~RooVectorDataStore()
   }
 
   delete _cache ;
+  TRACE_DESTROY
 }
 
 

@@ -27,6 +27,7 @@
 
 #include "RooFit.h"
 #include "Riostream.h"
+#include "RooTrace.h"
 
 #include <math.h>
 #include <stdlib.h>
@@ -61,6 +62,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(0
 {  
   // Default constructor
   _fast = kTRUE ;
+  TRACE_CREATE
 }
 
 
@@ -77,6 +79,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _fast = kTRUE ;
   removeRange();
   setConstant(kTRUE) ;
+  TRACE_CREATE
 }  
 
 
@@ -111,6 +114,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   //   setPlotRange(minValue,maxValue) ;
   setRange(minValue,maxValue) ;
+  TRACE_CREATE
 }  
 
 
@@ -127,6 +131,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   _binning = new RooUniformBinning(minValue,maxValue,100) ;
   setRange(minValue,maxValue) ;
+  TRACE_CREATE
 }  
 
 
@@ -156,6 +161,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
   }
   delete iter ;
   
+  TRACE_CREATE
   
 }
 
@@ -173,6 +179,8 @@ RooRealVar::~RooRealVar()
   if (_sharedProp) {
     _sharedPropList.unregisterProperties(_sharedProp) ;
   }
+
+  TRACE_DESTROY
 }
 
 
