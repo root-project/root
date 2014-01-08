@@ -30,6 +30,8 @@
 #include "clang/Lex/PPCallbacks.h"
 #include "llvm/Support/FileSystem.h"
 
+#include "TMetaUtils.h"
+
 using namespace clang;
 using namespace cling;
 
@@ -225,11 +227,15 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
       // wrapper function so the parent context must be the global.
       Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
                                              SemaR.TUScope);
+
+      // Use the Normalized name for the autoload
       std::string Name;
-      llvm::raw_string_ostream strStream(Name);
-      PrintingPolicy Policy(m_Interpreter->getCI()->getLangOpts());
-      Specialization->getNameForDiagnostic(strStream, Policy, /*Qualified*/true);
-      strStream.flush();
+      ROOT::TMetaUtils::TNormalizedCtxt tNormCtxt(m_Interpreter->getLookupHelper());
+      ROOT::TMetaUtils::GetNormalizedName(Name,
+                                          C.getTypeDeclType(Specialization),
+                                          *m_Interpreter,
+                                          tNormCtxt);
+                                          
                      
       // This would mean it is probably a template. Try autoload template.
       if (TCling__AutoLoadCallback(Name.c_str())) {
