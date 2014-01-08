@@ -20,6 +20,7 @@
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
+#include "RooTrace.h"
 
 class RooRealVar;
 class RooAbsReal;
@@ -31,7 +32,7 @@ public:
   RooHistFunc(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistFunc(const RooHistFunc& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooHistFunc(*this,newname); }
-  inline virtual ~RooHistFunc() { }
+  inline virtual ~RooHistFunc() { TRACE_DESTROY }
 
   RooDataHist& dataHist()  { 
     // Return RooDataHist that is represented

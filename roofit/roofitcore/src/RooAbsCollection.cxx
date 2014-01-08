@@ -71,8 +71,6 @@ RooAbsCollection::RooAbsCollection() :
   _allRRV(kTRUE)
 {
   // Default constructor
-
-  RooTrace::create(this) ;
 }
 
 
@@ -85,8 +83,6 @@ RooAbsCollection::RooAbsCollection(const char *name) :
   _allRRV(kTRUE)
 {
   // Empty collection constructor
-
-  RooTrace::create(this) ;
 }
 
 
@@ -127,7 +123,6 @@ RooAbsCollection::~RooAbsCollection()
     safeDeleteList() ;
     //_list.Delete();
   }
-  RooTrace::destroy(this) ;
 }
 
 

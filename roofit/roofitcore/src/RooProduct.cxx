@@ -41,6 +41,7 @@
 #include "RooAbsCategory.h"
 #include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
 
 using namespace std ;
 
@@ -64,6 +65,7 @@ RooProduct::RooProduct() :
   _compCIter( _compCSet.createIterator() )
 {
   // Default constructor
+  TRACE_CREATE
 }
 
 
@@ -80,6 +82,7 @@ RooProduct::~RooProduct()
   if (_compCIter) {
     delete _compCIter ;
   }
+  TRACE_DESTROY
 }
 
 
@@ -109,6 +112,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
     }
   }
   delete compIter ;
+  TRACE_CREATE
 }
 
 
@@ -123,6 +127,7 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
   _cacheMgr(other._cacheMgr,this)
 {
   // Copy constructor
+  TRACE_CREATE
 }
 
 

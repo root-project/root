@@ -65,6 +65,7 @@
 #include "RooRecursiveFraction.h"
 #include "RooGlobalFunc.h"
 #include "RooRealIntegral.h"
+#include "RooTrace.h"
 
 #include "Riostream.h"
 #include <algorithm>
@@ -91,6 +92,7 @@ RooAddPdf::RooAddPdf() :
 
   _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
+  TRACE_CREATE 
 }
 
 
@@ -116,7 +118,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title) :
 
   _coefCache = new Double_t[100] ;
   _coefErrCount = _errorCount ;
-
+  TRACE_CREATE 
 }
 
 
@@ -147,6 +149,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title,
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
+  TRACE_CREATE 
 }
 
 
@@ -272,6 +275,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   _coefErrCount = _errorCount ;
   _recursive = recursiveFractions ;
 
+  TRACE_CREATE 
 }
 
 
@@ -317,6 +321,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
 
   _coefCache = new Double_t[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
+  TRACE_CREATE 
 }
 
 
@@ -342,6 +347,7 @@ RooAddPdf::RooAddPdf(const RooAddPdf& other, const char* name) :
   _coefIter = _coefList.createIterator() ;
   _coefCache = new Double_t[_pdfList.getSize()] ;
   _coefErrCount = _errorCount ;
+  TRACE_CREATE 
 }
 
 
@@ -355,6 +361,7 @@ RooAddPdf::~RooAddPdf()
   delete _coefIter ;
 
   if (_coefCache) delete[] _coefCache ;
+  TRACE_DESTROY
 }
 
 
@@ -830,9 +837,9 @@ Double_t RooAddPdf::evaluate() const
     
     while((pdf = (RooAbsPdf*)pi.next())) {
       Double_t pdfVal = pdf->getVal(nset) ;
+
       if (pdf->isSelectedComp()) {
 	value += pdfVal*_coefCache[i] ;
-// 	cout << "RooAddPdf::EVALUATE(" << GetName() << ") adding pdf " << pdf->GetName() << " value = " << pdfVal << " coef = " << _coefCache[i] << endl ;
       }
       i++ ;
     }

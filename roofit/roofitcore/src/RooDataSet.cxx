@@ -51,6 +51,7 @@
 #include "RooCompositeDataStore.h"
 #include "RooTreeData.h"
 #include "RooSentinel.h"
+#include "RooTrace.h"
 
 #if (__GNUC__==3&&__GNUC_MINOR__==2&&__GNUC_PATCHLEVEL__==3)
 char* operator+( streampos&, char* );
@@ -179,6 +180,7 @@ void RooDataSet::operator delete (void* ptr)
 RooDataSet::RooDataSet() : _wgtVar(0) 
 {
   // Default constructor for persistence
+  TRACE_CREATE
 }
 
 
@@ -633,6 +635,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     }
     
   }
+  TRACE_CREATE
 }
 
 
@@ -650,6 +653,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 
   appendToDir(this,kTRUE) ;
   initialize(wgtVarName) ;
+  TRACE_CREATE
 }
 
 
@@ -690,7 +694,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
       initialize(0) ;
     }
   }
-
+  TRACE_CREATE
 }
 
 
@@ -729,6 +733,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
       initialize(0) ;
     }
   }
+  TRACE_CREATE
 }
 
 
@@ -769,6 +774,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
   
   appendToDir(this,kTRUE) ;
   initialize(wgtVarName) ;
+  TRACE_CREATE
 }
 
 
@@ -811,6 +817,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *intree,
   appendToDir(this,kTRUE) ;
 
   initialize(wgtVarName) ;
+  TRACE_CREATE
 }
 
 
@@ -823,6 +830,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 
   appendToDir(this,kTRUE) ;
   initialize(other._wgtVar?other._wgtVar->GetName():0) ;
+  TRACE_CREATE
 }
 
 //_____________________________________________________________________________
@@ -841,6 +849,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 
   appendToDir(this,kTRUE) ;
   initialize(dset->_wgtVar?dset->_wgtVar->GetName():0) ;
+  TRACE_CREATE
 }
 
 
@@ -958,6 +967,7 @@ RooDataSet::~RooDataSet()
   // Destructor
 
   removeFromDir(this) ;
+  TRACE_DESTROY
 }
 
 

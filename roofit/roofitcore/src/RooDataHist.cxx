@@ -47,6 +47,7 @@
 #include "RooTreeDataStore.h"
 #include "RooVectorDataStore.h"
 #include "TTree.h"
+#include "RooTrace.h"
 #include "RooTreeData.h"
 
 using namespace std ;
@@ -75,6 +76,7 @@ RooDataHist::RooDataHist() : _pbinvCacheMgr(0,10)
   _curVolume = 1 ;
   _curWgtErrHi = 0 ;
   _curWgtErrLo = 0 ;
+  TRACE_CREATE
 }
 
 
@@ -108,6 +110,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
 
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
@@ -145,6 +148,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgSet& v
 
   add(data,(const RooFormulaVar*)0,wgt) ;
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
@@ -170,6 +174,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importTH1Set(vars, indexCat, histMap, wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
@@ -195,6 +200,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importDHistSet(vars, indexCat, dhistMap, wgt) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
@@ -222,6 +228,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   importTH1(vars,*const_cast<TH1*>(hist),wgt, kFALSE) ;
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 }
 
 
@@ -355,6 +362,7 @@ RooDataHist::RooDataHist(const char *name, const char *title, const RooArgList& 
   }
 
   _dstore->setExternalWeightArray(_wgt,_errLo,_errHi,_sumw2) ;
+  TRACE_CREATE
 
 }
 
@@ -962,6 +970,7 @@ RooDataHist::RooDataHist(const char* name, const char* title, RooDataHist* h, co
 
 
   appendToDir(this,kTRUE) ;
+  TRACE_CREATE
 }
 
 
@@ -1061,6 +1070,7 @@ RooDataHist::~RooDataHist()
   }
 
    removeFromDir(this) ;
+  TRACE_DESTROY
 }
 
 
@@ -1165,6 +1175,8 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // the result is interpolated in the real dimensions 
   // of the dataset
 
+  //cout << "RooDataHist::weight(" << bin << "," << intOrder << "," << correctForBinSize << "," << cdfBoundaries << "," << oneSafe << ")" << endl ;
+
   checkInit() ;
 
   // Handle illegal intOrder values
@@ -1173,7 +1185,6 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     return 0 ;
   }
 
-
   // Handle no-interpolation case
   if (intOrder==0) {    
     _vars.assignValueOnly(bin,oneSafe) ;
@@ -1181,8 +1192,10 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     //cout << "intOrder 0, idx = " << idx << endl ;
     if (correctForBinSize) {
       //calculatePartialBinVolume(*get()) ;
+      //cout << "binw[" << idx << "] = " << _wgt[idx] <<  " / " << _binv[idx] << endl ;
       return _wgt[idx] / _binv[idx] ;
     } else {
+      //cout << "binw[" << idx << "] = " << _wgt[idx] << endl ;
       return _wgt[idx] ;
     }
   }
