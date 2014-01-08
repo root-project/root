@@ -601,8 +601,11 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
                xUp=(jUp*1.0)/fNBin;
                // swIn  =        aswIn/nent;
                // swOut = (swAll-aswIn)/nent;
-               sswIn = sqrt(asswIn)       /sqrt(nent*(xUp-xLo))     *(xUp-xLo);
-               sswOut= sqrt(sswAll-asswIn)/sqrt(nent*(1.0-xUp+xLo)) *(1.0-xUp+xLo);
+               if ( (xUp-xLo) < std::numeric_limits<double>::epsilon()) sswIn=0.;
+               else sswIn = sqrt(asswIn)       /sqrt(nent*(xUp-xLo))     *(xUp-xLo);
+               if ( (1.0-xUp+xLo) < std::numeric_limits<double>::epsilon()) sswOut=0.;
+               else if ( sswAll-asswIn < std::numeric_limits<double>::epsilon()) sswOut=0.;
+               else sswOut= sqrt(sswAll-asswIn)/sqrt(nent*(1.0-xUp+xLo)) *(1.0-xUp+xLo);
                if( (sswIn+sswOut) < sswtBest) {
                   sswtBest = sswIn+sswOut;
                   gain     = ssw-sswtBest;
