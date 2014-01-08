@@ -68,7 +68,7 @@ public:
 
   inline Bool_t containsSet1(const RooArgSet* set1)
   {
-    const Pair pair(set1, 0);
+    const Pair pair(set1, (const RooArgSet*)0);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
     if (_pairToIdx.end() != it && it->first.first == set1)
       return kTRUE;

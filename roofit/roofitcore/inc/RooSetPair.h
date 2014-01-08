@@ -16,11 +16,6 @@
 #ifndef ROO_SET_PAIR
 #define ROO_SET_PAIR
 
-#if !defined(__CINT__) && !defined(__ROOTCLING__) && !defined(__GCCXML__) && \
-  !defined(G__DICTIONARY) && !defined(ROOSETPAIR_CXX)
-#warning "RooSetPair is deprecated."
-#endif
-
 #include <iostream>
 #include "TObject.h"
 #include "RooArgSet.h"
@@ -34,7 +29,6 @@ public:
   // Initial element ctor
   RooSetPair(const RooArgSet* set1=0, const RooArgSet* set2=0) : 
     _set1(const_cast<RooArgSet*>(set1)), _set2(const_cast<RooArgSet*>(set2)) {
-      std::cout << "[#0] WARN: class RooSetPair is deprecated." << std::endl;
   }
 
   // Destructor
