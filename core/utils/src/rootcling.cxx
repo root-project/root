@@ -2565,10 +2565,11 @@ void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
 }
 
 //______________________________________________________________________________
-int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
+int ExtractTemplateDefinitionOld(const clang::RecordDecl& rDecl,
                               clang::CompilerInstance& compilerInstance,
                               std::string& definitionStr)
 {
+   // *** DEPRECATED ROUTINE: IT WORKS ONLY IN TRIVIAL CASES!! ***
    // Construct a template definition for the declaration
    // A typical template definition looks like:
    // namespace A { template <typename T, int I, typename S = T, int J = I> class MyClass; }
@@ -2626,6 +2627,98 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
 }
 
 //______________________________________________________________________________
+int HasAnyDefaultArgument(const clang::TemplateParameterList& tmplParamList)
+{
+   using namespace clang;
+   // Check if any of the template parameters has a default value
+   for (TemplateParameterList::const_iterator tmplParamIt = tmplParamList.begin();
+        tmplParamIt != tmplParamList.end(); ++tmplParamIt) {
+      if (TemplateTypeParmDecl *ITypeParm = llvm::dyn_cast<TemplateTypeParmDecl>(*tmplParamIt)) {
+         if (ITypeParm->hasDefaultArgument()) return 1;
+      } else if (NonTypeTemplateParmDecl *INonTypeParm = llvm::dyn_cast<NonTypeTemplateParmDecl>(*tmplParamIt)) {
+         if (INonTypeParm->hasDefaultArgument()) return 1;
+      } else {
+         TemplateTemplateParmDecl* ITemplateParm = llvm::cast<TemplateTemplateParmDecl>(*tmplParamIt);
+         if (ITemplateParm->hasDefaultArgument()) return 1;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
+int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
+                                 clang::CompilerInstance& compilerInstance,
+                                 std::string& definitionStr)
+{
+  
+   const clang::ClassTemplateSpecializationDecl* tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&rDecl);
+   if (!tmplSpecDecl){ // Should never happen
+      TMetaUtils::Error(0, "%s does not seem to be a template", rDecl.getNameAsString().c_str());
+      return 1;
+   }
+
+   clang::ClassTemplateDecl* templDecl = tmplSpecDecl->getSpecializedTemplate();
+   if (!templDecl){ // Should never happen
+      TMetaUtils::Error(0, "%s does not seem to be a template", rDecl.getNameAsString().c_str());
+      return 1;
+   }
+   
+   clang::TemplateParameterList *tmplParamList= templDecl->getTemplateParameters();
+   if (!tmplParamList){ // Should never happen
+      TMetaUtils::Error(0, "Cannot extract template parameter list for %s", rDecl.getNameAsString().c_str());
+      return 1;
+   }
+
+   // Do not fwd declare if a default template parameter is present
+   // FIXME: solve the issue of the redefinition of default arguments
+   if ( HasAnyDefaultArgument(*tmplParamList) != 0 )
+      return 1;
+   
+   // Now we can operate on the parameters list
+   clang::SourceLocation sourceBegin = tmplParamList->getLAngleLoc();
+   clang::SourceLocation sourceEnd = tmplParamList->getRAngleLoc();
+   clang::SourceManager& srcMgr = compilerInstance.getSourceManager();
+   
+   // Protect the source retrival
+   if (sourceBegin.isInvalid() || sourceEnd.isInvalid() )
+      return 1;
+   
+   bool srcMgrInvalid=false;
+   
+   const char* sourceBeginChar = srcMgr.getCharacterData(sourceBegin,&srcMgrInvalid);
+   if (srcMgrInvalid)
+      return 1;
+   
+   const char* sourceEndChar = srcMgr.getCharacterData(sourceEnd,&srcMgrInvalid);
+   if (srcMgrInvalid)
+      return 1;         
+   
+   std::string templateArgs(sourceBeginChar, sourceEndChar-sourceBeginChar +1);
+   ReplaceAll(templateArgs,"\n","");
+   
+   definitionStr="template "+templateArgs+" class "+rDecl.getNameAsString()+" ;";
+
+   // Check if we have enclosing namespaces
+   // FIXME: this should be active also for classes
+   const clang::RecordDecl* definition = rDecl.getDefinition();
+   if (!definition){ // Should never happen
+      TMetaUtils::Info(0, "Template definition of %s is absent", rDecl.getNameAsString().c_str());
+      return 1;
+   }
+   std::list<std::string> enclosingNamespaces;
+   ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);
+
+   // iterate over the nested namespaces and complete the definition
+   for (std::list<std::string>::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
+      enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
+      definitionStr = "namespace " + *enclosingNamespaceIt + " { " + definitionStr + " }";
+   }
+
+   
+   return 0;
+}
+
+//______________________________________________________________________________
 void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
                                            std::list<std::string>& classesList,
                                            std::list<std::string>& classesListForRootmap,
@@ -2647,13 +2740,13 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
       // Get template definition if needed
+      std::set<std::string> templateDefsSet; // FIXME: use c++11 unordered set when possible
       if ( clang::isa<clang::ClassTemplateSpecializationDecl>(*rDecl) ){
          std::string templateDefSrcStr;
          int retCode = ExtractTemplateDefinition(*rDecl,compilerInstance,templateDefSrcStr);
-         if (retCode==0)
+         if (retCode==0 && templateDefsSet.insert(templateDefSrcStr).second)
             templateDefsList.push_back(templateDefSrcStr);
       }
-
 
       // Loop on attributes, if rootmap=false, don't put it in the list!
       for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
