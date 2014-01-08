@@ -2514,16 +2514,17 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 
    // Add the template definitions
    if (!templateDefsList.empty()){
-      rootmapFile << "\n{ decls }\n";
+      rootmapFile << "{ decls }\n";
       for (std::list<std::string>::const_iterator tdefIt=templateDefsList.begin();
          tdefIt!=templateDefsList.end();++tdefIt){
          rootmapFile << *tdefIt << std::endl;
       }
+      rootmapFile << "\n";
    }
 
    // Add the "section"
    if (!nsNames.empty() || !classesNames.empty()){
-      rootmapFile << "\n[" << rootmapLibName << "]\n";
+      rootmapFile << "[" << rootmapLibName << "]\n";
 
       // Loop on selected classes and insert them in the rootmap
       for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
@@ -2646,6 +2647,64 @@ int HasAnyDefaultArgument(const clang::TemplateParameterList& tmplParamList)
 }
 
 //______________________________________________________________________________
+void PrepareArgsForFwdDecl(std::string& templateArgs)
+{   
+   // Strip comments
+   while(templateArgs.find("/*") != std::string::npos) {
+      size_t Beg = templateArgs.find("/*");
+      templateArgs.erase(Beg, (templateArgs.find("*/", Beg) - Beg)+2);
+   }
+   while(templateArgs.find("//") != std::string::npos) {
+      size_t Beg = templateArgs.find("//");
+      templateArgs.erase(Beg, templateArgs.find("\n", Beg) - Beg);
+   }
+
+   // Make it one line
+   ReplaceAll(templateArgs,"\n","");
+
+   // Strip default arguments
+   std::string noDefaultsTemplateArgs;
+   char c='@';
+   unsigned int wedgeCounter=0;
+   bool parsingDefArg = false;
+   for (unsigned int i=0;i<templateArgs.size();++i){
+      
+      c=templateArgs[i];
+
+      if ( c== '<' ) wedgeCounter++;
+      if ( c== '>' ) wedgeCounter--;
+
+      // = -> we started parsing a default argument
+      // To end:
+      //  1) we have only one > left: we wait for a comma
+      //  2) we have zero > left: we are done
+      if ( c == '=' ){
+         if (parsingDefArg){
+            TMetaUtils::Error(0,"An = was found while parsing the default argument.\n");
+         }
+         parsingDefArg=true;         
+      } else if ( ( (c == ','  &&  wedgeCounter == 1 ) || ( c == '>' && wedgeCounter == 0 ) ) && parsingDefArg){
+         parsingDefArg=false;
+      }
+      if (! parsingDefArg)
+         noDefaultsTemplateArgs+=c;
+   }
+   
+   // maquillage, remove double spaces
+   c='@';
+   templateArgs.clear();
+   for (unsigned int i=0;i<noDefaultsTemplateArgs.size();++i){
+      if ( noDefaultsTemplateArgs[i] == ' ' && c==' ' ){
+         c=noDefaultsTemplateArgs[i];
+         continue;
+      }
+      c=noDefaultsTemplateArgs[i];
+      templateArgs+=c;
+   }
+   
+}
+
+//______________________________________________________________________________
 int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
                                  clang::CompilerInstance& compilerInstance,
                                  std::string& definitionStr)
@@ -2668,34 +2727,35 @@ int ExtractTemplateDefinition(const clang::RecordDecl& rDecl,
       TMetaUtils::Error(0, "Cannot extract template parameter list for %s", rDecl.getNameAsString().c_str());
       return 1;
    }
-
+   
    // Do not fwd declare if a default template parameter is present
    // FIXME: solve the issue of the redefinition of default arguments
-   if ( HasAnyDefaultArgument(*tmplParamList) != 0 )
-      return 1;
-   
+//    if ( HasAnyDefaultArgument(*tmplParamList) != 0 )
+//       return 1;
+
    // Now we can operate on the parameters list
    clang::SourceLocation sourceBegin = tmplParamList->getLAngleLoc();
    clang::SourceLocation sourceEnd = tmplParamList->getRAngleLoc();
    clang::SourceManager& srcMgr = compilerInstance.getSourceManager();
-   
+
    // Protect the source retrival
    if (sourceBegin.isInvalid() || sourceEnd.isInvalid() )
       return 1;
-   
+
    bool srcMgrInvalid=false;
-   
+
    const char* sourceBeginChar = srcMgr.getCharacterData(sourceBegin,&srcMgrInvalid);
    if (srcMgrInvalid)
       return 1;
-   
+
    const char* sourceEndChar = srcMgr.getCharacterData(sourceEnd,&srcMgrInvalid);
    if (srcMgrInvalid)
-      return 1;         
-   
+      return 1;
+
    std::string templateArgs(sourceBeginChar, sourceEndChar-sourceBeginChar +1);
-   ReplaceAll(templateArgs,"\n","");
-   
+
+   PrepareArgsForFwdDecl(templateArgs);
+      
    definitionStr="template "+templateArgs+" class "+rDecl.getNameAsString()+" ;";
 
    // Check if we have enclosing namespaces
