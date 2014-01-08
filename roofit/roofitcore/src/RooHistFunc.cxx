@@ -50,6 +50,7 @@ RooHistFunc::RooHistFunc() :
   _unitNorm(kFALSE)
 {
   // Default constructor
+  TRACE_CREATE 
 }
 
 
@@ -90,7 +91,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     }
   }
   delete iter ;
-
+  TRACE_CREATE 
 }
 
 
@@ -107,6 +108,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _unitNorm(other._unitNorm)
 {
   // Copy constructor
+  TRACE_CREATE 
 }
 
 

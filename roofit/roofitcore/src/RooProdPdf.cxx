@@ -62,6 +62,7 @@
 #include "RooRangeBoolean.h"
 #include "RooCustomizer.h"
 #include "RooRealIntegral.h"
+#include "RooTrace.h"
 
 #include <string.h>
 #include <sstream>
@@ -113,6 +114,7 @@ RooProdPdf::RooProdPdf() :
 {
   // Default constructor
   _pdfIter = _pdfList.createIterator() ;  
+  TRACE_CREATE 
 }
 
 
@@ -131,6 +133,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title, Double_t cutOff) :
 {
   // Dummy constructor
   _pdfIter = _pdfList.createIterator() ;
+  TRACE_CREATE 
 }
 
 
@@ -188,6 +191,7 @@ RooProdPdf::RooProdPdf(const char *name, const char *title,
       _extendedIndex=_pdfList.index(&pdf2) ;
     }
   }
+  TRACE_CREATE 
 }
 
 
@@ -251,6 +255,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
   }
 
   delete iter ;
+  TRACE_CREATE 
 }
 
 
@@ -305,6 +310,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
   initializeFromCmdArgList(fullPdfSet,l) ;
+  TRACE_CREATE 
 }
 
 
@@ -359,6 +365,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title,
   l.Add((TObject*)&arg7) ;  l.Add((TObject*)&arg8) ;
 
   initializeFromCmdArgList(RooArgSet(),l) ;
+  TRACE_CREATE 
 }
 
 
@@ -378,6 +385,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgSet& ful
 {
   // Internal constructor from list of named arguments  
   initializeFromCmdArgList(fullPdfSet, cmdArgList) ;
+  TRACE_CREATE 
 }
 
 
@@ -407,7 +415,7 @@ RooProdPdf::RooProdPdf(const RooProdPdf& other, const char* name) :
     _pdfNSetList.Add(tmp) ;
   }
   delete iter ;
-
+  TRACE_CREATE 
 }
 
 
@@ -497,6 +505,7 @@ RooProdPdf::~RooProdPdf()
 
   _pdfNSetList.Delete() ;
   delete _pdfIter ;
+  TRACE_DESTROY 
 }
 
 
@@ -549,7 +558,7 @@ Double_t RooProdPdf::calculate(const RooArgList* partIntList, const RooLinkedLis
     partInt = ((RooAbsReal*)partIntList->at(i)) ;
     normSet = ((RooArgSet*)normSetList->At(i)) ;    
     Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
-    //cout << "partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
+//     cout << "RooProdPdf::calculate(" << GetName() << ") partInt(" << partInt->GetName() << ") = " << piVal << " normSet = " << normSet << " " << (normSet->getSize()>0 ? *normSet : RooArgSet()) << endl ;
     value *= piVal ;
     if (value<=_cutOff) {
       break ;
@@ -600,7 +609,7 @@ Double_t RooProdPdf::calculate(const RooProdPdf::CacheElem& cache, Bool_t /*verb
       partInt = (RooAbsReal*) plIter.next() ; //((RooAbsReal*)cache._partList.at(i)) ;
       normSet = (RooArgSet*) nlIter.next() ; // ((RooArgSet*)cache._normList.At(i)) ;    
       Double_t piVal = partInt->getVal(normSet->getSize()>0 ? normSet : 0) ;
-//       cout << "partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
+//       cout << "RooProdPdf::calculate(" << GetName() << ") partInt " << partInt->GetName() << " is of type " << partInt->IsA()->GetName() << endl ;
 //       if (dynamic_cast<RooAbsPdf*>(partInt)) {
 // 	cout << "product term " << partInt->GetName() << " normalized over " << (normSet?*normSet:RooArgSet())  
 // 	     << " = " << partInt->getVal() << " / " << ((RooAbsPdf*)partInt)->getNorm(normSet) << " = " << piVal << endl ;

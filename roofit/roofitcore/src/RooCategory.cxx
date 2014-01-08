@@ -36,6 +36,7 @@
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
 
 using namespace std;
 
@@ -48,6 +49,7 @@ RooCategorySharedProperties RooCategory::_nullProp("00000000-0000-0000-0000-0000
 //_____________________________________________________________________________
 RooCategory::RooCategory() : _sharedProp(0)
 {
+  TRACE_CREATE 
 }
 
 
@@ -62,6 +64,7 @@ RooCategory::RooCategory(const char *name, const char *title) :
 
   setValueDirty() ;  
   setShapeDirty() ;  
+  TRACE_CREATE 
 }
 
 
@@ -72,7 +75,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 {
   // Copy constructor
   _sharedProp =  (RooCategorySharedProperties*) _sharedPropList.registerProperties(other._sharedProp) ;
-  
+  TRACE_CREATE   
 }
 
 
@@ -82,6 +85,7 @@ RooCategory::~RooCategory()
 {
   // Destructor
   _sharedPropList.unregisterProperties(_sharedProp) ;
+  TRACE_DESTROY
 }
 
 

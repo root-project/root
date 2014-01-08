@@ -28,6 +28,8 @@ END_HTML
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
+#include "RooTrace.h"
+
 #include "TMath.h"
 
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
@@ -47,6 +49,7 @@ FlexibleInterpVar::FlexibleInterpVar()
   _nominal = 0;
   _interpBoundary=1.;
   _logInit = kFALSE ;
+  TRACE_CREATE
 }
 
 
@@ -75,6 +78,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _interpCode.push_back(0); // default code
   }
   delete paramIter ;
+  TRACE_CREATE
 
 }
 
@@ -115,6 +119,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _interpCode.push_back(0); // default code
   }
   delete paramIter ;
+  TRACE_CREATE
 
 }
 
@@ -146,6 +151,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _paramList.add(*param) ;
   }
   delete paramIter ;
+  TRACE_CREATE
 
 }
 
@@ -157,6 +163,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   // Constructor of flat polynomial function
   _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
+  TRACE_CREATE
 }
 
 //_____________________________________________________________________________
@@ -169,6 +176,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   // Copy constructor
   _logInit = kFALSE ;
   _paramIter = _paramList.createIterator() ;
+  TRACE_CREATE
   
 }
 
@@ -178,6 +186,7 @@ FlexibleInterpVar::~FlexibleInterpVar()
 {
   // Destructor
   delete _paramIter ;
+  TRACE_DESTROY
 }
 
 

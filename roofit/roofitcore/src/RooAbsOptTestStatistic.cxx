@@ -170,7 +170,6 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const RooAbsOptTestStatistic& oth
 void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName, 
 				       const char* addCoefRangeName) 
 {
-  
   RooArgSet obs(*indata.get()) ;
   obs.remove(projDeps,kTRUE,kTRUE) ;
 
@@ -185,6 +184,10 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Attach FUNC to data set  
   _funcObsSet = _funcClone->getObservables(indata) ;
+
+  if (_funcClone->getAttribute("BinnedLikelihood")) {
+    _funcClone->setAttribute("BinnedLikelihoodActive") ;
+  }
 
   // Reattach FUNC to original parameters  
   RooArgSet* origParams = (RooArgSet*) real.getParameters(indata) ;

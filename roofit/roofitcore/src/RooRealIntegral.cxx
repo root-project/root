@@ -49,6 +49,7 @@
 #include "RooExpensiveObjectCache.h"
 #include "RooConstVar.h"
 #include "RooDouble.h"
+#include "RooTrace.h"
 
 using namespace std;
 
@@ -76,6 +77,7 @@ RooRealIntegral::RooRealIntegral() :
 {
   _facListIter = _facList.createIterator() ;
   _jacListIter = _jacList.createIterator() ;
+  TRACE_CREATE
 }
 
 
@@ -571,6 +573,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     _sumCat.addOwned(*sumCat) ;
   }
 
+  TRACE_CREATE
 }
 
 
@@ -757,6 +760,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
  other._intList.snapshot(_saveInt) ;
  other._sumList.snapshot(_saveSum) ;
 
+  TRACE_CREATE
 }
 
 
@@ -772,6 +776,8 @@ RooRealIntegral::~RooRealIntegral()
   delete _jacListIter ;
   if (_sumCatIter)  delete _sumCatIter ;
   if (_params) delete _params ;
+
+  TRACE_DESTROY
 }
 
 

@@ -26,6 +26,7 @@
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
+#include "RooTrace.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ ClassImp(PiecewiseInterpolation)
 PiecewiseInterpolation::PiecewiseInterpolation()
 {
   _positiveDefinite=false;
+  TRACE_CREATE
 }
 
 
@@ -113,6 +115,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   
   // Choose special integrator by default 
   specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator") ;
+  TRACE_CREATE
 }
 
 
@@ -130,6 +133,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   // Copy constructor
 
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
+  TRACE_CREATE
 }
 
 
@@ -138,6 +142,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
 PiecewiseInterpolation::~PiecewiseInterpolation() 
 {
   // Destructor
+  TRACE_DESTROY
 }
 
 

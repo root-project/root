@@ -65,7 +65,7 @@
 using namespace RooFit ;
 using namespace std ;
 
-#define BUFFER_SIZE 10000 
+#define BUFFER_SIZE 64000 
 
 ClassImp(RooFactoryWSTool) 
 ;

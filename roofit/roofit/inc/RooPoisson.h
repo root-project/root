@@ -14,14 +14,15 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
+#include "RooTrace.h"
  
 class RooPoisson : public RooAbsPdf {
 public:
-  RooPoisson() { _noRounding = kFALSE ; } ;
+  RooPoisson() { _noRounding = kFALSE ;  TRACE_CREATE } ;
   RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, Bool_t noRounding=kFALSE);
   RooPoisson(const RooPoisson& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooPoisson(*this,newname); }
-  inline virtual ~RooPoisson() { }
+  inline virtual ~RooPoisson() { TRACE_DESTROY }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
