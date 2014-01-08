@@ -32,7 +32,9 @@
 #ifndef R__ALPHA
 templateClassImp(TMatrixT)
 #endif
-//______________________________________________________________________________
+
+
+
 template<class Element>
 TMatrixT<Element>::TMatrixT(Int_t nrows,Int_t ncols)
 {
@@ -3196,6 +3198,23 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
          R__b.WriteClassBuffer(TMatrixT<Element>::Class(),this);
    }
 }
+
+// trick to return a reference to nan in operator(i,j_ when i,j are outside of range
+template<class Element> 
+struct nan_value_t { 
+   static Element gNanValue;
+};
+template<>
+Double_t nan_value_t<Double_t>::gNanValue = std::numeric_limits<Double_t>::quiet_NaN(); 
+template<>
+Float_t nan_value_t<Float_t>::gNanValue = std::numeric_limits<Float_t>::quiet_NaN(); 
+
+template<class Element>
+Element & TMatrixT<Element>::NaNValue()
+{
+   return nan_value_t<Element>::gNanValue; 
+}
+
 
 template class TMatrixT<Float_t>;
 

@@ -32,6 +32,7 @@
 //#include <cblas.h>
 #endif
 
+
 template<class Element> class TMatrixTSym;
 template<class Element> class TMatrixTSparse;
 template<class Element> class TMatrixTLazy;
@@ -49,6 +50,8 @@ protected:
                       Int_t newSize,Int_t oldSize);
    void     Allocate(Int_t nrows,Int_t ncols,Int_t row_lwb = 0,Int_t col_lwb = 0,Int_t init = 0,
                      Int_t /*nr_nonzeros*/ = -1);
+
+   static Element & NaNValue(); 
 
 public:
 
@@ -239,11 +242,12 @@ template <class Element> inline Element TMatrixT<Element>::operator()(Int_t rown
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return fElements[0];
+      return NaNValue();
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return fElements[0];
+      return NaNValue();
+
    }
    return (fElements[arown*this->fNcols+acoln]);
 }
@@ -255,11 +259,12 @@ template <class Element> inline Element &TMatrixT<Element>::operator()(Int_t row
    const Int_t acoln = coln-this->fColLwb;
    if (arown >= this->fNrows || arown < 0) {
       Error("operator()","Request row(%d) outside matrix range of %d - %d",rown,this->fRowLwb,this->fRowLwb+this->fNrows);
-      return fElements[0];
+      return NaNValue();
+
    }
    if (acoln >= this->fNcols || acoln < 0) {
       Error("operator()","Request column(%d) outside matrix range of %d - %d",coln,this->fColLwb,this->fColLwb+this->fNcols);
-      return fElements[0];
+      return NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
 }
