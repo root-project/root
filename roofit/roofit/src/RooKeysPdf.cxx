@@ -253,8 +253,8 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
       if (xlo >= xhi) continue;
       const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
       const Double_t weightratio = _dataWgts[j] / _weights[j];
-      const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-      const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+      const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+      const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
       const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 	      Double_t(binlo) * _hi) / Double_t(_nPoints);
       Double_t chi = (x - _dataPts[j]) / _weights[j] / std::sqrt(2.);
@@ -271,8 +271,8 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 	  if (xlo >= xhi) continue;
 	  const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
 	  const Double_t weightratio = _dataWgts[j] / _weights[j];
-	  const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-	  const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+	  const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+	  const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
 	  const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 		  Double_t(binlo) * _hi) / Double_t(_nPoints);
 	  Double_t chi = (x - (2. * _lo - _dataPts[j])) / _weights[j] / std::sqrt(2.);
@@ -290,8 +290,8 @@ void RooKeysPdf::LoadDataSet( RooDataSet& data) {
 	  if (xlo >= xhi) continue;
 	  const Double_t chi2incr = _binWidth / _weights[j] / std::sqrt(2.);
 	  const Double_t weightratio = _dataWgts[j] / _weights[j];
-	  const Int_t binlo = std::floor((xlo - _lo) / _binWidth);
-	  const Int_t binhi = _nPoints - std::floor((_hi - xhi) / _binWidth);
+	  const Int_t binlo = static_cast<Int_t>(std::floor((xlo - _lo) / _binWidth));
+	  const Int_t binhi = static_cast<Int_t>(_nPoints - std::floor((_hi - xhi) / _binWidth));
 	  const Double_t x = (Double_t(_nPoints - binlo) * _lo +
 		  Double_t(binlo) * _hi) / Double_t(_nPoints);
 	  Double_t chi = (x - (2. * _hi - _dataPts[j])) / _weights[j] / std::sqrt(2.);
