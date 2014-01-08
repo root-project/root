@@ -1230,7 +1230,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
 	xarr[i-ybinLo] = 2*realY->getMax()-realY->getVal() ;
       } else {
 	// Underflow: mirror
-	ibin = -i ;
+	ibin = -i -1;
 	realY->setBin(ibin) ;
 	xarr[i-ybinLo] = 2*realY->getMin()-realY->getVal() ;
       }
