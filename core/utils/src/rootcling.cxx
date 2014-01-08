@@ -2740,11 +2740,12 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
       // Get template definition if needed
-      std::set<std::string> templateDefsSet; // FIXME: use c++11 unordered set when possible
       if ( clang::isa<clang::ClassTemplateSpecializationDecl>(*rDecl) ){
          std::string templateDefSrcStr;
          int retCode = ExtractTemplateDefinition(*rDecl,compilerInstance,templateDefSrcStr);
-         if (retCode==0 && templateDefsSet.insert(templateDefSrcStr).second)
+         // Linear search. Probably optimisable
+         if (retCode==0 &&
+            std::count (templateDefsList.begin(), templateDefsList.end(), templateDefSrcStr) == 0 )
             templateDefsList.push_back(templateDefSrcStr);
       }
 
