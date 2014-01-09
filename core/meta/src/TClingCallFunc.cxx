@@ -106,9 +106,10 @@ static void R__DropDefaultArg(std::string &name)
    TClassEdit::EModType mode;
    mode = (TClassEdit::EModType)(TClassEdit::kKeepOuterConst|TClassEdit::kDropAllDefault);
 
-   TClassEdit::TSplitType arglist(name.c_str(), mode);
-   std::string out; // must not use name which is ref'ed by arglist.
-   arglist.ShortType(out, mode);
+   std::string oldname;
+   oldname.swap(name); // must not use name which is ref'ed by arglist.
+   TClassEdit::TSplitType arglist(oldname.c_str(), mode);
+   arglist.ShortType(name, mode);
 }
 
 static
