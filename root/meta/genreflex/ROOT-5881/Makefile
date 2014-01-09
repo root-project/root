@@ -16,12 +16,12 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 $(LIBNAME): $(DICTNAME)
-	$(CXXCOMPILER) -shared -fPIC $(shell root-config --cflags) $(DICTNAME) -o $(LIBNAME)
+	$(CMDECHO) $(CXXCOMPILER) -shared -fPIC $(shell root-config --cflags) $(DICTNAME) -o $@ >$@.log 2>&1
 
 $(EXENAME): $(LIBNAME)
-	$(CXXCOMPILER) $(EXENAME).cpp -fPIC -o $(EXENAME) $(shell root-config --cflags --libs) -l $(LIBBASENAME) -L ./
+	$(CMDECHO) $(CXXCOMPILER) $@.cpp -fPIC -o $@ $(shell root-config --cflags --libs) -l $(LIBBASENAME) -L ./ > $@_compilation.log 2>&1
 
 $(OFILENAME): $(EXENAME)
-	./$(EXENAME)
+	$(CMDECHO) ./$(EXENAME) > $(EXENAME)_execution.log 2>&1
 
 execstringI.log: $(OFILENAME)
