@@ -12,8 +12,19 @@
 #include "TPgSQLServer.h"
 #include "TPgSQLResult.h"
 #include "TPgSQLStatement.h"
-#include "TUrl.h"
 
+#include "TSQLColumnInfo.h"
+#include "TSQLTableInfo.h"
+#include "TSQLRow.h"
+#include "TUrl.h"
+#include "TList.h"
+#include "TObjString.h"
+#include "TObjArray.h"
+
+
+#include<iostream>
+
+using namespace std;
 
 ClassImp(TPgSQLServer)
 
@@ -111,6 +122,7 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
    }
 
    PGresult *res = PQexec(fPgSQL, sql);
+   //cout << " Query called " << sql << ":" << PQntuples(res) << endl;
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
@@ -368,4 +380,151 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
    Error("Statement", "not implemented for pgsql < 8.2");
 #endif
    return 0;
+}
+
+//______________________________________________________________________________
+TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
+{
+   if (!IsConnected()) {
+      Error("GetColumns", "not connected");
+      return 0;
+   }
+
+   // Check table name
+   if ((tablename == 0) || (*tablename == 0)) return 0;
+
+   // Query first row ( works same way as MySQL)
+   TString sql;
+   sql.Form("SELECT * FROM %s LIMIT 1;", tablename);
+   PGresult *res = PQexec(fPgSQL, sql);
+
+   if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
+       (PQresultStatus(res) != PGRES_TUPLES_OK)) {
+      Error("Query", "%s", PQresultErrorMessage(res));
+      PQclear(res);
+      return 0;
+   }
+
+   TList *lst = 0;
+   Int_t sqltype = kSQL_NONE;
+   Int_t data_size = -1;    // size in bytes
+   Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
+   Int_t data_scale = -1;   // second argument in declaration
+   Int_t data_sign = -1;    // signed type or not
+   Bool_t nullable = 0;
+
+   Int_t nfields  = PQnfields(res);
+   Int_t ibin     = PQbinaryTuples(res);
+
+   for (Int_t col = 0; col < nfields; col++) {
+
+      const char *column_name = PQfname(res, col);
+      const char *type_name;
+      int   imod     = PQfmod(res, col);
+      int   isize    = PQfsize(res, col);
+
+      switch (PQftype(res, col)) {
+         case INT2OID:
+            sqltype = kSQL_INTEGER;
+            type_name = "INT";
+            data_size = 2;
+            break;
+         case INT4OID:
+            sqltype = kSQL_INTEGER;
+            type_name = "INT";
+            data_size = 4;
+            break;
+         case INT8OID:
+            sqltype = kSQL_INTEGER;
+            type_name = "INT";
+            data_size = 8;
+            break;
+         case FLOAT4OID:
+            sqltype = kSQL_FLOAT;
+            type_name = "FLOAT";
+            data_size = 4;
+            break;
+         case FLOAT8OID:
+            sqltype = kSQL_DOUBLE;
+            type_name = "DOUBLE";
+            data_size = 8;
+            break;
+         case BOOLOID:
+            sqltype = kSQL_INTEGER;
+            type_name = "BOOL";
+            data_size = 4;
+            break;
+         case CHAROID:
+            sqltype = kSQL_CHAR;
+            type_name = "CHAR";
+            data_size = 1;
+            break;
+         case NAMEOID:
+            sqltype = kSQL_VARCHAR;
+            type_name = "VARCHAR";
+            data_size = imod;
+            break;
+         case TEXTOID:
+            sqltype = kSQL_VARCHAR;
+            type_name = "VARCHAR";
+            data_size = imod;
+            break;
+         case VARCHAROID:
+            sqltype = kSQL_VARCHAR;
+            type_name = "VARCHAR";
+            data_size = imod;
+            break;
+         case DATEOID:
+            sqltype = kSQL_TIMESTAMP;
+            type_name = "TIMESTAMP";
+            data_size = 4;
+            break;
+         case TIMEOID:
+            sqltype = kSQL_TIMESTAMP;
+            type_name = "TIMESTAMP";
+            data_size = 8;
+            break;
+         case TIMETZOID:
+            sqltype = kSQL_TIMESTAMP;
+            type_name = "TIMESTAMP";
+            data_size = 8;
+            break;
+         case TIMESTAMPOID:
+            sqltype = kSQL_TIMESTAMP;
+            type_name = "TIMESTAMP";
+            data_size = 8;
+            break;
+         case TIMESTAMPTZOID:
+            sqltype = kSQL_TIMESTAMP;
+            type_name = "TIMESTAMP";
+            data_size = 8;
+            break;
+         case BYTEAOID:
+            sqltype = kSQL_BINARY;
+            type_name = "BINARY";
+            break;
+         default:
+            sqltype = kSQL_NUMERIC;
+            type_name = "NUMERIC";
+            break;
+      }
+
+      //cout << " -I-  ibin# " << ibin  << "col# " << col << " cname: "
+      //     << column_name << " sqltype:" << sqltype <<  " imod: "
+      //     << imod << " isize:" << isize << endl;
+
+      if (!lst)
+         lst = new TList;
+      lst->Add(new TSQLColumnInfo(column_name,
+                                  type_name,
+                                  nullable,
+                                  sqltype,
+                                  data_size,
+                                  data_length,
+                                  data_scale,
+                                  data_sign));
+   } //! ( cols)
+
+   PQclear(res);
+   return (new TSQLTableInfo(tablename, lst));
 }
