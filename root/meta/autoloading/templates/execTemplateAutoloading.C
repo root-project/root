@@ -4,3 +4,4 @@ int execTemplateAutoloading(){
    myClass2<double,double,4> aa;
    return 0;
 }
+
