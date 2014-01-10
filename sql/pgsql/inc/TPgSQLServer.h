@@ -17,7 +17,9 @@
 #endif
 
 #if !defined(__CINT__)
+#include <postgres.h>
 #include <libpq-fe.h>
+#include <catalog/pg_type.h>
 #else
 struct PGconn;
 #endif
@@ -42,6 +44,7 @@ public:
    TSQLResult    *GetDataBases(const char *wild = 0);
    TSQLResult    *GetTables(const char *dbname, const char *wild = 0);
    TSQLResult    *GetColumns(const char *dbname, const char *table, const char *wild = 0);
+   TSQLTableInfo *GetTableInfo(const char *tablename);
    Int_t          CreateDataBase(const char *dbname);
    Int_t          DropDataBase(const char *dbname);
    Int_t          Reload();
