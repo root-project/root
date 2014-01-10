@@ -384,6 +384,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
          "#pragma clang diagnostic ignored \"-Wextra\"\n"
          "#pragma clang diagnostic ignored \"-Wpedantic\"\n"
          "#pragma clang diagnostic warning \"-Wno-deprecated\"\n"
+         "#pragma clang diagnostic ignored \"-Wattributes\"\n"
          "#pragma clang diagnostic ignored \"-Wdeprecated-register\"\n"
          "#pragma clang diagnostic ignored \"-Wconstexpr-not-const\"\n"
          
