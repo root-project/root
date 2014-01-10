@@ -2476,16 +2476,22 @@ Int_t TGraph::Merge(TCollection* li)
                "Cannot merge - an object which doesn't inherit from TGraph found in the list");
          return -1;
       }
-      Double_t x, y;
-      for (Int_t i = 0 ; i < g->GetN(); i++) {
-         g->GetPoint(i, x, y);
-         SetPoint(GetN(), x, y);
-      }
+      DoMerge(g);
    }
    return GetN();
 }
+//______________________________________________________________________________
+Bool_t TGraph::DoMerge(const TGraph* g)
+{
+   //  protected function to perform the merge operation of a graph
 
-
+   Double_t x, y;
+   for (Int_t i = 0 ; i < g->GetN(); i++) {
+      g->GetPoint(i, x, y);
+      SetPoint(GetN(), x, y);
+   }
+   return kTRUE;
+}
 //______________________________________________________________________________
 void TGraph::Zero(Int_t &k, Double_t AZ, Double_t BZ, Double_t E2, Double_t &X, Double_t &Y
                   , Int_t maxiterations)

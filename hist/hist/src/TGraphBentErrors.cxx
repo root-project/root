@@ -21,6 +21,7 @@
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TF1.h"
+#include "TClass.h"
 
 ClassImp(TGraphBentErrors)
 
@@ -358,7 +359,40 @@ Bool_t TGraphBentErrors::CtorAllocate(void)
    return kTRUE;
 }
 
+//______________________________________________________________________________
+Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
+{
+   //  protected function to perform the merge operation of a graph with asymmetric errors
+   if (g->GetN() == 0) return kFALSE; 
 
+   Double_t * exl = g->GetEXlow();
+   Double_t * exh = g->GetEXhigh();
+   Double_t * eyl = g->GetEYlow();
+   Double_t * eyh = g->GetEYhigh();
+
+   Double_t * exld = g->GetEXlowd();
+   Double_t * exhd = g->GetEXhighd();
+   Double_t * eyld = g->GetEYlowd();
+   Double_t * eyhd = g->GetEYhighd();
+
+   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0 || 
+       exld == 0 || exhd == 0 || eyld == 0 || eyhd == 0) { 
+      if (g->IsA() != TGraph::Class() ) 
+         Warning("DoMerge","Merging a %s is not compatible with a TGraphBentErrors - errors will be ignored",g->IsA()->GetName());
+      return TGraph::DoMerge(g); 
+   }
+   for (Int_t i = 0 ; i < g->GetN(); i++) {
+      Int_t ipoint = GetN(); 
+      Double_t x = g->GetX()[i]; 
+      Double_t y = g->GetY()[i]; 
+      SetPoint(ipoint, x, y);
+      SetPointError(ipoint, exl[i],  exh[i],  eyl[i],  eyh[i], 
+                            exld[i], exhd[i], eyld[i], eyhd[i] ); 
+   }
+
+   return kTRUE;
+
+}
 //_____________________________________________________________________________
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 {
