@@ -33,5 +33,10 @@
    TTree *out; f->GetObject("tr",out);
    out->Scan();
    
+#ifndef ClingWorkAroundBrokenUnnamedReturn
    return 0;
+#else
+   // Make exit code 0;
+   out = 0;
+#endif
 }
