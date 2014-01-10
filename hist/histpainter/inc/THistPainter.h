@@ -78,6 +78,7 @@ public:
    virtual void       PaintBar(Option_t *option);
    virtual void       PaintBarH(Option_t *option);
    virtual void       PaintBoxes(Option_t *option);
+   virtual void       PaintCandlePlot(Option_t *option);
    virtual void       PaintColorLevels(Option_t *option);
    virtual void       PaintTH2PolyBins(Option_t *option);
    virtual void       PaintTH2PolyColorLevels(Option_t *option);

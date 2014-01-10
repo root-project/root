@@ -95,6 +95,7 @@
 <li><a href="#HP12">The ARRow option</li></a>
 <li><a href="#HP13">The BOX option</li></a>
 <li><a href="#HP14">The COLor option</li></a>
+<li><a href="#HP140">The CANDLE option</li></a>
 <li><a href="#HP15">The TEXT and TEXTnn Option</li></a>
 <li><a href="#HP16">The CONTour options</li></a>
 <ul>
@@ -423,6 +424,18 @@ if some bins have a negative content some empty bins might be not painted.
 
 <tr><th valign=top>"COLZ"</th><td>
 Same as "COL". In addition the color palette is also drawn.
+</td></tr>
+
+<tr><th valign=top>"CANDLE"</th><td>
+Draw a candle plot along X axis.
+</td></tr>
+
+<tr><th valign=top>"CANDLEX"</th><td>
+Same as "CANDLE".
+</td></tr>
+
+<tr><th valign=top>"CANDLEY"</th><td>
+Draw a candle plot along Y axis.
 </td></tr>
 
 <tr><th valign=top>"CONT"</th><td>
@@ -1272,6 +1285,49 @@ Begin_Macro(source)
    hcol2->Fill(0,0,-200);
    gStyle->SetPalette(1);
    hcol2->Draw("COLZ");
+   return c1;
+}
+End_Macro
+Begin_Html
+
+
+<a name="HP140"></a><h3>The CANDLE option</h3>
+
+
+A Candle plot (also known as a "box-and whisker plot" or simply "box plot")
+is a convenient way to describe graphically a data distribution (D) with 
+only the five numbers. It was invented in 1977 by John Tukey.
+<p>
+With the option CANDLEX five numbers are:
+<ol>
+<li> The minimum value of the distribution D (bottom dashed line).
+<li> The lower quartile (Q1): 25% of the data points in D are less than 
+     Q1 (bottom of the box).    
+<li> The median (M): 50% of the data points in D are less than M 
+     (thick line segment inside the box).
+<li> The upper quartile (Q3): 75% of the data points in D are less
+     than Q3 (top of the box).
+<li> The maximum value of the distribution D (top dashed line).
+</ol>
+
+The mean value of the distribution D is also represented as a circle.
+<p>
+In this implementation a TH2 is considered as a collection of TH1 along
+X (option <tt>CANDLE</tt> or <tt>CANDLEX</tt>) or Y (option <tt>CANDLEY</tt>).
+Each TH1 is represented as a candle plot.
+
+End_Html
+Begin_Macro(source)
+{
+   TCanvas *c1 = new TCanvas("c1","c1",600,400);
+   TH2F *hcandle = new TH2F("hcandle","Option CANDLE example ",40,-4,4,40,-20,20);
+   Float_t px, py;
+   for (Int_t i = 0; i < 25000; i++) {
+      gRandom->Rannor(px,py);
+      hcandle->Fill(px,5*py);
+   }
+   hcandle->SetMarkerSize(0.5);
+   hcandle->Draw("CANDLE");
    return c1;
 }
 End_Macro
@@ -3389,7 +3445,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.Char = Hoption.Color  = Hoption.Contour = Hoption.Logx  = 0;
    Hoption.Logy = Hoption.Logz   = Hoption.Lego    = Hoption.Surf  = 0;
    Hoption.Off  = Hoption.Tri    = Hoption.Proj    = Hoption.AxisPos = 0;
-   Hoption.Spec = Hoption.Pie    = 0;
+   Hoption.Spec = Hoption.Pie    = Hoption.Candle  = 0;
 
    //    special 2D options
    Hoption.List     = 0;
@@ -3465,6 +3521,15 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       Hoption.Pie = 1;
       strncpy(l,"   ",3);
+   }
+   
+   l = strstr(chopt,"CANDLE");
+   if (l) {
+      Hoption.Scat = 0;
+      Hoption.Candle = 1;
+      strncpy(l,"   ",6);
+      if (l[6] == 'X') { Hoption.Candle = 1; l[6] = ' '; }
+      if (l[6] == 'Y') { Hoption.Candle = 2; l[6] = ' '; }
    }
 
    l = strstr(chopt,"LEGO");
@@ -4636,6 +4701,111 @@ void THistPainter::PaintBoxes(Option_t *)
    fH->TAttFill::Modify();
 }
 
+
+//______________________________________________________________________________
+void THistPainter::PaintCandlePlot(Option_t *)
+{
+   /* Begin_html
+   <a href="#HP14">Control function to draw a 2D histogram as a candle (box) plot.</a>
+   End_html */
+      
+   Double_t x,y,w;
+   Double_t m1 = 0.055, m2 = 0.25;
+   Double_t xpm[1], ypm[1];
+   
+   TH1D *hp;
+   TH2D *h2 = (TH2D*)fH;
+   
+   Double_t *quantiles = new Double_t[5];
+   quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
+   Double_t *prob = new Double_t[5];
+   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
+   
+   Style_t fillsav   = h2->GetFillStyle();
+   Style_t colsav    = h2->GetFillColor();
+   Style_t linesav   = h2->GetLineStyle();
+   Style_t widthsav  = h2->GetLineWidth();
+   Style_t pmssav    = h2->GetMarkerStyle();
+
+   if (h2->GetFillColor() == 0)  h2->SetFillStyle(0);
+
+   h2->SetMarkerStyle(24);
+   h2->TAttLine::Modify();
+   h2->TAttFill::Modify();
+   h2->TAttMarker::Modify();
+   
+   // Candle plot along X
+   if (Hoption.Candle == 1) {
+      for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
+         x = fXaxis->GetBinLowEdge(i);
+         w = fXaxis->GetBinWidth(i);
+         hp = h2->ProjectionY("_px", i, i);
+         if (hp->GetEntries() !=0) {
+            hp->GetQuantiles(5, quantiles, prob);
+            ypm[0] = hp->GetMean();
+      
+            h2->SetLineStyle(1);
+            h2->TAttLine::Modify();
+            gPad->PaintBox(x+m1*w,  quantiles[1], x+(1-m1)*w, quantiles[3]);
+            gPad->PaintLine(x+m2*w, quantiles[0], x+(1-m2)*w, quantiles[0]);
+            gPad->PaintLine(x+m2*w, quantiles[4], x+(1-m2)*w, quantiles[4]);
+            h2->SetLineWidth(3*widthsav);
+            h2->TAttLine::Modify();
+            gPad->PaintLine(x+m1*w, quantiles[2], x+(1-m1)*w, quantiles[2]);
+            h2->SetLineWidth(widthsav);
+            h2->TAttLine::Modify();
+
+            h2->SetLineStyle(2);
+            h2->TAttLine::Modify();
+            gPad->PaintLine(x+w/2., quantiles[3], x+w/2., quantiles[4]);
+            gPad->PaintLine(x+w/2., quantiles[0], x+w/2., quantiles[1]);
+      
+            xpm[0] = x+w/2;
+            gPad->PaintPolyMarker(1,xpm,ypm);
+         }
+      }
+   // Candle plot along Y
+   } else {
+      for (Int_t i=Hparam.yfirst; i<=Hparam.ylast; i++) {
+         y = fYaxis->GetBinLowEdge(i);
+         w = fYaxis->GetBinWidth(i);
+         hp = h2->ProjectionX("_py", i, i);
+         if (hp->GetEntries() !=0) {
+            hp->GetQuantiles(5, quantiles, prob);
+            xpm[0] = hp->GetMean();
+      
+            h2->SetLineStyle(1);
+            h2->TAttLine::Modify();
+            gPad->PaintBox(quantiles[1],  y+m1*w, quantiles[3], y+(1-m1)*w);
+            gPad->PaintLine(quantiles[0], y+m2*w, quantiles[0], y+(1-m2)*w);
+            gPad->PaintLine(quantiles[4], y+m2*w, quantiles[4], y+(1-m2)*w);
+            h2->SetLineWidth(3*widthsav);
+            h2->TAttLine::Modify();
+            gPad->PaintLine(quantiles[2], y+m1*w, quantiles[2], y+(1-m1)*w);
+            h2->SetLineWidth(widthsav);
+            h2->TAttLine::Modify();
+
+            h2->SetLineStyle(2);
+            h2->TAttLine::Modify();
+            gPad->PaintLine(quantiles[3], y+w/2., quantiles[4], y+w/2.);
+            gPad->PaintLine(quantiles[0], y+w/2., quantiles[1], y+w/2.);
+      
+            ypm[0] = y+w/2;
+            gPad->PaintPolyMarker(1,xpm,ypm);
+         }
+      }
+   }
+
+   h2->SetFillStyle(fillsav);
+   h2->SetFillColor(colsav);
+   h2->SetLineStyle(linesav);
+   h2->SetMarkerStyle(pmssav);
+   h2->SetLineWidth(widthsav);
+   h2->TAttFill::Modify();
+   h2->TAttLine::Modify();
+   h2->TAttMarker::Modify();
+}
+   
 
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels(Option_t *)
@@ -8125,6 +8295,7 @@ void THistPainter::PaintTable(Option_t *option)
       if (Hoption.Contour) PaintContour(option);
       if (Hoption.Text)    PaintText(option);
       if (Hoption.Error >= 100)   Paint2DErrors(option);
+      if (Hoption.Candle)  PaintCandlePlot(option);
    }
 
    if (Hoption.Lego) PaintLego(option);

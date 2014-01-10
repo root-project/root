@@ -36,19 +36,20 @@ typedef struct Hoption_t {
    int Same;        // "S"  Histogram is plotted in the current PAD.
    int Update;      // "U"  Update histogram previously plotted with option K
    int Star;        // "*"  A * is plotted at each point
-   int Arrow;       // "ARR"   Draw 2D plot with Arrows.
-   int Box;         // "BOX"   Draw 2D plot with proportional Boxes.
-   int Char;        // "CHAR"  Draw 2D plot with a character set.
-   int Color;       // "COL"   Draw 2D plot with Colored boxes.
-   int Contour;     // "CONT"  Draw 2D plot as a Contour plot.
-   int Func;        // "FUNC"  Draw only the function (for example in case of fit).
-   int Hist;        // "HIST"  Draw only the histogram.
-   int Lego;        // "LEGO"  Draw as a Lego plot(LEGO,Lego=1, LEGO1,Lego1=11, LEGO2,Lego=12).
-   int Scat;        // "SCAT"  Draw 2D plot a Scatter plot.
-   int Surf;        // "SURF"  Draw as a Surface (SURF,Surf=1, SURF1,Surf=11, SURF2,Surf=12)
-   int Text;        // "TEXT"  Draw 2D plot with the content of each cell.
-   int Tri;         // "TRI"   Draw 2D plot with Delaunay triangles.
-   int Pie;         // "PIE"   Draw 1D plot as a pie chart.
+   int Arrow;       // "ARR"    Draw 2D plot with Arrows.
+   int Box;         // "BOX"    Draw 2D plot with proportional Boxes.
+   int Char;        // "CHAR"   Draw 2D plot with a character set.
+   int Color;       // "COL"    Draw 2D plot with Colored boxes.
+   int Contour;     // "CONT"   Draw 2D plot as a Contour plot.
+   int Func;        // "FUNC"   Draw only the function (for example in case of fit).
+   int Hist;        // "HIST"   Draw only the histogram.
+   int Lego;        // "LEGO"   Draw as a Lego plot(LEGO,Lego=1, LEGO1,Lego1=11, LEGO2,Lego=12).
+   int Scat;        // "SCAT"   Draw 2D plot a Scatter plot.
+   int Surf;        // "SURF"   Draw as a Surface (SURF,Surf=1, SURF1,Surf=11, SURF2,Surf=12)
+   int Text;        // "TEXT"   Draw 2D plot with the content of each cell.
+   int Tri;         // "TRI"    Draw 2D plot with Delaunay triangles.
+   int Pie;         // "PIE"    Draw 1D plot as a pie chart.
+   int Candle;      // "CANDLE" Draw a 2D histogram as candle/box plot.
    int System;      // type of coordinate system(1=car,2=pol,3=cyl,4=sph,5=psr)
    int Zscale;      // "Z"   to display the Z scale (color palette)
    int FrontBox;    //  = 0 to suppress the front box

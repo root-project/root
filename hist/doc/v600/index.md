@@ -88,6 +88,44 @@
     was too small and in some cases the errors where truncated. The size 
     of the string is now the same as in `PaintStat`.
 -   Display the bin error for 2D histograms in the status bar.
+-   New option `CANDLE` to draw 2D histograms as Candle-PLot (Box-PLot).
+    A Candle plot (also known as a "box-and whisker plot" or simply "box plot")
+    is a convenient way to describe graphically a data distribution (D) with 
+    only the five numbers. It was invented in 1977 by John Tukey.
+
+    With the option CANDLEX five numbers are:
+
+    1. The minimum value of the distribution D (bottom dashed line).
+    2. The lower quartile (Q1): 25% of the data points in D are less than 
+       Q1 (bottom of the box).    
+    3. The median (M): 50% of the data points in D are less than M 
+       (thick line segment inside the box).
+    4. The upper quartile (Q3): 75% of the data points in D are less
+       than Q3 (top of the box).
+    5. The maximum value of the distribution D (top dashed line).
+
+    The mean value of the distribution D is also represented as a circle.
+    
+    In this implementation a TH2 is considered as a collection of TH1 along
+    X (option `CANDLE` or `CANDLEX`) or Y (option `CANDLEY`).
+    Each TH1 is represented as a candle plot.
+    
+    Example:
+    
+    ``` {.cpp}
+    {
+       TH2F *hcandle = new TH2F("hcandle","Option CANDLE example ",40,-4,4,40,-20,20);
+       Float_t px, py;
+       for (Int_t i = 0; i < 25000; i++) {
+          gRandom->Rannor(px,py);
+          hcandle->Fill(px,5*py);
+       }
+       hcandle->SetMarkerSize(0.5);
+       hcandle->Draw("CANDLE");
+    }
+    ```
+   ![Candle plot example](candle.png "Candle plot example")
+
 
 
 ### TGraphPainter
