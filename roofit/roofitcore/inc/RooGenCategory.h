@@ -28,7 +28,7 @@ class TObject ;
 class RooGenCategory : public RooAbsCategory {
 public:
   // Constructors etc.
-  inline RooGenCategory() { 
+  inline RooGenCategory() : _map(0), _userFunc(0) { 
     // Default constructor
     // coverity[UNINIT_CTOR]
   }
