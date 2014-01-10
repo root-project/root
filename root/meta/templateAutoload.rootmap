@@ -15,7 +15,7 @@ class Template<int,0,TagClassWithoutDefinition,int,0>
 class Template<int,1,TagClassWithoutDefinition,int,1>
 
 [TmpltNoSpec_C]
-class Template<short,0,TagClassWithoutDefindition,int,1>
+class Template<short,0,TagClassWithoutDefinition,int,1>
 
 [ANSTmpltInt_C]
 class ANamespace::Template<int,0,TagClassWithoutDefinition,int,0>
