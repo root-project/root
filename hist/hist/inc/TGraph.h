@@ -74,6 +74,7 @@ protected:
    Double_t         **ExpandAndCopy(Int_t size, Int_t iend);
    virtual void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
+   virtual Bool_t     DoMerge(const TGraph * g);       
 
 public:
    // TGraph status bits

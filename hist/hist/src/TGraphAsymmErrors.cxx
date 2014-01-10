@@ -832,6 +832,32 @@ Bool_t TGraphAsymmErrors::CtorAllocate(void)
 }
 
 //______________________________________________________________________________
+Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
+{
+   //  protected function to perform the merge operation of a graph with asymmetric errors
+   if (g->GetN() == 0) return kFALSE; 
+
+   Double_t * exl = g->GetEXlow();
+   Double_t * exh = g->GetEXhigh();
+   Double_t * eyl = g->GetEYlow();
+   Double_t * eyh = g->GetEYhigh();
+   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) { 
+      if (g->IsA() != TGraph::Class() ) 
+         Warning("DoMerge","Merging a %s is not compatible with a TGraphAsymmErrors - errors will be ignored",g->IsA()->GetName());
+      return TGraph::DoMerge(g); 
+   }
+   for (Int_t i = 0 ; i < g->GetN(); i++) {
+      Int_t ipoint = GetN(); 
+      Double_t x = g->GetX()[i]; 
+      Double_t y = g->GetY()[i]; 
+      SetPoint(ipoint, x, y);
+      SetPointError(ipoint, exl[i], exh[i], eyl[i], eyh[i] ); 
+   }
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
 void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
                                  Bool_t from_ctor)
 {

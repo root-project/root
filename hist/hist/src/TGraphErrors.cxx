@@ -535,6 +535,30 @@ Bool_t TGraphErrors::CtorAllocate()
    return kTRUE;
 }
 
+//______________________________________________________________________________
+Bool_t TGraphErrors::DoMerge(const TGraph *g)
+{
+   //  protected function to perform the merge operation of a graph with errors
+
+   if (g->GetN() == 0) return kFALSE; 
+
+   Double_t * ex = g->GetEX();
+   Double_t * ey = g->GetEY();
+   if (ex == 0 || ey == 0 ) { 
+      if (g->IsA() != TGraph::Class() ) 
+         Warning("DoMerge","Merging a %s is not compatible with a TGraphErrors - errors will be ignored",g->IsA()->GetName());
+      return TGraph::DoMerge(g); 
+   }
+   for (Int_t i = 0 ; i < g->GetN(); i++) {
+      Int_t ipoint = GetN(); 
+      Double_t x = g->GetX()[i]; 
+      Double_t y = g->GetY()[i]; 
+      SetPoint(ipoint, x, y);
+      SetPointError( ipoint, ex[i], ey[i] ); 
+   }
+   return kTRUE;
+}
+
 
 //______________________________________________________________________________
 void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
