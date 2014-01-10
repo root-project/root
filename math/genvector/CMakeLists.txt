@@ -13,7 +13,7 @@ set(headers   Math/Vector2D.h Math/Point2D.h
               Math/Boost.h Math/BoostX.h Math/BoostY.h Math/BoostZ.h
               Math/EulerAngles.h Math/AxisAngle.h Math/Quaternion.h
               Math/Transform3D.h Math/Translation3D.h Math/Plane3D.h
-              Math/VectorUtil.h Math/VectorUtil_Cint.h)
+              Math/VectorUtil.h)
 set(headers32 Math/Vector2D.h Math/Point2D.h
 	      Math/Vector3D.h Math/Point3D.h Math/Vector4D.h)
 

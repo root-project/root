@@ -55,7 +55,6 @@ math_HEADERS =           	        \
          Vector3Dfwd.h                  \
          Vector4D.h                     \
          Vector4Dfwd.h                  \
-         VectorUtil.h                   \
-         VectorUtil_Cint.h              
+         VectorUtil.h                   
 
 

@@ -80,7 +80,6 @@ math_HEADERS =           	        \
          Vector4D.h                     \
          Vector4Dfwd.h                  \
          VectorUtil.h                   \
-         VectorUtil_Cint.h              \
          VirtualIntegrator.h            \
          WrappedFunction.h              \
          WrappedParamFunction.h

@@ -50,8 +50,7 @@ GENVECTORDH1  := $(MODDIRI)/Math/Vector2D.h \
                  $(MODDIRI)/Math/Transform3D.h \
                  $(MODDIRI)/Math/Translation3D.h \
                  $(MODDIRI)/Math/Plane3D.h \
-                 $(MODDIRI)/Math/VectorUtil.h \
-                 $(MODDIRI)/Math/VectorUtil_Cint.h  
+                 $(MODDIRI)/Math/VectorUtil.h
 
 GENVECTORDH132:= $(MODDIRI)/Math/Vector2D.h \
 	         $(MODDIRI)/Math/Point2D.h \
