@@ -1,4 +1,4 @@
-// @(#)root/eve:$Id$
+// @(#)root/eve:$Id: 2e075f81994f9a7eca182d23ab52b081eda5c617 $
 // Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007
 
 /*************************************************************************
@@ -55,7 +55,7 @@ public:
    void DoRangeHisto();
    void PlotHisto(Int_t min, Int_t max);
 
-   ClassDef(TEveDigitSetEditor, 1); // Editor for TEveDigitSet class.
+   ClassDef(TEveDigitSetEditor, 0); // Editor for TEveDigitSet class.
 };
 
 #endif
