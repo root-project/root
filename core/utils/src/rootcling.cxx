@@ -3206,7 +3206,6 @@ int RootCling(int argc,
    std::string currentDirectory;
    GetCurrentDirectory(currentDirectory);
 
-   int verbosityLevel=0;
    ic = 1;
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
@@ -3225,7 +3224,6 @@ int RootCling(int argc,
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
-      verbosityLevel=4;
       ic++;
    }
    if (ic < argc) {
@@ -3797,7 +3795,14 @@ int RootCling(int argc,
 
    clang::CompilerInstance* CI = interp.getCI();
 
-   RScanner scan(selectionRules,interp,normCtxt,verbosityLevel);
+
+   int scannerVerbLevel = 0;
+   { 
+     using namespace ROOT::TMetaUtils;
+     scannerVerbLevel = (isGenreflex && gErrorIgnoreLevel != kFatal) ? 1:0;
+   }
+
+   RScanner scan(selectionRules,interp,normCtxt,scannerVerbLevel);
    // If needed initialize the autoloading hook
    if (liblistPrefix.length()) {
       LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
@@ -3903,6 +3908,7 @@ int RootCling(int argc,
          }
       }
    }
+
 
    // Create rootmap and capabilities files
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
@@ -4636,7 +4642,7 @@ int GenReflex(int argc, char **argv)
    // The verbosity: debug wins over quiet
    //std::string verbosityOption("-v4"); // To be uncommented for the testing phase. It should be -v
    std::string verbosityOption("-v");
-   if (options[QUIET]) verbosityOption="-v1";
+   if (options[QUIET]) verbosityOption="-v0";
    if (options[DEBUG]) verbosityOption="-v4";
 
    genreflex::verbose= verbosityOption=="-v4";

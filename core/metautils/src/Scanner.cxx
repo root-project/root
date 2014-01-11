@@ -796,7 +796,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
             typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
          }
          
-         std::cout <<"\tSelected class "
+         std::cout <<"Selected class "
          << typedefMsg
          << "-> "
          << qual_name << "\n";
