@@ -28,23 +28,23 @@
 
 // declare the extra versions of GetValue() plus templated implementation
 #define DECLARE_GETVAL \
-   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0)          \
-       { return GetValueImpl<Double_t>(leaf, instance); }               \
-   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t instance = 0)    \
-       { return GetValueImpl<Long64_t>(leaf, instance); }               \
+   virtual Double_t  GetValue(TLeaf *leaf, Int_t instance = 0)               \
+       { return GetValueImpl<Double_t>(leaf, instance); }                    \
+   virtual Long64_t  GetValueLong64(TLeaf *leaf, Int_t instance = 0)         \
+       { return GetValueImpl<Long64_t>(leaf, instance); }                    \
    virtual LongDouble_t  GetValueLongDouble(TLeaf *leaf, Int_t instance = 0) \
        { return GetValueImpl<LongDouble_t>(leaf, instance); }                \
    template<typename T> T  GetValueImpl(TLeaf *leaf, Int_t instance = 0)   // no semicolon
-  
+
 
 // declare the extra versions of ReadValue() plus templated implementation
 #define DECLARE_READVAL \
-   virtual Double_t ReadValue(char *where, Int_t instance = 0)          \
-       { return ReadValueImpl<Double_t>(where, instance); }             \
-   virtual Long64_t ReadValueLong64(char *where, Int_t instance = 0)    \
-       { return ReadValueImpl<Long64_t>(where, instance); }             \
-   virtual LongDouble_t ReadValueLongDouble(char *where, Int_t instance = 0)  \
-       { return ReadValueImpl<LongDouble_t>(where, instance); }               \
+   virtual Double_t ReadValue(char *where, Int_t instance = 0)               \
+       { return ReadValueImpl<Double_t>(where, instance); }                  \
+   virtual Long64_t ReadValueLong64(char *where, Int_t instance = 0)         \
+       { return ReadValueImpl<Long64_t>(where, instance); }                  \
+   virtual LongDouble_t ReadValueLongDouble(char *where, Int_t instance = 0) \
+       { return ReadValueImpl<LongDouble_t>(where, instance); }              \
    template<typename T> T  ReadValueImpl(char *where, Int_t instance = 0)  // no semicolon
 
 
@@ -116,48 +116,51 @@ public:
    virtual void  SetSize(Int_t index, Int_t val);
    virtual void  SetBranch(TBranch* br)  { if ( fNext ) fNext->SetBranch(br); }
    virtual void  UpdateSizes(TArrayI *garr);
-  
-   virtual Bool_t    Update();  
+
+   virtual Bool_t    Update();
 
    DECLARE_GETVAL;
    DECLARE_READVAL;
-     
+
    template <typename T> struct ReadValueHelper {
-     static T Exec(TFormLeafInfo *leaf, char *where, Int_t instance)
-        { return leaf->ReadValue(where, instance); }
+      static T Exec(TFormLeafInfo *leaf, char *where, Int_t instance) {
+         return leaf->ReadValue(where, instance);
+      }
    };
-   template <typename T > T ReadTypedValue(char *where, Int_t instance = 0)
-      { return ReadValueHelper<T>::Exec(this, where, instance); }
+   template <typename T > T ReadTypedValue(char *where, Int_t instance = 0) {
+      return ReadValueHelper<T>::Exec(this, where, instance);
+   }
 
    template <typename T> struct GetValueHelper {
-     static T Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance)
-        { return linfo->GetValue(leaf, instance); }
+      static T Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) {
+         return linfo->GetValue(leaf, instance);
+      }
    };
-   template <typename T > T GetTypedValue(TLeaf *leaf, Int_t instance = 0)
-      { return GetValueHelper<T>::Exec(this, leaf, instance); }
+   template <typename T > T GetTypedValue(TLeaf *leaf, Int_t instance = 0) {
+      return GetValueHelper<T>::Exec(this, leaf, instance);
+   }
 };
 
 
 template <> struct TFormLeafInfo::ReadValueHelper<Long64_t> {
-    static Long64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLong64(where, instance); }
-}; 
+   static Long64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLong64(where, instance); }
+};
 template <> struct TFormLeafInfo::ReadValueHelper<ULong64_t> {
-  static ULong64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return (ULong64_t)leaf->ReadValueLong64(where, instance); }
-}; 
+   static ULong64_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return (ULong64_t)leaf->ReadValueLong64(where, instance); }
+};
 template <> struct TFormLeafInfo::ReadValueHelper<LongDouble_t> {
-  static LongDouble_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLongDouble(where, instance); }
-}; 
-
+   static LongDouble_t Exec(TFormLeafInfo *leaf, char *where, Int_t instance) { return leaf->ReadValueLongDouble(where, instance); }
+};
 
 template <> struct TFormLeafInfo::GetValueHelper<Long64_t> {
-    static Long64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLong64(leaf, instance); }
-}; 
+   static Long64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLong64(leaf, instance); }
+};
 template <> struct TFormLeafInfo::GetValueHelper<ULong64_t> {
-  static ULong64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return (ULong64_t)linfo->GetValueLong64(leaf, instance); }
-}; 
+   static ULong64_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return (ULong64_t)linfo->GetValueLong64(leaf, instance); }
+};
 template <> struct TFormLeafInfo::GetValueHelper<LongDouble_t> {
-  static LongDouble_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLongDouble(leaf, instance); }
-}; 
+   static LongDouble_t Exec(TFormLeafInfo *linfo, TLeaf *leaf, Int_t instance) { return linfo->GetValueLongDouble(leaf, instance); }
+};
 
 
 
@@ -306,8 +309,8 @@ public:
 
    virtual Bool_t    Update();
 
-   DECLARE_GETVAL;   
-   DECLARE_READVAL;   
+   DECLARE_GETVAL;
+   DECLARE_READVAL;
    virtual Int_t     GetCounterValue(TLeaf* leaf);
    virtual Int_t     ReadCounterValue(char* where);
    virtual Int_t     GetCounterValue(TLeaf* leaf, Int_t instance);
@@ -363,8 +366,8 @@ public:
 
    virtual TFormLeafInfo* DeepCopy() const;
 
-   DECLARE_GETVAL;   
-   DECLARE_READVAL;   
+   DECLARE_GETVAL;
+   DECLARE_READVAL;
 };
 
 //______________________________________________________________________________

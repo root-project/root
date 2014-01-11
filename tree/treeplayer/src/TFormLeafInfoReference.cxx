@@ -167,10 +167,10 @@ T TFormLeafInfoReference::GetValueImpl(TLeaf *leaf, Int_t instance)
    fBranch = leaf->GetBranch();
    return TFormLeafInfo::GetValueImpl<T>(leaf, instance);
 }
-template Double_t TFormLeafInfoReference::GetValueImpl<Double_t>(TLeaf*, Int_t);   
-template Long64_t TFormLeafInfoReference::GetValueImpl<Long64_t>(TLeaf*, Int_t);   
-template LongDouble_t TFormLeafInfoReference::GetValueImpl<LongDouble_t>(TLeaf*, Int_t);
 
+template Double_t TFormLeafInfoReference::GetValueImpl<Double_t>(TLeaf*, Int_t);
+template Long64_t TFormLeafInfoReference::GetValueImpl<Long64_t>(TLeaf*, Int_t);
+template LongDouble_t TFormLeafInfoReference::GetValueImpl<LongDouble_t>(TLeaf*, Int_t);
 
 //______________________________________________________________________________
 void *TFormLeafInfoReference::GetLocalValuePointer( TLeaf *from, Int_t instance)
@@ -220,7 +220,7 @@ T  TFormLeafInfoReference::ReadValueImpl(char *where, Int_t instance)
    return result;
 }
 
-template Double_t TFormLeafInfoReference::ReadValueImpl<Double_t>(char*, Int_t);   
-template Long64_t TFormLeafInfoReference::ReadValueImpl<Long64_t>(char*, Int_t);        
+template Double_t TFormLeafInfoReference::ReadValueImpl<Double_t>(char*, Int_t);
+template Long64_t TFormLeafInfoReference::ReadValueImpl<Long64_t>(char*, Int_t);
 template LongDouble_t TFormLeafInfoReference::ReadValueImpl<LongDouble_t>(char*, Int_t);
 

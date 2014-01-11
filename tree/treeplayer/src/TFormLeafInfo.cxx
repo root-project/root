@@ -770,9 +770,8 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
       case kOther_t:
       default:        return 0;
    }
-
 }
-      
+
 
 //______________________________________________________________________________
 template <typename T>
@@ -1611,7 +1610,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
 }
 
 //______________________________________________________________________________
-template <typename T> 
+template <typename T>
 T TFormLeafInfoCollection::ReadValueImpl(char *where, Int_t instance)
 {
    // Return the value of the underlying data member inside the
@@ -1647,7 +1646,6 @@ T TFormLeafInfoCollection::ReadValueImpl(char *where, Int_t instance)
 INSTANTIATE_GETVAL(TFormLeafInfoCollection);
 INSTANTIATE_READVAL(TFormLeafInfoCollection);
 
-   
 //______________________________________________________________________________
 void* TFormLeafInfoCollection::GetLocalValuePointer(TLeaf *leaf, Int_t /*instance*/)
 {

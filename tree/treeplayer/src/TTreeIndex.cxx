@@ -41,7 +41,7 @@ struct IndexSortComparator {
   Long64_t *fValMajor, *fValMinor;
 };
 
-   
+
 //______________________________________________________________________________
 TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
@@ -172,7 +172,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
       tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
       tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
    }
-   fIndex = new Long64_t[fN];   
+   fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
    std::sort(fIndex, fIndex + fN, IndexSortComparator(tmp_major, tmp_minor) );
    //TMath::Sort(fN,w,fIndex,0);
@@ -345,7 +345,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 {
    // find position where major|minor values are in the IndexValues tables
    // this is the index in IndexValues table, not entry# !
-   // use lower_bound STD algorithm 
+   // use lower_bound STD algorithm.
 
    Long64_t mid, step, pos = 0, count = fN;
    // find lower bound using bisection
@@ -363,7 +363,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
    return pos;
 }
 
-   
+
 //______________________________________________________________________________
 Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const
 {
@@ -389,7 +389,7 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor)
       return fIndex[pos];
    if( --pos < 0 )
       return -1;
-   return fIndex[pos]; 
+   return fIndex[pos];
 }
 
 

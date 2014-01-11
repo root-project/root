@@ -3884,7 +3884,7 @@ template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
       for (Int_t op=0; op<fNoper ; ++op) {
          const Int_t oper = GetOper()[op];
          if( (oper >> kTFOperShift) == kConstant ) {
-            int i = (oper & kTFOperMask);            
+            int i = (oper & kTFOperMask);
             if( !strncmp(fExpr[op], "0x", 2) || !strncmp(fExpr[op], "0X", 2) ) {
                ULong64_t val;
                sscanf( fExpr[op], "%llx", &val );
@@ -3911,7 +3911,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 // efficiencies.
    if (TestBit(kMissingLeaf)) return 0;
    if (fNoper == 1 && fNcodes > 0) {
-      
+ 
       switch (fLookupType[0]) {
          case kDirect:     {
             TT_EVAL_INIT;

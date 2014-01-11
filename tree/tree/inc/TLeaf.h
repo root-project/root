@@ -82,7 +82,7 @@ public:
   
    virtual Double_t GetValue(Int_t i = 0) const;
    virtual Long64_t GetValueLong64(Int_t i = 0) const { return GetValue(i); } //overload only when it matters.
-   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters. 
+   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters.
    template <typename T > T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
 
    virtual void     Import(TClonesArray*, Int_t) {}
@@ -109,15 +109,14 @@ public:
 
 
 template <> struct TLeaf::GetValueHelper<Long64_t> {
-    static Long64_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLong64(i); }
-}; 
+   static Long64_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLong64(i); }
+};
 template <> struct TLeaf::GetValueHelper<ULong64_t> {
-  static ULong64_t Exec(const TLeaf *leaf, Int_t i = 0) { return (ULong64_t)leaf->GetValueLong64(i); }
-}; 
+   static ULong64_t Exec(const TLeaf *leaf, Int_t i = 0) { return (ULong64_t)leaf->GetValueLong64(i); }
+};
 template <> struct TLeaf::GetValueHelper<LongDouble_t> {
-  static LongDouble_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLongDouble(i); }
-}; 
-
+   static LongDouble_t Exec(const TLeaf *leaf, Int_t i = 0) { return leaf->GetValueLongDouble(i); }
+};
 
 
 inline Double_t TLeaf::GetValue(Int_t /*i = 0*/) const { return 0.0; }
