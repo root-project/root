@@ -44,15 +44,15 @@ public:
    class TChainIndexEntry {
       // holds a description of indices of trees in the chain. 
    public:
-     TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
-                          fMaxIndexValue(0), fMaxIndexValMinor(0),
-                          fTreeIndex(0) {}
+      TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
+                           fMaxIndexValue(0), fMaxIndexValMinor(0),
+                           fTreeIndex(0) {}
 
-     typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
+      typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
 
-     IndexValPair_t GetMinIndexValPair() const { return IndexValPair_t(fMinIndexValue, fMinIndexValMinor); }
-     IndexValPair_t GetMaxIndexValPair() const { return IndexValPair_t(fMaxIndexValue, fMaxIndexValMinor); }
-     void           SetMinMaxFrom(const TTreeIndex *index );
+      IndexValPair_t GetMinIndexValPair() const { return IndexValPair_t(fMinIndexValue, fMinIndexValMinor); }
+      IndexValPair_t GetMaxIndexValPair() const { return IndexValPair_t(fMaxIndexValue, fMaxIndexValMinor); }
+      void           SetMinMaxFrom(const TTreeIndex *index );
 
       Long64_t    fMinIndexValue;           // the minimum value of the index (upper bits)
       Long64_t    fMinIndexValMinor;        // the minimum value of the index (lower bits)

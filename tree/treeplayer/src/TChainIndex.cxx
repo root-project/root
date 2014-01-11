@@ -23,7 +23,7 @@
 #include "TError.h"
 
 
- 
+
 //______________________________________________________________________________
 void TChainIndex::TChainIndexEntry::SetMinMaxFrom(const TTreeIndex *index )
 {
@@ -124,15 +124,14 @@ TChainIndex::TChainIndex(const TTree *T, const char *majorname, const char *mino
          Error("TChainIndex", "The indices in files of this chain aren't sorted.");
       }
    }
-
 }
 
-      
 //______________________________________________________________________________
 void TChainIndex::Append(const TVirtualIndex *index, Bool_t delaySort )
 {
    // add an index to this chain
    // if delaySort is kFALSE (default) check if the indices of different trees are in order.
+
    if (index) {
       const TTreeIndex *ti_index = dynamic_cast<const TTreeIndex*>(index);
       if (ti_index == 0) {
@@ -197,7 +196,7 @@ std::pair<TVirtualIndex*, Int_t> TChainIndex::GetSubTreeIndex(Long64_t major, Lo
    }
 
    const TChainIndexEntry::IndexValPair_t     indexValue(major, minor);
-   
+
    if( indexValue < fEntries[0].GetMinIndexValPair() ) {
       Warning("GetSubTreeIndex", "The index value is less than the smallest index values in subtrees");
       return make_pair(static_cast<TVirtualIndex*>(0), 0);
