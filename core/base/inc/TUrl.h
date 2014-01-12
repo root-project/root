@@ -80,6 +80,7 @@ public:
    const char *GetOptions() const { return fOptions; }
    const char *GetValueFromOptions(const char *key) const;
    Int_t       GetIntValueFromOptions(const char *key) const;
+   Bool_t      HasOption(const char *key) const;
    void        ParseOptions() const;
    void        CleanRelativePath();
    const char *GetFileAndOptions() const;
