@@ -22,10 +22,6 @@
 #include "TObjArray.h"
 
 
-#include<iostream>
-
-using namespace std;
-
 ClassImp(TPgSQLServer)
 
 //______________________________________________________________________________
@@ -122,7 +118,6 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
    }
 
    PGresult *res = PQexec(fPgSQL, sql);
-   //cout << " Query called " << sql << ":" << PQntuples(res) << endl;
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
@@ -382,6 +377,7 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
    return 0;
 }
 
+#if 0
 //______________________________________________________________________________
 TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
 {
@@ -509,10 +505,6 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
             break;
       }
 
-      //cout << " -I-  ibin# " << ibin  << "col# " << col << " cname: "
-      //     << column_name << " sqltype:" << sqltype <<  " imod: "
-      //     << imod << " isize:" << isize << endl;
-
       if (!lst)
          lst = new TList;
       lst->Add(new TSQLColumnInfo(column_name,
@@ -528,3 +520,4 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
    PQclear(res);
    return (new TSQLTableInfo(tablename, lst));
 }
+#endif
