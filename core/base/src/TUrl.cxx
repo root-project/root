@@ -178,7 +178,7 @@ tryfile:
 
    u = u0;
 
-   char *t, *s2;
+   char *x, *t, *s2;
    // allow x:/path as Windows filename
    if ((s = strstr(u, ":/")) && u+1 != s) {
       if (*(s+2) != '/') {
@@ -207,7 +207,9 @@ tryfile:
    u = s;
    t = s;
 again:
-   if ((s = strchr(t, '@')) && (s < strchr(t, '/') || !strchr(t, '/'))) {
+   //if ((s = strchr(t, '@')) && (s < strchr(t, '/') || !strchr(t, '/'))) {
+   if ((s = strchr(t, '@')) && (((x = strchr(t, '/')) && s < x) ||
+       ((x = strchr(t, '?')) && s < x) || ((x = strchr(t, '#')) && s < x))) {
       if (*(s-1) == '\\') {
          t = s+1;
          goto again;
@@ -232,7 +234,7 @@ again:
 
    // Find host
    u = s;
-   if ((s = strchr(u, ':')) || (s = strchr(u, '/'))) {
+   if ((s = strchr(u, ':')) || (s = strchr(u, '/')) || (s = strchr(u, '?')) || (s = strchr(u, '#'))) {
       if ((strchr (u, ':') > strchr(u, '/')) && (strchr (u, '/')))
          s = strchr(u, '/');
       sav = *s;
@@ -247,7 +249,7 @@ again:
             goto cleanup;
          }
          u = s;
-         if ((s = strchr(u, '/'))) {
+         if ((s = strchr(u, '/')) || (s = strchr(u, '?')) || (s = strchr(u, '#'))) {
             sav = *s;
             *s = 0;
             fPort = atoi(u);
@@ -619,14 +621,17 @@ void TUrl::ParseOptions() const
    for (Int_t n = 0; n < objOptions->GetEntries(); n++) {
       TString loption = ((TObjString *) objOptions->At(n))->GetName();
       TObjArray *objTags = loption.Tokenize("=");
-         if (objTags->GetEntries() == 2) {
+      if (!fOptionsMap) {
+         fOptionsMap = new TMap;
+         fOptionsMap->SetOwnerKeyValue();
+      }
+      if (objTags->GetEntries() == 2) {
          TString key = ((TObjString *) objTags->At(0))->GetName();
          TString value = ((TObjString *) objTags->At(1))->GetName();
-         if (!fOptionsMap) {
-            fOptionsMap = new TMap;
-            fOptionsMap->SetOwnerKeyValue();
-         }
          fOptionsMap->Add(new TObjString(key), new TObjString(value));
+      } else {
+         TString key = ((TObjString *) objTags->At(0))->GetName();
+         fOptionsMap->Add(new TObjString(key), 0);
       }
       delete objTags;
    }
@@ -656,6 +661,19 @@ Int_t TUrl::GetIntValueFromOptions(const char *key) const
    ParseOptions();
    TObject *option = fOptionsMap ? fOptionsMap->GetValue(key) : 0;
    return (option ? (atoi(((TObjString*)fOptionsMap->GetValue(key))->GetName())) : -1);
+}
+
+//______________________________________________________________________________
+Bool_t TUrl::HasOption(const char *key) const
+{
+   // Returns true if the given key appears in the URL options list.
+   
+   if (!key) return kFALSE;
+   ParseOptions();
+   
+   if (fOptionsMap && fOptionsMap->FindObject(key))
+      return kTRUE;
+   return kFALSE;
 }
 
 //______________________________________________________________________________
