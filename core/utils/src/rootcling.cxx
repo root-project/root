@@ -3340,7 +3340,6 @@ int RootCling(int argc,
    std::vector<std::string> clingArgs;
    clingArgs.push_back(argv[0]);
    clingArgs.push_back("-I.");
-   clingArgs.push_back("-DROOT_Math_VectorUtil_Cint"); // ignore that little problem maker
 
    // Is this needed at all or just historical?
    if (! IsPointer<std::vector<int>::iterator>::kVal) {

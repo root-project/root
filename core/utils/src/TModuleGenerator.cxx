@@ -212,7 +212,7 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string>& args)
          case 'D':
             if (args[iPcmArg] != "-DTRUE=1" && args[iPcmArg] != "-DFALSE=0"
                 && args[iPcmArg] != "-DG__NOCINTDLL") {
-               // keep -DROOT_Math_VectorUtil_Cint -DG__VECTOR_HAS_CLASS_ITERATOR?
+               // keep -DG__VECTOR_HAS_CLASS_ITERATOR?
                fCompD.push_back(SplitPPDefine(args[iPcmArg].c_str() + 2));
             }
             break;
