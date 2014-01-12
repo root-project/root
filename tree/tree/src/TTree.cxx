@@ -8070,7 +8070,12 @@ void TTree::Streamer(TBuffer& b)
       if (fBranchRef) {
          fBranchRef->Clear();
       }
+      TRefTable *table  = TRefTable::GetRefTable();
+      if (table) TRefTable::SetRefTable(0);
+
       b.WriteClassBuffer(TTree::Class(), this);
+
+      if (table) TRefTable::SetRefTable(table);
    }
 }
 
