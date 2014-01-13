@@ -21,14 +21,35 @@
 
 ClassImp(TTreeIndex)
 
+
+struct IndexSortComparator {
+
+  IndexSortComparator(Long64_t *major, Long64_t *minor)
+        : fValMajor(major), fValMinor(minor)
+  {}
+
+   template<typename Index>
+   bool operator()(Index i1, Index i2) {
+      if( *(fValMajor + i1) == *(fValMajor + i2) )
+         return *(fValMinor + i1) < *(fValMinor + i2);
+      else
+         return *(fValMajor + i1) < *(fValMajor + i2);
+   }
+
+  // pointers to the start of index values tables keeping uppder 64bit and lower 64bit
+  // of combined indexed 128bit value
+  Long64_t *fValMajor, *fValMinor;
+};
+
+   
 //______________________________________________________________________________
 TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
    // Default constructor for TTreeIndex
-
    fTree               = 0;
    fN                  = 0;
    fIndexValues        = 0;
+   fIndexValuesMinor   = 0;
    fIndex              = 0;
    fMajorFormula       = 0;
    fMinorFormula       = 0;
@@ -100,6 +121,7 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    fTree               = (TTree*)T;
    fN                  = 0;
    fIndexValues        = 0;
+   fIndexValuesMinor   = 0;
    fIndex              = 0;
    fMajorFormula       = 0;
    fMinorFormula       = 0;
@@ -134,7 +156,8 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
    //   return;
    //}
 
-   Long64_t *w = new Long64_t[fN];
+   Long64_t *tmp_major = new Long64_t[fN];
+   Long64_t *tmp_minor = new Long64_t[fN];
    Long64_t i;
    Long64_t oldEntry = fTree->GetReadEntry();
    Int_t current = -1;
@@ -146,21 +169,22 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
       }
-      Double_t majord = fMajorFormula->EvalInstance();
-      Double_t minord = fMinorFormula->EvalInstance();
-      Long64_t majorv = (Long64_t)majord;
-      Long64_t minorv = (Long64_t)minord;
-      w[i]  = majorv<<31;
-      w[i] += minorv;
+      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
+      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
    }
-   fIndex = new Long64_t[fN];
-   TMath::Sort(fN,w,fIndex,0);
+   fIndex = new Long64_t[fN];   
+   for(i = 0; i < fN; i++) { fIndex[i] = i; }
+   std::sort(fIndex, fIndex + fN, IndexSortComparator(tmp_major, tmp_minor) );
+   //TMath::Sort(fN,w,fIndex,0);
    fIndexValues = new Long64_t[fN];
+   fIndexValuesMinor = new Long64_t[fN];
    for (i=0;i<fN;i++) {
-      fIndexValues[i] = w[fIndex[i]];
+      fIndexValues[i] = tmp_major[fIndex[i]];
+      fIndexValuesMinor[i] = tmp_minor[fIndex[i]];
    }
 
-   delete [] w;
+   delete [] tmp_major;
+   delete [] tmp_minor;
    fTree->LoadTree(oldEntry);
 }
 
@@ -171,6 +195,7 @@ TTreeIndex::~TTreeIndex()
 
    if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(0);
    delete [] fIndexValues;      fIndexValues = 0;
+   delete [] fIndexValuesMinor;      fIndexValuesMinor = 0;
    delete [] fIndex;            fIndex = 0;
    delete fMajorFormula;        fMajorFormula  = 0;
    delete fMinorFormula;        fMinorFormula  = 0;
@@ -199,52 +224,84 @@ void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
       fN += add->GetN();
 
       Long64_t *oldIndex = fIndex;
-      Long64_t *oldValues = fIndexValues;
+      Long64_t *oldValues = GetIndexValues();
+      Long64_t *oldValues2 = GetIndexValuesMinor();
 
       fIndex = new Long64_t[fN];
       fIndexValues = new Long64_t[fN];
+      fIndexValuesMinor = new Long64_t[fN];
 
       // Copy data
-
       Long_t size = sizeof(Long64_t) * oldn;
       Long_t add_size = sizeof(Long64_t) * add->GetN();
       
       memcpy(fIndex,oldIndex, size);
       memcpy(fIndexValues,oldValues, size);
+      memcpy(fIndexValuesMinor,oldValues2, size);
 
       Long64_t *addIndex = ti_add->GetIndex();
       Long64_t *addValues = ti_add->GetIndexValues();
+      Long64_t *addValues2 = ti_add->GetIndexValuesMinor();
 
       memcpy(fIndex + oldn, addIndex, add_size);
       memcpy(fIndexValues + oldn, addValues, add_size);
+      memcpy(fIndexValuesMinor + oldn, addValues2, add_size);
       for(Int_t i = 0; i < add->GetN(); i++) {
          fIndex[oldn + i] += oldn;
       }
 
       delete [] oldIndex;
       delete [] oldValues;
+      delete [] oldValues2;
    }
 
    // Sort.
    if (!delaySort) {
-      Long64_t *w = fIndexValues;
+      Long64_t *addValues = GetIndexValues();
+      Long64_t *addValues2 = GetIndexValuesMinor();
       Long64_t *ind = fIndex;
       Long64_t *conv = new Long64_t[fN];
 
-      TMath::Sort(fN,w,conv,0);
+      for(Long64_t i = 0; i < fN; i++) { conv[i] = i; }
+      std::sort(conv, conv+fN, IndexSortComparator(addValues, addValues2) );
+      //Long64_t *w = fIndexValues;
+      //TMath::Sort(fN,w,conv,0);
 
       fIndex = new Long64_t[fN];
       fIndexValues = new Long64_t[fN];
+      fIndexValuesMinor = new Long64_t[fN];
 
       for (Int_t i=0;i<fN;i++) {
          fIndex[i] = ind[conv[i]];
-         fIndexValues[i] = w[conv[i]];
+         fIndexValues[i] = addValues[conv[i]];
+         fIndexValuesMinor[i] = addValues2[conv[i]];
       }
-      delete [] w;
+      delete [] addValues;
+      delete [] addValues2;
       delete [] ind;
       delete [] conv;
    }
 }
+
+
+
+//______________________________________________________________________________
+bool TTreeIndex::ConvertOldToNew()
+{
+   // conversion from old 64bit indexes
+   // return true if index was converted
+   if( !fIndexValuesMinor && fN ) {
+      fIndexValuesMinor = new Long64_t[fN];
+      for(int i=0; i<fN; i++) {
+         fIndexValuesMinor[i] = (fIndexValues[i] & 0x7fffffff);
+         fIndexValues[i] >>= 31;
+      }
+      return true;
+   }
+   return false;
+}
+
+
 
 //______________________________________________________________________________
 Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
@@ -282,8 +339,33 @@ Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
    return fTree->GetEntryNumberWithIndex(majorv,minorv);
 }
 
+
 //______________________________________________________________________________
-Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
+Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
+{
+   // find position where major|minor values are in the IndexValues tables
+   // this is the index in IndexValues table, not entry# !
+   // use lower_bound STD algorithm 
+
+   Long64_t mid, step, pos = 0, count = fN;
+   // find lower bound using bisection
+   while( count > 0 ) {
+      step = count / 2;
+      mid = pos + step;
+      // check if *mid < major|minor
+      if( fIndexValues[mid] < major
+          || ( fIndexValues[mid] == major &&  fIndexValuesMinor[mid] < minor ) ) {
+         pos = mid+1;
+         count -= step + 1;
+      } else
+         count = step;
+   }
+   return pos;
+}
+
+   
+//______________________________________________________________________________
+Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const
 {
    // Return entry number corresponding to major and minor number.
    // Note that this function returns only the entry number, not the data
@@ -301,16 +383,18 @@ Long64_t TTreeIndex::GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const
    // See also GetEntryNumberWithIndex
 
    if (fN == 0) return -1;
-   Long64_t value = Long64_t(major)<<31;
-   value += minor;
-   Int_t i = TMath::BinarySearch(fN, fIndexValues, value);
-   if (i < 0) return -1;
-   return fIndex[i];
+
+   Long64_t pos = FindValues(major, minor);
+   if( pos < fN && fIndexValues[pos] == major && fIndexValuesMinor[pos] == minor )
+      return fIndex[pos];
+   if( --pos < 0 )
+      return -1;
+   return fIndex[pos]; 
 }
 
 
 //______________________________________________________________________________
-Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
+Long64_t TTreeIndex::GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const
 {
    // Return entry number corresponding to major and minor number.
    // Note that this function returns only the entry number, not the data
@@ -324,13 +408,21 @@ Long64_t TTreeIndex::GetEntryNumberWithIndex(Int_t major, Int_t minor) const
    // See also GetEntryNumberWithBestIndex
 
    if (fN == 0) return -1;
-   Long64_t value = Long64_t(major)<<31;
-   value += minor;
-   Int_t i = TMath::BinarySearch(fN, fIndexValues, value);
-   if (i < 0) return -1;
-   if (fIndexValues[i] != value) return -1;
-   return fIndex[i];
+
+   Long64_t pos = FindValues(major, minor);
+   if( pos < fN && fIndexValues[pos] == major && fIndexValuesMinor[pos] == minor )
+      return fIndex[pos];
+   return -1;
 }
+
+
+//______________________________________________________________________________
+Long64_t* TTreeIndex::GetIndexValuesMinor()  const
+{
+   return fIndexValuesMinor;
+}
+
+
 
 //______________________________________________________________________________
 TTreeFormula *TTreeIndex::GetMajorFormula()
@@ -394,6 +486,7 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
    return fMinorFormulaParent;
 }
 
+
 //______________________________________________________________________________
 void TTreeIndex::Print(Option_t * option) const
 {
@@ -413,30 +506,26 @@ void TTreeIndex::Print(Option_t * option) const
    }
 
    if (printEntry) {
-
       Printf("\n*****************************************************************");
       Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
       Printf("*****************************************************************");
       Printf("%8s : %16s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data(),"entry number");
       Printf("*****************************************************************");
       for (Long64_t i=0;i<n;i++) {
-         Long64_t minor = fIndexValues[i] & 0xffff;
-         Long64_t major = fIndexValues[i]>>31;
-         Printf("%8lld :         %8lld :         %8lld :         %8lld",i,major,minor,fIndex[i]);
+         Printf("%8lld :         %8lld :         %8lld :         %8lld",
+                i, fIndexValues[i], GetIndexValuesMinor()[i], fIndex[i]);
       }
 
    } else {
-
       Printf("\n**********************************************");
       Printf("*    Index of Tree: %s/%s",fTree->GetName(),fTree->GetTitle());
       Printf("**********************************************");
       Printf("%8s : %16s : %16s","serial",fMajorName.Data(),fMinorName.Data());
       Printf("**********************************************");
       for (Long64_t i=0;i<n;i++) {
-         Long64_t minor = fIndexValues[i] & 0xffff;
-         Long64_t major = fIndexValues[i]>>31;
-         Printf("%8lld :         %8lld :         %8lld",i,major,minor);
-      }
+         Printf("%8lld :         %8lld :         %8lld",
+                i, fIndexValues[i],GetIndexValuesMinor()[i]);
+     }
    }
 }
 
@@ -456,6 +545,12 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       R__b >> fN;
       fIndexValues = new Long64_t[fN];
       R__b.ReadFastArray(fIndexValues,fN);
+      if( R__v > 1 ) {
+         fIndexValuesMinor = new Long64_t[fN];
+         R__b.ReadFastArray(fIndexValuesMinor,fN);
+      } else {
+         ConvertOldToNew();
+      }
       fIndex      = new Long64_t[fN];
       R__b.ReadFastArray(fIndex,fN);
       R__b.CheckByteCount(R__s, R__c, TTreeIndex::IsA());
@@ -466,6 +561,7 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       fMinorName.Streamer(R__b);
       R__b << fN;
       R__b.WriteFastArray(fIndexValues, fN);
+      R__b.WriteFastArray(fIndexValuesMinor, fN);
       R__b.WriteFastArray(fIndex, fN);
       R__b.SetByteCount(R__c, kTRUE);
    }

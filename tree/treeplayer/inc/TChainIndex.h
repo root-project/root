@@ -35,6 +35,7 @@
 #include <vector>
 
 class TTreeFormula;
+class TTreeIndex;
 class TChain;
 
 class TChainIndex : public TVirtualIndex {
@@ -43,10 +44,20 @@ public:
    class TChainIndexEntry {
       // holds a description of indices of trees in the chain. 
    public:
-      TChainIndexEntry() : fMinIndexValue(0), fMaxIndexValue(0), fTreeIndex(0) {}
+     TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
+                          fMaxIndexValue(0), fMaxIndexValMinor(0),
+                          fTreeIndex(0) {}
 
-      Long64_t    fMinIndexValue;           // the minimum value of the index
-      Long64_t    fMaxIndexValue;           // the maximum value of the index
+     typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
+
+     IndexValPair_t GetMinIndexValPair() const { return IndexValPair_t(fMinIndexValue, fMinIndexValMinor); }
+     IndexValPair_t GetMaxIndexValPair() const { return IndexValPair_t(fMaxIndexValue, fMaxIndexValMinor); }
+     void           SetMinMaxFrom(const TTreeIndex *index );
+
+      Long64_t    fMinIndexValue;           // the minimum value of the index (upper bits)
+      Long64_t    fMinIndexValMinor;        // the minimum value of the index (lower bits)
+      Long64_t    fMaxIndexValue;           // the maximum value of the index (upper bits)
+      Long64_t    fMaxIndexValMinor;        // the maximum value of the index (lower bits)
       TVirtualIndex* fTreeIndex;            // the tree index in case it was created in the constructor,
                                             // otherwise 0
    };
@@ -58,7 +69,7 @@ protected:
    TTreeFormula  *fMinorFormulaParent;      //! Pointer to minor TreeFormula in Parent tree (if any)
    std::vector<TChainIndexEntry> fEntries; // descriptions of indices of trees in the chain.
 
-   std::pair<TVirtualIndex*, Int_t> GetSubTreeIndex(Int_t major, Int_t minor) const;
+   std::pair<TVirtualIndex*, Int_t> GetSubTreeIndex(Long64_t major, Long64_t minor) const;
    void ReleaseSubTreeIndex(TVirtualIndex* index, Int_t treeNo) const;
    void DeleteIndices();
 
@@ -68,8 +79,8 @@ public:
    virtual               ~TChainIndex();
    virtual void           Append(const TVirtualIndex *, Bool_t delaySort = kFALSE);
    virtual Long64_t       GetEntryNumberFriend(const TTree *parent);
-   virtual Long64_t       GetEntryNumberWithIndex(Int_t major, Int_t minor) const;
-   virtual Long64_t       GetEntryNumberWithBestIndex(Int_t major, Int_t minor) const;
+   virtual Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const;
+   virtual Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const;
    const char            *GetMajorName()    const {return fMajorName.Data();}
    const char            *GetMinorName()    const {return fMinorName.Data();}
    virtual Long64_t       GetN()            const {return fEntries.size();}

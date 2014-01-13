@@ -57,7 +57,6 @@ const Int_t kMaxLen     = 1024;
 R__EXTERN TTree *gTree;
 
 
-
 ClassImp(TTreeFormula)
 
 //______________________________________________________________________________
@@ -141,6 +140,7 @@ TTreeFormula::TTreeFormula(): TFormula(), fQuickLoad(kFALSE), fNeedLoading(kTRUE
    fHasCast      = 0;
    fManager      = 0;
    fMultiplicity = 0;
+   fConstLD      = 0;
 
    Int_t j,k;
    for (j=0; j<kMAXCODES; j++) {
@@ -189,6 +189,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
    fMultiplicity = 0;
    fAxis         = 0;
    fHasCast      = 0;
+   fConstLD      = 0;
    Int_t i,j,k;
    fManager      = new TTreeFormulaManager;
    fManager->Add(this);
@@ -350,6 +351,7 @@ TTreeFormula::~TTreeFormula()
       fDimensionSetup->Delete();
       delete fDimensionSetup;
    }
+   delete[] fConstLD;
 }
 
 //______________________________________________________________________________
@@ -3762,107 +3764,144 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
                                                                                                 \
    if (real_instance>=fNdata[code]) return 0;
 
-namespace {
-   Double_t Summing(TTreeFormula *sum) {
-      Int_t len = sum->GetNdata();
-      Double_t res = 0;
-      for (int i=0; i<len; ++i) res += sum->EvalInstance(i);
-      return res;
+
+template<typename T> T Summing(TTreeFormula *sum) {
+   Int_t len = sum->GetNdata();
+   T res = 0;
+   for (int i=0; i<len; ++i) res += sum->EvalInstance<T>(i);
+   return res;
+}
+
+template<typename T> T  FindMin(TTreeFormula *arr) {
+   Int_t len = arr->GetNdata();
+   T res = 0;
+   if (len) {
+      res = arr->EvalInstance<T>(0);
+      for (int i=1; i<len; ++i) {
+         T val = arr->EvalInstance<T>(i);
+         if (val < res) {
+            res = val;
+         }
+      }
    }
-   Double_t FindMin(TTreeFormula *arr) {
-      Int_t len = arr->GetNdata();
-      Double_t res = 0;
-      if (len) {
-         res = arr->EvalInstance(0);
-         for (int i=1; i<len; ++i) {
-            Double_t val = arr->EvalInstance(i);
+   return res;
+}
+
+template<typename T> T FindMax(TTreeFormula *arr) {
+   Int_t len = arr->GetNdata();
+   T res = 0;
+   if (len) {
+      res = arr->EvalInstance<T>(0);
+      for (int i=1; i<len; ++i) {
+         T val = arr->EvalInstance(i);
+         if (val > res) {
+            res = val;
+         }
+      }
+   }
+   return res;
+}
+
+template<typename T> T FindMin(TTreeFormula *arr, TTreeFormula *condition) {
+   Int_t len = arr->GetNdata();
+   T res = 0;
+   if (len) {
+      int i = 0;
+      T condval;
+      do {
+         condval = condition->EvalInstance<T>(i);
+         ++i;
+      } while (!condval && i<len);
+      if (i==len) {
+         return 0;
+      }
+      if (i!=1) {
+         // Insure the loading of the branch.
+         arr->EvalInstance<T>(0);
+      }
+      // Now we know that i>0 && i<len and cond==true
+      res = arr->EvalInstance<T>(i-1);
+      for (; i<len; ++i) {
+         condval = condition->EvalInstance<T>(i);
+         if (condval) {
+            T val = arr->EvalInstance<T>(i);
             if (val < res) {
                res = val;
             }
          }
       }
-      return res;
    }
-   Double_t FindMax(TTreeFormula *arr) {
-      Int_t len = arr->GetNdata();
-      Double_t res = 0;
-      if (len) {
-         res = arr->EvalInstance(0);
-         for (int i=1; i<len; ++i) {
-            Double_t val = arr->EvalInstance(i);
+   return res;
+}
+
+template<typename T> T FindMax(TTreeFormula *arr, TTreeFormula *condition) {
+   Int_t len = arr->GetNdata();
+   T res = 0;
+   if (len) {
+      int i = 0;
+      T condval;
+      do {
+         condval = condition->EvalInstance<T>(i);
+         ++i;
+      } while (!condval && i<len);
+      if (i==len) {
+         return 0;
+      }
+      if (i!=1) {
+         // Insure the loading of the branch.
+         arr->EvalInstance<T>(0);
+      }
+      // Now we know that i>0 && i<len and cond==true
+      res = arr->EvalInstance<T>(i-1);
+      for (; i<len; ++i) {
+         condval = condition->EvalInstance<T>(i);
+         if (condval) {
+            T val = arr->EvalInstance<T>(i);
             if (val > res) {
                res = val;
             }
          }
       }
-      return res;
    }
-   Double_t FindMin(TTreeFormula *arr, TTreeFormula *condition) {
-      Int_t len = arr->GetNdata();
-      Double_t res = 0;
-      if (len) {
-         int i = 0;
-         Double_t condval;
-         do {
-            condval = condition->EvalInstance(i);
-            ++i;
-         } while (!condval && i<len);
-         if (i==len) {
-            return 0;
-         }
-         if (i!=1) {
-            // Insure the loading of the branch.
-            arr->EvalInstance(0);
-         }
-         // Now we know that i>0 && i<len and cond==true
-         res = arr->EvalInstance(i-1);
-         for (; i<len; ++i) {
-            condval = condition->EvalInstance(i);
-            if (condval) {
-               Double_t val = arr->EvalInstance(i);
-               if (val < res) {
-                  res = val;
-               }
-            }
-         }
-      }
-      return res;
-   }
-   Double_t FindMax(TTreeFormula *arr, TTreeFormula *condition) {
-      Int_t len = arr->GetNdata();
-      Double_t res = 0;
-      if (len) {
-         int i = 0;
-         Double_t condval;
-         do {
-            condval = condition->EvalInstance(i);
-            ++i;
-         } while (!condval && i<len);
-         if (i==len) {
-            return 0;
-         }
-         if (i!=1) {
-            // Insure the loading of the branch.
-            arr->EvalInstance(0);
-         }
-         // Now we know that i>0 && i<len and cond==true
-         res = arr->EvalInstance(i-1);
-         for (; i<len; ++i) {
-            condval = condition->EvalInstance(i);
-            if (condval) {
-               Double_t val = arr->EvalInstance(i);
-               if (val > res) {
-                  res = val;
-               }
-            }
-         }
-      }
-      return res;
-   }
+   return res;
 }
 
+
+
+template<typename T> inline T POWER(T x, T y) { return TMath::Power(x, y); }
+template<> Long64_t POWER(Long64_t x, Long64_t y) { return TMath::Power(x, (Int_t)y); }
+template<> LongDouble_t POWER(LongDouble_t x, LongDouble_t y) { return TMath::Power(x, (Double_t)y); }
+
+template<typename T> inline void SetMethodParam(TMethodCall *method, T p) { method->SetParam(p); }
+template<> void SetMethodParam(TMethodCall *method, LongDouble_t p) { method->SetParam((Double_t)p); }
+
+
+template<typename T> inline T TTreeFormula::GetConstant(Int_t k) { return fConst[k]; }
+template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
+   if( !fConstLD ) {
+      // create LD version of the constants list by rescanning all literals used in the expression
+      fConstLD = new LongDouble_t[fNconst];
+      for (Int_t op=0; op<fNoper ; ++op) {
+         const Int_t oper = GetOper()[op];
+         if( (oper >> kTFOperShift) == kConstant ) {
+            int i = (oper & kTFOperMask);            
+            if( !strncmp(fExpr[op], "0x", 2) || !strncmp(fExpr[op], "0X", 2) ) {
+               ULong64_t val;
+               sscanf( fExpr[op], "%llx", &val );
+               fConstLD[i] = (LongDouble_t)val;
+            } else {
+               sscanf( fExpr[op], "%Lg", &fConstLD[i] );
+            }
+         }
+      }
+   }
+   return fConstLD[k];
+}
+template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t)GetConstant<LongDouble_t>(k); }
+
 //______________________________________________________________________________
-Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
+template<typename T>
+T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 {
 //*-*-*-*-*-*-*-*-*-*-*Evaluate this treeformula*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 //*-*                  =========================
@@ -3870,15 +3909,13 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 
 // Note that the redundance and structure in this code is tailored to improve
 // efficiencies.
-
    if (TestBit(kMissingLeaf)) return 0;
    if (fNoper == 1 && fNcodes > 0) {
-
+      
       switch (fLookupType[0]) {
          case kDirect:     {
             TT_EVAL_INIT;
-            Double_t result = leaf->GetValue(real_instance);
-            return result;
+            return leaf->GetTypedValue<T>(real_instance);
          }
          case kMethod:     {
             TT_EVAL_INIT;
@@ -3888,21 +3925,21 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          case kDataMember: {
             TT_EVAL_INIT;
             ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->SetBranch(leaf->GetBranch());
-            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue(leaf,real_instance);
+            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetTypedValue<T>(leaf,real_instance);
          }
          case kTreeMember: {
             TREE_EVAL_INIT;
-            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetValue((TLeaf*)0x0,real_instance);
+            return ((TFormLeafInfo*)fDataMembers.UncheckedAt(0))->GetTypedValue<T>((TLeaf*)0x0,real_instance);
          }
-         case kIndexOfEntry: return (Double_t)fTree->GetReadEntry();
-         case kIndexOfLocalEntry: return (Double_t)fTree->GetTree()->GetReadEntry();
-         case kEntries:      return (Double_t)fTree->GetEntries();
+         case kIndexOfEntry: return (T)fTree->GetReadEntry();
+         case kIndexOfLocalEntry: return (T)fTree->GetTree()->GetReadEntry();
+         case kEntries:      return (T)fTree->GetEntries();
          case kLength:       return fManager->fNdata;
          case kLengthFunc:   return ((TTreeFormula*)fAliases.UncheckedAt(0))->GetNdata();
          case kIteration:    return instance;
-         case kSum:          return Summing((TTreeFormula*)fAliases.UncheckedAt(0));
-         case kMin:          return FindMin((TTreeFormula*)fAliases.UncheckedAt(0));
-         case kMax:          return FindMax((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kSum:          return Summing<T>((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kMin:          return FindMin<T>((TTreeFormula*)fAliases.UncheckedAt(0));
+         case kMax:          return FindMax<T>((TTreeFormula*)fAliases.UncheckedAt(0));
          case kEntryList: {
             TEntryList *elist = (TEntryList*)fExternalCuts.At(0);
             return elist->Contains(fTree->GetTree()->GetReadEntry());
@@ -3914,20 +3951,20 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
             TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-            Double_t xcut = fx->EvalInstance(instance);
-            Double_t ycut = fy->EvalInstance(instance);
+            T xcut = fx->EvalInstance<T>(instance);
+            T ycut = fy->EvalInstance<T>(instance);
             return gcut->IsInside(xcut,ycut);
          }
          case -1: {
             TCutG *gcut = (TCutG*)fExternalCuts.At(0);
             TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-            return fx->EvalInstance(instance);
+            return fx->EvalInstance<T>(instance);
          }
          default: return 0;
       }
    }
 
-   Double_t tab[kMAXFOUND];
+   T tab[kMAXFOUND];
    const Int_t kMAXSTRINGFOUND = 10;
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
@@ -3946,7 +3983,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
          // TFormula operands.
 
          // one of the most used cases
-         if (newaction==kConstant) { pos++; tab[pos-1] = fConst[(oper & kTFOperMask)]; continue; }
+         if (newaction==kConstant) { pos++; tab[pos-1] = GetConstant<T>(oper & kTFOperMask); continue; }
 
          switch(newaction) {
 
@@ -3960,7 +3997,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kModulo     : {pos--;
                                 Long64_t int1((Long64_t)tab[pos-1]);
                                 Long64_t int2((Long64_t)tab[pos]);
-                                tab[pos-1] = Double_t(int1%int2);
+                                tab[pos-1] = T(int1 % int2);
                                 continue;}
 
             case kcos  : tab[pos-1] = TMath::Cos(tab[pos-1]); continue;
@@ -3968,10 +4005,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case ktan  : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
                          else tab[pos-1] = TMath::Tan(tab[pos-1]);
                          continue;
-            case kacos : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+            case kacos : if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
                          else tab[pos-1] = TMath::ACos(tab[pos-1]);
                          continue;
-            case kasin : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+            case kasin : if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
                          else tab[pos-1] = TMath::ASin(tab[pos-1]);
                          continue;
             case katan : tab[pos-1] = TMath::ATan(tab[pos-1]); continue;
@@ -3984,20 +4021,20 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                          else tab[pos-1] = TMath::ACosH(tab[pos-1]);
                          continue;
             case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
-            case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
+            case katanh: if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
                      else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
             case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
 
             case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
-            case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
+            case kpow  : pos--; tab[pos-1] = POWER(tab[pos-1],tab[pos]); continue;
             case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
-            case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
+            case ksqrt : tab[pos-1] = TMath::Sqrt(std::abs(tab[pos-1])); continue;
 
             case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
                                         else tab[pos-1]=0; continue;
 
-            case kmin : pos--; tab[pos-1] = TMath::Min(tab[pos-1],tab[pos]); continue;
-            case kmax : pos--; tab[pos-1] = TMath::Max(tab[pos-1],tab[pos]); continue;
+            case kmin : pos--; tab[pos-1] = std::min(tab[pos-1],tab[pos]); continue;
+            case kmax : pos--; tab[pos-1] = std::max(tab[pos-1],tab[pos]); continue;
 
             case klog  : if (tab[pos-1] > 0) tab[pos-1] = TMath::Log(tab[pos-1]);
                          else {tab[pos-1] = 0;} //{indetermination }
@@ -4013,9 +4050,9 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
 
             case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
-            case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
+            case kabs  : tab[pos-1] = std::abs(tab[pos-1]); continue;
             case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
-            case kint  : tab[pos-1] = Double_t(Int_t(tab[pos-1])); continue;
+            case kint  : tab[pos-1] = T(Long64_t(tab[pos-1])); continue;
             case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
             case krndm : pos++; tab[pos-1] = gRandom->Rndm(1); continue;
 
@@ -4037,10 +4074,10 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             case kStringNotEqual: pos2 -= 2; pos++;if (strcmp(stringStack[pos2+1],stringStack[pos2])) tab[pos-1]=1;
                                                    else tab[pos-1]=0; continue;
 
-            case kBitAnd    : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) & ((Long64_t) tab[pos]); continue;
-            case kBitOr     : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) | ((Long64_t) tab[pos]); continue;
-            case kLeftShift : pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) <<((Long64_t) tab[pos]); continue;
-            case kRightShift: pos--; tab[pos-1]= ((Long64_t) tab[pos-1]) >>((Long64_t) tab[pos]); continue;
+            case kBitAnd    : pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) & ((ULong64_t) tab[pos]); continue;
+            case kBitOr     : pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) | ((ULong64_t) tab[pos]); continue;
+            case kLeftShift : pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) <<((ULong64_t) tab[pos]); continue;
+            case kRightShift: pos--; tab[pos-1]= ((ULong64_t) tab[pos-1]) >>((ULong64_t) tab[pos]); continue;
 
             case kJump   : i = (oper & kTFOperMask); continue;
             case kJumpIf : {
@@ -4061,7 +4098,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                pos2++; stringStack[pos2-1] = (char*)fExpr[i].Data();
                if (fAxis) {
                   // See TT_EVAL_INIT
-                  Int_t bin = fAxis->FindBin(stringStack[pos2-1]);                                                        \
+                  Int_t bin = fAxis->FindBin(stringStack[pos2-1]);
                   return bin;
                }
                continue;
@@ -4116,7 +4153,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                if (nargs) {
                   UInt_t argloc = pos-nargs;
                   for(Int_t j=0;j<nargs;j++,argloc++,pos--) {
-                     method->SetParam( tab[argloc] );
+                     SetMethodParam(method, tab[argloc]);
                   }
                }
                pos++;
@@ -4140,22 +4177,22 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
             const Int_t code = (oper & kTFOperMask);
             const Int_t lookupType = fLookupType[code];
             switch (lookupType) {
-               case kIndexOfEntry: tab[pos++] = (Double_t)fTree->GetReadEntry(); continue;
-               case kIndexOfLocalEntry: tab[pos++] = (Double_t)fTree->GetTree()->GetReadEntry(); continue;
-               case kEntries:      tab[pos++] = (Double_t)fTree->GetEntries(); continue;
+               case kIndexOfEntry: tab[pos++] = (T)fTree->GetReadEntry(); continue;
+               case kIndexOfLocalEntry: tab[pos++] = (T)fTree->GetTree()->GetReadEntry(); continue;
+               case kEntries:      tab[pos++] = (T)fTree->GetEntries(); continue;
                case kLength:       tab[pos++] = fManager->fNdata; continue;
                case kLengthFunc:   tab[pos++] = ((TTreeFormula*)fAliases.UncheckedAt(i))->GetNdata(); continue;
                case kIteration:    tab[pos++] = instance; continue;
-               case kSum:          tab[pos++] = Summing((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
-               case kMin:          tab[pos++] = FindMin((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
-               case kMax:          tab[pos++] = FindMax((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
+               case kSum:          tab[pos++] = Summing<T>((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
+               case kMin:          tab[pos++] = FindMin<T>((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
+               case kMax:          tab[pos++] = FindMax<T>((TTreeFormula*)fAliases.UncheckedAt(i)); continue;
 
-               case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetValue(real_instance); continue; }
+               case kDirect:     { TT_EVAL_INIT_LOOP; tab[pos++] = leaf->GetTypedValue<T>(real_instance); continue; }
                case kMethod:     { TT_EVAL_INIT_LOOP; tab[pos++] = GetValueFromMethod(code,leaf); continue; }
                case kDataMember: { TT_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
-                                          GetValue(leaf,real_instance); continue; }
+                                          GetTypedValue<T>(leaf,real_instance); continue; }
                case kTreeMember: { TREE_EVAL_INIT_LOOP; tab[pos++] = ((TFormLeafInfo*)fDataMembers.UncheckedAt(code))->
-                                          GetValue((TLeaf*)0x0,real_instance); continue; }
+                                          GetTypedValue<T>((TLeaf*)0x0,real_instance); continue; }
                case kEntryList: { TEntryList *elist = (TEntryList*)fExternalCuts.At(code);
                   tab[pos++] = elist->Contains(fTree->GetReadEntry());
                   continue;}
@@ -4167,15 +4204,15 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
                   TTreeFormula *fy = (TTreeFormula *)gcut->GetObjectY();
-                  Double_t xcut = fx->EvalInstance(instance);
-                  Double_t ycut = fy->EvalInstance(instance);
+                  T xcut = fx->EvalInstance<T>(instance);
+                  T ycut = fy->EvalInstance<T>(instance);
                   tab[pos++] = gcut->IsInside(xcut,ycut);
                   continue;
                }
                case -1: {
                   TCutG *gcut = (TCutG*)fExternalCuts.At(code);
                   TTreeFormula *fx = (TTreeFormula *)gcut->GetObjectX();
-                  tab[pos++] = fx->EvalInstance(instance);
+                  tab[pos++] = fx->EvalInstance<T>(instance);
                   continue;
                }
                default: {
@@ -4193,7 +4230,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                R__ASSERT(subform);
 
                subform->fDidBooleanOptimization = fDidBooleanOptimization;
-               Double_t param = subform->EvalInstance(instance);
+               T param = subform->EvalInstance<T>(instance);
 
                tab[pos] = param; pos++;
                continue;
@@ -4213,7 +4250,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                int alternateN = i;
                TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
                TTreeFormula *condition = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
-               Double_t param = FindMin(primary,condition);
+               T param = FindMin<T>(primary,condition);
                ++i; // skip the place holder for the condition
                tab[pos] = param; pos++;
                continue;
@@ -4222,7 +4259,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                int alternateN = i;
                TTreeFormula *primary = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN));
                TTreeFormula *condition = static_cast<TTreeFormula*>(fAliases.UncheckedAt(alternateN+1));
-               Double_t param = FindMax(primary,condition);
+               T param = FindMax<T>(primary,condition);
                ++i; // skip the place holder for the condition
                tab[pos] = param; pos++;
                continue;
@@ -4236,7 +4273,7 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
                // First check whether we are in range for the primary formula
                if (instance < primary->GetNdata()) {
 
-                  Double_t param = primary->EvalInstance(instance);
+                  T param = primary->EvalInstance<T>(instance);
 
                   ++i; // skip the alternate value.
 
@@ -4309,8 +4346,8 @@ Double_t TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[]
       R__ASSERT(i<fNoper);
    }
 
-   Double_t result = tab[0];
-   return result;
+   //std::cout << __PRETTY_FUNCTION__ << "  returning " << tab[0] << std::endl;
+   return tab[0];
 }
 
 //______________________________________________________________________________
@@ -4584,6 +4621,8 @@ Bool_t TTreeFormula::IsLeafInteger(Int_t code) const
    if (!strcmp(leaf->GetTypeName(),"Bool_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"Char_t"))   return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"UChar_t"))  return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"Long64_t"))  return kTRUE;
+   if (!strcmp(leaf->GetTypeName(),"ULong64_t"))  return kTRUE;
    if (!strcmp(leaf->GetTypeName(),"string"))   return kTRUE;
    return kFALSE;
 }
@@ -4777,7 +4816,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                   switch (outputSizeLevel) {
                      case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Short_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                      case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Long64_t)((TTreeFormula*)this)->EvalInstance<LongDouble_t>(instance)); break;
                      case 1:
                      default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(Int_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
@@ -4791,7 +4830,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                   switch (outputSizeLevel) {
                      case 0:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UShort_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                      case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
-                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 3:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(ULong64_t)((TTreeFormula*)this)->EvalInstance<LongDouble_t>(instance)); break;
                      case 1:
                      default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),(UInt_t)((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }
@@ -4804,7 +4843,7 @@ char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) 
                case 'G':
                {
                   switch (outputSizeLevel) {
-                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(long double)((TTreeFormula*)this)->EvalInstance(instance)); break;
+                     case 2:  snprintf(value,kMAXLENGTH,Form("%%%s",decform),(LongDouble_t)((TTreeFormula*)this)->EvalInstance<LongDouble_t>(instance)); break;
                      case 1:
                      default: snprintf(value,kMAXLENGTH,Form("%%%s",decform),((TTreeFormula*)this)->EvalInstance(instance)); break;
                   }

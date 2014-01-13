@@ -160,13 +160,17 @@ Bool_t TFormLeafInfoReference::Update()
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoReference::GetValue(TLeaf *leaf, Int_t instance)
+template <typename T>
+T TFormLeafInfoReference::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    // Return result of a leafobject method
-
    fBranch = leaf->GetBranch();
-   return TFormLeafInfo::GetValue(leaf, instance);
+   return TFormLeafInfo::GetValueImpl<T>(leaf, instance);
 }
+template Double_t TFormLeafInfoReference::GetValueImpl<Double_t>(TLeaf*, Int_t);   
+template Long64_t TFormLeafInfoReference::GetValueImpl<Long64_t>(TLeaf*, Int_t);   
+template LongDouble_t TFormLeafInfoReference::GetValueImpl<LongDouble_t>(TLeaf*, Int_t);
+
 
 //______________________________________________________________________________
 void *TFormLeafInfoReference::GetLocalValuePointer( TLeaf *from, Int_t instance)
@@ -196,17 +200,18 @@ void *TFormLeafInfoReference::GetLocalValuePointer(char *where, Int_t instance)
 }
 
 //______________________________________________________________________________
-Double_t TFormLeafInfoReference::ReadValue(char *where, Int_t instance)
+template <typename T>
+T  TFormLeafInfoReference::ReadValueImpl(char *where, Int_t instance)
 {
    // Execute the method on the given address
 
-   Double_t result = 0;
+   T result = 0;
    if ( where )  {
       where = (char*)fProxy->GetPreparedReference(where);
       if ( where )  {
          void* res = fProxy->GetObject(this, where, instance);
          if ( res )  {
-            result = (fNext) ? fNext->ReadValue((char*)res,instance) : *(Double_t*)res;
+            result = (fNext) ? fNext->ReadTypedValue<T>((char*)res,instance) : *(Double_t*)res;
          }
       }
    }
@@ -214,3 +219,8 @@ Double_t TFormLeafInfoReference::ReadValue(char *where, Int_t instance)
    // Get rid of temporary return object.
    return result;
 }
+
+template Double_t TFormLeafInfoReference::ReadValueImpl<Double_t>(char*, Int_t);   
+template Long64_t TFormLeafInfoReference::ReadValueImpl<Long64_t>(char*, Int_t);        
+template LongDouble_t TFormLeafInfoReference::ReadValueImpl<LongDouble_t>(char*, Int_t);
+
