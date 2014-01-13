@@ -811,7 +811,7 @@ Double_t TSpline3::Eval(Double_t x) const
    // Eval this spline at x
 
    Int_t klow=FindX(x);
-   if (klow >= fNp-1) klow = fNp-2; //see: https://savannah.cern.ch/bugs/?71651
+   if (klow >= fNp-1 && fNp > 1) klow = fNp-2; //see: https://savannah.cern.ch/bugs/?71651
    return fPoly[klow].Eval(x);
 }
 
