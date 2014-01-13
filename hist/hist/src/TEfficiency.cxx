@@ -1560,6 +1560,175 @@ Bool_t TEfficiency::CheckEntries(const TH1& pass,const TH1& total,Option_t* opt)
 }
 
 //______________________________________________________________________________
+TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
+{ 
+   // Create the graph used be painted (for dim=1 TEfficiency)
+   // The return object is managed by the caller 
+  
+   if (GetDimension() != 1) { 
+      Error("CreatePaintingGraph","Call this function only for dimension == 1");
+      return 0; 
+   }
+
+
+   Int_t npoints = fTotalHistogram->GetNbinsX();
+   TGraphAsymmErrors * 	graph = new TGraphAsymmErrors(npoints);
+   graph->SetName("eff_graph");
+   FillGraph(graph,opt); 
+
+   return graph;
+}
+
+    
+//______________________________________________________________________________
+void TEfficiency::FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const
+{ 
+   // Fill the graph to be painted with information from TEfficiency
+   // Internal metyhod called by TEfficiency::Paint or TEfficiency::CreateGraph
+
+   TString option = opt;
+   option.ToLower();
+
+   Bool_t plot0Bins = false; 
+   if (option.Contains("e0") ) plot0Bins = true; 
+   
+   Double_t x,y,xlow,xup,ylow,yup;
+   //point i corresponds to bin i+1 in histogram   
+   // point j is point graph index
+   // LM: cannot use TGraph::SetPoint because it deletes the underlying
+   // histogram  each time (see TGraph::SetPoint)  
+   // so use it only when extra points are added to the graph
+   Int_t j = 0;
+   double * px = graph->GetX();
+   double * py = graph->GetY(); 
+   double * exl = graph->GetEXlow();
+   double * exh = graph->GetEXhigh();
+   double * eyl = graph->GetEYlow();
+   double * eyh = graph->GetEYhigh();
+   Int_t npoints = fTotalHistogram->GetNbinsX();
+   for (Int_t i = 0; i < npoints; ++i) {
+      if (!plot0Bins && fTotalHistogram->GetBinContent(i+1) == 0 )    continue;
+      x = fTotalHistogram->GetBinCenter(i+1);
+      y = GetEfficiency(i+1);
+      xlow = fTotalHistogram->GetBinCenter(i+1) - fTotalHistogram->GetBinLowEdge(i+1);
+      xup = fTotalHistogram->GetBinWidth(i+1) - xlow;
+      ylow = GetEfficiencyErrorLow(i+1);
+      yup = GetEfficiencyErrorUp(i+1);
+      // in the case the graph already existed and extra points have been added 
+      if (j >= graph->GetN() ) { 
+         graph->SetPoint(j,x,y);
+         graph->SetPointError(j,xlow,xup,ylow,yup);
+      }
+      else { 
+         px[j] = x;
+         py[j] = y;
+         exl[j] = xlow;
+         exh[j] = xup; 
+         eyl[j] = ylow; 
+         eyh[j] = yup;
+      }
+      j++;
+   }
+   
+   // tell the graph the effective number of points 
+   graph->Set(j);
+   //refresh title before painting if changed 
+   TString oldTitle = graph->GetTitle(); 
+   TString newTitle = GetTitle();
+   if (oldTitle != newTitle ) {
+      graph->SetTitle(newTitle);
+   }
+
+   // set the axis labels
+   TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+   TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+   if (xlabel) graph->GetXaxis()->SetTitle(xlabel);
+   if (ylabel) graph->GetYaxis()->SetTitle(ylabel);
+
+   //copying style information
+   TAttLine::Copy(*graph);
+   TAttFill::Copy(*graph);
+   TAttMarker::Copy(*graph);
+
+   // this method forces the graph to compute correctly the axis
+   // according to the given points
+   graph->GetHistogram();
+      
+}
+
+//______________________________________________________________________________
+TH2 * TEfficiency::CreateHistogram(Option_t *) const
+{ 
+   // Create the histogram used to be painted (for dim=2 TEfficiency)
+   // The return object is managed by the caller 
+  
+   if (GetDimension() != 2) { 
+      Error("CreatePaintingistogram","Call this function only for dimension == 2");
+      return 0; 
+   }
+
+   Int_t nbinsx = fTotalHistogram->GetNbinsX();
+   Int_t nbinsy = fTotalHistogram->GetNbinsY();
+   TAxis * xaxis = fTotalHistogram->GetXaxis();
+   TAxis * yaxis = fTotalHistogram->GetYaxis();
+   TH2 * hist = 0;
+
+   if (xaxis->IsVariableBinSize() && yaxis->IsVariableBinSize() ) 
+      hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
+                             nbinsy,yaxis->GetXbins()->GetArray());
+   else if (xaxis->IsVariableBinSize() && ! yaxis->IsVariableBinSize() )
+      hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
+                             nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
+   else if (!xaxis->IsVariableBinSize() &&  yaxis->IsVariableBinSize() )
+      hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
+                             nbinsy,yaxis->GetXbins()->GetArray());
+   else 
+      hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
+                             nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
+         
+
+   hist->SetDirectory(0);
+
+   FillHistogram(hist);
+   
+   return hist; 
+}
+
+//______________________________________________________________________________
+void TEfficiency::FillHistogram(TH2 * hist ) const
+{ 
+   // Fill the 2d histogram to be painted with information from TEfficiency 2D
+   // Internal metyhod called by TEfficiency::Paint or TEfficiency::CreatePaintingGraph
+
+   //refresh title before each painting
+   hist->SetTitle(GetTitle());
+   
+   // set the axis labels
+   TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+   TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+   if (xlabel) hist->GetXaxis()->SetTitle(xlabel);
+   if (ylabel) hist->GetYaxis()->SetTitle(ylabel);
+
+   Int_t bin;
+   Int_t nbinsx = hist->GetNbinsX();
+   Int_t nbinsy = hist->GetNbinsY();
+   for(Int_t i = 0; i < nbinsx + 2; ++i) {
+      for(Int_t j = 0; j < nbinsy + 2; ++j) {
+         bin = GetGlobalBin(i,j);
+         hist->SetBinContent(bin,GetEfficiency(bin));
+      }
+   }
+   
+   //copying style information
+   TAttLine::Copy(*hist);
+   TAttFill::Copy(*hist);
+   TAttMarker::Copy(*hist);
+   hist->SetStats(0);
+   
+   return;
+
+}
+//______________________________________________________________________________
 Double_t TEfficiency::ClopperPearson(Int_t total,Int_t passed,Double_t level,Bool_t bUpper)
 {
    //calculates the boundaries for the frequentist Clopper-Pearson interval
@@ -2470,8 +2639,7 @@ Int_t TEfficiency::GetGlobalBin(Int_t binx,Int_t biny,Int_t binz) const
    //following functions:
    //
    // - GetEfficiency(bin), GetEfficiencyErrorLow(bin), GetEfficiencyErrorUp(bin)
-   // - GetPassedEvents(bin), SetPassedEvents(bin), GetTotalEvents(bin),
-   //   SetTotalEvents(bin)
+   // - SetPassedEvents(bin), SetTotalEvents(bin)
    //
    //see TH1::GetBin() for conventions on numbering bins
    
@@ -2664,85 +2832,19 @@ void TEfficiency::Paint(const Option_t* opt)
    if(!gPad)
       return;
    
-   TString option = opt;
-   option.ToLower();
-
-   Bool_t plot0Bins = false; 
-   if (option.Contains("e0") ) plot0Bins = true; 
 
    //use TGraphAsymmErrors for painting
    if(GetDimension() == 1) {
-      Int_t npoints = fTotalHistogram->GetNbinsX();
-      if(!fPaintGraph) {
-	 fPaintGraph = new TGraphAsymmErrors(npoints);
-	 fPaintGraph->SetName("eff_graph");
+      if(!fPaintGraph) {         
+	 fPaintGraph = CreateGraph(opt); 
       }
-
-      //errors for points
-             Double_t x,y,xlow,xup,ylow,yup;
-      //point i corresponds to bin i+1 in histogram   
-      // point j is point graph index
-      // LM: cannot use TGraph::SetPoint because it deletes the underlying
-      // histogram  each time (see TGraph::SetPoint)  
-      // so use it only when extra points are added to the graph
-      Int_t j = 0;
-      double * px = fPaintGraph->GetX();
-      double * py = fPaintGraph->GetY(); 
-      double * exl = fPaintGraph->GetEXlow();
-      double * exh = fPaintGraph->GetEXhigh();
-      double * eyl = fPaintGraph->GetEYlow();
-      double * eyh = fPaintGraph->GetEYhigh();
-      for (Int_t i = 0; i < npoints; ++i) {
-         if (!plot0Bins && fTotalHistogram->GetBinContent(i+1) == 0 )    continue;
-         x = fTotalHistogram->GetBinCenter(i+1);
-         y = GetEfficiency(i+1);
-	 xlow = fTotalHistogram->GetBinCenter(i+1) - fTotalHistogram->GetBinLowEdge(i+1);
-	 xup = fTotalHistogram->GetBinWidth(i+1) - xlow;
-	 ylow = GetEfficiencyErrorLow(i+1);
-	 yup = GetEfficiencyErrorUp(i+1);
-         // in the case the graph already existed and extra points have been added 
-         if (j >= fPaintGraph->GetN() ) { 
-            fPaintGraph->SetPoint(j,x,y);
-            fPaintGraph->SetPointError(j,xlow,xup,ylow,yup);
-         }
-         else { 
-            px[j] = x;
-            py[j] = y;
-            exl[j] = xlow;
-            exh[j] = xup; 
-            eyl[j] = ylow; 
-            eyh[j] = yup;
-         }
-         j++;
-      }
-
-      // tell the graph the effective number of points 
-      fPaintGraph->Set(j);
-      //refresh title before painting if changed 
-      TString oldTitle = fPaintGraph->GetTitle(); 
-      TString newTitle = GetTitle();
-      if (oldTitle != newTitle ) {
-         fPaintGraph->SetTitle(newTitle);
-      }
-
-      // set the axis labels
-      TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
-      TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
-      if (xlabel) fPaintGraph->GetXaxis()->SetTitle(xlabel);
-      if (ylabel) fPaintGraph->GetYaxis()->SetTitle(ylabel);
-
-      //copying style information
-      TAttLine::Copy(*fPaintGraph);
-      TAttFill::Copy(*fPaintGraph);
-      TAttMarker::Copy(*fPaintGraph);
-
-      // this method forces the graph to compute correctly the axis
-      // according to the given points
-      fPaintGraph->GetHistogram();
+      else 
+         // update existing graph already created 
+         FillGraph(fPaintGraph, opt); 
       
       //paint graph      
 
-      fPaintGraph->Paint(option.Data());
+      fPaintGraph->Paint(opt);
 
       //paint all associated functions
       if(fFunctions) {
@@ -2763,55 +2865,17 @@ void TEfficiency::Paint(const Option_t* opt)
 
    //use TH2 for painting
    if(GetDimension() == 2) {
-      Int_t nbinsx = fTotalHistogram->GetNbinsX();
-      Int_t nbinsy = fTotalHistogram->GetNbinsY();
-      TAxis * xaxis = fTotalHistogram->GetXaxis();
-      TAxis * yaxis = fTotalHistogram->GetYaxis();
       if(!fPaintHisto) {
-         if (xaxis->IsVariableBinSize() && yaxis->IsVariableBinSize() ) 
-            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
-                                   nbinsy,yaxis->GetXbins()->GetArray());
-         else if (xaxis->IsVariableBinSize() && ! yaxis->IsVariableBinSize() )
-            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
-                                   nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
-         else if (!xaxis->IsVariableBinSize() &&  yaxis->IsVariableBinSize() )
-            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
-                                   nbinsy,yaxis->GetXbins()->GetArray());
-         else 
-            fPaintHisto = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXmin(), xaxis->GetXmax(),
-                                   nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
-         
-
-
-	 fPaintHisto->SetDirectory(0);
+         fPaintHisto = CreateHistogram();
       }
-      //refresh title before each painting
-      fPaintHisto->SetTitle(GetTitle());
-
-      // set the axis labels
-      TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
-      TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
-      if (xlabel) fPaintHisto->GetXaxis()->SetTitle(xlabel);
-      if (ylabel) fPaintHisto->GetYaxis()->SetTitle(ylabel);
-
-      Int_t bin;
-      for(Int_t i = 0; i < nbinsx + 2; ++i) {
-	 for(Int_t j = 0; j < nbinsy + 2; ++j) {
-	    bin = GetGlobalBin(i,j);
-	    fPaintHisto->SetBinContent(bin,GetEfficiency(bin));
-	 }
-      }
-
-      //copying style information
-      TAttLine::Copy(*fPaintHisto);
-      TAttFill::Copy(*fPaintHisto);
-      TAttMarker::Copy(*fPaintHisto);
-      fPaintHisto->SetStats(0);
+      else 
+         FillHistogram(fPaintHisto);
 
       //paint histogram
-      fPaintHisto->Paint(option.Data());
+      fPaintHisto->Paint(opt);
       return;
    }
+   Warning("Paint","Painting 3D efficiency is not implemented");  
 }
 
 //______________________________________________________________________________
@@ -3043,6 +3107,122 @@ void TEfficiency::SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta)
    fBeta_bin_params[bin] = std::make_pair(alpha,beta);
    SetBit(kUseBinPrior,true);
 
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax) 
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 1) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xmin,xmax);
+   fTotalHistogram->SetBins(nx,xmin,xmax);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins) 
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 1) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xBins);
+   fTotalHistogram->SetBins(nx,xBins);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 2) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xmin,xmax,ny,ymin,ymax);
+   fTotalHistogram->SetBins(nx,xmin,xmax,ny,ymin,ymax);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins) 
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 2) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xBins,ny,yBins);
+   fTotalHistogram->SetBins(nx,xBins,ny,yBins);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
+                            Int_t nz, Double_t zmin, Double_t zmax)
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 3) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xmin,xmax,ny,ymin,ymax,nz,zmin,zmax);
+   fTotalHistogram->SetBins (nx,xmin,xmax,ny,ymin,ymax,nz,zmin,zmax);
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TEfficiency::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz,
+			    const Double_t *zBins ) 
+{ 
+   // set the bins for the underlined passed and total histograms
+   // If the class have been already filled the previous contents will be lost  
+   if (GetDimension() != 3) { 
+      Error("SetBins","Using wrong SetBins function for a %d-d histogram",GetDimension());
+      return kFALSE; 
+   }
+   if (fTotalHistogram->GetEntries() != 0 ) { 
+      Warning("SetBins","Histogram entries will be lost after SetBins");      
+      fPassedHistogram->Reset();
+      fTotalHistogram->Reset();
+   } 
+   fPassedHistogram->SetBins(nx,xBins,ny,yBins,nz,zBins);
+   fTotalHistogram->SetBins(nx,xBins,ny,yBins,nz,zBins);
+   return kTRUE;
 }
 
 //______________________________________________________________________________

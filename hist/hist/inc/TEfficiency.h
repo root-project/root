@@ -73,7 +73,9 @@ protected:
          kUseWeights       = BIT(18)               // use weights
       };
 
-      void          Build(const char* name,const char* title);      
+      void          Build(const char* name,const char* title);   
+      void          FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const;
+      void          FillHistogram(TH2 * h2) const;
       
 public:
       TEfficiency();   
@@ -97,6 +99,8 @@ public:
       ~TEfficiency();
       
       void          Add(const TEfficiency& rEff) {*this += rEff;}
+      TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
+      TH2*          CreateHistogram(Option_t * opt = "") const;
       virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
       void          Draw(Option_t* opt = "");
       virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
@@ -141,6 +145,15 @@ public:
       void          SetShortestInterval(Bool_t on = true) { SetBit(kShortestInterval,on); } 
       void          SetCentralInterval(Bool_t on = true) { SetBit(kShortestInterval,!on); } 
       void          SetStatisticOption(EStatOption option);
+      Bool_t        SetBins(Int_t nx, Double_t xmin, Double_t xmax);
+      Bool_t        SetBins(Int_t nx, const Double_t *xBins);
+      Bool_t        SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax);
+      Bool_t        SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins);
+      Bool_t        SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax,
+                            Int_t nz, Double_t zmin, Double_t zmax);
+      Bool_t        SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
+			    const Double_t *zBins);
+
       void          SetTitle(const char* title);
       Bool_t        SetTotalEvents(Int_t bin,Int_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
