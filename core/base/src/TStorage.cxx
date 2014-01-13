@@ -62,8 +62,6 @@
 
 #define PVOID (-1)
 
-ULong_t       TStorage::fgHeapBegin = (ULong_t)-1L;
-ULong_t       TStorage::fgHeapEnd;
 size_t        TStorage::fgMaxBlockSize;
 FreeHookFun_t TStorage::fgFreeHook;
 void         *TStorage::fgFreeHookData;
@@ -327,10 +325,9 @@ void *TStorage::ObjectAlloc(size_t sz)
    // the heap.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
 
-   ULong_t space = (ULong_t) ::operator new(sz);
-   AddToHeap(space, space+sz);
+   void* space =  ::operator new(sz);
+   memset(space,TSTORAGEMEMVALUE,sz);
    return (void*) space;
 }
 
@@ -450,15 +447,17 @@ void TStorage::EnableStatistics(int size, int ix)
 //______________________________________________________________________________
 ULong_t TStorage::GetHeapBegin()
 {
+   ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
    //return begin of heap
-   return fgHeapBegin;
+   return 0;
 }
 
 //______________________________________________________________________________
 ULong_t TStorage::GetHeapEnd()
 {
+   ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
    //return end of heap
-   return fgHeapEnd;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -482,23 +481,23 @@ void TStorage::SetCustomNewDelete()
    fgHasCustomNewDelete = kTRUE;
 }
 
-#ifdef WIN32
 
 //______________________________________________________________________________
-void TStorage::AddToHeap(ULong_t begin, ULong_t end)
+void TStorage::AddToHeap(ULong_t, ULong_t)
 {
    //add a range to the heap
-   if (begin < fgHeapBegin) fgHeapBegin = begin;
-   if (end   > fgHeapEnd)   fgHeapEnd   = end;
+   ::Obsolete("AddToHeap(ULong_t,ULong_t)", "v5-34-00", "v6-02-00");
 }
 
 //______________________________________________________________________________
-Bool_t TStorage::IsOnHeap(void *p)
+Bool_t TStorage::IsOnHeap(void *)
 {
    //is object at p in the heap?
-   return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd;
+   ::Obsolete("IsOnHeap(void*)", "v5-34-00", "v6-02-00");
+   return false;
 }
 
+#ifdef WIN32
 //______________________________________________________________________________
 size_t TStorage::GetMaxBlockSize()
 {
