@@ -79,9 +79,6 @@
 /* Define if this is Win32ish platform */
 #cmakedefine LLVM_ON_WIN32 ${LLVM_ON_WIN32}
 
-/* C++ compiler used to build llvm */
-#cmakedefine LLVM_CXX "${CXX}"
-
 /* Define to path to circo program if found or 'echo circo' otherwise */
 #cmakedefine LLVM_PATH_CIRCO "${LLVM_PATH_CIRCO}"
 
