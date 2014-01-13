@@ -486,6 +486,7 @@ void TStorage::SetCustomNewDelete()
 void TStorage::AddToHeap(ULong_t, ULong_t)
 {
    //add a range to the heap
+   ::Obsolete("AddToHeap(ULong_t,ULong_t)", "v5-34-00", "v6-02-00");
 }
 
 //______________________________________________________________________________
