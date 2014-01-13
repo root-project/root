@@ -2617,7 +2617,11 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
    // Smooth bin contents of this 2-d histogram using kernel algorithms
    // similar to the ones used in the raster graphics community.
    // Bin contents in the active range are replaced by their smooth values.
-   // If Errors are defined via Sumw2, they are scaled.
+   // If Errors are defined via Sumw2, they are also scaled and computed. 
+   // However, note the resulting errors will be correlated between different-bins, so 
+   // the errors should not be used blindly to perform any calculation involving several bins,
+   // like fitting the histogram.  One would need to compute also the bin by bin correlation matrix.
+   //
    // 3 kernels are proposed k5a, k5b and k3a.
    // k5a and k5b act on 5x5 cells (i-2,i-1,i,i+1,i+2, and same for j)
    // k5b is a bit more stronger in smoothing
@@ -2706,7 +2710,7 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
                   if ( k != 0.0 ) {
                      norm    += k;
                      content += k*buf[bin];
-                     if (ebuf) error   += k*k*buf[bin]*buf[bin];
+                     if (ebuf) error   += k*k*ebuf[bin]*ebuf[bin];
                   }
                }
             }
