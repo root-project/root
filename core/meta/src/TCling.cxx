@@ -3443,7 +3443,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                assert(cling::Interpreter::kSuccess == compRes &&
                       "A declaration in a rootmap could not be compiled");
                if (T==NULL || compRes!=cling::Interpreter::kSuccess){
-                  std::cout << "T = " << T << std::endl;
                   Warning("ReadRootmapFile",
                           "Problems declaring string '%s' were encountered.", line.c_str()) ;
                   continue;
