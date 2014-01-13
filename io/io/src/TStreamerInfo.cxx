@@ -244,6 +244,9 @@ void TStreamerInfo::Build()
    // Iterate over base classes.
    //
 
+   bool isCollection = fClass->GetCollectionProxy();
+   bool isString = !strcmp(fClass->GetName(), "string");
+
    TBaseClass* base = 0;
    TIter nextb(fClass->GetListOfBases());
    while ((base = (TBaseClass*)nextb())) {
@@ -288,7 +291,9 @@ void TStreamerInfo::Build()
                // element from being inserted into the compiled info.
                element->SetType(-1);
             }
-            if (!clm->IsLoaded()) {
+            if (!clm->IsLoaded() && !(isCollection || isString)) {
+               // Don't complain about the base classes of collections nor of
+               // std::string.
                Warning("Build:", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
             }
          }
