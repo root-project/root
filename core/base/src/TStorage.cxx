@@ -327,10 +327,9 @@ void *TStorage::ObjectAlloc(size_t sz)
    // the heap.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
 
-   ULong_t space = (ULong_t) ::operator new(sz);
-   AddToHeap(space, space+sz);
+   void* space =  ::operator new(sz);
+   memset(space,TSTORAGEMEMVALUE,sz);
    return (void*) space;
 }
 
@@ -478,8 +477,6 @@ void TStorage::SetCustomNewDelete()
 void TStorage::AddToHeap(ULong_t begin, ULong_t end)
 {
    //add a range to the heap
-   if (begin < fgHeapBegin) fgHeapBegin = begin;
-   if (end   > fgHeapEnd)   fgHeapEnd   = end;
 }
 
 //______________________________________________________________________________
