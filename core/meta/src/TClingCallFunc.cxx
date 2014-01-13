@@ -272,7 +272,9 @@ returnType sv_to(const cling::StoredValueRef& svref)
             break;
          case BuiltinType::WChar_U: {
                // wchar_t on targets where it is unsigned
-               return (returnType) gv.IntVal.getZExtValue();
+               // The standard doesn't allow to specify signednedd of wchar_t
+               // thus this maps simply to wchar_t.
+            return (returnType) (wchar_t) gv.IntVal.getZExtValue();
             }
             break;
          case BuiltinType::Char16: {
@@ -324,7 +326,9 @@ returnType sv_to(const cling::StoredValueRef& svref)
             break;
          case BuiltinType::WChar_S: {
                // wchar_t on targets where it is signed
-               return (returnType) gv.IntVal.getSExtValue();
+               // The standard doesn't allow to specify signednedd of wchar_t
+               // thus this maps simply to wchar_t.
+            return (returnType) (wchar_t) gv.IntVal.getSExtValue();
             }
             break;
          case BuiltinType::Short: {
@@ -1686,7 +1690,7 @@ public:
       short s;
       //char32_t c32;
       //char16_t c16;
-      unsigned wchar_t uwc;
+      //unsigned wchar_t uwc; - non-standard
       wchar_t wc;
       unsigned char uc;
       signed char sc;
@@ -1820,7 +1824,9 @@ TClingCallFunc::exec(void* address, void* ret) const
                }
                break;
             case BuiltinType::WChar_U: {
-                  // wchar_t on targets where it is unsigned
+                  // wchar_t on targets where it is unsigned.
+                  // The standard doesn't allow to specify signednedd of wchar_t
+                  // thus this maps simply to wchar_t.
                   ValHolder vh;
                   vh.u.wc = (wchar_t) sv_to_ulong_long(fArgVals[i]);
                   vh_ary.push_back(vh);
@@ -1902,7 +1908,9 @@ TClingCallFunc::exec(void* address, void* ret) const
                }
                break;
             case BuiltinType::WChar_S: {
-                  // wchar_t on targets where it is signed
+                  // wchar_t on targets where it is signed.
+                  // The standard doesn't allow to specify signednedd of wchar_t
+                  // thus this maps simply to wchar_t.
                   ValHolder vh;
                   vh.u.wc = (wchar_t) sv_to_long_long(fArgVals[i]);
                   vh_ary.push_back(vh);
@@ -2275,7 +2283,9 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
             }
             break;
          case BuiltinType::WChar_U: {
-               // wchar_t on targets where it is unsigned
+               // wchar_t on targets where it is unsigned.
+               // The standard doesn't allow to specify signednedd of wchar_t
+               // thus this maps simply to wchar_t.
                wchar_t retVal = L'\0';
                exec(address, &retVal);
                GenericValue gv;
@@ -2403,7 +2413,9 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
             }
             break;
          case BuiltinType::WChar_S: {
-               // wchar_t on targets where it is signed
+               // wchar_t on targets where it is signed.
+               // The standard doesn't allow to specify signednedd of wchar_t
+               // thus this maps simply to wchar_t.
                wchar_t retVal = L'\0';
                exec(address, &retVal);
                GenericValue gv;
