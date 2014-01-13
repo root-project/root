@@ -6,12 +6,12 @@
 
    //Add the tutorials directory to the macro path
    //This is necessary in case this macro is executed from another user directory
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("demos.C","");
-   dir.ReplaceAll("/./","");
+   TString dirName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   dirName.ReplaceAll("demos.C","");
+   dirName.ReplaceAll("/./","");
    const char *current = gROOT->GetMacroPath();
-   gROOT->SetMacroPath(Form("%s:%s",current,dir.Data()));
-   
+   gROOT->SetMacroPath(Form("%s:%s",current,dirName.Data()));
+
    TControlBar *bar = new TControlBar("vertical", "Demos",10,10);
    bar->AddButton("Help Demos",".x demoshelp.C",        "Click Here For Help on Running the Demos");
    bar->AddButton("browser",   "new TBrowser;",         "Start the ROOT Browser");

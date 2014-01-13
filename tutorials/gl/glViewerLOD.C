@@ -29,7 +29,7 @@ void glViewerLOD(Int_t reqNodes = 1000, Bool_t randomDist = kTRUE,
    // Create random number of unique sphere shapes - up to 25% of
    // total placed sphere requested
    UInt_t volumeCount = gRandom->Integer(reqNodes/4)+1;
-   TGeoVolume ** volumes = new TGeoVolume[volumeCount];
+   TGeoVolume ** volumes = new TGeoVolume *[volumeCount];
    TGeoVolume * volume;
 
    Double_t dummy;

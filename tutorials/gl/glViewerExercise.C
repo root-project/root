@@ -2,7 +2,7 @@
 //Author: Richard maunder
 
 #include "TGLViewer.h"
-#include "TGLPerspectiveCamera.h"
+#include "TGLOrthoCamera.h"
 #include "TTimer.h"
 #include "TRandom.h"
 #include "TVirtualPad.h"
@@ -117,7 +117,8 @@ void glViewerExercise()
    v->SetCurrentCamera(camera);
    v->CurrentCamera().SetExternalCenter(kTRUE);
    if (id > 2) {
-      TGLOrthoCamera& o = v->CurrentCamera();
+      //0, 1, and 2 - are different 'perspective' camers.
+      TGLOrthoCamera& o = static_cast<TGLOrthoCamera &>(v->CurrentCamera());
       o.SetEnableRotate(kTRUE);
    }
 
