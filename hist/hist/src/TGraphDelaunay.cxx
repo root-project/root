@@ -166,12 +166,9 @@ Double_t TGraphDelaunay::ComputeZ(Double_t x, Double_t y)
    Double_t zz = Interpolate(xx, yy);
 
    // Wrong zeros may appear when points sit on a regular grid.
-   // The following lines try to avoid this problem.
-   if (zz==0) {
-      xx += 0.001;
-      yy += 0.001;
-      zz = Interpolate(xx, yy);
-   }
+   // The following line try to avoid this problem.
+   if (zz==0) zz = Interpolate(xx+0.0001, yy);
+
    return zz;
 }
 

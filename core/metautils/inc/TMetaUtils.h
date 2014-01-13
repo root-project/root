@@ -36,6 +36,7 @@ namespace clang {
    class SourceLocation;
    class TagDecl;
    class Type;
+   class TypeDecl;
    class TypedefNameDecl;
    class Attr;
 }
@@ -470,6 +471,12 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 // adding default template argument for all types except the STL collections
 // where we remove the default template argument if any.
 void GetNormalizedName(std::string &norm_name, const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt);
+
+//______________________________________________________________________________
+// Alternative signature
+void GetNormalizedName(std::string &norm_name,
+                       const clang::TypeDecl* typeDecl,
+                       const cling::Interpreter &interpreter);
 
 //______________________________________________________________________________
 // Returns comment in a meaningful way

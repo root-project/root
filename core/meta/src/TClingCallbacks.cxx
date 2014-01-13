@@ -230,11 +230,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
       // Use the Normalized name for the autoload
       std::string Name;
-      ROOT::TMetaUtils::TNormalizedCtxt tNormCtxt(m_Interpreter->getLookupHelper());
-      ROOT::TMetaUtils::GetNormalizedName(Name,
-                                          C.getTypeDeclType(Specialization),
-                                          *m_Interpreter,
-                                          tNormCtxt);
+      ROOT::TMetaUtils::GetNormalizedName(Name,Specialization,*m_Interpreter);
                                           
                      
       // This would mean it is probably a template. Try autoload template.

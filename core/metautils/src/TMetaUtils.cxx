@@ -3095,6 +3095,22 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 }
 
 //______________________________________________________________________________
+void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
+                                         const clang::TypeDecl* typeDecl,
+                                         const cling::Interpreter &interpreter)
+{
+   ROOT::TMetaUtils::TNormalizedCtxt tNormCtxt(interpreter.getLookupHelper());
+   const clang::Sema &sema = interpreter.getSema();
+   clang::ASTContext& astCtxt = sema.getASTContext();
+   clang::QualType qualType = astCtxt.getTypeDeclType(typeDecl);
+   
+   ROOT::TMetaUtils::GetNormalizedName(norm_name,
+                                       qualType,
+                                       interpreter,
+                                       tNormCtxt);
+}
+
+//______________________________________________________________________________
 std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 {
    const std::string defaultInclude ("include");
