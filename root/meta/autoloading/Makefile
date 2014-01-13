@@ -60,6 +60,12 @@ testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
 
+# Sed-away the line number. A different number of new-style rootmap files (i.e.
+# with forward declarations) for example on different platforms can result in a
+# different line number.
+MissingEntriesROOT-5759.log: FullMissingEntriesROOT-5759.log
+	$(CMDECHO) cat FullMissingEntriesROOT-5759.log |sed 's/input_line_[0-9][0-9][0-9]://g' > MissingEntriesROOT-5759.log 2>&1
+
 
 MissingEntriesROOT-5759: MissingEntriesROOT-5759.log
 	$(TestDiff)
