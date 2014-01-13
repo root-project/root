@@ -3443,7 +3443,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                assert(cling::Interpreter::kSuccess == compRes &&
                       "A declaration in a rootmap could not be compiled");
                if (T==NULL || compRes!=cling::Interpreter::kSuccess){
-                  Warning("LoadLibraryMap",
+                  std::cout << "T = " << T << std::endl;
+                  Warning("ReadRootmapFile",
                           "Problems declaring string '%s' were encountered.", line.c_str()) ;
                   continue;
                }
@@ -3467,10 +3468,10 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             if (gDebug > 3) {
                const char* wlib = gSystem->DynamicPathName(lib, kTRUE);
                if (wlib) {
-                  Info("LoadLibraryMap", "new section for %s", lib_name.Data());
+                  Info("ReadRootmapFile", "new section for %s", lib_name.Data());
                }
                else {
-                  Info("LoadLibraryMap", "section for %s (library does not exist)", lib_name.Data());
+                  Info("ReadRootmapFile", "section for %s (library does not exist)", lib_name.Data());
                }
                delete[] wlib;
             }
@@ -3478,7 +3479,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
          else if (line.substr(0, 6) == "class ") {
             std::string classname = line.substr(6, line.length()-6);
             if (gDebug > 6)
-               Info("LoadLibraryMap", "class %s in %s", classname.c_str(), lib_name.Data());
+               Info("ReadRootmapFile", "class %s in %s", classname.c_str(), lib_name.Data());
             if (!fMapfile->Lookup(classname.c_str()))
                fMapfile->SetValue(classname.c_str(), lib_name.Data());
          }
@@ -3488,7 +3489,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             if (!fMapNamespaces->FindObject(classname.c_str()))
                fMapNamespaces->Add(new TNamed(classname.c_str(), ""));
             if (gDebug > 6)
-               Info("LoadLibraryMap", "namespace %s in %s", classname.c_str(), lib_name.Data());
+               Info("ReadRootmapFile", "namespace %s in %s", classname.c_str(), lib_name.Data());
          }
       }
       file.close();
