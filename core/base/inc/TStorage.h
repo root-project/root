@@ -30,12 +30,12 @@ typedef void *(*ReAllocFun_t)(void*, size_t);
 typedef void *(*ReAllocCFun_t)(void*, size_t, size_t);
 typedef char *(*ReAllocCharFun_t)(char*, size_t, size_t);
 
+/*Magic number written to memory after TStorage::ObjectAlloc */
+#define TSTORAGEMEMVALUE 0x99999999
 
 class TStorage {
 
 private:
-   static ULong_t        fgHeapBegin;          // begin address of heap
-   static ULong_t        fgHeapEnd;            // end address of heap
    static size_t         fgMaxBlockSize;       // largest block allocated
    static FreeHookFun_t  fgFreeHook;           // function called on free
    static void          *fgFreeHookData;       // data used by this function
@@ -80,14 +80,7 @@ public:
    ClassDef(TStorage,0)  //Storage manager class
 };
 
-#define TSTORAGEMEMVALUE 0x99999999
 #ifndef WIN32
-inline void TStorage::AddToHeap(ULong_t begin, ULong_t end)
-{ }
-
-inline Bool_t TStorage::IsOnHeap(void *p)
-   { return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd; }
-
 inline size_t TStorage::GetMaxBlockSize() { return fgMaxBlockSize; }
 
 inline void TStorage::SetMaxBlockSize(size_t size) { fgMaxBlockSize = size; }
