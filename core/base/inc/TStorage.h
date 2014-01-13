@@ -80,10 +80,10 @@ public:
    ClassDef(TStorage,0)  //Storage manager class
 };
 
+#define TSTORAGEMEMVALUE 0x99999999
 #ifndef WIN32
 inline void TStorage::AddToHeap(ULong_t begin, ULong_t end)
-   { if (begin < fgHeapBegin) fgHeapBegin = begin;
-     if (end   > fgHeapEnd)   fgHeapEnd   = end; }
+{ }
 
 inline Bool_t TStorage::IsOnHeap(void *p)
    { return (ULong_t)p >= fgHeapBegin && (ULong_t)p < fgHeapEnd; }
