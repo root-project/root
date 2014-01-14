@@ -2608,23 +2608,33 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
    //   SubCase 2.b: use the fully qualified name
    // Case 3: a TemplateTemplate argument
    //   E.g. template <template <typename> class T> class container { };
+
+   static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
    
    templateArgs="<";
    for (clang::TemplateParameterList::const_iterator prmIt = tmplParamList.begin();
-        prmIt != tmplParamList.end(); prmIt++){
-
+        prmIt != tmplParamList.end(); prmIt++){      
+      
       if (prmIt != tmplParamList.begin())
          templateArgs += ", ";
       
       clang::NamedDecl* nDecl = *prmIt;
       std::string typeName;
-   
-      // Case 1
+
+   // Case 1
       if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
+         if(nDecl->isParameterPack ()){
+            ROOT::TMetaUtils::Warning(0,paramPackWarning);
+            return 1;
+         }
          typeName = "typename " + (*prmIt)->getNameAsString();
       }
       // Case 2
-      else if (const clang::NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){         
+      else if (const clang::NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
+         if(nDecl->isParameterPack ()){
+            ROOT::TMetaUtils::Warning(0,paramPackWarning);
+            return 1;
+         }
          const clang::QualType &theType = nttpd->getType();
          // If this is an enum, use int as it is impossible to fwd declare and
          // this makes sense since it is not a type...            
@@ -2643,6 +2653,10 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
       }
       // Case 3: TemplateTemplate argument
       else if (const clang::TemplateTemplateParmDecl* ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(nDecl)){
+         if(nDecl->isParameterPack ()){
+            ROOT::TMetaUtils::Warning(0,paramPackWarning);
+            return 1;
+         }
          int retCode = ExtractTemplateDefinition(*ttpd,interpreter,typeName,NULL);
          if (retCode!=0){
             std::string astDump;
