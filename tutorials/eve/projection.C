@@ -16,8 +16,8 @@ void projection()
    gEve->GetDefaultViewer()->AddScene(s);
    TGLViewer* v = gEve->GetDefaultGLViewer();
    v->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   TGLOrthoCamera* cam = (TGLOrthoCamera*) v->CurrentCamera();
-   cam->SetZoomMinMax(0.2, 20);
+   TGLOrthoCamera& cam = (TGLOrthoCamera&) v->CurrentCamera();
+   cam.SetZoomMinMax(0.2, 20);
 
    // projections
    TEveProjectionManager* mng =
