@@ -4,9 +4,11 @@
 // Calorimeter detailed view by using TEveCaloDataVec as data-source.
 // Demonstrantes how to plot calorimiter data with irregular bins.
 
+#include "calorimeters.C"
+
 void calo_detail()
 {
-   gROOT->LoadMacro("calorimeters.C");
+   //gROOT->LoadMacro("calorimeters.C");
    TEveManager::Create();
 
    // data
