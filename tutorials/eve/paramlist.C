@@ -3,17 +3,6 @@
 
 // Demonstrates usage of simple configuration via TEveParamList class.
 
-/*
-// Must run in compiled mode for dynamic_cast to work properly.
-// NEW for CLING: no need in this trick anymore.
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("paramlist.C");
-   paramlist();
-}
-#else
-*/
-
 #include "TEveManager.h"
 #include "TEveParamList.h"
 #include "TQObject.h"
@@ -63,5 +52,3 @@ void paramlist()
 
    new TParamFollower;
 }
-
-//#endif
