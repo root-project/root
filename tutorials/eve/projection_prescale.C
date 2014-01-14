@@ -19,8 +19,8 @@ void projection_prescale()
 
    TGLViewer* pgv = pev->GetGLViewer();
    pgv->SetCurrentCamera(TGLViewer::kCameraOrthoXOY);
-   TGLOrthoCamera* cam = (TGLOrthoCamera*) pgv->CurrentCamera();
-   cam->SetZoomMinMax(0.2, 20);
+   TGLOrthoCamera& cam = (TGLOrthoCamera&) pgv->CurrentCamera();
+   cam.SetZoomMinMax(0.2, 20);
 
    // projections
    TEveProjectionManager* mng = new TEveProjectionManager();
