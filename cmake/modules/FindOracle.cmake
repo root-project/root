@@ -128,6 +128,15 @@ ELSE (ORACLE_FOUND)
     ENDIF (ORACLE_FIND_REQUIRED)
 ENDIF (ORACLE_FOUND)
 
+mark_as_advanced(
+  ORACLE_INCLUDE_DIR
+  ORACLE_LIBRARY_OCCI
+  ORACLE_LIBRARY_LNNZ
+  ORACLE_LIBRARY_CLNTSH
+  SQLPLUS_EXECUTABLE
+)
+
+
 MACRO (PREPROCESS_ORACLE_FILES INFILES INCLUDE_DIRS_IN)
  
   set(SYS_INCLUDE "'sys_include=(${ORACLE_HOME}/precomp/public,/usr/include/,/usr/local/gcc3.2.3/lib/gcc-lib/i686-pc-linux-gnu/3.2.3/include,/usr/local/gcc3.2.3/lib/gcc-lib/i686-pc-linux-gnu,/usr/include/g++-3,/usr/include/c++/3.2/backward,/usr/include/c++/3.2)'")
