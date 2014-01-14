@@ -78,7 +78,7 @@
   float dylc   = (0.4-xlc)/nloops;
   float dxt1   = (0.5-xt1)/nloops;
   float dyt1   = (0.8-yt1)/nloops;
-  float t10    = t1.GetTextSize();
+  float t10    = t1->GetTextSize();
   float t1end  = 0.3;
   float t1ds   = (t1end - t10)/nloops;
   Int_t color  = 0;
