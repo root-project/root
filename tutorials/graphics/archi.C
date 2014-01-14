@@ -207,7 +207,7 @@
          Float_t x0 = xlow +(i-1)*0.6;
          Float_t x1 = x0 + dx;
          TPavesText *anal = new TPavesText(x0,y0,x1,y1,7,"tr");
-         anal.Draw();
+         anal->Draw();
       }
    }
    TText daq;
@@ -223,5 +223,5 @@
    daq.DrawText(10.,0.7,"Attributes");
    daq.DrawText(10.,0.3,"Containers");
 
-   c1.cd();
+   c1->cd();
 }
