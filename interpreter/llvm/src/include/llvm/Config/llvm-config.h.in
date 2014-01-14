@@ -79,9 +79,6 @@
 /* Define if this is Win32ish platform */
 #undef LLVM_ON_WIN32
 
-/* C++ compiler used to build llvm */
-#undef LLVM_CXX
-
 /* Define to path to circo program if found or 'echo circo' otherwise */
 #undef LLVM_PATH_CIRCO
 
