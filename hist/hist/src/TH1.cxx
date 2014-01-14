@@ -535,6 +535,7 @@ extern void H1LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_
 extern void H1LeastSquareSeqnd(Int_t n, Double_t *a, Int_t idim, Int_t &ifail, Int_t k, Double_t *b);
 
 // Internal exceptions for the CheckConsistency method
+class DifferentDimension: public std::exception {};
 class DifferentNumberOfBins: public std::exception {};
 class DifferentAxisLimits: public std::exception {};
 class DifferentBinLimits: public std::exception {};
@@ -1463,13 +1464,21 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
    // Check histogram compatibility
    if (h1 == h2) return true;
 
+   if (h1->GetDimension() != h2->GetDimension() ) { 
+      throw DifferentDimension();
+      return false;
+   }
+   Int_t dim = h1->GetDimension(); 
+ 
    // returns kTRUE if number of bins and bin limits are identical
    Int_t nbinsx = h1->GetNbinsX();
    Int_t nbinsy = h1->GetNbinsY();
    Int_t nbinsz = h1->GetNbinsZ();
 
    // Check whether the histograms have the same number of bins.
-   if (nbinsx != h2->GetNbinsX() || nbinsy != h2->GetNbinsY() || nbinsz != h2->GetNbinsZ()) {
+   if (nbinsx != h2->GetNbinsX() || 
+       (dim > 1 && nbinsy != h2->GetNbinsY())  || 
+       (dim > 2 && nbinsz != h2->GetNbinsZ()) ) {
       throw DifferentNumberOfBins();
       return false;
    }
@@ -1478,20 +1487,20 @@ bool TH1::CheckConsistency(const TH1* h1, const TH1* h2)
 
    // check axis limits
    ret &= CheckAxisLimits(h1->GetXaxis(), h2->GetXaxis());
-   ret &= CheckAxisLimits(h1->GetYaxis(), h2->GetYaxis());
-   ret &= CheckAxisLimits(h1->GetZaxis(), h2->GetZaxis());
+   if (dim > 1) ret &= CheckAxisLimits(h1->GetYaxis(), h2->GetYaxis());
+   if (dim > 2) ret &= CheckAxisLimits(h1->GetZaxis(), h2->GetZaxis());
 
    // check bin limits
    ret &= CheckBinLimits(h1->GetXaxis(), h2->GetXaxis());
-   ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
-   ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
+   if (dim > 1) ret &= CheckBinLimits(h1->GetYaxis(), h2->GetYaxis());
+   if (dim > 2) ret &= CheckBinLimits(h1->GetZaxis(), h2->GetZaxis());
 
    // check labels if histograms are both not empty
    if ( (h1->fTsumw != 0 || h1->GetEntries() != 0) &&
         (h2->fTsumw != 0 || h2->GetEntries() != 0) ) {
       ret &= CheckBinLabels(h1->GetXaxis(), h2->GetXaxis());
-      ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
-      ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
+      if (dim > 1) ret &= CheckBinLabels(h1->GetYaxis(), h2->GetYaxis());
+      if (dim > 2) ret &= CheckBinLabels(h1->GetZaxis(), h2->GetZaxis());
    }
 
    return ret;
