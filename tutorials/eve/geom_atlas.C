@@ -28,7 +28,7 @@ void geom_atlas()
    // EClipType not exported to CINT (see TGLUtil.h):
    // 0 - no clip, 1 - clip plane, 2 - clip box
    TGLViewer *v = gEve->GetDefaultGLViewer();
-   v->GetClipSet()->SetClipType(1);
+   v->GetClipSet()->SetClipType(TGLClip::EType(1));
    v->RefreshPadEditor(v);
 
    v->CurrentCamera().RotateRad(-.7, 0.5);
