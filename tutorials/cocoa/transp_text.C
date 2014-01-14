@@ -1,9 +1,9 @@
 //This macro is based on labels1.C by Rene Brun.
 //Updated by Timur Pocheptsov to use transparent text.
+//Requires OS X and ROOT configured with --enable-cocoa.
 
-//All these includes (except freecustomcolor.h) are to make
-//this macro 'ACLiCable'.
 
+//Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"
 #include "TPaveText.h"
 #include "TCanvas.h"
@@ -13,44 +13,39 @@
 #include "TColor.h"
 #include "TH1F.h"
 
-#include "freecustomcolor.h"
+//Aux. functions for tutorials/cocoa.
+#include "customcolor.h"
 
 void transp_text()
 {
-   //This macro only shows how to use transparency with a TPaveText.
-   //In no way it's a good example of a right memory management
-   //or an error handling.
-   //Requires OS X and ROOT configured with --enable-cocoa.
-
+   //1. Some sanity check.
    if (!gRandom) {
-      ::Error("transp_text", "gRandom is null");
+      Error("transp_text", "gRandom is null");
       return;
    }
 
-   //1. Let's check, if we can create custom colors first:
-   const Int_t grayColorIndex = ROOT::CocoaTutorials::FindFreeCustomColorIndex();
-   if (grayColorIndex == -1) {
-      ::Error("transp_text", "failed to create a custom color - no index found for transparent gray");
+
+   //2. Try to 'allocate' free indices for our custom colors -
+   //we can use hard-coded indices like 1001, 1002, 1003 ... but
+   //I prefer to find free indices in a ROOT's color table
+   //to avoid possible conflicts with other tutorials.
+   Int_t indices[2] = {};
+   if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 2) {
+      Error("transp_text", "failed to create new custom colors");
       return;
    }
 
-   //Create special transparent colors for both pavetext fill color and text color.
+   //3. Create special transparent colors for both pavetext fill color and text color.
+   const Int_t grayColorIndex = indices[0], blackColorIndex = indices[1];
    new TColor(grayColorIndex, 0.8, 0.8, 0.8, "transparent_gray", 0.85);
-   
-   const Int_t blackColorIndex = ROOT::CocoaTutorials::FindFreeCustomColorIndex();
-   if (blackColorIndex == -1) {
-      ::Error("transp_text", "failed to create a custom color - no index found for transparent black");
-      return;
-   }
-
    new TColor(blackColorIndex, 0., 0., 0., "transparent_black", 0.5);
 
-   //Create a TCanvas first to force gVirtualX initialization.
-   TCanvas * const c1 = new TCanvas("c1","transparent text demo", 10, 10, 900, 500);
+   //4. Create a TCanvas first to force gVirtualX initialization.
+   TCanvas * const c1 = new TCanvas("transparent text","transparent text demo", 10, 10, 900, 500);
    //We can check gVirtualX (its type):
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      ::Warning("transt_text", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
-                               "To have transparency in a canvas graphics, you need OS X version with cocoa enabled");
+      Warning("transt_text", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
+                             "To have transparency in a canvas graphics, you need OS X version with cocoa enabled");
    }
 
    const Int_t nx = 20;
@@ -62,7 +57,7 @@ void transp_text()
    c1->SetGrid();
    c1->SetBottomMargin(0.15);
 
-   TH1F * const h = new TH1F("h", "test", nx, 0, nx);
+   TH1F * const h = new TH1F("h4", "test", nx, 0, nx);
 
    h->SetFillColor(38);
    for (Int_t i = 0; i < 5000; ++i)

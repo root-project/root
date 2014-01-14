@@ -1,10 +1,8 @@
 //This macro shows how to create and use linear gradients to fill
 //a histogram or a pad.
-//It works ONLY on MacOS X with cocoa graphical back-end.
-//This macro DOES NOT demonstrate a good memory management/error handling.
+//Requires OS X and ROOT configured with --enable-cocoa.
 
-
-//These includes are for ACLiC.
+//Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
@@ -12,113 +10,70 @@
 #include "TError.h"
 #include "TH1F.h"
 
-#include "freecustomcolor.h"
-
-namespace ROOT {
-namespace CocoaTutorials {
-
-//______________________________________________________________________
-Int_t create_pad_frame_gradient()
-{
-   //We create a gradient with 4 steps - from dark (and semi-transparent)
-   //gray to almost transparent (95%) white and to white and to dark gray again.
-   
-   //Unfortunately, if function fails at some stage, we are not deleting custom colors created
-   //before this failure.
-   
-   const Double_t locations[] = {0., 0.2, 0.8, 1.};
-   
-   const Int_t color1Index = FindFreeCustomColorIndex();
-   if (color1Index == -1) {
-      ::Error("create_pad_frame_gradient", "no free index found for a custom gray color");
-      return -1;
-   }
-   
-   new TColor(color1Index, 0.25, 0.25, 0.25, "special pad color1", 0.55);
-   
-   const Int_t color2Index = FindFreeCustomColorIndex();
-   if (color2Index == -1) {
-      ::Error("create_pad_frame_gradient", "no free index found for a custom white color");
-      return -1;
-   }
-   
-   new TColor(color2Index, 1., 1., 1., "special pad color2", 0.05);
-   
-   const Int_t gradientIndex = FindFreeCustomColorIndex();
-   if (gradientIndex == -1) {
-      ::Error("create_pad_frame_gradient", "no free index found for a resulting gradient color");
-      return -1;
-   }
-   
-   const Color_t colorIndices[4] = {color1Index, color2Index, color2Index, color1Index};
-   new TColorGradient(gradientIndex, TColorGradient::kGDHorizontal, 4, locations, colorIndices);
-   
-   return gradientIndex;
-}
-
-//______________________________________________________________________
-Int_t create_pad_gradient()
-{
-   //We create two-steps gradient from ROOT's standard colors (38 and 30).
-   const Int_t gradientIndex = FindFreeCustomColorIndex();
-   if (gradientIndex != -1) {
-      const Double_t locations[] = {0., 1.};
-      const Color_t colorIndices[4] = {38, 30};
-      new TColorGradient(gradientIndex, TColorGradient::kGDVertical, 2, locations, colorIndices);
-   } else
-      ::Error("create_pad_gradient", "no free index found for a gradient color");
-   
-   return gradientIndex;
-}
-
-//______________________________________________________________________
-Int_t create_histo_gradient()
-{
-   const Int_t gradientIndex = FindFreeCustomColorIndex();
-   if (gradientIndex != -1) {
-      //Gradient to fill a histogramm
-      const Color_t colorIndices[3] = {kRed, kOrange, kYellow};
-      const Double_t lengths[3] = {0., 0.5, 1.};
-      new TColorGradient(gradientIndex, TColorGradient::kGDVertical, 3, lengths, colorIndices);
-   } else
-      ::Error("create_histo_gradient", "no free index found for a gradient color");
-   
-   return gradientIndex;
-}
-
-}//CocoaTutorials
-}//ROOT
+//Aux. functions for tutorials/cocoa.
+#include "customcolor.h"
 
 //______________________________________________________________________
 void grad()
 {
-   using namespace ROOT::CocoaTutorials;
-
-   const Int_t padFrameColorIndex = create_pad_frame_gradient();
-   if (padFrameColorIndex == -1)//error message was issued already.
-      return;
-   
-   const Int_t padColorIndex = create_pad_gradient();
-   if (padColorIndex == -1)//error message was printed by create_pad_gradient.
-      return;
-   
-   const Int_t fillColorIndex = create_histo_gradient();
-   if (fillColorIndex == -1)
-      return;
-
-   TCanvas * const cnv = new TCanvas("cnv", "gradient test", 100, 100, 600, 600);
-   //After canvas was created, gVirtualX should be non-null.
-   if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      ::Error("grad", "This macro works only on MacOS X with --enable-cocoa");
-      delete cnv;
+   //1. Try to 'allocate' free indices for our custom colors.
+   //We can use hard-coded indices like 1001, 1002, 1003, ... but
+   //I prefer to find free indices in the ROOT's color table
+   //to avoid possible conflicts with other tutorials.
+   Int_t colorIndices[5] = {};
+   if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(colorIndices) != 5) {
+      Error("grad", "failed to create new custom colors");
       return;
    }
 
-   cnv->SetFillColor(padColorIndex);
-   cnv->SetFrameFillColor(padFrameColorIndex);
+   //2. Test if we have a right GUI back-end.
+   TCanvas * const cnv = new TCanvas("gradient demo 1", "gradient demo 1", 100, 100, 600, 600);
+   //After canvas was created, gVirtualX should be non-null.
+   if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
+      Error("grad", "This macro works only on MacOS X with --enable-cocoa");
+      delete cnv;
+      return;
+   }
    
-   TH1F * const hist = new TH1F("a", "b", 20, -3., 3.);
-   hist->SetFillColor(fillColorIndex);
+   //3. Create custom colors.
+   const Int_t frameGradient = colorIndices[2];//this gradient is a mixture of colorIndices[0] and colorIndices[1]
+   //Fill color for a pad frame:
+   {
+      new TColor(colorIndices[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
+      new TColor(colorIndices[1], 1., 1., 1., "special pad color2", 0.05);
+
+      const Double_t locations[] = {0., 0.2, 0.8, 1.};
+      const Color_t gradientIndices[4] = {colorIndices[0], colorIndices[1], colorIndices[1], colorIndices[0]};
+
+      //Gradient for a pad's frame.
+      new TColorGradient(frameGradient, TColorGradient::kGDHorizontal, 4, locations, gradientIndices);
+   }
+
+   const Int_t padGradient = colorIndices[3];
+   //Fill color for a pad:
+   {
+      const Double_t locations[] = {0., 1.};
+      const Color_t gradientIndices[4] = {38, 30};//We create a gradient from system colors.
+      
+      //Gradient for a pad.
+      new TColorGradient(padGradient, TColorGradient::kGDVertical, 2, locations, gradientIndices);
+   }
+   
+   const Int_t histGradient = colorIndices[4];
+   //Fill color for a histogram:
+   {
+      const Color_t gradientIndices[3] = {kRed, kOrange, kYellow};
+      const Double_t lengths[3] = {0., 0.5, 1.};
+      
+      //Gradient for a histogram.
+      new TColorGradient(histGradient, TColorGradient::kGDVertical, 3, lengths, gradientIndices);
+   }
+
+   cnv->SetFillColor(padGradient);
+   cnv->SetFrameFillColor(frameGradient);
+   
+   TH1F * const hist = new TH1F("a1", "b1", 20, -3., 3.);
+   hist->SetFillColor(histGradient);
    hist->FillRandom("gaus", 100000);
    hist->Draw();
 
