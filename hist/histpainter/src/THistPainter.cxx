@@ -4804,6 +4804,9 @@ void THistPainter::PaintCandlePlot(Option_t *)
    h2->TAttFill::Modify();
    h2->TAttLine::Modify();
    h2->TAttMarker::Modify();
+
+   delete [] prob;
+   delete [] quantiles;
 }
    
 
