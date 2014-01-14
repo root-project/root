@@ -81,6 +81,7 @@
 //                                                                     //
 /////////////////////////////////////////////////////////////////////////
 
+#include "TApplication.h"
 #include "TControlBar.h"
 #include "TGuiFactory.h"
 #include "TList.h"
@@ -224,6 +225,12 @@ void TControlBar::Hide()
 void TControlBar::Initialize(Int_t x, Int_t y)
 {
    // Initialize controlbar.
+
+   // Load and initialize graphics libraries if
+   // TApplication::NeedGraphicsLibs() has been called by a
+   // library static initializer.
+   if (gApplication)
+      gApplication->InitializeGraphics();
 
    if (x == -999) {
       fControlBarImp = gGuiFactory->CreateControlBarImp( this, GetName() );
