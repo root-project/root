@@ -25,7 +25,9 @@
 
 
 //- data and local helpers ---------------------------------------------------
-R__EXTERN PyObject* gRootModule;
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
 
 namespace {
 

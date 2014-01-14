@@ -44,7 +44,9 @@
 
 
 //- data _______________________________________________________________________
-R__EXTERN PyObject* gRootModule;
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
 
 namespace {
 
@@ -107,6 +109,8 @@ namespace PyROOT {
 }
 
 namespace {
+
+   using namespace PyROOT;
 
    inline void AddToGlobalScope( const char* label, const char* /* hdr */, TObject* obj, TClass* klass )
    {
