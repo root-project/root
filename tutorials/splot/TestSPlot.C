@@ -36,8 +36,7 @@ void TestSPlot()
    //Read the data and initialize a TSPlot object
    TTree *datatree = new TTree("datatree", "datatree");
    datatree->ReadFile(dataFile, 
-      "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:"
-      "dESignal/D:dEBackground/D:FSignal/D:FBackground/D");
+                      "Mes/D:dE/D:F/D:MesSignal/D:MesBackground/D:dESignal/D:dEBackground/D:FSignal/D:FBackground/D",' ');
 
    TSPlot *splot = new TSPlot(0, 3, 5420, 2, datatree);
 
