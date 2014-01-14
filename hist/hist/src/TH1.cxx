@@ -7371,7 +7371,11 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
 Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 {
    //  Statistical test of compatibility in shape between
-   //  THIS histogram and h2, using Kolmogorov test.
+   //  this histogram and h2, using Kolmogorov test.
+   //  Note that the KolmogorovTest (KS) test should in theory be used only for unbinned data
+   //  and not for binned data as in the case of the histogram (see NOTE 3 below). 
+   //  So, before using this method blindly, read the NOTE 3. 
+   //
    //
    //     Default: Ignore under- and overflow bins in comparison
    //
@@ -7433,6 +7437,10 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    //  slightly too big. That is, setting an acceptance criterion of (PROB>0.05
    //  will assure that at most 5% of truly compatible histograms are rejected,
    //  and usually somewhat less."
+   //
+   //  Note also that for GoF test of unbinned data ROOT provides also the class
+   //  ROOT::Math::GoFTest. The class has also method for doing one sample tests
+   //  (i.e. comparing the data with a given distribution). 
 
    TString opt = option;
    opt.ToUpper();
