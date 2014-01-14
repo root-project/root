@@ -3,13 +3,6 @@
 
 // Demonstrates usage of TGLAnnotation class.
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("annotation.C");
-   annotation();
-}
-#else
-
 #include <TEveManager.h>
 #include <TGLViewer.h>
 #include <TGLAnnotation.h>
@@ -44,8 +37,6 @@ public:
       TurnOn();
       return true;
    }
-
-   ClassDef(MyTimer, 0);
 };
 
 void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0)
@@ -79,4 +70,3 @@ void annotation(Float_t a=10, Float_t d=5, Float_t x=0, Float_t y=0, Float_t z=0
    timer->Reset();
    timer->TurnOn();
 }
-#endif
