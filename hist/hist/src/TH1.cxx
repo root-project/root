@@ -8339,6 +8339,66 @@ Double_t TH1::GetCellError(Int_t binx, Int_t biny) const
    return GetBinError(bin);
 }
 
+//L.M. These following getters are useless and should be probably deprecated
+//______________________________________________________________________________
+Double_t TH1::GetBinCenter(Int_t bin) const 
+{
+   // return bin center for 1D historam
+   // Better to use h1.GetXaxis().GetBinCenter(bin)
+   
+   if (fDimension == 1) return  fXaxis.GetBinCenter(bin);
+   Error("GetBinCenter","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   return TMath::QuietNaN();
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetBinLowEdge(Int_t bin) const 
+{
+   // return bin lower edge for 1D historam
+   // Better to use h1.GetXaxis().GetBinLowEdge(bin)
+   
+   if (fDimension == 1) return  fXaxis.GetBinLowEdge(bin);
+   Error("GetBinLowEdge","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   return TMath::QuietNaN();
+}
+
+//______________________________________________________________________________
+Double_t TH1::GetBinWidth(Int_t bin) const 
+{
+   // return bin width for 1D historam
+   // Better to use h1.GetXaxis().GetBinWidth(bin)
+   
+   if (fDimension == 1) return  fXaxis.GetBinWidth(bin);
+   Error("GetBinWidth","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   return TMath::QuietNaN();
+}
+
+//______________________________________________________________________________
+void TH1::GetCenter(Double_t *center) const 
+{
+   // Fill array with center of bins for 1D histogram
+   // Better to use h1.GetXaxis().GetCenter(center)
+   
+   if (fDimension == 1) {
+      fXaxis.GetCenter(center);
+      return;
+   }
+   Error("GetCenter","Invalid method for a %d-d histogram ",fDimension);
+}
+
+//______________________________________________________________________________
+void TH1::GetLowEdge(Double_t *edge) const 
+{
+   // Fill array with low edge of bins for 1D histogram
+   // Better to use h1.GetXaxis().GetLowEdge(edge)
+   
+   if (fDimension == 1) {
+      fXaxis.GetLowEdge(edge);
+      return;
+   }
+   Error("GetLowEdge","Invalid method for a %d-d histogram ",fDimension);
+}
+
 //______________________________________________________________________________
 void TH1::SetBinError(Int_t bin, Double_t error)
 {
