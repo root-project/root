@@ -57,7 +57,20 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
          self.assert_( hasattr( PyTest, '_S_single' ) )
          self.assert_( hasattr( PyTest, '__default_lock_policy' ) )
 
+   def test02NULLPtrPassing( self ):
+      """Allow the programmer to pass NULL in certain cases"""
 
+
+      # note that this test is not protected with USECPP11, as nullptr is
+      # defined explicitly in the ROOT module, not taken from C++
+
+      self.assertNotEqual( nullptr, 0 )
+      self.assertRaises( TypeError, TGraphErrors, 0, 0, 0 )
+
+      g = TGraphErrors( 0, nullptr, nullptr )
+      self.assertEqual( round( g.GetMean(), 8 ), 0.0 )
+
+ 
 ## actual test run
 if __name__ == '__main__':
    from MyTextTestRunner import MyTextTestRunner

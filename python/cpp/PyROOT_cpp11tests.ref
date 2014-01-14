@@ -1,4 +1,5 @@
 Test usage and access of std::shared_ptr<> ... ok
+Allow the programmer to pass NULL in certain cases ... ok
 
 ----------------------------------------------------------------------
 
