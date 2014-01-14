@@ -31,7 +31,7 @@ void arrow()
    gEve->AddElement(a1);
    TEveText* t1 = new TEveText("blue");
    t1->SetFontSize(20);
-   TEveVector tv = a1->GetVector()*0.5+a1->GetOrigin();
+   TEveVector tv = a1->GetVector()*0.5f+a1->GetOrigin();
    t1->RefMainTrans().SetPos(tv.Arr());
    a1->AddElement(t1);
 
