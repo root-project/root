@@ -593,19 +593,61 @@ if(cling)
                  -DLLVM_TARGETS_TO_BUILD=X86
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-      BUILD_COMMAND $(MAKE) libclang
     )
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
     set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
-    set(LLVM_LIBRARIES -L${CMAKE_BINARY_DIR}/LLVM-install/lib -lclangFrontend -lclangSerialization -lclangDriver -lclangCodeGen
-                       -lclangParse -lclangSema -lclangAnalysis  -lclangRewriteCore -lclangAST -lclangBasic -lclangEdit -lclangLex
-                       -lLLVMInstrumentation -lLLVMIRReader -lLLVMAsmParser -lLLVMDebugInfo -lLLVMOption -lLLVMLTO -lLLVMLinker 
-                       -lLLVMipo -lLLVMVectorize -lLLVMBitWriter -lLLVMBitReader -lLLVMTableGen -lLLVMX86Disassembler
-                       -lLLVMX86AsmParser -lLLVMX86CodeGen -lLLVMX86Desc -lLLVMX86Info -lLLVMX86AsmPrinter -lLLVMX86Utils
-                       -lLLVMSelectionDAG -lLLVMAsmPrinter -lLLVMMCDisassembler
-                       -lLLVMMCParser -lLLVMInterpreter -lLLVMMCJIT -lLLVMJIT -lLLVMCodeGen -lLLVMObjCARCOpts -lLLVMScalarOpts 
-                       -lLLVMInstCombine -lLLVMTransformUtils -lLLVMipa -lLLVMAnalysis -lLLVMRuntimeDyld -lLLVMExecutionEngine
-                       -lLLVMTarget -lLLVMMC -lLLVMObject -lLLVMCore -lLLVMSupport)
+    set(LLVM_LIBRARIES ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangFrontend.a 
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangSerialization.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangDriver.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangCodeGen.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangParse.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangSema.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangAnalysis.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangRewriteCore.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangAST.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangBasic.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangEdit.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libclangLex.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMInstrumentation.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMIRReader.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMAsmParser.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMDebugInfo.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMOption.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMLTO.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMLinker.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMipo.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMVectorize.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMBitWriter.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMBitReader.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMTableGen.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86Disassembler.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86AsmParser.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86CodeGen.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86Desc.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86Info.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86AsmPrinter.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86Utils.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMSelectionDAG.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMAsmPrinter.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMMCDisassembler.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMMCParser.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMInterpreter.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMMCJIT.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMJIT.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMCodeGen.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMObjCARCOpts.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMScalarOpts.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMInstCombine.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMTransformUtils.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMipa.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMAnalysis.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMRuntimeDyld.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMExecutionEngine.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMTarget.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMMC.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMObject.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMCore.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMSupport.a )
     file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
     string(REGEX REPLACE ".*PACKAGE_VERSION='([0-9]+[.][0-9]+).*" "\\1" LLVM_VERSION ${_filestr})
   else()
@@ -623,7 +665,10 @@ if(cling)
                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> 
     )
     set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
-    set(CLING_LIBRARIES -L${CMAKE_BINARY_DIR}/CLING-install/lib -lclingInterpreter -lclingMetaProcessor -lclingUtils ${LLVM_LIBRARIES})
+    set(CLING_LIBRARIES ${CMAKE_BINARY_DIR}/CLING-install/lib/libclingInterpreter.a
+                        ${CMAKE_BINARY_DIR}/CLING-install/lib/libclingMetaProcessor.a
+                        ${CMAKE_BINARY_DIR}/CLING-install/lib/libclingUtils.a 
+                        ${LLVM_LIBRARIES})
     #--Additional flags obtained from llvm-config --cxxflags
     set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wmissing-field-initializers -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
     add_dependencies(CLING LLVM)
