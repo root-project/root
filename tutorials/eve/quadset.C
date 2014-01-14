@@ -4,7 +4,7 @@
 // Demonstates usage of 2D digit class TEveQuadSet.
 
 TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
-                       Int_t num=100, Bool_t register=kTRUE)
+                       Int_t num=100, Bool_t registerSet=kTRUE)
 {
    TEveManager::Create();
 
@@ -46,14 +46,14 @@ TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
    // q->SetAlwaysSecSelect(1);
 
    TEveRGBAPaletteOverlay *po = new TEveRGBAPaletteOverlay(pal, 0.55, 0.1, 0.4, 0.05);
-   TGLViewer* v = gEve->GetDefaultGLViewer();
+   v = gEve->GetDefaultGLViewer();
    v->AddOverlayElement(po);
 
    // To set user-interface (GUI + overlay) to display real values
    // mapped with a linear function: r = 0.1 * i + 0;
    // pal->SetUIDoubleRep(kTRUE, 0.1, 0);
 
-   if (register)
+   if (registerSet)
    {
       gEve->AddElement(q);
       gEve->Redraw3D(kTRUE);
@@ -64,8 +64,7 @@ TEveQuadSet* quadset(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-TEveQuadSet* quadset_emc(Float_t x=0, Float_t y=0, Float_t z=0,
-                           Int_t num=100)
+TEveQuadSet* quadset_emc(Float_t x=0, Float_t y=0, Float_t z=0, Int_t num=100)
 {
    TEveManager::Create();
 
@@ -144,7 +143,7 @@ TEveQuadSet* quadset_circ()
 }
 
 TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
-                           Int_t num=100, Bool_t register=kTRUE)
+                           Int_t num=100, Bool_t registerSet=kTRUE)
 {
    TEveManager::Create();
 
@@ -167,7 +166,7 @@ TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
       TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
-      if (register)
+      if (registerSet)
       {
          gEve->AddElement(q);
          gEve->Redraw3D();
@@ -190,26 +189,28 @@ TEveQuadSet* quadset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
       TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
-      if (register)
+      if (registerSet)
       {
          gEve->AddElement(q);
          gEve->Redraw3D();
       }
+      
+      return q;
    }
-
-   return q;
 }
 
 TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
-                             Int_t num=100, Bool_t register=kTRUE)
+                             Int_t num=100, Bool_t registerSet=kTRUE)
 {
    TEveManager::Create();
 
    TRandom r(0);
    gStyle->SetPalette(1, 0);
 
+   TEveQuadSet* q = new TEveQuadSet("HexagonXY");
+
    {
-      TEveQuadSet* q = new TEveQuadSet("HexagonXY");
+      
       q->SetOwnIds(kTRUE);
       q->Reset(TEveQuadSet::kQT_HexagonXY, kFALSE, 32);
       for (Int_t i=0; i<num; ++i)
@@ -227,7 +228,7 @@ TEveQuadSet* quadset_hexid(Float_t x=0, Float_t y=0, Float_t z=0,
       TEveTrans& t = q->RefMainTrans();
       t.SetPos(x, y, z);
 
-      if (register)
+      if (registerSet)
       {
          gEve->AddElement(q);
          gEve->Redraw3D();
