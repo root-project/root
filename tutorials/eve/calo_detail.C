@@ -4,11 +4,11 @@
 // Calorimeter detailed view by using TEveCaloDataVec as data-source.
 // Demonstrantes how to plot calorimiter data with irregular bins.
 
-#include "calorimeters.C"
+TEveCaloDataVec* MakeVecData(Int_t ncells=0);
 
 void calo_detail()
 {
-   //gROOT->LoadMacro("calorimeters.C");
+   gROOT->LoadMacro("calorimeters.C");
    TEveManager::Create();
 
    // data
@@ -59,7 +59,7 @@ void calo_detail()
 }
 
 //______________________________________________________________________________
-TEveCaloDataVec* MakeVecData(Int_t ncells=0)
+TEveCaloDataVec* MakeVecData(Int_t ncells)
 {
    // Example how to fill data when bins can be iregular.
    // If ncells = 0 (default) whole histogram is taken,
