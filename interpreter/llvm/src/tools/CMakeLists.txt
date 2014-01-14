@@ -65,6 +65,10 @@ endif()
 
 add_llvm_external_project(clang)
 
+if(LLVM_NOCLING)
+  ignore_llvm_tool_subdirectory(cling)
+endif()
+
 if( NOT LLVM_INCLUDE_TOOLS STREQUAL "bootstrap-only" )
   add_llvm_external_project(lld)
   add_llvm_external_project(lldb)
@@ -74,9 +78,5 @@ if( NOT LLVM_INCLUDE_TOOLS STREQUAL "bootstrap-only" )
   # file as external projects.
   add_llvm_implicit_external_projects()
 endif()
-
-if( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cling/CMakeLists.txt )
-  add_llvm_external_project( ${CMAKE_CURRENT_SOURCE_DIR}/cling )
-endif( EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/cling/CMakeLists.txt )
 
 set(LLVM_COMMON_DEPENDS ${LLVM_COMMON_DEPENDS} PARENT_SCOPE)

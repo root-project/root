@@ -593,6 +593,7 @@ if(cling)
                  -DLLVM_TARGETS_TO_BUILD=X86
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                 -DLLVM_NOCLING=ON
     )
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
     set(LLVM_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LLVM-install/include)
