@@ -607,7 +607,7 @@ Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
 {
 // (1): "null pointer" or C++11 style nullptr
-   if ( pyobject == Py_None && pyobject == gNullPtrObject ) {
+   if ( pyobject == Py_None || pyobject == gNullPtrObject ) {
       address = (void*)0;
       return kTRUE;
    }
