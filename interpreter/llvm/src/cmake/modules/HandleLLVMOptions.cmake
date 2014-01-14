@@ -12,8 +12,6 @@ elseif( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
   set(LLVM_COMPILER_IS_GCC_COMPATIBLE ON)
 endif()
 
-set(LLVM_CXX ${CMAKE_CXX_COMPILER})
-
 if( LLVM_ENABLE_ASSERTIONS )
   # MSVC doesn't like _DEBUG on release builds. See PR 4379.
   if( NOT MSVC )

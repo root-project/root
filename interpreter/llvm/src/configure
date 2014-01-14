@@ -6806,10 +6806,6 @@ echo "${ECHO_T}no" >&6; }
 fi
 
 
-cat >>confdefs.h <<_ACEOF
-#define LLVM_CXX "${CXX}"
-_ACEOF
-
 
 # Extract the first word of "Graphviz", so it can be a program name with args.
 set dummy Graphviz; ac_word=$2
