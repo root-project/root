@@ -111,10 +111,10 @@ void hline (Double_t x, Double_t y)
 
 void arrow (Double_t x1, Double_t y1, Double_t x2, Double_t y2, Int_t ls)
 {
-   arrow = new TArrow(x1,y1,x2,y2,0.025,"|>");
-   arrow->SetFillColor(1);
-   arrow->SetFillStyle(1001);
-   arrow->SetLineStyle(ls);
-   arrow->SetAngle(19);
-   arrow->Draw();
+   arr = new TArrow(x1,y1,x2,y2,0.025,"|>");
+   arr->SetFillColor(1);
+   arr->SetFillStyle(1001);
+   arr->SetLineStyle(ls);
+   arr->SetAngle(19);
+   arr->Draw();
 }
