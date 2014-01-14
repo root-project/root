@@ -124,7 +124,7 @@ Int_t ConvertModel();
 
 // global variables
 Int_t nummodels = 0;
-Model model = {"","",0,0,0,0};
+Model model;
 
 Int_t nummaterials = 0;
 Material *material[1024];
