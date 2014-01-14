@@ -372,6 +372,13 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 }
 
 extern "C"
+void TCling__GetNormalizedContext(const ROOT::TMetaUtils::TNormalizedCtxt*& normCtxt)
+{
+   // We are sure in this context of the type of the interpreter
+   normCtxt = &( (TCling*) gInterpreter)->GetNormalizedContext();
+}
+
+extern "C"
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
                                     cling::Interpreter* interp) {
 

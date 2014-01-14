@@ -31,17 +31,20 @@
 #include "llvm/Support/FileSystem.h"
 
 #include "TMetaUtils.h"
+// #include "TCling.h"
 
 using namespace clang;
 using namespace cling;
 
 class TObject;
+class TCling;
 
 // Functions used to forward calls from code compiled with no-rtti to code 
 // compiled with rtti.
 extern "C" {
    void TCling__UpdateListsOnCommitted(const cling::Transaction&, Interpreter*);
    void TCling__UpdateListsOnUnloaded(const cling::Transaction&);
+   void TCling__GetNormalizedContext(const ROOT::TMetaUtils::TNormalizedCtxt*&);
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
@@ -205,7 +208,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
    }
    return false;
 }
-
+#include <iostream>
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
    if (ClassTemplateSpecializationDecl* Specialization 
@@ -230,8 +233,12 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 
       // Use the Normalized name for the autoload
       std::string Name;
-      ROOT::TMetaUtils::GetNormalizedName(Name,Specialization,*m_Interpreter);
-                                          
+      const ROOT::TMetaUtils::TNormalizedCtxt* tNormCtxt = NULL;
+      TCling__GetNormalizedContext(tNormCtxt);
+      ROOT::TMetaUtils::GetNormalizedName(Name,
+                                          C.getTypeDeclType(Specialization),
+                                          *m_Interpreter,
+                                          *tNormCtxt);                                               
                      
       // This would mean it is probably a template. Try autoload template.
       if (TCling__AutoLoadCallback(Name.c_str())) {
