@@ -2621,20 +2621,17 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
       clang::NamedDecl* nDecl = *prmIt;
       std::string typeName;
 
+      if(nDecl->isParameterPack ()){
+         ROOT::TMetaUtils::Warning(0,paramPackWarning);
+         return 1;
+      }
+
    // Case 1
       if (llvm::isa<clang::TemplateTypeParmDecl>(nDecl)){
-         if(nDecl->isParameterPack ()){
-            ROOT::TMetaUtils::Warning(0,paramPackWarning);
-            return 1;
-         }
          typeName = "typename " + (*prmIt)->getNameAsString();
       }
       // Case 2
       else if (const clang::NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
-         if(nDecl->isParameterPack ()){
-            ROOT::TMetaUtils::Warning(0,paramPackWarning);
-            return 1;
-         }
          const clang::QualType &theType = nttpd->getType();
          // If this is an enum, use int as it is impossible to fwd declare and
          // this makes sense since it is not a type...            
@@ -2653,15 +2650,11 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
       }
       // Case 3: TemplateTemplate argument
       else if (const clang::TemplateTemplateParmDecl* ttpd = llvm::dyn_cast<clang::TemplateTemplateParmDecl>(nDecl)){
-         if(nDecl->isParameterPack ()){
-            ROOT::TMetaUtils::Warning(0,paramPackWarning);
-            return 1;
-         }
          int retCode = ExtractTemplateDefinition(*ttpd,interpreter,typeName,NULL);
          if (retCode!=0){
             std::string astDump;
             llvm::raw_string_ostream ostream(astDump);
-            nttpd->dump(ostream);
+            ttpd->dump(ostream);
             ostream.flush();
             ROOT::TMetaUtils::Error(0,"Cannot reconstruct template template parameter forward declaration for %s\n", astDump.c_str());
             return 1;
