@@ -3,7 +3,7 @@
 //Author: Miro Helbich oct.2001
 
 
-Int_t npoints=3;
+const Int_t npoints=3;
 Double_t xaxis[npoints] = {1.,2.,3.};
 Double_t yaxis[npoints] = {10.,20.,30.};
 Double_t errorx[npoints] = {0.5,0.5,0.5};
