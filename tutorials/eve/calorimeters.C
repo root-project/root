@@ -8,6 +8,11 @@
 const char* histFile =
    "http://amraktad.web.cern.ch/amraktad/cms_calo_hist.root";
 
+TEveCaloLego* MakeCaloLego(TEveCaloData* data, TEveWindowSlot* slot);
+TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t);
+TEveCalo3D* MakeCalo3D(TEveCaloData* data, TEveWindowSlot* slot);
+TEveCalo2D* MakeCalo2D(TEveCalo3D* calo3d, TEveWindowSlot* slot, TEveProjection::EPType_e t);
+void MakeViewerScene(TEveWindowSlot* slot, TEveViewer*& v, TEveScene*& s);
 void add_jet(TEveElement*, const char*, Float_t, Float_t, Float_t, Float_t);
 
 void calorimeters()
@@ -64,7 +69,7 @@ void calorimeters()
    TEveCalo3D* calo3d = MakeCalo3D(data, slotRightTop);
    MakeCalo2D(calo3d, slotLeftTop, TEveProjection::kPT_RPhi);
    MakeCalo2D(calo3d, slotLeftBottom, TEveProjection::kPT_RhoZ);
-   TEveCaloLego* lego = MakeCaloLego(data, slotRightBottom);
+   lego = MakeCaloLego(data, slotRightBottom);
 
 
    gEve->GetBrowser()->GetTabRight()->SetTab(1);
