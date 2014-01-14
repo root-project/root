@@ -1,3 +1,7 @@
+void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
+                     Float_t lMargin = 0.15, Float_t rMargin = 0.05,
+                     Float_t bMargin = 0.15, Float_t tMargin = 0.05);
+
 void canvas2()
 {
 //Example of canvas partitioning
@@ -99,9 +103,9 @@ void canvas2()
 
 
 
-void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
-                     Float_t lMargin = 0.15, Float_t rMargin = 0.05,
-                     Float_t bMargin = 0.15, Float_t tMargin = 0.05)
+void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
+                     Float_t lMargin, Float_t rMargin,
+                     Float_t bMargin, Float_t tMargin)
 {
    if (!C) return;
 
