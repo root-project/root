@@ -332,6 +332,7 @@ if(krb5 OR afs)
   if(COMERR_LIBRARY)
     set(COMERR_LIBRARIES ${COMERR_LIBRARY})
   endif()
+  mark_as_advanced(COMERR_LIBRARY)
 endif()
 
 #---Check for XML Parser Support-----------------------------------------------------------
@@ -576,6 +577,7 @@ endif()
 
 #---Check for cling and llvm ----------------------------------------------------------------
 find_library(CMAKE_TINFO_LIBS NAMES tinfo ncurses)
+mark_as_advanced(CMAKE_TINFO_LIBS)
 if(cling)
   if(builtin_llvm)
     set(LLVM_SOURCE_DIR ${CMAKE_SOURCE_DIR}/interpreter/llvm/src)
