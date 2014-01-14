@@ -13,7 +13,9 @@
 
 
 //- data _______________________________________________________________________
-R__EXTERN PyObject* gRootModule;
+namespace PyROOT {
+   R__EXTERN PyObject* gRootModule;
+}
 
 //____________________________________________________________________________
 void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {

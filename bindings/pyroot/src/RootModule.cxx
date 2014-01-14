@@ -58,7 +58,11 @@
 #endif
 
 //- data -----------------------------------------------------------------------
-PyObject* gRootModule = 0;
+namespace PyROOT {
+   PyObject* gRootModule = 0;
+   PyObject* gNullPtrObject = 0;
+}
+
 
 //- private helpers ------------------------------------------------------------
 namespace {
@@ -624,6 +628,10 @@ extern "C" void initlibPyROOT()
 
    if ( ! Utility::InitProxy( gRootModule, &TCustomInstanceMethod_Type, "InstanceMethod" ) )
       PYROOT_INIT_ERROR;
+
+// inject identifiable nullptr
+   gNullPtrObject = PyROOT_PyCapsule_New( NULL, NULL, NULL );
+   PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
 
 // policy labels
    PyModule_AddObject( gRootModule, (char*)"kMemoryHeuristics", PyInt_FromLong( 1l ) );

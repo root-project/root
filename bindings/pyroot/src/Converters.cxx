@@ -26,7 +26,10 @@
 
 
 //- data ______________________________________________________________________
-PyROOT::ConvFactories_t PyROOT::gConvFactories;
+namespace PyROOT {
+   ConvFactories_t gConvFactories;
+   R__EXTERN PyObject* gNullPtrObject;
+}
 
 
 //- base converter implementation ---------------------------------------------
@@ -543,14 +546,21 @@ Bool_t PyROOT::TCStringConverter::ToMemory( PyObject* value, void* address )
 //- pointer/array conversions -------------------------------------------------
 namespace {
 
+   using namespace PyROOT;
+
    inline Bool_t CArraySetArg(
       PyObject* pyobject, PyROOT::TParameter_t& para, G__CallFunc* func, char tc, int size )
    {
    // general case of loading a C array pointer (void* + type code) as function argument
-      int buflen = PyROOT::Utility::GetBuffer( pyobject, tc, size, para.fVoidp );
-      if ( ! para.fVoidp || buflen == 0 )
-         return kFALSE;
-      else if ( func )
+      if ( pyobject == gNullPtrObject ) {
+         para.fVoidp = NULL;
+      } else {
+         int buflen = PyROOT::Utility::GetBuffer( pyobject, tc, size, para.fVoidp );
+         if ( ! para.fVoidp || buflen == 0 )
+            return kFALSE;
+      }
+
+      if ( func )
          func->SetArg( para.fLong );
       return kTRUE;
    }
@@ -596,8 +606,8 @@ Bool_t PyROOT::TNonConstUCStringConverter::SetArg(
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidArrayConverter::GetAddressSpecialCase( PyObject* pyobject, void*& address )
 {
-// (1): "null pointer"
-   if ( pyobject == Py_None ) {
+// (1): "null pointer" or C++11 style nullptr
+   if ( pyobject == Py_None && pyobject == gNullPtrObject ) {
       address = (void*)0;
       return kTRUE;
    }
