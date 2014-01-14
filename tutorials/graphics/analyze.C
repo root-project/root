@@ -19,7 +19,7 @@
    TText *t4=pt2.AddText("Analyze");
    pt2.Draw();
    TPaveText pt3(0,19,4,21);
-   TText *t4=pt3.AddText("look for simple");
+   t4=pt3.AddText("look for simple");
    TText *t5=pt3.AddText("operators");
    pt3.Draw();
    TPaveText pt4(0,15,4,17);
