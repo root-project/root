@@ -1,11 +1,13 @@
 TFile *f;
 
+TSeqCollection *GetCollection();
+
 void testMergeCont()
 {
    // Macro to test merging of containers.
 
    gROOT->LoadMacro("$ROOTSYS/tutorials/hsimple.C");
-   TList *list = GetCollection();
+   TList *list = (TList *)GetCollection();
    TList *inputs = new TList();
    for (Int_t i=0; i<10; i++) {
       inputs->AddAt(GetCollection(),0);
@@ -16,7 +18,7 @@ void testMergeCont()
    delete inputs;
    TH1F *hpx = (TH1F*)(((TList*)list->At(1))->At(0));
    printf("============================================\n");
-   printf("Total  hpx: %d entries\n", hpx->GetEntries());
+   printf("Total  hpx: %d entries\n", (int)hpx->GetEntries());
    hpx->Draw();
    list->Delete();
    delete list;
@@ -31,7 +33,7 @@ TSeqCollection *GetCollection()
    TList *l0 = new TList();
    TList *l01 = new TList();
    TH1 *hpx = (TH1*)f->Get("hpx");
-   printf("Adding hpx: %d entries\n", hpx->GetEntries());
+   printf("Adding hpx: %d entries\n", (int)hpx->GetEntries());
    l01->Add(hpx);
    TH1 *hpxpy = (TH1*)f->Get("hpxpy");
    l01->Add(hpxpy);

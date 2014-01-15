@@ -23,10 +23,10 @@
    arrow.SetFillStyle(1001);
    arrow.SetLineWidth(2);
    arrow.Draw();
-   TPaveText free(8,20,11,21);
-   free.SetFillColor(18);
-   free.Draw();
-   free.AddText("First:Last");
+   TPaveText free1(8,20,11,21);
+   free1.SetFillColor(18);
+   free1.Draw();
+   free1.AddText("First:Last");
    TPaveText free2(12,20,15,21);
    free2.SetFillColor(18);
    free2.Draw();
