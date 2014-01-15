@@ -482,6 +482,29 @@
    fun:_ZL20G__cpp_setup_global0v
 }
 
+######## ROOT TObject on heap
+
+{
+   TObject::TObject() uses uninitialized value
+   Memcheck:Cond
+   fun:_ZN7TObjectC1Ev
+   ...
+}
+
+{
+   TObject::TObject(const TObject&) uses uninitialized value
+   Memcheck:Cond
+   fun:_ZN7TObjectC1ERKS_
+   ...
+}
+
+{
+   gcc optimizer confuses valgrind on TObject::~TObject()
+   Memcheck:Cond
+   fun:_ZN7TObjectD1Ev
+   ...
+}
+
 ######### Misc
 
 {
