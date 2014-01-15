@@ -4,9 +4,9 @@
    c1 = new TCanvas("c1");
    c1->Range(0,0,1,1);
 
-   TPaveLabel *par = new TPaveLabel(0.1,0.8,0.9,0.95,"Examples of various arrow formats");
-   par->SetFillColor(42);
-   par->Draw();
+   TPaveLabel par(0.1,0.8,0.9,0.95,"Examples of various arrow formats");
+   par.SetFillColor(42);
+   par.Draw();
    
    TArrow ar1(0.1,0.1,0.1,0.7);
    ar1.Draw();
