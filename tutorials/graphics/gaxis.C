@@ -3,7 +3,7 @@
 //To see the output of this macro, click begin_html <a href="gif/gaxis.gif" >here</a> end_html
 //Author: Rene Brun
 
-  gROOT.Reset();
+  gROOT->Reset();
 
   c1 = new TCanvas("c1","Examples of Gaxis",10,10,700,500);
 

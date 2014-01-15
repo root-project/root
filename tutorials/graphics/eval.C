@@ -4,6 +4,7 @@
    //Author: Rene Brun
    
    gROOT->Reset();
+
    c1 = new TCanvas("c1");
    c1->Range(0,0,20,10);
    TPaveLabel pt1(0.2,4,3,6,"Eval");
@@ -18,11 +19,11 @@
    TText *t4=pt3.AddText("Apply Operator to current stack values");
    TText *t5=pt3.AddText("Example: if operator +");
    TText *t6=pt3.AddText("value[i] += value[i-1]");
-   t4.SetTextAlign(22);
-   t5.SetTextAlign(22);
-   t6.SetTextAlign(22);
-   t5.SetTextColor(4);
-   t6.SetTextColor(2);
+   t4->SetTextAlign(22);
+   t5->SetTextAlign(22);
+   t6->SetTextAlign(22);
+   t5->SetTextColor(4);
+   t6->SetTextColor(2);
    pt3.Draw();
    TPaveLabel pt4(4,0.5,12,2.5,"return result = value[i]");
    pt4.Draw();
