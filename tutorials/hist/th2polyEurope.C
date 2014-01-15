@@ -38,7 +38,7 @@ void th2polyEurope(Int_t npoints=500000)
    // Real surfaces taken from Wikipedia.
    const Int_t nx = 36;
    // see http://en.wikipedia.org/wiki/Area_and_population_of_European_countries
-   char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
+   const char *countries[nx] = { "france",     "spain",  "sweden",  "germany",       "finland",
                            "norway",     "poland", "italy",   "yugoslavia",    "united_kingdom",
 			   "romania",    "belarus","greece",  "czechoslovakia","bulgaria",
 			   "iceland",    "hungary","portugal","austria",       "ireland",
@@ -81,8 +81,8 @@ void th2polyEurope(Int_t npoints=500000)
    TMultiGraph *mg;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
-   while (key = (TKey*)nextkey()) {
-      obj = key->ReadObj();
+   while ((key = (TKey*)nextkey())) {
+      TObject *obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
          p->AddBin(mg);
@@ -113,7 +113,7 @@ void th2polyEurope(Int_t npoints=500000)
 
 
    // h2 contains the surfaces computed from TH2Poly.
-   TH1F *h2 = h->Clone("h2");
+   TH1F *h2 = (TH1F *)h->Clone("h2");
    h2->Reset();
    for (j=0; j<nx; j++) {
       for (i=0; i<nbins; i++) {
@@ -135,7 +135,7 @@ void th2polyEurope(Int_t npoints=500000)
    TCanvas *c1 = new TCanvas("c1", "c1",W+10,0,W-20,H);
    c1->SetRightMargin(0.047);
 
-   Double_t scale = h->GetMaximum()/h2->GetMaximum();
+   scale = h->GetMaximum()/h2->GetMaximum();
 
    h->SetStats(0);
    h->SetLineColor(kRed-3);

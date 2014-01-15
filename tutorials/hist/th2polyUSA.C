@@ -12,7 +12,7 @@ void th2polyUSA()
 {
    Int_t i, bin;
    const Int_t nx = 48;
-   char *states [nx] = {
+   const char *states [nx] = {
       "alabama",      "arizona",        "arkansas",       "california",
       "colorado",     "connecticut",    "delaware",       "florida",
       "georgia",      "idaho",          "illinois",       "indiana",
@@ -56,8 +56,8 @@ void th2polyUSA()
    TMultiGraph *mg;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
-   while (key = (TKey*)nextkey()) {
-      obj = key->ReadObj();
+   while ((key = (TKey*)nextkey())) {
+      TObject *obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
          bin = p->AddBin(mg);
