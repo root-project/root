@@ -7,23 +7,23 @@
 # Author: Fons Rademakers, 29/2/2000
 
 
-RC     := root-config
-ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
-MKARCH := $(wildcard $(shell $(RC) --etcdir)/Makefile.arch)
-RCONFIG := $(wildcard $(shell $(RC) --incdir)/RConfigure.h)
-endif
-ifneq ($(MKARCH),)
-include $(MKARCH)
-else
-ifeq ($(ROOTSYS),)
-ROOTSYS = ..
-endif
-include $(ROOTSYS)/etc/Makefile.arch
-endif
+# RC     := root-config
+# ifeq ($(shell which $(RC) 2>&1 | sed -ne "s@.*/$(RC)@$(RC)@p"),$(RC))
+# MKARCH := $(wildcard $(shell $(RC) --etcdir)/Makefile.arch)
+# RCONFIG := $(wildcard $(shell $(RC) --incdir)/RConfigure.h)
+# endif
+# ifneq ($(MKARCH),)
+# include $(MKARCH)
+# else
+# ifeq ($(ROOTSYS),)
+# ROOTSYS = ..
+# endif
+# include $(ROOTSYS)/etc/Makefile.arch
+# endif
 
-#ROOTSYS = ../../../..
-#include $(ROOTSYS)/config/Makefile.config
-#include $(ROOTSYS)/etc/Makefile.arch
+ROOTSYS = ../../../..
+include $(ROOTSYS)/config/Makefile.config
+include $(ROOTSYS)/etc/Makefile.arch
 
 #------------------------------------------------------------------------------
 
