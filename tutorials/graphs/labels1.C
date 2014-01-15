@@ -3,7 +3,7 @@
 void labels1()
 {
    const Int_t nx = 20;
-   char *people[nx] = {"Jean","Pierre","Marie","Odile",
+   const char *people[nx] = {"Jean","Pierre","Marie","Odile",
       "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
       "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
