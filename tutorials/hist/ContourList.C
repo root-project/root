@@ -6,6 +6,8 @@
 //   Date: Oct. 22, 2004
 //   Modified by O.Couet (Nov. 26, 2004)
 
+Double_t SawTooth(Double_t x, Double_t WaveLen);
+
 TCanvas *ContourList(){
 
    const Double_t PI = TMath::Pi();
@@ -14,7 +16,7 @@ TCanvas *ContourList(){
    c->SetRightMargin(0.15);
    c->SetTopMargin(0.15);
 
-   Int_t i, j, TotalConts;
+   Int_t i, j;
 
    Int_t nZsamples   = 80;
    Int_t nPhiSamples = 80;
@@ -82,7 +84,7 @@ TCanvas *ContourList(){
    if (conts == NULL){
       printf("*** No Contours Were Extracted!\n");
       TotalConts = 0;
-      return;
+      return 0;
    } else {
       TotalConts = conts->GetSize();
    }
