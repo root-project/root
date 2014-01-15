@@ -3,7 +3,7 @@
 void hlabels1()
 {
    const Int_t nx = 20;
-   char *people[nx] = {"Jean","Pierre","Marie","Odile","Sebastien",
+   const char *people[nx] = {"Jean","Pierre","Marie","Odile","Sebastien",
       "Fons","Rene","Nicolas","Xavier","Greg","Bjarne","Anton","Otto",
       "Eddy","Peter","Pasha","Philippe","Suzanne","Jeff","Valery"};
    TCanvas *c1 = new TCanvas("c1","demo bin labels",10,10,900,500);
