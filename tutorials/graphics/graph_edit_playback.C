@@ -84,7 +84,7 @@
 //       Save as C file
 //       Close c2
 
-Int_t file_size(char *filename)
+Int_t file_size(const char *filename)
 {
    FileStat_t fs;
    gSystem->GetPathInfo(filename, fs);
