@@ -15,6 +15,12 @@ void exec2()
    // as a development engine.
    //Author: Rene Brun
 
+   if (!gPad) {
+      Error("exec2", "gPad is null, you are not supposed to run this macro");
+      return;
+   }
+
+
    TObject *select = gPad->GetSelected();
    if(!select) return;
    if (!select->InheritsFrom(TH2::Class())) {gPad->SetUniqueID(0); return;}

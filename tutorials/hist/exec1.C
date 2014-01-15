@@ -9,6 +9,11 @@ void exec1()
    //on the histogram contour of any histogram in a pad
    //Author: Rene Brun
    
+   if (!gPad) {
+      Error("exec1", "gPad is null, you are not supposed to run this macro");
+      return;
+   }
+   
    int event = gPad->GetEvent();
    if (event != 11) return;
    int px = gPad->GetEventX();
