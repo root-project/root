@@ -321,14 +321,12 @@ void *TStorage::ObjectAlloc(size_t sz)
 {
    // Used to allocate a TObject on the heap (via TObject::operator new()).
    // Directly after this routine one can call (in the TObject ctor)
-   // TStorage::IsOnHeap() to find out if the just created object is on
+   // TStorage::FilledByObjectAlloc() to find out if the just created object is on
    // the heap.
 
-   // Needs to be protected by global mutex
-
    void* space =  ::operator new(sz);
-   memset(space,TSTORAGEMEMVALUE,sz);
-   return (void*) space;
+   memset(space, kObjectAllocMemValue, sz);
+   return space;
 }
 
 //______________________________________________________________________________
@@ -488,6 +486,13 @@ Bool_t TStorage::IsOnHeap(void *)
 }
 
 #ifdef WIN32
+//______________________________________________________________________________
+Bool_t TStorage::FilledByObjectAlloc(UInt_t *member)
+{
+   //called by TObject's constructor to determine if object was created by call to new
+   return *member == kObjectAllocMemValue;
+}
+
 //______________________________________________________________________________
 size_t TStorage::GetMaxBlockSize()
 {
