@@ -570,7 +570,10 @@ void RooPlot::Draw(Option_t *option)
   while((obj= _iterator->Next())) {
     DrawOpt opt(_iterator->GetOption()) ;
     if (!opt.invisible) {
-      obj->Draw(opt.drawOptions);
+       //LM:  in case of a TGraph derived object, do not use default "" option
+       // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP" 
+       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3); 
+       obj->Draw(opt.drawOptions);
     }
   }
 
