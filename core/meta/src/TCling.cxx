@@ -1489,6 +1489,7 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
 
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+
          }
       }
    } // loop over fields

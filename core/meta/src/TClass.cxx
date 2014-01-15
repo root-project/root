@@ -601,7 +601,29 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
             if ((dmclass != cl) && !dm->IsaPointer()) {
                if (dmclass->GetCollectionProxy()) {
                   TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
-                  if (valcl && !(valcl->Property() & kIsAbstract)) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
+                  // We create the real data for the content of the collection to help the case
+                  // of split branches in a TTree (where the node for the data member itself
+                  // might have been elided).  However, in some cases, like transient members
+                  // and/or classes, the content might not be createable.   An example is the
+                  // case of a map<A,B> where either A or B does not have default constructor
+                  // and thus the compilation of the default constructor for pair<A,B> will
+                  // fail (noisily) [This could also apply to any template instance, where it
+                  // might have a default constructor definition that can not be compiled due
+                  // to the template parameter]
+                  if (valcl) {
+                     Bool_t wantBuild = kTRUE;
+                     if (valcl->Property() & kIsAbstract) wantBuild = kFALSE;
+                     if ( (isTransient || TestBit(TRealData::kTransient))
+                          && (dmclass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+                          && (!valcl->IsLoaded()) ) {
+                        // Case where the collection dictionary was not requested and
+                        // the content's dictionary was also not requested.
+                        // [This is a super set of what we need, but we can't really detect it :(]
+                        wantBuild = kFALSE;
+                     }
+
+                     if (wantBuild) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
+                  }
                } else {
                   dmclass->BuildRealData(const_cast<void*>(add), isTransient || TestBit(TRealData::kTransient));
                }
