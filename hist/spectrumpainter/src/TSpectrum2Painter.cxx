@@ -177,6 +177,8 @@ TSpectrum2Painter::~TSpectrum2Painter()
       col = gROOT->GetColor(250+i);
       if (col) delete col;
    }
+   if (fEnvelope) delete [] fEnvelope;
+   if (fEnvelopeContour) delete [] fEnvelopeContour;
 }
 
 
@@ -483,7 +485,8 @@ void TSpectrum2Painter::ColorModel(unsigned ui, unsigned ui1, unsigned ui2,
       a     = fRainbow1Step;
       a     = ui*a;
       a     = ui1+a;
-      uinc1 = (Int_t)a;
+      if ((unsigned)a>=UINT_MAX) uinc1 = UINT_MAX;
+      else                       uinc1 = (unsigned)a;
       upom  = uinc1%256;
       i     = (uinc1-upom)/256;
       if ((i%2)==0) uinc1 = upom;
