@@ -19,7 +19,7 @@ void splines (Int_t np=23, Double_t a=-0.5, Double_t b=31)
   f->Draw("lc");
 
     // Create text and legend
-  Float_t xx1, yy1, xx2, yy2, dx, dy;
+  Double_t xx1, yy1, xx2, yy2, dx, dy;
   gPad->Update();
   gPad->GetRangeAxis(xx1,yy1,xx2,yy2);
   dx = xx2-xx1;
