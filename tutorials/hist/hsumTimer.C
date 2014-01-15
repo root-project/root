@@ -1,5 +1,5 @@
 // demo of Timers
-Int_t i;
+
 Float_t ratio;
 TSlider *slider;
 TCanvas *c1;
@@ -45,7 +45,7 @@ void hsumTimer(Int_t nfill=100000)
   Float_t xs1, xs2, xmain;
   gRandom->SetSeed();
   for (Int_t i=0; i<nfill; i++) {
-     ratio = Float_t(i)/Float_t(nfill);
+     ::ratio = Float_t(i)/Float_t(nfill);
      if (gSystem->ProcessEvents()) break;
      xmain = gRandom->Gaus(-1,1.5);
      xs1   = gRandom->Gaus(-0.5,0.5);
@@ -64,7 +64,7 @@ void hsumTimer(Int_t nfill=100000)
 void hsumUpdate()
 {
 // called when Timer times out
-   if (slider) slider->SetRange(0,ratio);
+   if (slider) slider->SetRange(0, ::ratio);
    c1->Modified();
    c1->Update();
 }
