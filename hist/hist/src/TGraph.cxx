@@ -56,8 +56,8 @@ The TGraph painting is performed thanks to the
 class. All details about the various painting options are given in
 <a href="http://root.cern.ch/root/html/TGraphPainter.html">this class</a>.
 </p>
-<i>Note:</i>Unlike histogram or tree (or even TGraph2D), TGraph objects 
- are not automatically attached to the current TFile, in order to keep the 
+<i>Note:</i>Unlike histogram or tree (or even TGraph2D), TGraph objects
+ are not automatically attached to the current TFile, in order to keep the
  management and size of the TGraph has small as possible.
 </p>
 The picture below gives an example:
@@ -199,11 +199,11 @@ TGraph& TGraph::operator=(const TGraph &gr)
       fMaxSize = gr.fMaxSize;
 
       // delete list of functions and their contents before copying it
-      if (fFunctions) { 
+      if (fFunctions) {
          // delete previous lists of functions
          if (!fFunctions->IsEmpty()) {
             fFunctions->SetBit(kInvalidObject);
-            // use TList::Remove to take into account the case the same object is 
+            // use TList::Remove to take into account the case the same object is
             // added multiple times in the list
             TObject *obj;
             while ((obj  = fFunctions->First())) {
@@ -217,7 +217,7 @@ TGraph& TGraph::operator=(const TGraph &gr)
       if (gr.fFunctions) fFunctions = (TList*)gr.fFunctions->Clone();
       else fFunctions = new TList;
 
-      if (fHistogram) delete fHistogram; 
+      if (fHistogram) delete fHistogram;
       if (gr.fHistogram) fHistogram = new TH1F(*(gr.fHistogram));
       else fHistogram = 0;
 
@@ -465,7 +465,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 
       // Looping
       while (std::getline(infile, line, '\n')) {
-         if (line[line.size() - 1] == char(13)) {  // removing DOS CR character 
+         if (line[line.size() - 1] == char(13)) {  // removing DOS CR character
             line.erase(line.end() - 1, line.end()) ;
          }
          if (line != "") {
@@ -607,14 +607,14 @@ Double_t TGraph::Chisquare(const TF1 *f1, Option_t * option) const
 
    // need to cast away the const - since it requires evaluating the function which is not const
    TF1 * func = const_cast<TF1*>(f1);
-   if (!func) { 
+   if (!func) {
       Error("Chisquare","Function pointer is Null - return -1");
       return -1;
    }
 
-   TString opt(option); opt.ToUpper(); 
+   TString opt(option); opt.ToUpper();
    bool useRange = opt.Contains("R");
-   
+
    return ROOT::Fit::Chisquare(*this, *func,useRange);
 }
 
@@ -815,10 +815,7 @@ void TGraph::Draw(Option_t *option)
       SetMarkerStyle(3);
       opt.Replace(pos, 1, "p");
    }
-   if (gPad) {
-      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (opt.Contains("a")) gPad->Clear();
-   }
+
    // If no option is specified, it is defined as "alp" in case there
    // no current pad or if the current pad as no axis defined.
    if (!strlen(option)) {
@@ -828,6 +825,12 @@ void TGraph::Draw(Option_t *option)
          opt = "alp";
       }
    }
+
+   if (gPad) {
+      if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
+      if (opt.Contains("a")) gPad->Clear();
+   }
+
    AppendPad(opt);
 }
 
@@ -1818,12 +1821,12 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    // Note that this function computes the area of the polygon enclosed by the points of the TGraph.
    // The polygon segments, which are defined by the points of the TGraph, do not need to form a closed polygon,
    // since the last polygon segment, which closes the polygon, is taken as the line connecting the last TGraph point
-   // with the first one. It is clear that the order of the point is essential in defining the polygon. 
-   // Also note that the segments should not intersect. 
-   //   
+   // with the first one. It is clear that the order of the point is essential in defining the polygon.
+   // Also note that the segments should not intersect.
+   //
    // NB: if last=-1 (default) last is set to the last point.
    //     if (first <0) the first point (0) is taken.
-   //   
+   //
    //Method:
    // There are many ways to calculate the surface of a polygon. It all depends on what kind of data
    // you have to deal with. The most evident solution would be to divide the polygon in triangles and
