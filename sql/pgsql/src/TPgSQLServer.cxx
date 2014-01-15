@@ -18,9 +18,6 @@
 #include "TSQLRow.h"
 #include "TUrl.h"
 #include "TList.h"
-#include "TObjString.h"
-#include "TObjArray.h"
-
 
 ClassImp(TPgSQLServer)
 
@@ -118,6 +115,7 @@ TSQLResult *TPgSQLServer::Query(const char *sql)
    }
 
    PGresult *res = PQexec(fPgSQL, sql);
+   //cout << " Query called " << sql << ":" << PQntuples(res) << endl;
 
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
@@ -377,136 +375,164 @@ TSQLStatement* TPgSQLServer::Statement(const char *, Int_t)
    return 0;
 }
 
-#if 0
 //______________________________________________________________________________
-TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
+TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
 {
+   // Produce TSQLTableInfo. 
+
    if (!IsConnected()) {
       Error("GetColumns", "not connected");
-      return 0;
+      return NULL;
    }
 
    // Check table name
-   if ((tablename == 0) || (*tablename == 0)) return 0;
-
-   // Query first row ( works same way as MySQL)
-   TString sql;
-   sql.Form("SELECT * FROM %s LIMIT 1;", tablename);
-   PGresult *res = PQexec(fPgSQL, sql);
-
+   if ((tablename==0) || (*tablename==0)) return 0;
+      // Query first row ( works same way as MySQL) 
+      PGresult *res = PQexec(fPgSQL, TString::Format("SELECT * FROM %s LIMIT 1;", tablename));
+  
    if ((PQresultStatus(res) != PGRES_COMMAND_OK) &&
        (PQresultStatus(res) != PGRES_TUPLES_OK)) {
-      Error("Query", "%s", PQresultErrorMessage(res));
+      Error("Query", "%s",PQresultErrorMessage(res));
       PQclear(res);
       return 0;
    }
 
-   TList *lst = 0;
-   Int_t sqltype = kSQL_NONE;
-   Int_t data_size = -1;    // size in bytes
-   Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
-   Int_t data_scale = -1;   // second argument in declaration
-   Int_t data_sign = -1;    // signed type or not
-   Bool_t nullable = 0;
+   if (fOidTypNameMap.empty()) {
+      // Oid-TypNameMap empty, populate it, stays valid at least for connection 
+      // lifetime. 
+      PGresult *res_type = PQexec(fPgSQL, "SELECT OID, TYPNAME FROM PG_TYPE;");
 
-   Int_t nfields  = PQnfields(res);
-   Int_t ibin     = PQbinaryTuples(res);
-
-   for (Int_t col = 0; col < nfields; col++) {
-
-      const char *column_name = PQfname(res, col);
-      const char *type_name;
-      int   imod     = PQfmod(res, col);
-      int   isize    = PQfsize(res, col);
-
-      switch (PQftype(res, col)) {
-         case INT2OID:
-            sqltype = kSQL_INTEGER;
-            type_name = "INT";
-            data_size = 2;
-            break;
-         case INT4OID:
-            sqltype = kSQL_INTEGER;
-            type_name = "INT";
-            data_size = 4;
-            break;
-         case INT8OID:
-            sqltype = kSQL_INTEGER;
-            type_name = "INT";
-            data_size = 8;
-            break;
-         case FLOAT4OID:
-            sqltype = kSQL_FLOAT;
-            type_name = "FLOAT";
-            data_size = 4;
-            break;
-         case FLOAT8OID:
-            sqltype = kSQL_DOUBLE;
-            type_name = "DOUBLE";
-            data_size = 8;
-            break;
-         case BOOLOID:
-            sqltype = kSQL_INTEGER;
-            type_name = "BOOL";
-            data_size = 4;
-            break;
-         case CHAROID:
-            sqltype = kSQL_CHAR;
-            type_name = "CHAR";
-            data_size = 1;
-            break;
-         case NAMEOID:
-            sqltype = kSQL_VARCHAR;
-            type_name = "VARCHAR";
-            data_size = imod;
-            break;
-         case TEXTOID:
-            sqltype = kSQL_VARCHAR;
-            type_name = "VARCHAR";
-            data_size = imod;
-            break;
-         case VARCHAROID:
-            sqltype = kSQL_VARCHAR;
-            type_name = "VARCHAR";
-            data_size = imod;
-            break;
-         case DATEOID:
-            sqltype = kSQL_TIMESTAMP;
-            type_name = "TIMESTAMP";
-            data_size = 4;
-            break;
-         case TIMEOID:
-            sqltype = kSQL_TIMESTAMP;
-            type_name = "TIMESTAMP";
-            data_size = 8;
-            break;
-         case TIMETZOID:
-            sqltype = kSQL_TIMESTAMP;
-            type_name = "TIMESTAMP";
-            data_size = 8;
-            break;
-         case TIMESTAMPOID:
-            sqltype = kSQL_TIMESTAMP;
-            type_name = "TIMESTAMP";
-            data_size = 8;
-            break;
-         case TIMESTAMPTZOID:
-            sqltype = kSQL_TIMESTAMP;
-            type_name = "TIMESTAMP";
-            data_size = 8;
-            break;
-         case BYTEAOID:
-            sqltype = kSQL_BINARY;
-            type_name = "BINARY";
-            break;
-         default:
-            sqltype = kSQL_NUMERIC;
-            type_name = "NUMERIC";
-            break;
+      if ((PQresultStatus(res_type) != PGRES_COMMAND_OK) &&
+          (PQresultStatus(res_type) != PGRES_TUPLES_OK)) {
+         Error("Query", "%s", PQresultErrorMessage(res_type));
+         PQclear(res);
+         PQclear(res_type);
+         return 0;
       }
 
-      if (!lst)
+      Int_t nOids = PQntuples(res_type);
+      for (Int_t oid=0; oid<nOids; oid++) {
+         Int_t tOid;
+         char* oidString  = PQgetvalue(res_type, oid, 0);
+         char* typeString = PQgetvalue(res_type, oid, 1);
+         if (sscanf(oidString, "%d", &tOid) != 1) {
+            Error("GetTableInfo", "Bad non-numeric oid '%s' for type '%s'", oidString, typeString);
+         }
+         fOidTypNameMap[tOid]=std::string(typeString);
+      }
+      PQclear(res_type);
+   }
+
+   TList * lst = NULL;
+
+   Int_t nfields  = PQnfields(res);
+
+   for (Int_t col=0;col<nfields;col++){
+      Int_t sqltype = kSQL_NONE;
+      Int_t data_size = -1;    // size in bytes
+      Int_t data_length = -1;  // declaration like VARCHAR(n) or NUMERIC(n)
+      Int_t data_scale = -1;   // second argument in declaration
+      Int_t data_sign = -1;    // signed type or not
+      Bool_t nullable = 0;
+
+      const char* column_name = PQfname(res,col);
+      const char* type_name;
+      int   imod     = PQfmod(res,col);
+      //int   isize    = PQfsize(res,col);
+
+      int oid_code = PQftype(res,col);
+
+      // Search for oid in map
+      std::map<Int_t,std::string>::iterator lookupOid = fOidTypNameMap.find(oid_code);
+      if (lookupOid == fOidTypNameMap.end()) {
+         // Not found. 
+         //default
+         sqltype = kSQL_NUMERIC;
+         type_name = "NUMERIC";
+         data_size=-1;
+      } else if (lookupOid->second == "int2"){
+         sqltype = kSQL_INTEGER;
+         type_name = "INT";
+         data_size=2;
+      } else if (lookupOid->second == "int4"){
+         sqltype = kSQL_INTEGER;
+         type_name = "INT";
+         data_size=4;
+      } else if (lookupOid->second == "int8"){
+         sqltype = kSQL_INTEGER;
+         type_name = "INT";
+         data_size=8;
+      } else if (lookupOid->second == "float4"){
+         sqltype = kSQL_FLOAT;
+         type_name = "FLOAT";
+         data_size=4;
+      } else if (lookupOid->second == "float8"){
+         sqltype = kSQL_DOUBLE;
+         type_name = "DOUBLE";
+         data_size=8;
+      } else if (lookupOid->second == "bool"){
+         sqltype = kSQL_INTEGER;
+         type_name = "INT";
+         data_size=1;
+      } else if (lookupOid->second == "char"){
+         sqltype = kSQL_CHAR;
+         type_name = "CHAR";
+         data_size=1;
+      } else if (lookupOid->second == "varchar"){
+         sqltype = kSQL_VARCHAR;
+         type_name = "VARCHAR";
+         data_size=imod;
+      } else if (lookupOid->second == "text"){
+         sqltype = kSQL_VARCHAR;
+         type_name = "VARCHAR";
+         data_size=imod;
+      } else if (lookupOid->second == "name"){
+         sqltype = kSQL_VARCHAR;
+         type_name = "VARCHAR";
+         data_size=imod;
+      } else if (lookupOid->second == "date"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "time"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "timetz"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "timestamp"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "timestamptz"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "interval"){
+         sqltype = kSQL_TIMESTAMP;
+         type_name = "TIMESTAMP";
+         data_size=8;
+      } else if (lookupOid->second == "bytea"){
+         sqltype = kSQL_BINARY;
+         type_name = "BINARY";
+         data_size=-1;
+      } else if (lookupOid->second == ""){
+         sqltype = kSQL_NONE;
+         type_name = "UNKNOWN";
+         data_size=-1;
+      } else{
+         //default
+         sqltype = kSQL_NUMERIC;
+         type_name = "NUMERIC";
+         data_size=-1;
+      }
+
+      if (!lst) {
          lst = new TList;
+      }
+
       lst->Add(new TSQLColumnInfo(column_name,
                                   type_name,
                                   nullable,
@@ -518,6 +544,5 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char *tablename)
    } //! ( cols)
 
    PQclear(res);
-   return (new TSQLTableInfo(tablename, lst));
+   return (new TSQLTableInfo(tablename,lst));
 }
-#endif
