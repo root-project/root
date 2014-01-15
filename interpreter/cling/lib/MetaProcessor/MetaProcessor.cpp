@@ -26,14 +26,99 @@
 #include <fstream>
 #include <cstdlib>
 #include <cctype>
+#include <unistd.h>
+#include <stdio.h>
 
 
 using namespace clang;
 
 namespace cling {
 
+  MetaProcessor::MaybeRedirectOutputRAII::MaybeRedirectOutputRAII(MetaProcessor* p)
+  :m_MetaProcessor(p), m_PrevStdoutFileName(""), m_PrevStderrFileName("") {
+    //Empty file acts as a flag.
+    redirect(STDOUT_FILENO, m_PrevStdoutFileName, m_MetaProcessor->m_FileOut, stdout);
+    // Deal with the case 2>&1 and 2&>1
+    if (strcmp(m_MetaProcessor->m_FileErr.c_str(), "_IO_2_1_stdout_") == 0) {
+      SmallString<1024> stdoutName;
+      cacheStd(STDERR_FILENO, stdoutName);
+      m_MetaProcessor->m_FileErr = stdoutName.c_str();
+    }
+    //Empty file acts as a flag.
+    redirect(STDERR_FILENO, m_PrevStderrFileName, m_MetaProcessor->m_FileErr, stderr);
+
+  }
+
+  void MetaProcessor::MaybeRedirectOutputRAII::pop() {
+
+    unredirect(m_PrevStdoutFileName, stdout);
+    unredirect(m_PrevStderrFileName, stderr);
+  }
+
+  bool MetaProcessor::MaybeRedirectOutputRAII::cacheStd(int fd,
+                                                      llvm::SmallVectorImpl<char>& file) {
+
+    int ttyname_Result = ttyname_r(fd, const_cast<char*>(file.data()), file.capacity());
+    while (ttyname_Result == ERANGE) {
+      file.reserve(16*file.capacity());
+      ttyname_Result = ttyname_r(fd, const_cast<char*>(file.data()), file.capacity());
+    }
+
+    if (ttyname_Result == 0) {
+      file.set_size(strlen(file.data()));
+      return true;
+    } else if (ttyname_Result == EBADF) {
+      llvm::errs() << "Error in cling::MetaProcessor: Bad file descriptor.";
+    } else if (ttyname_Result == ENOTTY) {
+      llvm::errs() << "File descriptor does not refer to a terminal device.";
+    } else if (ttyname_Result == EAGAIN) {
+      llvm::errs() << "The device driver was in use by another process, or the driver"
+                   << "was unable to carry out the request due to an outstanding command in progress.";
+    } else if (ttyname_Result == EINTR) {
+      llvm::errs() << "The function was interrupted by a signal.";
+    } else if (ttyname_Result == ENOSYS) {
+      llvm::errs() << "The ttyname_r() function isn't implemented for the filesystem specified by filedes.";
+    } else if (ttyname_Result == EPERM) {
+      llvm::errs() << "The process doesn't have sufficient permission to carry out the requested command.";
+    }
+    return false;
+  }
+
+  void MetaProcessor::MaybeRedirectOutputRAII::redirect(int fd,
+                                                        llvm::SmallVectorImpl<char>& prevFile,
+                                                        std::string fileName,
+                                                        struct _IO_FILE * standard) {
+    if (!fileName.empty()) {
+      //Cache prevous stdout.
+      if (!cacheStd(fd, prevFile)) {
+        llvm::errs() << "cling::MetaProcessor Error: Was not able to cache "
+                     << "previous output. Will not be able to redirect back.";
+      }
+      _IO_FILE * redirectionFile = freopen(fileName.c_str(), "a", standard);
+      if (!redirectionFile) {
+        llvm::errs() << "cling::MetaProcessor Error: The file path is not valid.";
+      } else {
+        standard = redirectionFile;
+      }
+    }
+  }
+
+  void MetaProcessor::MaybeRedirectOutputRAII::unredirect(llvm::SmallVectorImpl<char>& file,
+                                                          struct _IO_FILE * standard) {
+    //Switch back to standard output after line is processed.
+    if (!file.empty()) {
+      _IO_FILE * redirectionFile = freopen(file.data(), "w", standard);
+      if (!redirectionFile) {
+        llvm::errs() << "cling::MetaProcessor Error: The file path is not valid.";
+      } else {
+        standard = redirectionFile;
+      }
+    }
+  }
+
+
   MetaProcessor::MetaProcessor(Interpreter& interp, raw_ostream& outs) 
-    : m_Interp(interp), m_Outs(outs) {
+    : m_Interp(interp), m_Outs(outs), m_FileOut(""), m_FileErr("") {
     m_InputValidator.reset(new InputValidator());
     m_MetaParser.reset(new MetaParser(new MetaSema(interp, *this)));
   }
@@ -222,6 +307,23 @@ namespace cling {
     if (topmost)
       m_TopExecutingFile = llvm::StringRef();
     return ret;
+  }
+
+  void MetaProcessor::setStdStream(llvm::StringRef file,
+                                   RedirectionScope stream, bool append) {
+
+    if (stream & kSTDOUT) {
+      m_FileOut = file;
+      if (!append && !m_FileOut.empty()) {
+        FILE* f = fopen(m_FileOut.c_str(), "w");
+      }
+    }
+    if (stream & kSTDERR) {
+      m_FileErr = file;
+      if (!append && !m_FileErr.empty()) {
+        FILE* f = fopen(m_FileErr.c_str(), "w");
+      }
+    }
   }
 
 } // end namespace cling

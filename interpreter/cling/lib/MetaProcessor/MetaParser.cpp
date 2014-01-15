@@ -18,6 +18,7 @@
 
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/raw_ostream.h"
 
 namespace cling {
 
@@ -115,7 +116,8 @@ namespace cling {
       || ishelpCommand() || isfileExCommand() || isfilesCommand() || isClassCommand()
       || isgCommand() || isTypedefCommand() || isprintIRCommand()
       || isShellCommand(actionResult, resultValue)
-      || isstoreStateCommand() || iscompareStateCommand() || isundoCommand();
+      || isstoreStateCommand() || iscompareStateCommand() || isundoCommand()
+      || isRedirectCommand(actionResult);
   }
 
   // L := 'L' FilePath
@@ -138,6 +140,78 @@ namespace cling {
     }
     // TODO: Some fine grained diagnostics
     return result;
+  }
+
+  // >RedirectCommand := '>' FilePath
+  // FilePath := AnyString
+  // AnyString := .*^(' ' | '\t')
+  bool MetaParser::isRedirectCommand(MetaSema::ActionResult& actionResult) {
+
+    unsigned constant_FD = 0;
+    // Default redirect is stdout.
+    MetaProcessor::RedirectionScope stream = MetaProcessor::kSTDOUT;
+
+    if (getCurTok().is(tok::constant)) {
+      // > or 1> the redirection is for stdout stream
+      // 2> redirection for stderr stream
+      constant_FD = getCurTok().getConstant();
+      if (constant_FD == 2) {
+        stream = MetaProcessor::kSTDERR;
+      // Wrong constant_FD, do not redirect.
+      } else if (constant_FD != 1) {
+        llvm::errs() << "cling::MetaParser::isRedirectCommand(): invalid file descriptor number " << constant_FD << "\n";
+        return true;
+      }
+      consumeToken();
+    }
+    // &> redirection for both stdout & stderr
+    if (getCurTok().is(tok::ampersand)) {
+      if (constant_FD != 2) {
+        stream = MetaProcessor::kSTDBOTH;
+      }
+      consumeToken();
+    }
+    if (getCurTok().is(tok::greater)) {
+      bool append = false;
+      consumeToken();
+      // check for syntax like: 2>&1
+      if (getCurTok().is(tok::ampersand)) {
+        if (constant_FD != 2) {
+          stream = MetaProcessor::kSTDBOTH;
+        }
+        consumeToken();
+      } else {
+        // check whether we have >>
+        if (getCurTok().is(tok::greater)) {
+          append = true;
+          consumeToken();
+        }
+      }
+      llvm::StringRef file;
+      if (getCurTok().is(tok::constant) && getCurTok().getConstant() == 1) {
+        file = llvm::StringRef("_IO_2_1_stdout_");
+      } else {
+        if (getCurTok().is(tok::eof)) {
+          file  = llvm::StringRef();
+        } else {
+          consumeAnyStringToken();
+          if (getCurTok().is(tok::raw_ident)) {
+            file = getCurTok().getIdent();
+            consumeToken();
+          }
+          else {
+            file  = llvm::StringRef();
+          }
+        }
+      }
+      // Empty file means std.
+      actionResult =
+          m_Actions->actOnRedirectCommand(file/*file*/,
+                                          stream/*which stream to redirect*/,
+                                          append/*append mode*/);
+      return true;
+    } 
+    return false;
   }
 
   // XCommand := 'x' FilePath[ArgList] | 'X' FilePath[ArgList]

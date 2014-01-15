@@ -1276,7 +1276,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
       if (0!=strncmp(sLine.Data(), ".autodict ",10) && sLine != ".autodict") {
          // explicitly ignore .autodict without having to support it
          // in cling.
-
+         cling::MetaProcessor::MaybeRedirectOutputRAII RAII(fMetaProcessor);
          indent = fMetaProcessor->process(sLine, compRes, &result);
       }
    }

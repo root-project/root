@@ -10,6 +10,8 @@
 #ifndef CLING_META_SEMA_H
 #define CLING_META_SEMA_H
 
+#include "cling/MetaProcessor/MetaProcessor.h"
+
 namespace llvm {
   class StringRef;
   class raw_ostream;
@@ -28,6 +30,7 @@ namespace cling {
     MetaProcessor& m_MetaProcessor;
     bool m_IsQuitRequested;
     llvm::raw_ostream& m_Outs; // Shortens m_MetaProcessor->getOuts()
+
   public:
     enum SwitchMode {
       kOff = 0,
@@ -39,6 +42,7 @@ namespace cling {
       AR_Failure = 0,
       AR_Success = 1
     };
+
   public:
     MetaSema(Interpreter& interp, MetaProcessor& meta);
 
@@ -50,6 +54,16 @@ namespace cling {
     ///\param[in] file - The file/library to be loaded.
     ///
     ActionResult actOnLCommand(llvm::StringRef file) const;
+
+    ///\brief < Redirect command.
+    ///
+    ///\param[in] file - The file where the output is redirected
+    ///\param[in] stream - The optional stream to redirect.
+    ///\param[in] append - Write or append to the file.
+    ///
+    ActionResult actOnRedirectCommand(llvm::StringRef file,
+                                      MetaProcessor::RedirectionScope stream,
+                                      bool append);
 
     ///\brief Actions that need to be performed on occurance of a comment.
     ///

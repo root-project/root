@@ -14,6 +14,7 @@
 
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/SmallString.h"
 
 namespace cling {
 
@@ -51,6 +52,48 @@ namespace cling {
     ///\brief The output stream being used for various purposes.
     ///
     llvm::raw_ostream& m_Outs;
+
+    //brief The file name for the redirection of the stdout.
+    ///
+    std::string m_FileOut;
+
+    ///brief The file name for the redirection of the stderr.
+    ///
+    std::string m_FileErr;
+
+  public:
+    enum RedirectionScope {
+      kSTDOUT = 1,
+      kSTDERR = 2,
+      kSTDBOTH = 3
+    };
+
+  public:
+    ///brief Class to be created for each processing input to be
+    /// able to redirect std.
+    class MaybeRedirectOutputRAII {
+    private:
+      MetaProcessor* m_MetaProcessor;
+      ///brief Stores the terminal name for after the redirection
+      /// when nested redirection - should change name to
+      /// previousOutFile.
+      llvm::SmallString<1024> m_PrevStdoutFileName;
+      ///brief Stores the terminal name for after the redirection
+      /// when nested redirection - should change name to
+      /// previousErrFile.
+      llvm::SmallString<1024> m_PrevStderrFileName;
+
+    public:
+      MaybeRedirectOutputRAII(MetaProcessor* p);
+      ~MaybeRedirectOutputRAII() { pop(); }
+    private:
+      void pop();
+      bool cacheStd(int fd, llvm::SmallVectorImpl<char>& prevFile);
+      void redirect(int fd, llvm::SmallVectorImpl<char>& prevFile,
+                    std::string fileName, struct _IO_FILE * standard);
+      void unredirect(llvm::SmallVectorImpl<char>& prevFile,
+                      struct _IO_FILE * standard);
+    };
 
   public:
     MetaProcessor(Interpreter& interp, llvm::raw_ostream& outs);
@@ -128,6 +171,14 @@ namespace cling {
                       StoredValueRef* result,
                       bool ignoreOutmostBlock = false);
 
+    ///\brief Set the stdout and stderr stream to the appropriate file.
+    ///
+    ///\param [in] file - The file for teh redirection
+    ///\param [in] stream - Which stream to redirect: stdout, stderr or both.
+    ///\param [in] append - Write in append mode.
+    ///
+    void setStdStream(llvm::StringRef file, RedirectionScope stream,
+                      bool append);
   };
 } // end namespace cling
 

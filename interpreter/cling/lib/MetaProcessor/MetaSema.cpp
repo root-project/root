@@ -24,22 +24,32 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
 
+
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Basic/SourceManager.h"
 
 #include <cstdlib>
+#include <iostream>
 
 namespace cling {
 
   MetaSema::MetaSema(Interpreter& interp, MetaProcessor& meta) 
     : m_Interpreter(interp), m_MetaProcessor(meta), m_IsQuitRequested(false),
-      m_Outs(m_MetaProcessor.getOuts()){ }
+      m_Outs(m_MetaProcessor.getOuts()) { }
 
   MetaSema::ActionResult MetaSema::actOnLCommand(llvm::StringRef file) const {
     // TODO: extra checks. Eg if the path is readable, if the file exists...
     if (m_Interpreter.loadFile(file.str()) == Interpreter::kSuccess)
       return AR_Success;
     return AR_Failure;
+  }
+
+  MetaSema::ActionResult MetaSema::actOnRedirectCommand(llvm::StringRef file,
+                         MetaProcessor::RedirectionScope stream,
+                         bool append) {
+
+    m_MetaProcessor.setStdStream(file, stream, append);
+    return AR_Success;
   }
 
   void MetaSema::actOnComment(llvm::StringRef comment) const {
@@ -235,5 +245,8 @@ namespace cling {
     // nothing to run - should this be success or failure?
     return AR_Failure;
   }
+
+
+
 
 } // end namespace cling
