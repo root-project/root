@@ -2133,7 +2133,7 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    } else {
       if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
       else out << "   TGraph *";
-      out << "graph = new TGraph(" << fNpoints << ");" << std::endl;
+      out << "graph = new TGraph();" << std::endl;
    }
 
    out << "   graph->SetName(" << quote << GetName() << quote << ");" << std::endl;

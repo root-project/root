@@ -693,23 +693,38 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
    out << "   " << std::endl;
-   if (gROOT->ClassSaved(TGraphErrors::Class())) {
-      out << "   ";
-   } else {
-      out << "   TGraphErrors *";
-   }
-   out << "gre = new TGraphErrors(" << fNpoints << ");" << std::endl;
+   
+   Int_t i;
+   TString fXName  = TString(GetName()) + "_fx";
+   TString fYName  = TString(GetName()) + "_fy";
+   TString fEXName = TString(GetName()) + "_fex";
+   TString fEYName = TString(GetName()) + "_fey";
+   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
+   out << "   " << fX[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
+   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEX[i] << "," << std::endl;
+   out << "   " << fEX[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEY[i] << "," << std::endl;
+   out << "   " << fEY[fNpoints-1] << "};" << std::endl;
+   
+   if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
+   else out << "   TGraphErrors *";
+   out << "gre = new TGraphErrors(" << fNpoints << ","
+                                    << fXName   << ","  << fYName  << ","
+                                    << fEXName  << ","  << fEYName << ");"
+                                    << std::endl;
+
    out << "   gre->SetName(" << quote << GetName() << quote << ");" << std::endl;
    out << "   gre->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    SaveFillAttributes(out, "gre", 0, 1001);
    SaveLineAttributes(out, "gre", 1, 1, 1);
    SaveMarkerAttributes(out, "gre", 1, 1, 1);
-
-   for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   gre->SetPoint(" << i << "," << fX[i] << "," << fY[i] << ");" << std::endl;
-      out << "   gre->SetPointError(" << i << "," << fEX[i] << "," << fEY[i] << ");" << std::endl;
-   }
 
    static Int_t frameNumber = 1000;
    if (fHistogram) {
