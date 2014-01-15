@@ -386,7 +386,8 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_OBJECT_LIBRARY library)
   ROOT_GET_SOURCES(lib_srcs src ${ARGN})
-  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc ${CMAKE_BINARY_DIR}/include )
+  include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+  include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
 endfunction()
 
