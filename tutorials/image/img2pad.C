@@ -11,10 +11,10 @@ void img2pad()
    img->SetConstRatio(kFALSE);
    img->Draw("N");
 
-   TCanvas *c = gROOT->GetListOfCanvases()->FindObject("rose512jpg");
+   TCanvas *c = (TCanvas *)gROOT->GetListOfCanvases()->FindObject("rose512jpg");
    c->SetFixedAspectRatio();
 
-   TCanvas *c = new TCanvas("roses", "roses", 800, 800);
+   TCanvas *c1 = new TCanvas("roses", "roses", 800, 800);
    img->Draw("T100,100,yellow");
    //img->Draw("T100,100,#556655");
    //img->Draw("T100,100");
@@ -41,20 +41,20 @@ void img2pad()
    p1->Draw();
    p1->cd();
    i1->Draw();
-   c->cd();
+   c1->cd();
 
    p2->Draw();
    p2->cd();
    i2->Draw();
-   c->cd();
+   c1->cd();
 
    p3->Draw();
    p3->cd();
    i3->Draw();
-   c->cd();
+   c1->cd();
 
    p4->Draw();
    p4->cd();
    i4->Draw();
-   c->cd();
+   c1->cd();
 }
