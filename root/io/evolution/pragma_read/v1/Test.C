@@ -1,7 +1,7 @@
 void
 Test(bool useTree=true, bool useObj = true)
 {
-  gSystem->Load("libTestv1.so");
+  gSystem->Load("libTestv1");
 
   TFile* file = TFile::Open("test.root", "RECREATE");
   if (!file) { 

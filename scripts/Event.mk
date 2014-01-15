@@ -60,9 +60,9 @@ else
 ifeq ($(PLATFORM),win32)
 		$(CMDECHO) bindexplib $* $(EVENTO) > $*.def
 		$(CMDECHO) lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def \
-		   $(OutPutOpt)$(EVENTLIB)
+		   -out:$(EVENTLIB)
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $(EVENTO) $*.exp $(LIBS) \
-		   $(OutPutOpt)$@
+		   -out:$@
 else
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
 endif
@@ -70,6 +70,12 @@ endif
 endif
 endif
 
+ifneq ($(PLATFORM),win32)
 $(EVENT):       $(EVENTSO) $(MAINEVENTO) $(ROOTCORELIBS)
 		$(CMDECHO) $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
 		   $(OutPutOpt)$(EVENT)
+else
+$(EVENT):       $(EVENTSO) $(MAINEVENTO) $(ROOTCORELIBS)
+		$(CMDECHO) $(LD) $(LDFLAGS) $(MAINEVENTO) $(EVENTLIB) $(LIBS) \
+		   -out:$(EVENT)
+endif

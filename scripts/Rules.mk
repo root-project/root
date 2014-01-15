@@ -405,7 +405,7 @@ SrcSuf        = cxx
 ExeSuf        = .exe
 DllSuf        = dll
 LibSuf        = lib
-OutPutOpt     = -out:
+OutPutOpt     = -Fo
 CXX          ?= cl
 ifeq ($(CXX),./build/win/cl.sh)
    CXX        := cl
