@@ -14,7 +14,7 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 ifeq ($(CXX11),yes)
-CXX11FLAGS    = -std=c++11 -Wno-deprecated-declarations
+CXX11FLAGS    = -std=c++11
 endif
 
 # Compiler:
@@ -67,3 +67,4 @@ endif
 endif
 
 # Extras
+GLIBC_MALLOC_DEPRECATED = yes

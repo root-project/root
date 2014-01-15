@@ -1068,8 +1068,8 @@ void TString::ToLower()
 {
    // Change string to lower-case.
 
-   register Ssiz_t n = Length();
-   register char *p = GetPointer();
+   Ssiz_t n = Length();
+   char *p = GetPointer();
    while (n--) {
       *p = tolower((unsigned char)*p);
       p++;
@@ -1081,8 +1081,8 @@ void TString::ToUpper()
 {
    // Change string to upper case.
 
-   register Ssiz_t n = Length();
-   register char *p = GetPointer();
+   Ssiz_t n = Length();
+   char *p = GetPointer();
    while (n--) {
       *p = toupper((unsigned char)*p);
       p++;
@@ -1398,10 +1398,10 @@ TString ToLower(const TString &str)
 {
    // Return a lower-case version of str.
 
-   register Ssiz_t n = str.Length();
+   Ssiz_t n = str.Length();
    TString temp((char)0, n);
-   register const char *uc = str.Data();
-   register       char *lc = (char*)temp.Data();
+   const char *uc = str.Data();
+         char *lc = (char*)temp.Data();
    // Guard against tolower() being a macro
    while (n--) { *lc++ = tolower((unsigned char)*uc); uc++; }
    return temp;
@@ -1412,10 +1412,10 @@ TString ToUpper(const TString &str)
 {
    // Return an upper-case version of str.
 
-   register Ssiz_t n = str.Length();
+   Ssiz_t n = str.Length();
    TString temp((char)0, n);
-   register const char* uc = str.Data();
-   register       char* lc = (char*)temp.Data();
+   const char* uc = str.Data();
+         char* lc = (char*)temp.Data();
    // Guard against toupper() being a macro
    while (n--) { *lc++ = toupper((unsigned char)*uc); uc++; }
    return temp;
@@ -1727,7 +1727,7 @@ void TSubString::ToLower()
    // Convert sub-string to lower-case.
 
    if (!IsNull()) {                             // Ignore null substrings
-      register char *p = fStr.GetPointer() + fBegin;
+      char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
       while (n--) { *p = tolower((unsigned char)*p); p++;}
    }
@@ -1738,7 +1738,7 @@ void TSubString::ToUpper()
 {
    // Convert sub-string to upper-case.
    if (!IsNull()) {                             // Ignore null substrings
-      register char *p = fStr.GetPointer() + fBegin;
+      char *p = fStr.GetPointer() + fBegin;
       Ssiz_t n = fExtent;
       while (n--) { *p = toupper((unsigned char)*p); p++;}
    }

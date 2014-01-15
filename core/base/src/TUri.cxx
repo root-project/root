@@ -36,14 +36,14 @@ const char* const kURI_unreserved   = "[[:alpha:][:digit:]-._~]";
 
 // reserved characters, see chapter
 // reserved      = gen-delims / sub-delims
-const char* const kURI_reserved     = "[:/?#[]@!$&'()*+,;=]";
+//const char* const kURI_reserved     = "[:/?#[]@!$&'()*+,;=]";
 
 // gen-delims, see chapter 2.2
 // delimiters of the generic URI components
-const char* const kURI_gendelims    = "[:/?#[]@]";
+//const char* const kURI_gendelims    = "[:/?#[]@]";
 
 // sub-delims, see chapter 2.2
-const char* const kURI_subdelims    = "[!$&'()*+,;=]";
+//const char* const kURI_subdelims    = "[!$&'()*+,;=]";
 
 
 ClassImp(TUri)

@@ -54,7 +54,7 @@ ClassImp(TEveMagFieldDuo);
 
 namespace
 {
-   const Double_t kBMin     = 1e-6;
+   //const Double_t kBMin     = 1e-6;
    const Double_t kPtMinSqr = 1e-20;
    const Double_t kAMin     = 1e-10;
    const Double_t kStepEps  = 1e-3;

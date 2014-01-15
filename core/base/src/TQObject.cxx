@@ -579,7 +579,7 @@ void TQObject::Emit(const char *signal_name)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -634,7 +634,7 @@ void TQObject::EmitVA(const char *signal_name, Int_t nargs, va_list ap)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -675,7 +675,7 @@ void TQObject::Emit(const char *signal_name, Long_t param)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -716,7 +716,7 @@ void TQObject::Emit(const char *signal_name, Long64_t param)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -757,7 +757,7 @@ void TQObject::Emit(const char *signal_name, Double_t param)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -798,7 +798,7 @@ void TQObject::Emit(const char *signal_name, const char *params)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnection *connection = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;
@@ -851,8 +851,8 @@ void TQObject::Emit(const char *signal_name, Long_t *paramArr)
 
    TString signal = CompressName(signal_name);
 
-   register TQConnectionList *clist  = 0;
-   register TQConnection *connection = 0;
+   TQConnectionList *clist  = 0;
+   TQConnection *connection = 0;
 
    // execute class signals
    TList *sigList;

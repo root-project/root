@@ -768,7 +768,7 @@ TImage *TFITSHDU::ReadAsImage(Int_t layer, TImagePalette *pal)
 
    // Get the maximum and minimum pixel values in the layer to auto-stretch pixels
    Double_t maxval = 0, minval = 0;
-   register UInt_t i;
+   UInt_t i;
    Double_t pixvalue;
    Int_t offset = layer * pixels_per_layer;
 
@@ -881,7 +881,7 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
    Int_t width, height;
    UInt_t pixels_per_layer;
    Int_t offset;
-   register UInt_t i;
+   UInt_t i;
    TMatrixD *mat=0;
    
    width  = Int_t(fSizes->GetAt(0));

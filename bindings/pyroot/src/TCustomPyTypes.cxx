@@ -135,7 +135,7 @@ PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* p
 {
 // from instancemethod, but with custom type (at issue is that instancemethod is not
 // meant to be derived from)
-   register PyMethodObject* im;
+   PyMethodObject* im;
    if ( ! PyCallable_Check( func ) ) {
       PyErr_Format( PyExc_SystemError,
                      "%s:%d: bad argument to internal function",
@@ -168,7 +168,7 @@ PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* p
 }
 
 //____________________________________________________________________________
-static void im_dealloc( register PyMethodObject* im )
+static void im_dealloc( PyMethodObject* im )
 {
 // from instancemethod, but with custom type (at issue is that instancemethod is not
 // meant to be derived from)

@@ -154,7 +154,7 @@ TGButtonGroup::~TGButtonGroup()
    // Destructor, we do not delete the buttons.
 
    TIter next(fMapOfButtons);
-   register TGButton *item = 0;
+   TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
       item->SetGroup(0);
@@ -314,7 +314,7 @@ void TGButtonGroup::SetState(Bool_t state)
    fState = state;
 
    TIter next(fMapOfButtons);
-   register TGButton *item = 0;
+   TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       if (state) {
@@ -415,7 +415,7 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    // identifier id. Returns null if the button was not found.
 
    TIter next(fMapOfButtons);
-   register TGButton *item = 0;
+   TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
       if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
@@ -510,7 +510,7 @@ void TGButtonGroup::ReleaseButtons()
       return;
 
    TIter next(fMapOfButtons);
-   register TGButton *item = 0;
+   TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {    // loop over all buttons
       // coverity[returned_null]

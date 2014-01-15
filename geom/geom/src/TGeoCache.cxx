@@ -26,7 +26,7 @@
 #include "TGeoVolume.h"
 #include "TGeoCache.h"
 
-const Int_t kN3 = 3*sizeof(Double_t);
+//const Int_t kN3 = 3*sizeof(Double_t);
 
 
 ClassImp(TGeoNodeCache)

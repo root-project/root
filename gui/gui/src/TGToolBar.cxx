@@ -155,7 +155,7 @@ TGButton *TGToolBar::GetButton(Int_t id) const
    // identifier id. Returns null if the button was not found.
 
    TIter next(fMapOfButtons);
-   register TGButton *item = 0;
+   TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
       if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
