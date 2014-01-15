@@ -123,7 +123,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GENVECTORDEP) $(GENVECTORDS) $(GENVECTORDS32) \
 		   $(GENVECTORDH) $(GENVECTORDH32) \
 		   $(GENVECTORLIB) $(GENVECTORMAP)
-		@rm -rf include/Math/GenVector
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@rm -rf $(GENVECTORDIRT)
 else
