@@ -6580,6 +6580,7 @@ void TH1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       histName += ++hcounter;
    }
    const char *hname = histName.Data();
+   if (!strlen(hname)) hname = "unnamed";
 
    TString t(GetTitle());
    t.ReplaceAll("\\","\\\\");
