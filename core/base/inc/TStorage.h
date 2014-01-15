@@ -30,8 +30,6 @@ typedef void *(*ReAllocFun_t)(void*, size_t);
 typedef void *(*ReAllocCFun_t)(void*, size_t, size_t);
 typedef char *(*ReAllocCharFun_t)(char*, size_t, size_t);
 
-/*Magic number written to memory after TStorage::ObjectAlloc */
-#define TSTORAGEMEMVALUE 0x99999999
 
 class TStorage {
 
@@ -42,6 +40,8 @@ private:
    static ReAllocFun_t   fgReAllocHook;        // custom ReAlloc
    static ReAllocCFun_t  fgReAllocCHook;       // custom ReAlloc with length check
    static Bool_t         fgHasCustomNewDelete; // true if using ROOT's new/delete
+   static const UInt_t   kObjectAllocMemValue = 0x99999999;
+                                               // magic number for ObjectAlloc
 
 public:
    virtual ~TStorage() { }
@@ -77,10 +77,14 @@ public:
    static void   AddToHeap(ULong_t begin, ULong_t end);
    static Bool_t IsOnHeap(void *p);
 
+   static Bool_t FilledByObjectAlloc(UInt_t* member);
+
    ClassDef(TStorage,0)  //Storage manager class
 };
 
 #ifndef WIN32
+inline Bool_t TStorage::FilledByObjectAlloc(UInt_t *member) { return *member == kObjectAllocMemValue; }
+
 inline size_t TStorage::GetMaxBlockSize() { return fgMaxBlockSize; }
 
 inline void TStorage::SetMaxBlockSize(size_t size) { fgMaxBlockSize = size; }
