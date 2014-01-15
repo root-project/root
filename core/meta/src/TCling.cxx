@@ -1481,9 +1481,11 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
             ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, clang::QualType(memNonPtrType,0), *fInterpreter, *fNormalizedCtxt);
-            llvm::StringRef comment = ROOT::TMetaUtils::GetComment(* (*iField), 0);
-            // NOTE, we have to change this to support selection XML!
-            bool transient = !comment.empty() && comment[0] == '!';
+
+            TDataMember* mbr = cl->GetDataMember(iField->getName().data());
+            // if we can not find the member (which should not really happen),
+            // let's consider it transient.
+            bool transient = !mbr || !mbr->IsPersistent();
 
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
