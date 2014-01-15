@@ -246,8 +246,7 @@ public:
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    void               CalculateStreamerOffset() const;
-   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp,
-                                      Int_t isATObject = -1) const;
+   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp) const;
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    TObject           *Clone(const char *newname="") const;

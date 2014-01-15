@@ -1632,7 +1632,7 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
 
    } else {
       TAutoInspector insp(b);
-      CallShowMembers(obj,insp,0);
+      CallShowMembers(obj,insp);
       return insp.fCount;
    }
 
@@ -1879,8 +1879,7 @@ void TClass::CalculateStreamerOffset() const
 
 
 //______________________________________________________________________________
-Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
-                               Int_t isATObject) const
+Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
 {
    // Call ShowMembers() on the obj of this class type, passing insp and parent.
    // isATObject is -1 if unknown, 0 if it is not a TObject, and 1 if it is a TObject.
@@ -1893,11 +1892,12 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
       return kTRUE;
    } else {
 
-      if (isATObject == -1 && IsLoaded()) {
+      Bool_t isATObject = kFALSE;
+      if (IsLoaded()) {
          // Force a call to InheritsFrom. This function indirectly
          // calls TClass::GetClass.  It forces the loading of new
          // typedefs in case some of them were not yet loaded.
-         isATObject = (Int_t) (InheritsFrom(TObject::Class()));
+         isATObject = InheritsFrom(TObject::Class());
       }
 
       if (isATObject == 1) {
@@ -1941,7 +1941,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
             }
             // Since we do have some dictionary information, let's
             // call the interpreter's ShowMember.
-            // This works with Cling and might work with CINT (to support interpreted classes)
+            // This works with Cling to support interpreted classes.
             gInterpreter->InspectMembers(insp, obj, this);
             return kTRUE;
          } else {

@@ -1533,7 +1533,7 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          InspectMembers(insp, cobj + baseOffset, baseCl);
       } else {
          baseCl->CallShowMembers(cobj + baseOffset,
-                                 insp, 0);
+                                 insp);
       }
    } // loop over bases
 }
