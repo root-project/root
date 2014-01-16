@@ -48,16 +48,11 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
 {
 
    // Clean the dictionary name from characters which are not accepted in C++
-   std::string tmpName = fDictionaryName;
-   fDictionaryName.clear();
+   std::string tmpName = fDictionaryName;   
    std::size_t firstNonNumber = tmpName.find_first_not_of("0123456789");
    tmpName.replace(0,firstNonNumber,"");
-   char c;
-   for(unsigned int i=0;i<tmpName.size();++i){
-      c=tmpName[i];
-      if (! isalpha(c) ) c='_';
-      fDictionaryName+=c;
-   }
+   fDictionaryName.clear();
+   ROOT::TMetaUtils::GetCppName(fDictionaryName,tmpName.c_str());
    
    // Need to resolve _where_ to create the pcm
    // We default in the lib subdirectory
