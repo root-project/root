@@ -1914,66 +1914,19 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
       return kTRUE;
    } else {
 
-      Bool_t isATObject = kFALSE;
-      if (IsLoaded()) {
-         // Force a call to InheritsFrom. This function indirectly
-         // calls TClass::GetClass.  It forces the loading of new
-         // typedefs in case some of them were not yet loaded.
-         isATObject = InheritsFrom(TObject::Class());
-      }
+      if (fClassInfo) {
 
-      if (isATObject == 1) {
-         // We have access to the TObject interface, so let's use it.
-         if (!fIsOffsetStreamerSet) {
-            CalculateStreamerOffset();
+         if (strcmp(GetName(), "string") == 0) {
+            // For std::string we know that we do not have a ShowMembers
+            // function and that it's okay.
+            return kTRUE;
          }
-         TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
-         realTObject->ShowMembers(insp);
+         // Since we do have some dictionary information, let's
+         // call the interpreter's ShowMember.
+         // This works with Cling to support interpreted classes.
+         gInterpreter->InspectMembers(insp, obj, this);
          return kTRUE;
-      } else if (fClassInfo) {
 
-         // Always call ShowMembers via the interpreter. A direct call
-         // like:
-         //
-         //      realDataObject->ShowMembers(brd, parent);
-         //
-         // will not work if the class derives from TObject but does not
-         // have TObject as the leftmost base class.
-         //
-
-         if (!fInterShowMembers) {
-            CallFunc_t* ism = gCling->CallFunc_Factory();
-            Long_t offset = 0;
-
-            R__LOCKGUARD2(gInterpreterMutex);
-            gCling->CallFunc_SetFuncProto(ism,fClassInfo, "ShowMembers", "TMemberInspector&", &offset);
-            if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
-               Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
-               fInterShowMembers = 0;
-               return kFALSE;
-            }
-
-            fInterShowMembers = ism;
-         }
-         if (!gCling->CallFunc_IsValid(fInterShowMembers)) {
-            if (strcmp(GetName(), "string") == 0) {
-               // For std::string we know that we do not have a ShowMembers
-               // function and that it's okay.
-               return kTRUE;
-            }
-            // Since we do have some dictionary information, let's
-            // call the interpreter's ShowMember.
-            // This works with Cling to support interpreted classes.
-            gInterpreter->InspectMembers(insp, obj, this);
-            return kTRUE;
-         } else {
-            R__LOCKGUARD2(gInterpreterMutex);
-            gCling->CallFunc_ResetArg(fInterShowMembers);
-            gCling->CallFunc_SetArg(fInterShowMembers,(Long_t) &insp);
-            void* address = (void*) (((Long_t) obj) + fOffsetStreamer);
-            gCling->CallFunc_Exec((CallFunc_t*)fInterShowMembers,address);
-            return kTRUE;
-         }
       } else if (TVirtualStreamerInfo* sinfo = GetStreamerInfo()) {
          sinfo->CallShowMembers(obj,insp);
          return kTRUE;
