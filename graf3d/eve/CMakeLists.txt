@@ -30,6 +30,6 @@ ROOT_GENERATE_DICTIONARY(G__Eve1 ${headers1} LINKDEF src/SolarisCCDictHack.h Lin
 ROOT_GENERATE_DICTIONARY(G__Eve2 ${headers2} LINKDEF src/SolarisCCDictHack.h LinkDef2.h)
 
 ROOT_GENERATE_ROOTMAP(Eve LINKDEF LinkDef1.h LinkDef2.h DEPENDENCIES Geom GeomPainter Graf3d Gui Gpad Graf Hist Physics Ged EG Tree TreePlayer RGL RIO Rint MathCore)
-ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve1.cxx G__Eve2.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW FTGL Cint Core DEPENDENCIES Geom Ged RGL Physics EG)
+ROOT_LINKER_LIBRARY(Eve *.cxx G__Eve1.cxx G__Eve2.cxx LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES} Cint Core DEPENDENCIES Geom Ged RGL Physics EG)
 
 ROOT_INSTALL_HEADERS()
