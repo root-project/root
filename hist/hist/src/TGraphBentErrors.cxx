@@ -506,32 +506,70 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TGraphBentErrors::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TGraphBentErrors *";
-   }
-   out<<"grbe = new TGraphBentErrors("<<fNpoints<<");"<<std::endl;
-   out<<"   grbe->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   grbe->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
+   out << "   " << std::endl;
+   static Int_t frameNumber = 2000;
+   frameNumber++;
+   
+   Int_t i;
+   TString fXName    = TString(GetName()) + Form("_fx%d",frameNumber);
+   TString fYName    = TString(GetName()) + Form("_fy%d",frameNumber);
+   TString fElXName  = TString(GetName()) + Form("_felx%d",frameNumber);
+   TString fElYName  = TString(GetName()) + Form("_fely%d",frameNumber);
+   TString fEhXName  = TString(GetName()) + Form("_fehx%d",frameNumber);
+   TString fEhYName  = TString(GetName()) + Form("_fehy%d",frameNumber);
+   TString fEldXName = TString(GetName()) + Form("_feldx%d",frameNumber);
+   TString fEldYName = TString(GetName()) + Form("_feldy%d",frameNumber);
+   TString fEhdXName = TString(GetName()) + Form("_fehdx%d",frameNumber);
+   TString fEhdYName = TString(GetName()) + Form("_fehdy%d",frameNumber);
+   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
+   out << "   " << fX[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
+   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
+   out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fElYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlow[i] << "," << std::endl;
+   out << "   " << fEYlow[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhigh[i] << "," << std::endl;
+   out << "   " << fEXhigh[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
+   out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;   
+   out << "   Double_t " << fEldXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlowd[i] << "," << std::endl;
+   out << "   " << fEXlowd[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEldYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlowd[i] << "," << std::endl;
+   out << "   " << fEYlowd[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhdXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhighd[i] << "," << std::endl;
+   out << "   " << fEXhighd[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhdYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhighd[i] << "," << std::endl;
+   out << "   " << fEYhighd[fNpoints-1] << "};" << std::endl;
+   
+   if (gROOT->ClassSaved(TGraphBentErrors::Class())) out << "   ";
+   else out << "   TGraphBentErrors *";
+   out << "grbe = new TGraphBentErrors("<< fNpoints << ","
+                                    << fXName     << ","  << fYName  << ","
+                                    << fElXName   << ","  << fEhXName << ","
+                                    << fElYName   << ","  << fEhYName << ","
+                                    << fEldXName  << ","  << fEhdXName << ","
+                                    << fEldYName  << ","  << fEhdYName << ");"
+                                    << std::endl;
+
+   out << "   grbe->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   grbe->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
 
    SaveFillAttributes(out,"grbe",0,1001);
    SaveLineAttributes(out,"grbe",1,1,1);
    SaveMarkerAttributes(out,"grbe",1,1,1);
 
-   for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   grbe->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-      out<<"   grbe->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]
-                                       <<","<<fEYlow[i]<<","<<fEYhigh[i]
-                                       <<","<<fEXlowd[i]<<","<<fEXhighd[i]
-                                       <<","<<fEYlowd[i]<<","<<fEYhighd[i]
-                                       <<");"<<std::endl;
-   }
-
-   static Int_t frameNumber = 2000;
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s",hname.Data()));
