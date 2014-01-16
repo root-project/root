@@ -693,12 +693,14 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
    out << "   " << std::endl;
+   static Int_t frameNumber = 1000;
+   frameNumber++;
    
    Int_t i;
-   TString fXName  = TString(GetName()) + "_fx";
-   TString fYName  = TString(GetName()) + "_fy";
-   TString fEXName = TString(GetName()) + "_fex";
-   TString fEYName = TString(GetName()) + "_fey";
+   TString fXName  = TString(GetName()) + Form("_fx%d",frameNumber);
+   TString fYName  = TString(GetName()) + Form("_fy%d",frameNumber);
+   TString fEXName = TString(GetName()) + Form("_fex%d",frameNumber);
+   TString fEYName = TString(GetName()) + Form("_fey%d",frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
    out << "   " << fX[fNpoints-1] << "};" << std::endl;
@@ -726,9 +728,7 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveLineAttributes(out, "gre", 1, 1, 1);
    SaveMarkerAttributes(out, "gre", 1, 1, 1);
 
-   static Int_t frameNumber = 1000;
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s", hname.Data()));

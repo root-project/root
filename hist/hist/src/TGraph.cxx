@@ -2116,11 +2116,13 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    char quote = '"';
    out << "   " << std::endl;
+   static Int_t frameNumber = 0;
+   frameNumber++;
 
    if (fNpoints >= 1) {
       Int_t i;
-      TString fXName = TString(GetName()) + "_fx";
-      TString fYName = TString(GetName()) + "_fy";
+      TString fXName = TString(GetName()) + Form("_fx%d",frameNumber);
+      TString fYName = TString(GetName()) + Form("_fy%d",frameNumber);
       out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
       for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
       out << "   " << fX[fNpoints-1] << "};" << std::endl;
@@ -2143,9 +2145,7 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveLineAttributes(out, "graph", 1, 1, 1);
    SaveMarkerAttributes(out, "graph", 1, 1, 1);
 
-   static Int_t frameNumber = 0;
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s", hname.Data()));
