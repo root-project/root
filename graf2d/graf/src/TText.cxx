@@ -112,7 +112,7 @@ void TText::Copy(TObject &obj) const
 //______________________________________________________________________________
 const void *TText::GetWcsTitle(void) const
 {
-   // Returns teh text as UNICODE.
+   // Returns the text as UNICODE.
 
    if (fWcsTitle != NULL) {
       return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
