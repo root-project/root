@@ -1000,28 +1000,52 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
     // Save primitive as a C++ statement(s) on output stream out
 
    char quote = '"';
-   out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) {
-      out<<"   ";
-   } else {
-      out<<"   TGraphAsymmErrors *";
-   }
-   out<<"grae = new TGraphAsymmErrors("<<fNpoints<<");"<<std::endl;
-   out<<"   grae->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
-   out<<"   grae->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
-
-   SaveFillAttributes(out,"grae",0,1001);
-   SaveLineAttributes(out,"grae",1,1,1);
-   SaveMarkerAttributes(out,"grae",1,1,1);
-
-   for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   grae->SetPoint("<<i<<","<<fX[i]<<","<<fY[i]<<");"<<std::endl;
-      out<<"   grae->SetPointError("<<i<<","<<fEXlow[i]<<","<<fEXhigh[i]<<","<<fEYlow[i]<<","<<fEYhigh[i]<<");"<<std::endl;
-   }
-
+   out << "   " << std::endl;
    static Int_t frameNumber = 3000;
+   frameNumber++;
+
+   Int_t i;
+   TString fXName   = TString(GetName()) + Form("_fx%d",frameNumber);
+   TString fYName   = TString(GetName()) + Form("_fy%d",frameNumber);
+   TString fElXName = TString(GetName()) + Form("_felx%d",frameNumber);
+   TString fElYName = TString(GetName()) + Form("_fely%d",frameNumber);
+   TString fEhXName = TString(GetName()) + Form("_fehx%d",frameNumber);
+   TString fEhYName = TString(GetName()) + Form("_fehy%d",frameNumber);
+   out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
+   out << "   " << fX[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
+   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
+   out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fElYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYlow[i] << "," << std::endl;
+   out << "   " << fEYlow[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhXName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEXhigh[i] << "," << std::endl;
+   out << "   " << fEXhigh[fNpoints-1] << "};" << std::endl;
+   out << "   Double_t " << fEhYName << "[" << fNpoints << "] = {" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fEYhigh[i] << "," << std::endl;
+   out << "   " << fEYhigh[fNpoints-1] << "};" << std::endl;
+   
+   if (gROOT->ClassSaved(TGraphAsymmErrors::Class())) out<<"   ";
+   else out << "   TGraphAsymmErrors *";
+   out << "grae = new TGraphAsymmErrors("<< fNpoints << ","
+                                    << fXName   << ","  << fYName  << ","
+                                    << fElXName  << ","  << fEhXName << ","
+                                    << fElYName  << ","  << fEhYName << ");"
+                                    << std::endl;
+   
+   out << "   grae->SetName(" << quote << GetName() << quote << ");" << std::endl;
+   out << "   grae->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+
+   SaveFillAttributes(out, "grae", 0, 1001);
+   SaveLineAttributes(out, "grae", 1, 1, 1);
+   SaveMarkerAttributes(out, "grae", 1, 1, 1);
+
    if (fHistogram) {
-      frameNumber++;
       TString hname = fHistogram->GetName();
       hname += frameNumber;
       fHistogram->SetName(Form("Graph_%s",hname.Data()));
