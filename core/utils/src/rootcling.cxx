@@ -2002,6 +2002,7 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
    }
 
    code_for_parser += "\n#endif\n";
+   
 }
 
 //______________________________________________________________________________
@@ -3488,7 +3489,6 @@ int RootCling(int argc,
 
    AddPlatformDefines(clingArgs);
 
-
    std::string interpPragmaSource;
    std::string includeForSource;
    string esc_arg;
@@ -3623,7 +3623,6 @@ int RootCling(int argc,
    //---------------------------------------------------------------------------
    // Parse the linkdef or selection.xml file.
    //---------------------------------------------------------------------------
-
    string linkdefFilename;
    if (!linkdefLoc) {
       linkdefFilename = "in memory";
@@ -3634,7 +3633,7 @@ int RootCling(int argc,
          return 1;
       }
    }
-
+   
    // Exclude string not to re-generatre the dictionary
    std::vector<std::string> namesForExclusion;
    if (!ROOTBUILDVAL){
@@ -4313,7 +4312,7 @@ int GenReflex(int argc, char **argv)
    // Translate the aruments of genreflex into rootcling ones and forward them
    // to the RootCling function.
    // These are two typical genreflex and rootcling commandlines
-   // 1) genreflex.py header1.h [header2.h ...] [options] [preprocessor options]
+   // 1) genreflex header1.h [header2.h ...] [options] [preprocessor options]
    // 2) rootcling [-v] [-v0-4] [-f] [out.cxx] [-s sharedlib.so] [-m pcmfilename]
    //     header1.h[{+,-}][!] ..headerN.h[{+,-}][!] [{LinkDef.h,selectionRules.xml}]
    // The rules with which the arguments are translated are (1st column genreflex):
@@ -4376,7 +4375,7 @@ int GenReflex(int argc, char **argv)
    // Some long help strings
    const char* genreflexUsage =
    "Generates pcm file from starting from the old genreflex syntax\n"
-   "Usage: genreflex[.py] headerfile1.h [ ... headerfileN.h] [opts] [preproc. opts]\n\n"
+   "Usage: genreflex headerfile1.h [ ... headerfileN.h] [opts] [preproc. opts]\n\n"
    "Options:\n";
 
    const char* selectionFilenameUsage=

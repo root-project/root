@@ -46,7 +46,19 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
-      
+
+   // Clean the dictionary name from characters which are not accepted in C++
+   std::string tmpName = fDictionaryName;
+   fDictionaryName.clear();
+   std::size_t firstNonNumber = tmpName.find_first_not_of("0123456789");
+   tmpName.replace(0,firstNonNumber,"");
+   char c;
+   for(unsigned int i=0;i<tmpName.size();++i){
+      c=tmpName[i];
+      if (! isalpha(c) ) c='_';
+      fDictionaryName+=c;
+   }
+   
    // Need to resolve _where_ to create the pcm
    // We default in the lib subdirectory
    // otherwise we put it in the same directory as the dictionary file (for ACLiC)
