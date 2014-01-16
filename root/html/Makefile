@@ -64,9 +64,6 @@ MakeIndex_filtered.log: MakeIndex.log
 MakeIndex: MakeIndex_filtered.log
 	$(TestDiff)
 
-ifeq ($(ClingWorkAroundLackOfModule)$(PLATFORM),yesmacosx)
-MakeIndex.log:  CALLROOTEXE += -e '\#define _MALLOC_MALLOC_H_ 0'
-endif
 ifneq ($(ClingWorkAroundMissingAutoLoading),)
 MakeIndex.log:  CALLROOTEXE += -e 'gSystem->Load("libHtml");'
 endif
