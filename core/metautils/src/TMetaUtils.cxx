@@ -2723,6 +2723,11 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
       ++i;
    }
    out.resize(j);
+
+   // Remove initial numbers if any
+   std::size_t firstNonNumber = out.find_first_not_of("0123456789");
+   out.replace(0,firstNonNumber,"");   
+
    return;
 }
 
