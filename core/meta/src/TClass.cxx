@@ -1975,38 +1975,37 @@ Bool_t TClass::CanSplit() const
 //      return kFALSE;
 //   }
 
-   // If we do not have a showMembers and we have a streamer,
+   // If we do not have a showMembers or a fClassInfo and we have a streamer,
    // we are in the case of class that can never be split since it is
    // opaque to us.
-   if (GetShowMembersWrapper()==0 && GetStreamer()!=0) {
+   if (GetCollectionProxy()!=0) {
+      // For STL collection we need to look inside.
 
-      // the exception are the STL containers.
-      if (GetCollectionProxy()==0) {
-         // We do NOT have a collection.  The class is true opaque
+      // However we do not split collections of collections
+      // nor collections of strings
+      // nor collections of pointers (unless explicit request (see TBranchSTL)).
+
+      if (GetCollectionProxy()->HasPointers()) return kFALSE;
+
+      TClass *valueClass = GetCollectionProxy()->GetValueClass();
+      if (valueClass == 0) return kFALSE;
+      if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
          return kFALSE;
+      if (!valueClass->CanSplit()) return kFALSE;
+      if (valueClass->GetCollectionProxy() != 0) return kFALSE;
 
-      } else {
-
-         // However we do not split collections of collections
-         // nor collections of strings
-         // nor collections of pointers (unless explicit request (see TBranchSTL)).
-
-         if (GetCollectionProxy()->HasPointers()) return kFALSE;
-
-         TClass *valueClass = GetCollectionProxy()->GetValueClass();
-         if (valueClass == 0) return kFALSE;
-         if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
-            return kFALSE;
-         if (!valueClass->CanSplit()) return kFALSE;
-         if (valueClass->GetCollectionProxy() != 0) return kFALSE;
-
-         Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
-         if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
-              && valueClass->GetClassInfo()==0)
-         {
-            return kFALSE;
-         }
+      Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
+      if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
+          && valueClass->GetClassInfo()==0)
+      {
+         return kFALSE;
       }
+
+   } else if ((GetShowMembersWrapper()==0 && fClassInfo==0) && GetStreamer()!=0) {
+
+      // We do NOT have a collection.  The class is true opaque.
+      return kFALSE;
+
    }
 
    if (Size()==1) {
