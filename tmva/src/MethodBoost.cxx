@@ -845,11 +845,6 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
       return 0;
    }
 
-   if (!method) {
-      Log() << kFATAL << " You cannot call AdaBoost without MVA classifier" << Endl;
-      return returnVal;
-   }
-
    Float_t w,v; Bool_t sig=kTRUE;
    Double_t sumAll=0, sumWrong=0;
    Bool_t* WrongDetection=new Bool_t[GetNEvents()];
