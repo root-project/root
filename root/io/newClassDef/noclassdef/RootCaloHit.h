@@ -3,6 +3,7 @@
 
 #include "RootPCellID.h"
 #include "TObject.h"
+#include "TClass.h"
 
 
 class RootCaloHit : public TObject { 
@@ -106,7 +107,7 @@ public:
 
    void myPrint() {
       //return;
-      Dump();
+      IsA()->Dump(this, true /*noaddr*/);
       mycell.Print();
       mynocell.Print();
       if (mycellfix) mycellfix->Print();
