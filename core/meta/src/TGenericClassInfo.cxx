@@ -40,13 +40,13 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
-                                        ShowMembersFunc_t showmembers, VoidFuncPtr_t dictionary,
+                                        VoidFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
         fImplFileName(0), fImplFileLine(0),
-        fIsA(isa), fShowMembers(showmembers),
+        fIsA(isa),
         fVersion(1),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
@@ -60,33 +60,13 @@ namespace ROOT {
    TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
                                         const char *declFileName, Int_t declFileLine,
                                         const type_info &info, const TInitBehavior  *action,
-                                        ShowMembersFunc_t showmembers,  VoidFuncPtr_t dictionary,
-                                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
-      : fAction(action), fClass(0), fClassName(fullClassname),
-        fDeclFileName(declFileName), fDeclFileLine(declFileLine),
-        fDictionary(dictionary), fInfo(info),
-        fImplFileName(0), fImplFileLine(0),
-        fIsA(isa), fShowMembers(showmembers),
-        fVersion(version),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-   fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
-   {
-      // Constructor with version number.
-
-      Init(pragmabits);
-   }
-
-   TGenericClassInfo::TGenericClassInfo(const char *fullClassname, Int_t version,
-                                        const char *declFileName, Int_t declFileLine,
-                                        const type_info &info, const TInitBehavior  *action,
                                         VoidFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
       : fAction(action), fClass(0), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
         fImplFileName(0), fImplFileLine(0),
-        fIsA(isa), fShowMembers(0),
+        fIsA(isa),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
@@ -108,7 +88,7 @@ namespace ROOT {
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(typeid(TForNamespace)),
         fImplFileName(0), fImplFileLine(0),
-        fIsA(0), fShowMembers(0),
+        fIsA(0),
         fVersion(version),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
         fStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
@@ -131,7 +111,6 @@ namespace ROOT {
     fImplFileName(gci.fImplFileName),
     fImplFileLine(gci.fImplFileLine),
     fIsA(gci.fIsA),
-    fShowMembers(gci.fShowMembers),
     fVersion(gci.fVersion),
     fNew(gci.fNew),
     fNewArray(gci.fNewArray),
@@ -156,7 +135,6 @@ namespace ROOT {
        fImplFileName=gci.fImplFileName;
        fImplFileLine=gci.fImplFileLine;
        fIsA=gci.fIsA;
-       fShowMembers=gci.fShowMembers;
        fVersion=gci.fVersion;
        fNew=gci.fNew;
        fNewArray=gci.fNewArray;
@@ -213,7 +191,6 @@ namespace ROOT {
                                           GetVersion(),
                                           GetInfo(),
                                           GetIsA(),
-                                          GetShowMembers(),
                                           GetDeclFileName(),
                                           GetImplFileName(),
                                           GetDeclFileLine(),
@@ -341,12 +318,6 @@ namespace ROOT {
    {
       // Return the list of Data Model Evolution regular read rules.
       return fReadRules;
-   }
-
-   ShowMembersFunc_t TGenericClassInfo::GetShowMembers() const
-   {
-      // Return the point of the ShowMembers function
-      return fShowMembers;
    }
 
    void TGenericClassInfo::SetFromTemplate()

@@ -200,7 +200,6 @@ namespace ROOT {
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const type_info &info, TVirtualIsAProxy *isa,
-                              ShowMembersFunc_t show,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
    extern void AddClass(const char *cname, Version_t id, const type_info &info,
@@ -234,7 +233,6 @@ namespace ROOT {
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const = 0;
    };
@@ -250,10 +248,9 @@ namespace ROOT {
       }
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {
-         return ROOT::CreateClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+         return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
       }
    };
 
@@ -318,12 +315,10 @@ static const char *ImplFileName();
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif
@@ -389,12 +384,10 @@ static const char *ImplFileName();
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefTNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif

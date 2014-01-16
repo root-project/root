@@ -1466,8 +1466,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
    finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
-   if (!ClassInfo__HasMethod(decl,"ShowMembers")) finalString << "0, ";
-
    if (ClassInfo__HasMethod(decl,"Dictionary") && !IsTemplate(*decl)) {
       finalString << "&" << csymbol.c_str() << "::Dictionary, ";
    } else {

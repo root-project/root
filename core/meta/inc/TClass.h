@@ -119,7 +119,6 @@ private:
    TString            fContextMenuTitle;//context menu title
    const type_info   *fTypeInfo;        //pointer to the C++ type information.
    ShowMembersFunc_t  fShowMembers;     //pointer to the class's ShowMembers function
-   mutable CallFunc_t*fInterShowMembers;//Interpreter call setup for ShowMembers
    TClassStreamer    *fStreamer;        //pointer to streamer function
    TString            fSharedLibs;      //shared libraries containing class code
 
@@ -159,7 +158,7 @@ private:
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
    Int_t              GetBaseClassOffsetRecurse(const TClass *base);
    void Init(const char *name, Version_t cversion, const type_info *info,
-             TVirtualIsAProxy *isa, ShowMembersFunc_t showmember,
+             TVirtualIsAProxy *isa,
              const char *dfil, const char *ifil,
              Int_t dl, Int_t il,
              ClassInfo_t *classInfo,
@@ -230,7 +229,6 @@ public:
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const type_info &info, TVirtualIsAProxy *isa,
-          ShowMembersFunc_t showmember,
           const char *dfil, const char *ifil,
           Int_t dl, Int_t il, Bool_t silent = kFALSE);
    virtual           ~TClass();

@@ -47,7 +47,6 @@ namespace ROOT {
       const char                 *fImplFileName;
       Int_t                       fImplFileLine;
       TVirtualIsAProxy           *fIsA;
-      ShowMembersFunc_t           fShowMembers;
       Int_t                       fVersion;
       MergeFunc_t                 fMerge;
       ResetAfterMergeFunc_t       fResetAfterMerge;
@@ -71,13 +70,7 @@ namespace ROOT {
       TGenericClassInfo(const char *fullClassname,
                        const char *declFileName, Int_t declFileLine,
                        const type_info &info, const TInitBehavior *action,
-                       ShowMembersFunc_t showmembers, VoidFuncPtr_t dictionary,
-                       TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
-
-      TGenericClassInfo(const char *fullClassname, Int_t version,
-                       const char *declFileName, Int_t declFileLine,
-                       const type_info &info, const TInitBehavior *action,
-                       ShowMembersFunc_t showmembers,  VoidFuncPtr_t dictionary,
+                       VoidFuncPtr_t dictionary,
                        TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof);
 
       TGenericClassInfo(const char *fullClassname, Int_t version,
@@ -113,7 +106,6 @@ namespace ROOT {
       NewArrFunc_t                      GetNewArray() const;
       const std::vector<ROOT::TSchemaHelper> &GetReadRawRules() const;
       const std::vector<ROOT::TSchemaHelper> &GetReadRules() const;
-      ShowMembersFunc_t                 GetShowMembers() const;
       Int_t                             GetVersion() const;
 
       TClass                           *IsA(const void *obj);

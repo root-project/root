@@ -804,7 +804,7 @@ TClass::TClass() :
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -830,7 +830,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -879,7 +879,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -914,7 +914,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
       fName = gInterpreter->ClassInfo_FullName(classInfo);
 
       R__LOCKGUARD2(gInterpreterMutex);
-      Init(fName, cversion, 0, 0, 0, dfil, ifil, dl, il, classInfo, silent);
+      Init(fName, cversion, 0, 0, dfil, ifil, dl, il, classInfo, silent);
       SetBit(kUnloaded);
 
    }
@@ -934,7 +934,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -946,14 +946,13 @@ TClass::TClass(const char *name, Version_t cversion,
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
    R__LOCKGUARD2(gInterpreterMutex);
-   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il, 0, silent);
+   Init(name,cversion, 0, 0, dfil, ifil, dl, il, 0, silent);
    SetBit(kUnloaded);
 }
 
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, TVirtualIsAProxy *isa,
-               ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il,
                Bool_t silent) :
    TDictionary(name),
@@ -964,7 +963,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -978,7 +977,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
    R__LOCKGUARD2(gInterpreterMutex);
    // use info
-   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, 0, silent);
+   Init(name, cversion, &info, isa, dfil, ifil, dl, il, 0, silent);
 }
 
 //______________________________________________________________________________
@@ -1009,7 +1008,6 @@ void TClass::ForceReload (TClass* oldcl)
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
                   const type_info *typeinfo, TVirtualIsAProxy *isa,
-                  ShowMembersFunc_t showmembers,
                   const char *dfil, const char *ifil, Int_t dl, Int_t il,
                   ClassInfo_t *givenInfo,
                   Bool_t silent)
@@ -1029,7 +1027,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fTypeInfo       = typeinfo;
    fIsA            = isa;
    if ( fIsA ) fIsA->SetClass(this);
-   fShowMembers    = showmembers;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
 
@@ -1247,7 +1244,6 @@ TClass::TClass(const TClass& cl) :
   fContextMenuTitle(cl.fContextMenuTitle),
   fTypeInfo(cl.fTypeInfo),
   fShowMembers(cl.fShowMembers),
-  fInterShowMembers(cl.fInterShowMembers),
   fStreamer(cl.fStreamer),
   fSharedLibs(cl.fSharedLibs),
   fIsA(cl.fIsA),
@@ -1363,8 +1359,6 @@ TClass::~TClass()
    delete fClassMenuList; fClassMenuList=0;
 
    fIsOffsetStreamerSet=kFALSE;
-
-   if (fInterShowMembers) gCling->CallFunc_Delete(fInterShowMembers);
 
    if ( fIsA ) delete fIsA;
 
@@ -2042,7 +2036,6 @@ TObject *TClass::Clone(const char *new_name) const
                         fClassVersion,
                         *fTypeInfo,
                         new TIsAProxy(*fTypeInfo),
-                        fShowMembers,
                         GetDeclFileName(),
                         GetImplFileName(),
                         GetDeclFileLine(),
@@ -2054,8 +2047,8 @@ TObject *TClass::Clone(const char *new_name) const
                         GetImplFileName(),
                         GetDeclFileLine(),
                         GetImplFileLine());
-      copy->fShowMembers = fShowMembers;
    }
+   copy->fShowMembers = fShowMembers;
    // Remove the copy before renaming it
    TClass::RemoveClass(copy);
    copy->fName = new_name;
@@ -4633,7 +4626,6 @@ void TClass::Store(TBuffer &b) const
 //______________________________________________________________________________
 TClass *ROOT::CreateClass(const char *cname, Version_t id,
                           const type_info &info, TVirtualIsAProxy *isa,
-                          ShowMembersFunc_t show,
                           const char *dfil, const char *ifil,
                           Int_t dl, Int_t il)
 {
@@ -4643,7 +4635,7 @@ TClass *ROOT::CreateClass(const char *cname, Version_t id,
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
-   return new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+   return new TClass(cname, id, info, isa, dfil, ifil, dl, il);
 }
 
 //______________________________________________________________________________
