@@ -254,8 +254,6 @@ private:
    TGGroupFrame        *fF6, *fF7;
    TGButton            *fOkButton, *fCancelButton, *fStartB, *fStopB;
    TGButton            *fBtn1, *fBtn2, *fChk1, *fChk2, *fRad1, *fRad2;
-   TGPictureButton     *fPicBut1;
-   TGCheckButton       *fCheck1;
    TGCheckButton       *fCheckMulti;
    TGListBox           *fListBox;
    TGComboBox          *fCombo;
