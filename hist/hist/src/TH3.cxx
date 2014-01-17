@@ -1077,12 +1077,17 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
    Int_t nxy    = nbinsx*nbinsy;
    Int_t nbins  = nxy*nbinsz;
    Double_t integral;
+   // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral();
+      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral(true);
+      else integral = fIntegral[nbins];
    } else {
-      integral = ComputeIntegral();
-      if (integral == 0 || fIntegral == 0) return;
+      integral = ComputeIntegral(true);
    }
+   if (integral == 0 ) { x = 0; y = 0; z = 0; return;}
+   // case histogram has negative bins
+   if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); z = TMath::QuietNaN(); return;}
+
    Double_t r1 = gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
    Int_t binz = ibin/nxy;
