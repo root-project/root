@@ -2623,7 +2623,7 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
       std::string typeName;
 
       if(nDecl->isParameterPack ()){
-         ROOT::TMetaUtils::Warning(0,paramPackWarning);
+         ROOT::TMetaUtils::Info(0,paramPackWarning);
          return 1;
       }
 
@@ -2641,7 +2641,7 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
             llvm::raw_string_ostream ostream(astDump);
             nttpd->dump(ostream);
             ostream.flush();
-            ROOT::TMetaUtils::Warning(0,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
+            ROOT::TMetaUtils::Info(0,"Forward declarations of templates with enums as template parameters. The responsible class is: %s\n", astDump.c_str());
             return 1;
          } else {
             ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName,
