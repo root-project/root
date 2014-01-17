@@ -504,13 +504,6 @@ public:
    using TMemberInspector::Inspect;
    void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 
-   //----- bit manipulation
-   void     SetBit(UInt_t f, Bool_t set);
-   void     SetBit(UInt_t f) { fBits |= f & TObject::kBitMask; }
-   void     ResetBit(UInt_t f) { fBits &= ~(f & TObject::kBitMask); }
-   Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
-   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
-   void     InvertBit(UInt_t f) { fBits ^= f & TObject::kBitMask; }
 };
 
 //______________________________________________________________________________
@@ -523,9 +516,12 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       return;
    }
 
+   Bool_t isTransientMember = kFALSE;
+
    if (!dm->IsPersistent()) {
       // For the DataModelEvolution we need access to the transient member.
       // so we now record them in the list of RealData.
+      isTransientMember = kTRUE;
       isTransient = kTRUE;
    }
 
@@ -569,18 +565,18 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       if (!dm->IsBasic()) {
          // Pointer to class object.
          TRealData* rd = new TRealData(rname, offset, dm);
-         if (isTransient) { rd->SetBit(TRealData::kTransient); };
+         if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       } else {
          // Pointer to basic data type.
          TRealData* rd = new TRealData(rname, offset, dm);
-         if (isTransient) { rd->SetBit(TRealData::kTransient); };
+         if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       }
    } else {
       // Data Member is a basic data type.
       TRealData* rd = new TRealData(rname, offset, dm);
-      if (isTransient) { rd->SetBit(TRealData::kTransient); };
+      if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
       if (!dm->IsBasic()) {
          rd->SetIsObject(kTRUE);
 
@@ -589,9 +585,9 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          // classes composing this object (base classes, type of
          // embedded object and same for their data members).
          //
-         TClass* dmclass = TClass::GetClass(dm->GetTypeName(), kTRUE, isTransient || TestBit(TRealData::kTransient));
+         TClass* dmclass = TClass::GetClass(dm->GetTypeName(), kTRUE, isTransient);
          if (!dmclass) {
-            dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient || TestBit(TRealData::kTransient));
+            dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient);
          }
          if (dmclass) {
             if (dmclass->Property()) {
@@ -614,7 +610,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                   if (valcl) {
                      Bool_t wantBuild = kTRUE;
                      if (valcl->Property() & kIsAbstract) wantBuild = kFALSE;
-                     if ( (isTransient || TestBit(TRealData::kTransient))
+                     if ( (isTransient)
                           && (dmclass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated)
                           && (!valcl->IsLoaded()) ) {
                         // Case where the collection dictionary was not requested and
@@ -623,10 +619,10 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                         wantBuild = kFALSE;
                      }
 
-                     if (wantBuild) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
+                     if (wantBuild) valcl->BuildRealData(0, isTransient);
                   }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add), isTransient || TestBit(TRealData::kTransient));
+                  dmclass->BuildRealData(const_cast<void*>(add), isTransient);
                }
             }
          }
@@ -1758,12 +1754,8 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       // CallShowMember will force a call to InheritsFrom, which indirectly
       // calls TClass::GetClass.  It forces the loading of new typedefs in
       // case some of them were not yet loaded.
-      Bool_t wasTransient = brd.TestBit(TRealData::kTransient);
-      if (isTransient) {
-         brd.SetBit(TRealData::kTransient);
-      }
-      if ( ! CallShowMembers(realDataObject, brd, kFALSE) ) {
-         if ( brd.TestBit(TRealData::kTransient) ) {
+      if ( ! CallShowMembers(realDataObject, brd, isTransient) ) {
+         if ( isTransient ) {
             // This is a transient data member, so it is probably fine to not have
             // access to its content.  However let's no mark it as definitively setup,
             // since another class might use this class for a persistent data member and
@@ -1773,9 +1765,6 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
          } else {
             Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
          }
-      }
-      if (isTransient && !wasTransient) {
-         brd.ResetBit(TRealData::kTransient);
       }
 
       // Take this opportunity to build the real data for base classes.
