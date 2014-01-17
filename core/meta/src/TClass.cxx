@@ -2157,7 +2157,24 @@ void TClass::Dump(const void *obj) const
    //   fFillColor               19          fill area color
    //   fFillStyle               1001        fill area style
 
-   Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
+   if (IsTObject()) {
+      if (!fIsOffsetStreamerSet) {
+         CalculateStreamerOffset();
+      }
+      TObject *tobj = (TObject*)((Long_t)obj + fOffsetStreamer);
+
+      if (sizeof(this) == 4)
+         Printf("==> Dumping object at: 0x%08lx, name=%s, class=%s\n",(Long_t)obj,tobj->GetName(),GetName());
+      else
+         Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",(Long_t)obj,tobj->GetName(),GetName());
+   } else {
+
+      if (sizeof(this) == 4)
+         Printf("==> Dumping object at: 0x%08lx, class=%s\n",(Long_t)obj,GetName());
+      else
+         Printf("==> Dumping object at: 0x%016lx, class=%s\n",(Long_t)obj,GetName());
+   }
+
    TDumpMembers dm;
    if (!CallShowMembers(obj, dm, kFALSE)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
