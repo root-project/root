@@ -1,4 +1,4 @@
-// @(#)root/base:$Id$
+// @(#)root/base:
 // Authors: Rene Brun, Fons Rademakers   29/07/95
 
 /*************************************************************************
@@ -39,6 +39,7 @@ namespace TMath {
    inline Long64_t Abs(Long64_t d);
    inline Float_t  Abs(Float_t d);
    inline Double_t Abs(Double_t d);
+   inline LongDouble_t Abs(LongDouble_t d);
 
    // Even/Odd
    inline Bool_t   Even(Long_t a);
@@ -113,6 +114,9 @@ inline Float_t TMath::Abs(Float_t d)
    { return (d >= 0) ? d : -d; }
 
 inline Double_t TMath::Abs(Double_t d)
+   { return (d >= 0) ? d : -d; }
+
+inline LongDouble_t TMath::Abs(LongDouble_t d)
    { return (d >= 0) ? d : -d; }
 
 //---- Sign --------------------------------------------------------------------
