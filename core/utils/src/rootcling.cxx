@@ -2546,7 +2546,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 
 //______________________________________________________________________________
 void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
-                                std::list<std::string>& enclosingNamespaces)
+                                std::list<std::pair<std::string,bool> >& enclosingNamespaces)
 {
    // Extract enclosing namespaces recusrively
    const clang::DeclContext* enclosingNamespaceDeclCtxt = definition.getParent ();
@@ -2560,7 +2560,8 @@ void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
    if (!enclosingNamespace) return;
 
    // Add to the list of parent namespaces
-   enclosingNamespaces.push_back(enclosingNamespace->getNameAsString());
+   enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
+                                                enclosingNamespace->isInline()));
 
    // here the recursion
    ExtractEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
@@ -2721,11 +2722,14 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
       // Check if we have enclosing namespaces
       // FIXME: this should be active also for classes
          
-      std::list<std::string> enclosingNamespaces;
+      std::list<std::pair<std::string,bool> > enclosingNamespaces;
       ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);      
-      for (std::list<std::string>::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
+      for (std::list<std::pair<std::string, bool> >::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
          enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
-         definitionStr = "namespace " + *enclosingNamespaceIt + " { " + definitionStr + " }";
+         const std::string& nsName= enclosingNamespaceIt->first;
+         const std::string isInline ((enclosingNamespaceIt->second ? "inline ":""));
+         definitionStr = isInline + "namespace " + nsName +
+                      " { " + definitionStr + " }";
       }
    }
 
