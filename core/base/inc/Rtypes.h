@@ -173,7 +173,7 @@ R__EXTERN Int_t gDebug;
 
 //---- ClassDef macros ---------------------------------------------------------
 
-typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp);
+typedef void (*ShowMembersFunc_t)(const void *obj, TMemberInspector &R__insp, Bool_t isTransient);
 class TVirtualIsAProxy;
 typedef TClass *(*IsAGlobalFunc_t)(const TClass*, const void *obj);
 
@@ -200,7 +200,6 @@ namespace ROOT {
 
    extern TClass *CreateClass(const char *cname, Version_t id,
                               const type_info &info, TVirtualIsAProxy *isa,
-                              ShowMembersFunc_t show,
                               const char *dfil, const char *ifil,
                               Int_t dl, Int_t il);
    extern void AddClass(const char *cname, Version_t id, const type_info &info,
@@ -211,6 +210,7 @@ namespace ROOT {
    extern TNamed *RegisterClassTemplate(const char *name,
                                         const char *file, Int_t line);
 
+   extern void Class_ShowMembers(TClass *cl, const void *obj, TMemberInspector&);
 
 #if 0
    // This function is only implemented in the dictionary file.
@@ -234,7 +234,6 @@ namespace ROOT {
       virtual void Unregister(const char *classname) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const = 0;
    };
@@ -250,10 +249,9 @@ namespace ROOT {
       }
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const {
-         return ROOT::CreateClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+         return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
       }
    };
 
@@ -279,7 +277,7 @@ public: \
    static Version_t Class_Version() { return id; } \
    static void Dictionary(); \
    virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector&); \
+   virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
    virtual void Streamer(TBuffer&); \
    void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; } \
@@ -296,7 +294,7 @@ static const char *Class_Name(); \
 static Version_t Class_Version() { return id; } \
 static void Dictionary(); \
 TClass *IsA() const { return name::Class(); } \
-void ShowMembers(TMemberInspector&); \
+void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
 void Streamer(TBuffer&); \
 void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
 static const char *DeclFileName() { return __FILE__; } \
@@ -318,12 +316,10 @@ static const char *ImplFileName();
 
 #define ClassDef(name,id) \
    _ClassDef_(name,id) \
-   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend void ROOT__ShowMembersFunc(name*, TMemberInspector&); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif
@@ -389,12 +385,10 @@ static const char *ImplFileName();
 
 #define ClassDefT(name,id) \
    _ClassDef_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefTNV(name,id) \
    _ClassDefNV_(name,id) \
-   friend void ROOT__ShowMembersFunc(name *obj, TMemberInspector &R__insp); \
    static int DeclFileLine() { return __LINE__; }
 
 #endif

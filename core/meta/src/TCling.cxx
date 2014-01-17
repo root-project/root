@@ -1326,8 +1326,8 @@ void TCling::AddIncludePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TCling::InspectMembers(TMemberInspector& insp, void* obj,
-                                    const TClass* cl)
+void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
+                            const TClass* cl, Bool_t isTransient)
 {
    // Visit all members over members, recursing over base classes.
 
@@ -1479,7 +1479,7 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
       // R__insp.InspectMember(fName, "fName.");
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
-      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset, isTransient);
 
       if (!ispointer) {
          const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
@@ -1488,12 +1488,15 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
             ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, clang::QualType(memNonPtrType,0), *fInterpreter, *fNormalizedCtxt);
-            llvm::StringRef comment = ROOT::TMetaUtils::GetComment(* (*iField), 0);
-            // NOTE, we have to change this to support selection XML!
-            bool transient = !comment.empty() && comment[0] == '!';
+
+            TDataMember* mbr = cl->GetDataMember(iField->getName().data());
+            // if we can not find the member (which should not really happen),
+            // let's consider it transient.
+            Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
 
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
+
          }
       }
    } // loop over fields
@@ -1535,10 +1538,10 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          // For loaded class, CallShowMember will (especially for TObject)
          // call the virtual ShowMember rather than the class specific version
          // resulting in an infinite recursion.
-         InspectMembers(insp, cobj + baseOffset, baseCl);
+         InspectMembers(insp, cobj + baseOffset, baseCl, isTransient);
       } else {
          baseCl->CallShowMembers(cobj + baseOffset,
-                                 insp, 0);
+                                 insp, isTransient);
       }
    } // loop over bases
 }

@@ -1155,35 +1155,6 @@ long ROOT::TMetaUtils::GetLineNumber(const clang::Decl *decl)
 }
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::NeedExternalShowMember(const AnnotatedRecordDecl &cl,
-                                              const clang::CXXRecordDecl *decl,
-                                              const TNormalizedCtxt &normCtxt)
-{
-
-   if (ROOT::TMetaUtils::IsStdClass(*cl.GetRecordDecl())) {
-      // getName() return the template name without argument!
-      llvm::StringRef name = (*cl).getName();
-
-      if (name == "pair") return true;
-      if (name == "complex") return true;
-      if (name == "auto_ptr") return true;
-      if (TClassEdit::STLKind(name.str().c_str())) return false;
-      if (name == "string" || name == "basic_string") return false;
-   }
-
-   // This means templated classes hiding members won't have
-   // a proper shadow class, and the user has no chance of
-   // veto-ing a shadow, as we need it for ShowMembers :-/
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"ShowMembers"))
-      return IsTemplate(*cl);
-
-   // no streamer, no shadow
-   if (cl.RequestNoStreamer()) return false;
-
-   return (cl.RequestStreamerInfo());
-}
-
-//______________________________________________________________________________
 bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Return true if the type is a Double32_t or Float16_t or
@@ -1329,7 +1300,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    bool isStdNotString = isStd && !isString;
 
-   finalString << "namespace ROOT {" << "\n" << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp);" << "\n";
+   finalString << "namespace ROOT {" << "\n";
 
    if (!ClassInfo__HasMethod(decl,"Dictionary") || IsTemplate(*decl))
    {
@@ -1494,13 +1465,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       }
    }
    finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol.c_str() << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
-
-   if (!ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, normCtxt)) {
-      if (!ClassInfo__HasMethod(decl,"ShowMembers")) finalString << "0, ";
-   } else {
-      if (!ClassInfo__HasMethod(decl,"ShowMembers"))
-         finalString << "&" << mappedname.c_str() << "_ShowMembers, ";
-   }
 
    if (ClassInfo__HasMethod(decl,"Dictionary") && !IsTemplate(*decl)) {
       finalString << "&" << csymbol.c_str() << "::Dictionary, ";
@@ -1700,40 +1664,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::WriteBodyShowMembers(std::ostream& finalString,
-                                            const AnnotatedRecordDecl &cl,
-                                            const clang::CXXRecordDecl *decl,
-                                            const TNormalizedCtxt &normCtxt,
-                                            bool outside)
-{
-   std::string csymbol;
-   ROOT::TMetaUtils::GetQualifiedName(csymbol,*cl);
-
-   if ( !ROOT::TMetaUtils::IsStdClass(*cl) ) {
-
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      csymbol.insert(0,"::");
-   }
-
-   std::string getClass;
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"IsA") && !outside) {
-      getClass = csymbol + "::IsA()";
-   } else {
-      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
-      getClass += csymbol + "*)0x0)->GetClass()";
-   }
-   if (outside) {
-      finalString << "   gInterpreter->InspectMembers(R__insp, obj, "
-                    << getClass << ");" << std::endl;
-   } else {
-      finalString << "   gInterpreter->InspectMembers(R__insp, this, "
-                    << getClass << ");" << std::endl;
-   }
-}
-
-//______________________________________________________________________________
 bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
                                                  std::string &clsname,
                                                  std::string &nsname,
@@ -1879,66 +1809,6 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewArrayPlacement(const clang::RecordDec
    // return true if we can find a custom operator new with placement
 
    return HasCustomOperatorNewPlacement("operator new[]",cl, interp);
-}
-
-//______________________________________________________________________________
-void ROOT::TMetaUtils::WriteShowMembers(std::ostream& finalString,
-                                        const AnnotatedRecordDecl &cl,
-                                        const clang::CXXRecordDecl *decl,
-                                        const cling::Interpreter &interp,
-                                        const TNormalizedCtxt &normCtxt,
-                                        bool outside)
-{
-   std::string classname = TClassEdit::GetLong64_Name(cl.GetNormalizedName());
-
-   std::string mappedname;
-   ROOT::TMetaUtils::GetCppName(mappedname,classname.c_str());
-
-   finalString << "//_______________________________________" << "_______________________________________" << "\n";
-
-   if (outside || IsTemplate(*decl)) {
-      finalString << "namespace ROOT {" << "\n" << "   void " << mappedname.c_str() << "_ShowMembers(void *obj, TMemberInspector &R__insp)" << "\n" << "   {" << "\n";
-      WriteBodyShowMembers(finalString, cl, decl, normCtxt, outside || IsTemplate(*decl));
-      finalString << "   }" << "\n" << "\n" << "}" << "\n" << "\n";
-   }
-
-   if (!outside) {
-      std::string fullname;
-      std::string clsname;
-      std::string nsname;
-      int enclSpaceNesting = 0;
-
-      if (GetNameWithinNamespace(fullname,clsname,nsname,decl)) {
-         enclSpaceNesting = WriteNamespaceHeader(finalString, decl);
-      }
-
-      bool add_template_keyword = NeedTemplateKeyword(decl);
-      if (add_template_keyword)
-         finalString << "template <> ";
-
-      finalString << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)" << "\n" << "{" << "\n";
-
-      if (!IsTemplate(*decl)) {
-         WriteBodyShowMembers(finalString, cl, decl, normCtxt, outside);
-      } else {
-         std::string clnameNoDefArg = TClassEdit::GetLong64_Name( cl.GetNormalizedName() );
-         std::string mappednameNoDefArg;
-         ROOT::TMetaUtils::GetCppName(mappednameNoDefArg, clnameNoDefArg.c_str());
-
-         finalString <<  "   ::ROOT::";
-         finalString << mappednameNoDefArg.c_str();
-         finalString << "_ShowMembers(this, R__insp);";
-         finalString << "\n";
-      }
-      finalString << "}" << "\n" << "\n";
-
-      while (enclSpaceNesting) {
-         finalString << "} // namespace ";
-         finalString << nsname;
-         finalString << "\n";
-         --enclSpaceNesting;
-      }
-   }
 }
 
 //______________________________________________________________________________
@@ -2367,13 +2237,6 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
       ROOT::TMetaUtils::Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
       if (cl.RequestStreamerInfo()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
-   }
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"ShowMembers")) {
-      ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt);
-   } else {
-      if (ROOT::TMetaUtils::NeedExternalShowMember(cl, decl, normCtxt)) {
-         ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt, true);
-      }
    }
    ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, ctorTypes, normCtxt);
 }

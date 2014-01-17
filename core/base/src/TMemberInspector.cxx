@@ -24,7 +24,7 @@
 #include "TInterpreter.h"
 #include "TClassEdit.h"
 #include "TClass.h"
-
+#include "TError.h"
 
 class TMemberInspector::TParentBuf {
 private:
@@ -96,17 +96,23 @@ void TMemberInspector::RemoveFromParent(Ssiz_t startingAt)
    fParent->Remove(startingAt);
 }
 
+void TMemberInspector::Inspect(TClass *, const char *, const char *, const void *)
+{
+   // Obsolete signature
+   Fatal("Inspect","This version of Inspect is obsolete");
+}
+
 void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
-                                          Bool_t transientMember) {
+                                          Bool_t isTransient) {
    // Call ShowMember() on obj.
 
    // This could be faster if we implemented this either as a templated
    // function or by rootcint-generated code using the typeid (i.e. the
    // difference is a lookup in a TList instead of in a map).
-   
+
    // To avoid a spurrious error message in case the data member is
    // transient and does not have a dictionary we check first.
-   if (transientMember) {
+   if (isTransient) {
       if (!TClassEdit::IsSTLCont(topClassName)) {
          ClassInfo_t *b = gInterpreter->ClassInfo_Factory(topClassName);
          Bool_t isloaded = gInterpreter->ClassInfo_IsLoaded(b);
@@ -114,40 +120,39 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
          if (!isloaded) return;
       }
    }
-   
+
    TClass *top = TClass::GetClass(topClassName);
    if (top) {
-      top->CallShowMembers(obj, *this);
+      top->CallShowMembers(obj, *this, isTransient);
    } else {
       // This might be worth an error message
    }
-   
 }
 
-void TMemberInspector::InspectMember(TObject& obj, const char* name) 
+void TMemberInspector::InspectMember(TObject& obj, const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
 
-   InspectMember<TObject>(obj, name);
+   InspectMember<TObject>(obj, name, isTransient);
 }
 
 void TMemberInspector::InspectMember(const char* topclassname, void* pobj,
-                                     const char* name, Bool_t transient) 
+                                     const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
 
    Ssiz_t len = fParent->GetLength();
    fParent->Append(name);
-   GenericShowMembers(topclassname, pobj, transient);
+   GenericShowMembers(topclassname, pobj, isTransient);
    fParent->Remove(len);
 }
 
-void TMemberInspector::InspectMember(TClass* cl, void* pobj, const char* name) 
+void TMemberInspector::InspectMember(TClass* cl, void* pobj, const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
 
    Ssiz_t len = fParent->GetLength();
    fParent->Append(name);
-   cl->CallShowMembers(pobj, *this);
+   cl->CallShowMembers(pobj, *this, isTransient);
    fParent->Remove(len);
 }

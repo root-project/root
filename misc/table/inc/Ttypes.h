@@ -131,11 +131,10 @@ namespace ROOT {
       static const char* fgStructName; // Need to be instantiated
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
       {
-         TClass *cl = TDefaultInitBehavior::CreateClass(cname, id, info, isa, show,
+         TClass *cl = TDefaultInitBehavior::CreateClass(cname, id, info, isa,
                                                         dfil, ifil,dl, il);
          fgStructName = T::TableDictionary();
          return cl;

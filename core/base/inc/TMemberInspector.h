@@ -40,7 +40,8 @@ public:
    TMemberInspector();
    virtual ~TMemberInspector();
 
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr) = 0;
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t /* isTransient */) { Inspect(cl,parent,name,addr); }
 
    const char* GetParent() const;
    Ssiz_t GetParentLen() const;
@@ -48,17 +49,18 @@ public:
    void RemoveFromParent(Ssiz_t startingAt);
 
    template <class T>
-   void InspectMember(T& obj, const char* name) {
+   void InspectMember(T& obj, const char* name, Bool_t isTransient) {
       Ssiz_t len = GetParentLen();
       AddToParent(name);
-      obj.ShowMembers(*this);
+      obj.IsA()->CallShowMembers(&obj, *this, isTransient);
       RemoveFromParent(len);
    }
 
-   void InspectMember(TObject& obj, const char* name);
+   void InspectMember(TObject& obj, const char* name, Bool_t isTransient);
    void InspectMember(const char* topclassname, void* pobj, const char* name,
                       Bool_t transient);
-   void InspectMember(TClass* cl, void* pobj, const char* name);
+   void InspectMember(TClass* cl, void* pobj, const char* name,
+                      Bool_t isTransient);
    
    void GenericShowMembers(const char *topClassName, void *obj,
                            Bool_t transientMember);

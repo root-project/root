@@ -45,11 +45,10 @@ friend class TQObject;
 public:
    TQClass(const char *name, Version_t cversion,
            const type_info &info, TVirtualIsAProxy *isa,
-           ShowMembersFunc_t showmembers,
            const char *dfil = 0, const char *ifil = 0,
            Int_t dl = 0, Int_t il = 0) :
            TQObject(),
-           TClass(name, cversion, info,isa,showmembers, dfil, ifil, dl, il) { }
+           TClass(name, cversion, info,isa,dfil, ifil, dl, il) { }
 
    virtual ~TQClass() { Disconnect(); }
 
@@ -68,11 +67,10 @@ namespace ROOT {
    public:
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const type_info &info, TVirtualIsAProxy *isa,
-                                  ShowMembersFunc_t show,
                                   const char *dfil, const char *ifil,
                                   Int_t dl, Int_t il) const
       {
-         return new TQClass(cname, id, info, isa, show, dfil, ifil,dl, il);
+         return new TQClass(cname, id, info, isa, dfil, ifil,dl, il);
       }
    };
 

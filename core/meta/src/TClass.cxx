@@ -277,7 +277,6 @@ void TClass::AddClass(TClass *cl)
    }
 }
 
-
 //______________________________________________________________________________
 void TClass::RemoveClass(TClass *oldcl)
 {
@@ -291,17 +290,28 @@ void TClass::RemoveClass(TClass *oldcl)
 }
 
 //______________________________________________________________________________
+void ROOT::Class_ShowMembers(TClass *cl, const void *obj, TMemberInspector&insp)
+{
+   // Indirect call to the implementation of ShowMember allowing [forward]
+   // declaration with out a full definition of the TClass class.
+
+   gInterpreter->InspectMembers(insp, obj, cl, kFALSE);
+}
+
+//______________________________________________________________________________
 //______________________________________________________________________________
 
 class TDumpMembers : public TMemberInspector {
    bool fNoAddr;
 public:
    TDumpMembers(bool noAddr): fNoAddr(noAddr) { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+
+   using TMemberInspector::Inspect;
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add, Bool_t /* isTransient */)
 {
    // Print value of member mname.
    //
@@ -505,19 +515,13 @@ public:
       fRealDataObject = obj;
       fRealDataClass = cl;
    }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   using TMemberInspector::Inspect;
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 
-   //----- bit manipulation
-   void     SetBit(UInt_t f, Bool_t set);
-   void     SetBit(UInt_t f) { fBits |= f & TObject::kBitMask; }
-   void     ResetBit(UInt_t f) { fBits &= ~(f & TObject::kBitMask); }
-   Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
-   Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
-   void     InvertBit(UInt_t f) { fBits ^= f & TObject::kBitMask; }
 };
 
 //______________________________________________________________________________
-void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, const void* add)
+void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, const void* add, Bool_t isTransient)
 {
    // This method is called from ShowMembers() via BuildRealdata().
 
@@ -526,11 +530,12 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       return;
    }
 
-   Bool_t isTransient = kFALSE;
+   Bool_t isTransientMember = kFALSE;
 
    if (!dm->IsPersistent()) {
       // For the DataModelEvolution we need access to the transient member.
       // so we now record them in the list of RealData.
+      isTransientMember = kTRUE;
       isTransient = kTRUE;
    }
 
@@ -574,18 +579,18 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
       if (!dm->IsBasic()) {
          // Pointer to class object.
          TRealData* rd = new TRealData(rname, offset, dm);
-         if (isTransient) { rd->SetBit(TRealData::kTransient); };
+         if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       } else {
          // Pointer to basic data type.
          TRealData* rd = new TRealData(rname, offset, dm);
-         if (isTransient) { rd->SetBit(TRealData::kTransient); };
+         if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
          fRealDataClass->GetListOfRealData()->Add(rd);
       }
    } else {
       // Data Member is a basic data type.
       TRealData* rd = new TRealData(rname, offset, dm);
-      if (isTransient) { rd->SetBit(TRealData::kTransient); };
+      if (isTransientMember) { rd->SetBit(TRealData::kTransient); };
       if (!dm->IsBasic()) {
          rd->SetIsObject(kTRUE);
 
@@ -594,22 +599,44 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          // classes composing this object (base classes, type of
          // embedded object and same for their data members).
          //
-         TClass* dmclass = TClass::GetClass(dm->GetTypeName(), kTRUE, isTransient || TestBit(TRealData::kTransient));
+         TClass* dmclass = TClass::GetClass(dm->GetTypeName(), kTRUE, isTransient);
          if (!dmclass) {
-            dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient || TestBit(TRealData::kTransient));
+            dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient);
          }
          if (dmclass) {
             if (dmclass->Property()) {
                if (dmclass->Property() & kIsAbstract) {
-                  fprintf(stderr, "TBuildRealDataRecursive::Inspect(): data member class: '%s'  is abstract.\n", dmclass->GetName());
+                  ::Warning("TBuildRealDataRecursive::Inspect(): data member class: '%s'  is abstract.\n", dmclass->GetName());
                }
             }
             if ((dmclass != cl) && !dm->IsaPointer()) {
                if (dmclass->GetCollectionProxy()) {
                   TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
-                  if (valcl && !(valcl->Property() & kIsAbstract)) valcl->BuildRealData(0, isTransient || TestBit(TRealData::kTransient));
+                  // We create the real data for the content of the collection to help the case
+                  // of split branches in a TTree (where the node for the data member itself
+                  // might have been elided).  However, in some cases, like transient members
+                  // and/or classes, the content might not be createable.   An example is the
+                  // case of a map<A,B> where either A or B does not have default constructor
+                  // and thus the compilation of the default constructor for pair<A,B> will
+                  // fail (noisily) [This could also apply to any template instance, where it
+                  // might have a default constructor definition that can not be compiled due
+                  // to the template parameter]
+                  if (valcl) {
+                     Bool_t wantBuild = kTRUE;
+                     if (valcl->Property() & kIsAbstract) wantBuild = kFALSE;
+                     if ( (isTransient)
+                          && (dmclass->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated)
+                          && (!valcl->IsLoaded()) ) {
+                        // Case where the collection dictionary was not requested and
+                        // the content's dictionary was also not requested.
+                        // [This is a super set of what we need, but we can't really detect it :(]
+                        wantBuild = kFALSE;
+                     }
+
+                     if (wantBuild) valcl->BuildRealData(0, isTransient);
+                  }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add), isTransient || TestBit(TRealData::kTransient));
+                  dmclass->BuildRealData(const_cast<void*>(add), isTransient);
                }
             }
          }
@@ -633,12 +660,13 @@ public:
       // main constructor.
       fBrowser = b; fCount = 0; }
    virtual ~TAutoInspector() { }
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   using TMemberInspector::Inspect;
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 };
 
 //______________________________________________________________________________
 void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
-                             const void *addr)
+                             const void *addr, Bool_t /* isTransient */)
 {
    // This method is called from ShowMembers() via AutoBrowse().
 
@@ -788,7 +816,7 @@ TClass::TClass() :
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -814,7 +842,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -863,7 +891,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -898,7 +926,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
       fName = gInterpreter->ClassInfo_FullName(classInfo);
 
       R__LOCKGUARD2(gInterpreterMutex);
-      Init(fName, cversion, 0, 0, 0, dfil, ifil, dl, il, classInfo, silent);
+      Init(fName, cversion, 0, 0, dfil, ifil, dl, il, classInfo, silent);
       SetBit(kUnloaded);
 
    }
@@ -918,7 +946,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -930,14 +958,13 @@ TClass::TClass(const char *name, Version_t cversion,
    // Create a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
    R__LOCKGUARD2(gInterpreterMutex);
-   Init(name,cversion, 0, 0, 0, dfil, ifil, dl, il, 0, silent);
+   Init(name,cversion, 0, 0, dfil, ifil, dl, il, 0, silent);
    SetBit(kUnloaded);
 }
 
 //______________________________________________________________________________
 TClass::TClass(const char *name, Version_t cversion,
                const type_info &info, TVirtualIsAProxy *isa,
-               ShowMembersFunc_t showmembers,
                const char *dfil, const char *ifil, Int_t dl, Int_t il,
                Bool_t silent) :
    TDictionary(name),
@@ -948,7 +975,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
    fInstanceCount(0), fOnHeap(0),
    fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
-   fTypeInfo(0), fShowMembers(0), fInterShowMembers(0),
+   fTypeInfo(0), fShowMembers(0),
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
@@ -962,7 +989,7 @@ TClass::TClass(const char *name, Version_t cversion,
 
    R__LOCKGUARD2(gInterpreterMutex);
    // use info
-   Init(name, cversion, &info, isa, showmembers, dfil, ifil, dl, il, 0, silent);
+   Init(name, cversion, &info, isa, dfil, ifil, dl, il, 0, silent);
 }
 
 //______________________________________________________________________________
@@ -993,7 +1020,6 @@ void TClass::ForceReload (TClass* oldcl)
 //______________________________________________________________________________
 void TClass::Init(const char *name, Version_t cversion,
                   const type_info *typeinfo, TVirtualIsAProxy *isa,
-                  ShowMembersFunc_t showmembers,
                   const char *dfil, const char *ifil, Int_t dl, Int_t il,
                   ClassInfo_t *givenInfo,
                   Bool_t silent)
@@ -1013,7 +1039,6 @@ void TClass::Init(const char *name, Version_t cversion,
    fTypeInfo       = typeinfo;
    fIsA            = isa;
    if ( fIsA ) fIsA->SetClass(this);
-   fShowMembers    = showmembers;
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
 
@@ -1231,7 +1256,6 @@ TClass::TClass(const TClass& cl) :
   fContextMenuTitle(cl.fContextMenuTitle),
   fTypeInfo(cl.fTypeInfo),
   fShowMembers(cl.fShowMembers),
-  fInterShowMembers(cl.fInterShowMembers),
   fStreamer(cl.fStreamer),
   fSharedLibs(cl.fSharedLibs),
   fIsA(cl.fIsA),
@@ -1347,8 +1371,6 @@ TClass::~TClass()
    delete fClassMenuList; fClassMenuList=0;
 
    fIsOffsetStreamerSet=kFALSE;
-
-   if (fInterShowMembers) gCling->CallFunc_Delete(fInterShowMembers);
 
    if ( fIsA ) delete fIsA;
 
@@ -1638,7 +1660,7 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
 
    } else {
       TAutoInspector insp(b);
-      CallShowMembers(obj,insp,0);
+      CallShowMembers(obj,insp,kFALSE);
       return insp.fCount;
    }
 
@@ -1746,12 +1768,8 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       // CallShowMember will force a call to InheritsFrom, which indirectly
       // calls TClass::GetClass.  It forces the loading of new typedefs in
       // case some of them were not yet loaded.
-      Bool_t wasTransient = brd.TestBit(TRealData::kTransient);
-      if (isTransient) {
-         brd.SetBit(TRealData::kTransient);
-      }
-      if ( ! CallShowMembers(realDataObject, brd) ) {
-         if ( brd.TestBit(TRealData::kTransient) ) {
+      if ( ! CallShowMembers(realDataObject, brd, isTransient) ) {
+         if ( isTransient ) {
             // This is a transient data member, so it is probably fine to not have
             // access to its content.  However let's no mark it as definitively setup,
             // since another class might use this class for a persistent data member and
@@ -1761,9 +1779,6 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
          } else {
             Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
          }
-      }
-      if (isTransient && !wasTransient) {
-         brd.ResetBit(TRealData::kTransient);
       }
 
       // Take this opportunity to build the real data for base classes.
@@ -1885,8 +1900,7 @@ void TClass::CalculateStreamerOffset() const
 
 
 //______________________________________________________________________________
-Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
-                               Int_t isATObject) const
+Bool_t TClass::CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const
 {
    // Call ShowMembers() on the obj of this class type, passing insp and parent.
    // isATObject is -1 if unknown, 0 if it is not a TObject, and 1 if it is a TObject.
@@ -1895,71 +1909,25 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
    if (fShowMembers) {
       // This should always works since 'pointer' should be pointing
       // to an object of the actual type of this TClass object.
-      fShowMembers(obj, insp);
+      fShowMembers(obj, insp, isTransient);
       return kTRUE;
    } else {
 
-      if (isATObject == -1 && IsLoaded()) {
-         // Force a call to InheritsFrom. This function indirectly
-         // calls TClass::GetClass.  It forces the loading of new
-         // typedefs in case some of them were not yet loaded.
-         isATObject = (Int_t) (InheritsFrom(TObject::Class()));
-      }
+      if (fClassInfo) {
 
-      if (isATObject == 1) {
-         // We have access to the TObject interface, so let's use it.
-         if (!fIsOffsetStreamerSet) {
-            CalculateStreamerOffset();
+         if (strcmp(GetName(), "string") == 0) {
+            // For std::string we know that we do not have a ShowMembers
+            // function and that it's okay.
+            return kTRUE;
          }
-         TObject* realTObject = (TObject*)((size_t)obj + fOffsetStreamer);
-         realTObject->ShowMembers(insp);
+         // Since we do have some dictionary information, let's
+         // call the interpreter's ShowMember.
+         // This works with Cling to support interpreted classes.
+         gInterpreter->InspectMembers(insp, obj, this, isTransient);
          return kTRUE;
-      } else if (fClassInfo) {
 
-         // Always call ShowMembers via the interpreter. A direct call
-         // like:
-         //
-         //      realDataObject->ShowMembers(brd, parent);
-         //
-         // will not work if the class derives from TObject but does not
-         // have TObject as the leftmost base class.
-         //
-
-         if (!fInterShowMembers) {
-            CallFunc_t* ism = gCling->CallFunc_Factory();
-            Long_t offset = 0;
-
-            R__LOCKGUARD2(gInterpreterMutex);
-            gCling->CallFunc_SetFuncProto(ism,fClassInfo, "ShowMembers", "TMemberInspector&", &offset);
-            if (fIsOffsetStreamerSet && offset != fOffsetStreamer) {
-               Error("CallShowMembers", "Logic Error: offset for Streamer() and ShowMembers() differ!");
-               fInterShowMembers = 0;
-               return kFALSE;
-            }
-
-            fInterShowMembers = ism;
-         }
-         if (!gCling->CallFunc_IsValid(fInterShowMembers)) {
-            if (strcmp(GetName(), "string") == 0) {
-               // For std::string we know that we do not have a ShowMembers
-               // function and that it's okay.
-               return kTRUE;
-            }
-            // Since we do have some dictionary information, let's
-            // call the interpreter's ShowMember.
-            // This works with Cling and might work with CINT (to support interpreted classes)
-            gInterpreter->InspectMembers(insp, obj, this);
-            return kTRUE;
-         } else {
-            R__LOCKGUARD2(gInterpreterMutex);
-            gCling->CallFunc_ResetArg(fInterShowMembers);
-            gCling->CallFunc_SetArg(fInterShowMembers,(Long_t) &insp);
-            void* address = (void*) (((Long_t) obj) + fOffsetStreamer);
-            gCling->CallFunc_Exec((CallFunc_t*)fInterShowMembers,address);
-            return kTRUE;
-         }
       } else if (TVirtualStreamerInfo* sinfo = GetStreamerInfo()) {
-         sinfo->CallShowMembers(obj,insp);
+         sinfo->CallShowMembers(obj, insp, isTransient);
          return kTRUE;
       } // isATObject
    } // fShowMembers is set
@@ -1968,13 +1936,13 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp,
 }
 
 //______________________________________________________________________________
-void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp)
+void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, Bool_t isTransient)
 {
    // Do a ShowMembers() traversal of all members and base classes' members
    // using the reflection information from the interpreter. Works also for
    // interpreted objects.
 
-   return gInterpreter->InspectMembers(insp, obj, this);
+   return gInterpreter->InspectMembers(insp, obj, this, isTransient);
 }
 
 //______________________________________________________________________________
@@ -2006,38 +1974,37 @@ Bool_t TClass::CanSplit() const
 //      return kFALSE;
 //   }
 
-   // If we do not have a showMembers and we have a streamer,
+   // If we do not have a showMembers or a fClassInfo and we have a streamer,
    // we are in the case of class that can never be split since it is
    // opaque to us.
-   if (GetShowMembersWrapper()==0 && GetStreamer()!=0) {
+   if (GetCollectionProxy()!=0) {
+      // For STL collection we need to look inside.
 
-      // the exception are the STL containers.
-      if (GetCollectionProxy()==0) {
-         // We do NOT have a collection.  The class is true opaque
+      // However we do not split collections of collections
+      // nor collections of strings
+      // nor collections of pointers (unless explicit request (see TBranchSTL)).
+
+      if (GetCollectionProxy()->HasPointers()) return kFALSE;
+
+      TClass *valueClass = GetCollectionProxy()->GetValueClass();
+      if (valueClass == 0) return kFALSE;
+      if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
          return kFALSE;
+      if (!valueClass->CanSplit()) return kFALSE;
+      if (valueClass->GetCollectionProxy() != 0) return kFALSE;
 
-      } else {
-
-         // However we do not split collections of collections
-         // nor collections of strings
-         // nor collections of pointers (unless explicit request (see TBranchSTL)).
-
-         if (GetCollectionProxy()->HasPointers()) return kFALSE;
-
-         TClass *valueClass = GetCollectionProxy()->GetValueClass();
-         if (valueClass == 0) return kFALSE;
-         if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
-            return kFALSE;
-         if (!valueClass->CanSplit()) return kFALSE;
-         if (valueClass->GetCollectionProxy() != 0) return kFALSE;
-
-         Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
-         if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
-              && valueClass->GetClassInfo()==0)
-         {
-            return kFALSE;
-         }
+      Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
+      if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
+          && valueClass->GetClassInfo()==0)
+      {
+         return kFALSE;
       }
+
+   } else if ((GetShowMembersWrapper()==0 && fClassInfo==0) && GetStreamer()!=0) {
+
+      // We do NOT have a collection.  The class is true opaque.
+      return kFALSE;
+
    }
 
    if (Size()==1) {
@@ -2074,7 +2041,6 @@ TObject *TClass::Clone(const char *new_name) const
                         fClassVersion,
                         *fTypeInfo,
                         new TIsAProxy(*fTypeInfo),
-                        fShowMembers,
                         GetDeclFileName(),
                         GetImplFileName(),
                         GetDeclFileLine(),
@@ -2086,8 +2052,8 @@ TObject *TClass::Clone(const char *new_name) const
                         GetImplFileName(),
                         GetDeclFileLine(),
                         GetImplFileLine());
-      copy->fShowMembers = fShowMembers;
    }
+   copy->fShowMembers = fShowMembers;
    // Remove the copy before renaming it
    TClass::RemoveClass(copy);
    copy->fName = new_name;
@@ -2170,7 +2136,7 @@ void TClass::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TClass::Dump(void *obj, Bool_t noAddr /*=kFALSE*/) const
+void TClass::Dump(const void *obj, Bool_t noAddr /*=kFALSE*/) const
 {
    // Dump contents of object on stdout.
    // Using the information in the object dictionary
@@ -2196,10 +2162,29 @@ void TClass::Dump(void *obj, Bool_t noAddr /*=kFALSE*/) const
    //
    // If noAddr is true, printout of all pointer values is skipped.
 
-   Printf("==>Dumping object at:%lx, class=%s\n",
-          (noAddr ? 0 : (Long_t)obj), GetName());
+
+   Long_t prObj = noAddr ? 0 : (Long_t)obj;
+   if (IsTObject()) {
+      if (!fIsOffsetStreamerSet) {
+         CalculateStreamerOffset();
+      }
+      TObject *tobj = (TObject*)((Long_t)obj + fOffsetStreamer);
+
+
+      if (sizeof(this) == 4)
+         Printf("==> Dumping object at: 0x%08lx, name=%s, class=%s\n",prObj,tobj->GetName(),GetName());
+      else
+         Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",prObj,tobj->GetName(),GetName());
+   } else {
+
+      if (sizeof(this) == 4)
+         Printf("==> Dumping object at: 0x%08lx, class=%s\n",prObj,GetName());
+      else
+         Printf("==> Dumping object at: 0x%016lx, class=%s\n",prObj,GetName());
+   }
+
    TDumpMembers dm(noAddr);
-   if (!CallShowMembers(obj, dm)) {
+   if (!CallShowMembers(obj, dm, kFALSE)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
    }
 }
@@ -3983,6 +3968,17 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 }
 
 //______________________________________________________________________________
+const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
+{
+   // Cast obj of this class type up to baseclass cl if up is true.
+   // Cast obj of this class type down from baseclass cl if up is false.
+   // If this class is not a baseclass of cl return 0, else the pointer
+   // to the cl part of this (up) or to this (down).
+
+   return DynamicCast(cl,const_cast<void*>(obj),up);
+}
+
+//______________________________________________________________________________
 void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 {
    // Return a pointer to a newly allocated object of this class.
@@ -4668,7 +4664,6 @@ void TClass::Store(TBuffer &b) const
 //______________________________________________________________________________
 TClass *ROOT::CreateClass(const char *cname, Version_t id,
                           const type_info &info, TVirtualIsAProxy *isa,
-                          ShowMembersFunc_t show,
                           const char *dfil, const char *ifil,
                           Int_t dl, Int_t il)
 {
@@ -4678,7 +4673,7 @@ TClass *ROOT::CreateClass(const char *cname, Version_t id,
    // When called via TMapFile (e.g. Update()) make sure that the dictionary
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
-   return new TClass(cname, id, info, isa, show, dfil, ifil, dl, il);
+   return new TClass(cname, id, info, isa, dfil, ifil, dl, il);
 }
 
 //______________________________________________________________________________

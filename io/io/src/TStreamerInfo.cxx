@@ -2172,7 +2172,7 @@ namespace {
 }
 
 //______________________________________________________________________________
-void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp) const
+void TStreamerInfo::CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const
 {
    // Emulated a call ShowMembers() on the obj of this class type, passing insp and parent.
 
@@ -2194,9 +2194,9 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp) const
          // Nothing to do this round.
       } else if (element->IsaPointer()) {
          elementName.Form("*%s",element->GetFullName());
-         insp.Inspect(fClass, insp.GetParent(), elementName.Data(), eaddr);
+         insp.Inspect(fClass, insp.GetParent(), elementName.Data(), eaddr, isTransient);
       } else {
-         insp.Inspect(fClass, insp.GetParent(), element->GetFullName(), eaddr);
+         insp.Inspect(fClass, insp.GetParent(), element->GetFullName(), eaddr, isTransient);
          Int_t etype = element->GetType();
          switch(etype) {
             case kObject:
@@ -2208,7 +2208,7 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp) const
             {
                TClass *ecl = element->GetClassPointer();
                if (ecl && (fClass!=ecl /* This happens 'artificially for stl container see the use of "This" */)) {
-                  insp.InspectMember(ecl, eaddr, TString(element->GetName()) + ".");
+                  insp.InspectMember(ecl, eaddr, TString(element->GetName()) + ".", isTransient);
                }
                break;
             }
@@ -2230,7 +2230,7 @@ void TStreamerInfo::CallShowMembers(void* obj, TMemberInspector &insp) const
 
          TClass *ecl = element->GetClassPointer();
          if (ecl) {
-            ecl->CallShowMembers(eaddr, insp);
+            ecl->CallShowMembers(eaddr, insp, isTransient);
          }
       } // If is a abse
    } // Loop over elements
