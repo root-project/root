@@ -39,7 +39,7 @@ GQTMOCH       := $(MODDIRI)/TQtWidget.h       $(MODDIRI)/TQtEmitter.h     \
 GQTMOC        := $(call stripsrc,$(subst $(MODDIRI)/,$(MODDIRS)/moc_,$(patsubst %.h,%.cxx,$(GQTMOCH))))
 GQTMOCO       := $(GQTMOC:.cxx=.o)
 
-GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d)
+GQTDEP        := $(GQTO:.o=.d) $(GQTDO:.o=.d) $(GQTMOCO:.o=.d)
 
 QT4           := $(findstring QtCore, $(QTINCDIR))
 
