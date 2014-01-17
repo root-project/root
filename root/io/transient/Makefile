@@ -45,3 +45,5 @@ else
 missingdict:
 endif
 
+execTransientNoctor.log: libtransientNoctor_dictrflx.$(DllSuf)
+
