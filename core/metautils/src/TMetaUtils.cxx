@@ -1664,34 +1664,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::WriteBodyShowMembers(std::ostream& finalString,
-                                            const AnnotatedRecordDecl &cl,
-                                            const clang::CXXRecordDecl *decl,
-                                            const TNormalizedCtxt &normCtxt)
-{
-   std::string csymbol;
-   ROOT::TMetaUtils::GetQualifiedName(csymbol,*cl);
-
-   if ( !ROOT::TMetaUtils::IsStdClass(*cl) ) {
-
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      csymbol.insert(0,"::");
-   }
-
-   std::string getClass;
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"IsA")) {
-      getClass = csymbol + "::IsA()";
-   } else {
-      getClass = "::ROOT::GenerateInitInstanceLocal((const ";
-      getClass += csymbol + "*)0x0)->GetClass()";
-   }
-   finalString << "   gInterpreter->InspectMembers(R__insp, this, "
-               << getClass << ", kFALSE);" << std::endl;
-}
-
-//______________________________________________________________________________
 bool ROOT::TMetaUtils::GetNameWithinNamespace(std::string &fullname,
                                                  std::string &clsname,
                                                  std::string &nsname,
@@ -1837,46 +1809,6 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewArrayPlacement(const clang::RecordDec
    // return true if we can find a custom operator new with placement
 
    return HasCustomOperatorNewPlacement("operator new[]",cl, interp);
-}
-
-//______________________________________________________________________________
-void ROOT::TMetaUtils::WriteShowMembers(std::ostream& finalString,
-                                        const AnnotatedRecordDecl &cl,
-                                        const clang::CXXRecordDecl *decl,
-                                        const cling::Interpreter &interp,
-                                        const TNormalizedCtxt &normCtxt)
-{
-   std::string classname = TClassEdit::GetLong64_Name(cl.GetNormalizedName());
-
-   std::string mappedname;
-   ROOT::TMetaUtils::GetCppName(mappedname,classname.c_str());
-
-   finalString << "//_______________________________________" << "_______________________________________" << "\n";
-
-   std::string fullname;
-   std::string clsname;
-   std::string nsname;
-   int enclSpaceNesting = 0;
-
-   if (GetNameWithinNamespace(fullname,clsname,nsname,decl)) {
-      enclSpaceNesting = WriteNamespaceHeader(finalString, decl);
-   }
-
-   bool add_template_keyword = NeedTemplateKeyword(decl);
-   if (add_template_keyword)
-      finalString << "template <> ";
-
-   finalString << "void " << clsname << "::ShowMembers(TMemberInspector &R__insp)" << "\n" << "{" << "\n";
-
-   WriteBodyShowMembers(finalString, cl, decl, normCtxt);
-   finalString << "}" << "\n" << "\n";
-
-   while (enclSpaceNesting) {
-      finalString << "} // namespace ";
-      finalString << nsname;
-      finalString << "\n";
-      --enclSpaceNesting;
-   }
 }
 
 //______________________________________________________________________________
@@ -2305,9 +2237,6 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
       ROOT::TMetaUtils::Info(0, "Class %s: Streamer() not declared\n", fullname.c_str());
 
       if (cl.RequestStreamerInfo()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt);
-   }
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"ShowMembers")) {
-      ROOT::TMetaUtils::WriteShowMembers(dictStream, cl, decl, interp, normCtxt);
    }
    ROOT::TMetaUtils::WriteAuxFunctions(dictStream, cl, decl, interp, ctorTypes, normCtxt);
 }

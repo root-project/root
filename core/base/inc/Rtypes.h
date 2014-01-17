@@ -210,6 +210,7 @@ namespace ROOT {
    extern TNamed *RegisterClassTemplate(const char *name,
                                         const char *file, Int_t line);
 
+   extern void Class_ShowMembers(TClass *cl, const void *obj, TMemberInspector&);
 
 #if 0
    // This function is only implemented in the dictionary file.
@@ -276,7 +277,7 @@ public: \
    static Version_t Class_Version() { return id; } \
    static void Dictionary(); \
    virtual TClass *IsA() const { return name::Class(); } \
-   virtual void ShowMembers(TMemberInspector&); \
+   virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
    virtual void Streamer(TBuffer&); \
    void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; } \
@@ -293,7 +294,7 @@ static const char *Class_Name(); \
 static Version_t Class_Version() { return id; } \
 static void Dictionary(); \
 TClass *IsA() const { return name::Class(); } \
-void ShowMembers(TMemberInspector&); \
+void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
 void Streamer(TBuffer&); \
 void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
 static const char *DeclFileName() { return __FILE__; } \

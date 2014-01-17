@@ -373,13 +373,6 @@ void WriteAuxFunctions(std::ostream& finalString,
 
 
 //______________________________________________________________________________
-void WriteShowMembers(std::ostream& finalString,
-                      const AnnotatedRecordDecl &cl,
-                      const clang::CXXRecordDecl *decl,
-                      const cling::Interpreter &interp,
-                      const TNormalizedCtxt &normCtxt);
-
-//______________________________________________________________________________
 const clang::FunctionDecl *GetFuncWithProto(const clang::Decl* cinfo,
                                                const char *method,
                                                const char *proto,
@@ -408,12 +401,6 @@ bool HasCustomStreamerMemberFunction(const AnnotatedRecordDecl &cl,
                                      const clang::CXXRecordDecl* clxx,
                                      const cling::Interpreter &interp,
                                      const TNormalizedCtxt &normCtxt);
-
-//______________________________________________________________________________
-void WriteBodyShowMembers(std::ostream& finalString,
-                          const AnnotatedRecordDecl &cl,
-                          const clang::CXXRecordDecl *decl,
-                          const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
 // Return the header file to be included to declare the Decl

@@ -277,7 +277,6 @@ void TClass::AddClass(TClass *cl)
    }
 }
 
-
 //______________________________________________________________________________
 void TClass::RemoveClass(TClass *oldcl)
 {
@@ -288,6 +287,15 @@ void TClass::RemoveClass(TClass *oldcl)
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
    }
+}
+
+//______________________________________________________________________________
+void ROOT::Class_ShowMembers(TClass *cl, const void *obj, TMemberInspector&insp)
+{
+   // Indirect call to the implementation of ShowMember allowing [forward]
+   // declaration with out a full definition of the TClass class.
+
+   gInterpreter->InspectMembers(insp, obj, cl, kFALSE);
 }
 
 //______________________________________________________________________________
