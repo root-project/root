@@ -39,20 +39,43 @@ warnings or new compilation errors. For example when CINT was parsing
 Namespace::Symbol it would not only apply the C++ search rules but also
 search in the outer scopes and for this example could actually return
 ::Symbol instead of (as Cling now does) issuing a compilation error.
+
+#### Template class names
 Cling no longer supports refering to a class template instantiation of a
 class template that has all default template parameter without the \<\>.
 With:
 
 ``` {.cpp}
-   template <typename T = int> class vec {};
+   template <typename T = int> class templt {};
 ```
 
-With Cling (and any standard compliant compiler), using `*vec<>*` is
-allowed (but `*vec*` is not).
+With Cling (and any standard compliant compiler), using `*templt<>*` is
+allowed (but `*templt*` is not).
 
+#### Namespace prefix of template parameters
 Given `namespace N { class A; template <typename T> class B;}`, the name
 `N::B<N::A>` is no longer "shortened" to `N::B<A:`. This affects the forward
 and backward compatibility of files.
+
+#### Implicit dynamic up-casts
+CINT would perforam automatic upcasts to derived classes under certain contexts:
+``` {.cpp}
+TH1* h1 = hpx
+TH1F* h1f = h1;
+```
+Cling does not allow this anymore. We might add this feature later if demand exists (ROOT-4802).
+
+#### Using symbols that only available at runtime: load libFoo; foo()
+CINT was processing macros line by line; cling compiles code.
+When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, cling will in some cases report an unresolved symbol:
+``` {.cpp}
+#include "Event.h"
+void dynload() {
+   gSystem->Load("libEvent");
+   new Event();
+}
+```
+There are two options to make this work in both ROOT v5 and v6: either remove the `#include` or provide a rootmap file for libEvent (which also requires include guards for Event.h). This might get fixed in a later version (ROOT-4691).
 
 ### TInterpreter
 
