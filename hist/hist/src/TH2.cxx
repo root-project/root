@@ -1033,17 +1033,23 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
 {
    // Return 2 random numbers along axis x and y distributed according
    // the cellcontents of a 2-dim histogram
+   // return a NaN if the histogram has a bin with negative content
 
    Int_t nbinsx = GetNbinsX();
    Int_t nbinsy = GetNbinsY();
    Int_t nbins  = nbinsx*nbinsy;
    Double_t integral;
+   // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral();
+      if (fIntegral[nbins+1] != fEntries) integral = ComputeIntegral(true);
+      else integral = fIntegral[nbins];
    } else {
-      integral = ComputeIntegral();
-      if (integral == 0 || fIntegral == 0) return;
+      integral = ComputeIntegral(true);
    }
+   if (integral == 0 ) { x = 0; y = 0; return;}
+   // case histogram has negative bins
+   if (integral == TMath::QuietNaN() ) { x = TMath::QuietNaN(); y = TMath::QuietNaN(); return;}
+
    Double_t r1 = gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbins,fIntegral,(Double_t) r1);
    Int_t biny = ibin/nbinsx;
