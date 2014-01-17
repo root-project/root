@@ -630,6 +630,10 @@ N: Paul Nilsson
 E: Paul.Nilsson@cern.ch
 D: PROOF contributions (TProofResources classes)
 
+N: Marcin Nowak
+E: Marcin.Nowak@cern.ch
+D: Extend TTreeIndex and TTreeFormula to suport 64bit integer.
+
 N: John Odonnell
 E: odonnell@lanl.gov
 D: contributed to TFormula the support for recursive functions definitions
