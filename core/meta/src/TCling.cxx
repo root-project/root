@@ -1319,8 +1319,8 @@ void TCling::AddIncludePath(const char *path)
 }
 
 //______________________________________________________________________________
-void TCling::InspectMembers(TMemberInspector& insp, void* obj,
-                                    const TClass* cl)
+void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
+                            const TClass* cl, Bool_t isTransient)
 {
    // Visit all members over members, recursing over base classes.
 
@@ -1472,7 +1472,7 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "fName", &fName);
       // R__insp.InspectMember(fName, "fName.");
       // R__insp.Inspect(R__cl, R__insp.GetParent(), "*fClass", &fClass);
-      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset);
+      insp.Inspect(const_cast<TClass*>(cl), insp.GetParent(), fieldName.c_str(), cobj + fieldOffset, isTransient);
 
       if (!ispointer) {
          const clang::CXXRecordDecl* fieldRecDecl = memNonPtrType->getAsCXXRecordDecl();
@@ -1485,7 +1485,7 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
             TDataMember* mbr = cl->GetDataMember(iField->getName().data());
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
-            bool transient = !mbr || !mbr->IsPersistent();
+            Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
 
             insp.InspectMember(sFieldRecName.c_str(), cobj + fieldOffset,
                                (fieldName + '.').c_str(), transient);
@@ -1531,10 +1531,10 @@ void TCling::InspectMembers(TMemberInspector& insp, void* obj,
          // For loaded class, CallShowMember will (especially for TObject)
          // call the virtual ShowMember rather than the class specific version
          // resulting in an infinite recursion.
-         InspectMembers(insp, cobj + baseOffset, baseCl);
+         InspectMembers(insp, cobj + baseOffset, baseCl, isTransient);
       } else {
          baseCl->CallShowMembers(cobj + baseOffset,
-                                 insp);
+                                 insp, isTransient);
       }
    } // loop over bases
 }

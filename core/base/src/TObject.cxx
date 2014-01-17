@@ -49,13 +49,6 @@
 #include "TRefTable.h"
 #include "TProcessID.h"
 
-class TDumpMembers : public TMemberInspector {
-   // Implemented in TClass.cxx
-public:
-   TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
-};
-
 Long_t TObject::fgDtorOnly = 0;
 Bool_t TObject::fgObjectStat = kTRUE;
 
@@ -325,8 +318,7 @@ void TObject::Dump() const
    else
       Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
 
-   TDumpMembers dm;
-   ((TObject*)this)->ShowMembers(dm);
+   IsA()->Dump(this);
 }
 
 //______________________________________________________________________________

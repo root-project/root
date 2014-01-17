@@ -46,7 +46,8 @@ namespace {
    class TSetSelDataMembers: public TMemberInspector {
    public:
       TSetSelDataMembers(const TOutputListSelectorDataMap& owner, TCollection* dmInfo, TList* output);
-      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+      using TMemberInspector::Inspect;
+      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
       Ssiz_t GetNumSet() const { return fNumSet; }
    private:
       TCollection* fDMInfo; // output list object name / member name pairs for output list entries
@@ -63,7 +64,7 @@ TSetSelDataMembers::TSetSelDataMembers(const TOutputListSelectorDataMap& owner,
 {}
 
 //______________________________________________________________________________
-void TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char *name, const void *addr)
+void TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char *name, const void *addr, Bool_t /* isTransient */)
 {
    // This method is called by the ShowMembers() method for each
    // data member to recursively collect all base classes' members.
@@ -118,7 +119,8 @@ namespace {
    public:
       TCollectDataMembers(const TOutputListSelectorDataMap& owner): fOwner(owner) { }
       ~TCollectDataMembers();
-      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+      using TMemberInspector::Inspect;
+      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
       TExMap& GetMemberPointers() { return fMap; }
    private:
       TExMap fMap; //map of data member's value to TDataMember
@@ -127,7 +129,7 @@ namespace {
 }
 
 //______________________________________________________________________________
-void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char *name, const void *addr)
+void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char *name, const void *addr, Bool_t /* isTransient */)
 {
    // This method is called by the ShowMembers() method for each
    // data member to recursively collect all base classes' members.

@@ -244,14 +244,14 @@ public:
    void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    void               CalculateStreamerOffset() const;
-   Bool_t             CallShowMembers(void* obj, TMemberInspector &insp) const;
+   Bool_t             CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient = kFALSE) const;
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
    TObject           *Clone(const char *newname="") const;
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
    void               Dump() const { TDictionary::Dump(); }
-   void               Dump(void *obj) const;
+   void               Dump(const void *obj) const;
    char              *EscapeChars(const char *text) const;
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;
@@ -326,7 +326,7 @@ public:
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
-   void               InterpretedShowMembers(void* obj, TMemberInspector &insp);
+   void               InterpretedShowMembers(void* obj, TMemberInspector &insp, Bool_t isTransient);
    Bool_t             IsFolder() const { return kTRUE; }
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;

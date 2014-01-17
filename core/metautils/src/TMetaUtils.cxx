@@ -1688,7 +1688,7 @@ void ROOT::TMetaUtils::WriteBodyShowMembers(std::ostream& finalString,
       getClass += csymbol + "*)0x0)->GetClass()";
    }
    finalString << "   gInterpreter->InspectMembers(R__insp, this, "
-               << getClass << ");" << std::endl;
+               << getClass << ", kFALSE);" << std::endl;
 }
 
 //______________________________________________________________________________

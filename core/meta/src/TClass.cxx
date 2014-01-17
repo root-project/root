@@ -297,11 +297,13 @@ class TDumpMembers : public TMemberInspector {
 
 public:
    TDumpMembers() { }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+
+   using TMemberInspector::Inspect;
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 };
 
 //______________________________________________________________________________
-void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add)
+void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, const void *add, Bool_t /* isTransient */)
 {
    // Print value of member mname.
    //
@@ -499,7 +501,8 @@ public:
       fRealDataObject = obj;
       fRealDataClass = cl;
    }
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   using TMemberInspector::Inspect;
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 
    //----- bit manipulation
    void     SetBit(UInt_t f, Bool_t set);
@@ -511,7 +514,7 @@ public:
 };
 
 //______________________________________________________________________________
-void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, const void* add)
+void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, const void* add, Bool_t isTransient)
 {
    // This method is called from ShowMembers() via BuildRealdata().
 
@@ -519,8 +522,6 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
    if (!dm) {
       return;
    }
-
-   Bool_t isTransient = kFALSE;
 
    if (!dm->IsPersistent()) {
       // For the DataModelEvolution we need access to the transient member.
@@ -649,12 +650,13 @@ public:
       // main constructor.
       fBrowser = b; fCount = 0; }
    virtual ~TAutoInspector() { }
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
+   using TMemberInspector::Inspect;
+   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
 };
 
 //______________________________________________________________________________
 void TAutoInspector::Inspect(TClass *cl, const char *tit, const char *name,
-                             const void *addr)
+                             const void *addr, Bool_t /* isTransient */)
 {
    // This method is called from ShowMembers() via AutoBrowse().
 
@@ -1648,7 +1650,7 @@ Int_t TClass::Browse(void *obj, TBrowser *b) const
 
    } else {
       TAutoInspector insp(b);
-      CallShowMembers(obj,insp);
+      CallShowMembers(obj,insp,kFALSE);
       return insp.fCount;
    }
 
@@ -1760,7 +1762,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       if (isTransient) {
          brd.SetBit(TRealData::kTransient);
       }
-      if ( ! CallShowMembers(realDataObject, brd) ) {
+      if ( ! CallShowMembers(realDataObject, brd, kFALSE) ) {
          if ( brd.TestBit(TRealData::kTransient) ) {
             // This is a transient data member, so it is probably fine to not have
             // access to its content.  However let's no mark it as definitively setup,
@@ -1895,7 +1897,7 @@ void TClass::CalculateStreamerOffset() const
 
 
 //______________________________________________________________________________
-Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
+Bool_t TClass::CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const
 {
    // Call ShowMembers() on the obj of this class type, passing insp and parent.
    // isATObject is -1 if unknown, 0 if it is not a TObject, and 1 if it is a TObject.
@@ -1904,7 +1906,7 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
    if (fShowMembers) {
       // This should always works since 'pointer' should be pointing
       // to an object of the actual type of this TClass object.
-      fShowMembers(obj, insp);
+      fShowMembers(obj, insp, isTransient);
       return kTRUE;
    } else {
 
@@ -1918,11 +1920,11 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
          // Since we do have some dictionary information, let's
          // call the interpreter's ShowMember.
          // This works with Cling to support interpreted classes.
-         gInterpreter->InspectMembers(insp, obj, this);
+         gInterpreter->InspectMembers(insp, obj, this, isTransient);
          return kTRUE;
 
       } else if (TVirtualStreamerInfo* sinfo = GetStreamerInfo()) {
-         sinfo->CallShowMembers(obj,insp);
+         sinfo->CallShowMembers(obj, insp, isTransient);
          return kTRUE;
       } // isATObject
    } // fShowMembers is set
@@ -1931,13 +1933,13 @@ Bool_t TClass::CallShowMembers(void* obj, TMemberInspector &insp) const
 }
 
 //______________________________________________________________________________
-void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp)
+void TClass::InterpretedShowMembers(void* obj, TMemberInspector &insp, Bool_t isTransient)
 {
    // Do a ShowMembers() traversal of all members and base classes' members
    // using the reflection information from the interpreter. Works also for
    // interpreted objects.
 
-   return gInterpreter->InspectMembers(insp, obj, this);
+   return gInterpreter->InspectMembers(insp, obj, this, isTransient);
 }
 
 //______________________________________________________________________________
@@ -2131,7 +2133,7 @@ void TClass::Draw(Option_t *option)
 }
 
 //______________________________________________________________________________
-void TClass::Dump(void *obj) const
+void TClass::Dump(const void *obj) const
 {
    // Dump contents of object on stdout.
    // Using the information in the object dictionary
@@ -2157,7 +2159,7 @@ void TClass::Dump(void *obj) const
 
    Printf("==>Dumping object at:%lx, class=%s\n",(Long_t)obj,GetName());
    TDumpMembers dm;
-   if (!CallShowMembers(obj, dm)) {
+   if (!CallShowMembers(obj, dm, kFALSE)) {
       Info("Dump", "No ShowMembers function, dumping disabled");
    }
 }

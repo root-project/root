@@ -155,7 +155,7 @@ public: // Public Interface
    Bool_t  HasDictionary(TClass* cl);
    void    GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse);
    virtual void Initialize();
-   void    InspectMembers(TMemberInspector&, void* obj, const TClass* cl);
+   void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
    Int_t   Load(const char* filenam, Bool_t system = kFALSE);
    void    LoadMacro(const char* filename, EErrorCode* error = 0);

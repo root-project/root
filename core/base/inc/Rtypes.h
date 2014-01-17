@@ -173,7 +173,7 @@ R__EXTERN Int_t gDebug;
 
 //---- ClassDef macros ---------------------------------------------------------
 
-typedef void (*ShowMembersFunc_t)(void *obj, TMemberInspector &R__insp);
+typedef void (*ShowMembersFunc_t)(const void *obj, TMemberInspector &R__insp, Bool_t isTransient);
 class TVirtualIsAProxy;
 typedef TClass *(*IsAGlobalFunc_t)(const TClass*, const void *obj);
 

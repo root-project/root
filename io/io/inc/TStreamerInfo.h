@@ -184,7 +184,7 @@ public:
    void                BuildEmulated(TFile *file);
    void                BuildOld();
    virtual Bool_t      BuildFor( const TClass *cl );
-   void                CallShowMembers(void* obj, TMemberInspector &insp) const;
+   void                CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const;
    void                Clear(Option_t *);
    TObject            *Clone(const char *newname = "") const;
    Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete);
