@@ -4005,10 +4005,10 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
             case ktan  : if (TMath::Cos(tab[pos-1]) == 0) {tab[pos-1] = 0;} // { tangente indeterminee }
                          else tab[pos-1] = TMath::Tan(tab[pos-1]);
                          continue;
-            case kacos : if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+            case kacos : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
                          else tab[pos-1] = TMath::ACos(tab[pos-1]);
                          continue;
-            case kasin : if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
+            case kasin : if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} //  indetermination
                          else tab[pos-1] = TMath::ASin(tab[pos-1]);
                          continue;
             case katan : tab[pos-1] = TMath::ATan(tab[pos-1]); continue;
@@ -4021,14 +4021,14 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                          else tab[pos-1] = TMath::ACosH(tab[pos-1]);
                          continue;
             case kasinh: tab[pos-1] = TMath::ASinH(tab[pos-1]); continue;
-            case katanh: if (std::abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
+            case katanh: if (TMath::Abs(tab[pos-1]) > 1) {tab[pos-1] = 0;} // indetermination
                      else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
             case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
 
             case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
             case kpow  : pos--; tab[pos-1] = POWER(tab[pos-1],tab[pos]); continue;
             case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
-            case ksqrt : tab[pos-1] = TMath::Sqrt(std::abs(tab[pos-1])); continue;
+            case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
             case kstrstr : pos2 -= 2; pos++;if (strstr(stringStack[pos2],stringStack[pos2+1])) tab[pos-1]=1;
                                         else tab[pos-1]=0; continue;
@@ -4050,7 +4050,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
 
             case kpi   : pos++; tab[pos-1] = TMath::ACos(-1); continue;
 
-            case kabs  : tab[pos-1] = std::abs(tab[pos-1]); continue;
+            case kabs  : tab[pos-1] = TMath::Abs(tab[pos-1]); continue;
             case ksign : if (tab[pos-1] < 0) tab[pos-1] = -1; else tab[pos-1] = 1; continue;
             case kint  : tab[pos-1] = T(Long64_t(tab[pos-1])); continue;
             case kSignInv: tab[pos-1] = -1 * tab[pos-1]; continue;
