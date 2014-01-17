@@ -205,7 +205,7 @@ void *operator new(size_t size) R__THROW_BAD
       gNewInit++;
    }
 
-   register void *vp;
+   void *vp;
    if (gMmallocDesc)
       vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
    else
@@ -234,7 +234,7 @@ void *operator new(size_t size, void *vp) R__THROW_NULL
       if (TROOT::MemCheck())
          return TMemHashTable::AddPointer(size);
 
-      register void *vp;
+      void *vp;
       if (gMmallocDesc)
          vp = ::mcalloc(gMmallocDesc, RealSize(size), sizeof(char));
       else

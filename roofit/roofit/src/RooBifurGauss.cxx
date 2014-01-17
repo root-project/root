@@ -36,9 +36,6 @@ using namespace std;
 
 ClassImp(RooBifurGauss)
 
-static const char rcsid[] =
-"$Id$";
-
 
 //_____________________________________________________________________________
 RooBifurGauss::RooBifurGauss(const char *name, const char *title,

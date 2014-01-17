@@ -263,9 +263,9 @@ void a_assign(rsa_NUMBER *d, rsa_NUMBER *s)
 void a_add(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
 {
    int l,lo,ld,same;
-   register rsa_LONG sum;
-   register rsa_INT *p1,*p2,*p3;
-   register rsa_INT b;
+   rsa_LONG sum;
+   rsa_INT *p1,*p2,*p3;
+   rsa_INT b;
 
    /* setze s1 auch die groessere Zahl	*/
    l = s1->n_len;
@@ -324,7 +324,7 @@ int n_sub(rsa_INT *p1, rsa_INT *p2, rsa_INT *p3, int l, int lo)
 {
    int ld,lc,same;
    int over = 0;
-   register rsa_LONG dif;
+   rsa_LONG dif;
    rsa_LONG a,b;
 
    same = (p1 == p3);			/* frueher Abbruch moeglich */
@@ -379,7 +379,7 @@ void a_sub(rsa_NUMBER *s1, rsa_NUMBER *s2, rsa_NUMBER *d)
 int n_mult(rsa_INT *n, rsa_INT m, rsa_INT *d, int l)
 {
    int i;
-   register rsa_LONG mul;
+   rsa_LONG mul;
 
    for (i=l,mul=0; i; i--) {
       mul += (rsa_LONG)m * (rsa_LONG)*n++;
@@ -414,10 +414,10 @@ void a_imult(rsa_NUMBER *n, rsa_INT m, rsa_NUMBER *d)
 void a_mult(rsa_NUMBER *m1, rsa_NUMBER *m2, rsa_NUMBER *d)
 {
    static rsa_INT id[ rsa_MAXLEN ];		/* Zwischenspeicher	*/
-   register rsa_INT *vp;			/* Pointer darin	*/
-   register rsa_LONG sum;			/* Summe fuer jede Stelle */
-   register rsa_LONG tp1;			/* Zwischenspeicher fuer m1 */
-   register rsa_INT *p2;
+   rsa_INT *vp;					/* Pointer darin	*/
+   rsa_LONG sum;				/* Summe fuer jede Stelle */
+   rsa_LONG tp1;				/* Zwischenspeicher fuer m1 */
+   rsa_INT *p2;
    rsa_INT *p1;
    int l1,l2,ld,lc,l,i,j;
 
@@ -560,12 +560,12 @@ void a_div(rsa_NUMBER *d1, rsa_NUMBER *d2, rsa_NUMBER *q, rsa_NUMBER *r)
 void a_div2(rsa_NUMBER *n)
 {
 #if rsa_MAXBIT == rsa_LOWBITS
-   register rsa_INT *p;
+   rsa_INT *p;
    int i;
 
 #if rsa_MAXINT != 1
-   register rsa_INT h;
-   register int c;
+   rsa_INT h;
+   int c;
 
    c=0;
    i= n->n_len;

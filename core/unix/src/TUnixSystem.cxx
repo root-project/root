@@ -872,12 +872,12 @@ void TUnixSystem::ResetSignals()
 }
 
 //______________________________________________________________________________
-void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignore)
+void TUnixSystem::IgnoreSignal(ESignals sig, Bool_t ignr)
 {
-   // If ignore is true ignore the specified signal, else restore previous
+   // If ignr is true ignore the specified signal, else restore previous
    // behaviour.
 
-   UnixIgnoreSignal(sig, ignore);
+   UnixIgnoreSignal(sig, ignr);
 }
 
 //______________________________________________________________________________
@@ -3764,17 +3764,17 @@ void TUnixSystem::UnixSignal(ESignals sig, SigHandler_t handler)
 }
 
 //______________________________________________________________________________
-void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
+void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignr)
 {
-   // If ignore is true ignore the specified signal, else restore previous
+   // If ignr is true ignore the specified signal, else restore previous
    // behaviour.
 
    static Bool_t ignoreSig[kMAXSIGNALS] = { kFALSE };
    static struct sigaction oldsigact[kMAXSIGNALS];
 
-   if (ignore != ignoreSig[sig]) {
-      ignoreSig[sig] = ignore;
-      if (ignore) {
+   if (ignr != ignoreSig[sig]) {
+      ignoreSig[sig] = ignr;
+      if (ignr) {
          struct sigaction sigact;
 #if defined(R__SUN)
          sigact.sa_handler = (void (*)())SIG_IGN;

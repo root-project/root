@@ -601,12 +601,12 @@ void TSystem::IgnoreSignal(ESignals /*sig*/, Bool_t /*ignore*/)
 }
 
 //______________________________________________________________________________
-void TSystem::IgnoreInterrupt(Bool_t ignore)
+void TSystem::IgnoreInterrupt(Bool_t ignr)
 {
-   // If ignore is true ignore the interrupt signal, else restore previous
+   // If ignr is true ignore the interrupt signal, else restore previous
    // behaviour. Typically call ignore interrupt before writing to disk.
 
-   IgnoreSignal(kSigInterrupt, ignore);
+   IgnoreSignal(kSigInterrupt, ignr);
 }
 
 //______________________________________________________________________________

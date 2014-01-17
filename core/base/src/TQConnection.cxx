@@ -556,7 +556,7 @@ TQConnection::~TQConnection()
    //      TQSlot::fCounter > 0 .
 
    TIter next(this);
-   register TList *list;
+   TList *list;
 
    while ((list = (TList*)next())) {
       list->Remove(this);

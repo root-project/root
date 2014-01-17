@@ -49,13 +49,13 @@ int G__browsing=1; /* used in disp.c and intrpt.c */
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-G__int64 G__expr_strtoll(const char *nptr,char **endptr, register int base) {
-   register const char *s = nptr;
-   register G__uint64 acc;
-   register G__int64 result;
-   register int c;
-   register G__uint64 cutoff;
-   register int neg = 0, any, cutlim;
+G__int64 G__expr_strtoll(const char *nptr,char **endptr, int base) {
+   const char *s = nptr;
+   G__uint64 acc;
+   G__int64 result;
+   int c;
+   G__uint64 cutoff;
+   int neg = 0, any, cutlim;
 
    /*
     * Skip white space and pick up leading +/- sign if any.
@@ -142,12 +142,12 @@ G__int64 G__expr_strtoll(const char *nptr,char **endptr, register int base) {
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-G__uint64 G__expr_strtoull(const char *nptr, char **endptr, register int base) {
-   register const char *s = nptr;
-   register G__uint64 acc;
-   register int c;
-   register G__uint64 cutoff;
-   register int neg = 0, any, cutlim;
+G__uint64 G__expr_strtoull(const char *nptr, char **endptr, int base) {
+   const char *s = nptr;
+   G__uint64 acc;
+   int c;
+   G__uint64 cutoff;
+   int neg = 0, any, cutlim;
 
    /*
     * See strtoll for comments as to the logic used.

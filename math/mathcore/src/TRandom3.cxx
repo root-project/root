@@ -98,7 +98,7 @@ Double_t TRandom3::Rndm(Int_t)
    const UInt_t kMatrixA =         0x9908b0df;
 
    if (fCount624 >= kN) {
-      register Int_t i;
+      Int_t i;
 
       for (i=0; i < kN-kM; i++) {
          y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);
@@ -152,7 +152,7 @@ void TRandom3::RndmArray(Int_t n, Double_t *array)
 
    while (k < n) {
       if (fCount624 >= kN) {
-         register Int_t i;
+         Int_t i;
 
          for (i=0; i < kN-kM; i++) {
             y = (fMt[i] & kUpperMask) | (fMt[i+1] & kLowerMask);

@@ -291,9 +291,9 @@ namespace ROOT {
       */
       template<class Vector, class RotationMatrix> 
       Vector Rotate(const Vector &v, const RotationMatrix & rot) { 
-	register double xX = v.X();
-	register double yY = v.Y();
-	register double zZ = v.Z();
+	double xX = v.X();
+	double yY = v.Y();
+	double zZ = v.Z();
 	double x2 =  rot(0,0)*xX + rot(0,1)*yY + rot(0,2)*zZ;
 	double y2 =  rot(1,0)*xX + rot(1,1)*yY + rot(1,2)*zZ;
 	double z2 =  rot(2,0)*xX + rot(2,1)*yY + rot(2,2)*zZ;
@@ -312,17 +312,17 @@ namespace ROOT {
       */
       template <class LVector, class BoostVector> 
       LVector boost(const LVector & v, const BoostVector & b) { 
-        register double bx = b.X();
-        register double by = b.Y();
-        register double bz = b.Z();
+        double bx = b.X();
+        double by = b.Y();
+        double bz = b.Z();
 	double b2 = bx*bx + by*by + bz*bz;
 	if (b2 >= 1) {
            GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
            return LVector();
 	}    
-	register double gamma = 1.0 / std::sqrt(1.0 - b2);
-	register double bp = bx*v.X() + by*v.Y() + bz*v.Z();
-	register double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
+	double gamma = 1.0 / std::sqrt(1.0 - b2);
+	double bp = bx*v.X() + by*v.Y() + bz*v.Z();
+	double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
 	double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
 	double y2 = v.Y() + gamma2*bp*by + gamma*by*v.T();
 	double z2 = v.Z() + gamma2*bp*bz + gamma*bz*v.T();
@@ -345,7 +345,7 @@ namespace ROOT {
             GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
             return LVector();
          }    
-	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double x2 = gamma * v.X() + gamma * beta * v.T();
 	double t2 = gamma * beta * v.X() + gamma * v.T(); 
 	LVector lv; 
@@ -365,7 +365,7 @@ namespace ROOT {
            GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
            return LVector();
 	}    
-	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double y2 = gamma * v.Y() + gamma * beta * v.T();
 	double t2 = gamma * beta * v.Y() + gamma * v.T(); 
 	LVector lv; 
@@ -385,7 +385,7 @@ namespace ROOT {
            GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
            return LVector();
 	}    
-	register double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
+	double gamma = 1.0/ std::sqrt(1.0 - beta*beta); 
 	double z2 = gamma * v.Z() + gamma * beta * v.T();
 	double t2 = gamma * beta * v.Z() + gamma * v.T(); 
 	LVector lv; 

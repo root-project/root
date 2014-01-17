@@ -713,7 +713,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
       dsname = distinfo->GetName();
    }
 
-   THashList *ignore = 0, *targets = 0, *exclude = 0;
+   THashList *ignr = 0, *targets = 0, *exclude = 0;
    Bool_t addmode = kFALSE;
    if (!distonly_m) {
       TString ss, k, key;
@@ -725,8 +725,8 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
          while (ss.Tokenize(k, from, ",")) {
             do_anadist_getkey(k.Data(), key);
             if (!(key.IsNull())) {
-               if (!ignore) ignore = new THashList();
-               ignore->Add(new TObjString(key));
+               if (!ignr) ignr = new THashList();
+               ignr->Add(new TObjString(key));
             }
          }
       }
@@ -774,7 +774,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
                         action, infile);
             flist->Close();
             SafeDelete(flist);
-            SDELTRE(ignore, targets, exclude);
+            SDELTRE(ignr, targets, exclude);
             return -1;
          }
          // Get the title
@@ -797,7 +797,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
          }
       } else {
          Printf("%s: problems opening input file '%s' ", action, infile);
-         SDELTRE(ignore, targets, exclude);
+         SDELTRE(ignr, targets, exclude);
          return -1;
       }
    }
@@ -826,7 +826,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
          TString key;
          do_anadist_getkey(fi->GetCurrentUrl(), key);
          // Ignore if requested
-         if (ignore && ignore->FindObject(key)) continue;
+         if (ignr && ignr->FindObject(key)) continue;
          // Get the TFileCollection for this server
          if (!(fcs = (TFileCollection *) fcsls->FindObject(key))) {
             if (gverbose > 0)
@@ -856,14 +856,14 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
       // Nothing to do if no targets
       if (targets->GetSize() <= 0) {
          Printf("%s:%s: target servers list is empty!", action, dsname);
-         SDELETE(ignore, targets, exclude, fcsls, fcsls_title);
+         SDELETE(ignr, targets, exclude, fcsls, fcsls_title);
          return -1;
       } else {
          Printf("%s:%s: %d target servers found", action, dsname, targets->GetSize());
          if (gverbose > 0) targets->Print();
       }
    }
-   SDELTWO(ignore, exclude);
+   SDELTWO(ignr, exclude);
 
    // Separate into 'excess' and 'defect' lists
    TList *excls = new TList;
@@ -878,7 +878,7 @@ int do_anadist_ds(TFileCollection *fc, const char *servers, const char *ignsrvs,
    } else {
       // Cannot continue;
       Printf("%s:%s: target size is null or negative", action, dsname);
-      SDELETE(ignore, targets, exclude, fcsls, fcsls_title);
+      SDELETE(ignr, targets, exclude, fcsls, fcsls_title);
       return -1;
    }
    // Before redistribution

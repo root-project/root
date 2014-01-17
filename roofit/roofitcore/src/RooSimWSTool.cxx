@@ -897,10 +897,10 @@ std::string RooSimWSTool::SimWSIFace::create(RooFactoryWSTool& ft, const char* t
 
     // Perform syntax check. Warn about any meta parameters other than $SplitParam, $SplitParamConstrained, $Restrict and $Verbose
     for (unsigned int i=1 ; i<args.size() ; i++) {
-      if (!args[i].find("$SplitParam(")==0 &&
-	  !args[i].find("$SplitParamConstrained(")==0 &&
-	  !args[i].find("$SplitRestrict(")==0 &&
-	  !args[i].find("$Verbose(")==0) {
+      if (args[i].find("$SplitParam(")!=0 &&
+	  args[i].find("$SplitParamConstrained(")!=0 &&
+	  args[i].find("$SplitRestrict(")!=0 &&
+	  args[i].find("$Verbose(")!=0) {
 	throw string(Form("RooSimWSTool::SimWSIFace::create() ERROR: unknown token %s encountered",args[i].c_str())) ;
       }
     }

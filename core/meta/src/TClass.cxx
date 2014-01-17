@@ -3738,7 +3738,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
 }
 
 //______________________________________________________________________________
-void TClass::IgnoreTObjectStreamer(Bool_t ignore)
+void TClass::IgnoreTObjectStreamer(Bool_t ignr)
 {
    //  When the class kIgnoreTObjectStreamer bit is set, the automatically
    //  generated Streamer will not call TObject::Streamer.
@@ -3754,8 +3754,8 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
    //  To be effective for object streamed member-wise or split in a TTree,
    //  this function must be called for the most derived class (i.e. BigTrack).
 
-   if ( ignore &&  TestBit(kIgnoreTObjectStreamer)) return;
-   if (!ignore && !TestBit(kIgnoreTObjectStreamer)) return;
+   if ( ignr &&  TestBit(kIgnoreTObjectStreamer)) return;
+   if (!ignr && !TestBit(kIgnoreTObjectStreamer)) return;
    TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
    if (sinfo) {
       if (sinfo->IsCompiled()) {
@@ -3772,8 +3772,8 @@ void TClass::IgnoreTObjectStreamer(Bool_t ignore)
          return;
       }
    }
-   if (ignore) SetBit  (kIgnoreTObjectStreamer);
-   else        ResetBit(kIgnoreTObjectStreamer);
+   if (ignr) SetBit  (kIgnoreTObjectStreamer);
+   else      ResetBit(kIgnoreTObjectStreamer);
 }
 
 //______________________________________________________________________________

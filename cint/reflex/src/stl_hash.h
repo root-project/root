@@ -24,6 +24,8 @@
 # endif
 # if (__GNUC__ < 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ < 3))
 // For gcc, the hash_map and hash_set classes are in the extensions area
+// silence warning
+#  define _BACKWARD_BACKWARD_WARNING_H
 #  include <ext/hash_set>
 #  include <ext/hash_map>
 # else

@@ -1676,10 +1676,10 @@ Int_t TCint::LoadLibraryMap(const char *rootmapfile)
 
    if (rootmapfile && *rootmapfile) {
       // Add content of a specific rootmap file
-      Bool_t ignore = fMapfile->IgnoreDuplicates(kFALSE);
+      Bool_t ignre = fMapfile->IgnoreDuplicates(kFALSE);
       fMapfile->ReadFile(rootmapfile, kEnvGlobal);
       fRootmapFiles->Add(new TNamed(gSystem->BaseName(rootmapfile),rootmapfile));
-      fMapfile->IgnoreDuplicates(ignore);
+      fMapfile->IgnoreDuplicates(ignre);
    }
 
    TEnvRec *rec;

@@ -79,3 +79,4 @@ endif
 endif
 
 # Extras
+GLIBC_MALLOC_DEPRECATED = yes

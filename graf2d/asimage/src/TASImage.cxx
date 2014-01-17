@@ -5106,7 +5106,7 @@ static int GetPolyYBounds(TPoint *pts, int n, int *by, int *ty)
 {
    // Get poly bounds along Y.
 
-   register TPoint *ptMin;
+   TPoint *ptMin;
    int ymin, ymax;
    TPoint *ptsStart = pts;
 

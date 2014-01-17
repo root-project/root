@@ -296,9 +296,9 @@ void TLorentzVector::Boost(Double_t bx, Double_t by, Double_t bz)
 {
    //Boost this Lorentz vector
    Double_t b2 = bx*bx + by*by + bz*bz;
-   register Double_t gamma = 1.0 / TMath::Sqrt(1.0 - b2);
-   register Double_t bp = bx*X() + by*Y() + bz*Z();
-   register Double_t gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
+   Double_t gamma = 1.0 / TMath::Sqrt(1.0 - b2);
+   Double_t bp = bx*X() + by*Y() + bz*Z();
+   Double_t gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
 
    SetX(X() + gamma2*bp*bx + gamma*bx*T());
    SetY(Y() + gamma2*bp*by + gamma*by*T());

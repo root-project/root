@@ -47,7 +47,7 @@
 #if defined R__USEASMSWAP
 # define R__bswap_16(x) \
      (__extension__                                                           \
-      ({ register unsigned short int __v;                                     \
+      ({ unsigned short int __v;                                              \
          if (__builtin_constant_p (x))                                        \
            __v = R__bswap_constant_16 (x);                                    \
          else                                                                 \
@@ -74,7 +74,7 @@
      !defined __pentium4__ && !defined __x86_64__
 #  define R__bswap_32(x) \
      (__extension__                                                           \
-      ({ register unsigned int __v;                                           \
+      ({ unsigned int __v;                                                    \
          if (__builtin_constant_p (x))                                        \
            __v = R__bswap_constant_32 (x);                                    \
          else                                                                 \
@@ -88,7 +88,7 @@
 # else
 #  define R__bswap_32(x) \
      (__extension__                                                           \
-      ({ register unsigned int __v;                                           \
+      ({ unsigned int __v;                                                    \
          if (__builtin_constant_p (x))                                        \
            __v = R__bswap_constant_32 (x);                                    \
          else                                                                 \

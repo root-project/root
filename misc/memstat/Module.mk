@@ -76,3 +76,8 @@ distclean-$(MODNAME): clean-$(MODNAME)
 		   $(LPATH)/libMemStatGui.rootmap
 
 distclean::     distclean-$(MODNAME)
+
+###### extra rules ######
+ifeq ($(GLIBC_MALLOC_DEPRECATED),yes)
+$(MEMSTATO) $(MEMSTATDO): CXXFLAGS += -Wno-deprecated-declarations
+endif

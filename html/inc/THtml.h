@@ -172,8 +172,8 @@ public:
    // Utility class representing a directory
    class TFileSysDB: public TFileSysDir {
    public:
-      TFileSysDB(const char* path, const char* ignore, Int_t maxdirlevel):
-         TFileSysDir(path, 0), fEntries(1009, 5), fIgnorePath(ignore), fMaxLevel(maxdirlevel)
+      TFileSysDB(const char* path, const char* ignr, Int_t maxdirlevel):
+         TFileSysDir(path, 0), fEntries(1009, 5), fIgnorePath(ignr), fMaxLevel(maxdirlevel)
       { Fill(); }
 
       TExMap& GetMapIno() { return fMapIno; }

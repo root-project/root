@@ -78,7 +78,7 @@
 #include "TMVA/ResultsMulticlass.h"
 
 const Int_t  MinNoTrainingEvents = 10;
-const Int_t  MinNoTestEvents     = 1;
+//const Int_t  MinNoTestEvents     = 1;
 TFile* TMVA::Factory::fgTargetFile = 0;
 
 ClassImp(TMVA::Factory)
