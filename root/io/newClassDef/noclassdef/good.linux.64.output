@@ -4,7 +4,7 @@ Warning in <Build:>: RootPCellID: base class crap has no streamer or dictionary 
 Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
 Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
-==>Dumping object at:0, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1                 
 time                          1.2                 
@@ -143,7 +143,7 @@ id 	23
 obj 	102
 
 Reading Hit
-==>Dumping object at:0, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1                 
 time                          1.2                 
@@ -274,7 +274,7 @@ Writing Data
 Warning in <TBufferFile::WriteObjectAny>: An object of type class RootPCnodict (from type_info) passed through a RootPCellID pointer was truncated (due a missing dictionary)!!!
 Warning in <WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
-==>Dumping object at:0, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1                 
 time                          1.2                 
@@ -413,7 +413,7 @@ id 	23
 obj 	102
 
 Reading Data
-==>Dumping object at:0, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1                 
 time                          1.2                 

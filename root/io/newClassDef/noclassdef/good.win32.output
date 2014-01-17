@@ -8,7 +8,7 @@ Warning in <TStreamerInfo::Build:>: RootCaloHit: RootPCnodict has no streamer or
 Warning in <TStreamerInfo::Build:>: RootPCellID: base class crap has no streamer or dictionary it will not be saved
 Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
-==>Dumping object, name=RootCaloHit, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1         
 time                          1.2         
@@ -59,7 +59,7 @@ id 	1
 fix 	33
 
 Reading Hit
-==>Dumping object, name=RootCaloHit, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1         
 time                          1.2         
@@ -106,7 +106,7 @@ templated 	66
 Writing Data
 Warning in <TStreamerInfo::WriteBuffer>: The actual class of RootCaloHit::mynocellp is not available. Only the "RootPCellID" part will be written
 
-==>Dumping object, name=RootCaloHit, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1         
 time                          1.2         
@@ -157,7 +157,7 @@ id 	1
 fix 	33
 
 Reading Data
-==>Dumping object, name=RootCaloHit, class=RootCaloHit
+==> Dumping object, name=RootCaloHit, class=RootCaloHit
 
 energy                        1.1         
 time                          1.2         
