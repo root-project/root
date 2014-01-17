@@ -2337,7 +2337,7 @@ Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 
 }
 //______________________________________________________________________________
-Double_t TH1::ComputeIntegral()
+Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 {
    //  Compute integral (cumulative sum of bins)
    //  The result stored in fIntegral is used by the GetRandom functions.
@@ -2345,6 +2345,8 @@ Double_t TH1::ComputeIntegral()
    //  array does not exist or when the number of entries in the histogram
    //  has changed since the previous call to GetRandom.
    //  The resulting integral is normalized to 1
+   //  If the routine is called with th eonlyPositive flag set an error will 
+   //  be produced in case of negative bin content and a NaN value returned
 
    Int_t bin, binx, biny, binz, ibin;
 
@@ -2366,6 +2368,12 @@ Double_t TH1::ComputeIntegral()
          for (binx=1;binx<=nbinsx;binx++) {
             ibin++;
             bin  = GetBin(binx, biny, binz);
+            Double_t y = GetBinContent(bin); 
+            if (onlyPositive && y < 0) { 
+               Error("ComputeIntegral","Bin content is negative - return a NaN value");
+               fIntegral[nbins] = TMath::QuietNaN();
+               break;
+            }
             fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin);
          }
       }
@@ -4501,6 +4509,7 @@ Double_t TH1::GetRandom() const
    // The integral is automatically recomputed if the number of entries
    // is not the same then when the integral was computed.
    // NB Only valid for 1-d histograms. Use GetRandom2 or 3 otherwise.
+   // If the histogram has a bin with negative content a NaN is returned 
 
    if (fDimension > 1) {
       Error("GetRandom","Function only valid for 1-d histograms");
@@ -4508,13 +4517,16 @@ Double_t TH1::GetRandom() const
    }
    Int_t nbinsx = GetNbinsX();
    Double_t integral = 0;
+   // compute integral checking that all bins have positive content (see ROOT-5894)
    if (fIntegral) {
-      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral();
+      if (fIntegral[nbinsx+1] != fEntries) integral = ((TH1*)this)->ComputeIntegral(true);
       else  integral = fIntegral[nbinsx];
    } else {
-      integral = ((TH1*)this)->ComputeIntegral();
+      integral = ((TH1*)this)->ComputeIntegral(true);
    }
    if (integral == 0) return 0;
+   // return a NaN in case some bins have negative content
+   if (integral == TMath::QuietNaN() ) return TMath::QuietNaN(); 
 
    Double_t r1 = gRandom->Rndm();
    Int_t ibin = TMath::BinarySearch(nbinsx,fIntegral,r1);
