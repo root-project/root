@@ -313,12 +313,9 @@ void TObject::Dump() const
    //   fFillColor               19          fill area color
    //   fFillStyle               1001        fill area style
 
-   if (sizeof(this) == 4)
-      Printf("==> Dumping object at: 0x%08lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
-   else
-      Printf("==> Dumping object at: 0x%016lx, name=%s, class=%s\n",(Long_t)this,GetName(),ClassName());
-
-   IsA()->Dump(this);
+   // Get the actual address of the object.
+   const void *actual = IsA()->DynamicCast(TObject::Class(),this,kFALSE);
+   IsA()->Dump(actual);
 }
 
 //______________________________________________________________________________
