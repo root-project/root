@@ -415,7 +415,7 @@ TSQLTableInfo *TPgSQLServer::GetTableInfo(const char* tablename)
          Int_t tOid;
          char* oidString  = PQgetvalue(res_type, oid, 0);
          char* typeString = PQgetvalue(res_type, oid, 1);
-         if (sscanf(oidString, "%d", &tOid) != 1) {
+         if (sscanf(oidString, "%10d", &tOid) != 1) {
             Error("GetTableInfo", "Bad non-numeric oid '%s' for type '%s'", oidString, typeString);
          }
          fOidTypNameMap[tOid]=std::string(typeString);
