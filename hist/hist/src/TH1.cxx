@@ -2345,7 +2345,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
    //  array does not exist or when the number of entries in the histogram
    //  has changed since the previous call to GetRandom.
    //  The resulting integral is normalized to 1
-   //  If the routine is called with th eonlyPositive flag set an error will 
+   //  If the routine is called with the onlyPositive flag set an error will 
    //  be produced in case of negative bin content and a NaN value returned
 
    Int_t bin, binx, biny, binz, ibin;
@@ -2374,7 +2374,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
                fIntegral[nbins] = TMath::QuietNaN();
                break;
             }
-            fIntegral[ibin] = fIntegral[ibin-1] + GetBinContent(bin);
+            fIntegral[ibin] = fIntegral[ibin-1] + y;
          }
       }
    }
