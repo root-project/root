@@ -1338,7 +1338,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
-   char* cobj = (char*) obj; // for ptr arithmetics
+   const char* cobj = (const char*) obj; // for ptr arithmetics
 
    static clang::PrintingPolicy
       printPol(fInterpreter->getCI()->getLangOpts());

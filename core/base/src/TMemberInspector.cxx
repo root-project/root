@@ -102,7 +102,7 @@ void TMemberInspector::Inspect(TClass *, const char *, const char *, const void 
    Fatal("Inspect","This version of Inspect is obsolete");
 }
 
-void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
+void TMemberInspector::GenericShowMembers(const char *topClassName, const void *obj,
                                           Bool_t isTransient) {
    // Call ShowMember() on obj.
 
@@ -129,14 +129,14 @@ void TMemberInspector::GenericShowMembers(const char *topClassName, void *obj,
    }
 }
 
-void TMemberInspector::InspectMember(TObject& obj, const char* name, Bool_t isTransient)
+void TMemberInspector::InspectMember(const TObject& obj, const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
 
    InspectMember<TObject>(obj, name, isTransient);
 }
 
-void TMemberInspector::InspectMember(const char* topclassname, void* pobj,
+void TMemberInspector::InspectMember(const char* topclassname, const void* pobj,
                                      const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
@@ -147,7 +147,7 @@ void TMemberInspector::InspectMember(const char* topclassname, void* pobj,
    fParent->Remove(len);
 }
 
-void TMemberInspector::InspectMember(TClass* cl, void* pobj, const char* name, Bool_t isTransient)
+void TMemberInspector::InspectMember(TClass* cl, const void* pobj, const char* name, Bool_t isTransient)
 {
    // Routine driving the visiting of the class information/data members.
 

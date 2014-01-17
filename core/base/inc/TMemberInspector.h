@@ -49,20 +49,20 @@ public:
    void RemoveFromParent(Ssiz_t startingAt);
 
    template <class T>
-   void InspectMember(T& obj, const char* name, Bool_t isTransient) {
+   void InspectMember(const T& obj, const char* name, Bool_t isTransient) {
       Ssiz_t len = GetParentLen();
       AddToParent(name);
       obj.IsA()->CallShowMembers(&obj, *this, isTransient);
       RemoveFromParent(len);
    }
 
-   void InspectMember(TObject& obj, const char* name, Bool_t isTransient);
-   void InspectMember(const char* topclassname, void* pobj, const char* name,
+   void InspectMember(const TObject& obj, const char* name, Bool_t isTransient);
+   void InspectMember(const char* topclassname, const void* pobj, const char* name,
                       Bool_t transient);
-   void InspectMember(TClass* cl, void* pobj, const char* name,
+   void InspectMember(TClass* cl, const void* pobj, const char* name,
                       Bool_t isTransient);
    
-   void GenericShowMembers(const char *topClassName, void *obj,
+   void GenericShowMembers(const char *topClassName, const void *obj,
                            Bool_t transientMember);
 
    ClassDef(TMemberInspector,0)  //ABC for inspecting class data members
