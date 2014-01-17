@@ -66,6 +66,8 @@ public:
          new TGClient();
       }
       TApplication::NeedGraphicsLibs(); 
+      if (gApplication)
+         gApplication->InitializeGraphics();
    }
 };
 static TGClientInit gClientInit;
