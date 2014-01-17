@@ -838,8 +838,6 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
 {
    // the standard (discrete or real) AdaBoost algorithm 
 
-   Double_t returnVal=-1;
-
    if (!method) {
       Log() << kWARNING << " AdaBoost called without classifier reference - needed for calulating AdaBoost " << Endl;
       return 0;
