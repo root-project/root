@@ -13,4 +13,4 @@ BuildIndex returns 1
 Try to get value that is not in the chain, this should return a -1:
 -1
 3
-(int)0
+(int) 0
