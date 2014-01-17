@@ -3943,6 +3943,17 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 }
 
 //______________________________________________________________________________
+const void *TClass::DynamicCast(const TClass *cl, const void *obj, Bool_t up)
+{
+   // Cast obj of this class type up to baseclass cl if up is true.
+   // Cast obj of this class type down from baseclass cl if up is false.
+   // If this class is not a baseclass of cl return 0, else the pointer
+   // to the cl part of this (up) or to this (down).
+
+   return DynamicCast(cl,const_cast<void*>(obj),up);
+}
+
+//______________________________________________________________________________
 void *TClass::New(ENewType defConstructor, Bool_t quiet) const
 {
    // Return a pointer to a newly allocated object of this class.

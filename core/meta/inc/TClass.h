@@ -397,6 +397,7 @@ public:
    void               DeleteArray(void *ary, Bool_t dtorOnly = kFALSE);
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
+   const void        *DynamicCast(const TClass *base, const void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
    void               CreateAttributeMap();
    TClassAttributeMap *GetAttributeMap() const
