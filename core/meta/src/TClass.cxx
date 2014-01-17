@@ -507,10 +507,9 @@ class TBuildRealData : public TMemberInspector {
 private:
    void    *fRealDataObject;
    TClass  *fRealDataClass;
-   UInt_t   fBits;       //bit field status word
 
 public:
-   TBuildRealData(void *obj, TClass *cl) : fBits(0) {
+   TBuildRealData(void *obj, TClass *cl) {
       // Main constructor.
       fRealDataObject = obj;
       fRealDataClass = cl;
