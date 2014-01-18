@@ -20,6 +20,56 @@ namespace {
 namespace std {} using namespace std;
 
 //______________________________________________________________________________
+static size_t StdLen(const std::string &name, size_t pos = 0)
+{
+   // Return the length, if any, taken by std:: and any
+   // potential inline namespace (well compiler detail namespace).
+
+   size_t len = 0;
+   if (name.compare(pos,5,"std::")==0) {
+      len = 5;
+
+      if (name.compare(pos+len,2,"__",2)==0) {
+         for(size_t i = pos+len+2; i < name.length(); ++i) {
+            if (name[i] == '<') {
+               // A template specification is starting, this is not
+               // a namespace.
+               break;
+            } else if (name[i] == ':') {
+               // We found the end of the namespace name.
+               len = i+2-pos;
+               break;
+            }
+         }
+      }
+   }
+
+   return len;
+}
+
+//______________________________________________________________________________
+static size_t StdLen(const char *name, size_t pos = 0)
+{
+   // Return the length, if any, taken by std:: and any
+   // potential inline namespace (well compiler detail namespace).
+
+   return StdLen(std::string(name),pos);
+}
+
+//______________________________________________________________________________
+static void RemoveStd(std::string &name, size_t pos = 0)
+{
+   // Remove std:: and any potential inline namespace (well compiler detail
+   // namespace.
+
+   size_t len = StdLen(name,pos);
+   if (len) {
+      name.erase(pos,len);
+   }
+}
+
+
+//______________________________________________________________________________
 void TClassEdit::Init(TClassEdit::TInterpreterLookupHelper *helper)
 {
    gInterpreterHelper = helper;
@@ -247,9 +297,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
       if (strchr(fElements[i].c_str(),'<')==0) {
          if (mode&kDropStd) {
             unsigned int offset = (0==strncmp("const ",fElements[i].c_str(),6)) ? 6 : 0;
-            if (strncmp( fElements[i].c_str() + offset, "std::", 5) == 0) {
-               fElements[i].erase(offset,5);
-            }
+            RemoveStd( fElements[i], offset );
          }
          continue;
       }
@@ -313,7 +361,7 @@ ROOT::ESTLType TClassEdit::STLKind(const char *type)
 
    unsigned char offset = 0;
    if (strncmp(type,"const ",6)==0) { offset += 6; }
-   if (strncmp(type,"std::",5)==0) { offset += 5; }
+   offset += StdLen(type,offset);
 
    static const char *stls[] =                  //container names
    {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
@@ -349,14 +397,13 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    // 'classname'
 
    string a = allocname;
-   if (strncmp(a.c_str(),"std::",5)==0) {
-      a.erase(0,5);
-   }
-   string k = classname;
+   RemoveStd(a);
+
    if (a=="alloc")                              return true;
    if (a=="__default_alloc_template<true,0>")   return true;
    if (a=="__malloc_alloc_template<0>")         return true;
 
+   string k = classname;
    string ts("allocator<"); ts += k; ts+=">";
    if (a==ts) return true;
 
@@ -366,17 +413,26 @@ bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
    return false;
 }
 
-namespace {
-   static void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
-   {
-      if(from.empty())
-         return;
-      size_t start_pos = 0;
-      while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-         str.replace(start_pos, from.length(), to);
-         start_pos += to.length();
+//______________________________________________________________________________
+size_t findNameEnd(std::string &full, size_t pos)
+{
+   int level = 0;
+   for(size_t i = pos; i < full.length(); ++i) {
+      switch(full[i]) {
+         case '<': { ++level; break; }
+         case '>': {
+            if (level == 0) return i;
+            else --level;
+            break;
+         }
+         case ',': {
+            if (level == 0) return i;
+            break;
+         }
+         default: break;
       }
    }
+   return full.length();
 }
 
 //______________________________________________________________________________
@@ -389,112 +445,93 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    if (IsDefAlloc(allocname,keyclassname)) return true;
 
-
    string a = allocname;
-   string k = keyclassname;
-   string v = valueclassname;
+   RemoveStd(a);
 
-   ReplaceAll(a,"std::","");
-   ReplaceAll(k,"std::","");
-   ReplaceAll(v,"std::","");
+   const static int alloclen = strlen("allocator<");
+   if (a.compare(0,alloclen,"allocator<") != 0) {
+      return false;
+   }
+   size_t pos = alloclen;
 
-   string stem("allocator<pair<");
-   stem += k;
-   stem += ",";
-   stem += v;
+   pos += StdLen(a,pos);
 
-   string ts(stem);
-   ts += "> >";
+   const static int pairlen = strlen("pair<");
+   if (a.compare(pos,pairlen,"pair<") != 0) {
+      return false;
+   }
+   pos += pairlen;
 
-   if (a==ts) return true;
-
-   ts = stem;
-   ts += " > >";
-
-   if (a==ts) return true;
-
-   stem = "allocator<pair<const ";
-   stem += k;
-   stem += ",";
-   stem += v;
-
-   ts = stem;
-   ts += "> >";
-
-   if (a==ts) return true;
-
-   ts = stem;
-   ts += " > >";
-
-   if (a==ts) return true;
-
-   stem = "allocator<std::pair<const ";
-   stem += k;
-   stem += ",";
-   stem += v;
-   
-   ts = stem;
-   ts += "> >";
-   
-   if (a==ts) return true;
-   
-   ts = stem;
-   ts += " > >";
-   
-   if (a==ts) return true;
-   
-   if ( keyclassname[strlen(keyclassname)-1] == '*' ) {
-
-      stem = "allocator<pair<";
-      stem += k;
-      stem += "const";
-      stem += ",";
-      stem += v;
-
-      string tss(stem);
-      tss += "> >";
-
-      if (a==tss) return true;
-
-      tss = stem;
-      tss += " > >";
-
-      if (a==tss) return true;
-
-      stem = "allocator<pair<const ";
-      stem += k;
-      stem += "const";
-      stem += ",";
-      stem += v;
-
-      tss = stem;
-      tss += "> >";
-
-      if (a==tss) return true;
-
-      tss = stem;
-      tss += " > >";
-
-      if (a==tss) return true;
-
-      stem = "allocator<std::pair<const ";
-      stem += k;
-      stem += "const";
-      stem += ",";
-      stem += v;
-      
-      tss = stem;
-      tss += "> >";
-      
-      if (a==tss) return true;
-      
-      tss = stem;
-      tss += " > >";
-      
-      if (a==tss) return true;
+   const static int constlen = strlen("const ");
+   if (a.compare(pos,constlen,"const ") == 0) {
+      pos += constlen;
    }
 
-   return false;
+   pos += StdLen(a,pos);
+
+   string k = keyclassname;
+   size_t pos2 = StdLen(k);
+   if (pos2) k = keyclassname + pos2;
+
+   if (a.compare(pos,k.length(),k) != 0) {
+      // Now we need to compare the normalized name.
+      size_t end = findNameEnd(a,pos);
+
+      std::string keypart;
+      GetNormalizedName(keypart,a.substr(pos,end-pos).c_str());
+
+      std::string norm_key;
+      GetNormalizedName(norm_key,k.c_str());
+
+      if (keypart != norm_key) {
+         if ( k[k.length()-1] == '*' ) {
+            // also check with a trailing 'const'.
+            keypart += "const";
+            if (keypart != norm_key) {
+               return false;
+            }
+         } else {
+            return false;
+         }
+      }
+      pos = end;
+   } else {
+      pos += k.length();
+   }
+
+   if (a[pos] != ',') {
+      return false;
+   }
+   ++pos;
+
+   pos += StdLen(a,pos);
+
+   string v = valueclassname;
+   size_t pos3 = StdLen(v);
+   if (pos3) k = valueclassname + pos3;
+
+   if (a.compare(pos,v.length(),v) != 0) {
+      // Now we need to compare the normalized name.
+      size_t end = findNameEnd(a,pos);
+
+      std::string valuepart;
+      GetNormalizedName(valuepart,a.substr(pos,end-pos).c_str());
+
+      std::string norm_value;
+      GetNormalizedName(norm_value,k.c_str());
+
+      if (valuepart != norm_value) {
+         return false;
+      }
+   } else {
+      pos += v.length();
+   }
+
+   if (a.compare(pos,1,">")!=0 && a.compare(pos,2," >")!=0) {
+      return false;
+   }
+
+   return true;
 }
 
 //______________________________________________________________________________
@@ -504,22 +541,39 @@ bool TClassEdit::IsDefComp(const char *compname, const char *classname)
    // 'classname'
 
    string c = compname;
+
+   size_t pos = StdLen(c);
+
+   const static int lesslen = strlen("less<");
+   if (c.compare(pos,lesslen,"less<") != 0) {
+      return false;
+   }
+   pos += lesslen;
+
    string k = classname;
+   if (c.compare(pos,k.length(),k) != 0) {
+      // Now we need to compare the normalized name.
+      size_t end = findNameEnd(c,pos);
 
-   // The default compartor is std::less<classname> which is usually stored
-   // in CINT as less<classname>
+      std::string keypart;
+      GetNormalizedName(keypart,c.substr(pos,end-pos).c_str());
 
-   string stdless("less<");
-   stdless += k;
-   if (stdless[stdless.size()-1]=='>') stdless += " >";
-   else stdless += ">";
+      std::string norm_key;
+      GetNormalizedName(norm_key,k.c_str());
 
-   if (stdless == c) return true;
+      if (keypart != norm_key) {
+         return false;
+      }
+      pos = end;
+   } else {
+      pos += k.length();
+   }
 
-   stdless.insert(0,"std::");
-   if (stdless == c) return true;
+   if (c.compare(pos,1,">")!=0 && c.compare(pos,2," >")!=0) {
+      return false;
+   }
 
-   return false;
+   return true;
 }
 
 //______________________________________________________________________________
@@ -679,9 +733,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 
    if ( mode & kDropStd) {
       unsigned int offset = (0==strncmp("const ",full.c_str(),6)) ? 6 : 0;
-      if (strncmp( full.c_str() + offset, "std::", 5) == 0) {
-         full.erase(offset,5);
-      }
+      RemoveStd( full, offset );
    }
    const char *t = full.c_str();
    const char *c = strchr(t,'<');
@@ -900,8 +952,8 @@ bool TClassEdit::IsSTLBitset(const char *classname)
 {
    // Return true is the name is std::bitset<number> or bitset<number>
 
-   if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
-   if ( strncmp(classname,"std::bitset<",strlen("std::bitset<"))==0) return true;
+   size_t offset = StdLen(classname);
+   if ( strncmp(classname+offset,"bitset<",strlen("bitset<"))==0) return true;
    return false;
 }
 
@@ -929,7 +981,7 @@ bool TClassEdit::IsStdClass(const char *classname)
 {
    // return true if the class belond to the std namespace
 
-   if ( strncmp(classname,"std::",5)==0 ) classname += 5;
+   classname += StdLen( classname );
    if ( strcmp(classname,"string")==0 ) return true;
    if ( strncmp(classname,"bitset<",strlen("bitset<"))==0) return true;
    if ( strncmp(classname,"pair<",strlen("pair<"))==0) return true;
@@ -1067,12 +1119,12 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
            break;
          }
          case '<': {
-           char keep = input[i];
-           string temp( input, prev,i-prev );
-	   answ << temp;
-           answ << keep;
-           prev = i+1;
-           break; // We do not have a complete type yet.
+            char keep = input[i];
+            string temp( input, prev,i-prev );
+            answ << temp;
+            answ << keep;
+            prev = i+1;
+            break; // We do not have a complete type yet.
          }
          case '>':
          case '*':
