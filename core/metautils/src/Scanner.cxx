@@ -726,9 +726,19 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    
    DumpDecl(recordDecl, "");
    
-   const ClassSelectionRule *selected = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) :
-                                                      fSelectionRules.IsDeclSelected(recordDecl);
-   if (selected && selected->GetSelected() == BaseSelectionRule::kYes) {
+   //Test
+   const ClassSelectionRule *selectedFromTypedef = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : 0;
+   const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl);
+   
+   const ClassSelectionRule *selected = typedefNameDecl ? selectedFromTypedef : selectedFromRecDecl;
+
+   if (! selected) return true; // early exit. Nothing more to be done.
+
+   // Selected through typedef but excluded with concrete classname 
+   bool excludedFromRecDecl = selectedFromRecDecl && selectedFromRecDecl->GetSelected() == BaseSelectionRule::kNo;
+
+   if (selected->GetSelected() == BaseSelectionRule::kYes && !excludedFromRecDecl) { 
+   
       // For the case kNo, we could (but don't) remove the node from the pcm
       // For the case kDontCare, the rule is just a place holder and we are actually trying to exclude some of its children
       // (this is used only in the selection xml case).

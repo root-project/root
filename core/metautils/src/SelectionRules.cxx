@@ -758,8 +758,8 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
 
       if (match != BaseSelectionRule::kNoMatch) {
          // If we have a match.
+         selector = &(*it);
          if (it->GetSelected() == BaseSelectionRule::kYes) {
-            selector = &(*it);
             if (IsLinkdefFile()){
                // rootcint prefers explicit rules over pattern rules
                if (match == BaseSelectionRule::kName) {
@@ -775,7 +775,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                // in genreflex - we could explicitly select classes from other source files
                if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
                else {
-                  return 0; // explicit No returned
+                  return selector; // explicit No returned
                }
             }
             if (match == BaseSelectionRule::kPattern) {
