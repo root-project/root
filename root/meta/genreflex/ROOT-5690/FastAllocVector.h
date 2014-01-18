@@ -24,7 +24,7 @@
 // Check if memory pools are isabled completely
 #ifndef GOD_NOALLOC
 
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined( _LIBCPP_VERSION )
 
    #if __GNUC__ > 3
       // This is GCC 4 and above. Use the allocators
