@@ -49,7 +49,7 @@ namespace ROOT {
         fIsA(isa),
         fVersion(1),
         fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof),
+        fStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
         fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
    {
       // Constructor.
