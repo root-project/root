@@ -2618,7 +2618,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          }
          if (itypename.length()) {
             std::string altname( TClassEdit::ShortType(itypename.c_str(), TClassEdit::kDropStlDefault) );
-            if (altname != name) {
+            if (altname != name && altname != cl->GetName()) {
 
                // Remove the existing (soon to be invalid) TClass object to
                // avoid an infinite recursion.
