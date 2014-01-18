@@ -1,5 +1,13 @@
 #include <TStopwatch.h>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+#include "TSystem.h"
+#define ClingWorkAroundMissingDynamicScope
+#include "TBenchmark.h"
+#include "TChain.h"
+
 int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
 {
    std::string markfilename = "NuEvent_DST.mark";
@@ -41,20 +49,30 @@ int Read(TString library, TString rootfilename, Bool_t ref = kFALSE)
 
    cout << "All events read." << endl;
    Float_t ct = gBenchmark->GetCpuTime("Read");
-   Float_t refct;
+   //Float_t refct;
    //cout << "Cputime: " << ct << endl;
    if (ref) {
       ofstream markfile(markfilename.c_str());
       markfile << ct << '\n';
       return 0; // Success.
    } else {
+      Float_t refct;
+#if defined( _LIBCPP_VERSION ) && defined(__CLING__)
+      FILE *markfile = fopen(markfilename.c_str(),"r");
+      if (markfile) {
+         fscanf(markfile,"%f",&refct);
+         fclose(markfile);
+      }
+#else
       ifstream markfile(markfilename.c_str());
       markfile >> refct;
+#endif
       if ( TMath::Abs( (refct - ct) / refct ) > (tolerance/100.0)) {
-         cout << "Reading time for " << rootfilename << " with " << library 
+         cout << "Reading time for " << rootfilename << " with " << library
               << " takes " << tolerance << "% more than the reference " << ct << " vs " << refct << "\n";
          return 1; // Failure
       }
       return 0; // Success.
    }
+   return  tolerance && ref && ct;
 }
