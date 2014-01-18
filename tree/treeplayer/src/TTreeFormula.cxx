@@ -3866,15 +3866,15 @@ template<typename T> T FindMax(TTreeFormula *arr, TTreeFormula *condition) {
    return res;
 }
 
+namespace {
 
-
-template<typename T> inline T POWER(T x, T y) { return TMath::Power(x, y); }
-template<> Long64_t POWER(Long64_t x, Long64_t y) { return TMath::Power(x, (Int_t)y); }
-template<> LongDouble_t POWER(LongDouble_t x, LongDouble_t y) { return TMath::Power(x, (Double_t)y); }
+template <typename T> T fmod_local(T x, T y) { return fmod(x,y); }
+template <> Long64_t fmod_local(Long64_t x, Long64_t y) { return fmod((LongDouble_t)x,(LongDouble_t)y); }
 
 template<typename T> inline void SetMethodParam(TMethodCall *method, T p) { method->SetParam(p); }
 template<> void SetMethodParam(TMethodCall *method, LongDouble_t p) { method->SetParam((Double_t)p); }
 
+}
 
 template<typename T> inline T TTreeFormula::GetConstant(Int_t k) { return fConst[k]; }
 template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
@@ -4025,8 +4025,8 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                      else tab[pos-1] = TMath::ATanH(tab[pos-1]); continue;
             case katan2: pos--; tab[pos-1] = TMath::ATan2(tab[pos-1],tab[pos]); continue;
 
-            case kfmod : pos--; tab[pos-1] = fmod(tab[pos-1],tab[pos]); continue;
-            case kpow  : pos--; tab[pos-1] = POWER(tab[pos-1],tab[pos]); continue;
+            case kfmod : pos--; tab[pos-1] = fmod_local(tab[pos-1],tab[pos]); continue;
+            case kpow  : pos--; tab[pos-1] = TMath::Power(tab[pos-1],tab[pos]); continue;
             case ksq   : tab[pos-1] = tab[pos-1]*tab[pos-1]; continue;
             case ksqrt : tab[pos-1] = TMath::Sqrt(TMath::Abs(tab[pos-1])); continue;
 
