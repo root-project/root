@@ -18,7 +18,6 @@ vector<int,allocator<int> >::iterator::pointer
 TVirtualCollectionProxy::Next_t
 Cursor_t
 Option_t
-basic_stringbuf<char,char_traits<char>,allocator<char> >::__string_type
 basic_stringstream<char,char_traits<char>,allocator<char> >::int_type
 Color_t
 basic_ostringstream<char,char_traits<char>,allocator<char> >::traits_type
@@ -26,7 +25,6 @@ unsigned long long
 vector<double,allocator<double> >::reference
 ROOT::TSchemaRule::ReadRawFuncPtr_t
 ROOT::Math::IParametricFunctionOneDim::BaseFunc
-basic_istream<char,char_traits<char> >::__streambuf_type
 #wchar_t
 ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::Type_t
 vector<string,allocator<string> >::value_type
@@ -42,7 +40,6 @@ vector<pair<int,int>,allocator<pair<int,int> > >::pointer
 ROOT::Math::IParametricGradFunctionMultiDim::BaseGradFunc
 ROOT::Math::FitMethodFunction
 vector<int,allocator<int> >::value_type
-basic_istringstream<char,char_traits<char>,allocator<char> >::__string_type
 stringstream
 vector<vector<double,allocator<double> >,allocator<vector<double,allocator<double> > > >::const_pointer
 streamsize
@@ -120,7 +117,6 @@ vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::v
 ROOT::Math::FitMethodGradFunction
 ROOT::Math::IParametricGradFunctionOneDim::BaseGradFunc
 ios_base::fmtflags
-basic_ostringstream<char,char_traits<char>,allocator<char> >::__string_type
 vector<TString,allocator<TString> >::const_reference
 vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::const_pointer
 basic_stringstream<char,char_traits<char>,allocator<char> >::pos_type
@@ -187,7 +183,6 @@ TAssoc
 ULong64_t
 ROOT::Math::TDataPoint3D
 vector<string,allocator<string> >::reference
-ios_base::seekdir
 vector<TString,allocator<TString> >::const_pointer
 vector<double,allocator<double> >::const_iterator
 ROOT::Math::GradFunctor::Impl
@@ -235,7 +230,6 @@ ROOT::TSchemaRule::ReadFuncPtr_t
 ROOT::Fit::Fitter::IGradModel1DFunction
 ios
 Long64_t
-basic_ostream<char,char_traits<char> >::__ostream_type
 Time_t
 bool
 IsAGlobalFunc_t
@@ -248,7 +242,6 @@ basic_ifstream<char,char_traits<char> >::pos_type
 char_traits<char>::off_type
 EGetLineMode
 vector<double,allocator<double> >::iterator::reference
-basic_istream<char,char_traits<char> >::__istream_type
 Font_t
 Style_t
 void
@@ -275,7 +268,6 @@ vector<vector<double,allocator<double> >,allocator<vector<double,allocator<doubl
 basic_ios<char,char_traits<char> >::pos_type
 TInetAddress::AddressList_t
 vector<int,allocator<int> >::pointer
-basic_ostream<char,char_traits<char> >::__ios_type
 ROOT::Math::IGradFunction
 Bool_t
 ROOT::NewFunc_t
@@ -317,11 +309,9 @@ basic_stringbuf<char,char_traits<char>,allocator<char> >::char_type
 ROOT::TSchemaRule::RuleType_t
 vector<TString,allocator<TString> >::value_type
 UShort_t
-basic_stringstream<char,char_traits<char>,allocator<char> >::__string_type
 ROOT::Math::IGradientFunctionMultiDim::BaseGrad
 ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
 basic_ostream<char,char_traits<char> >::char_type
-basic_istream<char,char_traits<char> >::__ios_type
 vector<int,allocator<int> >::const_reference
 string::const_iterator
 ROOT::Fit::PoissonLLFunction
