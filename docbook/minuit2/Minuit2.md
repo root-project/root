@@ -4,7 +4,7 @@
 ## What M is intended to do ##
 
 M is conceived as a tool to find the minimum value of a multi-parameter
-function (the “$\mbox{\tt FCN}$”) and analyze the shape of the function
+function (the "$\mbox{FCN}$") and analyze the shape of the function
 around the minimum. The principal application is foreseen for
 statistical analysis, working on chisquare or log-likelihood functions,
 to compute the best-fit parameter values and uncertainties, including
@@ -32,7 +32,7 @@ More information about recent developments, releases and installation
 can be obtained from the M homepage @bib-C++MINUIT.
 
 The names of M applications are written in capital letters (e.g.
-$\mbox{\tt MIGRAD}$, $\mbox{\tt MINOS}$, $\mbox{\tt CONTOURS}$), the
+$\mbox{MIGRAD}$, $\mbox{MINOS}$, $\mbox{CONTOURS}$), the
 corresponding names of the classes are written using sans-serif font
 type (MnMigrad, MnMinos, MnContours).
 
@@ -43,25 +43,25 @@ type (MnMigrad, MnMinos, MnContours).
 ## The organization of M ##
 
 The M package acts on a multiparameter *objective function* which is
-called — for historical reasons — the $\mbox{\tt FCN}$ function (see
+called — for historical reasons — the $\mbox{FCN}$ function (see
 [howto:fcn]). This function is usually a chisquared or a log–likelihood,
-but it could also be a mathematical function. The $\mbox{\tt FCN}$
+but it could also be a mathematical function. The $\mbox{FCN}$
 function needs to be written in for which M defines the pure abstract
 base class FCNBase as interface. The user must define and implement the
-$\mbox{\tt FCN}$ function in a derived class from FCNBase. Sometimes
+$\mbox{FCN}$ function in a derived class from FCNBase. Sometimes
 this is done by an intermediate program such as HippoDraw@bib-HippoDraw,
 in which case M is being used under the control of such an intermediate
-program[^1]. The value of the $\mbox{\tt FCN}$ function will in general
+program[^1]. The value of the $\mbox{FCN}$ function will in general
 depend on one or more variable parameters whose meaning is defined by
 the user (or by the intermediate program), but whose trial values are
 determined by M .
 
 To take a simple example, suppose the problem is to fit a polynomial
 through a set of data points. Then the user would write a
-$\mbox{\tt FCN}$ which calculates the $\chi^2$ between a polynomial and
-the data; the variable parameters of $\mbox{\tt FCN}$ would be the
+$\mbox{FCN}$ which calculates the $\chi^2$ between a polynomial and
+the data; the variable parameters of $\mbox{FCN}$ would be the
 coefficients of the polynomials. Using objects for minimization from M ,
-the user would request M to minimize the $\mbox{\tt FCN}$ with respect
+the user would request M to minimize the $\mbox{FCN}$ with respect
 to the parameters, that is, find those values of the coefficients which
 give the lowest value of chisquare.
 
@@ -99,7 +99,7 @@ M is kept as a low-level package with optimal performance.
 
 The main usages of M are
 
--   from a user’s program (such as int main()...)
+-   from a user's program (such as int main()...)
 
 -   from a graphical data analysis tool such as HippoDraw@bib-HippoDraw
 
@@ -113,7 +113,7 @@ For the design of the application programming interface (API) of M a
 two-way strategy was imposed:
 
 -   a minimal required interface with minimum interaction with M objects
-    and with appropriate usage of the standard library (STL): the user’s
+    and with appropriate usage of the standard library (STL): the user's
     implementation of the FCNBase class, initial parameter values and
     uncertainties are provided by the to M user via std::vectors.
 
@@ -126,7 +126,7 @@ defined user interfaces (the API).
 
 ## Internal and external parameters ##
 
-Each of the parameters to the $\mbox{\tt FCN}$ is defined by the user as
+Each of the parameters to the $\mbox{FCN}$ is defined by the user as
 belonging to one of the following types:
 
 -   Freely variable: allowed to take on any value.
@@ -147,11 +147,11 @@ belonging to one of the following types:
 When using the minimal required interface, all variable parameters are
 free and unbound.
 
-The user, in his $\mbox{\tt FCN}$, must of course be able to “see” all
+The user, in his $\mbox{FCN}$, must of course be able to "see" all
 types of defined parameters, and he therefore has access to what we call
 the *external parameter list*, that is, the parameters as he defined
 them. On the other hand, the internal M minimizing routines only want to
-“see” variable parameters without limits, and so they have access only
+"see" variable parameters without limits, and so they have access only
 to the *internal parameter list* which is created from the external list
 by the following transformation:
 
@@ -191,12 +191,12 @@ which determines, for example, the size of the error matrix of the
 parameters, since only variable parameters have errors.
 
 An important feature of M is that parameters are allowed to change types
-during the M minimization and analysis of a $\mbox{\tt FCN}$ function.
+during the M minimization and analysis of a $\mbox{FCN}$ function.
 Several applications in M have methods available to make variable
 parameters fixed and vice-versa; to impose, change, or remove limits
 from variable parameters; and even to define completely new parameters
 at any time during a run. In addition, some M applications (notably the
-$\mbox{\tt MINOS}$ error analysis) cause one or more variable parameters
+$\mbox{MINOS}$ error analysis) cause one or more variable parameters
 to be temporarily fixed during the calculation. Therefore, the
 correspondence between external and internal parameter lists is in
 general a dynamic one, and the number of internal parameters is not
@@ -226,7 +226,7 @@ limits should be avoided if not necessary. In addition, the
 transformation does require some computer time, so it slows down the
 computation a little bit, and more importantly, it introduces additional
 numerical inaccuracy into the problem in addition to what is introduced
-in the numerical calculation of the $\mbox{\tt FCN}$ value. The effects
+in the numerical calculation of the $\mbox{FCN}$ value. The effects
 of non-linearity and numerical roundoff both become more important as
 the external value gets closer to one of the limits (expressed as the
 distance to nearest limit divided by distance between limits). The user
@@ -250,7 +250,7 @@ P_{\mathrm{int}} &=& \pm\sqrt{(b - P_{\mathrm{ext}} + 1)^2 - 1} \\
 P_{\mathrm{ext}} &=& b + 1 - \sqrt{P_{\mathrm{int}}^2 + 1}              \end{aligned}$$
 
 The transformation of course also affects the parameter error matrix, so
-M does a transformation of the error matrix (and the “parabolic”
+M does a transformation of the error matrix (and the "parabolic"
 parameter errors) when there are parameter limits. Users should however
 realize that the transformation is only a linear approximation, and that
 it cannot give a meaningful result if one or more parameters is very
@@ -270,9 +270,9 @@ the last chapter.
 
 ## M strategy ##
 
-At many places in the analysis of the $\mbox{\tt FCN}$ (the user
-provided function), M must decide whether to be “safe” and waste a few
-function calls in order to know where it is, or to be “fast” and attempt
+At many places in the analysis of the $\mbox{FCN}$ (the user
+provided function), M must decide whether to be "safe" and waste a few
+function calls in order to know where it is, or to be "fast" and attempt
 to get the requested results with the fewest possible calls at a certain
 risk of not obtaining the precision desired by the user. In order to
 allow the user to influence these decisions, there is a M class
@@ -294,35 +294,35 @@ e.g. the number of iteration cycles in the numerical gradient.
 
 ## Parameter errors ##
 
-M is usually used to find the “best” values of a set of parameters,
-where “best” is defined as those values which minimize a given function,
-$\mbox{\tt FCN}$. The width of the function minimum, or more generally,
+M is usually used to find the "best" values of a set of parameters,
+where "best" is defined as those values which minimize a given function,
+$\mbox{FCN}$. The width of the function minimum, or more generally,
 the shape of the function in some neighbourhood of the minimum, gives
 information about the *uncertainty* in the best parameter values, often
 called by physicists the *parameter errors*. An important feature of M
 is that it offers several tools to analyze the parameter errors.
 
-### $\mbox{\tt FCN}$ normalization and the error definition ###
+### $\mbox{FCN}$ normalization and the error definition ###
 
 Whatever method is used to calculate the parameter errors, they will
 depend on the overall (multiplicative) normalization of
-$\mbox{\tt FCN}$, in the sense that if the value of $\mbox{\tt FCN}$ is
+$\mbox{FCN}$, in the sense that if the value of $\mbox{FCN}$ is
 everywhere multiplied by a constant $\beta$, then the errors will be
 decreased by a factor $\sqrt{\beta}$. Additive constants do not change
 the parameter errors, but may imply a different goodness-of-fit
 confidence level.
 
 Assuming that the user knows what the normalization of his
-$\mbox{\tt FCN}$ means, and also that he is interested in parameter
+$\mbox{FCN}$ means, and also that he is interested in parameter
 errors, the user can change the error definition which allows him to
-define what he means by one “error”, in terms of the change in the
-$\mbox{\tt FCN}$ value which should be caused by changing one parameter
-by one “error”. If the $\mbox{\tt FCN}$ is the usual chisquare function
+define what he means by one "error", in terms of the change in the
+$\mbox{FCN}$ value which should be caused by changing one parameter
+by one "error". If the $\mbox{FCN}$ is the usual chisquare function
 (defined below) and if the user wants the usual one-standard-deviation
 errors, then the error definition (return value of the FCNBase::up()
-method, see [howto:errordef]) should be $1.0$. If the $\mbox{\tt FCN}$
+method, see [howto:errordef]) should be $1.0$. If the $\mbox{FCN}$
 is a negative-log-likelihood function, then the one-standard-deviation
-value for FCNBase::up() to return is $0.5$. If the $\mbox{\tt FCN}$ is a
+value for FCNBase::up() to return is $0.5$. If the $\mbox{FCN}$ is a
 chisquare, but the user wants two-standard-deviation errors, then
 FCNBase::up() should return $= 4.0$, etc.
 
@@ -330,7 +330,7 @@ Note that in the usual case where M is being used to perform a fit to
 some experimental data, the parameter errors will be proportional to the
 uncertainty in the data, and therefore meaningful parameter errors
 cannot be obtained unless the measurement errors of the data are known.
-In the common case of a least-squares fit, $\mbox{\tt FCN}$ is usually
+In the common case of a least-squares fit, $\mbox{FCN}$ is usually
 defined as a chisquare:
 
 $$\chi^2 (\alpha) = \sum_{i=1}^{n} (\frac{f(x_i,\alpha) - m_i)^2}{\sigma_i^2}$$
@@ -349,10 +349,10 @@ same factor $\beta$.
 
 ### The error matrix ###
 
-The M processors $\mbox{\tt MIGRAD}$ (MnMigrad, see [api:migrad]) and
+The M processors $\mbox{MIGRAD}$ (MnMigrad, see [api:migrad]) and
 HESSE (MnHesse, see [api:hesse]) (normally) produce an error matrix.
 This matrix is twice the inverse of the matrix of second derivatives of
-the $\mbox{\tt FCN}$, transformed if necessary into external coordinate
+the $\mbox{FCN}$, transformed if necessary into external coordinate
 space[^2], and multiplied by FCNBase::up(). Therefore, errors based on
 the M error matrix take account of all the parameter correlations, but
 not the non-linearities. That is, from the error matrix alone,
@@ -360,94 +360,94 @@ two-standard-deviation errors are always exactly twice as big as
 one-standard-deviation errors.
 
 When the error matrix has been calculated (for example by the successful
-execution of $\mbox{\tt MIGRAD}$ (MnMigrad::operator(), see
+execution of $\mbox{MIGRAD}$ (MnMigrad::operator(), see
 [api:migradop]) or HESSE (MnHesse::operator())) then the parameter
 errors printed by M are the square roots of the diagonal elements of
 this matrix. The covariance or the correlations can be printed and shown
 via std::cout as the ostream operator operator$<<$ is overloaded. The
 eigenvalues of the error matrix can be calculated using MnEigen, which
 should all be positive if the matrix is positive-definite (see below on
-$\mbox{\tt MIGRAD}$ and positive-definiteness).
+$\mbox{MIGRAD}$ and positive-definiteness).
 
 The effect of correlations on the individual parameter errors can be
-seen as follows. When parameter $\mbox{\tt n}$ is fixed (e.g. via the
+seen as follows. When parameter $\mbox{n}$ is fixed (e.g. via the
 method MnMigrad::fix(n)), M inverts the error matrix, removes the row
-and column corresponding to parameter $\mbox{\tt n}$, and re-inverts the
+and column corresponding to parameter $\mbox{n}$, and re-inverts the
 result. The effect on the errors of the other parameters will in general
 be to make them smaller, since the component due to the uncertainty in
-parameter $\mbox{\tt n}$ has now been removed. (In the limit that a
-given parameter is uncorrelated with parameter $\mbox{\tt n}$, its error
-will not change when parameter $\mbox{\tt n}$ is fixed.) However the
+parameter $\mbox{n}$ has now been removed. (In the limit that a
+given parameter is uncorrelated with parameter $\mbox{n}$, its error
+will not change when parameter $\mbox{n}$ is fixed.) However the
 procedure is not reversible, since M forgets the original error matrix,
-so if parameter $\mbox{\tt n}$ is then released (e.g. via the method
+so if parameter $\mbox{n}$ is then released (e.g. via the method
 MnMigrad::release(n)), the error matrix is considered as unknown and has
 to be recalculated with appropriate commands.
 
-### $\mbox{\tt MINOS}$ errors ###
+### $\mbox{MINOS}$ errors ###
 
-The M processor $\mbox{\tt MINOS}$ (MnMinos, see [api:minos]) was
+The M processor $\mbox{MINOS}$ (MnMinos, see [api:minos]) was
 probably the first, and may still be the only, generally available
 program to calculate parameter errors taking into account both parameter
-correlations and non-linearities. The $\mbox{\tt MINOS}$ error intervals
+correlations and non-linearities. The $\mbox{MINOS}$ error intervals
 are in general assymmetric, and may be expensive to calculate,
 especially if there are a lot of free parameters and the problem is very
 non-linear.
 
-$\mbox{\tt MINOS}$ can only operate after a good minimum has already
+$\mbox{MINOS}$ can only operate after a good minimum has already
 been found, and the error matrix has been calculated, so the
-$\mbox{\tt MINOS}$ error analysis will normally follow a
-$\mbox{\tt MIGRAD}$ minimization. The $\mbox{\tt MINOS}$ error for a
+$\mbox{MINOS}$ error analysis will normally follow a
+$\mbox{MIGRAD}$ minimization. The $\mbox{MINOS}$ error for a
 given parameter is defined as the change in the value of that parameter
 which causes ${\displaystyle F'}$ to increase by the amount
 FCNBase::up(), where ${\displaystyle F'}$ is the minimum of
-$\mbox{\tt FCN}$ with respect to all *other* free parameters, and
+$\mbox{FCN}$ with respect to all *other* free parameters, and
 FCNBase::up() is the return value of the error definition specified by
 the user (default = 1.).
 
-The algorithm for finding the positive and negative $\mbox{\tt MINOS}$
-errors for parameter $\mbox{\tt n}$ consists of varying parameter
-$\mbox{\tt n}$, each time minimizing $\mbox{\tt FCN}$ with respect to
-all the other $\mbox{\tt npar - 1}$ variable parameters, to find
-numerically the two values of parameter $\mbox{\tt n}$ for which the
-minimum of $\mbox{\tt FCN}$ takes on the values
-$\displaystyle F_{\mathrm{min}} + \mbox{\tt up}$, where
-$\displaystyle F_{\mathrm{min}}$ is the minimum of $\mbox{\tt FCN}$ with
-respect to all $\mbox{\tt npar}$ parameters. In order to make the
-procedure as fast as possible, $\mbox{\tt MINOS}$ uses the error matrix
+The algorithm for finding the positive and negative $\mbox{MINOS}$
+errors for parameter $\mbox{n}$ consists of varying parameter
+$\mbox{n}$, each time minimizing $\mbox{FCN}$ with respect to
+all the other $\mbox{npar - 1}$ variable parameters, to find
+numerically the two values of parameter $\mbox{n}$ for which the
+minimum of $\mbox{FCN}$ takes on the values
+$\displaystyle F_{\mathrm{min}} + \mbox{up}$, where
+$\displaystyle F_{\mathrm{min}}$ is the minimum of $\mbox{FCN}$ with
+respect to all $\mbox{npar}$ parameters. In order to make the
+procedure as fast as possible, $\mbox{MINOS}$ uses the error matrix
 to predict the values of all parameters at the various sub-minima which
 it will have to find in the course of the calculation, and in the limit
-that the problem is nearly linear, the predictions of $\mbox{\tt MINOS}$
+that the problem is nearly linear, the predictions of $\mbox{MINOS}$
 will be nearly exact, requiring very few iterations. On the other hand,
-when the problem is very non-linear (i.e., $\mbox{\tt FCN}$ is far from
+when the problem is very non-linear (i.e., $\mbox{FCN}$ is far from
 a quadratic function of its parameters), is precisely the situation when
-$\mbox{\tt MINOS}$ is needed in order to indicate the correct parameter
+$\mbox{MINOS}$ is needed in order to indicate the correct parameter
 errors.
 
-### $\mbox{\tt CONTOURS}$ plotting ###
+### $\mbox{CONTOURS}$ plotting ###
 
-M offers a procedure for finding $\mbox{\tt FCN}$ $\mbox{\tt CONTOURS}$
+M offers a procedure for finding $\mbox{FCN}$ $\mbox{CONTOURS}$
 (provided via the class MnContours, see [api:contours]).
 
 The contour calculated by MnContours::operator() is dynamic, in the
-sense that it represents the minimum of $\mbox{\tt FCN}$ with respect to
-all the other $\mbox{\tt npar - 2}$ parameters (if any). In statistical
+sense that it represents the minimum of $\mbox{FCN}$ with respect to
+all the other $\mbox{npar - 2}$ parameters (if any). In statistical
 terms, this means that MnContours takes account of the correlations
 between the two parameters being plotted, and all the other variable
-parameters, using a procedure analogous to that of $\mbox{\tt MINOS}$.
+parameters, using a procedure analogous to that of $\mbox{MINOS}$.
 (If this feature is not wanted, then the other parameters must be fixed
-before calling $\mbox{\tt CONTOURS}$.) MnContours provides the actual
+before calling $\mbox{CONTOURS}$.) MnContours provides the actual
 coordinates of the points around the contour, suitable for plotting with
 a graphics routine or by hand (using MnPlot, see [api:plot]). The points
 are given in counter-clockwise order around the contour. Only one
 contour is calculated per command, and the level is
-$\displaystyle F_{\mathrm{min}} + \mbox{\tt up}$. where $\mbox{\tt up}$
+$\displaystyle F_{\mathrm{min}} + \mbox{up}$. where $\mbox{up}$
 is the return value of FCNBase::up() specified by the user (usually 1.0
 by default). The number of points to be calculated is chosen by the user
-(default is 20). As a by-product, $\mbox{\tt CONTOURS}$ provides the
-$\mbox{\tt MINOS}$ errors of the two parameters in question, since these
+(default is 20). As a by-product, $\mbox{CONTOURS}$ provides the
+$\mbox{MINOS}$ errors of the two parameters in question, since these
 are just the extreme points of the contour (use the
 MnContours::contour(...) method in order to get the points of the
-contour and the ones of the $\mbox{\tt MINOS}$ errors).
+contour and the ones of the $\mbox{MINOS}$ errors).
 MnContours::operator() returns a
 std::vector$<$std::pair$<$double,double$> >$ of (x,y) points. Using
 MnPlot::operator() will generate a text graphics plot in the terminal.
@@ -463,7 +463,7 @@ M was re–implemented in from 2002–2004, but the functionality is largely
 compatible with the one of the version. The usage is different in the
 sense that the re–write from to was done by its signification and not
 literally (with minor exceptions). Applications such as
-$\mbox{\tt MIGRAD}$ have a corresponding class MnMigrad, M “commands”
+$\mbox{MIGRAD}$ have a corresponding class MnMigrad, M "commands"
 became classes or methods of classes according to their purpose. Users
 familiar with the version of M , who have not yet used releases from the
 version, should however read this manual, in order to adapt to the
@@ -575,7 +575,7 @@ Kerberos IV authorization:
 
     $ cvs co MathLibs/Minuit
 
-Anonymous read-only access (if it’s enabled by the librarian, see
+Anonymous read-only access (if it's enabled by the librarian, see
 details):
 
     $ setenv CVSROOT :pserver:anonymous@SEAL.cvs.cern.ch:/cvs/SEAL
@@ -645,9 +645,9 @@ save using stack–allocation.
 
 Differently to the version of M there is no limit on the number of
 parameters, variable or non-variable. Memory allocation is done
-dynamically according to the actual needs and “on demand”. There is no
+dynamically according to the actual needs and "on demand". There is no
 protection against an upper limit on the number of parameters, however
-the “technological” limitations of M can be seen around a maximum of 15
+the "technological" limitations of M can be seen around a maximum of 15
 free parameters at a time.
 
 ## Interference with other packages ##
@@ -668,56 +668,52 @@ precision of double precision (32–bit or 64–bit) is platform dependent
 and can even vary on the same platform, depending on whether a floating
 point number is read from memory a CPU register.
 
-The argument of the user’s implementation of FCNBase::operator() is
+The argument of the user's implementation of FCNBase::operator() is
 therefore a std:vector$<$double$>$. M expects that the calculations
-inside $\mbox{\tt FCN}$ will be performed approximately to the same
+inside $\mbox{FCN}$ will be performed approximately to the same
 accuracy.
 
 The accuracy M expects is called *machine precision*
 (MnMachinePrecision, see [api:epsmac]) and can be printed on demand
-using std::cout. If the user fools M by making internal $\mbox{\tt FCN}$
+using std::cout. If the user fools M by making internal $\mbox{FCN}$
 computations in single precision, M will interpret roundoff noise as
 significant and will usually either fail to find a minimum, or give
 incorrect values for the parameter errors.
 
 It is therefore recommended to make sure that all computations in
-$\mbox{\tt FCN}$, as well as all methods and functions called by
-$\mbox{\tt FCN}$, are done in double precision. If for some reason the
+$\mbox{FCN}$, as well as all methods and functions called by
+$\mbox{FCN}$, are done in double precision. If for some reason the
 computations cannot be done to a precision comparable with that expected
 by M , the user **must** inform M of this situation with setting a
 different machine precision via the
 MnMachinePrecision::setPrecision(double) method.
 
 With reduced precision, the user may find that certain features
-sensitive to first and second differences ($\mbox{\tt HESSE}$,
-$\mbox{\tt MINOS}$, $\mbox{\tt CONTOURS}$) do not work properly, in
+sensitive to first and second differences ($\mbox{HESSE}$,
+$\mbox{MINOS}$, $\mbox{CONTOURS}$) do not work properly, in
 which case the calculations must be performed in higher precision.
 
 # How to use M #
 
 [howto:howto]
 
-## The $\mbox{\tt FCN}$ Function ##
+## The $\mbox{FCN}$ Function ##
 
 [howto:fcn]
 
 The user must always implement a derived class of FCNBase (the
-“$\mbox{\tt FCN}$”) which calculates the function value to be minimized
+"$\mbox{FCN}$") which calculates the function value to be minimized
 or analyzed.
 
-```{.cpp}
-FCNBase
-+orepator()(const std::vector<double>&): double
-+up(): double
-```
+![](figures/fcnbase.png)
 
 Note that when M is being used through an intermediate package such as
-HippoDraw @bib-HippoDraw, then the user’s $\mbox{\tt FCN}$ may be
+HippoDraw @bib-HippoDraw, then the user's $\mbox{FCN}$ may be
 supplied by the this package.
 
-The name of the user’s class to implement the FCNBase interface may be
+The name of the user's class to implement the FCNBase interface may be
 chosen freely (in documentation we give it the generic name
-$\mbox{\tt FCN}$).
+$\mbox{FCN}$).
 
 ### FCNBase::operator()(const std::vector$<$double$>$&) ###
 
@@ -736,28 +732,20 @@ the user.
 
 ### FCNBase::up() ###
 
-[howto:errordef] Returns the value of $\mbox{\tt up}$ (default value
+[howto:errordef] Returns the value of $\mbox{up}$ (default value
 $= 1.$), defining parameter errors. M defines parameter errors as the
 change in parameter value required to change the function value by
-$\mbox{\tt up}$. Normally, for chisquared fits $\mbox{\tt up = 1}$, and
-for negative log likelihood, $\mbox{\tt up = 0.5}$.
+$\mbox{up}$. Normally, for chisquared fits $\mbox{up = 1}$, and
+for negative log likelihood, $\mbox{up = 0.5}$.
 
-### $\mbox{\tt FCN}$ function with gradient ###
+### $\mbox{FCN}$ function with gradient ###
 
 By default first derivatives are calculated numerically by M . In case
 the user wants to supply his own gradient calculator (e.g. analytical
 derivatives), he needs to implement the FCNGradientBase interface.
 
 
-```{.cpp}
-FCNBase
-+orepator()(const std::vector<double>&): double
-+up(): double
-           ^
-           |
-FCNGrandientBase
-+gradient(const std::vector<double>&): std::vector<double>
-```
+![](figures/fcngradientbase.png)
 
 
 The size of the output vector is the same as of the input one. The same
@@ -813,13 +801,13 @@ For more explanations see [api:state].
 
 The following input combinations to M are possible:
 
--   $\mbox{\tt FCN}$ + parameters + uncertainties
+-   $\mbox{FCN}$ + parameters + uncertainties
 
--   $\mbox{\tt FCN}$ with gradient + parameters + uncertainties
+-   $\mbox{FCN}$ with gradient + parameters + uncertainties
 
--   $\mbox{\tt FCN}$ + parameters + covariance
+-   $\mbox{FCN}$ + parameters + covariance
 
--   $\mbox{\tt FCN}$ with gradient + parameters + covariance
+-   $\mbox{FCN}$ with gradient + parameters + covariance
 
 For each of these combinations the user can chose between a minimal
 required interface (using std::vector containers) for the parameters and
@@ -861,7 +849,7 @@ Two use cases are addressed for minimization:
 
 -   The user just wants the function to be minimized in one go.
 
--   The user wants to minimize the $\mbox{\tt FCN}$ in several
+-   The user wants to minimize the $\mbox{FCN}$ in several
     minimization steps, re-using the result of the preceeding
     minimization in the next step and change parameters in between
     (fix/release/put limits on them, etc.).
@@ -872,7 +860,7 @@ How M minimizations can be performed is shown in [example:main].
 
 Minimizers such as the VariableMetricMinimizer are designed as
 state-less minimization engines, which means that they do not depend on
-the current function and its parameters. Any $\mbox{\tt FCN}$ function
+the current function and its parameters. Any $\mbox{FCN}$ function
 can be minimized with the same minimizer. The interface is restricted to
 minimization and no parameter interaction is possible.
 
@@ -880,7 +868,7 @@ minimization and no parameter interaction is possible.
 
 MnMigrad uses the VariableMetricMinimizer for minimization but allows as
 well for parameter interaction by the user. An instance of MnMigrad is
-specific to the current $\mbox{\tt FCN}$ and user parameters. Any
+specific to the current $\mbox{FCN}$ and user parameters. Any
 parameter interaction of the user between two minimization steps will
 make use of the result of the preceeding minimization in an optimal way.
 The interface for parameters (see [api:parameters], [api:covariance] and
@@ -903,7 +891,7 @@ isued by M when running into troubles. Problems can be:
 
 -   a bug in M
 
--   an error in the $\mbox{\tt FCN}$
+-   an error in the $\mbox{FCN}$
 
 -   a highly difficult problem (usually strong correlations among
     parameters)
@@ -971,9 +959,9 @@ printed using std::cout.
 ### isValid() ###
 
 In general, if the method bool FunctionMinimum::isValid() returns
-“true”, the minimizer did find a minimum without running into troubles.
+"true", the minimizer did find a minimum without running into troubles.
 However, in some cases it may happen that a minimum cannot be found,
-then the return value will be “false”. Reasons for the minimization to
+then the return value will be "false". Reasons for the minimization to
 fail are
 
 -   the number of allowed function calls has been exhausted
@@ -1000,7 +988,7 @@ during the minimization.
 
 ### MnContours(const FCNBase&, const FunctionMinimum&) ###
 
-Construct an MnContours object from the user’s FCN and a valid
+Construct an MnContours object from the user's FCN and a valid
 FunctionMinimum. Additional constructors for user specific MnStrategy
 settings are provided.
 
@@ -1008,24 +996,24 @@ settings are provided.
 
 The method MnContours::operator()(unsigned int parx, unsigned int pary,
 unsigned int npoints = 20) const calculates one function contour of
-$\mbox{\tt FCN}$ with respect to parameters $\mbox{\tt parx}$ and
-$\mbox{\tt pary}$. The return value is a
+$\mbox{FCN}$ with respect to parameters $\mbox{parx}$ and
+$\mbox{pary}$. The return value is a
 std::vector$<$std::pair$<$double,double$>$ $>$ of (x,y) points.
-$\mbox{\tt FCN}$ minimized always with respect to all other
-$\mbox{\tt n - 2}$ variable parameters (if any). M will try to find
-$\mbox{\tt npoints}$ points on the contour (default 20). To calculate
+$\mbox{FCN}$ minimized always with respect to all other
+$\mbox{n - 2}$ variable parameters (if any). M will try to find
+$\mbox{npoints}$ points on the contour (default 20). To calculate
 more than one contour, the user needs to set the error definition
-[howto:errordef] in its $\mbox{\tt FCN}$ to the appropriate value for
+[howto:errordef] in its $\mbox{FCN}$ to the appropriate value for
 the desired confidence level and call the method MnContours::operator()
 for each contour.
 
 ### contour(...) ###
 
 MnContours::contour(unsigned int parx, unsigned int pary, unsigned int
-npoints = 20) causes a $\mbox{\tt CONTOURS}$ error analysis and returns
+npoints = 20) causes a $\mbox{CONTOURS}$ error analysis and returns
 the result in form of ContoursError. As a by-product ContoursError keeps
-the MinosError information of parameters $\mbox{\tt parx}$ and
-$\mbox{\tt pary}$. The result ContoursError can be easily printed using
+the MinosError information of parameters $\mbox{parx}$ and
+$\mbox{pary}$. The result ContoursError can be easily printed using
 std::cout.
 
 ## MnEigen ##
@@ -1066,7 +1054,7 @@ external (user) parameters. External parameters can be specified as
 std::vector$<$double$>$ or as MnUserParameters. The return value is
 always a MnUserParameterState.
 
-The optional argument $\mbox{\tt maxcalls}$ specifies the (approximate)
+The optional argument $\mbox{maxcalls}$ specifies the (approximate)
 maximum number of function calls after which the calculation will be
 stopped.
 
@@ -1082,17 +1070,17 @@ MnMachinePrecision().
 ### setPrecision(double eps) ###
 
 Informs M that the relative floating point arithmetic precision is
-$\mbox{\tt eps}$. The method can be used to override M ’s own
-determination, when the user knows that the $\mbox{\tt FCN}$ function
+$\mbox{eps}$. The method can be used to override M 's own
+determination, when the user knows that the $\mbox{FCN}$ function
 value is not calculated to the nominal machine accuracy. Typical values
-of $\mbox{\tt eps}$ are between $10^{-5}$ and $10^{-14}$.
+of $\mbox{eps}$ are between $10^{-5}$ and $10^{-14}$.
 
 ## MnMigrad and VariableMetricMinimizer ##
 
 [api:migrad]
 
 MnMigrad provides minimization of the function by the method of
-$\mbox{\tt MIGRAD}$, the most efficient and complete single method,
+$\mbox{MIGRAD}$, the most efficient and complete single method,
 recommended for general functions (see also [api:minimize]), and the
 functionality for parameters interaction. It also retains the result
 from the last minimization in case the user may want to do subsequent
@@ -1106,7 +1094,7 @@ produced.
 
 ### MnMigrad(const FCNBase&, const std::vector$<$double$>$&, const std::vector$<$double$>$&, unsigned int) ###
 
-Constructor for the minimal required interface: $\mbox{\tt FCN}$ and
+Constructor for the minimal required interface: $\mbox{FCN}$ and
 starting values for parameters and uncertainties. Optional the strategy
 level in MnStrategy can be specified.
 
@@ -1123,16 +1111,16 @@ input plus the desired strategy.
 ### operator() ###
 
 [api:migradop] MnMigrad::operator()(unsigned int maxfcn, double
-tolerance) causes minimization of the $\mbox{\tt FCN}$ and returns the
+tolerance) causes minimization of the $\mbox{FCN}$ and returns the
 result in form of a FunctionMinimum. The optional argument
-$\mbox{\tt maxfcn}$ specifies the (approximate) maximum number of
+$\mbox{maxfcn}$ specifies the (approximate) maximum number of
 function calls after which the calculation will be stopped even if it
-has not yet converged. The optional argument $\mbox{\tt tolerance}$
+has not yet converged. The optional argument $\mbox{tolerance}$
 specifies the required tolerance on the function value at the minimum.
-The default $\mbox{\tt tolerance}$ value is $0.1$, and the minimization
+The default $\mbox{tolerance}$ value is $0.1$, and the minimization
 will stop when the estimated vertical distance to the minimum
-($\mbox{\tt EDM}$) is less than
-$0.001*$$\mbox{\tt tolerance}$$*$$\mbox{\tt up}$ (see [howto:errordef]).
+($\mbox{EDM}$) is less than
+$0.001*$$\mbox{tolerance}$$*$$\mbox{up}$ (see [howto:errordef]).
 
 ### Parameter interaction ###
 
@@ -1147,7 +1135,7 @@ The VariableMetricMinimizer is instantiated using default constructor.
 
 The VariableMetricMinimizer provides several overloaded methods minimize
 with return value FunctionMinimum. Together with the user
-$\mbox{\tt FCN}$ (either an implementation of FCNBase or
+$\mbox{FCN}$ (either an implementation of FCNBase or
 FCNGradientBase) the user has to give as input the parameters with
 starting values in one of the defined formats (std::vector$<$double$>$,
 MnUserParameters or MnUserParameterState).
@@ -1157,54 +1145,54 @@ MnUserParameters or MnUserParameterState).
 [api:minimize]
 
 Causes minimization of the function by the method of
-$\mbox{\tt MIGRAD}$, as does the MnMigrad class, but switches to the
-$\mbox{\tt SIMPLEX}$ method if $\mbox{\tt MIGRAD}$ fails to converge.
+$\mbox{MIGRAD}$, as does the MnMigrad class, but switches to the
+$\mbox{SIMPLEX}$ method if $\mbox{MIGRAD}$ fails to converge.
 Constructor arguments, methods arguments and names of methods are the
 same as for MnMigrad or MnSimplex and VariableMetricMinimizer or
 SimplexMinimizer.
 
 ## MnMinos ##
 
-[api:minos] Causes a $\mbox{\tt MINOS}$ error analysis to be performed
-on the parameter whose number is specified. $\mbox{\tt MINOS}$ errors
+[api:minos] Causes a $\mbox{MINOS}$ error analysis to be performed
+on the parameter whose number is specified. $\mbox{MINOS}$ errors
 may be expensive to calculate, but are very reliable since they take
 account of non-linearities in the problem as well as parameter
 correlations, and are in general asymmetric. The optional argument
-$\mbox{\tt maxcalls}$ specifies the (approximate) maximum number of
+$\mbox{maxcalls}$ specifies the (approximate) maximum number of
 function calls **per parameter requested**, after which the calculation
 will be stopped for that parameter.
 
 ### MnMinos(const FCNBase&, const FunctionMinimum&) ###
 
-Construct an MnMinos object from the user’s $\mbox{\tt FCN}$ and a valid
+Construct an MnMinos object from the user's $\mbox{FCN}$ and a valid
 FunctionMinimum. Additional constructors for user specific MnStrategy
 settings are provided.
 
 ### operator() ###
 
 MnMinos::operator()(unsigned int n, unsigned int maxcalls) causes a
-$\mbox{\tt MINOS}$ error analysis for external parameter $\mbox{\tt n}$.
+$\mbox{MINOS}$ error analysis for external parameter $\mbox{n}$.
 The return value is a std::pair$<$double,double$>$ with the lower and
-upper bounds of parameter $\mbox{\tt n}$.
+upper bounds of parameter $\mbox{n}$.
 
 ### minos(unsigned int n, unsigned int maxcalls) ###
 
 MnMinos::minos(unsigned int n, unsigned int maxcalls) causes a
-$\mbox{\tt MINOS}$ error analysis for external parameter $\mbox{\tt n}$
+$\mbox{MINOS}$ error analysis for external parameter $\mbox{n}$
 and returns a MinosError with the lower and upper bounds of parameter
-$\mbox{\tt n}$ and additional information in case that one bound could
+$\mbox{n}$ and additional information in case that one bound could
 not be found. The result MinosError can be easily printed using
 std::cout.
 
 ### Other methods ###
 
-Additional methods exist to ask for one side of $\mbox{\tt MINOS}$
+Additional methods exist to ask for one side of $\mbox{MINOS}$
 errors only.
 
 ## MnPlot ##
 
-[api:plot] MnPlot prints the result of $\mbox{\tt CONTOURS}$ or
-$\mbox{\tt SCAN}$ on a text terminal.
+[api:plot] MnPlot prints the result of $\mbox{CONTOURS}$ or
+$\mbox{SCAN}$ on a text terminal.
 
 ### MnPlot() ###
 
@@ -1232,12 +1220,12 @@ VariableMetricMinimizer.
 ### scan(unsigned int par, unsigned int npoint, double low, double high) ###
 
 Scans the value of the user function by varying parameter number
-$\mbox{\tt par}$, leaving all other parameters fixed at the current
-value. If $\mbox{\tt par}$ is not specified, all variable parameters are
-scanned in sequence. The number of points $\mbox{\tt npoints}$ in the
+$\mbox{par}$, leaving all other parameters fixed at the current
+value. If $\mbox{par}$ is not specified, all variable parameters are
+scanned in sequence. The number of points $\mbox{npoints}$ in the
 scan is 40 by default, and cannot exceed 100. The range of the scan is
 by default 2 standard deviations on each side of the current best value,
-but can be specified as from $\mbox{\tt low}$ to $\mbox{\tt high}$.
+but can be specified as from $\mbox{low}$ to $\mbox{high}$.
 After each scan, if a new minimum is found, the best parameter values
 are retained as start values for future scans or minimizations. The
 curve resulting from each scan can be plotted on the output terminal
@@ -1246,28 +1234,28 @@ the function.
 
 ### ScanMinimizer ###
 
-Although the $\mbox{\tt SCAN}$ method is not intended for minimization
+Although the $\mbox{SCAN}$ method is not intended for minimization
 it can be used as a minimizer in its most primitive form.
 
 ## MnSimplex and SimplexMinimizer ##
 
 [api:simplex]
 
-$\mbox{\tt SIMPLEX}$ is a function minimization method using the simplex
+$\mbox{SIMPLEX}$ is a function minimization method using the simplex
 method of Nelder and Mead. MnSimplex provides minimization of the
-function by the method of $\mbox{\tt SIMPLEX}$ and the functionality for
+function by the method of $\mbox{SIMPLEX}$ and the functionality for
 parameters interaction. It also retains the result from the last
 minimization in case the user may want to do subsequent minimization
 steps with parameter interactions in between the minimization requests.
 The minimization is done by the SimplexMinimizer. Minimization of the
 function can be done by directly using the SimplexMinimizer if no
-parameters interaction is required. As $\mbox{\tt SIMPLEX}$ is a
+parameters interaction is required. As $\mbox{SIMPLEX}$ is a
 stepping method it does not produce a covariance matrix.
 
 ### MnSimplex(const FCNBase&, const std::vector$<$double$>$&,\
 const std::vector$<$double$>$&, unsigned int) ###
 
-Constructor for the minimal required interface: $\mbox{\tt FCN}$ and
+Constructor for the minimal required interface: $\mbox{FCN}$ and
 starting values for parameters and uncertainties. Optional the strategy
 level in MnStrategy can be specified.
 
@@ -1286,12 +1274,12 @@ input plus the desired strategy.
 ### operator() ###
 
 MnSimplex::operator()(unsigned int maxfcn, double tolerance) causes
-minimization of the $\mbox{\tt FCN}$ and returns the result in form of a
+minimization of the $\mbox{FCN}$ and returns the result in form of a
 FunctionMinimum. Minimization terminates either when the function has
-been called (approximately) $\mbox{\tt maxfcn}$ times, or when the
-estimated vertical distance to minimum ($\mbox{\tt EDM}$) is less than
-$\mbox{\tt tolerance*up}$. The default value of $\mbox{\tt tolerance}$
-is $\mbox{\tt 0.1}$. (see [howto:errordef]).
+been called (approximately) $\mbox{maxfcn}$ times, or when the
+estimated vertical distance to minimum ($\mbox{EDM}$) is less than
+$\mbox{tolerance*up}$. The default value of $\mbox{tolerance}$
+is $\mbox{0.1}$. (see [howto:errordef]).
 
 ### Parameter interaction ###
 
@@ -1306,7 +1294,7 @@ The SimplexMinimizer() is instantiated using default constructor.
 ### minimize(const FCNBase&, ...) ###
 
 The SimplexMinimizer provides several overloaded methods minimize with
-return value FunctionMinimum. Together with the user $\mbox{\tt FCN}$
+return value FunctionMinimum. Together with the user $\mbox{FCN}$
 (either an implementation of FCNBase or FCNGradientBase) the user has to
 give as input the parameters with starting values in one of the defined
 formats (std::vector$<$double$>$, MnUserParameters or
@@ -1316,19 +1304,19 @@ MnUserParameterState).
 
 [api:strategy] Sets the strategy to be used in calculating first and
 second derivatives and in certain minimization methods. In general, low
-values of $\mbox{\tt level}$ mean fewer function calls and high values
+values of $\mbox{level}$ mean fewer function calls and high values
 mean more reliable minimization. Currently allowed values are 0 (low), 1
 (default), and 2 (high).
 
 ### MnStrategy() ###
 
 Default constructor, sets all settings according to
-$\mbox{\tt level}$$ = 1.$
+$\mbox{level}$$ = 1.$
 
 ### MnStrategy(unsigned int level) ###
 
 Explicit constructor for predefined settings of desired
-$\mbox{\tt level}$ 0 (low), 1 (default), or 2 (high).
+$\mbox{level}$ 0 (low), 1 (default), or 2 (high).
 
 ### setLowStrategy(), setMediumStrategy(), setHighStrategy() ###
 
@@ -1403,75 +1391,75 @@ their positions.
 
 [api:setvalue] setValue(unsigned int parno, double value) or
 setValue(const char\* name, double value) set the value of parameter
-$\mbox{\tt parno}$ or with name $\mbox{\tt name}$ to
-$\mbox{\tt  value}$. The parameter in question may be variable, fixed,
+$\mbox{parno}$ or with name $\mbox{name}$ to
+$\mbox{ value}$. The parameter in question may be variable, fixed,
 or constant, but must be defined.
 
 ### setError(...) ###
 
 [api:seterror] setError(unsigned int parno, double error) or
 setError(const char\* name, double error) set the error (sigma) of
-parameter $\mbox{\tt parno}$ or with name $\mbox{\tt name}$ to
-$\mbox{\tt value}$.
+parameter $\mbox{parno}$ or with name $\mbox{name}$ to
+$\mbox{value}$.
 
 ### fix(...) ###
 
 [api:fix] fix(unsigned int parno) or fix(const char\* name) fixes
-parameter $\mbox{\tt parno}$ or with name $\mbox{\tt name}$.
+parameter $\mbox{parno}$ or with name $\mbox{name}$.
 
 ### release(...) ###
 
 [api:release] release(unsigned int parno) or release(const char\* name)
-releases a previously fixed parameter $\mbox{\tt parno}$ or with name
-$\mbox{\tt name}$.
+releases a previously fixed parameter $\mbox{parno}$ or with name
+$\mbox{name}$.
 
 ### setLimits(...) ###
 
 [api:setlimits] setLimits(unsigned int n, double low, double up) or
 setLimits(const char\* name, double low, double up) sets the lower and
-upper bound of parameter $\mbox{\tt n}$ or with name $\mbox{\tt name}$.
+upper bound of parameter $\mbox{n}$ or with name $\mbox{name}$.
 
-However, if $\mbox{\tt low}$ is equal to $\mbox{\tt up}$, an error
+However, if $\mbox{low}$ is equal to $\mbox{up}$, an error
 condition results.
 
 ### setUpperLimit(...) ###
 
 [api:setupperlimits] setUpperLimit(unsigned int n, double up) or
 setUpperLimit(const char\* name, double up) sets the upper bound of
-parameter $\mbox{\tt n}$ or with name $\mbox{\tt name}$. The parameters
+parameter $\mbox{n}$ or with name $\mbox{name}$. The parameters
 does not have a lower limit.
 
 ### setLowerLimit(...) ###
 
 [api:setlowerlimits] setLowerLimit(unsigned int n, double low) or
 setLowerLimit(const char\* name, double low) sets the lower bound of
-parameter $\mbox{\tt n}$ or with name $\mbox{\tt name}$. The parameters
+parameter $\mbox{n}$ or with name $\mbox{name}$. The parameters
 does not have an upper limit.
 
 ### removeLimits(...) ###
 
 [api:removelimits] removeLimits(unsigned int n) or removeLimits(const
-char\* name) removes all possible limits on parameter $\mbox{\tt n}$ or
-with name $\mbox{\tt name}$. The parameter can then vary in both
+char\* name) removes all possible limits on parameter $\mbox{n}$ or
+with name $\mbox{name}$. The parameter can then vary in both
 directions without any bounds.
 
 ### value(...) ###
 
 value(unsigned int n) or value(const char\* name) return the current
-value of parameter $\mbox{\tt n}$ or with name $\mbox{\tt name}$.
+value of parameter $\mbox{n}$ or with name $\mbox{name}$.
 
 ### error(...) ###
 
 error(unsigned int n) or error(const char\* name) return the current
-uncertainty (error) of parameter $\mbox{\tt n}$ or with name
-$\mbox{\tt  name}$.
+uncertainty (error) of parameter $\mbox{n}$ or with name
+$\mbox{ name}$.
 
 ### index(...) ###
 
 index(const char\* name) returns the index (current position) of the
-parameter with name $\mbox{\tt  name}$ in the list of defined
+parameter with name $\mbox{ name}$ in the list of defined
 parameters. The index is the same as for the calculation of the function
-value in the user’s FCN (FCNBase::operator()).
+value in the user's FCN (FCNBase::operator()).
 
 ### name(...) ###
 
@@ -1591,11 +1579,11 @@ best for them. Since then, algorithms have improved considerably, but M
 still offers several, mostly so that old users will not feel cheated,
 but also to help the occasional user who does manage to defeat the best
 algorithms. M currently offers four applications which can be used to
-find a smaller function value, in addition to $\mbox{\tt MINOS}$, which
+find a smaller function value, in addition to $\mbox{MINOS}$, which
 will retain a smaller function value if it stumbles on one unexpectedly.
 The objects which can be used to minimize are:
 
-### $\mbox{\tt MIGRAD}$ ###
+### $\mbox{MIGRAD}$ ###
 
 This is the best minimizer for nearly all functions. It is a
 variable-metric method with inexact line search, a stable metric
@@ -1605,43 +1593,43 @@ more reliable if you instantiate it with a high–level MnStrategy
 (although the latter option may not help much). Its main weakness is
 that it depends heavily on knowledge of the first derivatives, and fails
 miserably if they are very inaccurate. If first derivatives are a
-problem, they can be calculated analytically inside $\mbox{\tt FCN}$
+problem, they can be calculated analytically inside $\mbox{FCN}$
 (see [howto:fcn]) or if this is not feasible, the user can try to
-improve the accuracy of M ’s numerical approximation by adjusting values
+improve the accuracy of M 's numerical approximation by adjusting values
 of MnMachinePrecision and/or MnStrategy (see [api:epsmac] and
 [api:strategy]).
 
-### $\mbox{\tt MINIMIZE}$ ###
+### $\mbox{MINIMIZE}$ ###
 
-This is equivalent to $\mbox{\tt MIGRAD}$, except that if
-$\mbox{\tt MIGRAD}$ fails, it reverts to $\mbox{\tt SIMPLEX}$ and then
-calls $\mbox{\tt MIGRAD}$ again.
+This is equivalent to $\mbox{MIGRAD}$, except that if
+$\mbox{MIGRAD}$ fails, it reverts to $\mbox{SIMPLEX}$ and then
+calls $\mbox{MIGRAD}$ again.
 
-### $\mbox{\tt SCAN}$ ###
+### $\mbox{SCAN}$ ###
 
 This is not intended to minimize, and just scans the function, one
 parameter at a time. It does however retain the best value after each
 scan, so it does some sort of highly primitive minimization.
 
-### $\mbox{\tt SIMPLEX}$ ###
+### $\mbox{SIMPLEX}$ ###
 
 This genuine multidimensional minimization routine is usually much
-slower than $\mbox{\tt MIGRAD}$, but it does not use first derivatives,
+slower than $\mbox{MIGRAD}$, but it does not use first derivatives,
 so it should not be so sensitive to the precision of the
-$\mbox{\tt FCN}$ calculations, and is even rather robust with respect to
+$\mbox{FCN}$ calculations, and is even rather robust with respect to
 gross fluctuations in the function value. However, it gives no reliable
 information about parameter errors, no information whatsoever about
 parameter correlations, and worst of all cannot be expected to converge
 accurately to the minimum in a finite time. Its estimate of the
-*expected distance to the minimum* $\mbox{\tt EDM}$ is largely fantasy,
+*expected distance to the minimum* $\mbox{EDM}$ is largely fantasy,
 so it would not even know if it did converge.
 
 ## Floating point precision ##
 
 M figures out at execution time the machine precision [api:epsmac], and
-assumes that $\mbox{\tt FCN}$ provides about the same precision. That
+assumes that $\mbox{FCN}$ provides about the same precision. That
 means not just the length of the numbers used and returned by
-$\mbox{\tt FCN}$, but the actual mathematical accuracy of the
+$\mbox{FCN}$, but the actual mathematical accuracy of the
 calculations. Section [install:epsmac] describes what to do if this is
 not the case.
 
@@ -1650,7 +1638,7 @@ not the case.
 Putting limits (absolute bounds) on the allowed values for a given
 parameter, causes M to make a non-linear transformation of its own
 internal parameter values to obtain the (external) parameter values
-passed to $\mbox{\tt FCN}$. To understand the adverse effect of limits,
+passed to $\mbox{FCN}$. To understand the adverse effect of limits,
 see [intro:limits].
 
 Basically, the use of limits should be avoided unless needed to keep the
@@ -1662,12 +1650,12 @@ to alleviate problems caused by limits.
 
 ### Getting the Right Minimum with Limits ###
 
-If $\mbox{\tt MIGRAD}$ converges normally to a point where no parameter
+If $\mbox{MIGRAD}$ converges normally to a point where no parameter
 is near one of its limits, then the existence of limits has probably not
 prevented M from finding the right minimum. On the other hand, if one or
 more parameters is near its limit at the minimum, this may be because
 the true minimum is indeed at a limit, or it may be because the
-minimizer has become “blocked” at a limit. This may normally happen only
+minimizer has become "blocked" at a limit. This may normally happen only
 if the parameter is so close to a limit (internal value at an odd
 multiple of $\pm \frac{ \pi}{ 2}$ that M prints a warning to this effect
 when it prints the parameter values.
@@ -1682,8 +1670,8 @@ $$\frac{\partial F}{\partial P_{\mathrm{int}}}                =
 \frac{\partial P_{\mathrm{ext}}}{\partial P_{\mathrm{int}}} =
 \frac{\partial F}{\partial P_{\mathrm{ext}}}                = 0$$
 
-For a stepping method (like $\mbox{\tt SIMPLEX}$) this seldom poses any
-problem, but a method based on derivatives ($\mbox{\tt MIGRAD}$) may
+For a stepping method (like $\mbox{SIMPLEX}$) this seldom poses any
+problem, but a method based on derivatives ($\mbox{MIGRAD}$) may
 become blocked at such a value. If this happens, it may be necessary to
 move the value of the parameter in question a significant distance from
 the limit (e.g. with MnMigrad::setValue(...)) and restart the
@@ -1697,33 +1685,33 @@ In the best case, where the minimum is far from any limits, M will
 correctly transform the error matrix, and the parameter errors it
 reports should be accurate and very close to those you would have got
 without limits. In other cases (which should be more common, since
-otherwise you wouldn’t need limits), the very meaning of parameter
+otherwise you wouldn't need limits), the very meaning of parameter
 errors becomes problematic. Mathematically, since the limit is an
 absolute constraint on the parameter, a parameter at its limit has no
 error, at least in one direction. The error matrix, which can assign
 only symmetric errors, then becomes essentially meaningless. On the
-other hand, the $\mbox{\tt MINOS}$ analysis is still meaningful, at
-least in principle, as long as $\mbox{\tt MIGRAD}$ (which is called
-internally by $\mbox{\tt MINOS}$) does not get blocked at a limit.
+other hand, the $\mbox{MINOS}$ analysis is still meaningful, at
+least in principle, as long as $\mbox{MIGRAD}$ (which is called
+internally by $\mbox{MINOS}$) does not get blocked at a limit.
 Unfortunately, the user has no control over this aspect of the
-$\mbox{\tt MINOS}$ calculation, although it is possible to get enough
-printout from the $\mbox{\tt MINOS}$ result to be able to determine
+$\mbox{MINOS}$ calculation, although it is possible to get enough
+printout from the $\mbox{MINOS}$ result to be able to determine
 whether the results are reliable or not.
 
 ## Fixing and releasing parameters ##
 
-When M needs to be guided to the “right” minimum, often the best way to
+When M needs to be guided to the "right" minimum, often the best way to
 do this is with the methods e.g. MnMigrad::fix(...) and
 MnMigrad::release(...). That is, suppose you have a problem with ten
 free parameters, and when you minimize with respect to all at once, M
 goes to an unphysical solution characterized by an unphysical or
 unwanted value of parameter number four. One way to avoid this is to fix
-parameter four at a “good” value (not necessarily the best, since you
-presumably don’t know that yet), and minimize with respect to the
+parameter four at a "good" value (not necessarily the best, since you
+presumably don't know that yet), and minimize with respect to the
 others. Then release parameter four and minimize again. If the problem
-admits a “good” physical solution, you will normally find it this way.
-If it doesn’t work, you may see what is wrong by the following sequence
-(where $\mbox{\tt xxx}$ is the expected physical value for parameter
+admits a "good" physical solution, you will normally find it this way.
+If it doesn't work, you may see what is wrong by the following sequence
+(where $\mbox{xxx}$ is the expected physical value for parameter
 four):
 
     MnMigrad migrad(...);
@@ -1734,7 +1722,7 @@ four):
     MnScan scan(...);
     std::vector<std::pair<double, double> > points = scan(4);
 
-where $\mbox{\tt SCAN}$ gives you a picture of $\mbox{\tt FCN}$ as a
+where $\mbox{SCAN}$ gives you a picture of $\mbox{FCN}$ as a
 function of parameter four alone, the others being fixed at their
 current best values. If you suspect the difficulty is due to parameter
 five, then add
@@ -1747,24 +1735,24 @@ to see a two-dimensional picture.
 ## Interpretation of parameter errors ##
 
 There are two kinds of problems that can arise: The **reliability** of M
-’s error estimates, and their **statistical interpretation**, assuming
+'s error estimates, and their **statistical interpretation**, assuming
 they are accurate.
 
 ### Statistical interpretation ###
 
 For discussuion of basic concepts, such as the meaning of the elements
-of the error matrix, parabolic versus $\mbox{\tt MINOS}$ errors, the
-appropriate value for $\mbox{\tt up}$ (see [howto:errordef]), and
+of the error matrix, parabolic versus $\mbox{MINOS}$ errors, the
+appropriate value for $\mbox{up}$ (see [howto:errordef]), and
 setting of exact confidence levels, see (in order of increasing
 complexity and completeness):
 
--   *“Interpretation of the Errors on Parameters”,* see Part 3 of this
+-   *"Interpretation of the Errors on Parameters",* see Part 3 of this
     write-up.
 
--   *“Determining the Statistical Significance of Experimental
-    Results”*@bib-MIN81.
+-   *"Determining the Statistical Significance of Experimental
+    Results"*@bib-MIN81.
 
--   *“Statistical Methods in Experimental Physics”*@bib-EADIE.
+-   *"Statistical Methods in Experimental Physics"*@bib-EADIE.
 
 ### The reliability of M error estimates ###
 
@@ -1772,7 +1760,7 @@ M always carries around its own current estimates of the parameter
 errors, which it will print out on request, no matter how accurate they
 are at any given point in the execution. For example, at initialization,
 these estimates are just the starting step sizes as specified by the
-user. After a $\mbox{\tt MIGRAD}$ or $\mbox{\tt HESSE}$ step, the errors
+user. After a $\mbox{MIGRAD}$ or $\mbox{HESSE}$ step, the errors
 are usually quite accurate, unless there has been a problem. If no
 mitigating adjective is given in the printout of the errors, then at
 least M believes the errors are accurate, although there is always a
@@ -1783,9 +1771,9 @@ been fooled are:
 
 -   Failure to find new minimum.
 
--   Value of $\mbox{\tt EDM}$ too big. For a “normal” minimization,
-    after $\mbox{\tt MIGRAD}$, the value of $\mbox{\tt EDM}$ is usually
-    more than three orders of magnitude smaller than $\mbox{\tt up}$,
+-   Value of $\mbox{EDM}$ too big. For a "normal" minimization,
+    after $\mbox{MIGRAD}$, the value of $\mbox{EDM}$ is usually
+    more than three orders of magnitude smaller than $\mbox{up}$,
     unless a looser tolerance has been specified.
 
 -   Correlation coefficients exactly equal to zero, unless some
@@ -1802,36 +1790,36 @@ been fooled are:
     parameter errors with limits*
 
 The best way to be absolutely sure of the errors, is to use
-“independent” calculations and compare them, or compare the calculated
+"independent" calculations and compare them, or compare the calculated
 errors with a picture of the function if possible. For example, if there
-is only one free parameter, $\mbox{\tt SCAN}$ allows the user to verify
+is only one free parameter, $\mbox{SCAN}$ allows the user to verify
 approximately the function curvature. Similarly, if there are only two
-free parameters, use $\mbox{\tt CONTOURS}$. To verify a full error
-matrix, compare the results of $\mbox{\tt MIGRAD}$ with those
-(calculated afterward) by $\mbox{\tt HESSE}$, which uses a different
+free parameters, use $\mbox{CONTOURS}$. To verify a full error
+matrix, compare the results of $\mbox{MIGRAD}$ with those
+(calculated afterward) by $\mbox{HESSE}$, which uses a different
 method. And of course the most reliable and most expensive technique,
 which must be used if asymmetric errors are required, is
-$\mbox{\tt MINOS}$.
+$\mbox{MINOS}$.
 
-## Convergence in $\mbox{\tt MIGRAD}$, and positive–definiteness ##
+## Convergence in $\mbox{MIGRAD}$, and positive–definiteness ##
 
-$\mbox{\tt MIGRAD}$ uses its current estimate of the covariance matrix
+$\mbox{MIGRAD}$ uses its current estimate of the covariance matrix
 of the function to determine the current search direction, since this is
-the optimal strategy for quadratic functions and “physical” functions
+the optimal strategy for quadratic functions and "physical" functions
 should be quadratic in the neighbourhood of the minimum at least. The
-search directions determined by $\mbox{\tt MIGRAD}$ are guaranteed to be
+search directions determined by $\mbox{MIGRAD}$ are guaranteed to be
 downhill only if the covariance matrix is positive–definite, so in case
 this is not true, it makes a positive–definite approximation by adding
 an appropriate constant along the diagonal as determined by the
 eigenvalues of the matrix. Theoretically, the covariance matrix for a
-“physical” function must be positive–definite at the minimum, although
+"physical" function must be positive–definite at the minimum, although
 it may not be so for all points far away from the minimum, even for a
-well–determined physical problem. Therefore, if $\mbox{\tt MIGRAD}$
+well–determined physical problem. Therefore, if $\mbox{MIGRAD}$
 reports that it has found a non-positive–definite covariance matrix,
 this may be a sign of one or more of the following:
 
 -   **A non–physical region.** On its way to the minimum,
-    $\mbox{\tt MIGRAD}$ may have traversed a region which has unphysical
+    $\mbox{MIGRAD}$ may have traversed a region which has unphysical
     behaviour, which is of course not a serious problem as long as it
     recovers and leaves such a region.
 
@@ -1849,7 +1837,7 @@ this may be a sign of one or more of the following:
 
 -   **Numerical inaccuracies.** It is possible that the apparent lack of
     positive–definiteness is in fact only due to excessive roundoff
-    errors in numerical calculations, either in $\mbox{\tt FCN}$ or in M
+    errors in numerical calculations, either in $\mbox{FCN}$ or in M
     . This is unlikely in general, but becomes more likely if the number
     of free parameters is very large, or if the parameters are badly
     scaled (not all of the same order of magnitude), and correlations
@@ -1859,24 +1847,24 @@ this may be a sign of one or more of the following:
 
 ## Additional trouble–shooting ##
 
-When M just doesn’t work, some of the more common causes are:
+When M just doesn't work, some of the more common causes are:
 
--   **Precision mismatch.** Make sure your $\mbox{\tt FCN}$ uses
+-   **Precision mismatch.** Make sure your $\mbox{FCN}$ uses
     internally the same precision as M .
 
     If the problem is only one of precision, and not of word length
     mismatch, an appropriate MnMachinePrecision::setPrecision() may fix
     it.
 
--   **Trivial bugs in $\mbox{\tt FCN}$.** The possibilities for bugs are
+-   **Trivial bugs in $\mbox{FCN}$.** The possibilities for bugs are
     numerous. Probably the most common among physicists inexperienced in
     is the confusion between double and int types, which you can
     sometimes get away with, but not always. [^3] M can spot some
     trivial bugs itself, and issues a warning when it detects an unusual
-    $\mbox{\tt FCN}$ behaviour. Such a warning should be taken
+    $\mbox{FCN}$ behaviour. Such a warning should be taken
     seriously.
 
-    M also offers some tools (especially $\mbox{\tt SCAN}$) which can
+    M also offers some tools (especially $\mbox{SCAN}$) which can
     help the user to find trivial bugs.
 
 -   **An ill–posed problem.** For questions of parameter dependence, see
@@ -1893,8 +1881,8 @@ When M just doesn’t work, some of the more common causes are:
 -   **A bug in M .** This is unlikely, but it happens. If a bug is
     suspected, and all other possible causes can be eliminated, please
     try to save a copy of the input and output files, listing of
-    $\mbox{\tt FCN}$, and other information that may be relevant, and
-    send them to $\mbox{\tt fred.james@cern.ch}$.
+    $\mbox{FCN}$, and other information that may be relevant, and
+    send them to $\mbox{fred.james@cern.ch}$.
 
 # A complete example #
 
@@ -1903,13 +1891,13 @@ When M just doesn’t work, some of the more common causes are:
 Here a full example of a fit is presented, following the example
 DemoGaussSim.cpp.
 
-## The user’s $\mbox{\tt FCN}$ ##
+## The user's $\mbox{FCN}$ ##
 
-The implementation of FCNBase by the user’s GaussFcn is shown here.
+The implementation of FCNBase by the user's GaussFcn is shown here.
 
 ### GaussFunction.h ###
 
-The user’s model function is a Gaussian.
+The user's model function is a Gaussian.
 
     #ifndef MN_GaussFunction_H_
     #define MN_GaussFunction_H_
@@ -1945,8 +1933,8 @@ The user’s model function is a Gaussian.
 
 ### GaussFcn.h ###
 
-The user’s $\mbox{\tt FCN}$ (GaussFcn) to calculate the $\chi^2$
-(combining the user’s data with the user’s model).
+The user's $\mbox{FCN}$ (GaussFcn) to calculate the $\chi^2$
+(combining the user's data with the user's model).
 
 
     #ifndef MN_GaussFcn_H_
@@ -1962,10 +1950,10 @@ The user’s $\mbox{\tt FCN}$ (GaussFcn) to calculate the $\chi^2$
 
       GaussFcn(const std::vector<double>& meas,
                const std::vector<double>& pos,
-    	   const std::vector<double>& mvar) : theMeasurements(meas),
-    		        		      thePositions(pos),
-    					      theMVariances(mvar), 
-    					      theErrorDef(1.) {}
+         const std::vector<double>& mvar) : theMeasurements(meas),
+                          thePositions(pos),
+                    theMVariances(mvar), 
+                    theErrorDef(1.) {}
 
       ~GaussFcn() {}
 
@@ -2014,7 +2002,7 @@ The actual implementation of the FCNBase::operator() (called by Minuit):
       return chi2;
     }
 
-## The user’s main program ##
+## The user's main program ##
 
 [example:main]
 
@@ -2260,7 +2248,7 @@ This is the main program DemoGaussSim.cpp:
         cont4.insert(cont4.end(), cont.begin(), cont.end());
         plot(min.userState().value("mean"), 
              min.userState().value("sigma"), 
-    	 cont4);
+       cont4);
       }
 
       return 0;
@@ -2279,8 +2267,8 @@ This is the main program DemoGaussSim.cpp:
     affects only parameters with limits; if there are no limits,
     internal and external error matrices are the same.
 
-[^3]: For example, if $\mbox{\tt a}$ and $\mbox{\tt b}$ are double
-    precision variables, the statement $\mbox{\tt a = 2*b}$ is not good
+[^3]: For example, if $\mbox{a}$ and $\mbox{b}$ are double
+    precision variables, the statement $\mbox{a = 2*b}$ is not good
     programming, but happens to do what the user probably intended,
-    whereas the statement $\mbox{\tt a = b + 2/3}$ almost certainly will
+    whereas the statement $\mbox{a = b + 2/3}$ almost certainly will
     not do what the user intended.
