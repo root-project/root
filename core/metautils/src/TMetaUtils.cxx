@@ -157,8 +157,6 @@ static clang::NestedNameSpecifier* ReSubstTemplateArgNNS(const clang::ASTContext
    return scope;
 }
 
-// See also cling's AST.cpp
-
 //______________________________________________________________________________
 static bool IsTypeInt(const clang::Type *type)
 {
@@ -3269,11 +3267,16 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
 
    const clang::DeclContext *ctx = cl.getDeclContext();
 
-   if (ctx->isNamespace())
+   while (ctx && ctx->isInlineNamespace()) {
+      ctx = ctx->getParent();
+   }
+
+   if (ctx && ctx->isNamespace())
    {
       const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
       if (parent) {
-         if (parent->getQualifiedNameAsString()=="std") {
+         if (parent->getDeclContext()->isTranslationUnit()
+             && parent->getQualifiedNameAsString()=="std") {
             return true;
          }
       }

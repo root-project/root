@@ -1032,8 +1032,14 @@ long TClingClassInfo::Property() const
    }
    long property = 0L;
    property |= kIsCPPCompiled;
-   if (fDecl->getDeclContext()->Equals(fInterp->getSema().getStdNamespace())) {
-      property |= kIsDefinedInStd;
+   const clang::DeclContext *ctxt = fDecl->getDeclContext();
+   clang::NamespaceDecl *std_ns =fInterp->getSema().getStdNamespace();
+   while (! ctxt->isTranslationUnit())  {
+      if (ctxt->Equals(std_ns)) {
+         property |= kIsDefinedInStd;
+         break;
+      }
+      ctxt = ctxt->getParent();
    }
    Decl::Kind DK = fDecl->getKind();
    if ((DK == Decl::Namespace) || (DK == Decl::TranslationUnit)) {

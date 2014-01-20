@@ -254,6 +254,10 @@ namespace utils {
                                              bool FullyQualify) {
     const DeclContext* DC = D->getDeclContext();
     if (const NamespaceDecl* NS = dyn_cast<NamespaceDecl>(DC)) {
+      while (NS && NS->isInline()) {
+        // Ignore inline namespace;
+        NS = dyn_cast_or_null<NamespaceDecl>(NS->getDeclContext());
+      }
       if (NS->getDeclName())
         return TypeName::CreateNestedNameSpecifier(Ctx, NS);
       return 0; // no starting '::', no anonymous
@@ -576,7 +580,8 @@ namespace utils {
       while ( outer && outer->getName().size() ) {
         // NOTE: Net is being cast too widely, replace by a lookup.
         // or by using Sema::getStdNamespace
-        if (outer->getName().compare("std") == 0) {
+         if (outer->getDeclContext()->isTranslationUnit()
+             && outer->getName().compare("std") == 0) {
           // And now let's check that the target is also within std.
           const Type *underlyingType
             = decl->getUnderlyingType().getSplitDesugaredType().Ty;
@@ -1168,6 +1173,12 @@ namespace utils {
   NestedNameSpecifier*
   TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
                                       const NamespaceDecl* Namesp) {
+    while (Namesp && Namesp->isInline()) {
+      // Ignore inline namespace;
+      Namesp = dyn_cast_or_null<NamespaceDecl>(Namesp->getDeclContext());
+    }
+    if (!Namesp) return 0;
+
     bool FullyQualified = true; // doesn't matter, DeclContexts are namespaces
     return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, Namesp,
                                                            FullyQualified),

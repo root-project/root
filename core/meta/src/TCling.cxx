@@ -2318,8 +2318,7 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
             // Since the point of instantiation is invalid, we 'guess' that
             // the 'instantiation' of the forwarded type appended in
             // findscope.
-            bool isStd = tmpltDecl->getDeclContext()->Equals(fInterpreter->getSema().getStdNamespace());
-            if (isStd && TClassEdit::STLKind(tmpltDecl->getName().data()) != 0) {
+            if (ROOT::TMetaUtils::IsSTLCont(*tmpltDecl)) {
                // For STL Collection we return false.
                SetClassAutoloading(storeAutoload);
                return kFALSE;
