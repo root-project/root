@@ -698,7 +698,7 @@ D: class TSPlot
 
 N: Timur Pocheptsov
 E: Timur.Pocheptsov@cern.ch
-D: Advanced OpenGL viewer.
+D: OpenGL viewer, gl-pad, ROOT browser for iOS, graphics back-end for OS X.
 
 N: Witold Pokorski
 E: Witold.Pokorski@cern.ch
