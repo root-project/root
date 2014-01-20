@@ -1,13 +1,230 @@
+#include <cassert>
+#include <vector>
+
 #include "TPad.h"
 #include "TPoint.h"
 #include "TPadPainter.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include "TMath.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
 const Int_t kPXY = 1002;
 static TPoint gPXY[kPXY];
 
+
+namespace {
+
+//All asserts were commented, since ROOT's build system does not use -DNDEBUG for gpad module (with --build=release).
+
+typedef std::vector<TPoint>::size_type size_type;
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
+{
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   if (!nPoints)
+      return;
+
+   //assert(pad != 0 && "ConvertPoints, parameter 'pad' is null");
+   //assert(x != 0 && "ConvertPoints, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPoints, parameter 'y' is null");
+
+   dst.resize(nPoints);
+   
+   for (unsigned i = 0; i < nPoints; ++i) {
+      dst[i].fX = pad->XtoPixel(x[i]);
+      dst[i].fY = pad->YtoPixel(y[i]);
+   }
+}
+
+//______________________________________________________________________________
+void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin, SCoord_t yMax, SCoord_t yLast)
+{
+   //assert(points.size() != 0 && "MergePointsX, parameter 'points' is an empty vector, should contain at least 1 point already");
+   //assert(nMerged > 1 && "MergePointsX, nothing to merge");
+   
+   const TPoint &firstPoint = points.back();
+   
+   if (nMerged == 2) {
+      points.push_back(TPoint(firstPoint.fX, yLast));//We have not merge anything.
+   } else if (nMerged == 3) {
+      yMin == firstPoint.fY ? points.push_back(TPoint(firstPoint.fX, yMax)) : points.push_back(TPoint(firstPoint.fX, yMin));
+      points.push_back(TPoint(firstPoint.fX, yLast));
+   } else {
+      points.push_back(TPoint(firstPoint.fX, yMin));
+      points.push_back(TPoint(firstPoint.fX, yMax));
+      points.push_back(TPoint(firstPoint.fX, yLast));
+   }
+}
+
+//______________________________________________________________________________
+size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin, SCoord_t xMax, SCoord_t xLast, size_type first)
+{
+   //assert(nMerged > 1 && "MergePointsInplaceY, nothing to merge");
+   //assert(first < dst.size() && "MergePointsInplaceY, parameter 'first' is out of range");
+   //assert(dst.size() - first >= nMerged && "MergePointsInplaceY, invalid index 'first + nMerged'");
+   
+   //Indices below are _valid_ - see asserts above.
+   
+   const TPoint &firstPoint = dst[first];//This point is never updated.
+   
+   if (nMerged == 2) {
+      dst[first + 1].fX = xLast;
+      dst[first + 1].fY = firstPoint.fY;
+   } else if (nMerged == 3) {
+      dst[first + 1].fX = xMin == firstPoint.fX ? xMax : xMin;
+      dst[first + 1].fY = firstPoint.fY;
+      dst[first + 2].fX = xLast;
+      dst[first + 2].fY = firstPoint.fY;
+   } else {
+      dst[first + 1].fX = xMin;
+      dst[first + 1].fY = firstPoint.fY;
+      dst[first + 2].fX = xMax;
+      dst[first + 2].fY = firstPoint.fY;
+      dst[first + 3].fX = xLast;
+      dst[first + 3].fY = firstPoint.fY;
+      nMerged = 4;//Adjust the shift.
+   }
+   
+   return nMerged;
+}
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
+{
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   //assert(pad != 0 && "ConvertPointsAndMergePassX, parameter 'pad' is null");
+   //assert(x != 0 && "ConvertPointsAndMergePassX, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPointsAndMergePassX, parameter 'y' is null");
+
+   //The "first" pass along X axis.
+   TPoint currentPoint;
+   SCoord_t yMin = 0, yMax = 0, yLast = 0;
+   unsigned nMerged = 0;
+   
+   //The first pass along X.
+   for (unsigned i = 0; i < nPoints;) {
+      currentPoint.fX = SCoord_t(pad->XtoPixel(x[i]));
+      currentPoint.fY = SCoord_t(pad->YtoPixel(y[i]));
+      
+      yMin = currentPoint.fY;
+      yMax = yMin;
+
+      dst.push_back(currentPoint);
+      bool merged = false;
+      nMerged = 1;
+      
+      for (unsigned j = i + 1; j < nPoints; ++j) {
+         const SCoord_t newX = pad->XtoPixel(x[j]);
+
+         if (newX == currentPoint.fX) {
+            yLast = pad->YtoPixel(y[j]);
+            yMin = TMath::Min(yMin, yLast);
+            yMax = TMath::Max(yMax, yLast);//We continue.
+            ++nMerged;
+         } else {
+            if (nMerged > 1)
+               MergePointsX(dst, nMerged, yMin, yMax, yLast);
+            merged = true;
+            break;
+         }
+      }
+      
+      if (!merged && nMerged > 1)
+         MergePointsX(dst, nMerged, yMin, yMax, yLast);
+      
+      i += nMerged;
+   }
+}
+
+//______________________________________________________________________________
+void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
+{
+   //assert(dst.size() != 0 && "ConvertPointsAndMergeInplacePassY, nothing to merge");
+
+   //This pass is a bit more complicated, since we have
+   //to 'compact' in-place.
+
+   size_type i = 0;
+   for (size_type j = 1, nPoints = dst.size(); i < nPoints;) {
+      //i is always less than j, so i is always valid here.
+      const TPoint &currentPoint = dst[i];
+      
+      SCoord_t xMin = currentPoint.fX;
+      SCoord_t xMax = xMin;
+      SCoord_t xLast = 0;
+      
+      bool merged = false;
+      size_type nMerged = 1;
+      
+      for (; j < nPoints; ++j) {
+         const TPoint &nextPoint = dst[j];
+         
+         if (nextPoint.fY == currentPoint.fY) {
+            xLast = nextPoint.fX;
+            xMin = TMath::Min(xMin, xLast);
+            xMax = TMath::Max(xMax, xLast);
+            ++nMerged;//and we continue ...
+         } else {
+            if (nMerged > 1)
+               nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
+            merged = true;
+            break;
+         }
+      }
+      
+      if (!merged && nMerged > 1)
+         nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
+      
+      i += nMerged;
+      
+      if (j < nPoints) {
+         dst[i] = dst[j];
+         ++j;
+      } else
+        break;
+   }
+
+   dst.resize(i);
+}
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
+{
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   if (!nPoints)
+      return;
+
+   //assert(pad != 0 && "ConvertPointsAndMerge, parameter 'pad' is null");
+   //assert(threshold != 0 && "ConvertPointsAndMerge, parameter 'threshold' must be > 0");
+   //assert(x != 0 && "ConvertPointsAndMerge, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPointsAndMerge, parameter 'y' is null");
+
+   dst.clear();
+   dst.reserve(threshold);
+
+   ConvertPointsAndMergePassX(pad, nPoints, x, y, dst);
+   
+   if (dst.size() < threshold)
+      return;
+
+   ConvertPointsAndMergeInplacePassY(dst);
+}
+
+}
 
 ClassImp(TPadPainter)
 
