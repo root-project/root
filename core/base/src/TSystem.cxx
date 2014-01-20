@@ -3349,7 +3349,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" -c -p ");
    if (produceRootmap) {
-      rcling += " -rml " + libname + " -rmf " + libmapfilename + " ";
+      rcling += " -rml " + libname + " -rmf \"" + libmapfilename + "\" ";
    }
    rcling.Append(GetIncludePath()).Append(" -D__ACLIC__ ");
    if (produceRootmap) {
