@@ -371,8 +371,6 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
                                             std::istreambuf_iterator<char>());
          inlinedHeader += headerFileAsStr;
       }
-      // ROOT-5657
-      // Temporary fix, waiting for the pcms.
       // Recover old genreflex behaviour, i.e. do not print warnings due to glitches
       // in the headers at runtime. This is not synonym of ignoring warnings as they
       // will be printed at dictionary generation time.
@@ -380,26 +378,9 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
       // way to express as a pragma the option "-Wno-deprecated" the
       // _BACKWARD_BACKWARD_WARNING_H macro, used to avoid to go through
       // backward/backward_warning.h.
-      // The definition of the preprocessor macro ROOT_DICT_PRINT_WARNINGS re-enables
-      // the warning printing at runtime. It is supposed to be used only for debugging
-      // purposes.
-      payloadCode+="#ifndef ROOT_DICT_PRINT_WARNINGS\n"
-         "#pragma clang diagnostic push\n"
-         "#pragma clang diagnostic ignored \"-Wall\"\n"
-         "#pragma clang diagnostic ignored \"-Wextra\"\n"
-         "#pragma clang diagnostic ignored \"-Wpedantic\"\n"
-         "#pragma clang diagnostic warning \"-Wno-deprecated\"\n"
-         "#pragma clang diagnostic ignored \"-Wattributes\"\n"
-         "#pragma clang diagnostic ignored \"-Wdeprecated-register\"\n"
-         "#pragma clang diagnostic ignored \"-Wconstexpr-not-const\"\n"
-         
-         "#define _BACKWARD_BACKWARD_WARNING_H\n"
-         "#endif\n"+
+      payloadCode+="#define _BACKWARD_BACKWARD_WARNING_H\n"+
          inlinedHeader+"\n"
-         "#ifndef ROOT_DICT_PRINT_WARNINGS\n"
-         "#undef  _BACKWARD_BACKWARD_WARNING_H\n"
-         "#pragma clang diagnostic pop\n"
-         "#endif\n";
+         "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
    }
 
 

@@ -1142,7 +1142,29 @@ void TCling::RegisterModule(const char* modulename,
          fInterpreter->loadModuleForHeader(*hdr);
    }
 
-   fInterpreter->parseForModule(code.Data());
+   // For now we disable diagnostics because we saw them already at
+   // dictionary generation time. That won't be an issue with the PCMs.
+   #if defined(R__MUST_REVISIT)
+      #if R__MUST_REVISIT(6,2)
+         Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
+      #endif
+   #endif
+   DiagnosticsEngine& Diag = fInterpreter->getSema().getDiagnostics();
+   bool oldVal = Diag.getSuppressAllDiagnostics();
+   Diag.setSuppressAllDiagnostics();
+   
+   cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
+   
+   assert(cling::Interpreter::kSuccess == compRes &&
+                    "Payload code of a dictionary could not be parsed correctly.");
+   if (compRes!=cling::Interpreter::kSuccess){
+      Warning("TCling::RegisterModule",
+              "Problems declaring payload for module %s.", modulename) ;
+   }   
+   Diag.setSuppressAllDiagnostics(oldVal);   
+
+   // End of portion to be revisited
+   
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
