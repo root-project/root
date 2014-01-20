@@ -102,8 +102,8 @@ namespace {
    };
 }
 
+static thread_local TClass::ENewType    fgCallingNew = TClass::kRealNew;  //Intent of why/how TClass::New() is called
 Int_t TClass::fgClassCount;
-TClass::ENewType TClass::fgCallingNew = kRealNew;
 
 struct ObjRepoValue {
    ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
