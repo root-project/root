@@ -531,6 +531,16 @@ void TMVA::MethodBDT::ProcessOptions()
          Log() << kWARNING << "Regression Trees do not work with Separation type other than <RegressionVariance> --> I will use it instead" << Endl;
          fSepType = NULL;
       }
+      if (fUseFisherCuts){
+	Log() << kWARNING << "Sorry, UseFisherCuts is not available for regression analysis, I will ignore it!" << Endl;
+	fUseFisherCuts = kFALSE;
+      }
+      if (fNCuts < 0) {
+	Log() << kWARNING << "Sorry, the option of nCuts<0 using a more elaborate node splitting algorithm " << Endl;
+	Log() << kWARNING << "is not implemented for regression analysis ! " << Endl;
+	Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting"<<Endl;
+	fNCuts=20;
+      }
    }
    if (fRandomisedTrees){
       Log() << kINFO << " Randomised trees use no pruning" << Endl;
@@ -538,6 +548,12 @@ void TMVA::MethodBDT::ProcessOptions()
       //      fBoostType   = "Bagging";
    }
 
+   if (fUseFisherCuts) {
+     Log() << kWARNING << "Sorry, when using the option UseFisherCuts, the other option nCuts<0 (i.e. using" << Endl;
+     Log() << kWARNING << " a more elaborate node splitting algorithm) is not implemented. I will switch o " << Endl;
+     Log() << kWARNING << "--> I switch do default nCuts = 20 and use standard node splitting WITH possible Fisher criteria"<<Endl;
+     fNCuts=20;
+   }
    
    if (fNTrees==0){
       Log() << kERROR << " Zero Decision Trees demanded... that does not work !! "
