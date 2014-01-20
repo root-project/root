@@ -2852,9 +2852,12 @@ void addComplexClassificationTests( UnitTestSuite& TMVA_test, bool full=true )
    TMVA_test.addTest(new MethodUnitTestWithComplexData(trees, prep, TMVA::Types::kSVM, "SVM", "Gamma=0.4:Tol=0.001" , 0.955, 0.975) );
 }
 
+//#include <fenv.h>
 
 int main(int argc, char **argv)
 {
+
+//feenableexcept (FE_DIVBYZERO | FE_OVERFLOW | FE_INVALID);
 
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
