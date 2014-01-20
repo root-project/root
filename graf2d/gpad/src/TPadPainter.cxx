@@ -201,6 +201,13 @@ void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
 template<typename T>
 void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
 {
+   //This is a quite simple algorithm, using the fact, that after conversion many subsequent vertices
+   //can have the same 'x' or 'y' coordinate and this part of a polygon will look like a line
+   //on the screen.
+   //Please NOTE: even if there are some problems (like invalid polygons), the algorithm can be
+   //fixed (I'm not sure at the moment if it's important) and remembering the order of yMin/yMax or xMin/xMax (see
+   //aux. functions above) - this should help if there any problems.
+
    //I'm using 'pad' pointer to get rid of this damned gPad.
    //Unfortunately, TPadPainter itself still has to use it.
    //But at least this code does not have to be fixed.
@@ -556,7 +563,7 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
 void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
    // Paint filled area.
-
+/*
    TPoint *pxy = &gPXY[0];
    if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    Int_t fillstyle = gVirtualX->GetFillStyle();
@@ -572,6 +579,29 @@ void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
       gVirtualX->DrawFillArea(n,pxy);
    }
    if (n >= kPXY) delete [] pxy;
+*/
+   if (n < 3)
+      return;
+   
+   std::vector<TPoint> xy;
+   
+   const Int_t threshold = unsigned(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
+                                    gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
+      return;
+
+   if (n < threshold)
+      ConvertPoints(gPad, n, x, y, xy);
+   else
+      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
+
+   if (!gVirtualX->GetFillStyle())//We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
+      xy.push_back(xy.front());
+   
+   if (xy.size() > 2)
+      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
+
 }
 
 
@@ -579,7 +609,7 @@ void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
    // Paint filled area.
-
+/*
    TPoint *pxy = &gPXY[0];
    if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    Int_t fillstyle = gVirtualX->GetFillStyle();
@@ -595,6 +625,29 @@ void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
       gVirtualX->DrawFillArea(n,pxy);
    }
    if (n >= kPXY) delete [] pxy;
+*/
+   // Paint filled area.
+   if (n < 3)
+      return;
+   
+   std::vector<TPoint> xy;
+
+   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
+                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
+      return;
+
+   if (n < threshold)
+      ConvertPoints(gPad, n, x, y, xy);
+   else
+      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
+
+   if (!gVirtualX->GetFillStyle())//We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
+      xy.push_back(xy.front());
+   
+   if (xy.size() > 2)
+      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
 }
 
 
@@ -602,7 +655,7 @@ void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
    // Paint polyline.
-
+/*
    TPoint *pxy = &gPXY[0];
    if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    for (Int_t i=0; i<n; i++) {
@@ -611,6 +664,22 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
    }
    gVirtualX->DrawPolyLine(n,pxy);
    if (n >= kPXY) delete [] pxy;
+*/
+   std::vector<TPoint> xy;
+
+   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
+                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
+      return;
+
+   if (n < threshold)
+      ConvertPoints(gPad, n, x, y, xy);
+   else
+      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
+
+   if (xy.size() > 1)
+      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
 }
 
 
@@ -618,7 +687,7 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
    // Paint polyline.
-
+/*
    TPoint *pxy = &gPXY[0];
    if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
    for (Int_t i=0; i<n; i++) {
@@ -626,7 +695,22 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
       pxy[i].fY = gPad->YtoPixel(y[i]);
    }
    gVirtualX->DrawPolyLine(n,pxy);
-   if (n >= kPXY) delete [] pxy;
+   if (n >= kPXY) delete [] pxy;*/
+   std::vector<TPoint> xy;
+
+   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
+                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
+      return;
+
+   if (n < threshold)
+      ConvertPoints(gPad, n, x, y, xy);
+   else
+      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
+
+   if (xy.size() > 1)
+      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
 }
 
 
