@@ -17,7 +17,7 @@ OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
 ifeq ($(CXX11),yes)
-CXX11FLAGS    = -std=c++11
+CXX11FLAGS    = -std=c++11 -Wno-deprecated-declarations
 endif
 
 # Compiler:
