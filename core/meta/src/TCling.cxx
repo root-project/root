@@ -848,6 +848,28 @@ namespace {
 //
 
 //______________________________________________________________________________
+namespace{
+
+   // An instance of this class causes the diagnostics of clang to be suppressed
+   // during its lifetime
+   class clangDiagSuppr {
+   public:
+      clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){         
+         fOldDiagValue = fDiagEngine.getSuppressAllDiagnostics();
+         fDiagEngine.setSuppressAllDiagnostics();
+      }
+         
+      ~clangDiagSuppr() {
+         fDiagEngine.setSuppressAllDiagnostics(fOldDiagValue); 
+      }
+   private:
+      clang::DiagnosticsEngine& fDiagEngine;
+      bool fOldDiagValue;         
+   };
+   
+}
+
+//______________________________________________________________________________
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
@@ -1142,28 +1164,27 @@ void TCling::RegisterModule(const char* modulename,
          fInterpreter->loadModuleForHeader(*hdr);
    }
 
+   { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
    // dictionary generation time. That won't be an issue with the PCMs.
-   #if defined(R__MUST_REVISIT)
-      #if R__MUST_REVISIT(6,2)
-         Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
-      #endif
-   #endif
-   DiagnosticsEngine& Diag = fInterpreter->getSema().getDiagnostics();
-   bool oldVal = Diag.getSuppressAllDiagnostics();
-   Diag.setSuppressAllDiagnostics();
-   
-   cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
-   
-   assert(cling::Interpreter::kSuccess == compRes &&
-                    "Payload code of a dictionary could not be parsed correctly.");
-   if (compRes!=cling::Interpreter::kSuccess){
-      Warning("TCling::RegisterModule",
-              "Problems declaring payload for module %s.", modulename) ;
-   }   
-   Diag.setSuppressAllDiagnostics(oldVal);   
 
-   // End of portion to be revisited
+      clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
+   
+      #if defined(R__MUST_REVISIT)
+      #if R__MUST_REVISIT(6,2)
+      Warning("TCling::RegisterModule","Diagnostics suppression should be gone by now.");
+      #endif
+      #endif      
+
+      cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
+
+      assert(cling::Interpreter::kSuccess == compRes &&
+                     "Payload code of a dictionary could not be parsed correctly.");
+      if (compRes!=cling::Interpreter::kSuccess){
+         Warning("TCling::RegisterModule",
+               "Problems declaring payload for module %s.", modulename) ;
+      }
+   }
    
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
@@ -3464,11 +3485,20 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             file.close();
             return -3; // old format
          }
-         if (line.substr(0, 9) == "{ decls }") {
+         if (line.substr(0, 9) == "{ decls }") {                        
             // forward declarations
+
+            // this is also a scope where diagnostics are off for mac os 10.9
+            
+            #ifdef R__MACOSX
+            #if defined(MAC_OS_X_VERSION_10_9)
+            clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
+            #endif
+            #endif
+            
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
-               if (line == "") continue;
+               if (line == "") continue;               
                cling::Transaction* T = 0;
                cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
                assert(cling::Interpreter::kSuccess == compRes &&
