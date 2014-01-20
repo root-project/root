@@ -3,7 +3,8 @@
 class Holder {
 public:
   Wrapper<Double32_t> fValue;
-
+ 
+  virtual ~Holder() {}
   ClassDef(Holder,4);
 };
 

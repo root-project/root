@@ -4,6 +4,7 @@ class Holder {
 public:
   Wrapper<double> fValue;
   Wrapper<long long> fIntValue;
+  virtual ~Holder() {}
   ClassDef(Holder,3);
 };
 
