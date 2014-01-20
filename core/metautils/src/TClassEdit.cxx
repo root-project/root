@@ -1065,6 +1065,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
                   string base(tname, 0, k);
                   if (base=="std") {
                      // std is not declared but is also ignored by CINT!
+                     // NOTE: this is probably no longer necessary.
                      tname += 5;
                      break;
                   } else {
