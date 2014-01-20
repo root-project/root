@@ -3275,7 +3275,8 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
    {
       const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
       if (parent) {
-         if (parent->getQualifiedNameAsString()=="std") {
+         if (parent->getDeclContext()->isTranslationUnit()
+             && parent->getQualifiedNameAsString()=="std") {
             return true;
          }
       }
