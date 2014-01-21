@@ -478,7 +478,7 @@ ifeq ($(PLATFORM),ios)
    POSTBIN       += staticlib
 endif
 
-POSTBIN       += onepcm
+POSTBIN       += etc/allDict.cxx.pch
 
 MAKEDEP        = $(RMKDEP)
 MAKELIB        = $(ROOT_SRCDIR)/build/unix/makelib.sh $(MKLIBOPTIONS)
@@ -657,7 +657,7 @@ endif
                 clean distclean distclean-xrootd maintainer-clean compiledata \
                 version html changelog install uninstall showbuild \
                 releasenotes staticlib static map debian redhat skip postbin \
-                showit help runtimedirs plugins-ios onepcm
+                showit help runtimedirs plugins-ios
 
 ifneq ($(findstring map, $(MAKECMDGOALS)),)
 .NOTPARALLEL:
@@ -1055,7 +1055,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-onepcm: $(ROOTCINTTMPDEP) $(ORDER_) $(ALLLIBS)
+etc/allDict.cxx.pch: $(ROOTCINTTMPDEP) $(ALLHDRS) $(ORDER_) $(ALLLIBS)
 	@$(MAKEONEPCM)
 
 ifeq ($(BUILDX11),yes)
