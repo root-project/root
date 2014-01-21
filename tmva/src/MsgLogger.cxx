@@ -97,7 +97,8 @@ TMVA::MsgLogger::MsgLogger( EMsgType minType )
 TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
    : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
      std::ostringstream(),
-     TObject()
+     TObject(),
+     fObjSource(0);
 {
    // copy constructor
    fgInstanceCounter++;
