@@ -561,8 +561,8 @@ namespace TMVA {
       PDF*             fMVAPdfS;             // signal MVA PDF
       PDF*             fMVAPdfB;             // background MVA PDF
 
-      TH1D*            fmvaS;                // PDFs of MVA distribution (signal)
-      TH1D*            fmvaB;                // PDFs of MVA distribution (background)
+      //      TH1D*            fmvaS;                // PDFs of MVA distribution (signal)
+      //      TH1D*            fmvaB;                // PDFs of MVA distribution (background)
       PDF*             fSplS;                // PDFs of MVA distribution (signal)
       PDF*             fSplB;                // PDFs of MVA distribution (background)
       TSpline*         fSpleffBvsS;          // splines for signal eff. versus background eff.
