@@ -19,10 +19,15 @@ else()
   list(REMOVE_ITEM rpdutilsrcs src/globus.cxx)
 endif()
 
+if(MACOSX_SSL_DEPRECATED)
+  set_source_files_properties(src/rpdutils.cxx COMPILE_FLAGS "-Wno-deprecated-declarations" )
+endif()
+
 #---Authentication methods-----------------------------------------------------------------
 if(shadowpw)
   add_definitions(-DR__SHADOWPW)
 endif()
+
 
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rpdutil STATIC ${rpdutilsrcs})

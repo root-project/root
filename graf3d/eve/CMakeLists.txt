@@ -25,6 +25,10 @@ set(headers2 TEveArrow*.h TEveBox*.h TEveCalo*.h
              TEveRGBAPalette*.h TEveScalableStraightLineSet*.h TEveStraightLineSet*.h
              TEveText*.h TEveTrack*.h TEveTriangleSet*.h TEveJetCone*.h
              TEvePlot3D*.h)
+             
+if(MACOSX_GLU_DEPRECATED)
+  add_definitions(-Wno-deprecated-declarations)
+endif()
 
 ROOT_GENERATE_DICTIONARY(G__Eve1 ${headers1} LINKDEF LinkDef1.h)
 ROOT_GENERATE_DICTIONARY(G__Eve2 ${headers2} LINKDEF LinkDef2.h)

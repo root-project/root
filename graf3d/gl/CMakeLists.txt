@@ -26,6 +26,10 @@ else()
   set(gllibs ${OPENGL_LIBRARIES})
 endif()
 
+if(MACOSX_GLU_DEPRECATED)
+  add_definitions(-Wno-deprecated-declarations)
+endif()
+
 set_source_files_properties(src/TGLFontManager.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 set_source_files_properties(src/TGLText.cxx PROPERTIES COMPILE_FLAGS "${FTGL_CFLAGS}")
 
