@@ -722,7 +722,6 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
    
    //      for (Int_t ibin=1;ibin<=nBins;ibin++) std::cout << " cutvalues[" << ibin<<"]="<<mvaSC->GetBinLowEdge(ibin) << "  " << mvaSC->GetBinCenter(ibin) << std::endl;
    Double_t mvaCutOrientation=1; // 1 if mva > mvaCut --> Signal and -1 if mva < mvaCut (i.e. mva*-1 > mvaCut*-1) --> Signal
-   Double_t SoBRight=1, SoBLeft=1;
    for (Int_t ibin=1;ibin<=nBins;ibin++){ 
       mvaSC->SetBinContent(ibin,mvaS->GetBinContent(ibin)+mvaSC->GetBinContent(ibin-1));
       mvaBC->SetBinContent(ibin,mvaB->GetBinContent(ibin)+mvaBC->GetBinContent(ibin-1));
@@ -740,10 +739,9 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
          separationGain = sepGain->GetSeparationGain(sSel,bSel,sTot,bTot);
          //         mvaCut=mvaSC->GetBinCenter(ibin);
          mvaCut=mvaSC->GetBinLowEdge(ibin+1);
-         if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
+	 //         if (sSel/bSel > (sTot-sSel)/(bTot-bSel)) mvaCutOrientation=-1;
+         if (sSel*(bTot-bSel) > (sTot-sSel)*bSel) mvaCutOrientation=-1;
          else                                     mvaCutOrientation=1;
-         SoBRight=sSel/bSel;
-         SoBLeft=(sTot-sSel)/(bTot-bSel);
          sSelCut=sSel;
          bSelCut=bSel;
          //         std::cout << "new cut at " << mvaCut << "with s="<<sTot-sSel << " b="<<bTot-bSel << std::endl;
@@ -767,19 +765,7 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
          
    }
    
-   // if (SoBRight<1 && SoBLeft<1) {
-   //    if (mvaCutOrientation == -1) mvaCut = mvaSC->GetBinCenter(1)-mvaSC->GetBinWidth(1);
-   //    if (mvaCutOrientation ==  1) mvaCut = mvaSC->GetBinCenter(nBins)+mvaSC->GetBinWidth(nBins);
-   // } else if (SoBRight>1 && SoBLeft>1) {
-   //    if (mvaCutOrientation ==  1) mvaCut = mvaSC->GetBinCenter(1)-mvaSC->GetBinWidth(1);
-   //    if (mvaCutOrientation == -1) mvaCut = mvaSC->GetBinCenter(nBins)+mvaSC->GetBinWidth(nBins);
-   // }
-   
-   //if (mvaCut > maxMVA || mvaCut < minMVA){
    if (0){
-      
-
-   
       double parentIndex=sepGain->GetSeparationIndex(sTot,bTot);
       double leftIndex  =sepGain->GetSeparationIndex(sSelCut,bSelCut);
       double rightIndex  =sepGain->GetSeparationIndex(sTot-sSelCut,bTot-bSelCut);
@@ -802,7 +788,6 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
               << " idx="<<fCurrentMethodIdx
               << " cutOrientation="<<mvaCutOrientation
               << std::endl;
-    std::cout << "S/B right="<<SoBRight << " left="<<SoBLeft<<std::endl;
    }
    method->SetSignalReferenceCut(mvaCut);
    method->SetSignalReferenceCutOrientation(mvaCutOrientation);
