@@ -88,6 +88,7 @@ TMVA::MethodTMlpANN::MethodTMlpANN( const TString& jobName,
                                     TDirectory* theTargetDir) :
    TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption, theTargetDir ),
    fMLP(0),
+   fLocalTrainingTree(0),
    fNcycles(100),
    fValidationFraction(0.5),
    fLearningMethod( "" )
@@ -101,6 +102,7 @@ TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
                                     TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile, theTargetDir ),
    fMLP(0),
+   fLocalTrainingTree(0),
    fNcycles(100),
    fValidationFraction(0.5),
    fLearningMethod( "" )
