@@ -1093,8 +1093,12 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
    fBinaryTree->SetPeriode( GetNvar() );
    fBinaryTree->CalcStatistics();
    fBinaryTree->CountNodes();
-   fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
-   fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
+   if (fBinaryTree->GetSumOfWeights( Types::kSignal ) > 0)
+     fScaleS = 1.0/fBinaryTree->GetSumOfWeights( Types::kSignal );
+   else fScaleS = 1;
+   if (fBinaryTree->GetSumOfWeights( Types::kBackground ) > 0)
+     fScaleB = 1.0/fBinaryTree->GetSumOfWeights( Types::kBackground );
+   else fScaleB = 1;
    Log() << kINFO << "signal and background scales: " << fScaleS << " " << fScaleB << Endl;
    CalcAverages();
    SetVolumeElement();
