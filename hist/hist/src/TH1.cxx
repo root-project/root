@@ -638,7 +638,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
    Build();
-   if (nbins <= 0) nbins = 1;
+   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    fXaxis.Set(nbins,xlow,xup);
    fNcells = fXaxis.GetNbins()+2;
 }
@@ -662,7 +662,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Build();
-   if (nbins <= 0) nbins = 1;
+   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
@@ -687,7 +687,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 //
 //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    Build();
-   if (nbins <= 0) nbins = 1;
+   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;

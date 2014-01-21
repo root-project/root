@@ -64,7 +64,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 //*-*              ==================================================
 
    fDimension   = 3;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (nbinsz <= 0) nbinsz = 1;
    fYaxis.Set(nbinsy,ylow,yup);
    fZaxis.Set(nbinsz,zlow,zup);
@@ -83,7 +83,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
 //*-*            =======================================================
    fDimension   = 3;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (nbinsz <= 0) nbinsz = 1;
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
@@ -104,7 +104,7 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 //*-*-*-*-*-*-*-*Normal constructor for variable bin size 3-D histograms*-*-*-*
 //*-*            =======================================================
    fDimension   = 3;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (nbinsz <= 0) nbinsz = 1;
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
