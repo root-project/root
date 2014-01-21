@@ -64,8 +64,6 @@ ALLHDRS      += $(patsubst $(MODDIRI)/%.h,include/%.h,$(GLH))
 ALLLIBS      += $(GLLIB)
 ALLMAPS      += $(GLMAP)
 
-FTGLINC		:= -I$(MODDIRI)/../../ftgl/inc
-
 # include all dependency files
 INCLUDEFILES += $(GLDEP)
 
@@ -115,11 +113,11 @@ $(GLDS):        CINTFLAGS += $(OPENGLINCDIR:%=-I%)
 endif
 
 $(call stripsrc,$(GLDIRS)/TGLText.o): $(FREETYPEDEP)
-$(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(call stripsrc,$(GLDIRS)/TGLText.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
 
 $(call stripsrc,$(GLDIRS)/TGLFontManager.o): $(FREETYPEDEP)
-$(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
-$(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS) $(FTGLINC)
+$(call stripsrc,$(GLDIRS)/TGLFontManager.o): CXXFLAGS += $(FREETYPEINC) $(FTGLINC) $(FTGLINCDIR:%=-I%) $(FTGLCPPFLAGS)
+$(GLO): CXXFLAGS += $(GLEWINCDIR:%=-I%) $(GLEWCPPFLAGS)
 
 # Optimize dictionary with stl containers.
 $(GLDO): NOOPT = $(OPT)

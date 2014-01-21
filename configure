@@ -2954,8 +2954,8 @@ if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
     opengllibdir=$found_dir
 
     if test ! "x$macosx105" = "x" && test "x$macosx106" = "x" ; then
-	# Mac OS X 10.5 problem
-	opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib -lGL"
+       # Mac OS X 10.5 problem
+       opengllib="-dylib_file /usr/X11R6/lib/libGL.dylib:/usr/X11R6/lib/libGL.dylib -lGL"
     fi
 
     skipchecklibcxxcompat="yes"
@@ -3001,7 +3001,7 @@ check_explicit "$enable_opengl" "$enable_opengl_explicit" \
 # (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
 #
 if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
-   ftglincdir=include
+   ftglincdir=
    ftgllibdir=-Llib
    ftgllibs=-lFTGL
    if test "x$enable_builtin_ftgl" = "x" || \
@@ -3060,7 +3060,7 @@ if test "x$platform" = "xwin32"; then
    glewlibs=lib/libGLEW.lib
 
    enable_builtin_ftgl="yes"
-   ftglincdir=include
+   ftglincdir=
    ftgllibdir=
    ftgllibs=lib/libFTGL.lib
 fi
