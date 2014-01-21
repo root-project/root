@@ -605,6 +605,7 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       Log() << kFATAL << "Selected pruning method not yet implemented "
             << Endl;
    }
+
    if(!tool) return 0.0;
 
    tool->SetPruneStrength(GetPruneStrength());
@@ -638,10 +639,8 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       this->CountNodes();
    }
    
-
    delete tool;
    delete info;
-
    
    return pruneStrength;
 };
