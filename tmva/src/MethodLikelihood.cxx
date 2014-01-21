@@ -144,8 +144,13 @@ TMVA::MethodLikelihood::MethodLikelihood( const TString& jobName,
    fPDFSig        ( 0 ),
    fPDFBgd        ( 0 ),
    fNsmooth       ( 2 ),
+   fNsmoothVarS   ( 0 ),
+   fNsmoothVarB   ( 0 ),
+   fAverageEvtPerBinVarS (0), 
+   fAverageEvtPerBinVarB (0),
    fAverageEvtPerBin( 0 ),
-   fKDEfineFactor ( 0 )
+   fKDEfineFactor ( 0 ),
+   fInterpolateString(0)
 {
    // standard constructor
 }
@@ -166,8 +171,13 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
    fPDFSig        ( 0 ),
    fPDFBgd        ( 0 ),
    fNsmooth       ( 2 ),
+   fNsmoothVarS   ( 0 ),
+   fNsmoothVarB   ( 0 ),
+   fAverageEvtPerBinVarS (0), 
+   fAverageEvtPerBinVarB (0),
    fAverageEvtPerBin( 0 ),
-   fKDEfineFactor ( 0 )
+   fKDEfineFactor ( 0 ),
+   fInterpolateString(0)
 {
    // construct likelihood references from file
 }
