@@ -76,7 +76,10 @@
    frame.origin = CGPoint();
 
    const CGSize imageSize = backgroundImage.size;
-   [backgroundImage drawInRect : frame fromRect : CGRectMake(0., 0., imageSize.width, imageSize.height) operation : NSCompositeSourceOver fraction : 1.];
+   [backgroundImage drawInRect : frame
+                    fromRect : CGRectMake(0., 0., imageSize.width, imageSize.height)
+                    operation : NSCompositeSourceOver
+                    fraction : 1.];
 }
 
 @end
