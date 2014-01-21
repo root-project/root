@@ -513,8 +513,20 @@ void HFit::GetDrawingRange(TMultiGraph * mg,  ROOT::Fit::DataRange & range) {
 void HFit::GetDrawingRange(TGraph2D * gr,  ROOT::Fit::DataRange & range) { 
    // get range for graph2D (used sub-set histogram)
    // N.B. : this is different than in previous implementation of TGraph2D::Fit. There range used was always(0,0)
-   TH1 * h1 = gr->GetHistogram();
-   if (h1) HFit::GetDrawingRange(h1, range);
+   // cannot use TGraph2D::GetHistogram which makes an interpolation
+   //TH1 * h1 = gr->GetHistogram();
+   //if (h1) HFit::GetDrawingRange(h1, range);
+   // not very efficient (t.b.i.)
+   if (range.Size(0) == 0)  { 
+      double xmin = gr->GetXmin(); 
+      double xmax = gr->GetXmax(); 
+      range.AddRange(0,xmin,xmax);
+   }
+   if (range.Size(1) == 0)  { 
+      double ymin = gr->GetYmin(); 
+      double ymax = gr->GetYmax(); 
+      range.AddRange(1,ymin,ymax);
+   }
 }
 
 void HFit::GetDrawingRange(THnBase * s1, ROOT::Fit::DataRange & range) { 
