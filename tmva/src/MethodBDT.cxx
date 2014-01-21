@@ -194,7 +194,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
-
+   , fHistoricBool(kFALSE) 
 {
    // the standard constructor for the "boosted decision trees"
    fMonitorNtuple = NULL;
@@ -248,6 +248,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fCtb_ss(0)
    , fCbb(0)
    , fDoPreselection(kFALSE)
+   , fHistoricBool(kFALSE) 
 {
    fMonitorNtuple = NULL;
    fSepType = NULL;
