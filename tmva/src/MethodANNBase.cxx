@@ -831,7 +831,13 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    fInvHessian.ResizeTo( nRows, nCols );
 
    // prepare an array to read in the values
-   Double_t* elements = new Double_t[nElements+10];
+   Double_t* elements;
+   if (nElements > std::numeric_limits<int>::max()-100){
+      Log() << kFATAL << "you tried to read a hessian matrix with " << nElements << " elements, --> too large, guess s.th. went wrong reading from the weight file" << Endl;
+      return;
+   } else {
+      elements = new Double_t[nElements+10];
+   }     
 
 
 
