@@ -62,7 +62,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH2","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
@@ -78,7 +78,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH2","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    fYaxis.Set(nbinsy,ylow,yup);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
 }
@@ -94,7 +94,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH2","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
@@ -111,7 +111,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH2","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor
@@ -128,7 +128,7 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
    fDimension   = 2;
    fScalefactor = 1;
    fTsumwy      = fTsumwy2 = fTsumwxy = 0;
-   if (nbinsy <= 0) nbinsy = 1;
+   if (nbinsy <= 0) {Warning("TH2","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
    if (ybins) fYaxis.Set(nbinsy,ybins);
    else       fYaxis.Set(nbinsy,0,1);
    fNcells      = fNcells*(nbinsy+2); // fNCells is set in the TH1 constructor.
