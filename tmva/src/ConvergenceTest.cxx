@@ -122,5 +122,5 @@ Float_t TMVA::ConvergenceTest::SpeedControl( UInt_t ofSteps )
       n++;
    }
 
-   return sum/Float_t(n);
+   return  n ? 0 : sum/Float_t(n);
 }
