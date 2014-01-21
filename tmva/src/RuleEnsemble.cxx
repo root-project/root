@@ -560,7 +560,7 @@ void TMVA::RuleEnsemble::MakeRules( const std::vector< const DecisionTree *> & f
       sumn2    += nendn*nendn;
       nrulesCheck += nrules;
    }
-   Double_t nmean = sumnendn/ntrees;
+   Double_t nmean = (ntrees>0) ? sumnendn/ntrees : 0;
    Double_t nsigm = TMath::Sqrt( gTools().ComputeVariance(sumn2,sumnendn,ntrees) );
    Double_t ndev = 2.0*(nmean-2.0-nsigm)/(nmean-2.0+nsigm);
    //
@@ -627,7 +627,7 @@ void TMVA::RuleEnsemble::MakeLinearTerms()
    fLinCoefficients.resize(nvars,0);
    fLinNorm.resize(nvars,0);
 
-   Double_t averageWeight = fRuleFit->GetNEveEff()/static_cast<Double_t>(neve);
+   Double_t averageWeight = neve ? fRuleFit->GetNEveEff()/static_cast<Double_t>(neve) : 0;
    // sort and find limits
    Double_t stdl;
 
@@ -861,16 +861,18 @@ void TMVA::RuleEnsemble::RuleResponseStats()
          }
       }
       // Fill tagging probabilities
-      fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
-      fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
-      fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
-      fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
-      fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
+      if (ntag>0 && neve > 0) { // should always be the case, but let's make sure and keep coverity quiet
+	 fRulePTag.push_back(Double_t(ntag)/Double_t(neve));
+	 fRulePSS.push_back(Double_t(nss)/Double_t(ntag));
+	 fRulePSB.push_back(Double_t(nsb)/Double_t(ntag));
+	 fRulePBS.push_back(Double_t(nbs)/Double_t(ntag));
+	 fRulePBB.push_back(Double_t(nbb)/Double_t(ntag));
+      }
       //
    }
-   fRuleFSig = static_cast<Double_t>(nsig)/static_cast<Double_t>(nsig+nbkg);
+   fRuleFSig = (nsig>0) ? static_cast<Double_t>(nsig)/static_cast<Double_t>(nsig+nbkg) : 0;
    for ( UInt_t v=0; v<nvars; v++) {
-      fRuleVarFrac[v] =  Double_t(varcnt[v])/Double_t(nrules);
+     fRuleVarFrac[v] =  (nrules>0) ? Double_t(varcnt[v])/Double_t(nrules) : 0;
    }
 }
 
