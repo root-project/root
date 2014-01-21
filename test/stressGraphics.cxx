@@ -366,7 +366,7 @@ void stressGraphics(Int_t verbose = 0)
    zoomfit       ();
    parallelcoord ();
    clonepad      ();
-   hbars         (); 
+   hbars         ();
    if (!gOptionR) {
       std::cout << "**********************************************************************" <<std::endl;
       if (!gTestsFailed) {
