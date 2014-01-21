@@ -233,8 +233,8 @@ int main(int argc, char** argv)
       hfile->SetCompressionLevel(comp);
 
       // Create histogram to show write_time in function of time
-      Float_t curtime = -0.5F;
-      Int_t ntime = nevent / printev;
+      Float_t curtime = 0.5F;
+      Int_t ntime = nevent / printev + 1;
       TH1F* htime = new TH1F("htime", "Real-Time to write versus time", ntime, 0, ntime);
       HistogramManager* hm = 0;
       if (hfill) {
