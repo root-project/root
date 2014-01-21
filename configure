@@ -3117,7 +3117,7 @@ check_explicit "$enable_opengl" "$enable_opengl_explicit" \
 # (see http://homepages.paradise.net.nz/henryj/code/index.html#FTGL)
 #
 if test ! "x$enable_opengl" = "xno" && test ! "x$platform" = "xwin32" ; then
-   ftglincdir=include
+   ftglincdir=
    ftgllibdir=-Llib
    ftgllibs=-lFTGL
    if test "x$enable_builtin_ftgl" = "x" || \
@@ -3176,7 +3176,7 @@ if test "x$platform" = "xwin32"; then
    glewlibs=lib/libGLEW.lib
 
    enable_builtin_ftgl="yes"
-   ftglincdir=include
+   ftglincdir=
    ftgllibdir=
    ftgllibs=lib/libFTGL.lib
 fi

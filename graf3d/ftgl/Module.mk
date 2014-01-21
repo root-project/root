@@ -23,12 +23,12 @@ FTGLLIB      := $(LPATH)/libFTGL.$(SOEXT)
 
 # used in the main Makefile
 # ALLHDRS     +=
-ALLLIBS     += $(FTGLLIB)
+ALLLIBS      += $(FTGLLIB)
 
 # include all dependency files
 INCLUDEFILES += $(FTGLDEP)
 
-FTGLINC		:= -I$(MODDIRI)
+FTGLINC		 := -I$(MODDIRI)
 
 ifeq ($(MACOSX_MINOR),3)
 FTGLLIBEXTRA += -lz
@@ -36,9 +36,6 @@ endif
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
-
-include/%.h:    $(FTGLDIRI)/%.h
-		cp $< $@
 
 $(FTGLLIB):     $(FTGLO) $(FREETYPEDEP) $(ORDER_) $(MAINLIBS) $(FTGLLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
