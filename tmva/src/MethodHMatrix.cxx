@@ -71,6 +71,10 @@ TMVA::MethodHMatrix::MethodHMatrix( const TString& jobName,
                                     const TString& theOption,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption, theTargetDir )
+  ,fInvHMatrixS(0) 
+  ,fInvHMatrixB(0) 
+  ,fVecMeanS(0)    
+  ,fVecMeanB(0)    
 {
    // standard constructor for the H-Matrix method
 }
@@ -80,6 +84,10 @@ TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
                                     const TString& theWeightFile,
                                     TDirectory* theTargetDir )
    : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile, theTargetDir )
+  ,fInvHMatrixS(0) 
+  ,fInvHMatrixB(0) 
+  ,fVecMeanS(0)    
+  ,fVecMeanB(0)    
 {
    // constructor from weight file
 }
