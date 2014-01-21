@@ -236,6 +236,7 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
          delete tmpEvents;
       }
       return 0;
+      delete tmpEvents;
    }
 
    return tmpEvents; // give back the newly created event collection (containing the transformed events)
