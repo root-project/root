@@ -990,9 +990,10 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          
          fisherCoeff = this->GetFisherCoefficients(eventSample, nFisherVars, mapVarInFisher);
          fisherOK = kTRUE;
-         delete [] useVarInFisher;
-         delete [] mapVarInFisher;
       }
+      delete [] useVarInFisher;
+      delete [] mapVarInFisher;
+
    }
 
 
