@@ -101,6 +101,7 @@ TMVA::DecisionTree::DecisionTree():
    fSepType        (NULL),
    fRegType        (NULL),
    fMinSize        (0),
+   fMinNodeSize    (1),
    fMinSepGain (0),
    fUseSearchTree(kFALSE),
    fPruneStrength(0),
