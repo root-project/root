@@ -122,6 +122,7 @@ TMVA::MethodDT::MethodDT( const TString& jobName,
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption, theTargetDir )
    , fTree(0)
+   , fSepType(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
@@ -146,6 +147,7 @@ TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           TDirectory* theTargetDir ) :
    TMVA::MethodBase( Types::kDT, dsi, theWeightFile, theTargetDir )
    , fTree(0)
+   , fSepType(0)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
