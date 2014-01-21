@@ -1643,8 +1643,10 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
    // the event for this decision tree.
   
    TMVA::DecisionTreeNode *current = this->GetRoot();
-   if (!current)
+   if (!current){
       Log() << kFATAL << "CheckEvent: started with undefined ROOT node" <<Endl;
+      return 0; //keeps covarity happy that doesn't know that kFATAL causes an exit
+   }
 
    while (current->GetNodeType() == 0) { // intermediate node in a (pruned) tree
       current = (current->GoesRight(*e)) ? 
