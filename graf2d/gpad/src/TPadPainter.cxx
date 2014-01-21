@@ -43,27 +43,28 @@ void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y, s
 }
 
 //______________________________________________________________________________
-void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin, SCoord_t yMax, SCoord_t yLast)
+inline void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin, SCoord_t yMax, SCoord_t yLast)
 {
    //assert(points.size() != 0 && "MergePointsX, parameter 'points' is an empty vector, should contain at least 1 point already");
    //assert(nMerged > 1 && "MergePointsX, nothing to merge");
    
-   const TPoint &firstPoint = points.back();
+   const SCoord_t firstPointX = points.back().fX;
+   const SCoord_t firstPointY = points.back().fY;
    
    if (nMerged == 2) {
-      points.push_back(TPoint(firstPoint.fX, yLast));//We have not merge anything.
+      points.push_back(TPoint(firstPointX, yLast));//We have not merge anything.
    } else if (nMerged == 3) {
-      yMin == firstPoint.fY ? points.push_back(TPoint(firstPoint.fX, yMax)) : points.push_back(TPoint(firstPoint.fX, yMin));
-      points.push_back(TPoint(firstPoint.fX, yLast));
+      yMin == firstPointY ? points.push_back(TPoint(firstPointX, yMax)) : points.push_back(TPoint(firstPointX, yMin));
+      points.push_back(TPoint(firstPointX, yLast));
    } else {
-      points.push_back(TPoint(firstPoint.fX, yMin));
-      points.push_back(TPoint(firstPoint.fX, yMax));
-      points.push_back(TPoint(firstPoint.fX, yLast));
+      points.push_back(TPoint(firstPointX, yMin));
+      points.push_back(TPoint(firstPointX, yMax));
+      points.push_back(TPoint(firstPointX, yLast));
    }
 }
 
 //______________________________________________________________________________
-size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin, SCoord_t xMax, SCoord_t xLast, size_type first)
+inline size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin, SCoord_t xMax, SCoord_t xLast, size_type first)
 {
    //assert(nMerged > 1 && "MergePointsInplaceY, nothing to merge");
    //assert(first < dst.size() && "MergePointsInplaceY, parameter 'first' is out of range");
