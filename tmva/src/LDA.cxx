@@ -89,8 +89,8 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
          m_muSignal[param] += inputSignalEvents[eventNumber][param];
       for (UInt_t eventNumber=0; eventNumber < numBackEvents; ++eventNumber)
          m_muBackground[param] += inputBackgroundEvents[eventNumber][param]/numBackEvents;
-      m_muSignal[param] /= numSignalEvents;
-      m_muBackground[param] /= numBackEvents;
+      if (numSignalEvents > 0) m_muSignal[param] /= numSignalEvents;
+      if (numBackEvents > 0 )  m_muBackground[param] /= numBackEvents;
    }
    fMu[0] = m_muBackground;
    fMu[1] = m_muSignal;
