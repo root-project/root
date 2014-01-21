@@ -753,6 +753,7 @@ void TMVA::MethodBDT::InitEventSample( void )
                firstZeroWeight = kFALSE;
                Log() << "Events with weight == 0 are going to be simply ignored " << Endl;
             }
+            delete event;
          }else{
             if (event->GetWeight() < 0) {
                fTrainWithNegWeights=kTRUE;
