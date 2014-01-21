@@ -106,6 +106,8 @@ TMVA::OptimizeConfigParameters::~OptimizeConfigParameters()
    gFOMvsIter->Write();
    h->Write();
 
+   delete [] x;
+   delete [] y;
    // delete fFOMvsIter;
 } 
 //_______________________________________________________________________
