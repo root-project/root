@@ -110,7 +110,7 @@ Long64_t     TXSockBuf::fgMemMax = 10485760; // Max allowed allocated memory [10
 TXSocket::TXSocket(const char *url, Char_t m, Int_t psid, Char_t capver,
                    const char *logbuf, Int_t loglevel, TXHandler *handler)
          : TSocket(), fMode(m), fLogLevel(loglevel),
-           fBuffer(logbuf), fASem(0), fAsynProc(1),
+           fBuffer(logbuf), fConn(0), fASem(0), fAsynProc(1),
            fDontTimeout(kFALSE), fRDInterrupt(kFALSE), fXrdProofdVersion(-1)
 {
    // Constructor
