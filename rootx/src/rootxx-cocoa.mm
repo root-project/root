@@ -230,7 +230,7 @@ bool popupDone = false;
 //Waitpid is a blocking call and we're a foreground process (a 'normal' Cocoa application).
 //Waitpid with WNOHUNG return immediately and does not solve our problems.
 //Here's the trick: create a background thread executing ... waitpid
-//and performing its special selector on a main thread.
+//and performing its special selector on a main thread (when status changed).
 //
 
 namespace {
