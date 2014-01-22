@@ -8,9 +8,8 @@
 // Cocoa based routines used to display the splash screen for rootx,    //
 // the root front-end program.                                          //
 //                                                                      //
-// WaitChildGeneric/StayUp copy-pasted from rootx.cxx/rootxx.cxx.       //
-// -main (ROOTWaitpidThread) is based on WaitChild (rootx.cxx)          //
-//                                                                      //
+// WaitChildGeneric/StayUp/-main (ROOTWaitpidThread) copy-pasted/based  //
+// on rootx.cxx/rootxx.cxx (author - Fons Rademakers).                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
