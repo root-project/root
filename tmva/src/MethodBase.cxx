@@ -114,10 +114,10 @@ ClassImp(TMVA::MethodBase)
 using std::endl;
 using std::atof;
 
-const Int_t    MethodBase_MaxIterations_ = 200;
+//const Int_t    MethodBase_MaxIterations_ = 200;
 const Bool_t   Use_Splines_for_Eff_      = kTRUE;
 
-const Int_t    NBIN_HIST_PLOT = 100;
+//const Int_t    NBIN_HIST_PLOT = 100;
 const Int_t    NBIN_HIST_HIGH = 10000;
 
 #ifdef _WIN32
