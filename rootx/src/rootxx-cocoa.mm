@@ -1,3 +1,19 @@
+// @(#)root/rootxx-cocoa.mm:$Id$
+// Author: Timur Pocheptsov   22/01/2014
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// Rootxx-cocoa                                                         //
+//                                                                      //
+// Cocoa based routines used to display the splash screen for rootx,    //
+// the root front-end program.                                          //
+//                                                                      //
+// WaitChildGeneric/StayUp copy-pasted from rootx.cxx/rootxx.cxx.       //
+// -main (ROOTWaitpidThread) is based on WaitChild (rootx.cxx)          //
+//                                                                      //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
 #include <cassert>
 #include <fstream>
 #include <cstdlib>
@@ -213,7 +229,8 @@ bool popupDone = false;
 //
 //Waitpid is a blocking call and we're a foreground process (a 'normal' Cocoa application).
 //Waitpid with WNOHUNG return immediately and does not solve our problems.
-//Here's the trick: create a background thread executing ... waitpid and performing its special selector on a main thread.
+//Here's the trick: create a background thread executing ... waitpid
+//and performing its special selector on a main thread.
 //
 
 namespace {
