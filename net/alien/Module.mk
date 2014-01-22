@@ -30,7 +30,7 @@ ALIENMAP     := $(ALIENLIB:.$(SOEXT)=.rootmap)
 # Include paths
 ALIENINCEXTRA := $(XROOTDDIRI:%=-I%)
 ifneq ($(EXTRA_XRDFLAGS),)
-ALIENINCEXTRA += -Iproof/proofd/inc -I$(ALIENINCDIR)
+ALIENINCEXTRA += -Iproof/proofd/inc $(ALIENINCDIR:%=-I%)
 endif
 
 ifeq ($(HASXRD),yes)
