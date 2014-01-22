@@ -68,7 +68,7 @@ TProofBenchRunDataRead::TProofBenchRunDataRead(TProofBenchDataSet *pbds, TPBRead
                          fProfile_perfstat_evtmax(0), fNorm_perfstat_evtmax(0),
                          fProfile_queryresult_event(0), fNorm_queryresult_event(0),
                          fProfile_perfstat_IO(0), fHist_perfstat_IO(0),
-                         fProfile_perfstat_IOmax(0),
+                         fProfile_perfstat_IOmax(0), fNorm_perfstat_IOmax(0),
                          fProfile_queryresult_IO(0), fNorm_queryresult_IO(0), fProfile_cpu_eff(0),
                          fProfLegend_evt(0), fNormLegend_evt(0), fProfLegend_mb(0), fNormLegend_mb(0),
                          fCPerfProfiles(0), fName(0)
