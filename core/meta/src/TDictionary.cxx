@@ -47,6 +47,9 @@
 
 ClassImp(TDictionary)
 
+TDictionary::TDictionary(const TDictionary& dict):
+  fAttributeMap(dict.fAttributeMap ? ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : 0 ) { }
+
 TDictionary::~TDictionary() {
    if(fAttributeMap) {
       delete fAttributeMap;

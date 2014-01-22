@@ -167,6 +167,7 @@ private:
 public:
    TDictionary(): fAttributeMap(0) { }
    TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0) { }
+   TDictionary(const TDictionary& dict);
    virtual ~TDictionary();
 
    void                CreateAttributeMap();
