@@ -73,6 +73,7 @@ XrdProofWorker::XrdProofWorker(const XrdProofWorker &w)
    fId = w.fId;
    fNwrks = w.fNwrks;
    fOrd = "";
+   fActive = 1;
 }
 
 //______________________________________________________________________________

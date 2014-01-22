@@ -5018,13 +5018,13 @@ int XrdProofSessionInfo::ReadFromFile(const char *file)
    // Read content from 'file'
    XPDLOC(SMGR, "SessionInfo::ReadFromFile")
 
+   Reset();
+
    // Check inputs
    if (!file || strlen(file) <= 0) {
       TRACE(XERR,"invalid input: "<<(file ? file : "<nul>"));
       return -1;
    }
-
-   Reset();
 
    // Open the session file
    FILE *fpid = fopen(file,"r");
