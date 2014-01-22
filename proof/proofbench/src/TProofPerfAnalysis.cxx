@@ -211,7 +211,7 @@ Bool_t TProofPerfAnalysis::fgDebug = kTRUE;
 //________________________________________________________________________
 TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
                                const char *title, const char *treename)
-               : TNamed(perffile, title), fTreeName(treename),
+               : TNamed(perffile, title), fFile(0), fTreeName(treename), fTree(0), 
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
                  fEvents(0), fPackets(0),
                  fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
@@ -281,7 +281,7 @@ TProofPerfAnalysis::TProofPerfAnalysis(const char *perffile,
 
 //________________________________________________________________________
 TProofPerfAnalysis::TProofPerfAnalysis(TTree *tree, const char *title)
-               : TNamed("", title), fFile(0),
+               : TNamed("", title), fFile(0), fTree(0), 
                  fInitTime(-1.), fMergeTime(-1.), fMaxTime(-1.),
                  fEvents(0), fPackets(0),
                  fEvtRateMax(-1.), fMBRateMax(-1.), fLatencyMax(-1.),
