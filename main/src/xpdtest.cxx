@@ -501,6 +501,7 @@ int xpd_ping(const char *host, int port)
    initHS.third  = (int)htonl((int)1);
    if (sendn(sd, &initHS, len) != len) {
       fprintf(stderr,"xpd_ping: problems sending first set of handshake bytes\n");
+      close(sd);
       return 1;
    }
    
@@ -510,6 +511,7 @@ int xpd_ping(const char *host, int port)
    dum[1] = (int)htonl((int)2012);
    if (sendn(sd, &dum[0], sizeof(dum)) != sizeof(dum)) {
       fprintf(stderr,"xpd_ping: problems sending second set of handshake bytes\n");
+      close(sd);
       return 1;
    }
    
@@ -520,6 +522,7 @@ int xpd_ping(const char *host, int port)
    if ((nr = recvn(sd, &type, len)) != len) { // 4 bytes
       fprintf(stderr, "xpd_ping: 1st: wrong number of bytes read: %d (expected: %d)\n",
                       nr, len);
+      close(sd);
       return 1;
    }
    
@@ -532,6 +535,7 @@ int xpd_ping(const char *host, int port)
       if ((nr = recvn(sd, &xbody, len)) != len) { // 12(4+4+4) bytes
          fprintf(stderr, "xpd_ping: 2nd: wrong number of bytes read: %d (expected: %d)\n",
                          nr, len);
+         close(sd);
          return 1;
       }
       xbody.protover = ntohl(xbody.protover);
@@ -541,10 +545,12 @@ int xpd_ping(const char *host, int port)
    } else if (type == 8) {
       // Standard proofd
       fprintf(stderr, "xpd_ping: server is PROOFD\n");
+      close(sd);
       return 1;
    } else {
       // We don't know the server type
       fprintf(stderr, "xpd_ping: unknown server type: %d\n", type);
+      close(sd);
       return 1;
    }
    // Cleanup
