@@ -3,8 +3,11 @@
 #include <cstdlib>
 #include <csignal>
 #include <string>
+#include <cerrno>
 #include <list>
 
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/time.h>
 
 #include <Cocoa/Cocoa.h>
@@ -14,6 +17,17 @@
 //ROOTSplashScreenView: content view for our panel (splash screen window)
 //with a background (ROOT's logo) + scrollview and textview to show info
 //about contributors.
+
+/*
+namespace ROOT {
+namespace ROOTX {
+
+//This had internal linkage before, now must be accessible from rootx-cocoa.mm.
+extern int gChildpid;
+
+}
+}
+*/
 
 @interface ROOTSplashScreenView : NSView
 @end
@@ -396,9 +410,52 @@ void RunEventLoop()
 }
 
 //_________________________________________________________________
+void WaitChildGeneric()
+{
+   //Wait till child (i.e. ROOT) is finished. From rootx.cxx.
+   /*
+   using ROOT::ROOTX::gChildpid;
+   
+   int status = 0;
+
+   do {
+      while (::waitpid(gChildpid, &status, WUNTRACED) < 0) {
+         if (errno != EINTR)
+            break;
+         errno = 0;
+      }
+
+      if (WIFEXITED(status))
+         std::exit(WEXITSTATUS(status));
+
+      if (WIFSIGNALED(status))
+         std::exit(WTERMSIG(status));
+
+      if (WIFSTOPPED(status)) {         // child got ctlr-Z
+         ::raise(SIGTSTP);                // stop also parent
+         ::kill(gChildpid, SIGCONT);       // if parent wakes up, wake up child
+      }
+   } while (WIFSTOPPED(status));
+
+   std::exit(0);
+   */
+}
+
+//
+
+
+//_________________________________________________________________
 void RunEventLoopInBackground()
 {
+   if (!InitTimers(true))//true == background
+      //This is actually something really fatal! Try to 'roll-back to X11 version'.
+      return WaitChildGeneric();
+   
+   AttachTimers(true);//only the 'signal' timer.
+   
+   while (true) {
 
+   }
 }
 
 //_________________________________________________________________
@@ -550,3 +607,17 @@ bool ReadContributors(std::list<std::string> & contributors)
 }
 
 }//unnamed namespace.
+
+
+namespace ROOT {
+namespace ROOTX {
+
+//This is a 'replacement' version.
+//_________________________________________________________________
+void WaitChild()
+{
+   RunEventLoopInBackground();
+}
+
+}
+}
