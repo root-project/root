@@ -782,8 +782,12 @@ L1:
                   dy2 = dyz[l%3];
                   dy3 = dyz[(l+1)%3];
 
-                  u = (dy3*dx2-dx3*dy2)/(dy1*dx2-dx1*dy2);
-                  v = (dy3*dx1-dx3*dy1)/(dy2*dx1-dx2*dy1);
+                  // u et v are used only to know their sign. The previous
+                  // code computed them with a division which was long and
+                  // might be a division by 0. It is now replaced by a 
+                  // multiplication.
+                  u = (dy3*dx2-dx3*dy2)*(dy1*dx2-dx1*dy2);                  
+                  v = (dy3*dx1-dx3*dy1)*(dy2*dx1-dx2*dy1);
 
                   if ((u>=0) && (v>=0)) {
                      // vector (dx3,dy3) is expressible as a sum of the other two vectors
