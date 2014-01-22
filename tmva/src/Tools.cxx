@@ -1449,7 +1449,6 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
       return 0;
    }
 
-
    UInt_t nvars=0, ntgts=0, nspcts=0;
    if (transformBase) 
       transformBase->CountVariableTypes( nvars, ntgts, nspcts );
