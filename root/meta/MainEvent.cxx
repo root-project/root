@@ -191,8 +191,8 @@ int MainEvent(Int_t nevent = 400,Int_t comp = 1, Int_t split = 1,
       hfile->SetCompressionLevel(comp);
 
      // Create histogram to show write_time in function of time
-     Float_t curtime = -0.5;
-     Int_t ntime = nevent/printev;
+     Float_t curtime = 0.5;
+     Int_t ntime = nevent/printev + 1;
      TH1F *htime = new TH1F("htime","Real-Time to write versus time",ntime,0,ntime);
      HistogramManager *hm = 0;
      if (hfill) {
