@@ -13,11 +13,6 @@
 #include <Cocoa/Cocoa.h>
 
 #include "CocoaUtils.h"
-
-//ROOTSplashScreenView: content view for our panel (splash screen window)
-//with a background (ROOT's logo) + scrollview and textview to show info
-//about contributors.
-
 /*
 namespace ROOT {
 namespace ROOTX {
@@ -28,6 +23,10 @@ extern int gChildpid;
 }
 }
 */
+
+//ROOTSplashScreenView: content view for our panel (splash screen window)
+//with a background (ROOT's logo) + scrollview and textview to show info
+//about contributors.
 
 @interface ROOTSplashScreenView : NSView
 @end
@@ -145,6 +144,93 @@ bool popupDone = false;
 
 @end
 
+
+//
+//Waitpid is a blocking call and we're a foreground process (a 'normal' Cocoa application).
+//Waitpid with WNOHUNG return immediately and does not solve our problems.
+//Here's the trick: create a background thread executing ... waitpid and performing its special selector on a main thread.
+//
+
+namespace {
+
+//Timer callbacks 'fire' custom NSEvents:
+enum CustomEventSource {//make it enum class when C++11 is here.
+   kScrollTimer = 1,
+   kSignalTimer = 2,
+   kWaitpidThread = 3
+};
+
+}
+
+@interface ROOTWaitpidThread : NSThread {
+   int status;
+   int result;
+   bool normalExit;
+}
+
+- (int) getStatus;
+
+@end
+
+@implementation ROOTWaitpidThread
+
+//_________________________________________________________________
+- (id) init
+{
+   if (self = [super init]) {
+      status = 0;
+      result = 0;
+      normalExit = false;
+   }
+   
+   return self;
+}
+
+//_________________________________________________________________
+- (int) getStatus
+{
+   return status;
+}
+
+//_________________________________________________________________
+- (void) main
+{
+ /*  using ROOT::ROOTX::gChildpid;
+   
+   do {
+      while ((result = ::waitpid(gChildpid, &status, WUNTRACED) < 0)) {
+         if (errno != EINTR)
+            break;
+         errno = 0;
+      }
+
+      if (WIFEXITED(status) || WIFSIGNALED(status)) {
+         [self performSelectorOnMainThread : @selector(exitEventLoop) withObject : nil waitUntilDone : NO];
+         return;
+      }
+
+      if (WIFSTOPPED(status)) {         // child got ctlr-Z
+         ::raise(SIGTSTP);                // stop also parent
+         ::kill(gChildpid, SIGCONT);       // if parent wakes up, wake up child
+      }
+   } while (WIFSTOPPED(status));
+
+   normalExit = true;
+   [self performSelectorOnMainThread : @selector(exitEventLoop) withObject : nil waitUntilDone : NO];*/
+
+}
+
+//_________________________________________________________________
+- (void) exitEventLoop
+{
+   //assert - we are on a main thread.
+   NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                                 timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kWaitpidThread data2 : 0];
+   [NSApp postEvent : timerEvent atStart : NO];
+}
+
+@end
+
 namespace {
 
 volatile sig_atomic_t popdown = 0;
@@ -161,22 +247,15 @@ CFRunLoopTimerRef signalTimer = 0;
 const CFTimeInterval signalInterval = 0.1;
 
 timeval popupCreationTime;
-const CFTimeInterval splashScreenDelayInSec = 4.;//4 seconds as in rootx.cxx.
+const CFTimeInterval splashScreenDelayInSec = 2.;//4 seconds in rootx.cxx, I'm gonna use 2.
 
 //Timer for a scroll animation.
 CFRunLoopTimerRef scrollTimer = 0;
 const CFTimeInterval scrollInterval = 2.;
 
-//Timer callbacks 'fire' custom NSEvents:
-enum TimerEventType {//make it enum class when C++11 is here.
-   kScrollTimer = 1,
-   kSignalTimer = 2,
-   kRemoveSplashTimer = 3
-};
-
 //Aux. functions:
 bool InitCocoa();
-bool InitTimers(bool background);
+bool InitTimers();
 void RunEventLoop();
 void RunEventLoopInBackground();
 bool StayUp();
@@ -192,8 +271,7 @@ bool ReadContributors(std::list<std::string> & contributors);
 //_________________________________________________________________
 void PopupLogo(bool about)
 {
-#pragma unused(about)
-return;//Still Noop!!!
+return;//DISABLED.
 
    if (!InitCocoa()) {
       //TODO: diagnostic.
@@ -236,7 +314,7 @@ void PopdownLogo()
 //_________________________________________________________________
 void WaitLogo()
 {
-return;//Still Noop!!!
+return;//DISABLED.
 
    if (!splashScreen)
       //TODO: diagnostic.
@@ -268,7 +346,7 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
 #pragma unused(info)
    if (timer == signalTimer) {
       NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                    timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
+                                    timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
       [NSApp postEvent : timerEvent atStart : NO];
    } else {
       //Scroll animation event.
@@ -283,6 +361,15 @@ namespace {
 bool InitCocoa()
 {
    if (!topLevelPool) {
+      //It's not clear, if I need TransformProcessType at all or activateIgnoring is enough.
+      //Anyway, let's try.
+      ProcessSerialNumber psn = {0, kCurrentProcess};
+      const OSStatus res = ::TransformProcessType(&psn, kProcessTransformToUIElementApplication);
+      if (res != noErr && res != paramErr) {
+         //TODO: diagnostic.
+         return false;
+      }
+  
       [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];
       [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
 
@@ -293,7 +380,7 @@ bool InitCocoa()
 }
 
 //_________________________________________________________________
-bool InitTimers(bool background)
+bool InitTimers()
 {
    assert(scrollTimer == 0 && "InitTimers, scrollTimer was initialized already");
    assert(signalTimer == 0 && "InitTimers, signalTimer was initialized already");
@@ -311,63 +398,52 @@ bool InitTimers(bool background)
    if (!guard1.Get())
       return false;
 
-   if (!background) {
-      //Scroll animation.
-      CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                                                  CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
-                                                                  scrollInterval,
-                                                                  0,
-                                                                  0,
-                                                                  ROOTSplashscreenTimerCallback,
-                                                                  0
-                                                                  ));
+   //Scroll animation.
+   CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
+                                                               CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
+                                                               scrollInterval,
+                                                               0,
+                                                               0,
+                                                               ROOTSplashscreenTimerCallback,
+                                                               0
+                                                               ));
+   if (!guard2.Get())
+      return false;
 
-      if (!guard2.Get())
-         return false;
+   //TODO: refactor CFScopeGuard to return the pointer from Release.
+   scrollTimer = guard2.Get();
+   guard2.Release();
 
-      signalTimer = guard2.Get();
-      guard2.Release();
-   }
-   
-   //TODO: refactor CFScopeGuard
-   scrollTimer = guard1.Get();
+   signalTimer = guard1.Get();
    guard1.Release();
-   
+
    return true;
 }
 
 //_________________________________________________________________
-void AttachTimers(bool background)
+void AttachTimers()
 {
    assert(signalTimer != 0 && "AttachTimer, invalid signalTimer (null)");
+   assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
    
    CFRunLoopAddTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
-
-   if (!background) {
-      //We also have to scroll.
-      assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
-      CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
-   }
+   CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
 }
 
 //_________________________________________________________________
-void RemoveTimers(bool background)
+void RemoveTimers()
 {
    assert(signalTimer != 0 && "RemoveTimers, signalTimer is null");
+   assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
    
    CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
    CFRunLoopTimerInvalidate(signalTimer);
    //TODO: test if I also have to call release!!!
    signalTimer = 0;
-   
-   if (!background) {
-      assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
-      CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
-      CFRunLoopTimerInvalidate(signalTimer);
-      //TODO: test if I also have to call release!!!
-      signalTimer = 0;
-      
-   }
+   CFRunLoopRemoveTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
+   CFRunLoopTimerInvalidate(scrollTimer);
+   //TODO: test if I also have to call release!!!
+   scrollTimer = 0;
 }
 
 //_________________________________________________________________
@@ -383,10 +459,10 @@ void RunEventLoop()
 {
    //Kind of event loop.
    
-   if (!InitTimers(false))//false == foreground.
+   if (!InitTimers())
       return;
    
-   AttachTimers(false);//false == foreground.
+   AttachTimers();
    
    popupDone = false;
 
@@ -395,16 +471,16 @@ void RunEventLoop()
       if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
          //Let's first check the type:
          if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
-            if (event.data1 == kSignalTimer)
+            if (event.data1 == kSignalTimer) {
                popupDone = !showAboutInfo && !StayUp() && popdown;
-            else
+            } else
                ProcessScrollTimerEvent(event);
          } else
             [NSApp sendEvent : event];
       }
    }
    
-   RemoveTimers(false);//false == foreground.
+   RemoveTimers();
    //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
    while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
 }
@@ -412,8 +488,9 @@ void RunEventLoop()
 //_________________________________________________________________
 void WaitChildGeneric()
 {
+   //If things with a waitpid thread went wrong, this function is called.
    //Wait till child (i.e. ROOT) is finished. From rootx.cxx.
-   /*
+ /*
    using ROOT::ROOTX::gChildpid;
    
    int status = 0;
@@ -437,25 +514,44 @@ void WaitChildGeneric()
       }
    } while (WIFSTOPPED(status));
 
-   std::exit(0);
-   */
+   std::exit(0);*/
 }
-
-//
-
 
 //_________________________________________________________________
 void RunEventLoopInBackground()
 {
-   if (!InitTimers(true))//true == background
-      //This is actually something really fatal! Try to 'roll-back to X11 version'.
-      return WaitChildGeneric();
-   
-   AttachTimers(true);//only the 'signal' timer.
-   
-   while (true) {
+   using ROOT::MacOSX::Util::NSScopeGuard;
 
+   int status = 0;
+   
+   {//Block to force a scope guard's lifetime.
+   const NSScopeGuard<ROOTWaitpidThread> thread([[ROOTWaitpidThread alloc] init]);
+   if (!thread.Get()) {
+      //TODO: diagnostic.
+      return WaitChildGeneric();
+   } else {
+      [thread.Get() start];
+
+      while (true) {
+         if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
+            if (event.type == NSApplicationDefined && event.data1 == kWaitpidThread) {
+               [thread.Get() cancel];
+               status = [thread.Get() getStatus];
+               break;
+            }
+            else
+               [NSApp sendEvent : event];
+         }
+      }
+      
+      [NSApp hide : nil];//deactivate?
    }
+   }//to force thread release.
+
+   if (WIFEXITED(status))
+      std::exit(WEXITSTATUS(status));
+   if (WIFSIGNALED(status))
+      std::exit(WTERMSIG(status));
 }
 
 //_________________________________________________________________

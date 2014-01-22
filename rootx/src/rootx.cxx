@@ -109,9 +109,11 @@ static STRUCT_UTMP *gUtmpContents;
 static bool gNoLogo = false;
 const  int  kMAXPATHLEN = 8192;
 
-//ifdefs.
+
 //Part for Cocoa - requires external linkage.
 /*
+#ifdef R__HAS_COCOA
+
 namespace ROOT {
 namespace ROOTX {
 
@@ -122,10 +124,11 @@ int gChildpid = -1;
 }
 
 using ROOT::ROOTX::gChildpid;//:)
+
+#else
 */
 
 static int gChildpid;
-
 static int GetErrno()
 {
 #ifdef GLOBAL_ERRNO
@@ -143,6 +146,8 @@ static void ResetErrno()
    errno = 0;
 #endif
 }
+
+//#endif
 
 static int ReadUtmp()
 {
@@ -358,6 +363,8 @@ static void SigTerm(int sig)
 
 //ifdefs for Cocoa/other *xes.
 /*
+#ifdef R__HAS_COCOA
+
 namespace ROOT {
 namespace ROOTX {
 
@@ -369,6 +376,8 @@ void WaitChild();
 }
 
 using ROOT::ROOTX::WaitChild;
+
+#else
 */
 
 static void WaitChild()
@@ -398,6 +407,8 @@ static void WaitChild()
 
    exit(0);
 }
+
+//#endif
 
 static void PrintUsage(char *pname)
 {
