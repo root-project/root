@@ -894,6 +894,7 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
    // w = ((1-err)/err)^beta
 
    Double_t boostWeight=0;
+
    if (fMethodError == 0) { //no misclassification made.. perfect, no boost ;)
       Log() << kWARNING << "Your classifier worked perfectly on the training sample --> serious overtraining expected and no boosting done " << Endl;
    }else{
