@@ -1,44 +1,37 @@
-// Macro to compare masses in root data base to the values from pdg
+// Macro to compare masses in ROOT data base to the values from pdg
 // http://pdg.lbl.gov/2009/mcdata/mass_width_2008.mc
 //
-// the ROOT values are read in by TDatabasePDG from $ROOTSYS/etc/pdg_table.C
+// The ROOT values are read in by TDatabasePDG from $ROOTSYS/etc/pdg_table.txt
 //
 // Author: Christian.Klein-Boesing@cern.ch
-   
-#include <fstream>
-#include <iostream>
+
 #include "TDatabasePDG.h"
 #include "TParticlePDG.h"
 
-using namespace std;
 
-void CompareMasses(){
-  
+void CompareMasses()
+{
   TString massWidthFile = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-  massWidthFile.ReplaceAll("tasks.C","mass_width_2008.mc.txt");
-  
+  massWidthFile.ReplaceAll("CompareMasses.C","mass_width_2008.mc.txt");
+
   FILE* file = fopen(massWidthFile.Data(),"r");
 
-  ifstream in1;
-  in1.open(massWidthFile);
-  if (!in1.good()){
-      Printf("Could not open PDG particle file %s",massWidthFile.Data());
-      fclose(file);
+  if (!file){
+      Printf("Could not open PDG particle file %s", massWidthFile.Data());
       return;
   }
 
-  char      c[200];  
+  char      c[200];
   char      cempty;
   Int_t     pdg[4];
-  Float_t   mass, err1,err2,err;
-  Int_t ndiff = 0;
+  Float_t   mass, err1, err2, err;
+  Int_t     ndiff = 0;
 
-  
-  while (fgets(&c[0],200,file)) {
+  while (fgets(c, 200, file)) {
     if (c[0] != '*' &&  c[0] !='W') {
-      // printf("%s",c);      
-      sscanf(&c[1],"%8d",&pdg[0]);
-      
+      //printf("%s",c);
+      sscanf(&c[1], "%8d", &pdg[0]);
+
       // check emptyness
       pdg[1] = 0;
       for(int i = 0;i<8;i++){
@@ -51,7 +44,6 @@ void CompareMasses(){
 	sscanf(&c[17+i],"%c",&cempty);
 	if(cempty != ' ')sscanf(&c[17],"%8d",&pdg[2]);
       }
-
 
       pdg[3] = 0;
       for(int i = 0;i<8;i++){
@@ -70,9 +62,9 @@ void CompareMasses(){
 	  Float_t massRoot = partRoot->Mass();
 	  Float_t deltaM = TMath::Abs(massRoot - mass);
 	  //      if(deltaM > err){
-	  if(deltaM/mass>1E-05){
+	  if (mass != 0.0 && deltaM/mass>1E-05){
              ndiff++;
-	    Printf("%10s %8d pdg mass %E pdg err %E root Mass %E >> deltaM %E = %3.3f%%",partRoot->GetName(),pdg[ipdg],mass,err,massRoot,deltaM,100.*deltaM/mass);
+	     Printf("%10s %8d pdg mass %E pdg err %E root Mass %E >> deltaM %E = %3.3f%%",partRoot->GetName(),pdg[ipdg],mass,err,massRoot,deltaM,100.*deltaM/mass);
 	  }
 	}
       }
