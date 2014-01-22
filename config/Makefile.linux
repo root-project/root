@@ -23,6 +23,7 @@ CC            = gcc
 CXXFLAGS      = -pipe -m32 -Wall -W -Woverloaded-virtual \
                 -fPIC -msse -mfpmath=sse $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
 CFLAGS        = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS)
+CLINGCXXFLAGS = -m32
 COMPILER      = gnu
 
 # Linker:

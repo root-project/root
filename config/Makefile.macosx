@@ -42,6 +42,7 @@ CXXFLAGS      = -m32 -pipe -Wshadow -W -Wall -Woverloaded-virtual \
                 $(TARGETFLAGS) $(CXX11FLAGS)
 CFLAGS        = -m32 -pipe -Wshadow -W -Wall -fsigned-char -fno-common \
                 $(EXTRA_CFLAGS) $(FINK_CFLAGS) $(TARGETFLAGS)
+CLINGCXXFLAGS = -m32
 COMPILER      = gnu
 
 # Linker:
