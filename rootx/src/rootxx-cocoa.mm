@@ -87,7 +87,7 @@
 //To be set from a signal handler.
 namespace {
 
-volatile sig_atomic_t popdown = 0;
+bool popupDone = false;
 
 }
 
@@ -117,14 +117,12 @@ volatile sig_atomic_t popdown = 0;
 - (void) sendEvent : (NSEvent *) theEvent
 {
    if ([theEvent type] == NSKeyDown) {
-      popdown = 1;
-      //TODO: something else actually, not popdown.
+      popupDone = true;
       return;
    }
 
    if ([theEvent type] == NSLeftMouseDown || [theEvent type] == NSRightMouseDown) {
-      popdown = 1;
-      //TODO: something else, not popdown.
+      popupDone = true;
       return;
    }
 
@@ -135,6 +133,7 @@ volatile sig_atomic_t popdown = 0;
 
 namespace {
 
+volatile sig_atomic_t popdown = 0;
 bool showAboutInfo = false;
 
 ROOTSplashScreenPanel *splashScreen = nil;
@@ -164,8 +163,8 @@ enum TimerEventType {//make it enum class when C++11 is here.
 //Aux. functions:
 bool InitCocoa();
 bool InitTimers(bool background);
-void RunEventLoop(bool background);
-void ProcessTimerEvent(NSEvent *event);
+void RunEventLoop();
+void RunEventLoopInBackground();
 bool StayUp();
 bool CreateSplashscreen();
 void SetSplashscreenPosition();
@@ -229,7 +228,7 @@ return;//Still Noop!!!
       //TODO: diagnostic.
       return;
 
-   RunEventLoop(false);//false - we're 'foreground'.
+   RunEventLoop();
    
    //Cleanup.
    
@@ -254,15 +253,9 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
 {
 #pragma unused(info)
    if (timer == signalTimer) {
-      //
-      if (popdown || !StayUp()) {
-         //Check if signal handler set popdown flag.
-         //We have to stop everything and inform our main loop.
-         NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                       timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : kRemoveSplashTimer data2 : 0];
-         [NSApp postEvent : timerEvent atStart : NO];
-      }
-      //else ignore.
+      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                                    timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
+      [NSApp postEvent : timerEvent atStart : NO];
    } else {
       //Scroll animation event.
    }
@@ -364,43 +357,48 @@ void RemoveTimers(bool background)
 }
 
 //_________________________________________________________________
-void RunEventLoop(bool background)
-{
-   //Kind of event loop.
-   
-   if (!InitTimers(background))
-      //TODO: in case of 'background == true' it's a very bad fatal problem.
-      return;
-   
-   AttachTimers(background);
-
-   while (true) {
-
-      //Here we (possibly) suspend waiting for event.
-      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
-         //Let's first check the type:
-         if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
-            if (event.data1 == kRemoveSplashTimer) {
-               //Ok, we stop
-               RemoveTimers(background);
-               //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
-               while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
-               return;
-            } else {
-               //This well be 'waitpid' event.
-               ProcessTimerEvent(event);
-            }
-         }
-      }
-   }
-}
-
-//_________________________________________________________________
-void ProcessTimerEvent(NSEvent *event)
+void ProcessScrollTimerEvent(NSEvent *event)
 {
 //   assert(event != nil && "ProcessTimerEvent, parameter 'event' is nil");
 #pragma unused(event)
    //TODO: scroll event.
+}
+
+//_________________________________________________________________
+void RunEventLoop()
+{
+   //Kind of event loop.
+   
+   if (!InitTimers(false))//false == foreground.
+      return;
+   
+   AttachTimers(false);//false == foreground.
+   
+   popupDone = false;
+
+   while (!popupDone) {
+      //Here we (possibly) suspend waiting for event.
+      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
+         //Let's first check the type:
+         if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
+            if (event.data1 == kSignalTimer)
+               popupDone = !showAboutInfo && !StayUp() && popdown;
+            else
+               ProcessScrollTimerEvent(event);
+         } else
+            [NSApp sendEvent : event];
+      }
+   }
+   
+   RemoveTimers(false);//false == foreground.
+   //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
+   while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
+}
+
+//_________________________________________________________________
+void RunEventLoopInBackground()
+{
+
 }
 
 //_________________________________________________________________
