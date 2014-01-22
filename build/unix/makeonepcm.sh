@@ -6,6 +6,10 @@
 # Copyright (c) 2013 Rene Brun and Fons Rademakers
 # Author: Fons Rademakers, 19/2/2013
 
+echo
+echo Generating the one large pcm, patience...
+echo
+
 srcdir=.
 if [ $# -eq 1 ]; then
    srcdir=$1
@@ -44,7 +48,6 @@ EOF
 #endif
 EOF
     fi
-
 
     find $srcdir/$dirname/inc/ -name '*LinkDef*.h' | \
         sed -e 's|^|#include "|' -e 's|$|"|' >> alldefs.h
