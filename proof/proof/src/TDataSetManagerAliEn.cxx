@@ -445,6 +445,7 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
     if (!ParseOfficialDataUri(uri, sim, lhcPeriod, year, runList, esd,
       aodNum, pass)) {
       Error("GetFindCommandsFromUri", "Invalid parameters");
+      delete runList;
       return NULL;
     }
 
