@@ -1129,9 +1129,11 @@ void TMVA::MethodMLP::Shuffle(Int_t* index, Int_t n)
    Int_t a = n - 1;
    for (Int_t i = 0; i < n; i++) {
       j = (Int_t) (frgen->Rndm() * a);
-      k = index[j];
-      index[j] = index[i];
-      index[i] = k;
+      if (j<n){ // address the 'worries' of coverity
+	k = index[j];
+	index[j] = index[i];
+	index[i] = k;
+      }
    }
 }
 
