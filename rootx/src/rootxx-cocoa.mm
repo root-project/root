@@ -47,7 +47,9 @@ namespace {
 NSString * const gConception = @"Conception:  Rene Brun, Fons Rademakers\n\n";
 NSString * const gLeadDevelopers = @"Lead Developers:  Rene Brun, Philippe Canal, Fons Rademakers\n\n";
 //Ok, and poor little me.
-NSString * const gRootDevelopers = @"Core Engineering:  Bertrand Bellenot, Olivier Couet, Gerardo Ganis, Andrei Gheata, Lorenzo Moneta, Axel Naumann, Paul Russo, Matevz Tadel, Timur Pocheptsov\n\n";
+NSString * const gRootDevelopers = @"Core Engineering:  Bertrand Bellenot, Olivier Couet, Gerardo Ganis,"
+                                    "Andrei Gheata, Lorenzo Moneta, Axel Naumann, "
+                                    "Paul Russo, Matevz Tadel, Timur Pocheptsov\n\n";
 NSString * const gRootDocumentation = @"Documentation:  Ilka Antcheva\n\n";
 
 bool showAboutInfo = false;
