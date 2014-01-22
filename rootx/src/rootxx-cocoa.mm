@@ -13,7 +13,9 @@
 #include <Cocoa/Cocoa.h>
 
 #include "CocoaUtils.h"
-/*
+#include "RVersion.h"
+
+
 namespace ROOT {
 namespace ROOTX {
 
@@ -22,7 +24,19 @@ extern int gChildpid;
 
 }
 }
-*/
+
+
+namespace {
+
+NSString * const gConception = @"Conception:  Rene Brun, Fons Rademakers\n\n";
+NSString * const gLeadDevelopers = @"Lead Developers:  Rene Brun, Philippe Canal, Fons Rademakers\n\n";
+//Ok, and poor little me.
+NSString * const gRootDevelopers = @"Core Engineering:  Bertrand Bellenot, Olivier Couet, Gerardo Ganis, Andrei Gheata, Lorenzo Moneta, Axel Naumann, Paul Russo, Matevz Tadel, Timur Pocheptsov\n\n";
+NSString * const gRootDocumentation = @"Documentation:  Ilka Antcheva\n\n";
+
+bool showAboutInfo = false;
+
+}
 
 //ROOTSplashScreenView: content view for our panel (splash screen window)
 //with a background (ROOT's logo) + scrollview and textview to show info
@@ -38,16 +52,19 @@ extern int gChildpid;
 }
 
 //_________________________________________________________________
-- (id) initWithImage : (NSImage *) image
+- (id) initWithImage : (NSImage *) image text : (NSAttributedString *) textToScroll
 {
-   assert(image != nil && "initWithImage:, parameter 'image' is nil");
+   assert(image != nil && "initWithImage:text:, parameter 'image' is nil");
+   assert(textToScroll != nil && "initWithImage:text:, parameter 'textToScroll' is nil");
+   
+   using ROOT::MacOSX::Util::NSScopeGuard;
    
    const CGSize imageSize = image.size;
    
    //minimal sizes required by text view's position (which is 'hardcoded' and
    //must be the same as in rootxx (X11 version).
    assert(imageSize.width >= 300 && imageSize.height >= 285 &&
-          "initWithImage:, unexpected background image sizes");
+          "initWithImage:text:, unexpected background image sizes");
 
    self = [super initWithFrame : CGRectMake(0, 0, imageSize.width, imageSize.height)];
    
@@ -63,7 +80,21 @@ extern int gChildpid;
       
       scrollRect.origin = CGPoint();
       textView = [[NSTextView alloc] initWithFrame : scrollRect];
-      [scrollView addSubview : textView];
+      [textView setEditable : NO];
+      
+      [[textView textStorage] setAttributedString : textToScroll];
+      
+      [scrollView setDocumentView : textView];
+      [scrollView setBorderType : NSNoBorder];
+      
+      if (showAboutInfo) {
+         [scrollView setHasVerticalScroller : YES];
+         [[scrollView verticalScroller] setControlSize : NSSmallControlSize];
+      }
+      
+      //Hehehehe.
+      [scrollView setDrawsBackground : NO];
+      [textView setDrawsBackground : NO];
    }
    
    return self;
@@ -79,6 +110,8 @@ extern int gChildpid;
    [super dealloc];
 }
 
+//Background image.
+
 //_________________________________________________________________
 - (void) drawRect : (NSRect) rect
 {
@@ -93,6 +126,31 @@ extern int gChildpid;
                     fromRect : CGRectMake(0., 0., imageSize.width, imageSize.height)
                     operation : NSCompositeSourceOver
                     fraction : 1.];
+   
+   //Let's now draw a version.
+   if (NSString * const version = [NSString stringWithFormat : @"Version %s", ROOT_RELEASE]) {
+      if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 11.]) {
+         NSDictionary * dict = [NSDictionary dictionaryWithObject : font forKey : NSFontAttributeName];
+         [version drawAtPoint : CGPointMake(15., 15.) withAttributes : dict];
+      }
+   }
+}
+
+//Animation.
+
+//_________________________________________________________________
+- (void) scrollText
+{
+   const CGFloat scrollAmountPixels = 1.;
+   // How far have we scrolled so far?
+   const CGFloat currentScrollAmount = [scrollView documentVisibleRect].origin.y;
+   [[scrollView documentView] scrollPoint : NSMakePoint(0., currentScrollAmount + scrollAmountPixels)];
+   // If anything overlaps the text we just scrolled, it won’t get redraw by the
+   // scrolling, so force everything in that part of the panel to redraw.
+   NSRect scrollViewFrame = [scrollView bounds];
+   scrollViewFrame = [self convertRect : scrollViewFrame fromView : scrollView];
+   // Redraw everything which overlaps it.
+   [self setNeedsDisplayInRect : scrollViewFrame];
 }
 
 @end
@@ -112,7 +170,14 @@ bool popupDone = false;
 
 @implementation ROOTSplashScreenPanel
 
-#pragma mark - Events.
+//Animation.
+
+//_________________________________________________________________
+- (void) scrollText
+{
+}
+
+//Events and behaviour.
 
 //_________________________________________________________________
 - (BOOL) canBecomeMainWindow
@@ -195,7 +260,7 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 //_________________________________________________________________
 - (void) main
 {
- /*  using ROOT::ROOTX::gChildpid;
+   using ROOT::ROOTX::gChildpid;
    
    do {
       while ((result = ::waitpid(gChildpid, &status, WUNTRACED) < 0)) {
@@ -216,7 +281,7 @@ enum CustomEventSource {//make it enum class when C++11 is here.
    } while (WIFSTOPPED(status));
 
    normalExit = true;
-   [self performSelectorOnMainThread : @selector(exitEventLoop) withObject : nil waitUntilDone : NO];*/
+   [self performSelectorOnMainThread : @selector(exitEventLoop) withObject : nil waitUntilDone : NO];
 
 }
 
@@ -234,7 +299,6 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 namespace {
 
 volatile sig_atomic_t popdown = 0;
-bool showAboutInfo = false;
 
 ROOTSplashScreenPanel *splashScreen = nil;
 //Top-level autorelease pool.
@@ -251,7 +315,7 @@ const CFTimeInterval splashScreenDelayInSec = 2.;//4 seconds in rootx.cxx, I'm g
 
 //Timer for a scroll animation.
 CFRunLoopTimerRef scrollTimer = 0;
-const CFTimeInterval scrollInterval = 2.;
+const CFTimeInterval scrollInterval = 0.1;
 
 //Aux. functions:
 bool InitCocoa();
@@ -271,15 +335,9 @@ bool ReadContributors(std::list<std::string> & contributors);
 //_________________________________________________________________
 void PopupLogo(bool about)
 {
-return;//DISABLED.
+return;//DISABLED in beta 2.
 
    if (!InitCocoa()) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   std::list<std::string> contributors;
-   if (!ReadContributors(contributors)) {
       //TODO: diagnostic.
       return;
    }
@@ -314,7 +372,7 @@ void PopdownLogo()
 //_________________________________________________________________
 void WaitLogo()
 {
-return;//DISABLED.
+return;//DISABLED in beta 2.
 
    if (!splashScreen)
       //TODO: diagnostic.
@@ -349,7 +407,9 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
                                     timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
       [NSApp postEvent : timerEvent atStart : NO];
    } else {
-      //Scroll animation event.
+      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                                    timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kScrollTimer data2 : 0];
+      [NSApp postEvent : timerEvent atStart : NO];
    }
 }
 
@@ -363,12 +423,13 @@ bool InitCocoa()
    if (!topLevelPool) {
       //It's not clear, if I need TransformProcessType at all or activateIgnoring is enough.
       //Anyway, let's try.
+      /*
       ProcessSerialNumber psn = {0, kCurrentProcess};
       const OSStatus res = ::TransformProcessType(&psn, kProcessTransformToUIElementApplication);
       if (res != noErr && res != paramErr) {
          //TODO: diagnostic.
          return false;
-      }
+      }*/
   
       [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];
       [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
@@ -447,17 +508,13 @@ void RemoveTimers()
 }
 
 //_________________________________________________________________
-void ProcessScrollTimerEvent(NSEvent *event)
-{
-//   assert(event != nil && "ProcessTimerEvent, parameter 'event' is nil");
-#pragma unused(event)
-   //TODO: scroll event.
-}
-
-//_________________________________________________________________
 void RunEventLoop()
 {
    //Kind of event loop.
+   
+   if (!splashScreen)
+      //TODO: diagnostic.
+      return;
    
    if (!InitTimers())
       return;
@@ -473,8 +530,11 @@ void RunEventLoop()
          if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
             if (event.data1 == kSignalTimer) {
                popupDone = !showAboutInfo && !StayUp() && popdown;
-            } else
-               ProcessScrollTimerEvent(event);
+            } else {
+               assert([[splashScreen contentView] isKindOfClass : [ROOTSplashScreenView class]] &&
+                      "RunEventLoop, splashScreen.contentView has a wrong type");
+               [(ROOTSplashScreenView *)[splashScreen contentView] scrollText];
+            }
          } else
             [NSApp sendEvent : event];
       }
@@ -490,7 +550,7 @@ void WaitChildGeneric()
 {
    //If things with a waitpid thread went wrong, this function is called.
    //Wait till child (i.e. ROOT) is finished. From rootx.cxx.
- /*
+
    using ROOT::ROOTX::gChildpid;
    
    int status = 0;
@@ -514,7 +574,7 @@ void WaitChildGeneric()
       }
    } while (WIFSTOPPED(status));
 
-   std::exit(0);*/
+   std::exit(0);
 }
 
 //_________________________________________________________________
@@ -589,12 +649,75 @@ bool StayUp()
 }
 
 //_________________________________________________________________
+NSAttributedString *CreateTextToScroll()
+{
+   using ROOT::MacOSX::Util::NSScopeGuard;
+
+   //the resulting string.
+   NSScopeGuard<NSMutableAttributedString> textToScroll([[NSMutableAttributedString alloc] init]);
+   if (!textToScroll.Get())
+      //TODO: diagnostic.
+      return nil;
+
+   NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : gConception]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return nil;
+   [textToScroll.Get() appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gLeadDevelopers]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return nil;
+   [textToScroll.Get() appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gRootDevelopers]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return nil;
+   [textToScroll.Get() appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gRootDocumentation]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return nil;
+   [textToScroll.Get() appendAttributedString : newString.Get()];
+
+   if (showAboutInfo) {
+      //Read contributors.
+      std::list<std::string> contributors;
+      ReadContributors(contributors);
+
+      if (contributors.size())//Add more lines here.
+         ;
+   }
+   //
+   if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 10.]) {
+      NSDictionary * dict = [NSDictionary dictionaryWithObject : font forKey : NSFontAttributeName];
+      [textToScroll.Get() setAttributes : dict range : NSMakeRange(0, textToScroll.Get().length)];
+   }
+   //
+   NSAttributedString * const result = textToScroll.Get();
+   textToScroll.Release();
+
+   return result;
+}
+
+//_________________________________________________________________
 bool CreateSplashscreen()
 {
    //Try to create NSImage out of Splash.gif, create NSPanel
-   //with ROOTSplashscreenView as its content view + our background image.
+   //with ROOTSplashscreenView as its content view + our background image + text in a scroll view.
 
-   //0. Image for splash screen's background.
+   using ROOT::MacOSX::Util::NSScopeGuard;
+
+   //0. Text to show.
+   const NSScopeGuard<NSAttributedString> textToScroll(CreateTextToScroll());
+   if (!textToScroll.Get())
+      //Diagnostic was issued by CreateTextToScroll (TODO though).
+      return false;
+
+   //1. Image for splash screen's background.
 #ifdef ROOTICONPATH
    const std::string fileName(std::string(ROOTICONPATH) + "/Splash.gif");
 #else
@@ -606,8 +729,6 @@ bool CreateSplashscreen()
    
    const std::string fileName(std::string(env) + "/icons/Splash.gif");
 #endif
-
-   using ROOT::MacOSX::Util::NSScopeGuard;
 
    const NSScopeGuard<NSString> nsStringGuard([[NSString alloc] initWithFormat : @"%s", fileName.c_str()]);
    if (!nsStringGuard.Get()) {
@@ -628,7 +749,7 @@ bool CreateSplashscreen()
       return false;
    }
    
-   //1. Splash-screen ('panel' + its content view).
+   //2. Splash-screen ('panel' + its content view).
    NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
                                                     initWithContentRect : CGRectMake(0, 0, imageSize.width, imageSize.height)
                                                     styleMask : NSBorderlessWindowMask
@@ -639,7 +760,7 @@ bool CreateSplashscreen()
       return false;
    }
 
-   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get()]);
+   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get() text : textToScroll.Get()]);
    if (!viewGuard.Get()) {
       //TODO: diagnostic.
       return false;

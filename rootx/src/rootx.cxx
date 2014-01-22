@@ -111,9 +111,6 @@ const  int  kMAXPATHLEN = 8192;
 
 
 //Part for Cocoa - requires external linkage.
-/*
-#ifdef R__HAS_COCOA
-
 namespace ROOT {
 namespace ROOTX {
 
@@ -122,6 +119,9 @@ int gChildpid = -1;
 
 }
 }
+
+/*
+#ifdef R__HAS_COCOA
 
 using ROOT::ROOTX::gChildpid;//:)
 
