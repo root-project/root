@@ -149,7 +149,6 @@ const CFTimeInterval signalInterval = 0.1;
 
 timeval popupCreationTime;
 const CFTimeInterval splashScreenDelayInSec = 4.;//4 seconds as in rootx.cxx.
-const int splashScreenDelay = int(splashScreenDelayInSec * 1000);
 
 //Timer for a scroll animation.
 CFRunLoopTimerRef scrollTimer = 0;
@@ -408,6 +407,7 @@ void ProcessTimerEvent(NSEvent *event)
 bool StayUp()
 {
    //Taken from rootxx.cxx.
+   const int splashScreenDelay = int(splashScreenDelayInSec * 1000);
 
    timeval ctv = {};
    timeval dtv = {};
