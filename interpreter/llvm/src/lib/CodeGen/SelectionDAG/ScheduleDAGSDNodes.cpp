@@ -214,7 +214,7 @@ void ScheduleDAGSDNodes::ClusterNeighboringLoads(SDNode *Node) {
 
   // Look for other loads of the same chain. Find loads that are loading from
   // the same base pointer and different offsets.
-  SmallPtrSet<SDNode*, 16> Visited;
+  SmallPtrSet<SDNode*, 64> Visited;
   SmallVector<int64_t, 4> Offsets;
   DenseMap<long long, SDNode*> O2SMap;  // Map from offset to SDNode.
   bool Cluster = false;
