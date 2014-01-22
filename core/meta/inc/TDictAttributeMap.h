@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TClassAttributeMap
-#define ROOT_TClassAttributeMap
+#ifndef ROOT_TDictAttributeMap
+#define ROOT_TDictAttributeMap
 
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TClassAttributeMap                                                    //
+// TDictAttributeMap                                                    //
 //                                                                      //
 // Dictionary of attributes of a TClass.                                //
 //                                                                      //
@@ -30,12 +30,12 @@
 #endif
 
 
-class TClassAttributeMap : public TObject
+class TDictAttributeMap : public TObject
 {
 public:
 
-   TClassAttributeMap();
-   virtual ~TClassAttributeMap();
+   TDictAttributeMap();
+   virtual ~TDictAttributeMap();
 
    void        AddProperty(const char* key, const char* value);
    Bool_t      HasKey(const char* key) const;
@@ -49,8 +49,8 @@ private:
 
    THashTable     fStringProperty;         //all properties of String type
 
-   ClassDef(TClassAttributeMap,1)  // Container for name/value pairs of TClass attributes
+   ClassDef(TDictAttributeMap,1)  // Container for name/value pairs of TDictionary attributes
 };
 
-#endif // ROOT_TClassAttributeMap
+#endif // ROOT_TDictAttributeMap
 

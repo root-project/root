@@ -2542,7 +2542,7 @@ static void R__WriteDependencyFile(const TString &build_loc, const TString &depf
 #endif
    {
      const char *dictHeaders[] = { "RVersion.h", "RConfig.h", "TClass.h",
-       "TClassAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
+       "TDictAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
        "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
        "TFileMergeInfo.h","TCollectionProxyInfo.h"};
 

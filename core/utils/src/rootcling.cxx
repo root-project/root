@@ -2975,7 +2975,7 @@ void CreateDictHeader(std::ostream& dictStream, const std::string& main_dictname
                << "#define G__DICTIONARY\n"
                << "#include \"RConfig.h\"\n"
                << "#include \"TClass.h\"\n"
-               << "#include \"TClassAttributeMap.h\"\n"
+               << "#include \"TDictAttributeMap.h\"\n"
                << "#include \"TInterpreter.h\"\n"
                << "#include \"TROOT.h\"\n"
                << "#include \"TBuffer.h\"\n"

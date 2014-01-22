@@ -1598,7 +1598,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             // 4) We fill the map (in the gen code)
             if (!attrMapExtracted){
                manipString+="      theClass->CreateAttributeMap();\n";
-               manipString+="      TClassAttributeMap* attrMap( theClass->GetAttributeMap() );\n";
+               manipString+="      TDictAttributeMap* attrMap( theClass->GetAttributeMap() );\n";
                attrMapExtracted=true;
             }
 

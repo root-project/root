@@ -42,9 +42,25 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TDataType.h"
+#include "TDictAttributeMap.h"
 #include "TROOT.h"
 
 ClassImp(TDictionary)
+
+TDictionary::~TDictionary() {
+   if(fAttributeMap) {
+      delete fAttributeMap;
+   }
+}
+
+void TDictionary::CreateAttributeMap()
+{
+   //Create a TDictAttributeMap for a TClass to be able to add attribute pairs
+   //key-value to the TClass.
+
+   if (!fAttributeMap)
+      fAttributeMap = new TDictAttributeMap;
+}
 
 TDictionary* TDictionary::GetDictionary(const char* name)
 {

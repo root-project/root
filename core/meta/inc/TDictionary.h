@@ -63,6 +63,7 @@ class MethodArgInfo_t;
 class MethodArgInfo_t;
 class TypeInfo_t;
 class TypedefInfo_t;
+class TDictAttributeMap;
 
 enum EProperty {
    kIsClass         = 0x00000001,
@@ -160,11 +161,22 @@ namespace ROOT {
 
 class TDictionary : public TNamed {
 
-public:
-   TDictionary() { }
-   TDictionary(const char* name): TNamed(name, "") { }
-   virtual ~TDictionary() { }
+private:
+   TDictAttributeMap *fAttributeMap;    //pointer to a class attribute map
 
+public:
+   TDictionary(): fAttributeMap(0) { }
+   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0) { }
+   virtual ~TDictionary();
+
+   void                CreateAttributeMap();
+   TDictAttributeMap  *GetAttributeMap() const
+   {
+      //Get the TDictAttributeMap pointer to be able to add attribute
+      //pairs key-value to the TClass.
+
+      return fAttributeMap;
+   }
    virtual Long_t      Property() const = 0;
    static TDictionary* GetDictionary(const char* name);
    static TDictionary* GetDictionary(const type_info &typeinfo);
