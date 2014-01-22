@@ -336,7 +336,6 @@ bool ReadContributors(std::list<std::string> & contributors);
 void PopupLogo(bool about)
 {
 return;//DISABLED in beta 2.
-
    if (!InitCocoa()) {
       //TODO: diagnostic.
       return;
@@ -354,12 +353,9 @@ return;//DISABLED in beta 2.
       return;
    }
    
-   SetSplashscreenPosition();
-
-   [splashScreen makeKeyAndOrderFront : nil];
-
-   //
    showAboutInfo = about;
+   SetSplashscreenPosition();
+   [splashScreen makeKeyAndOrderFront : nil];
 }
 
 //_________________________________________________________________
@@ -385,7 +381,6 @@ return;//DISABLED in beta 2.
    [splashScreen orderOut : nil];
    [splashScreen release];
    splashScreen = nil;
-
 }
 
 //_________________________________________________________________
@@ -421,16 +416,6 @@ namespace {
 bool InitCocoa()
 {
    if (!topLevelPool) {
-      //It's not clear, if I need TransformProcessType at all or activateIgnoring is enough.
-      //Anyway, let's try.
-      /*
-      ProcessSerialNumber psn = {0, kCurrentProcess};
-      const OSStatus res = ::TransformProcessType(&psn, kProcessTransformToUIElementApplication);
-      if (res != noErr && res != paramErr) {
-         //TODO: diagnostic.
-         return false;
-      }*/
-  
       [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];
       [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
 
@@ -683,16 +668,31 @@ NSAttributedString *CreateTextToScroll()
       return nil;
    [textToScroll.Get() appendAttributedString : newString.Get()];
 
-   if (showAboutInfo) {
-      //Read contributors.
-      std::list<std::string> contributors;
-      ReadContributors(contributors);
+   //Read contributors.
+   std::list<std::string> contributors;
+   ReadContributors(contributors);
 
-      if (contributors.size())//Add more lines here.
-         ;
+   if (contributors.size()) {//Add more lines here.
+      newString.Reset([[NSAttributedString alloc] initWithString : @"Contributors:  "]);
+      [textToScroll.Get() appendAttributedString : newString.Get()];
+   
+      std::list<std::string>::const_iterator it = contributors.begin(), end = contributors.end(), begin = contributors.begin();
+      for (; it != end; ++it) {
+         //Quite ugly :( NSString/NSAttributedString ARE ugly.
+         NSString * const nsFromC = [NSString stringWithFormat : it != begin ? @", %s" : @"%s", it->c_str()];
+         newString.Reset([[NSAttributedString alloc] initWithString : nsFromC]);
+         if (newString.Get())
+            [textToScroll.Get() appendAttributedString : newString.Get()];
+      }
+      
+      newString.Reset([[NSAttributedString alloc] initWithString :
+                      @"\n\nOur sincere thanks and apologies to anyone who deserves credit but fails to appear in this list."]);
    }
+   
+   //There is a favorite user (poor little me again??) yet.
+
    //
-   if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 10.]) {
+   if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 11.]) {
       NSDictionary * dict = [NSDictionary dictionaryWithObject : font forKey : NSFontAttributeName];
       [textToScroll.Get() setAttributes : dict range : NSMakeRange(0, textToScroll.Get().length)];
    }
@@ -814,7 +814,8 @@ bool ReadContributors(std::list<std::string> & contributors)
    while (std::getline(inputFile, line)) {
       if (line.length() > 3) {
          if (line[0] == 'N' && line[1] == ':' && line[2] == ' ')
-            tmp.push_back(line);
+            //Let's hope this substring is not a pile of whitespaces.
+            tmp.push_back(line.substr(3, line.length() - 3));
       }
    }
    
