@@ -145,7 +145,7 @@ NSAutoreleasePool * topLevelPool = nil;
 //if we got a SIGUSR1 (see rootx.cxx) or
 //if we have to remove a splash-screen after a delay.
 CFRunLoopTimerRef signalTimer = 0;
-const CFTimeInterval signalInterval = 1.;
+const CFTimeInterval signalInterval = 0.1;
 
 timeval popupCreationTime;
 const int splashScreenDelay = 4000;//4 seconds as in rootx.cxx.
@@ -163,9 +163,13 @@ enum TimerEventType {//make it enum class when C++11 is here.
 
 //Aux. functions:
 bool InitCocoa();
-bool InitTimers();
-bool StayUp();
+bool InitTimers(bool background);
+void RunEventLoop(bool background);
 void ProcessTimerEvent(NSEvent *event);
+bool StayUp();
+bool CreateSplashscreen();
+void SetSplashscreenPosition();
+//Non GUI aux. function.
 bool ReadContributors(std::list<std::string> & contributors);
 
 }//unnamed namespace.
@@ -176,22 +180,8 @@ bool ReadContributors(std::list<std::string> & contributors);
 void PopupLogo(bool about)
 {
 #pragma unused(about)
+return;//Still Noop!!!
 
-   //Let's do something stupid to suppress 'unused' warnings.
-   (void)showAboutInfo;
-   if (false) {
-      InitCocoa();
-      InitTimers();
-      ProcessTimerEvent(nil);
-      std::list<std::string> lst;
-      ReadContributors(lst);
-   }
-   //
-   
-   //Noop at the moment.
-   
-   
-   /*
    if (!InitCocoa()) {
       //TODO: diagnostic.
       return;
@@ -203,103 +193,50 @@ void PopupLogo(bool about)
       return;
    }
    
+   //0. For StayUp to check when we should hide our splash-screen.
    if (gettimeofday(&popupCreationTime, 0) == -1) {
       //TODO: check errno and issue a message,
       //we need a valid popup creation time.
       return;
    }
 
-   //Image first.
-#ifdef ROOTICONPATH
-   const std::string fileName(std::string(ROOTICONPATH) + "/Splash.gif");
-#else
-   const char * const env = std::getenv("ROOTSYS");
-   if (!env) {
+   if (!CreateSplashscreen()) {
       //TODO: diagnostic.
       return;
    }
    
-   const std::string fileName(std::string(env) + "/icons/Splash.gif");
-#endif
+   SetSplashscreenPosition();
 
-   using ROOT::MacOSX::Util::NSScopeGuard;
+   [splashScreen makeKeyAndOrderFront : nil];
 
-   const NSScopeGuard<NSString> nsStringGuard([[NSString alloc] initWithFormat : @"%s", fileName.c_str()]);
-   if (!nsStringGuard.Get()) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   const NSScopeGuard<NSImage> imageGuard([[NSImage alloc] initWithContentsOfFile : nsStringGuard.Get()]);
-   if (!imageGuard.Get()) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   const CGSize imageSize = imageGuard.Get().size;
-   //These sizes are from X11 version, they are related to the geometry of a scroll view.
-   if (imageSize.width < 300 || imageSize.height < 285) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   //Create a panel.
-   NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
-                                                    initWithContentRect : CGRectMake(0, 0, imageSize.width, imageSize.height)
-                                                    styleMask : NSBorderlessWindowMask
-                                                    backing : NSBackingStoreBuffered
-                                                    defer : NO]);
-   if (!splashGuard.Get()) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get()]);
-   if (!viewGuard.Get()) {
-      //TODO: diagnostic.
-      return;
-   }
-   
-   [splashGuard.Get() setContentView : viewGuard.Get()];
-   splashScreen = splashGuard.Get();
-   splashGuard.Release();
-
-   //Now, set the text in a text view.
-   if (NSScreen * const screen = [NSScreen mainScreen]) {
-      const CGSize screenSize = screen.frame.size;
-      const NSRect frame = splashScreen.frame;
-      const CGPoint origin = CGPointMake(screenSize.width / 2 - frame.size.width / 2, screenSize.height / 2 - frame.size.height / 2);
-      [splashScreen setFrameOrigin : origin];
-   }//else - is it possible?
-   
-   [splashScreen makeKeyAndOrderFront : nil];*/
+   //
+   showAboutInfo = about;
 }
 
 //_________________________________________________________________
 void PopdownLogo()
 {
    //This function is called from the signal handler.
-
-   //Noop.
+   popdown = 1;
 }
 
 //_________________________________________________________________
 void WaitLogo()
 {
-   //Noop at the moment.
+return;//Still Noop!!!
+
    if (!splashScreen)
       //TODO: diagnostic.
       return;
+
+   RunEventLoop(false);//false - we're 'foreground'.
    
-   /*
-   if (!InitTimers())
-      //TODO: diagnostic.
-      return;
-   */
+   //Cleanup.
    
-   //1. Attach timers to the main run loop.
-   //2. Event loop.
-   //3. Cleanup.
+   [splashScreen orderOut : nil];
+   [splashScreen release];
+   splashScreen = nil;
+
 }
 
 //_________________________________________________________________
@@ -363,7 +300,7 @@ bool InitCocoa()
 }
 
 //_________________________________________________________________
-bool InitTimers()
+bool InitTimers(bool background)
 {
    assert(scrollTimer == 0 && "InitTimers, scrollTimer was initialized already");
    assert(signalTimer == 0 && "InitTimers, signalTimer was initialized already");
@@ -380,58 +317,41 @@ bool InitTimers()
                                                                ));
    if (!guard1.Get())
       return false;
-   
-   CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                                               CFAbsoluteTimeGetCurrent() + scrollInterval,
-                                                               scrollInterval,
-                                                               0,
-                                                               0,
-                                                               ROOTSplashscreenTimerCallback,
-                                                               0
-                                                               ));
 
-   if (!guard2.Get())
-      return false;
+   if (!background) {
+      //Scroll animation.
+      CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
+                                                                  CFAbsoluteTimeGetCurrent() + scrollInterval,
+                                                                  scrollInterval,
+                                                                  0,
+                                                                  0,
+                                                                  ROOTSplashscreenTimerCallback,
+                                                                  0
+                                                                  ));
+
+      if (!guard2.Get())
+         return false;
+
+      signalTimer = guard2.Get();
+      guard2.Release();
+   }
    
-   //TODO: Hmm, may be, it's not a bad idea to return a pointer from 'Release'?
+   //TODO: refactor CFScopeGuard
    scrollTimer = guard1.Get();
    guard1.Release();
-   signalTimer = guard2.Get();
-   guard2.Release();
    
    return true;
 }
 
 //_________________________________________________________________
-bool ReadContributors(std::list<std::string> & contributors)
+void RunEventLoop(bool background)
 {
-#ifdef ROOTDOCDIR
-   const std::string fileName(std::string(ROOTDOCDIR) + "/CREDITS");
-#else
-   const char * const env = std::getenv("ROOTSYS");
-   if (!env)
-      //TODO: diagnostic?
-      return false;
-   
-   const std::string fileName(std::string(env) + "/README/CREDITS");
-#endif
-
-   std::ifstream inputFile(fileName.c_str());
-   if (!inputFile)
-      return false;
-
-   std::list<std::string> tmp;
-   std::string line(200, ' ');
-   while (std::getline(inputFile, line)) {
-      if (line.length() > 3) {
-         if (line[0] == 'N' && line[1] == ':' && line[2] == ' ')
-            tmp.push_back(line);
-      }
+#pragma unused(background)
+   //
+   if (0) {
+      InitTimers(background);
+      ProcessTimerEvent(nil);//To suppress warnings.
    }
-   
-   tmp.swap(contributors);
-   
-   return true;
 }
 
 //_________________________________________________________________
@@ -472,6 +392,120 @@ bool StayUp()
    if (ctv.tv_sec < 0)
       return false;
 
+   return true;
+}
+
+//_________________________________________________________________
+bool CreateSplashscreen()
+{
+   //Try to create NSImage out of Splash.gif, create NSPanel
+   //with ROOTSplashscreenView as its content view + our background image.
+
+   //0. Image for splash screen's background.
+#ifdef ROOTICONPATH
+   const std::string fileName(std::string(ROOTICONPATH) + "/Splash.gif");
+#else
+   const char * const env = std::getenv("ROOTSYS");
+   if (!env) {
+      //TODO: diagnostic.
+      return false;
+   }
+   
+   const std::string fileName(std::string(env) + "/icons/Splash.gif");
+#endif
+
+   using ROOT::MacOSX::Util::NSScopeGuard;
+
+   const NSScopeGuard<NSString> nsStringGuard([[NSString alloc] initWithFormat : @"%s", fileName.c_str()]);
+   if (!nsStringGuard.Get()) {
+      //TODO: diagnostic.
+      return false;
+   }
+   
+   const NSScopeGuard<NSImage> imageGuard([[NSImage alloc] initWithContentsOfFile : nsStringGuard.Get()]);
+   if (!imageGuard.Get()) {
+      //TODO: diagnostic.
+      return false;
+   }
+   
+   const CGSize imageSize = imageGuard.Get().size;
+   //These sizes are from X11 version, they are related to the geometry of a scroll view.
+   if (imageSize.width < 300 || imageSize.height < 285) {
+      //TODO: diagnostic.
+      return false;
+   }
+   
+   //1. Splash-screen ('panel' + its content view).
+   NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
+                                                    initWithContentRect : CGRectMake(0, 0, imageSize.width, imageSize.height)
+                                                    styleMask : NSBorderlessWindowMask
+                                                    backing : NSBackingStoreBuffered
+                                                    defer : NO]);
+   if (!splashGuard.Get()) {
+      //TODO: diagnostic.
+      return false;
+   }
+
+   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get()]);
+   if (!viewGuard.Get()) {
+      //TODO: diagnostic.
+      return false;
+   }
+   
+   [splashGuard.Get() setContentView : viewGuard.Get()];
+   splashScreen = splashGuard.Get();
+   splashGuard.Release();
+   
+   return true;
+}
+
+//_________________________________________________________________
+void SetSplashscreenPosition()
+{
+   assert(splashScreen != nil && "SetSplashscreenPosition, splashScreen is nil");
+   
+   //Set the splash-screen's position (can it be wrong for a multi-head setup?)
+   //TODO: check with a secondary display.
+   if (NSScreen * const screen = [NSScreen mainScreen]) {
+      const NSRect screenFrame = screen.frame;
+      const CGSize splashSize = splashScreen.frame.size;
+
+      const CGPoint origin = CGPointMake(screenFrame.origin.x + screenFrame.size.width / 2 - splashSize.width / 2,
+                                         screenFrame.origin.y + screenFrame.size.height / 2 - splashSize.height / 2);
+
+      [splashScreen setFrameOrigin : origin];
+   }//else - is it possible? TODO: diagnostic.
+}
+
+//_________________________________________________________________
+bool ReadContributors(std::list<std::string> & contributors)
+{
+#ifdef ROOTDOCDIR
+   const std::string fileName(std::string(ROOTDOCDIR) + "/CREDITS");
+#else
+   const char * const env = std::getenv("ROOTSYS");
+   if (!env)
+      //TODO: diagnostic?
+      return false;
+   
+   const std::string fileName(std::string(env) + "/README/CREDITS");
+#endif
+
+   std::ifstream inputFile(fileName.c_str());
+   if (!inputFile)
+      return false;
+
+   std::list<std::string> tmp;
+   std::string line(200, ' ');
+   while (std::getline(inputFile, line)) {
+      if (line.length() > 3) {
+         if (line[0] == 'N' && line[1] == ':' && line[2] == ' ')
+            tmp.push_back(line);
+      }
+   }
+   
+   tmp.swap(contributors);
+   
    return true;
 }
 
