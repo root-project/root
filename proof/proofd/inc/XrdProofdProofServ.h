@@ -50,6 +50,7 @@ public:
 
    XrdSrvBuffer(char *bp=0, int sz=0, bool dup=0) {
       fBuff = 0;
+      fSize = 0;
       if (dup && bp && sz > 0) {
          fMembuf = (char *)malloc(sz);
          if (fMembuf) {
