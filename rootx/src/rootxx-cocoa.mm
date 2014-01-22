@@ -148,7 +148,8 @@ CFRunLoopTimerRef signalTimer = 0;
 const CFTimeInterval signalInterval = 0.1;
 
 timeval popupCreationTime;
-const int splashScreenDelay = 4000;//4 seconds as in rootx.cxx.
+const CFTimeInterval splashScreenDelayInSec = 4.;//4 seconds as in rootx.cxx.
+const int splashScreenDelay = int(splashScreenDelayInSec * 1000);
 
 //Timer for a scroll animation.
 CFRunLoopTimerRef scrollTimer = 0;
@@ -255,20 +256,16 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
 #pragma unused(info)
    if (timer == signalTimer) {
       //
-      if (popdown) {
+      if (popdown || !StayUp()) {
          //Check if signal handler set popdown flag.
          //We have to stop everything and inform our main loop.
-         NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                       timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
-         [NSApp postEvent : timerEvent atStart : NO];
-      } else if (!StayUp()) {
-         //Check if we have to hide a splash screen after delay.
-         //Oook, we have to stop everything and inform our main loop.
-
          NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
                                        timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : kRemoveSplashTimer data2 : 0];
          [NSApp postEvent : timerEvent atStart : NO];
       }
+      //else ignore.
+   } else {
+      //Scroll animation event.
    }
 }
 
@@ -280,16 +277,6 @@ namespace {
 bool InitCocoa()
 {
    if (!topLevelPool) {
-      //
-      //It's not clear, if I need TransformProcessType at all or activateIgnoring is enough.
-      //Anyway, let's try.
-      ProcessSerialNumber psn = {0, kCurrentProcess};
-      const OSStatus res = ::TransformProcessType(&psn, kProcessTransformToUIElementApplication);
-      if (res != noErr && res != paramErr) {
-         //TODO: diagnostic.
-         return false;
-      }
-
       [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];
       [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
 
@@ -321,7 +308,7 @@ bool InitTimers(bool background)
    if (!background) {
       //Scroll animation.
       CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                                                  CFAbsoluteTimeGetCurrent() + scrollInterval,
+                                                                  CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
                                                                   scrollInterval,
                                                                   0,
                                                                   0,
@@ -344,13 +331,68 @@ bool InitTimers(bool background)
 }
 
 //_________________________________________________________________
+void AttachTimers(bool background)
+{
+   assert(signalTimer != 0 && "AttachTimer, invalid signalTimer (null)");
+   
+   CFRunLoopAddTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
+
+   if (!background) {
+      //We also have to scroll.
+      assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
+      CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
+   }
+}
+
+//_________________________________________________________________
+void RemoveTimers(bool background)
+{
+   assert(signalTimer != 0 && "RemoveTimers, signalTimer is null");
+   
+   CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
+   CFRunLoopTimerInvalidate(signalTimer);
+   //TODO: test if I also have to call release!!!
+   signalTimer = 0;
+   
+   if (!background) {
+      assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
+      CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
+      CFRunLoopTimerInvalidate(signalTimer);
+      //TODO: test if I also have to call release!!!
+      signalTimer = 0;
+      
+   }
+}
+
+//_________________________________________________________________
 void RunEventLoop(bool background)
 {
-#pragma unused(background)
-   //
-   if (0) {
-      InitTimers(background);
-      ProcessTimerEvent(nil);//To suppress warnings.
+   //Kind of event loop.
+   
+   if (!InitTimers(background))
+      //TODO: in case of 'background == true' it's a very bad fatal problem.
+      return;
+   
+   AttachTimers(background);
+
+   while (true) {
+
+      //Here we (possibly) suspend waiting for event.
+      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
+         //Let's first check the type:
+         if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
+            if (event.data1 == kRemoveSplashTimer) {
+               //Ok, we stop
+               RemoveTimers(background);
+               //Empty the queue (hehehe, this makes me feel ... uneasy :) ).
+               while ([NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]);
+               return;
+            } else {
+               //This well be 'waitpid' event.
+               ProcessTimerEvent(event);
+            }
+         }
+      }
    }
 }
 
