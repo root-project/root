@@ -83,7 +83,8 @@ ClassImp(TDSet)
 TDSetElement::TDSetElement() : TNamed("",""),
                                fDirectory(), fFirst(0), fNum(0), fMsd(),
                                fTDSetOffset(0), fEntryList(0), fValid(kFALSE),
-                               fEntries(0), fFriends(0), fDataSet(), fAssocObjList(0)
+                               fEntries(0), fFriends(0), fDataSet(), fAssocObjList(0),
+                               fMaxProcTime(-1)
 {
    // Default constructor
    ResetBit(kWriteV3);
