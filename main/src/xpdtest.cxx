@@ -557,7 +557,7 @@ int xpd_ping(const char *host, int port)
 int getsocket(struct hostent *h, int port)
 {
    int sd, rc;
-   struct sockaddr_in localAddr, servAddr;
+   struct sockaddr_in localAddr = {0}, servAddr = {0};
 
    servAddr.sin_family = h->h_addrtype;
    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
@@ -578,6 +578,7 @@ int getsocket(struct hostent *h, int port)
    rc = bind(sd, (struct sockaddr *) &localAddr, sizeof(localAddr));
    if(rc < 0) {
       perror("error ");
+      close(sd);
       return -1;
    }
                                 
@@ -585,6 +586,7 @@ int getsocket(struct hostent *h, int port)
    rc = connect(sd, (struct sockaddr *) &servAddr, sizeof(servAddr));
    if(rc < 0) {
       perror("cannot connect ");
+      close(sd);
       return -1;
    }
 
