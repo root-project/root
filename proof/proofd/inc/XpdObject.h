@@ -77,7 +77,7 @@ public:
    void DoIt();
 
    XpdObjectQ(const char *id, const char *desc) : XrdJob(desc) 
-          {fCurage = fCount = 0; fMaxage = 0; fTraceID = id;
+          {fCurage = fCount = 0; fMaxage = 0; fTraceID = 0; fSched = 0; fTraceID = id;
            fMaxinQ = 32; fMininQ = 16; fFirst = 0; }
 
    ~XpdObjectQ() {}
