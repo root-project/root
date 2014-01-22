@@ -173,9 +173,9 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
    fNsmooth       ( 2 ),
    fNsmoothVarS   ( 0 ),
    fNsmoothVarB   ( 0 ),
+   fAverageEvtPerBin( 0 ),
    fAverageEvtPerBinVarS (0), 
    fAverageEvtPerBinVarB (0),
-   fAverageEvtPerBin( 0 ),
    fKDEfineFactor ( 0 ),
    fInterpolateString(0)
 {
