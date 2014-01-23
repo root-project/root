@@ -8,6 +8,10 @@ include_directories(${PYTHON_INCLUDE_DIRS})
 ROOT_GENERATE_DICTIONARY(G__PyROOT *.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(PyROOT LINKDEF LinkDef.h)
 
+if(GCC_MAJOR EQUAL 4)
+  add_definitions(-fno-strict-aliasing)
+endif()
+
 ROOT_LINKER_LIBRARY(PyROOT *.cxx G__PyROOT.cxx LIBRARIES RIO Net Hist Graf Graf3d Gpad Tree Matrix Thread ${Reflexlib} ${PYTHON_LIBRARIES})
 if(WIN32)
   set_target_properties(PyROOT PROPERTIES SUFFIX ".pyd")
