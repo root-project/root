@@ -6,5 +6,6 @@
 
 #pragma link C++ class TGCocoa;
 #pragma link C++ class TGQuartz; 
+#pragma link C++ class TGOSXGLManager;
 
 #endif
