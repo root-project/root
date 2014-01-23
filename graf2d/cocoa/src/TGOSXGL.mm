@@ -1,7 +1,12 @@
+#include <utility>
 #include <cassert>
+#include <vector>
 
 #include "TVirtualViewer3D.h"
 #include "TSeqCollection.h"
+#include "TVirtualGL.h"
+#include "TVirtualX.h"
+
 #include "TGOSXGL.h"
 #include "TROOT.h"
 
@@ -27,18 +32,35 @@ TGOSXGLManager::~TGOSXGLManager()
 
 
 //______________________________________________________________________________
-Int_t TGOSXGLManager::InitGLWindow(Window_t winID)
+Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
 {
-#pragma unused(winID)
-   return 0;
+   typedef std::pair<UInt_t, Int_t> component_type;
+
+   std::vector<component_type> format;//Where is the hummer when you need one??? (I mean C++11 initializers '{xxx}').
+
+   //TODO: this values actually are quite random, find something better!
+   format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
+   format.push_back(component_type(Rgl::kDepth, 32));
+   format.push_back(component_type(Rgl::kMultiSample, 8));
+
+   //Now, the interface is quite ugly :) and not very different from X11, that's why it's called TVirtualX :)
+   Int_t dummyX = 0, dummyY = 0;
+   UInt_t width = 0, height = 0;
+   gVirtualX->GetWindowSize(parentID, dummyX, dummyY, width, height);
+
+   //Window_t is long, so in principle it's a potential problem: do I need a mapping?
+   //But billions of windows ... ;)
+   return Int_t(gVirtualX->CreateOpenGLWindow(parentID, width, height, format));
 }
 
 
 //______________________________________________________________________________
-Int_t TGOSXGLManager::CreateGLContext(Int_t winInd)
+Int_t TGOSXGLManager::CreateGLContext(Int_t winID)
 {
-#pragma unused(winInd)
-   return 0;
+   //This is used by TRootCanvas, it never shares :) So the second parameter is kNone.
+   //Handle_t is long, I'm converting to int, which can be a problem if you ...
+   //have billions of gl contexts :)
+   return Int_t(gVirtualX->CreateOpenGLContext(winID, kNone));
 }
 
 
@@ -49,14 +71,22 @@ Bool_t TGOSXGLManager::MakeCurrent(Int_t ctxInd)
    return false;
 }
 
-//A bunch of (now) noop functions - this is a legacy from the time when
-//we had a real off-screen OpenGL rendering. Nowadays we always do it "on-screen"
-
 //______________________________________________________________________________
 void TGOSXGLManager::Flush(Int_t ctxInd)
 {
-#pragma unused(ctxInd)
+   gVirtualX->FlushOpenGLBuffer(ctxInd);
 }
+
+//______________________________________________________________________________
+void TGOSXGLManager::DeleteGLContext(Int_t ctxInd)
+{
+   gVirtualX->DeleteOpenGLContext(ctxInd);
+}
+
+
+//A bunch of (now) noop functions - this is a legacy from the time when
+//we had a real off-screen OpenGL rendering. Nowadays we always do it "on-screen"
+
 
 //______________________________________________________________________________
 Bool_t TGOSXGLManager::AttachOffScreenDevice(Int_t, Int_t, Int_t, UInt_t, UInt_t)
@@ -95,13 +125,6 @@ void TGOSXGLManager::ReadGLBuffer(Int_t)
 }
 
 //Context management.
-
-//______________________________________________________________________________
-void TGOSXGLManager::DeleteGLContext(Int_t ctxInd)
-{
-#pragma unused(ctxInd)
-}
-
 
 //______________________________________________________________________________
 Int_t TGOSXGLManager::GetVirtualXInd(Int_t ctxInd)
