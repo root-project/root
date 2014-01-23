@@ -25,3 +25,4 @@ set(META_DICTIONARY ${dictionaries}  PARENT_SCOPE)
 set_target_properties(META_DICTIONARY PROPERTIES FOLDER Dictionaries)
 
 ROOT_INSTALL_HEADERS()
+
