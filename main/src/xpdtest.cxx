@@ -563,7 +563,8 @@ int xpd_ping(const char *host, int port)
 int getsocket(struct hostent *h, int port)
 {
    int sd, rc;
-   struct sockaddr_in localAddr = {0}, servAddr = {0};
+   struct sockaddr_in localAddr = sockaddr_in();
+   struct sockaddr_in servAddr = sockaddr_in();
 
    servAddr.sin_family = h->h_addrtype;
    memcpy((char *) &servAddr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
