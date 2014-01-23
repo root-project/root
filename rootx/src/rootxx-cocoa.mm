@@ -70,7 +70,7 @@ bool showAboutInfo = false;
 }
 
 //_________________________________________________________________
-- (id) initWithImage : (NSImage *) image text : (NSAttributedString *) textToScroll
+- (id) initWithImage : (NSImage *) image text : (NSAttributedString *) textToScroll aboutMode : (BOOL) about
 {
    assert(image != nil && "initWithImage:text:, parameter 'image' is nil");
    assert(textToScroll != nil && "initWithImage:text:, parameter 'textToScroll' is nil");
@@ -104,6 +104,12 @@ bool showAboutInfo = false;
       
       [scrollView setDocumentView : textView];
       [scrollView setBorderType : NSNoBorder];
+
+
+      if (about) {
+         [textView setTextContainerInset : CGSizeMake(0., scrollRect.size.height)];
+         [textView scrollPoint : NSMakePoint(0., scrollRect.size.height)];
+      }
 
       //Hehehehe.
       [scrollView setDrawsBackground : NO];
@@ -157,7 +163,11 @@ bool showAboutInfo = false;
    const CGFloat scrollAmountPixels = 1.;
    // How far have we scrolled so far?
    const CGFloat currentScrollAmount = [scrollView documentVisibleRect].origin.y;
-   [[scrollView documentView] scrollPoint : NSMakePoint(0., currentScrollAmount + scrollAmountPixels)];
+   
+   if (currentScrollAmount + scrollAmountPixels >= textView.frame.size.height - scrollView.frame.size.height)
+      [textView scrollPoint : NSMakePoint(0., 0.)];//Make a "loop".
+   else
+      [textView scrollPoint : NSMakePoint(0., currentScrollAmount + scrollAmountPixels)];
    // If anything overlaps the text we just scrolled, it won’t get redraw by the
    // scrolling, so force everything in that part of the panel to redraw.
    NSRect scrollViewFrame = [scrollView bounds];
@@ -544,6 +554,9 @@ void RunEventLoop()
 
    while (!popupDone) {
       //Here we (possibly) suspend waiting for event.
+      using ROOT::MacOSX::Util::NSScopeGuard;
+      const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
+      
       if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
          //Let's first check the type:
          if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
@@ -612,6 +625,10 @@ void RunEventLoopInBackground()
       [thread.Get() start];
 
       while (true) {
+         //Autorelease pool?
+         using ROOT::MacOSX::Util::NSScopeGuard;
+         const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
+
          if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
             if (event.type == NSApplicationDefined && event.data1 == kWaitpidThread) {
                [thread.Get() cancel];
@@ -724,7 +741,7 @@ bool CreateSplashscreen(bool about)
       return false;
    }
 
-   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get() text : textToScroll.Get()]);
+   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get() text : textToScroll.Get() aboutMode : about]);
    if (!viewGuard.Get()) {
       //TODO: diagnostic.
       return false;

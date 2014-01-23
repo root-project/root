@@ -155,6 +155,8 @@ private:
 //                                  //
 //////////////////////////////////////
 
+//TODO: why do I have a special class instead of NSScopeGuard???
+
 class AutoreleasePool {
 public:
    AutoreleasePool(bool delayCreation = false);
