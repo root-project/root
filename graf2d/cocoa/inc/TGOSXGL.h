@@ -1,6 +1,8 @@
 #ifndef ROOT_TGOSXGL
 #define ROOT_TGOSXGL
 
+#include <map>
+
 #ifndef ROOT_TVirtualGL
 #include "TVirtualGL.h"
 #endif
@@ -54,6 +56,10 @@ public:
    Bool_t   HighColorFormat(Int_t /*ctxInd*/){return kFALSE;}
 
 private:
+   //
+   typedef std::map<Handle_t, Window_t> CtxToWindowMap_t;
+   CtxToWindowMap_t fCtxToWin;
+
    TGOSXGLManager(const TGOSXGLManager &);
    TGOSXGLManager &operator = (const TGOSXGLManager &);
 

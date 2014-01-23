@@ -60,7 +60,10 @@ Int_t TGOSXGLManager::CreateGLContext(Int_t winID)
    //This is used by TRootCanvas, it never shares :) So the second parameter is kNone.
    //Handle_t is long, I'm converting to int, which can be a problem if you ...
    //have billions of gl contexts :)
-   return Int_t(gVirtualX->CreateOpenGLContext(winID, kNone));
+   const Handle_t ctx = gVirtualX->CreateOpenGLContext(winID, kNone);
+   fCtxToWin[ctx] = Window_t(winID);
+   
+   return Int_t(ctx);
 }
 
 
@@ -68,7 +71,10 @@ Int_t TGOSXGLManager::CreateGLContext(Int_t winID)
 Bool_t TGOSXGLManager::MakeCurrent(Int_t ctxInd)
 {
 #pragma unused(ctxInd)
-   return false;
+   assert(fCtxToWin.find(Handle_t(ctxInd)) != fCtxToWin.end() &&
+          "MakeCurrent, window not found for a given context");
+
+   return gVirtualX->MakeOpenGLContextCurrent(Handle_t(ctxInd), fCtxToWin[Handle_t(ctxInd)]);
 }
 
 //______________________________________________________________________________
