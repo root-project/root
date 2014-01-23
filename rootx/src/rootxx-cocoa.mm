@@ -187,13 +187,6 @@ bool popupDone = false;
 
 @implementation ROOTSplashScreenPanel
 
-//Animation.
-
-//_________________________________________________________________
-- (void) scrollText
-{
-}
-
 //Events and behaviour.
 
 //_________________________________________________________________
@@ -314,6 +307,21 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 
 @end
 
+
+@interface ROOTSplashScreenAppDelegate : NSObject<NSApplicationDelegate>
+@end
+
+@implementation ROOTSplashScreenAppDelegate
+
+//_________________________________________________________________
+- (void) applicationDidResignActive : (NSNotification *) aNotification
+{
+#pragma unused(aNotification)
+   popupDone = true;
+}
+
+@end
+
 namespace {
 
 volatile sig_atomic_t popdown = 0;
@@ -391,14 +399,25 @@ return;//DISABLED in beta 2.
    if (!splashScreen)
       //TODO: diagnostic.
       return;
+   
+   ROOTSplashScreenAppDelegate *delegate = nil;
+   
+   if (showAboutInfo) {
+      delegate = [[ROOTSplashScreenAppDelegate alloc] init];
+      [NSApp setDelegate : delegate];
+   }
 
    RunEventLoop();
    
    //Cleanup.
-   
    [splashScreen orderOut : nil];
    [splashScreen release];
    splashScreen = nil;
+
+   if (showAboutInfo) {
+      [NSApp setDelegate : nil];
+      [delegate release];
+   }
 }
 
 //_________________________________________________________________
