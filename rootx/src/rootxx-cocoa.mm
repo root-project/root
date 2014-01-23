@@ -348,6 +348,7 @@ bool StayUp();
 bool CreateSplashscreen(bool about);
 void SetSplashscreenPosition();
 //Non GUI aux. function.
+NSAttributedString *CreateTextToScroll(bool about);
 bool ReadContributors(std::list<std::string> & contributors);
 
 }//unnamed namespace.
@@ -667,134 +668,6 @@ bool StayUp()
 }
 
 //_________________________________________________________________
-bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
-{
-   assert(textToScroll != nil && "AddDeveloperInfo, parameter 'textToScroll' is nil");
-   
-   using ROOT::MacOSX::Util::NSScopeGuard;
-
-   NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : gConception]);
-   if (!newString.Get())
-      //TODO: diagnostic.
-      return false;
-   [textToScroll appendAttributedString : newString.Get()];
-   
-   newString.Reset([[NSAttributedString alloc] initWithString : gLeadDevelopers]);
-   if (!newString.Get())
-      //TODO: diagnostic.
-      return false;
-   [textToScroll appendAttributedString : newString.Get()];
-   
-   newString.Reset([[NSAttributedString alloc] initWithString : gRootDevelopers]);
-   if (!newString.Get())
-      //TODO: diagnostic.
-      return false;
-   [textToScroll appendAttributedString : newString.Get()];
-   
-   newString.Reset([[NSAttributedString alloc] initWithString : gRootDocumentation]);
-   if (!newString.Get())
-      //TODO: diagnostic.
-      return false;
-   [textToScroll appendAttributedString : newString.Get()];
-   
-   return true;
-}
-
-//_________________________________________________________________
-void AddContributorsInfo(NSMutableAttributedString *textToScroll)
-{
-   //TODO: diagnostic and error handling.
-
-   assert(textToScroll != nil && "AddContributorsInfo, parameter 'textToScroll' is nil");
-   //
-   std::list<std::string> contributors;
-   ReadContributors(contributors);
-
-   if (contributors.size()) {//Add more lines here.
-      using ROOT::MacOSX::Util::NSScopeGuard;
-      
-      NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : @"Contributors:  "]);
-      if (!newString.Get())
-         return;
-      [textToScroll appendAttributedString : newString.Get()];
-   
-      std::list<std::string>::const_iterator it = contributors.begin(), end = contributors.end(), begin = contributors.begin();
-      for (; it != end; ++it) {
-         //Quite ugly :( NSString/NSAttributedString ARE ugly.
-         NSString * const nsFromC = [NSString stringWithFormat : it != begin ? @", %s" : @"%s", it->c_str()];
-         newString.Reset([[NSAttributedString alloc] initWithString : nsFromC]);
-         if (newString.Get())
-            [textToScroll appendAttributedString : newString.Get()];
-      }
-      
-      newString.Reset([[NSAttributedString alloc] initWithString :
-                      @"\n\nOur sincere thanks and apologies to anyone who deserves credit but fails to appear in this list."]);
-   }
-}
-
-//_________________________________________________________________
-void AddUserInfo(NSMutableAttributedString *textToScroll)
-{
-   assert(textToScroll != nil && "AddUserInfo, parameter 'textToScroll' is nil");
-
-   if (const passwd * const pwd = getpwuid(getuid())) {
-      std::string name;
-      
-      if (pwd->pw_gecos) {
-         const char * const comma = std::strchr(pwd->pw_gecos, ',');
-         if (!comma)
-            name = pwd->pw_gecos;
-         else if (pwd->pw_gecos - comma)
-            name.assign(pwd->pw_gecos, pwd->pw_gecos - comma);
-      }
-      
-      if (!name.length() && pwd->pw_name)
-         name = pwd->pw_name;
-      
-      if (!name.length())
-         return;
-      
-      using ROOT::MacOSX::Util::NSScopeGuard;
-      NSString * const nsFromC = [NSString stringWithFormat : @"\n\nExtra special thanks go to %s, one of our favorite users.", name.c_str()];
-      const NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : nsFromC]);
-
-      if (newString.Get())
-         [textToScroll appendAttributedString : newString.Get()];
-   }
-}
-
-//_________________________________________________________________
-NSAttributedString *CreateTextToScroll(bool about)
-{
-   using ROOT::MacOSX::Util::NSScopeGuard;
-
-   //the resulting string.
-   NSScopeGuard<NSMutableAttributedString> textToScroll([[NSMutableAttributedString alloc] init]);
-   if (!textToScroll.Get())
-      //TODO: diagnostic.
-      return nil;
-
-   if (!AddDeveloperInfo(textToScroll.Get()))
-      return nil;
-
-   //Read contributors.
-   if (about) {
-      AddContributorsInfo(textToScroll.Get());
-      AddUserInfo(textToScroll.Get());
-   }
-
-   if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 11.]) {
-      NSDictionary * dict = [NSDictionary dictionaryWithObject : font forKey : NSFontAttributeName];
-      [textToScroll.Get() setAttributes : dict range : NSMakeRange(0, textToScroll.Get().length)];
-   }
-
-   NSAttributedString * const result = textToScroll.Get();
-   textToScroll.Release();
-
-   return result;
-}
-
-//_________________________________________________________________
 bool CreateSplashscreen(bool about)
 {
    //Try to create NSImage out of Splash.gif, create NSPanel
@@ -882,9 +755,143 @@ void SetSplashscreenPosition()
    }//else - is it possible? TODO: diagnostic.
 }
 
+//Aux. "non-GUI" functions.
+
+//_________________________________________________________________
+bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
+{
+   assert(textToScroll != nil && "AddDeveloperInfo, parameter 'textToScroll' is nil");
+   
+   using ROOT::MacOSX::Util::NSScopeGuard;
+
+   NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : gConception]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return false;
+   [textToScroll appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gLeadDevelopers]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return false;
+   [textToScroll appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gRootDevelopers]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return false;
+   [textToScroll appendAttributedString : newString.Get()];
+   
+   newString.Reset([[NSAttributedString alloc] initWithString : gRootDocumentation]);
+   if (!newString.Get())
+      //TODO: diagnostic.
+      return false;
+   [textToScroll appendAttributedString : newString.Get()];
+   
+   return true;
+}
+
+//_________________________________________________________________
+void AddContributorsInfo(NSMutableAttributedString *textToScroll)
+{
+   //TODO: diagnostic and error handling + problems with non-ascii.
+
+   assert(textToScroll != nil && "AddContributorsInfo, parameter 'textToScroll' is nil");
+   //
+   std::list<std::string> contributors;
+   ReadContributors(contributors);
+
+   if (contributors.size()) {//Add more lines here.
+      using ROOT::MacOSX::Util::NSScopeGuard;
+      
+      NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : @"Contributors:  "]);
+      if (!newString.Get())
+         return;
+      [textToScroll appendAttributedString : newString.Get()];
+   
+      std::list<std::string>::const_iterator it = contributors.begin(), end = contributors.end(), begin = contributors.begin();
+      for (; it != end; ++it) {
+         //Quite ugly :( NSString/NSAttributedString ARE ugly.
+         NSString * const nsFromC = [NSString stringWithFormat : it != begin ? @", %s" : @"%s", it->c_str()];
+         newString.Reset([[NSAttributedString alloc] initWithString : nsFromC]);
+         if (newString.Get())
+            [textToScroll appendAttributedString : newString.Get()];
+      }
+      
+      newString.Reset([[NSAttributedString alloc] initWithString :
+                      @"\n\nOur sincere thanks and apologies to anyone who deserves credit but fails to appear in this list."]);
+   }
+}
+
+//_________________________________________________________________
+void AddUserInfo(NSMutableAttributedString *textToScroll)
+{
+   //TODO: Fix - probably, it does not work with non-ascii? (if pw_gecos/pw_name can be mb strings?).
+
+   assert(textToScroll != nil && "AddUserInfo, parameter 'textToScroll' is nil");
+
+   if (const passwd * const pwd = getpwuid(getuid())) {
+      std::string name;
+      
+      if (pwd->pw_gecos) {
+         const char * const comma = std::strchr(pwd->pw_gecos, ',');
+         if (!comma)
+            name = pwd->pw_gecos;
+         else if (pwd->pw_gecos - comma)
+            name.assign(pwd->pw_gecos, pwd->pw_gecos - comma);
+      }
+      
+      if (!name.length() && pwd->pw_name)
+         name = pwd->pw_name;
+      
+      if (!name.length())
+         return;
+      
+      using ROOT::MacOSX::Util::NSScopeGuard;
+      NSString * const nsFromC = [NSString stringWithFormat : @"\n\nExtra special thanks go to %s, one of our favorite users.", name.c_str()];
+      const NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : nsFromC]);
+
+      if (newString.Get())
+         [textToScroll appendAttributedString : newString.Get()];
+   }
+}
+
+//_________________________________________________________________
+NSAttributedString *CreateTextToScroll(bool about)
+{
+   using ROOT::MacOSX::Util::NSScopeGuard;
+
+   //the resulting string.
+   NSScopeGuard<NSMutableAttributedString> textToScroll([[NSMutableAttributedString alloc] init]);
+   if (!textToScroll.Get())
+      //TODO: diagnostic.
+      return nil;
+
+   if (!AddDeveloperInfo(textToScroll.Get()))
+      return nil;
+
+   //Read contributors.
+   if (about) {
+      AddContributorsInfo(textToScroll.Get());
+      AddUserInfo(textToScroll.Get());
+   }
+
+   if (NSFont * const font = [NSFont fontWithName : @"Helvetica" size : 11.]) {
+      NSDictionary * dict = [NSDictionary dictionaryWithObject : font forKey : NSFontAttributeName];
+      [textToScroll.Get() setAttributes : dict range : NSMakeRange(0, textToScroll.Get().length)];
+   }
+
+   NSAttributedString * const result = textToScroll.Get();
+   textToScroll.Release();
+
+   return result;
+}
+
 //_________________________________________________________________
 bool ReadContributors(std::list<std::string> & contributors)
 {
+   //TODO: Fix - does not work with something except ascii.
+
 #ifdef ROOTDOCDIR
    const std::string fileName(std::string(ROOTDOCDIR) + "/CREDITS");
 #else
