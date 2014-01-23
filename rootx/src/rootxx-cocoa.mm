@@ -368,7 +368,6 @@ bool ReadContributors(std::list<std::string> & contributors);
 //_________________________________________________________________
 void PopupLogo(bool about)
 {
-return;//DISABLED in beta 2.
    if (!InitCocoa()) {
       //TODO: diagnostic.
       return;
@@ -401,8 +400,6 @@ void PopdownLogo()
 //_________________________________________________________________
 void WaitLogo()
 {
-return;//DISABLED in beta 2.
-
    if (!splashScreen)
       //TODO: diagnostic.
       return;
