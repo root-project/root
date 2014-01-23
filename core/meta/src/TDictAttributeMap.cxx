@@ -11,38 +11,38 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-//  The ROOT oject has a list of properties which are stored and       //
-//  retrieved using TClassAttributeMap.                                 //
-//  TClassAttributeMap maps the property keys of the object to their		//	
-//  values.															    //
+//  The ROOT oject has a list of properties which are stored and        //
+//  retrieved using TDictAttributeMap.                                 //
+//  TDictAttributeMap maps the property keys of the object to their		//
+//  values.                                                             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TClassAttributeMap.h"
+#include "TDictAttributeMap.h"
 #include "THashTable.h"
 #include "TNamed.h"
 #include "TParameter.h"
 
 
-ClassImp(TClassAttributeMap)
+ClassImp(TDictAttributeMap)
 
 //_____________________________________________________________________________
-TClassAttributeMap::TClassAttributeMap()
+TDictAttributeMap::TDictAttributeMap()
 {
    //Default constructor.
    fStringProperty.SetOwner(kTRUE);
 }
 
 //_____________________________________________________________________________
-TClassAttributeMap::~TClassAttributeMap()
+TDictAttributeMap::~TDictAttributeMap()
 {
    //Default destructor.
 }
 
 //_____________________________________________________________________________
-void TClassAttributeMap::AddProperty(const char* key, const char* value)
+void TDictAttributeMap::AddProperty(const char* key, const char* value)
 {
-   //Add a property with a String value to the TClassAttributeMap.
+   //Add a property with a String value to the TDictAttributeMap.
    //Parameters: key and char* value of the property.
 
    //Add the property pair name - Int value to the hash table.
@@ -50,7 +50,7 @@ void TClassAttributeMap::AddProperty(const char* key, const char* value)
 }
 
 //_____________________________________________________________________________
-Bool_t TClassAttributeMap::HasKey(const char* key) const
+Bool_t TDictAttributeMap::HasKey(const char* key) const
 {
 
    //Check whether the class has a property using the key.
@@ -61,7 +61,7 @@ Bool_t TClassAttributeMap::HasKey(const char* key) const
 }
 
 //_____________________________________________________________________________
-const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
+const char* TDictAttributeMap::GetPropertyAsString(const char* key) const
 {
    //Access the value of a String property using the key.
 
@@ -77,7 +77,7 @@ const char* TClassAttributeMap::GetPropertyAsString(const char* key) const
 }
 
 //_____________________________________________________________________________
-TString TClassAttributeMap::RemovePropertyString(const char* key)
+TString TDictAttributeMap::RemovePropertyString(const char* key)
 {
    //Remove a String property from the attribute map specified by the key.
    //Returns the TString property removed or NULL if the property does not exist.
@@ -90,7 +90,7 @@ TString TClassAttributeMap::RemovePropertyString(const char* key)
    return TString(0);
 }
 
-Bool_t TClassAttributeMap::RemoveProperty(const char* key)
+Bool_t TDictAttributeMap::RemoveProperty(const char* key)
 {
    //Remove a property from the attribute map specified by the key.
    //Returns true if property exists and was removed, false if property
@@ -104,7 +104,7 @@ Bool_t TClassAttributeMap::RemoveProperty(const char* key)
 }
 
 //_____________________________________________________________________________
-void TClassAttributeMap::Clear(Option_t* /*option = ""*/)
+void TDictAttributeMap::Clear(Option_t* /*option = ""*/)
 {
    //Deletes all the properties of the class.
 

@@ -39,7 +39,6 @@
 class TBaseClass;
 class TBrowser;
 class TDataMember;
-class TClassAttributeMap;
 class TClassRef;
 class TMethod;
 class TRealData;
@@ -140,7 +139,6 @@ private:
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
-   TClassAttributeMap *fAttributeMap;    //pointer to a class attribute map  
 
    typedef void (TClass::*StreamerImpl_t)(void *obj, TBuffer &b, const TClass *onfile_class) const;
    mutable StreamerImpl_t fStreamerImpl;//! Pointer to the function implementing the right streaming behavior for the class represented by this object.
@@ -383,14 +381,6 @@ public:
    void               Destructor(void *obj, Bool_t dtorOnly = kFALSE);
    void              *DynamicCast(const TClass *base, void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
-   void               CreateAttributeMap();
-   TClassAttributeMap *GetAttributeMap() const
-   {
-      //Get the TClassAttributeMap pointer to be able to add attribute 
-      //pairs key-value to the TClass.
- 
-      return fAttributeMap;
-   }
    inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
    {
       // Inline for performance, skipping one function call.

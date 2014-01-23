@@ -15,7 +15,7 @@
 #include "Cintex/Cintex.h"
 #include "TROOT.h"
 #include "TClass.h"
-#include "TClassAttributeMap.h"
+#include "TDictAttributeMap.h"
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClassStreamer.h"
@@ -472,7 +472,7 @@ namespace ROOT { namespace Cintex {
             if (noProperties > 0) {
                //Create the attribute map.
                root_class->CreateAttributeMap();
-               TClassAttributeMap* attrMap = root_class->GetAttributeMap();
+               TDictAttributeMap* attrMap = root_class->GetAttributeMap();
                for (size_t i = 1; i < noProperties; ++i) {
                   // Check if the property is exists and is valid.
                   if (properties.HasProperty(i)) {
