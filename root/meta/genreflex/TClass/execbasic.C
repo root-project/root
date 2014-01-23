@@ -6,7 +6,7 @@
 #include "TDataMember.h"
 #include "TMethod.h"
 #include "TMethodArg.h"
-#include "TClassAttributeMap.h"
+#include "TDictAttributeMap.h"
 #include <iostream>
 #include <vector>
 #include <string>
@@ -88,7 +88,7 @@ void printClassInfo(const std::string& className,
    if (theClass->IsTObject()) std::cout << "TObject.\n";
 
    // Get the attribute map
-   TClassAttributeMap* attrMap = theClass->GetAttributeMap();
+   TDictAttributeMap* attrMap = theClass->GetAttributeMap();
    if (attrMap) {
       for (propertiesNames::const_iterator propValType=properties.begin(); 
            propValType!=properties.end();propValType++){
