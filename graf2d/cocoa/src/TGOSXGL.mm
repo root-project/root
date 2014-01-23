@@ -2,6 +2,8 @@
 #include <cassert>
 #include <vector>
 
+#include <Foundation/Foundation.h>
+
 #include "TVirtualViewer3D.h"
 #include "TSeqCollection.h"
 #include "TVirtualGL.h"
@@ -44,13 +46,18 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    format.push_back(component_type(Rgl::kMultiSample, 8));
 
    //Now, the interface is quite ugly :) and not very different from X11, that's why it's called TVirtualX :)
-   Int_t dummyX = 0, dummyY = 0;
+   Int_t x = 0, y = 0;
    UInt_t width = 0, height = 0;
-   gVirtualX->GetWindowSize(parentID, dummyX, dummyY, width, height);
-
+   gVirtualX->GetWindowSize(parentID, x, y, width, height);
+   
+   const Window_t glWin = gVirtualX->CreateOpenGLWindow(parentID, width, height, format);
+   if (glWin != kNone) {
+      gVirtualX->MapWindow(glWin);
+      gVirtualX->MoveWindow(glWin, x, y);
+   }
    //Window_t is long, so in principle it's a potential problem: do I need a mapping?
    //But billions of windows ... ;)
-   return Int_t(gVirtualX->CreateOpenGLWindow(parentID, width, height, format));
+   return Int_t(glWin);
 }
 
 
@@ -138,7 +145,7 @@ Int_t TGOSXGLManager::GetVirtualXInd(Int_t ctxInd)
 #pragma unused(ctxInd)
    //Returns an index suitable for gVirtualX.
    //NOOP?
-   return 0;
+   return ctxInd;
 }
 
 
@@ -146,6 +153,7 @@ Int_t TGOSXGLManager::GetVirtualXInd(Int_t ctxInd)
 void TGOSXGLManager::ExtractViewport(Int_t, Int_t *)
 {
    //NOOP.
+   NSLog(@"viewpo");
 }
 
 //These 'delegating' functions are legacy - were required (many years ago) on Windows.
