@@ -97,7 +97,7 @@ private:
    TQtTextCloneProxy(const TQtTextCloneProxy&);
    void operator=(const TQtTextCloneProxy&);
 public:
-   TQtTextCloneProxy()  : fProxy(0) 
+   TQtTextCloneProxy()  : fProxy(0)
    {
       if ( TGQt::TextProxy())
          fProxy = TGQt::TextProxy()->Clone();
@@ -162,7 +162,7 @@ public:
    };
    TQtPainter() : QPainter (), fVirtualX(0) {}
    TQtPainter(QPaintDevice * dev) : QPainter ( dev ), fVirtualX(0) {}
-   TQtPainter( TGQt *dev, unsigned int useFeedBack=kUpdateBrush | kUpdatePen ) : fVirtualX(0) 
+   TQtPainter( TGQt *dev, unsigned int useFeedBack=kUpdateBrush | kUpdatePen ) : fVirtualX(0)
    {  begin(dev,useFeedBack);                                       }
    ~TQtPainter () { fVirtualX->fQPainter = 0; }
    bool begin ( TGQt *dev, unsigned int useFeedBack);
@@ -178,11 +178,11 @@ class TQtFeedBackWidget : public QFrame {
 protected:
    virtual void hideEvent (QHideEvent *ev) {
       // hide the feedback widget and remove the buffer
-      delete fPixBuffer;  fPixBuffer  = 0;  
+      delete fPixBuffer;  fPixBuffer  = 0;
       delete fGrabBuffer; fGrabBuffer = 0;
       QFrame::hideEvent(ev);
       if (fParentWidget) {
-         fParentWidget->SetIgnoreLeaveEnter(0);         
+         fParentWidget->SetIgnoreLeaveEnter(0);
          SetParent(0);  // reparent // it is dangerous thing to do inside of the event processing
       }
    }
@@ -196,7 +196,7 @@ protected:
          }
          ClearBuffer();
       } else if (fGrabBuffer) {
-         QRect rc = ev->rect(); 
+         QRect rc = ev->rect();
          QPainter p(this);
          p.setClipRect(rc);
          p.drawPixmap(rc,*fGrabBuffer);
@@ -208,7 +208,7 @@ public:
       ,fPixBuffer(0),fGrabBuffer(0),fParentWidget(0)
    {
       // Create the feedback widget
-      setAttribute(Qt::WA_NoSystemBackground); 
+      setAttribute(Qt::WA_NoSystemBackground);
       setEnabled(false);
       setBackgroundRole(QPalette::Window);
       setAutoFillBackground(false);
@@ -217,7 +217,7 @@ public:
       setPalette(p);
       setMouseTracking(true);
    }
-   virtual ~TQtFeedBackWidget() 
+   virtual ~TQtFeedBackWidget()
    {
       fParentWidget = 0;
       delete fPixBuffer; fPixBuffer   = 0;
@@ -228,12 +228,12 @@ public:
    }
    void Hide() {
       if (fParentWidget) {
-         fParentWidget->SetIgnoreLeaveEnter(0);         
+         fParentWidget->SetIgnoreLeaveEnter(0);
          SetParent(0);  // reparent
       }
    }
    void Show() {
-      // Protect (Qt >= 4.5.x) TCanvas  against of 
+      // Protect (Qt >= 4.5.x) TCanvas  against of
       // the confusing mouseMoveEvent
       if (fParentWidget) fParentWidget->SetIgnoreLeaveEnter(2);
       QFrame::show();
@@ -253,7 +253,7 @@ public:
       }
       return  fPixBuffer;
    }
-    QPaintDevice *GrabBuffer(QSize &s) { 
+    QPaintDevice *GrabBuffer(QSize &s) {
       // Create the feedback buffer to grab the parent TPad image
       if (fParentWidget ) {
          // resize the feedback
@@ -273,7 +273,7 @@ public:
    {
        // Set the feedback widget position and geometry
        if (isHidden() && src ) {
-          // grab the parent window and move the feedback 
+          // grab the parent window and move the feedback
           delete fGrabBuffer; fGrabBuffer = 0;
           QPixmap *canvas = src->GetOffScreenBuffer();
           if (canvas && w > 4 &&  h > 4 ) {
@@ -305,20 +305,20 @@ public:
    {
       // Update the "feedback" widget
      if (fFeedBackPainter.isActive() ) fFeedBackPainter.end();
-     if (fGQt->fFeedBackMode && fGQt->fFeedBackWidget) 
+     if (fGQt->fFeedBackMode && fGQt->fFeedBackWidget)
      {   fGQt->fFeedBackWidget->update();                   }
    }
    TQtPainter &painter() {
       // activate return  the "feedback" painter
       if (!fFeedBackPainter.isActive()) {
-         fFeedBackPainter.begin(fGQt, TQtPainter::kUseFeedBack 
-                                    | TQtPainter::kUpdatePen 
+         fFeedBackPainter.begin(fGQt, TQtPainter::kUseFeedBack
+                                    | TQtPainter::kUpdatePen
                                     | TQtPainter::kUpdateBrush);
          if (fGQt->fFeedBackMode) {
             fFeedBackPainter.setPen(QColor(128,128,128,128));// Qt::white);// darkGray);
         }
      }
-     return fFeedBackPainter; 
+     return fFeedBackPainter;
    }
 };
 
@@ -328,14 +328,14 @@ public:
 //______________________________________________________________________________
 inline bool TQtPainter::begin ( TGQt *dev, unsigned int useFeedBack)
 {
-  // Activate return  the "feedback" painter 
+  // Activate return  the "feedback" painter
   bool res = false;
   if (dev && (dev->fSelectedWindow != NoOperation)) {
      fVirtualX = dev;
      QPaintDevice *src= 0;
      if ( (useFeedBack & kUseFeedBack) && dev->fFeedBackMode
                      && dev->fFeedBackWidget
-                     && dev->fFeedBackWidget) 
+                     && dev->fFeedBackWidget)
      { src = dev->fFeedBackWidget->PixBuffer(); }
      else {
         src = dev->fSelectedWindow;
@@ -457,7 +457,7 @@ protected:
       Int_t intWid = kNone;             // TGQt::iwid(device);
       if ((ULong_t) device != (ULong_t) -1) {
           intWid = find( device);
-          if ( intWid != -1 && 
+          if ( intWid != -1 &&
              fWidgetCollection[intWid]) {
              fWidgetCollection[intWid] = (QPaintDevice *)(-1);
              fFreeWindowsIdStack.push(intWid);
@@ -504,8 +504,8 @@ protected:
    inline uint MaxTotalId() const { return fIDTotalMax;}
    //______________________________________________________________________________
    inline int find(const QPaintDevice *device, uint i=0) const
-   { 
-      return fWidgetCollection.indexOf((QPaintDevice*)device,i); 
+   {
+      return fWidgetCollection.indexOf((QPaintDevice*)device,i);
    }
    //______________________________________________________________________________
    inline QPaintDevice *operator[](int i) const {return fWidgetCollection[i];}
@@ -793,7 +793,7 @@ void TGQt::PostQtEvent(QObject *receiver, QEvent *event)
 TGQt::TGQt() : TVirtualX(),fDisplayOpened(kFALSE),fQPainter(0),fhEvent ()
 ,fQBrush(),fQPen(),fQtMarker(),fQFont(),fQClientFilter(),fQClientFilterBuffer(0)
 ,fPointerGrabber(),fCodec(0),fSymbolFontFamily("Symbol"),fQtEventHasBeenProcessed(0)
-,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)      
+,fFeedBackMode(kFALSE),fFeedBackWidget(0),fBlockRGB(kFALSE),fUseTTF(kTRUE)
 {
    //*-*-*-*-*-*-*-*-*-*-*-*Default Constructor *-*-*-*-*-*-*-*-*-*-*-*-*-*-*
    //*-*                    ===================
@@ -960,7 +960,7 @@ Bool_t TGQt::Init(void* /*display*/)
 #ifdef TTFFONTDIR
     		TTFFONTDIR
 #else
-		  "$ROOOTSYS/fonts"
+		  "$ROOTSYS/fonts"
 #endif
         ;
         QString symbolFontFile = fontdir + "/" + QString(fSymbolFontFamily).toLower() + ".ttf";
@@ -972,11 +972,11 @@ Bool_t TGQt::Init(void* /*display*/)
         fontFamily = fSymbolFontFamily = "Arial";
         qDebug() << " Substitute it with \""<<fontFamily <<"\"";
         qDebug() << " Make sure your local \"~/.fonts.conf\" or \"/etc/fonts/fonts.conf\" file points to \""
-                 << 
+                 <<
 #ifdef TTFFONTDIR
 		TTFFONTDIR
 #else
-		"$ROOOTSYS/fonts"
+		"$ROOTSYS/fonts"
 #endif
 		<< "\" directory to get the proper support for ROOT TLatex class";
         // create a custom codec
@@ -1286,11 +1286,11 @@ void  TGQt::CopyPixmap(int wd, int xpos, int ypos)
       }
       bool itIsWidget = fSelectedWindow->devType() == QInternal::Widget;
       TQtWidget *theWidget = 0;
-      if (itIsWidget) { 
+      if (itIsWidget) {
           theWidget =  (TQtWidget *)fSelectedWindow;
           dst = theWidget->GetOffScreenBuffer();
       }
-      { 
+      {
         QPainter paint(dst);
         paint.drawPixmap(xpos,ypos,*src);
       }
@@ -1369,17 +1369,17 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 #endif
    if (!fSelectedWindow ) return;
    TQtLock lock;
-   // Some workaround to fix issue from TBox::ExecuteEvent case pC. 
+   // Some workaround to fix issue from TBox::ExecuteEvent case pC.
    // The reason of the problem has not been found yet.
    // By some reason TBox::ExecuteEvent messes y2 and y1
    if (y2 > y1) {
 	   // swap them :-(()
-	   int swap = y1; 
+	   int swap = y1;
 	   y1=y2; y2=swap;
    }
    if (x1 > x2) {
 	   // swap them :-(()
-	   int swap = x1; 
+	   int swap = x1;
 	   x1=x2; x2=swap;
    }
    if ( (fSelectedWindow->devType() ==  QInternal::Widget) && fFeedBackMode && fFeedBackWidget) {
@@ -1389,7 +1389,7 @@ void  TGQt::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    }
 
    if ((mode == kHollow) || (fQBrush->style() == Qt::NoBrush) )
-   { 
+   {
       TQtPainter p(this,TQtPainter::kUpdatePen);
       p.setBrush(Qt::NoBrush);
       p.drawRect(x1,y2,x2-x1+Q3,y1-y2+Q3);
@@ -1492,7 +1492,7 @@ void  TGQt::DrawLine(int x1, int y1, int x2, int y2)
 #if 0
      if (x1> 1000) {
         // Qt 4.5.x bug
-       qDebug() << "TGQt::DrawLine " << " x1=" << x1 
+       qDebug() << "TGQt::DrawLine " << " x1=" << x1
                                    << " y1=" << y1
                                    << " x2=" << x2
                                    << " y2=" << y2;
@@ -1577,7 +1577,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
              w = proxy->width();
              h = proxy->height();
          }
-      } 
+      }
       if (!textProxy) {
          QFontMetrics metrics(*fQFont);
          QRect bRect = metrics.boundingRect(text);
@@ -1588,7 +1588,7 @@ void  TGQt::DrawText(int x, int y, float angle, float mgn, const char *text, TVi
       p.translate(x,y);
       if (TMath::Abs(angle) > 0.1 ) p.rotate(-angle);
       int dx =0; int dy =0;
-      
+
       switch( fTextAlignH ) {
            case 2: dx = -int(w/2);                  // h center;
               break;
@@ -1772,8 +1772,8 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
          w = textSize.width();
          h = (unsigned int)(textSize.height());
       }
-      // qDebug() << "  TGQt::GetTextExtent  w=" <<w <<" h=" << h << "font = " 
-      //         << fTextFont << " size =" << fTextSize 
+      // qDebug() << "  TGQt::GetTextExtent  w=" <<w <<" h=" << h << "font = "
+      //         << fTextFont << " size =" << fTextSize
       //         << mess;
    }
 }
@@ -1781,7 +1781,7 @@ void  TGQt::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
 Int_t TGQt::GetFontAscent() const
 {
    // Returns ascent of the current font (in pixels).
-   // The ascent of a font is the distance from the baseline 
+   // The ascent of a font is the distance from the baseline
    // to the highest position characters extend to
    Int_t ascent = 0;
    if (fQFont) {
@@ -1792,10 +1792,10 @@ Int_t TGQt::GetFontAscent() const
 }
 
 //______________________________________________________________________________
-Int_t TGQt::GetFontDescent() const 
-{ 
+Int_t TGQt::GetFontDescent() const
+{
    // Returns the descent of the current font (in pixels.
-   // The descent is the distance from the base line 
+   // The descent is the distance from the base line
    // to the lowest point characters extend to.
    Int_t descent = 0;
    if (fQFont) {
@@ -1867,7 +1867,7 @@ Int_t  TGQt::RequestLocator(Int_t /*mode*/, Int_t /*ctyp*/, Int_t &/*x*/, Int_t 
     QString   fText;
     QLineEdit fEdit;
     requestString(const char *text="") : QDialog(0
-          , Qt::FramelessWindowHint 
+          , Qt::FramelessWindowHint
           | Qt::WindowStaysOnTopHint
           | Qt::Popup)
           , fText(text),fEdit(this)
@@ -2001,7 +2001,7 @@ void  TGQt::SelectWindow(int wd)
       dev = iwid(wd);
       fSelectedWindow = dev ? dev : NoOperation;
    }
-   if (fPrevWindow != fSelectedWindow) 
+   if (fPrevWindow != fSelectedWindow)
       fPrevWindow     = fSelectedWindow;
 }
 
@@ -2099,7 +2099,7 @@ void  TGQt::SetDrawMode(TVirtualX::EDrawMode mode)
             fFeedBackWidget = new TQtFeedBackWidget;
             fFeedBackWidget->setFrameStyle(QFrame::Box);
          }
-	 // This makes no sense on X11 yet due the  
+	 // This makes no sense on X11 yet due the
 	 // TQtWidget::setAttribute(Qt::WA_PaintOnScreen) flag
 	 // TQtWidget keeps painting itself over the feedback windows. Wierd !!!
          // reparent if needed
@@ -2246,7 +2246,7 @@ void  TGQt::SetMarkerColor( Color_t cindex)
    //*-*  cindex : color index defined my IXSETCOL
    //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-	if (fQtMarker->GetColor() != cindex)		
+	if (fQtMarker->GetColor() != cindex)
 		fQtMarker->SetColor(fMarkerColor = UpdateColor(cindex));
 }
 
@@ -2717,8 +2717,8 @@ void  TGQt::UpdateWindow(int mode)
       ((TQtWidget *)fSelectedWindow)->repaint();
 #ifndef R__WIN32
       // X11 needs "repaint" operation to be forced by some reason
-//      qDebug() <<  " TGQt::UpdateWindow " 
-//               <<  " Please check whether the \"" 
+//      qDebug() <<  " TGQt::UpdateWindow "
+//               <<  " Please check whether the \""
 //               <<  "QCoreApplication::processEvents(QEventLoop::ExcludeUserInput | QEventLoop::ExcludeSocketNotifiers, 200);"
 //               << "\" still needed !!!";
 #endif

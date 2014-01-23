@@ -167,7 +167,7 @@ namespace Math {
        The list can be any stl container or a simple array of  ROOT::Math::IMultiGenFunctions* or 
        whatever implementing an iterator.
        If using a derivative type algorithm the function pointers must implement the 
-       ROOOT::Math::IMultiGradFunction interface
+       ROOT::Math::IMultiGradFunction interface
     */
     template<class FuncIterator>
     bool SetFunctionList( FuncIterator begin, FuncIterator end) { 
@@ -183,7 +183,7 @@ namespace Math {
       add (set) a single function fi(x1,...xn) which is part of the system of 
        specifying the begin and end of the iterator. 
        If using a derivative type algorithm the function must implement the 
-       ROOOT::Math::IMultiGradFunction interface
+       ROOT::Math::IMultiGradFunction interface
        Return the current number of function in the list and 0 if failed to add the function
      */
     int AddFunction( const ROOT::Math::IMultiGenFunction & func); 
