@@ -1077,7 +1077,7 @@ void DeclContext::removeDecl(Decl *D) {
       }
     }
   }
-
+   
   // Mark that D is no longer in the decl chain.
   D->NextInContextAndBits.setPointer(0);
 
