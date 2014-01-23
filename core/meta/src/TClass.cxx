@@ -2720,7 +2720,6 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 
    if (!gROOT->GetListOfClasses())    return 0;
 
-//printf("TClass::GetClass called, typeinfo.name=%s\n",typeinfo.name());
    TClass* cl = GetIdMap()->Find(typeinfo.name());
 
    if (cl) {
@@ -2777,13 +2776,11 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
       }
    }
 
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   //   if (gInterpreter->CheckClassInfo(name)) {
-   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
-   //      if (!ncl->IsZombie()) return ncl;
-   //      delete ncl;
-   //   }
-   return 0;
+   // last attempt. Look in the interpreter list of all (compiled+interpreted)
+   // classes
+   cl = gInterpreter->GetClass(typeinfo, load);
+
+   return cl; // Can be zero.
 }
 
 //______________________________________________________________________________

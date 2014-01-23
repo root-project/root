@@ -139,6 +139,7 @@ public: // Public Interface
    void    ClearStack(); // Delete existing temporary values
    void    EnableAutoLoading();
    void    EndOfLineAction();
+   TClass *GetClass(const std::type_info& typeinfo, Bool_t load) const;
    Int_t   GetExitCode() const { return fExitCode; }
    TEnv*   GetMapfile() const { return fMapfile; }
    Int_t   GetMore() const { return fMore; }

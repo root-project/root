@@ -3964,6 +3964,18 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
 }
 
 //______________________________________________________________________________
+TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
+{
+   // Demangle the name (from the typeinfo) and then request the class
+   // via the usual name based interface (TClass::GetClass).
+
+   int err = 0;
+   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   if (err) return 0;
+   return TClass::GetClass(demangled_name.c_str(), load, kTRUE);
+}
+
+//______________________________________________________________________________
 Int_t TCling::AutoLoad(const type_info& typeinfo)
 {
    // Load library containing the specified class. Returns 0 in case of error
