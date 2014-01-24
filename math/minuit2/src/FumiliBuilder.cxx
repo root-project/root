@@ -28,10 +28,10 @@
 
 
 
-//#define DEBUG 1
-#if defined(DEBUG) || defined(WARNINGMSG)
+// //#define DEBUG 1
+// #if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h" 
-#endif
+//#endif
 
 
 
