@@ -6,7 +6,6 @@
    Float_t px, py;
    for (Int_t i = 0; i < 50000; i++) {
       gRandom->Rannor(px,py);
-      Float_t random = gRandom->Rndm(1);
       h2->Fill(px,py);
       h2->Fill(px+4,py-4,0.5);
       h2->Fill(px+4,py+4,0.25);
