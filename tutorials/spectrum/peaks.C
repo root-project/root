@@ -74,11 +74,11 @@ void peaks(Int_t np=10) {
    par[0] = fline->GetParameter(0);
    par[1] = fline->GetParameter(1);
    npeaks = 0;
-   Float_t *xpeaks = s->GetPositionX();
+   Double_t *xpeaks = s->GetPositionX();
    for (p=0;p<nfound;p++) {
-      Float_t xp = xpeaks[p];
+      Double_t xp = xpeaks[p];
       Int_t bin = h->GetXaxis()->FindBin(xp);
-      Float_t yp = h->GetBinContent(bin);
+      Double_t yp = h->GetBinContent(bin);
       if (yp-TMath::Sqrt(yp) < fline->Eval(xp)) continue;
       par[3*npeaks+2] = yp;
       par[3*npeaks+3] = xp;
