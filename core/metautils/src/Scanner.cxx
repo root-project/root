@@ -769,8 +769,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       fselectedRecordDecls.insert(recordDecl);
 
       
-      std::string name_value;
-      if (selected->GetAttributeValue("name", name_value)) {                  
+      std::string name_value("");            
+      if (selected->GetAttributeValue("name", name_value)) {
          ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
                                                           selected->GetRequestedType(),
                                                           recordDecl,
@@ -783,6 +783,9 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
                                                           fInterpreter,
                                                           fNormCtxt);
          fSelectedClasses.push_back(annRecDecl);
+
+         
+         
       } else {
          ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
                                                           recordDecl,
@@ -804,12 +807,30 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          if (typedefNameDecl){
             GetDeclQualName(typedefNameDecl,typedef_qual_name);
             typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
-         }
+         }        
          
          std::cout <<"Selected class "
          << typedefMsg
          << "-> "
-         << qual_name << "\n";
+         << qual_name;
+
+         // Tho show what will happen. Probably we have to go through the
+         // TNormalizedCtxt.
+         std::string  templateArgsToHide_str("");
+    
+         if (selected->GetAttributeValue("KeepFirstTemplateArguments", templateArgsToHide_str)){
+            unsigned int templateArgsToKeep = stoi(templateArgsToHide_str);
+            std::string normName( fSelectedClasses.back().GetNormalizedName() );
+            ROOT::TMetaUtils::RemoveTemplateArgsFromName(normName,templateArgsToKeep);
+            std::cout << " ( PREVIEW: The normalized name is " << fSelectedClasses.back().GetNormalizedName() <<
+            ". If the first " << templateArgsToKeep << " template argument"
+            << (templateArgsToKeep==1 ? "" : "s")
+            << " only would been kept it would be " << normName << ")";
+         }
+
+         std::cout << "\n";
+
+         
          
       }      
    }
