@@ -31,6 +31,18 @@
 #include "CocoaUtils.h"
 #include "RVersion.h"
 
+//
+//'root' with Cocoa is a quite special application. In principle, it's a background process,
+//but it can create a GUI (in our case it's a simple splash-screen - a window with a ROOT's logo
+//and "Credits" info. The first version was converting its process into foreground, which
+//leads to some undesired effects like ... lost keyboard focus. Now this process never explicitly
+//converted into foreground and [NSApp activateAppIgnorinxxxx] is never called.
+//Instead, special window style is used - NSNonactivatingPanelMask (splash-screen's class derives NSPanel)
+//and I still have to specify activation policy (to avoid NSInternalInconsistencyException on window creation).
+//Also, I set a window level to NSFloatingPanelWindow (otherwise window is not visible).
+//This behavior is still different from how X11 based root works on Mac, but is very close.
+//
+
 
 namespace ROOT {
 namespace ROOTX {
@@ -729,7 +741,7 @@ bool CreateSplashscreen(bool about)
    //2. Splash-screen ('panel' + its content view).
    NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
                                                     initWithContentRect : CGRectMake(0, 0, imageSize.width, imageSize.height)
-                                                    styleMask : NSNonactivatingPanelMask// NSBorderlessWindowMask
+                                                    styleMask : NSNonactivatingPanelMask
                                                     backing : NSBackingStoreBuffered
                                                     defer : NO]);
    if (!splashGuard.Get()) {
