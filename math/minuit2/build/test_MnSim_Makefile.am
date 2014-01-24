@@ -12,6 +12,7 @@ CXX_LIB_PATH = @CXX_LIB_PATH@
 check_PROGRAMS =	\
 	test_Minuit2_DemoGaussSim   \
 	test_Minuit2_DemoFumili   \
+	test_Minuit2_DemoMinimizer   \
 	test_Minuit2_PaulTest    \
 	test_Minuit2_PaulTest2  \
 	test_Minuit2_PaulTest3  \
@@ -35,6 +36,8 @@ test_Minuit2_DemoFumili_SOURCES =	\
 	GaussDataGen.h	\
 	GaussDataGen.cxx	\
 	DemoFumili.cxx			
+
+test_Minuit2_DemoMinimizer_SOURCES = demoMinimizer.cxx
 
 test_Minuit2_PaulTest_SOURCES =	PaulTest.cxx 
 
@@ -68,6 +71,13 @@ test_Minuit2_DemoFumili_LDADD =				\
 	$(top_builddir)/src/libMinuit2.la
 
 test_Minuit2_DemoFumili_LDFLAGS =				\
+	-L$(CXX_LIB_PATH)			\
+	-R$(CXX_LIB_PATH)
+
+test_Minuit2_DemoMinimizer_LDADD =				\
+	$(top_builddir)/src/libMinuit2.la
+
+test_Minuit2_DemoMinimizer_LDFLAGS =				\
 	-L$(CXX_LIB_PATH)			\
 	-R$(CXX_LIB_PATH)
 
@@ -120,6 +130,7 @@ test_Minuit2_Parallel_LDADD =				\
 AllSOURCES =				        \
 	$(test_Minuit2_DemoGaussSim_SOURCES)     \
 	$(test_Minuit2_DemoFumili_SOURCES)       \
+	$(test_Minuit2_DemoMinimizer_SOURCES)       \
 	$(test_Minuit2_PaulTest_SOURCES)		\
 	$(test_Minuit2_PaulTest2_SOURCES)        \
 	$(test_Minuit2_PaulTest3_SOURCES)	\
