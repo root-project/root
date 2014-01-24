@@ -141,9 +141,52 @@ public:
       kHasVersion      = 0x08
    };
 
-   AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
-   AnnotatedRecordDecl(long index, const clang::RecordDecl *decl, const char *requestName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
-   AnnotatedRecordDecl(long index, const clang::Type *requestedType, const clang::RecordDecl *decl, const char *requestedName, bool rStreamerInfo, bool rNoStreamer, bool rRequestNoInputOperator, bool rRequestOnlyTClass, int rRequestedVersionNumber, const cling::Interpreter &interpret, const TNormalizedCtxt &normCtxt);
+   AnnotatedRecordDecl(long index,
+                       const clang::RecordDecl *decl,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       const cling::Interpreter &interpret,
+                       const TNormalizedCtxt &normCtxt);
+   
+   AnnotatedRecordDecl(long index,
+                       const clang::RecordDecl *decl,
+                       const char *requestName,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       const cling::Interpreter &interpret,
+                       const TNormalizedCtxt &normCtxt);
+
+   AnnotatedRecordDecl(long index,
+                       const clang::Type *requestedType,
+                       const clang::RecordDecl *decl,
+                       const char *requestedName,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       const cling::Interpreter &interpret,
+                       const TNormalizedCtxt &normCtxt);   
+   
+   AnnotatedRecordDecl(long index,
+                       const clang::Type *requestedType,
+                       const clang::RecordDecl *decl,
+                       const char *requestedName,
+                       unsigned int nTemplateArgsToSkip,
+                       bool rStreamerInfo,
+                       bool rNoStreamer,
+                       bool rRequestNoInputOperator,
+                       bool rRequestOnlyTClass,
+                       int rRequestedVersionNumber,
+                       const cling::Interpreter &interpret,
+                       const TNormalizedCtxt &normCtxt);
+   
    ~AnnotatedRecordDecl() {
       // Nothing to do we do not own the pointer;
    }
@@ -517,6 +560,15 @@ ROOT::ESTLType IsSTLCont(const clang::RecordDecl &cl);
 // instantiating the class template instance and replace it with the
 // partially sugared type we have from 'instance'.
 clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *instance);
+
+//______________________________________________________________________________
+// Remove the last n template arguments from the name
+int RemoveTemplateArgsFromName(std::string& name, unsigned int);
+
+//______________________________________________________________________________
+// Extract the namespaces enclosing a DeclContext
+void ExtractEnclosingNameSpaces(const clang::DeclContext&,
+                                std::list<std::pair<std::string,bool> >&);
 
 //______________________________________________________________________________
 // Kind of stl container

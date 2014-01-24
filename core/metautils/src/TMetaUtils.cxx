@@ -272,11 +272,39 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
    // There is no requested type name.
    // Still let's normalized the actual name.
 
-   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl),interpreter,normCtxt);
+   TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
 
 }
 
+//______________________________________________________________________________
+AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
+                                         const clang::Type *requestedType,
+                                         const clang::RecordDecl *decl,
+                                         const char *requestName,
+                                         unsigned int nTemplateArgsToSkip,
+                                         bool rStreamerInfo,
+                                         bool rNoStreamer,
+                                         bool rRequestNoInputOperator,
+                                         bool rRequestOnlyTClass,
+                                         int rRequestVersionNumber,
+                                         const cling::Interpreter &interpreter,
+                                         const TNormalizedCtxt &normCtxt) :
+   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
+   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+{
+   // Normalize the requested type name.
 
+   // For comparison purposes.
+   TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
+   splitname1.ShortType( fRequestedName, TClassEdit::kDropAllDefault );
+
+   TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
+   if ( 0!=TMetaUtils::RemoveTemplateArgsFromName( fNormalizedName, nTemplateArgsToSkip) ){
+      ROOT::TMetaUtils::Warning("AnnotatedRecordDecl",
+                                "Could not remove the requested template arguments.\n");
+   }
+
+}
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::Type *requestedType,
@@ -301,7 +329,6 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
    TMetaUtils::GetNormalizedName( fNormalizedName, clang::QualType(requestedType,0), interpreter, normCtxt);
 
 }
-
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
@@ -3475,6 +3502,33 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    return input;
 }
+//______________________________________________________________________________
+int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int nArgsToRemove)
+{
+   // Remove the last n template arguments from the name
+   if ( nArgsToRemove == 0 || name == "")
+      return 0;
+
+   // We proceed from the right to the left, counting commas which are not
+   // enclosed by < >.
+   const unsigned int length = name.length();
+   unsigned int cur=0; // let's start beyond the first > from the right
+   unsigned int nArgsRemoved=0;
+   unsigned int nBraces=0;
+   char c='@';
+   while (nArgsRemoved!=nArgsToRemove && cur<length){
+      c = name[cur];
+      if (c == '<') nBraces++;
+      if (c == '>') nBraces--;
+      if (c == ',' && nBraces==1 /*So we are not in a sub-template*/) nArgsRemoved++;
+      cur++;
+   }
+   cur--;
+   name = name.substr(0,cur)+">";   
+   return 0;
+   
+}
+
 
 //______________________________________________________________________________
 ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
@@ -3519,6 +3573,29 @@ const clang::TagDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::Ta
       TD = TD->getPreviousDecl();
 
    return TD;
+}
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
+                                                  std::list<std::pair<std::string,bool> >& enclosingNamespaces)
+{
+   // Extract enclosing namespaces recusrively
+   const clang::DeclContext* enclosingNamespaceDeclCtxt = definition.getParent ();
+   
+   // If no parent is found, nothing more to be done
+   if (!enclosingNamespaceDeclCtxt) return;
+   
+   // Check if the parent is a namespace (it could be a class for example)
+   // if not, nothing to be done here
+   const clang::NamespaceDecl* enclosingNamespace = clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
+   if (!enclosingNamespace) return;
+   
+   // Add to the list of parent namespaces
+   enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
+                                                enclosingNamespace->isInline()));
+   
+   // here the recursion
+   ExtractEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
 }
 
 //______________________________________________________________________________
