@@ -16,7 +16,7 @@ int execDictSelection()
    printClassInfo("classVanilla",Nullproperties,false);   
    printClassInfo("classTemplateVanilla<char>",Nullproperties,false);
    printClassInfo("classTransientMember",Nullproperties,false);
-   printClassInfo("classAutoselect",Nullproperties,false);
+   printClassInfo("classTestAutoselect",Nullproperties,false);
    printClassInfo("classAutoselected",Nullproperties,false);
    printClassInfo("classWithAttributes",Nullproperties,false);
    printClassInfo("classAutoselectedFromTemplateElaborate1",Nullproperties,false);

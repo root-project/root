@@ -1,0 +1,65 @@
+
+Processing execDictSelection.C...
+*** Stress TClass with DictSelection ***
+Loading library libclassesDictSelection_dictrflx.so
+
+--- Class classVanilla
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classVanilla
+
+--- Class classTemplateVanilla<char>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classTemplateVanilla<char>
+
+--- Class classTransientMember
+Class category: foreign.
+ * Version: -1
+ o Members (1):
+  * int transientMember [ isBasic isTransient ]
+--- End Class classTransientMember
+
+--- Class classTestAutoselect
+Class category: foreign.
+ * Version: -1
+ o Members (1):
+  * classAutoselected autoselected
+--- End Class classTestAutoselect
+
+--- Class classAutoselected
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselected
+
+--- Class classWithAttributes
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classWithAttributes
+
+--- Class classAutoselectedFromTemplateElaborate1
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselectedFromTemplateElaborate1
+
+--- Class classAutoselectedFromTemplateElaborate2
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class classAutoselectedFromTemplateElaborate2
+
+--- Class classTemplateElaborate<char>
+Class category: foreign.
+  - nonSplittable: true
+ * Version: -1
+ o Members (3):
+  * classAutoselectedFromTemplateElaborate1 autoselectedMember
+  * classVanilla transientMember [ isTransient ]
+  * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient ]
+--- End Class classTemplateElaborate<char>
+(int) 0
