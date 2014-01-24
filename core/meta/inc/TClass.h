@@ -154,7 +154,7 @@ private:
    TListOfFunctions  *GetMethodList();
    TMethod           *GetClassMethod(Long_t faddr);
    TMethod           *FindClassOrBaseMethodWithId(DeclId_t faddr);
-   Int_t              GetBaseClassOffsetRecurse(const TClass *base);
+   Int_t              GetBaseClassOffsetRecurse(const TClass *toBase);
    void Init(const char *name, Version_t cversion, const type_info *info,
              TVirtualIsAProxy *isa,
              const char *dfil, const char *ifil,
@@ -289,7 +289,7 @@ public:
    TClass            *GetActualClass(const void *object) const;
    TClass            *GetBaseClass(const char *classname);
    TClass            *GetBaseClass(const TClass *base);
-   Int_t              GetBaseClassOffset(const TClass *base, void *address = 0);
+   Int_t              GetBaseClassOffset(const TClass *toBase, void *address = 0, bool isDerivedObject = true);
    TClass            *GetBaseDataMember(const char *datamember);
    ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
    TFunctionTemplate *GetFunctionTemplate(const char *name);

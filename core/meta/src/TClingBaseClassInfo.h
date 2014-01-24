@@ -71,7 +71,7 @@ public:
    bool          IsValid() const;
    int           Next();
    int           Next(int onlyDirect);
-   ptrdiff_t     Offset(void * address = 0) const;
+   ptrdiff_t     Offset(void * address = 0, bool isDerivedObject = true) const;
    long          Property() const;
    long          Tagnum() const;
    void          FullName(std::string &output, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
@@ -79,7 +79,7 @@ public:
    const char   *TmpltName() const;
 
 private:
-   OffsetPtrFunc_t GenerateBaseOffsetFunction(const TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address) const;  
+   OffsetPtrFunc_t GenerateBaseOffsetFunction(const TClingClassInfo* derivedClass, TClingClassInfo* targetClass, void* address, bool isDerivedObject) const;
 };
 
 #endif // ROOT_TClingBaseClassInfo

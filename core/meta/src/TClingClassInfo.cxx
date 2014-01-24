@@ -538,16 +538,16 @@ long TClingClassInfo::GetOffset(const CXXMethodDecl* md) const
    return offset;
 }
 
-ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
+ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address, bool isDerivedObject)
 {
    // Check for the offset in the cache.
-   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, ptrdiff_t (*)(void *)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter
+   llvm::DenseMapIterator<const clang::Decl *, std::pair<ptrdiff_t, ptrdiff_t (*)(void*, bool)>, llvm::DenseMapInfo<const clang::Decl *>, true> iter
       = fOffsetCache.find(base->GetDecl());
    if (iter != fOffsetCache.end()) {
       std::pair<ptrdiff_t, OffsetPtrFunc_t> offsetCache = (*iter).second;
       if (OffsetPtrFunc_t executableFunc = offsetCache.second) {
          if (address) {
-            return (*executableFunc)(address);
+            return (*executableFunc)(address, isDerivedObject);
          }
          else {
             Error("TClingBaseClassInfo::Offset", "The address of the object for virtual base offset calculation is not valid.");
@@ -561,7 +561,7 @@ ptrdiff_t TClingClassInfo::GetBaseOffset(TClingClassInfo* base, void* address)
 
    // Compute the offset.
    TClingBaseClassInfo binfo(fInterp, this, base);
-   return binfo.Offset(address);
+   return binfo.Offset(address, isDerivedObject);
 }
 
 static bool HasBody(const clang::FunctionDecl &decl, const cling::Interpreter &interp)

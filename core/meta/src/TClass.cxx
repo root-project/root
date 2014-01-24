@@ -2369,7 +2369,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
 }
 
 //______________________________________________________________________________
-Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
+Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDerivedObject)
 {
    // Return data member offset to the base class "cl".
    // Returns -1 in case "cl" is not a base class.
@@ -2377,12 +2377,12 @@ Int_t TClass::GetBaseClassOffset(const TClass *cl, void *address)
 
    R__LOCKGUARD(gInterpreterMutex);
    ClassInfo_t* derived = GetClassInfo();
-   ClassInfo_t* base = cl->GetClassInfo();
+   ClassInfo_t* base = toBase->GetClassInfo();
    if(derived && base) {
-      return gCling->ClassInfo_GetBaseOffset(derived, base, address);
+      return gCling->ClassInfo_GetBaseOffset(derived, base, address, isDerivedObject);
    }
    else {
-      Int_t offset = GetBaseClassOffsetRecurse (cl);
+      Int_t offset = GetBaseClassOffsetRecurse (toBase);
       if (offset != -2) {
          return offset;
       }

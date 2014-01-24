@@ -48,7 +48,7 @@ namespace ROOT {
    }
 }
 
-extern "C" typedef ptrdiff_t (*OffsetPtrFunc_t)(void*);
+extern "C" typedef ptrdiff_t (*OffsetPtrFunc_t)(void*, bool);
 
 class TClingClassInfo {
 
@@ -110,7 +110,7 @@ public:
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
-   ptrdiff_t            GetBaseOffset(TClingClassInfo* base, void* address);
+   ptrdiff_t            GetBaseOffset(TClingClassInfo* toBase, void* address, bool isDerivedObject);
    const clang::Type   *GetType() const { return fType; } // Underlying representation with Double32_t
    bool                 HasDefaultConstructor() const;
    bool                 HasMethod(const char *name) const;

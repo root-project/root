@@ -158,27 +158,27 @@ TClingClassInfo *TClingBaseClassInfo::GetBase() const
 }
 
 OffsetPtrFunc_t
-TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * derivedClass,
-                                                TClingClassInfo* targetClass,
-                                                void* address) const
+TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDerivedClass,
+                                                TClingClassInfo* toBaseClass,
+                                                void* address, bool isDerivedObject) const
 {
    // Generate a function at run-time that would calculate the offset
-   // from the parameter derived class to the parameter target class for the
+   // from the parameter derived class to the parameter toBase class for the
    // address.
 
    // Get the dedcls for the two classes.
-   const clang::RecordDecl* derivedDecl
-      = dyn_cast<clang::RecordDecl>(derivedClass->GetDecl());
-   if (!derivedDecl) {
+   const clang::RecordDecl* fromDerivedDecl
+      = dyn_cast<clang::RecordDecl>(fromDerivedClass->GetDecl());
+   if (!fromDerivedDecl) {
       Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
-            "Offset of non-class %s is ill-defined!", derivedClass->Name());
+            "Offset of non-class %s is ill-defined!", fromDerivedClass->Name());
       return 0;
    }
-   const clang::RecordDecl* targetDecl
-      = dyn_cast<clang::RecordDecl>(targetClass->GetDecl());
-   if (!targetDecl) {
+   const clang::RecordDecl* toBaseDecl
+      = dyn_cast<clang::RecordDecl>(toBaseClass->GetDecl());
+   if (!toBaseDecl) {
       Error("TClingBaseClassInfo::GenerateBaseOffsetFunction",
-            "Offset of non-class %s is ill-defined!", targetClass->Name());
+            "Offset of non-class %s is ill-defined!", toBaseClass->Name());
       return 0;
    }
 
@@ -186,29 +186,35 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * derivedC
    string wrapper_name;
    {
       ostringstream buf;
-      buf << "h" << derivedDecl;
+      buf << "h" << fromDerivedDecl;
       buf << '_';
-      buf << "h" << targetDecl;
+      buf << "h" << toBaseDecl;
       wrapper_name = buf.str();
    }
    string code;
    // Check whether the function was already generated.
    if (!fInterp->getModule()->getNamedValue(wrapper_name)) {
-      //  Get the class or namespace name.
-      string derived_class_name;
-      clang::QualType QTDerived(derivedClass->GetType(), 0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(derived_class_name,
+      // Get the class or namespace name.
+      string fromDerivedClassName;
+      clang::QualType QTDerived(fromDerivedClass->GetType(), 0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(fromDerivedClassName,
                                                      QTDerived, *fInterp);
-      string target_class_name;
-      clang::QualType QTTarget(targetClass->GetType(), 0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(target_class_name,
-                                                  QTTarget, *fInterp);
+      string toBase_class_name;
+      clang::QualType QTtoBase(toBaseClass->GetType(), 0);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(toBase_class_name,
+                                                  QTtoBase, *fInterp);
       //  Write the wrapper code.
       llvm::raw_string_ostream buf(code);
-      buf << "extern \"C\" long " + wrapper_name + "(void* address) {\n"
-          << "  " << derived_class_name << " *object = (" << derived_class_name << "*)address;\n"
-          << "  " << target_class_name << " *target = object;\n"
-          << "  return ((long)target - (long)object);\n}\n";
+      buf << "extern \"C\" long " + wrapper_name + "(void* address, bool isDerivedObject) {\n"
+      // If the object is not derived, will downcast to toBase first.
+          << "  " << fromDerivedClassName << " *fromDerived;"
+          << "  if (isDerivedObject) {"
+          << "    fromDerived = (" << fromDerivedClassName << "*)address;\n"
+          << "  } else {\n"
+          << "    fromDerived = dynamic_cast<" << fromDerivedClassName << "*>((" << toBase_class_name << "*)address);\n"
+          << "  }\n"
+          << "  " << toBase_class_name << " *toBase = fromDerived;\n"
+          << "  return ((long)toBase - (long)fromDerived);\n}\n";
    }
 
    // If we have a GV then compileFunction will use it; empty code is enough.
@@ -389,7 +395,7 @@ static clang::CharUnits computeOffsetHint(clang::ASTContext &Context,
    return Offset;
  }
 
-ptrdiff_t TClingBaseClassInfo::Offset(void * address) const
+ptrdiff_t TClingBaseClassInfo::Offset(void * address, bool isDerivedObject) const
 {
    // Compute the offset of the derived class to the base class.
 
@@ -456,10 +462,10 @@ ptrdiff_t TClingBaseClassInfo::Offset(void * address) const
    }
 
    // Virtual inheritance case
-   OffsetPtrFunc_t executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address);
+   OffsetPtrFunc_t executableFunc = GenerateBaseOffsetFunction(fClassInfo, fBaseInfo, address, isDerivedObject);
    if (executableFunc) {
       fClassInfo->AddBaseOffsetFunction(fBaseInfo->GetDecl(), executableFunc);
-      return (*executableFunc)(address);
+      return (*executableFunc)(address, isDerivedObject);
    }
 
    return -1;
