@@ -36,8 +36,10 @@ set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-
 set(files_to_copy COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/LLVM-install/include/llvm/Config/llvm-config.h
                                         ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config/llvm-config.h)
 
-install(DIRECTORY ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include/ 
-        DESTINATION etc/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/llvm)
+install(DIRECTORY ${CMAKE_BINARY_DIR}/LLVM-install/lib/clang/${LLVM_VERSION}/include/
+        DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
+
 
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude ${CMAKE_BINARY_DIR}/CLING-install/include)
@@ -55,12 +57,12 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/ValuePrinterInfo.h )
   get_filename_component(path ${file} PATH)
   list(APPEND files_to_copy COMMAND cmake -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-  install(FILES ${clinginclude}/cling/${file} DESTINATION etc/cling/${path})
+  install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
 foreach(file  multimap  multiset)
   list(APPEND files_to_copy COMMAND cmake -E copy ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} ${CMAKE_BINARY_DIR}/etc/cling/cint/${file})
-  install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION etc/cling/cint)
+  install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
 
 
@@ -73,7 +75,7 @@ foreach( file llvm/ADT/IntrusiveRefCntPtr.h
               llvm/Support/type_traits.h )
   get_filename_component(path ${file} PATH)
   list(APPEND files_to_copy COMMAND cmake -E copy ${llvminclude}/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
-  install(FILES ${llvminclude}/${file} DESTINATION etc/cling/${path})
+  install(FILES ${llvminclude}/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
 endforeach()
 
 add_custom_target(LLVMRES COMMAND cmake -E make_directory
