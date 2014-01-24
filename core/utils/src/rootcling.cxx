@@ -2687,8 +2687,10 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
 
    //PrepareArgsForFwdDecl(templateArgs);
    int retCode = PrepareArgsForFwdDecl(templateArgs,*tmplParamList,interpreter);
-   if (retCode!=0)
+   if (retCode!=0){
+      TMetaUtils::Warning(0, "Problems encountered while preparing arguments for forward declaration of class %s", templDecl.getNameAsString().c_str());
       return retCode;
+   }
       
    definitionStr="template "+templateArgs+" class "+templDecl.getNameAsString();
 
