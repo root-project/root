@@ -202,6 +202,7 @@ const char *rootClingHelp =
 #include "RStl.h"
 #include "XMLReader.h"
 #include "LinkdefReader.h"
+#include "DictSelectionReader.h"
 #include "SelectionRules.h"
 #include "Scanner.h"
 
@@ -2545,29 +2546,6 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
-void ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
-                                std::list<std::pair<std::string,bool> >& enclosingNamespaces)
-{
-   // Extract enclosing namespaces recusrively
-   const clang::DeclContext* enclosingNamespaceDeclCtxt = definition.getParent ();
-
-   // If no parent is found, nothing more to be done
-   if (!enclosingNamespaceDeclCtxt) return;
-
-   // Check if the parent is a namespace (it could be a class for example)
-   // if not, nothing to be done here
-   const clang::NamespaceDecl* enclosingNamespace = clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
-   if (!enclosingNamespace) return;
-
-   // Add to the list of parent namespaces
-   enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
-                                                enclosingNamespace->isInline()));
-
-   // here the recursion
-   ExtractEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
-}
-
-//______________________________________________________________________________
 int HasAnyDefaultArgument(const clang::TemplateParameterList& tmplParamList)
 {
    using namespace clang;
@@ -2723,7 +2701,7 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
       // FIXME: this should be active also for classes
          
       std::list<std::pair<std::string,bool> > enclosingNamespaces;
-      ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);      
+      ROOT::TMetaUtils::ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);
       for (std::list<std::pair<std::string, bool> >::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
          enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
          const std::string& nsName= enclosingNamespaceIt->first;
@@ -3649,7 +3627,11 @@ int RootCling(int argc,
    std::string extraIncludes;
 
    ROOT::TMetaUtils::RConstructorTypes constructorTypes;
-   
+
+   // Select using DictSelection
+   clang::CompilerInstance* CI = interp.getCI();
+   DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
+  
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
    if (requestAllSymbols && !isSelXML) {
@@ -3748,9 +3730,6 @@ int RootCling(int argc,
    }
 
    selectionRules.SearchNames(interp);
-
-   clang::CompilerInstance* CI = interp.getCI();
-
 
    int scannerVerbLevel = 0;
    { 
@@ -4615,11 +4594,11 @@ int GenReflex(int argc, char **argv)
       }
    }
 
-   // Warn if a selection file is not present and exit
-   if (NULL==options[SELECTIONFILENAME].arg){
-      ROOT::TMetaUtils::Warning(0,"The usage of genreflex without a selection file is not yet supported.\n");
-      return 1;      
-   }
+//    // Warn if a selection file is not present and exit
+//    if (NULL==options[SELECTIONFILENAME].arg){
+//       ROOT::TMetaUtils::Warning(0,"The usage of genreflex without a selection file is not yet supported.\n");
+//       return 1;      
+//    }
    
 
    // Set the parameters for the rootmap file. If the libname is not set,
