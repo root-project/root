@@ -202,7 +202,7 @@ void DictSelectionReader::fManageBaseClasses(const clang::CXXRecordDecl& cxxRcrd
                break;
 
             if (ROOT::Meta::Selection::kNonSplittable == enumValue){
-               csr.SetAttributeValue("unsplittable", "true");
+               csr.SetAttributeValue("nonSplittable", "true");
             }
 
          }
