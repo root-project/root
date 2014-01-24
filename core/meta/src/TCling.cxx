@@ -3498,12 +3498,12 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
-               if (line == "") continue;               
+               if (line.empty()) continue;
                cling::Transaction* T = 0;
                cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
                assert(cling::Interpreter::kSuccess == compRes &&
                       "A declaration in a rootmap could not be compiled");
-               if (T==NULL || compRes!=cling::Interpreter::kSuccess){
+               if (compRes!=cling::Interpreter::kSuccess){
                   Warning("ReadRootmapFile",
                           "Problems declaring string '%s' were encountered.", line.c_str()) ;
                   continue;
