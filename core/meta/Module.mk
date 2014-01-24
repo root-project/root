@@ -35,7 +35,9 @@ METACLINGCXXFLAGS = $(filter-out -fno-exceptions,$(filter-out -fno-rtti,$(CLINGC
 ifneq ($(CXX:g++=),$(CXX))
 METACLINGCXXFLAGS += -Wno-shadow -Wno-unused-parameter
 endif
-METADICTH    := $(METAH)
+# exclude this file from the dictionary
+METASEL      := $(MODDIRI)/RootMetaSelection.h
+METADICTH    := $(filter-out $(METASEL),$(METAH))
 METAO        := $(call stripsrc,$(METAS:.cxx=.o))
 
 METADEP      := $(METAO:.o=.d) $(METADO:.o=.d)
