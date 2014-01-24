@@ -855,12 +855,12 @@ namespace{
    class clangDiagSuppr {
    public:
       clangDiagSuppr(clang::DiagnosticsEngine& diag): fDiagEngine(diag){         
-         fOldDiagValue = fDiagEngine.getSuppressAllDiagnostics();
-         fDiagEngine.setSuppressAllDiagnostics();
+         fOldDiagValue = fDiagEngine.getIgnoreAllWarnings();
+         fDiagEngine.setIgnoreAllWarnings(true);
       }
          
       ~clangDiagSuppr() {
-         fDiagEngine.setSuppressAllDiagnostics(fOldDiagValue); 
+         fDiagEngine.setIgnoreAllWarnings(fOldDiagValue); 
       }
    private:
       clang::DiagnosticsEngine& fDiagEngine;
