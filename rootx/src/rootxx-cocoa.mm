@@ -387,10 +387,8 @@ void PopupLogo(bool about)
    
    showAboutInfo = about;
    SetSplashscreenPosition();
-   [splashScreen setLevel :  NSScreenSaverWindowLevel];
+   [splashScreen setLevel : NSFloatingWindowLevel];
    [splashScreen makeKeyAndOrderFront : nil];
-
-//   [splashScreen orderFrontRegardless];
 }
 
 //_________________________________________________________________
