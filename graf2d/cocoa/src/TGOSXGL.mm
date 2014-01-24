@@ -43,7 +43,7 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    //TODO: this values actually are quite random, find something better!
    format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
    format.push_back(component_type(Rgl::kDepth, 32));
-   format.push_back(component_type(Rgl::kMultiSample, 8));
+//   format.push_back(component_type(Rgl::kMultiSample, 8));
 
    //Now, the interface is quite ugly :) and not very different from X11, that's why it's called TVirtualX :)
    Int_t x = 0, y = 0;
@@ -51,10 +51,8 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    gVirtualX->GetWindowSize(parentID, x, y, width, height);
    
    const Window_t glWin = gVirtualX->CreateOpenGLWindow(parentID, width, height, format);
-   if (glWin != kNone) {
+   if (glWin != kNone)
       gVirtualX->MapWindow(glWin);
-      gVirtualX->MoveWindow(glWin, x, y);
-   }
    //Window_t is long, so in principle it's a potential problem: do I need a mapping?
    //But billions of windows ... ;)
    return Int_t(glWin);
