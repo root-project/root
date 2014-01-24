@@ -146,10 +146,8 @@ bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
 
       *patternIndex = gVirtualX->GetFillStyle() % 1000;
       //ROOT has 26 fixed patterns.
-      if (*patternIndex >= 26) {
-         ::Error("SetFillAreaParameters", "Pattern index must be < 26");
-         return false;
-      }
+      if (*patternIndex > 25)
+         *patternIndex = 2;
 
       if (!SetFillPattern(ctx, patternIndex)) {
          ::Error("SetFillAreaParameters", "SetFillPattern failed");
