@@ -31,8 +31,11 @@
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const clang::Type** resultType = 0) ;
 
-void SelectionRules::AddClassSelectionRule(const ClassSelectionRule& classSel)
+void SelectionRules::AddClassSelectionRule(ClassSelectionRule& classSel)
 {
+   fRulesCounter++;
+   if (!classSel.HasInterpreter()) classSel.SetInterpreter(fInterp);
+   if (classSel.GetIndex() < 0) classSel.SetIndex( fRulesCounter );      
    fClassSelectionRules.push_front(classSel);
 }
 
@@ -46,8 +49,11 @@ const std::list<ClassSelectionRule>& SelectionRules::GetClassSelectionRules() co
    return fClassSelectionRules;
 }
 
-void SelectionRules::AddFunctionSelectionRule(const FunctionSelectionRule& funcSel)
+void SelectionRules::AddFunctionSelectionRule(FunctionSelectionRule& funcSel)
 {
+   fRulesCounter++;
+   if (!funcSel.HasInterpreter()) funcSel.SetInterpreter(fInterp);
+   if (funcSel.GetIndex() < 0) funcSel.SetIndex( fRulesCounter );
    fFunctionSelectionRules.push_back(funcSel);
 }
 
@@ -61,8 +67,11 @@ const std::list<FunctionSelectionRule>& SelectionRules::GetFunctionSelectionRule
    return fFunctionSelectionRules;
 }
 
-void SelectionRules::AddVariableSelectionRule(const VariableSelectionRule& varSel)
+void SelectionRules::AddVariableSelectionRule( VariableSelectionRule& varSel)
 {
+   fRulesCounter++;
+   if (!varSel.HasInterpreter()) varSel.SetInterpreter(fInterp);
+   if (varSel.GetIndex() < 0) varSel.SetIndex( fRulesCounter );
    fVariableSelectionRules.push_back(varSel);
 }
 
@@ -72,12 +81,15 @@ bool SelectionRules::HasVariableSelectionRules() const
 }
 
 const std::list<VariableSelectionRule>& SelectionRules::GetVariableSelectionRules() const
-{
+{   
    return fVariableSelectionRules;
 }
 
-void SelectionRules::AddEnumSelectionRule(const EnumSelectionRule& enumSel)
+void SelectionRules::AddEnumSelectionRule(EnumSelectionRule& enumSel)
 {
+   fRulesCounter++;
+   if (!enumSel.HasInterpreter()) enumSel.SetInterpreter(fInterp);
+   if (enumSel.GetIndex() < 0) enumSel.SetIndex( fRulesCounter );   
    fEnumSelectionRules.push_back(enumSel);
 }
 

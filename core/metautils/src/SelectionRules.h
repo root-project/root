@@ -46,6 +46,7 @@ public:
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
       fHasFileNameRule(false),
+      fRulesCounter(0),
       fInterp(interp) {
          long counter=1;
          for (std::vector<std::string>::const_iterator nameIt=namesForExclusion.begin();
@@ -57,19 +58,19 @@ public:
             }
       }
    
-   void AddClassSelectionRule(const ClassSelectionRule& classSel);
+   void AddClassSelectionRule(ClassSelectionRule& classSel);
    bool HasClassSelectionRules() const;
    const std::list<ClassSelectionRule>& GetClassSelectionRules() const;
    
-   void AddFunctionSelectionRule(const FunctionSelectionRule& funcSel);
+   void AddFunctionSelectionRule(FunctionSelectionRule& funcSel);
    bool HasFunctionSelectionRules() const;
    const std::list<FunctionSelectionRule>& GetFunctionSelectionRules() const;
    
-   void AddVariableSelectionRule(const VariableSelectionRule& varSel);
+   void AddVariableSelectionRule(VariableSelectionRule& varSel);
    bool HasVariableSelectionRules() const;
    const std::list<VariableSelectionRule>& GetVariableSelectionRules() const;
    
-   void AddEnumSelectionRule(const EnumSelectionRule& enumSel);
+   void AddEnumSelectionRule(EnumSelectionRule& enumSel);
    bool HasEnumSelectionRules() const;
    const std::list<EnumSelectionRule>& GetEnumSelectionRules() const;
    
@@ -151,6 +152,7 @@ private:
    
    bool fIsDeep; // if --deep option passed from command line, this should be set to true
    bool fHasFileNameRule; // if we have a file name rule, this should be set to true
+   long int fRulesCounter;
    
    cling::Interpreter &fInterp;
    

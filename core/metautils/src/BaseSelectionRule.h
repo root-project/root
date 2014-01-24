@@ -66,13 +66,18 @@ private:
    cling::Interpreter *fInterp; 
       
 public:
-   BaseSelectionRule(long index, cling::Interpreter &interp) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {} 
+
+   BaseSelectionRule(ESelect sel) : fIndex(-1),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(NULL),fRequestedType(NULL),fInterp(NULL) {}
+
+   BaseSelectionRule(long index, cling::Interpreter &interp) : fIndex(index),fIsSelected(kNo),fMatchFound(false),fCXXRecordDecl(0),fRequestedType(0),fInterp(&interp) {}
+   
    BaseSelectionRule(long index, ESelect sel, const std::string& attributeName, const std::string& attributeValue, cling::Interpreter &interp);
    
    virtual void DebugPrint() const;
    virtual void Print(std::ostream &out) const = 0;
 
    long    GetIndex() const { return fIndex; }
+   void    SetIndex(long index) { fIndex=index; }
 
    bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
 
@@ -81,6 +86,9 @@ public:
 
    ESelect GetSelected() const;
    void    SetSelected(ESelect sel);
+
+   bool  HasInterpreter() const {return fInterp!=NULL; };
+   void  SetInterpreter(cling::Interpreter& interp) {fInterp=&interp; };
    
    const AttributesMap_t& GetAttributes() const; // returns the list of attributes
    void  PrintAttributes(int level) const;       // prints the list of attributes - level is the number of tabs from the beginning of the line

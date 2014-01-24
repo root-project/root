@@ -45,8 +45,13 @@ private:
    int  fRequestedVersionNumber; // Explicit request for a specific version number (default to no request with -1).
 
 public:
+
+   ClassSelectionRule(ESelect sel):
+   BaseSelectionRule(sel), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   
    ClassSelectionRule(long index, cling::Interpreter &interp):
    BaseSelectionRule(index, interp), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
+   
    ClassSelectionRule(long index, bool inherit, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp):
    BaseSelectionRule(index, sel, attributeName, attributeValue, interp), fIsInheritable(inherit), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
 
