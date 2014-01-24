@@ -198,13 +198,13 @@ bool popupDone = false;
 //_________________________________________________________________
 - (BOOL) canBecomeMainWindow
 {
-   return YES;
+   return NO;//YES;
 }
 
 //_________________________________________________________________
 - (BOOL) canBecomeKeyWindow
 {
-   return YES;
+   return NO;//YES;
 }
 
 //_________________________________________________________________
@@ -372,7 +372,7 @@ void PopupLogo(bool about)
       //TODO: diagnostic.
       return;
    }
-   
+
    //0. For StayUp to check when we should hide our splash-screen.
    if (gettimeofday(&popupCreationTime, 0) == -1) {
       //TODO: check errno and issue a message,
@@ -387,7 +387,10 @@ void PopupLogo(bool about)
    
    showAboutInfo = about;
    SetSplashscreenPosition();
+   [splashScreen setLevel :  NSScreenSaverWindowLevel];
    [splashScreen makeKeyAndOrderFront : nil];
+
+//   [splashScreen orderFrontRegardless];
 }
 
 //_________________________________________________________________
@@ -457,9 +460,7 @@ namespace {
 bool InitCocoa()
 {
    if (!topLevelPool) {
-      [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];
-      [[NSApplication sharedApplication] activateIgnoringOtherApps : YES];
-
+      [[NSApplication sharedApplication] setActivationPolicy : NSApplicationActivationPolicyAccessory];//Do I need this?
       topLevelPool = [[NSAutoreleasePool alloc] init];
    }
    
@@ -730,7 +731,7 @@ bool CreateSplashscreen(bool about)
    //2. Splash-screen ('panel' + its content view).
    NSScopeGuard<ROOTSplashScreenPanel> splashGuard([[ROOTSplashScreenPanel alloc]
                                                     initWithContentRect : CGRectMake(0, 0, imageSize.width, imageSize.height)
-                                                    styleMask : NSBorderlessWindowMask
+                                                    styleMask : NSNonactivatingPanelMask// NSBorderlessWindowMask
                                                     backing : NSBackingStoreBuffered
                                                     defer : NO]);
    if (!splashGuard.Get()) {
