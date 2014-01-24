@@ -819,7 +819,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          std::string  templateArgsToHide_str("");
     
          if (selected->GetAttributeValue("KeepFirstTemplateArguments", templateArgsToHide_str)){
-            unsigned int templateArgsToKeep = stoi(templateArgsToHide_str);
+            unsigned int templateArgsToKeep = atoi(templateArgsToHide_str.c_str());
             std::string normName( fSelectedClasses.back().GetNormalizedName() );
             ROOT::TMetaUtils::RemoveTemplateArgsFromName(normName,templateArgsToKeep);
             std::cout << " ( PREVIEW: The normalized name is " << fSelectedClasses.back().GetNormalizedName() <<
