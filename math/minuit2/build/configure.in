@@ -6,7 +6,7 @@ dnl
 AC_INIT(src/VariableMetricBuilder.cxx)
 AM_CONFIG_HEADER(config.h)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(Minuit2, 5.24.00)
+AM_INIT_AUTOMAKE(Minuit2, 5.34.14)
 
 dnl Checks for programs.
 AC_PROG_CC
