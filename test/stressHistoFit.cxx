@@ -120,6 +120,8 @@ using namespace std;
 
 unsigned int __DRAW__ = 0;
 
+int gSelectedTest = 0; 
+
 // set a small tolerance for the tests
 // The default of 10*-2 make sometimes Simplex do not converge
 const double gDefaultTolerance = 1.E-4;  
@@ -395,6 +397,7 @@ enum testOpt {
    testOptColor = 8,  // Show wrong output in color
    testOptDebug = 16, // Print out debug version
    testOptCheck = 32, // Make the checkings
+   testOptFitDbg = 64 // Make fit verbose
 };
 
 // Default options that all tests will have
@@ -449,7 +452,6 @@ int gTestIndex = 0;
 template <typename T>
 void printTestName(T* object, TF1* func)
 {
-   gTestIndex++;
    string str = "Test  ";
    if (gTestIndex < 10) str += " ";  // add an extra space
    str += ROOT::Math::Util::ToString(gTestIndex);
@@ -583,6 +585,7 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
 {
    // counts the number of parameters wronly calculated
    int status = 0;
+
    int numberOfTests = 0;
    const double* origpars = &(fitFunction.origPars[0]);
    const double* fitpars = &(fitFunction.fitPars[0]);
@@ -592,8 +595,12 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    printTestName(object, func);
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(commonAlgos[0].type, commonAlgos[0].algo);
    ROOT::Math::MinimizerOptions::SetDefaultTolerance(gDefaultTolerance);
- 
-   object->Fit(func, "Q0");
+
+   TString opt = ""; 
+   if (! (defaultOptions & testOptFitDbg) ) opt += "Q"; 
+   if (! __DRAW__) opt += "0"; 
+
+   object->Fit(func, opt);
    if ( defaultOptions & testOptDebug ) printTitle(func);
    struct RefValue ref(origpars, func->GetChisquare());
    commonAlgos[0].cmpResult.setRefValue(&ref);
@@ -614,7 +621,7 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    }
 
    for ( unsigned int j = 0; j < listAlgos.size(); ++j )
-   {
+   { 
       for ( unsigned int i = 0; i < listAlgos[j].size(); ++i ) 
       {
          int testFitOptions = testOptPars | testOptChi | testOptErr | defaultOptions;
@@ -681,42 +688,57 @@ int test1DObjects(vector< vector<algoType> >& listH,
       for ( int i = 0; i <= h2->GetNbinsX() + 1; ++i )
          h2->SetBinContent( i, rndm.Poisson( func->Eval( h2->GetBinCenter(i) ) ) );
 
-      delete c0; c0 = new TCanvas("c0-1D", "Histogram1D Variable");
-      if ( __DRAW__ ) h2->Draw();
-      ObjectWrapper<TH1D*> owh2(h2);
-      globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[j]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete c0; c0 = new TCanvas("c0-1D", "Histogram1D Variable");
+         if ( __DRAW__ ) h2->DrawCopy();
+         ObjectWrapper<TH1D*> owh2(h2);
+         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[j]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
 
-      delete c1; c1 = new TCanvas("c1_1D", "Histogram1D");
-      if ( __DRAW__ ) h1->Draw();
-      ObjectWrapper<TH1D*> owh1(h1);
-      globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[j]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete c1; c1 = new TCanvas("c1_1D", "Histogram1D");
+         if ( __DRAW__ ) h1->DrawCopy();
+         ObjectWrapper<TH1D*> owh1(h1);
+         globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[j]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
       
-      delete g1; g1 = new TGraph(h1);
-      g1->SetName("TGraph1D");
-      g1->SetTitle("TGraph 1D - title");
-      if ( c2 ) delete c2;
-      c2 = new TCanvas("c2_1D","TGraph");
-      if ( __DRAW__ ) g1->Draw("AB*");
-      ObjectWrapper<TGraph*> owg1(g1);
-      globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[j]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete g1; g1 = new TGraph(h1);
+         g1->SetName("TGraph1D");
+         g1->SetTitle("TGraph 1D - title");
+         if ( c2 ) delete c2;
+         c2 = new TCanvas("c2_1D","TGraph");
+         if ( __DRAW__ ) g1->DrawClone("AB*");
+         ObjectWrapper<TGraph*> owg1(g1);
+         globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[j]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
 
-      delete ge1; ge1 = new TGraphErrors(h1);
-      ge1->SetName("TGraphErrors1D");
-      ge1->SetTitle("TGraphErrors 1D - title");
-      if ( c3 ) delete c3;
-      c3 = new TCanvas("c3_1D","TGraphError");
-      if ( __DRAW__ ) ge1->Draw("AB*");
-      ObjectWrapper<TGraphErrors*> owge1(ge1);
-      globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[j]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete ge1; ge1 = new TGraphErrors(h1);
+         ge1->SetName("TGraphErrors1D");
+         ge1->SetTitle("TGraphErrors 1D - title");
+         if ( c3 ) delete c3;
+         c3 = new TCanvas("c3_1D","TGraphError");
+         if ( __DRAW__ ) ge1->DrawClone("AB*");
+         ObjectWrapper<TGraphErrors*> owge1(ge1);
+         globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[j]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
 
-      delete s1; s1 = THnSparse::CreateSparse("THnSparse 1D", "THnSparse 1D - title", h1);
-      ObjectWrapper<THnSparse*> ows1(s1);
-      globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[j]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete s1; s1 = THnSparse::CreateSparse("THnSparse 1D", "THnSparse 1D - title", h1);
+         ObjectWrapper<THnSparse*> ows1(s1);
+         globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[j]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
    }
 
    if ( ! __DRAW__ )
@@ -798,46 +820,61 @@ int test2DObjects(vector< vector<algoType> >& listH,
             h2->SetBinContent( i, j, content );
          }
 
-      if ( c0 ) delete c0;
-      c0 = new TCanvas("c0_2D", "Histogram2D Variable");
-      if ( __DRAW__ ) h2->Draw();
-      ObjectWrapper<TH2D*> owh2(h2);
-      globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[h]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         if ( c0 ) delete c0;
+         c0 = new TCanvas("c0_2D", "Histogram2D Variable");
+         if ( __DRAW__ ) h2->DrawCopy();
+         ObjectWrapper<TH2D*> owh2(h2);
+         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[h]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
 
-      if ( c1 ) delete c1;
-      c1 = new TCanvas("c1_2D", "Histogram2D");
-      if ( __DRAW__ ) h1->Draw();
-      ObjectWrapper<TH2D*> owh1(h1);
-      globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[h]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         if ( c1 ) delete c1;
+         c1 = new TCanvas("c1_2D", "Histogram2D");
+         if ( __DRAW__ ) h1->DrawCopy();
+         ObjectWrapper<TH2D*> owh1(h1);
+         globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[h]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
 
       if ( g1 ) delete g1;
       g1 = new TGraph2D(h1);
       g1->SetName("TGraph2D");
       g1->SetTitle("TGraph 2D - title");
 
-      if ( c2 ) delete c2;
-      c2 = new TCanvas("c2_2D","TGraph");
-      if ( __DRAW__ ) g1->Draw("AB*");
-      ObjectWrapper<TGraph2D*> owg1(g1);
-      globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[h]);
-      printf("%s\n", (status?"FAILED":"OK"));
-
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         if ( c2 ) delete c2;
+         c2 = new TCanvas("c2_2D","TGraph");
+         if ( __DRAW__ ) g1->DrawClone("AB*");
+         ObjectWrapper<TGraph2D*> owg1(g1);
+         globalStatus += status = testFitters(&owg1, func, listG, listOfFunctions[h]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
       
       ge1->SetName("TGraphErrors2DGE");
       ge1->SetTitle("TGraphErrors 2DGE - title");
-      if ( c3 ) delete c3;
-      c3 = new TCanvas("c3_2DGE","TGraphError");
-      if ( __DRAW__ ) ge1->Draw("AB*");
-      ObjectWrapper<TGraph2DErrors*> owge1(ge1);
-      globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[h]);
-      printf("%s\n", (status?"FAILED":"OK"));
 
-      delete s1; s1 = THnSparse::CreateSparse("THnSparse2D", "THnSparse 2D - title", h1);
-      ObjectWrapper<THnSparse*> ows1(s1);
-      globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[h]);
-      printf("%s\n", (status?"FAILED":"OK"));
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         if ( c3 ) delete c3;
+         c3 = new TCanvas("c3_2DGE","TGraphError");
+         if ( __DRAW__ ) ge1->DrawClone("AB*");
+         ObjectWrapper<TGraph2DErrors*> owge1(ge1);
+         globalStatus += status = testFitters(&owge1, func, listGE, listOfFunctions[h]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
+
+      gTestIndex++;
+      if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+         delete s1; s1 = THnSparse::CreateSparse("THnSparse2D", "THnSparse 2D - title", h1);
+         ObjectWrapper<THnSparse*> ows1(s1);
+         globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[h]);
+         printf("%s\n", (status?"FAILED":"OK"));
+      }
    }
 
    if ( ! __DRAW__ )
@@ -934,13 +971,19 @@ int testUnBinnedFit(int n = 10000)
    listAlgos[1] = simplexAlgos;
 
    TreeWrapper tw;
+   TF1 * f1 = 0; 
+   TF2 * f2 = 0; 
+   TF1 * f4 = 0; 
 
-   TF1 * f1 = new TF1(treeFunctions[0].name,treeFunctions[0].func,minX,maxY,treeFunctions[0].npars);   
-   f1->SetParameters( &(treeFunctions[0].fitPars[0]) ); 
-   f1->FixParameter(2,1);
-   tw.set(tree, "x", "");
-   globalStatus += status = testFitters(&tw, f1, listAlgos, treeFunctions[0]);
-   printf("%s\n", (status?"FAILED":"OK"));
+   gTestIndex++;
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      f1 = new TF1(treeFunctions[0].name,treeFunctions[0].func,minX,maxY,treeFunctions[0].npars);   
+      f1->SetParameters( &(treeFunctions[0].fitPars[0]) ); 
+      f1->FixParameter(2,1);
+      tw.set(tree, "x", "");
+      globalStatus += status = testFitters(&tw, f1, listAlgos, treeFunctions[0]);
+      printf("%s\n", (status?"FAILED":"OK"));
+   }
 
    vector<algoType> noCompareInTree;
    // exclude Simplex in tree
@@ -950,22 +993,28 @@ int testUnBinnedFit(int n = 10000)
    listAlgosND[0] = commonAlgos;
    listAlgosND[1] = noCompareInTree;
 
-   TF2 * f2 = new TF2(treeFunctions[1].name,treeFunctions[1].func,minX,maxX,minY,maxY,treeFunctions[1].npars);   
-   f2->SetParameters( &(treeFunctions[1].fitPars[0]) ); 
-   tw.set(tree, "x:y", "");
-   globalStatus += status = testFitters(&tw, f2, listAlgosND, treeFunctions[1]);
-   printf("%s\n", (status?"FAILED":"OK"));
+   gTestIndex++;
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      f2 = new TF2(treeFunctions[1].name,treeFunctions[1].func,minX,maxX,minY,maxY,treeFunctions[1].npars);   
+      f2->SetParameters( &(treeFunctions[1].fitPars[0]) ); 
+      tw.set(tree, "x:y", "");
+      globalStatus += status = testFitters(&tw, f2, listAlgosND, treeFunctions[1]);
+      printf("%s\n", (status?"FAILED":"OK"));
+   }
 
-   TF1 * f4 = new TF1("gausND",gausNd,0,1,13);   
-   f4->SetParameters(&(treeFunctions[2].fitPars[0]));
-   tw.set(tree, "x:y:z:u:v:w", "");
-   globalStatus += status = testFitters(&tw, f4, listAlgosND, treeFunctions[2]);
-   printf("%s\n", (status?"FAILED":"OK"));
+   gTestIndex++;
+   if (gSelectedTest == 0 || gSelectedTest == gTestIndex) { 
+      f4 = new TF1("gausND",gausNd,0,1,13);   
+      f4->SetParameters(&(treeFunctions[2].fitPars[0]));
+      tw.set(tree, "x:y:z:u:v:w", "");
+      globalStatus += status = testFitters(&tw, f4, listAlgosND, treeFunctions[2]);
+      printf("%s\n", (status?"FAILED":"OK"));
+   }
 
    delete tree;
-   delete f1;
-   delete f2;
-   delete f4;
+   if (f1) delete f1;
+   if (f2) delete f2;
+   if (f4) delete f4;
 
    return globalStatus;
 }
@@ -1167,14 +1216,62 @@ int stressHistoFit()
    
 int main(int argc, char** argv)
 {
+
    TApplication* theApp = 0;
 
-   if (argc > 1) { 
-      bool debug = atoi(argv[1]);
-      if (debug) defaultOptions = testOptDebug;
+
+
+   Int_t  verbose     =      0;
+   Bool_t allTests    = kFALSE;
+   Bool_t oneTest     = kFALSE;
+   Int_t testNumber   =      0;
+   Bool_t doDraw      = kFALSE; 
+
+   // Parse command line arguments
+   for (Int_t i = 1 ;  i < argc ; i++) {
+
+      string arg = argv[i] ;
+
+      if (arg == "-v") {
+         cout << "stressHistoFit: running in verbose mode" << endl;
+         verbose = 1;
+      } else if (arg == "-vv") {
+         cout << "stressHistoFit: running in very verbose mode" << endl;
+         verbose = 2;
+      } else if (arg == "-a") {
+         cout << "stressHistoFit: deploying full suite of tests" << endl;
+         allTests = kTRUE;
+      } else if (arg == "-n") {
+         cout << "stressHistoFit: running single test" << endl;
+         oneTest = kTRUE;
+         testNumber = atoi(argv[++i]);
+      } else if (arg == "-d") {
+         cout << "stressHistoFit: setting gDebug to " << argv[i + 1] << endl;
+         gDebug = atoi(argv[++i]);
+      } else if (arg == "-g") {
+         cout << "stressHistoFit: running in graphics mode " << endl;
+         doDraw = kTRUE;
+      } else if (arg == "-h") {
+         cout << "usage: stressHistoFit [ options ] " << endl;
+         cout << "" << endl;
+         cout << "       -n N      : only run test with sequential number N" << endl;
+         cout << "       -a        : run full suite of tests (default is basic suite); this overrides the -n single test option" << endl;
+         cout << "       -g        : create a TApplication and produce plots" << endl;
+         cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl;
+         cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
+         cout << " " << endl ;
+         return 0 ;
+      }
+   }
+      
+   __DRAW__ = ( doDraw || verbose == 2);    
+
+   if (verbose > 0) { 
+      defaultOptions |= testOptDebug;   // debug mode (print test results) 
+      if (verbose > 1) defaultOptions |= testOptFitDbg;   // very debug (print also fit outputs)
    }
 
-   if (argc > 2) __DRAW__ = 1;
+   gSelectedTest = testNumber;  // number of selected test 
 
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);
