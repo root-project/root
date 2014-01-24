@@ -102,29 +102,29 @@ public:
 #endif
 
 #define MN_INFO_MSG(str) \
-   MN_OS << "Info: " << str \
+   if (MnPrint::Level() > 0) MN_OS << "Info: " << str    \
        << std::endl;
 #define MN_ERROR_MSG(str) \
-   MN_OS << "Error: " << str \
+   if (MnPrint::Level() >= 0) MN_OS << "Error: " << str \
        << std::endl;
 # define MN_INFO_VAL(x) \
-   MN_OS << "Info: " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() > 0) MN_OS << "Info: " << #x << " = " << (x) << std::endl; 
 # define MN_ERROR_VAL(x) \
-   MN_OS << "Error: " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() >= 0) MN_OS << "Error: " << #x << " = " << (x) << std::endl; 
 
 
 // same giving a location
 
 #define MN_INFO_MSG2(loc,str) \
-  MN_OS << "Info in " << loc << " : " << str \
+  if (MnPrint::Level() > 0) MN_OS << "Info in " << loc << " : " << str \
        << std::endl;
 #define MN_ERROR_MSG2(loc,str) \
-   MN_OS << "Error in " << loc << " : " << str \
+   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << str \
        << std::endl;
 # define MN_INFO_VAL2(loc,x) \
-   MN_OS << "Info in " << loc << " : " << #x << " = " << (x) << std::endl;
+   if (MnPrint::Level() > 0) MN_OS << "Info in " << loc << " : " << #x << " = " << (x) << std::endl;
 # define MN_ERROR_VAL2(loc,x) \
-   MN_OS << "Error in " << loc << " : " << #x << " = " << (x) << std::endl; 
+   if (MnPrint::Level() >= 0) MN_OS << "Error in " << loc << " : " << #x << " = " << (x) << std::endl; 
 
 
 

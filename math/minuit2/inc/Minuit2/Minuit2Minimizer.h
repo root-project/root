@@ -25,9 +25,6 @@
 #include "Math/IFunctionfwd.h"
 #endif
 
-#ifndef ROOT_Math_IParamFunctionfwd
-#include "Math/IParamFunctionfwd.h"
-#endif
 
 
 

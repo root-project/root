@@ -65,8 +65,9 @@ void RestoreGlobalPrintLevel(int value) {
 }
 #else
    // dummy functions
-int ControlPrintLevel( ) { return -1;}
-void RestoreGlobalPrintLevel(int ) {} 
+   int TurnOffPrintInfoLevel() { return -1} 
+   int ControlPrintLevel( ) { return -1;}
+   void RestoreGlobalPrintLevel(int ) {} 
 #endif      
 
       

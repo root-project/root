@@ -22,9 +22,9 @@
 #include "Minuit2/MnPrint.h"
 #endif
 
-#ifndef ROOT_Math_Util
-#include "Math/Util.h"
-#endif
+// #ifndef ROOT_Math_Util
+// #include "Math/Util.h"
+// #endif
 
 #include <cmath>
 
