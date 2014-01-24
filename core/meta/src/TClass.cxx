@@ -3522,22 +3522,13 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
    TInterpreter::DeclId_t decl = gInterpreter->GetFunctionWithValues(fClassInfo,
                                                                      method, params,
                                                                      objectIsConst);
-   
+
    if (!decl) return 0;
-   
-   TFunction *f = GetMethodList()->Get(decl);
-   if (f) return (TMethod*)f;
-   
-   
-   TBaseClass *base;
-   TIter       next(GetListOfBases());
-   while ((base = (TBaseClass *) next())) {
-      TClass *c = base->GetClassPointer();
-      if (c) {
-         f = c->GetMethodList()->Get(decl);
-         if (f) return (TMethod*)f;
-      }
-   }
+
+   // search recursively in this class or its base classes
+   TMethod* f = FindClassOrBaseMethodWithId(decl);
+   if (f) return f;
+
    Error("GetMethod",
          "\nDid not find matching TMethod <%s> with \"%s\" %sfor %s",
          method,params,objectIsConst ? "const " : "", GetName());
