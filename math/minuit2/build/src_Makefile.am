@@ -28,6 +28,7 @@ libMinuit2_la_SOURCES =				\
          LaOuterProduct.cxx			\
          LaSumOfElements.cxx			\
          LaVtMVSimilarity.cxx			\
+         Minuit2Minimizer.cxx			\
          MnApplication.cxx			\
          MnContours.cxx				\
          MnCovarianceSqueeze.cxx		\
@@ -67,6 +68,8 @@ libMinuit2_la_SOURCES =				\
          SqrtUpParameterTransformation.cxx	\
          VariableMetricBuilder.cxx		\
          VariableMetricEDMEstimator.cxx		\
+         MinimizerOptions.cxx		\
+         GenAlgoOptions.cxx		\
          mnbins.cxx				\
          mndasum.cxx				\
          mndaxpy.cxx				\

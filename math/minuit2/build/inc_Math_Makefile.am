@@ -15,7 +15,12 @@ math_HEADERS =           	        \
          Functor.h                      \
          IFunction.h                    \
          IFunctionfwd.h               \
+         IOptions.h               \
+         FitMethodFunction.h           \
+         Error.h               \
+         GenAlgoOptions.h               \
 	 Minimizer.h                    \
+	 MinimizerOptions.h             \
          WrappedFunction.h              
 
 
