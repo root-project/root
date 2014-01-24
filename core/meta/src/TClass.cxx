@@ -4305,7 +4305,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
-      if (fStreamerType & kEmulated) {
+      if (fStreamerType & kEmulatedStreamer) {
          // We always register emulated objects, we need to always
          // use the streamer info to destroy them.
       }
@@ -4797,7 +4797,7 @@ Long_t TClass::Property() const
    //    kForeign : the class does not have a Streamer method
    //    kInstrumented: the class does have a Streamer method
    //    kExternal: the class has a free standing way of streaming itself
-   //    kEmulated: the class is missing its shared library.
+   //    kEmulatedStreamer: the class is missing its shared library.
 
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -4859,14 +4859,14 @@ Long_t TClass::Property() const
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
-      kl->fStreamerType |= kEmulated;
+      kl->fStreamerType |= kEmulatedStreamer;
       switch (fStreamerType) {
-         case kEmulated:               // intentional fall through
-         case kForeign|kEmulated:      // intentional fall through
-         case kInstrumented|kEmulated: kl->fStreamerImpl = &TClass::StreamerStreamerInfo; break;
-         case kExternal|kEmulated:     kl->fStreamerImpl = &TClass::StreamerExternal; break;
-         case kTObject|kEmulated:      kl->fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
-         case TClass::kDefault:       kl->fStreamerImpl = &TClass::StreamerDefault; break;
+         case kEmulatedStreamer:               // intentional fall through
+         case kForeign|kEmulatedStreamer:      // intentional fall through
+         case kInstrumented|kEmulatedStreamer: kl->fStreamerImpl = &TClass::StreamerStreamerInfo; break;
+         case kExternal|kEmulatedStreamer:     kl->fStreamerImpl = &TClass::StreamerExternal; break;
+         case kTObject|kEmulatedStreamer:      kl->fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
+         case TClass::kDefault:                kl->fStreamerImpl = &TClass::StreamerDefault; break;
 
       }
       return 0;
@@ -5285,7 +5285,7 @@ void TClass::StreamerExternal(void *object, TBuffer &b, const TClass *onfile_cla
    //There is special streamer for the class
 
    //      case kExternal:
-   //      case kExternal|kEmulated:
+   //      case kExternal|kEmulatedStreamer:
 
    TClassStreamer *streamer = gThreadTsd ? GetStreamer() : fStreamer;
    streamer->Stream(b,object,onfile_class);
@@ -5319,7 +5319,7 @@ void TClass::StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onf
 {
    // Case of TObjects when we do not have the library defining the class.
 
-   // case kTObject|kEmulated :
+   // case kTObject|kEmulatedStreamer :
    if (b.IsReading()) {
       b.ReadClassEmulated(this, object, onfile_class);
    } else {
@@ -5341,9 +5341,9 @@ void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile
 {
    // Case of where we should directly use the StreamerInfo.
    //    case kForeign:
-   //    case kForeign|kEmulated:
-   //    case kInstrumented|kEmulated:
-   //    case kEmulated:
+   //    case kForeign|kEmulatedStreamer:
+   //    case kInstrumented|kEmulatedStreamer:
+   //    case kEmulatedStreamer:
 
    if (b.IsReading()) {
       b.ReadClassBuffer(this, object, onfile_class);
@@ -5386,7 +5386,7 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 
    if (fStreamer) delete fStreamer;
    if (str) {
-      fStreamerType = kExternal | ( fStreamerType&kEmulated );
+      fStreamerType = kExternal | ( fStreamerType&kEmulatedStreamer );
       fStreamer = str;
       fStreamerImpl = &TClass::StreamerExternal;
    } else if (fStreamer) {
