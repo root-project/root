@@ -34,7 +34,7 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
  * could be adopted. One could use for example hashes of strings in first
  * approximation.
  **/
-bool DictSelectionReader::fInSelectionNamespace(const clang::RecordDecl& recordDecl,
+bool DictSelectionReader::InSelectionNamespace(const clang::RecordDecl& recordDecl,
                                                 const std::string& className)
 {   
 //    // Check if the namespace is the right one using the cache
@@ -80,7 +80,7 @@ bool DictSelectionReader::fInSelectionNamespace(const clang::RecordDecl& recordD
  * Get from T the CXXRecordDecl.
  */
 template<class T>
-const clang::CXXRecordDecl* DictSelectionReader::fGetCXXRcrdDecl(const T& myClass)
+const clang::CXXRecordDecl* DictSelectionReader::GetCXXRcrdDecl(const T& myClass)
 {   
    const clang::RecordDecl* rcrdDecl =
                    ROOT::TMetaUtils::GetUnderlyingRecordDecl(myClass.getType());
@@ -94,7 +94,7 @@ const clang::CXXRecordDecl* DictSelectionReader::fGetCXXRcrdDecl(const T& myClas
 /**
  * Get the pointer to the template arguments list. Return zero if not available.
  **/
-const clang::TemplateArgumentList* DictSelectionReader::fGetTmplArgList(const clang::CXXRecordDecl& cxxRcrdDecl)
+const clang::TemplateArgumentList* DictSelectionReader::GetTmplArgList(const clang::CXXRecordDecl& cxxRcrdDecl)
 {
    const clang::ClassTemplateSpecializationDecl* tmplSpecDecl =
    llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&cxxRcrdDecl);
@@ -112,7 +112,7 @@ const clang::TemplateArgumentList* DictSelectionReader::fGetTmplArgList(const cl
  * autoselected. The key is the name of the class and the value the name of the
  * field. This information is used in the second pass.
  **/
-void DictSelectionReader::fManageFields(const clang::RecordDecl& recordDecl,
+void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
                    const std::string& className,
                    ClassSelectionRule& csr)
 {
@@ -123,11 +123,11 @@ void DictSelectionReader::fManageFields(const clang::RecordDecl& recordDecl,
    for (clang::RecordDecl::field_iterator fieldsIt = recordDecl.field_begin();
         fieldsIt!=recordDecl.field_end();++fieldsIt){
 
-      const clang::CXXRecordDecl* cxxRcrdDecl = fGetCXXRcrdDecl(**fieldsIt);
+      const clang::CXXRecordDecl* cxxRcrdDecl = GetCXXRcrdDecl(**fieldsIt);
       if (!cxxRcrdDecl) continue;
 
       const clang::TemplateArgumentList* tmplArgs =
-                                                  fGetTmplArgList(*cxxRcrdDecl);
+                                                  GetTmplArgList(*cxxRcrdDecl);
       if (!tmplArgs) continue;
 
       // Yes it is! Loop on the template parameters: useful information can be
@@ -167,7 +167,7 @@ void DictSelectionReader::fManageFields(const clang::RecordDecl& recordDecl,
  * the second one the number of arguments to be skipped. This information is
  * used during the second pass.
  **/
-void DictSelectionReader::fManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
+void DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
                                              const std::string& className,
                                              ClassSelectionRule& csr)
 {
@@ -181,11 +181,11 @@ void DictSelectionReader::fManageBaseClasses(const clang::CXXRecordDecl& cxxRcrd
    for( clang::CXXRecordDecl::base_class_const_iterator baseIt = cxxRcrdDecl.bases_begin();
        baseIt !=  cxxRcrdDecl.bases_end(); baseIt++){
       
-      const clang::CXXRecordDecl* baseCxxRcrdDecl = fGetCXXRcrdDecl(*baseIt);
+      const clang::CXXRecordDecl* baseCxxRcrdDecl = GetCXXRcrdDecl(*baseIt);
       if (!baseCxxRcrdDecl) continue;
 
       const clang::TemplateArgumentList* tmplArgs =
-                                                  fGetTmplArgList(*baseCxxRcrdDecl);
+                                                  GetTmplArgList(*baseCxxRcrdDecl);
       if (!tmplArgs) continue;
       
       baseName = baseCxxRcrdDecl->getNameAsString();
@@ -227,7 +227,7 @@ void DictSelectionReader::fManageBaseClasses(const clang::CXXRecordDecl& cxxRcrd
  * the selection namespace. Selection rules are directly filled as well as
  * data sructures re-used during the second pass.
  **/
-bool DictSelectionReader::fFirstPass(const clang::RecordDecl& recordDecl)
+bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
 {
 
    std::string className;
@@ -238,7 +238,7 @@ bool DictSelectionReader::fFirstPass(const clang::RecordDecl& recordDecl)
    // Strip ROOT::Meta::Selection FIXME
    className.replace(0,23,"");
    
-   if ( ! fInSelectionNamespace(recordDecl,className))
+   if ( ! InSelectionNamespace(recordDecl,className))
          return true;
    
    if ( !fSelectedRecordDecls.insert(&recordDecl).second )
@@ -247,11 +247,11 @@ bool DictSelectionReader::fFirstPass(const clang::RecordDecl& recordDecl)
    ClassSelectionRule csr(BaseSelectionRule::kYes);
    csr.SetAttributeValue("name",className);
 
-   fManageFields(recordDecl, className, csr);
+   ManageFields(recordDecl, className, csr);
 
    if (const clang::CXXRecordDecl* cxxRcrdDecl =
                           llvm::dyn_cast<clang::CXXRecordDecl>(&recordDecl)){
-      fManageBaseClasses(*cxxRcrdDecl,className,csr);
+      ManageBaseClasses(*cxxRcrdDecl,className,csr);
    }
 
    // Finally add the selection rule
@@ -277,10 +277,10 @@ bool DictSelectionReader::fFirstPass(const clang::RecordDecl& recordDecl)
  * information down to the @c AnnotatedRecordDecl creation which happens in the
  * @c RScanner .
  **/
-bool DictSelectionReader::fSecondPass(const clang::RecordDecl& recordDecl)
+bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
 {
    // No interest if we are in the selction namespace
-   if ( fInSelectionNamespace(recordDecl))
+   if ( InSelectionNamespace(recordDecl))
       return true;
 
    std::string className;
@@ -338,9 +338,9 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
 {
 
    if (fIsFirstPass)
-      return fFirstPass(*recordDecl);
+      return FirstPass(*recordDecl);
    else
-      return fSecondPass(*recordDecl);  
+      return SecondPass(*recordDecl);  
 }
 
    

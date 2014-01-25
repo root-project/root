@@ -164,14 +164,14 @@ public:
    
 private:
 
-   bool fInSelectionNamespace(const clang::RecordDecl&, const std::string& str=""); ///< Check if in the ROOT::Selection namespace
-   bool fFirstPass(const clang::RecordDecl&); ///< First pass on the AST
-   bool fSecondPass(const clang::RecordDecl&); ///< Second pass on the AST, using the information of the first one
-   void fManageFields(const clang::RecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class fields
-   void fManageBaseClasses(const clang::CXXRecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class bases
+   bool InSelectionNamespace(const clang::RecordDecl&, const std::string& str=""); ///< Check if in the ROOT::Selection namespace
+   bool FirstPass(const clang::RecordDecl&); ///< First pass on the AST
+   bool SecondPass(const clang::RecordDecl&); ///< Second pass on the AST, using the information of the first one
+   void ManageFields(const clang::RecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class fields
+   void ManageBaseClasses(const clang::CXXRecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class bases
    template<class T>
-   const clang::CXXRecordDecl* fGetCXXRcrdDecl(const T& ); ///< Extract the CXXRecordDecl when @c clang::QualType @c T::getType() exists
-   const clang::TemplateArgumentList* fGetTmplArgList(const clang::CXXRecordDecl& ); ///< Get the template arguments list if any
+   const clang::CXXRecordDecl* GetCXXRcrdDecl(const T& ); ///< Extract the CXXRecordDecl when @c clang::QualType @c T::getType() exists
+   const clang::TemplateArgumentList* GetTmplArgList(const clang::CXXRecordDecl& ); ///< Get the template arguments list if any
    
    SelectionRules& fSelectionRules; ///< The selection rules to be filled
    std::set<const clang::RecordDecl*> fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
