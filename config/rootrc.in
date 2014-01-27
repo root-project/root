@@ -636,7 +636,6 @@ XNet.ParStreamsPerPhyConn: 0
 # and related classes (module netxng, libNetxNG.so).
 
 # Use the old xrootd client (libNetx) instead of the new (libNetxNG)
-
 XNet.UseOldClient: @useoldnetx@
 
 # NetXNG.ConnectionWindow     - A time window for the connection establishment. A
@@ -673,20 +672,13 @@ XNet.UseOldClient: @useoldnetx@
 # NetXNG.ClientMonitorParam   - Additional optional parameters that will be
 #                               passed to the monitoring object on initialization.
 
-# Example of custom setting for the Rint application (root.exe).
-# This overrides the default specified above for a generic application.
-# Color 5 is yellow.
-Rint.Canvas.HighLightColor:      5
-
-
 # Parameters that influence the behavior of TDavixFile/TDavixSystem. These
 # classes give a comprehensive client side support for HTTP and WebDAV,
 # with all the goodies (session caching, flexible authentication, support
 # for different dialects like S3, and others)
 
-# Use old TWebFile as long as Davix is experimental
-# Davix.UseOldClient: @useoldwebfile@
-Davix.UseOldClient: yes
+# Use the old TWebFile instead of the new libDavix based version
+Davix.UseOldClient: @useoldwebfile@
 
 # Verbosity level of the external Davix library
 # Davix.Debug: 0
@@ -721,3 +713,8 @@ Davix.UseOldClient: yes
 # X509_USER_CERT, X509_USER_KEY, X509_USER_PROXY
 # They have the usual meaning for the X509 Grid things. The gEnv vars
 # have higher priority over the these envvars.
+
+# Example of custom setting for the Rint application (root.exe).
+# This overrides the default specified above for a generic application.
+# Color 5 is yellow.
+Rint.Canvas.HighLightColor:      5
