@@ -40,7 +40,13 @@ public:
       mycellnull = 0;
       mycellfix = new RootPCfix(4) ;
       mycellvirt = new RootPCvirt(5);
+#ifndef __CLING__
       mynocellp = new RootPCnodict(8);
+#else
+      // Use -1 to be able to determine that this line is
+      // really not executed in the test.
+      mynocellp = (RootPCellID*)-1;
+#endif
       int i = 0;
       for(i=0; i<3; i++) {
          RootPCellID cell(s,id+1+i);
@@ -153,7 +159,7 @@ public:
    int index;
    RootPCellID    **myArrVar;    //![index]  WAITING on Vicktor's implementation [index]
    RootPCellID     *objVarArr;   //![index]  Not implemented yet ... will it ever?
-   RootPCnodict     mynocell;
+   RootPCnoRequestedDict     mynocell;
    RootPCellID     *mycellnull; 
    RootPCellID     *mycellfix; //
    RootPCellID     *mycellvirt; //

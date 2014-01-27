@@ -97,6 +97,27 @@ public:
    virtual int getvirt() { return virt; }
 };
 
+class RootPCnoRequestedDict : public RootPCellID {
+public:
+   RootPCnoRequestedDict() : RootPCellID("none",0),nodict(0) {}
+   RootPCnoRequestedDict(int n) :  RootPCellID("noRequestedDict",n),nodict(55) {}
+   int nodict;
+   void Print() const {
+     RootPCellID::Print();
+     std::cout  << "noRequestedDict \t" << nodict << std::endl;
+   }
+};
+
+#if defined(__CLING__)
+// Since with cling the dictionary information is the same as
+// the header, we use this short-cut to emulate the case where
+// the public header do no define the class but just forward
+// declare it.  This is the only (I can think of so far) that
+// the user might request the I/O for a class and have some
+// of its content not declared/known to cling.  [And the use
+// as to be by pointer]
+class RootPCnodict;
+#else
 class RootPCnodict : public RootPCellID {
 public:
    RootPCnodict() : RootPCellID("none",0),nodict(0) {}
@@ -107,6 +128,7 @@ public:
      std::cout  << "nodict \t" << nodict << std::endl;
    }
 };
+#endif
 
 template <class T> class RootPCtemp : public RootPCellID {
 public:
