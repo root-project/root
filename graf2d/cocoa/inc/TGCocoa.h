@@ -309,15 +309,16 @@ public:
 
    /////////////////////////////
    //OpenGL.
+   //We have a mix of Handle_t, Window_t (both are long) and Int_t (this is an obsolete version).
    virtual Double_t  GetOpenGLScalingFactor();
    virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
    virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
    virtual void      CreateOpenGLContext(Int_t wid);
    virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
    virtual Handle_t  GetCurrentOpenGLContext();
-   virtual void      FlushOpenGLBuffer(Handle_t ctx);
+   virtual void      FlushOpenGLBuffer(Handle_t ctxID);
 
-   virtual void      DeleteOpenGLContext(Int_t wid);   
+   virtual void      DeleteOpenGLContext(Int_t ctxID);
    //OpenGL.
    /////////////////////////////
 
