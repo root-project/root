@@ -497,20 +497,22 @@ bool InitTimers()
       return false;
 
    //Scroll animation.
-   CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
-                                                               CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
-                                                               scrollInterval,
-                                                               0,
-                                                               0,
-                                                               ROOTSplashscreenTimerCallback,
-                                                               0
-                                                               ));
-   if (!guard2.Get())
-      return false;
+   if (showAboutInfo) {
+      CFScopeGuard<CFRunLoopTimerRef> guard2(CFRunLoopTimerCreate(kCFAllocatorDefault,
+                                                                  CFAbsoluteTimeGetCurrent() + splashScreenDelayInSec,
+                                                                  scrollInterval,
+                                                                  0,
+                                                                  0,
+                                                                  ROOTSplashscreenTimerCallback,
+                                                                  0
+                                                                  ));
+      if (!guard2.Get())
+         return false;
 
-   //TODO: refactor CFScopeGuard to return the pointer from Release.
-   scrollTimer = guard2.Get();
-   guard2.Release();
+      //TODO: refactor CFScopeGuard to return the pointer from Release.
+      scrollTimer = guard2.Get();
+      guard2.Release();
+   }
 
    signalTimer = guard1.Get();
    guard1.Release();
@@ -522,26 +524,31 @@ bool InitTimers()
 void AttachTimers()
 {
    assert(signalTimer != 0 && "AttachTimer, invalid signalTimer (null)");
-   assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
-   
    CFRunLoopAddTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
-   CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
+   
+   if (showAboutInfo) {
+      assert(scrollTimer != 0 && "AttachTimer, invalid scrollTimer (null)");
+      CFRunLoopAddTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
+   }
 }
 
 //_________________________________________________________________
 void RemoveTimers()
 {
    assert(signalTimer != 0 && "RemoveTimers, signalTimer is null");
-   assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
    
    CFRunLoopRemoveTimer(CFRunLoopGetMain(), signalTimer, kCFRunLoopCommonModes);
    CFRunLoopTimerInvalidate(signalTimer);
    //TODO: test if I also have to call release!!!
    signalTimer = 0;
-   CFRunLoopRemoveTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
-   CFRunLoopTimerInvalidate(scrollTimer);
-   //TODO: test if I also have to call release!!!
-   scrollTimer = 0;
+   
+   if (showAboutInfo) {
+      assert(scrollTimer != 0 && "RemoveTimers, scrollTimer is null");
+      CFRunLoopRemoveTimer(CFRunLoopGetMain(), scrollTimer, kCFRunLoopCommonModes);
+      CFRunLoopTimerInvalidate(scrollTimer);
+      //TODO: test if I also have to call release!!!
+      scrollTimer = 0;
+   }
 }
 
 //_________________________________________________________________
@@ -570,7 +577,7 @@ void RunEventLoop()
          if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
             if (event.data1 == kSignalTimer) {
                popupDone = !showAboutInfo && !StayUp() && popdown;
-            } else {
+            } else if (showAboutInfo) {
                assert([[splashScreen contentView] isKindOfClass : [ROOTSplashScreenView class]] &&
                       "RunEventLoop, splashScreen.contentView has a wrong type");
                [(ROOTSplashScreenView *)[splashScreen contentView] scrollText];
