@@ -36,10 +36,12 @@
 #include "QuartzLine.h"
 #include "CocoaUtils.h"
 #include "TGQuartz.h"
+#include "TString.h"
 #include "TPoint.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 ClassImp(TGQuartz)
 
@@ -80,6 +82,7 @@ void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoin
 
 //______________________________________________________________________________
 TGQuartz::TGQuartz()
+            : fUseAA(true)
 {
    //Default ctor.
    
@@ -93,12 +96,15 @@ TGQuartz::TGQuartz()
 
    fAlign.x = 0;
    fAlign.y = 0;
+   
+   SetAA();
 }
 
 
 //______________________________________________________________________________
 TGQuartz::TGQuartz(const char *name, const char *title)
-            : TGCocoa(name, title)
+            : TGCocoa(name, title),
+              fUseAA(true)
 {
    //Constructor.
    if (!TTF::IsInitialized())
@@ -110,6 +116,8 @@ TGQuartz::TGQuartz(const char *name, const char *title)
 
    fAlign.x = 0;
    fAlign.y = 0;
+   
+   SetAA();
 }
 
 
@@ -129,6 +137,8 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
    const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
@@ -189,6 +199,8 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
    
    const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
    const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
@@ -238,6 +250,8 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
       
    if (!Quartz::SetLineColor(ctx, GetLineColor())) {
       Error("DrawLine", "Could not set line color for index %d", int(GetLineColor()));
@@ -270,6 +284,8 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
    
    if (!Quartz::SetLineColor(ctx, GetLineColor())) {
       Error("DrawPolyLine", "Could not find TColor for index %d", GetLineColor());
@@ -305,6 +321,8 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
       
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
+   //AA flag is not a part of a state.
+   const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
    if (!Quartz::SetFillColor(ctx, GetMarkerColor())) {
       Error("DrawPolyMarker", "Could not find TColor for index %d", GetMarkerColor());
@@ -886,7 +904,24 @@ void TGQuartz::DrawFTGlyphIntoPixmap(void *pHack, FT_Bitmap *source, ULong_t for
    }
 }
 
-//Aux. function.
+//Aux. functions.
+
+//______________________________________________________________________________
+void TGQuartz::SetAA()
+{
+   if (gEnv) {
+      const TString value(TString(gEnv->GetValue("Cocoa.EnableAntiAliasing", "auto")).Strip());
+      if (value == "auto") {
+         //TODO: what about multi-head setup?
+         [[NSScreen mainScreen] backingScaleFactor] > 1. ? fUseAA = true : fUseAA = false;
+      } else if (value == "no")
+         fUseAA = false;
+      else {
+         assert(value == "yes" && "SetAA, value must be 'yes', 'no' or 'auto'");
+         fUseAA = true;
+      }
+   }
+}
 
 //______________________________________________________________________________
 void *TGQuartz::GetSelectedDrawableChecked(const char *calledFrom) const
