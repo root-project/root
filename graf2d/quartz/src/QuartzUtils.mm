@@ -30,5 +30,27 @@ CGStateGuard::~CGStateGuard()
    CGContextRestoreGState(fCtx);
 }
 
+//Actually, this class does any work only if you disable anti-aliasing, by default I have it on
+//and there is nothing to do for a guard if you want it on.
+
+//______________________________________________________________________________
+CGAAStateGuard::CGAAStateGuard(CGContextRef ctx, bool enable)
+               : fCtx(ctx),
+                 fEnable(enable)
+{
+   assert(ctx != 0 && "CGAAStateGuard, ctx parameter is null");
+   
+   if (!enable)
+      CGContextSetAllowsAntialiasing(ctx, false);
+}
+
+//______________________________________________________________________________
+CGAAStateGuard::~CGAAStateGuard()
+{
+   //Enable it back:
+   if (!fEnable)
+      CGContextSetAllowsAntialiasing(fCtx, true);
+}
+
 }//Quartz
 }//ROOT

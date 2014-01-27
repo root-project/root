@@ -89,6 +89,13 @@ X11.FindBestVisual:      yes
 X11.UseXft:              no
 X11.XInitThread:         yes
 
+# Settings for Cocoa backend.
+# The EnableAntialiasing flag
+# defines if you want to have
+# lines/polygon anti-aliased in a canvas/pad. Possible values:
+# yes (always use AA for lines/polygons), no (disable line/polygon AA) auto (use line/polygon AA only on Retina displays).
+Cocoa.EnableAntiAliasing yes
+
 # Settings for Win32 behavior.
 Win32.UseSysPointers:    no
 

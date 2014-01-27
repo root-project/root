@@ -30,6 +30,22 @@ private:
    CGStateGuard &operator = (const CGStateGuard &rhs);
 };
 
+//Scope guard for AA flag (due to some reason it's not
+//saved/restored as a part of a context state).
+class CGAAStateGuard {
+public:
+   CGAAStateGuard(CGContextRef ctx, bool enable);
+   ~CGAAStateGuard();
+
+private:
+   CGContextRef fCtx;
+   bool fEnable;
+
+   CGAAStateGuard(const CGAAStateGuard &rhs);
+   CGAAStateGuard &operator = (const CGAAStateGuard &rhs);
+
+};
+
 }
 }
 
