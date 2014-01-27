@@ -81,7 +81,7 @@ namespace ROOT{
             ClassAttributes <kNonSplittable>{
                MemberAttributes<kAutoSelected> autoselectedMember;
                MemberAttributes<kTransient> transientMember;
-               MemberAttributes<kTransient, kAutoSelected> autoselectedMemberAndTransientMemberMember;
+               MemberAttributes<kTransient + kAutoSelected> autoselectedMemberAndTransientMemberMember;
             };
          classTemplateElaborate<char> classTemplateElaborate_inst1;
 
