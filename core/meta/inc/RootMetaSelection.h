@@ -26,4 +26,4 @@ template <unsigned int memberAttributes = kMemberNullProperty > class MemberAttr
       }
    }   
 }
-#endif __ROOTMETASELECTION_H__
+#endif //__ROOTMETASELECTION_H__
