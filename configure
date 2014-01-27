@@ -4195,7 +4195,7 @@ if test ! "x$enable_davix" = "xno" ; then
     davixincdir=$found_dir
 
     check_library "libdavix" "$enable_shared" "$davixlibdir" \
-        $DAVIX ${DAVIX:+$DAVIX/lib} \
+        $DAVIX ${DAVIX:+$DAVIX/lib} ${DAVIX:+$DAVIX/lib64} \
         /usr/lib /usr/local
     davixlib=$found_lib
     davixlibdir=$found_dir

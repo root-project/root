@@ -172,7 +172,7 @@ Int_t TDavixSystem::Locate(const char *path, TString &endurl)
       return 1;
    }
    if (vecRep.size() > 0) {
-      endurl = vecRep[0].getString().c_str();
+      endurl = vecRep[0].uri.getString().c_str();
    } else {
       endurl = path;
    }
