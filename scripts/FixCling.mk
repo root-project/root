@@ -43,7 +43,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
-CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
+#CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
 CALLROOTEXE += -e "\#define ClingWorkAroundTClassUpdateDouble32"
 CALLROOTEXE += -e "\#define ClingWorkAroundStripDefaultArg"
 
@@ -102,7 +102,7 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jir
 # ClingReinstateRedeclarationAllowed = yes     # See https://sft.its.cern.ch/jira/browse/ROOT-4803
 # ClingReinstateImplicitDynamicCast = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-4802
 # ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
-ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
+#ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 ClingWorkAroundTClassUpdateDouble32 = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
 ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862 
 
