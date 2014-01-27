@@ -193,7 +193,7 @@ else
 fi
 
 if test "x$VERS" =  "x" ; then
-   VERS="0.2.7"
+   VERS="0.2.8"
 fi
 echo "Version: $VERS"
 
