@@ -1,5 +1,5 @@
 // @(#)root/gl:$Id$
-// Author:  Timur Pocheptsov  06/05/2009
+// Author:  Olivier Couet, Timur Pocheptsov  06/05/2009
 
 /*************************************************************************
  * Copyright (C) 1995-2009, Rene Brun and Fons Rademakers.               *
