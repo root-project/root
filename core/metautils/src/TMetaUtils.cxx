@@ -1600,7 +1600,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // Now manipulate tclass in order to percolate the properties expressed as
       // annotations of the decls.
       std::string manipString;
-      std::size_t substrFound;
       std::string attribute_s;
       std::string attrName, attrValue;
       // Class properties
@@ -1628,52 +1627,72 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
                manipString+="      TDictAttributeMap* attrMap( theClass->GetAttributeMap() );\n";
                attrMapExtracted=true;
             }
-
-            // Format property as String
-            attrValue = "\""+attrValue+"\"";
-
-            manipString+="      attrMap->AddProperty(\""+attrName +"\","+attrValue+");\n";
+            manipString+="      attrMap->AddProperty(\""+attrName +"\",\""+attrValue+"\");\n";
          }
       } // end of class has properties
 
       // Member properties
-      // NOTE: Only transiency propagated
-
-      // Loop on declarations inside the class, including data members
-      bool tDataMemberPtrGot=false;
+      // Loop on declarations inside the class, including data members   
       for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
           internalDeclIt != decl->decls_end(); ++internalDeclIt){
          if (!(!(*internalDeclIt)->isImplicit()
             && (clang::isa<clang::FieldDecl>(*internalDeclIt) ||
                 clang::isa<clang::VarDecl>(*internalDeclIt)))) continue; // Check if it's a var or a field
+
          // Now let's check the attributes of the var/field
          if (!internalDeclIt->hasAttrs()) continue;
+
+         attrMapExtracted = false;
+         bool memberPtrCreated = false;
+
          for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
               attrIt!=internalDeclIt->attr_end();++attrIt){
-            // Convert the attribute to AnnotateAttr if possible
-            clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);
-            if (!annAttr) continue;
-            // Let's see if it's a transient attribute
-            attribute_s = annAttr->getAnnotation();
-            std::string attributeNoSpaces_s (attribute_s);
-            std::remove(attributeNoSpaces_s.begin(), attributeNoSpaces_s.end(), ' ');
-            // 1) Let's see if it's a //!
-            substrFound = attributeNoSpaces_s.find("//!");
-            if (substrFound != 0) continue;
-            // 2) Add the modification lines to the manipString.
-            //    Get the TDataMamber and then set it Transient
+
+            // Get the attribute as string
+            if ( 0!=ROOT::TMetaUtils::extractAttrString(*attrIt,attribute_s)){
+               continue;
+            }
+
+            // Check the name of the decl
             clang::NamedDecl* namedInternalDecl = clang::dyn_cast<clang::NamedDecl> (*internalDeclIt);
             if (!namedInternalDecl) {
                TMetaUtils::Error(0,"Cannot convert field declaration to clang::NamedDecl");
                continue;
             };
-            std::string memberName(namedInternalDecl->getName());
-            if (!tDataMemberPtrGot){
-               manipString+="      TDataMember* ";
-               tDataMemberPtrGot = true;
+            const std::string memberName(namedInternalDecl->getName());
+            const std::string cppMemberName="theMember_"+memberName;
+
+            // Prepare a string to get the data member, it can be used later.
+            const std::string dataMemberCreation= "      TDataMember* "+cppMemberName+" = theClass->GetDataMember(\""+memberName+"\");\n";
+            
+            // Let's treat the transiency first, which is a special case as it is
+            // expressed with "//!" and is not a regular attribute:
+            std::string attributeNoSpaces_s (attribute_s);
+            std::remove(attributeNoSpaces_s.begin(), attributeNoSpaces_s.end(), ' ');
+            if (attributeNoSpaces_s.find("//!") == 0){
+               manipString+=dataMemberCreation;
+               manipString+="      "+cppMemberName+"->ResetBit(BIT(2));\n"; //FIXME: Make it less cryptic
+               memberPtrCreated=true;
             }
-            manipString+="      theMember = theClass->GetDataMember(\""+memberName+"\");\n"
-                         "      theMember->ResetBit(BIT(2));\n"; //FIXME: Make it less cryptic
+
+            // Let's now attack regular properties
+            
+            if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
+               continue;
+            }
+            
+            if (!memberPtrCreated){
+               manipString+=dataMemberCreation;
+               memberPtrCreated=true;
+            }
+            
+            if (!attrMapExtracted){
+               manipString+="      "+cppMemberName+"->CreateAttributeMap();\n";            
+               manipString+="      TDictAttributeMap* memberAttrMap_"+memberName+"( theMember_"+memberName+"->GetAttributeMap() );\n";
+            attrMapExtracted=true;               
+            }
+
+            manipString+="      memberAttrMap_"+memberName+"->AddProperty(\""+attrName +"\",\""+attrValue+"\");\n";
 
 
          } // End loop on attributes
