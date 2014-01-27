@@ -9,10 +9,14 @@ int execbasic()
    loadLib("libbasic_allClasses_dictrflx.so");
 
    // Start the tests
+   propertiesNames emptyProp;
    propertiesNames properties1;
    properties1.push_back("checksum");
    printClassInfo("class1",properties1);
-   printClassInfo("class2");
+   memberNamesProperties class2MemberProp;
+   class2MemberProp["m_i"].push_back("property1");
+   class2MemberProp["m_i"].push_back("property2");
+   printClassInfo("class2",emptyProp,true,class2MemberProp);
    printClassInfo("class3");
    printClassInfo("class3_1");
    printClassInfo("class3_2");

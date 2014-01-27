@@ -12,6 +12,8 @@
 #include <string>
 
 typedef std::vector<std::string> propertiesNames;
+typedef std::map<std::string, propertiesNames > memberNamesProperties;
+memberNamesProperties emptyMap;
 
 //______________________________________________________________________________
 void loadLib(const char* libname)
@@ -21,14 +23,15 @@ void loadLib(const char* libname)
 }
 
 //______________________________________________________________________________
-void printMemberNames(const std::string& className, const std::string indent="")
+void printMemberNames(const std::string& className, const std::string indent="", memberNamesProperties& mbProp = emptyMap)
 {
    TClass* theClass = TClass::GetClass(className.c_str());
    TList* listOfDataMembers(theClass->GetListOfDataMembers());
    TIter next(listOfDataMembers);
    TDataMember* dm;
    while ( ( dm = static_cast<TDataMember*> (next()) ) ){
-      std::cout << indent <<  dm->GetTrueTypeName() << " " << dm->GetName();
+      std::string dmName(dm->GetName());
+      std::cout << indent <<  dm->GetTrueTypeName() << " " << dmName;
       bool isPtr=dm->IsaPointer();
       bool isBasic=dm->IsBasic();
       bool isEnum=dm->IsEnum();
@@ -43,6 +46,14 @@ void printMemberNames(const std::string& className, const std::string indent="")
       }
       else
          std::cout << std::endl;
+      if (mbProp.count(dmName)!=0){
+         TDictAttributeMap* attrMap = dm->GetAttributeMap();
+         for (propertiesNames::iterator prop=mbProp[dmName].begin();
+              prop!=mbProp[dmName].end();prop++){
+            const char* propVals = attrMap->GetPropertyAsString(prop->c_str());
+            std::cout << "    - " << *prop << ": " << propVals <<  std::endl;            
+         }
+      }
    }
 }
 
@@ -76,7 +87,8 @@ void printMethodNames(const std::string& className,const std::string indent="")
 //______________________________________________________________________________
 void printClassInfo(const std::string& className,
                     const propertiesNames& properties = propertiesNames(),
-                    bool printMethods = true)
+                    bool printMethods = true,
+                    memberNamesProperties& mbProp = emptyMap)
 {
    TClass* theClass = TClass::GetClass(className.c_str());
    if (!theClass){
@@ -111,6 +123,6 @@ void printClassInfo(const std::string& className,
       printMethodNames(className,"  * ");
    }
    std::cout << " o Members (" << theClass->GetNdata() << "):\n";
-   printMemberNames(className,"  * ");
+   printMemberNames(className,"  * ",mbProp);
    std::cout << "--- End Class " << className << std::endl;
 }

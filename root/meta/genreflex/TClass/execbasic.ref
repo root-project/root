@@ -36,6 +36,8 @@ Class category: foreign.
   * class2& class2::operator=(const class2&)
  o Members (3):
   * int m_i [ isBasic  ]
+    - property1: value1
+    - property2: value2
   * int m_j [ isBasic  ]
   * map<float,double> m_map1
 --- End Class class2
