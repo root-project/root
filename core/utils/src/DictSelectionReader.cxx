@@ -22,7 +22,9 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
 
    // Now re-inspect the AST to find autoselected classes (double-tap)
    fIsFirstPass=false;
-   TraverseDecl(translUnitDecl);
+   if (!fTemplateInstanceNamePatternsArgsToKeep.empty() ||
+       !fAutoSelectedClassFieldNames.empty())
+      TraverseDecl(translUnitDecl);
 }
 
 //______________________________________________________________________________
@@ -37,10 +39,6 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
 bool DictSelectionReader::InSelectionNamespace(const clang::RecordDecl& recordDecl,
                                                 const std::string& className)
 {   
-//    // Check if the namespace is the right one using the cache
-//    if ( fSelectionNsDecls.count(recordDecl.getParent()) == 1 )
-//       return true;
-   
    // If it's not contained by 2 namespaces, drop it.
    std::list<std::pair<std::string,bool> > enclosingNamespaces;
    ROOT::TMetaUtils::ExtractEnclosingNameSpaces(recordDecl,enclosingNamespaces);
@@ -69,25 +67,8 @@ bool DictSelectionReader::InSelectionNamespace(const clang::RecordDecl& recordDe
                            className.find("Keep") == 0))
        return false;
    
-//    fSelectionNsDecls.insert(recordDecl.getParent())
-
    return true;
   
-}
-
-//______________________________________________________________________________
-/**
- * Get from T the CXXRecordDecl.
- */
-template<class T>
-const clang::CXXRecordDecl* DictSelectionReader::GetCXXRcrdDecl(const T& myClass)
-{   
-   const clang::RecordDecl* rcrdDecl =
-                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(myClass.getType());
-   const clang::CXXRecordDecl* cxxRcrdDecl =
-                                 llvm::dyn_cast<clang::CXXRecordDecl>(rcrdDecl);   
-   
-   return cxxRcrdDecl;
 }
 
 //______________________________________________________________________________
@@ -106,6 +87,32 @@ const clang::TemplateArgumentList* DictSelectionReader::GetTmplArgList(const cla
 
 //______________________________________________________________________________
 /**
+ * Extract the value of the integral template parameter of a CXXRecordDecl when
+ * it has a certain name. If nothing can be extracted, the value of @c zero
+ * is returned.
+ **/
+template<class T>
+unsigned int DictSelectionReader::ExtractTemplateArgValue(const T& myClass,
+                                                          const std::string& pattern)
+{
+   const clang::RecordDecl* rcrdDecl =
+                   ROOT::TMetaUtils::GetUnderlyingRecordDecl(myClass.getType());
+   const clang::CXXRecordDecl* cxxRcrdDecl =
+                                 llvm::dyn_cast<clang::CXXRecordDecl>(rcrdDecl);
+
+   if (!cxxRcrdDecl) return 0;
+   
+   const clang::TemplateArgumentList* tmplArgs = GetTmplArgList(*cxxRcrdDecl);
+   if (!tmplArgs) return 0;
+   
+   if ( std::string::npos == cxxRcrdDecl->getNameAsString().find(pattern))
+      return 0;
+   
+   return tmplArgs->get(0).getAsIntegral().getLimitedValue();
+}
+
+//______________________________________________________________________________
+/**
  * Loop over the class filelds and take actions according to their properties
  *    1. Insert a field selection rule marking a member transient
  *    2. Store in a map the name of the field the type of which should be
@@ -120,39 +127,28 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
    // 1) They are transient
    // 2) They imply further selection
 
+   std::string fieldClassName;
+   
    for (clang::RecordDecl::field_iterator fieldsIt = recordDecl.field_begin();
         fieldsIt!=recordDecl.field_end();++fieldsIt){
 
-      const clang::CXXRecordDecl* cxxRcrdDecl = GetCXXRcrdDecl(**fieldsIt);
-      if (!cxxRcrdDecl) continue;
+      unsigned int attrCode = ExtractTemplateArgValue(**fieldsIt,"MemberAttributes");
 
-      const clang::TemplateArgumentList* tmplArgs =
-                                                  GetTmplArgList(*cxxRcrdDecl);
-      if (!tmplArgs) continue;
-
-      // Yes it is! Loop on the template parameters: useful information can be
-      // there.
-      for (unsigned int i=0;i<tmplArgs->size();++i){
-         const clang::TemplateArgument& arg = tmplArgs->get(i);
-         int enumValue = arg.getAsIntegral().getLimitedValue();
-
-         if (ROOT::Meta::Selection::kMemberNullProperty == enumValue)
-            break;
-
-         if (ROOT::Meta::Selection::kTransient == enumValue){
-            VariableSelectionRule vsr(BaseSelectionRule::kYes);
-            vsr.SetAttributeValue("name", fieldsIt->getNameAsString());
-            vsr.SetAttributeValue("transient", "true");
-            csr.AddFieldSelectionRule(vsr);
-         }
-
-         if (ROOT::Meta::Selection::kAutoSelected == enumValue){
-            fAutoSelectedClassFieldNames[className].insert(fieldsIt->getNameAsString());
-         }
-
+      if (attrCode == ROOT::Meta::Selection::kMemberNullProperty)
+         continue;
+      
+      if (attrCode & ROOT::Meta::Selection::kTransient){
+         VariableSelectionRule vsr(BaseSelectionRule::kYes);
+         vsr.SetAttributeValue("name", fieldsIt->getNameAsString());
+         vsr.SetAttributeValue("transient", "true");
+         csr.AddFieldSelectionRule(vsr);
       }
 
-   } // end loop on the fields
+      if (attrCode & ROOT::Meta::Selection::kAutoSelected)
+         fAutoSelectedClassFieldNames[className].insert(fieldsIt->getNameAsString());
+
+   } // end loop on fields
+   
 }
 
 //______________________________________________________________________________
@@ -181,44 +177,23 @@ void DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdD
    for( clang::CXXRecordDecl::base_class_const_iterator baseIt = cxxRcrdDecl.bases_begin();
        baseIt !=  cxxRcrdDecl.bases_end(); baseIt++){
       
-      const clang::CXXRecordDecl* baseCxxRcrdDecl = GetCXXRcrdDecl(*baseIt);
-      if (!baseCxxRcrdDecl) continue;
+      unsigned int attrCode = ExtractTemplateArgValue(*baseIt,"ClassAttributes");
+      if (attrCode == ROOT::Meta::Selection::kMemberNullProperty)
+         continue;
 
-      const clang::TemplateArgumentList* tmplArgs =
-                                                  GetTmplArgList(*baseCxxRcrdDecl);
-      if (!tmplArgs) continue;
+      if (attrCode & ROOT::Meta::Selection::kNonSplittable)
+         csr.SetAttributeValue("nonSplittable", "true");               
+
       
-      baseName = baseCxxRcrdDecl->getNameAsString();
-   
-      // Yes it is! Loop on the template parameters: useful information can be
-      // there.      
-      // Category one, this class has properties
-      if ( std::string::npos != baseName.find("ClassAttributes") )
-         for (unsigned int i=0;i<tmplArgs->size();++i){
-            const clang::TemplateArgument& arg = tmplArgs->get(i);
-            int enumValue = arg.getAsIntegral().getLimitedValue();
-
-            if (ROOT::Meta::Selection::kClassNullProperty == enumValue)
-               break;
-
-            if (ROOT::Meta::Selection::kNonSplittable == enumValue){
-               csr.SetAttributeValue("nonSplittable", "true");
-            }
-
-         }
-      // Category two, the class has template args to hide
-      if ( std::string::npos != baseName.find("Keep") ){
-         // This base is a TemplateSpecialisationDecl
-         int nArgsToKeep = tmplArgs->get(0).getAsIntegral().getLimitedValue();
-         //Keep track of this as a pattern rule
+      if ( unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt,"Keep") ){
+      
          std::string pattern = className.substr(0,className.find_first_of("<"));
          // Fill the structure holding the template and the number of args to
          // skip
          fTemplateInstanceNamePatternsArgsToKeep.push_back(std::make_pair(pattern,nArgsToKeep));
       }
 
-   }
-
+   } // end loop on base classes
 }
 
 //______________________________________________________________________________
@@ -235,7 +210,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
                                       *recordDecl.getTypeForDecl(),
                                       recordDecl);
    
-   // Strip ROOT::Meta::Selection FIXME
+   // Strip ROOT::Meta::Selection
    className.replace(0,23,"");
    
    if ( ! InSelectionNamespace(recordDecl,className))
@@ -339,8 +314,8 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
 
    if (fIsFirstPass)
       return FirstPass(*recordDecl);
-   else
-      return SecondPass(*recordDecl);  
+   else 
+      return SecondPass(*recordDecl);
 }
 
    
