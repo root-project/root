@@ -168,6 +168,9 @@ etc/allDict.h
 # /interpreter/cling/lib/UserInterface/
 /interpreter/cling/lib/UserInterface/textinput
 
+# /interpreter/cling/lib/Interpreter/
+/interpreter/cling/lib/Interpreter/cling-compiledata.h
+
 # /interpreter/llvm/
 /interpreter/llvm/obj
 /interpreter/llvm/inst
