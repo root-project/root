@@ -109,24 +109,28 @@ TGridCollection *TAlienCollection::Open(const char *collectionurl,
    // an XML collection from the specified url. All ROOT URLs are supported.
    // You can restrict the number of importet entries using the maxentries value
 
-   //! stage the url to /tmp/
+   //! stage the url to gSystem->TempDirectory() for remote url
 
-   TUUID uuid;
-   TString rndname = "/tmp/";
-   rndname += "aliencollection.";
-   rndname += uuid.AsString();
-   if (!TFile::Cp(collectionurl, rndname.Data())) {
-      ::Error("TAlienCollection::Open", "Cannot make a local copy of collection with url %s",
-              collectionurl);
-      return 0;
+   TString coll(collectionurl);
+   Bool_t isRemote = coll.Contains(":/") && !coll.Contains("file:");
+   if (isRemote) {
+      TUUID uuid;
+      coll = gSystem->TempDirectory();
+      coll += "/aliencollection.";
+      coll += uuid.AsString();
+      if (!TFile::Cp(collectionurl, coll.Data())) {
+         ::Error("TAlienCollection::Open", "Cannot make a local copy of collection with url %s",
+                 collectionurl);
+         return 0;
+      }
    }
 
    TAlienCollection *collection =
-       new TAlienCollection(rndname, maxentries);
+       new TAlienCollection(coll, maxentries);
 
-   if (gSystem->Unlink(rndname.Data())) {
+   if (isRemote && gSystem->Unlink(coll.Data())) {
       ::Error("TAlienCollection::Open", "Cannot remove the local copy of the collection %s",
-              rndname.Data());
+              coll.Data());
    }
 
    return dynamic_cast <TAlienCollection * > (collection);
