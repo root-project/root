@@ -1,3 +1,6 @@
+#ifndef __ROOTMETASELECTION_H__
+#define __ROOTMETASELECTION_H__
+
 namespace ROOT{
    namespace Meta{
       namespace Selection{
@@ -23,3 +26,4 @@ template <unsigned int memberAttributes = kMemberNullProperty > class MemberAttr
       }
    }   
 }
+#endif __ROOTMETASELECTION_H__
