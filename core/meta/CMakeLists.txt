@@ -3,7 +3,7 @@
 ############################################################################
 
 ROOT_GLOB_FILES(sources FILTER "(^|/)TCling" ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx)
-ROOT_GLOB_HEADERS(headers FILTER "RootMetaSelection.h" ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
+ROOT_GLOB_FILES(headers FILTER "(LinkDef|RootMetaSelection.h)" ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 set(Meta_dict_headers ${headers} PARENT_SCOPE)
 ROOT_OBJECT_LIBRARY(Meta ${sources})
