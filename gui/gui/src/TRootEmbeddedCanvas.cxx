@@ -119,6 +119,8 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
          TString x = "win32";
          if (gVirtualX->InheritsFrom("TGX11"))
             x = "x11";
+         else if (gVirtualX->InheritsFrom("TGCocoa"))
+            x = "osx";
 
          TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TGLManager", x);
 
