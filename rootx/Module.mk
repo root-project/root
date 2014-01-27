@@ -14,9 +14,16 @@ ROOTXDIRI    := $(ROOTXDIR)/inc
 
 ##### rootx #####
 ROOTXH       := $(wildcard $(MODDIRI)/*.h)
-ROOTXS       := $(wildcard $(MODDIRS)/*.cxx)
+ROOTXS       := $(MODDIRS)/rootx.cxx
 ROOTXO       := $(call stripsrc,$(ROOTXS:.cxx=.o))
-ROOTXDEP     := $(ROOTXO:.o=.d)
+ifeq ($(BUILDCOCOA),yes)
+ROOTXXS      := $(MODDIRS)/rootxx-cocoa.mm
+ROOTXXO      := $(call stripsrc,$(ROOTXXS:.mm=.o))
+else
+ROOTXXS      := $(MODDIRS)/rootxx.cxx
+ROOTXXO      := $(call stripsrc,$(ROOTXXS:.cxx=.o))
+endif
+ROOTXDEP     := $(ROOTXO:.o=.d) $(ROOTXXO:.o=.d)
 ROOTX        := bin/root
 
 # used in the main Makefile
@@ -33,17 +40,17 @@ include/%.h:    $(ROOTXDIRI)/%.h
 		cp $< $@
 
 ifeq ($(BUILDCOCOA),yes)
-$(ROOTX):       $(ROOTEXE)
-		ln -sf `basename $(ROOTEXE)` $(ROOTX)
+$(ROOTX):       $(ROOTXO) $(ROOTXXO) $(STRLCPYO)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(ROOTXXO) $(STRLCPYO) -framework Cocoa
 else
-$(ROOTX):       $(ROOTXO) $(STRLCPYO)
-		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(STRLCPYO) $(XLIBS)
+$(ROOTX):       $(ROOTXO) $(ROOTXXO) $(STRLCPYO)
+		$(LD) $(LDFLAGS) -o $@ $(ROOTXO) $(ROOTXXO) $(STRLCPYO) $(XLIBS)
 endif
 
 all-$(MODNAME): $(ROOTX)
 
 clean-$(MODNAME):
-		@rm -f $(ROOTXO)
+		@rm -f $(ROOTXO) $(ROOTXXO)
 
 clean::         clean-$(MODNAME)
 
@@ -53,4 +60,6 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(ROOTXO): CXXFLAGS += $(X11INCDIR:%=-I%)
+ifneq ($(BUILDCOCOA),yes)
+$(ROOTXXO): CXXFLAGS += $(X11INCDIR:%=-I%)
+endif

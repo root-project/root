@@ -107,10 +107,28 @@ extern void CloseDisplay();
 
 static STRUCT_UTMP *gUtmpContents;
 static bool gNoLogo = false;
-static int childpid = -1;
 const  int  kMAXPATHLEN = 8192;
 
 
+//Part for Cocoa - requires external linkage.
+namespace ROOT {
+namespace ROOTX {
+
+//This had internal linkage before, now must be accessible from rootx-cocoa.mm.
+int gChildpid = -1;
+
+}
+}
+
+
+#ifdef R__HAS_COCOA
+
+using ROOT::ROOTX::gChildpid;
+
+#else
+
+
+static int gChildpid;
 static int GetErrno()
 {
 #ifdef GLOBAL_ERRNO
@@ -128,6 +146,8 @@ static void ResetErrno()
    errno = 0;
 #endif
 }
+
+#endif
 
 static int ReadUtmp()
 {
@@ -338,8 +358,26 @@ static void SigUsr1(int)
 static void SigTerm(int sig)
 {
    // When we get terminated, terminate child, too.
-   kill(childpid, sig);
+   kill(gChildpid, sig);
 }
+
+//ifdefs for Cocoa/other *xes.
+
+#ifdef R__HAS_COCOA
+
+namespace ROOT {
+namespace ROOTX {
+
+//Before it had internal linkage, now must be external,
+//add namespaces!
+void WaitChild();
+
+}
+}
+
+using ROOT::ROOTX::WaitChild;
+
+#else
 
 static void WaitChild()
 {
@@ -348,7 +386,7 @@ static void WaitChild()
    int status;
 
    do {
-      while (waitpid(childpid, &status, WUNTRACED) < 0) {
+      while (waitpid(gChildpid, &status, WUNTRACED) < 0) {
          if (GetErrno() != EINTR)
             break;
          ResetErrno();
@@ -362,12 +400,14 @@ static void WaitChild()
 
       if (WIFSTOPPED(status)) {         // child got ctlr-Z
          raise(SIGTSTP);                // stop also parent
-         kill(childpid, SIGCONT);       // if parent wakes up, wake up child
+         kill(gChildpid, SIGCONT);       // if parent wakes up, wake up child
       }
    } while (WIFSTOPPED(status));
 
    exit(0);
 }
+
+#endif
 
 static void PrintUsage(char *pname)
 {
@@ -487,10 +527,10 @@ int main(int argc, char **argv)
 
    // Create child...
 
-   if ((childpid = fork()) < 0) {
+   if ((gChildpid = fork()) < 0) {
       fprintf(stderr, "%s: error forking child\n", argv[0]);
       return 1;
-   } else if (childpid > 0) {
+   } else if (gChildpid > 0) {
       if (!gNoLogo)
          WaitLogo();
       WaitChild();
