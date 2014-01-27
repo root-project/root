@@ -1278,33 +1278,33 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "TClass *" << clsname.c_str() << "::fgIsA = 0;  // static to hold class pointer" << std::endl
+   dictStream << "TClass *" << clsname << "::fgIsA = 0;  // static to hold class pointer" << std::endl
                  << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "const char *" << clsname.c_str() << "::Class_Name()" << std::endl << "{" << std::endl
+   dictStream << "const char *" << clsname << "::Class_Name()" << std::endl << "{" << std::endl
                  << "   return \"" << fullname << "\";"  << std::endl <<"}" << std::endl << std::endl;
 
    dictStream << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "const char *" << clsname.c_str() << "::ImplFileName()"  << std::endl << "{" << std::endl
+   dictStream << "const char *" << clsname << "::ImplFileName()"  << std::endl << "{" << std::endl
                  << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream <<"template <> ";
-   dictStream << "int " << clsname.c_str() << "::ImplFileLine()" << std::endl << "{" << std::endl
+   dictStream << "int " << clsname << "::ImplFileLine()" << std::endl << "{" << std::endl
                  << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
                  << "*)0x0)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
 
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "void " << clsname.c_str() << "::Dictionary()" << std::endl << "{" << std::endl;
+   dictStream << "void " << clsname << "::Dictionary()" << std::endl << "{" << std::endl;
 
    // Trigger autoloading if dictionary is split
    if (autoLoad)
@@ -1317,9 +1317,9 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
                  << "//_______________________________________"
                  << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "TClass *" << clsname.c_str() << "::Class()" << std::endl << "{" << std::endl;
+   dictStream << "TClass *" << clsname << "::Class()" << std::endl << "{" << std::endl;
    if (autoLoad){
-      dictStream << "   A::Dictionary();\n";
+      dictStream << "   Dictionary();\n";
    } 
    else{
       dictStream << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
