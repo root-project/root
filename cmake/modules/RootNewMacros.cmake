@@ -253,15 +253,15 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     set(target_lib_common ${libprefix}${deduced_arg_module})
   endif()
 
-  set(rootmap_name ${target_lib_common}.rootmap)
+  set(rootmap_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${target_lib_common}.rootmap)
   set(library_name ${target_lib_common}${libsuffix})
   set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
   
   if(ARG_MODULE)
     set(newargs -s ${libprefix}${ARG_MODULE}${libsuffix})
-    set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)    
+    set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}_rdict.pcm)
   else()
-    set(pcm_name ${dictionary}_rdict.pcm)
+    set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${dictionary}_rdict.pcm)
   endif()
   
   if(ARG_DEPENDENCIES)
@@ -279,7 +279,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${CMAKE_CURRENT_BINARY_DIR}/${rootmap_name}
+  install(FILES ${pcm_name} ${rootmap_name}
                 DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
 
