@@ -1,5 +1,5 @@
-#ifndef __ROOTMETASELECTION_H__
-#define __ROOTMETASELECTION_H__
+#ifndef ROOT_Meta_Selection
+#define ROOT_Meta_Selection
 
 namespace ROOT{
    namespace Meta{
@@ -10,20 +10,32 @@ namespace ROOT{
 
 template <unsigned int I> class KeepFirstTemplateArguments{};
 
-enum EClassAttributes { kClassNullProperty   = 0,
-                        kNonSplittable       = 2};
-                              
+///\brief Describes the attributes of a class
+enum EClassAttributes {
+      ///\brief Indicates absence of properties
+      kClassNullProperty   = 0,
+      ///\brief The class cannot be split
+      kNonSplittable       = 2};
+
+///\brief Used to specify attributes of classes in the "DictSelection" syntax                        
 template <unsigned int classAttributes = kClassNullProperty> class ClassAttributes{};
                               
 
+///\brief Describes attributes of a data member
+enum EClassMemberAttributes {
+      ///\brief Indicates absence of properties
+      kMemberNullProperty = 0,
+      ///\brief The data member is transient
+      kTransient          = 2,
+      ///\brief Select the type of the member
+      kAutoSelected       = 4};
 
-enum EClassMemberAttributes { kMemberNullProperty = 0,
-                              kTransient          = 2,
-                              kAutoSelected       = 4};
-
+///\brief Used to specify attributes of data members in the "DictSelection" syntax
 template <unsigned int memberAttributes = kMemberNullProperty > class MemberAttributes{};
 
       }
    }   
 }
-#endif //__ROOTMETASELECTION_H__
+
+#endif 
+
