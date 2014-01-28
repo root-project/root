@@ -42,4 +42,5 @@ execInterpClassNew.log: classlib_cxx.$(DllSuf)
 
 execReadTmplt.clog: execTmpltD.success execTmpltD32.success 
 
+execState.log: libState_cxx.$(DllSuf)
 
