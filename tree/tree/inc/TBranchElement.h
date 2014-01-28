@@ -73,7 +73,7 @@ protected:
    TString                  fClonesName;    //  Name of class in TClonesArray (if any)
    TVirtualCollectionProxy *fCollProxy;     //! collection interface (if any)
    UInt_t                   fCheckSum;      //  CheckSum of class
-   Int_t                    fClassVersion;  //  Version number of class
+   Version_t                fClassVersion;  //  Version number of class
    Int_t                    fID;            //  element serial number in fInfo
    Int_t                    fType;          //  branch type
    Int_t                    fStreamerType;  //  branch streamer type
@@ -237,7 +237,7 @@ public:
       kSTLMemberNode = 41
    };
 
-   ClassDef(TBranchElement,9)  // Branch in case of an object
+   ClassDef(TBranchElement,10)  // Branch in case of an object
 };
 
 inline void TBranchElement::SetParentClass(TClass* clparent)
