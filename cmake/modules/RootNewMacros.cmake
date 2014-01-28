@@ -279,7 +279,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
-  install(FILES ${pcm_name} ${rootmap_name}
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${CMAKE_CURRENT_BINARY_DIR}/${rootmap_name}
                 DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
 endfunction()
 
