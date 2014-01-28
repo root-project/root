@@ -629,6 +629,11 @@ void WaitChildGeneric()
 void RunEventLoopInBackground()
 {
    using ROOT::MacOSX::Util::NSScopeGuard;
+   
+   if (!InitCocoa()) {
+      //It's a serious bug and must be either reported or handled in a different way.
+      return WaitChildGeneric();
+   }
 
    int status = 0;
    
