@@ -46,6 +46,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <atomic>
+
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TClass.h"
@@ -78,7 +80,7 @@ const ULong64_t kPidOffsetMask = 0xffffffffffffUL;
 const UChar_t kPidOffsetShift = 48;
 
 static TString gTDirectoryString = "TDirectory";
-UInt_t keyAbsNumber = 0;
+std::atomic<UInt_t> keyAbsNumber{0};
 
 ClassImp(TKey)
 
