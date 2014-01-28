@@ -575,8 +575,7 @@ Long64_t TDavixFile::GetSize() const
    Int_t ret = d_ptr->DavixStat(fUrl.GetUrl(), &st);
    if (ret) {
       if (gDebug > 1)
-         Info("GetSize", "file size requested:  %ld",
-              st.st_size);
+         Info("GetSize", "file size requested:  %lld", (Long64_t)st.st_size);
       return st.st_size;
    }
    return -1;
