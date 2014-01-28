@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += MissingEntriesROOT-5759 mytest
+TEST_TARGETS += MissingEntriesROOT-5759 mytest typeDefAutoloading
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -30,7 +30,7 @@ ifeq ($(strip $(ROOTTEST_HOME)),)
 endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
-
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
@@ -69,3 +69,6 @@ MissingEntriesROOT-5759.log: FullMissingEntriesROOT-5759.log
 
 MissingEntriesROOT-5759: MissingEntriesROOT-5759.log
 	$(TestDiff)
+
+exectypeDefAutoloading.log: libclasses_dictrflx.$(DllSuf)
+
