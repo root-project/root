@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "RConfigure.h"
+
 #include "TVirtualPad.h"
 #include "TView3D.h"
 #include "TAxis3D.h"
@@ -1586,6 +1588,9 @@ void TView3D::AdjustPad(TVirtualPad *pad)
    TVirtualPad *thisPad = pad;
    if (!thisPad) thisPad = gPad;
    if (thisPad) {
+#ifdef R__HAS_COCOA
+//      thisPad->AbsCoordinates(kFALSE);
+#endif
       thisPad->Modified();
       thisPad->Update();
    }
