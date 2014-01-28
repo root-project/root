@@ -1005,7 +1005,7 @@ void TClass::ForceReload (TClass* oldcl)
       info->SetClass(this);
       fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
    }
-   oldcl->GetStreamerInfos()->Clear();
+   oldcl->fStreamerInfo->Clear();
 
    oldcl->ReplaceWith(this);
    delete oldcl;
@@ -1066,7 +1066,7 @@ void TClass::Init(const char *name, Version_t cversion,
          info->SetClass(this);
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
-      oldcl->GetStreamerInfos()->Clear();
+      oldcl->fStreamerInfo->Clear();
 
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
@@ -5566,7 +5566,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    //----------------------------------------------------------------------------
    // We don't have the streamer info so find it in other class
    //----------------------------------------------------------------------------
-   TObjArray *clSI = cl->GetStreamerInfos();
+   const TObjArray *clSI = cl->GetStreamerInfos();
    TVirtualStreamerInfo* info = 0;
    if( version >= -1 && version < clSI->GetSize() )
       info = (TVirtualStreamerInfo*)clSI->At( version );
@@ -5702,6 +5702,40 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    arr->AddAtAndExpand( info, info->GetClassVersion() );
 
    return info;
+}
+
+//______________________________________________________________________________
+void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
+{
+   // Register the StreamerInfo in the given slot, change the State of the
+   // TClass as appropriate.
+
+   if (info) {
+      R__LOCKGUARD(gInterpreterMutex);
+      Int_t slot = info->GetClassVersion();
+      if (fStreamerInfo->GetSize() > (slot-fStreamerInfo->LowerBound())
+          && fStreamerInfo->At(slot) == 0
+          && fStreamerInfo->At(slot) == info) {
+         Error("RegisterStreamerInfo",
+               "Register StreamerInfo for %s on non-empty slot (%d).",
+               GetName(),slot);
+      }
+      fStreamerInfo->AddAtAndExpand(info, slot);
+   }
+}
+
+//______________________________________________________________________________
+void TClass::RemoveStreamerInfo(Int_t slot)
+{
+   // Remove and delete the StreamerInfo in the given slot.
+   // Update the slot accordingly.
+
+   if (fStreamerInfo->GetSize() >= slot) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
+      fStreamerInfo->RemoveAt(fClassVersion);
+      delete info;
+   }
 }
 
 //______________________________________________________________________________

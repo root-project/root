@@ -561,7 +561,7 @@ void TStreamerInfo::BuildCheck()
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   TObjArray* array = 0;
+   const TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
    if (!fClass) {
       fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
@@ -848,8 +848,7 @@ void TStreamerInfo::BuildCheck()
             }
             done = kTRUE;
          } else {
-            array->RemoveAt(fClassVersion);
-            delete info;
+            fClass->RemoveStreamerInfo(fClassVersion);
             info = 0;
          }
          TString origin;
@@ -998,7 +997,7 @@ void TStreamerInfo::BuildCheck()
       return;
    }
 
-   array->AddAtAndExpand(this, fClassVersion);
+   fClass->RegisterStreamerInfo(this);
    ++fgCount;
    fNumber = fgCount;
 
@@ -1138,7 +1137,7 @@ namespace {
             Int_t oldv = info->GetClassVersion();
             if (oldv > newClass->GetStreamerInfos()->GetSize() || newClass->GetStreamerInfos()->At(oldv) == 0) {
                // All is good.
-               newClass->GetStreamerInfos()->AddAtAndExpand(info,oldv);
+               newClass->RegisterStreamerInfo(info);
             } else {
                // We verify that we are consistent and that
                //   newcl->GetStreamerInfos()->UncheckedAt(info->GetClassVersion)

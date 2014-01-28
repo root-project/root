@@ -92,7 +92,7 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
    // Get pointer to a TStreamerBasicType in TClass *cl
    //static function
 
-   TObjArray *sinfos = cl->GetStreamerInfos();
+   const TObjArray *sinfos = cl->GetStreamerInfos();
    TVirtualStreamerInfo *info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
 
    if (!info || !info->IsBuilt()) {

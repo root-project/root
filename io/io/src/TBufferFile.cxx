@@ -3609,7 +3609,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    //   count    is the number of bytes for this object in the buffer
    //
 
-   TObjArray *infos = cl->GetStreamerInfos();
+   const TObjArray *infos = cl->GetStreamerInfos();
    Int_t ninfos = infos->GetSize();
    if (version < -1 || version >= ninfos) {
       Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
@@ -3646,7 +3646,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          if ( version == cl->GetClassVersion() || version == 1 ) {
             const_cast<TClass*>(cl)->BuildRealData(pointer);
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-            infos->AddAtAndExpand(sinfo, version);
+            const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
             sinfo->Build();
          } else if (version==0) {
@@ -3723,7 +3723,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    //---------------------------------------------------------------------------
    else {
       // The StreamerInfo should exist at this point.
-      TObjArray *infos = cl->GetStreamerInfos();
+      const TObjArray *infos = cl->GetStreamerInfos();
       Int_t infocapacity = infos->Capacity();
       if (infocapacity) {
          if (version < -1 || version >= infocapacity) {
@@ -3744,7 +3744,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          if (v2file || version == cl->GetClassVersion() || version == 1 ) {
             const_cast<TClass*>(cl)->BuildRealData(pointer);
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-            infos->AddAtAndExpand(sinfo,version);
+            sinfo->SetClassVersion(version);
+            const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
             if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
             sinfo->Build();
 
@@ -3798,7 +3799,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
       const_cast<TClass*>(cl)->BuildRealData(pointer);
       sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
       const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
-      cl->GetStreamerInfos()->AddAtAndExpand(sinfo,cl->GetClassVersion());
+      const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
       if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
       sinfo->Build();
    } else if (!sinfo->IsCompiled()) {

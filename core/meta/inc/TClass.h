@@ -315,7 +315,7 @@ public:
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
    TClassStreamer    *GetStreamer() const;
    ClassStreamerFunc_t GetStreamerFunc() const;
-   TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
+   const TObjArray          *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
@@ -341,7 +341,9 @@ public:
    Long_t             Property() const;
    Int_t              ReadBuffer(TBuffer &b, void *pointer, Int_t version, UInt_t start, UInt_t count);
    Int_t              ReadBuffer(TBuffer &b, void *pointer);
+   void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
    void               RemoveRef(TClassRef *ref);
+   void               RemoveStreamerInfo(Int_t slot);
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
    void               ResetCaches();
    void               ResetClassInfo(Long_t tagnum);
