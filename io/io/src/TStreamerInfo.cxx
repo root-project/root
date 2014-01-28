@@ -564,7 +564,11 @@ void TStreamerInfo::BuildCheck()
    const TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
    if (!fClass) {
-      fClass = new TClass(GetName(), fClassVersion, 0, 0, -1, -1);
+      // fClassVersion should have been a Version_t and/or Version_t 
+      // should have been an Int_t.  Changing the on-file format
+      // of the StreamerInfo is 'hard' (for forward compatibility), so
+      // leave it as is for now.
+      fClass = new TClass(GetName(), (Version_t)fClassVersion);
       fClass->SetBit(TClass::kIsEmulation);
       array = fClass->GetStreamerInfos();
      

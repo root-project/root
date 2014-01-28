@@ -2552,7 +2552,7 @@ Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass)
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   if (clActual==0) {
+   if (clActual==0 || clActual->GetState() == TClass::kForwardDeclared) {
       // The ptrClass is a class with a virtual table and we have no
       // TClass with the actual type_info in memory.
 

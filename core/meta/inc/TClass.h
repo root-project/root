@@ -82,14 +82,30 @@ friend class ROOT::TGenericClassInfo;
 public:
    // TClass status bits
    enum { kClassSaved  = BIT(12), kIgnoreTObjectStreamer = BIT(15),
-          kUnloaded    = BIT(16), kIsTObject = BIT(17),
-          kIsForeign   = BIT(18), kIsEmulation = BIT(19),
+          kUnloaded    = BIT(16), // The library containing the dictionary for this class was
+                                  // loaded and has been unloaded from memory.
+          kIsTObject = BIT(17),
+          kIsForeign   = BIT(18),
+          kIsEmulation = BIT(19), // Deprecated
           kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
           kWarned      = BIT(21),
           kHasNameMapNode = BIT(22),
           kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
+
+   // Describe the current state of the TClass itself.
+   enum EState {
+      kNoInfo,         // The state has not yet been initialized, i.e. the TClass
+                        // was just created and/or there is no trace of it in the interpreter.
+      kForwardDeclared, // The interpreted knows the entity is a class but that's it.
+      kEmulated,        // The information about the class only comes from a TStreamerInfo
+      kInterpreted,     // The class is described completely/only in the interpreter database.
+      kHasTClassInit,   // The class has a TClass proper bootstrap coming from a run
+                        // through rootcling/genreflex/TMetaUtils and the library
+                        // containing this dictionary has been loaded in memory.
+      kLoaded = kHasTClassInit
+   };
 
 private:
 
@@ -143,6 +159,7 @@ private:
    mutable Bool_t     fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
+   EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
@@ -219,11 +236,12 @@ protected:
 public:
    TClass();
    TClass(const char *name, Bool_t silent = kFALSE);
+   TClass(const char *name, Version_t cversion, Bool_t silent = kFALSE);
    TClass(ClassInfo_t *info, Version_t cversion,
-          const char *dfil = 0, const char *ifil = 0,
+          const char *dfil, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
-          const char *dfil = 0, const char *ifil = 0,
+          const char *dfil, const char *ifil = 0,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const type_info &info, TVirtualIsAProxy *isa,
@@ -313,6 +331,7 @@ public:
    ROOT::TSchemaRuleSet *GetSchemaRules(Bool_t create = kFALSE);
    const char        *GetSharedLibs();
    ShowMembersFunc_t  GetShowMembersWrapper() const { return fShowMembers; }
+   EState             GetState() const { return fState; }
    TClassStreamer    *GetStreamer() const;
    ClassStreamerFunc_t GetStreamerFunc() const;
    const TObjArray          *GetStreamerInfos() const { return fStreamerInfo; }

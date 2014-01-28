@@ -2233,6 +2233,19 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
       cl->MakeZombie();
    }
+   // If we reach here, the info was valid (See early returns).
+   if (cl->fState != TClass::kHasTClassInit) {
+      if (cl->fClassInfo) {
+         cl->fState = TClass::kInterpreted;
+      } else {
+//         if (TClassEdit::IsSTLCont(cl->GetName()) {
+//            There will be an emulated collection proxy, is that the same?
+//            cl->fState = TClass::kEmulated;
+//         } else {
+            cl->fState = TClass::kForwardDeclared;
+//         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -2526,11 +2539,11 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
    //   TClingClassInfo tci(fInterpreter, classname);
    //   if (1 || !tci.IsValid()) {
 
-   int version = 1;
+   Version_t version = 1;
    if (TClassEdit::IsSTLCont(classname)) {
       version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
-   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+   TClass *cl = new TClass(classname, version, silent);
    if (emulation) cl->SetBit(TClass::kIsEmulation);
 
    return cl;

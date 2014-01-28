@@ -2104,11 +2104,11 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
          // class, so let's create it by hand!.
 
          if (fID < 0) {
-            cl = new TClass(fBranchClass.GetClassName(), fClassVersion, 0, 0, -1, -1);
+            cl = new TClass(fBranchClass.GetClassName(), fClassVersion);
             cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          } else {
-            cl = new TClass(className, fClassVersion, 0, 0, -1, -1);
+            cl = new TClass(className, fClassVersion);
             cl->SetBit(TClass::kIsEmulation);
          }
       }
