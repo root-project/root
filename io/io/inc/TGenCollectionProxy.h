@@ -420,6 +420,10 @@ public:
    // Block allocation of containees.
    virtual void* Allocate(UInt_t n, Bool_t forceDelete);
 
+   // Insert data into the container where data is a C-style array of the actual type contained in the collection
+   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+   virtual void  Insert(const void *data, void *container, size_t size);
+
    // Block commit of containees.
    virtual void Commit(void* env);
 

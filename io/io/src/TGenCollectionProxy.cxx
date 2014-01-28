@@ -1093,6 +1093,15 @@ void* TGenCollectionProxy::Allocate(UInt_t n, Bool_t /* forceDelete */ )
 }
 
 //______________________________________________________________________________
+void TGenCollectionProxy::Insert(const void *data, void *container, size_t size)
+{
+   // Insert data into the container where data is a C-style array of the actual type contained in the collection
+   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+
+   fFeed((void*)data,container,size);
+}
+
+//______________________________________________________________________________
 void TGenCollectionProxy::Commit(void* from)
 {
    // Commit the change.

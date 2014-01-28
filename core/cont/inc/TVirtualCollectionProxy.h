@@ -149,6 +149,10 @@ public:
    
    virtual void      Commit(void*) = 0;
 
+   virtual void      Insert(const void *data, void *container, size_t size) = 0;
+   // Insert data into the container where data is a C-style array of the actual type contained in the collection
+   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+
            char     *operator[](UInt_t idx) const { return (char*)(const_cast<TVirtualCollectionProxy*>(this))->At(idx); }
    
    // MemberWise actions

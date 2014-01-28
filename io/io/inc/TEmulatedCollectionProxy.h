@@ -110,6 +110,10 @@ public:
    // Block commit of containees
    virtual void Commit(void* env);
 
+   // Insert data into the container where data is a C-style array of the actual type contained in the collection
+   // of the given size.   For associative container (map, etc.), the data type is the pair<key,value>.
+   virtual void  Insert(const void *data, void *container, size_t size);
+
    // Read portion of the streamer
    virtual void ReadBuffer(TBuffer &buff, void *pObj);
    virtual void ReadBuffer(TBuffer &buff, void *pObj, const TClass *onfile);
