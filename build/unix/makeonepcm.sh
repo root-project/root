@@ -57,7 +57,7 @@ mv all.h include/allHeaders.h
 mv alldefs.h include/allLinkDef.h
 
 cxxflags="-D_LIBCPP_EXTERN_TEMPLATE(...)= -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -Iinclude -Ietc -Ietc/cling `cat cppflags.txt | sort | uniq`"
-#rm cppflags.txt
+rm cppflags.txt
 
 # check if rootcling_tmp exists in the expected location (not the case for CMake builds)
 if [ ! -x core/utils/src/rootcling_tmp ]; then
