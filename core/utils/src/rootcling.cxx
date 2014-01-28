@@ -2497,7 +2497,8 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
                          const std::list<std::string>& templateDefsList,
                          const std::list<std::string>& classesNames,
-                         const std::list<std::string>& nsNames)
+                         const std::list<std::string>& nsNames,
+                         const std::vector<std::string>& typedefNames)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -2525,7 +2526,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty()){
+   if (!nsNames.empty() || !classesNames.empty() || !typedefNames.empty()){
       rootmapFile << "[" << rootmapLibName << "]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2539,6 +2540,16 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          nsNameIt!=nsNames.end();++nsNameIt){
          rootmapFile << "namespace " << *nsNameIt << std::endl;
       }
+      
+      // And typedefs. These are used just to trigger the autoload mechanism
+      if (!typedefNames.empty()){
+         rootmapFile << "# List of selected typedefs\n";
+      }
+      for (std::vector<std::string>::const_iterator typedefNameIt=typedefNames.begin();
+           typedefNameIt!=typedefNames.end();++typedefNameIt){
+         rootmapFile << "class " << *typedefNameIt << std::endl;
+      }
+      
    }
 
    return 0;
@@ -3884,7 +3895,8 @@ int RootCling(int argc,
                                              rootmapLibName,
                                              templateDefsList,
                                              classesNamesForRootmap,
-                                             nsNames);
+                                             nsNames,
+                                             scan.fSelectedTypedefNames);
       }
       else{
          rmStatusCode = CreateRootMapFile(rootmapFileName,

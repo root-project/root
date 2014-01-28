@@ -62,6 +62,7 @@ public:
    
    typedef std::vector<AnnotatedNamespaceDecl> NamespaceColl_t;   
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
+   typedef std::vector<std::string> TypedefNamesColl_t;
    typedef void (*DeclCallback)(const char *type);
       
    RScanner (const SelectionRules &rules,
@@ -110,6 +111,7 @@ public:
    // public for now, the list of selected classes.
    ClassColl_t     fSelectedClasses;
    NamespaceColl_t fSelectedNamespaces;
+   TypedefNamesColl_t fSelectedTypedefNames;
    
    virtual ~ RScanner ();
       

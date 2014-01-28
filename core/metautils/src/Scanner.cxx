@@ -688,6 +688,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
    // If typeDecl is not a RecordDecl, try to fetch the RecordDecl behind the TypedefDecl
    if (!recordDecl && typedefNameDecl) {
+      ROOT::TMetaUtils::Info("RScanner::TreatRecordDeclOrTypedefNameDecl",
+                             "Typedef is called %s.\n", typedefNameDecl->getNameAsString().c_str());
       recordDecl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
 
@@ -735,10 +737,15 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    if (! selected) return true; // early exit. Nothing more to be done.
 
    // Selected through typedef but excluded with concrete classname 
-   bool excludedFromRecDecl = selectedFromRecDecl && selectedFromRecDecl->GetSelected() == BaseSelectionRule::kNo;
+   bool excludedFromRecDecl = false;
+   if ( selectedFromRecDecl )
+      excludedFromRecDecl = selectedFromRecDecl->GetSelected() == BaseSelectionRule::kNo;
 
-   if (selected->GetSelected() == BaseSelectionRule::kYes && !excludedFromRecDecl) { 
-   
+   if (selected->GetSelected() == BaseSelectionRule::kYes && !excludedFromRecDecl) {
+      if (typedefNameDecl)
+         ROOT::TMetaUtils::Info("RScanner::TreatRecordDeclOrTypedefNameDecl",
+                                "Typedef is selected %s.\n", typedefNameDecl->getNameAsString().c_str());
+         
       // For the case kNo, we could (but don't) remove the node from the pcm
       // For the case kDontCare, the rule is just a place holder and we are actually trying to exclude some of its children
       // (this is used only in the selection xml case).
@@ -761,79 +768,82 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       }
 
       // Insert in the selected classes if not already there
-      // We need this check since the same class can be selected through its name or typedef         
-      if (0 != fselectedRecordDecls.count(recordDecl)){
-         return true;
-      }
-      
-      fselectedRecordDecls.insert(recordDecl);
+      // We need this check since the same class can be selected through its name or typedef
+      bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
 
-      
-      std::string name_value("");            
-      if (selected->GetAttributeValue("name", name_value)) {
-         ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                          selected->GetRequestedType(),
-                                                          recordDecl,
-                                                          name_value.c_str(),
-                                                          selected->RequestStreamerInfo(),
-                                                          selected->RequestNoStreamer(),
-                                                          selected->RequestNoInputOperator(),
-                                                          selected->RequestOnlyTClass(),
-                                                          selected->RequestedVersionNumber(),
-                                                          fInterpreter,
-                                                          fNormCtxt);
-         fSelectedClasses.push_back(annRecDecl);
+      if(rcrdDeclAlreadySelected){
+         std::string name_value("");
+         if (selected->GetAttributeValue("name", name_value)) {
+            ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
+                                                            selected->GetRequestedType(),
+                                                            recordDecl,
+                                                            name_value.c_str(),
+                                                            selected->RequestStreamerInfo(),
+                                                            selected->RequestNoStreamer(),
+                                                            selected->RequestNoInputOperator(),
+                                                            selected->RequestOnlyTClass(),
+                                                            selected->RequestedVersionNumber(),
+                                                            fInterpreter,
+                                                            fNormCtxt);
+            fSelectedClasses.push_back(annRecDecl);
 
+
+
+         } else {
+            ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
+                                                            recordDecl,
+                                                            selected->RequestStreamerInfo(),
+                                                            selected->RequestNoStreamer(),
+                                                            selected->RequestNoInputOperator(),
+                                                            selected->RequestOnlyTClass(),
+                                                            selected->RequestedVersionNumber(),
+                                                            fInterpreter,
+                                                            fNormCtxt);
+            fSelectedClasses.push_back(annRecDecl);
+         }
          
-         
-      } else {
-         ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
-                                                          recordDecl,
-                                                          selected->RequestStreamerInfo(),
-                                                          selected->RequestNoStreamer(),
-                                                          selected->RequestNoInputOperator(),
-                                                          selected->RequestOnlyTClass(),
-                                                          selected->RequestedVersionNumber(),
-                                                          fInterpreter,
-                                                          fNormCtxt);
-         fSelectedClasses.push_back(annRecDecl);
-      }
-      
-      if (fVerboseLevel > 0) {
-         std::string qual_name;
-         GetDeclQualName(recordDecl,qual_name);         
-         std::string typedef_qual_name;
-         std::string typedefMsg;
-         if (typedefNameDecl){
-            GetDeclQualName(typedefNameDecl,typedef_qual_name);
-            typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
-         }        
-         
+         if (fVerboseLevel > 0) {
+            std::string qual_name;
+            GetDeclQualName(recordDecl,qual_name);
+            std::string typedef_qual_name;
+            std::string typedefMsg;
+            if (typedefNameDecl){
+               GetDeclQualName(typedefNameDecl,typedef_qual_name);
+               typedefMsg = "(through typedef/alias " + typedef_qual_name + ") ";
+            }
+
          std::cout <<"Selected class "
          << typedefMsg
          << "-> "
          << qual_name;
-
-         // Tho show what will happen. Probably we have to go through the
-         // TNormalizedCtxt.
-         std::string  templateArgsToHide_str("");
-    
-         if (selected->GetAttributeValue("KeepFirstTemplateArguments", templateArgsToHide_str)){
-            unsigned int templateArgsToKeep = atoi(templateArgsToHide_str.c_str());
-            std::string normName( fSelectedClasses.back().GetNormalizedName() );
-            ROOT::TMetaUtils::RemoveTemplateArgsFromName(normName,templateArgsToKeep);
-            std::cout << " ( PREVIEW: The normalized name is " << fSelectedClasses.back().GetNormalizedName() <<
-            ". If the first " << templateArgsToKeep << " template argument"
-            << (templateArgsToKeep==1 ? "" : "s")
-            << " only would been kept it would be " << normName << ")";
-         }
-
          std::cout << "\n";
+         }
+         
+      }
+      // Add the typedef name if selected      
+      if (selectedFromTypedef){
+         // Here it does not make sense to use the name normalisation. It
+         // indeed resolve all typedefs except the opaque ones. The best we can
+         // do is to rely on clang.
+         fSelectedTypedefNames.push_back(typedefNameDecl->getQualifiedNameAsString());
+      }     
 
-         
-         
+      // Tho show what will happen. Probably we have to go through the
+      // TNormalizedCtxt.
+      std::string  templateArgsToHide_str("");
+
+      if (selected->GetAttributeValue("KeepFirstTemplateArguments", templateArgsToHide_str)){
+         unsigned int templateArgsToKeep = atoi(templateArgsToHide_str.c_str());
+         std::string normName( fSelectedClasses.back().GetNormalizedName() );
+         ROOT::TMetaUtils::RemoveTemplateArgsFromName(normName,templateArgsToKeep);
+         std::cout << " ( PREVIEW: The normalized name is " << fSelectedClasses.back().GetNormalizedName() <<
+         ". If the first " << templateArgsToKeep << " template argument"
+         << (templateArgsToKeep==1 ? "" : "s")
+         << " only would been kept it would be " << normName << ")";
+      }
+
       }      
-   }
+
 
    
    return true;   
