@@ -69,6 +69,53 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
 //pin the vtable here
 TClingCallbacks::~TClingCallbacks() {}
 
+void TClingCallbacks::InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                         const clang::Token &/*IncludeTok*/,
+                                         llvm::StringRef FileName,
+                                         bool /*IsAngled*/,
+                                         clang::CharSourceRange /*FilenameRange*/,
+                                         const clang::FileEntry */*File*/,
+                                         llvm::StringRef /*SearchPath*/,
+                                         llvm::StringRef /*RelativePath*/,
+                                         const clang::Module */*Imported*/) {
+   // Method called via Callbacks->InclusionDirective()
+   // in Preprocessor::HandleIncludeDirective(), invoked whenever an
+   // inclusion directive has been processed, and allowing us to try
+   // to autoload classes using their header file name. For example
+   // try to autoload TGClient (libGui) when seeing #include "TGClient.h"
+
+   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return;
+
+   std::string ClassName = FileName.str();
+   // Only try autoloading with ROOT headers, beginning with capital T 
+   // and ending with the .h extension (e.g. TGFrame.h)
+   if ((ClassName.find(".h") != std::string::npos) && (ClassName[0] == 'T')) {
+
+      Sema& SemaR = m_Interpreter->getSema();
+      // Save state of the PP
+      ASTContext& C = SemaR.getASTContext();
+      Preprocessor &PP = SemaR.getPreprocessor();
+      Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+      // Save state of the preprocessor
+      Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
+      Parser::ParserCurTokRestoreRAII savedCurToken(P);
+      // After we have saved the token reset the current one to something which 
+      // is safe (semi colon usually means empty decl)
+      Token& Tok = const_cast<Token&>(P.getCurToken());
+      Tok.setKind(tok::semi);
+
+      // We can't PushDeclContext, because we go up and the routine that pops 
+      // the DeclContext assumes that we drill down always.
+      // We have to be on the global context. At that point we are in a 
+      // wrapper function so the parent context must be the global.
+      Sema::ContextAndScopeRAII pushedDCAndS(SemaR, C.getTranslationUnitDecl(), 
+                                             SemaR.TUScope);
+
+      ClassName.erase(ClassName.find(".h"), std::string::npos);
+      TCling__AutoLoadCallback(ClassName.c_str());
+   }
+}
+
 // Preprocessor callbacks used to handle special cases like for example:
 // #include "myMacro.C+"
 //

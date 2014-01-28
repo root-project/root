@@ -17,6 +17,9 @@ namespace clang {
    class NamespaceDecl;
    class Scope;
    class TagDecl;
+   class Token;
+   class FileEntry;
+   class Module;
 }
 
 namespace cling {
@@ -49,6 +52,16 @@ public:
 
    void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
    bool IsAutoloadingEnabled() { return fIsAutoloading; }
+
+   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                   const clang::Token &/*IncludeTok*/,
+                                   llvm::StringRef FileName,
+                                   bool /*IsAngled*/,
+                                   clang::CharSourceRange /*FilenameRange*/,
+                                   const clang::FileEntry */*File*/,
+                                   llvm::StringRef /*SearchPath*/,
+                                   llvm::StringRef /*RelativePath*/,
+                                   const clang::Module */*Imported*/);
 
    // Preprocessor callbacks used to handle special cases like for example: 
    // #include "myMacro.C+"
