@@ -867,9 +867,6 @@ TClass::TClass(const char *name, Bool_t silent) :
       ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
    gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-   if (!fClassInfo) {
-      gInterpreter->SetClassInfo(this);
-   }
    if (!silent && !fClassInfo && fName.First('@')==kNPOS)
       ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    ResetBit(kLoading);
@@ -1121,7 +1118,6 @@ void TClass::Init(const char *name, Version_t cversion,
 
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
-            gInterpreter->SetClassInfo(this);
             if (IsZombie()) {
                TClass::RemoveClass(this);
                return;
