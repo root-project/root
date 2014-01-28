@@ -255,7 +255,7 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
    }
    return false;
 }
-#include <iostream>
+
 bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
    if (ClassTemplateSpecializationDecl* Specialization 
