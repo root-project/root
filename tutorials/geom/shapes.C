@@ -1,3 +1,5 @@
+#include "TGeometry.h"
+
 void shapes() {
 //The old geometry shapes (see script geodemo.C)
 //To see the output of this macro, click begin_html <a href="gif/shapes.gif" >here</a> end_html

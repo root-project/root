@@ -1,3 +1,6 @@
+void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0.,
+                    Double_t tmax=0., Bool_t logx=kFALSE);
+
 void RadioNuclides()
 {
 // Macro that demonstrates usage of radioactive elements/materials/mixtures
@@ -221,8 +224,8 @@ void RadioNuclides()
    arrow->Draw();
 }
 
-void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin=0., 
-   Double_t tmax=0., Bool_t logx=kFALSE)
+void DrawPopulation(TObjArray *vect, TCanvas *can, Double_t tmin,
+                    Double_t tmax, Bool_t logx)
 {
    Int_t n = vect->GetEntriesFast();
    TGeoElementRN *elem;
