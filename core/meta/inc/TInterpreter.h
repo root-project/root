@@ -137,7 +137,8 @@ public:
                                    const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
-                                   void (* /*triggerFunc*/)()) {}
+                                   void (* /*triggerFunc*/)()) = 0;
+   virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;

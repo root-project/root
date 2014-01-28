@@ -1185,7 +1185,20 @@ void TCling::RegisterModule(const char* modulename,
                "Problems declaring payload for module %s.", modulename) ;
       }
    }
-   
+
+   // Now that all the header have been registered/compiled, let's
+   // make sure to 'reset' the TClass that have a class init in this module
+   // but already had their type information available (using information/header
+   // loaded form other modules).
+   while (!fClassesToUpdate.empty()) {
+      TClass *oldcl = fClassesToUpdate.back().first;
+      if (oldcl->GetState() != TClass::kHasTClassInit) {
+         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         fClassesToUpdate.back().second();
+      }
+      fClassesToUpdate.pop_back();
+   }
+
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
@@ -1193,6 +1206,16 @@ void TCling::RegisterModule(const char* modulename,
    fInterpreter->declare("#ifdef __ROOTCLING__\n"
                          "#undef __ROOTCLING__\n"
                          "#endif");
+}
+
+//______________________________________________________________________________
+void TCling::RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict)
+{
+   // Register classes that already existed prior to their dictionary loading
+   // and that already had a ClassInfo (and thus would not be refresh via
+   // UpdateClassInfo.
+
+   fClassesToUpdate.push_back(std::make_pair(oldcl,dict));
 }
 
 //______________________________________________________________________________

@@ -36,6 +36,8 @@
 #include "TObjString.h"
 #include "TMap.h"
 
+#include "TInterpreter.h"
+
 TClassTable *gClassTable;
 
 TClassRec  **TClassTable::fgTable;
@@ -279,6 +281,16 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
+   } else if (gInterpreter && ROOT::gROOTLocal) {
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
+      if (oldcl && oldcl->GetClassInfo()) {
+         // The TClass exist and already has a class info, so it must
+         // correspond to a class template instantiation which the interpreter
+         // was able to make with the library containing the TClass Init.
+         // Because it is already known to the interpreter, the update class info
+         // will not be triggered, we need to force it.
+         gInterpreter->RegisterTClassUpdate(oldcl,dict);
+      }
    }
 
    r->fName = StrDup(shortName.c_str());
