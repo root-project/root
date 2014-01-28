@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "RConfigure.h"
+
 #include "TVirtualPad.h"
 #include "TView3D.h"
 #include "TAxis3D.h"
@@ -1585,7 +1587,12 @@ void TView3D::AdjustPad(TVirtualPad *pad)
 
    TVirtualPad *thisPad = pad;
    if (!thisPad) thisPad = gPad;
+   
    if (thisPad) {
+      //There is a bug here, invisible with X11, visible with Cocoa.
+#ifdef R__HAS_COCOA
+      thisPad->AbsCoordinates(kFALSE);
+#endif
       thisPad->Modified();
       thisPad->Update();
    }
@@ -1725,6 +1732,7 @@ void TView3D::ZoomView(TVirtualPad *pad,Double_t zoomFactor)
       min[i] = c - s;
    }
    SetRange(min,max);
+   
    AdjustPad(pad);
 }
 
