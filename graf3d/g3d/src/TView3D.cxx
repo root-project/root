@@ -1589,7 +1589,7 @@ void TView3D::AdjustPad(TVirtualPad *pad)
    if (!thisPad) thisPad = gPad;
    if (thisPad) {
 #ifdef R__HAS_COCOA
-//      thisPad->AbsCoordinates(kFALSE);
+      thisPad->AbsCoordinates(kFALSE);
 #endif
       thisPad->Modified();
       thisPad->Update();
