@@ -178,8 +178,9 @@ bool showAboutInfo = false;
    
    if (currentScrollAmount + scrollAmountPixels >= textView.frame.size.height - scrollView.frame.size.height)
       [textView scrollPoint : NSMakePoint(0., 0.)];//Make a "loop".
-   else
+   else {
       [textView scrollPoint : NSMakePoint(0., currentScrollAmount + scrollAmountPixels)];
+   }
    // If anything overlaps the text we just scrolled, it won’t get redraw by the
    // scrolling, so force everything in that part of the panel to redraw.
    NSRect scrollViewFrame = [scrollView bounds];
@@ -628,6 +629,11 @@ void WaitChildGeneric()
 void RunEventLoopInBackground()
 {
    using ROOT::MacOSX::Util::NSScopeGuard;
+   
+   if (!InitCocoa()) {
+      //It's a serious bug and must be either reported or handled in a different way.
+      return WaitChildGeneric();
+   }
 
    int status = 0;
    
