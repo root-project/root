@@ -259,9 +259,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   
   if(ARG_MODULE)
     set(newargs -s ${libprefix}${ARG_MODULE}${libsuffix})
-    set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}_rdict.pcm)
+    set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)
   else()
-    set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${dictionary}_rdict.pcm)
+    set(pcm_name ${dictionary}_rdict.pcm)
   endif()
   
   if(ARG_DEPENDENCIES)
