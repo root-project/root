@@ -1222,8 +1222,6 @@ int main(int argc, char** argv)
 
 
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
    Int_t testNumber   =      0;
    Bool_t doDraw      = kFALSE; 
 
@@ -1240,10 +1238,8 @@ int main(int argc, char** argv)
          verbose = 2;
       } else if (arg == "-a") {
          cout << "stressHistoFit: deploying full suite of tests" << endl;
-         allTests = kTRUE;
       } else if (arg == "-n") {
          cout << "stressHistoFit: running single test" << endl;
-         oneTest = kTRUE;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
          cout << "stressHistoFit: setting gDebug to " << argv[i + 1] << endl;
