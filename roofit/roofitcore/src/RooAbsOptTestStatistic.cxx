@@ -504,12 +504,12 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool
   // be abanoned. If codes ConfigChange or ValueChange are sent, any existing
   // constant term optimizations will be redone.
 
-//   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << endl ;
-//   _funcClone->Print("t") ;
+  //   cout << "ROATS::constOpt(" << GetName() << ") funcClone structure dump BEFORE const-opt" << endl ;
+  //   _funcClone->Print("t") ;
 
   RooAbsTestStatistic::constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
   if (operMode()!=Slave) return ;
-
+  
   if (_dataClone->hasFilledCache() && _dataClone->store()->cacheOwner()!=this) {
     if (opcode==Activate) {
       cxcoutW(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
@@ -518,13 +518,16 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool
     return ;
   }
 
-
   if (!allowFunctionCache()) {
     if (opcode==Activate) {
       cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
 			    << ") function caching prohibited by test statistic, no constant term optimization is applied" << endl ;
     }
     return ;
+  }
+
+  if (_dataClone->hasFilledCache() && opcode==Activate) {
+    opcode=ValueChange ;
   }
 
   switch(opcode) {
@@ -552,8 +555,9 @@ void RooAbsOptTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool
   case ValueChange: 
     cxcoutI(Optimization) << "RooAbsOptTestStatistic::constOptimize(" << GetName() 
 			  << ") the value of one ore more constant parameter were changed re-evaluating constant term optimization" << endl ;
-    optimizeConstantTerms(kFALSE) ;
-    optimizeConstantTerms(kTRUE,doAlsoTrackingOpt) ;
+    // Request a forcible cache update of all cached nodes
+    _dataClone->store()->forceCacheUpdate() ;
+
     break ;
   }
 
@@ -603,9 +607,8 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
   // that are exclusively used in constant terms are disabled as
   // they serve no more purpose
 
-
   if(activate) {
-    
+
     if (_optimized) {
       return ;
     }
