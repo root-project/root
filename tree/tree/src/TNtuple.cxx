@@ -37,6 +37,50 @@
 
 ClassImp(TNtuple)
 
+//Some aux. functions to read tuple from a text file. No reason to make them memeber-functions.
+
+namespace {
+
+//file:
+//    lines
+//
+//lines:
+//    line
+//    line lines
+//
+//line:
+//    comment
+//    tuple
+//    empty-line
+
+
+//comment:
+// '#' non-newline-character-sequence newline-character
+//
+//non-newline-character-sequence:
+// any symbol except '\r' or '\n'
+//
+//newline-character:
+// '\r' | '\n'
+void SkipComment(std::istream &input);
+
+//empty-line:
+//    newline-character
+//    ws-sequence newline-character
+//    ws-sequence comment
+void SkipEmptyLines(std::istream &input);
+
+//ws-sequence:
+//    c such that isspace(c) and c is not a newline-character.
+void SkipWSCharacters(std::istream &input);
+
+//Next character is either newline-character, eof or we have some problems reading
+//the next symbol.
+bool NextCharacterIsEOL(std::istream &input);
+
+}
+
+
 //______________________________________________________________________________
 TNtuple::TNtuple(): TTree()
 {
@@ -265,4 +309,85 @@ void TNtuple::Streamer(TBuffer &b)
    } else {
       b.WriteClassBuffer(TNtuple::Class(),this);
    }
+}
+
+namespace {
+
+//Aux. functions to read tuples from text files.
+
+//______________________________________________________________________________
+void SkipComment(std::istream &input)
+{
+   //Skips everything from '#' to (including) '\r' or '\n'.
+
+   //
+   if (0) {//Stupid hack to suppress warnings until I've re-implemented ReadStream.
+      SkipEmptyLines(input);
+      SkipWSCharacters(input);
+      NextCharacterIsEOL(input);
+   }
+   //
+   
+   while (input.good()) {
+      const char next = input.peek();
+      if (input.good()) {
+         input.get();
+         if (next == '\r' || next == '\n')
+            break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void SkipEmptyLines(std::istream &input)
+{
+   //Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
+   
+   if (0) {//Stupid hack to suppress warnings until I've re-implemented ReadStream.
+      SkipComment(input);
+   }
+   
+   while (input.good()) {
+      const char c = input.peek();
+      if (!input.good())
+         break;
+
+      if (c == '#')
+         SkipComment(input);
+      else if (!std::isspace(c))//'\r' and '\n' are also 'isspaces'.
+         break;
+      else
+         input.get();
+   }
+}
+
+//______________________________________________________________________________
+void SkipWSCharacters(std::istream &input)
+{
+   //Skip whitespace characters, but not newline-characters we support ('\r' or '\n').
+   while (input.good()) {
+      const char next = input.peek();
+      if (input.good()) {
+         if (std::isspace(next) && next != '\n' && next != '\r')
+            input.get();
+         else
+            break;
+      }
+   }
+}
+
+//______________________________________________________________________________
+bool NextCharacterIsEOL(std::istream &input)
+{
+   //Valid here means it's a digit.
+   if (!input.good())
+      return true;
+   
+   const char next = input.peek();
+   if (!input.good())
+      return true;
+  
+   return next == '\r' || next == '\n';
+}
+
 }
