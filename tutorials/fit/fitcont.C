@@ -1,3 +1,5 @@
+#include "TMinuit.h"
+
 void fitcont()
 {
    // Example illustrating how to draw the n-sigma contour of a Minuit fit.
