@@ -1,5 +1,5 @@
 // Open a FITS file and retrieve the first plane of the image array 
-// as a TASImage object
+// as a TImage object
 void FITS_tutorial1()
 {
    printf("\n\n--------------------------------\n");
@@ -54,7 +54,7 @@ void FITS_tutorial1()
    printf("and they will be shown in a canvas.\n");
    //printf("Press ENTER to continue..."); getchar();
    
-   TASImage *im = hdu->ReadAsImage(0);
+   TImage *im = hdu->ReadAsImage(0);
    
    // Read the primary array as a histogram.
    // Depending on array dimensions, returned

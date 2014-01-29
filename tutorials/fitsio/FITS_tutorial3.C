@@ -1,5 +1,5 @@
 // Open a FITS file and retrieve the first plane of the image array 
-// as a TASImage object
+// as a TImage object
 void FITS_tutorial3()
 {
    printf("\n\n--------------------------------\n");
@@ -24,7 +24,7 @@ void FITS_tutorial3()
          printf("ERROR: could not access the HDU\n"); return;
       }
       
-      TASImage *im = hdu->ReadAsImage(0);
+      TImage *im = hdu->ReadAsImage(0);
       c->cd(i);
       im->Draw();
       delete hdu;
