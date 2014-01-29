@@ -17,8 +17,7 @@ int permuteSimple1 ()
   for(i=0; i<4; i++) a[i]=i;
   do { 
     icount++;
-    for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++])))
-       ;
+    for(Int_t i=0;i<4;printf("%c",static_cast<char>(aa+a[i++])));
     printf("\n");
     
   } while(TMath::Permute(4,a));
@@ -37,8 +36,7 @@ int permuteSimple2 ()
   for(i=0; i<6; i++) a[i]=(i+2)/2;
   do { 
      icount++;
-     for(Int_t i=0;i<5;printf("%c",static_cast<char>(aa+a[i++])))
-        ;
+     for(Int_t i=0;i<5;printf("%c",static_cast<char>(aa+a[i++])));
      printf("\n");
      
   } while(TMath::Permute(5,a));
