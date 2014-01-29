@@ -73,7 +73,8 @@ RooVectorDataStore::RooVectorDataStore() :
   _curWgtErrHi(0),
   _curWgtErr(0),
   _cache(0),
-  _cacheOwner(0)
+  _cacheOwner(0),
+  _forcedUpdate(kFALSE)
 {
   TRACE_CREATE
 }
@@ -103,7 +104,8 @@ RooVectorDataStore::RooVectorDataStore(const char* name, const char* title, cons
   _curWgtErrHi(0),
   _curWgtErr(0),
   _cache(0),
-  _cacheOwner(0)
+  _cacheOwner(0),
+  _forcedUpdate(kFALSE)
 {
   TIterator* iter = _varsww.createIterator() ;
   RooAbsArg* arg ;
@@ -1263,6 +1265,10 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 }
 
 
+void RooVectorDataStore::forceCacheUpdate()
+{
+  if (_cache) _forcedUpdate = kTRUE ; 
+}
 
 
 
@@ -1277,7 +1283,7 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
 
   // Check which items need recalculation
   for (Int_t i=0 ; i<_cache->_nReal ; i++) {
-    if ((*(_cache->_firstReal+i))->needRecalc()) {
+    if ((*(_cache->_firstReal+i))->needRecalc() || _forcedUpdate) {
       tv[ntv] = (*(_cache->_firstReal+i)) ;
       tv[ntv]->_nativeReal->setOperMode(RooAbsArg::ADirty) ;
       tv[ntv]->_nativeReal->_operMode=RooAbsArg::Auto ;
@@ -1285,6 +1291,7 @@ void RooVectorDataStore::recalculateCache( const RooArgSet *projectedArgs, Int_t
       ntv++ ;
     }    
   }
+  _forcedUpdate = kFALSE ;
 
   // If no recalculations are neede stop here
   if (ntv==0) {

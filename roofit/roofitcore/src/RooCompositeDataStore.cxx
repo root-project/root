@@ -134,6 +134,28 @@ void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstE
 }
 
 
+//_____________________________________________________________________________
+Bool_t RooCompositeDataStore::hasFilledCache() const
+{
+  Bool_t ret(kFALSE) ;
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    ret |= iter->second->hasFilledCache() ;
+  }
+  return ret ;
+}
+
+
+//_____________________________________________________________________________
+void RooCompositeDataStore::forceCacheUpdate()
+{
+  map<int,RooAbsDataStore*>::const_iterator iter ;
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    iter->second->forceCacheUpdate() ;
+  }
+}
+
+
 
 //_____________________________________________________________________________
 Int_t RooCompositeDataStore::fill()
