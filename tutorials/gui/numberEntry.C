@@ -78,7 +78,7 @@ void MyMainFrame::DoSetlabel()
    // Slot method connected to the ValueSet(Long_t) signal.
    // It displays the value set in TGNumberEntry widget.
    
-   fLabel->SetText(Form("%d",fNumber->GetNumberEntry()->GetIntNumber()));
+   fLabel->SetText(Form("%ld",fNumber->GetNumberEntry()->GetIntNumber()));
 
    // Parent frame Layout() method will redraw the label showing the new value.
    fGframe->Layout();
