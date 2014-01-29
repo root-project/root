@@ -12,7 +12,7 @@
 #include <TString.h>
 #include <TApplication.h>
 
-char *icon1[] =
+const char * const icon1[] =
 {
 "16 16 8 1",
 "    c None s None",
@@ -69,7 +69,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
 
    // Create a picture from the XPM data 
    TGPicturePool *picpool = gClient->GetResourcePool()->GetPicturePool();
-   const TGPicture *iconpic = picpool->GetPicture(name.Data(),icon1);
+   const TGPicture *iconpic = picpool->GetPicture(name.Data(),(char **)icon1);
    TGIcon *icon = new TGIcon(this, iconpic, 40, 40, kChildFrame, yellow);
    AddFrame(icon, new TGLayoutHints(kLHintsLeft, 1,15,1,1));
    
