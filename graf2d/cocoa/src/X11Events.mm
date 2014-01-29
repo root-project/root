@@ -730,7 +730,7 @@ void SendKeyPressEvent(EventQueue_t &queue, NSView<X11Window> *view, NSView<X11W
    keyPressEvent.fType = kGKeyPress;
    keyPressEvent.fState = GetKeyboardModifiersFromCocoaEvent(theEvent);
    
-   NSString *characters = [theEvent charactersIgnoringModifiers];
+   NSString * const characters = [theEvent charactersIgnoringModifiers];
    assert(characters != nil && "SendKeyPressEvent, [theEvent characters] returned nil");
    assert([characters length] > 0 && "SendKeyPressEvent, characters is an empty string");
 
@@ -753,6 +753,51 @@ void SendKeyPressEvent(EventQueue_t &queue, NSView<X11Window> *view, NSView<X11W
    //Enqueue for ROOT.
    queue.push_back(keyPressEvent);
 }
+
+//______________________________________________________________________________
+void SendKeyReleaseEvent(EventQueue_t &queue, NSView<X11Window> *view, NSView<X11Window> *childView, NSEvent *theEvent, NSPoint windowPoint)
+{
+   //TODO: not too many GUI classes process key release event, test them all, I'm not quite sure if this implementation is the right one.
+
+   assert(view != nil && "SendKeyReleaseEvent, view parameter is nil");
+   assert(theEvent != nil && "SendKeyReleaseEvent, event parameter is nil");
+   assert(view.fID != 0 && "SendKeyReleaseEvent, view.fID is 0");
+
+   TGWindow * const window = gClient->GetWindowById(view.fID);
+   if (!window) {
+#ifdef DEBUG_ROOT_COCOA
+      NSLog(@"SendKeyPressEvent, ROOT's widget %u was not found", view.fID);
+#endif
+      return;
+   }
+   
+   Event_t keyReleaseEvent = NewX11EventFromCocoaEvent(view.fID, theEvent);
+   keyReleaseEvent.fType = kKeyRelease;//I do not understand, why we have kGKeyPress and kKeyPress but only kKeyRelease.
+
+   keyReleaseEvent.fState = GetKeyboardModifiersFromCocoaEvent(theEvent);
+   
+   NSString * const characters = [theEvent charactersIgnoringModifiers];
+   assert(characters != nil && "SendKeyReleaseEvent, [theEvent characters] returned nil");
+   assert([characters length] > 0 && "SendKeyReleaseEvent, characters is an empty string");
+   keyReleaseEvent.fCode = [characters characterAtIndex : 0];
+   
+   //Coords.
+   const NSPoint viewPoint = [view convertPoint : windowPoint fromView : nil];
+   keyReleaseEvent.fX = viewPoint.x;
+   keyReleaseEvent.fY = viewPoint.y;
+   const NSPoint screenPoint = TranslateToScreen(view, viewPoint);
+
+   //TODO: test if we really need the child window and the 'root's x/y.
+   keyReleaseEvent.fXRoot = screenPoint.x;
+   keyReleaseEvent.fYRoot = screenPoint.y;
+   //Subwindow.
+   if (childView)
+      keyReleaseEvent.fUser[0] = childView.fID;
+   
+   //Enqueue for ROOT.
+   queue.push_back(keyReleaseEvent);
+}
+
 
 //______________________________________________________________________________
 void SendFocusInEvent(EventQueue_t &queue, NSView<X11Window> *view, EXMagic mode)
@@ -1713,7 +1758,8 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
 
    if (eventType == kKeyPressMask)
       Detail::SendKeyPressEvent(fEventQueue, view, childView, theEvent, mousePosition);
-   else;
+   else
+      Detail::SendKeyReleaseEvent(fEventQueue, view, childView, theEvent, mousePosition);
 }
 
 //______________________________________________________________________________
