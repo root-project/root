@@ -11,7 +11,8 @@
 #include <TGClient.h>
 
 ////////////////////////////////////////////////////////////////////////////////
-namespace GuiTutorials {
+namespace ROOT {
+namespace GUITutorials {
 
 class WorldMap
 {
@@ -182,10 +183,12 @@ void WorldMap::PrintCode(Int_t code)
                 icontype, buttons, &retval);
 }
 
-}//namespace GuiTutorials.
+}//namespace GUITutorials.
+}//namespace ROOT.
 
 void WorldMap()
 {
-   GuiTutorials::WorldMap *map = new GuiTutorials::WorldMap;
+   namespace GUI = ROOT::GUITutorials;
+   GUI::WorldMap *map = new GUI::WorldMap;
    map->Show();
 }
