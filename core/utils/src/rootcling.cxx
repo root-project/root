@@ -2939,10 +2939,10 @@ int GenerateFullDict(std::ostream& dictStream,
       }
    }
 
-   if (!interpreteronly){
+   if (!interpreteronly) {
       // coverity[fun_call_w_exception] - that's just fine.
       ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
-      }
+   }
    
    return 0;
 }

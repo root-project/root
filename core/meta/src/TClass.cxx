@@ -820,6 +820,7 @@ TClass::TClass() :
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 
@@ -845,6 +846,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -867,15 +869,37 @@ TClass::TClass(const char *name, Bool_t silent) :
       ::Fatal("TClass::TClass", "gInterpreter not initialized");
 
    gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-   if (!fClassInfo) {
-      gInterpreter->SetClassInfo(this);
-   }
    if (!silent && !fClassInfo && fName.First('@')==kNPOS)
       ::Warning("TClass::TClass", "no dictionary for class %s is available", name);
    ResetBit(kLoading);
 
    if (fClassInfo) SetTitle(gCling->ClassInfo_Title(fClassInfo));
    fConversionStreamerInfo = 0;
+}
+
+//______________________________________________________________________________
+TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
+   TDictionary(name),
+   fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
+   fBase(0), fData(0), fEnums(0), fFuncTemplate(0), fMethod(0), fAllPubData(0),
+   fAllPubMethod(0), fClassMenuList(0),
+   fDeclFileName(""), fImplFileName(""), fDeclFileLine(0), fImplFileLine(0),
+   fInstanceCount(0), fOnHeap(0),
+   fCheckSum(0), fCollectionProxy(0), fClassVersion(0), fClassInfo(0),
+   fTypeInfo(0), fShowMembers(0),
+   fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
+   fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
+   fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
+   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kNoInfo),
+   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
+{
+   // Create a TClass object. This object contains the full dictionary
+   // of a class. It has list to baseclasses, datamembers and methods.
+   R__LOCKGUARD2(gInterpreterMutex);
+   Init(name, cversion, 0, 0, 0, 0, -1, -1, 0, silent);
 }
 
 //______________________________________________________________________________
@@ -894,6 +918,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -919,13 +944,12 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
 
    if (!classInfo || !gInterpreter->ClassInfo_IsValid(classInfo)) {
       MakeZombie();
+      fState = kNoInfo;
    } else {
       fName = gInterpreter->ClassInfo_FullName(classInfo);
 
       R__LOCKGUARD2(gInterpreterMutex);
       Init(fName, cversion, 0, 0, dfil, ifil, dl, il, classInfo, silent);
-      SetBit(kUnloaded);
-
    }
    ResetBit(kLoading);
 
@@ -949,6 +973,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -956,7 +981,6 @@ TClass::TClass(const char *name, Version_t cversion,
    // of a class. It has list to baseclasses, datamembers and methods.
    R__LOCKGUARD2(gInterpreterMutex);
    Init(name,cversion, 0, 0, dfil, ifil, dl, il, 0, silent);
-   SetBit(kUnloaded);
 }
 
 //______________________________________________________________________________
@@ -978,6 +1002,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fState(kHasTClassInit),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
@@ -1008,7 +1033,7 @@ void TClass::ForceReload (TClass* oldcl)
       info->SetClass(this);
       fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
    }
-   oldcl->GetStreamerInfos()->Clear();
+   oldcl->fStreamerInfo->Clear();
 
    oldcl->ReplaceWith(this);
    delete oldcl;
@@ -1069,7 +1094,7 @@ void TClass::Init(const char *name, Version_t cversion,
          info->SetClass(this);
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
-      oldcl->GetStreamerInfos()->Clear();
+      oldcl->fStreamerInfo->Clear();
 
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
@@ -1089,6 +1114,7 @@ void TClass::Init(const char *name, Version_t cversion,
       {
          if (!TClassEdit::IsSTLCont(fName.Data())) {
             MakeZombie();
+            fState = kNoInfo;
             TClass::RemoveClass(this);
             return;
          }
@@ -1121,7 +1147,6 @@ void TClass::Init(const char *name, Version_t cversion,
 
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
-            gInterpreter->SetClassInfo(this);
             if (IsZombie()) {
                TClass::RemoveClass(this);
                return;
@@ -1203,27 +1228,30 @@ void TClass::Init(const char *name, Version_t cversion,
       }
    }
 
-   ResetBit(kLoading);
-
    if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
-      fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName(), silent );
-      if (fCollectionProxy) {
-         fSizeof = fCollectionProxy->Sizeof();
+      if (fState != kHasTClassInit) {
+         // If we have a TClass compiled initialization, we can safely assume that 
+         // there will also be a collection proxy.
+         fCollectionProxy = TVirtualStreamerInfo::Factory()->GenEmulatedProxy( GetName(), silent );
+         if (fCollectionProxy) {
+            fSizeof = fCollectionProxy->Sizeof();
 
-         // Numeric Collections have implicit conversions:
-         GetSchemaRules(kTRUE);
+            // Numeric Collections have implicit conversions:
+            GetSchemaRules(kTRUE);
 
-      } else if (!silent) {
-         Warning("Init","Collection proxy for %s was not properly initialized!",GetName());
-      }
-      if (fStreamer==0) {
-         fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName(), silent );
+         } else if (!silent) {
+            Warning("Init","Collection proxy for %s was not properly initialized!",GetName());
+         }
+         if (fStreamer==0) {
+            fStreamer =  TVirtualStreamerInfo::Factory()->GenEmulatedClassStreamer( GetName(), silent );
+         }
       }
    } else if (!strncmp(GetName(),"std::pair<",10) || !strncmp(GetName(),"pair<",5) ) {
       // std::pairs have implicit conversions
       GetSchemaRules(kTRUE);
    }
 
+   ResetBit(kLoading);
 }
 
 //______________________________________________________________________________
@@ -1274,6 +1302,7 @@ TClass::TClass(const TClass& cl) :
   fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),
+  fState(cl.fState),
   fCurrentInfo(cl.fCurrentInfo),
   fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
@@ -2453,6 +2482,9 @@ TVirtualCollectionProxy *TClass::GetCollectionProxy() const
 {
    // Return the proxy describinb the collection (if any).
 
+   // Use assert, so that this line (slow because of the TClassEdit) is completely
+   // remove in optimized code.
+   assert(TestBit(kLoading) || !TClassEdit::IsSTLCont(fName) || fCollectionProxy || 0 == "The TClass for the STL collection has no collection proxy!");
    if (gThreadTsd && fCollectionProxy) {
       TClassLocalStorage *local = TClassLocalStorage::GetStorage(this);
       if (local == 0) return fCollectionProxy;
@@ -2558,6 +2590,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // Returns 0 in case class is not found.
 
    if (!name || !name[0]) return 0;
+   R__LOCKGUARD(gInterpreterMutex);
    if (!gROOT->GetListOfClasses())    return 0;
 
    if (strncmp(name,"class ",6)==0) name += 6;
@@ -2720,7 +2753,6 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 
    if (!gROOT->GetListOfClasses())    return 0;
 
-//printf("TClass::GetClass called, typeinfo.name=%s\n",typeinfo.name());
    TClass* cl = GetIdMap()->Find(typeinfo.name());
 
    if (cl) {
@@ -2777,13 +2809,11 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
       }
    }
 
-   //last attempt. Look in CINT list of all (compiled+interpreted) classes
-   //   if (gInterpreter->CheckClassInfo(name)) {
-   //      TClass *ncl = new TClass(name, 1, 0, 0, 0, -1, -1);
-   //      if (!ncl->IsZombie()) return ncl;
-   //      delete ncl;
-   //   }
-   return 0;
+   // last attempt. Look in the interpreter list of all (compiled+interpreted)
+   // classes
+   cl = gInterpreter->GetClass(typeinfo, load);
+
+   return cl; // Can be zero.
 }
 
 //______________________________________________________________________________
@@ -3282,7 +3312,9 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    }
 
    while ((acl = (TClass*)nextClass())) {
-      if (recurse && acl!=newcl && acl!=this) {
+      if (acl == newcl) continue;
+
+      if (recurse && acl!=this) {
 
          TString aclCorename( TClassEdit::ResolveTypedef(acl->GetName()) );
 
@@ -4308,7 +4340,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // Allow TObject's to be registered again.
       SetObjectStat(statsave);
 
-      if (fStreamerType & kEmulated) {
+      if (fStreamerType & kEmulatedStreamer) {
          // We always register emulated objects, we need to always
          // use the streamer info to destroy them.
       }
@@ -4686,7 +4718,7 @@ Bool_t TClass::IsLoaded() const
    // process's memory.  Return false, after the shared library has been
    // unloaded or if this is an 'emulated' class created from a file's StreamerInfo.
 
-   return (GetImplFileLine()>=0 && !TestBit(kUnloaded));
+   return fState == kHasTClassInit;
 }
 
 //______________________________________________________________________________
@@ -4800,7 +4832,7 @@ Long_t TClass::Property() const
    //    kForeign : the class does not have a Streamer method
    //    kInstrumented: the class does have a Streamer method
    //    kExternal: the class has a free standing way of streaming itself
-   //    kEmulated: the class is missing its shared library.
+   //    kEmulatedStreamer: the class is missing its shared library.
 
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -4862,14 +4894,14 @@ Long_t TClass::Property() const
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
-      kl->fStreamerType |= kEmulated;
+      kl->fStreamerType |= kEmulatedStreamer;
       switch (fStreamerType) {
-         case kEmulated:               // intentional fall through
-         case kForeign|kEmulated:      // intentional fall through
-         case kInstrumented|kEmulated: kl->fStreamerImpl = &TClass::StreamerStreamerInfo; break;
-         case kExternal|kEmulated:     kl->fStreamerImpl = &TClass::StreamerExternal; break;
-         case kTObject|kEmulated:      kl->fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
-         case TClass::kDefault:       kl->fStreamerImpl = &TClass::StreamerDefault; break;
+         case kEmulatedStreamer:               // intentional fall through
+         case kForeign|kEmulatedStreamer:      // intentional fall through
+         case kInstrumented|kEmulatedStreamer: kl->fStreamerImpl = &TClass::StreamerStreamerInfo; break;
+         case kExternal|kEmulatedStreamer:     kl->fStreamerImpl = &TClass::StreamerExternal; break;
+         case kTObject|kEmulatedStreamer:      kl->fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
+         case TClass::kDefault:                kl->fStreamerImpl = &TClass::StreamerDefault; break;
 
       }
       return 0;
@@ -4896,6 +4928,11 @@ void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
    fCollectionProxy = p;
 
    AdoptStreamer(TVirtualStreamerInfo::Factory()->GenExplicitClassStreamer(info,this));
+
+   if (fCollectionProxy && !fSchemaRules) {
+      // Numeric Collections have implicit conversions:
+      GetSchemaRules(kTRUE);
+   }
 }
 
 //______________________________________________________________________________
@@ -4939,6 +4976,15 @@ void TClass::SetUnloaded()
    // Call this method to indicate that the shared library containing this
    // class's code has been removed (unloaded) from the process's memory
 
+   if (TestBit(kUnloaded)) {
+      // Don't redo the work.
+      return;
+   }
+   R__ASSERT(fState == kLoaded);
+
+   // Make sure SetClassInfo, re-calculated the state.
+   fState = kForwardDeclared;
+
    delete fIsA; fIsA = 0;
    // Disable the autoloader while calling SetClassInfo, to prevent
    // the library from being reloaded!
@@ -4956,6 +5002,10 @@ void TClass::SetUnloaded()
    }
    if (fData) {
       fData->Unload();
+   }
+
+   if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
+      fState = kEmulated;
    }
 
    SetBit(kUnloaded);
@@ -5288,7 +5338,7 @@ void TClass::StreamerExternal(void *object, TBuffer &b, const TClass *onfile_cla
    //There is special streamer for the class
 
    //      case kExternal:
-   //      case kExternal|kEmulated:
+   //      case kExternal|kEmulatedStreamer:
 
    TClassStreamer *streamer = gThreadTsd ? GetStreamer() : fStreamer;
    streamer->Stream(b,object,onfile_class);
@@ -5322,7 +5372,7 @@ void TClass::StreamerTObjectEmulated(void *object, TBuffer &b, const TClass *onf
 {
    // Case of TObjects when we do not have the library defining the class.
 
-   // case kTObject|kEmulated :
+   // case kTObject|kEmulatedStreamer :
    if (b.IsReading()) {
       b.ReadClassEmulated(this, object, onfile_class);
    } else {
@@ -5344,9 +5394,9 @@ void TClass::StreamerStreamerInfo(void *object, TBuffer &b, const TClass *onfile
 {
    // Case of where we should directly use the StreamerInfo.
    //    case kForeign:
-   //    case kForeign|kEmulated:
-   //    case kInstrumented|kEmulated:
-   //    case kEmulated:
+   //    case kForeign|kEmulatedStreamer:
+   //    case kInstrumented|kEmulatedStreamer:
+   //    case kEmulatedStreamer:
 
    if (b.IsReading()) {
       b.ReadClassBuffer(this, object, onfile_class);
@@ -5389,7 +5439,7 @@ void TClass::AdoptStreamer(TClassStreamer *str)
 
    if (fStreamer) delete fStreamer;
    if (str) {
-      fStreamerType = kExternal | ( fStreamerType&kEmulated );
+      fStreamerType = kExternal | ( fStreamerType&kEmulatedStreamer );
       fStreamer = str;
       fStreamerImpl = &TClass::StreamerExternal;
    } else if (fStreamer) {
@@ -5572,7 +5622,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    //----------------------------------------------------------------------------
    // We don't have the streamer info so find it in other class
    //----------------------------------------------------------------------------
-   TObjArray *clSI = cl->GetStreamerInfos();
+   const TObjArray *clSI = cl->GetStreamerInfos();
    TVirtualStreamerInfo* info = 0;
    if( version >= -1 && version < clSI->GetSize() )
       info = (TVirtualStreamerInfo*)clSI->At( version );
@@ -5708,6 +5758,46 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    arr->AddAtAndExpand( info, info->GetClassVersion() );
 
    return info;
+}
+
+//______________________________________________________________________________
+void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
+{
+   // Register the StreamerInfo in the given slot, change the State of the
+   // TClass as appropriate.
+
+   if (info) {
+      R__LOCKGUARD(gInterpreterMutex);
+      Int_t slot = info->GetClassVersion();
+      if (fStreamerInfo->GetSize() > (slot-fStreamerInfo->LowerBound())
+          && fStreamerInfo->At(slot) == 0
+          && fStreamerInfo->At(slot) == info) {
+         Error("RegisterStreamerInfo",
+               "Register StreamerInfo for %s on non-empty slot (%d).",
+               GetName(),slot);
+      }
+      fStreamerInfo->AddAtAndExpand(info, slot);
+      if (fState <= kForwardDeclared) {
+         fState = kEmulated;
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::RemoveStreamerInfo(Int_t slot)
+{
+   // Remove and delete the StreamerInfo in the given slot.
+   // Update the slot accordingly.
+
+   if (fStreamerInfo->GetSize() >= slot) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
+      fStreamerInfo->RemoveAt(fClassVersion);
+      delete info;
+      if (fState == kEmulated && fStreamerInfo->GetEntries() == 0) {
+         fState = kForwardDeclared;
+      }
+   }
 }
 
 //______________________________________________________________________________

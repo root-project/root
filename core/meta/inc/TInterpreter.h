@@ -103,6 +103,7 @@ public:
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;
    virtual void     EndOfLineAction() = 0;
+   virtual TClass  *GetClass(const std::type_info& typeinfo, Bool_t load) const = 0;
    virtual Int_t    GetExitCode() const = 0;
    virtual TEnv    *GetMapfile() const { return 0; }
    virtual Int_t    GetMore() const = 0;
@@ -136,7 +137,8 @@ public:
                                    const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
-                                   void (* /*triggerFunc*/)()) {}
+                                   void (* /*triggerFunc*/)()) = 0;
+   virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
    virtual void     SetGetline(const char*(*getlineFunc)(const char* prompt),
                                void (*histaddFunc)(const char* line)) = 0;

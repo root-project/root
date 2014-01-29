@@ -1185,7 +1185,20 @@ void TCling::RegisterModule(const char* modulename,
                "Problems declaring payload for module %s.", modulename) ;
       }
    }
-   
+
+   // Now that all the header have been registered/compiled, let's
+   // make sure to 'reset' the TClass that have a class init in this module
+   // but already had their type information available (using information/header
+   // loaded form other modules).
+   while (!fClassesToUpdate.empty()) {
+      TClass *oldcl = fClassesToUpdate.back().first;
+      if (oldcl->GetState() != TClass::kHasTClassInit) {
+         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         fClassesToUpdate.back().second();
+      }
+      fClassesToUpdate.pop_back();
+   }
+
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
@@ -1193,6 +1206,16 @@ void TCling::RegisterModule(const char* modulename,
    fInterpreter->declare("#ifdef __ROOTCLING__\n"
                          "#undef __ROOTCLING__\n"
                          "#endif");
+}
+
+//______________________________________________________________________________
+void TCling::RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict)
+{
+   // Register classes that already existed prior to their dictionary loading
+   // and that already had a ClassInfo (and thus would not be refresh via
+   // UpdateClassInfo.
+
+   fClassesToUpdate.push_back(std::make_pair(oldcl,dict));
 }
 
 //______________________________________________________________________________
@@ -2233,6 +2256,19 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (zombieCandidate && !TClassEdit::IsSTLCont(cl->GetName())) {
       cl->MakeZombie();
    }
+   // If we reach here, the info was valid (See early returns).
+   if (cl->fState != TClass::kHasTClassInit) {
+      if (cl->fClassInfo) {
+         cl->fState = TClass::kInterpreted;
+      } else {
+//         if (TClassEdit::IsSTLCont(cl->GetName()) {
+//            There will be an emulated collection proxy, is that the same?
+//            cl->fState = TClass::kEmulated;
+//         } else {
+            cl->fState = TClass::kForwardDeclared;
+//         }
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -2526,11 +2562,11 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
    //   TClingClassInfo tci(fInterpreter, classname);
    //   if (1 || !tci.IsValid()) {
 
-   int version = 1;
+   Version_t version = 1;
    if (TClassEdit::IsSTLCont(classname)) {
       version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
-   TClass *cl = new TClass(classname, version, 0, 0, -1, -1, silent);
+   TClass *cl = new TClass(classname, version, silent);
    if (emulation) cl->SetBit(TClass::kIsEmulation);
 
    return cl;
@@ -3961,6 +3997,18 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    //fMapfile->SetValue(key, libs);
    fMapfile->SetValue(cls, libs);
    return 1;
+}
+
+//______________________________________________________________________________
+TClass *TCling::GetClass(const std::type_info& typeinfo, Bool_t load) const
+{
+   // Demangle the name (from the typeinfo) and then request the class
+   // via the usual name based interface (TClass::GetClass).
+
+   int err = 0;
+   string demangled_name = TCling__Demangle(typeinfo.name(), &err);
+   if (err) return 0;
+   return TClass::GetClass(demangled_name.c_str(), load, kTRUE);
 }
 
 //______________________________________________________________________________

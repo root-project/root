@@ -119,6 +119,7 @@ private: // Data Members
       ModuleForHeader_t;
    ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
    std::set<TClass*> fModTClasses;
+   std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
@@ -139,6 +140,7 @@ public: // Public Interface
    void    ClearStack(); // Delete existing temporary values
    void    EnableAutoLoading();
    void    EndOfLineAction();
+   TClass *GetClass(const std::type_info& typeinfo, Bool_t load) const;
    Int_t   GetExitCode() const { return fExitCode; }
    TEnv*   GetMapfile() const { return fMapfile; }
    Int_t   GetMore() const { return fMore; }
@@ -174,7 +176,8 @@ public: // Public Interface
                           const char** includePaths,
                           const char* payloadCode,
                           void (*triggerFunc)());
-   
+   void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
+
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),
                       void (*histaddFunc)(const char* line));
