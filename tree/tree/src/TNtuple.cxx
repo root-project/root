@@ -34,8 +34,19 @@
 #include "TClass.h"
 
 #include <string>
+#include <cctype>
 
 ClassImp(TNtuple)
+
+namespace {
+
+//Some aux. functions to read tuple from a text file. No reason to make them memeber-functions.
+void SkipComment(std::istream &input);
+void SkipEmptyLines(std::istream &input);
+void SkipWSCharacters(std::istream &input);
+bool NextCharacterIsEOL(std::istream &input);
+
+}
 
 //______________________________________________________________________________
 TNtuple::TNtuple(): TTree()
@@ -218,7 +229,7 @@ Long64_t TNtuple::ReadStream(istream &inputStream, const char * /*branchDescript
    // the function returns the number of rows found in the file
    // The second argument "branchDescriptor" is currently not used.
    // Lines in the input file starting with "#" are ignored.
-
+   /*
    Long64_t nlines = 0;
    char newline = GetNewlineValue(inputStream);
    while (1) {
@@ -236,6 +247,71 @@ Long64_t TNtuple::ReadStream(istream &inputStream, const char * /*branchDescript
       inputStream.ignore(8192,newline);
    }
    return nlines;
+   */
+
+   if (delimiter == '\r' || delimiter == '\n') {
+      Error("ReadStream", "invalid delimiter - newline character");
+      return 0;
+   }
+
+   const bool relaxedMode = false;//later, this must become a parameter (we have a JIRA request for such a mode).
+   Long64_t nLines = 0;
+   
+   if (!relaxedMode) {
+      while (true) {
+         //Skip empty-lines (containing only newlines, comments, whitespaces + newlines
+         //and combinations).
+         SkipEmptyLines(inputStream);
+         
+         if (!inputStream.good()) {
+            if (!nLines)
+               Error("ReadStream", "no data read");
+            return nLines;
+         }
+
+         //Now, we have to be able to read _the_ _required_ number of entires.
+         for (Int_t i = 0; i < fNvar; ++i) {
+            SkipWSCharacters(inputStream);//skip all wses except newlines.
+            if (!inputStream.good()) {
+               Error("ReadStream", "failed to read a tuple (invalid line)");
+               return nLines;
+            }
+
+            if (i > 0 && !std::isspace(delimiter)) {
+               const char test = inputStream.peek();
+               if (!inputStream.good() || test != delimiter) {
+                  Error("ReadStream", "delimiter expected");
+                  return nLines;
+               }
+
+               inputStream.get();//we skip a dilimiter whatever it is.
+               SkipWSCharacters(inputStream);
+            }
+            
+            if (NextCharacterIsEOL(inputStream)) {
+               //This is unexpected!
+               Error("ReadStream", "unexpected character or eof found");
+               return nLines;
+            }
+
+            inputStream>>fArgs[i];
+            
+            if (!(inputStream.eof() && i + 1 == fNvar) && !inputStream.good()){
+               Error("ReadStream", "error while reading a value");
+               return nLines;
+            }
+         }
+         
+         //Of, tuple is good:
+         TTree::Fill();
+         ++nLines;
+      }
+   } else {
+      //This was requested in JIRA: read values for a given row even if they are separated
+      //by newline-character.
+   }
+   
+   return nLines;
 }
 
 
@@ -266,3 +342,103 @@ void TNtuple::Streamer(TBuffer &b)
       b.WriteClassBuffer(TNtuple::Class(),this);
    }
 }
+
+
+namespace {
+
+//Aux. functions to read tuples from text files.
+
+//file:
+//    lines
+//
+//lines:
+//    line
+//    line lines
+//
+//line:
+//    comment
+//    tuple
+//    empty-line
+
+
+
+//comment:
+// '#' non-newline-character-sequence newline-character
+//
+//non-newline-character-sequence:
+// any symbol except '\r' or '\n'
+//
+//newline-character:
+// '\r' | '\n'
+//______________________________________________________________________________
+void SkipComment(std::istream &input)
+{
+   //Skips everything from '#' to (including) '\r' or '\n'.
+
+   while (input.good()) {
+      const char next = input.peek();
+      if (input.good()) {
+         input.get();
+         if (next == '\r' || next == '\n')
+            break;
+      }
+   }
+}
+
+//empty-line:
+//    newline-character
+//    ws-sequence newline-character
+//    ws-sequence comment
+//______________________________________________________________________________
+void SkipEmptyLines(std::istream &input)
+{
+   //Skips empty lines (newline-characters), ws-lines (consisting only of whitespace characters + newline-characters).
+   
+   while (input.good()) {
+      const char c = input.peek();
+      if (!input.good())
+         break;
+
+      if (c == '#')
+         SkipComment(input);
+      else if (!std::isspace(c))//'\r' and '\n' are also 'isspaces'.
+         break;
+      else
+         input.get();
+   }
+}
+
+//ws-sequence:
+//    c such that isspace(c) and c is not a newline-character.
+//______________________________________________________________________________
+void SkipWSCharacters(std::istream &input)
+{
+   //Skip whitespace characters, but not newline-characters we support ('\r' or '\n').
+   while (input.good()) {
+      const char next = input.peek();
+      if (input.good()) {
+         if (std::isspace(next) && next != '\n' && next != '\r')
+            input.get();
+         else
+            break;
+      }
+   }
+}
+
+//Next character is either newline-character, eof or we have some problems reading
+//the next symbol.
+//______________________________________________________________________________
+bool NextCharacterIsEOL(std::istream &input)
+{
+   //Either '\r' | '\n' or eof of some problem.
+   if (!input.good())
+      return true;
+   
+   const char next = input.peek();
+   if (!input.good())
+      return true;
+  
+   return next == '\r' || next == '\n';
+}
+
+}//unnamed namespace.
