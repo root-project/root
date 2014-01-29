@@ -1,5 +1,4 @@
 #include "TPrincipal.h"
-#include "iomanip.h"
    
 void principal(Int_t n=10, Int_t m=10000) 
 {
