@@ -11,6 +11,8 @@
 #include <TGClient.h>
 
 ////////////////////////////////////////////////////////////////////////////////
+namespace GuiTutorials {
+
 class WorldMap
 {
 protected:
@@ -175,13 +177,15 @@ void WorldMap::PrintCode(Int_t code)
    Int_t buttons = 0;
    Int_t retval;
 
-   TGMsgBox* box = new TGMsgBox(gClient->GetRoot(), fMain,
-                              "Country Code", Form("Country Code=%d",code),
-                              icontype, buttons, &retval);
+   new TGMsgBox(gClient->GetRoot(), fMain,
+                "Country Code", Form("Country Code=%d",code),
+                icontype, buttons, &retval);
 }
+
+}//namespace GuiTutorials.
 
 void WorldMap()
 {
-   WorldMap *map = new WorldMap;
+   GuiTutorials::WorldMap *map = new GuiTutorials::WorldMap;
    map->Show();
 }
