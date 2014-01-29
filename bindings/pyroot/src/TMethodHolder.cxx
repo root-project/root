@@ -595,7 +595,7 @@ PyObject* PyROOT::TMethodHolder::operator()(
 // get its class
    TClass* derived = self->ObjectIsA();
    if ( derived ) // the method expects 'this' to point to an object of fClass
-      fOffset = Utility::UpcastOffset( derived, (TClass*)fClass.Id(), object );
+      fOffset = Utility::UpcastOffset( derived, (TClass*)fClass.Id(), object, true /*derivedObj*/);
 
 // actual call; recycle self instead of returning new object for same address objects
    ObjectProxy* pyobj = (ObjectProxy*)Execute( object, release_gil );

@@ -81,15 +81,15 @@ namespace PyROOT {
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 
    // offsets to move between classes
-      Long_t UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj );
-      inline Long_t UpcastOffset( TClass* clDerived, TClass* clBase, void* obj ) {
-         return UpcastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj );
+      Long_t UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj );
+      inline Long_t UpcastOffset( TClass* clDerived, TClass* clBase, void* obj, bool derivedObj ) {
+         return UpcastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj, derivedObj );
       }
-      inline Long_t DowncastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj ) {
-         return -UpcastOffset( clDerived, clBase, obj );
+      inline Long_t DowncastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj ) {
+         return -UpcastOffset( clDerived, clBase, obj, derivedObj );
       }
-      inline Long_t DowncastOffset( TClass* clDerived, TClass* clBase, void* obj ) {
-         return DowncastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj );
+      inline Long_t DowncastOffset( TClass* clDerived, TClass* clBase, void* obj, bool derivedObj ) {
+         return DowncastOffset( clDerived->GetClassInfo(), clBase->GetClassInfo(), obj, derivedObj );
       }
 
    // CINT integration

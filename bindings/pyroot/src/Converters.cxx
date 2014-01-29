@@ -824,7 +824,7 @@ Bool_t PyROOT::TRootObjectConverter::SetArg(
 
    // calculate offset between formal and actual arguments
       para.fVoidp = pyobj->GetObject();
-      para.fLong += Utility::UpcastOffset( pyobj->ObjectIsA(), fClass, para.fVoidp );
+      para.fLong += Utility::UpcastOffset( pyobj->ObjectIsA(), fClass, para.fVoidp, true /*derivedObj*/ );
 
    // set pointer (may be null) and declare success
       if ( func )

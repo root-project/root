@@ -702,12 +702,12 @@ const std::string PyROOT::Utility::ResolveTypedef( const std::string& tname,
 }
 
 //____________________________________________________________________________
-Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj ) {
+Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBase, void* obj, bool derivedObj ) {
 // Forwards to TInterpreter->ClassInfo_GetBaseOffset(), just adds caching
    if ( clBase == clDerived || !(clBase && clDerived) )
       return 0;
 
-   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clDerived, clBase, obj, false /*isDerived*/ );
+   Long_t offset = gInterpreter->ClassInfo_GetBaseOffset( clDerived, clBase, obj, derivedObj );
    if ( offset == -1 ) {
    // warn to allow diagnostics, but 0 offset is often good, so use that and continue
       std::string bName = gInterpreter->ClassInfo_FullName( clBase );    // collect first b/c

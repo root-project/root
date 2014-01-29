@@ -251,7 +251,7 @@ Long_t PyROOT::PropertyProxy::GetAddress( ObjectProxy* pyobj ) {
 
 // the proxy's internal offset is calculated from the enclosing class
    Long_t offset = Utility::UpcastOffset(
-      pyobj->ObjectIsA()->GetClassInfo(), fEnclosingScope, obj );
+      pyobj->ObjectIsA()->GetClassInfo(), fEnclosingScope, obj, true /*isDerived*/ );
 
    return (Long_t)obj + offset + fOffset;
 }
