@@ -34,6 +34,7 @@
 #include "TClass.h"
 
 #include <string>
+#include <cctype>
 
 ClassImp(TNtuple)
 
