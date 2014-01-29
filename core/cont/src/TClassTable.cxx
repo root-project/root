@@ -281,7 +281,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
-   } else if (gInterpreter && ROOT::gROOTLocal) {
+   } else if (ROOT::gROOTLocal && gInterpreter) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
       if (oldcl && oldcl->GetClassInfo()) {
          // The TClass exist and already has a class info, so it must
