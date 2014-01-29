@@ -38,7 +38,13 @@ PyROOT_advancedtests.log: AdvancedCpp_C.$(DllSuf) Template_C.$(DllSuf)
 
 PyROOT_cpp11tests.log: Cpp11Features_C.$(DllSuf)
 
-PyROOT_cpptests: PyROOT_cpptests.log PyROOT_advancedtests.log PyROOT_cpp11tests.log
-	$(TestDiff)
+PyROOT_cpptests: PyROOT_cpptests.log
+	$(TestDiffW)
+
+PyROOT_advancedtests: PyROOT_advancedtests.log
+	$(TestDiffW)
+
+PyROOT_cpp11tests: PyROOT_cpp11tests.log
+	$(TestDiffW)
 
 endif
