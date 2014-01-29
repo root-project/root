@@ -95,6 +95,12 @@ Cling does not support such a multiplexing wrapper and alternatively
 interface must be used (See TClass::New and TClass::Destructor for
 example).
 
+The following interfaces are not yet available:
+
+- DeleteVariable
+
+They might be re-implemented in a later version.
+
 ### rootcling
 
 rootcling is the successor to rootcint and genreflex. It is used to
