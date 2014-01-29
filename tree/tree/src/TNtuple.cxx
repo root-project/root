@@ -380,7 +380,7 @@ void SkipWSCharacters(std::istream &input)
 //______________________________________________________________________________
 bool NextCharacterIsEOL(std::istream &input)
 {
-   //Valid here means it's a digit.
+   //Either '\r' | '\n' or eof of some problem.
    if (!input.good())
       return true;
    
