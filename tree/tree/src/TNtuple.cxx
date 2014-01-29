@@ -38,10 +38,11 @@
 
 ClassImp(TNtuple)
 
-//Some aux. functions to read tuple from a text file. No reason to make them memeber-functions.
+
 
 namespace {
 
+//Some aux. functions to read tuple from a text file. No reason to make them memeber-functions.
 //file:
 //    lines
 //
