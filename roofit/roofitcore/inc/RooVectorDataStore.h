@@ -713,6 +713,10 @@ public:
     return _realfStoreList.back() ;
   }
 
+  virtual Bool_t hasFilledCache() const { return _cache ? kTRUE : kFALSE ; }  
+
+  void forceCacheUpdate() ; 
+
  private:
   RooArgSet _varsww ;
   RooRealVar* _wgtVar ;     // Pointer to weight variable (if set)
@@ -745,6 +749,8 @@ public:
 
   RooVectorDataStore* _cache ; //! Optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
+
+  Bool_t _forcedUpdate ; //! Request for forced cache update 
 
   ClassDef(RooVectorDataStore,2) // STL-vector-based Data Storage class
 };

@@ -109,12 +109,14 @@ public:
 
   virtual void checkInit() const {} ;
   
-  Bool_t hasFilledCache() const { return _cachedVars.getSize()>0 ; }
-
+  virtual Bool_t hasFilledCache() const { return kFALSE ; }
+  
   virtual const TTree* tree() const { return 0 ; }
   virtual void dump() {} 
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000) = 0 ;
+
+  virtual void forceCacheUpdate() {} ;
   
  protected:
 
