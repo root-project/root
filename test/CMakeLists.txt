@@ -24,6 +24,9 @@ ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
+#---Defines some of the tutorials as tests----------------------------------------------------
+ROOT_ADD_TEST(macro-hsimple COMMAND ${ROOT_root_CMD} -b -q ${ROOT_SOURCE_DIR}/tutorials/hsimple.C)
+
 #---event-------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(Event Event.cxx EventDict.cxx LIBRARIES Hist MathCore)
