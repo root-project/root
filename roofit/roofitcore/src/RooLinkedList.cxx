@@ -176,6 +176,7 @@ namespace RooLinkedListImplDetails {
   {
     // find from which chunk el came
     AddrMap::iterator ci = _addrmap.lower_bound(el);
+    if (ci == _addrmap.end()) return;
     if (!_addrmap.empty() && _addrmap.begin() != ci && ci->first != el) --ci;
     // ci should now point to the chunk which might contain el
     if (_addrmap.empty() || !ci->second->contains(el)) {

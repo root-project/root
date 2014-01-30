@@ -206,7 +206,7 @@ Double_t* RooBinning::array() const
 
   delete[] _array;
   _array = new Double_t[numBoundaries()];
-  std::copy(&_boundaries[_blo], &_boundaries[_blo + _nbins + 1], _array);
+  std::copy(_boundaries.begin()+_blo, _boundaries.begin()+_blo+_nbins+1, _array);
   return _array;
 }
 
