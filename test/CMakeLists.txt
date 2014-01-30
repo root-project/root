@@ -19,6 +19,11 @@ else()
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
 endif()
 
+macro(ROOT_ADD_MACRO macrofile)
+  get_filename_component(name ${macrofile} NAME_WE)
+  ROOT_ADD_TEST(macro-${name} COMMAND ${ROOT_root_CMD} -b -q ${macrofile} PASSRC 1 FAILREGEX Error)
+endmacro()
+
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 
@@ -26,7 +31,7 @@ ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 
 #---Defines some of the tutorials as tests----------------------------------------------------
-ROOT_ADD_TEST(macro-hsimple COMMAND ${ROOT_root_CMD} -b -q ${ROOT_SOURCE_DIR}/tutorials/hsimple.C)
+ROOT_ADD_MACRO(${ROOT_SOURCE_DIR}/tutorials/hsimple.C)
 
 #---event-------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
@@ -179,7 +184,7 @@ ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
-              FAILREGEX "FAILED|Error")
+              FAILREGEX Error|FAILED)
 
 #--stressHepix-------------------------------------------------------------------------------
 #ROOT_EXECUTABLE(stressHepix stressHepix.cxx LIBRARIES Core)

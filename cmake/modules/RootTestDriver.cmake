@@ -9,6 +9,7 @@
 #     ENV evironment VAR1=Value1;VAR2=Value2
 #     CWD current working directory
 #     DBG debug flag
+#     RC  return code for success
 
 if(DBG)
   message(STATUS "ENV=${ENV}")
@@ -87,10 +88,9 @@ if(CMD)
   execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
 
   #---Return error is test returned an error code of write somthing to the stderr---------------------
-  #if(_errvar)
-  #  message(FATAL_ERROR "output error: ${_errvar}")
-  #endif()
-  if(_rc)
+  if(DEFINED RC AND (NOT _rc EQUAL RC))
+    message(FATAL_ERROR "error code: ${_rc}")
+  elseif(_rc)
     message(FATAL_ERROR "error code: ${_rc}")
   endif()
 endif()

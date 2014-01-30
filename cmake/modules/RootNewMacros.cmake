@@ -608,12 +608,13 @@ endmacro()
 #                        [SOURCE_DIR dir] [BINARY_DIR dir]
 #                        [WORKING_DIR dir]
 #                        [BUILD target] [PROJECT project]
-#                        [PASSREGEX exp] [FAILREGEX epx])
+#                        [PASSREGEX exp] [FAILREGEX epx]
+#                        [PASSRC code])
 #
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG"
-                             "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSREGEX;FAILREGEX"
-                             "COMMAND;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS"
+                             "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
+                             "COMMAND;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS;PASSREGEX;FAILREGEX"
                         ${ARGN})
   #- Handle COMMAND argument
   list(LENGTH ARG_COMMAND _len)
@@ -664,6 +665,10 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_DEBUG)
     set(_command ${_command} -DDBG=ON)
+  endif()
+
+  if(ARG_PASSRC)
+    set(_command ${_command} -DRC=${ARG_PASSRC})
   endif()
 
   #- Handle ENVIRONMENT argument
