@@ -90,7 +90,7 @@ if(CMD)
   #---Return error is test returned an error code of write somthing to the stderr---------------------
   if(DEFINED RC AND (NOT _rc EQUAL RC))
     message(FATAL_ERROR "error code: ${_rc}")
-  elseif(_rc)
+  elseif(NOT DEFINED RC AND _rc)
     message(FATAL_ERROR "error code: ${_rc}")
   endif()
 endif()
