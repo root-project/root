@@ -822,8 +822,10 @@ Bool_t PyROOT::TRootObjectConverter::SetArg(
 //
 // Original code:
 // if ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
-   if ( pyobj->ObjectIsA() && gInterpreter->ClassInfo_IsBase(
-           pyobj->ObjectIsA()->GetClassInfo(), fClass.GetClass()->GetName() ) ) {
+   if ( pyobj->ObjectIsA() && fClass.GetClass() && pyobj->ObjectIsA()->GetClassInfo() &&
+        ( pyobj->ObjectIsA() == fClass.GetClass() ||
+          gInterpreter->ClassInfo_IsBase(
+             pyobj->ObjectIsA()->GetClassInfo(), fClass.GetClass()->GetName()) ) ) {
 // -- END CLING WORKAROUND
    // depending on memory policy, some objects need releasing when passed into functions
       if ( ! KeepControl() && user != Utility::kStrict )
