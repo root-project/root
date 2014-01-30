@@ -10,7 +10,7 @@ ROOT_USE_PACKAGE(graf3d/g3d)
 ROOT_USE_PACKAGE(tree/tree)
 
 
-ROOT_GENERATE_DICTIONARY(G__${libname} T*.h LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__${libname} T*.h MODULE ${libname} LINKDEF LinkDef.h)
 
 
 ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES Geom Tree Graf3d Hist Gpad RIO)

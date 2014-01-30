@@ -26,7 +26,7 @@ if(ROOT_PLATFORM MATCHES "linux" AND CMAKE_COMPILER_IS_GNUCXX AND
   set_source_files_properties(src/TDataSetManager.cxx src/TDSet PROPERTIES COMPILE_FLAGS "-O")
 endif()
 
-ROOT_GENERATE_DICTIONARY(G__Proof ${headers} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Proof ${headers} MODULE Proof LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Proof ${sources} G__Proof.cxx DEPENDENCIES Net Tree Thread RIO MathCore)
 ROOT_INSTALL_HEADERS()

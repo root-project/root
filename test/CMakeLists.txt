@@ -34,7 +34,7 @@ ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 ROOT_ADD_MACRO(${ROOT_SOURCE_DIR}/tutorials/hsimple.C)
 
 #---event-------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
+ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h MODULE Event LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(Event Event.cxx EventDict.cxx LIBRARIES Hist MathCore)
 
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
@@ -74,15 +74,15 @@ ROOT_EXECUTABLE(vlazy vlazy.cxx LIBRARIES Core Matrix)
 ROOT_ADD_TEST(test-vlazy COMMAND vlazy)
 
 #--helloso------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(HelloDict ${CMAKE_CURRENT_SOURCE_DIR}/Hello.h)
+ROOT_GENERATE_DICTIONARY(HelloDict ${CMAKE_CURRENT_SOURCE_DIR}/Hello.h MODULE Hello)
 ROOT_LINKER_LIBRARY(Hello Hello.cxx HelloDict.cxx LIBRARIES Graf Gpad)
 
 #--Aclockso------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(AclockDict ${CMAKE_CURRENT_SOURCE_DIR}/Aclock.h)
+ROOT_GENERATE_DICTIONARY(AclockDict ${CMAKE_CURRENT_SOURCE_DIR}/Aclock.h MODULE Aclock)
 ROOT_LINKER_LIBRARY(Aclock Aclock.cxx AclockDict.cxx LIBRARIES Graf Gpad)
 
 #--bench------------------------------------------------------------------------------------
-ROOT_GENERATE_DICTIONARY(TBenchDict ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h LINKDEF benchLinkDef.h)
+ROOT_GENERATE_DICTIONARY(TBenchDict ${CMAKE_CURRENT_SOURCE_DIR}/TBench.h MODULE TBench LINKDEF benchLinkDef.h)
 ROOT_LINKER_LIBRARY(TBench TBench.cxx TBenchDict.cxx LIBRARIES Core MathCore RIO Tree)
 ROOT_EXECUTABLE(bench bench.cxx LIBRARIES Core TBench)
 ROOT_ADD_TEST(test-bench COMMAND bench)

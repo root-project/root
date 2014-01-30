@@ -1,4 +1,4 @@
-#include "tmva/inc/LinkDef1.h"
-#include "tmva/inc/LinkDef2.h"
-#include "tmva/inc/LinkDef3.h"
-#include "tmva/inc/LinkDef4.h"
+#include "LinkDef1.h"
+#include "LinkDef2.h"
+#include "LinkDef3.h"
+#include "LinkDef4.h"

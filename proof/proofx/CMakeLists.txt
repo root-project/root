@@ -20,7 +20,7 @@ include_directories(${XROOTD_INCLUDE_DIRS})
 link_directories(${XROOTD_LIBRARY_DIR})
 add_definitions(${XROOTD_CFLAGS})
 
-ROOT_GENERATE_DICTIONARY(G__Proofx ${headers} LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Proofx ${headers} MODULE Proofx LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Proofx ${sources} G__Proofx.cxx LIBRARIES ${XROOTD_LIBRARIES} XrdProofd DEPENDENCIES Net Proof Thread )
 

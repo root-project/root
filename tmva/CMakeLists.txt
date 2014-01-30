@@ -50,14 +50,9 @@ foreach(hs headers1 headers2 headers3 headers4)
   endforeach()
 endforeach()
 
-ROOT_GENERATE_DICTIONARY(G__TMVA1 ${theaders1} LINKDEF LinkDef1.h)
-ROOT_GENERATE_DICTIONARY(G__TMVA2 ${theaders2} LINKDEF LinkDef2.h)
-ROOT_GENERATE_DICTIONARY(G__TMVA3 ${theaders3} LINKDEF LinkDef3.h)
-ROOT_GENERATE_DICTIONARY(G__TMVA4 ${theaders4} LINKDEF LinkDef4.h)
+ROOT_GENERATE_DICTIONARY(G__TMVA ${theaders1} ${theaders2} ${theaders3} ${theaders4} MODULE TMVA LINKDEF LinkDef.h)
 
-
-
-ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA1.cxx G__TMVA2.cxx G__TMVA3.cxx G__TMVA4.cxx LIBRARIES Core
+ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA.cxx LIBRARIES Core
                     DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA

@@ -7,7 +7,7 @@ ROOT_USE_PACKAGE(montecarlo/eg)
 ROOT_USE_PACKAGE(montecarlo/vmc)
 ROOT_USE_PACKAGE(math/physics)
 
-ROOT_GENERATE_DICTIONARY(G__Pythia6 *.h  LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Pythia6 *.h  MODULE EGPythia6 LINKDEF LinkDef.h)
 
 if(pythia6_nolink)
   string(REGEX REPLACE "-Wl,--no-undefined" "" CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS}")

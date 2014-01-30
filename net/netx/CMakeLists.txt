@@ -10,7 +10,7 @@ include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 #---------------------------------------------------------------------------
 
-ROOT_GENERATE_DICTIONARY(G__Netx *.h LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Netx *.h MODULE Netx LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Netx *.cxx G__Netx.cxx LIBRARIES ${XROOTD_LIBRARIES} DEPENDENCIES Net RIO Thread)
 

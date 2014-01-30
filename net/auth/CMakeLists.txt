@@ -24,12 +24,11 @@ add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsafun.cxx)
 
-ROOT_GENERATE_DICTIONARY(G__RootAuth ${headers} LINKDEF LinkDefRoot.h)
-
+ROOT_GENERATE_DICTIONARY(G__RootAuth ${headers} MODULE RootAuth LINKDEF LinkDefRoot.h)
 ROOT_LINKER_LIBRARY(RootAuth ${sources} G__RootAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES Net RIO )
 
 if(afs)
-  ROOT_GENERATE_DICTIONARY(G__AFSAuth AFSAuth.h AFSAuthTypes.h TAFS.h LINKDEF LinkDefAFS.h)
+  ROOT_GENERATE_DICTIONARY(G__AFSAuth AFSAuth.h AFSAuthTypes.h TAFS.h MODULE AFSAuth LINKDEF LinkDefAFS.h)
   ROOT_LINKER_LIBRARY(AFSAuth AFSAuth.cxx TAFS.cxx G__AFSAuth.cxx LIBRARIES ${CRYPTLIBS} DEPENDENCIES  Net RIO )
 endif()
 
