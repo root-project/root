@@ -248,12 +248,12 @@ public:
       } else {
 	_vec.resize(siz);
       }
-      _vec0 = &_vec.front();
+      _vec0 = _vec.size() > 0 ? &_vec.front() : 0;
     }
 
     void reserve(Int_t siz) {
       _vec.reserve(siz);
-      _vec0 = &_vec.front();
+      _vec0 = _vec.size() > 0 ? &_vec.front() : 0;
     }
 
   protected:
@@ -538,12 +538,12 @@ public:
       } else {
 	_vec.resize(siz);
       }
-      _vec0 = &_vec.front();
+      _vec0 = _vec.size() > 0 ? &_vec.front() : 0;
     }
 
     void reserve(Int_t siz) {
       _vec.reserve(siz);
-      _vec0 = &_vec.front();
+      _vec0 = _vec.size() > 0 ? &_vec.front() : 0;
     }
 
     void setBufArg(RooAbsCategory* arg) { _cat = arg; }
