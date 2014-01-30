@@ -53,7 +53,7 @@ void goftest() {
 
    TCanvas* c = new TCanvas("c","1-Sample and 2-Samples GoF Tests");
    c->Divide(1, 2);
-   TPad * pad = c->cd(1);
+   TPad * pad = (TPad *)c->cd(1);
    h1smp->Draw();
    h1smp->SetLineColor(kBlue);
    pad->SetLogy();
