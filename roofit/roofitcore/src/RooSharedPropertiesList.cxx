@@ -43,6 +43,7 @@ ClassImp(RooSharedPropertiesList)
 RooSharedPropertiesList::RooSharedPropertiesList() 
 {
   // Constructor
+   _propList.setHashTableSize(1000);
 } 
 
 
@@ -89,7 +90,11 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
 
   // Find property with identical uuid in list
   RooFIter iter = _propList.fwdIterator() ;
+
+  //std::cout << "REGISTER properties " << prop->asString() << " - list size = " << _propList.GetSize() << std::endl;
   RooSharedProperties* tmp ;
+
+#ifdef OLD
   while((tmp=(RooSharedProperties*)iter.next())) {
     if (tmp != prop && *tmp==*prop) {
       // Found another instance of object with identical UUID 
@@ -119,6 +124,26 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   prop->setInSharedList() ;
   prop->increaseRefCount() ;
   _propList.Add(prop) ;
+#else 
+  
+  std::map<std::string, RooSharedProperties *>::iterator it; 
+
+  it = _newPropList.find( std::string(prop->asString()) ); 
+  if (it != _newPropList.end() ) {
+     tmp = it->second; 
+     if (tmp != prop) { 
+        // found another instance with same UUID
+        if (canDeleteIncoming) delete prop; 
+     }
+     tmp->increaseRefCount(); 
+     return tmp;
+  }
+  prop->setInSharedList() ;
+  prop->increaseRefCount() ;
+  _newPropList[ std::string(prop->asString()) ] = prop; 
+
+#endif
+
   return prop ;
 }
 

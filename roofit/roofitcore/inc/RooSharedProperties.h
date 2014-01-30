@@ -18,6 +18,7 @@
 
 #include "TObject.h"
 #include "TUUID.h"
+#include "TString.h"
 
 class RooSharedProperties : public TObject {
 public:
@@ -37,6 +38,8 @@ public:
 
   void setInSharedList() { _inSharedList = kTRUE ; }
   Bool_t inSharedList() const { return _inSharedList ; }
+
+   TString asString() { return TString(_uuid.AsString()); }
 
 protected:
 
