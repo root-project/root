@@ -21,6 +21,7 @@
 #include "TClassStreamer.h"
 #include "TCollectionProxyInfo.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualMutex.h"
 #include "TMemberInspector.h"
 #include "RVersion.h"
 #include "Reflex/Reflex.h"
@@ -43,6 +44,8 @@
 using namespace ROOT::Reflex;
 using namespace ROOT::Cintex;
 using namespace std;
+
+static TVirtualMutex* gCintexMutex = 0;
 
 namespace ROOT { namespace Cintex {
 
@@ -174,7 +177,10 @@ namespace ROOT { namespace Cintex {
       // Constructor.
       fType = CleanType(t);
       fName = CintName(fType);
-      rootEnhancerInfos().push_back(this);
+      {
+	R__LOCKGUARD2(gCintexMutex);
+	rootEnhancerInfos().push_back(this);
+      }
       fMyType = &t.TypeInfo();
       fIsVirtual = TypeGet().IsVirtual();
       fClassInfo = 0;
@@ -373,7 +379,8 @@ namespace ROOT { namespace Cintex {
          if ( &typ == fMyType )  {
             return Tclass();
          }
-         else if ( &typ == fLastType )  {
+	 R__LOCKGUARD2(gCintexMutex);
+         if ( &typ == fLastType )  {
             return fLastClass;
          }
          // Check if TypeNth is already in sub-class cache
