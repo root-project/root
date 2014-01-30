@@ -32,6 +32,7 @@
 #include "TBrowser.h"
 #include "Riostream.h"
 #include "TClass.h"
+#include "TreeUtils.h"
 
 ClassImp(TNtupleD)
 
@@ -199,7 +200,8 @@ Long64_t TNtupleD::ReadStream(istream &inputStream, const char * /*branchDescrip
 // the function returns the number of rows found in the file
 // The second argument "branchDescriptor" is currently not used.
 // Lines in the input file starting with "#" are ignored.
-         
+
+   /*
    Long64_t nlines = 0;
    char newline = GetNewlineValue(inputStream);
    while (1) {
@@ -217,6 +219,10 @@ Long64_t TNtupleD::ReadStream(istream &inputStream, const char * /*branchDescrip
       inputStream.ignore(8192,newline);   
    }
    return nlines;
+   */
+   
+   //The last argument - false == strict mode.
+   return ROOT::TreeUtils::FillNtupleFromStream<Double_t, TNtupleD>(inputStream, *this, delimiter, false);
 }
 
 //_______________________________________________________________________
