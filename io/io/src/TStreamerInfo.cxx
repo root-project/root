@@ -561,7 +561,6 @@ void TStreamerInfo::BuildCheck()
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   const TObjArray* array = 0;
    fClass = TClass::GetClass(GetName());
    if (!fClass) {
       // fClassVersion should have been a Version_t and/or Version_t 
@@ -570,7 +569,6 @@ void TStreamerInfo::BuildCheck()
       // leave it as is for now.
       fClass = new TClass(GetName(), (Version_t)fClassVersion);
       fClass->SetBit(TClass::kIsEmulation);
-      array = fClass->GetStreamerInfos();
      
       // Case of a custom collection (the user provided a CollectionProxy
       // for a class that is not an STL collection).
@@ -614,7 +612,7 @@ void TStreamerInfo::BuildCheck()
          SetBit(kCanDelete);
          return;
       }
-      array = fClass->GetStreamerInfos();
+      const TObjArray *array = fClass->GetStreamerInfos();
       TStreamerInfo* info = 0;
 
       if (fClass->TestBit(TClass::kIsEmulation) && array->GetEntries()==0) {
