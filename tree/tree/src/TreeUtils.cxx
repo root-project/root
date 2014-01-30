@@ -20,6 +20,7 @@
 
 #include <istream>
 #include <cassert>
+#include <cctype>
 
 #include "TreeUtils.h"
 #include "TNtupleD.h"

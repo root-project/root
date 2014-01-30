@@ -35,7 +35,6 @@
 #include "TreeUtils.h"
 
 #include <string>
-#include <cctype>
 
 ClassImp(TNtuple)
 
