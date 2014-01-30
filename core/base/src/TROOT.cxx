@@ -653,7 +653,8 @@ TROOT::~TROOT()
       // Cleanup system class
       delete gSystem;
 
-      if (gInterpreterLib) dlclose(gInterpreterLib);
+      // ROOT-6022:
+      //   if (gInterpreterLib) dlclose(gInterpreterLib);
 #ifdef R__COMPLETE_MEM_TERMINATION
       // On some 'newer' platform (Fedora Core 17+, Ubuntu 12), the
       // initialization order is (by default?) is 'wrong' and so we can't
