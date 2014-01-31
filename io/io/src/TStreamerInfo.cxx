@@ -404,11 +404,19 @@ void TStreamerInfo::Build()
             TVirtualCollectionProxy *proxy = TClass::GetClass(dm->GetTypeName() /* the underlying type */)->GetCollectionProxy();
             if (proxy) element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, *proxy, dmIsPtr);
             else element = new TStreamerSTL(dmName, dmTitle, offset, dmFull, dm->GetTrueTypeName(), dmIsPtr);
-            if (fClass->IsLoaded() && ((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
-               if (!element->GetClassPointer()->IsLoaded()) {
-                  Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
-                  delete element;
-                  continue;
+            if (((TStreamerSTL*)element)->GetSTLtype() != ROOT::kSTLvector) {
+               if (fClass->IsLoaded()) {
+                  if (!element->GetClassPointer()->IsLoaded()) {
+                     Error("Build","The class \"%s\" is compiled and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     delete element;
+                     continue;
+                  }
+               } else if (fClass->GetState() == TClass::kInterpreted) {
+                  if (element->GetClassPointer()->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) {
+                     Error("Build","The class \"%s\" is interpreted and for its the data member \"%s\", we do not have a dictionary for the collection \"%s\", we will not be able to read or write this data member.",GetName(),dmName,element->GetClassPointer()->GetName());
+                     delete element;
+                     continue;
+                  }
                }
             }
          } else {
