@@ -1,4 +1,0 @@
-Leave/Enter notify events without grabs.
-
-Red window contains a child window (orange).
-Both have enternotify/leavenotify masks.
