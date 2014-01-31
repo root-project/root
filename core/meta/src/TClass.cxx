@@ -4031,17 +4031,6 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fgCallingNew = defConstructor;
-      p = fCollectionProxy->New();
-      fgCallingNew = kRealNew;
-      if (!p && !quiet) {
-         //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
-         Error("New", "cannot create object of class %s", GetName());
-      }
    } else if (fClassInfo) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
@@ -4059,7 +4048,18 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-   } else /* if (!fNew && !fClassInfo && !fCollectionProxy) */ {
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->New();
+      fgCallingNew = kRealNew;
+      if (!p && !quiet) {
+         //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
+         Error("New", "cannot create object of class %s", GetName());
+      }
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4094,6 +4094,8 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
       if (p) {
          RegisterAddressInRepository("New",p,this);
       }
+   } else {
+      Fatal("New", "This cannot happen!");
    }
 
    return p;
@@ -4119,13 +4121,6 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fgCallingNew = defConstructor;
-      p = fCollectionProxy->New(arena);
-      fgCallingNew = kRealNew;
    } else if (fClassInfo) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
@@ -4142,7 +4137,14 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else /* if (!fNew && !fClassInfo && !fCollectionProxy) */ {
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->New(arena);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4175,6 +4177,8 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       if (p) {
          RegisterAddressInRepository("TClass::New with placement",p,this);
       }
+   } else {
+      Error("New with placement", "This cannot happen!");
    }
 
    return p;
@@ -4201,13 +4205,6 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fgCallingNew = defConstructor;
-      p = fCollectionProxy->NewArray(nElements);
-      fgCallingNew = kRealNew;
    } else if (fClassInfo) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
@@ -4224,7 +4221,14 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
-   } else /*if (!fNewArray && !fClassInfo && !fCollectionProxy) */ {
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->NewArray(nElements);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4257,6 +4261,8 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       if (p) {
          RegisterAddressInRepository("TClass::NewArray",p,this);
       }
+   } else {
+      Error("NewArray", "This cannot happen!");
    }
 
    return p;
@@ -4282,13 +4288,6 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fgCallingNew = defConstructor;
-      p = fCollectionProxy->NewArray(nElements, arena);
-      fgCallingNew = kRealNew;
    } else if (fClassInfo) {
       // We have the dictionary but do not have the constructor wrapper,
       // so the dictionary was not generated by rootcint (it was made either
@@ -4305,7 +4304,14 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else /* if (!fNewArray && !fClassInfo && !fCollectionProxy) */ {
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fgCallingNew = defConstructor;
+      p = fCollectionProxy->NewArray(nElements, arena);
+      fgCallingNew = kRealNew;
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4343,6 +4349,8 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       if (p) {
          RegisterAddressInRepository("TClass::NewArray with placement",p,this);
       }
+   } else {
+      Error("NewArray with placement", "This cannot happen!");
    }
 
    return p;
@@ -4364,11 +4372,6 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    } else if ((!dtorOnly) && fDelete) {
       // We have the delete wrapper, use it.
       fDelete(p);
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fCollectionProxy->Destructor(p, dtorOnly);
    } else if (fClassInfo) {
       // We have the dictionary but do not have the
       // destruct/delete wrapper, so the dictionary was
@@ -4383,7 +4386,12 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       } else {
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
-   } else /* if (!fDestructor && !fClassInfo && !fCollectionProxy) */{
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fCollectionProxy->Destructor(p, dtorOnly);
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4456,6 +4464,8 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       if (inRepo && verFound && p) {
          UnregisterAddressInRepository("TClass::Destructor",p,this);
       }
+   } else {
+      Error("Destructor", "This cannot happen! (class %s)", GetName());
    }
 }
 
@@ -4477,11 +4487,6 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
          // We have the array delete wrapper, use it.
          fDeleteArray(ary);
       }
-   } else if (fCollectionProxy) {
-      // There is no dictionary at all, so this is an emulated
-      // class; however we do have the services of a collection proxy,
-      // so this is an emulated STL class.
-      fCollectionProxy->DeleteArray(ary, dtorOnly);
    } else if (fClassInfo) {
       // We have the dictionary but do not have the
       // array delete wrapper, so the dictionary was
@@ -4492,7 +4497,12 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // a destructor we can call.
       R__LOCKGUARD2(gInterpreterMutex);
       gCling->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
-   } else /* if (fDeteleArray && !fClassInfo && !fCollectionProxy) */ {
+   } else if (!fClassInfo && fCollectionProxy) {
+      // There is no dictionary at all, so this is an emulated
+      // class; however we do have the services of a collection proxy,
+      // so this is an emulated STL class.
+      fCollectionProxy->DeleteArray(ary, dtorOnly);
+   } else if (!fClassInfo && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling the
@@ -4570,6 +4580,8 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       if (inRepo && verFound && p) {
          UnregisterAddressInRepository("TClass::DeleteArray",p,this);
       }
+   } else {
+      Error("DeleteArray", "This cannot happen! (class '%s')", GetName());
    }
 }
 
