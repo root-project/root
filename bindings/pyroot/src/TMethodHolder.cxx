@@ -352,22 +352,13 @@ Int_t PyROOT::TMethodHolder::GetPriority()
    const size_t nArgs = fMethod.FunctionParameterSize();
    for ( size_t iarg = 0; iarg < nArgs; ++iarg ) {
       const TScopeAdapter& arg = fMethod.TypeOf().FunctionParameterAt( iarg );
+      const std::string aname = arg.Name( Rflx::FINAL | Rflx::QUALIFIED );
 
    // the following numbers are made up and may cause problems in specific
    // situations: use <obj>.<meth>.disp() for choice of exact dispatch
-      if ( arg.IsClass() || arg.IsStruct() ) {
-         if ( ! (Bool_t)arg ) {
-            priority -= 10000;   // class is gibberish
-         } else if ( ! arg.IsComplete() ) {
-         // class is known, but no dictionary available, 2 more cases: * and &
-            const std::string aname = arg.Name( Rflx::QUALIFIED );
-            if ( aname[ aname.size() - 1 ] == '&' )
-               priority -= 3000;
-            else
-               priority -= 1000; // prefer pointer passing over reference
-         }
-      } else {
-         const std::string aname = arg.Name( Rflx::FINAL | Rflx::QUALIFIED );
+      if ( ! (Bool_t)arg ) {
+      // happens for builtin types (and namespaces, but those can never be an
+      // argument), NOT for unknown classes as that concept no longer exists
          if ( aname == "void*" )
             priority -= 100;  // void* shouldn't be too greedy
          else if ( aname == "float" )
@@ -375,8 +366,17 @@ Int_t PyROOT::TMethodHolder::GetPriority()
          else if ( aname == "double" )
             priority -= 10;   // char, int, long preferred over double
 
-      // resolve a few special cases
-         else if ( aname == "IBaseFunctionMultiDim")
+      } else if ( ! arg.IsComplete() ) {
+      // class is known, but no dictionary available, 2 more cases: * and &
+         if ( aname[ aname.size() - 1 ] == '&' )
+            priority -= 3000;
+         else
+            priority -= 1000; // prefer pointer passing over reference
+
+      } else {
+      // resolve a few special cases (these are valid & known, but are lined up
+      // with derived classes in there interface that should have preference
+         if ( aname == "IBaseFunctionMultiDim")
             priority -= 1;
          else if ( aname == "RooAbsReal" )
             priority -= 1;

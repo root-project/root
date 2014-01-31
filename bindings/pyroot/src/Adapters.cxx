@@ -406,6 +406,8 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
 // verify whether the dictionary of this class is fully available
    Bool_t b = kFALSE;
 
+   Int_t oldEIL = gErrorIgnoreLevel;
+   gErrorIgnoreLevel = 3000;
    std::string scname = Name( Rflx::SCOPED );
    TClass* klass = TClass::GetClass( scname.c_str() );
    if ( klass && klass->GetClassInfo() )     // works for normal case w/ dict
@@ -417,6 +419,7 @@ Bool_t PyROOT::TScopeAdapter::IsComplete() const
          gInterpreter->ClassInfo_Delete( ci );    // we own the fresh class info
       }
    }
+   gErrorIgnoreLevel = oldEIL;
    return b;
 }
 
