@@ -1,0 +1,4 @@
+exec_root_6023.py:8: RuntimeWarning: creating executor for unknown type "string(&)[2]"
+  print c.value()
+
+<Long_t buffer, size 1>
