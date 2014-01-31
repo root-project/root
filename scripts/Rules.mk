@@ -62,11 +62,13 @@ ALL_EXEC_CXX   := $(wildcard exec*.cxx)
 ALL_EXEC_C     := $(wildcard exec*.C)
 ALL_ASSERT_CXX := $(wildcard assert*.cxx)
 ALL_ASSERT_C   := $(wildcard assert*.C)
+ALL_EXEC_PY    := $(wildcard exec*.py)
 
 TEST_TARGETS_DIR = $(SUBDIRS:%=%.test)
 TEST_TARGETS += $(TEST_TARGETS_DIR) \
      $(subst .C,,$(ALL_ASSERT_C))  $(subst .cxx,,$(ALL_ASSERT_CXX)) \
-     $(subst .C,,$(ALL_EXEC_C))  $(subst .cxx,,$(ALL_EXEC_CXX))
+     $(subst .C,,$(ALL_EXEC_C))  $(subst .cxx,,$(ALL_EXEC_CXX)) \
+     $(subst .py,,$(ALL_EXEC_PY)) 
 
 # allow tests to be disabled by putting their names into a file called !DISABLE
 ifneq ($(MAKECMDGOALS),clean)
@@ -765,9 +767,14 @@ $(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref
 $(subst .C,.success,$(ALL_EXEC_C)) : %.success: %.log %.ref 
 	$(SuccessTestDiff) && touch $@
 
+$(subst .py,.success,$(ALL_EXEC_PY)) : %.success: %.log %.ref 
+	$(SuccessTestDiff) && touch $@
+
 $(subst .cxx,,$(ALL_EXEC_CXX)) : %: %.success 
 
 $(subst .C,,$(ALL_EXEC_C)) : %: %.success 
+
+$(subst .py,,$(ALL_EXEC_PY)) : %: %.success 
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)

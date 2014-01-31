@@ -70,7 +70,7 @@ be compared to an empty file.
 
 To check both the output streams, instead of using the assert file names,
 use the names:
-    execMytest.C or execMytest.cxx
+    execMytest.C or execMytest.cxx or execMyTest.py
 
 After running the test (successfully) once you will need to copy the log file over to
 the ref file as the standard output is never empty.
