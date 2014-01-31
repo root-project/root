@@ -474,6 +474,8 @@ Int_t RooMinimizer::minos(const RooArgSet& minosParamList)
       _theFitter->Config().SetMinimizer(_minimizerType.c_str());
       bool ret = _theFitter->CalculateMinosErrors();
       _status = ((ret) ? _theFitter->Result().Status() : -1);
+      // to avoid that following minimization computes automatically the Minos errors
+      _theFitter->Config().SetMinosErrors(kFALSE);
 
     }
 

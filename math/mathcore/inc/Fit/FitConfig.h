@@ -194,7 +194,7 @@ public:
    ///set parabolic erros
    void SetParabErrors(bool on = true) { fParabErrors = on; } 
 
-   ///set Minos erros
+   ///set Minos erros computation to be performed after fitting
    void SetMinosErrors(bool on = true) { fMinosErrors = on; } 
 
    ///apply the weight correction for error matric computation
