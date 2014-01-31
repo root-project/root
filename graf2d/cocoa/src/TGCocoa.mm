@@ -493,7 +493,6 @@ Int_t TGCocoa::GetDepth() const
 {
    //Comment from TVirtualX:
    // Returns depth of screen (number of bit planes).
-   // Equivalent to GetPlanes().
    //End of comment.
 
    NSArray * const screens = [NSScreen screens];
@@ -2855,9 +2854,10 @@ ULong_t TGCocoa::GetPixel(Color_t rootColorIndex)
 }
 
 //______________________________________________________________________________
-void TGCocoa::GetPlanes(Int_t & /*nplanes*/)
+void TGCocoa::GetPlanes(Int_t &nPlanes)
 {
-   // Returns the maximum number of planes.
+   //Implemented as NSBitsPerPixelFromDepth([mainScreen depth]);
+   nPlanes = GetDepth();
 }
 
 //______________________________________________________________________________
