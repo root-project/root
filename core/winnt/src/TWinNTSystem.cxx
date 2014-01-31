@@ -2842,6 +2842,10 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
    if (!proto.EqualTo("file")) // don't expand urls!!!
       return kFALSE;
 
+   // skip the "file:" protocol, if any
+   if (patbuf0.BeginsWith("file:"))
+      patbuf += 5;
+
    // skip leading blanks
    while (*patbuf == ' ') {
       patbuf++;
