@@ -356,11 +356,13 @@ void TSAXParserCallback::Warning(void * fParser, const char *va_(fmt), ...)
    TSAXParser *parser = (TSAXParser*)fParser;
 
    va_list arg;
-   TString buff;
+   char buffer[2048];
 
    va_start(arg, va_(fmt));
-   buff.Form(va_(fmt), arg);
+   vsnprintf(buffer, 2048, va_(fmt), arg);
    va_end(arg);
+
+   TString buff(buffer);
 
    parser->OnWarning(buff.Data());
 }
@@ -373,12 +375,15 @@ void TSAXParserCallback::Error(void *fParser, const char *va_(fmt), ...)
 
    Int_t errorcode;
    TSAXParser *parser = (TSAXParser*)fParser;
+
    va_list arg;
-   TString buff;
+   char buffer[2048];
 
    va_start(arg, va_(fmt));
-   buff.Form(va_(fmt), arg);
+   vsnprintf(buffer, 2048, va_(fmt), arg);
    va_end(arg);
+
+   TString buff(buffer);
 
    errorcode = parser->OnError(buff.Data());
    if (errorcode < 0) { //When error occurs, write fErrorCode
@@ -399,12 +404,15 @@ void TSAXParserCallback::FatalError(void *fParser, const char *va_(fmt), ...)
 
    Int_t errorcode;
    TSAXParser *parser = (TSAXParser*)fParser;
+
    va_list arg;
-   TString buff;
+   char buffer[2048];
 
    va_start(arg, va_(fmt));
-   buff.Form(va_(fmt), arg);
+   vsnprintf(buffer, 2048, va_(fmt), arg);
    va_end(arg);
+
+   TString buff(buffer);
 
    errorcode = parser->OnFatalError(buff);
    if (errorcode < 0) {
