@@ -509,9 +509,20 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
    }
    while (1) {
       if (QT->isArrayType()) {
-         ++ptrCnt;
-         QT = cast<clang::ArrayType>(QT)->getElementType();
-         continue;
+         string ar_typedef_name;
+         {
+            ostringstream ar;
+            ar << "AR" << wrapper_serial++;
+            type_name = ar.str();
+            raw_string_ostream OS(ar_typedef_name);
+            QT.print(OS, Policy, type_name);
+            OS.flush();
+         }
+         for (int i = 0; i < indent_level; ++i) {
+            typedefbuf << indent_string;
+         }
+         typedefbuf << "typedef " << ar_typedef_name << ";\n";
+         break;
       }
       else if (QT->isFunctionPointerType()) {
          string fp_typedef_name;
