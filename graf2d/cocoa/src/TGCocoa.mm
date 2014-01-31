@@ -2855,9 +2855,10 @@ ULong_t TGCocoa::GetPixel(Color_t rootColorIndex)
 }
 
 //______________________________________________________________________________
-void TGCocoa::GetPlanes(Int_t & /*nplanes*/)
+void TGCocoa::GetPlanes(Int_t &nPlanes)
 {
-   // Returns the maximum number of planes.
+   //Implemented as NSBitsPerPixelFromDepth([mainScreen depth]);
+   nPlanes = GetDepth();
 }
 
 //______________________________________________________________________________
