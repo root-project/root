@@ -281,7 +281,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
       return;
-   } else if (ROOT::gROOTLocal && gInterpreter) {
+   } else if (ROOT::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
       if (oldcl && oldcl->GetClassInfo()) {
          // The TClass exist and already has a class info, so it must
@@ -289,7 +289,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
          // was able to make with the library containing the TClass Init.
          // Because it is already known to the interpreter, the update class info
          // will not be triggered, we need to force it.
-         gInterpreter->RegisterTClassUpdate(oldcl,dict);
+         gCling->RegisterTClassUpdate(oldcl,dict);
       }
    }
 
