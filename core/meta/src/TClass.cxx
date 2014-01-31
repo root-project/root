@@ -1990,6 +1990,8 @@ Bool_t TClass::CanSplit() const
    if (fName.BeginsWith("TMatrixT<")) return kFALSE;
    if (InheritsFrom("TCollection") && !InheritsFrom("TClonesArray")) return kFALSE;
    if (InheritsFrom("TTree"))     return kFALSE;
+   if (fName == "string")         return kFALSE;
+   if (fName == "std::string")    return kFALSE;
 
 //   Uncommenting this would change the default bahavior and disallow the splitting by
 //   default.
