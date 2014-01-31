@@ -676,7 +676,7 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
       isString = true;
    }
    if (isString) {
-      ssize_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
+      size_t offset = isStdString ? basic_string_std_len : basic_string_std_len - 5;
       if ( full[offset] == '>' ) {
          // done.
       } else if (full[offset] == ',') {
@@ -688,8 +688,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          static const unsigned int char_traits_len = strlen(char_traits_s);
          if (full.compare(offset, char_traits_len, char_traits_s) == 0) {
             offset += char_traits_len;
-            if ( full[offset] == '>' ||
-                (full[offset] == ' ' && full[offset+1] == '>')) {
+            if ( full[offset] == '>') {
+               // done.
+            } else if (full[offset] == ' ' && full[offset+1] == '>') {
+               ++offset;
                // done.
             } else if (full[offset] == ',') {
                ++offset;
@@ -700,8 +702,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
                static const unsigned int allocator_len = strlen(allocator_s);
                if (full.compare(offset, allocator_len, allocator_s) == 0) {
                   offset += allocator_len;
-                  if ( full[offset] == '>' ||
-                      (full[offset] == ' ' && full[offset+1] == '>')) {
+                  if ( full[offset] == '>') {
+                     // done.
+                  } else if (full[offset] == ' ' && full[offset+1] == '>') {
+                     ++offset;
                      // done.
                   } else {
                      // Not std::string
@@ -726,6 +730,10 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
             output.push_back("std::string");
          } else {
             output.push_back("string");
+         }
+         if (offset < full.length()) {
+            // Copy the trailing text.
+            output.back().append(full.substr(offset+1));
          }
          return output.size();
       }
