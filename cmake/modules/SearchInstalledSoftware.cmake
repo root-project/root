@@ -593,7 +593,7 @@ if(cling)
                  -DLLVM_TARGETS_TO_BUILD=X86
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-                 -DCMAKE_CC_COMPILER=${CMAKE_CC_COMPILER}
+                 -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                  -DLLVM_NOCLING=ON
     )
@@ -666,7 +666,7 @@ if(cling)
                -DCLING_PATH_TO_LLVM_BUILD=${CMAKE_BINARY_DIR}/LLVM-install
                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-               -DCMAKE_CC_COMPILER=${CMAKE_CC_COMPILER}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     )
     set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
