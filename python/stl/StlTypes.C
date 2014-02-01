@@ -2,11 +2,13 @@
   File: roottest/python/stl/StlTypes.C
   Author: Wim Lavrijsen@lbl.gov
   Created: 10/25/05
-  Last: 07/17/13
+  Last: 01/30/14
 */
 
 #include <list>
 #include <map>
+#include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -38,6 +40,14 @@ public:
    void SetString2( std::string s ) { m_string = s; }
 
    std::string m_string;
+};
+
+class StringStreamUser {
+public:
+   virtual std::ostream& fillStream( std::ostream& s ) const {
+      return s << "StringStreamUser Says Hello!";
+   }
+   virtual ~StringStreamUser() {}
 };
 
 

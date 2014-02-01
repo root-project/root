@@ -18,6 +18,7 @@ Test that strings with NULL do not get truncated ... ok
 Test iterator comparison for vector ... ok
 Test iterator comparison for list ... ok
 Test iterator comparison for map ... ok
+Pass stringstream through ostream& ... ok
 
 ----------------------------------------------------------------------
 
