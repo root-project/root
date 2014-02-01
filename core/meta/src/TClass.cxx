@@ -2289,21 +2289,12 @@ TClass *TClass::GetBaseClass(const char *classname)
 
    if (!fClassInfo) return 0;
 
-   TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
+   // Make sure we deal with possible aliases, we could also have normalized
+   // the name.
+   TClass *search = TClass::GetClass(classname);
 
-   // otherwise look at inheritance tree
-   while (lnk) {
-      TClass     *c, *c1;
-      TBaseClass *base = (TBaseClass*) lnk->GetObject();
-      c = base->GetClassPointer();
-      if (c) {
-         if (strcmp(c->GetName(), classname) == 0) return c;
-         c1 = c->GetBaseClass(classname);
-         if (c1) return c1;
-      }
-      lnk = lnk->Next();
-   }
-   return 0;
+   if (search) return GetBaseClass(search);
+   else return 0;
 }
 
 //______________________________________________________________________________
