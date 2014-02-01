@@ -3311,23 +3311,7 @@ bool ROOT::TMetaUtils::IsStdClass(const clang::RecordDecl &cl)
 {
    // Return true, if the decl is part of the std namespace.
 
-   const clang::DeclContext *ctx = cl.getDeclContext();
-
-   while (ctx && ctx->isInlineNamespace()) {
-      ctx = ctx->getParent();
-   }
-
-   if (ctx && ctx->isNamespace())
-   {
-      const clang::NamedDecl *parent = llvm::dyn_cast<clang::NamedDecl> (ctx);
-      if (parent) {
-         if (parent->getDeclContext()->isTranslationUnit()
-             && parent->getQualifiedNameAsString()=="std") {
-            return true;
-         }
-      }
-   }
-   return false;
+  return cling::utils::Analyze::IsStdClass(cl);
 }
 
 //______________________________________________________________________________
