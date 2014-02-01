@@ -314,7 +314,7 @@ Bool_t PyROOT::Utility::AddUsingToClass( PyObject* pyclass, const char* method )
 
 //____________________________________________________________________________
 Bool_t PyROOT::Utility::AddBinaryOperator(
-   PyObject* left, PyObject* right, const char* op, const char* label )
+   PyObject* left, PyObject* right, const char* op, const char* label, const char* alt )
 {
 // Install the named operator (op) into the left object's class if such a function
 // exists as a global overload; a label must be given if the operator is not in
@@ -329,21 +329,22 @@ Bool_t PyROOT::Utility::AddBinaryOperator(
    std::string lcname = ClassName( left );
    PyObject* pyclass = PyObject_GetAttr( left, PyStrings::gClass );
 
-   Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label );
+   Bool_t result = AddBinaryOperator( pyclass, lcname, rcname, op, label, alt );
 
    Py_DECREF( pyclass );
    return result;
 }
 
 //____________________________________________________________________________
-Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const char* op, const char* label )
+Bool_t PyROOT::Utility::AddBinaryOperator(
+   PyObject* pyclass, const char* op, const char* label, const char* alt )
 {
 // Install binary operator op in pyclass, working on two instances of pyclass.
    PyObject* pyname = PyObject_GetAttr( pyclass, PyStrings::gName );
    std::string cname = ResolveTypedef( PyROOT_PyUnicode_AsString( pyname ) );
    Py_DECREF( pyname ); pyname = 0;
 
-   return AddBinaryOperator( pyclass, cname, cname, op, label );
+   return AddBinaryOperator( pyclass, cname, cname, op, label, alt );
 }
 
 //____________________________________________________________________________
@@ -363,7 +364,7 @@ static inline TFunction* FindAndAddOperator( const std::string& lcname, const st
 }
 
 Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string& lcname,
-   const std::string& rcname, const char* op, const char* label )
+   const std::string& rcname, const char* op, const char* label, const char* alt )
 {
 // Find a global function with a matching signature and install the result on pyclass;
 // in addition, __gnu_cxx is searched pro-actively (as there's AFAICS no way to unearth
@@ -381,9 +382,11 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
       if ( func ) pyfunc = new TFunctionHolder( func );
    }
 
-   if ( pyfunc )    // found a matching overload; add to class
-      return Utility::AddToClass(
-         pyclass, label ? label : gC2POperatorMapping[ op ].c_str(), pyfunc );
+   if ( pyfunc ) {  // found a matching overload; add to class
+      Bool_t ok = AddToClass( pyclass, label, pyfunc );
+      if ( ok && alt )
+         return AddToClass( pyclass, alt, label );
+   }
 
    return kFALSE;
 }
