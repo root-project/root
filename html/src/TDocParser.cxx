@@ -68,13 +68,21 @@ namespace {
             ++l;
             ++r;
          }
-         if (fgClass->InheritsFrom(l)) {
-            if (fgClass->InheritsFrom(r)) {
-               if (gROOT->GetClass(l)->InheritsFrom(r))
-                  return -1;
-               else return 1;
-            } else return -1;
-         } else if (fgClass->InheritsFrom(r))
+         TClass *lcl = 0;
+         TClass *rcl = 0;
+         if (fMeth->Property() & (kIsConstructor|kIsDestructor)) { 
+            lcl = TClass::GetClass(l);
+         }
+         if (m->fMeth->Property() & (kIsConstructor|kIsDestructor)) {
+            rcl = TClass::GetClass(r);
+         }
+         if (lcl && fgClass->InheritsFrom(lcl)) {
+               if (rcl && fgClass->InheritsFrom(rcl)) {
+                  if (lcl->InheritsFrom(rcl))
+                     return -1;
+                  else return 1;
+               } else return -1;
+         } else if (rcl && fgClass->InheritsFrom(rcl))
             return 1;
 
          if (l[0] == '~') return -1;

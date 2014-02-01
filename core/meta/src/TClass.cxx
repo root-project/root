@@ -3910,13 +3910,7 @@ Bool_t TClass::InheritsFrom(const char *classname) const
 
    if (strcmp(GetName(), classname) == 0) return kTRUE;
 
-   if (!fClassInfo) return InheritsFrom(TClass::GetClass(classname));
-
-   // This is faster that calling TClass::GetClass as the search in only in
-   // the 'small' list of base class (rather than the list of classes).
-   // cast const away (only for member fBase which can be set in GetListOfBases())
-   if (((TClass *)this)->GetBaseClass(classname)) return kTRUE;
-   return kFALSE;
+   return InheritsFrom(TClass::GetClass(classname));
 }
 
 //______________________________________________________________________________
