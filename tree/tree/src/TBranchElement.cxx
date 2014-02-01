@@ -5490,7 +5490,7 @@ Int_t TBranchElement::Unroll(const char* name, TClass* clParent, TClass* cl, cha
    //  independently in the tree.
    //
    TStreamerInfo* sinfo = fTree->BuildStreamerInfo(cl);
-   if (sinfo && splitlevel > 0) {
+   if (sinfo && splitlevel > 0 && (!sinfo->IsCompiled() || sinfo->IsOptimized()) ) {
       sinfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
       sinfo->Compile();
    }
