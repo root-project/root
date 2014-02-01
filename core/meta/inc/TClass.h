@@ -39,6 +39,9 @@
 #include <set>
 #include <vector>
 
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 class TBaseClass;
 class TBrowser;
 class TDataMember;
@@ -128,7 +131,11 @@ public:
 private:
 
    mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
+#if __cplusplus > 199711L
+   mutable std::atomic<std::map<std::string, TObjArray*>*> fConversionStreamerInfo; //Array of the streamer infos derived from another class.
+#else
    mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
+#endif
    TList             *fRealData;        //linked list for persistent members including base classes
    TList             *fBase;            //linked list for base classes
    TListOfDataMembers*fData;            //linked list for data members
@@ -182,7 +189,11 @@ private:
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
+#if __cplusplus > 199711L
+   mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
+#else
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+#endif
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
    ROOT::TSchemaRuleSet *fSchemaRules;  //! Schema evolution rules
@@ -205,6 +216,7 @@ private:
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
+   TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
    void SetStreamerImpl();
 
@@ -327,7 +339,7 @@ public:
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;
-      else return (fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion)));
+      else return DetermineCurrentStreamerInfo();
    }
    TList             *GetListOfDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums(Bool_t load = kTRUE);

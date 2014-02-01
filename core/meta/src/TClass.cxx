@@ -320,6 +320,8 @@ void TClass::AddClass(TClass *cl)
    // static: Add a class to the list and map of classes.
 
    if (!cl) return;
+
+   R__LOCKGUARD2(gCINTMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
       GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
@@ -344,6 +346,8 @@ void TClass::RemoveClass(TClass *oldcl)
    // static: Remove a class from the list and map of classes
 
    if (!oldcl) return;
+
+   R__LOCKGUARD2(gCINTMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
@@ -1372,7 +1376,7 @@ void TClass::Init(const char *name, Version_t cversion,
 TClass::TClass(const TClass& cl) :
   TDictionary(cl),
   fStreamerInfo(cl.fStreamerInfo),
-  fConversionStreamerInfo(cl.fConversionStreamerInfo),
+  fConversionStreamerInfo(0),
   fRealData(cl.fRealData),
   fBase(cl.fBase),
   fData(cl.fData),
@@ -1419,11 +1423,11 @@ TClass::TClass(const TClass& cl) :
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),
   fState(cl.fState),
-  fCurrentInfo(cl.fCurrentInfo),
+  fCurrentInfo(0),
   fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
   fSchemaRules(cl.fSchemaRules),
-  fStreamerImpl(cl.fStreamerImpl)
+  fStreamerImpl(0)
 {
    //copy constructor
 
@@ -1524,11 +1528,15 @@ TClass::~TClass()
    delete fSchemaRules;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
-      std::map<std::string, TObjArray*>::iterator end = fConversionStreamerInfo->end();
-      for( it = fConversionStreamerInfo->begin(); it != end; ++it ) {
+      std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
+      for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
          delete it->second;
       }
+#if __cplusplus > 199711L
+      delete fConversionStreamerInfo.load();
+#else
       delete fConversionStreamerInfo;
+#endif
    }
 }
 
@@ -2157,6 +2165,9 @@ TObject *TClass::Clone(const char *new_name) const
       Error("Clone","The name of the class must be changed when cloning a TClass object.");
       return 0;
    }
+
+   // Need to lock access to TROOT::GetListOfClasses so the cloning happens atomically
+   R__LOCKGUARD2(gCINTMutex);
    // Temporarily remove the original from the list of classes.
    TClass::RemoveClass(const_cast<TClass*>(this));
 
@@ -2903,6 +2914,9 @@ THashTable *TClass::GetClassTypedefHash() {
 TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
    // Return pointer to class with name.
+
+   //protect access to TROOT::GetListOfClasses
+   R__LOCKGUARD2(gCINTMutex);
 
    if (!gROOT->GetListOfClasses())    return 0;
 
@@ -3754,8 +3768,8 @@ void TClass::ls(Option_t *options) const
 
       if (fConversionStreamerInfo) {
          std::map<std::string, TObjArray*>::iterator it;
-         std::map<std::string, TObjArray*>::iterator end = fConversionStreamerInfo->end();
-         for( it = fConversionStreamerInfo->begin(); it != end; ++it ) {
+         std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
+         for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
             it->second->ls(options);
          }
       }
@@ -5032,6 +5046,18 @@ void TClass::SetClassVersion(Version_t version)
 }
 
 //______________________________________________________________________________
+TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
+{
+   // Determine and set pointer to current TVirtualStreamerInfo
+
+   R__LOCKGUARD2(gCINTMutex);
+   if(!fCurrentInfo) {
+     fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
+   }
+   return fCurrentInfo;
+}
+
+//______________________________________________________________________________
 void TClass::SetCurrentStreamerInfo(TVirtualStreamerInfo *info)
 {
    // Set pointer to current TVirtualStreamerInfo
@@ -5207,6 +5233,8 @@ void TClass::PostLoadCheck()
    }
    else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
    {
+      R__LOCKGUARD(gCINTMutex);
+
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
       // loaded from a file) is consistent with the definition in the library we just loaded.
@@ -6069,6 +6097,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 
    if (fCheckSum == checksum) return GetStreamerInfo();
 
+   R__LOCKGUARD(gCINTMutex);
    Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;++i) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -6086,7 +6115,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 TVirtualStreamerInfo *TClass::FindStreamerInfo(TObjArray* arr, UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
-
+   R__LOCKGUARD(gCINTMutex);
    Int_t ninfos = arr->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -6132,10 +6161,11 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    TObjArray* arr = 0;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
+      R__LOCKGUARD(gCINTMutex);
 
-      it = fConversionStreamerInfo->find( cl->GetName() );
+      it = (*fConversionStreamerInfo).find( cl->GetName() );
 
-      if( it != fConversionStreamerInfo->end() ) {
+      if( it != (*fConversionStreamerInfo).end() ) {
          arr = it->second;
       }
 
@@ -6228,9 +6258,11 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
 
-      it = fConversionStreamerInfo->find( cl->GetName() );
-
-      if( it != fConversionStreamerInfo->end() ) {
+      R__LOCKGUARD(gCINTMutex);
+    
+      it = (*fConversionStreamerInfo).find( cl->GetName() );
+      
+      if( it != (*fConversionStreamerInfo).end() ) {
          arr = it->second;
       }
       if (arr) {
