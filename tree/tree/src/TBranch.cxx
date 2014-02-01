@@ -36,6 +36,7 @@
 #include "TTree.h"
 #include "TTreeCache.h"
 #include "TTreeCacheUnzip.h"
+#include "TVirtualMutex.h"
 #include "TVirtualPad.h"
 
 #include <cstddef>
@@ -459,6 +460,7 @@ TBranch::~TBranch()
    if (fDirectory && (!fTree || fDirectory != fTree->GetDirectory())) {
       TString bFileName( GetRealFileName() );
 
+      R__LOCKGUARD2(gROOTMutex);
       TFile* file = (TFile*)gROOT->GetListOfFiles()->FindObject(bFileName);
       if (file){
          file->Close();
@@ -1381,10 +1383,14 @@ TFile* TBranch::GetFile(Int_t mode)
    if (fDirectory) return fDirectory->GetFile();
 
    // check if a file with this name is in the list of Root files
-   TFile *file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
-   if (file) {
-      fDirectory = file;
-      return file;
+   TFile *file = 0;
+   {
+      R__LOCKGUARD2(gROOTMutex);
+      file = (TFile*)gROOT->GetListOfFiles()->FindObject(fFileName.Data());
+      if (file) {
+	 fDirectory = file;
+	 return file;
+      }
    }
 
    if (fFileName.Length() == 0) return 0;

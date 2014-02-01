@@ -4570,6 +4570,7 @@ TFile::EAsyncOpenStatus TFile::GetAsyncOpenStatus(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
@@ -4616,6 +4617,7 @@ const TUrl *TFile::GetEndpointUrl(const char* name)
    }
 
    // Check also the list of files open
+   R__LOCKGUARD2(gROOTMutex);
    TSeqCollection *of = gROOT->GetListOfFiles();
    if (of && (of->GetSize() > 0)) {
       TIter nxf(of);
