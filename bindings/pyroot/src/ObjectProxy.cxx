@@ -11,6 +11,9 @@
 #include "TObject.h"
 #include "TBufferFile.h"      // for pickling
 
+// Standard
+#include <algorithm>
+
 
 //- data _______________________________________________________________________
 namespace PyROOT {
@@ -182,16 +185,24 @@ namespace {
 
 //= PyROOT type number stubs to allow dynamic overrides ======================
 #define PYROOT_STUB( name, op, pystring )                                     \
-   PyObject* op_##name##_stub( PyObject* self, PyObject* other )              \
+   PyObject* op_##name##_stub( PyObject* left, PyObject* right )              \
    {                                                                          \
+      if ( ! ObjectProxy_Check( left ) ) {                                    \
+         if ( ObjectProxy_Check( right ) ) {                                  \
+            std::swap( left, right );                                         \
+         } else {                                                             \
+            Py_INCREF( Py_NotImplemented );                                   \
+            return Py_NotImplemented;                                         \
+         }                                                                    \
+      }                                                                       \
    /* place holder to lazily install __name__ if a global overload is available */ \
-      if ( ! Utility::AddBinaryOperator( self, other, #op, "__"#name"__" ) ) {\
+      if ( ! Utility::AddBinaryOperator(                                      \
+               left, right, #op, "__"#name"__", "__r"#name"__" ) ) {          \
          Py_INCREF( Py_NotImplemented );                                      \
          return Py_NotImplemented;                                            \
       }                                                                       \
-                                                                              \
    /* redo the call, which will now go to the newly installed method */       \
-      return PyObject_CallMethodObjArgs( self, pystring, other, NULL );       \
+      return PyObject_CallMethodObjArgs( left, pystring, right, NULL );       \
    }
 
 PYROOT_STUB( add, +, PyStrings::gAdd )
