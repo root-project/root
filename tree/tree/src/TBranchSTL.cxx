@@ -17,6 +17,8 @@
 #include "TBasket.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
+#include "TInterpreter.h"  // For gCINTMutex
+#include "TVirtualMutex.h"
 #include <string>
 #include <utility>
 
@@ -561,6 +563,9 @@ TStreamerInfo* TBranchSTL::GetInfo() const
       // If the checksum is there and we're dealing with the foreign class
       //------------------------------------------------------------------------
       if( fClCheckSum && !cl->IsVersioned() ) {
+         // NOTE: We do not need a R__LOCKGUARD2 since the TClass constructor
+         //  is guaranteed to set the gCINTMutex if it is not already available.
+         R__LOCKGUARD(gCINTMutex);
          //---------------------------------------------------------------------
          // Loop over the infos
          //---------------------------------------------------------------------
@@ -579,8 +584,10 @@ TStreamerInfo* TBranchSTL::GetInfo() const
             }
          }
       }
-      fInfo->SetBit(TVirtualStreamerInfo::kCannotOptimize);
-      fInfo->BuildOld();
+      if((*fInfo).IsOptimized()) {
+	(*fInfo).SetBit(TVirtualStreamerInfo::kCannotOptimize);
+	(*fInfo).BuildOld();
+      }
    }
    return fInfo;
 }
@@ -672,7 +679,7 @@ void TBranchSTL::SetAddress( void* addr )
       // Get the appropriate streamer element
       //------------------------------------------------------------------------
       GetInfo();
-      TStreamerElement *el = (TStreamerElement*)fInfo->GetElements()->At( fID );
+      TStreamerElement *el = (TStreamerElement*)(*fInfo).GetElements()->At( fID );
 
       //------------------------------------------------------------------------
       // Set up the addresses
