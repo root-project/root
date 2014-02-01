@@ -424,6 +424,7 @@ TObject *TDirectoryFile::FindObjectAnyFile(const char *name) const
    // Scan the memory lists of all files for an object with name
 
    TFile *f;
+   R__LOCKGUARD2(gROOTMutex);
    TIter next(gROOT->GetListOfFiles());
    while ((f = (TFile*)next())) {
       TObject *obj = f->GetList()->FindObject(name);
