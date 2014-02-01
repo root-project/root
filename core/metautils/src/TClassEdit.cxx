@@ -29,6 +29,7 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
    if (name.compare(pos,5,"std::")==0) {
       len = 5;
 
+#if 0
       if (name.compare(pos+len,2,"__",2)==0) {
          for(size_t i = pos+len+2; i < name.length(); ++i) {
             if (name[i] == '<') {
@@ -42,6 +43,7 @@ static size_t StdLen(const std::string &name, size_t pos = 0)
             }
          }
       }
+#endif
    }
 
    return len;
