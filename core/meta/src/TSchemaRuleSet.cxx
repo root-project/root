@@ -11,6 +11,8 @@
 
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h" // For gCINTMutex
 #include "TStreamerElement.h"
 #include "TClassEdit.h"
 
@@ -103,7 +105,12 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    TObject* obj;
    // Check only if we have some information about the class, otherwise we have
    // nothing to check against
-   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0)) ) {
+   bool streamerInfosTest;
+   {
+     R__LOCKGUARD2(gCINTMutex);
+     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
+   }
+   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
       TObjArrayIter titer( rule->GetTarget() );
       while( (obj = titer.Next()) ) {
          TObjString* str = (TObjString*)obj;
