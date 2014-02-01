@@ -2440,8 +2440,6 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    if (TST && TSTdecl) {
 
-      bool wantDefault = !cling::utils::Analyze::IsStdOrCompilerDetails(*TSTdecl);
-
       clang::Sema& S = interpreter.getCI()->getSema();
       clang::TemplateDecl *Template = TSTdecl->getSpecializedTemplate()->getMostRecentDecl();
       clang::TemplateParameterList *Params = Template->getTemplateParameters();
@@ -2449,9 +2447,12 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       //llvm::SmallVectorImpl<TemplateArgument> Converted; // Need to contains the other arguments.
       // Converted seems to be the same as our 'desArgs'
 
+      unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
+
       bool mightHaveChanged = false;
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
+      unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
       for(clang::TemplateSpecializationType::iterator
              I = TST->begin(), E = TST->end();
           Idecl != Edecl;
@@ -2497,7 +2498,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                desArgs.push_back(*I);
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
-         } else if (wantDefault) {
+         } else if (Idecl < maxAddArg) {
 
             mightHaveChanged = true;
 
