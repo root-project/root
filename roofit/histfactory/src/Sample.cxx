@@ -39,6 +39,7 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
   fShapeSysList(other.fShapeSysList),
   fShapeFactorList(other.fShapeFactorList),
 
+  fStatError(other.fStatError),
   fNormalizeByTheory(other.fNormalizeByTheory),
   fStatErrorActivate(other.fStatErrorActivate),
   fhNominal(other.fhNominal),
