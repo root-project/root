@@ -253,6 +253,11 @@ class Regression09TVector3Pythonize( MyTestCase ):
       v = TVector3( 1., 2., 3.)
       self.assertEqual( list(v), [1., 2., 3. ] )
 
+      w = 2*v
+      self.assertEqual( w.x(), 2*v.x() )
+      self.assertEqual( w.y(), 2*v.y() )
+      self.assertEqual( w.z(), 2*v.z() )
+
 
 ### test pythonization coral::AttributeList iterators ========================
 class Regression10CoralAttributeListIterators( MyTestCase ):
