@@ -36,11 +36,27 @@ void SkipEmptyLines(std::istream &input);
 void SkipWSCharacters(std::istream &input);
 bool NextCharacterIsEOL(std::istream &input);
 
-//Let's enforce/limit what can be a Tuple.
+//Enforce/limit what can be a Tuple.
 //Actually, at the moment you can only use
-//the fill function only for TNtuple/TNtupleD
+//the fill function for TNtuple/TNtupleD
 //(enforced by hidden definition and explicit instantiations).
 //But in future this can potentially change.
+
+//TODO: there is no line number in any of error messages.
+//It can be improved, though, we can have mixed line endings
+//so I can not rely on this numbering (for example, my vim shows these lines:
+//aaaa\r\r\nbbb as
+//aaaa
+//bbbb
+//Though it can be also treated as
+//aaaa
+//
+//bbb
+//or even as
+//aaaa
+//
+//
+//bbb - so line numbers can be useless and misleading.
 
 template<class> struct InvalidTupleType;
 
@@ -71,8 +87,13 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
       return 0;
    }
 
+   if (delimiter == '#') {
+      ::Error("FillNtuplesFromStream", "invalid delimiter, '#' symbols can only start a comment");
+      return 0;
+   }
+
    const Int_t nVars = tuple.GetNvar();
-   if (!nVars) {
+   if (nVars <= 0) {
       ::Error("FillNtupleFromStream", "invalid number of elements");
       return 0;
    }
@@ -127,6 +148,13 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
             }
          }
          
+         SkipWSCharacters(inputStream);
+         if (!NextCharacterIsEOL(inputStream)) {
+            ::Error("FillNtupleFromStream",
+                    "only whitespace and new line can follow the last number on the line");
+            return nLines;
+         }
+
          //Only God forgives :) Ugly but ...
          //for TNtuple it's protected :)
          static_cast<TTree &>(tuple).Fill();
