@@ -6,13 +6,13 @@ void surfaces() {
    TCanvas *c1 = new TCanvas("c1","Surfaces Drawing Options",200,10,700,900);
    c1->SetFillColor(42);
    gStyle->SetFrameFillColor(42);
-   auto title = new TPaveText(.2,0.96,.8,.995);
+   TPaveText *title = new TPaveText(.2,0.96,.8,.995);
    title->SetFillColor(33);
    title->AddText("Examples of Surface options");
    title->Draw();
 
-   auto pad1 = new TPad("pad1","Gouraud shading",0.03,0.50,0.98,0.95,21);
-   auto pad2 = new TPad("pad2","Color mesh",0.03,0.02,0.98,0.48,21);
+   TPad *pad1 = new TPad("pad1","Gouraud shading",0.03,0.50,0.98,0.95,21);
+   TPad *pad2 = new TPad("pad2","Color mesh",0.03,0.02,0.98,0.48,21);
    pad1->Draw();
    pad2->Draw();
    //
