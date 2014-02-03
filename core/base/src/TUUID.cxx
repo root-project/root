@@ -111,6 +111,7 @@
 #include "TInetAddress.h"
 #include "TMD5.h"
 #include "Bytes.h"
+#include "TVirtualMutex.h"
 #include <string.h>
 #include <stdlib.h>
 #ifdef R__WIN32
@@ -124,6 +125,7 @@
 #endif
 #endif
 
+#include <atomic>
 
 ClassImp(TUUID)
 
@@ -132,9 +134,9 @@ TUUID::TUUID()
 {
    // Create a UUID.
 
-   static uuid_time_t time_last;
-   static UShort_t    clockseq;
-   static Bool_t firstTime = kTRUE;
+   static thread_local uuid_time_t time_last;
+   static thread_local UShort_t    clockseq;
+   static thread_local Bool_t firstTime = kTRUE;
    if (firstTime) {
       if (gSystem) {
          // try to get a unique seed per process
@@ -321,9 +323,9 @@ void TUUID::GetCurrentTime(uuid_time_t *timestamp)
 
    const UShort_t uuids_per_tick = 1024;
 
-   static uuid_time_t time_last;
-   static UShort_t    uuids_this_tick;
-   static Bool_t      init = kFALSE;
+   static thread_local uuid_time_t time_last;
+   static thread_local UShort_t    uuids_this_tick;
+   static thread_local Bool_t      init = kFALSE;
 
    if (!init) {
       GetSystemTime(&time_last);
