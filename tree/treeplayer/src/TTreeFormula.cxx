@@ -54,7 +54,7 @@
 #include <algorithm>
 
 const Int_t kMaxLen     = 1024;
-R__EXTERN TTree *gTree;
+R__EXTERN thread_local TTree *gTree;
 
 
 ClassImp(TTreeFormula)

@@ -236,7 +236,7 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 
 Bool_t THbookFile::fgPawInit = kFALSE;
 Int_t  *THbookFile::fgLuns   = 0;
-R__EXTERN TTree *gTree;
+R__EXTERN thread_local TTree *gTree;
 
 ClassImp(THbookFile)
 
