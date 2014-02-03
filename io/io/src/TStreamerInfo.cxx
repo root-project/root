@@ -72,7 +72,11 @@
 
 #include "TStreamerInfoActions.h"
 
+#if __cplusplus > 199711L
+thread_local TStreamerElement *TStreamerInfo::fgElement = 0;
+#else
 TStreamerElement *TStreamerInfo::fgElement = 0;
+#endif
 Int_t   TStreamerInfo::fgCount = 0;
 
 const Int_t kMaxLen = 1024;
@@ -1482,6 +1486,8 @@ void TStreamerInfo::BuildOld()
    // rebuild the TStreamerInfo structure
 
    R__LOCKGUARD(gCINTMutex);
+   if( TestBit(kBuildOldUsed) && !IsOptimized() ) return;
+   SetBit(kBuildOldUsed);
 
    if (gDebug > 0) {
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
