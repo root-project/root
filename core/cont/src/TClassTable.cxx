@@ -283,7 +283,12 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       return;
    } else if (ROOT::gROOTLocal && gCling) {
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(shortName.c_str());
-      if (oldcl && oldcl->GetClassInfo()) {
+      if (oldcl) { //  && oldcl->GetClassInfo()) {
+         // As a work-around to ROOT-6012, we need to register the class even if
+         // it is not a template instance, because a forward declaration in the header
+         // files loaded by the current dictionary wil also de-activate the update 
+         // class info mechanism!
+  
          // The TClass exist and already has a class info, so it must
          // correspond to a class template instantiation which the interpreter
          // was able to make with the library containing the TClass Init.
