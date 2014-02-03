@@ -60,7 +60,8 @@ public:
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16)
+          kIsCompiled            = BIT(16),
+	  kBuildOldUsed          = BIT(17)
    };
 
    enum EReadWrite {
