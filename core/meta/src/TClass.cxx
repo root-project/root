@@ -2354,8 +2354,11 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-            if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
-               return -2;
+	    {
+               R__LOCKGUARD(gCINTMutex);
+               if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
+                  return -2;
+	    }
             return inh->GetDelta();
          }
          off = c->GetBaseClassOffsetRecurse(cl);
