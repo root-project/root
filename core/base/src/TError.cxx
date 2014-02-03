@@ -64,10 +64,8 @@ static void DebugPrint(const char *fmt, ...)
 {
    // Print debugging message to stderr and, on Windows, to the system debugger.
 
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
-
-   R__LOCKGUARD2(gErrorMutex);
+   static thread_local Int_t buf_size = 2048;
+   static thread_local char *buf = 0;
 
    va_list ap;
    va_start(ap, fmt);
@@ -91,6 +89,8 @@ again:
       goto again;
    }
    va_end(ap);
+
+   R__LOCKGUARD2(gErrorMutex);
 
    fprintf(stderr, "%s", buf);
 
@@ -200,10 +200,9 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
 {
    // General error handler function. It calls the user set error handler.
 
-   R__LOCKGUARD2(gErrorMutex);
 
-   static Int_t buf_size = 2048;
-   static char *buf = 0;
+   static thread_local Int_t buf_size = 2048;
+   static thread_local char *buf = 0;
 
    int vc = 0;
    va_list sap;
@@ -236,9 +235,10 @@ again:
       va_end(ap);
 
    char *bp;
-   if (level >= kSysError && level < kFatal)
+   if (level >= kSysError && level < kFatal) {
+      R__LOCKGUARD2(gErrorMutex);
       bp = Form("%s (%s)", buf, gSystem->GetError());
-   else
+   } else
       bp = buf;
 
    if (level != kFatal)
