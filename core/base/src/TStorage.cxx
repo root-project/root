@@ -344,9 +344,6 @@ void TStorage::ObjectDealloc(void *vp)
 {
    // Used to deallocate a TObject on the heap (via TObject::operator delete()).
 
-   // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
-
 #ifndef NOCINT
    // to handle delete with placement called via CINT
    Long_t gvp = 0;
