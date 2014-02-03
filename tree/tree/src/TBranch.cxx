@@ -43,7 +43,7 @@
 #include <string.h>
 #include <stdio.h>
 
-R__EXTERN TTree* gTree;
+R__EXTERN thread_local TTree* gTree;
 
 Int_t TBranch::fgCount = 0;
 
