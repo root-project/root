@@ -103,6 +103,8 @@
 
 TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
+static TVirtualMutex *gPluginManagerMutex;
+static thread_local bool fgReadingDirs = false;
 
 ClassImp(TPluginHandler)
 
@@ -470,6 +472,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    // dependency, check on some OS or ROOT capability or downloading
    // of the plugin.
 
+   R__LOCKGUARD2(gCINTMutex);
    if (!fBasesLoaded) {
       fBasesLoaded = new THashTable();
       fBasesLoaded->SetOwner();
@@ -485,7 +488,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       fBasesLoaded->Add(new TObjString(sbase));
    }
 
-   fReadingDirs = kTRUE;
+   fgReadingDirs = kTRUE;
 
    TString plugindirs = gEnv->GetValue("Root.PluginPath", (char*)0);
 #ifdef WIN32
@@ -530,7 +533,7 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
    }
 
    delete dirs;
-   fReadingDirs = kFALSE;
+   fgReadingDirs = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -541,20 +544,25 @@ void TPluginManager::AddHandler(const char *base, const char *regexp,
    // Add plugin handler to the list of handlers. If there is already a
    // handler defined for the same base and regexp it will be replaced.
 
-   if (!fHandlers) {
-      fHandlers = new TList;
-      fHandlers->SetOwner();
+   {
+      R__LOCKGUARD2(gPluginManagerMutex);
+      if (!fHandlers) {
+	 fHandlers = new TList;
+	 fHandlers->SetOwner();
+      }
    }
-
    // make sure there is no previous handler for the same case
    RemoveHandler(base, regexp);
 
-   if (fReadingDirs)
+   if (fgReadingDirs)
       origin = gInterpreter->GetCurrentMacroName();
 
    TPluginHandler *h = new TPluginHandler(base, regexp, className,
                                           pluginName, ctor, origin);
-   fHandlers->Add(h);
+   {
+      R__LOCKGUARD2(gPluginManagerMutex);
+      fHandlers->Add(h);
+   }
 }
 
 //______________________________________________________________________________
@@ -562,7 +570,7 @@ void TPluginManager::RemoveHandler(const char *base, const char *regexp)
 {
    // Remove handler for the specified base class and the specified
    // regexp. If regexp=0 remove all handlers for the specified base.
-
+   R__LOCKGUARD2(gPluginManagerMutex);
    if (!fHandlers) return;
 
    TIter next(fHandlers);
@@ -570,10 +578,10 @@ void TPluginManager::RemoveHandler(const char *base, const char *regexp)
 
    while ((h = (TPluginHandler*) next())) {
       if (h->fBase == base) {
-         if (!regexp || h->fRegexp == regexp) {
-            fHandlers->Remove(h);
-            delete h;
-         }
+	 if (!regexp || h->fRegexp == regexp) {
+	    fHandlers->Remove(h);
+	    delete h;
+	 }
       }
    }
 }
@@ -587,6 +595,7 @@ TPluginHandler *TPluginManager::FindHandler(const char *base, const char *uri)
 
    LoadHandlersFromPluginDirs(base);
 
+   R__LOCKGUARD2(gPluginManagerMutex);
    TIter next(fHandlers);
    TPluginHandler *h;
 
