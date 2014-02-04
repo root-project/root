@@ -904,7 +904,7 @@ TString TTabCom::DetermineClass(const char varName[])
    
    cmd = "gROOT->ProcessLine(\"";
    cmd += varName;
-   cmd += "\")";
+   cmd += "\");";
    cmd += "\n";
    gROOT->ProcessLineSync(cmd.Data());
    // the type of the variable whose name is "varName"
