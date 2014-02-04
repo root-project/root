@@ -52,6 +52,9 @@ RooHistFunc::RooHistFunc() :
 {
   // Default constructor
   TRACE_CREATE 
+
+  _histObsIter = _histObsList.createIterator() ;
+  _pdfObsIter = _depList.createIterator() ;
 }
 
 
@@ -73,7 +76,11 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   // RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
   // for the entire life span of this function.
 
+  _histObsList.addClone(vars) ;
   _depList.add(vars) ;
+
+  _histObsIter = _histObsList.createIterator() ;
+  _pdfObsIter = _depList.createIterator() ;
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
@@ -83,6 +90,52 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
     assert(0) ;
   }
   TIterator* iter = vars.createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)iter->Next())) {
+    if (!dvars->find(arg->GetName())) {
+      coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
+			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+      assert(0) ;
+    }
+  }
+  delete iter ;
+  TRACE_CREATE 
+}
+
+
+
+//_____________________________________________________________________________
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, 
+  		       const RooDataHist& dhist, Int_t intOrder) :
+  RooAbsReal(name,title), 
+  _depList("depList","List of dependents",this),
+  _dataHist((RooDataHist*)&dhist), 
+  _codeReg(10),
+  _intOrder(intOrder),
+  _cdfBoundaries(kFALSE),
+  _totVolume(0),
+  _unitNorm(kFALSE)
+{
+  // Constructor from a RooDataHist. The variable listed in 'vars' control the dimensionality of the
+  // function. Any additional dimensions present in 'dhist' will be projected out. RooDataHist dimensions
+  // can be either real or discrete. See RooDataHist::RooDataHist for details on the binning.
+  // RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
+  // for the entire life span of this function.
+
+  _histObsList.addClone(histObs) ;
+  _depList.add(funcObs) ;
+
+  _histObsIter = _histObsList.createIterator() ;
+  _pdfObsIter = _depList.createIterator() ;
+
+  // Verify that vars and dhist.get() have identical contents
+  const RooArgSet* dvars = dhist.get() ;
+  if (histObs.getSize()!=dvars->getSize()) {
+    coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
+			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+    assert(0) ;
+  }
+  TIterator* iter = histObs.createIterator() ;
   RooAbsArg* arg ;
   while((arg=(RooAbsArg*)iter->Next())) {
     if (!dvars->find(arg->GetName())) {
@@ -110,7 +163,24 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 {
   // Copy constructor
   TRACE_CREATE 
+
+  _histObsList.addClone(other._histObsList) ;
+
+  _histObsIter = _histObsList.createIterator() ;
+  _pdfObsIter = _depList.createIterator() ;
 }
+
+
+
+//_____________________________________________________________________________
+RooHistFunc::~RooHistFunc() 
+{ 
+  TRACE_DESTROY 
+
+  delete _histObsIter ;
+  delete _pdfObsIter ;
+}
+
 
 
 
@@ -121,7 +191,24 @@ Double_t RooHistFunc::evaluate() const
   // of the dependents, normalized by the histograms contents. Interpolation
   // is applied if the RooHistFunc is configured to do that
 
-  Double_t ret =  _dataHist->weight(_depList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  // Transfer values from   
+  if (_depList.getSize()>0) {
+    _histObsIter->Reset() ;
+    _pdfObsIter->Reset() ;
+    RooAbsArg* harg, *parg ;
+    while((harg=(RooAbsArg*)_histObsIter->Next())) {
+      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+      if (harg != parg) {
+	parg->syncCache() ;
+	harg->copyCache(parg,kTRUE) ;
+	if (!harg->inRange(0)) {
+	  return 0 ;
+	}
+      }
+    }
+  }
+
+  Double_t ret =  _dataHist->weight(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
   return ret ;
 }
 
@@ -262,7 +349,23 @@ Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* /*rangeName*/) 
   }
   delete iter ;
 
-  Double_t ret =  _dataHist->sum(intSet,_depList,kTRUE) ;
+  if (_depList.getSize()>0) {
+    _histObsIter->Reset() ;
+    _pdfObsIter->Reset() ;
+    RooAbsArg* harg, *parg ;
+    while((harg=(RooAbsArg*)_histObsIter->Next())) {
+      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+      if (harg != parg) {
+	parg->syncCache() ;
+	harg->copyCache(parg,kTRUE) ;
+	if (!harg->inRange(0)) {
+	  return 0 ;
+	}
+      }
+    }
+  }
+
+  Double_t ret =  _dataHist->sum(intSet,_histObsList,kTRUE) ;
   return ret ;
 }
 
@@ -345,6 +448,32 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 
   return hint ;
 }
+
+
+
+//_____________________________________________________________________________
+Bool_t RooHistFunc::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
+{
+  // If we detect a name change in the observable, apply the corresponding name change in the embedded datahist
+
+  RooFIter iter = _depList.fwdIterator() ;
+  RooAbsArg* arg ;
+  while ((arg=iter.next())) {
+    
+    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newServerList,nameChange) ;
+    if (replace && (string(arg->GetName())!=replace->GetName())) {
+      _dataHist->changeObservableName(arg->GetName(),replace->GetName()) ;
+    } else if (replace && _dataHist->get()->find(arg->GetName())==0) {
+      const char* origName = replace->getStringAttribute("origName") ;
+      if (origName) {
+	_dataHist->changeObservableName(origName,replace->GetName()) ;
+      }
+    }
+
+  }
+  return kFALSE ;
+}
+
 
 
 //_____________________________________________________________________________
@@ -437,5 +566,18 @@ void RooHistFunc::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(RooHistFunc::Class(),this);
    }
+}
+
+
+//______________________________________________________________________________
+void RooHistFunc::ioStreamerPass2() 
+{
+  // Schema evolution: if histObsList wasn't filled from persistence (v1)
+  // then fill it here. Can't be done in regular schema evolution in LinkDef
+  // as _depList content is not guaranteed to be initialized there
+
+  if (_histObsList.getSize()==0) {
+    _histObsList.addClone(_depList) ;
+  }
 }
 

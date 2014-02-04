@@ -88,6 +88,9 @@ public:
 
   void printMetaArgs(std::ostream& os) const ;
 
+  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
 protected:
 
   virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
