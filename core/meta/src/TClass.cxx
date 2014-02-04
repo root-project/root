@@ -2652,7 +2652,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          // short name rather than the true name (at least) in
          // a first try!
 
-         TDataType *objType = gROOT->GetType(name, load);
+         TDataType *objType = gROOT->GetType(name, kTRUE);
          if (objType) {
             const char *typdfName = objType->GetTypeName();
             if (typdfName && strcmp(typdfName, name)) {
