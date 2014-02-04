@@ -7,6 +7,11 @@
 
 //The equation by Paul Burke: http://paulbourke.net/geometry/
 
+//Point compression (before you resize):
+//polygon 1 from 500000 to 61071 points;
+//polygon 2 from 100000 to 44600 points.
+//OpenGL died :)))
+
 #include <cassert>
 #include <vector>
 
@@ -53,7 +58,7 @@ void flower()
       Error("flower", "failed to create custom colors");
       return;
    }
-
+   
    //1. I have to create a canvas to initialize gVirtualX.
    TCanvas * const cnv = new TCanvas("Chrysanthemum", "Chrysanthemum", 900, 900);
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
