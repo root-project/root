@@ -2621,7 +2621,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
          TClassRef clref = cl;
          std::string itypename;
-         gCling->GetInterpreterTypeName(name,itypename);
+         gCling->GetInterpreterTypeName(name,itypename,kTRUE);
          // Protect again possible library loading
          if (clref->IsLoaded()) {
             return clref;
