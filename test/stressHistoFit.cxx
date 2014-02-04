@@ -112,6 +112,19 @@
 #include <cassert>
 #include <cmath>
 
+#ifdef R__WIN32
+#define FOREGROUND_BLUE      1
+#define FOREGROUND_GREEN     2
+#define FOREGROUND_RED       4
+#define FOREGROUND_INTENSITY 8
+#define FOREGROUND_GREY FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE
+extern "C" {
+   void *__stdcall GetStdHandle(unsigned long);
+   bool __stdcall SetConsoleTextAttribute(void *, unsigned int);
+}
+#pragma comment(lib, "Kernel32.lib")
+#endif
+
 #include "Riostream.h"
 using namespace std;
 // Next line should not exist. It is now there for testing
@@ -490,12 +503,19 @@ void printSeparator()
 // Sets the color of the output to red or normal
 void setColor(int red = 0)
 {
+#ifndef R__WIN32
    char command[13];
    if ( red ) 
       snprintf(command,13, "%c[%d;%d;%dm", 0x1B, 1, 1 + 30, 8 + 40);
    else 
-      snprintf(command,13, "%c[%d;%d;%dm", 0x1B, 0, 0 + 30, 8 + 40);
+      snprintf(command,13, "%c[%dm", 0x1B, 0); // reset to default
    printf("%s", command);
+#else
+   if ( red )
+      SetConsoleTextAttribute(GetStdHandle((unsigned long)-11), FOREGROUND_RED );
+   else
+      SetConsoleTextAttribute(GetStdHandle((unsigned long)-11), FOREGROUND_GREY );
+#endif
 }
 
 // Test a fit once it has been done:
