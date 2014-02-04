@@ -83,7 +83,7 @@ CLEAN_TARGETS_DIR = $(SUBDIRS:%=%.clean)
 CLEAN_TARGETS += 
 
 ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.summary *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
-	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog \
+	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog *.pylog \
 	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz perftrack.tar.gz
@@ -767,19 +767,26 @@ $(subst .cxx,.success,$(ALL_EXEC_CXX)) : %.success: %.clog %.ref
 $(subst .C,.success,$(ALL_EXEC_C)) : %.success: %.log %.ref 
 	$(SuccessTestDiff) && touch $@
 
-$(subst .py,.success,$(ALL_EXEC_PY)) : %.success: %.log %.ref 
+$(subst .py,.py.success,$(ALL_EXEC_PY)) : %.py.success: %.pylog %.py.ref 
 	$(SuccessTestDiff) && touch $@
 
 $(subst .cxx,,$(ALL_EXEC_CXX)) : %: %.success 
 
 $(subst .C,,$(ALL_EXEC_C)) : %: %.success 
 
-$(subst .py,,$(ALL_EXEC_PY)) : %: %.success 
+$(subst .py,,$(ALL_EXEC_PY)) : %: %.py.success 
 
 %.log : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
 ifeq ($(PYTHONPATH),)
 	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 else 
+	$(CMDECHO) $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
+endif
+
+%.pylog : %.py $(UTILS_PREREQ) $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+ifeq ($(PYTHONPATH),)
+	$(CMDECHO) PYTHONPATH=$(ROOTSYS)/lib $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
+else
 	$(CMDECHO) $(PYTHON) $< -b - $(PYROOT_EXTRAFLAGS) > $@ 2>&1 || cat $@
 endif
 
@@ -805,6 +812,9 @@ exec%.ref:  | exec%.clog
 
 exec%.ref:  | exec%.log
 	$(CMDECHO)  if [ ! -e $@ ] ; then echo > $@ ; echo "Processing exec$*.C..." >> $@ ; fi
+
+%.py.ref:
+	$(CMDECHO) touch $@
 
 %.ref:
 	$(CMDECHO) touch $@

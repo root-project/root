@@ -53,4 +53,5 @@ PyROOT_regressiontests: PyROOT_regressiontests.log
 
 endif
 
-exec_root_6023.log: root_6023_h.$(DllSuf)
+exec_root_6023.pylog: root_6023_h.$(DllSuf)
+
