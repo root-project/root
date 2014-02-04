@@ -3919,6 +3919,7 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
    // Return kTRUE if this class inherits from class cl.
    // note that the function returns KTRUE in case cl is the class itself
 
+   if (!cl) return kFALSE;
    if (cl == this) return kTRUE;
 
    if (!fClassInfo) {
