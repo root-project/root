@@ -393,29 +393,6 @@ int   TClassEdit::STLArgs(int kind)
 }
 
 //______________________________________________________________________________
-bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
-{
-   // return whether or not 'allocname' is the STL default allocator for type
-   // 'classname'
-
-   string a = allocname;
-   RemoveStd(a);
-
-   if (a=="alloc")                              return true;
-   if (a=="__default_alloc_template<true,0>")   return true;
-   if (a=="__malloc_alloc_template<0>")         return true;
-
-   string k = classname;
-   string ts("allocator<"); ts += k; ts+=">";
-   if (a==ts) return true;
-
-   ts = "allocator<"; ts += k; ts+=" >";
-   if (a==ts) return true;
-
-   return false;
-}
-
-//______________________________________________________________________________
 size_t findNameEnd(std::string &full, size_t pos)
 {
    int level = 0;
@@ -435,6 +412,56 @@ size_t findNameEnd(std::string &full, size_t pos)
       }
    }
    return full.length();
+}
+
+//______________________________________________________________________________
+bool TClassEdit::IsDefAlloc(const char *allocname, const char *classname)
+{
+   // return whether or not 'allocname' is the STL default allocator for type
+   // 'classname'
+
+   string a = allocname;
+   RemoveStd(a);
+
+   if (a=="alloc")                              return true;
+   if (a=="__default_alloc_template<true,0>")   return true;
+   if (a=="__malloc_alloc_template<0>")         return true;
+
+   const static int alloclen = strlen("allocator<");
+   if (a.compare(0,alloclen,"allocator<") != 0) {
+      return false;
+   }
+   size_t pos = alloclen;
+
+   pos += StdLen(a,pos);
+
+   string k = classname;
+   size_t pos2 = StdLen(k);
+   if (pos2) k = classname + pos2;
+
+   if (a.compare(pos,k.length(),k) != 0) {
+      // Now we need to compare the normalized name.
+      size_t end = findNameEnd(a,pos);
+
+      std::string valuepart;
+      GetNormalizedName(valuepart,a.substr(pos,end-pos).c_str());
+
+      std::string norm_value;
+      GetNormalizedName(norm_value,k.c_str());
+
+      if (valuepart != norm_value) {
+         return false;
+      }
+      pos = end;
+   } else {
+      pos += k.length();
+   }
+
+   if (a.compare(pos,1,">")!=0 && a.compare(pos,2," >")!=0) {
+      return false;
+   }
+
+   return true;
 }
 
 //______________________________________________________________________________
@@ -510,7 +537,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
 
    string v = valueclassname;
    size_t pos3 = StdLen(v);
-   if (pos3) k = valueclassname + pos3;
+   if (pos3) v = valueclassname + pos3;
 
    if (a.compare(pos,v.length(),v) != 0) {
       // Now we need to compare the normalized name.
@@ -525,6 +552,7 @@ bool TClassEdit::IsDefAlloc(const char *allocname,
       if (valuepart != norm_value) {
          return false;
       }
+      pos = end;
    } else {
       pos += v.length();
    }
