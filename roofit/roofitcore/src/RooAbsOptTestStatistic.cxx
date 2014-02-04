@@ -60,7 +60,6 @@
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h" 
-#include "RooStarMomentMorph.h"
 
 using namespace std;
 
