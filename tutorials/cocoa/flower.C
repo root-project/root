@@ -57,8 +57,9 @@ void flower()
    //1. I have to create a canvas to initialize gVirtualX.
    TCanvas * const cnv = new TCanvas("Chrysanthemum", "Chrysanthemum", 900, 900);
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      Warning("flower", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
-                        "To have transparency in a canvas graphics, you need OS X version of ROOT with cocoa enabled");
+      ::Error("flower", "This macro requires OS X version of ROOT with cocoa enabled");
+      delete cnv;
+      return;
    }
 
    cnv->cd();//Just to suppress a warning if compiled.
