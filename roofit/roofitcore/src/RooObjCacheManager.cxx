@@ -92,7 +92,9 @@ Bool_t RooObjCacheManager::redirectServersHook(const RooAbsCollection& newServer
   } else {
 
     for (Int_t i=0 ; i<cacheSize() ; i++) {
-      _object[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
+      if (_object[i]) {
+	_object[i]->redirectServersHook(newServerList,mustReplaceAll,nameChange,isRecursive) ;
+      }
     }
 
   }
@@ -206,7 +208,7 @@ void RooObjCacheManager::findConstantNodes(const RooArgSet& obs, RooArgSet& cach
 {
   // If clearOnRedirect is false, forward constant term optimization calls to
   // cache elements
-
+  
   if (_clearOnRedirect) {
     return ;
   }

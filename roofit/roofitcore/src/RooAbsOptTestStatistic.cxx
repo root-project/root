@@ -60,6 +60,7 @@
 #include "RooRealSumPdf.h"
 #include "RooTrace.h"
 #include "RooVectorDataStore.h" 
+#include "RooStarMomentMorph.h"
 
 using namespace std;
 
@@ -641,64 +642,15 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
       RooFIter iter = branches.fwdIterator() ;
       RooAbsArg* arg ;
       while((arg=iter.next())) {
-	RooAddPdf* apdf = dynamic_cast<RooAddPdf*>(arg) ;
-	if (apdf) {
-	  RooFIter aiter = apdf->pdfList().fwdIterator() ;
-	  RooAbsArg* aarg ;
-	  while ((aarg=aiter.next())) {
-	    RooProdPdf* prod = dynamic_cast<RooProdPdf*>(aarg) ;
-	    if (prod) {
-	      RooFIter piter = prod->pdfList().fwdIterator() ;
-	      RooAbsArg* parg ;
-	      while ((parg=piter.next())) {
-		parg->setAttribute("CacheAndTrack") ;
-		RooArgSet* pdf_nset = prod->findPdfNSet((RooAbsPdf&)(*parg)) ;
-		
-		if (pdf_nset) {
-		  // Check if conditional normalization is specified		  
-		  if (string("nset")==pdf_nset->GetName() && pdf_nset->getSize()>0) {
-		    RooNameSet n(*pdf_nset) ;
-		    parg->setStringAttribute("CATNormSet",n.content()) ;
-		  }
-		  if (string("cset")==pdf_nset->GetName()) {
-		    RooNameSet c(*pdf_nset) ;
-		    parg->setStringAttribute("CATCondSet",c.content()) ;
-		  }
-		} else {
-		  coutW(Optimization) << "RooAbsOptTestStatistic::optimizeConstantTerms(" << GetName() << ") WARNING RooProdPdf::" << prod->GetName() 
-				      << " does not specify a normalization set for component " << parg->GetName() << endl ;
-		}
-		trackNodes.add(*aarg) ;
-	      }
-	    } else {
-	      aarg->setAttribute("CacheAndTrack") ;
-	      trackNodes.add(*aarg) ;
-	    }
-	  }
-	}
-	RooRealSumPdf* spdf = dynamic_cast<RooRealSumPdf*>(arg) ;
-	if (spdf) {
-	  RooFIter siter = spdf->funcList().fwdIterator() ;
-	  RooAbsArg* sarg ;
-	  while ((sarg=siter.next())) {
-	    RooProduct* prod = dynamic_cast<RooProduct*>(sarg) ;
-	    if (prod) {
-	      RooArgSet comp(prod->components()) ;
-	      RooFIter piter = comp.fwdIterator() ;
-	      RooAbsArg* parg ;
-	      while ((parg=piter.next())) {
-		if (parg->isDerived()) {
-		  parg->setAttribute("CacheAndTrack") ;
-		  trackNodes.add(*parg) ;
-		}
-	      }
-	    } else {
-	      sarg->setAttribute("CacheAndTrack") ;
-	      trackNodes.add(*sarg) ;
-	    }
-	  }
-	}
+	arg->setCacheAndTrackHints(trackNodes) ;
       }
+      // Do not set CacheAndTrack on constant expressions
+      RooArgSet* constNodes = (RooArgSet*) trackNodes.selectByAttrib("Constant",kTRUE) ;
+      trackNodes.remove(*constNodes) ;
+      delete constNodes ;
+
+      // Set CacheAndTrack flag on all remaining nodes
+      trackNodes.setAttribAll("CacheAndTrack",kTRUE) ;
     }
     
     // Find all nodes that depend exclusively on constant parameters
@@ -726,7 +678,14 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     delete cIter ;  
 
 
-    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpression",kTRUE) ;
+//     cout << "_cachedNodes = " << endl ;
+//     RooFIter i = _cachedNodes.fwdIterator() ;
+//     RooAbsArg* aa ;
+//     while ((aa=i.next())) {
+//       cout << aa->IsA()->GetName() << "::" << aa->GetName() << (aa->getAttribute("ConstantExpressionCached")?" CEC":"   ") << (aa->getAttribute("CacheAndTrack")?" CAT":"   ") << endl ;
+//     }
+
+    RooArgSet* constNodes = (RooArgSet*) _cachedNodes.selectByAttrib("ConstantExpressionCached",kTRUE) ;
     RooArgSet actualTrackNodes(_cachedNodes) ;
     actualTrackNodes.remove(*constNodes) ;
     if (constNodes->getSize()>0) {
@@ -744,6 +703,11 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     if (actualTrackNodes.getSize()>0) {
       if (actualTrackNodes.getSize()<20) {
 	coutI(Minimization) << " The following expressions will be evaluated in cache-and-track mode: " << actualTrackNodes << endl ;
+// 	RooFIter iter = actualTrackNodes.fwdIterator() ;
+// 	RooAbsArg* atn ;
+// 	while((atn = iter.next())) {
+// 	  cout << atn->IsA()->GetName() << "::" << atn->GetName() << endl ;
+// 	}
       } else {
 	coutI(Minimization) << " A total of " << constNodes->getSize() << " expressions will be evaluated in cache-and-track-mode." << endl ;
       }

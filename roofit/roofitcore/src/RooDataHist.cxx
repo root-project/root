@@ -1174,7 +1174,7 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
   // contained in 'bin' is returned. For higher values,
   // the result is interpolated in the real dimensions 
   // of the dataset
-
+  
   //cout << "RooDataHist::weight(" << bin << "," << intOrder << "," << correctForBinSize << "," << cdfBoundaries << "," << oneSafe << ")" << endl ;
 
   checkInit() ;

@@ -1278,6 +1278,20 @@ Bool_t RooAddPdf::isBinnedDistribution(const RooArgSet& obs) const
 }
 
 
+//_____________________________________________________________________________
+void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes) 
+{
+  // Label OK'ed components of a RooAddPdf with cache-and-track
+  RooFIter aiter = pdfList().fwdIterator() ;
+  RooAbsArg* aarg ;
+  while ((aarg=aiter.next())) {
+    if (aarg->canNodeBeCached()==Always) {
+      trackNodes.add(*aarg) ;
+      //cout << "tracking node RooAddPdf component " << aarg->IsA()->GetName() << "::" << aarg->GetName() << endl ;	      
+    } 
+  }  
+}
+
 
 
 //_____________________________________________________________________________

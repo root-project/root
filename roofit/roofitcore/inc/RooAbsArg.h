@@ -313,6 +313,9 @@ public:
 
   // constant term optimization
   virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  enum CacheMode { Always=0, NotAdvised=1, Never=2 } ;
+  virtual CacheMode canNodeBeCached() const { return Always ; }
+  virtual void setCacheAndTrackHints(RooArgSet& /*trackNodes*/ ) {} ;
   
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;

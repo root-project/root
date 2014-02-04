@@ -50,6 +50,8 @@ public:
 
   static void doClearObsList(Bool_t flag) { _clearObsList = flag ; }
   static Bool_t clearObsList() { return _clearObsList ; }
+
+  void setClearOnRedirect(Bool_t flag) { _clearOnRedirect = flag ; }
  
 protected:
 

@@ -235,6 +235,7 @@ Double_t RooHistPdf::evaluate() const
   }
 
   Double_t ret =  _dataHist->weight(_histObsList,_intOrder,_unitNorm?kFALSE:kTRUE,_cdfBoundaries) ;  
+  //cout << "RooHistPdf::evaluate(" << GetName() << ") ret = " << ret << endl ;
   if (ret<0) {
     ret=0 ;
   }  
@@ -379,14 +380,14 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
   }
 
   Double_t ret = (code & 1) ?
-      _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
-      _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
-
-//    cout << "intSet = " << intSet << endl ;
-//    cout << "slice position = " << endl ;
-//    _histObsList.Print("v") ;
-//    cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
-
+    _dataHist->sum(intSet,_histObsList,kTRUE,kTRUE) :
+    _dataHist->sum(intSet,_histObsList,kFALSE,kTRUE, ranges);
+  
+  //    cout << "intSet = " << intSet << endl ;
+  //    cout << "slice position = " << endl ;
+  //    _histObsList.Print("v") ;
+  //    cout << "RooHistPdf::ai(" << GetName() << ") code = " << code << " ret = " << ret << endl ;
+  
   return ret ;
 }
 

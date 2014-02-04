@@ -66,6 +66,9 @@ public:
   static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag ; }
   static Bool_t getFloorGlobal() { return _doFloorGlobal ; }
 
+  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
 protected:
   
   class CacheElem : public RooAbsCacheElement {

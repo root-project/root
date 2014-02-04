@@ -460,6 +460,28 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
 
 
 //_____________________________________________________________________________
+void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes) 
+{
+  // Label OK'ed components of a RooProduct with cache-and-track
+
+  RooArgSet comp(components()) ;
+  RooFIter piter = comp.fwdIterator() ;
+  RooAbsArg* parg ;
+  while ((parg=piter.next())) {
+    if (parg->isDerived()) {
+      if (parg->canNodeBeCached()==Always) {
+	trackNodes.add(*parg) ;
+	//cout << "tracking node RooProduct component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+      }
+    }
+  }
+}							    
+
+
+
+
+
+//_____________________________________________________________________________
 void RooProduct::printMetaArgs(ostream& os) const 
 {
   // Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
