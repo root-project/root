@@ -124,6 +124,9 @@ protected:
 					      Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
 
+  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
+  virtual void setCacheAndTrackHints(RooArgSet&) ;
+
   // The cache object
   class CacheElem : public RooAbsCacheElement {
   public:

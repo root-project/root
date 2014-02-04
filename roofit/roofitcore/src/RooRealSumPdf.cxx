@@ -462,7 +462,6 @@ Double_t RooRealSumPdf::expectedEvents(const RooArgSet* nset) const
 //_____________________________________________________________________________
 std::list<Double_t>* RooRealSumPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-
   list<Double_t>* sumBinB = 0 ;
   Bool_t needClean(kFALSE) ;
   
@@ -569,6 +568,22 @@ std::list<Double_t>* RooRealSumPdf::plotSamplingHint(RooAbsRealLValue& obs, Doub
   return sumHint ;
 }
 
+
+
+
+//_____________________________________________________________________________
+void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes) 
+{
+  // Label OK'ed components of a RooRealSumPdf with cache-and-track
+  RooFIter siter = funcList().fwdIterator() ;
+  RooAbsArg* sarg ;
+  while ((sarg=siter.next())) {
+    if (sarg->canNodeBeCached()==Always) {
+      trackNodes.add(*sarg) ;
+      //cout << "tracking node RealSumPdf component " << sarg->IsA()->GetName() << "::" << sarg->GetName() << endl ;
+    }
+  }
+}
 
 
 

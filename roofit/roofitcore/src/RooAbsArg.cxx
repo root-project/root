@@ -1661,6 +1661,10 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
   }
   delete paramSet ;
 
+  if (getAttribute("NeverConstant")) {
+    canOpt = kFALSE ;
+  }
+
   if (canOpt) {
     setAttribute("ConstantExpression") ;
   }
@@ -1673,6 +1677,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
       // Add to cache list
       cxcoutD(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << ") adding self to list of constant nodes" << endl ;
 
+      if (canOpt) setAttribute("ConstantExpressionCached") ;
       cacheList.add(*this,kFALSE) ;
     }
   }
