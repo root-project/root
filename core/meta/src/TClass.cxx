@@ -2291,7 +2291,7 @@ TClass *TClass::GetBaseClass(const char *classname)
 
    // Make sure we deal with possible aliases, we could also have normalized
    // the name.
-   TClass *search = TClass::GetClass(classname);
+   TClass *search = TClass::GetClass(classname,kTRUE,kTRUE);
 
    if (search) return GetBaseClass(search);
    else return 0;
@@ -3910,7 +3910,7 @@ Bool_t TClass::InheritsFrom(const char *classname) const
 
    if (strcmp(GetName(), classname) == 0) return kTRUE;
 
-   return InheritsFrom(TClass::GetClass(classname));
+   return InheritsFrom(TClass::GetClass(classname,kTRUE,kTRUE));
 }
 
 //______________________________________________________________________________
