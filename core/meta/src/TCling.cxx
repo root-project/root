@@ -1194,11 +1194,14 @@ void TCling::RegisterModule(const char* modulename,
       TClass *oldcl = fClassesToUpdate.back().first;
       if (oldcl->GetState() != TClass::kHasTClassInit) {
          // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+         TString classname = oldcl->GetName();
          VoidFuncPtr_t dict = fClassesToUpdate.back().second;
          fClassesToUpdate.pop_back();
          // Calling func could manipulate the list so, let maintain the list
          // then call the dictionary function.
          dict();
+         TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+         if (ncl) ncl->PostLoadCheck();
       } else {
          fClassesToUpdate.pop_back();
       }
