@@ -144,7 +144,11 @@ private:
 
    mutable Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
+#if __cplusplus > 199711L
+   mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
+#else
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
+#endif
 
    mutable Bool_t     fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
@@ -185,7 +189,13 @@ private:
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
    
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
+#if __cplusplus > 199711L 
+   static thread_local ENewType  fgCallingNew;  //Intent of why/how TClass::New() is called
+   static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
+#else
+   static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
+#endif
                                         //stored in TObject::fUniqueID
    // Internal status bits
    enum { kLoading = BIT(14) };
