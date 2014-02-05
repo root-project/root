@@ -4413,6 +4413,7 @@ void THistPainter::PaintBar(Option_t *)
    Double_t width  = fH->GetBarWidth();
    TBox box;
    Int_t hcolor = fH->GetFillColor();
+   if (hcolor == gPad->GetFrameFillColor()) ++hcolor;
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
@@ -4473,6 +4474,7 @@ void THistPainter::PaintBarH(Option_t *)
    Double_t width  = fH->GetBarWidth();
    TBox box;
    Int_t hcolor = fH->GetFillColor();
+   if (hcolor == gPad->GetFrameFillColor()) ++hcolor;
    Int_t hstyle = fH->GetFillStyle();
    box.SetFillColor(hcolor);
    box.SetFillStyle(hstyle);
