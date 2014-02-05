@@ -121,11 +121,18 @@
 
 using std::sqrt;
 
+#if __cplusplus > 199711L
+std::atomic<Long64_t> TFile::fgBytesRead{0};
+std::atomic<Long64_t> TFile::fgBytesWrite{0};
+std::atomic<Long64_t> TFile::fgFileCounter{0};
+std::atomic<Int_t>    TFile::fgReadCalls{0};
+#else
 Long64_t TFile::fgBytesRead  = 0;
 Long64_t TFile::fgBytesWrite = 0;
 Long64_t TFile::fgFileCounter = 0;
-Int_t    TFile::fgReadaheadSize = 256000;
 Int_t    TFile::fgReadCalls = 0;
+#endif
+Int_t    TFile::fgReadaheadSize = 256000;
 Bool_t   TFile::fgReadInfo = kTRUE;
 TList   *TFile::fgAsyncOpenRequests = 0;
 TString  TFile::fgCacheFileDir;
