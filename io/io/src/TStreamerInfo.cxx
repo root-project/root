@@ -73,11 +73,12 @@
 #include "TStreamerInfoActions.h"
 
 #if __cplusplus > 199711L
-thread_local TStreamerElement *TStreamerInfo::fgElement = 0;
+thread_local TStreamerElement *TStreamerInfo::fgElement = nullptr;
+std::atomic<Int_t>   TStreamerInfo::fgCount{0};
 #else
 TStreamerElement *TStreamerInfo::fgElement = 0;
-#endif
 Int_t   TStreamerInfo::fgCount = 0;
+#endif
 
 const Int_t kMaxLen = 1024;
 
