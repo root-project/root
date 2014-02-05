@@ -315,6 +315,15 @@ namespace Math {
    @ingroup  GenFunc
 */ 
 
+// add a pragma to prevent the following warning with Visual Studio 2012:
+// warning C4436: dynamic_cast from virtual base 'ROOT::Math::IBaseFunctionOneDim'
+// to 'ROOT::Math::IGradientFunctionOneDim' in constructor or destructor could
+// fail with partially-constructed object
+// (and the same with ROOT::Math::IGradientFunctionMultiDim)
+#if _MSC_VER && _MSC_VER > 1600
+#pragma vtordisp(push, 2)
+#endif
+
    class IGradientFunctionMultiDim : 
       virtual public IBaseFunctionMultiDim , 
       public IGradientMultiDim { 
@@ -408,8 +417,9 @@ namespace Math {
 
    }; 
 
-
-
+#if _MSC_VER && _MSC_VER > 1600
+#pragma vtordisp(pop)
+#endif
  
 
 } // namespace Math
