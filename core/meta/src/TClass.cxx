@@ -2354,16 +2354,17 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-	    {
-               R__LOCKGUARD(gCINTMutex);
-               if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
-                  return -2;
-	    }
+	    R__LOCKGUARD(gCINTMutex);
+	    if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
+	       return -2;
             return inh->GetDelta();
          }
          off = c->GetBaseClassOffsetRecurse(cl);
          if (off == -2) return -2;
-         if (off != -1) return off + inh->GetDelta();
+         if (off != -1) {
+	    R__LOCKGUARD(gCINTMutex);
+	    return off + inh->GetDelta();
+	 }
       }
       lnk = lnk->Next();
    }
@@ -3004,7 +3005,10 @@ TList *TClass::GetListOfBases()
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
-      gInterpreter->CreateListOfBaseClasses(this);
+      R__LOCKGUARD(gCINTMutex);
+      if(!fBase) {
+ 	 gInterpreter->CreateListOfBaseClasses(this);
+      }
    }
    return fBase;
 }
@@ -4315,8 +4319,10 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
+	 R__LOCKGUARD2(gCINTMutex);
          gCint->ClassInfo_Destruct(fClassInfo,p);
       } else {
+	 R__LOCKGUARD2(gCINTMutex);
          gCint->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!fClassInfo && fCollectionProxy) {
