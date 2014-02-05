@@ -481,7 +481,7 @@ public:
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
-   virtual Int_t       GetDivAxis()      {return 2;}
+   virtual Int_t       GetDivAxis()      {return 3;}
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
@@ -498,21 +498,31 @@ public:
 
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
+//new_code_start
+private:
+	Double_t           *fSinCos;
+//new_code_end
+
 public:
+   TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc) 
+     : TGeoPatternFinder(pfc), fSinCos(pfc.fSinCos) {CreateThreadData(1);}
+   TGeoPatternSphPhi& operator=(const TGeoPatternSphPhi& pfc)
+     {if(this!=&pfc) {TGeoPatternFinder::operator=(pfc); fSinCos=pfc.fSinCos; CreateThreadData(1);}
+     return *this;}
+
    // constructors
    TGeoPatternSphPhi();
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions);
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t step);
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t start, Double_t end);
-   TGeoPatternSphPhi(const TGeoPatternSphPhi &pf);
-   TGeoPatternSphPhi& operator=(const TGeoPatternSphPhi&);
    // destructor
    virtual ~TGeoPatternSphPhi();
    // methods
    virtual TGeoMatrix* CreateMatrix() const;
    virtual void        cd(Int_t idiv);
    virtual TGeoNode   *FindNode(Double_t *point, const Double_t *dir=0); 
-   virtual Int_t       GetDivAxis()      {return 3;}
+   virtual Int_t       GetDivAxis()      {return 2;}
+   virtual Bool_t      IsOnBoundary(const Double_t *point) const;
    virtual 
    TGeoPatternFinder  *MakeCopy(Bool_t reflect=kFALSE);
    virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
