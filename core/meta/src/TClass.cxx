@@ -3326,10 +3326,10 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
          info->Update(this, newcl);
       }
 
-      if (acl->GetCollectionProxy() && acl->GetCollectionProxy()->GetValueClass()==this) {
-         acl->GetCollectionProxy()->SetValueClass(newcl);
-         // We should also inform all the TBranchElement :( but we do not have a master list :(
+      if (acl->GetCollectionProxy()) {
+         acl->GetCollectionProxy()->UpdateValueClass(this, newcl);
       }
+      // We should also inform all the TBranchElement :( but we do not have a master list :(
    }
 
    TIter delIter( &tobedeleted );

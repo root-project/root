@@ -352,6 +352,10 @@ protected:
    virtual void DeleteItem(Bool_t force, void* ptr) const;
    // Allow to check function pointers.
    void CheckFunctions()  const;
+
+   // Set pointer to the TClass representing the content.
+   virtual void UpdateValueClass(const TClass *oldcl, TClass *newcl);
+
 private:
    TGenCollectionProxy(); // not implemented on purpose.
    
@@ -398,9 +402,6 @@ public:
 
    // Return a pointer to the TClass representing the content.
    virtual TClass *GetValueClass() const;
-
-   // Set pointer to the TClass representing the content.
-   virtual void SetValueClass(TClass *newcl);
 
    // If the content is a simple numerical value, return its type (see TDataType).
    virtual EDataType GetType() const;

@@ -910,12 +910,18 @@ TClass *TGenCollectionProxy::GetValueClass() const
 }
 
 //______________________________________________________________________________
-void TGenCollectionProxy::SetValueClass(TClass *new_Value_type)
+void TGenCollectionProxy::UpdateValueClass(const TClass *oldValueType, TClass *newValueType)
 {
-   // Set pointer to the TClass representing the content.
+   // Update the internal ValueClass when a TClass constructor need to
+   // replace an emulated TClass by the real TClass.
 
-   if (!fValue) Initialize(kFALSE);
-   fValue->fType = new_Value_type;
+   // Note that we do not need to update anything if we have not yet been
+   // initialized.  In addition (see ROOT-6040) doing an initialization here
+   // might hence a nested dlopen (due to autoloading).
+   if (fValue && fValue->fType == oldValueType) {
+      // Set pointer to the TClass representing the content.
+      fValue->fType = newValueType;
+   }
 }
 
 //______________________________________________________________________________
