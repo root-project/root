@@ -213,6 +213,8 @@ void TStreamerInfo::Build()
    // one by one the list of data members of the analyzed class.
 
    R__LOCKGUARD(gCINTMutex);
+   // Did another thread already do the work?
+   if (fIsBuilt) return;
 
    // This is used to avoid unwanted recursive call to Build
    fIsBuilt = kTRUE;
@@ -508,6 +510,8 @@ void TStreamerInfo::Build()
       if (!infoalloc) {
          Error("Build","Could you create a TStreamerInfo for %s\n",TString::Format("%s@@%d",GetName(),GetClassVersion()).Data());
       } else {
+         // Tell clone we should rerun BuildOld
+         infoalloc->SetBit(kBuildOldUsed,false);
          infoalloc->BuildCheck();
          infoalloc->BuildOld();
          TClass *allocClass = infoalloc->GetClass();
@@ -1266,6 +1270,15 @@ namespace {
       }
       return kFALSE;
    }
+
+  //Makes sure kBuildOldUsed set once BuildOld finishes
+  struct BuildOldGuard {
+     BuildOldGuard(TStreamerInfo* info): fInfo(info) {}
+     ~BuildOldGuard() {
+        fInfo->SetBit(TStreamerInfo::kBuildOldUsed);
+     }
+     TStreamerInfo* fInfo;
+  };
 }
 
 //______________________________________________________________________________
@@ -1275,7 +1288,7 @@ void TStreamerInfo::BuildOld()
 
    R__LOCKGUARD(gCINTMutex);
    if( TestBit(kBuildOldUsed) && !IsOptimized() ) return;
-   SetBit(kBuildOldUsed);
+   BuildOldGuard buildOldGuard(this);
 
    if (gDebug > 0) {
       printf("\n====>Rebuilding TStreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
@@ -1948,6 +1961,7 @@ void TStreamerInfo::BuildOld()
                if (!infoalloc) {
                   Error("BuildOld","Unable to create the StreamerInfo for %s.",TString::Format("%s@@%d",GetName(),GetOnFileClassVersion()).Data());
                } else {
+	          infoalloc->SetBit(kBuildOldUsed,false);
                   infoalloc->BuildCheck();
                   infoalloc->BuildOld();
                   allocClass = infoalloc->GetClass();
