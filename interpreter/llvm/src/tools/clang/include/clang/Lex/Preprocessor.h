@@ -425,7 +425,6 @@ public:
   /// \param Target Information about the target.
   void Initialize(const TargetInfo &Target);
 
-
   /// \brief Retrieve the preprocessor options used to initialize this
   /// preprocessor.
   PreprocessorOptions &getPreprocessorOpts() const { return *PPOpts; }

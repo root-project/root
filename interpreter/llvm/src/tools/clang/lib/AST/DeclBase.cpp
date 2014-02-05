@@ -1077,7 +1077,7 @@ void DeclContext::removeDecl(Decl *D) {
       }
     }
   }
-   
+  
   // Mark that D is no longer in the decl chain.
   D->NextInContextAndBits.setPointer(0);
 
@@ -1096,11 +1096,11 @@ void DeclContext::removeDecl(Decl *D) {
     assert(Pos != Map->end() && "no lookup entry for decl");
 #endif
     if (Pos != Map->end()) {
-       StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
-       if((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())
-          || Pos->second.getAsDecl() == ND)
-          Pos->second.remove(ND);
-    }
+    StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
+    if ((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())
+        || Pos->second.getAsDecl() == ND)
+      Pos->second.remove(ND);
+    } // if (Pos != Map->end())
   }
 }
 
