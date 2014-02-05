@@ -3336,7 +3336,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    while ((acl = (TClass*)delIter())) {
       delete acl;
    }
-
+   gInterpreter->UnRegisterTClassUpdate(this);
 }
 
 //______________________________________________________________________________

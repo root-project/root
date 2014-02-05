@@ -177,6 +177,7 @@ public: // Public Interface
                           const char* payloadCode,
                           void (*triggerFunc)());
    void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
+   void    UnRegisterTClassUpdate(const TClass *oldcl);
 
    Int_t   SetClassSharedLibs(const char *cls, const char *libs);
    void    SetGetline(const char * (*getlineFunc)(const char* prompt),

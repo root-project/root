@@ -1194,9 +1194,14 @@ void TCling::RegisterModule(const char* modulename,
       TClass *oldcl = fClassesToUpdate.back().first;
       if (oldcl->GetState() != TClass::kHasTClassInit) {
          // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-         fClassesToUpdate.back().second();
+         VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+         fClassesToUpdate.pop_back();
+         // Calling func could manipulate the list so, let maintain the list
+         // then call the dictionary function.
+         dict();
+      } else {
+         fClassesToUpdate.pop_back();
       }
-      fClassesToUpdate.pop_back();
    }
 
    if (fClingCallbacks)
@@ -1216,6 +1221,25 @@ void TCling::RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict)
    // UpdateClassInfo.
 
    fClassesToUpdate.push_back(std::make_pair(oldcl,dict));
+}
+
+//______________________________________________________________________________
+void TCling::UnRegisterTClassUpdate(const TClass *oldcl)
+{
+   // If the dictionary is loaded, we can remove the class from the list
+   // (otherwise the class might be loaded twice).
+
+   typedef std::vector<std::pair<TClass*,VoidFuncPtr_t> >::iterator iterator;
+   iterator stop = fClassesToUpdate.end();
+   for(iterator i = fClassesToUpdate.begin();
+       i != stop;
+       ++i)
+   {
+      if ( i->first == oldcl ) {
+         fClassesToUpdate.erase(i);
+         return;
+      }
+   }
 }
 
 //______________________________________________________________________________
