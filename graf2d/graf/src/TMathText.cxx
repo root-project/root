@@ -29,14 +29,14 @@
 TMathText's purpose is to write mathematical equations, exactly as TeX would
 do it. The syntax is the same as the TeX's one.
 <p>
-The following example demonstate how to use TMathText:
+The following example demonstrate how to use TMathText:
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphics/tmathtext.C
 End_Macro
 Begin_Html
 <p>
-The list of all available symbol is given in the following example:
+The list of all available symbols is given in the following example:
 End_Html
 Begin_Macro(source)
 ../../../tutorials/graphics/tmathtext2.C
