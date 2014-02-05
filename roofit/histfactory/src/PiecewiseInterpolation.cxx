@@ -232,13 +232,14 @@ Double_t PiecewiseInterpolation::evaluate() const
       } else {
 	double eps_plus = high->getVal() - nominal;
 	double eps_minus = nominal - low->getVal();
-	double S = (eps_plus + eps_minus)/2;
-	double A = (eps_plus - eps_minus)/16;
+	double S = 0.5 * (eps_plus + eps_minus);
+	double A = 0.0625 * (eps_plus - eps_minus);
 	
 	//fcns+der+2nd_der are eq at bd
-	double xx = x*x ;
-	double xxxx = xx*xx ;
-	double val = nominal + S*x + A*(15*xx - 10*xxxx + 3*xxxx*xx);
+
+        double val = nominal + x * (S + x * A * ( 15 + x * x * (-10 + x * x * 3  ) ) ); 
+
+
 	if (val < 0) val = 0;
 	sum += val-nominal;
       }

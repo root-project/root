@@ -56,6 +56,10 @@ namespace HistFactory{
     virtual void printMultiline(ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const;
     virtual void printFlexibleInterpVars(ostream& os) const;
 
+  private:
+
+    double PolyInterpValue(int i, double x) const;
+
   protected:
 
     RooListProxy _paramList ;
@@ -67,11 +71,8 @@ namespace HistFactory{
 
     TIterator* _paramIter ;  //! do not persist
 
-    mutable Bool_t         _logInit ; //! 
-    mutable std::vector<double> _logLo ; //! cached logs 
-    mutable std::vector<double> _logHi ; //! cached logs
-    mutable std::vector<double> _powLo ; //! cached powers
-    mutable std::vector<double> _powHi ; //! cached powers
+    mutable Bool_t         _logInit ;            //! flag used for chaching polynomial coefficients
+    mutable std::vector< double>  _polCoeff;     //! cached polynomial coefficients
 
     Double_t evaluate() const;
 

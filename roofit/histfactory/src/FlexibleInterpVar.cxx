@@ -203,6 +203,7 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
     _interpCode.at(index) = code;
   }
   // GHL: Adding suggestion by Swagato:
+  _logInit = kFALSE ;
   setValueDirty();
 }
 
@@ -213,6 +214,7 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
     _interpCode.at(i) = code;
   }
   // GHL: Adding suggestion by Swagato:
+  _logInit = kFALSE ;
   setValueDirty();
 
 }
@@ -222,6 +224,8 @@ void FlexibleInterpVar::setNominal(Double_t newNominal){
 
   coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
   _nominal = newNominal;
+
+  _logInit = kFALSE ;
 
   setValueDirty();
 }
@@ -239,6 +243,8 @@ void FlexibleInterpVar::setLow(RooAbsReal& param, Double_t newLow){
     _low.at(index) = newLow;
   }
 
+  _logInit = kFALSE ;
+
   setValueDirty();
 }
 
@@ -255,6 +261,7 @@ void FlexibleInterpVar::setHigh(RooAbsReal& param, Double_t newHigh){
     _high.at(index) = newHigh;
   }
 
+  _logInit = kFALSE ;
   setValueDirty();
 }
 
@@ -271,6 +278,83 @@ void FlexibleInterpVar::printAllInterpCodes(){
 }
 
 //_____________________________________________________________________________
+double FlexibleInterpVar::PolyInterpValue(int i, double x) const { 
+   
+   // code for polynomial interpolation used when interpCode=4
+
+   double boundary = _interpBoundary;
+
+   double x0 = boundary;
+
+
+   // cache the polynomial coefficient values
+   // which do not dpened on x but on the boundaries values
+   if (!_logInit) {
+      
+      _logInit=kTRUE ;
+
+      unsigned int n = _low.size(); 
+      assert(n == _high.size() );
+      
+      _polCoeff.resize(n*6) ;
+      
+      for (unsigned int j = 0; j < n ; j++) {
+         
+         // location of the 6 coefficient for the j-th variable
+         double * coeff = &_polCoeff[j * 6]; 
+         
+         // GHL: Swagato's suggestions
+         double pow_up       =  std::pow(_high[j]/_nominal, x0);
+         double pow_down     =  std::pow(_low[j]/_nominal,  x0);
+         double logHi        =  std::log(_high[j]) ; 
+         double logLo        =  std::log(_low[j] );
+         double pow_up_log   = _high[j] <= 0.0 ? 0.0 : pow_up      * logHi;
+         double pow_down_log = _low[j] <= 0.0 ? 0.0 : -pow_down    * logLo;
+         double pow_up_log2  = _high[j] <= 0.0 ? 0.0 : pow_up_log  * logHi;
+         double pow_down_log2= _low[j] <= 0.0 ? 0.0 : -pow_down_log* logLo;
+
+         double S0 = (pow_up+pow_down)/2;
+         double A0 = (pow_up-pow_down)/2;
+         double S1 = (pow_up_log+pow_down_log)/2;
+         double A1 = (pow_up_log-pow_down_log)/2;
+         double S2 = (pow_up_log2+pow_down_log2)/2;
+         double A2 = (pow_up_log2-pow_down_log2)/2;
+         
+         //fcns+der+2nd_der are eq at bd
+         
+         // cache  coefficient of the polynomial 
+         coeff[0] = 1./(8*x0)        *(      15*A0 -  7*x0*S1 + x0*x0*A2);
+         coeff[1] = 1./(8*x0*x0)     *(-24 + 24*S0 -  9*x0*A1 + x0*x0*S2);
+         coeff[2] = 1./(4*pow(x0, 3))*(    -  5*A0 +  5*x0*S1 - x0*x0*A2);
+         coeff[3] = 1./(4*pow(x0, 4))*( 12 - 12*S0 +  7*x0*A1 - x0*x0*S2);
+         coeff[4] = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
+         coeff[5] = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
+         
+      }
+      
+   }
+   
+   // GHL: Swagato's suggestions
+   // if( _low[i] == 0 ) _low[i] = 0.0001;
+   // if( _high[i] == 0 ) _high[i] = 0.0001;
+   
+   // get pointer to location of coefficients in the vector 
+   const double * coeff = &_polCoeff.front() + 6*i;  
+   
+   double a = coeff[0];
+   double b = coeff[1];
+   double c = coeff[2];
+   double d = coeff[3];
+   double e = coeff[4];
+   double f = coeff[5];
+   
+
+   // evaluate the 6-th degree polynomial using Horner's method
+   double value = 1. + x * (a + x * ( b + x * ( c + x * ( d + x * ( e + x * f ) ) ) ) );
+   return value; 
+}
+
+//_____________________________________________________________________________
 Double_t FlexibleInterpVar::evaluate() const 
 {
   // Calculate and return value of polynomial
@@ -282,11 +366,16 @@ Double_t FlexibleInterpVar::evaluate() const
   //const RooArgSet* nset = _paramList.nset() ;
   int i=0;
 
+  // TString name = GetName();
+  // if (name == TString("ZHWW_ll12_vzll_epsilon") )
+  //    //    std::cout << "evaluate flexible interp var - init flag is " << _logInit << std::endl;
+
   while((param=(RooAbsReal*)_paramIter->Next())) {
     //    param->Print("v");
 
 
     Int_t icode = _interpCode[i] ;
+
     switch(icode) {
 
     case 0: {
@@ -333,83 +422,23 @@ Double_t FlexibleInterpVar::evaluate() const
       }
       break ;
     }
+
     case 4: {
       double boundary = _interpBoundary;
-      // piece-wise log + parabolic
-      if(param->getVal()>=boundary)
+      double x = param->getVal(); 
+      //std::cout << icode << " param " << param->GetName() << "  " << param->getVal() << " boundary " << boundary << std::endl;
+
+      if(x >= boundary)
 	{
-	total *= pow(_high[i]/_nominal, +param->getVal());
-      }
-      else if (param->getVal() < boundary && param->getVal() > -boundary && boundary != 0)
+           total *= std::pow(_high[i]/_nominal, +param->getVal()); 
+        }
+      else if (x <= -boundary)
+	{
+           total *= std::pow(_low[i]/_nominal, -param->getVal());
+        }      
+      else if (x != 0)
       {
-	double x0 = boundary;
-	double x  = param->getVal();
-
-	if (!_logInit) {
-	  
-	  _logInit=kTRUE ;
-	  
-	  _logHi.resize(_high.size()) ;
-	  for (unsigned int j=0 ; j<_high.size() ; j++) {
-	    _logHi[j] = TMath::Log(_high.at(j)) ; 
-	  }
-	  _logLo.resize(_low.size()) ;
-	  for (unsigned int j=0 ; j<_low.size() ; j++) {
-	    _logLo[j] = TMath::Log(_low.at(j)) ; 
-	  }
-	  
-	  _powHi.resize(_high.size()) ;
-	  for (unsigned int j=0 ; j<_high.size() ; j++) {
-	    _powHi[j] = pow(_high.at(j)/_nominal, x0);
-	  }
-	  _powLo.resize(_low.size()) ;
-	  for (unsigned int j=0 ; j<_low.size() ; j++) {
-	    _powLo[j] = pow(_low.at(j)/_nominal,  x0);
-	  }
-	  
-	}
-	
-	// GHL: Swagato's suggestions
-	// if( _low[i] == 0 ) _low[i] = 0.0001;
-	// if( _high[i] == 0 ) _high[i] = 0.0001;
-
-	// GHL: Swagato's suggestions
-	double pow_up       = _powHi[i] ;
-	double pow_down     = _powLo[i] ;
-	double pow_up_log   = _high[i] <= 0.0 ? 0.0 : pow_up*_logHi[i] ;
-	double pow_down_log = _low[i] <= 0.0 ? 0.0 : -pow_down*_logLo[i] ;
-	double pow_up_log2  = _high[i] <= 0.0 ? 0.0 : pow_up_log*_logHi[i] ;
-	double pow_down_log2= _low[i] <= 0.0 ? 0.0 : -pow_down_log*_logLo[i] ;
-	/*
-	double pow_up       = pow(_high[i]/_nominal, x0);
-	double pow_down     = pow(_low[i]/_nominal,  x0);
-	double pow_up_log   = pow_up*TMath::Log(_high[i]);
-	double pow_down_log = -pow_down*TMath::Log(_low[i]);
-	double pow_up_log2  = pow_up_log*TMath::Log(_high[i]);
-	double pow_down_log2= pow_down_log*TMath::Log(_low[i]);
-	*/
-	double S0 = (pow_up+pow_down)/2;
-	double A0 = (pow_up-pow_down)/2;
-	double S1 = (pow_up_log+pow_down_log)/2;
-	double A1 = (pow_up_log-pow_down_log)/2;
-	double S2 = (pow_up_log2+pow_down_log2)/2;
-	double A2 = (pow_up_log2-pow_down_log2)/2;
-
-//fcns+der+2nd_der are eq at bd
-	double a = 1./(8*pow(x0, 1))*(      15*A0 -  7*x0*S1 + x0*x0*A2);
-	double b = 1./(8*pow(x0, 2))*(-24 + 24*S0 -  9*x0*A1 + x0*x0*S2);
-	double c = 1./(4*pow(x0, 3))*(    -  5*A0 +  5*x0*S1 - x0*x0*A2);
-	double d = 1./(4*pow(x0, 4))*( 12 - 12*S0 +  7*x0*A1 - x0*x0*S2);
-	double e = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
-	double f = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
-
-	double xx = x*x ;
-	double xxx = xx*x ;
-	total *= 1 + a*x + b*xx + c*xxx + d*xx*xx + e*xxx*xx + f*xxx*xxx;
-      }
-      else if (param->getVal()<=-boundary)
-	{
-	total *= pow(_low[i]/_nominal,  -param->getVal());
+         total *= PolyInterpValue(i, x);
       }
       break ;
     }
@@ -422,7 +451,7 @@ Double_t FlexibleInterpVar::evaluate() const
   }
 
   if(total<=0) {
-    total=1E-9;
+     total= TMath::Limits<double>::Min();
   }    
 
   return total;
