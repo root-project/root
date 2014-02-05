@@ -123,9 +123,8 @@ void* DynamicLibrary::SearchForAddressOfSymbol(const char *symbolName) {
 
 #if HAVE_DLFCN_H
   // Now search the symbol in all the libraries.
-  if (void *ptr = dlsym(0, symbolName)) {
+  if (void *ptr = dlsym(0, symbolName))
     return ptr;
-  }
 #endif
 
   if (void *Result = llvm::SearchForAddressOfSpecialSymbol(symbolName))
