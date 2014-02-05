@@ -321,7 +321,7 @@ void TClass::AddClass(TClass *cl)
 
    if (!cl) return;
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
       GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
@@ -347,7 +347,7 @@ void TClass::RemoveClass(TClass *oldcl)
 
    if (!oldcl) return;
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
@@ -2167,7 +2167,7 @@ TObject *TClass::Clone(const char *new_name) const
    }
 
    // Need to lock access to TROOT::GetListOfClasses so the cloning happens atomically
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    // Temporarily remove the original from the list of classes.
    TClass::RemoveClass(const_cast<TClass*>(this));
 
@@ -2494,16 +2494,17 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-	    {
-               R__LOCKGUARD(gInterpreterMutex);
-               if ((inh->Property() & kIsVirtualBase) != 0)
-                  return -2;
-	    }
+	    R__LOCKGUARD(gInterpreterMutex);
+	    if ((inh->Property() & kIsVirtualBase) != 0)
+	       return -2;
             return inh->GetDelta();
          }
          off = c->GetBaseClassOffsetRecurse(cl);
          if (off == -2) return -2;
-         if (off != -1) return off + inh->GetDelta();
+         if (off != -1) {
+	    R__LOCKGUARD(gInterpreterMutex);
+	    return off + inh->GetDelta();
+	 }
       }
       lnk = lnk->Next();
    }
@@ -2919,7 +2920,7 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
    // Return pointer to class with name.
 
    //protect access to TROOT::GetListOfClasses
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
 
    if (!gROOT->GetListOfClasses())    return 0;
 
@@ -3317,7 +3318,10 @@ TList *TClass::GetListOfBases()
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
-      gInterpreter->CreateListOfBaseClasses(this);
+      R__LOCKGUARD(gInterpreterMutex);
+      if(!fBase) {
+ 	 gInterpreter->CreateListOfBaseClasses(this);
+      }
    }
    return fBase;
 }
@@ -4816,8 +4820,10 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
+	 R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Destruct(fClassInfo,p);
       } else {
+	 R__LOCKGUARD2(gInterpreterMutex);
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!HasInterpreterInfo() && fCollectionProxy) {
@@ -5053,7 +5059,7 @@ TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
 {
    // Determine and set pointer to current TVirtualStreamerInfo
 
-   R__LOCKGUARD2(gCINTMutex);
+   R__LOCKGUARD2(gInterpreterMutex);
    if(!fCurrentInfo) {
      fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
    }
@@ -5236,7 +5242,7 @@ void TClass::PostLoadCheck()
    }
    else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
    {
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
@@ -6100,7 +6106,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 
    if (fCheckSum == checksum) return GetStreamerInfo();
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;++i) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -6118,7 +6124,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 TVirtualStreamerInfo *TClass::FindStreamerInfo(TObjArray* arr, UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    Int_t ninfos = arr->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -6164,7 +6170,7 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    TObjArray* arr = 0;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       it = (*fConversionStreamerInfo).find( cl->GetName() );
 
@@ -6261,7 +6267,7 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
 
-      R__LOCKGUARD(gCINTMutex);
+      R__LOCKGUARD(gInterpreterMutex);
     
       it = (*fConversionStreamerInfo).find( cl->GetName() );
       
