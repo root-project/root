@@ -131,7 +131,6 @@ protected:
    TH1(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
    TH1(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins);
    TH1(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
-   virtual void     Copy(TObject &hnew) const;
    virtual Int_t    BufferFill(Double_t x, Double_t w);
    virtual Bool_t   FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t& newMin, Double_t &newMax);
    virtual void     SavePrimitiveHelp(ostream &out, const char *hname, Option_t *option = "");
@@ -188,6 +187,7 @@ public:
    
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
+   virtual void     Copy(TObject &hnew) const;
    virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
    virtual Bool_t   Divide(TF1 *f1, Double_t c1=1);
