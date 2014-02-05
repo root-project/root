@@ -266,7 +266,7 @@ public:
    Long_t            ProcessLine(const char *line, Int_t *error = 0);
    Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
    Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
-   Bool_t            ReadingObject() const { /* Deprecated (will be removed in next release) */ return fReadingObject; }
+   Bool_t            ReadingObject() const;
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
@@ -291,7 +291,7 @@ public:
    void              SetEscape(Bool_t flag = kTRUE) { fEscape = flag; }
    void              SetLineIsProcessing() { fLineIsProcessing++; }
    void              SetLineHasBeenProcessed() { if (fLineIsProcessing) fLineIsProcessing--; }
-   void              SetReadingObject(Bool_t flag = kTRUE) { fReadingObject = flag; }
+   void              SetReadingObject(Bool_t flag = kTRUE);
    void              SetMustClean(Bool_t flag = kTRUE) { fMustClean=flag; }
    void              SetSelectedPrimitive(const TObject *obj) { fPrimitive = obj; }
    void              SetSelectedPad(TVirtualPad *pad) { fSelectPad = pad; }
