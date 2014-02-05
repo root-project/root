@@ -102,8 +102,13 @@ namespace {
    };
 }
 
-static thread_local TClass::ENewType    fgCallingNew = TClass::kRealNew;  //Intent of why/how TClass::New() is called
+#if __cplusplus > 199711L
+std::atomic<Int_t> TClass::fgClassCount;
+thread_local TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
+#else
 Int_t TClass::fgClassCount;
+TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
+#endif
 
 struct ObjRepoValue {
    ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
@@ -1418,7 +1423,7 @@ TClass::TClass(const TClass& cl) :
   fProperty(cl.fProperty),
   fClassProperty(cl.fClassProperty),
   fCanLoadClassInfo(cl.fCanLoadClassInfo),
-  fVersionUsed(cl.fVersionUsed),
+  fVersionUsed(),
   fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),

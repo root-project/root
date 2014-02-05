@@ -183,8 +183,12 @@ private:
 
            Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
    mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
-   mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
    mutable Bool_t     fIsOffsetStreamerSet : 1; //!saved remember if fOffsetStreamer has been set.
+#if __cplusplus > 199711L
+   mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
+#else
+   mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
+#endif
 
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
@@ -231,7 +235,13 @@ private:
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
    static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
+#if __cplusplus > 199711L
+   static thread_local ENewType  fgCallingNew;  //Intent of why/how TClass::New() is called
+   static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
+#else
+   static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
+#endif
                                         //stored in TObject::fUniqueID
    // Internal status bits
    enum { kLoading = BIT(14), kUnloading = BIT(14) };
