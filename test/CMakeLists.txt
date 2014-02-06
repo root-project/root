@@ -148,6 +148,12 @@ if(ROOT_roofit_FOUND)
   ROOT_ADD_TEST(test-stressroostats COMMAND stressRooStats FAILREGEX "FAILED")  
 endif()
 
+#--stressHistFactory--------------------------------------------------------------------------------
+if(ROOT_roofit_FOUND)
+  ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
+  ROOT_ADD_TEST(test-stressHistFactory COMMAND stressHistFactory FAILREGEX "FAILED")  
+endif()
+
 #--stressFit---------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED")
