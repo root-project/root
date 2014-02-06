@@ -1216,47 +1216,6 @@ Int_t TUnixSystem::Select(TFileHandler *h, Long_t to)
 //---- handling of system events -----------------------------------------------
 
 //______________________________________________________________________________
-void TUnixSystem::DispatchSignals(ESignals sig)
-{
-   // Handle and dispatch signals.
-
-   switch (sig) {
-   case kSigAlarm:
-      DispatchTimers(kFALSE);
-      break;
-   case kSigChild:
-      CheckChilds();
-      break;
-   case kSigBus:
-   case kSigSegmentationViolation:
-   case kSigIllegalInstruction:
-   case kSigFloatingException:
-      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
-      StackTrace();
-      if (gApplication)
-         gApplication->HandleException(sig);
-      else
-         Exit(sig);
-      break;
-   case kSigSystem:
-   case kSigPipe:
-      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
-      break;
-   case kSigWindowChanged:
-      Gl_windowchanged();
-      break;
-   default:
-      fSignals->Set(sig);
-      fSigcnt++;
-      break;
-   }
-
-   // check a-synchronous signals
-   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-      CheckSignals(kFALSE);
-}
-
-//______________________________________________________________________________
 Bool_t TUnixSystem::CheckSignals(Bool_t sync)
 {
    // Check if some signals were raised and call their Notify() member.
@@ -3533,6 +3492,50 @@ static void sighandler(int sig)
          return;
       }
    }
+}
+
+//______________________________________________________________________________
+void TUnixSystem::DispatchSignals(ESignals sig)
+{
+   // Handle and dispatch signals.
+
+   switch (sig) {
+   case kSigAlarm:
+      DispatchTimers(kFALSE);
+      break;
+   case kSigChild:
+      CheckChilds();
+      break;
+   case kSigBus:
+   case kSigSegmentationViolation:
+   case kSigIllegalInstruction:
+   case kSigFloatingException:
+      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
+      StackTrace();
+      if (gApplication)
+         //sig is ESignals, should it be mapped to the correct signal number?
+         gApplication->HandleException(sig);
+      else
+         //map to the real signal code + set the
+         //high order bit to indicate a signal (?)
+         Exit(gSignalMap[sig].fCode + 0x80);
+      break;
+   case kSigSystem:
+   case kSigPipe:
+      Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
+      break;
+   case kSigWindowChanged:
+      Gl_windowchanged();
+      break;
+   default:
+      fSignals->Set(sig);
+      fSigcnt++;
+      break;
+   }
+
+   // check a-synchronous signals
+   if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
+      CheckSignals(kFALSE);
 }
 
 //______________________________________________________________________________
