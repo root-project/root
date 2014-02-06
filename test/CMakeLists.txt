@@ -150,8 +150,10 @@ endif()
 
 #--stressHistFactory--------------------------------------------------------------------------------
 if(ROOT_roofit_FOUND)
+if(ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
   ROOT_ADD_TEST(test-stressHistFactory COMMAND stressHistFactory FAILREGEX "FAILED")  
+endif()
 endif()
 
 #--stressFit---------------------------------------------------------------------------------
