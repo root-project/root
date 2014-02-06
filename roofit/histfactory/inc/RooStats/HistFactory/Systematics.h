@@ -16,7 +16,7 @@
 #include <iostream>
 
 #include "TH1.h"
-#include "TRef.h"
+#include "RooStats/HistFactory/HistRef.h"
 
 namespace RooStats{
 namespace HistFactory {
@@ -150,8 +150,8 @@ namespace HistFactory {
     std::string fHistoPathHigh;
 
     // The Low and High Histograms
-    TRef fhLow;
-    TRef fhHigh;
+    HistRef fhLow;
+    HistRef fhHigh;
 
   };
 
@@ -203,8 +203,8 @@ namespace HistFactory {
     std::string fHistoPathHigh;
 
     // The Low and High Histograms
-    TRef fhLow;
-    TRef fhHigh;
+    HistRef fhLow;
+    HistRef fhHigh;
 
   };
 
@@ -244,7 +244,7 @@ namespace HistFactory {
     Constraint::Type fConstraintType; 
 
     // The histogram holding the error
-    TRef fhError;
+    HistRef fhError;
 
   };
 
@@ -342,7 +342,7 @@ namespace HistFactory {
     std::string fHistoPath;
 
     // The histogram holding the error
-    TRef fhError;
+    HistRef fhError;
 
   };
 

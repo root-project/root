@@ -16,8 +16,9 @@
 #include <vector>
 #include <iostream>
 
-#include "TRef.h"
 class TH1;
+
+#include "RooStats/HistFactory/HistRef.h"
 #include "RooStats/HistFactory/Systematics.h"
 
 namespace RooStats{
@@ -146,7 +147,7 @@ protected:
 
 
   // The Nominal Shape
-  TRef fhNominal;
+  HistRef fhNominal;
   TH1* fhCountingHist;
 
 };

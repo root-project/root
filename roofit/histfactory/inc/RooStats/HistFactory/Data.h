@@ -59,7 +59,7 @@ protected:
 
 
   // The Data Histogram
-  TRef fhData;
+  HistRef fhData;
 
 
 };
