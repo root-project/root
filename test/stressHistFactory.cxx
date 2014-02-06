@@ -46,7 +46,7 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 }
 
 //______________________________________________________________________________
-Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun)
+Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun)
 {
    // width of lines when printing test results
    const Int_t lineWidth = 120;
@@ -58,7 +58,7 @@ Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
-            cout << "stressHistfactory ERROR: reference file must be local file in writing mode" << endl ;
+            cout << "stressHistFactory ERROR: reference file must be local file in writing mode" << endl ;
             return kFALSE ;
          }
          fref = new TWebFile(refFile) ;
@@ -66,7 +66,7 @@ Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
          fref = new TFile(refFile, writeRef ? "RECREATE" : "") ;
       }
       if (fref->IsZombie()) {
-         cout << "stressHistfactory ERROR: cannot open reference file " << refFile << endl ;
+         cout << "stressHistFactory ERROR: cannot open reference file " << refFile << endl ;
          return kFALSE ;
       }
    }
@@ -102,7 +102,7 @@ Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    cout << "*" << setw(lineWidth - 3) << setfill(' ') << suiteType << " *" << endl;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
 
-   gBenchmark->Start("stressHistfactory");
+   gBenchmark->Start("stressHistFactory");
 
    {
       Int_t i;
@@ -124,7 +124,7 @@ Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
       RooTrace::dump();
    }
 
-   gBenchmark->Stop("stressHistfactory");
+   gBenchmark->Stop("stressHistFactory");
 
 
    //Print table with results
@@ -149,13 +149,13 @@ Int_t stressHistfactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    }
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
-   gBenchmark->Print("stressHistfactory");
+   gBenchmark->Print("stressHistFactory");
 #ifdef __CINT__
    Double_t reftime = 186.34; //pcbrun4 interpreted
 #else
    Double_t reftime = 93.59; //pcbrun4 compiled
 #endif
-   const Double_t rootmarks = 860 * reftime / gBenchmark->GetCpuTime("stressHistfactory");
+   const Double_t rootmarks = 860 * reftime / gBenchmark->GetCpuTime("stressHistFactory");
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    cout << TString::Format("*  ROOTMARKS = %6.1f  *  Root %-8s %d/%d", rootmarks, gROOT->GetVersion(),
@@ -188,39 +188,39 @@ int main(int argc, const char *argv[])
    Int_t testNumber   =      0;
    Bool_t dryRun      = kFALSE;
 
-   string refFileName = "$ROOTSYS/test/stressHistfactory_ref.root" ;
+   string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
       string arg = argv[i] ;
 
       if (arg == "-f") {
-         cout << "stressHistfactory: using reference file " << argv[i + 1] << endl ;
+         cout << "stressHistFactory: using reference file " << argv[i + 1] << endl ;
          refFileName = argv[++i] ;
       } else if (arg == "-w") {
-         cout << "stressHistfactory: running in writing mode to update reference file" << endl ;
+         cout << "stressHistFactory: running in writing mode to update reference file" << endl ;
          doWrite = kTRUE ;
       } else if (arg == "-mc") {
-         cout << "stressHistfactory: running in memcheck mode, no regression tests are performed" << endl;
+         cout << "stressHistFactory: running in memcheck mode, no regression tests are performed" << endl;
          dryRun = kTRUE;
       } else if (arg == "-v") {
-         cout << "stressHistfactory: running in verbose mode" << endl;
+         cout << "stressHistFactory: running in verbose mode" << endl;
          verbose = 1;
       } else if (arg == "-vv") {
-         cout << "stressHistfactory: running in very verbose mode" << endl;
+         cout << "stressHistFactory: running in very verbose mode" << endl;
          verbose = 2;
       } else if (arg == "-a") {
-         cout << "stressHistfactory: deploying full suite of tests" << endl;
+         cout << "stressHistFactory: deploying full suite of tests" << endl;
          allTests = kTRUE;
       } else if (arg == "-n") {
-         cout << "stressHistfactory: running single test" << endl;
+         cout << "stressHistFactory: running single test" << endl;
          oneTest = kTRUE;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
-         cout << "stressHistfactory: setting gDebug to " << argv[i + 1] << endl;
+         cout << "stressHistFactory: setting gDebug to " << argv[i + 1] << endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-h") {
-         cout << "usage: stressHistfactory [ options ] " << endl;
+         cout << "usage: stressHistFactory [ options ] " << endl;
          cout << "" << endl;
          cout << "       -f <file> : use given reference file instead of default (" << refFileName << ")" << endl;
          cout << "       -w        : write reference file, instead of reading file and running comparison tests" << endl;
@@ -241,7 +241,7 @@ int main(int argc, const char *argv[])
    RooMath::cacheCERF(kFALSE) ;
 
    gBenchmark = new TBenchmark();
-   stressHistfactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
+   stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
    return 0;
 }
 
