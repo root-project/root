@@ -21,24 +21,6 @@ ClassImp(TSchemaRule)
 
 using namespace ROOT;
 
-namespace {
-   Bool_t IsCodeEquivalent (TString code1, TString code2)
-   {
-      // A small helper function to check if the C++ code of the two rules 
-      // is the same modulo these characters: '\n', ' ' and '\t'
-      // Copies of the TStrings are performed: in this context clarity is
-      // preferred over performance.
-      /* Original patch by Bill Tanenbaum */
-
-      Char_t irrelevantChars[] = {'\n',' ','\t'};
-      for (Int_t i=0;i<3;i++){
-         code1.ReplaceAll(irrelevantChars[i],"");
-         code2.ReplaceAll(irrelevantChars[i],"");
-         }
-      return code1==code2;
-   }
-}
-
 //------------------------------------------------------------------------------
 TSchemaRule::TSchemaRule(): fVersionVect( 0 ), fChecksumVect( 0 ),
                             fTargetVect( 0 ), fSourceVect( 0 ),
@@ -109,7 +91,7 @@ Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs )
                        && fSource == rhs.fSource
                        && fTarget == rhs.fTarget
                        && fInclude == rhs.fInclude
-                       && IsCodeEquivalent(fCode, rhs.fCode)
+                       && fCode == rhs.fCode
                        && fEmbed == rhs.fEmbed
                        && fRuleType == rhs.fRuleType
                        && fAttributes == rhs.fAttributes );
