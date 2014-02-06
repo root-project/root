@@ -36,9 +36,10 @@ using namespace clang;
 namespace cling {
 
   ClangInternalState::ClangInternalState(ASTContext& AC, Preprocessor& PP,
-                                         llvm::Module& M, const std::string& name)
-    : m_ASTContext(AC), m_Preprocessor(PP), m_Module(M), 
-      m_DiffCommand("diff -u --text "), m_Name(name) {
+                                         llvm::Module* M,
+                                         const std::string& name)
+    : m_ASTContext(AC), m_Preprocessor(PP), m_Module(M),
+      m_DiffCommand("diff -u --text "), m_Name(name), m_DiffPair(0) {
     store();
   }
 
@@ -68,10 +69,11 @@ namespace cling {
     m_MacrosOS.reset(createOutputFile("macros", &m_MacrosFile));
 
     printLookupTables(*m_LookupTablesOS.get(), m_ASTContext);
-    printIncludedFiles(*m_IncludedFilesOS.get(), 
+    printIncludedFiles(*m_IncludedFilesOS.get(),
                        m_ASTContext.getSourceManager());
     printAST(*m_ASTOS.get(), m_ASTContext);
-    printLLVMModule(*m_LLVMModuleOS.get(), m_Module);
+    if (m_Module)
+      printLLVMModule(*m_LLVMModuleOS.get(), *m_Module);
     printMacroDefinitions(*m_MacrosOS.get(), m_Preprocessor);
   }
   namespace {
@@ -89,7 +91,7 @@ namespace cling {
   }
 
   // Copied with modifications from CompilerInstance.cpp
-  llvm::raw_fd_ostream* 
+  llvm::raw_fd_ostream*
   ClangInternalState::createOutputFile(llvm::StringRef OutFile,
                                        std::string *TempPathName/*=0*/,
                                        bool RemoveFileOnSignal/*=true*/) {
@@ -105,7 +107,7 @@ namespace cling {
     llvm::sys::fs::make_absolute(TempPath);
     assert(llvm::sys::fs::is_directory(TempPath.str()) && "Must be a folder.");
     // Create a temporary file.
-    llvm::sys::path::append(TempPath, OutFile);
+    llvm::sys::path::append(TempPath, "cling-" + OutFile);
     TempPath += "-" + getCurrentTimeAsString();
     TempPath += "-%%%%%%%%";
     int fd;
@@ -125,13 +127,16 @@ namespace cling {
     return OS.take();
   }
 
-  void ClangInternalState::compare(ClangInternalState& other) {
+  void ClangInternalState::compare(const std::string& name) {
+    assert(name == m_Name && "Different names!?");
+    m_DiffPair.reset(new ClangInternalState(m_ASTContext, m_Preprocessor,
+                                            m_Module, name));
     std::string differences = "";
     // Ignore the builtins
     typedef llvm::SmallVector<const char*, 1024> Builtins;
     Builtins builtinNames;
     m_ASTContext.BuiltinInfo.GetBuiltinNames(builtinNames);
-    for (Builtins::iterator I = builtinNames.begin(); 
+    for (Builtins::iterator I = builtinNames.begin();
          I != builtinNames.end();) {
       if (llvm::StringRef(*I).startswith("__builtin"))
         I = builtinNames.erase(I);
@@ -139,41 +144,42 @@ namespace cling {
         ++I;
     }
 
-    builtinNames.push_back(".*__builtin.*");      
-    
-    if (differentContent(m_LookupTablesFile, other.m_LookupTablesFile, 
+    builtinNames.push_back(".*__builtin.*");
+
+    if (differentContent(m_LookupTablesFile, m_DiffPair->m_LookupTablesFile,
                          differences, &builtinNames)) {
       llvm::errs() << "Differences in the lookup tables\n";
       llvm::errs() << differences << "\n";
       differences = "";
     }
 
-    if (differentContent(m_IncludedFilesFile, other.m_IncludedFilesFile, 
+    if (differentContent(m_IncludedFilesFile, m_DiffPair->m_IncludedFilesFile,
                          differences)) {
       llvm::errs() << "Differences in the included files\n";
       llvm::errs() << differences << "\n";
       differences = "";
     }
-    if (differentContent(m_ASTFile, other.m_ASTFile, differences)) {
+    if (differentContent(m_ASTFile, m_DiffPair->m_ASTFile, differences)) {
       llvm::errs() << "Differences in the AST \n";
       llvm::errs() << differences << "\n";
       differences = "";
     }
 
-    if (differentContent(m_LLVMModuleFile, other.m_LLVMModuleFile, differences)){
+    if (differentContent(m_LLVMModuleFile, m_DiffPair->m_LLVMModuleFile,
+                         differences)) {
       llvm::errs() << "Differences in the llvm Module \n";
       llvm::errs() << differences << "\n";
       differences = "";
     }
-    if (differentContent(m_MacrosFile, other.m_MacrosFile, differences)){
+    if (differentContent(m_MacrosFile, m_DiffPair->m_MacrosFile, differences)){
       llvm::errs() << "Differences in the Macro Definitions \n";
       llvm::errs() << differences << "\n";
       differences = "";
     }
   }
 
-  bool ClangInternalState::differentContent(const std::string& file1, 
-                                            const std::string& file2, 
+  bool ClangInternalState::differentContent(const std::string& file1,
+                                            const std::string& file2,
                                             std::string& differences,
                 const llvm::SmallVectorImpl<const char*>* ignores/*=0*/) const {
     std::string diffCall = m_DiffCommand;
@@ -222,13 +228,13 @@ namespace cling {
     }
   };
 
-  void ClangInternalState::printLookupTables(llvm::raw_ostream& Out, 
+  void ClangInternalState::printLookupTables(llvm::raw_ostream& Out,
                                              ASTContext& C) {
     DumpLookupTables dumper(Out);
     dumper.TraverseDecl(C.getTranslationUnitDecl());
   }
 
-  void ClangInternalState::printIncludedFiles(llvm::raw_ostream& Out, 
+  void ClangInternalState::printIncludedFiles(llvm::raw_ostream& Out,
                                               SourceManager& SM) {
     for (clang::SourceManager::fileinfo_iterator I = SM.fileinfo_begin(),
            E = SM.fileinfo_end(); I != E; ++I) {
@@ -262,7 +268,7 @@ namespace cling {
     Out.flush();
   }
 
-  void ClangInternalState::printLLVMModule(llvm::raw_ostream& Out, 
+  void ClangInternalState::printLLVMModule(llvm::raw_ostream& Out,
                                            llvm::Module& M) {
     M.print(Out, /*AssemblyAnnotationWriter*/ 0);
   }

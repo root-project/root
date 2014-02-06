@@ -359,6 +359,10 @@ namespace cling {
         VarDecl* VD = cast<VarDecl>(I.m_DGR.getSingleDecl());
         getCodeGenerator()->HandleCXXStaticMemberVarInstantiation(VD);
       }
+      else if (I.m_Call == Transaction::kCCICompleteTentativeDefinition) {
+        VarDecl* VD = cast<VarDecl>(I.m_DGR.getSingleDecl());
+        getCodeGenerator()->CompleteTentativeDefinition(VD);
+      }
       else if (I.m_Call == Transaction::kCCINone)
         ; // We use that internally as delimiter in the Transaction.
       else
@@ -420,6 +424,10 @@ namespace cling {
                  == Transaction::kCCIHandleCXXStaticMemberVarInstantiation) {
           VarDecl* VD = cast<VarDecl>(*DI);
           getCodeGenerator()->HandleCXXStaticMemberVarInstantiation(VD);
+        }
+        else if (I->m_Call == Transaction::kCCICompleteTentativeDefinition) {
+          VarDecl* VD = cast<VarDecl>(I->m_DGR.getSingleDecl());
+          getCodeGenerator()->CompleteTentativeDefinition(VD);
         }
         else if (I->m_Call == Transaction::kCCINone)
           ; // We use that internally as delimiter in the Transaction.
@@ -645,8 +653,6 @@ namespace cling {
 
     assert(T->getState() == Transaction::kCommitted && 
            "Unloading not commited transaction?");
-    assert(T->getModule() && 
-           "Trying to uncodegen transaction taken in syntax only mode. ");
 
     ASTNodeEraser NodeEraser(&getCI()->getSema(), 
                              m_Interpreter->getExecutionEngine());

@@ -37,7 +37,7 @@ namespace cling {
   // pin the vtable here.
   DeclCollector::~DeclCollector() { }
 
-  bool DeclCollector::HandleTopLevelDecl(DeclGroupRef DGR) {        
+  bool DeclCollector::HandleTopLevelDecl(DeclGroupRef DGR) {
     Transaction::DelayCallInfo DCI(DGR, Transaction::kCCIHandleTopLevelDecl);
     m_CurTransaction->append(DCI);
     return true;
@@ -49,26 +49,30 @@ namespace cling {
   }
 
   void DeclCollector::HandleTagDeclDefinition(TagDecl* TD) {
-    Transaction::DelayCallInfo DCI(DeclGroupRef(TD), 
+    Transaction::DelayCallInfo DCI(DeclGroupRef(TD),
                                    Transaction::kCCIHandleTagDeclDefinition);
-    m_CurTransaction->append(DCI);    
+    m_CurTransaction->append(DCI);
   }
 
   void DeclCollector::HandleVTable(CXXRecordDecl* RD, bool DefinitionRequired) {
     Transaction::DelayCallInfo DCI(DeclGroupRef(RD),
                                    Transaction::kCCIHandleVTable);
-    m_CurTransaction->append(DCI);    
+    m_CurTransaction->append(DCI);
 
     // Intentional no-op. It comes through Sema::DefineUsedVTables, which
     // comes either Sema::ActOnEndOfTranslationUnit or while instantiating a
-    // template. In our case we will do it on transaction commit, without 
+    // template. In our case we will do it on transaction commit, without
     // keeping track of used vtables, because we have cases where we bypass the
-    // clang/AST and directly ask the module so that we have to generate 
+    // clang/AST and directly ask the module so that we have to generate
     // everything without extra smartness.
   }
 
   void DeclCollector::CompleteTentativeDefinition(VarDecl* VD) {
-    assert(0 && "Not implemented yet!");
+    // C has tentative definitions which we might need to deal with when running
+    // in C mode.
+    Transaction::DelayCallInfo DCI(DeclGroupRef(VD),
+                                   Transaction::kCCICompleteTentativeDefinition);
+    m_CurTransaction->append(DCI);
   }
 
   void DeclCollector::HandleTranslationUnit(ASTContext& Ctx) {

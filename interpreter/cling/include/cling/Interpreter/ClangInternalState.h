@@ -42,12 +42,15 @@ namespace cling {
     std::string m_MacrosFile;
     clang::ASTContext& m_ASTContext;
     clang::Preprocessor& m_Preprocessor;
-    llvm::Module& m_Module;
+    llvm::Module* m_Module;
     std::string m_DiffCommand;
     std::string m_Name;
+    ///\brief Takes the ownership after compare was made.
+    ///
+    llvm::OwningPtr<ClangInternalState> m_DiffPair;
   public:
     ClangInternalState(clang::ASTContext& AC, clang::Preprocessor& PP,
-                       llvm::Module& M, const std::string& name);
+                       llvm::Module* M, const std::string& name);
     ~ClangInternalState();
 
     ///\brief It is convenient the state object to be named so that can be
@@ -59,9 +62,9 @@ namespace cling {
     ///
     void store();
 
-    ///\brief Compares two states.
+    ///\brief Compares the states with the current state of the same objects.
     ///
-    void compare(ClangInternalState& other);
+    void compare(const std::string& name);
 
     ///\brief Runs diff on two files.
     ///\param[in] file1 - A file to diff
@@ -70,12 +73,12 @@ namespace cling {
     ///\param[in] ignores - A list of differences to ignore.
     ///\returns true if there is difference in the contents.
     ///
-    bool differentContent(const std::string& file1, const std::string& file2, 
-                          std::string& differences, 
+    bool differentContent(const std::string& file1, const std::string& file2,
+                          std::string& differences,
                    const llvm::SmallVectorImpl<const char*>* ignores = 0) const;
-    
+
     static void printLookupTables(llvm::raw_ostream& Out, clang::ASTContext& C);
-    static void printIncludedFiles(llvm::raw_ostream& Out, 
+    static void printIncludedFiles(llvm::raw_ostream& Out,
                                    clang::SourceManager& SM);
     static void printAST(llvm::raw_ostream& Out, clang::ASTContext& C);
     static void printLLVMModule(llvm::raw_ostream& Out, llvm::Module& M);

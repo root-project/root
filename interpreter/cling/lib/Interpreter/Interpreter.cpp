@@ -154,7 +154,7 @@ namespace cling {
 
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/) :
-    m_UniqueCounter(0), m_PrintAST(false), m_PrintIR(false), 
+    m_UniqueCounter(0), m_PrintAST(false), m_PrintIR(false),
     m_DynamicLookupEnabled(false), m_RawInputEnabled(false) {
 
     m_LLVMContext.reset(new llvm::LLVMContext);
@@ -172,8 +172,8 @@ namespace cling {
                                              &LeftoverArgs[0],
                                              llvmdir));
     Sema& SemaRef = getSema();
-    m_LookupHelper.reset(new LookupHelper(new Parser(SemaRef.getPreprocessor(), 
-                                                     SemaRef, 
+    m_LookupHelper.reset(new LookupHelper(new Parser(SemaRef.getPreprocessor(),
+                                                     SemaRef,
                                                      /*SkipFunctionBodies*/false,
                                                      /*isTemp*/true), this));
 
@@ -252,7 +252,8 @@ namespace cling {
   Interpreter::~Interpreter() {
     if (m_ExecutionContext)
       m_ExecutionContext->shuttingDown();
-    assert(!m_StoredStates.size() && "Unbalanced store/compare state.");
+    for (size_t i = 0, e = m_StoredStates.size(); i != e; ++i)
+      delete m_StoredStates[i];
     getCI()->getDiagnostics().getClient()->EndSourceFile();
   }
 
@@ -300,25 +301,25 @@ namespace cling {
   void Interpreter::storeInterpreterState(const std::string& name) const {
     // This may induce deserialization
     PushTransactionRAII RAII(this);
-    ClangInternalState* state 
+    ClangInternalState* state
       = new ClangInternalState(getCI()->getASTContext(),
-                               getCI()->getPreprocessor(), *getModule(), name);
+                               getCI()->getPreprocessor(), getModule(), name);
     m_StoredStates.push_back(state);
   }
 
   void Interpreter::compareInterpreterState(const std::string& name) const {
-    // This may induce deserialization
-    PushTransactionRAII RAII(this);
-    ClangInternalState state(getCI()->getASTContext(),
-                             getCI()->getPreprocessor(), *getModule(), name);
-    for (unsigned i = 0, e = m_StoredStates.size(); i != e; ++i) {
+    short foundAtPos = -1;
+    for (short i = 0, e = m_StoredStates.size(); i != e; ++i) {
       if (m_StoredStates[i]->getName() == name) {
-        m_StoredStates[i]->compare(state);
-        // Remove from the stack and free the storage.
-        delete *m_StoredStates.erase(m_StoredStates.begin() + i);
+        foundAtPos = i;
         break;
       }
     }
+    assert(foundAtPos>-1 && "The name doesnt exist. Unbalanced store/compare");
+
+    // This may induce deserialization
+    PushTransactionRAII RAII(this);
+    m_StoredStates[foundAtPos]->compare(name);
   }
 
   void Interpreter::printIncludedFiles(llvm::raw_ostream& Out) const {
@@ -429,7 +430,9 @@ namespace cling {
   }
 
   llvm::Module* Interpreter::getModule() const {
-    return m_IncrParser->getCodeGenerator()->GetModule();
+    if (m_IncrParser->hasCodeGenerator())
+      return m_IncrParser->getCodeGenerator()->GetModule();
+    return 0;
   }
 
   ///\brief Maybe transform the input line to implement cint command line
@@ -841,7 +844,7 @@ namespace cling {
                                Transaction** T /* = 0 */) const {
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()
-    ignoreFakeDiagnostics();
+    MaybeIgnoreFakeDiagnostics();
 
     if (Transaction* lastT = m_IncrParser->Compile(input, CO)) {
       if (lastT->getIssuedDiags() != Transaction::kErrors) {
@@ -863,7 +866,7 @@ namespace cling {
                                 Transaction** T /* = 0 */) {
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()
-    ignoreFakeDiagnostics();
+    MaybeIgnoreFakeDiagnostics();
 
     // Wrap the expression
     std::string WrapperName;
@@ -1001,7 +1004,10 @@ namespace cling {
     m_ExecutionContext->runStaticDestructorsOnce(getModule());
   }
 
-  void Interpreter::ignoreFakeDiagnostics() const {
+  void Interpreter::MaybeIgnoreFakeDiagnostics() const {
+    // In rawInput mode we want to be as close as possible to the compiler.
+    if (isRawInputEnabled())
+      return;
     DiagnosticsEngine& Diag = getCI()->getDiagnostics();
     // Disable warnings which doesn't make sense when using the prompt
     // This gets reset with the clang::Diagnostics().Reset()

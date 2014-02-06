@@ -149,7 +149,37 @@ namespace cling {
     ///
     bool VisitMacro(const Transaction::MacroDirectiveInfo MD);
 
-    void RemoveDeclFromModule(GlobalDecl& GD) const;
+    ///@name Templates
+    ///@{
+
+    ///\brief Removes template from the redecl chain. Templates are 
+    /// redeclarables also.
+    /// @param[in] R - The declaration to be removed.
+    ///
+    ///\returns true on success.
+    ///
+    bool VisitRedeclarableTemplateDecl(RedeclarableTemplateDecl* R);
+
+
+    ///\brief Removes the declaration clang's internal structures. This case
+    /// looks very much to VisitFunctionDecl, but FunctionTemplateDecl doesn't
+    /// derive from FunctionDecl and thus we need to handle it 'by hand'.
+    /// @param[in] FTD - The declaration to be removed.
+    ///
+    ///\returns true on success.
+    ///
+    bool VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD);
+
+    ///\brief Removes the template declaration clang's internal structures.
+    /// @param[in] CTD - The declaration to be removed.
+    ///
+    ///\returns true on success.
+    ///
+    bool VisitClassTemplateDecl(ClassTemplateDecl* CTD);
+
+    ///@}
+
+    void MaybeRemoveDeclFromModule(GlobalDecl& GD) const;
     void RemoveStaticInit(llvm::Function& F) const;
 
     /// @name Helpers
@@ -199,33 +229,12 @@ namespace cling {
           if (!Name.isEmpty()) {
             StoredDeclsMap::iterator Pos = Map->find(Name);
             if (Pos != Map->end() && !Pos->second.isNull()) {
-              // If this is a redeclaration of an existing decl, replace the
-              // old one with D.
-              if (!Pos->second.HandleRedeclaration(PrevDecls[0])) {
-                // We are probably in the case where we had overloads and we 
-                // deleted an overload definition but we still have its 
-                // declaration. Say void f(); void f(int); void f(int) {}
-                // If f(int) was in the lookup table we remove it but we must
-                // put the declaration of void f(int);
-                if (Pos->second.getAsDecl() == ND)
-                  Pos->second.setOnlyValue(PrevDecls[0]);
-                else if (StoredDeclsList::DeclsTy* Vec 
-                         = Pos->second.getAsVector()) {
-                  bool wasReplaced = false;
-                  for (StoredDeclsList::DeclsTy::iterator I= Vec->begin(),
-                         E = Vec->end(); I != E; ++I)
-                    if (*I == ND) {
-                      // We need to replace it exactly at the same place where
-                      // the old one was. The reason is cling diff-based 
-                      // test suite
-                      *I = PrevDecls[0];
-                      wasReplaced = true;
-                      break;
-                    }
-                  // This will make the DeclContext::removeDecl happy. It also
-                  // tries to remove the decl from the lookup.
-                  if (wasReplaced)
-                    Pos->second.AddSubsequentDecl(ND);
+              DeclContext::lookup_result decls = Pos->second.getLookupResult();
+              for(DeclContext::lookup_result::iterator I = decls.begin(),
+                    E = decls.end(); I != E; ++I) {
+                if (*I == ND) { // the decl is registered in the lookup
+                  *I = PrevDecls[0];
+                  break;
                 }
               }
             }
@@ -286,31 +295,6 @@ namespace cling {
       m_FilesToUncache.insert(FID);
   }
 
-  // Gives us access to the protected members that we need.
-  class DeclContextExt : public DeclContext {
-  public:
-    static bool removeIfLast(DeclContext* DC, Decl* D) {
-      if (!D->getNextDeclInContext()) {
-        // Either last (remove!), or invalid (nothing to remove)
-        if (((DeclContextExt*)DC)->LastDecl == D) {
-          // Valid. Thus remove.
-          DC->removeDecl(D);
-          // Force rebuilding of the lookup table.
-          //DC->setMustBuildLookupTable();
-          return true;
-        }
-      }
-      else {
-        // Force rebuilding of the lookup table.
-        //DC->setMustBuildLookupTable();
-        DC->removeDecl(D);
-        return true;
-      }
-
-      return false;
-    }
-  };
-
   bool DeclReverter::VisitDecl(Decl* D) {
     assert(D && "The Decl is null");
     CollectFilesToUncache(D->getLocStart());
@@ -318,7 +302,8 @@ namespace cling {
     DeclContext* DC = D->getLexicalDeclContext();
 
     bool Successful = true;
-    DeclContextExt::removeIfLast(DC, D);
+    if (DC->containsDecl(D))
+      DC->removeDecl(D);
 
     // With the bump allocator this is nop.
     if (Successful)
@@ -357,13 +342,13 @@ namespace cling {
           Pos->second.remove(ND);
         else if (StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector()) {
           // Otherwise iterate over the list with entries with the same name.
-          // TODO: Walk the redeclaration chain if the entry was a redeclaration
           for (StoredDeclsList::DeclsTy::const_iterator I = Vec->begin(),
                  E = Vec->end(); I != E; ++I)
             if (*I == ND)
               Pos->second.remove(ND);
         }
-        if (Pos->second.isNull())
+        if (Pos->second.isNull() || 
+            (Pos->second.getAsVector() && !Pos->second.getAsVector()->size()))
           Map->erase(Pos);
       }
     }
@@ -398,7 +383,7 @@ namespace cling {
     // generated. This has to go first, because it may need the AST information
     // which we will remove soon. (Eg. mangleDeclName iterates the redecls)
     GlobalDecl GD(VD);
-    RemoveDeclFromModule(GD);
+    MaybeRemoveDeclFromModule(GD);
 
     // VarDecl : DeclaratiorDecl, Redeclarable
     bool Successful = VisitRedeclarable(VD, VD->getDeclContext());
@@ -414,7 +399,7 @@ namespace cling {
       // generated. This has to go first, because it may need the AST info
       // which we will remove soon. (Eg. mangleDeclName iterates the redecls)
       GlobalDecl GD(FD);
-      RemoveDeclFromModule(GD);
+      MaybeRemoveDeclFromModule(GD);
     }
 
     // FunctionDecl : DeclaratiorDecl, DeclContext, Redeclarable
@@ -519,11 +504,11 @@ namespace cling {
     // Ctor_Base                Base object ctor.
     // Ctor_CompleteAllocating 	Complete object allocating ctor.
     GlobalDecl GD(CXXCtor, Ctor_Complete);
-    RemoveDeclFromModule(GD);
+    MaybeRemoveDeclFromModule(GD);
     GD = GlobalDecl(CXXCtor, Ctor_Base);
-    RemoveDeclFromModule(GD);
+    MaybeRemoveDeclFromModule(GD);
     GD = GlobalDecl(CXXCtor, Ctor_CompleteAllocating);
-    RemoveDeclFromModule(GD);
+    MaybeRemoveDeclFromModule(GD);
 
     bool Successful = VisitCXXMethodDecl(CXXCtor);
     return Successful;
@@ -576,7 +561,9 @@ namespace cling {
     return Successful;
   }
 
-  void DeclReverter::RemoveDeclFromModule(GlobalDecl& GD) const {
+  void DeclReverter::MaybeRemoveDeclFromModule(GlobalDecl& GD) const {
+    if (!m_CurTransaction->getModule()) // syntax-only mode exit
+      return;
     using namespace llvm;
     // if it was successfully removed from the AST we have to check whether
     // code was generated and remove it.
@@ -749,12 +736,42 @@ namespace cling {
     const MacroInfo* MI = MD->getMacroInfo();
 
     // If the macro is not defined, this is a noop undef, just return.
-    if (MI == 0) return false;
+    if (MI == 0)
+      return false;
 
     // Remove the pair from the macros
     PP.removeMacro(MacroD.m_II, const_cast<MacroDirective*>(MacroD.m_MD));
 
     return true;
+  }
+
+  bool DeclReverter::VisitRedeclarableTemplateDecl(RedeclarableTemplateDecl* R){
+    bool Successful = VisitRedeclarable(R, R->getDeclContext());
+    Successful &= VisitTemplateDecl(R);
+    return Successful;
+  }
+
+  bool DeclReverter::VisitFunctionTemplateDecl(FunctionTemplateDecl* FTD) {
+    bool Successful = VisitRedeclarableTemplateDecl(FTD);
+
+    // Remove specializations:
+    for (FunctionTemplateDecl::spec_iterator I = FTD->spec_begin(), 
+           E = FTD->spec_end(); I != E; ++I)
+      Successful = Visit(*I);
+
+    Successful &= VisitFunctionDecl(FTD->getTemplatedDecl());
+    return Successful;
+  }
+
+  bool DeclReverter::VisitClassTemplateDecl(ClassTemplateDecl* CTD) {
+    bool Successful = VisitRedeclarableTemplateDecl(CTD);
+    // Remove specializations:
+    for (ClassTemplateDecl::spec_iterator I = CTD->spec_begin(), 
+           E = CTD->spec_end(); I != E; ++I)
+      Successful = Visit(*I);
+
+    Successful &= Visit(CTD->getTemplatedDecl());
+    return Successful;
   }
 
   ASTNodeEraser::ASTNodeEraser(Sema* S, llvm::ExecutionEngine* EE)
