@@ -39,14 +39,13 @@ public:
 
    //copy ctor (need for cloning)
    FunctorCintHandler(const FunctorCintHandler<Functor> & rhs) :
-      BaseFunc(),
+      ImplFunc(),
       fDim(rhs.fDim),
       fPtr(rhs.fPtr),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(0)
    {}
    FunctorCintHandler(const FunctorCintHandler<GradFunctor> & rhs) :
-      BaseFunc(),
       ImplFunc(),
       fDim(rhs.fDim),
       fPtr(rhs.fPtr),
@@ -54,14 +53,13 @@ public:
       fMethodCall2(rhs.fMethodCall2)
    {}
    FunctorCintHandler(const FunctorCintHandler<Functor1D> & rhs) :
-      BaseFunc(),
+      ImplFunc(),
       fDim(1),
       fPtr(rhs.fPtr),
       fMethodCall(rhs.fMethodCall),
       fMethodCall2(0)
    {}
    FunctorCintHandler(const FunctorCintHandler<GradFunctor1D> & rhs) :
-      BaseFunc(),
       ImplFunc(),
       fDim(1),
       fPtr(rhs.fPtr),
@@ -69,8 +67,11 @@ public:
       fMethodCall2(rhs.fMethodCall2)
    {}
 
-   ~FunctorCintHandler() { //no op (keep pointer to TMethodCall)
+   virtual ~FunctorCintHandler() { //no op (keep pointer to TMethodCall)
    }
+
+   ImplFunc  * Copy() const {  return new FunctorCintHandler(*this);  }
+
    BaseFunc  * Clone() const {  return new FunctorCintHandler(*this);  }
 
    unsigned int NDim() const {
