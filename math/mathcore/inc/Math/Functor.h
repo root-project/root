@@ -29,6 +29,27 @@ namespace ROOT {
 
 namespace Math { 
 
+/**
+   FunctorImpl is a base class for the functor 
+   handler implementation class. 
+   It defines the Copy operator used to clone the functor objects
+*/
+
+template<class IBaseFunc> 
+class FunctorImpl : public IBaseFunc { 
+
+public: 
+
+   typedef IBaseFunc BaseFunc; 
+
+
+   FunctorImpl() : IBaseFunc() { }
+
+   virtual ~FunctorImpl() {}
+
+   virtual FunctorImpl* Copy() const = 0; 
+
+};
 
 /** 
    Functor Handler class is responsible for wrapping any other functor and pointer to 
@@ -54,6 +75,7 @@ class FunctorHandler : public ParentFunctor::Impl {
    typedef typename ImplFunc::BaseFunc BaseFunc; 
    //typedef typename ParentFunctor::Dim Dim; 
 
+
 public: 
 
    // constructor for 1d functions 
@@ -66,10 +88,18 @@ public:
       fFunc(fun) 
    {}
 
-   // clone of the function handler (use copy-ctor) 
-   BaseFunc * Clone() const { 
+   virtual ~FunctorHandler() {}
+
+   // copy of the function handler (use copy-ctor)
+   ImplFunc * Copy() const { 
      return new FunctorHandler(*this); 
    }
+
+   // clone of the function handler (use copy-ctor) 
+   BaseFunc * Clone() const { 
+      return Copy(); 
+   }
+
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -138,8 +168,13 @@ public:
       fGradFunc( gfun ) 
    {}
 
+   virtual ~FunctorGradHandler() {} 
+
    // clone of the function handler (use copy-ctor) 
-   BaseFunc * Clone() const { return new FunctorGradHandler(*this); }
+   ImplFunc * Copy() const { return new FunctorGradHandler(*this); }
+
+   // clone of the function handler (use copy-ctor) 
+   BaseFunc * Clone() const { return Copy(); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -200,8 +235,12 @@ public:
    MemFunHandler(unsigned int dim, const PointerToObj& pObj, PointerToMemFn pMemFn) 
       : fDim(dim), fObj(pObj), fMemFn(pMemFn)
    {}
-        
+
+   virtual ~MemFunHandler() {}
    
+   // clone of the function handler (use copy-ctor) 
+   ImplFunc * Copy() const { return new MemFunHandler(*this); }
+
    // clone of the function handler (use copy-ctor) 
    BaseFunc * Clone() const { return new MemFunHandler(*this); }
 
@@ -265,10 +304,14 @@ public:
         fMemFn(pMemFn), 
         fGradMemFn(pGradMemFn)
    {}
-        
+       
+   virtual ~MemGradFunHandler() {}
+
+   // clone of the function handler (use copy-ctor) 
+   ImplFunc * Copy() const { return new MemGradFunHandler(*this); }
    
    // clone of the function handler (use copy-ctor) 
-     BaseFunc * Clone() const { return new MemGradFunHandler(*this); }
+   BaseFunc * Clone() const { return new MemGradFunHandler(*this); }
 
    // constructor for multi-dimensional functions
    unsigned int NDim() const { 
@@ -312,8 +355,10 @@ public:
 
    FunctorHandler(TRootIOCtor  *) {}
    // function required by interface
+   virtual ~FunctorHandler() {}
    double DoEval (double ) const  { return 0; } 
    double DoDerivative (double ) const  { return 0; } 
+   ImplFunc  * Copy() const {  return 0;  } 
    BaseFunc  * Clone() const {  return 0;  } 
 
 }; 
@@ -342,7 +387,7 @@ class Functor : public IBaseFunctionMultiDim  {
 
 public: 
 
-   typedef IBaseFunctionMultiDim Impl;   
+   typedef FunctorImpl<IBaseFunctionMultiDim> Impl;   
    typedef IBaseFunctionMultiDim::BaseFunc ImplBase;   
 
    /** 
@@ -387,10 +432,10 @@ public:
       Copy constructor for functor based on ROOT::Math::IMultiGenFunction
    */ 
    Functor(const Functor & rhs) : 
-      Impl()  
+      ImplBase()  
    {
       if (rhs.fImpl.get() != 0) 
-         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Clone() ); 
+         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Copy() ); 
    } 
    // need a specialization in order to call base classes and use  clone
 
@@ -449,7 +494,7 @@ class Functor1D : public IBaseFunctionOneDim  {
 
 public: 
 
-   typedef IBaseFunctionOneDim          Impl;   
+   typedef FunctorImpl<IBaseFunctionOneDim>          Impl;   
    typedef IBaseFunctionOneDim::BaseFunc ImplBase; 
 
    /** 
@@ -493,11 +538,11 @@ public:
       Copy constructor for Functor based on ROOT::Math::IGenFunction
    */ 
    Functor1D(const Functor1D & rhs) : 
-      // strange that this is required eventhough Impl is an abstract class
-      Impl()
+      // strange that this is required eventhough ImplBase is an abstract class
+      ImplBase()
    {
       if (rhs.fImpl.get() != 0) 
-         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Clone() ); 
+         fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Copy() ); 
    } 
 #endif
 
@@ -556,7 +601,7 @@ class GradFunctor : public IGradientFunctionMultiDim  {
 
 public: 
 
-   typedef IGradientFunctionMultiDim Impl;   
+   typedef FunctorImpl<IGradientFunctionMultiDim> Impl;   
    typedef IGradientFunctionMultiDim::BaseFunc ImplBase;   
    
 
@@ -610,11 +655,10 @@ public:
       Copy constructor for functor based on ROOT::Math::IMultiGradFunction
    */ 
    GradFunctor(const GradFunctor & rhs) : 
-      ImplBase(),
-      Impl() 
+      ImplBase()
    {
       if (rhs.fImpl.get() != 0) 
-         fImpl = std::auto_ptr<Impl>( dynamic_cast<Impl *>( (rhs.fImpl)->Clone()) ); 
+         fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy() ); 
    } 
 #endif
 
@@ -679,7 +723,7 @@ class GradFunctor1D : public IGradientFunctionOneDim  {
 
 public: 
 
-   typedef IGradientFunctionOneDim  Impl; 
+   typedef FunctorImpl<IGradientFunctionOneDim>  Impl; 
    typedef IGradientFunctionOneDim::BaseFunc ImplBase; 
    
 
@@ -735,11 +779,10 @@ public:
    */ 
    GradFunctor1D(const GradFunctor1D & rhs) : 
       // strange that this is required eventhough Impl is an abstract class
-      ImplBase(),          
-      Impl()  
+      ImplBase()          
    {
       if (rhs.fImpl.get() != 0) 
-         fImpl = std::auto_ptr<Impl>( dynamic_cast<Impl *>( (rhs.fImpl)->Clone() ) ); 
+         fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy()  ); 
    } 
 #endif
 
