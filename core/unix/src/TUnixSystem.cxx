@@ -3513,7 +3513,7 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       Break("TUnixSystem::DispatchSignals", "%s", UnixSigname(sig));
       StackTrace();
       if (gApplication)
-         //sig is ESignals, should it be mapped to the correct signal number?
+         //sig is ESignal, should it be mapped to the correct signal number?
          gApplication->HandleException(sig);
       else
          //map to the real signal code + set the
