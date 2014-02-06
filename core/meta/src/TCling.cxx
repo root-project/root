@@ -580,63 +580,8 @@ static string TCling__Demangle(const char *mangled_name, int *err)
 
 void* llvmLazyFunctionCreator(const std::string& mangled_name)
 {
-   // Autoload a library providing a given a mangled function name.
-   //--
-   //
-   //  Use the C++ ABI provided function to demangle the symbol name.
-   //
-   int err = 0;
-   string name = TCling__Demangle(mangled_name.c_str(), &err);
-   if (err) {
-      return 0;
-   }
-   //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
-   //
-   //  Separate out the class or namespace part of the
-   //  function name.
-   //
-
-   if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
-      name.erase(0, sizeof("typeinfo for ")-1);
-   } else {
-      // Remove the function arguments.
-      std::string::size_type pos = name.rfind('(');
-      if (pos != std::string::npos) {
-         name.erase(pos);
-      }
-      // Remove the function name.
-      pos = name.rfind(':');
-      if (pos != std::string::npos) {
-         if ((pos != 0) && (name[pos-1] == ':')) {
-            name.erase(pos-1);
-         }
-      }
-   }
-   //fprintf(stderr, "name: '%s'\n", name.c_str());
-   // Now we have the class or namespace name, so do the lookup.
-   TString libs = gCling->GetClassSharedLibs(name.c_str());
-   if (libs.IsNull()) {
-      // Not found in the map, all done.
-      return 0;
-   }
-   //fprintf(stderr, "library: %s\n", iter->second.c_str());
-   // Now we have the name of the libraries to load, so load them.
-
-   TString lib;
-   Ssiz_t posLib = 0;
-   while (libs.Tokenize(lib, posLib)) {
-      if (gInterpreter->Load(lib, kFALSE /*system*/) < 0) {
-         // The library load failed, all done.
-         //fprintf(stderr, "load failed: %s\n", errmsg.c_str());
-         return 0;
-      }
-   }
-
-   //fprintf(stderr, "load succeeded.\n");
-   // Get the address of the function being called.
-   void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
-   //fprintf(stderr, "addr: %016lx\n", reinterpret_cast<unsigned long>(addr));
-   return addr;
+   // Autoload a library provided the mangled name of a missing symbol.
+   return ((TCling*)gCling)->LazyFunctionCreatorAutoload(mangled_name);
 }
 
 //______________________________________________________________________________
@@ -1141,6 +1086,19 @@ void TCling::RegisterModule(const char* modulename,
    TString code = "#define __ROOTCLING__ 1\n";
    code += payloadCode;
 
+   // We need to open the dictionary shared library, to resolve sylbols
+   // requested by the JIT from it: as the library is currently being dlopen'ed,
+   // its symbols are not yet reachable from the process.
+   // Recursive dlopen seems to work just fine.
+   void* shLibHandle = dlopen(FindLibraryName(triggerFunc),
+                              RTLD_LAZY | RTLD_GLOBAL);
+   if (!shLibHandle) {
+      ::Error("TCling::RegisterModule",
+              "Cannot determine shared library for dictionary %s", modulename);
+   } else {
+      fRegisterModuleDyLibs.push_back(shLibHandle);
+   }
+
    if (rootModulesDefined) {
       fInterpreter->declare(code.Data());
       code = "";
@@ -1214,6 +1172,11 @@ void TCling::RegisterModule(const char* modulename,
    fInterpreter->declare("#ifdef __ROOTCLING__\n"
                          "#undef __ROOTCLING__\n"
                          "#endif");
+
+   if (shLibHandle) {
+      fRegisterModuleDyLibs.pop_back();
+      dlclose(shLibHandle);
+   }
 }
 
 //______________________________________________________________________________
@@ -4121,6 +4084,77 @@ Int_t TCling::AutoLoad(const char* cls)
    }
    SetClassAutoloading(oldvalue);
    return status;
+}
+
+//______________________________________________________________________________
+void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
+   // Autoload a library based on a missing symbol.
+
+   // First see whether the symbol is in the library that we are currently
+   // loading. It will have access to the symbols of the libraries that
+   // triggered its load, thus checking "back()" is sufficient.
+   if (!fRegisterModuleDyLibs.empty()) {
+      if (void* addr = dlsym(fRegisterModuleDyLibs.back(),
+                             mangled_name.c_str())) {
+         return addr;
+      }
+   }
+
+   //
+   //  Use the C++ ABI provided function to demangle the symbol name.
+   //
+   int err = 0;
+   string name = TCling__Demangle(mangled_name.c_str(), &err);
+   if (err) {
+      return 0;
+   }
+   //fprintf(stderr, "demangled name: '%s'\n", demangled_name);
+   //
+   //  Separate out the class or namespace part of the
+   //  function name.
+   //
+
+   if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
+      name.erase(0, sizeof("typeinfo for ")-1);
+   } else {
+      // Remove the function arguments.
+      std::string::size_type pos = name.rfind('(');
+      if (pos != std::string::npos) {
+         name.erase(pos);
+      }
+      // Remove the function name.
+      pos = name.rfind(':');
+      if (pos != std::string::npos) {
+         if ((pos != 0) && (name[pos-1] == ':')) {
+            name.erase(pos-1);
+         }
+      }
+   }
+   //fprintf(stderr, "name: '%s'\n", name.c_str());
+   // Now we have the class or namespace name, so do the lookup.
+   TString libs = GetClassSharedLibs(name.c_str());
+   if (libs.IsNull()) {
+      // Not found in the map, all done.
+      return 0;
+   }
+   //fprintf(stderr, "library: %s\n", iter->second.c_str());
+   // Now we have the name of the libraries to load, so load them.
+
+   TString lib;
+   Ssiz_t posLib = 0;
+   while (libs.Tokenize(lib, posLib)) {
+      if (Load(lib, kFALSE /*system*/) < 0) {
+         // The library load failed, all done.
+         //fprintf(stderr, "load failed: %s\n", errmsg.c_str());
+         return 0;
+      }
+   }
+
+   //fprintf(stderr, "load succeeded.\n");
+   // Get the address of the function being called.
+   void* addr = llvm::sys::DynamicLibrary::SearchForAddressOfSymbol(mangled_name.c_str());
+   //fprintf(stderr, "addr: %016lx\n", reinterpret_cast<unsigned long>(addr));
+   return addr;
 }
 
 //______________________________________________________________________________

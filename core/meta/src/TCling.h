@@ -108,6 +108,7 @@ private: // Data Members
    ROOT::TMetaUtils::TClingLookupHelper *fLookupHelper; // lookup helper used by TClassEdit
 
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
+   std::vector<void*> fRegisterModuleDyLibs; // Stack of libraries currently running RegisterModule
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
    Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    struct CharPtrCmp_t {
@@ -135,6 +136,7 @@ public: // Public Interface
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
    Int_t   AutoLoad(const char* cls);
    Int_t   AutoLoad(const std::type_info& typeinfo);
+   void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
