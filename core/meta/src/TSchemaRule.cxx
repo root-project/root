@@ -21,6 +21,69 @@ ClassImp(TSchemaRule)
 
 using namespace ROOT;
 
+static Bool_t IsWhiteSpace(char c)
+{
+   return (c == ' ' || c == '\n' || c == '\t');
+}
+
+static void AdvanceOverWhiteSpace(const char*& str)
+{
+    while (IsWhiteSpace(*str))
+    {
+      ++str;
+    }
+}
+
+// check if lhs matches rhs if we ignore irelevant white space differences
+
+static Bool_t IsTheSame(const TString& lhs, const TString& rhs)
+{
+   Bool_t result = kTRUE;
+
+   if (lhs != rhs)
+   {
+       const char null = '\0';
+       const char* left = lhs.Data();
+       const char* right = rhs.Data();
+       Bool_t literal = false;
+       // skip initial white space
+       AdvanceOverWhiteSpace(left);
+       AdvanceOverWhiteSpace(right);
+
+       while (*left != null || *right  != null)
+       {
+          // If both chars are white space, skip consecutive white space
+          if (!literal && IsWhiteSpace(*left) && IsWhiteSpace(*right))
+          {
+              AdvanceOverWhiteSpace(left);
+              AdvanceOverWhiteSpace(right);
+              continue;
+          }
+          // Check if one string has trailing white space, and the other doesn't.
+          if (*left == null || *right == null)
+          {
+              AdvanceOverWhiteSpace(left);
+              AdvanceOverWhiteSpace(right);
+              result = (*left == null && *right == null);
+              break;
+          }
+
+          if (*left != *right)
+          {
+              result = kFALSE;
+              break;
+          }
+          if (*left == '"')
+          { 
+              literal = !literal;
+          } 
+          ++left;
+          ++right;
+       }
+   }
+   return result;   
+}
+
 //------------------------------------------------------------------------------
 TSchemaRule::TSchemaRule(): fVersionVect( 0 ), fChecksumVect( 0 ),
                             fTargetVect( 0 ), fSourceVect( 0 ),
@@ -91,7 +154,7 @@ Bool_t TSchemaRule::operator == ( const TSchemaRule& rhs )
                        && fSource == rhs.fSource
                        && fTarget == rhs.fTarget
                        && fInclude == rhs.fInclude
-                       && fCode == rhs.fCode
+                       && IsTheSame(fCode, rhs.fCode)
                        && fEmbed == rhs.fEmbed
                        && fRuleType == rhs.fRuleType
                        && fAttributes == rhs.fAttributes );
