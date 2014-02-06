@@ -3518,7 +3518,8 @@ void TUnixSystem::DispatchSignals(ESignals sig)
       else
          //map to the real signal code + set the
          //high order bit to indicate a signal (?)
-         Exit(gSignalMap[sig].fCode + 0x80);
+         //Exit(gSignalMap[sig].fCode + 0x80);
+         Exit(gSignalMap[sig].fCode);
       break;
    case kSigSystem:
    case kSigPipe:
