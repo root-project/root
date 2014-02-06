@@ -1090,13 +1090,21 @@ void TCling::RegisterModule(const char* modulename,
    // requested by the JIT from it: as the library is currently being dlopen'ed,
    // its symbols are not yet reachable from the process.
    // Recursive dlopen seems to work just fine.
-   void* shLibHandle = dlopen(FindLibraryName(triggerFunc),
-                              RTLD_LAZY | RTLD_GLOBAL);
-   if (!shLibHandle) {
-      ::Error("TCling::RegisterModule",
-              "Cannot determine shared library for dictionary %s", modulename);
-   } else {
-      fRegisterModuleDyLibs.push_back(shLibHandle);
+   const char* dyLibName = FindLibraryName(triggerFunc);
+   if (dyLibName) {
+      // We were able to determine the library name.
+      void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
+      const char* dyLibError = dlerror();
+      if (dyLibError) {
+         if (gDebug > 0) {
+            ::Info("TCling::RegisterModule",
+                   "Cannot open shared library %s for dictionary %s:\n  %s",
+                   dyLibName, modulename, dyLibError);
+         }
+         dyLibName = 0;
+      } else {
+         fRegisterModuleDyLibs.push_back(dyLibHandle);
+      }
    }
 
    if (rootModulesDefined) {
@@ -1173,9 +1181,10 @@ void TCling::RegisterModule(const char* modulename,
                          "#undef __ROOTCLING__\n"
                          "#endif");
 
-   if (shLibHandle) {
+   if (dyLibName) {
+      void* dyLibHandle = fRegisterModuleDyLibs.back();
       fRegisterModuleDyLibs.pop_back();
-      dlclose(shLibHandle);
+      dlclose(dyLibHandle);
    }
 }
 
