@@ -504,6 +504,17 @@ public:
    */ 
    Functor1D ()  : fImpl(0) {}  
 
+#ifndef __CINT__
+   /**
+      construct from a callable object with the right signature 
+      implementing operator() (double x)
+    */
+   template <typename Func> 
+   Functor1D(const Func & f) : 
+      fImpl(new FunctorHandler<Functor1D,Func>(f) )
+   {}
+#endif
+
 
    /** 
        construct from a pointer to member function (1D type)
@@ -517,17 +528,6 @@ public:
    //implement for interpreted CINT functions
 #if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    Functor1D(void * p, const char * className = 0, const char * methodName = 0);
-
-#else
-
-   /**
-      construct from a callable object with the right signature 
-      implementing operator() (double x)
-    */
-   template <typename Func> 
-   Functor1D(const Func & f) : 
-      fImpl(new FunctorHandler<Functor1D,Func>(f) )
-   {}
 
 #endif
 
@@ -733,6 +733,17 @@ public:
    GradFunctor1D ()  : fImpl(0) {}  
 
 
+#ifndef __CINT__
+   /**
+      construct from an object with the right signature 
+      implementing both operator() (double x) and Derivative(double x)
+    */
+   template <typename Func> 
+   GradFunctor1D(const Func & f) : 
+      fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
+   {}
+#endif
+
 
    /** 
        construct from a pointer to class and two pointers to member functions, one for 
@@ -750,15 +761,6 @@ public:
 #if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
    GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
    GradFunctor1D(void * p1, void * p2);
-#else
-   /**
-      construct from an object with the right signature 
-      implementing both operator() (double x) and Derivative(double x)
-    */
-   template <typename Func> 
-   GradFunctor1D(const Func & f) : 
-      fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
-   {}
 #endif
 
    /**
