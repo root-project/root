@@ -2221,12 +2221,8 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       return;
    }
    else if (QT->isRecordType()) {
-      uint64_t size = Context.getTypeSizeInChars(QT).getQuantity();
-      void* p = ::operator new(size);
-      exec(address, p);
-      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                cling::Value(PTOGV(p),
-                                                QT));
+      *ret = cling::StoredValueRef::allocate(*fInterp, QT, 0);
+      exec(address, ret->get().getAs<void*>());
       return;
    }
    else if (const EnumType* ET =
