@@ -6,7 +6,9 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
+ifeq ($(ROOTSYS),)
 ROOTSYS = ../../..
+endif
 include $(ROOTSYS)/etc/Makefile.arch
 
 #------------------------------------------------------------------------------
@@ -192,8 +194,8 @@ endif
 endif
 else
 ifeq ($(PLATFORM),win32)
-		bindexplib libTrackDict $^ > libTrackDict.def
-		lib -nologo -MACHINE:IX86 $^ -def:$*.def \
+		bindexplib libTrackDict.$(DllSuf) $^ > libTrackDict.def
+		lib -nologo -MACHINE:IX86 $^ -def:libTrackDict.def \
 		   $(OutPutOpt)libTrackDict.lib
 		$(LD) $(SOFLAGS) $(LDFLAGS) $^ libTrackDict.exp $(LIBS) \
 		   $(OutPutOpt)$@
