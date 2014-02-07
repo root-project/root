@@ -2371,6 +2371,7 @@ void TStreamerInfo::Clear(Option_t *option)
       fNdata = 0;
       fSize = 0;
       ResetBit(kIsCompiled);
+      ResetBit(kBuildOldUsed);
 
       if (fReadObjectWise) fReadObjectWise->fActions.clear();
       if (fReadMemberWise) fReadMemberWise->fActions.clear();
@@ -4787,6 +4788,7 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
          R__b.ClassEnd(TStreamerInfo::Class());
          R__b.SetBufferOffset(R__s+R__c+sizeof(UInt_t));
          ResetBit(kIsCompiled);
+	 ResetBit(kBuildOldUsed);
          return;
       }
       //====process old versions before automatic schema evolution
