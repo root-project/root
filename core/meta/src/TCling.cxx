@@ -240,6 +240,9 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
       llvm::raw_string_ostream stream(buf);
       ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
    }
+
+   // If the enum is unnamed we do not add it to the list of enums i.e unusable.
+   if (buf.empty()) return ;
    const char* name = buf.c_str();
 
    // Create the enum type.
