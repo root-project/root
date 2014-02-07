@@ -8,8 +8,8 @@
  *                                                                    *
  **********************************************************************/
 
-// Heaer file for Functor classes. 
-// designed is inspired by the Loki Functor
+// Header file for Functor classes.
+// Design is inspired by the Loki Functor.
 
 #ifndef ROOT_Math_Functor
 #define ROOT_Math_Functor
@@ -28,6 +28,8 @@
 namespace ROOT { 
 
 namespace Math { 
+
+   class GradFunctor1D;
 
 /**
    FunctorImpl is a base class for the functor 
