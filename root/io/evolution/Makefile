@@ -1,5 +1,5 @@
-CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp *.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.rootmap *.success $(STL_FILES) atlas32
-TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution
+CLEAN_TARGETS += *.so Class*.root typedef*.root $(ALL_LIBRARIES) *.clog *.log *.tmp skiptestfile.xml arr.root FixedArray*.root boolUpdate.root  data.root  skiptestfile.root $(FILES) $(FILESFAIL) *.success $(STL_FILES) atlas32
+TEST_TARGETS += foreign310 boolUpdate skip ClassConv ConvArray typedef Missing FixedArrayLengthChange ClonesArrayEvo NumericalTypeEvolution execioReadRuleEquivalentCode
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
@@ -193,4 +193,12 @@ atlas32: assertMakeAtlas32.elog
 	$(CMDECHO) diff -w assertMakeAtlas32.elog  assertMakeAtlas32.ref
 
 assertLongLong64.elog: atlas32
+
+include $(ROOTTEST_HOME)/scripts/Reflex.mk
+
+execioReadRuleEquivalentCode: execioReadRuleEquivalentCode.log
+
+execioReadRuleEquivalentCode.log: libioReadRuleEquivalentCode_dictrflx.$(DllSuf)
+
+
 
