@@ -149,12 +149,13 @@ void fillSparse(THnSparse* s, TF1* f, int nEvents = 5)
    const unsigned int ndim = s->GetNdimensions();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t points[ndim];
+      Double_t *points = new Double_t[ndim];
       for ( UInt_t i = 0; i < ndim; ++ i )
          points[i] = r.Uniform( xmin[0] * .9 , xmax[0] * 1.1 );
       double value = gRandom->Poisson( f->EvalPar(points));
       s->Fill(points, value );
       cout << value << " " << s->GetNbins() << endl;
+      delete [] points;
    }
 }
 

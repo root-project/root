@@ -3,6 +3,7 @@
 
 // program to test new KDTree class 
 
+#include <time.h>
 // STL include(s)
 #include <iostream>
 #include <stdlib.h>

@@ -21,7 +21,9 @@
 # include $(ROOTSYS)/etc/Makefile.arch
 # endif
 
+ifeq ($(ROOTSYS),)
 ROOTSYS = ../../../..
+endif
 include $(ROOTSYS)/config/Makefile.config
 include $(ROOTSYS)/etc/Makefile.arch
 
