@@ -1,4 +1,4 @@
-% ROOT Version 5.99/04 Release Notes
+% ROOT Version 5.99/05 Release Notes
 % November 2013
 <a name="TopOfPage"></a>
 
