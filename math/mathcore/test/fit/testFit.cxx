@@ -140,7 +140,7 @@ int testHisto1DFit() {
    ROOT::Fit::BinData dl(opt);
    ROOT::Fit::FillData(dl,h1,func);
    
-   ret = fitter.LikelihoodFit(dl, f);
+   ret = fitter.LikelihoodFit(dl, f, true);
    f.SetParameters(p); 
    if (ret)  
       fitter.Result().Print(std::cout); 
@@ -189,7 +189,7 @@ int testHisto1DFit() {
    ROOT::Fit::BinData dl2(opt); 
    ROOT::Fit::FillData(dl2,h1,func); 
    f.SetParameters(p); 
-   ret = fitter.LikelihoodFit(dl2, f);
+   ret = fitter.LikelihoodFit(dl2, f, true);
    if (ret)  
       fitter.Result().Print(std::cout); 
    else {
@@ -594,7 +594,7 @@ int testHisto2DFit() {
    if (ret)  {
       // redo fit releasing the parameters   
       f.SetParameters(&(fitter.Result().Parameters().front()) );
-      ret = fitter.LikelihoodFit(d,f);
+      ret = fitter.LikelihoodFit(d,f,true);
    }
    if (ret)   
       fitter.Result().Print(std::cout); 

@@ -149,12 +149,13 @@ void fillSparse(THnSparse* s, TF1* f, int nEvents = 5)
    const unsigned int ndim = s->GetNdimensions();
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t points[ndim];
+      Double_t *points = new Double_t[ndim];
       for ( UInt_t i = 0; i < ndim; ++ i )
          points[i] = r.Uniform( xmin[0] * .9 , xmax[0] * 1.1 );
       double value = gRandom->Poisson( f->EvalPar(points));
       s->Fill(points, value );
       cout << value << " " << s->GetNbins() << endl;
+      delete [] points;
    }
 }
 
@@ -183,7 +184,7 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    cout << "\n ******* Likelihood with BinData and NoCeros *******" << endl;
    ROOT::Fit::BinData bdNoCeros;
    d.GetBinDataNoZeros(bdNoCeros);
-   ret = fitter.LikelihoodFit(bdNoCeros, if2);
+   ret = fitter.LikelihoodFit(bdNoCeros, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
@@ -192,7 +193,7 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    cout << "\n ******* Likelihood with BinData with Ceros *******" << endl;
    ROOT::Fit::BinData bdWithCeros(opt);
    d.GetBinDataIntegral(bdWithCeros);
-   ret = fitter.LikelihoodFit(bdWithCeros, if2);
+   ret = fitter.LikelihoodFit(bdWithCeros, if2, true);
    fitter.Result().Print(std::cout); 
    if (!ret)  
       std::cout << "Fit Failed " << std::endl;
