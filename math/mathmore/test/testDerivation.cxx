@@ -192,12 +192,12 @@ void testDerivPerf() {
 
 }
 
-double userFunc(const double *x, const double *  = 0) { 
+double userFunc(const double *x, const double *y) {
    return std::exp(-x[0]); 
 }
-double userFunc1(double x) { return userFunc(&x); }
+double userFunc1(double x) { return userFunc(&x, 0); }
 
-double userFunc2(const double * x) { return userFunc(x); }
+double userFunc2(const double * x) { return userFunc(x, 0); }
 
 void testDerivPerfUser() { 
 
