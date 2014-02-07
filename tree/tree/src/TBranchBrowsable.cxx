@@ -96,7 +96,9 @@ void TVirtualBranchBrowsable::Browse(TBrowser *b)
 // Calls TTree::Draw on the method if return type is not a class;
 // otherwise expands returned object's "folder"
 
-   if (!fClass) {
+   if (!fClass
+       || (fClass->GetCollectionProxy()
+           && fClass->GetCollectionProxy()->GetType() > 0)) {
       TString name;
       GetScope(name);
 
