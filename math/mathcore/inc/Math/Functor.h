@@ -343,27 +343,31 @@ private :
 };
   
 
-#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
+//****************************
+// LM 7/2/2014:  no needed this : make template ctor of Functor1D and GradFunctor1D not 
+// available to CINT s
+//***************************************
+//#if defined(__MAKECINT__) || defined(G__DICTIONARY) 
 // needed since CINT initialize it with TRootIOCtor
 //class TRootIOCtor; 
-template<class ParentFunctor> 
-class FunctorHandler<ParentFunctor,TRootIOCtor *> : public ParentFunctor::Impl 
-{
-public:
-   typedef typename ParentFunctor::Impl ImplFunc; 
-   typedef typename ImplFunc::BaseFunc BaseFunc; 
 
-   FunctorHandler(TRootIOCtor  *) {}
-   // function required by interface
-   virtual ~FunctorHandler() {}
-   double DoEval (double ) const  { return 0; } 
-   double DoDerivative (double ) const  { return 0; } 
-   ImplFunc  * Copy() const {  return 0;  } 
-   BaseFunc  * Clone() const {  return 0;  } 
+// template<class ParentFunctor> 
+// class FunctorHandler<ParentFunctor,TRootIOCtor *> : public ParentFunctor::Impl 
+// {
+// public:
+//    typedef typename ParentFunctor::Impl ImplFunc; 
+//    typedef typename ImplFunc::BaseFunc BaseFunc; 
 
-}; 
-#endif   
+//    FunctorHandler(TRootIOCtor  *) {}
+//    // function required by interface
+//    virtual ~FunctorHandler() {}
+//    double DoEval (double ) const  { return 0; } 
+//    double DoDerivative (double ) const  { return 0; } 
+//    ImplFunc  * Copy() const {  return 0;  } 
+//    BaseFunc  * Clone() const {  return 0;  } 
 
+// }; 
+// #endif   
 
 
 //_______________________________________________________________________________________________
@@ -427,7 +431,6 @@ public:
    */ 
    virtual ~Functor ()  {}  
 
-#ifndef __CINT__
    /** 
       Copy constructor for functor based on ROOT::Math::IMultiGenFunction
    */ 
@@ -439,7 +442,6 @@ public:
    } 
    // need a specialization in order to call base classes and use  clone
 
-#endif
 
    /** 
       Assignment operator
@@ -512,6 +514,12 @@ public:
    {}
 
 
+   //implement for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
+   Functor1D(void * p, const char * className = 0, const char * methodName = 0);
+
+#else
+
    /**
       construct from a callable object with the right signature 
       implementing operator() (double x)
@@ -521,18 +529,13 @@ public:
       fImpl(new FunctorHandler<Functor1D,Func>(f) )
    {}
 
-
-   //implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   Functor1D(void * p, const char * className = 0, const char * methodName = 0);
-#endif 
+#endif
 
    /** 
       Destructor (no operations)
    */ 
    virtual ~Functor1D ()  {}  
 
-#ifndef __CINT__
 
    /** 
       Copy constructor for Functor based on ROOT::Math::IGenFunction
@@ -544,7 +547,6 @@ public:
       if (rhs.fImpl.get() != 0) 
          fImpl = std::auto_ptr<Impl>( (rhs.fImpl)->Copy() ); 
    } 
-#endif
 
 
    /** 
@@ -649,7 +651,6 @@ public:
    */ 
    virtual ~GradFunctor ()  {}  
 
-#ifndef __CINT__
 
    /** 
       Copy constructor for functor based on ROOT::Math::IMultiGradFunction
@@ -660,7 +661,6 @@ public:
       if (rhs.fImpl.get() != 0) 
          fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy() ); 
    } 
-#endif
 
    /** 
       Assignment operator
@@ -732,14 +732,6 @@ public:
    */ 
    GradFunctor1D ()  : fImpl(0) {}  
 
-   /**
-      construct from an object with the right signature 
-      implementing both operator() (double x) and Derivative(double x)
-    */
-   template <typename Func> 
-   GradFunctor1D(const Func & f) : 
-      fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
-   {}
 
 
    /** 
@@ -753,6 +745,22 @@ public:
    {}
 
 
+
+   // eventually implement for interpreted CINT functions
+#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
+   GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
+   GradFunctor1D(void * p1, void * p2);
+#else
+   /**
+      construct from an object with the right signature 
+      implementing both operator() (double x) and Derivative(double x)
+    */
+   template <typename Func> 
+   GradFunctor1D(const Func & f) : 
+      fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
+   {}
+#endif
+
    /**
       construct from two 1D function objects
     */
@@ -761,18 +769,11 @@ public:
       fImpl(new FunctorGradHandler<GradFunctor1D,Func, GradFunc>(f, g) )
    {}
 
-   // eventually implement for interpreted CINT functions
-#if defined(__CINT__) || defined(G__DICTIONARY) || defined(MAKE_CINT_FUNCTOR)
-   GradFunctor1D(void * p1, const char * className, const char * methodName, const char * derivName);
-   GradFunctor1D(void * p1, void * p2);
-#endif 
-
    /** 
       Destructor (no operations)
    */ 
    virtual ~GradFunctor1D ()  {}  
 
-#ifndef __CINT__
 
    /** 
       Copy constructor for Functor based on ROOT::Math::IGradFunction
@@ -784,7 +785,6 @@ public:
       if (rhs.fImpl.get() != 0) 
          fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy()  ); 
    } 
-#endif
 
 
    /** 
