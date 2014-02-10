@@ -244,9 +244,10 @@ public:
       return false; 
    }
    /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
-   virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & pars) const {
+   virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & /*pars */ ) const {
       MATH_ERROR_MSG("Minimizer::GetVariableSettings","Quering an existing variable not implemented");      
-      MATH_UNUSED(ivar); MATH_UNUSED(pars);
+      MATH_UNUSED(ivar); 
+      //MATH_UNUSED(pars);
       return false; 
    }
 
