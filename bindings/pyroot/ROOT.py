@@ -265,9 +265,14 @@ _root.gInterpreter = _ExpandMacroFunction( "TInterpreter", "Instance" )
 ### special case pythonization --------------------------------------------------
 def _TTree__iter__( self ):
    i = 0
-   while self.GetEntry(i):
+   bytes_read = self.GetEntry(i)
+   while 0 < bytes_read:
       yield self                   # TODO: not sure how to do this w/ C-API ...
       i += 1
+      bytes_read = self.GetEntry(i)
+
+   if bytes_read == -1:
+      raise RuntimeError( "TTree I/O error" )
 
 _root.MakeRootClass( "TTree" ).__iter__    = _TTree__iter__
 
