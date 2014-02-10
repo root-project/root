@@ -69,6 +69,10 @@ void fillTree(TTree & t2) {
       ev = i;
       t2.Fill();      
    }   
+   // t2.Print(); 
+   // std::cout << "number of branches " << t2.GetNbranches() << std::endl;
+
+   t2.ResetBranchAddresses() ;
 }
 
 void FillUnBinData(ROOT::Fit::UnBinData &d, TTree * tree ) { 
@@ -101,6 +105,8 @@ void FillUnBinData(ROOT::Fit::UnBinData &d, TTree * tree ) {
       std::cout << m[j]/n << "  ";
    std::cout << "\n";
 #endif
+
+   tree->ResetBranchAddresses() ;
       
    return; 
 
