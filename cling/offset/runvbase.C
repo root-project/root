@@ -50,18 +50,31 @@ long CompOffset(const DERIVED* obj) {
    return addrBase - addrDerived;
 }
 
-// Interpreter computes offset.
-long InterpOffsetTClassInterface(void* obj, const char* derivedClassName, const char* targetClassName) {
-   TClass* clDerived = TClass::GetClass(derivedClassName);
-   TClass* clBase = TClass::GetClass(targetClassName);
-   return clDerived->GetBaseClassOffset(clBase, obj);
+// Compiler computed offset.
+template <typename DERIVED, typename TARGET>
+long CompOffsetNotDerived(const TARGET* obj) {
+   char* addrDerived = (char*) dynamic_cast<const DERIVED*>((const TARGET*)obj);
+   // NOTE: this casts even unrelated types, yielding a 0 offset!
+   char* addrBase = (char*) obj;
+   // [base1 base2 base3]
+   // ^-- obj starts here
+   //                   ^-- obj + sizeof(obj)
+   //              ^-- offset to base3
+   return addrBase-addrDerived;
 }
 
-long InterpOffsetTClassInfoInterface(void* obj, const char* derivedClassName, const char* targetClassName) {
-   ClassInfo_t* cliDerived = gInterpreter->ClassInfo_Factory(derivedClassName);
-   ClassInfo_t* cliTarget = gInterpreter->ClassInfo_Factory(targetClassName);
+// Interpreter computes offset.
+long InterpOffsetTClassInterface(void* obj, const char* fromDerivedClassName, const char* toBaseClassName, bool isDerivedObject = true) {
+   TClass* clDerived = TClass::GetClass(fromDerivedClassName);
+   TClass* clBase = TClass::GetClass(toBaseClassName);
+   return clDerived->GetBaseClassOffset(clBase, obj, isDerivedObject);
+}
+
+long InterpOffsetTClassInfoInterface(void* obj, const char* fromDerivedClassName, const char* toBaseClassName, bool isDerivedObject = true) {
+   ClassInfo_t* cliDerived = gInterpreter->ClassInfo_Factory(fromDerivedClassName);
+   ClassInfo_t* cliTarget = gInterpreter->ClassInfo_Factory(toBaseClassName);
    long offset = -1;
-   offset = gInterpreter->ClassInfo_GetBaseOffset(cliDerived, cliTarget, obj);
+   offset = gInterpreter->ClassInfo_GetBaseOffset(cliDerived, cliTarget, obj, isDerivedObject);
    gInterpreter->ClassInfo_Delete(cliDerived);
    gInterpreter->ClassInfo_Delete(cliTarget);
    return offset;
@@ -69,30 +82,42 @@ long InterpOffsetTClassInfoInterface(void* obj, const char* derivedClassName, co
 
 template <typename DERIVED, typename TARGET>
 void CheckFor(DERIVED* obj,
-              const char* derivedClassName, const char* targetClassName) {
+              const char* fromDerivedClassName, const char* toBaseClassName) {
    printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-          derivedClassName, targetClassName,
+          fromDerivedClassName, toBaseClassName,
           CompOffset<DERIVED, TARGET>(obj),
-          InterpOffsetTClassInterface(obj, derivedClassName, targetClassName));
+          InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName));
+}
+
+template <typename DERIVED, typename TARGET>
+void CheckForNotDerived(TARGET* obj,
+              const char* fromDerivedClassName, const char* toBaseClassName) {
+   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
+          fromDerivedClassName, toBaseClassName,
+          CompOffsetNotDerived<DERIVED, TARGET>(obj),
+          InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName, false));
 }
 
 template <typename DERIVED, typename TARGET>
 void CheckForWithClassInfo(DERIVED* obj,
-              const char* derivedClassName, const char* targetClassName) {
+              const char* fromDerivedClassName, const char* toBaseClassName) {
    printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-          derivedClassName, targetClassName,
+          fromDerivedClassName, toBaseClassName,
           CompOffset<DERIVED, TARGET>(obj),
-          InterpOffsetTClassInfoInterface(obj, derivedClassName, targetClassName));
+          InterpOffsetTClassInfoInterface(obj, fromDerivedClassName, toBaseClassName));
 }
 
 void runvbase() {
    Basement *obj = new Basement;
+   Top *baseObj = obj;
 
    CheckFor<Basement, Top>(obj, "Basement", "Top");
    // Check for the caching of the function pointer in TClingClassInfo.
    CheckFor<Basement, Top>(obj, "Basement", "Top");
    printf("Top does not derive from Basement:\n");
    CheckFor<Basement, Top>(obj, "Top", "Basement");
+   printf("The object is a base ptr object:\n");
+   CheckForNotDerived<Basement, Top>(baseObj, "Basement", "Top");
    CheckFor<Basement, Fill>(obj, "Basement", "Fill");
    CheckFor<Basement, Mid1>(obj, "Basement", "Mid1");
    // This will result in an error from the Compiler function first.
