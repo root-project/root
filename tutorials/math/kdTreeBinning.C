@@ -60,7 +60,6 @@ void kdTreeBinning() {
    const Double_t* binsMinEdges = kdBins->GetBinsMinEdges();
    const Double_t* binsMaxEdges = kdBins->GetBinsMaxEdges();
 
-   gStyle->SetCanvasPreferGL(1);
    TH2Poly* h2pol = new TH2Poly("h2PolyBinTest", "KDTree binning", kdBins->GetDataMin(0), kdBins->GetDataMax(0), kdBins->GetDataMin(1), kdBins->GetDataMax(1));
 
    for (UInt_t i = 0; i < nbins; ++i) {
