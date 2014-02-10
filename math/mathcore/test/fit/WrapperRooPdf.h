@@ -29,13 +29,16 @@ public:
       assert(fPdf != 0);
 
       RooArgSet *vars = fPdf->getVariables();
-      RooAbsArg & arg = (*vars)[xvar.c_str()];  // code should abort if not found 
-      RooArgSet obsList(arg);
+      RooAbsArg * arg = vars->find(xvar.c_str());  // code should abort if not found 
+      if (!arg) std::cout <<"Error - observable " << xvar << "is not in the list of pdf variables" << std::endl;
+      assert(arg != 0);
+      RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
       fX = fPdf->getObservables(obsList);
       fParams = fPdf->getParameters(obsList);
       assert(fX!=0);
       assert(fParams!=0);
+      delete vars; 
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
