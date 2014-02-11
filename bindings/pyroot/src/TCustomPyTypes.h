@@ -60,7 +60,7 @@ namespace PyROOT {
       return object && Py_TYPE(object) == &TCustomInstanceMethod_Type;
    }
 
-   PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* klass );
+   PyObject* TCustomInstanceMethod_New( PyObject* func, PyObject* self, PyObject* pyclass );
 
 } // namespace PyROOT
 

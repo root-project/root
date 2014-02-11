@@ -11,6 +11,7 @@
 #include "PropertyProxy.h"
 #include "TPyBufferFactory.h"
 #include "TCustomPyTypes.h"
+#include "TTupleOfInstances.h"
 #include "RootWrapper.h"
 #include "Utility.h"
 #include "Adapters.h"
@@ -627,6 +628,9 @@ extern "C" void initlibPyROOT()
       PYROOT_INIT_ERROR;
 
    if ( ! Utility::InitProxy( gRootModule, &TCustomInstanceMethod_Type, "InstanceMethod" ) )
+      PYROOT_INIT_ERROR;
+
+   if ( ! Utility::InitProxy( gRootModule, &TTupleOfInstances_Type, "InstancesArray" ) )
       PYROOT_INIT_ERROR;
 
 // inject identifiable nullptr

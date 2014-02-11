@@ -8,6 +8,7 @@
 #include "ObjectProxy.h"
 #include "TPyBufferFactory.h"
 #include "TCustomPyTypes.h"
+#include "TTupleOfInstances.h"
 #include "Utility.h"
 #include "RootWrapper.h"
 
@@ -943,6 +944,58 @@ Bool_t PyROOT::TRootObjectPtrConverter::ToMemory( PyObject* value, void* address
 }
 
 //____________________________________________________________________________
+Bool_t PyROOT::TRootObjectArrayConverter::SetArg(
+      PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t /* user */ )
+{
+// convert <pyobject> to C++ instance**, set arg for call
+   if ( ! TTupleOfInstances_CheckExact( pyobject ) )
+      return kFALSE;              // no guarantee that the tuple is okay
+
+// treat the first instance of the tuple as the start of the array, and pass it
+// by pointer (TODO: store and check sizes)
+   if ( PyTuple_Size( pyobject ) < 1 )
+      return kFALSE;
+
+   PyObject* first = PyTuple_GetItem( pyobject, 0 );
+   if ( ! ObjectProxy_Check( first ) )
+      return kFALSE;              // should not happen
+
+   if ( ((ObjectProxy*)first)->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
+   // no memory policies supported
+
+   // set pointer (may be null) and declare success
+      para.fVoidp = ((ObjectProxy*)first)->fObject;
+      if ( func )
+         gInterpreter->CallFunc_SetArg( func,  para.fLong );
+      return kTRUE;
+   }
+
+   return kFALSE;
+}
+
+//____________________________________________________________________________
+PyObject* PyROOT::TRootObjectArrayConverter::FromMemory( void* /* address */ )
+{
+// construct python tuple of instances from C++ array read at <address>
+
+// TODO: need to get size from somewhere ...
+   PyErr_SetString( PyExc_NotImplementedError,
+      "access to C-arrays of objects not yet implemented!" );
+   return NULL;
+}
+
+//____________________________________________________________________________
+Bool_t PyROOT::TRootObjectArrayConverter::ToMemory( PyObject* /* value */, void* /* address */ )
+{
+// convert <value> to C++ array of instances, write it at <address>
+
+// TODO: need to have size both for the array and from the input
+   PyErr_SetString( PyExc_NotImplementedError,
+      "access to C-arrays of objects not yet implemented!" );
+   return kFALSE;
+}
+
+//____________________________________________________________________________
 // CLING WORKAROUND -- classes for STL iterators are completely undefined in that
 // they come in a bazillion different guises, so just do whatever
 Bool_t PyROOT::TSTLIteratorConverter::SetArg(
@@ -1095,6 +1148,13 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    Bool_t isConst = resolvedType.substr(0, 5) == "const";
    Bool_t control = cpd == "&" || isConst;
 
+// CLING WORKAROUND -- if the type is a fixed-size array, it will have a funky
+// resolved type like MyClass(&)[N], which TClass::GetClass() fails on. So, strip
+// it down:
+   if ( cpd == "[]" )
+      realType = realType.substr( 0, realType.rfind("(") );
+// -- CLING WORKAROUND
+
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
    if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
@@ -1109,6 +1169,8 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
          result = new TRootObjectConverter( klass, control );
       else if ( cpd == "&" )
          result = new TStrictRootObjectConverter( klass, control );
+      else if ( cpd == "[]" )
+         result = new TRootObjectArrayConverter( klass, kFALSE );
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
 

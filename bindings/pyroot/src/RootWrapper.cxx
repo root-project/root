@@ -17,6 +17,7 @@
 #include "TFunctionHolder.h"
 #include "TSetItemHolder.h"
 #include "TMemoryRegulator.h"
+#include "TTupleOfInstances.h"
 #include "Utility.h"
 #include "Adapters.h"
 
@@ -799,6 +800,13 @@ PyObject* PyROOT::BindRootObject( void* address, TClass* klass, Bool_t isRef )
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::BindRootObjectArray( void* address, TClass* klass, Int_t size ) {
+// TODO: this function exists for symmetry; need to figure out if it's useful
+   return TTupleOfInstances_New( address, klass, size );
+}
+
+
+//____________________________________________________________________________
 PyObject* PyROOT::BindRootGlobal( DataMemberInfo_t* dmi ) {
    TGlobal gbl( gInterpreter->DataMemberInfo_FactoryCopy( dmi ) );
    return BindRootGlobal( &gbl );
@@ -816,10 +824,20 @@ PyObject* PyROOT::BindRootGlobal( TGlobal* gbl )
 // determine type and cast as appropriate
    TClass* klass = TClass::GetClass( gbl->GetTypeName() );
    if ( klass != 0 ) {
-   // special cases where there should be no casting:
+   // handle array of objects
+      if ( gbl->GetArrayDim() == 1 ) {
+         return BindRootObjectArray( (void*)gbl->GetAddress(), klass, gbl->GetMaxIndex(0) );
+      } else if ( gbl->GetArrayDim() ) {
+         PyErr_SetString( PyExc_NotImplementedError,
+            "larger than 1D arrays of objects not supported" );
+         return 0;
+      }
+
+   // special case where there should be no casting:
       if ( klass->InheritsFrom( "ios_base" ) )
          return BindRootObjectNoCast( (void*)gbl->GetAddress(), klass );
 
+   // pointer types are bound "by-reference"
       if ( Utility::Compound( gbl->GetFullTypeName() ) != "" )
          return BindRootObject( (void*)gbl->GetAddress(), klass, kTRUE );
 

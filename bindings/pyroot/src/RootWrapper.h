@@ -38,6 +38,7 @@ namespace PyROOT {
    PyObject* BindRootObjectNoCast(
       void* object, TClass* klass, Bool_t isRef = kFALSE, Bool_t isValue = kFALSE );
    PyObject* BindRootObject( void* object, TClass* klass, Bool_t isRef = kFALSE );
+   PyObject* BindRootObjectArray( void* address, TClass* klass, Int_t size );
    PyObject* BindRootGlobal( TGlobal* );
 
 } // namespace PyROOT
