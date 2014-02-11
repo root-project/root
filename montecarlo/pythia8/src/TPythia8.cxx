@@ -143,6 +143,14 @@ Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t ecms)
 }
 
 //___________________________________________________________________________
+Bool_t TPythia8::Initialize(Int_t idAin, Int_t idBin, Double_t eAin, Double_t eBin)
+{
+   // Initialization
+   AddParticlesToPdgDataBase();
+   return fPythia->init(idAin, idBin, eAin, eBin);
+}
+
+//___________________________________________________________________________
 void TPythia8::GenerateEvent()
 {
    // Generate the next event
@@ -265,6 +273,41 @@ void  TPythia8::ReadConfigFile(const char* string) const
 {
   // Configuration
   fPythia->readFile(string);
+}
+
+//___________________________________________________________________________
+void TPythia8::ListAll() const
+{
+   // Event listing
+   fPythia->settings.listAll();
+}
+
+//___________________________________________________________________________
+void TPythia8::ListChanged() const
+{
+   // Event listing
+   fPythia->settings.listChanged();
+}
+
+//___________________________________________________________________________
+void TPythia8::Plist(Int_t id) const
+{
+   // Event listing
+   fPythia->particleData.list(id);
+}
+
+//___________________________________________________________________________
+void TPythia8::PlistAll() const
+{
+   // Event listing
+   fPythia->particleData.listAll();
+}
+
+//___________________________________________________________________________
+void TPythia8::PlistChanged() const
+{
+   // Event listing
+   fPythia->particleData.listChanged();
 }
 
 //___________________________________________________________________________
