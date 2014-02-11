@@ -471,12 +471,14 @@ int main(int argc, char **argv)
 
    if (!batch) {
       SetDisplay();
+#ifndef R__HAS_COCOA
       if (!getenv("DISPLAY")) {
          fprintf(stderr, "%s: can't figure out DISPLAY, set it manually\n", argv[0]);
          fprintf(stderr, "In case you run a remote ssh session, restart your ssh session with:\n");
          fprintf(stderr, "=========>  ssh -Y\n");
          return 1;
       }
+#endif
       if (about) {
          PopupLogo(true);
          WaitLogo();
