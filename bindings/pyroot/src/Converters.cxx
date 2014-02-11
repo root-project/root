@@ -79,7 +79,7 @@ static inline Bool_t VerifyPyBool( PyObject* pyobject )
 {
    Long_t l = PyLong_AsLong( pyobject );
    if ( ! ( l == 0 || l == 1 ) ) {
-      PyErr_SetString( PyExc_TypeError, "boolean value should be bool, or integer 1 or 0" );
+      PyErr_SetString( PyExc_ValueError, "boolean value should be bool, or integer 1 or 0" );
       return kFALSE;
    }
    return kTRUE;
