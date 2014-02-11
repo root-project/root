@@ -95,13 +95,16 @@ if not _builtin_cppyy:
 
 
 #--- LoadDictionary function and aliases -----------------------------
-def loadDictionary(name) :
+def loadDictionary(name):
    # prepend "lib" 
-   if sys.platform != 'win32' and name[:3] != 'lib' :
+   if sys.platform != 'win32' and name[:3] != 'lib':
        name = 'lib' + name
    sc = _backend.gSystem.Load(name)
-   if sc == -1 : raise RuntimeError("Error Loading dictionary")
+   if sc == -1: raise RuntimeError("Error Loading dictionary")
 loadDict = loadDictionary
+
+def load_reflection_info(name):
+   sc = _backend.gSystem.Load(name)
 
 
 #--- Other functions needed -------------------------------------------
@@ -163,3 +166,7 @@ class unsigned_long(long): pass
 if _builtin_cppyy:
    for name in dir():
       if name[0] != '_': setattr( _thismodule, name, eval(name) )
+
+#--- Compatibility ------------------------------------------------------
+if not _builtin_cppyy:
+   bind_object = _backend.BindObject
