@@ -416,7 +416,7 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
    //    frame:  - specifies the frame of the experiment:
    //                "CMS","FIXT","USER","FOUR","FIVE","NONE"
    //    beam,
-   //    target: - beam and target particles (with additionaly cahrges, tildes or "bar":
+   //    target: - beam and target particles (with additionaly charges, tildes or "bar":
    //              e,nu_e,mu,nu_mu,tau,nu_tau,gamma,pi,n,p,Lambda,Sigma,Xi,Omega,
    //              pomeron,reggeon
    //    win:    - related to energy system:
@@ -426,10 +426,10 @@ void TPythia6::Initialize(const char *frame, const char *beam, const char *targe
 
    char  cframe[4];
    strlcpy(cframe,frame,4);
-   char  cbeam[8];
-   strlcpy(cbeam,beam,8);
-   char  ctarget[8];
-   strlcpy(ctarget,target,8);
+   char  cbeam[10];
+   strlcpy(cbeam,beam,10);
+   char  ctarget[10];
+   strlcpy(ctarget,target,10);
 
    // For frames "3MOM", "4MOM" and "5MOM" see p. 181-182 of the version 6 manual,
    // http://home.thep.lu.se/~torbjorn/pythia/lutp0613man2.pdf
