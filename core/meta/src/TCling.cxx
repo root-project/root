@@ -521,16 +521,10 @@ extern "C" int TCling__AutoLoadCallback(const char* className)
    return ((TCling*)gCling)->AutoLoad(className);
 }
 
-// // Returns 0 for failure 1 for success
-// extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
-// {
-//    return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(name);
-// }
-
 // Returns 0 for failure 1 for success
-extern "C" int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
+extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
 {
-   return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(nsDecl);
+   return ((TCling*)gCling)->IsAutoLoadNamespaceCandidate(name);
 }
 
 extern "C" int TCling__CompileMacro(const char *fileName, const char *options)
@@ -902,7 +896,7 @@ TCling::TCling(const char *name, const char *title)
    fMore      = 0;
    fPrompt[0] = 0;
    fMapfile   = 0;
-//    fMapNamespaces   = 0;
+   fMapNamespaces   = 0;
    fRootmapFiles = 0;
    fLockProcessLine = kTRUE;
    // Disable the autoloader until it is explicitly enabled.
@@ -936,7 +930,7 @@ TCling::~TCling()
 {
    // Destroy the interpreter interface.
    delete fMapfile;
-//    delete fMapNamespaces;
+   delete fMapNamespaces;
    delete fRootmapFiles;
    delete fMetaProcessor;
    delete fTemporaries;
@@ -3508,28 +3502,6 @@ namespace {
          return false;
       }
    };
-
-   class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
-      // This class is to be considered an helper for autoloading.
-      // It is a recursive visitor is used to inspect namespaces coming from
-      // forward declarations in rootmaps and to set the external visible
-      // storage flag for them.
-   public:
-      ExtVisibleStorageAdder(std::set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
-      bool VisitNamespaceDecl(NamespaceDecl* nsDecl) {
-         // We want to enable the external lookup for this namespace
-         // because it may shadow the lookup of other names contained
-         // in that namespace
-         nsDecl->setHasExternalVisibleStorage();
-         fNSSet.insert(nsDecl);
-         return true;
-      }
-   private:
-      std::set<const NamespaceDecl*>& fNSSet;
-   
-   };
-
-   
 }
 
 //______________________________________________________________________________
@@ -3540,9 +3512,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // is the old one (e.g. containing "Library.ClassName")
 
    if (rootmapfile && *rootmapfile) {
-
-      ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
-      
       // Add content of a specific rootmap file
       if (fRootmapFiles->FindObject(rootmapfile)) return -1;
       std::ifstream file(rootmapfile);
@@ -3558,7 +3527,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             // forward declarations
 
             // this is also a scope where diagnostics are off for mac os 10.9
-            // FIXME remove when c++11 is enabled by default
+            
             #ifdef R__MACOSX
             #if defined(MAC_OS_X_VERSION_10_9)
             clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
@@ -3582,10 +3551,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                // default arguments.
                TmpltParamAnnotator TPA;
                TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
-
-               if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl())) {
-                  evsAdder.TraverseDecl(NSD);
-               }
             }
          }
          if (line[0] == '[') {
@@ -3615,6 +3580,14 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                Info("ReadRootmapFile", "class %s in %s", classname.c_str(), lib_name.Data());
             if (!fMapfile->Lookup(classname.c_str()))
                fMapfile->SetValue(classname.c_str(), lib_name.Data());
+         }
+         else if (line.substr(0, 10) == "namespace ") {
+            std::string classname = line.substr(10, line.length()-10);
+            // This is a reference to a substring that lives in fMapfile
+            if (!fMapNamespaces->FindObject(classname.c_str()))
+               fMapNamespaces->Add(new TNamed(classname.c_str(), ""));
+            if (gDebug > 6)
+               Info("ReadRootmapFile", "namespace %s in %s", classname.c_str(), lib_name.Data());
          }
       }
       file.close();
@@ -3692,8 +3665,8 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    if (!fMapfile) {
       fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
-//       fMapNamespaces = new THashTable();
-//       fMapNamespaces->SetOwner();
+      fMapNamespaces = new THashTable();
+      fMapNamespaces->SetOwner();
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
       InitRootmapFile(".rootmap");
@@ -3816,14 +3789,14 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
             delete[] wlib;
          }
          // Fill in the namespace candidate list
-//          Ssiz_t last = cls.Last(':');
-//          if (last != kNPOS) {
-//             // Please note that the funny op overlaod does substring.
-//             TString namespaceCand = cls(0, last - 1);
-//             // This is a reference to a substring that lives in fMapfile
-//             if (!fMapNamespaces->FindObject(namespaceCand.Data()))
-//                fMapNamespaces->Add(new TNamed(namespaceCand.Data(), ""));
-//          }
+         Ssiz_t last = cls.Last(':');
+         if (last != kNPOS) {
+            // Please note that the funny op overlaod does substring.
+            TString namespaceCand = cls(0, last - 1);
+            // This is a reference to a substring that lives in fMapfile
+            if (!fMapNamespaces->FindObject(namespaceCand.Data()))
+               fMapNamespaces->Add(new TNamed(namespaceCand.Data(), ""));
+         }
          delete tokens;
       }
       else if (!strncmp(cls.Data(), "Declare.", 8) && cls.Length() > 8) {
@@ -4015,8 +3988,8 @@ Int_t TCling::SetClassSharedLibs(const char *cls, const char *libs)
    if (!fMapfile) {
       fMapfile = new TEnv();
       fMapfile->IgnoreDuplicates(kTRUE);
-//       fMapNamespaces = new THashTable();
-//       fMapNamespaces->SetOwner();
+      fMapNamespaces = new THashTable();
+      fMapNamespaces->SetOwner();
 
       fRootmapFiles = new TObjArray;
       fRootmapFiles->SetOwner();
@@ -4199,16 +4172,9 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
 //______________________________________________________________________________
 Bool_t TCling::IsAutoLoadNamespaceCandidate(const char* name)
 {
-//    if (fMapNamespaces){
-//       return fMapNamespaces->FindObject(name);
-//    }
+   if (fMapNamespaces)
+      return fMapNamespaces->FindObject(name);
    return false;
-}
-
-//______________________________________________________________________________
-Bool_t TCling::IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl)
-{
-   return fNSFromRootmaps.count(nsDecl) != 0;
 }
 
 //______________________________________________________________________________

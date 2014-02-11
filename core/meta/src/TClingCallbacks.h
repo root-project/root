@@ -37,6 +37,7 @@ class TClingCallbacks : public cling::InterpreterCallbacks {
 private:
    void *fLastLookupCtx;
    clang::NamespaceDecl *fROOTSpecialNamespace;
+   clang::NamespaceDecl *fDeclContextToLookIn;
    bool fFirstRun;
    bool fIsAutoloading;
    bool fIsAutoloadingRecursively;
