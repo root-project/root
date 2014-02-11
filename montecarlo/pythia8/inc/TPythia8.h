@@ -97,6 +97,12 @@ public:
    void                    ReadString(const char* string) const;
    void                    ReadConfigFile(const char* string) const;
    Bool_t                  Initialize(Int_t idAin, Int_t idBin, Double_t ecms);
+   Bool_t                  Initialize(Int_t idAin, Int_t idBin, Double_t eAin, Double_t eBin);
+   void                    ListAll() const;
+   void                    ListChanged() const;
+   void                    Plist(Int_t id) const;
+   void                    PlistAll() const;
+   void                    PlistChanged() const;
    void                    PrintStatistics() const;
    void                    EventListing() const;
    Int_t                   GetN() const;
