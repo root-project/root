@@ -46,6 +46,7 @@ namespace clang {
    class Decl;
    class EnumDecl;
    class FunctionDecl;
+   class NamespaceDecl;
    class Type;
    class QualType;
 }
@@ -96,7 +97,8 @@ private: // Data Members
    TString         fIncludePath;      // Interpreter include path.
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
-   THashTable*     fMapNamespaces;    // Entries for the namespaces, that we need to signal to clang.
+   //FIXME use an unordered set when C++11 is enabled
+   std::set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
 
@@ -138,6 +140,7 @@ public: // Public Interface
    Int_t   AutoLoad(const std::type_info& typeinfo);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
+   Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
    void    ClearFileBusy();
    void    ClearStack(); // Delete existing temporary values
    void    EnableAutoLoading();
