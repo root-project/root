@@ -260,21 +260,22 @@ void PyROOT::TMethodHolder::SetPyError_( PyObject* msg )
       }
    }
 
-   Py_XDECREF( etype ); Py_XDECREF( evalue ); Py_XDECREF( etrace );
+   Py_XDECREF( evalue ); Py_XDECREF( etrace );
 
    PyObject* doc = GetDocString();
-
+   PyObject* errtype = etype ? etype : PyExc_TypeError;
    if ( details.empty() ) {
-      PyErr_Format( PyExc_TypeError, "%s =>\n    %s", PyROOT_PyUnicode_AsString( doc ),
+      PyErr_Format( errtype, "%s =>\n    %s", PyROOT_PyUnicode_AsString( doc ),
          msg ? PyROOT_PyUnicode_AsString( msg ) : ""  );
    } else if ( msg ) {
-      PyErr_Format( PyExc_TypeError, "%s =>\n    %s (%s)",
+      PyErr_Format( errtype, "%s =>\n    %s (%s)",
          PyROOT_PyUnicode_AsString( doc ), PyROOT_PyUnicode_AsString( msg ), details.c_str() );
    } else {
-      PyErr_Format( PyExc_TypeError, "%s =>\n    %s",
+      PyErr_Format( errtype, "%s =>\n    %s",
          PyROOT_PyUnicode_AsString( doc ), details.c_str() );
    }
 
+   Py_XDECREF( etype ); 
    Py_DECREF( doc );
    Py_XDECREF( msg );
 }
