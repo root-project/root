@@ -1155,8 +1155,13 @@ void TClass::Init(const char *name, Version_t cversion,
       }
    }
    if (!silent && !fClassInfo && !isStl && fName.First('@')==kNPOS &&
-       !TClassEdit::IsInterpreterDetail(fName.Data()) )
-      ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
+       !TClassEdit::IsInterpreterDetail(fName.Data()) ) {
+      if (fState == kHasTClassInit) {
+         ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+      } else {
+         ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
+      }
+   }
 
    fgClassCount++;
    SetUniqueID(fgClassCount);
