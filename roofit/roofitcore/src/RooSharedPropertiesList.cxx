@@ -88,43 +88,8 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
     return prop ;
   }
 
-  // Find property with identical uuid in list
-  RooFIter iter = _propList.fwdIterator() ;
-
   //std::cout << "REGISTER properties " << prop->asString() << " - list size = " << _propList.GetSize() << std::endl;
   RooSharedProperties* tmp ;
-
-#ifdef OLD
-  while((tmp=(RooSharedProperties*)iter.next())) {
-    if (tmp != prop && *tmp==*prop) {
-      // Found another instance of object with identical UUID 
-
-      // Delete incoming instance, increase ref count of already stored instance
-      // cout << "RooSharedProperties::reg deleting incoming prop " << prop << " recycling existing prop " << tmp << endl ;
-
-      // Check if prop is in _propList
-      if (_propList.FindObject(prop)) {
-	// cout << "incoming object to be deleted is in proplist!!" << endl ;
-      } else {
-	// cout << "deleting prop object " << prop << endl ;
-	if (canDeleteIncoming) delete prop ;
-      }
-
-      // delete prop ;
-      //_propList.Add(tmp) ;
-      tmp->increaseRefCount() ;
-
-      // Return pointer to already-stored instance
-      return tmp ;
-    }
-  }
-
-  
-  // cout << "RooSharedProperties::reg storing incoming prop " << prop << endl ;
-  prop->setInSharedList() ;
-  prop->increaseRefCount() ;
-  _propList.Add(prop) ;
-#else 
   
   std::map<std::string, RooSharedProperties *>::iterator it; 
 
@@ -141,8 +106,6 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   prop->setInSharedList() ;
   prop->increaseRefCount() ;
   _newPropList[ std::string(prop->asString()) ] = prop; 
-
-#endif
 
   return prop ;
 }
