@@ -36,6 +36,9 @@
 #include <sstream>
 #include <memory>
 #include <string>
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,1,1)
 #include "TVirtualIsAProxy.h"
@@ -55,7 +58,11 @@ namespace ROOT { namespace Cintex {
 
       Type                     fType;
       string                   fName;
+#if __cplusplus > 199711L
+     std::atomic<TClass*>      fTclass;
+#else
       TClass*                  fTclass;
+#endif
       TClass*                  fLastClass;
       std::map<const std::type_info*,TClass*> fSub_types;
       const  std::type_info*   fLastType;
@@ -367,38 +374,44 @@ namespace ROOT { namespace Cintex {
       if ( ! obj || ! fIsVirtual )  {
          return Tclass();
       }
-      else  {
-         // Avoid the case that the first word is a virtual_base_offset_table instead of
-         // a virtual_function_table
-         long Offset = **(long**)obj;
-         if ( Offset == 0 ) return Tclass();
 
-         DynamicStruct_t* p = (DynamicStruct_t*)obj;
-         const std::type_info& typ = typeid(*p);
+      // Avoid the case that the first word is a virtual_base_offset_table instead of
+      // a virtual_function_table
+      long Offset = **(long**)obj;
+      if ( Offset == 0 ) return Tclass();
 
-         if ( &typ == fMyType )  {
-            return Tclass();
-         }
+      DynamicStruct_t* p = (DynamicStruct_t*)obj;
+      const std::type_info& typ = typeid(*p);
+
+      if ( &typ == fMyType )  {
+	return Tclass();
+      }
+      {
 	 R__LOCKGUARD2(gCintexMutex);
          if ( &typ == fLastType )  {
             return fLastClass;
          }
+
          // Check if TypeNth is already in sub-class cache
-         else if ( 0 != (fLastClass=fSub_types[&typ]) )  {
+         if ( 0 != (fLastClass=fSub_types[&typ]) )  {
             fLastType = &typ;
-         }
-         // Last resort: lookup root class
-         else   {
-            std::string nam;
-            Type t = Type::ByTypeInfo(typ);
-            if (t) nam = CintName(t);
-            else   nam = CintName(Tools::Demangle(typ));
-            fLastClass = ROOT::GetROOT()->GetClass(nam.c_str());
-            fSub_types[fLastType=&typ] = fLastClass;
+	    return fLastClass;
          }
       }
+      // Last resort: lookup root class
+      TClass* returnValue;
+      std::string nam;
+      Type t = Type::ByTypeInfo(typ);
+      if (t) nam = CintName(t);
+      else   nam = CintName(Tools::Demangle(typ));
+      returnValue = ROOT::GetROOT()->GetClass(nam.c_str());
+      {
+         R__LOCKGUARD2(gCintexMutex);
+	 fLastClass = returnValue;
+	 fSub_types[fLastType=&typ] = fLastClass;
+      }
       //std::cout << "Cintex: IsA:" << TypeNth.Name(SCOPED) << " dynamic:" << dtype.Name(SCOPED) << std::endl;
-      return fLastClass;
+      return returnValue;
    }
 
    TClass* ROOTClassEnhancerInfo::Default_CreateClass( Type typ, ROOT::TGenericClassInfo* info)  {
