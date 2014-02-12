@@ -8,9 +8,9 @@
 #include "TSeqCollection.h"
 #include "TVirtualGL.h"
 #include "TVirtualX.h"
-
 #include "TGOSXGL.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 
 ClassImp(TGOSXGLManager)
@@ -56,8 +56,12 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    
    format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
    format.push_back(component_type(Rgl::kDepth, 32));
-   //I love multisampling, but its quite expensive :)
-   //format.push_back(component_type(Rgl::kMultiSample, 8));
+   
+   if (gEnv) {
+      const Int_t nSamples = gEnv->GetValue("OpenGL.Framebuffer.Multisample", 0);
+      if (nSamples > 0 && nSamples <= 8) //TODO: check the 'upper limit' using API, not hardcoded 8.
+         format.push_back(component_type(Rgl::kMultiSample, nSamples));
+   }
 
    //Now, the interface is quite ugly, that's why it's called TVirtualX :)
    Int_t x = 0, y = 0;
