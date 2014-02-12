@@ -381,13 +381,6 @@ also a fill area if the hist fill color is set but the fill area corresponds to
 the histogram contour.
 </td></tr>
 
-<tr><th valign=top>"9"</th><td>
-Force histogram to be drawn in high resolution mode. By default, the histogram
-is drawn in low resolution in case the number of bins is greater than the number
-of pixels in the current pad. This option should be combined with a "drawing
-option" like "H" or "L".
-</td></tr>
-
 </table>
 
 <a name="HP01c"></a><h4><u>Options supported for 2D histograms</u></h4>
@@ -3454,8 +3447,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    Hoption.BackBox  = 1;
    Hoption.System   = kCARTESIAN;
 
-   Hoption.HighRes  = 0;
-
    Hoption.Zero     = 0;
 
    //check for graphical cuts
@@ -3753,8 +3744,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          }
       }
    }
-
-   if (strstr(chopt,"9"))  Hoption.HighRes = 1;
 
    if (Hoption.Surf == 15) {
       if (Hoption.System == kPOLAR || Hoption.System == kCARTESIAN) {
@@ -5961,7 +5950,6 @@ void THistPainter::PaintHist(Option_t *)
    }
 
    if (Hoption.Fill == 2)    chopth[13] = '2';
-   if (Hoption.HighRes != 0) chopth[14] = '9';
 
    //         Option LOGX
 

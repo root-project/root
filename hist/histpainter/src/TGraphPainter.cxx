@@ -1465,12 +1465,6 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
     A Bar chart with equidistant bins is drawn as fill areas (Contours are drawn).
     </td></tr>
 
-    <tr><th valign=top>"9"</th><td>
-    Force graph to be drawn in high resolution mode. By default, the graph is
-    drawn in low resolution in case the number of points is greater than the
-    number of pixels in the current pad.
-    </td></tr>
-
     <tr><th valign=top>"]["</th><td>
     "Cutoff" style. When this option is selected together with H option, the
     first and last vertical lines of the histogram are not drawn.
@@ -1951,241 +1945,130 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       else
          nrPix = ay2Pix-ay1Pix+1;
 
-      // Make here decision whether it should be painted in high or low resolution
-      Int_t ip, ipix, lowRes = 0;
-      if (3*nrPix < last-first+1) {
-         lowRes = 1;
+      if (!optionRot) {
+         npt = 0;
+         for (i=first; i<=last;i++) {
+            npt++;
+            if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
+            else {
+               xi1 = x[i];      xi = x[i-1];
+               if (xi1 < xi) {
+                  if (i != last) Error(where, "X must be in increasing order");
+                  else           Error(where, "X must have N+1 values with option N");
+                  return;
+               }
+               gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
+            }
+            if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
+            if ((optionMark != 10) && (optionLine == 0)) {
+               if (y[i-1] <= rwymin)  {npt--; continue;}
+            }
+            gywork[npt-1] = y[i-1];
+            gywork[npt]   = y[i-1]; //new
+            if ((gywork[npt-1] < rwymin) || ((gywork[npt-1] > rwymax) && !optionFill2)) {
+               if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
+               if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
+               if (npt > 2) {
+                  if (optionMarker) {
+                     ComputeLogs(npt, optionZ);
+                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+                  }
+                  if (optionLine) {
+                     if (!optionMarker) ComputeLogs(npt, optionZ);
+                     gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
+                  }
+               }
+               gxwork[0] = gxwork[npt-1];
+               gywork[0] = gywork[npt-1];
+               npt       = 1;
+               continue;
+            }
+
+            if (npt >= 50) {
+               if (optionMarker) {
+                  ComputeLogs(50, optionZ);
+                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
+               }
+               if (optionLine) {
+                  if (!optionMarker) ComputeLogs(50, optionZ);
+                  if (optionFill2) {
+                     gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
+                     gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
+                     gPad->PaintFillArea(52,gxworkl,gyworkl);
+                  }
+                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+               }
+               gxwork[0] = gxwork[npt-1];
+               gywork[0] = gywork[npt-1];
+               npt      = 1;
+            }
+         }  //endfor (i=first; i<=last;i++)
+         if (optionMarker && npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+         }
+         if (optionLine && npt > 1) {
+            if (!optionMarker) ComputeLogs(npt, optionZ);
+            if (optionFill2) {
+               gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
+               gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
+               gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
+            }
+            gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+         }
       }
-      if (optionFill2)       lowRes = 0;
-      if (opt.Contains("9")) lowRes = 0;
-      if (lowRes) {
-         Double_t *minPix   = new Double_t[nrPix];
-         Double_t *maxPix   = new Double_t[nrPix];
-         Double_t *centrPix = new Double_t[nrPix];
-         Int_t *nrEntries   = new Int_t[nrPix];
-
-         for (ip = 0; ip < nrPix; ip++) {
-            minPix[ip]    =  1e100;
-            maxPix[ip]    = -1e100;
-            nrEntries[ip] = 0;
-         }
-
-         for (ip = first; ip < last; ip++) {
-            Double_t xw;
-            if (!optionBins) xw = wmin + (ip-first)*delta+0.5*delta;
-            else             xw = x[ip-1] + 0.5*(x[ip]-x[ip-1]);;
-
-            if (!optionRot) {
-               Int_t ix = gPad->XtoAbsPixel(gPad->XtoPad(xw))-ax1Pix;
-               if (ix < 0) ix = 0;
-               if (ix >= nrPix) ix = nrPix-1;
-               Int_t yPixel = gPad->YtoAbsPixel(y[ip-1]);
-               if (yPixel >= ay1Pix) continue;
-               if (minPix[ix] > yPixel) minPix[ix] = yPixel;
-               if (maxPix[ix] < yPixel) maxPix[ix] = yPixel;
-               (nrEntries[ix])++;
-            } else {
-               Int_t iy = gPad->YtoAbsPixel(gPad->YtoPad(y[ip-1]))-ay1Pix;
-               if (iy < 0) iy = 0;
-               if (iy >= nrPix) iy = nrPix-1;;
-               Int_t xPixel = gPad->XtoAbsPixel(gPad->XtoPad(xw));
-               if (minPix[iy] > xPixel) minPix[iy] = xPixel;
-               if (maxPix[iy] < xPixel) maxPix[iy] = xPixel;
-               (nrEntries[iy])++;
+      else {
+         npt = 0;
+         for (i=first; i<=last;i++) {
+            npt++;
+            if (!optionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
+            else {
+               yi1 = y[i];      yi = y[i-1];
+               if (yi1 < yi) {
+                  if (i != last) Error(where, "Y must be in increasing order");
+                  else           Error(where, "Y must have N+1 values with option N");
+                  return;
+               }
+               gywork[npt-1] = y[i-1] + 0.5*(y[i]-y[i-1]);
             }
-         }
-
-         for (ipix = 0; ipix < nrPix; ipix++) {
-            if (nrEntries[ipix] > 0)
-               centrPix[ipix] = (minPix[ipix]+maxPix[ipix])/2.0;
-            else
-               centrPix[ipix] = 2*TMath::Max(TMath::Abs(minPix[ipix]),
-                                             TMath::Abs(maxPix[ipix]));
-         }
-
-         Double_t *xc = new Double_t[nrPix];
-         Double_t *yc = new Double_t[nrPix];
-
-         Double_t xcadjust = 0.3*(gPad->AbsPixeltoX(ax1Pix+1) - gPad->AbsPixeltoX(ax1Pix));
-         Double_t ycadjust = 0.3*(gPad->AbsPixeltoY(ay1Pix)   - gPad->AbsPixeltoY(ay1Pix+1));
-         Int_t nrLine = 0;
-         for (ipix = 0; ipix < nrPix; ipix++) {
-            if (minPix[ipix] <= maxPix[ipix]) {
-               Double_t xl[2]; Double_t yl[2];
-               if (!optionRot) {
-                  xc[nrLine] = gPad->AbsPixeltoX(ax1Pix+ipix) + xcadjust;
-                  yc[nrLine] = gPad->AbsPixeltoY((Int_t)centrPix[ipix]);
-
-                  xl[0]      = xc[nrLine];
-                  yl[0]      = gPad->AbsPixeltoY((Int_t)minPix[ipix]);
-                  xl[1]      = xc[nrLine];
-                  yl[1]      = gPad->AbsPixeltoY((Int_t)maxPix[ipix]);
-               } else {
-                  yc[nrLine] = gPad->AbsPixeltoY(ay1Pix+ipix) + ycadjust;
-                  xc[nrLine] = gPad->AbsPixeltoX((Int_t)centrPix[ipix]);
-
-                  xl[0]      = gPad->AbsPixeltoX((Int_t)minPix[ipix]);
-                  yl[0]      = yc[nrLine];
-                  xl[1]      = gPad->AbsPixeltoX((Int_t)maxPix[ipix]);
-                  yl[1]      = yc[nrLine];
-               }
-               if (!optionZ && gPad->GetLogx()) {
-                  if (xc[nrLine] > 0) xc[nrLine] = TMath::Log10(xc[nrLine]);
-                  else                xc[nrLine] = gPad->GetX1();
-                  for (Int_t il = 0; il < 2; il++) {
-                     if (xl[il] > 0) xl[il] = TMath::Log10(xl[il]);
-                     else            xl[il] = gPad->GetX1();
-                  }
-               }
-               if (!optionZ && gPad->GetLogy()) {
-                  if (yc[nrLine] > 0) yc[nrLine] = TMath::Log10(yc[nrLine]);
-                  else                yc[nrLine] = gPad->GetY1();
-                  for (Int_t il = 0; il < 2; il++) {
-                     if (yl[il] > 0) yl[il] = TMath::Log10(yl[il]);
-                     else            yl[il] = gPad->GetY1();
-                  }
-               }
-
-               gPad->PaintPolyLine(2,xl,yl,noClip);
-               nrLine++;
-            }
-         }
-
-         gPad->PaintPolyLine(nrLine,xc,yc,noClip);
-
-         delete [] xc;
-         delete [] yc;
-
-         delete [] minPix;
-         delete [] maxPix;
-         delete [] centrPix;
-         delete [] nrEntries;
-      } else {
-         if (!optionRot) {
-            npt = 0;
-            for (i=first; i<=last;i++) {
-               npt++;
-               if (!optionBins) gxwork[npt-1] = wmin+(i-first)*delta+0.5*delta;
-               else {
-                  xi1 = x[i];      xi = x[i-1];
-                  if (xi1 < xi) {
-                     if (i != last) Error(where, "X must be in increasing order");
-                     else           Error(where, "X must have N+1 values with option N");
-                     return;
-                  }
-                  gxwork[npt-1] = x[i-1] + 0.5*(x[i]-x[i-1]);
-               }
-               if (gxwork[npt-1] < uxmin || gxwork[npt-1] > uxmax) { npt--; continue;}
-               if ((optionMark != 10) && (optionLine == 0)) {
-                  if (y[i-1] <= rwymin)  {npt--; continue;}
-               }
-               gywork[npt-1] = y[i-1];
-               gywork[npt]   = y[i-1]; //new
-               if ((gywork[npt-1] < rwymin) || ((gywork[npt-1] > rwymax) && !optionFill2)) {
-                  if ((gywork[npt-1] < rwymin)) gywork[npt-1] = rwymin;
-                  if ((gywork[npt-1] > rwymax)) gywork[npt-1] = rwymax;
-                  if (npt > 2) {
-                     if (optionMarker) {
-                        ComputeLogs(npt, optionZ);
-                        gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                     }
-                     if (optionLine) {
-                        if (!optionMarker) ComputeLogs(npt, optionZ);
-                        gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
-                     }
-                  }
-                  gxwork[0] = gxwork[npt-1];
-                  gywork[0] = gywork[npt-1];
-                  npt       = 1;
-                  continue;
-               }
-
-               if (npt >= 50) {
+            gxwork[npt-1] = x[i-1];
+            if ((gxwork[npt-1] < uxmin) || (gxwork[npt-1] > uxmax)) {
+               if (npt > 2) {
                   if (optionMarker) {
-                     ComputeLogs(50, optionZ);
-                     gPad->PaintPolyMarker(50,gxworkl,gyworkl);
+                     ComputeLogs(npt, optionZ);
+                     gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
                   }
                   if (optionLine) {
-                     if (!optionMarker) ComputeLogs(50, optionZ);
-                     if (optionFill2) {
-                        gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
-                        gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
-                        gPad->PaintFillArea(52,gxworkl,gyworkl);
-                     }
-                     gPad->PaintPolyLine(50,gxworkl,gyworkl);
+                     if (!optionMarker) ComputeLogs(npt, optionZ);
+                     gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
                   }
-                  gxwork[0] = gxwork[npt-1];
-                  gywork[0] = gywork[npt-1];
-                  npt      = 1;
                }
-            }  //endfor (i=first; i<=last;i++)
-            if (optionMarker && npt > 0) {
-               ComputeLogs(npt, optionZ);
-               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
+               gxwork[0] = gxwork[npt-1];
+               gywork[0] = gywork[npt-1];
+               npt      = 1;
+               continue;
             }
-            if (optionLine && npt > 1) {
-               if (!optionMarker) ComputeLogs(npt, optionZ);
-               if (optionFill2) {
-                  gxworkl[npt]   = gxworkl[npt-1]; gyworkl[npt]   = rwymin;
-                  gxworkl[npt+1] = gxworkl[0];     gyworkl[npt+1] = rwymin;
-                  gPad->PaintFillArea(npt+2,gxworkl,gyworkl);
+            if (npt >= 50) {
+               if (optionMarker) {
+                  ComputeLogs(50, optionZ);
+                  gPad->PaintPolyMarker(50,gxworkl,gyworkl);
                }
-               gPad->PaintPolyLine(npt,gxworkl,gyworkl);
+               if (optionLine) {
+                  if (!optionMarker) ComputeLogs(50, optionZ);
+                  gPad->PaintPolyLine(50,gxworkl,gyworkl);
+               }
+               gxwork[0] = gxwork[npt-1];
+               gywork[0] = gywork[npt-1];
+               npt      = 1;
             }
+         }  //endfor (i=first; i<=last;i++)
+         if (optionMarker && npt > 0) {
+            ComputeLogs(npt, optionZ);
+            gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
          }
-         else {
-            npt = 0;
-            for (i=first; i<=last;i++) {
-               npt++;
-               if (!optionBins) gywork[npt-1] = wminstep+(i-first)*delta+0.5*delta;
-               else {
-                  yi1 = y[i];      yi = y[i-1];
-                  if (yi1 < yi) {
-                     if (i != last) Error(where, "Y must be in increasing order");
-                     else           Error(where, "Y must have N+1 values with option N");
-                     return;
-                  }
-                  gywork[npt-1] = y[i-1] + 0.5*(y[i]-y[i-1]);
-               }
-               gxwork[npt-1] = x[i-1];
-               if ((gxwork[npt-1] < uxmin) || (gxwork[npt-1] > uxmax)) {
-                  if (npt > 2) {
-                     if (optionMarker) {
-                        ComputeLogs(npt, optionZ);
-                        gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-                     }
-                     if (optionLine) {
-                        if (!optionMarker) ComputeLogs(npt, optionZ);
-                        gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
-                     }
-                  }
-                  gxwork[0] = gxwork[npt-1];
-                  gywork[0] = gywork[npt-1];
-                  npt      = 1;
-                  continue;
-               }
-               if (npt >= 50) {
-                  if (optionMarker) {
-                     ComputeLogs(50, optionZ);
-                     gPad->PaintPolyMarker(50,gxworkl,gyworkl);
-                  }
-                  if (optionLine) {
-                     if (!optionMarker) ComputeLogs(50, optionZ);
-                     gPad->PaintPolyLine(50,gxworkl,gyworkl);
-                  }
-                  gxwork[0] = gxwork[npt-1];
-                  gywork[0] = gywork[npt-1];
-                  npt      = 1;
-               }
-            }  //endfor (i=first; i<=last;i++)
-            if (optionMarker && npt > 0) {
-               ComputeLogs(npt, optionZ);
-               gPad->PaintPolyMarker(npt,gxworkl,gyworkl);
-            }
-            if (optionLine != 0 && npt > 1) {
-               if (!optionMarker) ComputeLogs(npt, optionZ);
-               gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
-            }
+         if (optionLine != 0 && npt > 1) {
+            if (!optionMarker) ComputeLogs(npt, optionZ);
+            gPad->PaintPolyLine(npt,gxworkl,gyworkl,noClip);
          }
       }
    }
