@@ -213,6 +213,9 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
           << "  } else {\n"
           << "    fromDerived = dynamic_cast<" << fromDerivedClassName << "*>((" << toBase_class_name << "*)address);\n"
           << "  }\n"
+          << "  if (!fromDerived) {\n"
+          << "    return -1; \n"
+          << "  }\n"
           << "  " << toBase_class_name << " *toBase = fromDerived;\n"
           << "  return ((long)toBase - (long)fromDerived);\n}\n";
    }
