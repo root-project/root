@@ -55,7 +55,6 @@ typedef struct Hoption_t {
    int FrontBox;    //  = 0 to suppress the front box
    int BackBox;     //  = 0 to suppress the back box
    int List;        //  = 1 to generate the TObjArray "contours"
-   int HighRes;     //  = 1 to select high resolution
    int Proj;        //  = 1 to get an Aitoff projection, usefull for skymaps or exposure maps..   
                     //  = 2 to get a Mercator ptojection
                     //  = 3 to get a Sinusoidal ptojection

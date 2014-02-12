@@ -126,6 +126,8 @@
     ```
    ![Candle plot example](candle.png "Candle plot example")
 
+-   The option "9" as been removed. It is not needed anymore since the line compression
+    has been implemented in `TPadPainter`.
 
 
 ### TGraphPainter
