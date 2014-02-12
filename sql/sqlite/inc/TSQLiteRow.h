@@ -1,4 +1,4 @@
-// @(#)root/sqlite:$Id$
+// @(#)root/sqlite:
 // Author: o.freyermuth <o.f@cern.ch>, 01/06/2013
 
 /*************************************************************************
@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TPgSQLRow
-#define ROOT_TPgSQLRow
+#ifndef ROOT_TSQLiteRow
+#define ROOT_TSQLiteRow
 
 #ifndef ROOT_TSQLRow
 #include "TSQLRow.h"
