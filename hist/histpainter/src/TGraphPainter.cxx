@@ -1929,11 +1929,6 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       Axis_t ax1,ax2,ay1,ay2;
       gPad->GetRangeAxis(ax1,ay1,ax2,ay2);
 
-      Int_t ax1Pix = gPad->XtoAbsPixel(ax1);
-      Int_t ax2Pix = gPad->XtoAbsPixel(ax2);
-      Int_t ay1Pix = gPad->YtoAbsPixel(ay1);
-      Int_t ay2Pix = gPad->YtoAbsPixel(ay2);
-
       if (!optionRot) {
          npt = 0;
          for (i=first; i<=last;i++) {
