@@ -48,6 +48,13 @@ namespace {
       return result;
    }
 
+//= PyROOT object explicit destruction =======================================
+   PyObject* op_destruct( ObjectProxy* self )
+   {
+      op_dealloc_nofree( self );
+      Py_INCREF( Py_None );
+      return Py_None;
+   }
 
 //= PyROOT object proxy pickle support =======================================
    PyObject* op_reduce( ObjectProxy* self )
@@ -99,9 +106,10 @@ namespace {
 
 //____________________________________________________________________________
    PyMethodDef op_methods[] = {
-      { (char*)"__nonzero__", (PyCFunction)op_nonzero, METH_NOARGS, NULL },
-      { (char*)"__bool__",    (PyCFunction)op_nonzero, METH_NOARGS, NULL }, // for p3
-      { (char*)"__reduce__",  (PyCFunction)op_reduce,  METH_NOARGS, NULL },
+      { (char*)"__nonzero__",  (PyCFunction)op_nonzero,  METH_NOARGS, NULL },
+      { (char*)"__bool__",     (PyCFunction)op_nonzero,  METH_NOARGS, NULL }, // for p3
+      { (char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, NULL },
+      { (char*)"__reduce__",   (PyCFunction)op_reduce,   METH_NOARGS, NULL },
       { (char*)NULL, NULL, 0, NULL }
    };
 
