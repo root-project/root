@@ -158,7 +158,6 @@ void TGOSXGLManager::MarkForDirectCopy(Int_t, Bool_t)
 void TGOSXGLManager::ExtractViewport(Int_t, Int_t *)
 {
    //NOOP.
-   NSLog(@"viewpo");
 }
 
 //______________________________________________________________________________
