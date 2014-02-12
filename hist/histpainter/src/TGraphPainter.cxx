@@ -1939,12 +1939,6 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
       Int_t ay1Pix = gPad->YtoAbsPixel(ay1);
       Int_t ay2Pix = gPad->YtoAbsPixel(ay2);
 
-      Int_t nrPix;
-      if (!optionRot)
-         nrPix = ax2Pix-ax1Pix+1;
-      else
-         nrPix = ay2Pix-ay1Pix+1;
-
       if (!optionRot) {
          npt = 0;
          for (i=first; i<=last;i++) {
