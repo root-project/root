@@ -1350,7 +1350,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "TClass *" << clsname << "::fgIsA = 0;  // static to hold class pointer" << std::endl
+   dictStream << "atomic_TClass_ptr " << clsname << "::fgIsA(0);  // static to hold class pointer" << std::endl
                  << std::endl
 
                  << "//_______________________________________"
@@ -1394,8 +1394,8 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
       dictStream << "   Dictionary();\n";
    }
    else{
-      dictStream << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-      dictStream << fullname << "*)0x0)->GetClass();" << std::endl;
+      dictStream << "   if (!fgIsA) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
+      dictStream << fullname << "*)0x0)->GetClass(); }" << std::endl;
       }
    dictStream    << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
@@ -3033,6 +3033,8 @@ void CreateDictHeader(std::ostream& dictStream, const std::string& main_dictname
                << "#include \"TROOT.h\"\n"
                << "#include \"TBuffer.h\"\n"
                << "#include \"TMemberInspector.h\"\n"
+               << "#include \"TInterpreter.h\"" << std::endl
+               << "#include \"TVirtualMutex.h\"" << std::endl
                << "#include \"TError.h\"\n\n"
                << "#ifndef G__ROOT\n"
                << "#define G__ROOT\n"
