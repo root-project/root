@@ -1220,14 +1220,14 @@ void TWinNTSystem::SetProgname(const char *name)
       }
 
       if (which) {
-         const char *dirname;
+         TString dirname;
          char driveletter = DriveName(which);
          const char *d = DirName(which);
 
          if (driveletter) {
-            dirname = Form("%c:%s", driveletter, d);
+            dirname.Form("%c:%s", driveletter, d);
          } else {
-            dirname = Form("%s", d);
+            dirname.Form("%s", d);
          }
 
          gProgPath = StrDup(dirname);
@@ -1260,7 +1260,9 @@ const char *TWinNTSystem::GetError()
    if (err == 0 && fLastErrorString != "")
       return fLastErrorString;
    if (err < 0 || err >= sys_nerr) {
-      return Form("errno out of range %d", err);
+      static TString error_msg;
+      error_msg.Form("errno out of range %d", err);
+      return error_msg;
    }
    return sys_errlist[err];
 }
@@ -3722,7 +3724,7 @@ void TWinNTSystem::Setenv(const char *name, const char *value)
 {
    // Set environment variable.
 
-   ::_putenv(Form("%s=%s", name, value));
+   ::_putenv(TString::Format("%s=%s", name, value));
 }
 
 //______________________________________________________________________________
@@ -3799,8 +3801,8 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
          TBrowser *b;
          TIter next(gROOT->GetListOfBrowsers());
          while ((b = (TBrowser*) next()))
-            gROOT->ProcessLine(Form("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
-                                    (ULong_t)b));
+            gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
+                                               (ULong_t)b));
       }
    }
    if (gInterpreter) {

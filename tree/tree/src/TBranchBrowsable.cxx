@@ -549,7 +549,7 @@ Bool_t TMethodBrowsable::IsMethodBrowsable(const TMethod* m)
       TObject* mem=0;
       const char* arrMemberNames[3]={"f%s","_%s","m%s"};
       for (Int_t i=0; !mem && i<3; i++)
-         mem=members->FindObject(Form(arrMemberNames[i],baseName));
+         mem=members->FindObject(TString::Format(arrMemberNames[i],baseName));
       return (!mem ||! ((TDataMember*)mem)->IsPersistent());
    };
    return kFALSE;

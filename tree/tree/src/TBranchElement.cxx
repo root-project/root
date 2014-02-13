@@ -1141,7 +1141,7 @@ void TBranchElement::BuildTitle(const char* name)
       if (dim>=0) {
          branchname.Remove(dim);
       }
-      branchname += Form("[%s_]",name);
+      branchname += TString::Format("[%s_]",name);
       bre->SetTitle(branchname);
       if (lf) {
          lf->SetTitle(branchname);

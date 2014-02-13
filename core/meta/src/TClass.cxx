@@ -1874,14 +1874,16 @@ void TClass::BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl)
                  etype == TVirtualStreamerInfo::kObject ||
                  etype == TVirtualStreamerInfo::kAny) {
          //member class
-         TRealData *rd = new TRealData(Form("%s%s",name,element->GetFullName()),offset+eoffset,0);
+         TString rdname; rdname.Form("%s%s",name,element->GetFullName());
+         TRealData *rd = new TRealData(rdname,offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
-         TString rdname(Form("%s%s.",name,element->GetFullName()));
+         // Now we a dot
+         rdname.Form("%s%s.",name,element->GetFullName());
          if (cle) cle->BuildEmulatedRealData(rdname,offset+eoffset,cl);
       } else {
          //others
-         TString rdname(Form("%s%s",name,element->GetFullName()));
+         TString rdname; rdname.Form("%s%s",name,element->GetFullName());
          TRealData *rd = new TRealData(rdname,offset+eoffset,0);
          if (gDebug > 0) printf(" Class: %s, adding TRealData=%s, offset=%ld\n",cl->GetName(),rd->GetName(),rd->GetThisOffset());
          cl->GetListOfRealData()->Add(rd);
