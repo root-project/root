@@ -78,7 +78,7 @@ struct InvalidTupleType<TNtupleD>
 
 //_______________________________________________________________________
 template<class DataType, class Tuple>
-Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool relaxedMode)
+Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool strictMode)
 {
    InvalidTupleType<Tuple> typeChecker;
 
@@ -103,7 +103,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
    
    Long64_t nLines = 0;
    
-   if (!relaxedMode) {
+   if (strictMode) {
       while (true) {
          //Skip empty-lines (containing only newlines, comments, whitespaces + newlines
          //and combinations).
@@ -119,7 +119,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
          for (Int_t i = 0; i < nVars; ++i) {
             SkipWSCharacters(inputStream);//skip all wses except newlines.
             if (!inputStream.good()) {
-               ::Error("FillNtupleFromStream", "failed to read a tuple (invalid line)");
+               ::Error("FillNtupleFromStream", "failed to read a tuple (not enough values found)");
                return nLines;
             }
 
@@ -161,8 +161,50 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
          ++nLines;
       }
    } else {
-      //This was requested in JIRA: read values for a given row even if they are separated
-      //by newline-character.
+      Int_t i = 0;//how many values we found for a given tuple's entry.
+      while (true) {
+         //Skip empty lines, comments and whitespaces before
+         //the first 'non-ws' symbol (can be either a delimiter, or a number, or invalid symbol).
+         SkipEmptyLines(inputStream);
+         
+         if (!inputStream.good()) {
+            //No data to read, check what we read by this moment:
+            if (!nLines)
+               ::Error("FillNtupleFromStream", "no data read");
+            else if (i > 0)//we've read only a part of a row.
+               ::Error("FillNtupleFromStream", "failed to read a next number");
+
+            return nLines;
+         }
+         
+         if (i > 0 && !std::isspace(delimiter)) {
+            //The next one must be a delimiter.
+            const char test = inputStream.peek();
+            if (!inputStream.good() || test != delimiter) {
+               ::Error("FillNtupleFromStream", "delimiter expected (non-strict mode)");
+               return nLines;
+            }
+
+            inputStream.get();//skip the delimiter.
+            SkipEmptyLines(inputStream);//probably, read till eof.
+         }
+         
+         //Here must be a number.
+         inputStream>>args[i];
+            
+         if (!(inputStream.eof() && i + 1 == nVars) && !inputStream.good()){
+            ::Error("FillNtupleFromStream", "error while reading a value");
+            return nLines;
+         }
+            
+         if (i + 1 == nVars) {
+            //We god the row, can fill now and continue.
+            static_cast<TTree &>(tuple).Fill();
+            ++nLines;
+            i = 0;
+         } else
+            ++i;
+      }
    }
    
    return nLines;

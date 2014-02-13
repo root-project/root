@@ -240,8 +240,8 @@ Long64_t TNtuple::ReadStream(std::istream &inputStream, const char * /*branchDes
    return nlines;
    */
 
-   //The last argument - false == strict mode.
-   return ROOT::TreeUtils::FillNtupleFromStream<Float_t, TNtuple>(inputStream, *this, delimiter, false);
+   //The last argument - true == strict mode.
+   return ROOT::TreeUtils::FillNtupleFromStream<Float_t, TNtuple>(inputStream, *this, delimiter, true);
 }
 
 
