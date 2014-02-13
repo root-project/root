@@ -2349,20 +2349,32 @@ static const int cb_size  = 4096;
 static const int fld_size = 2048;
 
 // a circular formating buffer
+#if __cplusplus > 199711L
+static thread_local char gFormbuf[cb_size];       // some slob for form overflow
+static thread_local char *gBfree  = gFormbuf;
+static thread_local char *gEndbuf = &gFormbuf[cb_size-1];
+#else
 static char gFormbuf[cb_size];       // some slob for form overflow
 static char *gBfree  = gFormbuf;
 static char *gEndbuf = &gFormbuf[cb_size-1];
-
+#endif
 //______________________________________________________________________________
 static char *SlowFormat(const char *format, va_list ap, int hint)
 {
    // Format a string in a formatting buffer (using a printf style
    // format descriptor).
 
+#if __cplusplus > 199711L
+   static thread_local char *slowBuffer  = 0;
+   static thread_local int   slowBufferSize = 0;
+#else
    static char *slowBuffer  = 0;
    static int   slowBufferSize = 0;
 
+   //NOTE: since slowBuffer is returned from this function,
+   // this lock guard is ineffectual in protecting slowBuffer reads
    R__LOCKGUARD2(gStringMutex);
+#endif
 
    if (hint == -1) hint = fld_size;
    if (hint > slowBufferSize) {
@@ -2408,8 +2420,12 @@ static char *Format(const char *format, va_list ap)
    // Format a string in a circular formatting buffer (using a printf style
    // format descriptor).
 
+#if __cplusplus <= 199711L
+   //NOTE: since an address into the shared buffer is returned from this
+   // function, this lock is ineffectual in protecting reads from 
+   // the buffer.
    R__LOCKGUARD2(gStringMutex);
-
+#endif
    char *buf = gBfree;
 
    if (buf+fld_size > gEndbuf)
