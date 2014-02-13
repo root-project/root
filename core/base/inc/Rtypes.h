@@ -302,6 +302,20 @@ static const char *DeclFileName() { return __FILE__; } \
 static int ImplFileLine(); \
 static const char *ImplFileName();
 
+#define _ClassDefInterp_(name,id) \
+private: \
+public: \
+   static TClass *Class() { static TClass* sIsA = 0; if (!sIsA) sIsA = TClass::GetClass(#name); return sIsA; } \
+   static const char *Class_Name() { return #name; } \
+   static Version_t Class_Version() { return id; } \
+   static void Dictionary() {} \
+   virtual TClass *IsA() const { return name::Class(); } \
+   virtual void ShowMembers(TMemberInspector&insp) const { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
+   virtual void Streamer(TBuffer&) { Error ("Streamer", "Cannot stream interpreted class."); } \
+   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+   static const char *DeclFileName() { return __FILE__; } \
+   static int ImplFileLine() { return 0; } \
+   static const char *ImplFileName() { return __FILE__; }
 
 #if !defined(R__ACCESS_IN_SYMBOL) || defined(__CINT__)
 
