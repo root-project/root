@@ -36,7 +36,7 @@ namespace TreeUtils {
 //get rid of DataType parameter :) (or with a simple typedef inside ntuple class).
 //An input file consists of non-empty lines (separated by newline-characters), possibly empty lines,
 //and comments (treated as empty lines). Each non-empty line should contain N numbers - entry for a tuple.
-//non-strict mode (not implemented yet) let's you to have newline-characters inside a tuple's row (as it worked
+//non-strict mode lets you to have newline-characters inside a tuple's row (as it worked
 //in ROOT prior to v5.3xxx).
 
 template<class DataType, class Tuple>
