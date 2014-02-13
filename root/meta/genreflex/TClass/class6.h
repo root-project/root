@@ -26,6 +26,8 @@ private:
    Double32_t m_d322;     ///<[0,  0, 14] Hi I am opaque in Doxygen
    Double32_t m_d323;     //     [0,  0, 14] Hi I am opaque
    Double32_t m_d324;     ///<  [0,  0, 14] Hi I am opaque in Doxygen
+   int m_testComment; //  This is an important member!
+   
 };
 #endif
 
