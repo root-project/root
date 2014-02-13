@@ -2654,6 +2654,8 @@ def ClassDefImplementation(selclasses, self) :
   returnValue += '#endif\n'
   returnValue += '#include "TClass.h"\n'
   returnValue += '#include "TMemberInspector.h"\n'
+  returnValue += '#include "TInterpreter.h"\n'
+  returnValue += '#include "TVirtualMutex.h"\n'
   returnValue += '#include "RtypesImp.h"\n' # for GenericShowMembers etc
   returnValue += '#include "TIsAProxy.h"\n'
   haveClassDef = 0
@@ -2725,8 +2727,11 @@ def ClassDefImplementation(selclasses, self) :
         specclname = clname
 
       returnValue += template + 'TClass* ' + specclname + '::Class() {\n'
-      returnValue += '   if (!fgIsA)\n'
-      returnValue += '      fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
+      returnValue += '   if (!fgIsA) {\n'
+      returnValue += '      R__LOCKGUARD2(gCINTMutex);'
+      returnValue += '      if (!fgIsA)\n'
+      returnValue += '         fgIsA = TClass::GetClass("' + clname[2:] + '");\n'
+      returnValue += '   }\n'
       returnValue += '   return fgIsA;\n'
       returnValue += '}\n'
       returnValue += template + 'const char * ' + specclname + '::Class_Name() {return "' + clname[2:]  + '";}\n'
@@ -2814,7 +2819,7 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
       returnValue += '   }\n'
       returnValue += '}\n'
-      returnValue += template + 'TClass* ' + specclname + '::fgIsA = 0;\n'
+      returnValue += template + 'atomic_TClass_ptr ' + specclname + '::fgIsA(0);\n'
       returnValue += namespacelevel * '}' + '\n'
     elif derivesFromTObject :
       # no fgIsA etc members but derives from TObject!
