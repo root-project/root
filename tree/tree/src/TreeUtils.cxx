@@ -164,7 +164,8 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
       Int_t i = 0;//how many values we found for a given tuple's entry.
       while (true) {
          //Skip empty lines, comments and whitespaces before
-         //the first 'non-ws' symbol (can be either a delimiter, or a number, or invalid symbol).
+         //the first 'non-ws' symbol:
+         //it can be a delimiter/a number (depends on a context) or an invalid symbol.
          SkipEmptyLines(inputStream);
          
          if (!inputStream.good()) {
@@ -172,8 +173,7 @@ Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char deli
             if (!nLines)
                ::Error("FillNtupleFromStream", "no data read");
             else if (i > 0)//we've read only a part of a row.
-               ::Error("FillNtupleFromStream", "failed to read a next number");
-
+               ::Error("FillNtupleFromStream", "unexpected character or eof found");
             return nLines;
          }
          
