@@ -105,6 +105,8 @@ struct ObjRepoValue {
    const TClass *fClass;
    Version_t     fVersion;
 };
+
+static TVirtualMutex* gOVRMutex = 0;
 typedef std::multimap<void*, ObjRepoValue> RepoCont_t;
 static RepoCont_t gObjectVersionRepository;
 
@@ -118,8 +120,10 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 //    } else {
 //       Warning(where, "Registering address %p again of class '%s' version %d", location, what->GetName(), version);
 //    }
-   gObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
-
+   {
+      R__LOCKGUARD2(gOVRMutex);
+      gObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
+   }
 #if 0
    // This code could be used to prevent an address to be registered twice.
    std::pair<RepoCont_t::iterator, Bool_t> tmp = gObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
@@ -138,6 +142,7 @@ static void UnregisterAddressInRepository(const char * /*where*/, void *location
 {
    // Remove an address from the repository of address/object.
 
+   R__LOCKGUARD2(gOVRMutex);
    RepoCont_t::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
@@ -159,6 +164,7 @@ static void MoveAddressInRepository(const char * /*where*/, void *oldadd, void *
    // Move not only the object itself but also any base classes or sub-objects.
    size_t objsize = what->Size();
    long delta = (char*)newadd - (char*)oldadd;
+   R__LOCKGUARD2(gOVRMutex);
    RepoCont_t::iterator cur = gObjectVersionRepository.find(oldadd);
    for (; cur != gObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
@@ -4346,20 +4352,24 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 
       // Was this object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-      if (iter == gObjectVersionRepository.end()) {
-         // No, it wasn't, skip special version handling.
-         //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
-         inRepo = kFALSE;
-      } else {
-         //objVer = iter->second;
-         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-            Version_t ver = iter->second.fVersion;
-            knownVersions.insert(ver);
-            if (ver == fClassVersion && this == iter->second.fClass) {
-               verFound = kTRUE;
-            }
-         }
+      R__LOCKGUARD2(gOVRMutex);
+
+      {
+	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+	 if (iter == gObjectVersionRepository.end()) {
+	    // No, it wasn't, skip special version handling.
+	    //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
+	    inRepo = kFALSE;
+	 } else {
+	    //objVer = iter->second;
+	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+	       Version_t ver = iter->second.fVersion;
+	       knownVersions.insert(ver);
+	        if (ver == fClassVersion && this == iter->second.fClass) {
+		   verFound = kTRUE;
+		}
+	    }
+	 }
       }
 
       if (!inRepo || verFound) {
@@ -4457,19 +4467,22 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       // Was this array object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-      if (iter == gObjectVersionRepository.end()) {
-         // No, it wasn't, we cannot know what to do.
-         //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
-         inRepo = kFALSE;
-      } else {
-         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-            Version_t ver = iter->second.fVersion;
-            knownVersions.insert(ver);
-            if (ver == fClassVersion && this == iter->second.fClass ) {
-               verFound = kTRUE;
-            }
-         }
+      {
+	 R__LOCKGUARD2(gOVRMutex);
+	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+	 if (iter == gObjectVersionRepository.end()) {
+	    // No, it wasn't, we cannot know what to do.
+	    //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
+	   inRepo = kFALSE;
+	 } else {
+	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+	       Version_t ver = iter->second.fVersion;
+	       knownVersions.insert(ver);
+	       if (ver == fClassVersion && this == iter->second.fClass ) {
+		  verFound = kTRUE;
+	       }
+	    }
+	 }
       }
 
       if (!inRepo || verFound) {
