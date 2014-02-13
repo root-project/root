@@ -16,7 +16,7 @@ public:
 private:
    int m_i;
    int m_j;
-   double m_dArray[10]; // [10]
+   double* m_dArray; //[m_i]
 };
 #endif
 
@@ -27,8 +27,8 @@ class4::class4(int i, int j):
 };
 
 class4::class4():
-   m_i(0),
-   m_j(0){
+   m_i(10),
+   m_j(10){
    };
 
 class4::~class4(){};

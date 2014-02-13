@@ -25,6 +25,7 @@ int execbasic()
    properties4.push_back("myProp");
    printClassInfo("class4", properties4);
    printClassInfo("class5");
+   printClassInfo("class6");
 
    return 0;
 }

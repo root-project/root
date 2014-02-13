@@ -36,13 +36,16 @@ void printMemberNames(const std::string& className, const std::string indent="",
       bool isBasic=dm->IsBasic();
       bool isEnum=dm->IsEnum();
       bool isTransient=!dm->IsPersistent();
-      if (isPtr || isBasic || isEnum || isTransient){
+      std::string dmTitle (dm->GetTitle());
+      if (isPtr || isEnum || isTransient || isBasic || dmTitle!="" ){
          std::cout << " [ ";
          if (isPtr) std::cout << "isPtr ";
          if (isBasic) std::cout << "isBasic ";
          if (isEnum) std::cout << "isEnum ";
-         if (isTransient) std::cout << "isTransient";
-         std::cout << " ]\n";
+         if (isTransient) std::cout << "isTransient ";
+         if (dmTitle!="") std::cout << "\"" << dmTitle << "\" ";
+         std::cout << "]\n";
+         
       }
       else
          std::cout << std::endl;
