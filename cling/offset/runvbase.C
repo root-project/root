@@ -92,10 +92,21 @@ void CheckFor(DERIVED* obj,
 template <typename DERIVED, typename TARGET>
 void CheckForNotDerived(TARGET* obj,
               const char* fromDerivedClassName, const char* toBaseClassName) {
+   long offsetComp = CompOffsetNotDerived<DERIVED, TARGET>(obj);
+   long offsetTClass = InterpOffsetTClassInterface(obj, fromDerivedClassName,
+                                                  toBaseClassName, false);
+   // On some platforms (or stdlibs?) the interpreted dynamic_cast from a
+   // virtual base to derived returns 0, and the offset calculation thus returns
+   // -1. Check whether this is the case here:
+#if defined(__GLIBCXX__) && (__GLIBCXX__ <= 20100326)
+   if (offsetTClass == -1) {
+     // Fake the expected offset.
+     offsetTClass = offsetComp;
+   }
+#endif
    printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
           fromDerivedClassName, toBaseClassName,
-          CompOffsetNotDerived<DERIVED, TARGET>(obj),
-          InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName, false));
+          offsetComp, offsetTClass);
 }
 
 template <typename DERIVED, typename TARGET>
