@@ -36,11 +36,11 @@ namespace TreeUtils {
 //get rid of DataType parameter :) (or with a simple typedef inside ntuple class).
 //An input file consists of non-empty lines (separated by newline-characters), possibly empty lines,
 //and comments (treated as empty lines). Each non-empty line should contain N numbers - entry for a tuple.
-//relaxedMode (not implemented yet) let's you to have newline-characters inside a tuple's row (as it worked
+//Non-strict mode lets you to have newline-characters inside a tuple's row (as it worked
 //in ROOT prior to v5.3xxx).
 
 template<class DataType, class Tuple>
-Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool relaxedMode);
+Long64_t FillNtupleFromStream(std::istream &inputStream, Tuple &tuple, char delimiter, bool strictMode);
 
 }
 }
