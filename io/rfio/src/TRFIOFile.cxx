@@ -134,7 +134,7 @@ TRFIOFile::TRFIOFile(const char *url, Option_t *option, const char *ftitle,
    else
       fname.Form("%s:///%s", fUrl.GetProtocol(), fUrl.GetFile());
    if (strlen(fUrl.GetOptions()))
-      fname += Form("?%s", fUrl.GetOptions());
+      fname += TString::Format("?%s", fUrl.GetOptions());
 
    if (recreate) {
       if (::rfio_access((char*)fname.Data(), kFileExists) == 0)

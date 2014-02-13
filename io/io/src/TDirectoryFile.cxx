@@ -1436,7 +1436,7 @@ Int_t TDirectoryFile::SaveObjectAs(const TObject *obj, const char *filename, Opt
    TDirectory *dirsav = gDirectory;
    TString fname = filename;
    if (!filename || strlen(filename) == 0) {
-      fname = Form("%s.root",obj->GetName());
+      fname.Form("%s.root",obj->GetName());
    }
    TFile *local = TFile::Open(fname.Data(),"recreate");
    if (!local) return 0;

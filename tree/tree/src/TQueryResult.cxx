@@ -44,8 +44,8 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
    // Main constructor.
 
    // Name and unique title
-   SetName(Form("q%d", fSeqNum));
-   SetTitle(Form("session-localhost-%ld-%d",
+   SetName(TString::Format("q%d", fSeqNum));
+   SetTitle(TString::Format("session-localhost-%ld-%d",
                  (Long_t)TTimeStamp().GetSec(), gSystem->GetPid()));
 
    // Start time
@@ -77,16 +77,16 @@ TQueryResult::TQueryResult(Int_t seqnum, const char *opt, TList *inlist,
                Int_t iht = varsel.Index(">>htemp");
                if (iht > -1)
                   varsel.Remove(iht);
-               varsel = Form("\"%s\";", varsel.Data());
+               varsel.Form("\"%s\";", varsel.Data());
             }
             if (!strcmp(o->GetName(),"selection"))
-               varsel += Form("\"%s\"", o->GetTitle());
+               varsel += TString::Format("\"%s\"", o->GetTitle());
          }
          if (gDebug > 0)
             Info("TQueryResult","selec: %s, varsel: %s", selec, varsel.Data());
          // Log notification also in the instance
-         fLogFile->AddLine(Form("TQueryResult: selec: %s, varsel: %s",
-                                selec, varsel.Data()));
+         fLogFile->AddLine(TString::Format("TQueryResult: selec: %s, varsel: %s",
+                                           selec, varsel.Data()));
       }
       // Standard draw action: save only the name
       fSelecImp = new TMacro(selec, varsel);
@@ -181,7 +181,7 @@ void TQueryResult::SaveSelector(const char *selector)
 
    // Store aclic options, if any
    if (aclicMode.Length() > 0)
-      fOptions += Form("#%s", aclicMode.Data());
+      fOptions += TString::Format("#%s", aclicMode.Data());
 
    // If the selector is in a precompiled shared lib (e.g. in a PAR)
    // we just save the name
@@ -337,8 +337,8 @@ void TQueryResult::Print(Option_t *opt) const
    if (full) Printf("+++");
 
    TString range;
-   if (!full)
-      range = (last > -1) ? Form("evts:%lld-%lld", fFirst, last) : "";
+   if (!full && (last > -1)) 
+      range.Form("evts:%lld-%lld", fFirst, last);
 
    // Print header
    if (!fDraw) {
@@ -474,7 +474,7 @@ Bool_t TQueryResult::Matches(const char *ref)
 {
    // Return TRUE if reference ref matches.
 
-   TString lref = Form("%s:%s", GetTitle(), GetName());
+   TString lref; lref.Form("%s:%s", GetTitle(), GetName());
 
    if (lref == ref)
       return kTRUE;

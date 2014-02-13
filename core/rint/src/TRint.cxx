@@ -686,7 +686,7 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 
    if (ret == 1) {
       if (fAppRemote) {
-         TString prompt = Form("%s:root [%%d] ", fAppRemote->ApplicationName());
+         TString prompt; prompt.Form("%s:root [%%d] ", fAppRemote->ApplicationName());
          SetPrompt(prompt);
       } else {
          SetPrompt("root [%d] ");

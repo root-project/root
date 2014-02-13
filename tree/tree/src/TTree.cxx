@@ -2541,7 +2541,7 @@ TFile* TTree::ChangeFile(TFile* file)
       file->Remove(obj);
       // Histogram: just change the directory.
       if (obj->InheritsFrom("TH1")) {
-         gROOT->ProcessLine(Form("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);", obj->ClassName(), (Long_t) obj, (Long_t) newfile));
+         gROOT->ProcessLine(TString::Format("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);", obj->ClassName(), (Long_t) obj, (Long_t) newfile));
          continue;
       }
       // Tree: must save all trees in the old file, reset them.
@@ -6555,7 +6555,7 @@ Long64_t TTree::ReadStream(istream& inputStream, const char *branchDescriptor, c
             desc = bdcur;
             olddesc = slash+1;
          } else {
-            desc = Form("%s/%s",bdname,olddesc.Data());
+            desc.Form("%s/%s",bdname,olddesc.Data());
          }
          char *bracket = strchr(bdname,'[');
          if (bracket) {

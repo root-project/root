@@ -564,7 +564,7 @@ void TFile::Init(Bool_t create)
       // Make sure the anchor is in the name
       if (!fNoAnchorInName)
          if (!strchr(GetName(),'#'))
-            SetName(Form("%s#%s", GetName(), fArchive->GetMemberName()));
+            SetName(TString::Format("%s#%s", GetName(), fArchive->GetMemberName()));
 
       if (fArchive->SetCurrentMember() != -1)
          fArchiveOffset = fArchive->GetMemberFilePosition();
@@ -4477,13 +4477,13 @@ TFile::EFileType TFile::GetType(const char *name, Option_t *option, TString *pre
             TString lfname;
             if (fname[0] == '/') {
                if (prefix)
-                  lfname = Form("%s%s", prefix->Data(), fname);
+                  lfname.Form("%s%s", prefix->Data(), fname);
                else
                   lfname = fname;
             } else if (fname[0] == '~' || fname[0] == '$') {
                lfname = fname;
             } else {
-               lfname = Form("%s/%s", gSystem->HomeDirectory(), fname);
+               lfname.Form("%s/%s", gSystem->HomeDirectory(), fname);
             }
             // If option "READ" test existence and access
             TString opt = option;
@@ -4774,7 +4774,7 @@ Bool_t TFile::Cp(const char *src, const char *dst, Bool_t progressbar,
    //    cachesz = 4*buffersize     -> 4 buffers as peak mem usage
    //    readaheadsz = 2*buffersize -> Keep at max 4*buffersize bytes outstanding when reading
    //    rmpolicy = 1               -> Remove from the cache the blk with the least offset
-   opt += Form("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
+   opt += TString::Format("&cachesz=%d&readaheadsz=%d&rmpolicy=1", 4*buffersize, 2*buffersize);
    sURL.SetOptions(opt);
 
    TFile *sfile = 0;
