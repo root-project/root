@@ -393,7 +393,9 @@ namespace ROOT { namespace Cintex {
          }
 
          // Check if TypeNth is already in sub-class cache
-         if ( 0 != (fLastClass=fSub_types[&typ]) )  {
+	 TClass* findClass = fSub_types[&typ];
+         if ( 0 != findClass )  {
+ 	    fLastClass = findClass;
             fLastType = &typ;
 	    return fLastClass;
          }
