@@ -2221,7 +2221,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       return;
    }
    else if (QT->isRecordType()) {
-      *ret = cling::StoredValueRef::allocate(*fInterp, QT, 0);
+      *ret = cling::StoredValueRef::allocate(*fInterp, QT);
       exec(address, ret->get().getAs<void*>());
       return;
    }
