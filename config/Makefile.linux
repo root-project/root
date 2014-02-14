@@ -20,15 +20,15 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -m32 -Wall -W -Woverloaded-virtual \
+CXXFLAGS      = -pipe -m32 -msse -mfpmath=sse -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
-CFLAGS        = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -pipe -m32 -Wall -W -Woverloaded-virtual \
+CFLAGS        = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS)
+CINTCXXFLAGS  = -pipe -m32 -msse -mfpmath=sse -Wall -W -Woverloaded-virtual \
                 -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 -DG__STD_EXCEPTION
-CINTCFLAGS    = -pipe -m32 -Wall -W -fPIC $(EXTRA_CFLAGS) \
+CINTCFLAGS    = -pipe -m32 -msse -mfpmath=sse -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
                 -DG__STD_EXCEPTION
@@ -53,7 +53,7 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = gfortran
 endif
-F77FLAGS      = -m32 -fPIC -std=legacy
+F77FLAGS      = -m32 -msse -mfpmath=sse -fPIC -std=legacy
 ifneq ($(shell $(F77) -m32 -print-file-name=libgfortran.$(SOEXT)),libgfortran.$(SOEXT))
 F77LIBS      := $(shell $(F77) -m32 -print-file-name=libgfortran.$(SOEXT))
 else
@@ -67,7 +67,7 @@ ifeq ($(F77),)
 # only needed to get default compiler in ./configure
 F77           = g77
 endif
-F77FLAGS      = -m32 -fPIC
+F77FLAGS      = -m32 -msse -mfpmath=sse -fPIC
 ifneq ($(shell $(F77) -print-file-name=libg2c.so),libg2c.so)
 F77LIBS      := $(shell $(F77) -m32 -print-file-name=libg2c.so) -lnsl
 else
