@@ -304,7 +304,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
 
    const clang::Decl* D = static_cast<const clang::Decl*>(DV);
 
-   if (!D->isCanonicalDecl() && !isa<clang::NamespaceDecl>(D)) return;
+   if (!D->isCanonicalDecl() && !isa<clang::NamespaceDecl>(D)
+       && !dyn_cast<clang::RecordDecl>(D)) return;
 
    if (isa<clang::FunctionDecl>(D->getDeclContext())
        || isa<clang::TagDecl>(D->getDeclContext()))
@@ -320,7 +321,8 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
    }
 
    if (const RecordDecl *TD = dyn_cast<RecordDecl>(D)) {
-      TCling__UpdateClassInfo(TD);
+      if (TD->isCanonicalDecl() || TD->isThisDeclarationADefinition())
+         TCling__UpdateClassInfo(TD);
    }
    else if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
 
