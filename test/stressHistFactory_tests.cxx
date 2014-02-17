@@ -30,6 +30,7 @@ using namespace RooStats;
 class PdfComparison : public RooUnitTest {
 private:
   TString fTestDirectory;
+  TString fOldDirectory;  // old directory where test is started
   Double_t fTolerance;
 public:
   PdfComparison(
@@ -41,10 +42,18 @@ public:
     fTestDirectory("HistFactoryTest"),
     fTolerance(1e-3)
   {
+     fOldDirectory = gSystem->pwd();
   }
 
   ~PdfComparison()
   {
+     // delete temmporary directory if in not verbose mode
+     if (_verb == 0) { 
+        TString cmd = "rm -rf "; 
+        cmd += fTestDirectory;
+        int ret = gSystem->Exec(cmd); 
+        if (ret != 0) Error("PdfComparison","Error removing test directory %s",fTestDirectory.Data());
+     }
   }
 
   Bool_t isTestAvailable()
@@ -69,6 +78,7 @@ public:
     gSystem->RedirectOutput(fTestDirectory + "/API_vs_XML_test.log","a");
     
     // build model using the API
+    // create and move to a temporary directory to run hist2workspace
     gSystem->ChangeDirectory(fTestDirectory + "/API/");
     buildAPI_XML_TestModel("API_XML_TestModel");
 
@@ -105,6 +115,9 @@ public:
     
     // cancel redirection
     gSystem->RedirectOutput(0);
+
+    // change working directory to original one
+    gSystem->ChangeDirectory(fOldDirectory);
     
     // compare data
     if(pWS_API->data("obsData"))
