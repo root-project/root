@@ -102,7 +102,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
-#if defined(cygwingcc)
+#if defined(cygwingcc) && !defined(F_LOCK) && !defined(F_ULOCK)
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
 int ruserok(const char *, int, const char *, const char *) {

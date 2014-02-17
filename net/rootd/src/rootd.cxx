@@ -281,7 +281,7 @@ extern "C" int fstatfs(int file_descriptor, struct statfs *buffer);
 #endif
 #endif
 
-#if defined(cygwingcc)
+#if defined(cygwingcc) && !defined(F_LOCK) && !defined(F_ULOCK)
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
 static int fcntl_lockf(int fd, int op, off_t off)
