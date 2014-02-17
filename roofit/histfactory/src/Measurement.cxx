@@ -268,8 +268,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   // First, check that the directory exists:
 
-  // LM : fixes for Windows 
-  if( gSystem->OpenDirectory( Directory.c_str() ) == 0 ) {
+  if( Directory != "" && gSystem->OpenDirectory( Directory.c_str() ) == 0 ) {
     int success = gSystem->MakeDirectory(Directory.c_str() );    
     if( success != 0 ) {
       std::cout << "Error: Failed to make directory: " << Directory << std::endl;
