@@ -5825,6 +5825,7 @@ void THistPainter::PaintFunction(Option_t *)
                TF2 *f2 = (TF2*)obj;
                f2->SetMinimum(fH->GetMinimum());
                f2->SetMaximum(fH->GetMaximum());
+               f2->SetRange(fH->GetXaxis()->GetXmin(), fH->GetYaxis()->GetXmin(), fH->GetXaxis()->GetXmax(), fH->GetYaxis()->GetXmax() );
                f2->Paint("surf same");
             } else {
                obj->Paint("cont3 same");
