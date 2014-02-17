@@ -216,8 +216,8 @@ linuxrh42 | linuxrh51)
    ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="-m32"
-   auxldflags="-m32"
+   auxcflags="-m32 -msse -mfpmath=sse "
+   auxldflags="-m32 -msse -mfpmath=sse "
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxhppa)
