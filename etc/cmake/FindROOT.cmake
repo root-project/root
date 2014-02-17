@@ -5,7 +5,9 @@
 # ROOT_INCLUDE_DIR    PATH to the include directory
 # ROOT_LIBRARIES      Most common libraries
 # ROOT_LIBRARY_DIR    PATH to the library directory 
-
+#
+# Updated by K. Smith (ksmith37@nd.edu) to properly handle
+#  dependncies in ROOT_GENERATE_DICTIONARY
 
 find_program(ROOT_CONFIG_EXECUTABLE root-config
   PATHS $ENV{ROOTSYS}/bin)
@@ -38,17 +40,15 @@ else()
   #set(ROOT_LIBRARIES ${ROOT_LIBRARIES} -lThread -lMinuit -lHtml -lVMC -lEG -lGeom -lTreePlayer -lXMLIO -lProof)
   #set(ROOT_LIBRARIES ${ROOT_LIBRARIES} -lProofPlayer -lMLP -lSpectrum -lEve -lRGL -lGed -lXMLParser -lPhysics)
   set(ROOT_LIBRARY_DIR ${ROOTSYS}/lib)
-
-  # Make variables changeble to the advanced user
-  mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
-
-  if(NOT ROOT_FIND_QUIETLY)
-    message(STATUS "Found ROOT ${ROOT_VERSION} in ${ROOTSYS}")
-  endif()
 endif()
 
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(ROOT DEFAULT_MSG ROOT_CONFIG_EXECUTABLE
+    ROOTSYS ROOT_VERSION ROOT_INCLUDE_DIR ROOT_LIBRARIES	ROOT_LIBRARY_DIR)
 
-include(CMakeMacroParseArguments)
+mark_as_advanced(ROOT_CONFIG_EXECUTABLE)
+
+include(CMakeParseArguments)
 find_program(ROOTCINT_EXECUTABLE rootcint PATHS $ENV{ROOTSYS}/bin)
 find_program(GENREFLEX_EXECUTABLE genreflex PATHS $ENV{ROOTSYS}/bin)
 find_package(GCCXML)
@@ -60,6 +60,12 @@ find_package(GCCXML)
 #                                    OPTIONS opt1...)
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LINKDEF;OPTIONS" "" ${ARGN})
+  #---Get the list of include directories------------------
+  get_directory_property(incdirs INCLUDE_DIRECTORIES)
+  set(includedirs) 
+  foreach( d ${incdirs})    
+  	set(includedirs ${includedirs} -I${d})
+  endforeach()
   #---Get the list of header files-------------------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
@@ -67,37 +73,29 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     if(files)
       foreach(f ${files})
         if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
+          find_file(headerFile ${f} PATHS ${incdirs})
+          set(headerfiles ${headerfiles} ${headerFile})
+          unset(headerFile CACHE)
         endif()
       endforeach()
     else()
-      set(headerfiles ${headerfiles} ${fp})
+      find_file(headerFile ${fp} PATHS ${incdirs})
+      set(headerfiles ${headerfiles} ${headerFile})
+      unset(headerFile CACHE)
     endif()
-  endforeach()
-  #---Get the list of include directories------------------
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  set(includedirs) 
-  foreach( d ${incdirs})    
-   set(includedirs ${includedirs} -I${d})
   endforeach()
   #---Get LinkDef.h file------------------------------------
   set(linkdefs)
   foreach( f ${ARG_LINKDEF})
-    if( IS_ABSOLUTE ${f})
-      set(linkdefs ${linkdefs} ${f})
-    else() 
-      if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/inc/${f})
-        set(linkdefs ${linkdefs} ${CMAKE_CURRENT_SOURCE_DIR}/inc/${f})
-      else()
-        set(linkdefs ${linkdefs} ${CMAKE_CURRENT_SOURCE_DIR}/${f})
-      endif()
-    endif()
+    find_file(linkFile ${f} PATHS ${incdirs})
+    set(linkdefs ${linkdefs} ${linkFile})
+    unset(linkFile CACHE)
   endforeach()
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${dictionary}.h
                      COMMAND ${ROOTCINT_EXECUTABLE} -cint -f  ${dictionary}.cxx 
                                           -c ${ARG_OPTIONS} ${includedirs} ${headerfiles} ${linkdefs} 
-                     DEPENDS ${headerfiles} ${linkdefs})
+                     DEPENDS ${headerfiles} ${linkdefs} VERBATIM)
 endfunction()
 
 #----------------------------------------------------------------------------
