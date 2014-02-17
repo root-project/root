@@ -2,34 +2,28 @@
 # This will define:
 # GRAPHVIZ_FOUND - system has Graphviz
 # GRAPHVIZ_INCLUDE_DIR - the Graphviz include directory
-# GRAPHVIZ_LIBRARY - Link these to use Graphviz
-# GRAPHVIZ_DEFINITIONS - Compiler switches required for using Graphviz
+# GRAPHVIZ_xxx_LIBRARY - Graphviz libraries
+# GRAPHVIZ_LIBRARIES - Link these to use Graphviz (not cached)
 
-if(GRAPHVIZ_INCLUDE_DIR AND GRAPHVIZ_CDT_LIBRARY AND GRAPHVIZ_GRAPH_LIBRARY AND GRAPHVIZ_PATHPLAN_LIBRARY)
-  set(GRAPHVIZ_FIND_QUIETLY TRUE)
-endif()
+find_path(GRAPHVIZ_INCLUDE_DIR graphviz/gvc.h HINTS ${GRAPHVIZ_DIR} ENV GRAPHVIZ_DIR PATH_SUFFIXES include)
 
+find_library(GRAPHVIZ_cdt_LIBRARY NAMES cdt HINTS ${GRAPHVIZ_DIR} ENV GRAPHVIZ_DIR PATH_SUFFIXES lib)
+find_library(GRAPHVIZ_gvc_LIBRARY NAMES gvc HINTS ${GRAPHVIZ_DIR} ENV GRAPHVIZ_DIR PATH_SUFFIXES lib)
+find_library(GRAPHVIZ_graph_LIBRARY NAMES graph cgraph HINTS ${GRAPHVIZ_DIR} ENV GRAPHVIZ_DIR PATH_SUFFIXES lib)
+find_library(GRAPHVIZ_pathplan_LIBRARY NAMES pathplan HINTS ${GRAPHVIZ_DIR} ENV GRAPHVIZ_DIR PATH_SUFFIXES lib)
 
-find_path(GRAPHVIZ_INCLUDE_DIR graphviz/graph.h HINTS $ENV{GRAPHVIZ_DIR}/include ${GRAPHVIZ_DIR}/include)
+set(GRAPHVIZ_LIBRARIES ${GRAPHVIZ_gvc_LIBRARY} ${GRAPHVIZ_graph_LIBRARY} ${GRAPHVIZ_cdt_LIBRARY} ${GRAPHVIZ_pathplan_LIBRARY})
 
-find_library(GRAPHVIZ_CDT_LIBRARY NAMES cdt HINTS $ENV{GRAPHVIZ_DIR}/lib ${GRAPHVIZ_DIR}/lib)
-find_library(GRAPHVIZ_GVC_LIBRARY NAMES gvc HINTS $ENV{GRAPHVIZ_DIR}/lib ${GRAPHVIZ_DIR}/lib)
-find_library(GRAPHVIZ_GRAPH_LIBRARY NAMES graph HINTS $ENV{GRAPHVIZ_DIR}/lib ${GRAPHVIZ_DIR}/lib)
-find_library(GRAPHVIZ_PATHPLAN_LIBRARY NAMES pathplan HINTS $ENV{GRAPHVIZ_DIR}/lib ${GRAPHVIZ_DIR}/lib)
-	
-if(GRAPHVIZ_INCLUDE_DIR AND GRAPHVIZ_CDT_LIBRARY AND GRAPHVIZ_GVC_LIBRARY AND GRAPHVIZ_GRAPH_LIBRARY AND GRAPHVIZ_PATHPLAN_LIBRARY)
-  set(GRAPHVIZ_FOUND 1)
-else()
-  set(GRAPHVIZ_FOUND 0)
-endif()
-
-if(GRAPHVIZ_FOUND AND NOT GRAPHVIZ_FIND_QUIETLY)
-  message(STATUS "Found Graphviz: ${GRAPHVIZ_CDT_LIBRARY} ${GRAPHVIZ_GVC_LIBRARY} ${GRAPHVIZ_GRAPH_LIBRARY} ${GRAPHVIZ_PATHPLAN_LIBRARY}")
-endif()
+# handle the QUIETLY and REQUIRED arguments and set GRAPHVIZ_FOUND to TRUE if all listed variables are TRUE
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(GRAPHVIZ DEFAULT_MSG GRAPHVIZ_INCLUDE_DIR 
+                                                       GRAPHVIZ_cdt_LIBRARY
+                                                       GRAPHVIZ_gvc_LIBRARY 
+                                                       GRAPHVIZ_graph_LIBRARY 
+                                                       GRAPHVIZ_pathplan_LIBRARY)
 
 mark_as_advanced(GRAPHVIZ_INCLUDE_DIR 
-                 GRAPHVIZ_CDT_LIBRARY
-                 GRAPHVIZ_GRAPH_LIBRARY
-                 GRAPHVIZ_GVC_LIBRARY
-                 GRAPHVIZ_PATHPLAN_LIBRARY)
-
+                 GRAPHVIZ_cdt_LIBRARY
+                 GRAPHVIZ_graph_LIBRARY
+                 GRAPHVIZ_gvc_LIBRARY
+                 GRAPHVIZ_pathplan_LIBRARY)
