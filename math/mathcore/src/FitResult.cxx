@@ -94,7 +94,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
          fParamBounds.push_back(std::make_pair(lower,upper));
       }
    }
-
+   std::cout << "create fit result from config - nfree " << fNFree << std::endl;
 } 
 
 FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) : 
@@ -159,10 +159,11 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
 
    // check for fixed or limited parameters
+   unsigned int nfree = 0;
    for (unsigned int ipar = 0; ipar < npar; ++ipar) { 
       const ParameterSettings & par = fconfig.ParSettings(ipar); 
       if (par.IsFixed() ) fFixedParams[ipar] = true;  
-      else fNFree++;
+      else nfree++;
       if (par.IsBound() ) { 
          double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
          double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
@@ -170,6 +171,12 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
          fParamBounds.push_back(std::make_pair(lower,upper));
       }
    } 
+   // check if nfree (from FitConfig) and fNFree (from minimizer) are consistent 
+   if (nfree != fNFree ) { 
+      MATH_ERROR_MSG("FitResult","FitConfiguration and Minimizer result are not consistent");
+      std::cout << "Number of free parameters from FitConfig = " << nfree << std::endl;
+      std::cout << "Number of free parameters from Minimizer = " << fNFree << std::endl;
+   }
 
    // if flag is binned compute a chi2 when a chi2 function is given 
    if (binnedFit) { 
@@ -287,7 +294,7 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    }
    //fNFree = min.NFree(); 
    if (fNFree != min.NFree() ) { 
-      MATH_ERROR_MSG("FitResult::Update","Configuration has changed  ");
+      MATH_ERROR_MSG("FitResult::Update","Configuration has changed ");
       return false; 
    }
 
