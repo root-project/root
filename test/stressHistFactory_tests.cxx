@@ -267,9 +267,11 @@ private:
       return kFALSE;
 
     RooLinkedListIter it = set1->iterator();
-    RooRealVar* par = 0;
-    while((par = (RooRealVar*)it.Next()))
+    RooAbsArg* arg = 0;
+    while((arg = (RooAbsArg*)it.Next()))
     {
+      RooRealVar * par = dynamic_cast<RooRealVar*>(arg); 
+      if (!par) continue;  // do not test RooCategory
       if(!TMath::AreEqualAbs(rData1.mean(*par),rData2.mean(*par),fTolerance))
       {
 	Warning("CompareData","data sets have different means for \"%s\": %.3f vs %.3f",par->GetName(),rData1.mean(*par),rData2.mean(*par));
