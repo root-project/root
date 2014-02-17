@@ -48,6 +48,7 @@ void RooStats::HistFactory::Data::Print( std::ostream& stream ) {
   stream << "\t \t InputFile: " << fInputFile
 	 << "\t HistoName: " << fHistoName
 	 << "\t HistoPath: " << fHistoPath
+	 << "\t HistoAddress: " << GetHisto()
 	 << std::endl;
 
 }

@@ -36,6 +36,7 @@
 #pragma link C++ class RooStats::HistFactory::Data+ ;
 #pragma link C++ class RooStats::HistFactory::Asimov+ ;
 
+#pragma link C++ class RooStats::HistFactory::HistRef+ ;
 #pragma link C++ class RooStats::HistFactory::StatError+ ;
 #pragma link C++ class RooStats::HistFactory::StatErrorConfig+ ;
 #pragma link C++ class RooStats::HistFactory::PreprocessFunction+ ;
