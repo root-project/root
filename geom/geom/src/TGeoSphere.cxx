@@ -928,8 +928,19 @@ TGeoVolume *TGeoSphere::Divide(TGeoVolume * voldiv, const char * divname, Int_t 
    Double_t end = start+ndiv*step;
    switch (iaxis) {
       case 1:  //---                R division
-         Error("Divide", "In shape %s - R division not implemented", GetName());
-         return 0;
+         finder = new TGeoPatternSphR(voldiv, ndiv, start, end);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());
+         for (id=0; id<ndiv; id++) {
+            shape = new TGeoSphere(start+id*step, start+(id+1)*step, fTheta1,fTheta2,fPhi1,fPhi2);
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
+            opt = "R";
+            voldiv->AddNodeOffset(vol, id, 0, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);  
+         }
+         return vmulti;
       case 2:  //---                Phi division
          finder = new TGeoPatternSphPhi(voldiv, ndiv, start, end);
          voldiv->SetFinder(finder);
@@ -945,8 +956,19 @@ TGeoVolume *TGeoSphere::Divide(TGeoVolume * voldiv, const char * divname, Int_t 
          }
          return vmulti;
       case 3:  //---                Theta division
-         Error("Divide", "In shape %s - Theta division not implemented", GetName());
-         return 0;
+         finder = new TGeoPatternSphTheta(voldiv, ndiv, start, end);
+         vmulti = gGeoManager->MakeVolumeMulti(divname, voldiv->GetMedium());
+         voldiv->SetFinder(finder);
+         finder->SetDivIndex(voldiv->GetNdaughters());
+         for (id=0; id<ndiv; id++) {
+            shape = new TGeoSphere(fRmin,fRmax,start+id*step, start+(id+1)*step,fPhi1,fPhi2);
+            vol = new TGeoVolume(divname, shape, voldiv->GetMedium());
+            vmulti->AddVolume(vol);
+            opt = "Theta";
+            voldiv->AddNodeOffset(vol, id, 0, opt.Data());
+            ((TGeoNodeOffset*)voldiv->GetNodes()->At(voldiv->GetNdaughters()-1))->SetFinder(finder);
+         }
+         return vmulti;
       default:
          Error("Divide", "In shape %s wrong axis type for division", GetName());
          return 0;
