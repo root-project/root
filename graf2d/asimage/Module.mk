@@ -173,6 +173,7 @@ else
 		if [ "$(BUILDCOCOA)" = "yes" ]; then \
 			JPEGINCDIR="--without-x --with-builtin-jpeg"; \
 			PNGINCDIR="--with-builtin-png"; \
+			TIFFINCDIR="--with-tiff=no"; \
 		fi; \
 		if [ "$(ASTIFFINCDIR)" = "--with-tiff=no" ]; then \
 			TIFFINCDIR="$(ASTIFFINCDIR)"; \
