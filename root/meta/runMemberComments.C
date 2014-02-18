@@ -2,6 +2,9 @@
 
 // from ROOT-5660
 class baseCl {
+public:
+   baseCl() {}
+   baseCl(const baseCl&) {}
 #if __cplusplus >= 201103L
    baseCl &operator=(baseCl&&) = delete;
 #endif
@@ -10,6 +13,9 @@ public:
 };
 
 class basePrCl {
+public:
+   basePrCl() {}
+   basePrCl(const basePrCl&) {}
 #if __cplusplus >= 201103L
    basePrCl &operator=(basePrCl&&) = delete;
 #endif
@@ -19,6 +25,8 @@ public:
 
 class childCl : private basePrCl, public baseCl {
 public:
+   childCl() {}
+   childCl(const childCl&) {}
    virtual int fGetIndex(Int_t aIndex); // Title Derived
 };
 
