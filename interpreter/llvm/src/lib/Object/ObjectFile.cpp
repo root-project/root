@@ -23,9 +23,9 @@ using namespace object;
 
 void ObjectFile::anchor() { }
 
-ObjectFile::ObjectFile(unsigned int Type, MemoryBuffer *source)
-  : Binary(Type, source) {
-}
+ObjectFile::ObjectFile(unsigned int Type, MemoryBuffer *Source,
+                       bool BufferOwned)
+    : Binary(Type, Source, BufferOwned) {}
 
 error_code ObjectFile::getSymbolAlignment(DataRefImpl DRI,
                                           uint32_t &Result) const {
@@ -37,25 +37,26 @@ section_iterator ObjectFile::getRelocatedSection(DataRefImpl Sec) const {
   return section_iterator(SectionRef(Sec, this));
 }
 
-ObjectFile *ObjectFile::createObjectFile(MemoryBuffer *Object) {
-  if (Object->getBufferSize() < 64) {
-    delete Object;
-    return 0;
-  }
+ErrorOr<ObjectFile *> ObjectFile::createObjectFile(MemoryBuffer *Object,
+                                                   bool BufferOwned,
+                                                   sys::fs::file_magic Type) {
+  if (Type == sys::fs::file_magic::unknown)
+    Type = sys::fs::identify_magic(Object->getBuffer());
 
-  sys::fs::file_magic Type = sys::fs::identify_magic(Object->getBuffer());
   switch (Type) {
   case sys::fs::file_magic::unknown:
   case sys::fs::file_magic::bitcode:
   case sys::fs::file_magic::archive:
   case sys::fs::file_magic::macho_universal_binary:
-    delete Object;
-    return 0;
+  case sys::fs::file_magic::windows_resource:
+    if (BufferOwned)
+      delete Object;
+    return object_error::invalid_file_type;
   case sys::fs::file_magic::elf_relocatable:
   case sys::fs::file_magic::elf_executable:
   case sys::fs::file_magic::elf_shared_object:
   case sys::fs::file_magic::elf_core:
-    return createELFObjectFile(Object);
+    return createELFObjectFile(Object, BufferOwned);
   case sys::fs::file_magic::macho_object:
   case sys::fs::file_magic::macho_executable:
   case sys::fs::file_magic::macho_fixed_virtual_memory_shared_lib:
@@ -66,17 +67,18 @@ ObjectFile *ObjectFile::createObjectFile(MemoryBuffer *Object) {
   case sys::fs::file_magic::macho_bundle:
   case sys::fs::file_magic::macho_dynamically_linked_shared_lib_stub:
   case sys::fs::file_magic::macho_dsym_companion:
-    return createMachOObjectFile(Object);
+    return createMachOObjectFile(Object, BufferOwned);
   case sys::fs::file_magic::coff_object:
+  case sys::fs::file_magic::coff_import_library:
   case sys::fs::file_magic::pecoff_executable:
-    return createCOFFObjectFile(Object);
+    return createCOFFObjectFile(Object, BufferOwned);
   }
   llvm_unreachable("Unexpected Object File Type");
 }
 
-ObjectFile *ObjectFile::createObjectFile(StringRef ObjectPath) {
+ErrorOr<ObjectFile *> ObjectFile::createObjectFile(StringRef ObjectPath) {
   OwningPtr<MemoryBuffer> File;
-  if (MemoryBuffer::getFile(ObjectPath, File))
-    return NULL;
+  if (error_code EC = MemoryBuffer::getFile(ObjectPath, File))
+    return EC;
   return createObjectFile(File.take());
 }

@@ -77,7 +77,7 @@ Instruction *InstCombiner::SimplifyMemTransfer(MemIntrinsic *MI) {
   // A single load+store correctly handles overlapping memory in the memmove
   // case.
   uint64_t Size = MemOpLength->getLimitedValue();
-  assert(Size && "0-sized memory transfering should be removed already.");
+  assert(Size && "0-sized memory transferring should be removed already.");
 
   if (Size > 8 || (Size&(Size-1)))
     return 0;  // If not 1/2/4/8 bytes, exit.
@@ -666,40 +666,25 @@ Instruction *InstCombiner::visitCallInst(CallInst &CI) {
     // Check for constant LHS & RHS - in this case we just simplify.
     bool Zext = (II->getIntrinsicID() == Intrinsic::arm_neon_vmullu);
     VectorType *NewVT = cast<VectorType>(II->getType());
-    unsigned NewWidth = NewVT->getElementType()->getIntegerBitWidth();
-    if (ConstantDataVector *CV0 = dyn_cast<ConstantDataVector>(Arg0)) {
-      if (ConstantDataVector *CV1 = dyn_cast<ConstantDataVector>(Arg1)) {
-        VectorType* VT = cast<VectorType>(CV0->getType());
-        SmallVector<Constant*, 4> NewElems;
-        for (unsigned i = 0; i < VT->getNumElements(); ++i) {
-          APInt CV0E =
-            (cast<ConstantInt>(CV0->getAggregateElement(i)))->getValue();
-          CV0E = Zext ? CV0E.zext(NewWidth) : CV0E.sext(NewWidth);
-          APInt CV1E =
-            (cast<ConstantInt>(CV1->getAggregateElement(i)))->getValue();
-          CV1E = Zext ? CV1E.zext(NewWidth) : CV1E.sext(NewWidth);
-          NewElems.push_back(
-            ConstantInt::get(NewVT->getElementType(), CV0E * CV1E));
-        }
-        return ReplaceInstUsesWith(CI, ConstantVector::get(NewElems));
+    if (Constant *CV0 = dyn_cast<Constant>(Arg0)) {
+      if (Constant *CV1 = dyn_cast<Constant>(Arg1)) {
+        CV0 = ConstantExpr::getIntegerCast(CV0, NewVT, /*isSigned=*/!Zext);
+        CV1 = ConstantExpr::getIntegerCast(CV1, NewVT, /*isSigned=*/!Zext);
+
+        return ReplaceInstUsesWith(CI, ConstantExpr::getMul(CV0, CV1));
       }
 
-      // Couldn't simplify - cannonicalize constant to the RHS.
+      // Couldn't simplify - canonicalize constant to the RHS.
       std::swap(Arg0, Arg1);
     }
 
     // Handle mul by one:
-    if (ConstantDataVector *CV1 = dyn_cast<ConstantDataVector>(Arg1)) {
+    if (Constant *CV1 = dyn_cast<Constant>(Arg1))
       if (ConstantInt *Splat =
-            dyn_cast_or_null<ConstantInt>(CV1->getSplatValue())) {
-        if (Splat->isOne()) {
-          if (Zext)
-            return CastInst::CreateZExtOrBitCast(Arg0, II->getType());
-          // else
-          return CastInst::CreateSExtOrBitCast(Arg0, II->getType());
-        }
-      }
-    }
+              dyn_cast_or_null<ConstantInt>(CV1->getSplatValue()))
+        if (Splat->isOne())
+          return CastInst::CreateIntegerCast(Arg0, II->getType(),
+                                             /*isSigned=*/!Zext);
 
     break;
   }
@@ -767,10 +752,10 @@ static bool isSafeToEliminateVarargsCast(const CallSite CS,
   if (!CI->isLosslessCast())
     return false;
 
-  // The size of ByVal arguments is derived from the type, so we
+  // The size of ByVal or InAlloca arguments is derived from the type, so we
   // can't change to a type with a different size.  If the size were
   // passed explicitly we could avoid this check.
-  if (!CS.isByValArgument(ix))
+  if (!CS.isByValOrInAllocaArgument(ix))
     return true;
 
   Type* SrcTy =
@@ -994,11 +979,12 @@ bool InstCombiner::transformConstExprCastCall(CallSite CS) {
   Type *OldRetTy = Caller->getType();
   Type *NewRetTy = FT->getReturnType();
 
-  if (NewRetTy->isStructTy())
-    return false; // TODO: Handle multiple return values.
-
   // Check to see if we are changing the return type...
   if (OldRetTy != NewRetTy) {
+
+    if (NewRetTy->isStructTy())
+      return false; // TODO: Handle multiple return values.
+
     if (!CastInst::isBitCastable(NewRetTy, OldRetTy)) {
       if (Callee->isDeclaration())
         return false;   // Cannot transform this return value.
@@ -1048,6 +1034,9 @@ bool InstCombiner::transformConstExprCastCall(CallSite CS) {
                         typeIncompatible(ParamTy, i + 1), i + 1))
       return false;   // Attribute not compatible with transformed value.
 
+    if (CS.isInAllocaArgument(i))
+      return false;   // Cannot transform to and from inalloca.
+
     // If the parameter is passed as a byval argument, then we have to have a
     // sized type and the sized type has to have the same size as the old type.
     if (ParamTy != ActTy &&
@@ -1057,7 +1046,7 @@ bool InstCombiner::transformConstExprCastCall(CallSite CS) {
       if (ParamPTy == 0 || !ParamPTy->getElementType()->isSized() || TD == 0)
         return false;
 
-      Type *CurElTy = cast<PointerType>(ActTy)->getElementType();
+      Type *CurElTy = ActTy->getPointerElementType();
       if (TD->getTypeAllocSize(CurElTy) !=
           TD->getTypeAllocSize(ParamPTy->getElementType()))
         return false;

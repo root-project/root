@@ -14,13 +14,16 @@
 #ifndef LLVM_CLANG_CXTRANSLATIONUNIT_H
 #define LLVM_CLANG_CXTRANSLATIONUNIT_H
 
-#include "clang-c/Index.h"
 #include "CXString.h"
+#include "CLog.h"
+#include "clang-c/Index.h"
 
 namespace clang {
   class ASTUnit;
   class CIndexer;
-  class SimpleFormatContext;
+namespace index {
+class CommentToXMLConverter;
+} // namespace index
 } // namespace clang
 
 struct CXTranslationUnitImpl {
@@ -29,8 +32,7 @@ struct CXTranslationUnitImpl {
   clang::cxstring::CXStringPool *StringPool;
   void *Diagnostics;
   void *OverridenCursorsPool;
-  clang::SimpleFormatContext *FormatContext;
-  unsigned FormatInMemoryUniqueId;
+  clang::index::CommentToXMLConverter *CommentToXML;
 };
 
 namespace clang {
@@ -43,6 +45,21 @@ static inline ASTUnit *getASTUnit(CXTranslationUnit TU) {
     return 0;
   return TU->TheASTUnit;
 }
+
+/// \returns true if the ASTUnit has a diagnostic about the AST file being
+/// corrupted.
+bool isASTReadError(ASTUnit *AU);
+
+static inline bool isNotUsableTU(CXTranslationUnit TU) {
+  return !TU;
+}
+
+#define LOG_BAD_TU(TU)                                  \
+    do {                                                \
+      LOG_FUNC_SECTION {                                \
+        *Log << "called with a bad TU: " << TU;         \
+      }                                                 \
+    } while(false)
 
 class CXTUOwner {
   CXTranslationUnitImpl *TU;

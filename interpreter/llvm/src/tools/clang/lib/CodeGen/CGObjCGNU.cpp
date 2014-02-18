@@ -796,8 +796,7 @@ class CGObjCGNUstep : public CGObjCGNU {
     }
 };
 
-/// Support for the ObjFW runtime. Support here is due to
-/// Jonathan Schleifer <js@webkeks.org>, the ObjFW maintainer.
+/// Support for the ObjFW runtime.
 class CGObjCObjFW: public CGObjCGNU {
 protected:
   /// The GCC ABI message lookup function.  Returns an IMP pointing to the
@@ -949,7 +948,7 @@ CGObjCGNU::CGObjCGNU(CodeGenModule &cgm, unsigned runtimeABIVersion,
   Int64Ty = llvm::Type::getInt64Ty(VMContext);
 
   IntPtrTy =
-      TheModule.getPointerSize() == llvm::Module::Pointer32 ? Int32Ty : Int64Ty;
+      CGM.getDataLayout().getPointerSizeInBits() == 32 ? Int32Ty : Int64Ty;
 
   // Object type
   QualType UnqualIdTy = CGM.getContext().getObjCIdType();
@@ -1439,8 +1438,7 @@ CGObjCGNU::GenerateMessageSend(CodeGenFunction &CGF,
   imp = EnforceType(Builder, imp, MSI.MessengerType);
 
   llvm::Instruction *call;
-  RValue msgRet = CGF.EmitCall(MSI.CallInfo, imp, Return, ActualArgs,
-      0, &call);
+  RValue msgRet = CGF.EmitCall(MSI.CallInfo, imp, Return, ActualArgs, 0, &call);
   call->setMetadata(msgSendMDKind, node);
 
 
@@ -1998,8 +1996,7 @@ void CGObjCGNU::GenerateProtocolHolderCategory() {
 /// bitfield / with the 63rd bit set will be 1<<64.
 llvm::Constant *CGObjCGNU::MakeBitField(ArrayRef<bool> bits) {
   int bitCount = bits.size();
-  int ptrBits =
-        (TheModule.getPointerSize() == llvm::Module::Pointer32) ? 32 : 64;
+  int ptrBits = CGM.getDataLayout().getPointerSizeInBits();
   if (bitCount < ptrBits) {
     uint64_t val = 1;
     for (int i=0 ; i<bitCount ; ++i) {
@@ -2597,7 +2594,7 @@ llvm::Function *CGObjCGNU::ModuleInitFunction() {
             llvm::Constant::getNullValue(RegisterAlias->getType()));
     Builder.CreateCondBr(HasRegisterAlias, AliasBB, NoAliasBB);
 
-    // The true branch (has alias registration fucntion):
+    // The true branch (has alias registration function):
     Builder.SetInsertPoint(AliasBB);
     // Emit alias registration calls:
     for (std::vector<ClassAliasPair>::iterator iter = ClassAliases.begin();

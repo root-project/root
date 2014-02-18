@@ -71,7 +71,7 @@ UndefCapturedBlockVarChecker::checkPostStmt(const BlockExpr *BE,
     const VarRegion *VR = I.getCapturedRegion();
     const VarDecl *VD = VR->getDecl();
 
-    if (VD->getAttr<BlocksAttr>() || !VD->hasLocalStorage())
+    if (VD->hasAttr<BlocksAttr>() || !VD->hasLocalStorage())
       continue;
 
     // Get the VarRegion associated with VD in the local stack frame.
@@ -79,7 +79,8 @@ UndefCapturedBlockVarChecker::checkPostStmt(const BlockExpr *BE,
           state->getSVal(I.getOriginalRegion()).getAs<UndefinedVal>()) {
       if (ExplodedNode *N = C.generateSink()) {
         if (!BT)
-          BT.reset(new BuiltinBug("uninitialized variable captured by block"));
+          BT.reset(
+              new BuiltinBug(this, "uninitialized variable captured by block"));
 
         // Generate a bug report.
         SmallString<128> buf;

@@ -37,23 +37,17 @@ MCAsmInfo::MCAsmInfo() {
   MinInstAlignment = 1;
   DollarIsPC = false;
   SeparatorString = ";";
-  CommentColumn = 40;
   CommentString = "#";
   LabelSuffix = ":";
   DebugLabelSuffix = ":";
-  GlobalPrefix = "";
-  PrivateGlobalPrefix = ".";
-  LinkerPrivateGlobalPrefix = "";
+  PrivateGlobalPrefix = "L";
   InlineAsmStart = "APP";
   InlineAsmEnd = "NO_APP";
   Code16Directive = ".code16";
   Code32Directive = ".code32";
   Code64Directive = ".code64";
   AssemblerDialect = 0;
-  AllowQuotesInName = false;
-  AllowNameToStartWithDigit = false;
-  AllowPeriodsInName = true;
-  AllowUTF8 = true;
+  AllowAtInName = false;
   UseDataRegionDirectives = false;
   ZeroDirective = "\t.zero\t";
   AsciiDirective = "\t.ascii\t";
@@ -64,7 +58,6 @@ MCAsmInfo::MCAsmInfo() {
   Data64bitsDirective = "\t.quad\t";
   SunStyleELFSectionSwitchSyntax = false;
   UsesELFSectionDirectiveForBSS = false;
-  AlignDirective = "\t.align\t";
   AlignmentIsInBytes = true;
   TextAlignFillValue = 0;
   GPRel64Directive = 0;
@@ -76,11 +69,12 @@ MCAsmInfo::MCAsmInfo() {
   LCOMMDirectiveAlignmentType = LCOMM::NoAlignment;
   HasDotTypeDotSizeDirective = true;
   HasSingleParameterDotFile = true;
+  HasIdentDirective = false;
   HasNoDeadStrip = false;
-  HasSymbolResolver = false;
   WeakRefDirective = 0;
-  WeakDefDirective = 0;
-  LinkOnceDirective = 0;
+  HasWeakDefDirective = false;
+  HasWeakDefCanBeHiddenDirective = false;
+  HasLinkOnceDirective = false;
   HiddenVisibilityAttr = MCSA_Hidden;
   HiddenDeclarationVisibilityAttr = MCSA_Hidden;
   ProtectedVisibilityAttr = MCSA_Protected;
@@ -88,9 +82,24 @@ MCAsmInfo::MCAsmInfo() {
   SupportsDebugInformation = false;
   ExceptionsType = ExceptionHandling::None;
   DwarfUsesRelocationsAcrossSections = true;
+  DwarfFDESymbolsUseAbsDiff = false;
   DwarfRegNumForCFI = false;
-  HasMicrosoftFastStdCallMangling = false;
   NeedsDwarfSectionOffsetDirective = false;
+  UseParensForSymbolVariant = false;
+
+  // FIXME: Clang's logic should be synced with the logic used to initialize
+  //        this member and the two implementations should be merged.
+  // For reference:
+  // - Solaris always enables the integrated assembler by default
+  //   - SparcELFMCAsmInfo and X86ELFMCAsmInfo are handling this case
+  // - Windows always enables the integrated assembler by default
+  //   - MCAsmInfoCOFF is handling this case, should it be MCAsmInfoMicrosoft?
+  // - MachO targets always enables the integrated assembler by default
+  //   - MCAsmInfoDarwin is handling this case
+  // - Generic_GCC toolchains enable the integrated assembler on a per
+  //   architecture basis.
+  //   - The target subclasses for AArch64, ARM, and X86  handle these cases
+  UseIntegratedAssembler = false;
 }
 
 MCAsmInfo::~MCAsmInfo() {

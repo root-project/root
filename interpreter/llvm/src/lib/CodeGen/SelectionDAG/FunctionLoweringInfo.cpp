@@ -74,7 +74,12 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf) {
   // them.
   Function::const_iterator BB = Fn->begin(), EB = Fn->end();
   for (BasicBlock::const_iterator I = BB->begin(), E = BB->end(); I != E; ++I)
-    if (const AllocaInst *AI = dyn_cast<AllocaInst>(I))
+    if (const AllocaInst *AI = dyn_cast<AllocaInst>(I)) {
+      // Don't fold inalloca allocas or other dynamic allocas into the initial
+      // stack frame allocation, even if they are in the entry block.
+      if (!AI->isStaticAlloca())
+        continue;
+
       if (const ConstantInt *CUI = dyn_cast<ConstantInt>(AI->getArraySize())) {
         Type *Ty = AI->getAllocatedType();
         uint64_t TySize = TLI->getDataLayout()->getTypeAllocSize(Ty);
@@ -85,17 +90,10 @@ void FunctionLoweringInfo::set(const Function &fn, MachineFunction &mf) {
         TySize *= CUI->getZExtValue();   // Get total allocated size.
         if (TySize == 0) TySize = 1; // Don't create zero-sized stack objects.
 
-        // The object may need to be placed onto the stack near the stack
-        // protector if one exists. Determine here if this object is a suitable
-        // candidate. I.e., it would trigger the creation of a stack protector.
-        bool MayNeedSP =
-          (AI->isArrayAllocation() ||
-           (TySize >= 8 && isa<ArrayType>(Ty) &&
-            cast<ArrayType>(Ty)->getElementType()->isIntegerTy(8)));
         StaticAllocaMap[AI] =
-          MF->getFrameInfo()->CreateStackObject(TySize, Align, false,
-                                                MayNeedSP, AI);
+          MF->getFrameInfo()->CreateStackObject(TySize, Align, false, AI);
       }
+    }
 
   for (; BB != EB; ++BB)
     for (BasicBlock::const_iterator I = BB->begin(), E = BB->end();

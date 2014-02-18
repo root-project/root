@@ -16,6 +16,7 @@
 #include "SymbolTableListTraitsImpl.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/IR/Instruction.h"
@@ -65,7 +66,7 @@ class MDNodeOperand : public CallbackVH {
 
 public:
   MDNodeOperand(Value *V) : CallbackVH(V) {}
-  ~MDNodeOperand() {}
+  virtual ~MDNodeOperand();
 
   void set(Value *V) {
     unsigned IsFirst = this->getValPtrInt();
@@ -82,6 +83,8 @@ public:
 };
 } // end namespace llvm.
 
+// Provide out-of-line definition to prevent weak vtable.
+MDNodeOperand::~MDNodeOperand() {}
 
 void MDNodeOperand::deleted() {
   getParent()->replaceOperand(this, 0);
@@ -579,6 +582,50 @@ void Instruction::setMetadata(StringRef Kind, MDNode *Node) {
 
 MDNode *Instruction::getMetadataImpl(StringRef Kind) const {
   return getMetadataImpl(getContext().getMDKindID(Kind));
+}
+
+void Instruction::dropUnknownMetadata(ArrayRef<unsigned> KnownIDs) {
+  SmallSet<unsigned, 5> KnownSet;
+  KnownSet.insert(KnownIDs.begin(), KnownIDs.end());
+
+  // Drop debug if needed
+  if (KnownSet.erase(LLVMContext::MD_dbg))
+    DbgLoc = DebugLoc();
+
+  if (!hasMetadataHashEntry())
+    return; // Nothing to remove!
+
+  DenseMap<const Instruction *, LLVMContextImpl::MDMapTy> &MetadataStore =
+      getContext().pImpl->MetadataStore;
+
+  if (KnownSet.empty()) {
+    // Just drop our entry at the store.
+    MetadataStore.erase(this);
+    setHasMetadataHashEntry(false);
+    return;
+  }
+
+  LLVMContextImpl::MDMapTy &Info = MetadataStore[this];
+  unsigned I;
+  unsigned E;
+  // Walk the array and drop any metadata we don't know.
+  for (I = 0, E = Info.size(); I != E;) {
+    if (KnownSet.count(Info[I].first)) {
+      ++I;
+      continue;
+    }
+
+    Info[I] = Info.back();
+    Info.pop_back();
+    --E;
+  }
+  assert(E == Info.size());
+
+  if (E == 0) {
+    // Drop our entry at the store.
+    MetadataStore.erase(this);
+    setHasMetadataHashEntry(false);
+  }
 }
 
 /// setMetadata - Set the metadata of of the specified kind to the specified

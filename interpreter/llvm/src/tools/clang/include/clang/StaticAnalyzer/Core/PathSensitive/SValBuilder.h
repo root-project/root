@@ -88,7 +88,7 @@ public:
 
   virtual SVal evalComplement(NonLoc val) = 0;
 
-  /// Create a new value which represents a binary expression with two non
+  /// Create a new value which represents a binary expression with two non-
   /// location operands.
   virtual SVal evalBinOpNN(ProgramStateRef state, BinaryOperator::Opcode op,
                            NonLoc lhs, NonLoc rhs, QualType resultTy) = 0;
@@ -99,7 +99,7 @@ public:
                            Loc lhs, Loc rhs, QualType resultTy) = 0;
 
   /// Create a new value which represents a binary expression with a memory
-  /// location and non location operands. For example, this would be used to
+  /// location and non-location operands. For example, this would be used to
   /// evaluate a pointer arithmetic operation.
   virtual SVal evalBinOpLN(ProgramStateRef state, BinaryOperator::Opcode op,
                            Loc lhs, NonLoc rhs, QualType resultTy) = 0;
@@ -200,7 +200,8 @@ public:
   DefinedSVal getFunctionPointer(const FunctionDecl *func);
   
   DefinedSVal getBlockPointer(const BlockDecl *block, CanQualType locTy,
-                              const LocationContext *locContext);
+                              const LocationContext *locContext,
+                              unsigned blockCount);
 
   /// Returns the value of \p E, if it can be determined in a non-path-sensitive
   /// manner.

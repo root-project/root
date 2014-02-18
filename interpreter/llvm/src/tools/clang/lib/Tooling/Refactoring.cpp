@@ -18,6 +18,8 @@
 #include "clang/Lex/Lexer.h"
 #include "clang/Rewrite/Core/Rewriter.h"
 #include "clang/Tooling/Refactoring.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Path.h"
 #include "llvm/Support/raw_os_ostream.h"
 
 namespace clang {
@@ -103,7 +105,15 @@ void Replacement::setFromSourceLocation(SourceManager &Sources,
   const std::pair<FileID, unsigned> DecomposedLocation =
       Sources.getDecomposedLoc(Start);
   const FileEntry *Entry = Sources.getFileEntryForID(DecomposedLocation.first);
-  this->FilePath = Entry != NULL ? Entry->getName() : InvalidLocation;
+  if (Entry != NULL) {
+    // Make FilePath absolute so replacements can be applied correctly when
+    // relative paths for files are used.
+    llvm::SmallString<256> FilePath(Entry->getName());
+    llvm::error_code EC = llvm::sys::fs::make_absolute(FilePath);
+    this->FilePath = EC ? FilePath.c_str() : Entry->getName();
+  } else {
+    this->FilePath = InvalidLocation;
+  }
   this->ReplacementRange = Range(DecomposedLocation.second, Length);
   this->ReplacementText = ReplacementText;
 }
@@ -291,23 +301,7 @@ bool RefactoringTool::applyAllReplacements(Rewriter &Rewrite) {
 }
 
 int RefactoringTool::saveRewrittenFiles(Rewriter &Rewrite) {
-  for (Rewriter::buffer_iterator I = Rewrite.buffer_begin(),
-                                 E = Rewrite.buffer_end();
-       I != E; ++I) {
-    // FIXME: This code is copied from the FixItRewriter.cpp - I think it should
-    // go into directly into Rewriter (there we also have the Diagnostics to
-    // handle the error cases better).
-    const FileEntry *Entry =
-        Rewrite.getSourceMgr().getFileEntryForID(I->first);
-    std::string ErrorInfo;
-    llvm::raw_fd_ostream FileStream(Entry->getName(), ErrorInfo,
-                                    llvm::sys::fs::F_Binary);
-    if (!ErrorInfo.empty())
-      return 1;
-    I->second.write(FileStream);
-    FileStream.flush();
-  }
-  return 0;
+  return Rewrite.overwriteChangedFiles() ? 1 : 0;
 }
 
 } // end namespace tooling

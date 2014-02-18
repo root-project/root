@@ -11,6 +11,7 @@
 #define LLVM_ADT_STRINGREF_H
 
 #include "llvm/Support/type_traits.h"
+#include "llvm/Support/Allocator.h"
 #include <algorithm>
 #include <cassert>
 #include <cstring>
@@ -124,6 +125,13 @@ namespace llvm {
       return Data[Length-1];
     }
 
+    // copy - Allocate copy in BumpPtrAllocator and return StringRef to it.
+    StringRef copy(BumpPtrAllocator &Allocator) {
+      char *S = Allocator.Allocate<char>(Length);
+      std::copy(begin(), end(), S);
+      return StringRef(S, Length);
+    }
+
     /// equals - Check for string equality, this is more efficient than
     /// compare() when the relative ordering of inequal strings isn't needed.
     bool equals(StringRef RHS) const {
@@ -210,11 +218,17 @@ namespace llvm {
              compareMemory(Data, Prefix.Data, Prefix.Length) == 0;
     }
 
+    /// Check if this string starts with the given \p Prefix, ignoring case.
+    bool startswith_lower(StringRef Prefix) const;
+
     /// Check if this string ends with the given \p Suffix.
     bool endswith(StringRef Suffix) const {
       return Length >= Suffix.Length &&
         compareMemory(end() - Suffix.Length, Suffix.Data, Suffix.Length) == 0;
     }
+
+    /// Check if this string ends with the given \p Suffix, ignoring case.
+    bool endswith_lower(StringRef Suffix) const;
 
     /// @}
     /// @name String Searching
@@ -547,11 +561,6 @@ namespace llvm {
   // StringRefs can be treated like a POD type.
   template <typename T> struct isPodLike;
   template <> struct isPodLike<StringRef> { static const bool value = true; };
-
-  /// Construct a string ref from a boolean.
-  inline StringRef toStringRef(bool B) {
-    return StringRef(B ? "true" : "false");
-  }
 }
 
 #endif

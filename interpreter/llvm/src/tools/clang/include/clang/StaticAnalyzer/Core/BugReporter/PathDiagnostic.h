@@ -21,13 +21,13 @@
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/PointerUnion.h"
 #include <deque>
-#include <list>
 #include <iterator>
+#include <list>
 #include <string>
 #include <vector>
 
 namespace clang {
-
+class ConditionalOperator;
 class AnalysisDeclContext;
 class BinaryOperator;
 class CompoundStmt;
@@ -38,6 +38,7 @@ class ParentMap;
 class ProgramPoint;
 class SourceManager;
 class Stmt;
+class CallExpr;
 
 namespace ento {
 
@@ -210,6 +211,9 @@ public:
   /// Assumes the statement has a valid location.
   static PathDiagnosticLocation createOperatorLoc(const BinaryOperator *BO,
                                                   const SourceManager &SM);
+  static PathDiagnosticLocation createConditionalColonLoc(
+                                                  const ConditionalOperator *CO,
+                                                  const SourceManager &SM);
 
   /// For member expressions, return the location of the '.' or '->'.
   /// Assumes the statement has a valid location.
@@ -290,7 +294,7 @@ public:
   /// for the diagnostic location.
   static const Stmt *getStmt(const ExplodedNode *N);
 
-  /// \brief Retrieve the statement corresponding to the sucessor node.
+  /// \brief Retrieve the statement corresponding to the successor node.
   static const Stmt *getNextStmt(const ExplodedNode *N);
 };
 
@@ -419,7 +423,7 @@ public:
     return Result;
   }
 
-  LLVM_ATTRIBUTE_USED void dump() const;
+  void dump() const;
 };
 
 class PathDiagnosticSpotPiece : public PathDiagnosticPiece {
@@ -706,6 +710,7 @@ public:
 ///  diagnostic.  It represents an ordered-collection of PathDiagnosticPieces,
 ///  each which represent the pieces of the path.
 class PathDiagnostic : public llvm::FoldingSetNode {
+  std::string CheckName;
   const Decl *DeclWithIssue;
   std::string BugType;
   std::string VerboseDesc;
@@ -726,8 +731,8 @@ class PathDiagnostic : public llvm::FoldingSetNode {
 
   PathDiagnostic() LLVM_DELETED_FUNCTION;
 public:
-  PathDiagnostic(const Decl *DeclWithIssue, StringRef bugtype,
-                 StringRef verboseDesc, StringRef shortDesc,
+  PathDiagnostic(StringRef CheckName, const Decl *DeclWithIssue,
+                 StringRef bugtype, StringRef verboseDesc, StringRef shortDesc,
                  StringRef category, PathDiagnosticLocation LocationToUnique,
                  const Decl *DeclToUnique);
 
@@ -784,6 +789,7 @@ public:
   StringRef getShortDescription() const {
     return ShortDesc.empty() ? VerboseDesc : ShortDesc;
   }
+  StringRef getCheckName() const { return CheckName; }
   StringRef getBugType() const { return BugType; }
   StringRef getCategory() const { return Category; }
 

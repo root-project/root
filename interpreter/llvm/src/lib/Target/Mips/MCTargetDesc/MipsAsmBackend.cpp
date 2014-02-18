@@ -16,18 +16,23 @@
 #include "MCTargetDesc/MipsMCTargetDesc.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDirectives.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCObjectWriter.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
 // Prepare value for the target space for it
-static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
+static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
+                                 MCContext *Ctx = NULL) {
+
+  unsigned Kind = Fixup.getKind();
 
   // Add/subtract and shift
   switch (Kind) {
@@ -45,6 +50,10 @@ static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
   case Mips::fixup_Mips_GOT_DISP:
   case Mips::fixup_Mips_GOT_LO16:
   case Mips::fixup_Mips_CALL_LO16:
+  case Mips::fixup_MICROMIPS_LO16:
+  case Mips::fixup_MICROMIPS_GOT_PAGE:
+  case Mips::fixup_MICROMIPS_GOT_OFST:
+  case Mips::fixup_MICROMIPS_GOT_DISP:
     break;
   case Mips::fixup_Mips_PC16:
     // So far we are only using this type for branches.
@@ -52,8 +61,11 @@ static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
     // so the displacement will be one instruction size less.
     Value -= 4;
     // The displacement is then divided by 4 to give us an 18 bit
-    // address range.
-    Value >>= 2;
+    // address range. Forcing a signed division because Value can be negative.
+    Value = (int64_t)Value / 4;
+    // We now check if Value can be encoded as a 16-bit signed immediate.
+    if (!isIntN(16, Value) && Ctx)
+      Ctx->FatalError(Fixup.getLoc(), "out of range PC16 fixup");
     break;
   case Mips::fixup_Mips_26:
     // So far we are only using this type for jumps.
@@ -65,6 +77,7 @@ static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
   case Mips::fixup_Mips_GOT_Local:
   case Mips::fixup_Mips_GOT_HI16:
   case Mips::fixup_Mips_CALL_HI16:
+  case Mips::fixup_MICROMIPS_HI16:
     // Get the 2nd 16-bits. Also add 1 if bit 15 is 1.
     Value = ((Value + 0x8000) >> 16) & 0xffff;
     break;
@@ -75,6 +88,17 @@ static unsigned adjustFixupValue(unsigned Kind, uint64_t Value) {
   case Mips::fixup_Mips_HIGHEST:
     // Get the 4th 16-bits.
     Value = ((Value + 0x800080008000LL) >> 48) & 0xffff;
+    break;
+  case Mips::fixup_MICROMIPS_26_S1:
+    Value >>= 1;
+    break;
+  case Mips::fixup_MICROMIPS_PC16_S1:
+    Value -= 4;
+    // Forcing a signed division because Value can be negative.
+    Value = (int64_t)Value / 2;
+    // We now check if Value can be encoded as a 16-bit signed immediate.
+    if (!isIntN(16, Value) && Ctx)
+      Ctx->FatalError(Fixup.getLoc(), "out of range PC16 fixup");
     break;
   }
 
@@ -103,7 +127,7 @@ public:
   void applyFixup(const MCFixup &Fixup, char *Data, unsigned DataSize,
                   uint64_t Value) const {
     MCFixupKind Kind = Fixup.getKind();
-    Value = adjustFixupValue((unsigned)Kind, Value);
+    Value = adjustFixupValue(Fixup, Value);
 
     if (!Value)
       return; // Doesn't change encoding.
@@ -188,7 +212,22 @@ public:
       { "fixup_Mips_GOT_HI16",     0,     16,   0 },
       { "fixup_Mips_GOT_LO16",     0,     16,   0 },
       { "fixup_Mips_CALL_HI16",    0,     16,   0 },
-      { "fixup_Mips_CALL_LO16",    0,     16,   0 }
+      { "fixup_Mips_CALL_LO16",    0,     16,   0 },
+      { "fixup_MICROMIPS_26_S1",   0,     26,   0 },
+      { "fixup_MICROMIPS_HI16",    0,     16,   0 },
+      { "fixup_MICROMIPS_LO16",    0,     16,   0 },
+      { "fixup_MICROMIPS_GOT16",   0,     16,   0 },
+      { "fixup_MICROMIPS_PC16_S1", 0,     16,   MCFixupKindInfo::FKF_IsPCRel },
+      { "fixup_MICROMIPS_CALL16",  0,     16,   0 },
+      { "fixup_MICROMIPS_GOT_DISP",        0,     16,   0 },
+      { "fixup_MICROMIPS_GOT_PAGE",        0,     16,   0 },
+      { "fixup_MICROMIPS_GOT_OFST",        0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_GD",          0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_LDM",         0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_DTPREL_HI16", 0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_DTPREL_LO16", 0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_TPREL_HI16",  0,     16,   0 },
+      { "fixup_MICROMIPS_TLS_TPREL_LO16",  0,     16,   0 }
     };
 
     if (Kind < FirstTargetFixupKind)
@@ -248,6 +287,20 @@ public:
       OW->Write32(0);
     return true;
   }
+
+  /// processFixupValue - Target hook to process the literal value of a fixup
+  /// if necessary.
+  void processFixupValue(const MCAssembler &Asm, const MCAsmLayout &Layout,
+                         const MCFixup &Fixup, const MCFragment *DF,
+                         MCValue &Target, uint64_t &Value,
+                         bool &IsResolved) {
+    // At this point we'll ignore the value returned by adjustFixupValue as
+    // we are only checking if the fixup can be applied correctly. We have
+    // access to MCContext from here which allows us to report a fatal error
+    // with *possibly* a source code location.
+    (void)adjustFixupValue(Fixup, Value, &Asm.getContext());
+  }
+
 }; // class MipsAsmBackend
 
 } // namespace

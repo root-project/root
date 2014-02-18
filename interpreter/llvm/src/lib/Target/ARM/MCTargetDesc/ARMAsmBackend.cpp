@@ -155,6 +155,8 @@ static unsigned getRelaxedOpcode(unsigned Op) {
   case ARM::tLDRpci:    return ARM::t2LDRpci;
   case ARM::tADR:       return ARM::t2ADR;
   case ARM::tB:         return ARM::t2B;
+  case ARM::tCBZ:       return ARM::tHINT;
+  case ARM::tCBNZ:      return ARM::tHINT;
   }
 }
 
@@ -196,6 +198,12 @@ bool ARMAsmBackend::fixupNeedsRelaxation(const MCFixup &Fixup,
     int64_t Offset = int64_t(Value) - 4;
     return Offset > 1020 || Offset < 0 || Offset & 3;
   }
+  case ARM::fixup_arm_thumb_cb:
+    // If we have a Thumb CBZ or CBNZ instruction and its target is the next
+    // instruction it is is actually out of range for the instruction.
+    // It will be changed to a NOP.
+    int64_t Offset = (Value & ~1);
+    return Offset == 2;
   }
   llvm_unreachable("Unexpected fixup kind in fixupNeedsRelaxation()!");
 }
@@ -212,7 +220,18 @@ void ARMAsmBackend::relaxInstruction(const MCInst &Inst, MCInst &Res) const {
     report_fatal_error("unexpected instruction to relax: " + OS.str());
   }
 
-  // The instructions we're relaxing have (so far) the same operands.
+  // If we are changing Thumb CBZ or CBNZ instruction to a NOP, aka tHINT, we
+  // have to change the operands too.
+  if ((Inst.getOpcode() == ARM::tCBZ || Inst.getOpcode() == ARM::tCBNZ) &&
+      RelaxedOp == ARM::tHINT) {
+    Res.setOpcode(RelaxedOp);
+    Res.addOperand(MCOperand::CreateImm(0));
+    Res.addOperand(MCOperand::CreateImm(14));
+    Res.addOperand(MCOperand::CreateReg(0));
+    return;
+  } 
+
+  // The rest of instructions we're relaxing have the same operands.
   // We just need to update to the proper opcode.
   Res = Inst;
   Res.setOpcode(RelaxedOp);
@@ -361,6 +380,9 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
   case ARM::fixup_arm_blx:
     // These values don't encode the low two bits since they're always zero.
     // Offset by 8 just as above.
+    if (const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Fixup.getValue()))
+      if (SRE->getKind() == MCSymbolRefExpr::VK_ARM_TLSCALL)
+        return 0;
     return 0xffffff & ((Value - 8) >> 2);
   case ARM::fixup_t2_uncondbranch: {
     Value = Value - 4;
@@ -399,65 +421,67 @@ static unsigned adjustFixupValue(const MCFixup &Fixup, uint64_t Value,
     return swapped;
   }
   case ARM::fixup_arm_thumb_bl: {
-     // The value doesn't encode the low bit (always zero) and is offset by
-     // four. The 32-bit immediate value is encoded as
-     //   imm32 = SignExtend(S:I1:I2:imm10:imm11:0)
-     // where I1 = NOT(J1 ^ S) and I2 = NOT(J2 ^ S).
-     // The value is encoded into disjoint bit positions in the destination
-     // opcode. x = unchanged, I = immediate value bit, S = sign extension bit,
-     // J = either J1 or J2 bit
-     //
-     //   BL:  xxxxxSIIIIIIIIII xxJxJIIIIIIIIIII
-     //
-     // Note that the halfwords are stored high first, low second; so we need
-     // to transpose the fixup value here to map properly.
-     uint32_t offset = (Value - 4) >> 1;
-     uint32_t signBit = (offset & 0x800000) >> 23;
-     uint32_t I1Bit = (offset & 0x400000) >> 22;
-     uint32_t J1Bit = (I1Bit ^ 0x1) ^ signBit;
-     uint32_t I2Bit = (offset & 0x200000) >> 21;
-     uint32_t J2Bit = (I2Bit ^ 0x1) ^ signBit;
-     uint32_t imm10Bits = (offset & 0x1FF800) >> 11;
-     uint32_t imm11Bits = (offset & 0x000007FF);
+    // The value doesn't encode the low bit (always zero) and is offset by
+    // four. The 32-bit immediate value is encoded as
+    //   imm32 = SignExtend(S:I1:I2:imm10:imm11:0)
+    // where I1 = NOT(J1 ^ S) and I2 = NOT(J2 ^ S).
+    // The value is encoded into disjoint bit positions in the destination
+    // opcode. x = unchanged, I = immediate value bit, S = sign extension bit,
+    // J = either J1 or J2 bit
+    //
+    //   BL:  xxxxxSIIIIIIIIII xxJxJIIIIIIIIIII
+    //
+    // Note that the halfwords are stored high first, low second; so we need
+    // to transpose the fixup value here to map properly.
+    uint32_t offset = (Value - 4) >> 1;
+    uint32_t signBit = (offset & 0x800000) >> 23;
+    uint32_t I1Bit = (offset & 0x400000) >> 22;
+    uint32_t J1Bit = (I1Bit ^ 0x1) ^ signBit;
+    uint32_t I2Bit = (offset & 0x200000) >> 21;
+    uint32_t J2Bit = (I2Bit ^ 0x1) ^ signBit;
+    uint32_t imm10Bits = (offset & 0x1FF800) >> 11;
+    uint32_t imm11Bits = (offset & 0x000007FF);
 
-     uint32_t Binary = 0;
-     uint32_t firstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10Bits);
-     uint32_t secondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
-                           (uint16_t)imm11Bits);
-     Binary |= secondHalf << 16;
-     Binary |= firstHalf;
-     return Binary;
-
+    uint32_t Binary = 0;
+    uint32_t firstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10Bits);
+    uint32_t secondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
+                          (uint16_t)imm11Bits);
+    Binary |= secondHalf << 16;
+    Binary |= firstHalf;
+    return Binary;
   }
   case ARM::fixup_arm_thumb_blx: {
-     // The value doesn't encode the low two bits (always zero) and is offset by
-     // four (see fixup_arm_thumb_cp). The 32-bit immediate value is encoded as
-     //   imm32 = SignExtend(S:I1:I2:imm10H:imm10L:00)
-     // where I1 = NOT(J1 ^ S) and I2 = NOT(J2 ^ S).
-     // The value is encoded into disjoint bit positions in the destination
-     // opcode. x = unchanged, I = immediate value bit, S = sign extension bit,
-     // J = either J1 or J2 bit, 0 = zero.
-     //
-     //   BLX: xxxxxSIIIIIIIIII xxJxJIIIIIIIIII0
-     //
-     // Note that the halfwords are stored high first, low second; so we need
-     // to transpose the fixup value here to map properly.
-     uint32_t offset = (Value - 2) >> 2;
-     uint32_t signBit = (offset & 0x400000) >> 22;
-     uint32_t I1Bit = (offset & 0x200000) >> 21;
-     uint32_t J1Bit = (I1Bit ^ 0x1) ^ signBit;
-     uint32_t I2Bit = (offset & 0x100000) >> 20;
-     uint32_t J2Bit = (I2Bit ^ 0x1) ^ signBit;
-     uint32_t imm10HBits = (offset & 0xFFC00) >> 10;
-     uint32_t imm10LBits = (offset & 0x3FF);
+    // The value doesn't encode the low two bits (always zero) and is offset by
+    // four (see fixup_arm_thumb_cp). The 32-bit immediate value is encoded as
+    //   imm32 = SignExtend(S:I1:I2:imm10H:imm10L:00)
+    // where I1 = NOT(J1 ^ S) and I2 = NOT(J2 ^ S).
+    // The value is encoded into disjoint bit positions in the destination
+    // opcode. x = unchanged, I = immediate value bit, S = sign extension bit,
+    // J = either J1 or J2 bit, 0 = zero.
+    //
+    //   BLX: xxxxxSIIIIIIIIII xxJxJIIIIIIIIII0
+    //
+    // Note that the halfwords are stored high first, low second; so we need
+    // to transpose the fixup value here to map properly.
+    uint32_t offset = (Value - 2) >> 2;
+    if (const MCSymbolRefExpr *SRE = dyn_cast<MCSymbolRefExpr>(Fixup.getValue()))
+      if (SRE->getKind() == MCSymbolRefExpr::VK_ARM_TLSCALL)
+        offset = 0;
+    uint32_t signBit = (offset & 0x400000) >> 22;
+    uint32_t I1Bit = (offset & 0x200000) >> 21;
+    uint32_t J1Bit = (I1Bit ^ 0x1) ^ signBit;
+    uint32_t I2Bit = (offset & 0x100000) >> 20;
+    uint32_t J2Bit = (I2Bit ^ 0x1) ^ signBit;
+    uint32_t imm10HBits = (offset & 0xFFC00) >> 10;
+    uint32_t imm10LBits = (offset & 0x3FF);
 
-     uint32_t Binary = 0;
-     uint32_t firstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10HBits);
-     uint32_t secondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
-                           ((uint16_t)imm10LBits) << 1);
-     Binary |= secondHalf << 16;
-     Binary |= firstHalf;
-     return Binary;
+    uint32_t Binary = 0;
+    uint32_t firstHalf = (((uint16_t)signBit << 10) | (uint16_t)imm10HBits);
+    uint32_t secondHalf = (((uint16_t)J1Bit << 13) | ((uint16_t)J2Bit << 11) |
+                          ((uint16_t)imm10LBits) << 1);
+    Binary |= secondHalf << 16;
+    Binary |= firstHalf;
+    return Binary;
   }
   case ARM::fixup_arm_thumb_cp:
     // Offset by 4, and don't encode the low two bits. Two bytes of that
@@ -541,11 +565,18 @@ void ARMAsmBackend::processFixupValue(const MCAssembler &Asm,
         Value |= 1;
     }
   }
+  // For Thumb1 BL instruction, it is possible to be a long jump between
+  // the basic blocks of the same function.  Thus, we would like to resolve
+  // the offset when the destination has the same MCFragment.
+  if (A && (unsigned)Fixup.getKind() == ARM::fixup_arm_thumb_bl) {
+    const MCSymbol &Sym = A->getSymbol().AliasedSymbol();
+    MCSymbolData &SymData = Asm.getSymbolData(Sym);
+    IsResolved = (SymData.getFragment() == DF);
+  }
   // We must always generate a relocation for BL/BLX instructions if we have
   // a symbol to reference, as the linker relies on knowing the destination
   // symbol's thumb-ness to get interworking right.
   if (A && ((unsigned)Fixup.getKind() == ARM::fixup_arm_thumb_blx ||
-            (unsigned)Fixup.getKind() == ARM::fixup_arm_thumb_bl ||
             (unsigned)Fixup.getKind() == ARM::fixup_arm_blx ||
             (unsigned)Fixup.getKind() == ARM::fixup_arm_uncondbl ||
             (unsigned)Fixup.getKind() == ARM::fixup_arm_condbl))
@@ -652,10 +683,6 @@ public:
                                      MachO::CPU_TYPE_ARM,
                                      Subtype);
   }
-
-  virtual bool doesSectionRequireSymbols(const MCSection &Section) const {
-    return false;
-  }
 };
 
 } // end anonymous namespace
@@ -665,7 +692,7 @@ MCAsmBackend *llvm::createARMAsmBackend(const Target &T,
                                         StringRef TT, StringRef CPU) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin()) {
+  if (TheTriple.isOSBinFormatMachO()) {
     MachO::CPUSubTypeARM CS =
       StringSwitch<MachO::CPUSubTypeARM>(TheTriple.getArchName())
       .Cases("armv4t", "thumbv4t", MachO::CPU_SUBTYPE_ARM_V4T)
@@ -673,7 +700,6 @@ MCAsmBackend *llvm::createARMAsmBackend(const Target &T,
       .Cases("armv6", "thumbv6", MachO::CPU_SUBTYPE_ARM_V6)
       .Cases("armv6m", "thumbv6m", MachO::CPU_SUBTYPE_ARM_V6M)
       .Cases("armv7em", "thumbv7em", MachO::CPU_SUBTYPE_ARM_V7EM)
-      .Cases("armv7f", "thumbv7f", MachO::CPU_SUBTYPE_ARM_V7F)
       .Cases("armv7k", "thumbv7k", MachO::CPU_SUBTYPE_ARM_V7K)
       .Cases("armv7m", "thumbv7m", MachO::CPU_SUBTYPE_ARM_V7M)
       .Cases("armv7s", "thumbv7s", MachO::CPU_SUBTYPE_ARM_V7S)

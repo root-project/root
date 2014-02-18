@@ -13,12 +13,12 @@
 
 #define DEBUG_TYPE "mips-isel"
 #include "MipsISelDAGToDAG.h"
-#include "Mips16ISelDAGToDAG.h"
-#include "MipsSEISelDAGToDAG.h"
-#include "Mips.h"
 #include "MCTargetDesc/MipsBaseInfo.h"
+#include "Mips.h"
+#include "Mips16ISelDAGToDAG.h"
 #include "MipsMachineFunction.h"
 #include "MipsRegisterInfo.h"
+#include "MipsSEISelDAGToDAG.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -104,6 +104,16 @@ bool MipsDAGToDAGISel::selectVSplat(SDNode *N, APInt &Imm) const {
   return false;
 }
 
+bool MipsDAGToDAGISel::selectVSplatUimm1(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimm2(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
 bool MipsDAGToDAGISel::selectVSplatUimm3(SDValue N, SDValue &Imm) const {
   llvm_unreachable("Unimplemented function.");
   return false;
@@ -135,6 +145,21 @@ bool MipsDAGToDAGISel::selectVSplatSimm5(SDValue N, SDValue &Imm) const {
 }
 
 bool MipsDAGToDAGISel::selectVSplatUimmPow2(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatUimmInvPow2(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatMaskL(SDValue N, SDValue &Imm) const {
+  llvm_unreachable("Unimplemented function.");
+  return false;
+}
+
+bool MipsDAGToDAGISel::selectVSplatMaskR(SDValue N, SDValue &Imm) const {
   llvm_unreachable("Unimplemented function.");
   return false;
 }

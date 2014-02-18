@@ -1016,7 +1016,7 @@ class NVJrr_template<string mnemonic, bits<3> majOp, bit NvOpNum,
       bits<5> src1;
       bits<5> src2;
       bits<3> Ns;    // New-Value Operand
-      bits<5> RegOp; // Non New-Value Operand
+      bits<5> RegOp; // Non-New-Value Operand
       bits<11> offset;
 
       let isBrTaken = !if(isTaken, "true", "false");
@@ -3390,4 +3390,3 @@ def : Pat<(i32 (load FoldGlobalAddrGP:$addr)),
 def : Pat<(atomic_load_32 FoldGlobalAddrGP:$addr),
           (i32 (LDriw_abs_V4 FoldGlobalAddrGP:$addr))>,
            Requires<[HasV4T]>;
-

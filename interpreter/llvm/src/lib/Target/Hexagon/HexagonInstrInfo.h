@@ -16,9 +16,9 @@
 
 #include "HexagonRegisterInfo.h"
 #include "MCTargetDesc/HexagonBaseInfo.h"
-#include "llvm/Target/TargetInstrInfo.h"
-#include "llvm/Target/TargetFrameLowering.h"
 #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
+#include "llvm/Target/TargetFrameLowering.h"
+#include "llvm/Target/TargetInstrInfo.h"
 
 #define GET_INSTRINFO_HEADER
 #include "HexagonGenInstrInfo.inc"
@@ -26,6 +26,7 @@
 namespace llvm {
 
 class HexagonInstrInfo : public HexagonGenInstrInfo {
+  virtual void anchor();
   const HexagonRegisterInfo RI;
   const HexagonSubtarget &Subtarget;
   typedef unsigned Opcode_t;

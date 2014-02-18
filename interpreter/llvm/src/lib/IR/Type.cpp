@@ -132,7 +132,7 @@ unsigned Type::getPrimitiveSizeInBits() const {
 /// getScalarSizeInBits - If this is a vector type, return the
 /// getPrimitiveSizeInBits value for the element type. Otherwise return the
 /// getPrimitiveSizeInBits value for this type.
-unsigned Type::getScalarSizeInBits() {
+unsigned Type::getScalarSizeInBits() const {
   return getScalarType()->getPrimitiveSizeInBits();
 }
 
@@ -155,20 +155,14 @@ int Type::getFPMantissaWidth() const {
 /// isSizedDerivedType - Derived types like structures and arrays are sized
 /// iff all of the members of the type are sized as well.  Since asking for
 /// their size is relatively uncommon, move this operation out of line.
-bool Type::isSizedDerivedType() const {
-  if (this->isIntegerTy())
-    return true;
-
+bool Type::isSizedDerivedType(SmallPtrSet<const Type*, 4> *Visited) const {
   if (const ArrayType *ATy = dyn_cast<ArrayType>(this))
-    return ATy->getElementType()->isSized();
+    return ATy->getElementType()->isSized(Visited);
 
   if (const VectorType *VTy = dyn_cast<VectorType>(this))
-    return VTy->getElementType()->isSized();
+    return VTy->getElementType()->isSized(Visited);
 
-  if (!this->isStructTy()) 
-    return false;
-
-  return cast<StructType>(this)->isSized();
+  return cast<StructType>(this)->isSized(Visited);
 }
 
 //===----------------------------------------------------------------------===//
@@ -556,17 +550,20 @@ StructType *StructType::create(StringRef Name, Type *type, ...) {
   return llvm::StructType::create(Ctx, StructFields, Name);
 }
 
-bool StructType::isSized() const {
+bool StructType::isSized(SmallPtrSet<const Type*, 4> *Visited) const {
   if ((getSubclassData() & SCDB_IsSized) != 0)
     return true;
   if (isOpaque())
+    return false;
+
+  if (Visited && !Visited->insert(this))
     return false;
 
   // Okay, our struct is sized if all of the elements are, but if one of the
   // elements is opaque, the struct isn't sized *yet*, but may become sized in
   // the future, so just bail out without caching.
   for (element_iterator I = element_begin(), E = element_end(); I != E; ++I)
-    if (!(*I)->isSized())
+    if (!(*I)->isSized(Visited))
       return false;
 
   // Here we cheat a bit and cast away const-ness. The goal is to memoize when
@@ -616,11 +613,7 @@ bool StructType::isLayoutIdentical(StructType *Other) const {
 /// getTypeByName - Return the type with the specified name, or null if there
 /// is none by that name.
 StructType *Module::getTypeByName(StringRef Name) const {
-  StringMap<StructType*>::iterator I =
-    getContext().pImpl->NamedStructTypes.find(Name);
-  if (I != getContext().pImpl->NamedStructTypes.end())
-    return I->second;
-  return 0;
+  return getContext().pImpl->NamedStructTypes.lookup(Name);
 }
 
 

@@ -32,6 +32,7 @@ class MCDataAtom;
 /// \brief Represents a contiguous range of either instructions (a TextAtom)
 /// or data (a DataAtom).  Address ranges are expressed as _closed_ intervals.
 class MCAtom {
+  virtual void anchor();
 public:
   virtual ~MCAtom() {}
 
@@ -188,7 +189,9 @@ private:
   friend class MCModule;
   // Private constructor - only callable by MCModule
   MCDataAtom(MCModule *P, uint64_t Begin, uint64_t End)
-    : MCAtom(DataAtom, P, Begin, End), Data(End - Begin) {}
+    : MCAtom(DataAtom, P, Begin, End) {
+    Data.reserve(End + 1 - Begin);
+  }
 };
 
 }

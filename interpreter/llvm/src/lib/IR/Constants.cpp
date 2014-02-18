@@ -584,23 +584,21 @@ Constant *ConstantFP::get(Type *Ty, StringRef Str) {
   return C; 
 }
 
+Constant *ConstantFP::getNegativeZero(Type *Ty) {
+  const fltSemantics &Semantics = *TypeToFloatSemantics(Ty->getScalarType());
+  APFloat NegZero = APFloat::getZero(Semantics, /*Negative=*/true);
+  Constant *C = get(Ty->getContext(), NegZero);
 
-ConstantFP *ConstantFP::getNegativeZero(Type *Ty) {
-  LLVMContext &Context = Ty->getContext();
-  APFloat apf = cast<ConstantFP>(Constant::getNullValue(Ty))->getValueAPF();
-  apf.changeSign();
-  return get(Context, apf);
+  if (VectorType *VTy = dyn_cast<VectorType>(Ty))
+    return ConstantVector::getSplat(VTy->getNumElements(), C);
+
+  return C;
 }
 
 
 Constant *ConstantFP::getZeroValueForNegation(Type *Ty) {
-  Type *ScalarTy = Ty->getScalarType();
-  if (ScalarTy->isFloatingPointTy()) {
-    Constant *C = getNegativeZero(ScalarTy);
-    if (VectorType *VTy = dyn_cast<VectorType>(Ty))
-      return ConstantVector::getSplat(VTy->getNumElements(), C);
-    return C;
-  }
+  if (Ty->isFPOrFPVectorTy())
+    return getNegativeZero(Ty);
 
   return Constant::getNullValue(Ty);
 }
@@ -635,10 +633,14 @@ ConstantFP* ConstantFP::get(LLVMContext &Context, const APFloat& V) {
   return Slot;
 }
 
-ConstantFP *ConstantFP::getInfinity(Type *Ty, bool Negative) {
-  const fltSemantics &Semantics = *TypeToFloatSemantics(Ty);
-  return ConstantFP::get(Ty->getContext(),
-                         APFloat::getInf(Semantics, Negative));
+Constant *ConstantFP::getInfinity(Type *Ty, bool Negative) {
+  const fltSemantics &Semantics = *TypeToFloatSemantics(Ty->getScalarType());
+  Constant *C = get(Ty->getContext(), APFloat::getInf(Semantics, Negative));
+
+  if (VectorType *VTy = dyn_cast<VectorType>(Ty))
+    return ConstantVector::getSplat(VTy->getNumElements(), C);
+
+  return C;
 }
 
 ConstantFP::ConstantFP(Type *Ty, const APFloat& V)
@@ -1126,6 +1128,7 @@ getWithOperands(ArrayRef<Constant*> Ops, Type *Ty) const {
   case Instruction::PtrToInt:
   case Instruction::IntToPtr:
   case Instruction::BitCast:
+  case Instruction::AddrSpaceCast:
     return ConstantExpr::getCast(getOpcode(), Ops[0], Ty);
   case Instruction::Select:
     return ConstantExpr::getSelect(Ops[0], Ops[1], Ops[2]);
@@ -1372,6 +1375,17 @@ BlockAddress::BlockAddress(Function *F, BasicBlock *BB)
   BB->AdjustBlockAddressRefCount(1);
 }
 
+BlockAddress *BlockAddress::lookup(const BasicBlock *BB) {
+  if (!BB->hasAddressTaken())
+    return 0;
+
+  const Function *F = BB->getParent();
+  assert(F != 0 && "Block must have a parent");
+  BlockAddress *BA =
+      F->getContext().pImpl->BlockAddresses.lookup(std::make_pair(F, BB));
+  assert(BA && "Refcount and block address map disagree!");
+  return BA;
+}
 
 // destroyConstant - Remove the constant from the constant table.
 //
@@ -1461,6 +1475,7 @@ Constant *ConstantExpr::getCast(unsigned oc, Constant *C, Type *Ty) {
   case Instruction::PtrToInt: return getPtrToInt(C, Ty);
   case Instruction::IntToPtr: return getIntToPtr(C, Ty);
   case Instruction::BitCast:  return getBitCast(C, Ty);
+  case Instruction::AddrSpaceCast:  return getAddrSpaceCast(C, Ty);
   }
 }
 
@@ -1489,10 +1504,26 @@ Constant *ConstantExpr::getPointerCast(Constant *S, Type *Ty) {
 
   if (Ty->isIntOrIntVectorTy())
     return getPtrToInt(S, Ty);
+
+  unsigned SrcAS = S->getType()->getPointerAddressSpace();
+  if (Ty->isPtrOrPtrVectorTy() && SrcAS != Ty->getPointerAddressSpace())
+    return getAddrSpaceCast(S, Ty);
+
   return getBitCast(S, Ty);
 }
 
-Constant *ConstantExpr::getIntegerCast(Constant *C, Type *Ty, 
+Constant *ConstantExpr::getPointerBitCastOrAddrSpaceCast(Constant *S,
+                                                         Type *Ty) {
+  assert(S->getType()->isPtrOrPtrVectorTy() && "Invalid cast");
+  assert(Ty->isPtrOrPtrVectorTy() && "Invalid cast");
+
+  if (S->getType()->getPointerAddressSpace() != Ty->getPointerAddressSpace())
+    return getAddrSpaceCast(S, Ty);
+
+  return getBitCast(S, Ty);
+}
+
+Constant *ConstantExpr::getIntegerCast(Constant *C, Type *Ty,
                                        bool isSigned) {
   assert(C->getType()->isIntOrIntVectorTy() &&
          Ty->isIntOrIntVectorTy() && "Invalid cast");
@@ -1660,6 +1691,13 @@ Constant *ConstantExpr::getBitCast(Constant *C, Type *DstTy) {
   if (C->getType() == DstTy) return C;
 
   return getFoldedCast(Instruction::BitCast, C, DstTy);
+}
+
+Constant *ConstantExpr::getAddrSpaceCast(Constant *C, Type *DstTy) {
+  assert(CastInst::castIsValid(Instruction::AddrSpaceCast, C, DstTy) &&
+         "Invalid constantexpr addrspacecast!");
+
+  return getFoldedCast(Instruction::AddrSpaceCast, C, DstTy);
 }
 
 Constant *ConstantExpr::get(unsigned Opcode, Constant *C1, Constant *C2,
@@ -2756,6 +2794,7 @@ Instruction *ConstantExpr::getAsInstruction() {
   case Instruction::PtrToInt:
   case Instruction::IntToPtr:
   case Instruction::BitCast:
+  case Instruction::AddrSpaceCast:
     return CastInst::Create((Instruction::CastOps)getOpcode(),
                             Ops[0], getType());
   case Instruction::Select:

@@ -39,9 +39,10 @@ struct PrintingPolicy {
       SuppressTagKeyword(false), SuppressTag(false), SuppressScope(false),
       SuppressUnwrittenScope(false), SuppressInitializers(false),
       ConstantArraySizeAsWritten(false), AnonymousTagLocations(true),
-      SuppressStrongLifetime(false), Bool(LO.Bool),
-      TerseOutput(false), PolishForDeclaration(false),
-      MSWChar(LO.MicrosoftExt && !LO.WChar) { }
+      SuppressStrongLifetime(false), SuppressLifetimeQualifiers(false),
+      Bool(LO.Bool), TerseOutput(false), PolishForDeclaration(false),
+      MSWChar(LO.MicrosoftExt && !LO.WChar),
+      IncludeNewlines(true) { }
 
   /// \brief What language we're printing.
   LangOptions LangOpts;
@@ -132,6 +133,10 @@ struct PrintingPolicy {
   /// ARC.
   unsigned SuppressStrongLifetime : 1;
   
+  /// \brief When true, suppress printing of lifetime qualifier in
+  /// ARC.
+  unsigned SuppressLifetimeQualifiers : 1;
+  
   /// \brief Whether we can use 'bool' rather than '_Bool', even if the language
   /// doesn't actually have 'bool' (because, e.g., it is defined as a macro).
   unsigned Bool : 1;
@@ -151,6 +156,9 @@ struct PrintingPolicy {
   /// \brief When true, print the built-in wchar_t type as __wchar_t. For use in
   /// Microsoft mode when wchar_t is not available.
   unsigned MSWChar : 1;
+
+  /// \brief When true, include newlines after statements like "break", etc.
+  unsigned IncludeNewlines : 1;
 };
 
 } // end namespace clang

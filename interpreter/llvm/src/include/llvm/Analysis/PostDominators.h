@@ -14,7 +14,7 @@
 #ifndef LLVM_ANALYSIS_POSTDOMINATORS_H
 #define LLVM_ANALYSIS_POSTDOMINATORS_H
 
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/IR/Dominators.h"
 
 namespace llvm {
 
@@ -77,6 +77,12 @@ struct PostDominatorTree : public FunctionPass {
   inline const BasicBlock *findNearestCommonDominator(const BasicBlock *A,
                                                       const BasicBlock *B) {
     return DT->findNearestCommonDominator(A, B);
+  }
+
+  /// Get all nodes post-dominated by R, including R itself.
+  void getDescendants(BasicBlock *R,
+                      SmallVectorImpl<BasicBlock *> &Result) const {
+    DT->getDescendants(R, Result);
   }
 
   virtual void releaseMemory() {

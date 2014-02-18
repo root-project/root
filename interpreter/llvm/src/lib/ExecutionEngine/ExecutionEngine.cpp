@@ -14,10 +14,11 @@
 
 #define DEBUG_TYPE "jit"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
-#include "llvm/ExecutionEngine/JITMemoryManager.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/ExecutionEngine/JITMemoryManager.h"
+#include "llvm/ExecutionEngine/ObjectCache.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -39,6 +40,11 @@ using namespace llvm;
 STATISTIC(NumInitBytes, "Number of bytes of global vars initialized");
 STATISTIC(NumGlobals  , "Number of global vars initialized");
 
+// Pin the vtable to this file.
+void ObjectCache::anchor() {}
+void ObjectBuffer::anchor() {}
+void ObjectBufferStream::anchor() {}
+
 ExecutionEngine *(*ExecutionEngine::JITCtor)(
   Module *M,
   std::string *ErrorStr,
@@ -56,9 +62,7 @@ ExecutionEngine *(*ExecutionEngine::InterpCtor)(Module *M,
 
 ExecutionEngine::ExecutionEngine(Module *M)
   : EEState(*this),
-    LazyFunctionCreator(0),
-    ExceptionTableRegister(0),
-    ExceptionTableDeregister(0) {
+    LazyFunctionCreator(0) {
   CompilingLazily         = false;
   GVCompilationDisabled   = false;
   SymbolSearchingDisabled = false;
@@ -70,16 +74,6 @@ ExecutionEngine::~ExecutionEngine() {
   clearAllGlobalMappings();
   for (unsigned i = 0, e = Modules.size(); i != e; ++i)
     delete Modules[i];
-}
-
-void ExecutionEngine::DeregisterAllTables() {
-  if (ExceptionTableDeregister) {
-    DenseMap<const Function*, void*>::iterator it = AllExceptionTables.begin();
-    DenseMap<const Function*, void*>::iterator ite = AllExceptionTables.end();
-    for (; it != ite; ++it)
-      ExceptionTableDeregister(it->second);
-    AllExceptionTables.clear();
-  }
 }
 
 namespace {
@@ -1217,9 +1211,7 @@ void ExecutionEngine::emitGlobals() {
         }
 
         // If the existing global is strong, never replace it.
-        if (GVEntry->hasExternalLinkage() ||
-            GVEntry->hasDLLImportLinkage() ||
-            GVEntry->hasDLLExportLinkage())
+        if (GVEntry->hasExternalLinkage())
           continue;
 
         // Otherwise, we know it's linkonce/weak, replace it if this is a strong
@@ -1301,6 +1293,10 @@ void ExecutionEngine::EmitGlobalVariable(const GlobalVariable *GV) {
   if (GA == 0) {
     // If it's not already specified, allocate memory for the global.
     GA = getMemoryForGV(GV);
+
+    // If we failed to allocate memory for this global, return.
+    if (GA == 0) return;
+
     addGlobalMapping(GV, GA);
   }
 

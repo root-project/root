@@ -17,11 +17,11 @@
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/SwapByteOrder.h"
 #include "llvm/Support/type_traits.h"
-
 #include <cstring>
 
 #ifdef _MSC_VER
-# include <intrin.h>
+#include <intrin.h>
+#include <limits>
 #endif
 
 namespace llvm {
@@ -552,6 +552,13 @@ inline uint64_t NextPowerOf2(uint64_t A) {
   return A + 1;
 }
 
+/// Returns the power of two which is less than or equal to the given value.
+/// Essentially, it is a floor operation across the domain of powers of two.
+inline uint64_t PowerOf2Floor(uint64_t A) {
+  if (!A) return 0;
+  return 1ull << (63 - countLeadingZeros(A, ZB_Undefined));
+}
+
 /// Returns the next integer (mod 2**64) that is greater than or equal to
 /// \p Value and is a multiple of \p Align. \p Align must be non-zero.
 ///
@@ -603,6 +610,13 @@ inline int64_t SignExtend64(uint64_t X, unsigned B) {
   return int64_t(X << (64 - B)) >> (64 - B);
 }
 
+#if defined(_MSC_VER)
+  // Visual Studio defines the HUGE_VAL class of macros using purposeful
+  // constant arithmetic overflow, which it then warns on when encountered.
+  const float huge_valf = std::numeric_limits<float>::infinity();
+#else
+  const float huge_valf = HUGE_VALF;
+#endif
 } // End llvm namespace
 
 #endif

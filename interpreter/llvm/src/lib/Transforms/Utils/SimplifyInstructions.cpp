@@ -19,9 +19,9 @@
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Pass.h"
@@ -45,7 +45,9 @@ namespace {
 
     /// runOnFunction - Remove instructions that simplify.
     bool runOnFunction(Function &F) {
-      const DominatorTree *DT = getAnalysisIfAvailable<DominatorTree>();
+      const DominatorTreeWrapperPass *DTWP =
+          getAnalysisIfAvailable<DominatorTreeWrapperPass>();
+      const DominatorTree *DT = DTWP ? &DTWP->getDomTree() : 0;
       const DataLayout *TD = getAnalysisIfAvailable<DataLayout>();
       const TargetLibraryInfo *TLI = &getAnalysis<TargetLibraryInfo>();
       SmallPtrSet<const Instruction*, 8> S1, S2, *ToSimplify = &S1, *Next = &S2;

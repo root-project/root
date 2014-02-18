@@ -22,7 +22,6 @@ AArch64ELFMCAsmInfo::AArch64ELFMCAsmInfo() {
   AlignmentIsInBytes = false;
 
   CommentString = "//";
-  PrivateGlobalPrefix = ".L";
   Code32Directive = ".code\t32";
 
   Data16bitsDirective = "\t.hword\t";
@@ -31,11 +30,14 @@ AArch64ELFMCAsmInfo::AArch64ELFMCAsmInfo() {
 
   UseDataRegionDirectives = true;
 
-  WeakRefDirective = "\t.weak\t";
-
   HasLEB128 = true;
   SupportsDebugInformation = true;
 
   // Exceptions handling
   ExceptionsType = ExceptionHandling::DwarfCFI;
+
+  UseIntegratedAssembler = true;
 }
+
+// Pin the vtable to this file.
+void AArch64ELFMCAsmInfo::anchor() {}

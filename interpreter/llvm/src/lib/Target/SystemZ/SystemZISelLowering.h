@@ -38,6 +38,16 @@ namespace SystemZISD {
     // accesses (LARL).  Operand 0 is the address.
     PCREL_WRAPPER,
 
+    // Used in cases where an offset is applied to a TargetGlobalAddress.
+    // Operand 0 is the full TargetGlobalAddress and operand 1 is a
+    // PCREL_WRAPPER for an anchor point.  This is used so that we can
+    // cheaply refer to either the full address or the anchor point
+    // as a register base.
+    PCREL_OFFSET,
+
+    // Integer absolute.
+    IABS,
+
     // Integer comparisons.  There are three operands: the two values
     // to compare, and an integer of type SystemZICMP.
     ICMP,
@@ -125,6 +135,9 @@ namespace SystemZISD {
     // Store the CC value in bits 29 and 28 of an integer.
     IPM,
 
+    // Perform a serialization operation.  (BCR 15,0 or BCR 14,0.)
+    SERIALIZE,
+
     // Wrappers around the inner loop of an 8- or 16-bit ATOMIC_SWAP or
     // ATOMIC_LOAD_<op>.
     //
@@ -163,6 +176,11 @@ namespace SystemZISD {
     // a store prefetch.
     PREFETCH
   };
+
+  // Return true if OPCODE is some kind of PC-relative address.
+  inline bool isPCREL(unsigned Opcode) {
+    return Opcode == PCREL_WRAPPER || Opcode == PCREL_OFFSET;
+  }
 }
 
 namespace SystemZICMP {
@@ -186,15 +204,13 @@ public:
   virtual MVT getScalarShiftAmountTy(EVT LHSTy) const LLVM_OVERRIDE {
     return MVT::i32;
   }
-  virtual EVT getSetCCResultType(LLVMContext &, EVT) const LLVM_OVERRIDE {
-    return MVT::i32;
-  }
+  virtual EVT getSetCCResultType(LLVMContext &, EVT) const LLVM_OVERRIDE;
   virtual bool isFMAFasterThanFMulAndFAdd(EVT VT) const LLVM_OVERRIDE;
   virtual bool isFPImmLegal(const APFloat &Imm, EVT VT) const LLVM_OVERRIDE;
   virtual bool isLegalAddressingMode(const AddrMode &AM, Type *Ty) const
      LLVM_OVERRIDE;
-  virtual bool allowsUnalignedMemoryAccesses(EVT VT, bool *Fast) const
-    LLVM_OVERRIDE;
+  virtual bool allowsUnalignedMemoryAccesses(EVT VT, unsigned AS,
+                                             bool *Fast) const LLVM_OVERRIDE;
   virtual bool isTruncateFree(Type *, Type *) const LLVM_OVERRIDE;
   virtual bool isTruncateFree(EVT, EVT) const LLVM_OVERRIDE;
   virtual const char *getTargetNodeName(unsigned Opcode) const LLVM_OVERRIDE;
@@ -234,12 +250,16 @@ public:
                 const SmallVectorImpl<ISD::OutputArg> &Outs,
                 const SmallVectorImpl<SDValue> &OutVals,
                 SDLoc DL, SelectionDAG &DAG) const LLVM_OVERRIDE;
+  virtual SDValue prepareVolatileOrAtomicLoad(SDValue Chain, SDLoc DL,
+                                              SelectionDAG &DAG) const
+    LLVM_OVERRIDE;
 
 private:
   const SystemZSubtarget &Subtarget;
   const SystemZTargetMachine &TM;
 
   // Implement LowerOperation for individual opcodes.
+  SDValue lowerSETCC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerBR_CC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSELECT_CC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerGlobalAddress(GlobalAddressSDNode *Node,
@@ -259,9 +279,14 @@ private:
   SDValue lowerUDIVREM(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerBITCAST(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerOR(SDValue Op, SelectionDAG &DAG) const;
-  SDValue lowerATOMIC_LOAD(SDValue Op, SelectionDAG &DAG,
-                           unsigned Opcode) const;
+  SDValue lowerSIGN_EXTEND(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerATOMIC_LOAD(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerATOMIC_STORE(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerATOMIC_LOAD_OP(SDValue Op, SelectionDAG &DAG,
+                              unsigned Opcode) const;
+  SDValue lowerATOMIC_LOAD_SUB(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerATOMIC_CMP_SWAP(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerLOAD_SEQUENCE_POINT(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSTACKSAVE(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSTACKRESTORE(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerPREFETCH(SDValue Op, SelectionDAG &DAG) const;

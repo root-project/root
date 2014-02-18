@@ -101,8 +101,8 @@ int X86RegisterInfo::getCompactUnwindRegNum(unsigned RegNum, bool isEH) const {
 
 bool
 X86RegisterInfo::trackLivenessAfterRegAlloc(const MachineFunction &MF) const {
-  // Only enable when post-RA scheduling is enabled and this is needed.
-  return TM.getSubtargetImpl()->postRAScheduler();
+  // ExeDepsFixer and PostRAScheduler require liveness.
+  return true;
 }
 
 int
@@ -234,14 +234,24 @@ X86RegisterInfo::getRegPressureLimit(const TargetRegisterClass *RC,
 
 const uint16_t *
 X86RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
+  bool HasAVX = TM.getSubtarget<X86Subtarget>().hasAVX();
+  bool HasAVX512 = TM.getSubtarget<X86Subtarget>().hasAVX512();
+
   switch (MF->getFunction()->getCallingConv()) {
   case CallingConv::GHC:
   case CallingConv::HiPE:
     return CSR_NoRegs_SaveList;
-
+  case CallingConv::AnyReg:
+    if (HasAVX)
+      return CSR_64_AllRegs_AVX_SaveList;
+    return CSR_64_AllRegs_SaveList;
+  case CallingConv::PreserveMost:
+    return CSR_64_RT_MostRegs_SaveList;
+  case CallingConv::PreserveAll:
+    if (HasAVX)
+      return CSR_64_RT_AllRegs_AVX_SaveList;
+    return CSR_64_RT_AllRegs_SaveList;
   case CallingConv::Intel_OCL_BI: {
-    bool HasAVX = TM.getSubtarget<X86Subtarget>().hasAVX();
-    bool HasAVX512 = TM.getSubtarget<X86Subtarget>().hasAVX512();
     if (HasAVX512 && IsWin64)
       return CSR_Win64_Intel_OCL_BI_AVX512_SaveList;
     if (HasAVX512 && Is64Bit)
@@ -254,12 +264,10 @@ X86RegisterInfo::getCalleeSavedRegs(const MachineFunction *MF) const {
       return CSR_64_Intel_OCL_BI_SaveList;
     break;
   }
-
   case CallingConv::Cold:
     if (Is64Bit)
-      return CSR_MostRegs_64_SaveList;
+      return CSR_64_MostRegs_SaveList;
     break;
-
   default:
     break;
   }
@@ -282,7 +290,21 @@ X86RegisterInfo::getCallPreservedMask(CallingConv::ID CC) const {
   bool HasAVX = TM.getSubtarget<X86Subtarget>().hasAVX();
   bool HasAVX512 = TM.getSubtarget<X86Subtarget>().hasAVX512();
 
-  if (CC == CallingConv::Intel_OCL_BI) {
+  switch (CC) {
+  case CallingConv::GHC:
+  case CallingConv::HiPE:
+    return CSR_NoRegs_RegMask;
+  case CallingConv::AnyReg:
+    if (HasAVX)
+      return CSR_64_AllRegs_AVX_RegMask;
+    return CSR_64_AllRegs_RegMask;
+  case CallingConv::PreserveMost:
+    return CSR_64_RT_MostRegs_RegMask;
+  case CallingConv::PreserveAll:
+    if (HasAVX)
+      return CSR_64_RT_AllRegs_AVX_RegMask;
+    return CSR_64_RT_AllRegs_RegMask;
+  case CallingConv::Intel_OCL_BI: {
     if (IsWin64 && HasAVX512)
       return CSR_Win64_Intel_OCL_BI_AVX512_RegMask;
     if (Is64Bit && HasAVX512)
@@ -294,15 +316,20 @@ X86RegisterInfo::getCallPreservedMask(CallingConv::ID CC) const {
     if (!HasAVX && !IsWin64 && Is64Bit)
       return CSR_64_Intel_OCL_BI_RegMask;
   }
-  if (CC == CallingConv::GHC || CC == CallingConv::HiPE)
-    return CSR_NoRegs_RegMask;
-  if (!Is64Bit)
-    return CSR_32_RegMask;
-  if (CC == CallingConv::Cold)
-    return CSR_MostRegs_64_RegMask;
-  if (IsWin64)
-    return CSR_Win64_RegMask;
-  return CSR_64_RegMask;
+  case CallingConv::Cold:
+    if (Is64Bit)
+      return CSR_64_MostRegs_RegMask;
+    break;
+  default:
+    break;
+  }
+
+  if (Is64Bit) {
+    if (IsWin64)
+      return CSR_Win64_RegMask;
+    return CSR_64_RegMask;
+  }
+  return CSR_32_RegMask;
 }
 
 const uint32_t*
@@ -396,18 +423,15 @@ bool X86RegisterInfo::hasBasePointer(const MachineFunction &MF) const {
    if (!EnableBasePointer)
      return false;
 
-   // When we need stack realignment and there are dynamic allocas, we can't
-   // reference off of the stack pointer, so we reserve a base pointer.
-   //
-   // This is also true if the function contain MS-style inline assembly.  We
-   // do this because if any stack changes occur in the inline assembly, e.g.,
-   // "pusha", then any C local variable or C argument references in the
-   // inline assembly will be wrong because the SP is not properly tracked.
-   if ((needsStackRealignment(MF) && MFI->hasVarSizedObjects()) ||
-       MF.hasMSInlineAsm())
-     return true;
-
-   return false;
+   // When we need stack realignment, we can't address the stack from the frame
+   // pointer.  When we have dynamic allocas or stack-adjusting inline asm, we
+   // can't address variables from the stack pointer.  MS inline asm can
+   // reference locals while also adjusting the stack pointer.  When we can't
+   // use both the SP and the FP, we need a separate base pointer register.
+   bool CantUseFP = needsStackRealignment(MF);
+   bool CantUseSP =
+       MFI->hasVarSizedObjects() || MFI->hasInlineAsmWithSPAdjust();
+   return CantUseFP && CantUseSP;
 }
 
 bool X86RegisterInfo::canRealignStack(const MachineFunction &MF) const {
@@ -510,14 +534,6 @@ X86RegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 unsigned X86RegisterInfo::getFrameRegister(const MachineFunction &MF) const {
   const TargetFrameLowering *TFI = MF.getTarget().getFrameLowering();
   return TFI->hasFP(MF) ? FramePtr : StackPtr;
-}
-
-unsigned X86RegisterInfo::getEHExceptionRegister() const {
-  llvm_unreachable("What is the exception register");
-}
-
-unsigned X86RegisterInfo::getEHHandlerRegister() const {
-  llvm_unreachable("What is the exception handler register");
 }
 
 namespace llvm {

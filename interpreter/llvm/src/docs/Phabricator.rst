@@ -68,7 +68,7 @@ To upload a new patch:
 To submit an updated patch:
 
 * Click *Differential*.
-* Click *Create Revision*.
+* Click *Create Diff*.
 * Paste the updated diff.
 * Select the review you want to from the *Attach To* dropdown and click
   *Continue*.
@@ -93,6 +93,26 @@ people prefer it over a web interface, we do not generate automated mail
 when a review changes state, for example by clicking "Accept Revision" in
 the web interface. Thus, please type LGTM into the comment box to accept
 a change from Phabricator.
+
+Committing a change
+-------------------
+
+When committing an LLVM change that has been reviewed using
+Phabricator, the convention is for the commit message to end with the
+line:
+
+::
+
+  Differential Revision: <URL>
+
+where ``<URL>`` is the URL for the code review, starting with
+``http://llvm-reviews.chandlerc.com/``.
+
+Note that Arcanist will add this automatically.
+
+This allows people reading the version history to see the review for
+context.  This also allows Phabricator to detect the commit, close the
+review, and add a link from the review to the commit.
 
 Status
 ------

@@ -76,6 +76,7 @@ protected:
   bool IsPPC64;
   bool HasAltivec;
   bool HasQPX;
+  bool HasVSX;
   bool HasFCPSGN;
   bool HasFSQRT;
   bool HasFRE, HasFRES, HasFRSQRTE, HasFRSQRTES;
@@ -124,22 +125,6 @@ public:
   /// getInstrItins - Return the instruction itineraies based on subtarget
   /// selection.
   const InstrItineraryData &getInstrItineraryData() const { return InstrItins; }
-
-  /// getDataLayoutString - Return the pointer size and type alignment
-  /// properties of this subtarget.
-  const char *getDataLayoutString() const {
-    // Note, the alignment values for f64 and i64 on ppc64 in Darwin
-    // documentation are wrong; these are correct (i.e. "what gcc does").
-    if (isPPC64() && isSVR4ABI()) {
-      if (TargetTriple.getOS() == llvm::Triple::FreeBSD)
-        return "E-p:64:64-f64:64:64-i64:64:64-v128:128:128-n32:64";
-      else
-        return "E-p:64:64-f64:64:64-i64:64:64-f128:128:128-v128:128:128-n32:64";
-    }
-
-    return isPPC64() ? "E-p:64:64-f64:64:64-i64:64:64-f128:64:128-n32:64"
-                     : "E-p:32:32-f64:64:64-i64:64:64-f128:64:128-n32";
-  }
 
   /// \brief Reset the features for the PowerPC target.
   virtual void resetSubtargetFeatures(const MachineFunction *MF);

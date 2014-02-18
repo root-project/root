@@ -14,6 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "X86.h"
+#include "X86CallingConv.h"
 #include "X86ISelLowering.h"
 #include "X86InstrBuilder.h"
 #include "X86RegisterInfo.h"
@@ -560,13 +561,8 @@ redo_gep:
           Disp += CI->getSExtValue() * S;
           break;
         }
-        if (isa<AddOperator>(Op) &&
-            (!isa<Instruction>(Op) ||
-             FuncInfo.MBBMap[cast<Instruction>(Op)->getParent()]
-               == FuncInfo.MBB) &&
-            isa<ConstantInt>(cast<AddOperator>(Op)->getOperand(1))) {
-          // An add (in the same block) with a constant operand. Fold the
-          // constant.
+        if (canFoldAddIntoGEP(U, Op)) {
+          // A compatible add with a constant operand. Fold the constant.
           ConstantInt *CI =
             cast<ConstantInt>(cast<AddOperator>(Op)->getOperand(1));
           Disp += CI->getSExtValue() * S;
@@ -632,9 +628,35 @@ redo_gep:
 bool X86FastISel::X86SelectCallAddress(const Value *V, X86AddressMode &AM) {
   const User *U = NULL;
   unsigned Opcode = Instruction::UserOp1;
-  if (const Instruction *I = dyn_cast<Instruction>(V)) {
+  const Instruction *I = dyn_cast<Instruction>(V);
+  // Record if the value is defined in the same basic block.
+  //
+  // This information is crucial to know whether or not folding an
+  // operand is valid.
+  // Indeed, FastISel generates or reuses a virtual register for all
+  // operands of all instructions it selects. Obviously, the definition and
+  // its uses must use the same virtual register otherwise the produced
+  // code is incorrect.
+  // Before instruction selection, FunctionLoweringInfo::set sets the virtual
+  // registers for values that are alive across basic blocks. This ensures
+  // that the values are consistently set between across basic block, even
+  // if different instruction selection mechanisms are used (e.g., a mix of
+  // SDISel and FastISel).
+  // For values local to a basic block, the instruction selection process
+  // generates these virtual registers with whatever method is appropriate
+  // for its needs. In particular, FastISel and SDISel do not share the way
+  // local virtual registers are set.
+  // Therefore, this is impossible (or at least unsafe) to share values
+  // between basic blocks unless they use the same instruction selection
+  // method, which is not guarantee for X86.
+  // Moreover, things like hasOneUse could not be used accurately, if we
+  // allow to reference values across basic blocks whereas they are not
+  // alive across basic blocks initially.
+  bool InMBB = true;
+  if (I) {
     Opcode = I->getOpcode();
     U = I;
+    InMBB = I->getParent() == FuncInfo.MBB->getBasicBlock();
   } else if (const ConstantExpr *C = dyn_cast<ConstantExpr>(V)) {
     Opcode = C->getOpcode();
     U = C;
@@ -643,18 +665,22 @@ bool X86FastISel::X86SelectCallAddress(const Value *V, X86AddressMode &AM) {
   switch (Opcode) {
   default: break;
   case Instruction::BitCast:
-    // Look past bitcasts.
-    return X86SelectCallAddress(U->getOperand(0), AM);
+    // Look past bitcasts if its operand is in the same BB.
+    if (InMBB)
+      return X86SelectCallAddress(U->getOperand(0), AM);
+    break;
 
   case Instruction::IntToPtr:
-    // Look past no-op inttoptrs.
-    if (TLI.getValueType(U->getOperand(0)->getType()) == TLI.getPointerTy())
+    // Look past no-op inttoptrs if its operand is in the same BB.
+    if (InMBB &&
+        TLI.getValueType(U->getOperand(0)->getType()) == TLI.getPointerTy())
       return X86SelectCallAddress(U->getOperand(0), AM);
     break;
 
   case Instruction::PtrToInt:
-    // Look past no-op ptrtoints.
-    if (TLI.getValueType(U->getType()) == TLI.getPointerTy())
+    // Look past no-op ptrtoints if its operand is in the same BB.
+    if (InMBB &&
+        TLI.getValueType(U->getType()) == TLI.getPointerTy())
       return X86SelectCallAddress(U->getOperand(0), AM);
     break;
   }
@@ -671,7 +697,7 @@ bool X86FastISel::X86SelectCallAddress(const Value *V, X86AddressMode &AM) {
       return false;
 
     // Can't handle DLLImport.
-    if (GV->hasDLLImportLinkage())
+    if (GV->hasDLLImportStorageClass())
       return false;
 
     // Can't handle TLS.
@@ -862,7 +888,7 @@ bool X86FastISel::X86SelectRet(const Instruction *I) {
 
   // Now emit the RET.
   MachineInstrBuilder MIB =
-    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(X86::RET));
+    BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(Subtarget->is64Bit() ? X86::RETQ : X86::RETL));
   for (unsigned i = 0, e = RetRegs.size(); i != e; ++i)
     MIB.addReg(RetRegs[i], RegState::Implicit);
   return true;
@@ -1482,8 +1508,13 @@ bool X86FastISel::X86SelectSelect(const Instruction *I) {
   unsigned Op2Reg = getRegForValue(I->getOperand(2));
   if (Op2Reg == 0) return false;
 
-  BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(X86::TEST8rr))
-    .addReg(Op0Reg).addReg(Op0Reg);
+  // Selects operate on i1, however, Op0Reg is 8 bits width and may contain
+  // garbage. Indeed, only the less significant bit is supposed to be accurate.
+  // If we read more than the lsb, we may see non-zero values whereas lsb
+  // is zero. Therefore, we have to truncate Op0Reg to i1 for the select.
+  // This is achieved by performing TEST against 1.
+  BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(X86::TEST8ri))
+    .addReg(Op0Reg).addImm(1);
   unsigned ResultReg = createResultReg(RC);
   BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(Opc), ResultReg)
     .addReg(Op1Reg).addReg(Op2Reg);
@@ -1670,6 +1701,8 @@ bool X86FastISel::X86VisitIntrinsicCall(const IntrinsicInst &I) {
     const Value *Op1 = I.getArgOperand(0); // The guard's value.
     const AllocaInst *Slot = cast<AllocaInst>(I.getArgOperand(1));
 
+    MFI.setStackProtectorIndex(FuncInfo.StaticAllocaMap[Slot]);
+
     // Grab the frame index.
     X86AddressMode AM;
     if (!X86SelectAddress(Slot, AM)) return false;
@@ -1837,7 +1870,7 @@ static unsigned computeBytesPoppedByCallee(const X86Subtarget &Subtarget,
                                            const ImmutableCallSite &CS) {
   if (Subtarget.is64Bit())
     return 0;
-  if (Subtarget.isTargetWindows())
+  if (Subtarget.getTargetTriple().isOSMSVCRT())
     return 0;
   CallingConv::ID CC = CS.getCallingConv();
   if (CC == CallingConv::Fast || CC == CallingConv::GHC)
@@ -1875,6 +1908,10 @@ bool X86FastISel::DoSelectCall(const Instruction *I, const char *MemIntName) {
   // Don't know how to handle Win64 varargs yet.  Nothing special needed for
   // x86-32.  Special handling for x86-64 is implemented.
   if (isVarArg && isWin64)
+    return false;
+
+  // Don't know about inalloca yet.
+  if (CS.hasInAllocaArgument())
     return false;
 
   // Fast-isel doesn't know about callee-pop yet.
@@ -2078,6 +2115,8 @@ bool X86FastISel::DoSelectCall(const Instruction *I, const char *MemIntName) {
       // FIXME: Indirect doesn't need extending, but fast-isel doesn't fully
       // support this.
       return false;
+    case CCValAssign::FPExt:
+      llvm_unreachable("Unexpected loc info!");
     }
 
     if (VA.isRegLoc()) {
@@ -2448,6 +2487,7 @@ unsigned X86FastISel::TargetMaterializeAlloca(const AllocaInst *C) {
   // X86SelectAddrss, and TargetMaterializeAlloca.
   if (!FuncInfo.StaticAllocaMap.count(C))
     return 0;
+  assert(C->isStaticAlloca() && "dynamic alloca in the static alloca map?");
 
   X86AddressMode AM;
   if (!X86SelectAddress(C, AM))

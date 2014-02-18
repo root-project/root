@@ -89,6 +89,7 @@ static CXTypeKind GetTypeKind(QualType T) {
     TKCASE(VariableArray);
     TKCASE(DependentSizedArray);
     TKCASE(Vector);
+    TKCASE(MemberPointer);
     default:
       return CXType_Unexposed;
   }
@@ -365,6 +366,9 @@ CXType clang_getPointeeType(CXType CT) {
     case Type::ObjCObjectPointer:
       T = cast<ObjCObjectPointerType>(TP)->getPointeeType();
       break;
+    case Type::MemberPointer:
+      T = cast<MemberPointerType>(TP)->getPointeeType();
+      break;
     default:
       T = QualType();
       break;
@@ -478,6 +482,7 @@ CXString clang_getTypeKindSpelling(enum CXTypeKind K) {
     TKIND(VariableArray);
     TKIND(DependentSizedArray);
     TKIND(Vector);
+    TKIND(MemberPointer);
   }
 #undef TKIND
   return cxstring::createRef(s);
@@ -533,7 +538,7 @@ int clang_getNumArgTypes(CXType X) {
     return -1;
   
   if (const FunctionProtoType *FD = T->getAs<FunctionProtoType>()) {
-    return FD->getNumArgs();
+    return FD->getNumParams();
   }
   
   if (T->getAs<FunctionNoProtoType>()) {
@@ -549,11 +554,11 @@ CXType clang_getArgType(CXType X, unsigned i) {
     return MakeCXType(QualType(), GetTU(X));
 
   if (const FunctionProtoType *FD = T->getAs<FunctionProtoType>()) {
-    unsigned numArgs = FD->getNumArgs();
-    if (i >= numArgs)
+    unsigned numParams = FD->getNumParams();
+    if (i >= numParams)
       return MakeCXType(QualType(), GetTU(X));
-    
-    return MakeCXType(FD->getArgType(i), GetTU(X));
+
+    return MakeCXType(FD->getParamType(i), GetTU(X));
   }
   
   return MakeCXType(QualType(), GetTU(X));
@@ -565,8 +570,8 @@ CXType clang_getResultType(CXType X) {
     return MakeCXType(QualType(), GetTU(X));
   
   if (const FunctionType *FD = T->getAs<FunctionType>())
-    return MakeCXType(FD->getResultType(), GetTU(X));
-  
+    return MakeCXType(FD->getReturnType(), GetTU(X));
+
   return MakeCXType(QualType(), GetTU(X));
 }
 
@@ -574,7 +579,7 @@ CXType clang_getCursorResultType(CXCursor C) {
   if (clang_isDeclaration(C.kind)) {
     const Decl *D = cxcursor::getCursorDecl(C);
     if (const ObjCMethodDecl *MD = dyn_cast_or_null<ObjCMethodDecl>(D))
-      return MakeCXType(MD->getResultType(), cxcursor::getCursorTU(C));
+      return MakeCXType(MD->getReturnType(), cxcursor::getCursorTU(C));
 
     return clang_getResultType(clang_getCursorType(C));
   }
@@ -707,6 +712,17 @@ long long clang_Type_getAlignOf(CXType T) {
   return Ctx.getTypeAlignInChars(QT).getQuantity();
 }
 
+CXType clang_Type_getClassType(CXType CT) {
+  QualType ET = QualType();
+  QualType T = GetQualType(CT);
+  const Type *TP = T.getTypePtrOrNull();
+
+  if (TP && TP->getTypeClass() == Type::MemberPointer) {
+    ET = QualType(cast<MemberPointerType> (TP)->getClass(), 0);
+  }
+  return MakeCXType(ET, GetTU(CT));
+}
+
 long long clang_Type_getSizeOf(CXType T) {
   if (T.kind == CXType_Invalid)
     return CXTypeLayoutError_Invalid;
@@ -798,6 +814,24 @@ long long clang_Type_getOffsetOf(CXType PT, const char *S) {
     return Ctx.getFieldOffset(IFD);
   // we don't want any other Decl Type.
   return CXTypeLayoutError_InvalidFieldName;
+}
+
+enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T) {
+  QualType QT = GetQualType(T);
+  if (QT.isNull())
+    return CXRefQualifier_None;
+  const FunctionProtoType *FD = QT->getAs<FunctionProtoType>();
+  if (!FD)
+    return CXRefQualifier_None;
+  switch (FD->getRefQualifier()) {
+    case RQ_None:
+      return CXRefQualifier_None;
+    case RQ_LValue:
+      return CXRefQualifier_LValue;
+    case RQ_RValue:
+      return CXRefQualifier_RValue;
+  }
+  return CXRefQualifier_None;
 }
 
 unsigned clang_Cursor_isBitField(CXCursor C) {

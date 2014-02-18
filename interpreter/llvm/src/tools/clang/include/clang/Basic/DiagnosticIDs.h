@@ -48,7 +48,7 @@ namespace clang {
     // Get typedefs for common diagnostics.
     enum {
 #define DIAG(ENUM,FLAGS,DEFAULT_MAPPING,DESC,GROUP,\
-             SFINAE,ACCESS,CATEGORY,NOWERROR,SHOWINSYSHEADER) ENUM,
+             SFINAE,CATEGORY,NOWERROR,SHOWINSYSHEADER) ENUM,
 #define COMMONSTART
 #include "clang/Basic/DiagnosticCommonKinds.inc"
       NUM_BUILTIN_COMMON_DIAGNOSTICS
@@ -124,11 +124,16 @@ public:
   DiagnosticIDs();
   ~DiagnosticIDs();
 
-  /// \brief Return an ID for a diagnostic with the specified message and level.
+  /// \brief Return an ID for a diagnostic with the specified format string and
+  /// level.
   ///
   /// If this is the first request for this diagnostic, it is registered and
   /// created, otherwise the existing ID is returned.
-  unsigned getCustomDiagID(Level L, StringRef Message);
+
+  // FIXME: Replace this function with a create-only facilty like
+  // createCustomDiagIDFromFormatString() to enforce safe usage. At the time of
+  // writing, nearly all callers of this function were invalid.
+  unsigned getCustomDiagID(Level L, StringRef FormatString);
 
   //===--------------------------------------------------------------------===//
   // Diagnostic classification and reporting interfaces.
@@ -247,15 +252,15 @@ private:
   ///
   /// \param Loc The source location for which we are interested in finding out
   /// the diagnostic state. Can be null in order to query the latest state.
-  DiagnosticIDs::Level getDiagnosticLevel(unsigned DiagID, SourceLocation Loc,
-                                          const DiagnosticsEngine &Diag) const;
+  DiagnosticIDs::Level
+  getDiagnosticLevel(unsigned DiagID, SourceLocation Loc,
+                     const DiagnosticsEngine &Diag) const LLVM_READONLY;
 
   /// \brief An internal implementation helper used when \p DiagClass is
   /// already known.
-  DiagnosticIDs::Level getDiagnosticLevel(unsigned DiagID,
-                                          unsigned DiagClass,
-                                          SourceLocation Loc,
-                                          const DiagnosticsEngine &Diag) const;
+  DiagnosticIDs::Level
+  getDiagnosticLevel(unsigned DiagID, unsigned DiagClass, SourceLocation Loc,
+                     const DiagnosticsEngine &Diag) const LLVM_READONLY;
 
   /// \brief Used to report a diagnostic that is finally fully formed.
   ///

@@ -59,6 +59,8 @@ class CallAnalyzer : public InstVisitor<CallAnalyzer, bool> {
   bool ExposesReturnsTwice;
   bool HasDynamicAlloca;
   bool ContainsNoDuplicateCall;
+  bool HasReturn;
+  bool HasIndirectBr;
 
   /// Number of bytes allocated statically by the callee.
   uint64_t AllocatedSize;
@@ -132,6 +134,12 @@ class CallAnalyzer : public InstVisitor<CallAnalyzer, bool> {
   bool visitExtractValue(ExtractValueInst &I);
   bool visitInsertValue(InsertValueInst &I);
   bool visitCallSite(CallSite CS);
+  bool visitReturnInst(ReturnInst &RI);
+  bool visitBranchInst(BranchInst &BI);
+  bool visitSwitchInst(SwitchInst &SI);
+  bool visitIndirectBrInst(IndirectBrInst &IBI);
+  bool visitResumeInst(ResumeInst &RI);
+  bool visitUnreachableInst(UnreachableInst &I);
 
 public:
   CallAnalyzer(const DataLayout *TD, const TargetTransformInfo &TTI,
@@ -139,12 +147,13 @@ public:
       : TD(TD), TTI(TTI), F(Callee), Threshold(Threshold), Cost(0),
         IsCallerRecursive(false), IsRecursiveCall(false),
         ExposesReturnsTwice(false), HasDynamicAlloca(false),
-        ContainsNoDuplicateCall(false), AllocatedSize(0), NumInstructions(0),
-        NumVectorInstructions(0), FiftyPercentVectorBonus(0),
-        TenPercentVectorBonus(0), VectorBonus(0), NumConstantArgs(0),
-        NumConstantOffsetPtrArgs(0), NumAllocaArgs(0), NumConstantPtrCmps(0),
-        NumConstantPtrDiffs(0), NumInstructionsSimplified(0),
-        SROACostSavings(0), SROACostSavingsLost(0) {}
+        ContainsNoDuplicateCall(false), HasReturn(false), HasIndirectBr(false),
+        AllocatedSize(0), NumInstructions(0), NumVectorInstructions(0),
+        FiftyPercentVectorBonus(0), TenPercentVectorBonus(0), VectorBonus(0),
+        NumConstantArgs(0), NumConstantOffsetPtrArgs(0), NumAllocaArgs(0),
+        NumConstantPtrCmps(0), NumConstantPtrDiffs(0),
+        NumInstructionsSimplified(0), SROACostSavings(0),
+        SROACostSavingsLost(0) {}
 
   bool analyzeCall(CallSite CS);
 
@@ -704,7 +713,7 @@ bool CallAnalyzer::simplifyCallSite(Function *F, CallSite CS) {
 }
 
 bool CallAnalyzer::visitCallSite(CallSite CS) {
-  if (CS.isCall() && cast<CallInst>(CS.getInstruction())->canReturnTwice() &&
+  if (CS.hasFnAttr(Attribute::ReturnsTwice) &&
       !F.getAttributes().hasAttribute(AttributeSet::FunctionIndex,
                                       Attribute::ReturnsTwice)) {
     // This aborts the entire analysis.
@@ -785,6 +794,60 @@ bool CallAnalyzer::visitCallSite(CallSite CS) {
   return Base::visitCallSite(CS);
 }
 
+bool CallAnalyzer::visitReturnInst(ReturnInst &RI) {
+  // At least one return instruction will be free after inlining.
+  bool Free = !HasReturn;
+  HasReturn = true;
+  return Free;
+}
+
+bool CallAnalyzer::visitBranchInst(BranchInst &BI) {
+  // We model unconditional branches as essentially free -- they really
+  // shouldn't exist at all, but handling them makes the behavior of the
+  // inliner more regular and predictable. Interestingly, conditional branches
+  // which will fold away are also free.
+  return BI.isUnconditional() || isa<ConstantInt>(BI.getCondition()) ||
+         dyn_cast_or_null<ConstantInt>(
+             SimplifiedValues.lookup(BI.getCondition()));
+}
+
+bool CallAnalyzer::visitSwitchInst(SwitchInst &SI) {
+  // We model unconditional switches as free, see the comments on handling
+  // branches.
+  return isa<ConstantInt>(SI.getCondition()) ||
+         dyn_cast_or_null<ConstantInt>(
+             SimplifiedValues.lookup(SI.getCondition()));
+}
+
+bool CallAnalyzer::visitIndirectBrInst(IndirectBrInst &IBI) {
+  // We never want to inline functions that contain an indirectbr.  This is
+  // incorrect because all the blockaddress's (in static global initializers
+  // for example) would be referring to the original function, and this
+  // indirect jump would jump from the inlined copy of the function into the
+  // original function which is extremely undefined behavior.
+  // FIXME: This logic isn't really right; we can safely inline functions with
+  // indirectbr's as long as no other function or global references the
+  // blockaddress of a block within the current function.  And as a QOI issue,
+  // if someone is using a blockaddress without an indirectbr, and that
+  // reference somehow ends up in another function or global, we probably don't
+  // want to inline this function.
+  HasIndirectBr = true;
+  return false;
+}
+
+bool CallAnalyzer::visitResumeInst(ResumeInst &RI) {
+  // FIXME: It's not clear that a single instruction is an accurate model for
+  // the inline cost of a resume instruction.
+  return false;
+}
+
+bool CallAnalyzer::visitUnreachableInst(UnreachableInst &I) {
+  // FIXME: It might be reasonably to discount the cost of instructions leading
+  // to unreachable as they have the lowest possible impact on both runtime and
+  // code size.
+  return true; // No actual code is needed for unreachable.
+}
+
 bool CallAnalyzer::visitInstruction(Instruction &I) {
   // Some instructions are free. All of the free intrinsics can also be
   // handled by SROA, etc.
@@ -808,8 +871,17 @@ bool CallAnalyzer::visitInstruction(Instruction &I) {
 /// construct has been detected. It returns false if inlining is no longer
 /// viable, and true if inlining remains viable.
 bool CallAnalyzer::analyzeBlock(BasicBlock *BB) {
-  for (BasicBlock::iterator I = BB->begin(), E = llvm::prior(BB->end());
-       I != E; ++I) {
+  for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E; ++I) {
+    // FIXME: Currently, the number of instructions in a function regardless of
+    // our ability to simplify them during inline to constants or dead code,
+    // are actually used by the vector bonus heuristic. As long as that's true,
+    // we have to special case debug intrinsics here to prevent differences in
+    // inlining due to debug symbols. Eventually, the number of unsimplified
+    // instructions shouldn't factor into the cost computation, but until then,
+    // hack around it here.
+    if (isa<DbgInfoIntrinsic>(I))
+      continue;
+
     ++NumInstructions;
     if (isa<ExtractElementInst>(I) || I->getType()->isVectorTy())
       ++NumVectorInstructions;
@@ -825,7 +897,8 @@ bool CallAnalyzer::analyzeBlock(BasicBlock *BB) {
       Cost += InlineConstants::InstrCost;
 
     // If the visit this instruction detected an uninlinable pattern, abort.
-    if (IsRecursiveCall || ExposesReturnsTwice || HasDynamicAlloca)
+    if (IsRecursiveCall || ExposesReturnsTwice || HasDynamicAlloca ||
+        HasIndirectBr)
       return false;
 
     // If the caller is a recursive function then we don't want to inline
@@ -989,10 +1062,6 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
     }
   }
 
-  // Track whether we've seen a return instruction. The first return
-  // instruction is free, as at least one will usually disappear in inlining.
-  bool HasReturn = false;
-
   // Populate our simplified values by mapping from function arguments to call
   // arguments with known important simplifications.
   CallSite::arg_iterator CAI = CS.arg_begin();
@@ -1039,33 +1108,11 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
     if (BB->empty())
       continue;
 
-    // Handle the terminator cost here where we can track returns and other
-    // function-wide constructs.
-    TerminatorInst *TI = BB->getTerminator();
-
-    // We never want to inline functions that contain an indirectbr.  This is
-    // incorrect because all the blockaddress's (in static global initializers
-    // for example) would be referring to the original function, and this
-    // indirect jump would jump from the inlined copy of the function into the 
-    // original function which is extremely undefined behavior.
-    // FIXME: This logic isn't really right; we can safely inline functions
-    // with indirectbr's as long as no other function or global references the
-    // blockaddress of a block within the current function.  And as a QOI issue,
-    // if someone is using a blockaddress without an indirectbr, and that
-    // reference somehow ends up in another function or global, we probably
-    // don't want to inline this function.
-    if (isa<IndirectBrInst>(TI))
-      return false;
-
-    if (!HasReturn && isa<ReturnInst>(TI))
-      HasReturn = true;
-    else
-      Cost += InlineConstants::InstrCost;
-
     // Analyze the cost of this block. If we blow through the threshold, this
     // returns false, and we can bail on out.
     if (!analyzeBlock(BB)) {
-      if (IsRecursiveCall || ExposesReturnsTwice || HasDynamicAlloca)
+      if (IsRecursiveCall || ExposesReturnsTwice || HasDynamicAlloca ||
+          HasIndirectBr)
         return false;
 
       // If the caller is a recursive function then we don't want to inline
@@ -1077,6 +1124,8 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
 
       break;
     }
+
+    TerminatorInst *TI = BB->getTerminator();
 
     // Add in the live successors by first checking whether we have terminator
     // that may be simplified based on the values simplified by this call.
@@ -1115,7 +1164,7 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
     }
   }
 
-  // If this is a noduplicate call, we can still inline as long as 
+  // If this is a noduplicate call, we can still inline as long as
   // inlining this would cause the removal of the caller (so the instruction
   // is not actually duplicated, just moved).
   if (!OnlyOneCallAndLocalLinkage && ContainsNoDuplicateCall)
@@ -1139,6 +1188,9 @@ void CallAnalyzer::dump() {
   DEBUG_PRINT_STAT(SROACostSavings);
   DEBUG_PRINT_STAT(SROACostSavingsLost);
   DEBUG_PRINT_STAT(ContainsNoDuplicateCall);
+  DEBUG_PRINT_STAT(Cost);
+  DEBUG_PRINT_STAT(Threshold);
+  DEBUG_PRINT_STAT(VectorBonus);
 #undef DEBUG_PRINT_STAT
 }
 #endif
@@ -1204,6 +1256,10 @@ InlineCost InlineCostAnalysis::getInlineCost(CallSite CS, Function *Callee,
   // Never inline functions with conflicting attributes (unless callee has
   // always-inline attribute).
   if (!functionsHaveCompatibleAttributes(CS.getCaller(), Callee))
+    return llvm::InlineCost::getNever();
+
+  // Don't inline this call if the caller has the optnone attribute.
+  if (CS.getCaller()->hasFnAttribute(Attribute::OptimizeNone))
     return llvm::InlineCost::getNever();
 
   // Don't inline functions which can be redefined at link-time to mean

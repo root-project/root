@@ -14,6 +14,7 @@
 #include "TreeTransform.h"
 #include "clang/AST/ASTConsumer.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTLambda.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/Expr.h"
 #include "clang/Basic/LangOptions.h"
@@ -75,8 +76,18 @@ Sema::getTemplateInstantiationArgs(NamedDecl *D,
       // If this variable template specialization was instantiated from a
       // specialized member that is a variable template, we're done.
       assert(Spec->getSpecializedTemplate() && "No variable template?");
-      if (Spec->getSpecializedTemplate()->isMemberSpecialization())
-        return Result;
+      llvm::PointerUnion<VarTemplateDecl*,
+                         VarTemplatePartialSpecializationDecl*> Specialized
+                             = Spec->getSpecializedTemplateOrPartial();
+      if (VarTemplatePartialSpecializationDecl *Partial =
+              Specialized.dyn_cast<VarTemplatePartialSpecializationDecl *>()) {
+        if (Partial->isMemberSpecialization())
+          return Result;
+      } else {
+        VarTemplateDecl *Tmpl = Specialized.get<VarTemplateDecl *>();
+        if (Tmpl->isMemberSpecialization())
+          return Result;
+      }
     }
 
     // If we have a template template parameter with translation unit context,
@@ -130,6 +141,11 @@ Sema::getTemplateInstantiationArgs(NamedDecl *D,
         assert(Function->getPrimaryTemplate() && "No function template?");
         if (Function->getPrimaryTemplate()->isMemberSpecialization())
           break;
+
+        // If this function is a generic lambda specialization, we are done.
+        if (isGenericLambdaCallOperatorSpecialization(Function))
+          break;
+
       } else if (FunctionTemplateDecl *FunTmpl
                                    = Function->getDescribedFunctionTemplate()) {
         // Add the "injected" template arguments.
@@ -911,13 +927,38 @@ namespace {
     }
 
     ExprResult TransformLambdaScope(LambdaExpr *E,
-                                    CXXMethodDecl *CallOperator) {
-      CallOperator->setInstantiationOfMemberFunction(E->getCallOperator(),
-                                                     TSK_ImplicitInstantiation);
-      return TreeTransform<TemplateInstantiator>::
-         TransformLambdaScope(E, CallOperator);
+        CXXMethodDecl *NewCallOperator, 
+        ArrayRef<InitCaptureInfoTy> InitCaptureExprsAndTypes) {
+      CXXMethodDecl *const OldCallOperator = E->getCallOperator();   
+      // In the generic lambda case, we set the NewTemplate to be considered
+      // an "instantiation" of the OldTemplate.
+      if (FunctionTemplateDecl *const NewCallOperatorTemplate = 
+            NewCallOperator->getDescribedFunctionTemplate()) {
+        
+        FunctionTemplateDecl *const OldCallOperatorTemplate = 
+                              OldCallOperator->getDescribedFunctionTemplate();
+        NewCallOperatorTemplate->setInstantiatedFromMemberTemplate(
+                                                     OldCallOperatorTemplate);
+        // Mark the NewCallOperatorTemplate a specialization.  
+        NewCallOperatorTemplate->setMemberSpecialization();
+      } else 
+        // For a non-generic lambda we set the NewCallOperator to 
+        // be an instantiation of the OldCallOperator.
+        NewCallOperator->setInstantiationOfMemberFunction(OldCallOperator,
+                                                    TSK_ImplicitInstantiation);
+      
+      return inherited::TransformLambdaScope(E, NewCallOperator, 
+          InitCaptureExprsAndTypes);
     }
-
+    TemplateParameterList *TransformTemplateParameterList(
+                              TemplateParameterList *OrigTPL)  {
+      if (!OrigTPL || !OrigTPL->size()) return OrigTPL;
+         
+      DeclContext *Owner = OrigTPL->getParam(0)->getDeclContext();
+      TemplateDeclInstantiator  DeclInstantiator(getSema(), 
+                        /* DeclContext *Owner */ Owner, TemplateArgs);
+      return DeclInstantiator.SubstTemplateParams(OrigTPL); 
+    }
   private:
     ExprResult transformNonTypeTemplateParmRef(NonTypeTemplateParmDecl *parm,
                                                SourceLocation loc,
@@ -1599,8 +1640,8 @@ static bool NeedsInstantiationAsFunctionType(TypeSourceInfo *T) {
     return false;
 
   FunctionProtoTypeLoc FP = TL.castAs<FunctionProtoTypeLoc>();
-  for (unsigned I = 0, E = FP.getNumArgs(); I != E; ++I) {
-    ParmVarDecl *P = FP.getArg(I);
+  for (unsigned I = 0, E = FP.getNumParams(); I != E; ++I) {
+    ParmVarDecl *P = FP.getParam(I);
 
     // This must be synthesized from a typedef.
     if (!P) continue;
@@ -1981,7 +2022,7 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
   }
   
   InstantiatingTemplate Inst(*this, PointOfInstantiation, Instantiation);
-  if (Inst)
+  if (Inst.isInvalid())
     return true;
 
   // Enter the scope of this instantiation. We don't use
@@ -2095,16 +2136,14 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
       FieldDecl *NewField = FieldsWithMemberInitializers[I].second;
       Expr *OldInit = OldField->getInClassInitializer();
 
+      ActOnStartCXXInClassMemberInitializer();
       ExprResult NewInit = SubstInitializer(OldInit, TemplateArgs,
                                             /*CXXDirectInit=*/false);
-      if (NewInit.isInvalid())
-        NewField->setInvalidDecl();
-      else {
-        Expr *Init = NewInit.take();
-        assert(Init && "no-argument initializer in class");
-        assert(!isa<ParenListExpr>(Init) && "call-style init in class");
-        ActOnCXXInClassMemberInitializer(NewField, Init->getLocStart(), Init);
-      }
+      Expr *Init = NewInit.take();
+      assert((!Init || !isa<ParenListExpr>(Init)) &&
+             "call-style init in class");
+      ActOnFinishCXXInClassMemberInitializer(NewField, Init->getLocStart(),
+                                             Init);
     }
   }
   // Instantiate late parsed attributes, and attach them to their decls.
@@ -2218,7 +2257,7 @@ bool Sema::InstantiateEnum(SourceLocation PointOfInstantiation,
   }
 
   InstantiatingTemplate Inst(*this, PointOfInstantiation, Instantiation);
-  if (Inst)
+  if (Inst.isInvalid())
     return true;
 
   // Enter the scope of this instantiation. We don't use
@@ -2325,8 +2364,7 @@ bool Sema::InstantiateClassTemplateSpecialization(
   // If we're dealing with a member template where the template parameters
   // have been instantiated, this provides the original template parameters
   // from which the member template's parameters were instantiated.
-  SmallVector<const NamedDecl *, 4> InstantiatedTemplateParameters;
-  
+
   if (Matched.size() >= 1) {
     SmallVectorImpl<MatchResult>::iterator Best = Matched.begin();
     if (Matched.size() == 1) {
@@ -2438,6 +2476,11 @@ Sema::InstantiateClassMembers(SourceLocation PointOfInstantiation,
                               CXXRecordDecl *Instantiation,
                         const MultiLevelTemplateArgumentList &TemplateArgs,
                               TemplateSpecializationKind TSK) {
+  assert(
+      (TSK == TSK_ExplicitInstantiationDefinition ||
+       TSK == TSK_ExplicitInstantiationDeclaration ||
+       (TSK == TSK_ImplicitInstantiation && Instantiation->isLocalClass())) &&
+      "Unexpected template specialization kind!");
   for (DeclContext::decl_iterator D = Instantiation->decls_begin(),
                                DEnd = Instantiation->decls_end();
        D != DEnd; ++D) {
@@ -2478,9 +2521,15 @@ Sema::InstantiateClassMembers(SourceLocation PointOfInstantiation,
           InstantiateFunctionDefinition(PointOfInstantiation, Function);
         } else {
           Function->setTemplateSpecializationKind(TSK, PointOfInstantiation);
+          if (TSK == TSK_ImplicitInstantiation)
+            PendingLocalImplicitInstantiations.push_back(
+                std::make_pair(Function, PointOfInstantiation));
         }
       }
     } else if (VarDecl *Var = dyn_cast<VarDecl>(*D)) {
+      if (isa<VarTemplateSpecializationDecl>(Var))
+        continue;
+
       if (Var->isStaticDataMember()) {
         MemberSpecializationInfo *MSInfo = Var->getMemberSpecializationInfo();
         assert(MSInfo && "No member specialization information?");

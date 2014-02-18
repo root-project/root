@@ -31,14 +31,8 @@ namespace CodeGen {
 class CodeGenVTables {
   CodeGenModule &CGM;
 
-  // FIXME: Consider moving VTContext and VFTContext into respective CXXABI
-  // classes?
-  VTableContext VTContext;
-  OwningPtr<MicrosoftVFTableContext> VFTContext;
+  VTableContextBase *VTContext;
 
-  /// VTables - All the vtables which have been defined.
-  llvm::DenseMap<const CXXRecordDecl *, llvm::GlobalVariable *> VTables;
-  
   /// VTableAddressPointsMapTy - Address points for a single vtable.
   typedef llvm::DenseMap<BaseSubobject, uint64_t> VTableAddressPointsMapTy;
 
@@ -55,16 +49,14 @@ class CodeGenVTables {
   /// indices.
   SecondaryVirtualPointerIndicesMapTy SecondaryVirtualPointerIndices;
 
-  /// EmitThunk - Emit a single thunk.
-  void EmitThunk(GlobalDecl GD, const ThunkInfo &Thunk, 
-                 bool UseAvailableExternallyLinkage);
+  /// emitThunk - Emit a single thunk.
+  void emitThunk(GlobalDecl GD, const ThunkInfo &Thunk, bool ForVTable);
 
-  /// MaybeEmitThunkAvailableExternally - Try to emit the given thunk with
-  /// available_externally linkage to allow for inlining of thunks.
-  /// This will be done iff optimizations are enabled and the member function
-  /// doesn't contain any incomplete types.
-  void MaybeEmitThunkAvailableExternally(GlobalDecl GD, const ThunkInfo &Thunk);
+  /// maybeEmitThunkForVTable - Emit the given thunk for the vtable if needed by
+  /// the ABI.
+  void maybeEmitThunkForVTable(GlobalDecl GD, const ThunkInfo &Thunk);
 
+public:
   /// CreateVTableInitializer - Create a vtable initializer for the given record
   /// decl.
   /// \param Components - The vtable components; this is really an array of
@@ -75,12 +67,15 @@ class CodeGenVTables {
                                 const VTableLayout::VTableThunkTy *VTableThunks,
                                           unsigned NumVTableThunks);
 
-public:
   CodeGenVTables(CodeGenModule &CGM);
 
-  VTableContext &getVTableContext() { return VTContext; }
+  ItaniumVTableContext &getItaniumVTableContext() {
+    return *cast<ItaniumVTableContext>(VTContext);
+  }
 
-  MicrosoftVFTableContext &getVFTableContext() { return *VFTContext.get(); }
+  MicrosoftVTableContext &getMicrosoftVTableContext() {
+    return *cast<MicrosoftVTableContext>(VTContext);
+  }
 
   /// getSubVTTIndex - Return the index of the sub-VTT for the base class of the
   /// given record decl.
@@ -94,14 +89,6 @@ public:
   /// getAddressPoint - Get the address point of the given subobject in the
   /// class decl.
   uint64_t getAddressPoint(BaseSubobject Base, const CXXRecordDecl *RD);
-  
-  /// GetAddrOfVTable - Get the address of the vtable for the given record decl.
-  llvm::GlobalVariable *GetAddrOfVTable(const CXXRecordDecl *RD);
-
-  /// EmitVTableDefinition - Emit the definition of the given vtable.
-  void EmitVTableDefinition(llvm::GlobalVariable *VTable,
-                            llvm::GlobalVariable::LinkageTypes Linkage,
-                            const CXXRecordDecl *RD);
   
   /// GenerateConstructionVTable - Generate a construction vtable for the given 
   /// base subobject.

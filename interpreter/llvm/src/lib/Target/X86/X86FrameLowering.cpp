@@ -50,7 +50,7 @@ bool X86FrameLowering::hasFP(const MachineFunction &MF) const {
   return (MF.getTarget().Options.DisableFramePointerElim(MF) ||
           RegInfo->needsStackRealignment(MF) ||
           MFI->hasVarSizedObjects() ||
-          MFI->isFrameAddressTaken() || MF.hasMSInlineAsm() ||
+          MFI->isFrameAddressTaken() || MFI->hasInlineAsmWithSPAdjust() ||
           MF.getInfo<X86MachineFunctionInfo>()->getForceFramePointer() ||
           MMI.callsUnwindInit() || MMI.callsEHReturn());
 }
@@ -107,8 +107,10 @@ static unsigned findDeadCallerSavedReg(MachineBasicBlock &MBB,
   unsigned Opc = MBBI->getOpcode();
   switch (Opc) {
   default: return 0;
-  case X86::RET:
-  case X86::RETI:
+  case X86::RETL:
+  case X86::RETQ:
+  case X86::RETIL:
+  case X86::RETIQ:
   case X86::TCRETURNdi:
   case X86::TCRETURNri:
   case X86::TCRETURNmi:
@@ -606,16 +608,14 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF) const {
   // responsible for adjusting the stack pointer.  Touching the stack at 4K
   // increments is necessary to ensure that the guard pages used by the OS
   // virtual memory manager are allocated in correct sequence.
-  if (NumBytes >= 4096 && STI.isTargetCOFF() && !STI.isTargetEnvMacho()) {
+  if (NumBytes >= 4096 && STI.isOSWindows() && !STI.isTargetMacho()) {
     const char *StackProbeSymbol;
-    bool isSPUpdateNeeded = false;
 
     if (Is64Bit) {
-      if (STI.isTargetCygMing())
-        StackProbeSymbol = "___chkstk";
-      else {
+      if (STI.isTargetCygMing()) {
+        StackProbeSymbol = "___chkstk_ms";
+      } else {
         StackProbeSymbol = "__chkstk";
-        isSPUpdateNeeded = true;
       }
     } else if (STI.isTargetCygMing())
       StackProbeSymbol = "_alloca";
@@ -657,15 +657,15 @@ void X86FrameLowering::emitPrologue(MachineFunction &MF) const {
       .addReg(X86::EFLAGS, RegState::Define | RegState::Implicit)
       .setMIFlag(MachineInstr::FrameSetup);
 
-    // MSVC x64's __chkstk does not adjust %rsp itself.
-    // It also does not clobber %rax so we can reuse it when adjusting %rsp.
-    if (isSPUpdateNeeded) {
+    if (Is64Bit) {
+      // MSVC x64's __chkstk and cygwin/mingw's ___chkstk_ms do not adjust %rsp
+      // themself. It also does not clobber %rax so we can reuse it when
+      // adjusting %rsp.
       BuildMI(MBB, MBBI, DL, TII.get(X86::SUB64rr), StackPtr)
         .addReg(StackPtr)
         .addReg(X86::RAX)
         .setMIFlag(MachineInstr::FrameSetup);
     }
-
     if (isEAXAlive) {
         // Restore EAX
         MachineInstr *MI = addRegOffset(BuildMI(MF, DL, TII.get(X86::MOV32rm),
@@ -730,8 +730,10 @@ void X86FrameLowering::emitEpilogue(MachineFunction &MF,
   switch (RetOpcode) {
   default:
     llvm_unreachable("Can only insert epilog into returning blocks");
-  case X86::RET:
-  case X86::RETI:
+  case X86::RETQ:
+  case X86::RETL:
+  case X86::RETIL:
+  case X86::RETIQ:
   case X86::TCRETURNdi:
   case X86::TCRETURNri:
   case X86::TCRETURNmi:
@@ -888,7 +890,8 @@ void X86FrameLowering::emitEpilogue(MachineFunction &MF,
 
     // Delete the pseudo instruction TCRETURN.
     MBB.erase(MBBI);
-  } else if ((RetOpcode == X86::RET || RetOpcode == X86::RETI) &&
+  } else if ((RetOpcode == X86::RETQ || RetOpcode == X86::RETL ||
+              RetOpcode == X86::RETIQ || RetOpcode == X86::RETIL) &&
              (X86FI->getTCReturnAddrDelta() < 0)) {
     // Add the return addr area delta back since we are not tail calling.
     int delta = -1*X86FI->getTCReturnAddrDelta();

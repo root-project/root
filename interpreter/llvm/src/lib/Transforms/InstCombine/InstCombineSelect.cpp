@@ -367,7 +367,7 @@ static Value *foldSelectICmpAndOr(const SelectInst &SI, Value *TrueVal,
                                   Value *FalseVal,
                                   InstCombiner::BuilderTy *Builder) {
   const ICmpInst *IC = dyn_cast<ICmpInst>(SI.getCondition());
-  if (!IC || !IC->isEquality())
+  if (!IC || !IC->isEquality() || !SI.getType()->isIntegerTy())
     return 0;
 
   Value *CmpLHS = IC->getOperand(0);
@@ -901,6 +901,11 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
             Value *NegVal;  // Compute -Z
             if (SI.getType()->isFPOrFPVectorTy()) {
               NegVal = Builder->CreateFNeg(SubOp->getOperand(1));
+              if (Instruction *NegInst = dyn_cast<Instruction>(NegVal)) {
+                FastMathFlags Flags = AddOp->getFastMathFlags();
+                Flags &= SubOp->getFastMathFlags();
+                NegInst->setFastMathFlags(Flags);
+              }
             } else {
               NegVal = Builder->CreateNeg(SubOp->getOperand(1));
             }
@@ -913,9 +918,15 @@ Instruction *InstCombiner::visitSelectInst(SelectInst &SI) {
               Builder->CreateSelect(CondVal, NewTrueOp,
                                     NewFalseOp, SI.getName() + ".p");
 
-            if (SI.getType()->isFPOrFPVectorTy())
-              return BinaryOperator::CreateFAdd(SubOp->getOperand(0), NewSel);
-            else
+            if (SI.getType()->isFPOrFPVectorTy()) {
+              Instruction *RI =
+                BinaryOperator::CreateFAdd(SubOp->getOperand(0), NewSel);
+
+              FastMathFlags Flags = AddOp->getFastMathFlags();
+              Flags &= SubOp->getFastMathFlags();
+              RI->setFastMathFlags(Flags);
+              return RI;
+            } else
               return BinaryOperator::CreateAdd(SubOp->getOperand(0), NewSel);
           }
         }

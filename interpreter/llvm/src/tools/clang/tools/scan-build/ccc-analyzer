@@ -29,6 +29,7 @@ my $Compiler;
 my $Clang;
 my $DefaultCCompiler;
 my $DefaultCXXCompiler;
+my $IsCXX;
 
 if (`uname -a` =~ m/Darwin/) { 
   $DefaultCCompiler = 'clang';
@@ -44,6 +45,8 @@ if ($FindBin::Script =~ /c\+\+-analyzer/) {
   
   $Clang = $ENV{'CLANG_CXX'};
   if (!defined $Clang) { $Clang = 'clang++'; }
+
+  $IsCXX = 1
 }
 else {
   $Compiler = $ENV{'CCC_CC'};
@@ -51,6 +54,8 @@ else {
 
   $Clang = $ENV{'CLANG'};
   if (!defined $Clang) { $Clang = 'clang'; }
+
+  $IsCXX = 0
 }
 
 ##===----------------------------------------------------------------------===##
@@ -153,9 +158,8 @@ sub GetCCArgs {
   close(FROM_CHILD);
   
   die "could not find clang line\n" if (!defined $line);
-  # Strip the newline and initial whitspace
-  chomp $line;
-  $line =~ s/^\s+//;
+  # Strip leading and trailing whitespace characters.
+  $line =~ s/^\s+|\s+$//g;
   my @items = quotewords('\s+', 0, $line);
   my $cmd = shift @items;
   die "cannot find 'clang' in 'clang' command\n" if (!($cmd =~ /clang/));
@@ -377,18 +381,19 @@ my %IgnoredOptionMap = (
 );
 
 my %LangMap = (
-  'c'   => 'c',
+  'c'   => $IsCXX ? 'c++' : 'c',
   'cp'  => 'c++',
   'cpp' => 'c++',
   'cxx' => 'c++',
   'txx' => 'c++',
   'cc'  => 'c++',
   'C'   => 'c++',
-  'ii'  => 'c++',
-  'i'   => 'c-cpp-output',
+  'ii'  => 'c++-cpp-output',
+  'i'   => $IsCXX ? 'c++-cpp-output' : 'c-cpp-output',
   'm'   => 'objective-c',
   'mi'  => 'objective-c-cpp-output',
-  'mm'  => 'objective-c++'
+  'mm'  => 'objective-c++',
+  'mii' => 'objective-c++-cpp-output',
 );
 
 my %UniqueOptions = (
@@ -444,6 +449,9 @@ my $InternalStats = $ENV{'CCC_ANALYZER_INTERNAL_STATS'};
 my $OutputFormat = $ENV{'CCC_ANALYZER_OUTPUT_FORMAT'};
 if (!defined $OutputFormat) { $OutputFormat = "html"; }
 
+# Get the config options.
+my $ConfigOptions = $ENV{'CCC_ANALYZER_CONFIG'};
+
 # Determine the level of verbosity.
 my $Verbose = 0;
 if (defined $ENV{'CCC_ANALYZER_VERBOSE'}) { $Verbose = 1; }
@@ -482,10 +490,6 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
     my $Cnt = $CompileOptionMap{$ArgKey};
     push @CompileOpts,$Arg;
     while ($Cnt > 0) { ++$i; --$Cnt; push @CompileOpts, $ARGV[$i]; }
-    next;
-  }
-  if ($Arg =~ /-m.*/) {
-    push @CompileOpts,$Arg;
     next;
   }
   # Handle the case where there isn't a space after -iquote
@@ -546,6 +550,11 @@ foreach (my $i = 0; $i < scalar(@ARGV); ++$i) {
       $Tmp = $Arg . $ARGV[$i];
     }
     push @CompileOpts,$Tmp;
+    next;
+  }
+  
+  if ($Arg =~ /-m.*/) {
+    push @CompileOpts,$Arg;
     next;
   }
   
@@ -676,11 +685,14 @@ if ($Action eq 'compile' or $Action eq 'link') {
         my ($h, $f) = tempfile("report-XXXXXX", SUFFIX => ".plist",
                                DIR => $HtmlDir);
         $ResultFile = $f;
-        # If the HtmlDir is not set, we sould clean up the plist files.
+        # If the HtmlDir is not set, we should clean up the plist files.
         if (!defined $HtmlDir || -z $HtmlDir) {
           $CleanupFile = $f;
         }
       }
+    }
+    if (defined $ConfigOptions) {
+      push @AnalyzeArgs, split '\s+', $ConfigOptions;
     }
 
     push @CmdArgs, @CompileOpts;

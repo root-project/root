@@ -140,10 +140,13 @@ static bool hasImplicitExceptionSpec(FunctionDecl *Decl) {
       Decl->getDeclName().getCXXOverloadedOperator() != OO_Array_Delete)
     return false;
 
-  // If the user didn't declare the function, its exception specification must
-  // be implicit.
+  // For a function that the user didn't declare:
+  //  - if this is a destructor, its exception specification is implicit.
+  //  - if this is 'operator delete' or 'operator delete[]', the exception
+  //    specification is as-if an explicit exception specification was given
+  //    (per [basic.stc.dynamic]p2).
   if (!Decl->getTypeSourceInfo())
-    return true;
+    return isa<CXXDestructorDecl>(Decl);
 
   const FunctionProtoType *Ty =
     Decl->getTypeSourceInfo()->getType()->getAs<FunctionProtoType>();
@@ -155,9 +158,13 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
   bool IsOperatorNew = OO == OO_New || OO == OO_Array_New;
   bool MissingExceptionSpecification = false;
   bool MissingEmptyExceptionSpecification = false;
+
   unsigned DiagID = diag::err_mismatched_exception_spec;
-  if (getLangOpts().MicrosoftExt)
+  bool ReturnValueOnError = true;
+  if (getLangOpts().MicrosoftExt) {
     DiagID = diag::warn_mismatched_exception_spec; 
+    ReturnValueOnError = false;
+  }
 
   // Check the types as written: they must match before any exception
   // specification adjustment is applied.
@@ -182,9 +189,9 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
   }
 
   // The failure was something other than an missing exception
-  // specification; return an error.
+  // specification; return an error, except in MS mode where this is a warning.
   if (!MissingExceptionSpecification)
-    return true;
+    return ReturnValueOnError;
 
   const FunctionProtoType *NewProto =
     New->getType()->castAs<FunctionProtoType>();
@@ -203,8 +210,8 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
       Old->isExternC()) {
     FunctionProtoType::ExtProtoInfo EPI = NewProto->getExtProtoInfo();
     EPI.ExceptionSpecType = EST_DynamicNone;
-    QualType NewType = Context.getFunctionType(NewProto->getResultType(),
-                                               NewProto->getArgTypes(), EPI);
+    QualType NewType = Context.getFunctionType(NewProto->getReturnType(),
+                                               NewProto->getParamTypes(), EPI);
     New->setType(NewType);
     return false;
   }
@@ -224,8 +231,8 @@ bool Sema::CheckEquivalentExceptionSpec(FunctionDecl *Old, FunctionDecl *New) {
 
   // Update the type of the function with the appropriate exception
   // specification.
-  QualType NewType = Context.getFunctionType(NewProto->getResultType(),
-                                             NewProto->getArgTypes(), EPI);
+  QualType NewType = Context.getFunctionType(NewProto->getReturnType(),
+                                             NewProto->getParamTypes(), EPI);
   New->setType(NewType);
 
   // Warn about the lack of exception specification.
@@ -302,10 +309,14 @@ bool Sema::CheckEquivalentExceptionSpec(
     const FunctionProtoType *New, SourceLocation NewLoc) {
   unsigned DiagID = diag::err_mismatched_exception_spec;
   if (getLangOpts().MicrosoftExt)
-    DiagID = diag::warn_mismatched_exception_spec; 
-  return CheckEquivalentExceptionSpec(PDiag(DiagID),
-                                      PDiag(diag::note_previous_declaration),
-                                      Old, OldLoc, New, NewLoc);
+    DiagID = diag::warn_mismatched_exception_spec;
+  bool Result = CheckEquivalentExceptionSpec(PDiag(DiagID),
+      PDiag(diag::note_previous_declaration), Old, OldLoc, New, NewLoc);
+
+  // In Microsoft mode, mismatching exception specifications just cause a warning.
+  if (getLangOpts().MicrosoftExt)
+    return false;
+  return Result;
 }
 
 /// CheckEquivalentExceptionSpec - Check if the two types have compatible
@@ -711,23 +722,21 @@ bool Sema::CheckParamExceptionSpec(const PartialDiagnostic & NoteID,
     const FunctionProtoType *Target, SourceLocation TargetLoc,
     const FunctionProtoType *Source, SourceLocation SourceLoc)
 {
-  if (CheckSpecForTypesEquivalent(*this,
-                           PDiag(diag::err_deep_exception_specs_differ) << 0, 
-                                  PDiag(),
-                                  Target->getResultType(), TargetLoc,
-                                  Source->getResultType(), SourceLoc))
+  if (CheckSpecForTypesEquivalent(
+          *this, PDiag(diag::err_deep_exception_specs_differ) << 0, PDiag(),
+          Target->getReturnType(), TargetLoc, Source->getReturnType(),
+          SourceLoc))
     return true;
 
   // We shouldn't even be testing this unless the arguments are otherwise
   // compatible.
-  assert(Target->getNumArgs() == Source->getNumArgs() &&
+  assert(Target->getNumParams() == Source->getNumParams() &&
          "Functions have different argument counts.");
-  for (unsigned i = 0, E = Target->getNumArgs(); i != E; ++i) {
-    if (CheckSpecForTypesEquivalent(*this,
-                           PDiag(diag::err_deep_exception_specs_differ) << 1, 
-                                    PDiag(),
-                                    Target->getArgType(i), TargetLoc,
-                                    Source->getArgType(i), SourceLoc))
+  for (unsigned i = 0, E = Target->getNumParams(); i != E; ++i) {
+    if (CheckSpecForTypesEquivalent(
+            *this, PDiag(diag::err_deep_exception_specs_differ) << 1, PDiag(),
+            Target->getParamType(i), TargetLoc, Source->getParamType(i),
+            SourceLoc))
       return true;
   }
   return false;
@@ -1063,7 +1072,6 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::AddrLabelExprClass:
   case Expr::ArrayTypeTraitExprClass:
   case Expr::AtomicExprClass:
-  case Expr::BinaryTypeTraitExprClass:
   case Expr::TypeTraitExprClass:
   case Expr::CXXBoolLiteralExprClass:
   case Expr::CXXNoexceptExprClass:
@@ -1086,7 +1094,6 @@ CanThrowResult Sema::canThrow(const Expr *E) {
   case Expr::PredefinedExprClass:
   case Expr::SizeOfPackExprClass:
   case Expr::StringLiteralClass:
-  case Expr::UnaryTypeTraitExprClass:
     // These expressions can never throw.
     return CT_Cannot;
 

@@ -63,6 +63,10 @@ private:
   /// \brief Select constant vector splats whose value fits in a given integer.
   virtual bool selectVSplatCommon(SDValue N, SDValue &Imm, bool Signed,
                                   unsigned ImmBitSize) const;
+  /// \brief Select constant vector splats whose value fits in a uimm1.
+  virtual bool selectVSplatUimm1(SDValue N, SDValue &Imm) const;
+  /// \brief Select constant vector splats whose value fits in a uimm2.
+  virtual bool selectVSplatUimm2(SDValue N, SDValue &Imm) const;
   /// \brief Select constant vector splats whose value fits in a uimm3.
   virtual bool selectVSplatUimm3(SDValue N, SDValue &Imm) const;
   /// \brief Select constant vector splats whose value fits in a uimm4.
@@ -77,6 +81,15 @@ private:
   virtual bool selectVSplatSimm5(SDValue N, SDValue &Imm) const;
   /// \brief Select constant vector splats whose value is a power of 2.
   virtual bool selectVSplatUimmPow2(SDValue N, SDValue &Imm) const;
+  /// \brief Select constant vector splats whose value is the inverse of a
+  /// power of 2.
+  virtual bool selectVSplatUimmInvPow2(SDValue N, SDValue &Imm) const;
+  /// \brief Select constant vector splats whose value is a run of set bits
+  /// ending at the most significant bit
+  virtual bool selectVSplatMaskL(SDValue N, SDValue &Imm) const;
+  /// \brief Select constant vector splats whose value is a run of set bits
+  /// starting at bit zero.
+  virtual bool selectVSplatMaskR(SDValue N, SDValue &Imm) const;
 
   virtual std::pair<bool, SDNode*> selectNode(SDNode *Node);
 

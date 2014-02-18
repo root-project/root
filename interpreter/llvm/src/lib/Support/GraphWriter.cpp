@@ -87,8 +87,7 @@ ExecGraphViewer(StringRef ExecPath, std::vector<const char*> &args,
       errs() << "Error: " << ErrMsg << "\n";
       return false;
     }
-    bool Existed;
-    sys::fs::remove(Filename, Existed);
+    sys::fs::remove(Filename);
     errs() << " done. \n";
   }
   else {
@@ -219,5 +218,8 @@ void llvm::DisplayGraph(StringRef FilenameRef, bool wait,
   errs() << "Running 'dotty' program... ";
   if (!ExecGraphViewer(dotty, args, Filename, wait, ErrMsg))
     return;
+#else
+  (void)Filename;
+  (void)ErrMsg;
 #endif
 }

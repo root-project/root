@@ -14,6 +14,8 @@
 //===----------------------------------------------------------------------===//
 // ARM Instruction Predicate Definitions.
 //
+def HasFPARMv8       : Predicate<"Subtarget->hasFPARMv8()">,
+                               AssemblerPredicate<"FeatureFPARMv8", "fp-armv8">;
 def HasNEON          : Predicate<"Subtarget->hasNEON()">,
                                  AssemblerPredicate<"FeatureNEON", "neon">;
 def HasCrypto        : Predicate<"Subtarget->hasCrypto()">,
@@ -23,6 +25,15 @@ def HasCrypto        : Predicate<"Subtarget->hasCrypto()">,
 def UseFusedMAC      : Predicate<"(TM.Options.AllowFPOpFusion =="
                                  " FPOpFusion::Fast)">;
 include "AArch64InstrFormats.td"
+
+//===----------------------------------------------------------------------===//
+//  AArch64 specific pattern fragments.
+//
+// An 'fmul' node with a single use.
+def fmul_su : PatFrag<(ops node:$lhs, node:$rhs), (fmul node:$lhs, node:$rhs),[{
+  return N->hasOneUse();
+}]>;
+
 
 //===----------------------------------------------------------------------===//
 // Target-specific ISD nodes and profiles
@@ -1276,7 +1287,7 @@ def : Pat<(i64 (sext_inreg (anyext i32:$Rn), i1)),
 
 // UBFX makes sense as an implementation of a 64-bit zero-extension too. Could
 // use either 64-bit or 32-bit variant, but 32-bit might be more efficient.
-def : Pat<(zext i32:$Rn), (SUBREG_TO_REG (i64 0), (UBFXwwii $Rn, 0, 31),
+def : Pat<(i64 (zext i32:$Rn)), (SUBREG_TO_REG (i64 0), (UBFXwwii $Rn, 0, 31),
                                          sub_32)>;
 
 //===-------------------------------
@@ -1980,6 +1991,13 @@ def fpz64 : Operand<f64>,
   let DecoderMethod = "DecodeFPZeroOperand";
 }
 
+def fpz64movi : Operand<i64>,
+            ComplexPattern<f64, 1, "SelectFPZeroOperand", [fpimm]> {
+  let ParserMatchClass = fpzero_asmoperand;
+  let PrintMethod = "printFPZeroOperand";
+  let DecoderMethod = "DecodeFPZeroOperand";
+}
+
 multiclass A64I_fpcmpSignal<bits<2> type, bit imm, dag ins, dag pattern> {
   def _quiet : A64I_fpcmp<0b0, 0b0, type, 0b00, {0b0, imm, 0b0, 0b0, 0b0},
                           (outs), ins, "fcmp\t$Rn, $Rm", [pattern],
@@ -2163,9 +2181,9 @@ defm FSUB : A64I_fpdp2sizes<0b0011, "fsub", fsub>;
 
 def fmsub : PatFrag<(ops node:$Rn, node:$Rm, node:$Ra),
                     (fma (fneg node:$Rn),  node:$Rm, node:$Ra)>;
-def fnmadd : PatFrag<(ops node:$Rn, node:$Rm, node:$Ra),
-                     (fma node:$Rn,  node:$Rm, (fneg node:$Ra))>;
 def fnmsub : PatFrag<(ops node:$Rn, node:$Rm, node:$Ra),
+                     (fma node:$Rn,  node:$Rm, (fneg node:$Ra))>;
+def fnmadd : PatFrag<(ops node:$Rn, node:$Rm, node:$Ra),
                      (fma (fneg node:$Rn),  node:$Rm, (fneg node:$Ra))>;
 
 class A64I_fpdp3Impl<string asmop, RegisterClass FPR, ValueType VT,
@@ -2188,23 +2206,23 @@ def FNMSUBdddd : A64I_fpdp3Impl<"fnmsub", FPR64, f64, 0b01, 0b1, 0b1, fnmsub>;
 
 // Extra patterns for when we're allowed to optimise separate multiplication and
 // addition.
-let Predicates = [UseFusedMAC] in {
-def : Pat<(f32 (fadd FPR32:$Ra, (f32 (fmul FPR32:$Rn, FPR32:$Rm)))),
+let Predicates = [HasFPARMv8, UseFusedMAC] in {
+def : Pat<(f32 (fadd FPR32:$Ra, (f32 (fmul_su FPR32:$Rn, FPR32:$Rm)))),
           (FMADDssss FPR32:$Rn, FPR32:$Rm, FPR32:$Ra)>;
-def : Pat<(f32 (fsub FPR32:$Ra, (f32 (fmul FPR32:$Rn, FPR32:$Rm)))),
+def : Pat<(f32 (fsub FPR32:$Ra, (f32 (fmul_su FPR32:$Rn, FPR32:$Rm)))),
           (FMSUBssss FPR32:$Rn, FPR32:$Rm, FPR32:$Ra)>;
-def : Pat<(f32 (fsub (f32 (fmul FPR32:$Rn, FPR32:$Rm)), FPR32:$Ra)),
+def : Pat<(f32 (fsub (f32 (fneg FPR32:$Ra)), (f32 (fmul_su FPR32:$Rn, FPR32:$Rm)))),
           (FNMADDssss FPR32:$Rn, FPR32:$Rm, FPR32:$Ra)>;
-def : Pat<(f32 (fsub (f32 (fneg FPR32:$Ra)), (f32 (fmul FPR32:$Rn, FPR32:$Rm)))),
+def : Pat<(f32 (fsub (f32 (fmul_su FPR32:$Rn, FPR32:$Rm)), FPR32:$Ra)),
           (FNMSUBssss FPR32:$Rn, FPR32:$Rm, FPR32:$Ra)>;
 
-def : Pat<(f64 (fadd FPR64:$Ra, (f64 (fmul FPR64:$Rn, FPR64:$Rm)))),
+def : Pat<(f64 (fadd FPR64:$Ra, (f64 (fmul_su FPR64:$Rn, FPR64:$Rm)))),
           (FMADDdddd FPR64:$Rn, FPR64:$Rm, FPR64:$Ra)>;
-def : Pat<(f64 (fsub FPR64:$Ra, (f64 (fmul FPR64:$Rn, FPR64:$Rm)))),
+def : Pat<(f64 (fsub FPR64:$Ra, (f64 (fmul_su FPR64:$Rn, FPR64:$Rm)))),
           (FMSUBdddd FPR64:$Rn, FPR64:$Rm, FPR64:$Ra)>;
-def : Pat<(f64 (fsub (f64 (fmul FPR64:$Rn, FPR64:$Rm)), FPR64:$Ra)),
+def : Pat<(f64 (fsub (f64 (fneg FPR64:$Ra)), (f64 (fmul_su FPR64:$Rn, FPR64:$Rm)))),
           (FNMADDdddd FPR64:$Rn, FPR64:$Rm, FPR64:$Ra)>;
-def : Pat<(f64 (fsub (f64 (fneg FPR64:$Ra)), (f64 (fmul FPR64:$Rn, FPR64:$Rm)))),
+def : Pat<(f64 (fsub (f64 (fmul_su FPR64:$Rn, FPR64:$Rm)), FPR64:$Ra)),
           (FNMSUBdddd FPR64:$Rn, FPR64:$Rm, FPR64:$Ra)>;
 }
 
@@ -2344,6 +2362,7 @@ defm FCVTM : A64I_fptointRM<0b10, 0b0, "fcvtm">;
 defm FCVTZ : A64I_fptointRM<0b11, 0b0, "fcvtz">;
 defm FCVTA : A64I_fptointRM<0b00, 0b1, "fcvta">;
 
+let Predicates = [HasFPARMv8] in {
 def : Pat<(i32 (fp_to_sint f32:$Rn)), (FCVTZSws $Rn)>;
 def : Pat<(i64 (fp_to_sint f32:$Rn)), (FCVTZSxs $Rn)>;
 def : Pat<(i32 (fp_to_uint f32:$Rn)), (FCVTZUws $Rn)>;
@@ -2352,6 +2371,7 @@ def : Pat<(i32 (fp_to_sint f64:$Rn)), (FCVTZSwd $Rn)>;
 def : Pat<(i64 (fp_to_sint f64:$Rn)), (FCVTZSxd $Rn)>;
 def : Pat<(i32 (fp_to_uint f64:$Rn)), (FCVTZUwd $Rn)>;
 def : Pat<(i64 (fp_to_uint f64:$Rn)), (FCVTZUxd $Rn)>;
+}
 
 multiclass A64I_inttofp<bit o0, string asmop> {
   def CVTFsw : A64I_fpintI<0b0, 0b00, 0b00, {0, 1, o0}, FPR32, GPR32, asmop>;
@@ -2363,6 +2383,7 @@ multiclass A64I_inttofp<bit o0, string asmop> {
 defm S : A64I_inttofp<0b0, "scvtf">;
 defm U : A64I_inttofp<0b1, "ucvtf">;
 
+let Predicates = [HasFPARMv8] in {
 def : Pat<(f32 (sint_to_fp i32:$Rn)), (SCVTFsw $Rn)>;
 def : Pat<(f32 (sint_to_fp i64:$Rn)), (SCVTFsx $Rn)>;
 def : Pat<(f64 (sint_to_fp i32:$Rn)), (SCVTFdw $Rn)>;
@@ -2371,16 +2392,19 @@ def : Pat<(f32 (uint_to_fp i32:$Rn)), (UCVTFsw $Rn)>;
 def : Pat<(f32 (uint_to_fp i64:$Rn)), (UCVTFsx $Rn)>;
 def : Pat<(f64 (uint_to_fp i32:$Rn)), (UCVTFdw $Rn)>;
 def : Pat<(f64 (uint_to_fp i64:$Rn)), (UCVTFdx $Rn)>;
+}
 
 def FMOVws : A64I_fpintI<0b0, 0b00, 0b00, 0b110, GPR32, FPR32, "fmov">;
 def FMOVsw : A64I_fpintI<0b0, 0b00, 0b00, 0b111, FPR32, GPR32, "fmov">;
 def FMOVxd : A64I_fpintI<0b1, 0b01, 0b00, 0b110, GPR64, FPR64, "fmov">;
 def FMOVdx : A64I_fpintI<0b1, 0b01, 0b00, 0b111, FPR64, GPR64, "fmov">;
 
+let Predicates = [HasFPARMv8] in {
 def : Pat<(i32 (bitconvert f32:$Rn)), (FMOVws $Rn)>;
 def : Pat<(f32 (bitconvert i32:$Rn)), (FMOVsw $Rn)>;
 def : Pat<(i64 (bitconvert f64:$Rn)), (FMOVxd $Rn)>;
 def : Pat<(f64 (bitconvert i64:$Rn)), (FMOVdx $Rn)>;
+}
 
 def lane1_asmoperand : AsmOperandClass {
   let Name = "Lane1";
@@ -2403,11 +2427,13 @@ let DecoderMethod =  "DecodeFMOVLaneInstruction" in {
                           "fmov\t$Rd.d[$Lane], $Rn", [], NoItinerary>;
 }
 
+let Predicates = [HasFPARMv8] in {
 def : InstAlias<"fmov $Rd, $Rn.2d[$Lane]",
                 (FMOVxv GPR64:$Rd, VPR128:$Rn, lane1:$Lane), 0b0>;
 
 def : InstAlias<"fmov $Rd.2d[$Lane], $Rn",
                 (FMOVvx VPR128:$Rd, GPR64:$Rn, lane1:$Lane), 0b0>;
+}
 
 //===----------------------------------------------------------------------===//
 // Floating-point immediate instructions
@@ -2501,11 +2527,15 @@ let mayLoad = 1 in {
   def LDRx_lit : A64I_LDRlitSimple<0b01, 0b0, GPR64>;
 }
 
+let Predicates = [HasFPARMv8] in {
 def LDRs_lit  : A64I_LDRlitSimple<0b00, 0b1, FPR32>;
 def LDRd_lit  : A64I_LDRlitSimple<0b01, 0b1, FPR64>;
+}
 
 let mayLoad = 1 in {
+  let Predicates = [HasFPARMv8] in {
   def LDRq_lit : A64I_LDRlitSimple<0b10, 0b1, FPR128>;
+  }
 
 
   def LDRSWx_lit : A64I_LDRlit<0b10, 0b0,
@@ -3099,6 +3129,7 @@ defm LS32
 defm LS64
   : A64I_LDRSTR_unsigned<"LS64", 0b11, 0b0, 0b0, "", GPR64, dword_addrparams>;
 
+let Predicates = [HasFPARMv8] in {
 // STR/LDR to/from a B register
 defm LSFP8
   : A64I_LDRSTR_unsigned<"LSFP8", 0b00, 0b1, 0b0, "", FPR8, byte_addrparams>;
@@ -3117,6 +3148,7 @@ defm LSFP64
 defm LSFP128
   : A64I_LDRSTR_unsigned<"LSFP128", 0b00, 0b1, 0b1, "", FPR128,
                          qword_addrparams>;
+}
 
 //===------------------------------
 // 2.3 Signed loads
@@ -3572,10 +3604,13 @@ multiclass A64I_LSPsimple<bits<2> opc, bit v, RegisterClass SomeReg,
 
 defm LSPair32 : A64I_LSPsimple<0b00, 0b0, GPR32, word_simm7, "LSPair32">;
 defm LSPair64 : A64I_LSPsimple<0b10, 0b0, GPR64, dword_simm7, "LSPair64">;
+
+let Predicates = [HasFPARMv8] in {
 defm LSFPPair32 : A64I_LSPsimple<0b00, 0b1, FPR32, word_simm7, "LSFPPair32">;
 defm LSFPPair64 : A64I_LSPsimple<0b01, 0b1, FPR64,  dword_simm7, "LSFPPair64">;
 defm LSFPPair128 : A64I_LSPsimple<0b10, 0b1, FPR128, qword_simm7,
                                   "LSFPPair128">;
+}
 
 
 def LDPSWx : A64I_LSPoffset<0b01, 0b0, 0b1,
@@ -4513,6 +4548,7 @@ def : ADRP_ADD<A64WrapperSmall, texternalsym>;
 def : ADRP_ADD<A64WrapperSmall, tglobaladdr>;
 def : ADRP_ADD<A64WrapperSmall, tglobaltlsaddr>;
 def : ADRP_ADD<A64WrapperSmall, tjumptable>;
+def : ADRP_ADD<A64WrapperSmall, tconstpool>;
 
 //===----------------------------------------------------------------------===//
 // GOT access patterns

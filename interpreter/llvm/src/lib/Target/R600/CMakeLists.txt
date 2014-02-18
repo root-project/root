@@ -17,7 +17,6 @@ add_llvm_target(R600CodeGen
   AMDILISelLowering.cpp
   AMDGPUAsmPrinter.cpp
   AMDGPUFrameLowering.cpp
-  AMDGPUIndirectAddressing.cpp
   AMDGPUISelDAGToDAG.cpp
   AMDGPUMCInstLower.cpp
   AMDGPUMachineFunction.cpp
@@ -28,6 +27,7 @@ add_llvm_target(R600CodeGen
   AMDGPUConvertToISA.cpp
   AMDGPUInstrInfo.cpp
   AMDGPURegisterInfo.cpp
+  R600ClauseMergePass.cpp
   R600ControlFlowFinalizer.cpp
   R600EmitClauseMarkers.cpp
   R600ExpandSpecialInstrs.cpp
@@ -49,8 +49,6 @@ add_llvm_target(R600CodeGen
   SIRegisterInfo.cpp
   SITypeRewriter.cpp
   )
-
-add_dependencies(LLVMR600CodeGen AMDGPUCommonTableGen intrinsics_gen)
 
 add_subdirectory(InstPrinter)
 add_subdirectory(TargetInfo)

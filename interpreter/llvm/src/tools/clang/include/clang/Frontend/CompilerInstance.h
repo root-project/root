@@ -13,6 +13,7 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Frontend/CompilerInvocation.h"
+#include "clang/Frontend/Utils.h"
 #include "clang/Lex/ModuleLoader.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
@@ -123,7 +124,7 @@ class CompilerInstance : public ModuleLoader {
   /// \brief Holds information about the output file.
   ///
   /// If TempFilename is not empty we must rename it to Filename at the end.
-  /// TempFilename may be empty and Filename non empty if creating the temporary
+  /// TempFilename may be empty and Filename non-empty if creating the temporary
   /// failed.
   struct OutputFile {
     std::string Filename;
@@ -325,6 +326,7 @@ public:
   }
   
   void resetAndLeakFileManager() {
+    BuryPointer(FileMgr.getPtr());
     FileMgr.resetWithoutRelease();
   }
 
@@ -344,6 +346,7 @@ public:
   }
   
   void resetAndLeakSourceManager() {
+    BuryPointer(SourceMgr.getPtr());
     SourceMgr.resetWithoutRelease();
   }
 
@@ -363,6 +366,7 @@ public:
   }
 
   void resetAndLeakPreprocessor() {
+    BuryPointer(PP.getPtr());
     PP.resetWithoutRelease();
   }
 
@@ -381,6 +385,7 @@ public:
   }
   
   void resetAndLeakASTContext() {
+    BuryPointer(Context.getPtr());
     Context.resetWithoutRelease();
   }
 

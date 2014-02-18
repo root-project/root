@@ -14,6 +14,7 @@
 # Where gtest's .h files can be found.
 include_directories(
   googletest/include
+  googletest
   )
 
 if(WIN32)
@@ -38,15 +39,12 @@ if(MSVC AND MSVC_VERSION EQUAL 1700)
 endif ()
 
 add_llvm_library(gtest
-  googletest/gtest.cc
-  googletest/gtest-death-test.cc
-  googletest/gtest-filepath.cc
-  googletest/gtest-port.cc
-  googletest/gtest-printers.cc
-  googletest/gtest-test-part.cc
-  googletest/gtest-typed-test.cc
+  googletest/src/gtest-all.cc
   )
 
-add_llvm_library(gtest_main
-  UnitTestMain/TestMain.cpp
+# Depends on llvm::raw_ostream
+target_link_libraries(gtest
+  LLVMSupport
   )
+
+add_subdirectory(UnitTestMain)

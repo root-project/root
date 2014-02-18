@@ -129,13 +129,13 @@
 #cmakedefine HAVE_LOG10 ${HAVE_LOG10}
 
 /* Define to 1 if you have the `exp' function. */
-#cmakedefine HAVE_EXP ${HAVE_LOG}
+#cmakedefine HAVE_EXP ${HAVE_EXP}
 
 /* Define to 1 if you have the `exp2' function. */
-#cmakedefine HAVE_EXP2 ${HAVE_LOG2}
+#cmakedefine HAVE_EXP2 ${HAVE_EXP2}
 
 /* Define to 1 if you have the `exp10' function. */
-#cmakedefine HAVE_EXP10 ${HAVE_LOG10}
+#cmakedefine HAVE_EXP10 ${HAVE_EXP10}
 
 /* Define to 1 if you have the `fmodf' function. */
 #cmakedefine HAVE_FMODF ${HAVE_FMODF}
@@ -203,11 +203,17 @@
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #cmakedefine HAVE_LIBPTHREAD ${HAVE_LIBPTHREAD}
 
+/* Define to 1 if you have the `shell32' library (-lshell32). */
+#cmakedefine HAVE_LIBSHELL32 ${HAVE_LIBSHELL32}
+
 /* Define to 1 if you have the `udis86' library (-ludis86). */
 #undef HAVE_LIBUDIS86
 
 /* Define to 1 if you have the 'z' library (-lz). */
 #cmakedefine HAVE_LIBZ ${HAVE_LIBZ}
+
+/* Define to 1 if you have the 'edit' library (-ledit). */
+#cmakedefine HAVE_LIBEDIT ${HAVE_LIBEDIT}
 
 /* Define to 1 if you have the <limits.h> header file. */
 #cmakedefine HAVE_LIMITS_H ${HAVE_LIMITS_H}

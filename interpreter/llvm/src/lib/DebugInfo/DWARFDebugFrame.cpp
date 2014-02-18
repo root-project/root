@@ -10,8 +10,8 @@
 #include "DWARFDebugFrame.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/DataTypes.h"
-#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Dwarf.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/raw_ostream.h"
 #include <string>
@@ -125,6 +125,7 @@ void FrameEntry::parseInstructions(uint32_t *Offset, uint32_t EndOffset) {
         case DW_CFA_nop:
         case DW_CFA_remember_state:
         case DW_CFA_restore_state:
+        case DW_CFA_GNU_window_save:
           // No operands
           addInstruction(Opcode);
           break;

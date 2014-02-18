@@ -45,7 +45,7 @@ D: Hexagon Backend
 
 N: Hal Finkel
 E: hfinkel@anl.gov
-D: BBVectorize and the PowerPC target
+D: BBVectorize, the loop reroller and the PowerPC target
 
 N: Venkatraman Govindaraju
 E: venkatra@cs.wisc.edu
@@ -102,12 +102,16 @@ E: richard@xmos.com
 D: XCore Backend
 
 N: Chad Rosier
-E: mcrosier@apple.com
+E: mcrosier@codeaurora.org
 D: Fast-Isel
 
 N: Nadav Rotem
 E: nrotem@apple.com
 D: X86 Backend, Loop Vectorizer
+
+N: Daniel Sanders
+E: daniel.sanders@imgtec.com
+D: MIPS Backend (lib/Target/Mips/*)
 
 N: Richard Sandiford
 E: rsandifo@linux.vnet.ibm.com
@@ -139,5 +143,9 @@ E: atrick@apple.com
 D: IndVar Simplify, Loop Strength Reduction, Instruction Scheduling
 
 N: Bill Wendling
-E: wendling@apple.com
+E: isanbard@gmail.com
 D: libLTO, IR Linker
+
+N: Peter Zotov
+E: whitequark@whitequark.org
+D: OCaml bindings

@@ -587,7 +587,8 @@ enum ObjCInstanceTypeFamily {
   OIT_Array,
   OIT_Dictionary,
   OIT_Singleton,
-  OIT_Init
+  OIT_Init,
+  OIT_ReturnsSelf
 };
 
 /// \brief Smart pointer class that efficiently represents Objective-C method
@@ -696,8 +697,10 @@ public:
   
   /// \brief Derive the full selector name (e.g. "foo:bar:") and return
   /// it as an std::string.
-  // FIXME: Add a print method that uses a raw_ostream.
   std::string getAsString() const;
+
+  /// \brief Prints the full selector name (e.g. "foo:bar:").
+  void print(llvm::raw_ostream &OS) const;
 
   /// \brief Derive the conventional family of this method.
   ObjCMethodFamily getMethodFamily() const {

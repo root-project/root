@@ -6,16 +6,19 @@ add_llvm_library(LLVMCore
   ConstantFold.cpp
   Constants.cpp
   Core.cpp
+  DiagnosticInfo.cpp
+  DiagnosticPrinter.cpp
+  DIBuilder.cpp
   DataLayout.cpp
   DebugInfo.cpp
   DebugLoc.cpp
-  DIBuilder.cpp
   Dominators.cpp
   Function.cpp
   GCOV.cpp
   GVMaterializer.cpp
   Globals.cpp
   IRBuilder.cpp
+  IRPrintingPasses.cpp
   InlineAsm.cpp
   Instruction.cpp
   Instructions.cpp
@@ -23,12 +26,13 @@ add_llvm_library(LLVMCore
   LLVMContext.cpp
   LLVMContextImpl.cpp
   LeakDetector.cpp
+  LegacyPassManager.cpp
+  Mangler.cpp
   Metadata.cpp
   Module.cpp
   Pass.cpp
   PassManager.cpp
   PassRegistry.cpp
-  PrintModulePass.cpp
   Type.cpp
   TypeFinder.cpp
   Use.cpp

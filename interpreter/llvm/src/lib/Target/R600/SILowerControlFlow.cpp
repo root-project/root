@@ -67,7 +67,7 @@ private:
 
   static char ID;
   const TargetRegisterInfo *TRI;
-  const TargetInstrInfo *TII;
+  const SIInstrInfo *TII;
 
   bool shouldSkip(MachineBasicBlock *From, MachineBasicBlock *To);
 
@@ -283,16 +283,13 @@ void SILowerControlFlowPass::EndCf(MachineInstr &MI) {
 }
 
 void SILowerControlFlowPass::Branch(MachineInstr &MI) {
-  MachineBasicBlock *Next = MI.getParent()->getNextNode();
-  MachineBasicBlock *Target = MI.getOperand(0).getMBB();
-  if (Target == Next)
+  if (MI.getOperand(0).getMBB() == MI.getParent()->getNextNode())
     MI.eraseFromParent();
-  else
-    assert(0);
+
+  // If these aren't equal, this is probably an infinite loop.
 }
 
 void SILowerControlFlowPass::Kill(MachineInstr &MI) {
-
   MachineBasicBlock &MBB = *MI.getParent();
   DebugLoc DL = MI.getDebugLoc();
 
@@ -377,10 +374,13 @@ void SILowerControlFlowPass::IndirectSrc(MachineInstr &MI) {
   unsigned Dst = MI.getOperand(0).getReg();
   unsigned Vec = MI.getOperand(2).getReg();
   unsigned Off = MI.getOperand(4).getImm();
+  unsigned SubReg = TRI->getSubReg(Vec, AMDGPU::sub0);
+  if (!SubReg)
+    SubReg = Vec;
 
-  MachineInstr *MovRel = 
+  MachineInstr *MovRel =
     BuildMI(*MBB.getParent(), DL, TII->get(AMDGPU::V_MOVRELS_B32_e32), Dst)
-            .addReg(TRI->getSubReg(Vec, AMDGPU::sub0) + Off)
+            .addReg(SubReg + Off)
             .addReg(AMDGPU::M0, RegState::Implicit)
             .addReg(Vec, RegState::Implicit);
 
@@ -395,10 +395,13 @@ void SILowerControlFlowPass::IndirectDst(MachineInstr &MI) {
   unsigned Dst = MI.getOperand(0).getReg();
   unsigned Off = MI.getOperand(4).getImm();
   unsigned Val = MI.getOperand(5).getReg();
+  unsigned SubReg = TRI->getSubReg(Dst, AMDGPU::sub0);
+  if (!SubReg)
+    SubReg = Dst;
 
   MachineInstr *MovRel = 
     BuildMI(*MBB.getParent(), DL, TII->get(AMDGPU::V_MOVRELD_B32_e32))
-            .addReg(TRI->getSubReg(Dst, AMDGPU::sub0) + Off, RegState::Define)
+            .addReg(SubReg + Off, RegState::Define)
             .addReg(Val)
             .addReg(AMDGPU::M0, RegState::Implicit)
             .addReg(Dst, RegState::Implicit);
@@ -407,7 +410,7 @@ void SILowerControlFlowPass::IndirectDst(MachineInstr &MI) {
 }
 
 bool SILowerControlFlowPass::runOnMachineFunction(MachineFunction &MF) {
-  TII = MF.getTarget().getInstrInfo();
+  TII = static_cast<const SIInstrInfo*>(MF.getTarget().getInstrInfo());
   TRI = MF.getTarget().getRegisterInfo();
   SIMachineFunctionInfo *MFI = MF.getInfo<SIMachineFunctionInfo>();
 
@@ -425,6 +428,11 @@ bool SILowerControlFlowPass::runOnMachineFunction(MachineFunction &MF) {
 
       Next = llvm::next(I);
       MachineInstr &MI = *I;
+      if (TII->isDS(MI.getOpcode())) {
+        NeedM0 = true;
+        NeedWQM = true;
+      }
+
       switch (MI.getOpcode()) {
         default: break;
         case AMDGPU::SI_IF:
@@ -477,19 +485,12 @@ bool SILowerControlFlowPass::runOnMachineFunction(MachineFunction &MF) {
           IndirectSrc(MI);
           break;
 
+        case AMDGPU::SI_INDIRECT_DST_V1:
         case AMDGPU::SI_INDIRECT_DST_V2:
         case AMDGPU::SI_INDIRECT_DST_V4:
         case AMDGPU::SI_INDIRECT_DST_V8:
         case AMDGPU::SI_INDIRECT_DST_V16:
           IndirectDst(MI);
-          break;
-
-        case AMDGPU::DS_READ_B32:
-          NeedWQM = true;
-          // Fall through
-        case AMDGPU::DS_WRITE_B32:
-        case AMDGPU::DS_ADD_U32_RTN:
-          NeedM0 = true;
           break;
 
         case AMDGPU::V_INTERP_P1_F32:
@@ -510,7 +511,7 @@ bool SILowerControlFlowPass::runOnMachineFunction(MachineFunction &MF) {
             AMDGPU::M0).addImm(0xffffffff);
   }
 
-  if (NeedWQM && MFI->ShaderType != ShaderType::COMPUTE) {
+  if (NeedWQM && MFI->ShaderType == ShaderType::PIXEL) {
     MachineBasicBlock &MBB = MF.front();
     BuildMI(MBB, MBB.getFirstNonPHI(), DebugLoc(), TII->get(AMDGPU::S_WQM_B64),
             AMDGPU::EXEC).addReg(AMDGPU::EXEC);

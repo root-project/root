@@ -24,10 +24,14 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
 
-#define GET_INSTRINFO_CTOR
+#define GET_INSTRINFO_CTOR_DTOR
 #include "SparcGenInstrInfo.inc"
 
 using namespace llvm;
+
+
+// Pin the vtable to this file.
+void SparcInstrInfo::anchor() {}
 
 SparcInstrInfo::SparcInstrInfo(SparcSubtarget &ST)
   : SparcGenInstrInfo(SP::ADJCALLSTACKDOWN, SP::ADJCALLSTACKUP),
@@ -102,14 +106,14 @@ static SPCC::CondCodes GetOppositeBranchCondition(SPCC::CondCodes CC)
 
   case SPCC::FCC_U:    return SPCC::FCC_O;
   case SPCC::FCC_O:    return SPCC::FCC_U;
-  case SPCC::FCC_G:    return SPCC::FCC_LE;
-  case SPCC::FCC_LE:   return SPCC::FCC_G;
-  case SPCC::FCC_UG:   return SPCC::FCC_ULE;
-  case SPCC::FCC_ULE:  return SPCC::FCC_UG;
-  case SPCC::FCC_L:    return SPCC::FCC_GE;
-  case SPCC::FCC_GE:   return SPCC::FCC_L;
-  case SPCC::FCC_UL:   return SPCC::FCC_UGE;
-  case SPCC::FCC_UGE:  return SPCC::FCC_UL;
+  case SPCC::FCC_G:    return SPCC::FCC_ULE;
+  case SPCC::FCC_LE:   return SPCC::FCC_UG;
+  case SPCC::FCC_UG:   return SPCC::FCC_LE;
+  case SPCC::FCC_ULE:  return SPCC::FCC_G;
+  case SPCC::FCC_L:    return SPCC::FCC_UGE;
+  case SPCC::FCC_GE:   return SPCC::FCC_UL;
+  case SPCC::FCC_UL:   return SPCC::FCC_GE;
+  case SPCC::FCC_UGE:  return SPCC::FCC_L;
   case SPCC::FCC_LG:   return SPCC::FCC_UE;
   case SPCC::FCC_UE:   return SPCC::FCC_LG;
   case SPCC::FCC_NE:   return SPCC::FCC_E;
@@ -427,8 +431,9 @@ unsigned SparcInstrInfo::getGlobalBaseReg(MachineFunction *MF) const
   MachineBasicBlock::iterator MBBI = FirstMBB.begin();
   MachineRegisterInfo &RegInfo = MF->getRegInfo();
 
-  GlobalBaseReg = RegInfo.createVirtualRegister(&SP::IntRegsRegClass);
-
+  const TargetRegisterClass *PtrRC =
+    Subtarget.is64Bit() ? &SP::I64RegsRegClass : &SP::IntRegsRegClass;
+  GlobalBaseReg = RegInfo.createVirtualRegister(PtrRC);
 
   DebugLoc dl;
 

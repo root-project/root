@@ -15,8 +15,8 @@
 #include "clang/Basic/AllDiagnostics.h"
 #include "clang/Basic/DiagnosticCategories.h"
 #include "clang/Basic/SourceManager.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <map>
 using namespace clang;
@@ -39,8 +39,7 @@ struct StaticDiagInfoRec {
   uint16_t DiagID;
   unsigned Mapping : 3;
   unsigned Class : 3;
-  unsigned SFINAE : 1;
-  unsigned AccessControl : 1;
+  unsigned SFINAE : 2;
   unsigned WarnNoWerror : 1;
   unsigned WarnShowInSystemHeader : 1;
   unsigned Category : 5;
@@ -67,9 +66,9 @@ struct StaticDiagInfoRec {
 
 static const StaticDiagInfoRec StaticDiagInfo[] = {
 #define DIAG(ENUM,CLASS,DEFAULT_MAPPING,DESC,GROUP,               \
-             SFINAE,ACCESS,NOWERROR,SHOWINSYSHEADER,              \
-             CATEGORY)                                            \
-  { diag::ENUM, DEFAULT_MAPPING, CLASS, SFINAE, ACCESS,           \
+             SFINAE,NOWERROR,SHOWINSYSHEADER,CATEGORY)            \
+  { diag::ENUM, DEFAULT_MAPPING, CLASS,                           \
+    DiagnosticIDs::SFINAE,                                        \
     NOWERROR, SHOWINSYSHEADER, CATEGORY, GROUP,                   \
     STR_SIZE(DESC, uint16_t), DESC },
 #include "clang/Basic/DiagnosticCommonKinds.inc"
@@ -112,7 +111,7 @@ static const StaticDiagInfoRec *GetDiagInfo(unsigned DiagID) {
     return 0;
 
   // Compute the index of the requested diagnostic in the static table.
-  // 1. Add the number of diagnostics in each category preceeding the
+  // 1. Add the number of diagnostics in each category preceding the
   //    diagnostic and of the category the diagnostic is in. This gives us
   //    the offset of the category in the table.
   // 2. Subtract the number of IDs in each category from our ID. This gives us
@@ -235,22 +234,10 @@ StringRef DiagnosticIDs::getCategoryNameFromID(unsigned CategoryID) {
 
 
 
-DiagnosticIDs::SFINAEResponse 
+DiagnosticIDs::SFINAEResponse
 DiagnosticIDs::getDiagnosticSFINAEResponse(unsigned DiagID) {
-  if (const StaticDiagInfoRec *Info = GetDiagInfo(DiagID)) {
-    if (Info->AccessControl)
-      return SFINAE_AccessControl;
-    
-    if (!Info->SFINAE)
-      return SFINAE_Report;
-
-    if (Info->Class == CLASS_ERROR)
-      return SFINAE_SubstitutionFailure;
-    
-    // Suppress notes, warnings, and extensions;
-    return SFINAE_Suppress;
-  }
-  
+  if (const StaticDiagInfoRec *Info = GetDiagInfo(DiagID))
+    return static_cast<DiagnosticIDs::SFINAEResponse>(Info->SFINAE);
   return SFINAE_Report;
 }
 
@@ -324,10 +311,13 @@ DiagnosticIDs::~DiagnosticIDs() {
 /// getCustomDiagID - Return an ID for a diagnostic with the specified message
 /// and level.  If this is the first request for this diagnostic, it is
 /// registered and created, otherwise the existing ID is returned.
-unsigned DiagnosticIDs::getCustomDiagID(Level L, StringRef Message) {
+///
+/// \param FormatString A fixed diagnostic format string that will be hashed and
+/// mapped to a unique DiagID.
+unsigned DiagnosticIDs::getCustomDiagID(Level L, StringRef FormatString) {
   if (CustomDiagInfo == 0)
     CustomDiagInfo = new diag::CustomDiagInfo();
-  return CustomDiagInfo->getOrCreateDiagID(L, Message, *this);
+  return CustomDiagInfo->getOrCreateDiagID(L, FormatString, *this);
 }
 
 

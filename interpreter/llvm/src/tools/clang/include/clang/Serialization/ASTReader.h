@@ -46,9 +46,9 @@
 #include <deque>
 #include <map>
 #include <string>
+#include <sys/stat.h>
 #include <utility>
 #include <vector>
-#include <sys/stat.h>
 
 namespace llvm {
   class MemoryBuffer;
@@ -610,10 +610,10 @@ private:
   /// \brief The IDs of all declarations that fulfill the criteria of
   /// "interesting" decls.
   ///
-  /// This contains the data loaded from all EXTERNAL_DEFINITIONS blocks in the
-  /// chain. The referenced declarations are deserialized and passed to the
-  /// consumer eagerly.
-  SmallVector<uint64_t, 16> ExternalDefinitions;
+  /// This contains the data loaded from all EAGERLY_DESERIALIZED_DECLS blocks
+  /// in the chain. The referenced declarations are deserialized and passed to
+  /// the consumer eagerly.
+  SmallVector<uint64_t, 16> EagerlyDeserializedDecls;
 
   /// \brief The IDs of all tentative definitions stored in the chain.
   ///
@@ -732,6 +732,13 @@ private:
 
   /// \brief Whether to accept an AST file with compiler errors.
   bool AllowASTWithCompilerErrors;
+
+  /// \brief Whether to accept an AST file that has a different configuration
+  /// from the current compiler instance.
+  bool AllowConfigurationMismatch;
+
+  /// \brief Whether validate system input files.
+  bool ValidateSystemInputs;
 
   /// \brief Whether we are allowed to use the global module index.
   bool UseGlobalIndex;
@@ -875,6 +882,14 @@ private:
   /// been completed.
   std::deque<PendingDeclContextInfo> PendingDeclContextInfos;
 
+  /// \brief The set of NamedDecls that have been loaded, but are members of a
+  /// context that has been merged into another context where the corresponding
+  /// declaration is either missing or has not yet been loaded.
+  ///
+  /// We will check whether the corresponding declaration is in fact missing
+  /// once recursing loading has been completed.
+  llvm::SmallVector<NamedDecl *, 16> PendingOdrMergeChecks;
+
   /// \brief The set of Objective-C categories that have been deserialized
   /// since the last time the declaration chains were linked.
   llvm::SmallPtrSet<ObjCCategoryDecl *, 16> CategoriesDeserialized;
@@ -916,6 +931,10 @@ private:
   /// are treating as the definition of the entity. This is used, for instance,
   /// when merging implicit instantiations of class templates across modules.
   llvm::DenseMap<DeclContext *, DeclContext *> MergedDeclContexts;
+
+  /// \brief A mapping from canonical declarations of enums to their canonical
+  /// definitions. Only populated when using modules in C++.
+  llvm::DenseMap<EnumDecl *, EnumDecl *> EnumDefinitions;
 
   /// \brief When reading a Stmt tree, Stmt operands are placed in this stack.
   SmallVector<Stmt *, 16> StmtStack;
@@ -1162,11 +1181,20 @@ public:
   /// AST file the was created out of an AST with compiler errors,
   /// otherwise it will reject it.
   ///
+  /// \param AllowConfigurationMismatch If true, the AST reader will not check
+  /// for configuration differences between the AST file and the invocation.
+  ///
+  /// \param ValidateSystemInputs If true, the AST reader will validate
+  /// system input files in addition to user input files. This is only
+  /// meaningful if \p DisableValidation is false.
+  ///
   /// \param UseGlobalIndex If true, the AST reader will try to load and use
   /// the global module index.
   ASTReader(Preprocessor &PP, ASTContext &Context, StringRef isysroot = "",
             bool DisableValidation = false,
             bool AllowASTWithCompilerErrors = false,
+            bool AllowConfigurationMismatch = false,
+            bool ValidateSystemInputs = false,
             bool UseGlobalIndex = true);
 
   ~ASTReader();
@@ -1255,6 +1283,9 @@ public:
   
   /// \brief Initializes the ASTContext
   void InitializeContext();
+
+  /// \brief Update the state of Sema after loading some additional modules.
+  void UpdateSema();
 
   /// \brief Add in-memory (virtual file) buffer.
   void addInMemoryBuffer(StringRef &FileName, llvm::MemoryBuffer *Buffer) {
@@ -1817,7 +1848,7 @@ public:
            "Should be called only during statement reading!");
     // Subexpressions are stored from last to first, so the next Stmt we need
     // is at the back of the stack.
-    assert(!StmtStack.empty() && "Read too many sub statements!");
+    assert(!StmtStack.empty() && "Read too many sub-statements!");
     return StmtStack.pop_back_val();
   }
 

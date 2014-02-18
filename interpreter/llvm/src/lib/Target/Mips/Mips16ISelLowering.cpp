@@ -12,9 +12,9 @@
 //===----------------------------------------------------------------------===//
 #define DEBUG_TYPE "mips-lower"
 #include "Mips16ISelLowering.h"
+#include "MCTargetDesc/MipsBaseInfo.h"
 #include "MipsRegisterInfo.h"
 #include "MipsTargetMachine.h"
-#include "MCTargetDesc/MipsBaseInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Target/TargetInstrInfo.h"
@@ -145,6 +145,11 @@ Mips16TargetLowering::Mips16TargetLowering(MipsTargetMachine &TM)
   setOperationAction(ISD::ATOMIC_LOAD_UMIN,   MVT::i32,   Expand);
   setOperationAction(ISD::ATOMIC_LOAD_UMAX,   MVT::i32,   Expand);
 
+  setOperationAction(ISD::ROTR, MVT::i32,  Expand);
+  setOperationAction(ISD::ROTR, MVT::i64,  Expand);
+  setOperationAction(ISD::BSWAP, MVT::i32, Expand);
+  setOperationAction(ISD::BSWAP, MVT::i64, Expand);
+
   computeRegisterProperties();
 }
 
@@ -154,7 +159,9 @@ llvm::createMips16TargetLowering(MipsTargetMachine &TM) {
 }
 
 bool
-Mips16TargetLowering::allowsUnalignedMemoryAccesses(EVT VT, bool *Fast) const {
+Mips16TargetLowering::allowsUnalignedMemoryAccesses(EVT VT,
+                                                    unsigned,
+                                                    bool *Fast) const {
   return false;
 }
 
@@ -169,57 +176,57 @@ Mips16TargetLowering::EmitInstrWithCustomInserter(MachineInstr *MI,
   case Mips::SelBneZ:
     return emitSel16(Mips::BnezRxImm16, MI, BB);
   case Mips::SelTBteqZCmpi:
-    return emitSeliT16(Mips::BteqzX16, Mips::CmpiRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Bteqz16, Mips::CmpiRxImmX16, MI, BB);
   case Mips::SelTBteqZSlti:
-    return emitSeliT16(Mips::BteqzX16, Mips::SltiRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Bteqz16, Mips::SltiRxImmX16, MI, BB);
   case Mips::SelTBteqZSltiu:
-    return emitSeliT16(Mips::BteqzX16, Mips::SltiuRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Bteqz16, Mips::SltiuRxImmX16, MI, BB);
   case Mips::SelTBtneZCmpi:
-    return emitSeliT16(Mips::BtnezX16, Mips::CmpiRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Btnez16, Mips::CmpiRxImmX16, MI, BB);
   case Mips::SelTBtneZSlti:
-    return emitSeliT16(Mips::BtnezX16, Mips::SltiRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Btnez16, Mips::SltiRxImmX16, MI, BB);
   case Mips::SelTBtneZSltiu:
-    return emitSeliT16(Mips::BtnezX16, Mips::SltiuRxImmX16, MI, BB);
+    return emitSeliT16(Mips::Btnez16, Mips::SltiuRxImmX16, MI, BB);
   case Mips::SelTBteqZCmp:
-    return emitSelT16(Mips::BteqzX16, Mips::CmpRxRy16, MI, BB);
+    return emitSelT16(Mips::Bteqz16, Mips::CmpRxRy16, MI, BB);
   case Mips::SelTBteqZSlt:
-    return emitSelT16(Mips::BteqzX16, Mips::SltRxRy16, MI, BB);
+    return emitSelT16(Mips::Bteqz16, Mips::SltRxRy16, MI, BB);
   case Mips::SelTBteqZSltu:
-    return emitSelT16(Mips::BteqzX16, Mips::SltuRxRy16, MI, BB);
+    return emitSelT16(Mips::Bteqz16, Mips::SltuRxRy16, MI, BB);
   case Mips::SelTBtneZCmp:
-    return emitSelT16(Mips::BtnezX16, Mips::CmpRxRy16, MI, BB);
+    return emitSelT16(Mips::Btnez16, Mips::CmpRxRy16, MI, BB);
   case Mips::SelTBtneZSlt:
-    return emitSelT16(Mips::BtnezX16, Mips::SltRxRy16, MI, BB);
+    return emitSelT16(Mips::Btnez16, Mips::SltRxRy16, MI, BB);
   case Mips::SelTBtneZSltu:
-    return emitSelT16(Mips::BtnezX16, Mips::SltuRxRy16, MI, BB);
+    return emitSelT16(Mips::Btnez16, Mips::SltuRxRy16, MI, BB);
   case Mips::BteqzT8CmpX16:
-    return emitFEXT_T8I816_ins(Mips::BteqzX16, Mips::CmpRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Bteqz16, Mips::CmpRxRy16, MI, BB);
   case Mips::BteqzT8SltX16:
-    return emitFEXT_T8I816_ins(Mips::BteqzX16, Mips::SltRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Bteqz16, Mips::SltRxRy16, MI, BB);
   case Mips::BteqzT8SltuX16:
     // TBD: figure out a way to get this or remove the instruction
     // altogether.
-    return emitFEXT_T8I816_ins(Mips::BteqzX16, Mips::SltuRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Bteqz16, Mips::SltuRxRy16, MI, BB);
   case Mips::BtnezT8CmpX16:
-    return emitFEXT_T8I816_ins(Mips::BtnezX16, Mips::CmpRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Btnez16, Mips::CmpRxRy16, MI, BB);
   case Mips::BtnezT8SltX16:
-    return emitFEXT_T8I816_ins(Mips::BtnezX16, Mips::SltRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Btnez16, Mips::SltRxRy16, MI, BB);
   case Mips::BtnezT8SltuX16:
     // TBD: figure out a way to get this or remove the instruction
     // altogether.
-    return emitFEXT_T8I816_ins(Mips::BtnezX16, Mips::SltuRxRy16, MI, BB);
+    return emitFEXT_T8I816_ins(Mips::Btnez16, Mips::SltuRxRy16, MI, BB);
   case Mips::BteqzT8CmpiX16: return emitFEXT_T8I8I16_ins(
-    Mips::BteqzX16, Mips::CmpiRxImm16, Mips::CmpiRxImmX16, false, MI, BB);
+    Mips::Bteqz16, Mips::CmpiRxImm16, Mips::CmpiRxImmX16, false, MI, BB);
   case Mips::BteqzT8SltiX16: return emitFEXT_T8I8I16_ins(
-    Mips::BteqzX16, Mips::SltiRxImm16, Mips::SltiRxImmX16, true, MI, BB);
+    Mips::Bteqz16, Mips::SltiRxImm16, Mips::SltiRxImmX16, true, MI, BB);
   case Mips::BteqzT8SltiuX16: return emitFEXT_T8I8I16_ins(
-    Mips::BteqzX16, Mips::SltiuRxImm16, Mips::SltiuRxImmX16, false, MI, BB);
+    Mips::Bteqz16, Mips::SltiuRxImm16, Mips::SltiuRxImmX16, false, MI, BB);
   case Mips::BtnezT8CmpiX16: return emitFEXT_T8I8I16_ins(
-    Mips::BtnezX16, Mips::CmpiRxImm16, Mips::CmpiRxImmX16, false, MI, BB);
+    Mips::Btnez16, Mips::CmpiRxImm16, Mips::CmpiRxImmX16, false, MI, BB);
   case Mips::BtnezT8SltiX16: return emitFEXT_T8I8I16_ins(
-    Mips::BtnezX16, Mips::SltiRxImm16, Mips::SltiRxImmX16, true, MI, BB);
+    Mips::Btnez16, Mips::SltiRxImm16, Mips::SltiRxImmX16, true, MI, BB);
   case Mips::BtnezT8SltiuX16: return emitFEXT_T8I8I16_ins(
-    Mips::BtnezX16, Mips::SltiuRxImm16, Mips::SltiuRxImmX16, false, MI, BB);
+    Mips::Btnez16, Mips::SltiuRxImm16, Mips::SltiuRxImmX16, false, MI, BB);
     break;
   case Mips::SltCCRxRy16:
     return emitFEXT_CCRX16_ins(Mips::SltRxRy16, MI, BB);
@@ -419,11 +426,12 @@ getOpndList(SmallVectorImpl<SDValue> &Ops,
             bool IsPICCall, bool GlobalOrExternal, bool InternalLinkage,
             CallLoweringInfo &CLI, SDValue Callee, SDValue Chain) const {
   SelectionDAG &DAG = CLI.DAG;
+  MachineFunction &MF = DAG.getMachineFunction();
+  MipsFunctionInfo *FuncInfo = MF.getInfo<MipsFunctionInfo>();
   const char* Mips16HelperFunction = 0;
   bool NeedMips16Helper = false;
 
-  if (getTargetMachine().Options.UseSoftFloat &&
-      Subtarget->inMips16HardFloat()) {
+  if (Subtarget->inMips16HardFloat()) {
     //
     // currently we don't have symbols tagged with the mips16 or mips32
     // qualifier so we will assume that we don't know what kind it is.
@@ -474,7 +482,10 @@ getOpndList(SmallVectorImpl<SDValue> &Ops,
     if (NeedMips16Helper) {
       RegsToPass.push_front(std::make_pair(V0Reg, Callee));
       JumpTarget = DAG.getExternalSymbol(Mips16HelperFunction, getPointerTy());
-      JumpTarget = getAddrGlobal(JumpTarget, DAG, MipsII::MO_GOT);
+      ExternalSymbolSDNode *S = cast<ExternalSymbolSDNode>(JumpTarget);
+      JumpTarget = getAddrGlobal(S, JumpTarget.getValueType(), DAG,
+                                 MipsII::MO_GOT, Chain,
+                                 FuncInfo->callPtrInfo(S->getSymbol()));
     } else
       RegsToPass.push_front(std::make_pair((unsigned)Mips::T9, Callee));
   }

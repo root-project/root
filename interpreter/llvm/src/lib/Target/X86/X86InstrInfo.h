@@ -152,6 +152,8 @@ class X86InstrInfo : public X86GenInstrInfo {
                             MemOp2RegOpTableType &M2RTable,
                             unsigned RegOp, unsigned MemOp, unsigned Flags);
 
+  virtual void anchor();
+
 public:
   explicit X86InstrInfo(X86TargetMachine &tm);
 
@@ -369,6 +371,8 @@ public:
 
   unsigned getPartialRegUpdateClearance(const MachineInstr *MI, unsigned OpNum,
                                         const TargetRegisterInfo *TRI) const;
+  unsigned getUndefRegClearance(const MachineInstr *MI, unsigned &OpNum,
+                                const TargetRegisterInfo *TRI) const;
   void breakPartialRegDependency(MachineBasicBlock::iterator MI, unsigned OpNum,
                                  const TargetRegisterInfo *TRI) const;
 

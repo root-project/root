@@ -36,7 +36,8 @@ namespace {
   public:
     explicit IncludeStrongLifetimeRAII(PrintingPolicy &Policy) 
       : Policy(Policy), Old(Policy.SuppressStrongLifetime) {
-      Policy.SuppressStrongLifetime = false;
+        if (!Policy.SuppressLifetimeQualifiers)
+          Policy.SuppressStrongLifetime = false;
     }
     
     ~IncludeStrongLifetimeRAII() {
@@ -203,6 +204,7 @@ bool TypePrinter::canPrefixQualifiers(const Type *T,
       NeedARCStrongQualifier = true;
       // Fall through
       
+    case Type::Adjusted:
     case Type::Decayed:
     case Type::Pointer:
     case Type::BlockPointer:
@@ -470,12 +472,21 @@ void TypePrinter::printVariableArrayAfter(const VariableArrayType *T,
   printAfter(T->getElementType(), OS);
 }
 
+void TypePrinter::printAdjustedBefore(const AdjustedType *T, raw_ostream &OS) {
+  // Print the adjusted representation, otherwise the adjustment will be
+  // invisible.
+  printBefore(T->getAdjustedType(), OS);
+}
+void TypePrinter::printAdjustedAfter(const AdjustedType *T, raw_ostream &OS) {
+  printAfter(T->getAdjustedType(), OS);
+}
+
 void TypePrinter::printDecayedBefore(const DecayedType *T, raw_ostream &OS) {
   // Print as though it's a pointer.
-  printBefore(T->getDecayedType(), OS);
+  printAdjustedBefore(T, OS);
 }
 void TypePrinter::printDecayedAfter(const DecayedType *T, raw_ostream &OS) {
-  printAfter(T->getDecayedType(), OS);
+  printAdjustedAfter(T, OS);
 }
 
 void TypePrinter::printDependentSizedArrayBefore(
@@ -597,7 +608,7 @@ void TypePrinter::printFunctionProtoBefore(const FunctionProtoType *T,
   } else {
     // If needed for precedence reasons, wrap the inner part in grouping parens.
     SaveAndRestore<bool> PrevPHIsEmpty(HasEmptyPlaceHolder, false);
-    printBefore(T->getResultType(), OS);
+    printBefore(T->getReturnType(), OS);
     if (!PrevPHIsEmpty.get())
       OS << '(';
   }
@@ -613,17 +624,17 @@ void TypePrinter::printFunctionProtoAfter(const FunctionProtoType *T,
   OS << '(';
   {
     ParamPolicyRAII ParamPolicy(Policy);
-    for (unsigned i = 0, e = T->getNumArgs(); i != e; ++i) {
+    for (unsigned i = 0, e = T->getNumParams(); i != e; ++i) {
       if (i) OS << ", ";
-      print(T->getArgType(i), OS, StringRef());
+      print(T->getParamType(i), OS, StringRef());
     }
   }
   
   if (T->isVariadic()) {
-    if (T->getNumArgs())
+    if (T->getNumParams())
       OS << ", ";
     OS << "...";
-  } else if (T->getNumArgs() == 0 && !Policy.LangOpts.CPlusPlus) {
+  } else if (T->getNumParams() == 0 && !Policy.LangOpts.CPlusPlus) {
     // Do not emit int() if we have a proto, emit 'int(void)'.
     OS << "void";
   }
@@ -702,17 +713,17 @@ void TypePrinter::printFunctionProtoAfter(const FunctionProtoType *T,
   T->printExceptionSpecification(OS, Policy);
 
   if (T->hasTrailingReturn()) {
-    OS << " -> "; 
-    print(T->getResultType(), OS, StringRef());
+    OS << " -> ";
+    print(T->getReturnType(), OS, StringRef());
   } else
-    printAfter(T->getResultType(), OS);
+    printAfter(T->getReturnType(), OS);
 }
 
 void TypePrinter::printFunctionNoProtoBefore(const FunctionNoProtoType *T, 
                                              raw_ostream &OS) { 
   // If needed for precedence reasons, wrap the inner part in grouping parens.
   SaveAndRestore<bool> PrevPHIsEmpty(HasEmptyPlaceHolder, false);
-  printBefore(T->getResultType(), OS);
+  printBefore(T->getReturnType(), OS);
   if (!PrevPHIsEmpty.get())
     OS << '(';
 }
@@ -726,7 +737,7 @@ void TypePrinter::printFunctionNoProtoAfter(const FunctionNoProtoType *T,
   OS << "()";
   if (T->getNoReturnAttr())
     OS << " __attribute__((noreturn))";
-  printAfter(T->getResultType(), OS);
+  printAfter(T->getReturnType(), OS);
 }
 
 void TypePrinter::printTypeSpec(const NamedDecl *D, raw_ostream &OS) {
@@ -1412,13 +1423,10 @@ void QualType::dump(const char *msg) const {
   print(llvm::errs(), PrintingPolicy(LO), "identifier");
   llvm::errs() << '\n';
 }
-void QualType::dump() const {
-  dump(0);
-}
 
-void Type::dump() const {
-  QualType(this, 0).dump();
-}
+LLVM_DUMP_METHOD void QualType::dump() const { dump(0); }
+
+LLVM_DUMP_METHOD void Type::dump() const { QualType(this, 0).dump(); }
 
 std::string Qualifiers::getAsString() const {
   LangOptions LO;

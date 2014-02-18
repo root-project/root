@@ -21,8 +21,8 @@
 #define LLVM_SUPPORT_COMMANDLINE_H
 
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/Twine.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/type_traits.h"
 #include <cassert>
@@ -249,6 +249,12 @@ public:
   //
   void addArgument();
 
+  /// Unregisters this option from the CommandLine system.
+  ///
+  /// This option must have been the last option registered.
+  /// For testing purposes only.
+  void removeArgument();
+
   Option *getNextRegisteredOption() const { return NextRegistered; }
 
   // Return the width of the option tag for printing...
@@ -350,6 +356,9 @@ struct cat {
 struct GenericOptionValue {
   virtual ~GenericOptionValue() {}
   virtual bool compare(const GenericOptionValue &V) const = 0;
+
+private:
+  virtual void anchor();
 };
 
 template<class DataType> struct OptionValue;
@@ -1643,6 +1652,10 @@ class alias : public Option {
   virtual void printOptionValue(size_t /*GlobalWidth*/,
                                 bool /*Force*/) const LLVM_OVERRIDE {}
 
+  virtual ValueExpected getValueExpectedFlagDefault() const LLVM_OVERRIDE {
+    return AliasFor->getValueExpectedFlag();
+  }
+
   void done() {
     if (!hasArgStr())
       error("cl::alias must have argument name specified!");
@@ -1752,6 +1765,7 @@ void getRegisteredOptions(StringMap<Option*> &Map);
 /// \brief Saves strings in the inheritor's stable storage and returns a stable
 /// raw character pointer.
 class StringSaver {
+  virtual void anchor();
 public:
   virtual const char *SaveString(const char *Str) = 0;
   virtual ~StringSaver() {};  // Pacify -Wnon-virtual-dtor.

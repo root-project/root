@@ -17,6 +17,7 @@
 #include "DWARFDebugLoc.h"
 #include "DWARFDebugRangeList.h"
 #include "DWARFTypeUnit.h"
+#include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/DebugInfo/DIContext.h"
@@ -37,6 +38,7 @@ class DWARFContext : public DIContext {
   OwningPtr<DWARFDebugFrame> DebugFrame;
 
   SmallVector<DWARFCompileUnit *, 1> DWOCUs;
+  SmallVector<DWARFTypeUnit *, 1> DWOTUs;
   OwningPtr<DWARFDebugAbbrev> AbbrevDWO;
 
   DWARFContext(DWARFContext &) LLVM_DELETED_FUNCTION;
@@ -51,6 +53,10 @@ class DWARFContext : public DIContext {
   /// Read compile units from the debug_info.dwo section and store them in
   /// DWOCUs.
   void parseDWOCompileUnits();
+
+  /// Read type units from the debug_types.dwo section and store them in
+  /// DWOTUs.
+  void parseDWOTypeUnits();
 
 public:
   struct Section {
@@ -88,6 +94,13 @@ public:
     return DWOCUs.size();
   }
 
+  /// Get the number of compile units in the DWO context.
+  unsigned getNumDWOTypeUnits() {
+    if (DWOTUs.empty())
+      parseDWOTypeUnits();
+    return DWOTUs.size();
+  }
+
   /// Get the compile unit at the specified index for this compile unit.
   DWARFCompileUnit *getCompileUnitAtIndex(unsigned index) {
     if (CUs.empty())
@@ -107,6 +120,13 @@ public:
     if (DWOCUs.empty())
       parseDWOCompileUnits();
     return DWOCUs[index];
+  }
+
+  /// Get the type unit at the specified index for the DWO type units.
+  DWARFTypeUnit *getDWOTypeUnitAtIndex(unsigned index) {
+    if (DWOTUs.empty())
+      parseDWOTypeUnits();
+    return DWOTUs[index];
   }
 
   /// Get a pointer to the parsed DebugAbbrev object.
@@ -138,7 +158,9 @@ public:
   virtual bool isLittleEndian() const = 0;
   virtual uint8_t getAddressSize() const = 0;
   virtual const Section &getInfoSection() = 0;
-  virtual const std::map<object::SectionRef, Section> &getTypesSections() = 0;
+  typedef MapVector<object::SectionRef, Section,
+                    std::map<object::SectionRef, unsigned> > TypeSectionMap;
+  virtual const TypeSectionMap &getTypesSections() = 0;
   virtual StringRef getAbbrevSection() = 0;
   virtual const Section &getLocSection() = 0;
   virtual StringRef getARangeSection() = 0;
@@ -153,6 +175,7 @@ public:
 
   // Sections for DWARF5 split dwarf proposal.
   virtual const Section &getInfoDWOSection() = 0;
+  virtual const TypeSectionMap &getTypesDWOSections() = 0;
   virtual StringRef getAbbrevDWOSection() = 0;
   virtual StringRef getStringDWOSection() = 0;
   virtual StringRef getStringOffsetDWOSection() = 0;
@@ -179,7 +202,7 @@ class DWARFContextInMemory : public DWARFContext {
   bool IsLittleEndian;
   uint8_t AddressSize;
   Section InfoSection;
-  std::map<object::SectionRef, Section> TypesSections;
+  TypeSectionMap TypesSections;
   StringRef AbbrevSection;
   Section LocSection;
   StringRef ARangeSection;
@@ -194,6 +217,7 @@ class DWARFContextInMemory : public DWARFContext {
 
   // Sections for DWARF5 split dwarf proposal.
   Section InfoDWOSection;
+  TypeSectionMap TypesDWOSections;
   StringRef AbbrevDWOSection;
   StringRef StringDWOSection;
   StringRef StringOffsetDWOSection;
@@ -208,9 +232,7 @@ public:
   virtual bool isLittleEndian() const { return IsLittleEndian; }
   virtual uint8_t getAddressSize() const { return AddressSize; }
   virtual const Section &getInfoSection() { return InfoSection; }
-  virtual const std::map<object::SectionRef, Section> &getTypesSections() {
-    return TypesSections;
-  }
+  virtual const TypeSectionMap &getTypesSections() { return TypesSections; }
   virtual StringRef getAbbrevSection() { return AbbrevSection; }
   virtual const Section &getLocSection() { return LocSection; }
   virtual StringRef getARangeSection() { return ARangeSection; }
@@ -225,6 +247,9 @@ public:
 
   // Sections for DWARF5 split dwarf proposal.
   virtual const Section &getInfoDWOSection() { return InfoDWOSection; }
+  virtual const TypeSectionMap &getTypesDWOSections() {
+    return TypesDWOSections;
+  }
   virtual StringRef getAbbrevDWOSection() { return AbbrevDWOSection; }
   virtual StringRef getStringDWOSection() { return StringDWOSection; }
   virtual StringRef getStringOffsetDWOSection() {

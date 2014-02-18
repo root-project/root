@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Object/MachOUniversal.h"
-
 #include "llvm/Object/MachO.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Casting.h"
@@ -82,15 +81,25 @@ error_code MachOUniversalBinary::ObjectForArch::getAsObjectFile(
         Triple::getArchTypeName(MachOObjectFile::getArch(Header.cputype));
     MemoryBuffer *ObjBuffer = MemoryBuffer::getMemBuffer(
         ObjectData, ObjectName, false);
-    if (ObjectFile *Obj = ObjectFile::createMachOObjectFile(ObjBuffer)) {
-      Result.reset(Obj);
-      return object_error::success;
-    }
+    ErrorOr<ObjectFile *> Obj = ObjectFile::createMachOObjectFile(ObjBuffer);
+    if (error_code EC = Obj.getError())
+      return EC;
+    Result.reset(Obj.get());
+    return object_error::success;
   }
   return object_error::parse_failed;
 }
 
 void MachOUniversalBinary::anchor() { }
+
+ErrorOr<MachOUniversalBinary *>
+MachOUniversalBinary::create(MemoryBuffer *Source) {
+  error_code EC;
+  OwningPtr<MachOUniversalBinary> Ret(new MachOUniversalBinary(Source, EC));
+  if (EC)
+    return EC;
+  return Ret.take();
+}
 
 MachOUniversalBinary::MachOUniversalBinary(MemoryBuffer *Source,
                                            error_code &ec)

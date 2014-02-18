@@ -371,12 +371,12 @@ public:
 
   /// \brief Dumps the specified AST fragment and all subtrees to
   /// \c llvm::errs().
-  LLVM_ATTRIBUTE_USED void dump() const;
-  LLVM_ATTRIBUTE_USED void dump(SourceManager &SM) const;
+  void dump() const;
+  void dump(SourceManager &SM) const;
   void dump(raw_ostream &OS, SourceManager &SM) const;
 
   /// dumpColor - same as dump(), but forces color highlighting.
-  LLVM_ATTRIBUTE_USED void dumpColor() const;
+  void dumpColor() const;
 
   /// dumpPretty/printPretty - These two methods do a "pretty print" of the AST
   /// back to its original source language syntax.
@@ -547,7 +547,7 @@ public:
   CompoundStmt(const ASTContext &C, ArrayRef<Stmt*> Stmts,
                SourceLocation LB, SourceLocation RB);
 
-  // \brief Build an empty compound statment with a location.
+  // \brief Build an empty compound statement with a location.
   explicit CompoundStmt(SourceLocation Loc)
     : Stmt(CompoundStmtClass), Body(0), LBracLoc(Loc), RBracLoc(Loc) {
     CompoundStmtBits.NumStmts = 0;
@@ -1767,7 +1767,7 @@ public:
   }
 
   child_range children() {
-    return child_range(&Exprs[0], &Exprs[0]);
+    return child_range(&Exprs[0], &Exprs[NumInputs + NumOutputs]);
   }
 };
 

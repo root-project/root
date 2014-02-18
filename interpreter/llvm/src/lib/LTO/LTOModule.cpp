@@ -18,134 +18,41 @@
 #include "llvm/Bitcode/ReaderWriter.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCParser/MCAsmParser.h"
+#include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCTargetAsmParser.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/Host.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/system_error.h"
+#include "llvm/Target/TargetLowering.h"
+#include "llvm/Target/TargetLoweringObjectFile.h"
 #include "llvm/Target/TargetRegisterInfo.h"
+#include "llvm/Transforms/Utils/GlobalStatus.h"
 using namespace llvm;
-
-static cl::opt<bool>
-EnableFPMAD("enable-fp-mad",
-  cl::desc("Enable less precise MAD instructions to be generated"),
-  cl::init(false));
-
-static cl::opt<bool>
-DisableFPElim("disable-fp-elim",
-  cl::desc("Disable frame pointer elimination optimization"),
-  cl::init(false));
-
-static cl::opt<bool>
-EnableUnsafeFPMath("enable-unsafe-fp-math",
-  cl::desc("Enable optimizations that may decrease FP precision"),
-  cl::init(false));
-
-static cl::opt<bool>
-EnableNoInfsFPMath("enable-no-infs-fp-math",
-  cl::desc("Enable FP math optimizations that assume no +-Infs"),
-  cl::init(false));
-
-static cl::opt<bool>
-EnableNoNaNsFPMath("enable-no-nans-fp-math",
-  cl::desc("Enable FP math optimizations that assume no NaNs"),
-  cl::init(false));
-
-static cl::opt<bool>
-EnableHonorSignDependentRoundingFPMath("enable-sign-dependent-rounding-fp-math",
-  cl::Hidden,
-  cl::desc("Force codegen to assume rounding mode can change dynamically"),
-  cl::init(false));
-
-static cl::opt<bool>
-GenerateSoftFloatCalls("soft-float",
-  cl::desc("Generate software floating point library calls"),
-  cl::init(false));
-
-static cl::opt<llvm::FloatABI::ABIType>
-FloatABIForCalls("float-abi",
-  cl::desc("Choose float ABI type"),
-  cl::init(FloatABI::Default),
-  cl::values(
-    clEnumValN(FloatABI::Default, "default",
-               "Target default float ABI type"),
-    clEnumValN(FloatABI::Soft, "soft",
-               "Soft float ABI (implied by -soft-float)"),
-    clEnumValN(FloatABI::Hard, "hard",
-               "Hard float ABI (uses FP registers)"),
-    clEnumValEnd));
-
-static cl::opt<llvm::FPOpFusion::FPOpFusionMode>
-FuseFPOps("fp-contract",
-  cl::desc("Enable aggresive formation of fused FP ops"),
-  cl::init(FPOpFusion::Standard),
-  cl::values(
-    clEnumValN(FPOpFusion::Fast, "fast",
-               "Fuse FP ops whenever profitable"),
-    clEnumValN(FPOpFusion::Standard, "on",
-               "Only fuse 'blessed' FP ops."),
-    clEnumValN(FPOpFusion::Strict, "off",
-               "Only fuse FP ops when the result won't be effected."),
-    clEnumValEnd));
-
-static cl::opt<bool>
-DontPlaceZerosInBSS("nozero-initialized-in-bss",
-  cl::desc("Don't place zero-initialized symbols into bss section"),
-  cl::init(false));
-
-static cl::opt<bool>
-EnableGuaranteedTailCallOpt("tailcallopt",
-  cl::desc("Turn fastcc calls into tail calls by (potentially) changing ABI."),
-  cl::init(false));
-
-static cl::opt<bool>
-DisableTailCalls("disable-tail-calls",
-  cl::desc("Never emit tail calls"),
-  cl::init(false));
-
-static cl::opt<unsigned>
-OverrideStackAlignment("stack-alignment",
-  cl::desc("Override default stack alignment"),
-  cl::init(0));
-
-static cl::opt<std::string>
-TrapFuncName("trap-func", cl::Hidden,
-  cl::desc("Emit a call to trap function rather than a trap instruction"),
-  cl::init(""));
-
-static cl::opt<bool>
-EnablePIE("enable-pie",
-  cl::desc("Assume the creation of a position independent executable."),
-  cl::init(false));
-
-static cl::opt<bool>
-SegmentedStacks("segmented-stacks",
-  cl::desc("Use segmented stacks if possible."),
-  cl::init(false));
-
-static cl::opt<bool>
-UseInitArray("use-init-array",
-  cl::desc("Use .init_array instead of .ctors."),
-  cl::init(false));
 
 LTOModule::LTOModule(llvm::Module *m, llvm::TargetMachine *t)
   : _module(m), _target(t),
-    _context(_target->getMCAsmInfo(), _target->getRegisterInfo(), NULL),
-    _mangler(_context, t) {}
+    _context(_target->getMCAsmInfo(), _target->getRegisterInfo(), &ObjFileInfo),
+    _mangler(t->getDataLayout()) {
+  ObjFileInfo.InitMCObjectFileInfo(t->getTargetTriple(),
+                                   t->getRelocationModel(), t->getCodeModel(),
+                                   _context);
+}
 
 /// isBitcodeFile - Returns 'true' if the file (or memory contents) is LLVM
 /// bitcode.
@@ -189,23 +96,26 @@ bool LTOModule::isTargetMatch(MemoryBuffer *buffer, const char *triplePrefix) {
 
 /// makeLTOModule - Create an LTOModule. N.B. These methods take ownership of
 /// the buffer.
-LTOModule *LTOModule::makeLTOModule(const char *path, std::string &errMsg) {
+LTOModule *LTOModule::makeLTOModule(const char *path, TargetOptions options,
+                                    std::string &errMsg) {
   OwningPtr<MemoryBuffer> buffer;
   if (error_code ec = MemoryBuffer::getFile(path, buffer)) {
     errMsg = ec.message();
     return NULL;
   }
-  return makeLTOModule(buffer.take(), errMsg);
+  return makeLTOModule(buffer.take(), options, errMsg);
 }
 
 LTOModule *LTOModule::makeLTOModule(int fd, const char *path,
-                                    size_t size, std::string &errMsg) {
-  return makeLTOModule(fd, path, size, 0, errMsg);
+                                    size_t size, TargetOptions options,
+                                    std::string &errMsg) {
+  return makeLTOModule(fd, path, size, 0, options, errMsg);
 }
 
 LTOModule *LTOModule::makeLTOModule(int fd, const char *path,
                                     size_t map_size,
                                     off_t offset,
+                                    TargetOptions options,
                                     std::string &errMsg) {
   OwningPtr<MemoryBuffer> buffer;
   if (error_code ec =
@@ -213,48 +123,30 @@ LTOModule *LTOModule::makeLTOModule(int fd, const char *path,
     errMsg = ec.message();
     return NULL;
   }
-  return makeLTOModule(buffer.take(), errMsg);
+  return makeLTOModule(buffer.take(), options, errMsg);
 }
 
 LTOModule *LTOModule::makeLTOModule(const void *mem, size_t length,
-                                    std::string &errMsg) {
-  OwningPtr<MemoryBuffer> buffer(makeBuffer(mem, length));
+                                    TargetOptions options,
+                                    std::string &errMsg, StringRef path) {
+  OwningPtr<MemoryBuffer> buffer(makeBuffer(mem, length, path));
   if (!buffer)
     return NULL;
-  return makeLTOModule(buffer.take(), errMsg);
-}
-
-void LTOModule::getTargetOptions(TargetOptions &Options) {
-  Options.LessPreciseFPMADOption = EnableFPMAD;
-  Options.NoFramePointerElim = DisableFPElim;
-  Options.AllowFPOpFusion = FuseFPOps;
-  Options.UnsafeFPMath = EnableUnsafeFPMath;
-  Options.NoInfsFPMath = EnableNoInfsFPMath;
-  Options.NoNaNsFPMath = EnableNoNaNsFPMath;
-  Options.HonorSignDependentRoundingFPMathOption =
-    EnableHonorSignDependentRoundingFPMath;
-  Options.UseSoftFloat = GenerateSoftFloatCalls;
-  if (FloatABIForCalls != FloatABI::Default)
-    Options.FloatABIType = FloatABIForCalls;
-  Options.NoZerosInBSS = DontPlaceZerosInBSS;
-  Options.GuaranteedTailCallOpt = EnableGuaranteedTailCallOpt;
-  Options.DisableTailCalls = DisableTailCalls;
-  Options.StackAlignmentOverride = OverrideStackAlignment;
-  Options.TrapFuncName = TrapFuncName;
-  Options.PositionIndependentExecutable = EnablePIE;
-  Options.EnableSegmentedStacks = SegmentedStacks;
-  Options.UseInitArray = UseInitArray;
+  return makeLTOModule(buffer.take(), options, errMsg);
 }
 
 LTOModule *LTOModule::makeLTOModule(MemoryBuffer *buffer,
+                                    TargetOptions options,
                                     std::string &errMsg) {
   // parse bitcode buffer
-  OwningPtr<Module> m(getLazyBitcodeModule(buffer, getGlobalContext(),
-                                           &errMsg));
-  if (!m) {
+  ErrorOr<Module *> ModuleOrErr =
+      getLazyBitcodeModule(buffer, getGlobalContext());
+  if (error_code EC = ModuleOrErr.getError()) {
+    errMsg = EC.message();
     delete buffer;
     return NULL;
   }
+  OwningPtr<Module> m(ModuleOrErr.get());
 
   std::string TripleStr = m->getTargetTriple();
   if (TripleStr.empty())
@@ -278,23 +170,27 @@ LTOModule *LTOModule::makeLTOModule(MemoryBuffer *buffer,
     else if (Triple.getArch() == llvm::Triple::x86)
       CPU = "yonah";
   }
-  TargetOptions Options;
-  getTargetOptions(Options);
+
   TargetMachine *target = march->createTargetMachine(TripleStr, CPU, FeatureStr,
-                                                     Options);
+                                                     options);
+  m->materializeAllPermanently();
+
   LTOModule *Ret = new LTOModule(m.take(), target);
   if (Ret->parseSymbols(errMsg)) {
     delete Ret;
     return NULL;
   }
 
+  Ret->parseMetadata();
+
   return Ret;
 }
 
-/// makeBuffer - Create a MemoryBuffer from a memory range.
-MemoryBuffer *LTOModule::makeBuffer(const void *mem, size_t length) {
+/// Create a MemoryBuffer from a memory range with an optional name.
+MemoryBuffer *LTOModule::makeBuffer(const void *mem, size_t length,
+                                    StringRef name) {
   const char *startPtr = (const char*)mem;
-  return MemoryBuffer::getMemBuffer(StringRef(startPtr, length), "", false);
+  return MemoryBuffer::getMemBuffer(StringRef(startPtr, length), name, false);
 }
 
 /// objcClassNameFromExpression - Get string that the data pointer points to.
@@ -453,6 +349,30 @@ void LTOModule::addDefinedFunctionSymbol(const Function *f) {
   addDefinedSymbol(f, true);
 }
 
+static bool canBeHidden(const GlobalValue *GV) {
+  // FIXME: this is duplicated with another static function in AsmPrinter.cpp
+  GlobalValue::LinkageTypes L = GV->getLinkage();
+
+  if (L != GlobalValue::LinkOnceODRLinkage)
+    return false;
+
+  if (GV->hasUnnamedAddr())
+    return true;
+
+  // If it is a non constant variable, it needs to be uniqued across shared
+  // objects.
+  if (const GlobalVariable *Var = dyn_cast<GlobalVariable>(GV)) {
+    if (!Var->isConstant())
+      return false;
+  }
+
+  GlobalStatus GS;
+  if (GlobalStatus::analyzeGlobal(GV, GS))
+    return false;
+
+  return !GS.IsCompared;
+}
+
 /// addDefinedSymbol - Add a defined symbol to the list.
 void LTOModule::addDefinedSymbol(const GlobalValue *def, bool isFunction) {
   // ignore all llvm.* symbols
@@ -461,7 +381,7 @@ void LTOModule::addDefinedSymbol(const GlobalValue *def, bool isFunction) {
 
   // string is owned by _defines
   SmallString<64> Buffer;
-  _mangler.getNameWithPrefix(Buffer, def, false);
+  _mangler.getNameWithPrefix(Buffer, def);
 
   // set alignment part log2() can have rounding errors
   uint32_t align = def->getAlignment();
@@ -492,12 +412,12 @@ void LTOModule::addDefinedSymbol(const GlobalValue *def, bool isFunction) {
     attr |= LTO_SYMBOL_SCOPE_HIDDEN;
   else if (def->hasProtectedVisibility())
     attr |= LTO_SYMBOL_SCOPE_PROTECTED;
+  else if (canBeHidden(def))
+    attr |= LTO_SYMBOL_SCOPE_DEFAULT_CAN_BE_HIDDEN;
   else if (def->hasExternalLinkage() || def->hasWeakLinkage() ||
            def->hasLinkOnceLinkage() || def->hasCommonLinkage() ||
            def->hasLinkerPrivateWeakLinkage())
     attr |= LTO_SYMBOL_SCOPE_DEFAULT;
-  else if (def->hasLinkOnceODRAutoHideLinkage())
-    attr |= LTO_SYMBOL_SCOPE_DEFAULT_CAN_BE_HIDDEN;
   else
     attr |= LTO_SYMBOL_SCOPE_INTERNAL;
 
@@ -597,7 +517,7 @@ LTOModule::addPotentialUndefinedSymbol(const GlobalValue *decl, bool isFunc) {
     return;
 
   SmallString<64> name;
-  _mangler.getNameWithPrefix(name, decl, false);
+  _mangler.getNameWithPrefix(name, decl);
 
   StringMap<NameAndAttributes>::value_type &entry =
     _undefines.GetOrCreateValue(name);
@@ -622,6 +542,7 @@ LTOModule::addPotentialUndefinedSymbol(const GlobalValue *decl, bool isFunc) {
 }
 
 namespace {
+
   class RecordStreamer : public MCStreamer {
   public:
     enum State { NeverSeen, Global, Defined, DefinedGlobal, Used };
@@ -711,10 +632,9 @@ namespace {
       return Symbols.end();
     }
 
-    RecordStreamer(MCContext &Context)
-        : MCStreamer(SK_RecordStreamer, Context) {}
+    RecordStreamer(MCContext &Context) : MCStreamer(Context) {}
 
-    virtual void EmitInstruction(const MCInst &Inst) {
+    virtual void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo &STI) {
       // Scan for values.
       for (unsigned i = Inst.getNumOperands(); i--; )
         if (Inst.getOperand(i).isExpr())
@@ -752,8 +672,6 @@ namespace {
     // Noop calls.
     virtual void ChangeSection(const MCSection *Section,
                                const MCExpr *Subsection) {}
-    virtual void InitToTextSection() {}
-    virtual void InitSections() {}
     virtual void EmitAssemblerFlag(MCAssemblerFlag Flag) {}
     virtual void EmitThumbFunc(MCSymbol *Func) {}
     virtual void EmitSymbolDesc(MCSymbol *Symbol, unsigned DescValue) {}
@@ -786,10 +704,6 @@ namespace {
     virtual void FinishImpl() {}
     virtual void EmitCFIEndProcImpl(MCDwarfFrameInfo &Frame) {
       RecordProcEnd(Frame);
-    }
-
-    static bool classof(const MCStreamer *S) {
-      return S->getKind() == SK_RecordStreamer;
     }
   };
 } // end anonymous namespace
@@ -897,4 +811,28 @@ bool LTOModule::parseSymbols(std::string &errMsg) {
   }
 
   return false;
+}
+
+/// parseMetadata - Parse metadata from the module
+void LTOModule::parseMetadata() {
+  // Linker Options
+  if (Value *Val = _module->getModuleFlag("Linker Options")) {
+    MDNode *LinkerOptions = cast<MDNode>(Val);
+    for (unsigned i = 0, e = LinkerOptions->getNumOperands(); i != e; ++i) {
+      MDNode *MDOptions = cast<MDNode>(LinkerOptions->getOperand(i));
+      for (unsigned ii = 0, ie = MDOptions->getNumOperands(); ii != ie; ++ii) {
+        MDString *MDOption = cast<MDString>(MDOptions->getOperand(ii));
+        StringRef Op = _linkeropt_strings.
+            GetOrCreateValue(MDOption->getString()).getKey();
+        StringRef DepLibName = _target->getTargetLowering()->
+            getObjFileLowering().getDepLibFromLinkerOpt(Op);
+        if (!DepLibName.empty())
+          _deplibs.push_back(DepLibName.data());
+        else if (!Op.empty())
+          _linkeropts.push_back(Op.data());
+      }
+    }
+  }
+
+  // Add other interesting metadata here.
 }

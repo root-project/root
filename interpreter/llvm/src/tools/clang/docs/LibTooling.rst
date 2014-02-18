@@ -60,13 +60,18 @@ and automatic location of the compilation database using source files paths.
 .. code-block:: c++
 
   #include "clang/Tooling/CommonOptionsParser.h"
+  #include "llvm/Support/CommandLine.h"
 
   using namespace clang::tooling;
+
+  // Apply a custom category to all command-line options so that they are the
+  // only ones displayed.
+  static llvm::cl::OptionCategory MyToolCategory("my-tool options");
 
   int main(int argc, const char **argv) {
     // CommonOptionsParser constructor will parse arguments and create a
     // CompilationDatabase.  In case of error it will terminate the program.
-    CommonOptionsParser OptionsParser(argc, argv);
+    CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
 
     // Use OptionsParser.getCompilations() and OptionsParser.getSourcePathList()
     // to retrieve CompilationDatabase and the list of input file paths.
@@ -99,8 +104,8 @@ our ``FrontendAction`` over some code.  For example, to run the
 Putting it together --- the first tool
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Now we combine the two previous steps into our first real tool.  This example
-tool is also checked into the clang tree at
+Now we combine the two previous steps into our first real tool.  A more advanced
+version of this example tool is also checked into the clang tree at
 ``tools/clang-check/ClangCheck.cpp``.
 
 .. code-block:: c++
@@ -115,6 +120,10 @@ tool is also checked into the clang tree at
   using namespace clang::tooling;
   using namespace llvm;
 
+  // Apply a custom category to all command-line options so that they are the
+  // only ones displayed.
+  static cl::OptionCategory MyToolCategory("my-tool options");
+
   // CommonOptionsParser declares HelpMessage with a description of the common
   // command-line options related to the compilation database and input files.
   // It's nice to have this help message in all tools.
@@ -124,9 +133,9 @@ tool is also checked into the clang tree at
   static cl::extrahelp MoreHelp("\nMore help text...");
 
   int main(int argc, const char **argv) {
-    CommonOptionsParser OptionsParser(argc, argv);
+    CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
     ClangTool Tool(OptionsParser.getCompilations(),
-    OptionsParser.getSourcePathList());
+                   OptionsParser.getSourcePathList());
     return Tool.run(newFrontendActionFactory<clang::SyntaxOnlyAction>());
   }
 

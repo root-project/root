@@ -337,7 +337,9 @@ class PointerEscape {
     for (InvalidatedSymbols::const_iterator I = Escaped.begin(), 
                                             E = Escaped.end(); I != E; ++I)
       if (!ETraits->hasTrait(*I,
-              RegionAndSymbolInvalidationTraits::TK_PreserveContents))
+              RegionAndSymbolInvalidationTraits::TK_PreserveContents) &&
+          !ETraits->hasTrait(*I,
+              RegionAndSymbolInvalidationTraits::TK_SuppressEscape))
         RegularEscape.insert(*I);
 
     if (RegularEscape.empty())
@@ -375,7 +377,9 @@ class ConstPointerEscape {
     for (InvalidatedSymbols::const_iterator I = Escaped.begin(), 
                                             E = Escaped.end(); I != E; ++I)
       if (ETraits->hasTrait(*I,
-              RegionAndSymbolInvalidationTraits::TK_PreserveContents))
+              RegionAndSymbolInvalidationTraits::TK_PreserveContents) &&
+          !ETraits->hasTrait(*I,
+              RegionAndSymbolInvalidationTraits::TK_SuppressEscape))
         ConstEscape.insert(*I);
 
     if (ConstEscape.empty())
@@ -449,14 +453,18 @@ public:
 } // end eval namespace
 
 class CheckerBase : public ProgramPointTag {
+  CheckName Name;
+  friend class ::clang::ento::CheckerManager;
+
 public:
   StringRef getTagDescription() const;
+  CheckName getCheckName() const;
 
   /// See CheckerManager::runCheckersForPrintState.
   virtual void printState(raw_ostream &Out, ProgramStateRef State,
                           const char *NL, const char *Sep) const { }
 };
-  
+
 template <typename CHECK1, typename CHECK2=check::_VoidCheck,
           typename CHECK3=check::_VoidCheck, typename CHECK4=check::_VoidCheck,
           typename CHECK5=check::_VoidCheck, typename CHECK6=check::_VoidCheck,

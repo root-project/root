@@ -21,6 +21,10 @@
 # define __has_feature(x) 0
 #endif
 
+#ifndef __has_extension
+# define __has_extension(x) 0
+#endif
+
 #ifndef __has_attribute
 # define __has_attribute(x) 0
 #endif
@@ -40,12 +44,23 @@
 # endif
 #endif
 
+/// \macro LLVM_MSC_PREREQ
+/// \brief Is the compiler MSVC of at least the specified version?
+/// The common \param version values to check for are:
+///  * 1600: Microsoft Visual Studio 2010 / 10.0
+///  * 1700: Microsoft Visual Studio 2012 / 11.0
+///  * 1800: Microsoft Visual Studio 2013 / 12.0
+#ifdef _MSC_VER
+#define LLVM_MSC_PREREQ(version) (_MSC_VER >= (version))
+#else
+#define LLVM_MSC_PREREQ(version) 0
+#endif
+
 /// \brief Does the compiler support r-value references?
 /// This implies that <utility> provides the one-argument std::move;  it
 /// does not imply the existence of any other C++ library features.
-#if (__has_feature(cxx_rvalue_references)   \
-     || defined(__GXX_EXPERIMENTAL_CXX0X__) \
-     || (defined(_MSC_VER) && _MSC_VER >= 1600))
+#if __has_feature(cxx_rvalue_references) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1600)
 #define LLVM_HAS_RVALUE_REFERENCES 1
 #else
 #define LLVM_HAS_RVALUE_REFERENCES 0
@@ -72,8 +87,7 @@
 /// * {true,false}_type
 /// * is_constructible
 /// * etc...
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) \
-    || (defined(_MSC_VER) && _MSC_VER >= 1700)
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
 #define LLVM_HAS_CXX11_TYPETRAITS 1
 #else
 #define LLVM_HAS_CXX11_TYPETRAITS 0
@@ -83,8 +97,7 @@
 /// \brief Does the compiler have the C++11 standard library.
 ///
 /// Implies LLVM_HAS_RVALUE_REFERENCES, LLVM_HAS_CXX11_TYPETRAITS
-#if defined(__GXX_EXPERIMENTAL_CXX0X__) \
-    || (defined(_MSC_VER) && _MSC_VER >= 1700)
+#if defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
 #define LLVM_HAS_CXX11_STDLIB 1
 #else
 #define LLVM_HAS_CXX11_STDLIB 0
@@ -94,7 +107,7 @@
 /// \brief Does this compiler support variadic templates.
 ///
 /// Implies LLVM_HAS_RVALUE_REFERENCES and the existence of std::forward.
-#if __has_feature(cxx_variadic_templates)
+#if __has_feature(cxx_variadic_templates) || LLVM_MSC_PREREQ(1800)
 # define LLVM_HAS_VARIADIC_TEMPLATES 1
 #else
 # define LLVM_HAS_VARIADIC_TEMPLATES 0
@@ -129,9 +142,8 @@
 /// public:
 ///   ...
 /// };
-#if (__has_feature(cxx_deleted_functions) \
-     || defined(__GXX_EXPERIMENTAL_CXX0X__))
-     // No version of MSVC currently supports this.
+#if __has_feature(cxx_deleted_functions) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1800)
 #define LLVM_DELETED_FUNCTION = delete
 #else
 #define LLVM_DELETED_FUNCTION
@@ -139,8 +151,8 @@
 
 /// LLVM_FINAL - Expands to 'final' if the compiler supports it.
 /// Use to mark classes or virtual methods as final.
-#if __has_feature(cxx_override_control) \
-    || (defined(_MSC_VER) && _MSC_VER >= 1700)
+#if __has_feature(cxx_override_control) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
 #define LLVM_FINAL final
 #else
 #define LLVM_FINAL
@@ -148,8 +160,8 @@
 
 /// LLVM_OVERRIDE - Expands to 'override' if the compiler supports it.
 /// Use to mark virtual methods as overriding a base class method.
-#if __has_feature(cxx_override_control) \
-    || (defined(_MSC_VER) && _MSC_VER >= 1700)
+#if __has_feature(cxx_override_control) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
 #define LLVM_OVERRIDE override
 #else
 #define LLVM_OVERRIDE
@@ -374,8 +386,8 @@
 /// \macro LLVM_EXPLICIT
 /// \brief Expands to explicit on compilers which support explicit conversion
 /// operators. Otherwise expands to nothing.
-#if (__has_feature(cxx_explicit_conversions) \
-     || defined(__GXX_EXPERIMENTAL_CXX0X__))
+#if __has_feature(cxx_explicit_conversions) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1800)
 #define LLVM_EXPLICIT explicit
 #else
 #define LLVM_EXPLICIT
@@ -383,10 +395,13 @@
 
 /// \macro LLVM_STATIC_ASSERT
 /// \brief Expands to C/C++'s static_assert on compilers which support it.
-#if __has_feature(cxx_static_assert)
+#if __has_feature(cxx_static_assert) || \
+    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1600)
 # define LLVM_STATIC_ASSERT(expr, msg) static_assert(expr, msg)
 #elif __has_feature(c_static_assert)
 # define LLVM_STATIC_ASSERT(expr, msg) _Static_assert(expr, msg)
+#elif __has_extension(c_static_assert)
+# define LLVM_STATIC_ASSERT(expr, msg) LLVM_EXTENSION _Static_assert(expr, msg)
 #else
 # define LLVM_STATIC_ASSERT(expr, msg)
 #endif
@@ -395,12 +410,37 @@
 /// \brief Expands to colon followed by the given integral type on compilers
 /// which support C++11 strong enums.  This can be used to make enums unsigned
 /// with MSVC.
-#if __has_feature(cxx_strong_enums)
-# define LLVM_ENUM_INT_TYPE(intty) : intty
-#elif defined(_MSC_VER) && _MSC_VER >= 1600  // Added in MSVC 2010.
+#if __has_feature(cxx_strong_enums) || LLVM_MSC_PREREQ(1600)
 # define LLVM_ENUM_INT_TYPE(intty) : intty
 #else
 # define LLVM_ENUM_INT_TYPE(intty)
+#endif
+
+/// \brief Does the compiler support C++11 semantics for strongly typed forward
+/// declared enums?
+#if __has_feature(cxx_strong_enums) || LLVM_MSC_PREREQ(1700)
+#define LLVM_HAS_STRONG_ENUMS 1
+#else
+#define LLVM_HAS_STRONG_ENUMS 0
+#endif
+
+/// \brief Does the compiler support generalized initializers (using braced
+/// lists and std::initializer_list).  While clang may claim it supports general
+/// initializers, if we're using MSVC's headers, we might not have a usable
+/// std::initializer list type from the STL.  Disable this for now.
+#if __has_feature(cxx_generalized_initializers) && !defined(_MSC_VER)
+#define LLVM_HAS_INITIALIZER_LISTS 1
+#else
+#define LLVM_HAS_INITIALIZER_LISTS 0
+#endif
+
+/// \brief Mark debug helper function definitions like dump() that should not be
+/// stripped from debug builds.
+// FIXME: Move this to a private config.h as it's not usable in public headers.
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+#define LLVM_DUMP_METHOD LLVM_ATTRIBUTE_NOINLINE LLVM_ATTRIBUTE_USED
+#else
+#define LLVM_DUMP_METHOD LLVM_ATTRIBUTE_NOINLINE
 #endif
 
 #endif

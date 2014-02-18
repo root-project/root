@@ -33,9 +33,11 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/GraphTraits.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/Pass.h"
+#include "llvm/Support/CFG.h"
 #include <algorithm>
 
 namespace llvm {
@@ -53,6 +55,7 @@ class Loop;
 class MDNode;
 class PHINode;
 class raw_ostream;
+template<class N> class DominatorTreeBase;
 template<class N, class M> class LoopInfoBase;
 template<class N, class M> class LoopBase;
 
@@ -68,6 +71,8 @@ class LoopBase {
 
   // Blocks - The list of blocks in this loop.  First entry is the header node.
   std::vector<BlockT*> Blocks;
+
+  SmallPtrSet<const BlockT*, 8> DenseBlockSet;
 
   LoopBase(const LoopBase<BlockT, LoopT> &) LLVM_DELETED_FUNCTION;
   const LoopBase<BlockT, LoopT>&
@@ -108,7 +113,7 @@ public:
   /// contains - Return true if the specified basic block is in this loop.
   ///
   bool contains(const BlockT *BB) const {
-    return std::find(block_begin(), block_end(), BB) != block_end();
+    return DenseBlockSet.count(BB);
   }
 
   /// contains - Return true if the specified instruction is in this loop.
@@ -134,7 +139,6 @@ public:
   /// getBlocks - Get a list of the basic blocks which make up this loop.
   ///
   const std::vector<BlockT*> &getBlocks() const { return Blocks; }
-  std::vector<BlockT*> &getBlocksVector() { return Blocks; }
   typedef typename std::vector<BlockT*>::const_iterator block_iterator;
   block_iterator block_begin() const { return Blocks.begin(); }
   block_iterator block_end() const { return Blocks.end(); }
@@ -227,6 +231,18 @@ public:
   /// A latch block is a block that contains a branch back to the header.
   BlockT *getLoopLatch() const;
 
+  /// getLoopLatches - Return all loop latch blocks of this loop. A latch block
+  /// is a block that contains a branch back to the header.
+  void getLoopLatches(SmallVectorImpl<BlockT *> &LoopLatches) const {
+    BlockT *H = getHeader();
+    typedef GraphTraits<Inverse<BlockT*> > InvBlockTraits;
+    for (typename InvBlockTraits::ChildIteratorType I =
+         InvBlockTraits::child_begin(H),
+         E = InvBlockTraits::child_end(H); I != E; ++I)
+      if (contains(*I))
+        LoopLatches.push_back(*I);
+  }
+
   //===--------------------------------------------------------------------===//
   // APIs for updating loop information after changing the CFG
   //
@@ -271,6 +287,17 @@ public:
   /// transformations should use addBasicBlockToLoop.
   void addBlockEntry(BlockT *BB) {
     Blocks.push_back(BB);
+    DenseBlockSet.insert(BB);
+  }
+
+  /// reverseBlocks - interface to reverse Blocks[from, end of loop] in this loop
+  void reverseBlock(unsigned from) {
+    std::reverse(Blocks.begin() + from, Blocks.end());
+  }
+
+  /// reserveBlocks- interface to do reserve() for Blocks
+  void reserveBlocks(unsigned size) {
+    Blocks.reserve(size);
   }
 
   /// moveToHeader - This method is used to move BB (which must be part of this
@@ -293,6 +320,7 @@ public:
   /// the mapping in the LoopInfo class.
   void removeBlockFromLoop(BlockT *BB) {
     RemoveFromVector(Blocks, BB);
+    DenseBlockSet.erase(BB);
   }
 
   /// verifyLoop - Verify loop structure
@@ -307,6 +335,7 @@ protected:
   friend class LoopInfoBase<BlockT, LoopT>;
   explicit LoopBase(BlockT *BB) : ParentLoop(0) {
     Blocks.push_back(BB);
+    DenseBlockSet.insert(BB);
   }
 };
 

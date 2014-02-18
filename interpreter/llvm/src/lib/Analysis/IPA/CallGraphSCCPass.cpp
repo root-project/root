@@ -22,7 +22,7 @@
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IntrinsicInst.h"
-#include "llvm/PassManagers.h"
+#include "llvm/IR/LegacyPassManagers.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Timer.h"
@@ -60,7 +60,7 @@ public:
   /// Pass Manager itself does not invalidate any analysis info.
   void getAnalysisUsage(AnalysisUsage &Info) const {
     // CGPassManager walks SCC and it needs CallGraph.
-    Info.addRequired<CallGraph>();
+    Info.addRequired<CallGraphWrapperPass>();
     Info.setPreservesAll();
   }
 
@@ -424,7 +424,7 @@ bool CGPassManager::RunAllPassesOnSCC(CallGraphSCC &CurSCC, CallGraph &CG,
 /// run - Execute all of the passes scheduled for execution.  Keep track of
 /// whether any of the passes modifies the module, and if so, return true.
 bool CGPassManager::runOnModule(Module &M) {
-  CallGraph &CG = getAnalysis<CallGraph>();
+  CallGraph &CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
   bool Changed = doInitialization(CG);
   
   // Walk the callgraph in bottom-up SCC order.
@@ -570,8 +570,8 @@ void CallGraphSCCPass::assignPassManager(PMStack &PMS,
 /// the call graph.  If the derived class implements this method, it should
 /// always explicitly call the implementation here.
 void CallGraphSCCPass::getAnalysisUsage(AnalysisUsage &AU) const {
-  AU.addRequired<CallGraph>();
-  AU.addPreserved<CallGraph>();
+  AU.addRequired<CallGraphWrapperPass>();
+  AU.addPreserved<CallGraphWrapperPass>();
 }
 
 

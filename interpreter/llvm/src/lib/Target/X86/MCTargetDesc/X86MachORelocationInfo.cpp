@@ -11,8 +11,8 @@
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
-#include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCRelocationInfo.h"
+#include "llvm/MC/MCSymbol.h"
 #include "llvm/Object/MachO.h"
 
 using namespace llvm;
@@ -72,9 +72,9 @@ public:
       break;
     case X86_64_RELOC_SUBTRACTOR:
       {
-        RelocationRef RelNext;
-        Obj->getRelocationNext(Rel.getRawDataRefImpl(), RelNext);
-        any_relocation_info RENext = Obj->getRelocation(RelNext.getRawDataRefImpl());
+        Rel.moveNext();
+        any_relocation_info RENext =
+            Obj->getRelocation(Rel.getRawDataRefImpl());
 
         // X86_64_SUBTRACTOR must be followed by a relocation of type
         // X86_64_RELOC_UNSIGNED.
@@ -86,7 +86,7 @@ public:
 
         const MCExpr *LHS = MCSymbolRefExpr::Create(Sym, Ctx);
 
-        symbol_iterator RSymI = RelNext.getSymbol();
+        symbol_iterator RSymI = Rel.getSymbol();
         uint64_t RSymAddr;
         RSymI->getAddress(RSymAddr);
         StringRef RSymName;

@@ -16,8 +16,8 @@
 #define LLVM_ANALYSIS_LOOPPASS_H
 
 #include "llvm/Analysis/LoopInfo.h"
+#include "llvm/IR/LegacyPassManagers.h"
 #include "llvm/Pass.h"
-#include "llvm/PassManagers.h"
 #include <deque>
 
 namespace llvm {
@@ -81,6 +81,11 @@ public:
 
   /// deleteAnalysisValue - Delete analysis info associated with value V.
   virtual void deleteAnalysisValue(Value *V, Loop *L) {}
+
+protected:
+  /// skipOptnoneFunction - Containing function has Attribute::OptimizeNone
+  /// and most transformation passes should skip it.
+  bool skipOptnoneFunction(Loop *L) const;
 };
 
 class LPPassManager : public FunctionPass, public PMDataManager {

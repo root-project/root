@@ -21,10 +21,11 @@ add_dependencies(clangTooling
   )
 
 target_link_libraries(clangTooling
-  clangBasic
-  clangFrontend
   clangAST
   clangASTMatchers
+  clangBasic
+  clangDriver
+  clangFrontend
+  clangLex
   clangRewriteCore
-  clangRewriteFrontend
   )

@@ -22,6 +22,7 @@ class ExprInspectionChecker : public Checker< eval::Call > {
 
   void analyzerEval(const CallExpr *CE, CheckerContext &C) const;
   void analyzerCheckInlined(const CallExpr *CE, CheckerContext &C) const;
+  void analyzerWarnIfReached(const CallExpr *CE, CheckerContext &C) const;
   void analyzerCrash(const CallExpr *CE, CheckerContext &C) const;
 
   typedef void (ExprInspectionChecker::*FnCheck)(const CallExpr *,
@@ -41,6 +42,7 @@ bool ExprInspectionChecker::evalCall(const CallExpr *CE,
     .Case("clang_analyzer_checkInlined",
           &ExprInspectionChecker::analyzerCheckInlined)
     .Case("clang_analyzer_crash", &ExprInspectionChecker::analyzerCrash)
+    .Case("clang_analyzer_warnIfReached", &ExprInspectionChecker::analyzerWarnIfReached)
     .Default(0);
 
   if (!Handler)
@@ -93,9 +95,20 @@ void ExprInspectionChecker::analyzerEval(const CallExpr *CE,
     return;
 
   if (!BT)
-    BT.reset(new BugType("Checking analyzer assumptions", "debug"));
+    BT.reset(new BugType(this, "Checking analyzer assumptions", "debug"));
 
   BugReport *R = new BugReport(*BT, getArgumentValueString(CE, C), N);
+  C.emitReport(R);
+}
+
+void ExprInspectionChecker::analyzerWarnIfReached(const CallExpr *CE,
+                                                  CheckerContext &C) const {
+  ExplodedNode *N = C.getPredecessor();
+
+  if (!BT)
+    BT.reset(new BugType(this, "Checking analyzer assumptions", "debug"));
+
+  BugReport *R = new BugReport(*BT, "REACHABLE", N);
   C.emitReport(R);
 }
 
@@ -113,7 +126,7 @@ void ExprInspectionChecker::analyzerCheckInlined(const CallExpr *CE,
     return;
 
   if (!BT)
-    BT.reset(new BugType("Checking analyzer assumptions", "debug"));
+    BT.reset(new BugType(this, "Checking analyzer assumptions", "debug"));
 
   BugReport *R = new BugReport(*BT, getArgumentValueString(CE, C), N);
   C.emitReport(R);

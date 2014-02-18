@@ -33,9 +33,6 @@
 /* Directory where gcc is installed. */
 #undef GCC_INSTALL_PREFIX
 
-/* Define to 1 if you have the `arc4random' function. */
-#undef HAVE_ARC4RANDOM
-
 /* Define to 1 if you have the `argz_append' function. */
 #undef HAVE_ARGZ_APPEND
 
@@ -74,6 +71,10 @@
 
 /* Define to 1 if you have the <cxxabi.h> header file. */
 #undef HAVE_CXXABI_H
+
+/* Define to 1 if you have the declaration of `arc4random', and to 0 if you
+   don't. */
+#undef HAVE_DECL_ARC4RANDOM
 
 /* Define to 1 if you have the declaration of `FE_ALL_EXCEPT', and to 0 if you
    don't. */
@@ -205,6 +206,9 @@
 /* Define if you have the libdl library or equivalent. */
 #undef HAVE_LIBDL
 
+/* Define if libedit is available on this platform. */
+#undef HAVE_LIBEDIT
+
 /* Define to 1 if you have the `imagehlp' library (-limagehlp). */
 #undef HAVE_LIBIMAGEHLP
 
@@ -216,6 +220,9 @@
 
 /* Define to 1 if you have the `pthread' library (-lpthread). */
 #undef HAVE_LIBPTHREAD
+
+/* Define to 1 if you have the `shell32' library (-lshell32). */
+#undef HAVE_LIBSHELL32
 
 /* Define to 1 if you have the `udis86' library (-ludis86). */
 #undef HAVE_LIBUDIS86

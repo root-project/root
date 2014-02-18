@@ -7,19 +7,19 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file implements the top level handling of macro expasion for the
+// This file implements the top level handling of macro expansion for the
 // preprocessor.
 //
 //===----------------------------------------------------------------------===//
 
 #include "clang/Lex/Preprocessor.h"
-#include "clang/Lex/MacroArgs.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/CodeCompletionHandler.h"
 #include "clang/Lex/ExternalPreprocessorSource.h"
 #include "clang/Lex/LexDiagnostic.h"
+#include "clang/Lex/MacroArgs.h"
 #include "clang/Lex/MacroInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
@@ -914,6 +914,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("objc_modules", LangOpts.ObjC2 && LangOpts.Modules)
            .Case("objc_nonfragile_abi", LangOpts.ObjCRuntime.isNonFragile())
            .Case("objc_property_explicit_atomic", true) // Does clang support explicit "atomic" keyword?
+           .Case("objc_protocol_qualifier_mangling", true)
            .Case("objc_weak_class", LangOpts.ObjCRuntime.hasWeakClassImport())
            .Case("ownership_holds", true)
            .Case("ownership_returns", true)
@@ -962,7 +963,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("cxx_rvalue_references", LangOpts.CPlusPlus11)
            .Case("cxx_strong_enums", LangOpts.CPlusPlus11)
            .Case("cxx_static_assert", LangOpts.CPlusPlus11)
-           .Case("cxx_thread_local", 
+           .Case("cxx_thread_local",
                  LangOpts.CPlusPlus11 && PP.getTargetInfo().isTLSSupported())
            .Case("cxx_trailing_return", LangOpts.CPlusPlus11)
            .Case("cxx_unicode_literals", LangOpts.CPlusPlus11)
@@ -973,12 +974,12 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("cxx_aggregate_nsdmi", LangOpts.CPlusPlus1y)
            .Case("cxx_binary_literals", LangOpts.CPlusPlus1y)
            .Case("cxx_contextual_conversions", LangOpts.CPlusPlus1y)
-           //.Case("cxx_generic_lambda", LangOpts.CPlusPlus1y)
-           //.Case("cxx_init_capture", LangOpts.CPlusPlus1y)
+           //.Case("cxx_generic_lambdas", LangOpts.CPlusPlus1y)
+           .Case("cxx_init_captures", LangOpts.CPlusPlus1y)
            .Case("cxx_relaxed_constexpr", LangOpts.CPlusPlus1y)
            .Case("cxx_return_type_deduction", LangOpts.CPlusPlus1y)
-           //.Case("cxx_runtime_array", LangOpts.CPlusPlus1y)
-           //.Case("cxx_variable_templates", LangOpts.CPlusPlus1y)
+           //.Case("cxx_runtime_arrays", LangOpts.CPlusPlus1y)
+           .Case("cxx_variable_templates", LangOpts.CPlusPlus1y)
            // Type traits
            .Case("has_nothrow_assign", LangOpts.CPlusPlus)
            .Case("has_nothrow_copy", LangOpts.CPlusPlus)
@@ -999,6 +1000,7 @@ static bool HasFeature(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("is_standard_layout", LangOpts.CPlusPlus)
            .Case("is_pod", LangOpts.CPlusPlus)
            .Case("is_polymorphic", LangOpts.CPlusPlus)
+           .Case("is_sealed", LangOpts.MicrosoftExt)
            .Case("is_trivial", LangOpts.CPlusPlus)
            .Case("is_trivially_assignable", LangOpts.CPlusPlus)
            .Case("is_trivially_constructible", LangOpts.CPlusPlus)
@@ -1053,15 +1055,17 @@ static bool HasExtension(const Preprocessor &PP, const IdentifierInfo *II) {
            .Case("cxx_rvalue_references", LangOpts.CPlusPlus)
            // C++1y features supported by other languages as extensions.
            .Case("cxx_binary_literals", true)
+           .Case("cxx_init_captures", LangOpts.CPlusPlus11)
+           .Case("cxx_variable_templates", LangOpts.CPlusPlus)
            .Default(false);
 }
 
 /// HasAttribute -  Return true if we recognize and implement the attribute
 /// specified by the given identifier.
-static bool HasAttribute(const IdentifierInfo *II) {
+static bool HasAttribute(const IdentifierInfo *II, const llvm::Triple &T) {
   StringRef Name = II->getName();
   // Normalize the attribute name, __foo__ becomes foo.
-  if (Name.startswith("__") && Name.endswith("__") && Name.size() >= 4)
+  if (Name.size() >= 4 && Name.startswith("__") && Name.endswith("__"))
     Name = Name.substr(2, Name.size() - 4);
 
   // FIXME: Do we need to handle namespaces here?
@@ -1093,7 +1097,7 @@ static bool EvaluateHasIncludeCommon(Token &Tok,
   if (Tok.isNot(tok::l_paren)) {
     // No '(', use end of last token.
     LParenLoc = PP.getLocForEndOfToken(LParenLoc);
-    PP.Diag(LParenLoc, diag::err_pp_missing_lparen) << II->getName();
+    PP.Diag(LParenLoc, diag::err_pp_expected_after) << II << tok::l_paren;
     // If the next token looks like a filename or the start of one,
     // assume it is and process it as such.
     if (!Tok.is(tok::angle_string_literal) && !Tok.is(tok::string_literal) &&
@@ -1155,9 +1159,9 @@ static bool EvaluateHasIncludeCommon(Token &Tok,
 
   // Ensure we have a trailing ).
   if (Tok.isNot(tok::r_paren)) {
-    PP.Diag(PP.getLocForEndOfToken(FilenameLoc), diag::err_pp_missing_rparen)
-        << II->getName();
-    PP.Diag(LParenLoc, diag::note_matching) << "(";
+    PP.Diag(PP.getLocForEndOfToken(FilenameLoc), diag::err_pp_expected_after)
+        << II << tok::r_paren;
+    PP.Diag(LParenLoc, diag::note_matching) << tok::l_paren;
     return false;
   }
 
@@ -1214,7 +1218,8 @@ static bool EvaluateBuildingModule(Token &Tok,
 
   // Ensure we have a '('.
   if (Tok.isNot(tok::l_paren)) {
-    PP.Diag(Tok.getLocation(), diag::err_pp_missing_lparen) << II->getName();
+    PP.Diag(Tok.getLocation(), diag::err_pp_expected_after) << II
+                                                            << tok::l_paren;
     return false;
   }
 
@@ -1238,8 +1243,9 @@ static bool EvaluateBuildingModule(Token &Tok,
 
   // Ensure we have a trailing ).
   if (Tok.isNot(tok::r_paren)) {
-    PP.Diag(Tok.getLocation(), diag::err_pp_missing_rparen) << II->getName();
-    PP.Diag(LParenLoc, diag::note_matching) << "(";
+    PP.Diag(Tok.getLocation(), diag::err_pp_expected_after) << II
+                                                            << tok::r_paren;
+    PP.Diag(LParenLoc, diag::note_matching) << tok::l_paren;
     return false;
   }
 
@@ -1406,7 +1412,7 @@ void Preprocessor::ExpandBuiltinMacro(Token &Tok) {
       // Check for a builtin is trivial.
       Value = FeatureII->getBuiltinID() != 0;
     } else if (II == Ident__has_attribute)
-      Value = HasAttribute(FeatureII);
+      Value = HasAttribute(FeatureII, getTargetInfo().getTriple());
     else if (II == Ident__has_extension)
       Value = HasExtension(*this, FeatureII);
     else {

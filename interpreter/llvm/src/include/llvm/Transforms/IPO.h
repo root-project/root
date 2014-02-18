@@ -104,14 +104,23 @@ Pass *createPruneEHPass();
 
 //===----------------------------------------------------------------------===//
 /// createInternalizePass - This pass loops over all of the functions in the
-/// input module, internalizing all globals (functions and variables) not in the
-/// given exportList.
+/// input module, internalizing all globals (functions and variables) it can.
+////
+/// The symbols in \p ExportList are never internalized.
+///
+/// When OnlyHidden=true, only symbols with hidden visibility are internalized.
+///
+/// The symbol in DSOList are internalized if it is safe to drop them from
+/// the symbol table.
 ///
 /// Note that commandline options that are used with the above function are not
 /// used now!
-ModulePass *createInternalizePass(ArrayRef<const char *> ExportList);
+ModulePass *createInternalizePass(ArrayRef<const char *> ExportList,
+                                  bool OnlyHidden = false);
 /// createInternalizePass - Same as above, but with an empty exportList.
-ModulePass *createInternalizePass();
+ModulePass *createInternalizePass(bool OnlyHidden = false);
+/// createInternalizePass - Resolve ambiguity when passed a const char *.
+ModulePass *createInternalizePass(const char *SingleExport);
 
 //===----------------------------------------------------------------------===//
 /// createDeadArgEliminationPass - This pass removes arguments from functions

@@ -467,7 +467,8 @@ static void EmitGenDwarfAbbrev(MCStreamer *MCOS) {
   EmitAbbrev(MCOS, dwarf::DW_AT_low_pc, dwarf::DW_FORM_addr);
   EmitAbbrev(MCOS, dwarf::DW_AT_high_pc, dwarf::DW_FORM_addr);
   EmitAbbrev(MCOS, dwarf::DW_AT_name, dwarf::DW_FORM_string);
-  EmitAbbrev(MCOS, dwarf::DW_AT_comp_dir, dwarf::DW_FORM_string);
+  if (!context.getCompilationDir().empty())
+    EmitAbbrev(MCOS, dwarf::DW_AT_comp_dir, dwarf::DW_FORM_string);
   StringRef DwarfDebugFlags = context.getDwarfDebugFlags();
   if (!DwarfDebugFlags.empty())
     EmitAbbrev(MCOS, dwarf::DW_AT_APPLE_flags, dwarf::DW_FORM_string);
@@ -643,8 +644,10 @@ static void EmitGenDwarfInfo(MCStreamer *MCOS,
   MCOS->EmitIntValue(0, 1); // NULL byte to terminate the string.
 
   // AT_comp_dir, the working directory the assembly was done in.
-  MCOS->EmitBytes(context.getCompilationDir());
-  MCOS->EmitIntValue(0, 1); // NULL byte to terminate the string.
+  if (!context.getCompilationDir().empty()) {
+    MCOS->EmitBytes(context.getCompilationDir());
+    MCOS->EmitIntValue(0, 1); // NULL byte to terminate the string.
+  }
 
   // AT_APPLE_flags, the command line arguments of the assembler tool.
   StringRef DwarfDebugFlags = context.getDwarfDebugFlags();
@@ -836,8 +839,9 @@ static unsigned getSizeForEncoding(MCStreamer &streamer,
   }
 }
 
-static void EmitSymbol(MCStreamer &streamer, const MCSymbol &symbol,
-                       unsigned symbolEncoding, const char *comment = 0) {
+static void EmitFDESymbol(MCStreamer &streamer, const MCSymbol &symbol,
+                       unsigned symbolEncoding, bool isEH,
+                       const char *comment = 0) {
   MCContext &context = streamer.getContext();
   const MCAsmInfo *asmInfo = context.getAsmInfo();
   const MCExpr *v = asmInfo->getExprForFDESymbol(&symbol,
@@ -845,7 +849,10 @@ static void EmitSymbol(MCStreamer &streamer, const MCSymbol &symbol,
                                                  streamer);
   unsigned size = getSizeForEncoding(streamer, symbolEncoding);
   if (streamer.isVerboseAsm() && comment) streamer.AddComment(comment);
-  streamer.EmitAbsValue(v, size);
+  if (asmInfo->doDwarfFDESymbolsUseAbsDiff() && isEH)
+    streamer.EmitAbsValue(v, size);
+  else
+    streamer.EmitValue(v, size);
 }
 
 static void EmitPersonality(MCStreamer &streamer, const MCSymbol &symbol,
@@ -882,7 +889,8 @@ namespace {
                             unsigned personalityEncoding,
                             const MCSymbol *lsda,
                             bool IsSignalFrame,
-                            unsigned lsdaEncoding);
+                            unsigned lsdaEncoding,
+                            bool IsSimple);
     MCSymbol *EmitFDE(MCStreamer &streamer,
                       const MCSymbol &cieStart,
                       const MCDwarfFrameInfo &frame);
@@ -1192,7 +1200,8 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(MCStreamer &streamer,
                                           unsigned personalityEncoding,
                                           const MCSymbol *lsda,
                                           bool IsSignalFrame,
-                                          unsigned lsdaEncoding) {
+                                          unsigned lsdaEncoding,
+                                          bool IsSimple) {
   MCContext &context = streamer.getContext();
   const MCRegisterInfo *MRI = context.getRegisterInfo();
   const MCObjectFileInfo *MOFI = context.getObjectFileInfo();
@@ -1291,9 +1300,11 @@ const MCSymbol &FrameEmitterImpl::EmitCIE(MCStreamer &streamer,
   // Initial Instructions
 
   const MCAsmInfo *MAI = context.getAsmInfo();
-  const std::vector<MCCFIInstruction> &Instructions =
-      MAI->getInitialFrameState();
-  EmitCFIInstructions(streamer, Instructions, NULL);
+  if (!IsSimple) {
+    const std::vector<MCCFIInstruction> &Instructions =
+        MAI->getInitialFrameState();
+    EmitCFIInstructions(streamer, Instructions, NULL);
+  }
 
   // Padding
   streamer.EmitValueToAlignment(IsEH ? 4 : MAI->getPointerSize());
@@ -1344,7 +1355,7 @@ MCSymbol *FrameEmitterImpl::EmitFDE(MCStreamer &streamer,
   unsigned PCEncoding = IsEH ? MOFI->getFDEEncoding(UsingCFI)
                              : (unsigned)dwarf::DW_EH_PE_absptr;
   unsigned PCSize = getSizeForEncoding(streamer, PCEncoding);
-  EmitSymbol(streamer, *frame.Begin, PCEncoding, "FDE initial location");
+  EmitFDESymbol(streamer, *frame.Begin, PCEncoding, IsEH, "FDE initial location");
 
   // PC Range
   const MCExpr *Range = MakeStartMinusEndExpr(streamer, *frame.Begin,
@@ -1364,8 +1375,8 @@ MCSymbol *FrameEmitterImpl::EmitFDE(MCStreamer &streamer,
 
     // Augmentation Data
     if (frame.Lsda)
-      EmitSymbol(streamer, *frame.Lsda, frame.LsdaEncoding,
-                 "Language Specific Data Area");
+      EmitFDESymbol(streamer, *frame.Lsda, frame.LsdaEncoding, true,
+                    "Language Specific Data Area");
   }
 
   // Call Frame Instructions
@@ -1379,18 +1390,20 @@ MCSymbol *FrameEmitterImpl::EmitFDE(MCStreamer &streamer,
 
 namespace {
   struct CIEKey {
-    static const CIEKey getEmptyKey() { return CIEKey(0, 0, -1, false); }
-    static const CIEKey getTombstoneKey() { return CIEKey(0, -1, 0, false); }
+    static const CIEKey getEmptyKey() { return CIEKey(0, 0, -1, false, false); }
+    static const CIEKey getTombstoneKey() { return CIEKey(0, -1, 0, false, false); }
 
     CIEKey(const MCSymbol* Personality_, unsigned PersonalityEncoding_,
-           unsigned LsdaEncoding_, bool IsSignalFrame_) :
+           unsigned LsdaEncoding_, bool IsSignalFrame_, bool IsSimple_) :
       Personality(Personality_), PersonalityEncoding(PersonalityEncoding_),
-      LsdaEncoding(LsdaEncoding_), IsSignalFrame(IsSignalFrame_) {
+      LsdaEncoding(LsdaEncoding_), IsSignalFrame(IsSignalFrame_),
+      IsSimple(IsSimple_) {
     }
     const MCSymbol* Personality;
     unsigned PersonalityEncoding;
     unsigned LsdaEncoding;
     bool IsSignalFrame;
+    bool IsSimple;
   };
 }
 
@@ -1407,14 +1420,16 @@ namespace llvm {
       return static_cast<unsigned>(hash_combine(Key.Personality,
                                                 Key.PersonalityEncoding,
                                                 Key.LsdaEncoding,
-                                                Key.IsSignalFrame));
+                                                Key.IsSignalFrame,
+                                                Key.IsSimple));
     }
     static bool isEqual(const CIEKey &LHS,
                         const CIEKey &RHS) {
       return LHS.Personality == RHS.Personality &&
         LHS.PersonalityEncoding == RHS.PersonalityEncoding &&
         LHS.LsdaEncoding == RHS.LsdaEncoding &&
-        LHS.IsSignalFrame == RHS.IsSignalFrame;
+        LHS.IsSignalFrame == RHS.IsSignalFrame &&
+        LHS.IsSimple == RHS.IsSimple;
     }
   };
 }
@@ -1458,13 +1473,14 @@ void MCDwarfFrameEmitter::Emit(MCStreamer &Streamer, MCAsmBackend *MAB,
   for (unsigned i = 0, n = FrameArray.size(); i < n; ++i) {
     const MCDwarfFrameInfo &Frame = FrameArray[i];
     CIEKey Key(Frame.Personality, Frame.PersonalityEncoding,
-               Frame.LsdaEncoding, Frame.IsSignalFrame);
+               Frame.LsdaEncoding, Frame.IsSignalFrame, Frame.IsSimple);
     const MCSymbol *&CIEStart = IsEH ? CIEStarts[Key] : DummyDebugKey;
     if (!CIEStart)
       CIEStart = &Emitter.EmitCIE(Streamer, Frame.Personality,
                                   Frame.PersonalityEncoding, Frame.Lsda,
                                   Frame.IsSignalFrame,
-                                  Frame.LsdaEncoding);
+                                  Frame.LsdaEncoding,
+                                  Frame.IsSimple);
 
     FDEEnd = Emitter.EmitFDE(Streamer, *CIEStart, Frame);
 

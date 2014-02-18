@@ -13,13 +13,12 @@
 
 #include "llvm/Object/Binary.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 
 // Include headers for createBinary.
 #include "llvm/Object/Archive.h"
-#include "llvm/Object/COFF.h"
 #include "llvm/Object/MachOUniversal.h"
 #include "llvm/Object/ObjectFile.h"
 
@@ -27,12 +26,12 @@ using namespace llvm;
 using namespace object;
 
 Binary::~Binary() {
-  delete Data;
+  if (BufferOwned)
+    delete Data;
 }
 
-Binary::Binary(unsigned int Type, MemoryBuffer *Source)
-  : TypeID(Type)
-  , Data(Source) {}
+Binary::Binary(unsigned int Type, MemoryBuffer *Source, bool BufferOwned)
+  : TypeID(Type), BufferOwned(BufferOwned), Data(Source) {}
 
 StringRef Binary::getData() const {
   return Data->getBuffer();
@@ -42,31 +41,19 @@ StringRef Binary::getFileName() const {
   return Data->getBufferIdentifier();
 }
 
-error_code object::createBinary(MemoryBuffer *Source,
-                                OwningPtr<Binary> &Result) {
+ErrorOr<Binary *> object::createBinary(MemoryBuffer *Source,
+                                       sys::fs::file_magic Type) {
   OwningPtr<MemoryBuffer> scopedSource(Source);
-  if (!Source)
-    return make_error_code(errc::invalid_argument);
-  sys::fs::file_magic type = sys::fs::identify_magic(Source->getBuffer());
-  error_code ec;
-  switch (type) {
-    case sys::fs::file_magic::archive: {
-      OwningPtr<Binary> ret(new Archive(scopedSource.take(), ec));
-      if (ec) return ec;
-      Result.swap(ret);
-      return object_error::success;
-    }
+  if (Type == sys::fs::file_magic::unknown)
+    Type = sys::fs::identify_magic(Source->getBuffer());
+
+  switch (Type) {
+    case sys::fs::file_magic::archive:
+      return Archive::create(scopedSource.take());
     case sys::fs::file_magic::elf_relocatable:
     case sys::fs::file_magic::elf_executable:
     case sys::fs::file_magic::elf_shared_object:
-    case sys::fs::file_magic::elf_core: {
-      OwningPtr<Binary> ret(
-        ObjectFile::createELFObjectFile(scopedSource.take()));
-      if (!ret)
-        return object_error::invalid_file_type;
-      Result.swap(ret);
-      return object_error::success;
-    }
+    case sys::fs::file_magic::elf_core:
     case sys::fs::file_magic::macho_object:
     case sys::fs::file_magic::macho_executable:
     case sys::fs::file_magic::macho_fixed_virtual_memory_shared_lib:
@@ -76,41 +63,25 @@ error_code object::createBinary(MemoryBuffer *Source,
     case sys::fs::file_magic::macho_dynamic_linker:
     case sys::fs::file_magic::macho_bundle:
     case sys::fs::file_magic::macho_dynamically_linked_shared_lib_stub:
-    case sys::fs::file_magic::macho_dsym_companion: {
-      OwningPtr<Binary> ret(
-        ObjectFile::createMachOObjectFile(scopedSource.take()));
-      if (!ret)
-        return object_error::invalid_file_type;
-      Result.swap(ret);
-      return object_error::success;
-    }
-    case sys::fs::file_magic::macho_universal_binary: {
-      OwningPtr<Binary> ret(new MachOUniversalBinary(scopedSource.take(), ec));
-      if (ec) return ec;
-      Result.swap(ret);
-      return object_error::success;
-    }
+    case sys::fs::file_magic::macho_dsym_companion:
     case sys::fs::file_magic::coff_object:
-    case sys::fs::file_magic::pecoff_executable: {
-      OwningPtr<Binary> ret(
-          ObjectFile::createCOFFObjectFile(scopedSource.take()));
-      if (!ret)
-        return object_error::invalid_file_type;
-      Result.swap(ret);
-      return object_error::success;
-    }
+    case sys::fs::file_magic::coff_import_library:
+    case sys::fs::file_magic::pecoff_executable:
+      return ObjectFile::createObjectFile(scopedSource.take(), true, Type);
+    case sys::fs::file_magic::macho_universal_binary:
+      return MachOUniversalBinary::create(scopedSource.take());
     case sys::fs::file_magic::unknown:
-    case sys::fs::file_magic::bitcode: {
+    case sys::fs::file_magic::bitcode:
+    case sys::fs::file_magic::windows_resource:
       // Unrecognized object file format.
       return object_error::invalid_file_type;
-    }
   }
   llvm_unreachable("Unexpected Binary File Type");
 }
 
-error_code object::createBinary(StringRef Path, OwningPtr<Binary> &Result) {
+ErrorOr<Binary *> object::createBinary(StringRef Path) {
   OwningPtr<MemoryBuffer> File;
-  if (error_code ec = MemoryBuffer::getFileOrSTDIN(Path, File))
-    return ec;
-  return createBinary(File.take(), Result);
+  if (error_code EC = MemoryBuffer::getFileOrSTDIN(Path, File))
+    return EC;
+  return createBinary(File.take());
 }

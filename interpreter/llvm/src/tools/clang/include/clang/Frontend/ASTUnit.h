@@ -30,6 +30,7 @@
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
+#include "llvm/Support/MD5.h"
 #include "llvm/Support/Path.h"
 #include <cassert>
 #include <map>
@@ -205,8 +206,34 @@ public:
     return Preamble;
   }
 
-private:
+  /// Data used to determine if a file used in the preamble has been changed.
+  struct PreambleFileHash {
+    /// All files have size set.
+    off_t Size;
 
+    /// Modification time is set for files that are on disk.  For memory
+    /// buffers it is zero.
+    time_t ModTime;
+
+    /// Memory buffers have MD5 instead of modification time.  We don't
+    /// compute MD5 for on-disk files because we hope that modification time is
+    /// enough to tell if the file was changed.
+    llvm::MD5::MD5Result MD5;
+
+    static PreambleFileHash createForFile(off_t Size, time_t ModTime);
+    static PreambleFileHash
+    createForMemoryBuffer(const llvm::MemoryBuffer *Buffer);
+
+    friend bool operator==(const PreambleFileHash &LHS,
+                           const PreambleFileHash &RHS);
+
+    friend bool operator!=(const PreambleFileHash &LHS,
+                           const PreambleFileHash &RHS) {
+      return !(LHS == RHS);
+    }
+  };
+
+private:
   /// \brief The contents of the preamble that has been precompiled to
   /// \c PreambleFile.
   PreambleData Preamble;
@@ -226,7 +253,7 @@ private:
   ///
   /// If any of the files have changed from one compile to the next,
   /// the preamble must be thrown away.
-  llvm::StringMap<std::pair<off_t, time_t> > FilesInPreamble;
+  llvm::StringMap<PreambleFileHash> FilesInPreamble;
 
   /// \brief When non-NULL, this is the buffer used to store the contents of
   /// the main file when it has been padded for use with the precompiled
@@ -406,9 +433,7 @@ private:
   /// just about any usage.
   /// Becomes a noop in release mode; only useful for debug mode checking.
   class ConcurrencyState {
-#ifndef NDEBUG
     void *Mutex; // a llvm::sys::MutexImpl in debug;
-#endif
 
   public:
     ConcurrencyState();
@@ -646,11 +671,9 @@ public:
   /// \brief Determine what kind of translation unit this AST represents.
   TranslationUnitKind getTranslationUnitKind() const { return TUKind; }
 
-  typedef llvm::PointerUnion<const char *, const llvm::MemoryBuffer *>
-      FilenameOrMemBuf;
   /// \brief A mapping from a file name to the memory buffer that stores the
   /// remapped contents of that file.
-  typedef std::pair<std::string, FilenameOrMemBuf> RemappedFile;
+  typedef std::pair<std::string, const llvm::MemoryBuffer *> RemappedFile;
 
   /// \brief Create a ASTUnit. Gets ownership of the passed CompilerInvocation. 
   static ASTUnit *create(CompilerInvocation *CI,
@@ -670,8 +693,7 @@ public:
                               IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
                                   const FileSystemOptions &FileSystemOpts,
                                   bool OnlyLocalDecls = false,
-                                  RemappedFile *RemappedFiles = 0,
-                                  unsigned NumRemappedFiles = 0,
+                                  ArrayRef<RemappedFile> RemappedFiles = None,
                                   bool CaptureDiagnostics = false,
                                   bool AllowPCHWithCompilerErrors = false,
                                   bool UserFilesAreVolatile = false);
@@ -699,10 +721,10 @@ public:
   /// lifetime is expected to extend past that of the returned ASTUnit.
   ///
   /// \param Action - The ASTFrontendAction to invoke. Its ownership is not
-  /// transfered.
+  /// transferred.
   ///
   /// \param Unit - optionally an already created ASTUnit. Its ownership is not
-  /// transfered.
+  /// transferred.
   ///
   /// \param Persistent - if true the returned ASTUnit will be complete.
   /// false means the caller is only interested in getting info through the
@@ -773,8 +795,7 @@ public:
                                       StringRef ResourceFilesPath,
                                       bool OnlyLocalDecls = false,
                                       bool CaptureDiagnostics = false,
-                                      RemappedFile *RemappedFiles = 0,
-                                      unsigned NumRemappedFiles = 0,
+                                      ArrayRef<RemappedFile> RemappedFiles = None,
                                       bool RemappedFilesKeepOriginalName = true,
                                       bool PrecompilePreamble = false,
                                       TranslationUnitKind TUKind = TU_Complete,
@@ -791,8 +812,7 @@ public:
   ///
   /// \returns True if a failure occurred that causes the ASTUnit not to
   /// contain any translation-unit information, false otherwise.  
-  bool Reparse(RemappedFile *RemappedFiles = 0,
-               unsigned NumRemappedFiles = 0);
+  bool Reparse(ArrayRef<RemappedFile> RemappedFiles = None);
 
   /// \brief Perform code completion at the given file, line, and
   /// column within this translation unit.
@@ -815,7 +835,7 @@ public:
   /// FIXME: The Diag, LangOpts, SourceMgr, FileMgr, StoredDiagnostics, and
   /// OwnedBuffers parameters are all disgusting hacks. They will go away.
   void CodeComplete(StringRef File, unsigned Line, unsigned Column,
-                    RemappedFile *RemappedFiles, unsigned NumRemappedFiles,
+                    ArrayRef<RemappedFile> RemappedFiles,
                     bool IncludeMacros, bool IncludeCodePatterns,
                     bool IncludeBriefComments,
                     CodeCompleteConsumer &Consumer,

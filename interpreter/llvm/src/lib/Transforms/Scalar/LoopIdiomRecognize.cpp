@@ -51,6 +51,7 @@
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Module.h"
@@ -108,8 +109,8 @@ namespace {
     bool preliminaryScreen();
 
     /// Check if the given conditional branch is based on the comparison
-    /// beween a variable and zero, and if the variable is non-zero, the
-    /// control yeilds to the loop entry. If the branch matches the behavior,
+    /// between a variable and zero, and if the variable is non-zero, the
+    /// control yields to the loop entry. If the branch matches the behavior,
     /// the variable involved in the comparion is returned. This function will
     /// be called to see if the precondition and postcondition of the loop
     /// are in desirable form.
@@ -174,8 +175,8 @@ namespace {
       AU.addPreserved<AliasAnalysis>();
       AU.addRequired<ScalarEvolution>();
       AU.addPreserved<ScalarEvolution>();
-      AU.addPreserved<DominatorTree>();
-      AU.addRequired<DominatorTree>();
+      AU.addPreserved<DominatorTreeWrapperPass>();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<TargetLibraryInfo>();
       AU.addRequired<TargetTransformInfo>();
     }
@@ -185,7 +186,8 @@ namespace {
     }
 
     DominatorTree *getDominatorTree() {
-      return DT ? DT : (DT=&getAnalysis<DominatorTree>());
+      return DT ? DT
+                : (DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree());
     }
 
     ScalarEvolution *getScalarEvolution() {
@@ -212,7 +214,7 @@ char LoopIdiomRecognize::ID = 0;
 INITIALIZE_PASS_BEGIN(LoopIdiomRecognize, "loop-idiom", "Recognize loop idioms",
                       false, false)
 INITIALIZE_PASS_DEPENDENCY(LoopInfo)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(LoopSimplify)
 INITIALIZE_PASS_DEPENDENCY(LCSSA)
 INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
@@ -314,7 +316,7 @@ bool NclPopcountRecognize::preliminaryScreen() {
   if (TTI->getPopcntSupport(32) != TargetTransformInfo::PSK_FastHardware)
     return false;
 
-  // Counting population are usually conducted by few arithmetic instrutions.
+  // Counting population are usually conducted by few arithmetic instructions.
   // Such instructions can be easilly "absorbed" by vacant slots in a
   // non-compact loop. Therefore, recognizing popcount idiom only makes sense
   // in a compact loop.
@@ -519,7 +521,7 @@ void NclPopcountRecognize::transform(Instruction *CntInst,
     // TripCnt is exactly the number of iterations the loop has
     TripCnt = NewCount;
 
-    // If the popoulation counter's initial value is not zero, insert Add Inst.
+    // If the population counter's initial value is not zero, insert Add Inst.
     Value *CntInitVal = CntPhi->getIncomingValueForBlock(PreHead);
     ConstantInt *InitConst = dyn_cast<ConstantInt>(CntInitVal);
     if (!InitConst || !InitConst->isZero()) {
@@ -705,6 +707,9 @@ bool LoopIdiomRecognize::runOnNoncountableLoop() {
 }
 
 bool LoopIdiomRecognize::runOnLoop(Loop *L, LPPassManager &LPM) {
+  if (skipOptnoneFunction(L))
+    return false;
+
   CurLoop = L;
 
   // If the loop could not be converted to canonical form, it must have an

@@ -46,7 +46,7 @@ enum ArgEffect {
 
   /// The argument has its reference count decreased by 1 to model
   /// a transferred bridge cast under ARC.
-  DecRefBridgedTransfered,
+  DecRefBridgedTransferred,
 
   /// The argument has its reference count increased by 1.  This is as
   /// if a -retain message has been sent to the argument.  This differs
@@ -114,8 +114,6 @@ public:
     /// Indicates that the object is not owned and controlled by the
     /// Garbage collector.
     GCNotOwnedSymbol,
-    /// Indicates that the object is not owned and controlled by ARC.
-    ARCNotOwnedSymbol,
     /// Indicates that the return value is an owned object when the
     /// receiver is also a tracked object.
     OwnedWhenTrackedReceiver,
@@ -154,7 +152,7 @@ public:
   }
   
   bool notOwned() const {
-    return K == NotOwnedSymbol || K == ARCNotOwnedSymbol;
+    return K == NotOwnedSymbol;
   }
   
   bool operator==(const RetEffect &Other) const {
@@ -173,9 +171,6 @@ public:
   }
   static RetEffect MakeGCNotOwned() {
     return RetEffect(GCNotOwnedSymbol, ObjC);
-  }
-  static RetEffect MakeARCNotOwned() {
-    return RetEffect(ARCNotOwnedSymbol, ObjC);
   }
   static RetEffect MakeNoRet() {
     return RetEffect(NoRet);

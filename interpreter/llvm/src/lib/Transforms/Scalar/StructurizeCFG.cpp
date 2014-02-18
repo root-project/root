@@ -231,7 +231,7 @@ public:
 
   StructurizeCFG() :
     RegionPass(ID) {
-    initializeRegionInfoPass(*PassRegistry::getPassRegistry());
+    initializeStructurizeCFGPass(*PassRegistry::getPassRegistry());
   }
 
   using Pass::doInitialization;
@@ -244,8 +244,9 @@ public:
   }
 
   void getAnalysisUsage(AnalysisUsage &AU) const {
-    AU.addRequired<DominatorTree>();
-    AU.addPreserved<DominatorTree>();
+    AU.addRequiredID(LowerSwitchID);
+    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addPreserved<DominatorTreeWrapperPass>();
     RegionPass::getAnalysisUsage(AU);
   }
 };
@@ -256,7 +257,8 @@ char StructurizeCFG::ID = 0;
 
 INITIALIZE_PASS_BEGIN(StructurizeCFG, "structurizecfg", "Structurize the CFG",
                       false, false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(LowerSwitch)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(RegionInfo)
 INITIALIZE_PASS_END(StructurizeCFG, "structurizecfg", "Structurize the CFG",
                     false, false)
@@ -275,9 +277,8 @@ bool StructurizeCFG::doInitialization(Region *R, RGPassManager &RGM) {
 
 /// \brief Build up the general order of nodes
 void StructurizeCFG::orderNodes() {
-  scc_iterator<Region *> I = scc_begin(ParentRegion),
-                         E = scc_end(ParentRegion);
-  for (Order.clear(); I != E; ++I) {
+  scc_iterator<Region *> I = scc_begin(ParentRegion);
+  for (Order.clear(); !I.isAtEnd(); ++I) {
     std::vector<RegionNode *> &Nodes = *I;
     Order.append(Nodes.begin(), Nodes.end());
   }
@@ -321,21 +322,32 @@ Value *StructurizeCFG::invert(Value *Condition) {
   if (match(Condition, m_Not(m_Value(Condition))))
     return Condition;
 
-  // Third: Check all the users for an invert
-  BasicBlock *Parent = cast<Instruction>(Condition)->getParent();
-  for (Value::use_iterator I = Condition->use_begin(),
-       E = Condition->use_end(); I != E; ++I) {
+  if (Instruction *Inst = dyn_cast<Instruction>(Condition)) {
+    // Third: Check all the users for an invert
+    BasicBlock *Parent = Inst->getParent();
+    for (Value::use_iterator I = Condition->use_begin(),
+           E = Condition->use_end(); I != E; ++I) {
 
-    Instruction *User = dyn_cast<Instruction>(*I);
-    if (!User || User->getParent() != Parent)
-      continue;
+      Instruction *User = dyn_cast<Instruction>(*I);
+      if (!User || User->getParent() != Parent)
+        continue;
 
-    if (match(*I, m_Not(m_Specific(Condition))))
-      return *I;
+      if (match(*I, m_Not(m_Specific(Condition))))
+        return *I;
+    }
+
+    // Last option: Create a new instruction
+    return BinaryOperator::CreateNot(Condition, "", Parent->getTerminator());
   }
 
-  // Last option: Create a new instruction
-  return BinaryOperator::CreateNot(Condition, "", Parent->getTerminator());
+  if (Argument *Arg = dyn_cast<Argument>(Condition)) {
+    BasicBlock &EntryBlock = Arg->getParent()->getEntryBlock();
+    return BinaryOperator::CreateNot(Condition,
+                                     Arg->getName() + ".inv",
+                                     EntryBlock.getTerminator());
+  }
+
+  llvm_unreachable("Unhandled condition to invert");
 }
 
 /// \brief Build the condition for one edge
@@ -766,6 +778,20 @@ void StructurizeCFG::handleLoops(bool ExitUseAllowed,
     handleLoops(false, LoopEnd);
   }
 
+  // If the start of the loop is the entry block, we can't branch to it so
+  // insert a new dummy entry block.
+  Function *LoopFunc = LoopStart->getParent();
+  if (LoopStart == &LoopFunc->getEntryBlock()) {
+    LoopStart->setName("entry.orig");
+
+    BasicBlock *NewEntry =
+      BasicBlock::Create(LoopStart->getContext(),
+                         "entry",
+                         LoopFunc,
+                         LoopStart);
+    BranchInst::Create(LoopStart, NewEntry);
+  }
+
   // Create an extra loop end node
   LoopEnd = needPrefix(false);
   BasicBlock *Next = needPostfix(LoopEnd, ExitUseAllowed);
@@ -849,7 +875,7 @@ bool StructurizeCFG::runOnRegion(Region *R, RGPassManager &RGM) {
   Func = R->getEntry()->getParent();
   ParentRegion = R;
 
-  DT = &getAnalysis<DominatorTree>();
+  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
 
   orderNodes();
   collectInfos();

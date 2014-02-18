@@ -189,15 +189,16 @@ namespace llvm {
 
     /// Convenient NoWrapFlags manipulation that hides enum casts and is
     /// visible in the ScalarEvolution name space.
-    static SCEV::NoWrapFlags maskFlags(SCEV::NoWrapFlags Flags, int Mask) {
+    static SCEV::NoWrapFlags LLVM_ATTRIBUTE_UNUSED_RESULT
+    maskFlags(SCEV::NoWrapFlags Flags, int Mask) {
       return (SCEV::NoWrapFlags)(Flags & Mask);
     }
-    static SCEV::NoWrapFlags setFlags(SCEV::NoWrapFlags Flags,
-                                      SCEV::NoWrapFlags OnFlags) {
+    static SCEV::NoWrapFlags LLVM_ATTRIBUTE_UNUSED_RESULT
+    setFlags(SCEV::NoWrapFlags Flags, SCEV::NoWrapFlags OnFlags) {
       return (SCEV::NoWrapFlags)(Flags | OnFlags);
     }
-    static SCEV::NoWrapFlags clearFlags(SCEV::NoWrapFlags Flags,
-                                        SCEV::NoWrapFlags OffFlags) {
+    static SCEV::NoWrapFlags LLVM_ATTRIBUTE_UNUSED_RESULT
+    clearFlags(SCEV::NoWrapFlags Flags, SCEV::NoWrapFlags OffFlags) {
       return (SCEV::NoWrapFlags)(Flags & ~OffFlags);
     }
 
@@ -252,17 +253,28 @@ namespace llvm {
     /// Mark predicate values currently being processed by isImpliedCond.
     DenseSet<Value*> PendingLoopPredicates;
 
-    /// ExitLimit - Information about the number of loop iterations for
-    /// which a loop exit's branch condition evaluates to the not-taken path.
-    /// This is a temporary pair of exact and max expressions that are
-    /// eventually summarized in ExitNotTakenInfo and BackedgeTakenInfo.
+    /// ExitLimit - Information about the number of loop iterations for which a
+    /// loop exit's branch condition evaluates to the not-taken path.  This is a
+    /// temporary pair of exact and max expressions that are eventually
+    /// summarized in ExitNotTakenInfo and BackedgeTakenInfo.
+    ///
+    /// If MustExit is true, then the exit must be taken when the BECount
+    /// reaches Exact (and before surpassing Max). If MustExit is false, then
+    /// BECount may exceed Exact or Max if the loop exits via another branch. In
+    /// either case, the loop may exit early via another branch.
+    ///
+    /// MustExit is true for most cases. However, an exit guarded by an
+    /// (in)equality on a nonunit stride may be skipped.
     struct ExitLimit {
       const SCEV *Exact;
       const SCEV *Max;
+      bool MustExit;
 
-      /*implicit*/ ExitLimit(const SCEV *E) : Exact(E), Max(E) {}
+      /*implicit*/ ExitLimit(const SCEV *E)
+        : Exact(E), Max(E), MustExit(true) {}
 
-      ExitLimit(const SCEV *E, const SCEV *M) : Exact(E), Max(M) {}
+      ExitLimit(const SCEV *E, const SCEV *M, bool MustExit)
+        : Exact(E), Max(M), MustExit(MustExit) {}
 
       /// hasAnyInfo - Test whether this ExitLimit contains any computed
       /// information, or whether it's all SCEVCouldNotCompute values.
@@ -361,18 +373,18 @@ namespace llvm {
     /// that we attempt to compute getSCEVAtScope information for, which can
     /// be expensive in extreme cases.
     DenseMap<const SCEV *,
-             std::map<const Loop *, const SCEV *> > ValuesAtScopes;
+             SmallVector<std::pair<const Loop *, const SCEV *>, 2> > ValuesAtScopes;
 
     /// LoopDispositions - Memoized computeLoopDisposition results.
     DenseMap<const SCEV *,
-             std::map<const Loop *, LoopDisposition> > LoopDispositions;
+             SmallVector<std::pair<const Loop *, LoopDisposition>, 2> > LoopDispositions;
 
     /// computeLoopDisposition - Compute a LoopDisposition value.
     LoopDisposition computeLoopDisposition(const SCEV *S, const Loop *L);
 
     /// BlockDispositions - Memoized computeBlockDisposition results.
     DenseMap<const SCEV *,
-             std::map<const BasicBlock *, BlockDisposition> > BlockDispositions;
+             SmallVector<std::pair<const BasicBlock *, BlockDisposition>, 2> > BlockDispositions;
 
     /// computeBlockDisposition - Compute a BlockDisposition value.
     BlockDisposition computeBlockDisposition(const SCEV *S, const BasicBlock *BB);
@@ -426,14 +438,6 @@ namespace llvm {
     /// resolution.
     void ForgetSymbolicName(Instruction *I, const SCEV *SymName);
 
-    /// getBECount - Subtract the end and start values and divide by the step,
-    /// rounding up, to get the number of times the backedge is executed. Return
-    /// CouldNotCompute if an intermediate computation overflows.
-    const SCEV *getBECount(const SCEV *Start,
-                           const SCEV *End,
-                           const SCEV *Step,
-                           bool NoWrap);
-
     /// getBackedgeTakenInfo - Return the BackedgeTakenInfo for the given
     /// loop, lazily computing new values if the loop hasn't been analyzed
     /// yet.
@@ -464,6 +468,13 @@ namespace llvm {
                                        BasicBlock *TBB,
                                        BasicBlock *FBB,
                                        bool IsSubExpr);
+
+    /// ComputeExitLimitFromSingleExitSwitch - Compute the number of times the
+    /// backedge of the specified loop will execute if its exit condition were a
+    /// switch with a single exiting case to ExitingBB.
+    ExitLimit
+    ComputeExitLimitFromSingleExitSwitch(const Loop *L, SwitchInst *Switch,
+                               BasicBlock *ExitingBB, bool IsSubExpr);
 
     /// ComputeLoadConstantCompareExitLimit - Given an exit condition
     /// of 'icmp op load X, cst', try to see if we can compute the
@@ -498,6 +509,8 @@ namespace llvm {
     /// less-than is signed.
     ExitLimit HowManyLessThans(const SCEV *LHS, const SCEV *RHS,
                                const Loop *L, bool isSigned, bool IsSubExpr);
+    ExitLimit HowManyGreaterThans(const SCEV *LHS, const SCEV *RHS,
+                                  const Loop *L, bool isSigned, bool IsSubExpr);
 
     /// getPredecessorWithUniqueSuccessorForBB - Return a predecessor of BB
     /// (which may not be an immediate predecessor) which has exactly one
@@ -618,6 +631,7 @@ namespace llvm {
       return getMulExpr(Ops, Flags);
     }
     const SCEV *getUDivExpr(const SCEV *LHS, const SCEV *RHS);
+    const SCEV *getUDivExactExpr(const SCEV *LHS, const SCEV *RHS);
     const SCEV *getAddRecExpr(const SCEV *Start, const SCEV *Step,
                               const Loop *L, SCEV::NoWrapFlags Flags);
     const SCEV *getAddRecExpr(SmallVectorImpl<const SCEV *> &Operands,
@@ -641,19 +655,10 @@ namespace llvm {
     ///
     const SCEV *getSizeOfExpr(Type *IntTy, Type *AllocTy);
 
-    /// getAlignOfExpr - Return an expression for alignof AllocTy
-    ///
-    const SCEV *getAlignOfExpr(Type *AllocTy);
-
     /// getOffsetOfExpr - Return an expression for offsetof on the given field
     /// with type IntTy
     ///
     const SCEV *getOffsetOfExpr(Type *IntTy, StructType *STy, unsigned FieldNo);
-
-    /// getOffsetOfExpr - Return an expression for offsetof on the given field
-    /// that is type IntTy
-    ///
-    const SCEV *getOffsetOfExpr(Type *IntTy, Type *CTy, Constant *FieldNo);
 
     /// getNegativeSCEV - Return the SCEV object corresponding to -V.
     ///
@@ -798,6 +803,13 @@ namespace llvm {
     /// disconnect it from a def-use chain linking it to a loop.
     void forgetValue(Value *V);
 
+    /// \brief Called when the client has changed the disposition of values in
+    /// this loop.
+    ///
+    /// We don't have a way to invalidate per-loop dispositions. Clear and
+    /// recompute is simpler.
+    void forgetLoopDispositions(const Loop *L) { LoopDispositions.clear(); }
+
     /// GetMinTrailingZeros - Determine the minimum number of zero bits that S
     /// is guaranteed to end in (at every loop iteration).  It is, at the same
     /// time, the minimum number of times S is divisible by 2.  For example,
@@ -887,6 +899,24 @@ namespace llvm {
     virtual void getAnalysisUsage(AnalysisUsage &AU) const;
     virtual void print(raw_ostream &OS, const Module* = 0) const;
     virtual void verifyAnalysis() const;
+
+  private:
+    /// Compute the backedge taken count knowing the interval difference, the
+    /// stride and presence of the equality in the comparison.
+    const SCEV *computeBECount(const SCEV *Delta, const SCEV *Stride,
+                               bool Equality);
+
+    /// Verify if an linear IV with positive stride can overflow when in a
+    /// less-than comparison, knowing the invariant term of the comparison,
+    /// the stride and the knowledge of NSW/NUW flags on the recurrence.
+    bool doesIVOverflowOnLT(const SCEV *RHS, const SCEV *Stride,
+                            bool IsSigned, bool NoWrap);
+
+    /// Verify if an linear IV with negative stride can overflow when in a
+    /// greater-than comparison, knowing the invariant term of the comparison,
+    /// the stride and the knowledge of NSW/NUW flags on the recurrence.
+    bool doesIVOverflowOnGT(const SCEV *RHS, const SCEV *Stride,
+                            bool IsSigned, bool NoWrap);
 
   private:
     FoldingSet<SCEV> UniqueSCEVs;

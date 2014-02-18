@@ -1723,9 +1723,10 @@ Bool_t TCling::IsLoaded(const char* filename) const
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
    const clang::FileEntry *FE = HS.LookupFile(file_name.c_str(),
+                                              clang::SourceLocation(),
                                               /*isAngled*/ false,
                                               /*FromDir*/ 0, CurDir,
-                                              /*CurFileEnt*/ 0,
+                                              clang::ArrayRef<const clang::FileEntry*>(),
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
                                               /*SuggestedModule*/ 0,
@@ -3499,7 +3500,7 @@ namespace {
                if (!ITemplateParm->hasDefaultArgument()) continue;
             }
             // This template parameter has a default argument; add an annotation.
-            (*I)->addAttr(new (Ctx) clang::AnnotateAttr(SourceRange(), Ctx, "rootmap"));
+            (*I)->addAttr(new (Ctx) clang::AnnotateAttr(SourceRange(), Ctx, "rootmap", 0));
          }
          return false;
       }

@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This library implements the functionality defined in llvm/Assembly/Writer.h
+// This library implements the functionality defined in llvm/IR/Writer.h
 //
 // Note that these routines must be extremely tolerant of various errors in the
 // LLVM code, because it can be used for debugging transformations.
@@ -15,18 +15,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "AsmWriter.h"
-
-#include "llvm/Assembly/Writer.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/Assembly/AssemblyAnnotationWriter.h"
-#include "llvm/Assembly/PrintModulePass.h"
 #include "llvm/DebugInfo.h"
+#include "llvm/IR/AssemblyAnnotationWriter.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
@@ -40,7 +38,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/MathExtras.h"
-
 #include <algorithm>
 #include <cctype>
 using namespace llvm;
@@ -74,9 +71,14 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   default:                         Out << "cc" << cc; break;
   case CallingConv::Fast:          Out << "fastcc"; break;
   case CallingConv::Cold:          Out << "coldcc"; break;
+  case CallingConv::WebKit_JS:     Out << "webkit_jscc"; break;
+  case CallingConv::AnyReg:        Out << "anyregcc"; break;
+  case CallingConv::PreserveMost:  Out << "preserve_mostcc"; break;
+  case CallingConv::PreserveAll:   Out << "preserve_allcc"; break;
   case CallingConv::X86_StdCall:   Out << "x86_stdcallcc"; break;
   case CallingConv::X86_FastCall:  Out << "x86_fastcallcc"; break;
   case CallingConv::X86_ThisCall:  Out << "x86_thiscallcc"; break;
+  case CallingConv::X86_CDeclMethod:Out << "x86_cdeclmethodcc"; break;
   case CallingConv::Intel_OCL_BI:  Out << "intel_ocl_bicc"; break;
   case CallingConv::ARM_APCS:      Out << "arm_apcscc"; break;
   case CallingConv::ARM_AAPCS:     Out << "arm_aapcscc"; break;
@@ -86,6 +88,8 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   case CallingConv::PTX_Device:    Out << "ptx_device"; break;
   case CallingConv::X86_64_SysV:   Out << "x86_64_sysvcc"; break;
   case CallingConv::X86_64_Win64:  Out << "x86_64_win64cc"; break;
+  case CallingConv::SPIR_FUNC:     Out << "spir_func"; break;
+  case CallingConv::SPIR_KERNEL:   Out << "spir_kernel"; break;
   }
 }
 
@@ -190,16 +194,16 @@ void TypePrinting::incorporateTypes(const Module &M) {
 /// use of type names or up references to shorten the type name where possible.
 void TypePrinting::print(Type *Ty, raw_ostream &OS) {
   switch (Ty->getTypeID()) {
-  case Type::VoidTyID:      OS << "void"; break;
-  case Type::HalfTyID:      OS << "half"; break;
-  case Type::FloatTyID:     OS << "float"; break;
-  case Type::DoubleTyID:    OS << "double"; break;
-  case Type::X86_FP80TyID:  OS << "x86_fp80"; break;
-  case Type::FP128TyID:     OS << "fp128"; break;
-  case Type::PPC_FP128TyID: OS << "ppc_fp128"; break;
-  case Type::LabelTyID:     OS << "label"; break;
-  case Type::MetadataTyID:  OS << "metadata"; break;
-  case Type::X86_MMXTyID:   OS << "x86_mmx"; break;
+  case Type::VoidTyID:      OS << "void"; return;
+  case Type::HalfTyID:      OS << "half"; return;
+  case Type::FloatTyID:     OS << "float"; return;
+  case Type::DoubleTyID:    OS << "double"; return;
+  case Type::X86_FP80TyID:  OS << "x86_fp80"; return;
+  case Type::FP128TyID:     OS << "fp128"; return;
+  case Type::PPC_FP128TyID: OS << "ppc_fp128"; return;
+  case Type::LabelTyID:     OS << "label"; return;
+  case Type::MetadataTyID:  OS << "metadata"; return;
+  case Type::X86_MMXTyID:   OS << "x86_mmx"; return;
   case Type::IntegerTyID:
     OS << 'i' << cast<IntegerType>(Ty)->getBitWidth();
     return;
@@ -259,10 +263,8 @@ void TypePrinting::print(Type *Ty, raw_ostream &OS) {
     OS << '>';
     return;
   }
-  default:
-    OS << "<unrecognized-type>";
-    return;
   }
+  llvm_unreachable("Invalid TypeID");
 }
 
 void TypePrinting::printStructBody(StructType *STy, raw_ostream &OS) {
@@ -523,7 +525,7 @@ void SlotTracker::processFunction() {
       // optimizer.
       if (const CallInst *CI = dyn_cast<CallInst>(I)) {
         if (Function *F = CI->getCalledFunction())
-          if (F->getName().startswith("llvm."))
+          if (F->isIntrinsic())
             for (unsigned i = 0, e = I->getNumOperands(); i != e; ++i)
               if (MDNode *N = dyn_cast_or_null<MDNode>(I->getOperand(i)))
                 CreateMetadataSlot(N);
@@ -674,8 +676,6 @@ static void WriteAsOperandInternal(raw_ostream &Out, const Value *V,
                                    TypePrinting *TypePrinter,
                                    SlotTracker *Machine,
                                    const Module *Context);
-
-
 
 static const char *getPredicateText(unsigned predicate) {
   const char * pred = "unknown";
@@ -1063,11 +1063,8 @@ static void WriteMDNodeBodyInternal(raw_ostream &Out, const MDNode *Node,
   Out << "}";
 }
 
-
-/// WriteAsOperand - Write the name of the specified value out to the specified
-/// ostream.  This can be useful when you just want to print int %reg126, not
-/// the whole instruction that generated it.
-///
+// Full implementation of printing a Value as an operand with support for
+// TypePrinting, etc.
 static void WriteAsOperandInternal(raw_ostream &Out, const Value *V,
                                    TypePrinting *TypePrinter,
                                    SlotTracker *Machine,
@@ -1172,31 +1169,6 @@ static void WriteAsOperandInternal(raw_ostream &Out, const Value *V,
     Out << Prefix << Slot;
   else
     Out << "<badref>";
-}
-
-void WriteAsOperand(raw_ostream &Out, const Value *V,
-                    bool PrintType, const Module *Context) {
-
-  // Fast path: Don't construct and populate a TypePrinting object if we
-  // won't be needing any types printed.
-  if (!PrintType &&
-      ((!isa<Constant>(V) && !isa<MDNode>(V)) ||
-       V->hasName() || isa<GlobalValue>(V))) {
-    WriteAsOperandInternal(Out, V, 0, 0, Context);
-    return;
-  }
-
-  if (Context == 0) Context = getModuleFromVal(V);
-
-  TypePrinting TypePrinter;
-  if (Context)
-    TypePrinter.incorporateTypes(*Context);
-  if (PrintType) {
-    TypePrinter.print(V->getType(), Out);
-    Out << ' ';
-  }
-
-  WriteAsOperandInternal(Out, V, &TypePrinter, 0, Context);
 }
 
 void AssemblyWriter::init() {
@@ -1394,15 +1366,10 @@ static void PrintLinkage(GlobalValue::LinkageTypes LT,
   case GlobalValue::InternalLinkage:      Out << "internal ";       break;
   case GlobalValue::LinkOnceAnyLinkage:   Out << "linkonce ";       break;
   case GlobalValue::LinkOnceODRLinkage:   Out << "linkonce_odr ";   break;
-  case GlobalValue::LinkOnceODRAutoHideLinkage:
-    Out << "linkonce_odr_auto_hide ";
-    break;
   case GlobalValue::WeakAnyLinkage:       Out << "weak ";           break;
   case GlobalValue::WeakODRLinkage:       Out << "weak_odr ";       break;
   case GlobalValue::CommonLinkage:        Out << "common ";         break;
   case GlobalValue::AppendingLinkage:     Out << "appending ";      break;
-  case GlobalValue::DLLImportLinkage:     Out << "dllimport ";      break;
-  case GlobalValue::DLLExportLinkage:     Out << "dllexport ";      break;
   case GlobalValue::ExternalWeakLinkage:  Out << "extern_weak ";    break;
   case GlobalValue::AvailableExternallyLinkage:
     Out << "available_externally ";
@@ -1417,6 +1384,15 @@ static void PrintVisibility(GlobalValue::VisibilityTypes Vis,
   case GlobalValue::DefaultVisibility: break;
   case GlobalValue::HiddenVisibility:    Out << "hidden "; break;
   case GlobalValue::ProtectedVisibility: Out << "protected "; break;
+  }
+}
+
+static void PrintDLLStorageClass(GlobalValue::DLLStorageClassTypes SCT,
+                                 formatted_raw_ostream &Out) {
+  switch (SCT) {
+  case GlobalValue::DefaultStorageClass: break;
+  case GlobalValue::DLLImportStorageClass: Out << "dllimport "; break;
+  case GlobalValue::DLLExportStorageClass: Out << "dllexport "; break;
   }
 }
 
@@ -1452,6 +1428,7 @@ void AssemblyWriter::printGlobal(const GlobalVariable *GV) {
 
   PrintLinkage(GV->getLinkage(), Out);
   PrintVisibility(GV->getVisibility(), Out);
+  PrintDLLStorageClass(GV->getDLLStorageClass(), Out);
   PrintThreadLocalModel(GV->getThreadLocalMode(), Out);
 
   if (unsigned AddressSpace = GV->getType()->getAddressSpace())
@@ -1489,6 +1466,7 @@ void AssemblyWriter::printAlias(const GlobalAlias *GA) {
     Out << " = ";
   }
   PrintVisibility(GA->getVisibility(), Out);
+  PrintDLLStorageClass(GA->getDLLStorageClass(), Out);
 
   Out << "alias ";
 
@@ -1586,6 +1564,7 @@ void AssemblyWriter::printFunction(const Function *F) {
 
   PrintLinkage(F->getLinkage(), Out);
   PrintVisibility(F->getVisibility(), Out);
+  PrintDLLStorageClass(F->getDLLStorageClass(), Out);
 
   // Print the calling convention.
   if (F->getCallingConv() != CallingConv::C) {
@@ -1967,6 +1946,8 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
   } else if (const AllocaInst *AI = dyn_cast<AllocaInst>(&I)) {
     Out << ' ';
     TypePrinter.print(AI->getAllocatedType(), Out);
+    if (AI->isUsedWithInAlloca())
+      Out << ", inalloca";
     if (!AI->getArraySize() || AI->isArrayAllocation()) {
       Out << ", ";
       writeOperand(AI->getArraySize(), true);
@@ -2196,12 +2177,36 @@ void Value::print(raw_ostream &ROS, AssemblyAnnotationWriter *AAW) const {
     WriteConstantInternal(OS, C, TypePrinter, 0, 0);
   } else if (isa<InlineAsm>(this) || isa<MDString>(this) ||
              isa<Argument>(this)) {
-    WriteAsOperand(OS, this, true, 0);
+    this->printAsOperand(OS);
   } else {
     // Otherwise we don't know what it is. Call the virtual function to
     // allow a subclass to print itself.
     printCustom(OS);
   }
+}
+
+void Value::printAsOperand(raw_ostream &O, bool PrintType, const Module *M) const {
+  // Fast path: Don't construct and populate a TypePrinting object if we
+  // won't be needing any types printed.
+  if (!PrintType &&
+      ((!isa<Constant>(this) && !isa<MDNode>(this)) ||
+       hasName() || isa<GlobalValue>(this))) {
+    WriteAsOperandInternal(O, this, 0, 0, M);
+    return;
+  }
+
+  if (!M)
+    M = getModuleFromVal(this);
+
+  TypePrinting TypePrinter;
+  if (M)
+    TypePrinter.incorporateTypes(*M);
+  if (PrintType) {
+    TypePrinter.print(getType(), O);
+    O << ' ';
+  }
+
+  WriteAsOperandInternal(O, this, &TypePrinter, 0, M);
 }
 
 // Value::printCustom - subclasses should override this to implement printing.

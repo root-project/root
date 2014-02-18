@@ -78,10 +78,10 @@ doxygen: regendoc $(PROJ_OBJ_DIR)/doxygen.tar.gz
 
 regendoc:
 	$(Echo) Building doxygen documentation
-	$(Verb) if test -e $(PROJ_OBJ_DIR)/doxygen ; then \
-	  $(RM) -rf $(PROJ_OBJ_DIR)/doxygen ; \
-	fi
+	$(Verb) $(RM) -rf $(PROJ_OBJ_DIR)/doxygen
 	$(Verb) $(DOXYGEN) $(PROJ_OBJ_DIR)/doxygen.cfg
+	$(Verb) sed -i "s/[$$]LatestRev[$$]/`svnversion $(PROJ_SRC_DIR)`/g" \
+	 $(PROJ_OBJ_DIR)/doxygen/html/*.html
 
 $(PROJ_OBJ_DIR)/doxygen.tar.gz: $(DOXYFILES) $(PROJ_OBJ_DIR)/doxygen.cfg
 	$(Echo) Packaging doxygen documentation

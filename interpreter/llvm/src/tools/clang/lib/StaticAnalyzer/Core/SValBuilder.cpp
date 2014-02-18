@@ -202,10 +202,12 @@ DefinedSVal SValBuilder::getFunctionPointer(const FunctionDecl *func) {
 
 DefinedSVal SValBuilder::getBlockPointer(const BlockDecl *block,
                                          CanQualType locTy,
-                                         const LocationContext *locContext) {
+                                         const LocationContext *locContext,
+                                         unsigned blockCount) {
   const BlockTextRegion *BC =
     MemMgr.getBlockTextRegion(block, locTy, locContext->getAnalysisDeclContext());
-  const BlockDataRegion *BD = MemMgr.getBlockDataRegion(BC, locContext);
+  const BlockDataRegion *BD = MemMgr.getBlockDataRegion(BC, locContext,
+                                                        blockCount);
   return loc::MemRegionVal(BD);
 }
 
@@ -360,7 +362,7 @@ SVal SValBuilder::evalBinOp(ProgramStateRef state, BinaryOperator::Opcode op,
 DefinedOrUnknownSVal SValBuilder::evalEQ(ProgramStateRef state,
                                          DefinedOrUnknownSVal lhs,
                                          DefinedOrUnknownSVal rhs) {
-  return evalBinOp(state, BO_EQ, lhs, rhs, Context.IntTy)
+  return evalBinOp(state, BO_EQ, lhs, rhs, getConditionType())
       .castAs<DefinedOrUnknownSVal>();
 }
 
@@ -374,7 +376,7 @@ static bool shouldBeModeledWithNoOp(ASTContext &Context, QualType ToTy,
     ToTy = Context.getUnqualifiedArrayType(ToTy, Quals1);
     FromTy = Context.getUnqualifiedArrayType(FromTy, Quals2);
 
-    // Make sure that non cvr-qualifiers the other qualifiers (e.g., address
+    // Make sure that non-cvr-qualifiers the other qualifiers (e.g., address
     // spaces) are identical.
     Quals1.removeCVRQualifiers();
     Quals2.removeCVRQualifiers();

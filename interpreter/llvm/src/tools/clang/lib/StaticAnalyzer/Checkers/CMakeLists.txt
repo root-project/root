@@ -3,6 +3,10 @@ clang_tablegen(Checkers.inc -gen-clang-sa-checkers
   SOURCE Checkers.td
   TARGET ClangSACheckers)
 
+set(LLVM_LINK_COMPONENTS
+  Support
+  )
+
 add_clang_library(clangStaticAnalyzerCheckers
   AllocationDiagnostics.cpp
   AnalyzerStatsChecker.cpp
@@ -23,7 +27,6 @@ add_clang_library(clangStaticAnalyzerCheckers
   CheckerDocumentation.cpp
   ChrootChecker.cpp
   ClangCheckers.cpp
-  CommonBugCategories.cpp
   DeadStoresChecker.cpp
   DebugCheckers.cpp
   DereferenceChecker.cpp
@@ -33,7 +36,7 @@ add_clang_library(clangStaticAnalyzerCheckers
   ExprInspectionChecker.cpp
   FixedAddressChecker.cpp
   GenericTaintChecker.cpp
-  IdempotentOperationChecker.cpp
+  IdenticalExprChecker.cpp
   IvarInvalidationChecker.cpp
   LLVMConventionsChecker.cpp
   MacOSKeychainAPIChecker.cpp
@@ -74,7 +77,6 @@ add_clang_library(clangStaticAnalyzerCheckers
   )
 
 add_dependencies(clangStaticAnalyzerCheckers
-  clangStaticAnalyzerCore
   ClangAttrClasses
   ClangAttrList
   ClangCommentNodes
@@ -85,7 +87,8 @@ add_dependencies(clangStaticAnalyzerCheckers
   )
 
 target_link_libraries(clangStaticAnalyzerCheckers
-  clangBasic
   clangAST
+  clangAnalysis
+  clangBasic
   clangStaticAnalyzerCore
   )

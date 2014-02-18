@@ -34,11 +34,11 @@
 #include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
-#include "llvm/CodeGen/MachineLoopInfo.h"
-#include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/Passes.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -63,7 +63,7 @@ public:
   DenseMap<unsigned, unsigned> RegToChan;
   std::vector<unsigned> UndefReg;
   RegSeqInfo(MachineRegisterInfo &MRI, MachineInstr *MI) : Instr(MI) {
-    assert (MI->getOpcode() == AMDGPU::REG_SEQUENCE);
+    assert(MI->getOpcode() == AMDGPU::REG_SEQUENCE);
     for (unsigned i = 1, e = Instr->getNumOperands(); i < e; i+=2) {
       MachineOperand &MO = Instr->getOperand(i);
       unsigned Chan = Instr->getOperand(i + 1).getImm();

@@ -42,6 +42,7 @@ namespace SystemZMC {
   // as %r0-%r15.  It seems better to provide the same interface for
   // all classes though.
   extern const unsigned GR32Regs[16];
+  extern const unsigned GRH32Regs[16];
   extern const unsigned GR64Regs[16];
   extern const unsigned GR128Regs[16];
   extern const unsigned FP32Regs[16];
@@ -60,6 +61,11 @@ namespace SystemZMC {
   // Return the given register as a low GR32.
   inline unsigned getRegAsGR32(unsigned Reg) {
     return GR32Regs[getFirstReg(Reg)];
+  }
+
+  // Return the given register as a high GR32.
+  inline unsigned getRegAsGRH32(unsigned Reg) {
+    return GRH32Regs[getFirstReg(Reg)];
   }
 }
 

@@ -21,6 +21,10 @@
 
 namespace llvm {
 
+namespace object {
+  class ObjectFile;
+}
+
 class RuntimeDyldImpl;
 class ObjectImage;
 
@@ -46,6 +50,12 @@ public:
   /// failure, the input buffer will be deleted.
   ObjectImage *loadObject(ObjectBuffer *InputBuffer);
 
+  /// Prepare the referenced object file for execution.
+  /// Ownership of the input object is transferred to the ObjectImage
+  /// instance returned from this function if successful. In the case of load
+  /// failure, the input object will be deleted.
+  ObjectImage *loadObject(object::ObjectFile *InputObject);
+
   /// Get the address of our local copy of the symbol. This may or may not
   /// be the address used for relocation (clients can copy the data around
   /// and resolve relocatons based on where they put it).
@@ -64,9 +74,16 @@ public:
   /// This is the address which will be used for relocation resolution.
   void mapSectionAddress(const void *LocalAddress, uint64_t TargetAddress);
 
-  StringRef getErrorString();
+  /// Register any EH frame sections that have been loaded but not previously
+  /// registered with the memory manager.  Note, RuntimeDyld is responsible
+  /// for identifying the EH frame and calling the memory manager with the
+  /// EH frame section data.  However, the memory manager itself will handle
+  /// the actual target-specific EH frame registration.
+  void registerEHFrames();
 
-  StringRef getEHFrameSection();
+  void deregisterEHFrames();
+
+  StringRef getErrorString();
 };
 
 } // end namespace llvm

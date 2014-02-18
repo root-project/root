@@ -15,10 +15,10 @@
 #ifndef LLVM_CLANG_AST_STMTOPENMP_H
 #define LLVM_CLANG_AST_STMTOPENMP_H
 
-#include "clang/Basic/OpenMPKinds.h"
-#include "clang/Basic/SourceLocation.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/Stmt.h"
+#include "clang/Basic/OpenMPKinds.h"
+#include "clang/Basic/SourceLocation.h"
 
 namespace clang {
 
@@ -118,6 +118,60 @@ public:
     return ArrayRef<const Expr *>(
        reinterpret_cast<const Expr *const *>(static_cast<const T *>(this) + 1),
        NumVars);
+  }
+};
+
+/// \brief This represents 'if' clause in the '#pragma omp ...' directive.
+///
+/// \code
+/// #pragma omp parallel if(a > 5)
+/// \endcode
+/// In this example directive '#pragma omp parallel' has simple 'if'
+/// clause with condition 'a > 5'.
+///
+class OMPIfClause : public OMPClause {
+  friend class OMPClauseReader;
+  /// \brief Location of '('.
+  SourceLocation LParenLoc;
+  /// \brief Condition of the 'if' clause.
+  Stmt *Condition;
+
+  /// \brief Set condition.
+  ///
+  void setCondition(Expr *Cond) { Condition = Cond; }
+public:
+  /// \brief Build 'if' clause with condition \a Cond.
+  ///
+  /// \param StartLoc Starting location of the clause.
+  /// \param LParenLoc Location of '('.
+  /// \param Cond Condition of the clause.
+  /// \param EndLoc Ending location of the clause.
+  ///
+  OMPIfClause(Expr *Cond, SourceLocation StartLoc,
+              SourceLocation LParenLoc, SourceLocation EndLoc)
+    : OMPClause(OMPC_if, StartLoc, EndLoc), LParenLoc(LParenLoc),
+      Condition(Cond) { }
+
+  /// \brief Build an empty clause.
+  ///
+  OMPIfClause()
+    : OMPClause(OMPC_if, SourceLocation(), SourceLocation()),
+      LParenLoc(SourceLocation()), Condition(0) { }
+
+  /// \brief Sets the location of '('.
+  void setLParenLoc(SourceLocation Loc) { LParenLoc = Loc; }
+  /// \brief Returns the location of '('.
+  SourceLocation getLParenLoc() const { return LParenLoc; }
+
+  /// \brief Returns condition.
+  Expr *getCondition() const { return cast_or_null<Expr>(Condition); }
+
+  static bool classof(const OMPClause *T) {
+    return T->getClauseKind() == OMPC_if;
+  }
+
+  StmtRange children() {
+    return StmtRange(&Condition, &Condition + 1);
   }
 };
 
@@ -246,6 +300,67 @@ public:
 
   static bool classof(const OMPClause *T) {
     return T->getClauseKind() == OMPC_private;
+  }
+};
+
+/// \brief This represents clause 'firstprivate' in the '#pragma omp ...'
+/// directives.
+///
+/// \code
+/// #pragma omp parallel firstprivate(a,b)
+/// \endcode
+/// In this example directive '#pragma omp parallel' has clause 'firstprivate'
+/// with the variables 'a' and 'b'.
+///
+class OMPFirstprivateClause : public OMPClause,
+                              public OMPVarList<OMPFirstprivateClause> {
+  /// \brief Build clause with number of variables \a N.
+  ///
+  /// \param StartLoc Starting location of the clause.
+  /// \param LParenLoc Location of '('.
+  /// \param EndLoc Ending location of the clause.
+  /// \param N Number of the variables in the clause.
+  ///
+  OMPFirstprivateClause(SourceLocation StartLoc, SourceLocation LParenLoc,
+                   SourceLocation EndLoc, unsigned N)
+    : OMPClause(OMPC_firstprivate, StartLoc, EndLoc),
+      OMPVarList<OMPFirstprivateClause>(LParenLoc, N) { }
+
+  /// \brief Build an empty clause.
+  ///
+  /// \param N Number of variables.
+  ///
+  explicit OMPFirstprivateClause(unsigned N)
+    : OMPClause(OMPC_firstprivate, SourceLocation(), SourceLocation()),
+      OMPVarList<OMPFirstprivateClause>(SourceLocation(), N) { }
+public:
+  /// \brief Creates clause with a list of variables \a VL.
+  ///
+  /// \param C AST context.
+  /// \param StartLoc Starting location of the clause.
+  /// \param LParenLoc Location of '('.
+  /// \param EndLoc Ending location of the clause.
+  /// \param VL List of references to the variables.
+  ///
+  static OMPFirstprivateClause *Create(const ASTContext &C,
+                                       SourceLocation StartLoc,
+                                       SourceLocation LParenLoc,
+                                       SourceLocation EndLoc,
+                                       ArrayRef<Expr *> VL);
+  /// \brief Creates an empty clause with the place for \a N variables.
+  ///
+  /// \param C AST context.
+  /// \param N The number of variables.
+  ///
+  static OMPFirstprivateClause *CreateEmpty(const ASTContext &C, unsigned N);
+
+  StmtRange children() {
+    return StmtRange(reinterpret_cast<Stmt **>(varlist_begin()),
+                     reinterpret_cast<Stmt **>(varlist_end()));
+  }
+
+  static bool classof(const OMPClause *T) {
+    return T->getClauseKind() == OMPC_firstprivate;
   }
 };
 

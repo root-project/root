@@ -22,6 +22,7 @@
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/RecordLayout.h"
+#include "clang/CodeGen/CGFunctionInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Module.h"
@@ -32,7 +33,6 @@ CodeGenTypes::CodeGenTypes(CodeGenModule &cgm)
   : CGM(cgm), Context(cgm.getContext()), TheModule(cgm.getModule()),
     TheDataLayout(cgm.getDataLayout()),
     Target(cgm.getTarget()), TheCXXABI(cgm.getCXXABI()),
-    CodeGenOpts(cgm.getCodeGenOpts()),
     TheABIInfo(cgm.getTargetCodeGenInfo().getABIInfo()) {
   SkippedLayout = false;
 }
@@ -186,13 +186,12 @@ static bool isSafeToConvert(const RecordDecl *RD, CodeGenTypes &CGT) {
   return isSafeToConvert(RD, CGT, AlreadyChecked);
 }
 
-
-/// isFuncTypeArgumentConvertible - Return true if the specified type in a 
-/// function argument or result position can be converted to an IR type at this
+/// isFuncParamTypeConvertible - Return true if the specified type in a
+/// function parameter or result position can be converted to an IR type at this
 /// point.  This boils down to being whether it is complete, as well as whether
 /// we've temporarily deferred expanding the type because we're in a recursive
 /// context.
-bool CodeGenTypes::isFuncTypeArgumentConvertible(QualType Ty) {
+bool CodeGenTypes::isFuncParamTypeConvertible(QualType Ty) {
   // If this isn't a tagged type, we can convert it!
   const TagType *TT = Ty->getAs<TagType>();
   if (TT == 0) return true;
@@ -217,17 +216,17 @@ bool CodeGenTypes::isFuncTypeArgumentConvertible(QualType Ty) {
 
 
 /// Code to verify a given function type is complete, i.e. the return type
-/// and all of the argument types are complete.  Also check to see if we are in
+/// and all of the parameter types are complete.  Also check to see if we are in
 /// a RS_StructPointer context, and if so whether any struct types have been
 /// pended.  If so, we don't want to ask the ABI lowering code to handle a type
 /// that cannot be converted to an IR type.
 bool CodeGenTypes::isFuncTypeConvertible(const FunctionType *FT) {
-  if (!isFuncTypeArgumentConvertible(FT->getResultType()))
+  if (!isFuncParamTypeConvertible(FT->getReturnType()))
     return false;
   
   if (const FunctionProtoType *FPT = dyn_cast<FunctionProtoType>(FT))
-    for (unsigned i = 0, e = FPT->getNumArgs(); i != e; i++)
-      if (!isFuncTypeArgumentConvertible(FPT->getArgType(i)))
+    for (unsigned i = 0, e = FPT->getNumParams(); i != e; i++)
+      if (!isFuncParamTypeConvertible(FPT->getParamType(i)))
         return false;
 
   return true;
@@ -479,11 +478,11 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
 
       // Force conversion of all the relevant record types, to make sure
       // we re-convert the FunctionType when appropriate.
-      if (const RecordType *RT = FT->getResultType()->getAs<RecordType>())
+      if (const RecordType *RT = FT->getReturnType()->getAs<RecordType>())
         ConvertRecordDeclType(RT->getDecl());
       if (const FunctionProtoType *FPT = dyn_cast<FunctionProtoType>(FT))
-        for (unsigned i = 0, e = FPT->getNumArgs(); i != e; i++)
-          if (const RecordType *RT = FPT->getArgType(i)->getAs<RecordType>())
+        for (unsigned i = 0, e = FPT->getNumParams(); i != e; i++)
+          if (const RecordType *RT = FPT->getParamType(i)->getAs<RecordType>())
             ConvertRecordDeclType(RT->getDecl());
 
       // Return a placeholder type.
@@ -493,7 +492,7 @@ llvm::Type *CodeGenTypes::ConvertType(QualType T) {
       break;
     }
 
-    // While we're converting the argument types for a function, we don't want
+    // While we're converting the parameter types for a function, we don't want
     // to recursively convert any pointed-to structs.  Converting directly-used
     // structs is ok though.
     if (!RecordsBeingLaidOut.insert(Ty)) {

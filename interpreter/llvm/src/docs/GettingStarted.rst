@@ -217,9 +217,7 @@ uses the package and provides other details.
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
 | `SVN <http://subversion.tigris.org/project_packages.html>`_  | >=1.3           | Subversion access to LLVM\ :sup:`2`         |
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `python <http://www.python.org/>`_                           | >=2.4           | Automated test suite\ :sup:`3`              |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `perl <http://www.perl.com/download.csp>`_                   | >=5.6.0         | Utilities                                   |
+| `python <http://www.python.org/>`_                           | >=2.5           | Automated test suite\ :sup:`3`              |
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
 | `GNU M4 <http://savannah.gnu.org/projects/m4>`_              | 1.4             | Macro processor for configuration\ :sup:`4` |
 +--------------------------------------------------------------+-----------------+---------------------------------------------+
@@ -393,6 +391,11 @@ recommend using the system GCC to compile LLVM and Clang in this case.
 **Clang 3.0 on Mageia 2**.  There's a packaging issue: Clang can not find at
 least some (``cxxabi.h``) libstdc++ headers.
 
+**Clang in C++11 mode and libstdc++ 4.7.2**.  This version of libstdc++
+contained `a bug <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53841>`__ which
+causes Clang to refuse to compile condition_variable header file.  At the time
+of writing, this breaks LLD build.
+
 .. _Getting Started with LLVM:
 
 Getting Started with LLVM
@@ -481,6 +484,8 @@ you can checkout it from the '``tags``' directory (instead of '``trunk``'). The
 following releases are located in the following subdirectories of the '``tags``'
 directory:
 
+* Release 3.3: **RELEASE_33/final**
+* Release 3.2: **RELEASE_32/final**
 * Release 3.1: **RELEASE_31/final**
 * Release 3.0: **RELEASE_30/final**
 * Release 2.9: **RELEASE_29/final**

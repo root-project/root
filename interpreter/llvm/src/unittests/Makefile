@@ -9,8 +9,4 @@
 
 all:;
 
-
-clean:;
-
-
 install:;

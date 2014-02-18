@@ -233,7 +233,7 @@ ASTUnit::ASTUnit(bool _MainFileIsAST)
     UnsafeToFree(false) { 
   if (getenv("LIBCLANG_OBJTRACKING")) {
     llvm::sys::AtomicIncrement(&ActiveASTUnitObjects);
-    fprintf(stderr, "+++ %d translation units\n", ActiveASTUnitObjects);
+    fprintf(stderr, "+++ %d translation units\n", (int)ActiveASTUnitObjects);
   }    
 }
 
@@ -269,7 +269,7 @@ ASTUnit::~ASTUnit() {
   
   if (getenv("LIBCLANG_OBJTRACKING")) {
     llvm::sys::AtomicDecrement(&ActiveASTUnitObjects);
-    fprintf(stderr, "--- %d translation units\n", ActiveASTUnitObjects);
+    fprintf(stderr, "--- %d translation units\n", (int)ActiveASTUnitObjects);
   }    
 }
 
@@ -680,8 +680,7 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
                               IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
                                   const FileSystemOptions &FileSystemOpts,
                                   bool OnlyLocalDecls,
-                                  RemappedFile *RemappedFiles,
-                                  unsigned NumRemappedFiles,
+                                  ArrayRef<RemappedFile> RemappedFiles,
                                   bool CaptureDiagnostics,
                                   bool AllowPCHWithCompilerErrors,
                                   bool UserFilesAreVolatile) {
@@ -707,58 +706,16 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
   AST->HSOpts = new HeaderSearchOptions();
   
   AST->HeaderInfo.reset(new HeaderSearch(AST->HSOpts,
-                                         AST->getFileManager(),
+                                         AST->getSourceManager(),
                                          AST->getDiagnostics(),
                                          AST->ASTFileLangOpts,
                                          /*Target=*/0));
-  
-  for (unsigned I = 0; I != NumRemappedFiles; ++I) {
-    FilenameOrMemBuf fileOrBuf = RemappedFiles[I].second;
-    if (const llvm::MemoryBuffer *
-          memBuf = fileOrBuf.dyn_cast<const llvm::MemoryBuffer *>()) {
-      // Create the file entry for the file that we're mapping from.
-      const FileEntry *FromFile
-        = AST->getFileManager().getVirtualFile(RemappedFiles[I].first,
-                                               memBuf->getBufferSize(),
-                                               0);
-      if (!FromFile) {
-        AST->getDiagnostics().Report(diag::err_fe_remap_missing_from_file)
-          << RemappedFiles[I].first;
-        delete memBuf;
-        continue;
-      }
-      
-      // Override the contents of the "from" file with the contents of
-      // the "to" file.
-      AST->getSourceManager().overrideFileContents(FromFile, memBuf);
 
-    } else {
-      const char *fname = fileOrBuf.get<const char *>();
-      const FileEntry *ToFile = AST->FileMgr->getFile(fname);
-      if (!ToFile) {
-        AST->getDiagnostics().Report(diag::err_fe_remap_missing_to_file)
-        << RemappedFiles[I].first << fname;
-        continue;
-      }
+  PreprocessorOptions *PPOpts = new PreprocessorOptions();
 
-      // Create the file entry for the file that we're mapping from.
-      const FileEntry *FromFile
-        = AST->getFileManager().getVirtualFile(RemappedFiles[I].first,
-                                               ToFile->getSize(),
-                                               0);
-      if (!FromFile) {
-        AST->getDiagnostics().Report(diag::err_fe_remap_missing_from_file)
-          << RemappedFiles[I].first;
-        delete memBuf;
-        continue;
-      }
-      
-      // Override the contents of the "from" file with the contents of
-      // the "to" file.
-      AST->getSourceManager().overrideFileContents(FromFile, ToFile);
-    }
-  }
-  
+  for (unsigned I = 0, N = RemappedFiles.size(); I != N; ++I)
+    PPOpts->addRemappedFile(RemappedFiles[I].first, RemappedFiles[I].second);
+
   // Gather Info for preprocessor construction later on.
 
   HeaderSearch &HeaderInfo = *AST->HeaderInfo.get();
@@ -766,7 +723,7 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
 
   OwningPtr<ASTReader> Reader;
 
-  AST->PP = new Preprocessor(new PreprocessorOptions(),
+  AST->PP = new Preprocessor(PPOpts,
                              AST->getDiagnostics(), AST->ASTFileLangOpts,
                              /*Target=*/0, AST->getSourceManager(), HeaderInfo, 
                              *AST, 
@@ -877,6 +834,18 @@ void AddTopLevelDeclarationToHash(Decl *D, unsigned &Hash) {
     return;
 
   if (NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
+    if (EnumDecl *EnumD = dyn_cast<EnumDecl>(D)) {
+      // For an unscoped enum include the enumerators in the hash since they
+      // enter the top-level namespace.
+      if (!EnumD->isScoped()) {
+        for (EnumDecl::enumerator_iterator EI = EnumD->enumerator_begin(),
+               EE = EnumD->enumerator_end(); EI != EE; ++EI) {
+          if ((*EI)->getIdentifier())
+            Hash = llvm::HashString((*EI)->getIdentifier()->getName(), Hash);
+        }
+      }
+    }
+
     if (ND->getIdentifier())
       Hash = llvm::HashString(ND->getIdentifier()->getName(), Hash);
     else if (DeclarationName Name = ND->getDeclName()) {
@@ -1347,6 +1316,36 @@ static llvm::MemoryBuffer *CreatePaddedMainFileBuffer(llvm::MemoryBuffer *Old,
   return Result;
 }
 
+ASTUnit::PreambleFileHash
+ASTUnit::PreambleFileHash::createForFile(off_t Size, time_t ModTime) {
+  PreambleFileHash Result;
+  Result.Size = Size;
+  Result.ModTime = ModTime;
+  memset(Result.MD5, 0, sizeof(Result.MD5));
+  return Result;
+}
+
+ASTUnit::PreambleFileHash ASTUnit::PreambleFileHash::createForMemoryBuffer(
+    const llvm::MemoryBuffer *Buffer) {
+  PreambleFileHash Result;
+  Result.Size = Buffer->getBufferSize();
+  Result.ModTime = 0;
+
+  llvm::MD5 MD5Ctx;
+  MD5Ctx.update(Buffer->getBuffer().data());
+  MD5Ctx.final(Result.MD5);
+
+  return Result;
+}
+
+namespace clang {
+bool operator==(const ASTUnit::PreambleFileHash &LHS,
+                const ASTUnit::PreambleFileHash &RHS) {
+  return LHS.Size == RHS.Size && LHS.ModTime == RHS.ModTime &&
+         memcmp(LHS.MD5, RHS.MD5, sizeof(LHS.MD5)) == 0;
+}
+} // namespace clang
+
 /// \brief Attempt to build or re-use a precompiled preamble when (re-)parsing
 /// the source file.
 ///
@@ -1416,7 +1415,7 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
           
       // First, make a record of those files that have been overridden via
       // remapping or unsaved_files.
-      llvm::StringMap<std::pair<off_t, time_t> > OverriddenFiles;
+      llvm::StringMap<PreambleFileHash> OverriddenFiles;
       for (PreprocessorOptions::remapped_file_iterator
                 R = PreprocessorOpts.remapped_file_begin(),
              REnd = PreprocessorOpts.remapped_file_end();
@@ -1430,7 +1429,7 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
           break;
         }
 
-        OverriddenFiles[R->first] = std::make_pair(
+        OverriddenFiles[R->first] = PreambleFileHash::createForFile(
             Status.getSize(), Status.getLastModificationTime().toEpochTime());
       }
       for (PreprocessorOptions::remapped_file_buffer_iterator
@@ -1438,18 +1437,16 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
              REnd = PreprocessorOpts.remapped_file_buffer_end();
            !AnyFileChanged && R != REnd;
            ++R) {
-        // FIXME: Should we actually compare the contents of file->buffer
-        // remappings?
-        OverriddenFiles[R->first] = std::make_pair(R->second->getBufferSize(), 
-                                                   0);
+        OverriddenFiles[R->first] =
+            PreambleFileHash::createForMemoryBuffer(R->second);
       }
        
       // Check whether anything has changed.
-      for (llvm::StringMap<std::pair<off_t, time_t> >::iterator 
+      for (llvm::StringMap<PreambleFileHash>::iterator 
              F = FilesInPreamble.begin(), FEnd = FilesInPreamble.end();
            !AnyFileChanged && F != FEnd; 
            ++F) {
-        llvm::StringMap<std::pair<off_t, time_t> >::iterator Overridden
+        llvm::StringMap<PreambleFileHash>::iterator Overridden
           = OverriddenFiles.find(F->first());
         if (Overridden != OverriddenFiles.end()) {
           // This file was remapped; check whether the newly-mapped file 
@@ -1464,9 +1461,9 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
         if (FileMgr->getNoncachedStatValue(F->first(), Status)) {
           // If we can't stat the file, assume that something horrible happened.
           AnyFileChanged = true;
-        } else if (Status.getSize() != uint64_t(F->second.first) ||
+        } else if (Status.getSize() != uint64_t(F->second.Size) ||
                    Status.getLastModificationTime().toEpochTime() !=
-                       uint64_t(F->second.second))
+                       uint64_t(F->second.ModTime))
           AnyFileChanged = true;
       }
           
@@ -1537,7 +1534,7 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
 
   // Save the preamble text for later; we'll need to compare against it for
   // subsequent reparses.
-  StringRef MainFilename = PreambleInvocation->getFrontendOpts().Inputs[0].getFile();
+  StringRef MainFilename = FrontendOpts.Inputs[0].getFile();
   Preamble.assign(FileMgr->getFile(MainFilename),
                   NewPreamble.first->getBufferStart(), 
                   NewPreamble.first->getBufferStart() 
@@ -1666,11 +1663,20 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
        F != FEnd;
        ++F) {
     const FileEntry *File = F->second->OrigEntry;
-    if (!File || F->second->getRawBuffer() == MainFileBuffer)
+    if (!File)
       continue;
-    
-    FilesInPreamble[File->getName()]
-      = std::make_pair(F->second->getSize(), File->getModificationTime());
+    const llvm::MemoryBuffer *Buffer = F->second->getRawBuffer();
+    if (Buffer == MainFileBuffer)
+      continue;
+
+    if (time_t ModTime = File->getModificationTime()) {
+      FilesInPreamble[File->getName()] = PreambleFileHash::createForFile(
+          F->second->getSize(), ModTime);
+    } else {
+      assert(F->second->getSize() == Buffer->getBufferSize());
+      FilesInPreamble[File->getName()] =
+          PreambleFileHash::createForMemoryBuffer(Buffer);
+    }
   }
   
   PreambleRebuildCounter = 1;
@@ -1972,8 +1978,7 @@ ASTUnit *ASTUnit::LoadFromCommandLine(const char **ArgBegin,
                                       StringRef ResourceFilesPath,
                                       bool OnlyLocalDecls,
                                       bool CaptureDiagnostics,
-                                      RemappedFile *RemappedFiles,
-                                      unsigned NumRemappedFiles,
+                                      ArrayRef<RemappedFile> RemappedFiles,
                                       bool RemappedFilesKeepOriginalName,
                                       bool PrecompilePreamble,
                                       TranslationUnitKind TUKind,
@@ -2007,15 +2012,9 @@ ASTUnit *ASTUnit::LoadFromCommandLine(const char **ArgBegin,
   }
 
   // Override any files that need remapping
-  for (unsigned I = 0; I != NumRemappedFiles; ++I) {
-    FilenameOrMemBuf fileOrBuf = RemappedFiles[I].second;
-    if (const llvm::MemoryBuffer *
-            memBuf = fileOrBuf.dyn_cast<const llvm::MemoryBuffer *>()) {
-      CI->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first, memBuf);
-    } else {
-      const char *fname = fileOrBuf.get<const char *>();
-      CI->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first, fname);
-    }
+  for (unsigned I = 0, N = RemappedFiles.size(); I != N; ++I) {
+    CI->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first,
+                                              RemappedFiles[I].second);
   }
   PreprocessorOptions &PPOpts = CI->getPreprocessorOpts();
   PPOpts.RemappedFilesKeepOriginalName = RemappedFilesKeepOriginalName;
@@ -2065,7 +2064,7 @@ ASTUnit *ASTUnit::LoadFromCommandLine(const char **ArgBegin,
   return AST.take();
 }
 
-bool ASTUnit::Reparse(RemappedFile *RemappedFiles, unsigned NumRemappedFiles) {
+bool ASTUnit::Reparse(ArrayRef<RemappedFile> RemappedFiles) {
   if (!Invocation)
     return true;
 
@@ -2084,19 +2083,11 @@ bool ASTUnit::Reparse(RemappedFile *RemappedFiles, unsigned NumRemappedFiles) {
     delete R->second;
   }
   Invocation->getPreprocessorOpts().clearRemappedFiles();
-  for (unsigned I = 0; I != NumRemappedFiles; ++I) {
-    FilenameOrMemBuf fileOrBuf = RemappedFiles[I].second;
-    if (const llvm::MemoryBuffer *
-            memBuf = fileOrBuf.dyn_cast<const llvm::MemoryBuffer *>()) {
-      Invocation->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first,
-                                                        memBuf);
-    } else {
-      const char *fname = fileOrBuf.get<const char *>();
-      Invocation->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first,
-                                                        fname);
-    }
+  for (unsigned I = 0, N = RemappedFiles.size(); I != N; ++I) {
+    Invocation->getPreprocessorOpts().addRemappedFile(RemappedFiles[I].first,
+                                                      RemappedFiles[I].second);
   }
-  
+
   // If we have a preamble file lying around, or if we might try to
   // build a precompiled preamble, do so now.
   llvm::MemoryBuffer *OverrideMainBuffer = 0;
@@ -2366,8 +2357,7 @@ void AugmentedCodeCompleteConsumer::ProcessCodeCompleteResults(Sema &S,
 
 
 void ASTUnit::CodeComplete(StringRef File, unsigned Line, unsigned Column,
-                           RemappedFile *RemappedFiles, 
-                           unsigned NumRemappedFiles,
+                           ArrayRef<RemappedFile> RemappedFiles,
                            bool IncludeMacros, 
                            bool IncludeCodePatterns,
                            bool IncludeBriefComments,
@@ -2450,18 +2440,12 @@ void ASTUnit::CodeComplete(StringRef File, unsigned Line, unsigned Column,
   // Remap files.
   PreprocessorOpts.clearRemappedFiles();
   PreprocessorOpts.RetainRemappedFileBuffers = true;
-  for (unsigned I = 0; I != NumRemappedFiles; ++I) {
-    FilenameOrMemBuf fileOrBuf = RemappedFiles[I].second;
-    if (const llvm::MemoryBuffer *
-            memBuf = fileOrBuf.dyn_cast<const llvm::MemoryBuffer *>()) {
-      PreprocessorOpts.addRemappedFile(RemappedFiles[I].first, memBuf);
-      OwnedBuffers.push_back(memBuf);
-    } else {
-      const char *fname = fileOrBuf.get<const char *>();
-      PreprocessorOpts.addRemappedFile(RemappedFiles[I].first, fname);
-    }
+  for (unsigned I = 0, N = RemappedFiles.size(); I != N; ++I) {
+    PreprocessorOpts.addRemappedFile(RemappedFiles[I].first,
+                                     RemappedFiles[I].second);
+    OwnedBuffers.push_back(RemappedFiles[I].second);
   }
-  
+
   // Use the code completion consumer we were given, but adding any cached
   // code-completion results.
   AugmentedCodeCompleteConsumer *AugmentedConsumer
@@ -2542,8 +2526,7 @@ bool ASTUnit::Save(StringRef File) {
   }
 
   if (llvm::sys::fs::rename(TempPath.str(), File)) {
-    bool exists;
-    llvm::sys::fs::remove(TempPath.str(), exists);
+    llvm::sys::fs::remove(TempPath.str());
     return true;
   }
 
@@ -2941,7 +2924,7 @@ void ASTUnit::ConcurrencyState::finish() {
 
 #else // NDEBUG
 
-ASTUnit::ConcurrencyState::ConcurrencyState() {}
+ASTUnit::ConcurrencyState::ConcurrencyState() { Mutex = 0; }
 ASTUnit::ConcurrencyState::~ConcurrencyState() {}
 void ASTUnit::ConcurrencyState::start() {}
 void ASTUnit::ConcurrencyState::finish() {}

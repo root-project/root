@@ -11,14 +11,14 @@
 // different components in LLVM.
 //
 //===----------------------------------------------------------------------===//
-#include "llvm/IR/LLVMContext.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Analysis/CallGraphSCCPass.h"
-#include "llvm/Analysis/Verifier.h"
-#include "llvm/Assembly/PrintModulePass.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/IR/Instruction.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -52,6 +52,7 @@ static cl::opt<bool> GenPPCFP128("generate-ppc-fp128",
 static cl::opt<bool> GenX86MMX("generate-x86-mmx",
   cl::desc("Generate X86 MMX floating-point values"), cl::init(false));
 
+namespace {
 /// A utility class to provide a pseudo-random number generator which is
 /// the same across all platforms. This is somewhat close to the libc
 /// implementation. Note: This is not a cryptographically secure pseudorandom
@@ -288,7 +289,7 @@ protected:
 struct LoadModifier: public Modifier {
   LoadModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
   virtual void Act() {
-    // Try to use predefined pointers. If non exist, use undef pointer value;
+    // Try to use predefined pointers. If non-exist, use undef pointer value;
     Value *Ptr = getRandomPointerValue();
     Value *V = new LoadInst(Ptr, "L", BB->getTerminator());
     PT->push_back(V);
@@ -298,7 +299,7 @@ struct LoadModifier: public Modifier {
 struct StoreModifier: public Modifier {
   StoreModifier(BasicBlock *BB, PieceTable *PT, Random *R):Modifier(BB, PT, R) {}
   virtual void Act() {
-    // Try to use predefined pointers. If non exist, use undef pointer value;
+    // Try to use predefined pointers. If non-exist, use undef pointer value;
     Value *Ptr = getRandomPointerValue();
     Type  *Tp = Ptr->getType();
     Value *Val = getRandomValue(Tp->getContainedType(0));
@@ -607,7 +608,9 @@ struct CmpModifier: public Modifier {
   }
 };
 
-void FillFunction(Function *F, Random &R) {
+} // end anonymous namespace
+
+static void FillFunction(Function *F, Random &R) {
   // Create a legal entry block.
   BasicBlock *BB = BasicBlock::Create(F->getContext(), "BB", F);
   ReturnInst::Create(F->getContext(), BB);
@@ -654,7 +657,7 @@ void FillFunction(Function *F, Random &R) {
   SM->ActN(5); // Throw in a few stores.
 }
 
-void IntroduceControlFlow(Function *F, Random &R) {
+static void IntroduceControlFlow(Function *F, Random &R) {
   std::vector<Instruction*> BoolInst;
   for (BasicBlock::iterator it = F->begin()->begin(),
        e = F->begin()->end(); it != e; ++it) {
@@ -710,7 +713,7 @@ int main(int argc, char **argv) {
 
   PassManager Passes;
   Passes.add(createVerifierPass());
-  Passes.add(createPrintModulePass(&Out->os()));
+  Passes.add(createPrintModulePass(Out->os()));
   Passes.run(*M.get());
   Out->keep();
 

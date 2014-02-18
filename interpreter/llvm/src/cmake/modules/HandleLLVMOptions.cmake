@@ -2,14 +2,48 @@
 # options and executing the appropriate CMake commands to realize the users'
 # selections.
 
+include(HandleLLVMStdlib)
 include(AddLLVMDefinitions)
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
-if( CMAKE_COMPILER_IS_GNUCXX )
-  set(LLVM_COMPILER_IS_GCC_COMPATIBLE ON)
-elseif( "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" )
-  set(LLVM_COMPILER_IS_GCC_COMPATIBLE ON)
+if(NOT LLVM_FORCE_USE_OLD_TOOLCHAIN)
+  if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.7)
+      message(FATAL_ERROR "Host GCC version must be at least 4.7!")
+    endif()
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 3.1)
+      message(FATAL_ERROR "Host Clang version must be at least 3.1!")
+    endif()
+
+    # Also test that we aren't using too old of a version of libstdc++ with the
+    # Clang compiler. This is tricky as there is no real way to check the
+    # version of libstdc++ directly. Instead we test for a known bug in
+    # libstdc++4.6 that is fixed in libstdc++4.7.
+    if(NOT LLVM_ENABLE_LIBCXX)
+      set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
+      set(OLD_CMAKE_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+      set(CMAKE_REQUIRED_FLAGS "-std=c++0x")
+      if (ANDROID)
+        set(CMAKE_REQUIRED_LIBRARIES "atomic")
+      endif()
+      check_cxx_source_compiles("
+#include <atomic>
+std::atomic<float> x(0.0f);
+int main() { return (float)x; }"
+        LLVM_NO_OLD_LIBSTDCXX)
+      if(NOT LLVM_NO_OLD_LIBSTDCXX)
+        message(FATAL_ERROR "Host Clang must be able to find libstdc++4.7 or newer!")
+      endif()
+      set(CMAKE_REQUIRED_FLAGS ${OLD_CMAKE_REQUIRED_FLAGS})
+      set(CMAKE_REQUIRED_LIBRARIES ${OLD_CMAKE_REQUIRED_LIBRARIES})
+    endif()
+  elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 17.0)
+      message(FATAL_ERROR "Host Visual Studio must be at least 2012 (MSVC 17.0)")
+    endif()
+  endif()
 endif()
 
 if( LLVM_ENABLE_ASSERTIONS )
@@ -22,8 +56,13 @@ if( LLVM_ENABLE_ASSERTIONS )
   if( NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "DEBUG" )
     add_definitions( -UNDEBUG )
     # Also remove /D NDEBUG to avoid MSVC warnings about conflicting defines.
-    string (REGEX REPLACE "(^| )[/-]D *NDEBUG($| )" " "
+    set(REGEXP_NDEBUG "(^| )[/-]D *NDEBUG($| )")
+    string (REGEX REPLACE "${REGEXP_NDEBUG}" " "
       CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    string (REGEX REPLACE "${REGEXP_NDEBUG}" " "
+      CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+    string (REGEX REPLACE "${REGEXP_NDEBUG}" " "
+      CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}")
   endif()
 else()
   if( NOT uppercase_CMAKE_BUILD_TYPE STREQUAL "RELEASE" )
@@ -34,6 +73,7 @@ else()
 endif()
 
 if(WIN32)
+  set(LLVM_HAVE_LINK_VERSION_SCRIPT 0)
   if(CYGWIN)
     set(LLVM_ON_WIN32 0)
     set(LLVM_ON_UNIX 1)
@@ -41,8 +81,6 @@ if(WIN32)
     set(LLVM_ON_WIN32 1)
     set(LLVM_ON_UNIX 0)
   endif(CYGWIN)
-  set(LTDL_SHLIB_EXT ".dll")
-  set(EXEEXT ".exe")
   # Maximum path length is 160 for non-unicode paths
   set(MAXPATHLEN 160)
 else(WIN32)
@@ -50,17 +88,27 @@ else(WIN32)
     set(LLVM_ON_WIN32 0)
     set(LLVM_ON_UNIX 1)
     if(APPLE)
-      set(LTDL_SHLIB_EXT ".dylib")
+      set(LLVM_HAVE_LINK_VERSION_SCRIPT 0)
     else(APPLE)
-      set(LTDL_SHLIB_EXT ".so")
+      set(LLVM_HAVE_LINK_VERSION_SCRIPT 1)
     endif(APPLE)
-    set(EXEEXT "")
     # FIXME: Maximum path length is currently set to 'safe' fixed value
     set(MAXPATHLEN 2024)
   else(UNIX)
     MESSAGE(SEND_ERROR "Unable to determine platform")
   endif(UNIX)
 endif(WIN32)
+
+set(EXEEXT ${CMAKE_EXECUTABLE_SUFFIX})
+set(LTDL_SHLIB_EXT ${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+# We use *.dylib rather than *.so on darwin.
+set(LLVM_PLUGIN_EXT ${CMAKE_SHARED_LIBRARY_SUFFIX})
+
+if(APPLE)
+  # Darwin-specific linker flags for loadable modules.
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,-flat_namespace -Wl,-undefined -Wl,suppress")
+endif()
 
 function(add_flag_or_print_warning flag)
   check_c_compiler_flag(${flag} C_SUPPORTS_FLAG)
@@ -151,6 +199,15 @@ endif()
 if( MSVC )
   include(ChooseMSVCCRT)
 
+  if( NOT (${CMAKE_VERSION} VERSION_LESS 2.8.11) )
+    # set stack reserved size to ~10MB
+    # CMake previously automatically set this value for MSVC builds, but the
+    # behavior was changed in CMake 2.8.11 (Issue 12437) to use the MSVC default
+    # value (1 MB) which is not enough for us in tasks such as parsing recursive
+    # C++ templates in Clang.
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /STACK:10000000")
+  endif()
+
   if( MSVC10 )
     # MSVC 10 will complain about headers in the STL not being exported, but
     # will not complain in MSVC 11.
@@ -230,6 +287,10 @@ elseif( LLVM_COMPILER_IS_GCC_COMPATIBLE )
   if (LLVM_ENABLE_WERROR)
     add_llvm_definitions( -Werror )
   endif (LLVM_ENABLE_WERROR)
+  if (LLVM_ENABLE_CXX11)
+    check_cxx_compiler_flag("-std=c++11" CXX_SUPPORTS_CXX11)
+    append_if(CXX_SUPPORTS_CXX11 "-std=c++11" CMAKE_CXX_FLAGS)
+  endif (LLVM_ENABLE_CXX11)
 endif( MSVC )
 
 macro(append_common_sanitizer_flags)
@@ -280,4 +341,35 @@ if (UNIX AND
     CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND
     CMAKE_GENERATOR STREQUAL "Ninja")
   append("-fcolor-diagnostics" CMAKE_C_FLAGS CMAKE_CXX_FLAGS)
+endif()
+
+# Add flags for add_dead_strip().
+# FIXME: With MSVS, consider compiling with /Gy and linking with /OPT:REF?
+# But MinSizeRel seems to add that automatically, so maybe disable these
+# flags instead if LLVM_NO_DEAD_STRIP is set.
+if(NOT CYGWIN AND NOT WIN32)
+  if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    check_c_compiler_flag("-Werror -fno-function-sections" C_SUPPORTS_FNO_FUNCTION_SECTIONS)
+    if (C_SUPPORTS_FNO_FUNCTION_SECTIONS)
+      # Don't add -ffunction-section if it can be disabled with -fno-function-sections.
+      # Doing so will break sanitizers.
+      check_c_compiler_flag("-Werror -ffunction-sections" C_SUPPORTS_FFUNCTION_SECTIONS)
+      check_cxx_compiler_flag("-Werror -ffunction-sections" CXX_SUPPORTS_FFUNCTION_SECTIONS)
+      append_if(C_SUPPORTS_FFUNCTION_SECTIONS "-ffunction-sections" CMAKE_C_FLAGS)
+      append_if(CXX_SUPPORTS_FFUNCTION_SECTIONS "-ffunction-sections" CMAKE_CXX_FLAGS)
+    endif()
+    check_c_compiler_flag("-Werror -fdata-sections" C_SUPPORTS_FDATA_SECTIONS)
+    check_cxx_compiler_flag("-Werror -fdata-sections" CXX_SUPPORTS_FDATA_SECTIONS)
+    append_if(C_SUPPORTS_FDATA_SECTIONS "-fdata-sections" CMAKE_C_FLAGS)
+    append_if(CXX_SUPPORTS_FDATA_SECTIONS "-fdata-sections" CMAKE_CXX_FLAGS)
+  endif()
+endif()
+
+if(MSVC)
+  # Remove flags here, for exceptions and RTTI.
+  # Each target property or source property should be responsible to control
+  # them.
+  # CL.EXE complains to override flags like "/GR /GR-".
+  string(REGEX REPLACE "(^| ) */EH[-cs]+ *( |$)" "\\1 \\2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REGEX REPLACE "(^| ) */GR-? *( |$)" "\\1 \\2" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 endif()

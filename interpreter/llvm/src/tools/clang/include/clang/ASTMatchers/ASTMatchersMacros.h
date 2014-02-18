@@ -171,7 +171,7 @@
 #define AST_POLYMORPHIC_SUPPORTED_TYPES_4(t1, t2, t3, t4)                      \
   void(internal::TypeList<t1, t2, t3, t4>)
 #define AST_POLYMORPHIC_SUPPORTED_TYPES_5(t1, t2, t3, t4, t5)                  \
-  void(internal::TypeList<t1, t2, t3, t4, t5>)
+  void(internal::TypeList<t1, t2, t3, internal::TypeList<t4, t5> >)
 
 /// \brief AST_POLYMORPHIC_MATCHER(DefineMatcher) { ... }
 /// defines a single-parameter function named DefineMatcher() that is
@@ -308,7 +308,7 @@
 /// to another.
 ///
 /// For a specific \c SpecificType, the traversal is done using 
-/// \c SpecificType::FunctionName. The existance of such a function determines
+/// \c SpecificType::FunctionName. The existence of such a function determines
 /// whether a corresponding matcher can be used on \c SpecificType.
 #define AST_TYPE_TRAVERSE_MATCHER(MatcherName, FunctionName, ReturnTypesF)     \
   namespace internal {                                                         \

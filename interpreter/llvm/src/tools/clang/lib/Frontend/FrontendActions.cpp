@@ -63,17 +63,6 @@ ASTConsumer *ASTDeclListAction::CreateASTConsumer(CompilerInstance &CI,
   return CreateASTDeclNodeLister();
 }
 
-ASTConsumer *ASTDumpXMLAction::CreateASTConsumer(CompilerInstance &CI,
-                                                 StringRef InFile) {
-  raw_ostream *OS;
-  if (CI.getFrontendOpts().OutputFile.empty())
-    OS = &llvm::outs();
-  else
-    OS = CI.createDefaultOutputFile(false, InFile);
-  if (!OS) return 0;
-  return CreateASTDumperXML(*OS);
-}
-
 ASTConsumer *ASTViewAction::CreateASTConsumer(CompilerInstance &CI,
                                               StringRef InFile) {
   return CreateASTViewer();
@@ -257,11 +246,18 @@ bool GenerateModuleAction::BeginSourceFileAction(CompilerInstance &CI,
   }
 
   // Check whether we can build this module at all.
-  StringRef Feature;
-  if (!Module->isAvailable(CI.getLangOpts(), CI.getTarget(), Feature)) {
-    CI.getDiagnostics().Report(diag::err_module_unavailable)
-      << Module->getFullModuleName()
-      << Feature;
+  clang::Module::Requirement Requirement;
+  clang::Module::HeaderDirective MissingHeader;
+  if (!Module->isAvailable(CI.getLangOpts(), CI.getTarget(), Requirement,
+                           MissingHeader)) {
+    if (MissingHeader.FileNameLoc.isValid()) {
+      CI.getDiagnostics().Report(diag::err_module_header_missing)
+        << MissingHeader.IsUmbrella << MissingHeader.FileName;
+    } else {
+      CI.getDiagnostics().Report(diag::err_module_unavailable)
+        << Module->getFullModuleName()
+        << Requirement.second << Requirement.first;
+    }
 
     return false;
   }
@@ -279,7 +275,7 @@ bool GenerateModuleAction::BeginSourceFileAction(CompilerInstance &CI,
   llvm::MemoryBuffer *InputBuffer =
       llvm::MemoryBuffer::getMemBufferCopy(HeaderContents,
                                            Module::getModuleInputBufferName());
-  // Ownership of InputBuffer will be transfered to the SourceManager.
+  // Ownership of InputBuffer will be transferred to the SourceManager.
   setCurrentInput(FrontendInputFile(InputBuffer, getCurrentFileKind(),
                                     Module->IsSystem));
   return true;
@@ -322,6 +318,30 @@ ASTConsumer *SyntaxOnlyAction::CreateASTConsumer(CompilerInstance &CI,
 ASTConsumer *DumpModuleInfoAction::CreateASTConsumer(CompilerInstance &CI,
                                                      StringRef InFile) {
   return new ASTConsumer();
+}
+
+ASTConsumer *VerifyPCHAction::CreateASTConsumer(CompilerInstance &CI,
+                                                StringRef InFile) {
+  return new ASTConsumer();
+}
+
+void VerifyPCHAction::ExecuteAction() {
+  CompilerInstance &CI = getCompilerInstance();
+  bool Preamble = CI.getPreprocessorOpts().PrecompiledPreambleBytes.first != 0;
+  const std::string &Sysroot = CI.getHeaderSearchOpts().Sysroot;
+  OwningPtr<ASTReader> Reader(new ASTReader(
+    CI.getPreprocessor(), CI.getASTContext(),
+    Sysroot.empty() ? "" : Sysroot.c_str(),
+    /*DisableValidation*/false,
+    /*AllowPCHWithCompilerErrors*/false,
+    /*AllowConfigurationMismatch*/true,
+    /*ValidateSystemInputs*/true));
+
+  Reader->ReadAST(getCurrentFile(),
+                  Preamble ? serialization::MK_Preamble
+                           : serialization::MK_PCH,
+                  SourceLocation(),
+                  ASTReader::ARR_ConfigurationMismatch);
 }
 
 namespace {
@@ -367,7 +387,6 @@ namespace {
       Out.indent(4) << "  Triple: " << TargetOpts.Triple << "\n";
       Out.indent(4) << "  CPU: " << TargetOpts.CPU << "\n";
       Out.indent(4) << "  ABI: " << TargetOpts.ABI << "\n";
-      Out.indent(4) << "  C++ ABI: " << TargetOpts.CXXABI << "\n";
       Out.indent(4) << "  Linker version: " << TargetOpts.LinkerVersion << "\n";
 
       if (!TargetOpts.FeaturesAsWritten.empty()) {

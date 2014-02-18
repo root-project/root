@@ -42,7 +42,7 @@ static inline bool isARMArea1Register(unsigned Reg, bool isIOS) {
     case R4:  case R5:  case R6:  case R7:
     case LR:  case SP:  case PC:
       return true;
-    case R8:  case R9:  case R10: case R11:
+    case R8:  case R9:  case R10: case R11: case R12:
       // For iOS we want r7 and lr to be next to each other.
       return !isIOS;
     default:
@@ -53,7 +53,7 @@ static inline bool isARMArea1Register(unsigned Reg, bool isIOS) {
 static inline bool isARMArea2Register(unsigned Reg, bool isIOS) {
   using namespace ARM;
   switch (Reg) {
-    case R8: case R9: case R10: case R11:
+    case R8: case R9: case R10: case R11: case R12:
       // iOS has this second area.
       return isIOS;
     default:
@@ -70,6 +70,14 @@ static inline bool isARMArea3Register(unsigned Reg, bool isIOS) {
     default:
       return false;
   }
+}
+
+static inline bool isCalleeSavedRegister(unsigned Reg,
+                                         const MCPhysReg *CSRegs) {
+  for (unsigned i = 0; CSRegs[i]; ++i)
+    if (Reg == CSRegs[i])
+      return true;
+  return false;
 }
 
 class ARMBaseRegisterInfo : public ARMGenRegisterInfo {
@@ -148,10 +156,6 @@ public:
   // Debug information queries.
   unsigned getFrameRegister(const MachineFunction &MF) const;
   unsigned getBaseRegister() const { return BasePtr; }
-
-  // Exception handling queries.
-  unsigned getEHExceptionRegister() const;
-  unsigned getEHHandlerRegister() const;
 
   bool isLowRegister(unsigned Reg) const;
 

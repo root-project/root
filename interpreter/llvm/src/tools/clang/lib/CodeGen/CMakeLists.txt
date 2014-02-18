@@ -1,12 +1,18 @@
 set(LLVM_LINK_COMPONENTS
-  asmparser
-  bitreader
-  bitwriter
-  irreader
-  instrumentation
-  ipo
-  linker
-  vectorize
+  BitReader
+  BitWriter
+  Core
+  IPO
+  IRReader
+  InstCombine
+  Instrumentation
+  Linker
+  MC
+  ObjCARCOpts
+  ScalarOpts
+  Support
+  Target
+  TransformUtils
   )
 
 add_clang_library(clangCodeGen
@@ -14,12 +20,12 @@ add_clang_library(clangCodeGen
   CGAtomic.cpp
   CGBlocks.cpp
   CGBuiltin.cpp
-  CGCall.cpp
-  CGClass.cpp
   CGCUDANV.cpp
   CGCUDARuntime.cpp
   CGCXX.cpp
   CGCXXABI.cpp
+  CGCall.cpp
+  CGClass.cpp
   CGCleanup.cpp
   CGDebugInfo.cpp
   CGDecl.cpp
@@ -27,28 +33,29 @@ add_clang_library(clangCodeGen
   CGException.cpp
   CGExpr.cpp
   CGExprAgg.cpp
+  CGExprCXX.cpp
   CGExprComplex.cpp
   CGExprConstant.cpp
-  CGExprCXX.cpp
   CGExprScalar.cpp
   CGObjC.cpp
   CGObjCGNU.cpp
   CGObjCMac.cpp
   CGObjCRuntime.cpp
   CGOpenCLRuntime.cpp
-  CGRecordLayoutBuilder.cpp
   CGRTTI.cpp
+  CGRecordLayoutBuilder.cpp
   CGStmt.cpp
-  CGVTables.cpp
   CGVTT.cpp
+  CGVTables.cpp
+  CodeGenABITypes.cpp
   CodeGenAction.cpp
   CodeGenFunction.cpp
   CodeGenModule.cpp
+  CodeGenPGO.cpp
   CodeGenTBAA.cpp
   CodeGenTypes.cpp
   ItaniumCXXABI.cpp
   MicrosoftCXXABI.cpp
-  MicrosoftVBTables.cpp
   ModuleBuilder.cpp
   TargetInfo.cpp
   )

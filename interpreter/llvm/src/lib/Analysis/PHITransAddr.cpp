@@ -12,10 +12,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/PHITransAddr.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -72,7 +72,7 @@ static bool VerifySubExpr(Value *Expr,
   // If it isn't in the InstInputs list it is a subexpr incorporated into the
   // address.  Sanity check that it is phi translatable.
   if (!CanPHITrans(I)) {
-    errs() << "Non phi translatable instruction found in PHITransAddr:\n";
+    errs() << "Instruction in PHITransAddr is not phi-translatable:\n";
     errs() << *I << '\n';
     llvm_unreachable("Either something is missing from InstInputs or "
                      "CanPHITrans is wrong.");

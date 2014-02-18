@@ -1,8 +1,5 @@
 set(LLVM_LINK_COMPONENTS
-  ${LLVM_TARGETS_TO_BUILD}
-  asmparser
-  support
-  mc
+  Support
   )
 
 add_clang_library(clangSema
@@ -50,7 +47,6 @@ add_clang_library(clangSema
   SemaTemplateInstantiateDecl.cpp
   SemaTemplateVariadic.cpp
   SemaType.cpp
-  TargetAttributesSema.cpp
   TypeLocBuilder.cpp
   )
 

@@ -28,8 +28,8 @@
 #include "clang/Analysis/Support/BumpVector.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/Support/ErrorHandling.h"
-#include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/SaveAndRestore.h"
+#include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
 
@@ -68,7 +68,8 @@ AnalysisDeclContextManager::AnalysisDeclContextManager(bool useUnoptimizedCFG,
                                                        bool addInitializers,
                                                        bool addTemporaryDtors,
                                                        bool synthesizeBodies,
-                                                       bool addStaticInitBranch)
+                                                       bool addStaticInitBranch,
+                                                       bool addCXXNewAllocator)
   : SynthesizeBodies(synthesizeBodies)
 {
   cfgBuildOptions.PruneTriviallyFalseEdges = !useUnoptimizedCFG;
@@ -76,6 +77,7 @@ AnalysisDeclContextManager::AnalysisDeclContextManager(bool useUnoptimizedCFG,
   cfgBuildOptions.AddInitializers = addInitializers;
   cfgBuildOptions.AddTemporaryDtors = addTemporaryDtors;
   cfgBuildOptions.AddStaticInitBranches = addStaticInitBranch;
+  cfgBuildOptions.AddCXXNewAllocator = addCXXNewAllocator;
 }
 
 void AnalysisDeclContextManager::clear() {
@@ -94,14 +96,21 @@ Stmt *AnalysisDeclContext::getBody(bool &IsAutosynthesized) const {
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     Stmt *Body = FD->getBody();
     if (!Body && Manager && Manager->synthesizeBodies()) {
-      IsAutosynthesized = true;
-      return getBodyFarm(getASTContext()).getBody(FD);
+      Body = getBodyFarm(getASTContext()).getBody(FD);
+      if (Body)
+        IsAutosynthesized = true;
     }
     return Body;
   }
-  else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D))
-    return MD->getBody();
-  else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D))
+  else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D)) {
+    Stmt *Body = MD->getBody();
+    if (!Body && Manager && Manager->synthesizeBodies()) {
+      Body = getBodyFarm(getASTContext()).getBody(MD);
+      if (Body)
+        IsAutosynthesized = true;
+    }
+    return Body;
+  } else if (const BlockDecl *BD = dyn_cast<BlockDecl>(D))
     return BD->getBody();
   else if (const FunctionTemplateDecl *FunTmpl
            = dyn_cast_or_null<FunctionTemplateDecl>(D))
@@ -435,7 +444,7 @@ void LocationContext::dumpStack(raw_ostream &OS, StringRef Indent) const {
   }
 }
 
-void LocationContext::dumpStack() const {
+LLVM_DUMP_METHOD void LocationContext::dumpStack() const {
   dumpStack(llvm::errs());
 }
 

@@ -15,6 +15,7 @@
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Process.h"
 #include <cctype>
 #include <cstdio>
 #include <cstring>
@@ -32,10 +33,10 @@ namespace {
 
 #ifdef LLVM_ON_WIN32
   const char *separators = "\\/";
-  const char  prefered_separator = '\\';
+  const char preferred_separator = '\\';
 #else
   const char  separators = '/';
-  const char  prefered_separator = '/';
+  const char preferred_separator = '/';
 #endif
 
   StringRef find_first_component(StringRef path) {
@@ -403,7 +404,7 @@ void append(SmallVectorImpl<char> &path, const Twine &a,
 
     if (!component_has_sep && !(path.empty() || is_root_name)) {
       // Add a separator.
-      path.push_back(prefered_separator);
+      path.push_back(preferred_separator);
     }
 
     path.append(i->begin(), i->end());
@@ -507,8 +508,9 @@ bool is_separator(char value) {
 void system_temp_directory(bool erasedOnReboot, SmallVectorImpl<char> &result) {
   result.clear();
 
-#ifdef __APPLE__
+#if defined(_CS_DARWIN_USER_TEMP_DIR) && defined(_CS_DARWIN_USER_CACHE_DIR)
   // On Darwin, use DARWIN_USER_TEMP_DIR or DARWIN_USER_CACHE_DIR.
+  // macros defined in <unistd.h> on darwin >= 9
   int ConfName = erasedOnReboot? _CS_DARWIN_USER_TEMP_DIR
                                : _CS_DARWIN_USER_CACHE_DIR;
   size_t ConfLen = confstr(ConfName, 0, 0);
@@ -749,20 +751,27 @@ error_code make_absolute(SmallVectorImpl<char> &path) {
                    "occurred above!");
 }
 
-error_code create_directories(const Twine &path, bool &existed) {
-  SmallString<128> path_storage;
-  StringRef p = path.toStringRef(path_storage);
+error_code create_directories(const Twine &Path, bool &Existed) {
+  SmallString<128> PathStorage;
+  StringRef P = Path.toStringRef(PathStorage);
 
-  StringRef parent = path::parent_path(p);
-  if (!parent.empty()) {
-    bool parent_exists;
-    if (error_code ec = fs::exists(parent, parent_exists)) return ec;
+  // Be optimistic and try to create the directory
+  error_code EC = create_directory(P, Existed);
+  // If we succeeded, or had any error other than the parent not existing, just
+  // return it.
+  if (EC != errc::no_such_file_or_directory)
+    return EC;
 
-    if (!parent_exists)
-      if (error_code ec = create_directories(parent, existed)) return ec;
-  }
+  // We failed because of a no_such_file_or_directory, try to create the
+  // parent.
+  StringRef Parent = path::parent_path(P);
+  if (Parent.empty())
+    return EC;
 
-  return create_directory(p, existed);
+  if ((EC = create_directories(Parent)))
+      return EC;
+
+  return create_directory(P, Existed);
 }
 
 bool exists(file_status status) {
@@ -847,6 +856,21 @@ error_code has_magic(const Twine &path, const Twine &magic, bool &result) {
   if (Magic.size() < 4)
     return file_magic::unknown;
   switch ((unsigned char)Magic[0]) {
+    case 0x00: {
+      // COFF short import library file
+      if (Magic[1] == (char)0x00 && Magic[2] == (char)0xff &&
+          Magic[3] == (char)0xff)
+        return file_magic::coff_import_library;
+      // Windows resource file
+      const char Expected[] = { 0, 0, 0, 0, '\x20', 0, 0, 0, '\xff' };
+      if (Magic.size() >= sizeof(Expected) &&
+          memcmp(Magic.data(), Expected, sizeof(Expected)) == 0)
+        return file_magic::windows_resource;
+      // 0x0000 = COFF unknown machine type
+      if (Magic[1] == 0)
+        return file_magic::coff_object;
+      break;
+    }
     case 0xDE:  // 0x0B17C0DE = BC wraper
       if (Magic[1] == (char)0xC0 && Magic[2] == (char)0x17 &&
           Magic[3] == (char)0x0B)
@@ -966,45 +990,6 @@ error_code identify_magic(const Twine &path, file_magic &result) {
 
   result = identify_magic(Magic);
   return error_code::success();
-}
-
-namespace {
-error_code remove_all_r(StringRef path, file_type ft, uint32_t &count) {
-  if (ft == file_type::directory_file) {
-    // This code would be a lot better with exceptions ;/.
-    error_code ec;
-    directory_iterator i(path, ec);
-    if (ec) return ec;
-    for (directory_iterator e; i != e; i.increment(ec)) {
-      if (ec) return ec;
-      file_status st;
-      if (error_code ec = i->status(st)) return ec;
-      if (error_code ec = remove_all_r(i->path(), st.type(), count)) return ec;
-    }
-    bool obviously_this_exists;
-    if (error_code ec = remove(path, obviously_this_exists)) return ec;
-    assert(obviously_this_exists);
-    ++count; // Include the directory itself in the items removed.
-  } else {
-    bool obviously_this_exists;
-    if (error_code ec = remove(path, obviously_this_exists)) return ec;
-    assert(obviously_this_exists);
-    ++count;
-  }
-
-  return error_code::success();
-}
-} // end unnamed namespace
-
-error_code remove_all(const Twine &path, uint32_t &num_removed) {
-  SmallString<128> path_storage;
-  StringRef p = path.toStringRef(path_storage);
-
-  file_status fs;
-  if (error_code ec = status(path, fs))
-    return ec;
-  num_removed = 0;
-  return remove_all_r(p, fs.type(), num_removed);
 }
 
 error_code directory_entry::status(file_status &result) const {

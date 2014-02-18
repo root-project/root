@@ -13,11 +13,11 @@
 
 #include "llvm/Target/TargetMachine.h"
 #include "llvm/ADT/OwningPtr.h"
-#include "llvm/Assembly/PrintModulePass.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCInstrInfo.h"
@@ -53,6 +53,10 @@ static cl::opt<cl::boolOrDefault>
 AsmVerbose("asm-verbose", cl::desc("Add comments to directives."),
            cl::init(cl::BOU_UNSET));
 
+static cl::opt<bool>
+NoIntegratedAssembler("no-integrated-as", cl::Hidden,             
+                      cl::desc("Disable integrated assembler"));
+
 static bool getVerboseAsm() {
   switch (AsmVerbose) {
   case cl::BOU_UNSET: return TargetMachine::getAsmVerbosityDefault();
@@ -63,14 +67,20 @@ static bool getVerboseAsm() {
 }
 
 void LLVMTargetMachine::initAsmInfo() {
-  AsmInfo = TheTarget.createMCAsmInfo(*getRegisterInfo(), TargetTriple);
+  MCAsmInfo *TmpAsmInfo = TheTarget.createMCAsmInfo(*getRegisterInfo(),
+                                                    TargetTriple);
   // TargetSelect.h moved to a different directory between LLVM 2.9 and 3.0,
   // and if the old one gets included then MCAsmInfo will be NULL and
   // we'll crash later.
   // Provide the user with a useful error message about what's wrong.
-  assert(AsmInfo && "MCAsmInfo not initialized. "
+  assert(TmpAsmInfo && "MCAsmInfo not initialized. "
          "Make sure you include the correct TargetSelect.h"
          "and that InitializeAllTargetMCs() is being invoked!");
+
+  if (NoIntegratedAssembler)
+    TmpAsmInfo->setUseIntegratedAssembler(false);
+
+  AsmInfo = TmpAsmInfo;
 }
 
 LLVMTargetMachine::LLVMTargetMachine(const Target &T, StringRef Triple,
@@ -92,6 +102,9 @@ static MCContext *addPassesToGenerateCode(LLVMTargetMachine *TM,
                                           bool DisableVerify,
                                           AnalysisID StartAfter,
                                           AnalysisID StopAfter) {
+  // Add internal analysis passes from the target machine.
+  TM->addAnalysisPasses(PM);
+
   // Targets may override createPassConfig to provide a target-specific sublass.
   TargetPassConfig *PassConfig = TM->createPassConfig(PM);
   PassConfig->setStartStopPasses(StartAfter, StopAfter);
@@ -154,7 +167,7 @@ bool LLVMTargetMachine::addPassesToEmitFile(PassManagerBase &PM,
     // machine-level pass), and whatever other information is needed to
     // deserialize the code and resume compilation.  For now, just write the
     // LLVM IR.
-    PM.add(createPrintModulePass(&Out));
+    PM.add(createPrintModulePass(Out));
     return false;
   }
 
@@ -182,7 +195,6 @@ bool LLVMTargetMachine::addPassesToEmitFile(PassManagerBase &PM,
                                                        TargetCPU);
     MCStreamer *S = getTarget().createAsmStreamer(*Context, Out,
                                                   getVerboseAsm(),
-                                                  hasMCUseLoc(),
                                                   hasMCUseCFI(),
                                                   hasMCUseDwarfDirectory(),
                                                   InstPrinter,
@@ -201,11 +213,9 @@ bool LLVMTargetMachine::addPassesToEmitFile(PassManagerBase &PM,
     if (MCE == 0 || MAB == 0)
       return true;
 
-    AsmStreamer.reset(getTarget().createMCObjectStreamer(getTargetTriple(),
-                                                         *Context, *MAB, Out,
-                                                         MCE, hasMCRelaxAll(),
-                                                         hasMCNoExecStack()));
-    AsmStreamer.get()->setAutoInitSections(true);
+    AsmStreamer.reset(getTarget().createMCObjectStreamer(
+        getTargetTriple(), *Context, *MAB, Out, MCE, STI, hasMCRelaxAll(),
+        hasMCNoExecStack()));
     break;
   }
   case CGFT_Null:
@@ -231,7 +241,7 @@ bool LLVMTargetMachine::addPassesToEmitFile(PassManagerBase &PM,
 /// addPassesToEmitMachineCode - Add passes to the specified pass manager to
 /// get machine code emitted.  This uses a JITCodeEmitter object to handle
 /// actually outputting the machine code and resolving things like the address
-/// of functions.  This method should returns true if machine code emission is
+/// of functions.  This method should return true if machine code emission is
 /// not supported.
 ///
 bool LLVMTargetMachine::addPassesToEmitMachineCode(PassManagerBase &PM,
@@ -276,11 +286,9 @@ bool LLVMTargetMachine::addPassesToEmitMC(PassManagerBase &PM,
     return true;
 
   OwningPtr<MCStreamer> AsmStreamer;
-  AsmStreamer.reset(getTarget().createMCObjectStreamer(getTargetTriple(), *Ctx,
-                                                       *MAB, Out, MCE,
-                                                       hasMCRelaxAll(),
-                                                       hasMCNoExecStack()));
-  AsmStreamer.get()->InitSections();
+  AsmStreamer.reset(getTarget().createMCObjectStreamer(
+      getTargetTriple(), *Ctx, *MAB, Out, MCE, STI, hasMCRelaxAll(),
+      hasMCNoExecStack()));
 
   // Create the AsmPrinter, which takes ownership of AsmStreamer if successful.
   FunctionPass *Printer = getTarget().createAsmPrinter(*this, *AsmStreamer);

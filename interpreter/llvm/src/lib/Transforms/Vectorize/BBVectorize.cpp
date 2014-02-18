@@ -26,7 +26,6 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/AliasSetTracker.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
@@ -34,6 +33,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -199,7 +199,7 @@ namespace {
     BBVectorize(Pass *P, const VectorizeConfig &C)
       : BasicBlockPass(ID), Config(C) {
       AA = &P->getAnalysis<AliasAnalysis>();
-      DT = &P->getAnalysis<DominatorTree>();
+      DT = &P->getAnalysis<DominatorTreeWrapperPass>().getDomTree();
       SE = &P->getAnalysis<ScalarEvolution>();
       TD = P->getAnalysisIfAvailable<DataLayout>();
       TTI = IgnoreTargetInfo ? 0 : &P->getAnalysis<TargetTransformInfo>();
@@ -388,6 +388,8 @@ namespace {
     void combineMetadata(Instruction *K, const Instruction *J);
 
     bool vectorizeBB(BasicBlock &BB) {
+      if (skipOptnoneFunction(BB))
+        return false;
       if (!DT->isReachableFromEntry(&BB)) {
         DEBUG(dbgs() << "BBV: skipping unreachable " << BB.getName() <<
               " in " << BB.getParent()->getName() << "\n");
@@ -429,8 +431,10 @@ namespace {
     }
 
     virtual bool runOnBasicBlock(BasicBlock &BB) {
+      // OptimizeNone check deferred to vectorizeBB().
+
       AA = &getAnalysis<AliasAnalysis>();
-      DT = &getAnalysis<DominatorTree>();
+      DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
       SE = &getAnalysis<ScalarEvolution>();
       TD = getAnalysisIfAvailable<DataLayout>();
       TTI = IgnoreTargetInfo ? 0 : &getAnalysis<TargetTransformInfo>();
@@ -441,11 +445,11 @@ namespace {
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       BasicBlockPass::getAnalysisUsage(AU);
       AU.addRequired<AliasAnalysis>();
-      AU.addRequired<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<ScalarEvolution>();
       AU.addRequired<TargetTransformInfo>();
       AU.addPreserved<AliasAnalysis>();
-      AU.addPreserved<DominatorTree>();
+      AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addPreserved<ScalarEvolution>();
       AU.setPreservesCFG();
     }
@@ -528,12 +532,16 @@ namespace {
 
     // Returns the cost of the provided instruction using TTI.
     // This does not handle loads and stores.
-    unsigned getInstrCost(unsigned Opcode, Type *T1, Type *T2) {
+    unsigned getInstrCost(unsigned Opcode, Type *T1, Type *T2,
+                          TargetTransformInfo::OperandValueKind Op1VK = 
+                              TargetTransformInfo::OK_AnyValue,
+                          TargetTransformInfo::OperandValueKind Op2VK =
+                              TargetTransformInfo::OK_AnyValue) {
       switch (Opcode) {
       default: break;
       case Instruction::GetElementPtr:
         // We mark this instruction as zero-cost because scalar GEPs are usually
-        // lowered to the intruction addressing mode. At the moment we don't
+        // lowered to the instruction addressing mode. At the moment we don't
         // generate vector GEPs.
         return 0;
       case Instruction::Br:
@@ -558,7 +566,7 @@ namespace {
       case Instruction::And:
       case Instruction::Or:
       case Instruction::Xor:
-        return TTI->getArithmeticInstrCost(Opcode, T1);
+        return TTI->getArithmeticInstrCost(Opcode, T1, Op1VK, Op2VK);
       case Instruction::Select:
       case Instruction::ICmp:
       case Instruction::FCmp:
@@ -625,10 +633,10 @@ namespace {
         ConstantInt *IntOff = ConstOffSCEV->getValue();
         int64_t Offset = IntOff->getSExtValue();
 
-        Type *VTy = cast<PointerType>(IPtr->getType())->getElementType();
+        Type *VTy = IPtr->getType()->getPointerElementType();
         int64_t VTyTSS = (int64_t) TD->getTypeStoreSize(VTy);
 
-        Type *VTy2 = cast<PointerType>(JPtr->getType())->getElementType();
+        Type *VTy2 = JPtr->getType()->getPointerElementType();
         if (VTy != VTy2 && Offset < 0) {
           int64_t VTy2TSS = (int64_t) TD->getTypeStoreSize(VTy2);
           OffsetInElmts = Offset/VTy2TSS;
@@ -1009,13 +1017,49 @@ namespace {
       unsigned JCost = getInstrCost(J->getOpcode(), JT1, JT2);
       Type *VT1 = getVecTypeForPair(IT1, JT1),
            *VT2 = getVecTypeForPair(IT2, JT2);
+      TargetTransformInfo::OperandValueKind Op1VK =
+          TargetTransformInfo::OK_AnyValue;
+      TargetTransformInfo::OperandValueKind Op2VK =
+          TargetTransformInfo::OK_AnyValue;
+
+      // On some targets (example X86) the cost of a vector shift may vary
+      // depending on whether the second operand is a Uniform or
+      // NonUniform Constant.
+      switch (I->getOpcode()) {
+      default : break;
+      case Instruction::Shl:
+      case Instruction::LShr:
+      case Instruction::AShr:
+
+        // If both I and J are scalar shifts by constant, then the
+        // merged vector shift count would be either a constant splat value
+        // or a non-uniform vector of constants.
+        if (ConstantInt *CII = dyn_cast<ConstantInt>(I->getOperand(1))) {
+          if (ConstantInt *CIJ = dyn_cast<ConstantInt>(J->getOperand(1)))
+            Op2VK = CII == CIJ ? TargetTransformInfo::OK_UniformConstantValue :
+                               TargetTransformInfo::OK_NonUniformConstantValue;
+        } else {
+          // Check for a splat of a constant or for a non uniform vector
+          // of constants.
+          Value *IOp = I->getOperand(1);
+          Value *JOp = J->getOperand(1);
+          if ((isa<ConstantVector>(IOp) || isa<ConstantDataVector>(IOp)) &&
+              (isa<ConstantVector>(JOp) || isa<ConstantDataVector>(JOp))) {
+            Op2VK = TargetTransformInfo::OK_NonUniformConstantValue;
+            Constant *SplatValue = cast<Constant>(IOp)->getSplatValue();
+            if (SplatValue != NULL &&
+                SplatValue == cast<Constant>(JOp)->getSplatValue())
+              Op2VK = TargetTransformInfo::OK_UniformConstantValue;
+          }
+        }
+      }
 
       // Note that this procedure is incorrect for insert and extract element
       // instructions (because combining these often results in a shuffle),
       // but this cost is ignored (because insert and extract element
       // instructions are assigned a zero depth factor and are not really
       // fused in general).
-      unsigned VCost = getInstrCost(I->getOpcode(), VT1, VT2);
+      unsigned VCost = getInstrCost(I->getOpcode(), VT1, VT2, Op1VK, Op2VK);
 
       if (VCost > ICost + JCost)
         return false;
@@ -2231,11 +2275,12 @@ namespace {
     // The pointer value is taken to be the one with the lowest offset.
     Value *VPtr = IPtr;
 
-    Type *ArgTypeI = cast<PointerType>(IPtr->getType())->getElementType();
-    Type *ArgTypeJ = cast<PointerType>(JPtr->getType())->getElementType();
+    Type *ArgTypeI = IPtr->getType()->getPointerElementType();
+    Type *ArgTypeJ = JPtr->getType()->getPointerElementType();
     Type *VArgType = getVecTypeForPair(ArgTypeI, ArgTypeJ);
-    Type *VArgPtrType = PointerType::get(VArgType,
-      cast<PointerType>(IPtr->getType())->getAddressSpace());
+    Type *VArgPtrType
+      = PointerType::get(VArgType,
+                         IPtr->getType()->getPointerAddressSpace());
     return new BitCastInst(VPtr, VArgPtrType, getReplacementName(I, true, o),
                         /* insert before */ I);
   }
@@ -2244,7 +2289,7 @@ namespace {
                      unsigned MaskOffset, unsigned NumInElem,
                      unsigned NumInElem1, unsigned IdxOffset,
                      std::vector<Constant*> &Mask) {
-    unsigned NumElem1 = cast<VectorType>(J->getType())->getNumElements();
+    unsigned NumElem1 = J->getType()->getVectorNumElements();
     for (unsigned v = 0; v < NumElem1; ++v) {
       int m = cast<ShuffleVectorInst>(J)->getMaskValue(v);
       if (m < 0) {
@@ -2271,18 +2316,18 @@ namespace {
     Type *ArgTypeJ = J->getType();
     Type *VArgType = getVecTypeForPair(ArgTypeI, ArgTypeJ);
 
-    unsigned NumElemI = cast<VectorType>(ArgTypeI)->getNumElements();
+    unsigned NumElemI = ArgTypeI->getVectorNumElements();
 
     // Get the total number of elements in the fused vector type.
     // By definition, this must equal the number of elements in
     // the final mask.
-    unsigned NumElem = cast<VectorType>(VArgType)->getNumElements();
+    unsigned NumElem = VArgType->getVectorNumElements();
     std::vector<Constant*> Mask(NumElem);
 
     Type *OpTypeI = I->getOperand(0)->getType();
-    unsigned NumInElemI = cast<VectorType>(OpTypeI)->getNumElements();
+    unsigned NumInElemI = OpTypeI->getVectorNumElements();
     Type *OpTypeJ = J->getOperand(0)->getType();
-    unsigned NumInElemJ = cast<VectorType>(OpTypeJ)->getNumElements();
+    unsigned NumInElemJ = OpTypeJ->getVectorNumElements();
 
     // The fused vector will be:
     // -----------------------------------------------------
@@ -2344,6 +2389,12 @@ namespace {
     return ExpandedIEChain;
   }
 
+  static unsigned getNumScalarElements(Type *Ty) {
+    if (VectorType *VecTy = dyn_cast<VectorType>(Ty))
+      return VecTy->getNumElements();
+    return 1;
+  }
+
   // Returns the value to be used as the specified operand of the vector
   // instruction that fuses I with J.
   Value *BBVectorize::getReplacementInput(LLVMContext& Context, Instruction *I,
@@ -2359,17 +2410,8 @@ namespace {
     Instruction *L = I, *H = J;
     Type *ArgTypeL = ArgTypeI, *ArgTypeH = ArgTypeJ;
 
-    unsigned numElemL;
-    if (ArgTypeL->isVectorTy())
-      numElemL = cast<VectorType>(ArgTypeL)->getNumElements();
-    else
-      numElemL = 1;
-
-    unsigned numElemH;
-    if (ArgTypeH->isVectorTy())
-      numElemH = cast<VectorType>(ArgTypeH)->getNumElements();
-    else
-      numElemH = 1;
+    unsigned numElemL = getNumScalarElements(ArgTypeL);
+    unsigned numElemH = getNumScalarElements(ArgTypeH);
 
     Value *LOp = L->getOperand(o);
     Value *HOp = H->getOperand(o);
@@ -2430,11 +2472,12 @@ namespace {
 
       if (CanUseInputs) {
         unsigned LOpElem =
-          cast<VectorType>(cast<Instruction>(LOp)->getOperand(0)->getType())
-            ->getNumElements();
+          cast<Instruction>(LOp)->getOperand(0)->getType()
+            ->getVectorNumElements();
+
         unsigned HOpElem =
-          cast<VectorType>(cast<Instruction>(HOp)->getOperand(0)->getType())
-            ->getNumElements();
+          cast<Instruction>(HOp)->getOperand(0)->getType()
+            ->getVectorNumElements();
 
         // We have one or two input vectors. We need to map each index of the
         // operands to the index of the original vector.
@@ -2650,14 +2693,14 @@ namespace {
                                            getReplacementName(IBeforeJ ? I : J,
                                                               true, o, 1));
         }
-  
+
         NHOp->insertBefore(IBeforeJ ? J : I);
         HOp = NHOp;
       }
     }
 
     if (ArgType->isVectorTy()) {
-      unsigned numElem = cast<VectorType>(VArgType)->getNumElements();
+      unsigned numElem = VArgType->getVectorNumElements();
       std::vector<Constant*> Mask(numElem);
       for (unsigned v = 0; v < numElem; ++v) {
         unsigned Idx = v;
@@ -2750,16 +2793,8 @@ namespace {
       VectorType *VType = getVecTypeForPair(IType, JType);
       unsigned numElem = VType->getNumElements();
 
-      unsigned numElemI, numElemJ;
-      if (IType->isVectorTy())
-        numElemI = cast<VectorType>(IType)->getNumElements();
-      else
-        numElemI = 1;
-
-      if (JType->isVectorTy())
-        numElemJ = cast<VectorType>(JType)->getNumElements();
-      else
-        numElemJ = 1;
+      unsigned numElemI = getNumScalarElements(IType);
+      unsigned numElemJ = getNumScalarElements(JType);
 
       if (IType->isVectorTy()) {
         std::vector<Constant*> Mask1(numElemI), Mask2(numElemI);
@@ -3150,7 +3185,7 @@ static const char bb_vectorize_name[] = "Basic-Block Vectorization";
 INITIALIZE_PASS_BEGIN(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
 INITIALIZE_AG_DEPENDENCY(TargetTransformInfo)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
 INITIALIZE_PASS_END(BBVectorize, BBV_NAME, bb_vectorize_name, false, false)
 

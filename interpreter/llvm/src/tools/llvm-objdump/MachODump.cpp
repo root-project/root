@@ -154,13 +154,14 @@ getSectionsAndSymbols(const MachO::mach_header Header,
                       std::vector<SymbolRef> &Symbols,
                       SmallVectorImpl<uint64_t> &FoundFns,
                       uint64_t &BaseSegmentAddress) {
-  error_code ec;
-  for (symbol_iterator SI = MachOObj->begin_symbols(),
-       SE = MachOObj->end_symbols(); SI != SE; SI.increment(ec))
+  for (symbol_iterator SI = MachOObj->symbol_begin(),
+                       SE = MachOObj->symbol_end();
+       SI != SE; ++SI)
     Symbols.push_back(*SI);
 
-  for (section_iterator SI = MachOObj->begin_sections(),
-       SE = MachOObj->end_sections(); SI != SE; SI.increment(ec)) {
+  for (section_iterator SI = MachOObj->section_begin(),
+                        SE = MachOObj->section_end();
+       SI != SE; ++SI) {
     SectionRef SR = *SI;
     StringRef SectName;
     SR.getName(SectName);
@@ -207,8 +208,8 @@ void llvm::DisassembleInputMachO(StringRef Filename) {
     return;
   }
 
-  OwningPtr<MachOObjectFile> MachOOF(static_cast<MachOObjectFile*>(
-        ObjectFile::createMachOObjectFile(Buff.take())));
+  OwningPtr<MachOObjectFile> MachOOF(static_cast<MachOObjectFile *>(
+      ObjectFile::createMachOObjectFile(Buff.take()).get()));
 
   DisassembleInputMachO2(Filename, MachOOF.get());
 }
@@ -260,8 +261,6 @@ static void DisassembleInputMachO2(StringRef Filename,
   getSectionsAndSymbols(Header, MachOOF, Sections, Symbols, FoundFns,
                         BaseSegmentAddress);
 
-  // Make a copy of the unsorted symbol list. FIXME: duplication
-  std::vector<SymbolRef> UnsortedSymbols(Symbols);
   // Sort the symbols by address, just in case they didn't come in that way.
   std::sort(Symbols.begin(), Symbols.end(), SymbolSorter());
 
@@ -272,9 +271,8 @@ static void DisassembleInputMachO2(StringRef Filename,
   else
     BaseAddress = BaseSegmentAddress;
   DiceTable Dices;
-  error_code ec;
   for (dice_iterator DI = MachOOF->begin_dices(), DE = MachOOF->end_dices();
-       DI != DE; DI.increment(ec)){
+       DI != DE; ++DI) {
     uint32_t Offset;
     DI->getOffset(Offset);
     Dices.push_back(std::make_pair(BaseAddress + Offset, *DI));
@@ -299,7 +297,7 @@ static void DisassembleInputMachO2(StringRef Filename,
         errs() << "llvm-objdump: " << Filename << ": " << ec.message() << '\n';
         return;
       }
-      DbgObj = ObjectFile::createMachOObjectFile(Buf.take());
+      DbgObj = ObjectFile::createMachOObjectFile(Buf.take()).get();
     }
 
     // Setup the DIContext
@@ -331,9 +329,9 @@ static void DisassembleInputMachO2(StringRef Filename,
 
     // Parse relocations.
     std::vector<std::pair<uint64_t, SymbolRef> > Relocs;
-    error_code ec;
-    for (relocation_iterator RI = Sections[SectIdx].begin_relocations(),
-         RE = Sections[SectIdx].end_relocations(); RI != RE; RI.increment(ec)) {
+    for (relocation_iterator RI = Sections[SectIdx].relocation_begin(),
+                             RE = Sections[SectIdx].relocation_end();
+         RI != RE; ++RI) {
       uint64_t RelocOffset, SectionAddress;
       RI->getOffset(RelocOffset);
       Sections[SectIdx].getAddress(SectionAddress);

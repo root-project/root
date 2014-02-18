@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// This file defines structures to encapsulate the machine model as decribed in
+// This file defines structures to encapsulate the machine model as described in
 // the target description.
 //
 //===----------------------------------------------------------------------===//
@@ -36,10 +36,11 @@ static void dumpIdxVec(const SmallVectorImpl<unsigned> &V) {
 }
 #endif
 
+namespace {
 // (instrs a, b, ...) Evaluate and union all arguments. Identical to AddOp.
 struct InstrsOp : public SetTheory::Operator {
-  void apply(SetTheory &ST, DagInit *Expr, SetTheory::RecSet &Elts,
-             ArrayRef<SMLoc> Loc) {
+  virtual void apply(SetTheory &ST, DagInit *Expr, SetTheory::RecSet &Elts,
+                     ArrayRef<SMLoc> Loc) {
     ST.evaluate(Expr->arg_begin(), Expr->arg_end(), Elts, Loc);
   }
 };
@@ -84,6 +85,7 @@ struct InstRegexOp : public SetTheory::Operator {
     DeleteContainerPointers(RegexList);
   }
 };
+} // end anonymous namespace
 
 /// CodeGenModels ctor interprets machine model records and populates maps.
 CodeGenSchedModels::CodeGenSchedModels(RecordKeeper &RK,

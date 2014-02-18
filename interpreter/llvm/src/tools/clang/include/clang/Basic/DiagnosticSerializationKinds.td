@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 let Component = "Serialization" in {
+let CategoryName = "AST Deserialization Issue" in {
 
 def err_fe_unable_to_read_pch_file : Error<
     "unable to read PCH file %0: '%1'">;
@@ -22,6 +23,8 @@ def err_fe_pch_file_modified : Error<
     DefaultFatal;
 def err_fe_pch_file_overridden : Error<
     "file '%0' from the precompiled header has been overridden">;
+def note_pch_required_by : Note<"'%0' required by '%1'">;
+def note_pch_rebuild_required : Note<"please rebuild precompiled header '%0'">;
 def note_module_cache_path : Note<
     "after modifying system headers, please delete the module cache at '%0'">;
 
@@ -37,11 +40,11 @@ def err_pch_langopt_mismatch : Error<"%0 was %select{disabled|enabled}1 in "
 def err_pch_langopt_value_mismatch : Error<
   "%0 differs in PCH file vs. current file">;
   
-def warn_pch_version_too_old : Error<
+def err_pch_version_too_old : Error<
     "PCH file uses an older PCH format that is no longer supported">;
-def warn_pch_version_too_new : Error<
+def err_pch_version_too_new : Error<
     "PCH file uses a newer PCH format that cannot be read">;
-def warn_pch_different_branch : Error<
+def err_pch_different_branch : Error<
     "PCH file built from a different branch (%0) than the compiler (%1)">;
 def err_pch_with_compiler_errors : Error<
     "PCH file contains compiler errors">;
@@ -67,4 +70,15 @@ def err_pch_pp_detailed_record : Error<
 
 def err_not_a_pch_file : Error<
     "'%0' does not appear to be a precompiled header file">, DefaultFatal;
-}
+
+def err_module_odr_violation_missing_decl : Error<
+  "%q0 from module '%1' is not present in definition of %q2"
+  "%select{ in module '%4'| provided earlier}3">, NoSFINAE;
+def note_module_odr_violation_no_possible_decls : Note<
+  "definition has no member %0">;
+def note_module_odr_violation_possible_decl : Note<
+  "declaration of %0 does not match">;
+
+} // let CategoryName
+} // let Component
+

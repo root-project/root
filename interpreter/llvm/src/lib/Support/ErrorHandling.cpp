@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm-c/Core.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Config/config.h"
@@ -101,4 +102,20 @@ void llvm::llvm_unreachable_internal(const char *msg, const char *file,
   // so use the unreachable builtin to avoid a Clang self-host warning.
   LLVM_BUILTIN_UNREACHABLE;
 #endif
+}
+
+static void bindingsErrorHandler(void *user_data, const std::string& reason,
+                                 bool gen_crash_diag) {
+  LLVMFatalErrorHandler handler =
+      LLVM_EXTENSION reinterpret_cast<LLVMFatalErrorHandler>(user_data);
+  handler(reason.c_str());
+}
+
+void LLVMInstallFatalErrorHandler(LLVMFatalErrorHandler Handler) {
+  install_fatal_error_handler(bindingsErrorHandler,
+                              LLVM_EXTENSION reinterpret_cast<void *>(Handler));
+}
+
+void LLVMResetFatalErrorHandler() {
+  remove_fatal_error_handler();
 }

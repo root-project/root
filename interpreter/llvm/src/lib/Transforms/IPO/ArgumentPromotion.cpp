@@ -88,7 +88,7 @@ char ArgPromotion::ID = 0;
 INITIALIZE_PASS_BEGIN(ArgPromotion, "argpromotion",
                 "Promote 'by reference' arguments to scalars", false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
-INITIALIZE_AG_DEPENDENCY(CallGraph)
+INITIALIZE_PASS_DEPENDENCY(CallGraphWrapperPass)
 INITIALIZE_PASS_END(ArgPromotion, "argpromotion",
                 "Promote 'by reference' arguments to scalars", false, false)
 
@@ -155,7 +155,8 @@ CallGraphNode *ArgPromotion::PromoteArguments(CallGraphNode *CGN) {
     Type *AgTy = cast<PointerType>(PtrArg->getType())->getElementType();
 
     // If this is a byval argument, and if the aggregate type is small, just
-    // pass the elements, which is always safe.
+    // pass the elements, which is always safe.  This does not apply to
+    // inalloca.
     if (PtrArg->hasByValAttr()) {
       if (StructType *STy = dyn_cast<StructType>(AgTy)) {
         if (maxElements > 0 && STy->getNumElements() > maxElements) {
@@ -201,7 +202,7 @@ CallGraphNode *ArgPromotion::PromoteArguments(CallGraphNode *CGN) {
     }
     
     // Otherwise, see if we can promote the pointer to its value.
-    if (isSafeToPromoteArgument(PtrArg, PtrArg->hasByValAttr()))
+    if (isSafeToPromoteArgument(PtrArg, PtrArg->hasByValOrInAllocaAttr()))
       ArgsToPromote.insert(PtrArg);
   }
 
@@ -301,7 +302,8 @@ static void MarkIndicesSafe(const ArgPromotion::IndicesVector &ToMark,
 /// This method limits promotion of aggregates to only promote up to three
 /// elements of the aggregate in order to avoid exploding the number of
 /// arguments passed in.
-bool ArgPromotion::isSafeToPromoteArgument(Argument *Arg, bool isByVal) const {
+bool ArgPromotion::isSafeToPromoteArgument(Argument *Arg,
+                                           bool isByValOrInAlloca) const {
   typedef std::set<IndicesVector> GEPIndicesSet;
 
   // Quick exit for unused arguments
@@ -323,6 +325,9 @@ bool ArgPromotion::isSafeToPromoteArgument(Argument *Arg, bool isByVal) const {
   //
   // This set will contain all sets of indices that are loaded in the entry
   // block, and thus are safe to unconditionally load in the caller.
+  //
+  // This optimization is also safe for InAlloca parameters, because it verifies
+  // that the address isn't captured.
   GEPIndicesSet SafeToUnconditionallyLoad;
 
   // This set contains all the sets of indices that we are planning to promote.
@@ -330,7 +335,7 @@ bool ArgPromotion::isSafeToPromoteArgument(Argument *Arg, bool isByVal) const {
   GEPIndicesSet ToPromote;
 
   // If the pointer is always valid, any load with first index 0 is valid.
-  if (isByVal || AllCallersPassInValidPointerForArgument(Arg))
+  if (isByValOrInAlloca || AllCallersPassInValidPointerForArgument(Arg))
     SafeToUnconditionallyLoad.insert(IndicesVector(1, 0));
 
   // First, iterate the entry block and mark loads of (geps of) arguments as
@@ -389,7 +394,7 @@ bool ArgPromotion::isSafeToPromoteArgument(Argument *Arg, bool isByVal) const {
         // TODO: This runs the above loop over and over again for dead GEPs
         // Couldn't we just do increment the UI iterator earlier and erase the
         // use?
-        return isSafeToPromoteArgument(Arg, isByVal);
+        return isSafeToPromoteArgument(Arg, isByValOrInAlloca);
       }
 
       // Ensure that all of the indices are constants.
@@ -504,7 +509,9 @@ CallGraphNode *ArgPromotion::DoPromotion(Function *F,
   // OriginalLoads - Keep track of a representative load instruction from the
   // original function so that we can tell the alias analysis implementation
   // what the new GEP/Load instructions we are inserting look like.
-  std::map<IndicesVector, LoadInst*> OriginalLoads;
+  // We need to keep the original loads for each argument and the elements
+  // of the argument that are accessed.
+  std::map<std::pair<Argument*, IndicesVector>, LoadInst*> OriginalLoads;
 
   // Attribute - Keep track of the parameter attributes for the arguments
   // that we are *not* promoting. For the ones that we do promote, the parameter
@@ -569,7 +576,7 @@ CallGraphNode *ArgPromotion::DoPromotion(Function *F,
         else
           // Take any load, we will use it only to update Alias Analysis
           OrigLoad = cast<LoadInst>(User->use_back());
-        OriginalLoads[Indices] = OrigLoad;
+        OriginalLoads[std::make_pair(I, Indices)] = OrigLoad;
       }
 
       // Add a parameter to the function for each element passed in.
@@ -619,8 +626,8 @@ CallGraphNode *ArgPromotion::DoPromotion(Function *F,
 
   // Get the callgraph information that we need to update to reflect our
   // changes.
-  CallGraph &CG = getAnalysis<CallGraph>();
-  
+  CallGraph &CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
+
   // Get a new callgraph node for NF.
   CallGraphNode *NF_CGN = CG.getOrInsertFunction(NF);
 
@@ -676,7 +683,7 @@ CallGraphNode *ArgPromotion::DoPromotion(Function *F,
         for (ScalarizeTable::iterator SI = ArgIndices.begin(),
                E = ArgIndices.end(); SI != E; ++SI) {
           Value *V = *AI;
-          LoadInst *OrigLoad = OriginalLoads[*SI];
+          LoadInst *OrigLoad = OriginalLoads[std::make_pair(I, *SI)];
           if (!SI->empty()) {
             Ops.reserve(SI->size());
             Type *ElTy = V->getType();
@@ -805,6 +812,16 @@ CallGraphNode *ArgPromotion::DoPromotion(Function *F,
       I->replaceAllUsesWith(TheAlloca);
       TheAlloca->takeName(I);
       AA.replaceWithNewValue(I, TheAlloca);
+
+      // If the alloca is used in a call, we must clear the tail flag since
+      // the callee now uses an alloca from the caller.
+      for (Value::use_iterator UI = TheAlloca->use_begin(),
+             E = TheAlloca->use_end(); UI != E; ++UI) {
+        CallInst *Call = dyn_cast<CallInst>(*UI);
+        if (!Call)
+          continue;
+        Call->setTailCall(false);
+      }
       continue;
     }
 

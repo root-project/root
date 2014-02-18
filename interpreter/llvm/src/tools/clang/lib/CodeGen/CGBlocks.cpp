@@ -53,7 +53,7 @@ static llvm::Constant *buildCopyHelper(CodeGenModule &CGM,
   return CodeGenFunction(CGM).GenerateCopyHelperFunction(blockInfo);
 }
 
-/// Build the helper function to dipose of a block.
+/// Build the helper function to dispose of a block.
 static llvm::Constant *buildDisposeHelper(CodeGenModule &CGM,
                                           const CGBlockInfo &blockInfo) {
   return CodeGenFunction(CGM).GenerateDestroyHelperFunction(blockInfo);
@@ -834,7 +834,7 @@ llvm::Value *CodeGenFunction::EmitBlockLiteral(const CGBlockInfo &blockInfo) {
                type->isBlockPointerType()) {
       // Load the block and do a simple retain.
       LValue srcLV = MakeAddrLValue(src, type, align);
-      llvm::Value *value = EmitLoadOfScalar(srcLV);
+      llvm::Value *value = EmitLoadOfScalar(srcLV, SourceLocation());
       value = EmitARCRetainNonBlock(value);
 
       // Do a primitive store to the block field.
@@ -931,7 +931,7 @@ llvm::Type *CodeGenModule::getGenericBlockLiteralType() {
 }
 
 
-RValue CodeGenFunction::EmitBlockCallExpr(const CallExpr* E, 
+RValue CodeGenFunction::EmitBlockCallExpr(const CallExpr *E, 
                                           ReturnValueSlot ReturnValue) {
   const BlockPointerType *BPT =
     E->getCallee()->getType()->getAs<BlockPointerType>();
@@ -1123,10 +1123,9 @@ CodeGenFunction::GenerateBlockFunction(GlobalDecl GD,
 
   // Create the function declaration.
   const FunctionProtoType *fnType = blockInfo.getBlockExpr()->getFunctionType();
-  const CGFunctionInfo &fnInfo =
-    CGM.getTypes().arrangeFunctionDeclaration(fnType->getResultType(), args,
-                                              fnType->getExtInfo(),
-                                              fnType->isVariadic());
+  const CGFunctionInfo &fnInfo = CGM.getTypes().arrangeFreeFunctionDeclaration(
+      fnType->getReturnType(), args, fnType->getExtInfo(),
+      fnType->isVariadic());
   if (CGM.ReturnTypeUsesSRet(fnInfo))
     blockInfo.UsesStret = true;
 
@@ -1140,7 +1139,7 @@ CodeGenFunction::GenerateBlockFunction(GlobalDecl GD,
   CGM.SetInternalFunctionAttributes(blockDecl, fn, fnInfo);
 
   // Begin generating the function.
-  StartFunction(blockDecl, fnType->getResultType(), fn, fnInfo, args,
+  StartFunction(blockDecl, fnType->getReturnType(), fn, fnInfo, args,
                 blockInfo.getBlockExpr()->getBody()->getLocStart());
 
   // Okay.  Undo some of what StartFunction did.
@@ -1285,10 +1284,8 @@ CodeGenFunction::GenerateCopyHelperFunction(const CGBlockInfo &blockInfo) {
   ImplicitParamDecl srcDecl(0, SourceLocation(), 0, C.VoidPtrTy);
   args.push_back(&srcDecl);
 
-  const CGFunctionInfo &FI =
-    CGM.getTypes().arrangeFunctionDeclaration(C.VoidTy, args,
-                                              FunctionType::ExtInfo(),
-                                              /*variadic*/ false);
+  const CGFunctionInfo &FI = CGM.getTypes().arrangeFreeFunctionDeclaration(
+      C.VoidTy, args, FunctionType::ExtInfo(), /*variadic=*/false);
 
   // FIXME: it would be nice if these were mergeable with things with
   // identical semantics.
@@ -1460,10 +1457,8 @@ CodeGenFunction::GenerateDestroyHelperFunction(const CGBlockInfo &blockInfo) {
   ImplicitParamDecl srcDecl(0, SourceLocation(), 0, C.VoidPtrTy);
   args.push_back(&srcDecl);
 
-  const CGFunctionInfo &FI =
-    CGM.getTypes().arrangeFunctionDeclaration(C.VoidTy, args,
-                                              FunctionType::ExtInfo(),
-                                              /*variadic*/ false);
+  const CGFunctionInfo &FI = CGM.getTypes().arrangeFreeFunctionDeclaration(
+      C.VoidTy, args, FunctionType::ExtInfo(), /*variadic=*/false);
 
   // FIXME: We'd like to put these into a mergable by content, with
   // internal linkage.
@@ -1751,10 +1746,8 @@ generateByrefCopyHelper(CodeGenFunction &CGF,
   ImplicitParamDecl src(0, SourceLocation(), 0, Context.VoidPtrTy);
   args.push_back(&src);
 
-  const CGFunctionInfo &FI =
-    CGF.CGM.getTypes().arrangeFunctionDeclaration(R, args,
-                                                  FunctionType::ExtInfo(),
-                                                  /*variadic*/ false);
+  const CGFunctionInfo &FI = CGF.CGM.getTypes().arrangeFreeFunctionDeclaration(
+      R, args, FunctionType::ExtInfo(), /*variadic=*/false);
 
   CodeGenTypes &Types = CGF.CGM.getTypes();
   llvm::FunctionType *LTy = Types.GetFunctionType(FI);
@@ -1822,10 +1815,8 @@ generateByrefDisposeHelper(CodeGenFunction &CGF,
   ImplicitParamDecl src(0, SourceLocation(), 0, Context.VoidPtrTy);
   args.push_back(&src);
 
-  const CGFunctionInfo &FI =
-    CGF.CGM.getTypes().arrangeFunctionDeclaration(R, args,
-                                                  FunctionType::ExtInfo(),
-                                                  /*variadic*/ false);
+  const CGFunctionInfo &FI = CGF.CGM.getTypes().arrangeFreeFunctionDeclaration(
+      R, args, FunctionType::ExtInfo(), /*variadic=*/false);
 
   CodeGenTypes &Types = CGF.CGM.getTypes();
   llvm::FunctionType *LTy = Types.GetFunctionType(FI);

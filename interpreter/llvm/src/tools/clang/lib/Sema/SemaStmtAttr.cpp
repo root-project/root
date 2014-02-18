@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Sema/SemaInternal.h"
-#include "TargetAttributesSema.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Lex/Lexer.h"
@@ -41,7 +40,8 @@ static Attr *handleFallThroughAttr(Sema &S, Stmt *St, const AttributeList &A,
     S.Diag(A.getRange().getBegin(), diag::err_fallthrough_attr_outside_switch);
     return 0;
   }
-  return ::new (S.Context) FallThroughAttr(A.getRange(), S.Context);
+  return ::new (S.Context) FallThroughAttr(A.getRange(), S.Context,
+                                           A.getAttributeSpellingListIndex());
 }
 
 

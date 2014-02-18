@@ -38,13 +38,12 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/ConstantFolding.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/InstVisitor.h"
@@ -120,7 +119,7 @@ namespace {
       AU.setPreservesAll();
       AU.addRequired<AliasAnalysis>();
       AU.addRequired<TargetLibraryInfo>();
-      AU.addRequired<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
     }
     virtual void print(raw_ostream &O, const Module *M) const {}
 
@@ -129,7 +128,7 @@ namespace {
       if (isa<Instruction>(V)) {
         MessagesStr << *V << '\n';
       } else {
-        WriteAsOperand(MessagesStr, V, true, Mod);
+        V->printAsOperand(MessagesStr, true, Mod);
         MessagesStr << '\n';
       }
     }
@@ -153,7 +152,7 @@ char Lint::ID = 0;
 INITIALIZE_PASS_BEGIN(Lint, "lint", "Statically lint-checks LLVM IR",
                       false, true)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfo)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
 INITIALIZE_PASS_END(Lint, "lint", "Statically lint-checks LLVM IR",
                     false, true)
@@ -176,7 +175,7 @@ INITIALIZE_PASS_END(Lint, "lint", "Statically lint-checks LLVM IR",
 bool Lint::runOnFunction(Function &F) {
   Mod = F.getParent();
   AA = &getAnalysis<AliasAnalysis>();
-  DT = &getAnalysis<DominatorTree>();
+  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   TD = getAnalysisIfAvailable<DataLayout>();
   TLI = &getAnalysis<TargetLibraryInfo>();
   visit(F);
@@ -207,7 +206,7 @@ void Lint::visitCallSite(CallSite CS) {
             &I);
 
     FunctionType *FT = F->getFunctionType();
-    unsigned NumActualArgs = unsigned(CS.arg_end()-CS.arg_begin());
+    unsigned NumActualArgs = CS.arg_size();
 
     Assert1(FT->isVarArg() ?
               FT->getNumParams() <= NumActualArgs :

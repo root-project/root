@@ -17,8 +17,8 @@
 #define LLVM_OBJECT_RELOCVISITOR_H
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Object/ObjectFile.h"
 #include "llvm/Object/ELFObjectFile.h"
+#include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ELF.h"
 #include "llvm/Support/raw_ostream.h"
@@ -119,6 +119,27 @@ public:
         return visitELF_390_32(R, Value);
       case llvm::ELF::R_390_64:
         return visitELF_390_64(R, Value);
+      default:
+        HasError = true;
+        return RelocToApply();
+      }
+    } else if (FileFormat == "ELF32-sparc") {
+      switch (RelocType) {
+      case llvm::ELF::R_SPARC_32:
+      case llvm::ELF::R_SPARC_UA32:
+        return visitELF_SPARC_32(R, Value);
+      default:
+        HasError = true;
+        return RelocToApply();
+      }
+    } else if (FileFormat == "ELF64-sparc") {
+      switch (RelocType) {
+      case llvm::ELF::R_SPARC_32:
+      case llvm::ELF::R_SPARC_UA32:
+        return visitELF_SPARCV9_32(R, Value);
+      case llvm::ELF::R_SPARC_64:
+      case llvm::ELF::R_SPARC_UA64:
+        return visitELF_SPARCV9_64(R, Value);
       default:
         HasError = true;
         return RelocToApply();
@@ -272,6 +293,22 @@ private:
     int64_t Addend = getAddend64BE(R);
     return RelocToApply(Value + Addend, 8);
   }
+
+  RelocToApply visitELF_SPARC_32(RelocationRef R, uint32_t Value) {
+    int32_t Addend = getAddend32BE(R);
+    return RelocToApply(Value + Addend, 4);
+  }
+
+  RelocToApply visitELF_SPARCV9_32(RelocationRef R, uint64_t Value) {
+    int32_t Addend = getAddend64BE(R);
+    return RelocToApply(Value + Addend, 4);
+  }
+
+  RelocToApply visitELF_SPARCV9_64(RelocationRef R, uint64_t Value) {
+    int64_t Addend = getAddend64BE(R);
+    return RelocToApply(Value + Addend, 8);
+  }
+
 };
 
 }

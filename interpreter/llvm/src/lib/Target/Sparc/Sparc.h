@@ -23,10 +23,18 @@ namespace llvm {
   class FunctionPass;
   class SparcTargetMachine;
   class formatted_raw_ostream;
+  class AsmPrinter;
+  class MCInst;
+  class MachineInstr;
 
   FunctionPass *createSparcISelDag(SparcTargetMachine &TM);
   FunctionPass *createSparcDelaySlotFillerPass(TargetMachine &TM);
+  FunctionPass *createSparcJITCodeEmitterPass(SparcTargetMachine &TM,
+                                              JITCodeEmitter &JCE);
 
+  void LowerSparcMachineInstrToMCInst(const MachineInstr *MI,
+                                      MCInst &OutMI,
+                                      AsmPrinter &AP);
 } // end namespace llvm;
 
 namespace llvm {
@@ -103,5 +111,22 @@ namespace llvm {
     }
     llvm_unreachable("Invalid cond code");
   }
+
+  inline static unsigned HI22(int64_t imm) {
+    return (unsigned)((imm >> 10) & ((1 << 22)-1));
+  }
+
+  inline static unsigned LO10(int64_t imm) {
+    return (unsigned)(imm & 0x3FF);
+  }
+
+  inline static unsigned HIX22(int64_t imm) {
+    return HI22(~imm);
+  }
+
+  inline static unsigned LOX10(int64_t imm) {
+    return ~LO10(~imm);
+  }
+
 }  // end namespace llvm
 #endif

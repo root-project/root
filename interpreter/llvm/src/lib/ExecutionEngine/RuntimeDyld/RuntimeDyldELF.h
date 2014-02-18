@@ -15,6 +15,7 @@
 #define LLVM_RUNTIME_DYLD_ELF_H
 
 #include "RuntimeDyldImpl.h"
+#include "llvm/ADT/DenseMap.h"
 
 using namespace llvm;
 
@@ -81,6 +82,30 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
                                 uint32_t Type,
                                 int64_t Addend);
 
+  unsigned getMaxStubSize() {
+    if (Arch == Triple::aarch64)
+      return 20; // movz; movk; movk; movk; br
+    if (Arch == Triple::arm || Arch == Triple::thumb)
+      return 8; // 32-bit instruction and 32-bit address
+    else if (Arch == Triple::mipsel || Arch == Triple::mips)
+      return 16;
+    else if (Arch == Triple::ppc64 || Arch == Triple::ppc64le)
+      return 44;
+    else if (Arch == Triple::x86_64)
+      return 6; // 2-byte jmp instruction + 32-bit relative address
+    else if (Arch == Triple::systemz)
+      return 16;
+    else
+      return 0;
+  }
+
+  unsigned getStubAlignment() {
+    if (Arch == Triple::systemz)
+      return 8;
+    else
+      return 1;
+  }
+
   uint64_t findPPC64TOC() const;
   void findOPDEntrySection(ObjectImage &Obj,
                            ObjSectionToIDMap &LocalSections,
@@ -91,12 +116,20 @@ class RuntimeDyldELF : public RuntimeDyldImpl {
 
   virtual void updateGOTEntries(StringRef Name, uint64_t Addr);
 
-  SmallVector<RelocationValueRef, 2>  GOTEntries;
-  unsigned GOTSectionID;
+  // Relocation entries for symbols whose position-independent offset is
+  // updated in a global offset table.
+  typedef SmallVector<RelocationValueRef, 2> GOTRelocations;
+  GOTRelocations GOTEntries; // List of entries requiring finalization.
+  SmallVector<std::pair<SID, GOTRelocations>, 8> GOTs; // Allocated tables.
+
+  // When a module is loaded we save the SectionID of the EH frame section
+  // in a table until we receive a request to register all unregistered
+  // EH frame sections with the memory manager.
+  SmallVector<SID, 2> UnregisteredEHFrameSections;
+  SmallVector<SID, 2> RegisteredEHFrameSections;
 
 public:
-  RuntimeDyldELF(RTDyldMemoryManager *mm) : RuntimeDyldImpl(mm),
-                                            GOTSectionID(0)
+  RuntimeDyldELF(RTDyldMemoryManager *mm) : RuntimeDyldImpl(mm)
                                           {}
 
   virtual void resolveRelocation(const RelocationEntry &RE, uint64_t Value);
@@ -107,9 +140,12 @@ public:
                                     const SymbolTableMap &Symbols,
                                     StubMap &Stubs);
   virtual bool isCompatibleFormat(const ObjectBuffer *Buffer) const;
+  virtual bool isCompatibleFile(const object::ObjectFile *Buffer) const;
   virtual ObjectImage *createObjectImage(ObjectBuffer *InputBuffer);
-  virtual StringRef getEHFrameSection();
-  virtual void finalizeLoad();
+  virtual ObjectImage *createObjectImageFromFile(object::ObjectFile *Obj);
+  virtual void registerEHFrames();
+  virtual void deregisterEHFrames();
+  virtual void finalizeLoad(ObjSectionToIDMap &SectionMap);
   virtual ~RuntimeDyldELF();
 };
 

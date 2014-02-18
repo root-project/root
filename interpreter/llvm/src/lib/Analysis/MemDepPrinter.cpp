@@ -13,7 +13,6 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/CallSite.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -68,7 +67,7 @@ namespace {
         return InstTypePair(dep.getInst(), Def);
       if (dep.isNonFuncLocal())
         return InstTypePair(dep.getInst(), NonFuncLocal);
-      assert(dep.isUnknown() && "unexptected dependence type");
+      assert(dep.isUnknown() && "unexpected dependence type");
       return InstTypePair(dep.getInst(), Unknown);
     }
     static InstTypePair getInstTypePair(const Instruction* inst, DepType type) {
@@ -177,7 +176,7 @@ void MemDepPrinter::print(raw_ostream &OS, const Module *M) const {
       OS << DepTypeStr[type];
       if (DepBB) {
         OS << " in block ";
-        WriteAsOperand(OS, DepBB, /*PrintType=*/false, M);
+        DepBB->printAsOperand(OS, /*PrintType=*/false, M);
       }
       if (DepInst) {
         OS << " from: ";

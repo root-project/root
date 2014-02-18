@@ -19,16 +19,10 @@ namespace {
 
   class MCNullStreamer : public MCStreamer {
   public:
-    MCNullStreamer(MCContext &Context) : MCStreamer(SK_NullStreamer, Context) {}
+    MCNullStreamer(MCContext &Context) : MCStreamer(Context) {}
 
     /// @name MCStreamer Interface
     /// @{
-
-    virtual void InitToTextSection() {
-    }
-
-    virtual void InitSections() {
-    }
 
     virtual void ChangeSection(const MCSection *Section,
                                const MCExpr *Subsection) {
@@ -98,7 +92,7 @@ namespace {
                                        unsigned Column, unsigned Flags,
                                        unsigned Isa, unsigned Discriminator,
                                        StringRef FileName) {}
-    virtual void EmitInstruction(const MCInst &Inst) {}
+    virtual void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo&) {}
 
     virtual void EmitBundleAlignMode(unsigned AlignPow2) {}
     virtual void EmitBundleLock(bool AlignToEnd) {}
@@ -109,13 +103,6 @@ namespace {
     virtual void EmitCFIEndProcImpl(MCDwarfFrameInfo &Frame) {
       RecordProcEnd(Frame);
     }
-
-    /// @}
-
-    static bool classof(const MCStreamer *S) {
-      return S->getKind() == SK_NullStreamer;
-    }
-
   };
 
 }

@@ -357,6 +357,19 @@ bool DAE::RemoveDeadArgumentsFromCallers(Function &Fn)
   if (Fn.hasLocalLinkage() && !Fn.getFunctionType()->isVarArg())
     return false;
 
+  // If a function seen at compile time is not necessarily the one linked to
+  // the binary being built, it is illegal to change the actual arguments
+  // passed to it. These functions can be captured by isWeakForLinker().
+  // *NOTE* that mayBeOverridden() is insufficient for this purpose as it
+  // doesn't include linkage types like AvailableExternallyLinkage and
+  // LinkOnceODRLinkage. Take link_odr* as an example, it indicates a set of
+  // *EQUIVALENT* globals that can be merged at link-time. However, the
+  // semantic of *EQUIVALENT*-functions includes parameters. Changing
+  // parameters breaks this assumption.
+  //
+  if (Fn.isWeakForLinker())
+    return false;
+
   if (Fn.use_empty())
     return false;
 
@@ -365,7 +378,7 @@ bool DAE::RemoveDeadArgumentsFromCallers(Function &Fn)
        I != E; ++I) {
     Argument *Arg = I;
 
-    if (Arg->use_empty() && !Arg->hasByValAttr())
+    if (Arg->use_empty() && !Arg->hasByValOrInAllocaAttr())
       UnusedArgs.push_back(Arg->getArgNo());
   }
 
@@ -518,6 +531,13 @@ DAE::Liveness DAE::SurveyUses(const Value *V, UseVector &MaybeLiveUses) {
 // well as arguments to functions which have their "address taken".
 //
 void DAE::SurveyFunction(const Function &F) {
+  // Functions with inalloca parameters are expecting args in a particular
+  // register and memory layout.
+  if (F.getAttributes().hasAttrSomewhere(Attribute::InAlloca)) {
+    MarkLive(F);
+    return;
+  }
+
   unsigned RetCount = NumRetVals(&F);
   // Assume all return values are dead
   typedef SmallVector<Liveness, 5> RetVals;

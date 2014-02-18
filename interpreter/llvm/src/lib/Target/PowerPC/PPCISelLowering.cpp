@@ -670,6 +670,7 @@ const char *PPCTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case PPCISD::ADDIS_TOC_HA:    return "PPCISD::ADDIS_TOC_HA";
   case PPCISD::LD_TOC_L:        return "PPCISD::LD_TOC_L";
   case PPCISD::ADDI_TOC_L:      return "PPCISD::ADDI_TOC_L";
+  case PPCISD::PPC32_GOT:       return "PPCISD::PPC32_GOT";
   case PPCISD::ADDIS_GOT_TPREL_HA: return "PPCISD::ADDIS_GOT_TPREL_HA";
   case PPCISD::LD_GOT_TPREL_L:  return "PPCISD::LD_GOT_TPREL_L";
   case PPCISD::ADD_TLS:         return "PPCISD::ADD_TLS";
@@ -1431,18 +1432,19 @@ SDValue PPCTargetLowering::LowerGlobalTLSAddress(SDValue Op,
     return DAG.getNode(PPCISD::Lo, dl, PtrVT, TGALo, Hi);
   }
 
-  if (!is64bit)
-    llvm_unreachable("only local-exec is currently supported for ppc32");
-
   if (Model == TLSModel::InitialExec) {
     SDValue TGA = DAG.getTargetGlobalAddress(GV, dl, PtrVT, 0, 0);
     SDValue TGATLS = DAG.getTargetGlobalAddress(GV, dl, PtrVT, 0,
                                                 PPCII::MO_TLS);
-    SDValue GOTReg = DAG.getRegister(PPC::X2, MVT::i64);
-    SDValue TPOffsetHi = DAG.getNode(PPCISD::ADDIS_GOT_TPREL_HA, dl,
-                                     PtrVT, GOTReg, TGA);
+    SDValue GOTPtr;
+    if (is64bit) {
+      SDValue GOTReg = DAG.getRegister(PPC::X2, MVT::i64);
+      GOTPtr = DAG.getNode(PPCISD::ADDIS_GOT_TPREL_HA, dl,
+                           PtrVT, GOTReg, TGA);
+    } else
+      GOTPtr = DAG.getNode(PPCISD::PPC32_GOT, dl, PtrVT);
     SDValue TPOffset = DAG.getNode(PPCISD::LD_GOT_TPREL_L, dl,
-                                   PtrVT, TGA, TPOffsetHi);
+                                   PtrVT, TGA, GOTPtr);
     return DAG.getNode(PPCISD::ADD_TLS, dl, PtrVT, TPOffset, TGATLS);
   }
 
@@ -2333,7 +2335,7 @@ PPCTargetLowering::LowerFormalArguments_64SVR4(
             EVT ObjType = (ObjSize == 1 ? MVT::i8 :
                            (ObjSize == 2 ? MVT::i16 : MVT::i32));
             Store = DAG.getTruncStore(Val.getValue(1), dl, Val, FIN,
-                                      MachinePointerInfo(FuncArg, CurArgOffset),
+                                      MachinePointerInfo(FuncArg),
                                       ObjType, false, false, 0);
           } else {
             // For sizes that don't fit a truncating store (3, 5, 6, 7),
@@ -2345,7 +2347,7 @@ PPCTargetLowering::LowerFormalArguments_64SVR4(
             int FI = MFI->CreateFixedObject(PtrByteSize, ArgOffset, true);
             SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
             Store = DAG.getStore(Val.getValue(1), dl, Val, FIN,
-                                 MachinePointerInfo(FuncArg, ArgOffset),
+                                 MachinePointerInfo(FuncArg),
                                  false, false, 0);
           }
 
@@ -2369,7 +2371,7 @@ PPCTargetLowering::LowerFormalArguments_64SVR4(
           SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
           SDValue Val = DAG.getCopyFromReg(Chain, dl, VReg, PtrVT);
           SDValue Store = DAG.getStore(Val.getValue(1), dl, Val, FIN,
-                                       MachinePointerInfo(FuncArg, ArgOffset),
+                                       MachinePointerInfo(FuncArg, j),
                                        false, false, 0);
           MemOps.push_back(Store);
           ++GPR_idx;
@@ -2665,8 +2667,7 @@ PPCTargetLowering::LowerFormalArguments_Darwin(
           SDValue Val = DAG.getCopyFromReg(Chain, dl, VReg, PtrVT);
           EVT ObjType = ObjSize == 1 ? MVT::i8 : MVT::i16;
           SDValue Store = DAG.getTruncStore(Val.getValue(1), dl, Val, FIN,
-                                            MachinePointerInfo(FuncArg,
-                                              CurArgOffset),
+                                            MachinePointerInfo(FuncArg),
                                             ObjType, false, false, 0);
           MemOps.push_back(Store);
           ++GPR_idx;
@@ -2690,7 +2691,7 @@ PPCTargetLowering::LowerFormalArguments_Darwin(
           SDValue FIN = DAG.getFrameIndex(FI, PtrVT);
           SDValue Val = DAG.getCopyFromReg(Chain, dl, VReg, PtrVT);
           SDValue Store = DAG.getStore(Val.getValue(1), dl, Val, FIN,
-                                       MachinePointerInfo(FuncArg, ArgOffset),
+                                       MachinePointerInfo(FuncArg, j),
                                        false, false, 0);
           MemOps.push_back(Store);
           ++GPR_idx;
@@ -2968,7 +2969,7 @@ PPCTargetLowering::IsEligibleForTailCallOptimization(SDValue Callee,
        if (Flags.isByVal()) return false;
     }
 
-    // Non PIC/GOT  tail calls are supported.
+    // Non-PIC/GOT tail calls are supported.
     if (getTargetMachine().getRelocationModel() != Reloc::PIC_)
       return true;
 
@@ -3487,7 +3488,9 @@ PPCTargetLowering::FinishCall(CallingConv::ID CallConv, SDLoc dl,
       // from allocating it), resulting in an additional register being
       // allocated and an unnecessary move instruction being generated.
       needsTOCRestore = true;
-    } else if ((CallOpc == PPCISD::CALL) && !isLocalCall(Callee)) {
+    } else if ((CallOpc == PPCISD::CALL) &&
+               (!isLocalCall(Callee) ||
+                DAG.getTarget().getRelocationModel() == Reloc::PIC_)) {
       // Otherwise insert NOP for non-local calls.
       CallOpc = PPCISD::CALL_NOP;
     }
@@ -7202,7 +7205,7 @@ SDValue PPCTargetLowering::PerformDAGCombine(SDNode *N,
       // you might suspect (sizeof(vector) bytes after the last requested
       // load), but rather sizeof(vector) - 1 bytes after the last
       // requested vector. The point of this is to avoid a page fault if the
-      // base address happend to be aligned. This works because if the base
+      // base address happened to be aligned. This works because if the base
       // address is aligned, then adding less than a full vector length will
       // cause the last vector in the sequence to be (re)loaded. Otherwise,
       // the next vector will be fetched as you might suspect was necessary.
@@ -7791,6 +7794,9 @@ SDValue PPCTargetLowering::LowerRETURNADDR(SDValue Op,
   MachineFrameInfo *MFI = MF.getFrameInfo();
   MFI->setReturnAddressIsTaken(true);
 
+  if (verifyReturnAddressArgumentIsConstant(Op, DAG))
+    return SDValue();
+
   SDLoc dl(Op);
   unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
 
@@ -7879,6 +7885,7 @@ EVT PPCTargetLowering::getOptimalMemOpType(uint64_t Size,
 }
 
 bool PPCTargetLowering::allowsUnalignedMemoryAccesses(EVT VT,
+                                                      unsigned,
                                                       bool *Fast) const {
   if (DisablePPCUnaligned)
     return false;

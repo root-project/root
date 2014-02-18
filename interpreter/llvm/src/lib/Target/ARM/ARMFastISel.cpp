@@ -78,6 +78,7 @@ class ARMFastISel : public FastISel {
   /// Subtarget - Keep a pointer to the ARMSubtarget around so that we can
   /// make the right decision when generating code for different targets.
   const ARMSubtarget *Subtarget;
+  Module &M;
   const TargetMachine &TM;
   const TargetInstrInfo &TII;
   const TargetLowering &TLI;
@@ -91,6 +92,7 @@ class ARMFastISel : public FastISel {
     explicit ARMFastISel(FunctionLoweringInfo &funcInfo,
                          const TargetLibraryInfo *libInfo)
     : FastISel(funcInfo, libInfo),
+      M(const_cast<Module&>(*funcInfo.Fn->getParent())),
       TM(funcInfo.MF->getTarget()),
       TII(*TM.getInstrInfo()),
       TLI(*TM.getTargetLowering()) {
@@ -651,13 +653,14 @@ unsigned ARMFastISel::ARMMaterializeInt(const Constant *C, MVT VT) {
     AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL,
                             TII.get(ARM::t2LDRpci), DestReg)
                     .addConstantPoolIndex(Idx));
-  else
+  else {
     // The extra immediate is for addrmode2.
     DestReg = constrainOperandRegClass(TII.get(ARM::LDRcp), DestReg, 0);
     AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL,
                             TII.get(ARM::LDRcp), DestReg)
                     .addConstantPoolIndex(Idx)
                     .addImm(0));
+  }
 
   return DestReg;
 }
@@ -673,31 +676,30 @@ unsigned ARMFastISel::ARMMaterializeGV(const GlobalValue *GV, MVT VT) {
     (const TargetRegisterClass*)&ARM::GPRRegClass;
   unsigned DestReg = createResultReg(RC);
 
-  // FastISel TLS support on non-Darwin is broken, punt to SelectionDAG.
+  // FastISel TLS support on non-MachO is broken, punt to SelectionDAG.
   const GlobalVariable *GVar = dyn_cast<GlobalVariable>(GV);
   bool IsThreadLocal = GVar && GVar->isThreadLocal();
-  if (!Subtarget->isTargetDarwin() && IsThreadLocal) return 0;
+  if (!Subtarget->isTargetMachO() && IsThreadLocal) return 0;
 
   // Use movw+movt when possible, it avoids constant pool entries.
-  // Darwin targets don't support movt with Reloc::Static, see
-  // ARMTargetLowering::LowerGlobalAddressDarwin.  Other targets only support
-  // static movt relocations.
+  // Non-darwin targets only support static movt relocations in FastISel.
   if (Subtarget->useMovt() &&
-      Subtarget->isTargetDarwin() == (RelocM != Reloc::Static)) {
+      (Subtarget->isTargetMachO() || RelocM == Reloc::Static)) {
     unsigned Opc;
+    unsigned char TF = 0;
+    if (Subtarget->isTargetMachO())
+      TF = ARMII::MO_NONLAZY;
+
     switch (RelocM) {
     case Reloc::PIC_:
       Opc = isThumb2 ? ARM::t2MOV_ga_pcrel : ARM::MOV_ga_pcrel;
-      break;
-    case Reloc::DynamicNoPIC:
-      Opc = isThumb2 ? ARM::t2MOV_ga_dyn : ARM::MOV_ga_dyn;
       break;
     default:
       Opc = isThumb2 ? ARM::t2MOVi32imm : ARM::MOVi32imm;
       break;
     }
     AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL, TII.get(Opc),
-                            DestReg).addGlobalAddress(GV));
+                            DestReg).addGlobalAddress(GV, 0, TF));
   } else {
     // MachineConstantPool wants an explicit alignment.
     unsigned Align = TD.getPrefTypeAlignment(GV->getType());
@@ -802,9 +804,11 @@ unsigned ARMFastISel::TargetMaterializeAlloca(const AllocaInst *AI) {
   // This will get lowered later into the correct offsets and registers
   // via rewriteXFrameIndex.
   if (SI != FuncInfo.StaticAllocaMap.end()) {
+    unsigned Opc = isThumb2 ? ARM::t2ADDri : ARM::ADDri;
     const TargetRegisterClass* RC = TLI.getRegClassFor(VT);
     unsigned ResultReg = createResultReg(RC);
-    unsigned Opc = isThumb2 ? ARM::t2ADDri : ARM::ADDri;
+    ResultReg = constrainOperandRegClass(TII.get(Opc), ResultReg, 0);
+
     AddOptionalDefs(BuildMI(*FuncInfo.MBB, FuncInfo.InsertPt, DL,
                             TII.get(Opc), ResultReg)
                             .addFrameIndex(SI->second)
@@ -900,13 +904,8 @@ bool ARMFastISel::ARMComputeAddress(const Value *Obj, Address &Addr) {
               TmpOffset += CI->getSExtValue() * S;
               break;
             }
-            if (isa<AddOperator>(Op) &&
-                (!isa<Instruction>(Op) ||
-                 FuncInfo.MBBMap[cast<Instruction>(Op)->getParent()]
-                 == FuncInfo.MBB) &&
-                isa<ConstantInt>(cast<AddOperator>(Op)->getOperand(1))) {
-              // An add (in the same block) with a constant operand. Fold the
-              // constant.
+            if (canFoldAddIntoGEP(U, Op)) {
+              // A compatible add with a constant operand. Fold the constant.
               ConstantInt *CI =
               cast<ConstantInt>(cast<AddOperator>(Op)->getOperand(1));
               TmpOffset += CI->getSExtValue() * S;
@@ -2248,7 +2247,7 @@ unsigned ARMFastISel::getLibcallReg(const Twine &Name) {
   EVT LCREVT = TLI.getValueType(GVTy);
   if (!LCREVT.isSimple()) return 0;
 
-  GlobalValue *GV = new GlobalVariable(Type::getInt32Ty(*Context), false,
+  GlobalValue *GV = new GlobalVariable(M, Type::getInt32Ty(*Context), false,
                                        GlobalValue::ExternalLinkage, 0, Name);
   assert(GV->getType() == GVTy && "We miscomputed the type for the global!");
   return ARMMaterializeGV(GV, LCREVT.getSimpleVT());
@@ -3146,7 +3145,7 @@ namespace llvm {
     const ARMSubtarget *Subtarget = &TM.getSubtarget<ARMSubtarget>();
     // Thumb2 support on iOS; ARM support on iOS, Linux and NaCl.
     bool UseFastISel = false;
-    UseFastISel |= Subtarget->isTargetIOS() && !Subtarget->isThumb1Only();
+    UseFastISel |= Subtarget->isTargetMachO() && !Subtarget->isThumb1Only();
     UseFastISel |= Subtarget->isTargetLinux() && !Subtarget->isThumb();
     UseFastISel |= Subtarget->isTargetNaCl() && !Subtarget->isThumb();
 

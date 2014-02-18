@@ -111,7 +111,8 @@ static void Scan(IvarUsageMap &M, const DeclContext *C, const FileID FID,
 }
 
 static void checkObjCUnusedIvar(const ObjCImplementationDecl *D,
-                                BugReporter &BR) {
+                                BugReporter &BR,
+                                const CheckerBase *Checker) {
 
   const ObjCInterfaceDecl *ID = D->getClassInterface();
   IvarUsageMap M;
@@ -128,8 +129,8 @@ static void checkObjCUnusedIvar(const ObjCImplementationDecl *D,
     // (c) are iboutlets
     // (d) are unnamed bitfields
     if (ID->getAccessControl() != ObjCIvarDecl::Private ||
-        ID->getAttr<UnusedAttr>() || ID->getAttr<IBOutletAttr>() ||
-        ID->getAttr<IBOutletCollectionAttr>() ||
+        ID->hasAttr<UnusedAttr>() || ID->hasAttr<IBOutletAttr>() ||
+        ID->hasAttr<IBOutletCollectionAttr>() ||
         ID->isUnnamedBitfield())
       continue;
 
@@ -172,7 +173,7 @@ static void checkObjCUnusedIvar(const ObjCImplementationDecl *D,
 
       PathDiagnosticLocation L =
         PathDiagnosticLocation::create(I->first, BR.getSourceManager());
-      BR.EmitBasicReport(D, "Unused instance variable", "Optimization",
+      BR.EmitBasicReport(D, Checker, "Unused instance variable", "Optimization",
                          os.str(), L);
     }
 }
@@ -187,7 +188,7 @@ class ObjCUnusedIvarsChecker : public Checker<
 public:
   void checkASTDecl(const ObjCImplementationDecl *D, AnalysisManager& mgr,
                     BugReporter &BR) const {
-    checkObjCUnusedIvar(D, BR);
+    checkObjCUnusedIvar(D, BR, this);
   }
 };
 }

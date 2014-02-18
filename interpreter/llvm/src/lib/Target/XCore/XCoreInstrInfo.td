@@ -35,6 +35,11 @@ def XCoreBranchLink     : SDNode<"XCoreISD::BL",SDT_XCoreBranchLink,
 def XCoreRetsp : SDNode<"XCoreISD::RETSP", SDTBrind,
                       [SDNPHasChain, SDNPOptInGlue, SDNPMayLoad, SDNPVariadic]>;
 
+def SDT_XCoreEhRet : SDTypeProfile<0, 2,
+                            [SDTCisSameAs<0, 1>, SDTCisPtrTy<0>]>;
+def XCoreEhRet       : SDNode<"XCoreISD::EH_RETURN", SDT_XCoreEhRet,
+                         [SDNPHasChain, SDNPOptInGlue]>;
+
 def SDT_XCoreBR_JT    : SDTypeProfile<0, 2,
                                       [SDTCisVT<0, i32>, SDTCisVT<1, i32>]>;
 
@@ -56,6 +61,9 @@ def dprelwrapper : SDNode<"XCoreISD::DPRelativeWrapper", SDT_XCoreAddress,
 def cprelwrapper : SDNode<"XCoreISD::CPRelativeWrapper", SDT_XCoreAddress,
                            []>;
 
+def frametoargsoffset : SDNode<"XCoreISD::FRAME_TO_ARGS_OFFSET", SDTIntLeaf,
+                               []>;
+
 def SDT_XCoreStwsp    : SDTypeProfile<0, 2, [SDTCisInt<1>]>;
 def XCoreStwsp        : SDNode<"XCoreISD::STWSP", SDT_XCoreStwsp,
                                [SDNPHasChain, SDNPMayStore]>;
@@ -69,6 +77,11 @@ def callseq_start : SDNode<"ISD::CALLSEQ_START", SDT_XCoreCallSeqStart,
                            [SDNPHasChain, SDNPOutGlue]>;
 def callseq_end   : SDNode<"ISD::CALLSEQ_END",   SDT_XCoreCallSeqEnd,
                            [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
+
+def SDT_XCoreMEMBARRIER : SDTypeProfile<0, 0, []>;
+
+def XCoreMemBarrier : SDNode<"XCoreISD::MEMBARRIER", SDT_XCoreMEMBARRIER,
+                             [SDNPHasChain]>;
 
 //===----------------------------------------------------------------------===//
 // Instruction Pattern Stuff
@@ -321,6 +334,16 @@ def ADJCALLSTACKUP : PseudoInstXCore<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                             [(callseq_end timm:$amt1, timm:$amt2)]>;
 }
 
+let isReMaterializable = 1 in
+def FRAME_TO_ARGS_OFFSET : PseudoInstXCore<(outs GRRegs:$dst), (ins),
+                               "# FRAME_TO_ARGS_OFFSET $dst",
+                               [(set GRRegs:$dst, (frametoargsoffset))]>;
+
+let isReturn = 1, isTerminator = 1, isBarrier = 1 in
+def EH_RETURN : PseudoInstXCore<(outs), (ins GRRegs:$s, GRRegs:$handler),
+                               "# EH_RETURN $s, $handler",
+                               [(XCoreEhRet GRRegs:$s, GRRegs:$handler)]>;
+
 def LDWFI : PseudoInstXCore<(outs GRRegs:$dst), (ins MEMii:$addr),
                              "# LDWFI $dst, $addr",
                              [(set GRRegs:$dst, (load ADDRspii:$addr))]>;
@@ -342,6 +365,10 @@ let usesCustomInserter = 1 in {
                               [(set GRRegs:$dst,
                                  (select GRRegs:$cond, GRRegs:$T, GRRegs:$F))]>;
 }
+
+let hasSideEffects = 1 in
+def Int_MemBarrier : PseudoInstXCore<(outs), (ins), "#MEMBARRIER",
+                                     [(XCoreMemBarrier)]>;
 
 //===----------------------------------------------------------------------===//
 // Instructions
@@ -1277,3 +1304,9 @@ def : Pat<(setgt GRRegs:$lhs, -1),
 
 def : Pat<(sra (shl GRRegs:$src, immBpwSubBitp:$imm), immBpwSubBitp:$imm),
           (SEXT_rus GRRegs:$src, (bpwsub_xform immBpwSubBitp:$imm))>;
+
+def : Pat<(load (cprelwrapper tconstpool:$b)),
+          (LDWCP_lru6 tconstpool:$b)>;
+
+def : Pat<(cprelwrapper tconstpool:$b),
+          (LDAWCP_lu6 tconstpool:$b)>;

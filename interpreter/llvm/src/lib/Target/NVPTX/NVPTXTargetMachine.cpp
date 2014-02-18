@@ -19,13 +19,13 @@
 #include "NVPTXSplitBBatBar.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/Analysis/Passes.h"
-#include "llvm/Analysis/Verifier.h"
-#include "llvm/Assembly/PrintModulePass.h"
 #include "llvm/CodeGen/AsmPrinter.h"
 #include "llvm/CodeGen/MachineFunctionAnalysis.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCStreamer.h"
@@ -57,13 +57,21 @@ extern "C" void LLVMInitializeNVPTXTarget() {
   RegisterTargetMachine<NVPTXTargetMachine32> X(TheNVPTXTarget32);
   RegisterTargetMachine<NVPTXTargetMachine64> Y(TheNVPTXTarget64);
 
-  RegisterMCAsmInfo<NVPTXMCAsmInfo> A(TheNVPTXTarget32);
-  RegisterMCAsmInfo<NVPTXMCAsmInfo> B(TheNVPTXTarget64);
-
   // FIXME: This pass is really intended to be invoked during IR optimization,
   // but it's very NVPTX-specific.
   initializeNVVMReflectPass(*PassRegistry::getPassRegistry());
   initializeGenericToNVVMPass(*PassRegistry::getPassRegistry());
+}
+
+static std::string computeDataLayout(const NVPTXSubtarget &ST) {
+  std::string Ret = "e";
+
+  if (!ST.is64Bit())
+    Ret += "-p:32:32";
+
+  Ret += "-i64:64-v16:16-v32:32-n16:32:64";
+
+  return Ret;
 }
 
 NVPTXTargetMachine::NVPTXTargetMachine(
@@ -71,7 +79,7 @@ NVPTXTargetMachine::NVPTXTargetMachine(
     const TargetOptions &Options, Reloc::Model RM, CodeModel::Model CM,
     CodeGenOpt::Level OL, bool is64bit)
     : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
-      Subtarget(TT, CPU, FS, is64bit), DL(Subtarget.getDataLayout()),
+      Subtarget(TT, CPU, FS, is64bit), DL(computeDataLayout(Subtarget)),
       InstrInfo(*this), TLInfo(*this), TSInfo(*this),
       FrameLowering(
           *this, is64bit) /*FrameInfo(TargetFrameInfo::StackGrowsUp, 8, 0)*/ {
@@ -129,6 +137,7 @@ void NVPTXPassConfig::addIRPasses() {
   disablePass(&PrologEpilogCodeInserterID);
   disablePass(&MachineCopyPropagationID);
   disablePass(&BranchFolderPassID);
+  disablePass(&TailDuplicateID);
 
   TargetPassConfig::addIRPasses();
   addPass(createGenericToNVVMPass());
@@ -154,10 +163,30 @@ FunctionPass *NVPTXPassConfig::createTargetRegisterAllocator(bool) {
 
 void NVPTXPassConfig::addFastRegAlloc(FunctionPass *RegAllocPass) {
   assert(!RegAllocPass && "NVPTX uses no regalloc!");
-  addPass(&StrongPHIEliminationID);
+  addPass(&PHIEliminationID);
+  addPass(&TwoAddressInstructionPassID);
 }
 
 void NVPTXPassConfig::addOptimizedRegAlloc(FunctionPass *RegAllocPass) {
   assert(!RegAllocPass && "NVPTX uses no regalloc!");
-  addPass(&StrongPHIEliminationID);
+
+  addPass(&ProcessImplicitDefsID);
+  addPass(&LiveVariablesID);
+  addPass(&MachineLoopInfoID);
+  addPass(&PHIEliminationID);
+
+  addPass(&TwoAddressInstructionPassID);
+  addPass(&RegisterCoalescerID);
+
+  // PreRA instruction scheduling.
+  if (addPass(&MachineSchedulerID))
+    printAndVerify("After Machine Scheduling");
+
+
+  addPass(&StackSlotColoringID);
+
+  // FIXME: Needs physical registers
+  //addPass(&PostRAMachineLICMID);
+
+  printAndVerify("After StackSlotColoring");
 }

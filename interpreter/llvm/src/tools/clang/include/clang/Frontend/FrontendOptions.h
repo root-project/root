@@ -26,7 +26,6 @@ namespace frontend {
   enum ActionKind {
     ASTDeclList,            ///< Parse ASTs and list Decl nodes.
     ASTDump,                ///< Parse ASTs and dump them.
-    ASTDumpXML,             ///< Parse ASTs and dump them in XML.
     ASTPrint,               ///< Parse ASTs and print them.
     ASTView,                ///< Parse ASTs and view them in Graphviz.
     DumpRawTokens,          ///< Dump out raw tokens.
@@ -44,6 +43,7 @@ namespace frontend {
     GeneratePTH,            ///< Generate pre-tokenized header.
     InitOnly,               ///< Only execute frontend initialization.
     ModuleFileInfo,         ///< Dump information about a module file.
+    VerifyPCH,              ///< Load and verify that a PCH file is usable.
     ParseSyntaxOnly,        ///< Parse and perform semantic analysis.
     PluginAction,           ///< Run a plugin action, \see ActionName.
     PrintDeclContext,       ///< Print DeclContext and their Decls.
@@ -160,12 +160,37 @@ public:
     ObjCMT_Literals = 0x1,
     /// \brief Enable migration to modern ObjC subscripting.
     ObjCMT_Subscripting = 0x2,
-    /// \brief Enable migration to modern ObjC property.
-    ObjCMT_Property = 0x4,
     /// \brief Enable migration to modern ObjC readonly property.
-    ObjCMT_ReadonlyProperty = 0x8
+    ObjCMT_ReadonlyProperty = 0x4,
+    /// \brief Enable migration to modern ObjC readwrite property.
+    ObjCMT_ReadwriteProperty = 0x8,
+    /// \brief Enable migration to modern ObjC property.
+    ObjCMT_Property = (ObjCMT_ReadonlyProperty | ObjCMT_ReadwriteProperty),
+    /// \brief Enable annotation of ObjCMethods of all kinds.
+    ObjCMT_Annotation = 0x10,
+    /// \brief Enable migration of ObjC methods to 'instancetype'.
+    ObjCMT_Instancetype = 0x20,
+    /// \brief Enable migration to NS_ENUM/NS_OPTIONS macros.
+    ObjCMT_NsMacros = 0x40,
+    /// \brief Enable migration to add conforming protocols.
+    ObjCMT_ProtocolConformance = 0x80,
+    /// \brief prefer 'atomic' property over 'nonatomic'.
+    ObjCMT_AtomicProperty = 0x100,
+    /// \brief annotate property with NS_RETURNS_INNER_POINTER
+    ObjCMT_ReturnsInnerPointerProperty = 0x200,
+    /// \brief use NS_NONATOMIC_IOSONLY for property 'atomic' attribute
+    ObjCMT_NsAtomicIOSOnlyProperty = 0x400,
+    /// \brief Enable inferring NS_DESIGNATED_INITIALIZER for ObjC methods.
+    ObjCMT_DesignatedInitializer = 0x800,
+    ObjCMT_MigrateDecls = (ObjCMT_ReadonlyProperty | ObjCMT_ReadwriteProperty |
+                           ObjCMT_Annotation | ObjCMT_Instancetype |
+                           ObjCMT_NsMacros | ObjCMT_ProtocolConformance |
+                           ObjCMT_NsAtomicIOSOnlyProperty |
+                           ObjCMT_DesignatedInitializer),
+    ObjCMT_MigrateAll = (ObjCMT_Literals | ObjCMT_Subscripting | ObjCMT_MigrateDecls)
   };
   unsigned ObjCMTAction;
+  std::string ObjCMTWhiteListPath;
 
   std::string MTMigrateDir;
   std::string ARCMTMigrateReportOut;

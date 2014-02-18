@@ -98,15 +98,12 @@ static TargetTransformInfo::OperandValueKind getOperandInfo(Value *V) {
   TargetTransformInfo::OperandValueKind OpInfo =
     TargetTransformInfo::OK_AnyValue;
 
-  // Check for a splat of a constant.
-  ConstantDataVector *CDV = 0;
-  if ((CDV = dyn_cast<ConstantDataVector>(V)))
-    if (CDV->getSplatValue() != NULL)
+  // Check for a splat of a constant or for a non uniform vector of constants.
+  if (isa<ConstantVector>(V) || isa<ConstantDataVector>(V)) {
+    OpInfo = TargetTransformInfo::OK_NonUniformConstantValue;
+    if (cast<Constant>(V)->getSplatValue() != NULL)
       OpInfo = TargetTransformInfo::OK_UniformConstantValue;
-  ConstantVector *CV = 0;
-  if ((CV = dyn_cast<ConstantVector>(V)))
-    if (CV->getSplatValue() != NULL)
-      OpInfo = TargetTransformInfo::OK_UniformConstantValue;
+  }
 
   return OpInfo;
 }
@@ -439,7 +436,8 @@ unsigned CostModelAnalysis::getInstructionCost(const Instruction *I) const {
   case Instruction::UIToFP:
   case Instruction::Trunc:
   case Instruction::FPTrunc:
-  case Instruction::BitCast: {
+  case Instruction::BitCast:
+  case Instruction::AddrSpaceCast: {
     Type *SrcTy = I->getOperand(0)->getType();
     return TTI->getCastInstrCost(I->getOpcode(), I->getType(), SrcTy);
   }

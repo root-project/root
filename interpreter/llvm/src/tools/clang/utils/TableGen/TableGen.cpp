@@ -24,14 +24,14 @@ using namespace clang;
 
 enum ActionType {
   GenClangAttrClasses,
-  GenClangAttrExprArgsList,
+  GenClangAttrParserStringSwitches,
   GenClangAttrImpl,
   GenClangAttrList,
   GenClangAttrPCHRead,
   GenClangAttrPCHWrite,
   GenClangAttrSpellingList,
   GenClangAttrSpellingListIndex,
-  GenClangAttrLateParsedList,
+  GenClangAttrASTVisitor,
   GenClangAttrTemplateInstantiate,
   GenClangAttrParsedAttrList,
   GenClangAttrParsedAttrImpl,
@@ -60,9 +60,9 @@ cl::opt<ActionType> Action(
     cl::values(
         clEnumValN(GenClangAttrClasses, "gen-clang-attr-classes",
                    "Generate clang attribute clases"),
-        clEnumValN(GenClangAttrExprArgsList, "gen-clang-attr-expr-args-list",
-                   "Generate a clang attribute expression "
-                   "arguments list"),
+        clEnumValN(GenClangAttrParserStringSwitches,
+                   "gen-clang-attr-parser-string-switches",
+                   "Generate all parser-related attribute string switches"),
         clEnumValN(GenClangAttrImpl, "gen-clang-attr-impl",
                    "Generate clang attribute implementations"),
         clEnumValN(GenClangAttrList, "gen-clang-attr-list",
@@ -76,21 +76,21 @@ cl::opt<ActionType> Action(
         clEnumValN(GenClangAttrSpellingListIndex,
                    "gen-clang-attr-spelling-index",
                    "Generate a clang attribute spelling index"),
-        clEnumValN(GenClangAttrLateParsedList,
-                   "gen-clang-attr-late-parsed-list",
-                   "Generate a clang attribute LateParsed list"),
+        clEnumValN(GenClangAttrASTVisitor,
+                   "gen-clang-attr-ast-visitor",
+                   "Generate a recursive AST visitor for clang attributes"),
         clEnumValN(GenClangAttrTemplateInstantiate,
                    "gen-clang-attr-template-instantiate",
                    "Generate a clang template instantiate code"),
-                    clEnumValN(GenClangAttrParsedAttrList,
-                               "gen-clang-attr-parsed-attr-list",
-                               "Generate a clang parsed attribute list"),
-                    clEnumValN(GenClangAttrParsedAttrImpl,
-                               "gen-clang-attr-parsed-attr-impl",
-                               "Generate the clang parsed attribute helpers"),
-                    clEnumValN(GenClangAttrParsedAttrKinds,
-                               "gen-clang-attr-parsed-attr-kinds",
-                               "Generate a clang parsed attribute kinds"),
+        clEnumValN(GenClangAttrParsedAttrList,
+                   "gen-clang-attr-parsed-attr-list",
+                   "Generate a clang parsed attribute list"),
+        clEnumValN(GenClangAttrParsedAttrImpl,
+                   "gen-clang-attr-parsed-attr-impl",
+                   "Generate the clang parsed attribute helpers"),
+        clEnumValN(GenClangAttrParsedAttrKinds,
+                   "gen-clang-attr-parsed-attr-kinds",
+                   "Generate a clang parsed attribute kinds"),
         clEnumValN(GenClangAttrDump, "gen-clang-attr-dump",
                    "Generate clang attribute dumper"),
         clEnumValN(GenClangDiagsDefs, "gen-clang-diags-defs",
@@ -141,8 +141,8 @@ bool ClangTableGenMain(raw_ostream &OS, RecordKeeper &Records) {
   case GenClangAttrClasses:
     EmitClangAttrClass(Records, OS);
     break;
-  case GenClangAttrExprArgsList:
-    EmitClangAttrExprArgsList(Records, OS);
+  case GenClangAttrParserStringSwitches:
+    EmitClangAttrParserStringSwitches(Records, OS);
     break;
   case GenClangAttrImpl:
     EmitClangAttrImpl(Records, OS);
@@ -162,8 +162,8 @@ bool ClangTableGenMain(raw_ostream &OS, RecordKeeper &Records) {
   case GenClangAttrSpellingListIndex:
     EmitClangAttrSpellingListIndex(Records, OS);
     break;
-  case GenClangAttrLateParsedList:
-    EmitClangAttrLateParsedList(Records, OS);
+  case GenClangAttrASTVisitor:
+    EmitClangAttrASTVisitor(Records, OS);
     break;
   case GenClangAttrTemplateInstantiate:
     EmitClangAttrTemplateInstantiate(Records, OS);
@@ -239,3 +239,12 @@ int main(int argc, char **argv) {
 
   return TableGenMain(argv[0], &ClangTableGenMain);
 }
+
+#ifdef __has_feature
+#if __has_feature(address_sanitizer)
+#include <sanitizer/lsan_interface.h>
+// Disable LeakSanitizer for this binary as it has too many leaks that are not
+// very interesting to fix. See compiler-rt/include/sanitizer/lsan_interface.h .
+int __lsan_is_turned_off() { return 1; }
+#endif  // __has_feature(address_sanitizer)
+#endif  // defined(__has_feature)

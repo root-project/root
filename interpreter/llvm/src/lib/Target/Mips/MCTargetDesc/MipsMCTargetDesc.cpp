@@ -11,17 +11,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "MCTargetDesc/MipsELFStreamer.h"
 #include "MipsMCTargetDesc.h"
 #include "InstPrinter/MipsInstPrinter.h"
 #include "MipsMCAsmInfo.h"
+#include "MipsTargetStreamer.h"
 #include "llvm/MC/MCCodeGenInfo.h"
+#include "llvm/MC/MCELFStreamer.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
-#include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
+#include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MachineLocation.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/FormattedStream.h"
 #include "llvm/Support/TargetRegistry.h"
 
 #define GET_INSTRINFO_MC_DESC
@@ -125,14 +128,26 @@ static MCInstPrinter *createMipsMCInstPrinter(const Target &T,
 }
 
 static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
-                                    MCContext &Ctx, MCAsmBackend &MAB,
-                                    raw_ostream &_OS,
-                                    MCCodeEmitter *_Emitter,
-                                    bool RelaxAll,
-                                    bool NoExecStack) {
-  Triple TheTriple(TT);
+                                    MCContext &Context, MCAsmBackend &MAB,
+                                    raw_ostream &OS, MCCodeEmitter *Emitter,
+                                    const MCSubtargetInfo &STI,
+                                    bool RelaxAll, bool NoExecStack) {
+  MCStreamer *S =
+      createELFStreamer(Context, MAB, OS, Emitter, RelaxAll, NoExecStack);
+  new MipsTargetELFStreamer(*S, STI);
+  return S;
+}
 
-  return createMipsELFStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll, NoExecStack);
+static MCStreamer *
+createMCAsmStreamer(MCContext &Ctx, formatted_raw_ostream &OS,
+                    bool isVerboseAsm, bool useCFI, bool useDwarfDirectory,
+                    MCInstPrinter *InstPrint, MCCodeEmitter *CE,
+                    MCAsmBackend *TAB, bool ShowInst) {
+  MCStreamer *S =
+      llvm::createAsmStreamer(Ctx, OS, isVerboseAsm, useCFI, useDwarfDirectory,
+                              InstPrint, CE, TAB, ShowInst);
+  new MipsTargetAsmStreamer(*S, OS);
+  return S;
 }
 
 extern "C" void LLVMInitializeMipsTargetMC() {
@@ -182,6 +197,12 @@ extern "C" void LLVMInitializeMipsTargetMC() {
   TargetRegistry::RegisterMCObjectStreamer(TheMips64Target, createMCStreamer);
   TargetRegistry::RegisterMCObjectStreamer(TheMips64elTarget,
                                            createMCStreamer);
+
+  // Register the asm streamer.
+  TargetRegistry::RegisterAsmStreamer(TheMipsTarget, createMCAsmStreamer);
+  TargetRegistry::RegisterAsmStreamer(TheMipselTarget, createMCAsmStreamer);
+  TargetRegistry::RegisterAsmStreamer(TheMips64Target, createMCAsmStreamer);
+  TargetRegistry::RegisterAsmStreamer(TheMips64elTarget, createMCAsmStreamer);
 
   // Register the asm backend.
   TargetRegistry::RegisterMCAsmBackend(TheMipsTarget,

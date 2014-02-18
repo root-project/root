@@ -30,7 +30,9 @@ namespace llvm {
     void addMSAFloatType(MVT::SimpleValueType Ty,
                          const TargetRegisterClass *RC);
 
-    virtual bool allowsUnalignedMemoryAccesses(EVT VT, bool *Fast) const;
+    virtual bool allowsUnalignedMemoryAccesses(
+      EVT VT, unsigned AS = 0,
+      bool *Fast = 0) const LLVM_OVERRIDE;
 
     virtual SDValue LowerOperation(SDValue Op, SelectionDAG &DAG) const;
 
@@ -84,6 +86,30 @@ namespace llvm {
     MachineBasicBlock *emitMSACBranchPseudo(MachineInstr *MI,
                                             MachineBasicBlock *BB,
                                             unsigned BranchOp) const;
+    /// \brief Emit the COPY_FW pseudo instruction
+    MachineBasicBlock *emitCOPY_FW(MachineInstr *MI,
+                                   MachineBasicBlock *BB) const;
+    /// \brief Emit the COPY_FD pseudo instruction
+    MachineBasicBlock *emitCOPY_FD(MachineInstr *MI,
+                                   MachineBasicBlock *BB) const;
+    /// \brief Emit the INSERT_FW pseudo instruction
+    MachineBasicBlock *emitINSERT_FW(MachineInstr *MI,
+                                     MachineBasicBlock *BB) const;
+    /// \brief Emit the INSERT_FD pseudo instruction
+    MachineBasicBlock *emitINSERT_FD(MachineInstr *MI,
+                                     MachineBasicBlock *BB) const;
+    /// \brief Emit the FILL_FW pseudo instruction
+    MachineBasicBlock *emitFILL_FW(MachineInstr *MI,
+                                   MachineBasicBlock *BB) const;
+    /// \brief Emit the FILL_FD pseudo instruction
+    MachineBasicBlock *emitFILL_FD(MachineInstr *MI,
+                                   MachineBasicBlock *BB) const;
+    /// \brief Emit the FEXP2_W_1 pseudo instructions.
+    MachineBasicBlock *emitFEXP2_W_1(MachineInstr *MI,
+                                     MachineBasicBlock *BB) const;
+    /// \brief Emit the FEXP2_D_1 pseudo instructions.
+    MachineBasicBlock *emitFEXP2_D_1(MachineInstr *MI,
+                                     MachineBasicBlock *BB) const;
   };
 }
 

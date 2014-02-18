@@ -585,13 +585,16 @@ namespace {
       return Visit(T->getElementType());
     }
     AutoType *VisitFunctionType(const FunctionType *T) {
-      return Visit(T->getResultType());
+      return Visit(T->getReturnType());
     }
     AutoType *VisitParenType(const ParenType *T) {
       return Visit(T->getInnerType());
     }
     AutoType *VisitAttributedType(const AttributedType *T) {
       return Visit(T->getModifiedType());
+    }
+    AutoType *VisitAdjustedType(const AdjustedType *T) {
+      return Visit(T->getOriginalType());
     }
   };
 }
@@ -1582,41 +1585,37 @@ StringRef FunctionType::getNameForCallConv(CallingConv CC) {
   llvm_unreachable("Invalid calling convention.");
 }
 
-FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> args,
+FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> params,
                                      QualType canonical,
                                      const ExtProtoInfo &epi)
-  : FunctionType(FunctionProto, result, epi.TypeQuals,
-                 canonical,
-                 result->isDependentType(),
-                 result->isInstantiationDependentType(),
-                 result->isVariablyModifiedType(),
-                 result->containsUnexpandedParameterPack(),
-                 epi.ExtInfo),
-    NumArgs(args.size()), NumExceptions(epi.NumExceptions),
-    ExceptionSpecType(epi.ExceptionSpecType),
-    HasAnyConsumedArgs(epi.ConsumedArguments != 0),
-    Variadic(epi.Variadic), HasTrailingReturn(epi.HasTrailingReturn),
-    RefQualifier(epi.RefQualifier)
-{
-  assert(NumArgs == args.size() && "function has too many parameters");
+    : FunctionType(FunctionProto, result, epi.TypeQuals, canonical,
+                   result->isDependentType(),
+                   result->isInstantiationDependentType(),
+                   result->isVariablyModifiedType(),
+                   result->containsUnexpandedParameterPack(), epi.ExtInfo),
+      NumParams(params.size()), NumExceptions(epi.NumExceptions),
+      ExceptionSpecType(epi.ExceptionSpecType),
+      HasAnyConsumedParams(epi.ConsumedParameters != 0), Variadic(epi.Variadic),
+      HasTrailingReturn(epi.HasTrailingReturn), RefQualifier(epi.RefQualifier) {
+  assert(NumParams == params.size() && "function has too many parameters");
 
   // Fill in the trailing argument array.
   QualType *argSlot = reinterpret_cast<QualType*>(this+1);
-  for (unsigned i = 0; i != NumArgs; ++i) {
-    if (args[i]->isDependentType())
+  for (unsigned i = 0; i != NumParams; ++i) {
+    if (params[i]->isDependentType())
       setDependent();
-    else if (args[i]->isInstantiationDependentType())
+    else if (params[i]->isInstantiationDependentType())
       setInstantiationDependent();
-    
-    if (args[i]->containsUnexpandedParameterPack())
+
+    if (params[i]->containsUnexpandedParameterPack())
       setContainsUnexpandedParameterPack();
 
-    argSlot[i] = args[i];
+    argSlot[i] = params[i];
   }
 
   if (getExceptionSpecType() == EST_Dynamic) {
     // Fill in the exception array.
-    QualType *exnSlot = argSlot + NumArgs;
+    QualType *exnSlot = argSlot + NumParams;
     for (unsigned i = 0, e = epi.NumExceptions; i != e; ++i) {
       if (epi.Exceptions[i]->isDependentType())
         setDependent();
@@ -1630,7 +1629,7 @@ FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> args,
     }
   } else if (getExceptionSpecType() == EST_ComputedNoexcept) {
     // Store the noexcept expression and context.
-    Expr **noexSlot = reinterpret_cast<Expr**>(argSlot + NumArgs);
+    Expr **noexSlot = reinterpret_cast<Expr **>(argSlot + NumParams);
     *noexSlot = epi.NoexceptExpr;
     
     if (epi.NoexceptExpr) {
@@ -1643,7 +1642,8 @@ FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> args,
   } else if (getExceptionSpecType() == EST_Uninstantiated) {
     // Store the function decl from which we will resolve our
     // exception specification.
-    FunctionDecl **slot = reinterpret_cast<FunctionDecl**>(argSlot + NumArgs);
+    FunctionDecl **slot =
+        reinterpret_cast<FunctionDecl **>(argSlot + NumParams);
     slot[0] = epi.ExceptionSpecDecl;
     slot[1] = epi.ExceptionSpecTemplate;
     // This exception specification doesn't make the type dependent, because
@@ -1651,14 +1651,15 @@ FunctionProtoType::FunctionProtoType(QualType result, ArrayRef<QualType> args,
   } else if (getExceptionSpecType() == EST_Unevaluated) {
     // Store the function decl from which we will resolve our
     // exception specification.
-    FunctionDecl **slot = reinterpret_cast<FunctionDecl**>(argSlot + NumArgs);
+    FunctionDecl **slot =
+        reinterpret_cast<FunctionDecl **>(argSlot + NumParams);
     slot[0] = epi.ExceptionSpecDecl;
   }
 
-  if (epi.ConsumedArguments) {
-    bool *consumedArgs = const_cast<bool*>(getConsumedArgsBuffer());
-    for (unsigned i = 0; i != NumArgs; ++i)
-      consumedArgs[i] = epi.ConsumedArguments[i];
+  if (epi.ConsumedParameters) {
+    bool *consumedParams = const_cast<bool *>(getConsumedParamsBuffer());
+    for (unsigned i = 0; i != NumParams; ++i)
+      consumedParams[i] = epi.ConsumedParameters[i];
   }
 }
 
@@ -1686,16 +1687,41 @@ FunctionProtoType::getNoexceptSpec(const ASTContext &ctx) const {
   return value.getBoolValue() ? NR_Nothrow : NR_Throw;
 }
 
+bool FunctionProtoType::isNothrow(const ASTContext &Ctx,
+                                  bool ResultIfDependent) const {
+  ExceptionSpecificationType EST = getExceptionSpecType();
+  //AXEL: assert(EST != EST_Unevaluated && EST != EST_Uninstantiated);
+  if (EST == EST_DynamicNone || EST == EST_BasicNoexcept)
+    return true;
+
+  if (EST == EST_Dynamic && ResultIfDependent == true) {
+    // A dynamic exception specification is throwing unless every exception
+    // type is an (unexpanded) pack expansion type.
+    for (unsigned I = 0, N = NumExceptions; I != N; ++I)
+      if (!getExceptionType(I)->getAs<PackExpansionType>())
+        return false;
+    return ResultIfDependent;
+  }
+
+  if (EST != EST_ComputedNoexcept)
+    return false;
+
+  NoexceptResult NR = getNoexceptSpec(Ctx);
+  if (NR == NR_Dependent)
+    return ResultIfDependent;
+  return NR == NR_Nothrow;
+}
+
 bool FunctionProtoType::isTemplateVariadic() const {
-  for (unsigned ArgIdx = getNumArgs(); ArgIdx; --ArgIdx)
-    if (isa<PackExpansionType>(getArgType(ArgIdx - 1)))
+  for (unsigned ArgIdx = getNumParams(); ArgIdx; --ArgIdx)
+    if (isa<PackExpansionType>(getParamType(ArgIdx - 1)))
       return true;
   
   return false;
 }
 
 void FunctionProtoType::Profile(llvm::FoldingSetNodeID &ID, QualType Result,
-                                const QualType *ArgTys, unsigned NumArgs,
+                                const QualType *ArgTys, unsigned NumParams,
                                 const ExtProtoInfo &epi,
                                 const ASTContext &Context) {
 
@@ -1717,7 +1743,7 @@ void FunctionProtoType::Profile(llvm::FoldingSetNodeID &ID, QualType Result,
   // whether the following bool is the EH spec or part of the arguments.
 
   ID.AddPointer(Result.getAsOpaquePtr());
-  for (unsigned i = 0; i != NumArgs; ++i)
+  for (unsigned i = 0; i != NumParams; ++i)
     ID.AddPointer(ArgTys[i].getAsOpaquePtr());
   // This method is relatively performance sensitive, so as a performance
   // shortcut, use one AddInteger call instead of four for the next four
@@ -1740,9 +1766,9 @@ void FunctionProtoType::Profile(llvm::FoldingSetNodeID &ID, QualType Result,
              epi.ExceptionSpecType == EST_Unevaluated) {
     ID.AddPointer(epi.ExceptionSpecDecl->getCanonicalDecl());
   }
-  if (epi.ConsumedArguments) {
-    for (unsigned i = 0; i != NumArgs; ++i)
-      ID.AddBoolean(epi.ConsumedArguments[i]);
+  if (epi.ConsumedParameters) {
+    for (unsigned i = 0; i != NumParams; ++i)
+      ID.AddBoolean(epi.ConsumedParameters[i]);
   }
   epi.ExtInfo.Profile(ID);
   ID.AddBoolean(epi.HasTrailingReturn);
@@ -1750,7 +1776,7 @@ void FunctionProtoType::Profile(llvm::FoldingSetNodeID &ID, QualType Result,
 
 void FunctionProtoType::Profile(llvm::FoldingSetNodeID &ID,
                                 const ASTContext &Ctx) {
-  Profile(ID, getResultType(), arg_type_begin(), NumArgs, getExtProtoInfo(),
+  Profile(ID, getReturnType(), param_type_begin(), NumParams, getExtProtoInfo(),
           Ctx);
 }
 
@@ -2200,12 +2226,13 @@ static CachedProperties computeCachedProperties(const Type *T) {
   case Type::ExtVector:
     return Cache::get(cast<VectorType>(T)->getElementType());
   case Type::FunctionNoProto:
-    return Cache::get(cast<FunctionType>(T)->getResultType());
+    return Cache::get(cast<FunctionType>(T)->getReturnType());
   case Type::FunctionProto: {
     const FunctionProtoType *FPT = cast<FunctionProtoType>(T);
-    CachedProperties result = Cache::get(FPT->getResultType());
-    for (FunctionProtoType::arg_type_iterator ai = FPT->arg_type_begin(),
-           ae = FPT->arg_type_end(); ai != ae; ++ai)
+    CachedProperties result = Cache::get(FPT->getReturnType());
+    for (FunctionProtoType::param_type_iterator ai = FPT->param_type_begin(),
+                                                ae = FPT->param_type_end();
+         ai != ae; ++ai)
       result = merge(result, Cache::get(*ai));
     return result;
   }
@@ -2285,12 +2312,13 @@ static LinkageInfo computeLinkageInfo(const Type *T) {
   case Type::ExtVector:
     return computeLinkageInfo(cast<VectorType>(T)->getElementType());
   case Type::FunctionNoProto:
-    return computeLinkageInfo(cast<FunctionType>(T)->getResultType());
+    return computeLinkageInfo(cast<FunctionType>(T)->getReturnType());
   case Type::FunctionProto: {
     const FunctionProtoType *FPT = cast<FunctionProtoType>(T);
-    LinkageInfo LV = computeLinkageInfo(FPT->getResultType());
-    for (FunctionProtoType::arg_type_iterator ai = FPT->arg_type_begin(),
-           ae = FPT->arg_type_end(); ai != ae; ++ai)
+    LinkageInfo LV = computeLinkageInfo(FPT->getReturnType());
+    for (FunctionProtoType::param_type_iterator ai = FPT->param_type_begin(),
+                                                ae = FPT->param_type_end();
+         ai != ae; ++ai)
       LV.merge(computeLinkageInfo(*ai));
     return LV;
   }
@@ -2440,4 +2468,8 @@ QualType::DestructionKind QualType::isDestructedTypeImpl(QualType type) {
     return DK_cxx_destructor;
 
   return DK_none;
+}
+
+CXXRecordDecl *MemberPointerType::getMostRecentCXXRecordDecl() const {
+  return getClass()->getAsCXXRecordDecl()->getMostRecentDecl();
 }

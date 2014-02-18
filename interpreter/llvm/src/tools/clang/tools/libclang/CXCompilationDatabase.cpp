@@ -8,7 +8,7 @@ using namespace clang::tooling;
 
 extern "C" {
 
-// FIXME: do something more usefull with the error message
+// FIXME: do something more useful with the error message
 CXCompilationDatabase
 clang_CompilationDatabase_fromDirectory(const char *BuildDir,
                                         CXCompilationDatabase_Error *ErrorCode)
@@ -136,5 +136,41 @@ clang_CompileCommand_getArg(CXCompileCommand CCmd, unsigned Arg)
   return cxstring::createRef(Cmd->CommandLine[Arg].c_str());
 }
 
+unsigned
+clang_CompileCommand_getNumMappedSources(CXCompileCommand CCmd)
+{
+  if (!CCmd)
+    return 0;
+
+  return static_cast<CompileCommand *>(CCmd)->MappedSources.size();
+}
+
+CXString
+clang_CompileCommand_getMappedSourcePath(CXCompileCommand CCmd, unsigned I)
+{
+  if (!CCmd)
+    return cxstring::createNull();
+
+  CompileCommand *Cmd = static_cast<CompileCommand *>(CCmd);
+
+  if (I >= Cmd->MappedSources.size())
+    return cxstring::createNull();
+
+  return cxstring::createRef(Cmd->MappedSources[I].first.c_str());
+}
+
+CXString
+clang_CompileCommand_getMappedSourceContent(CXCompileCommand CCmd, unsigned I)
+{
+  if (!CCmd)
+    return cxstring::createNull();
+
+  CompileCommand *Cmd = static_cast<CompileCommand *>(CCmd);
+
+  if (I >= Cmd->MappedSources.size())
+    return cxstring::createNull();
+
+  return cxstring::createRef(Cmd->MappedSources[I].second.c_str());
+}
 
 } // end: extern "C"

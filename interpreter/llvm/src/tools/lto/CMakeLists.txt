@@ -1,6 +1,11 @@
 set(LLVM_LINK_COMPONENTS
   ${LLVM_TARGETS_TO_BUILD}
-  ipo scalaropts linker bitreader bitwriter lto mcdisassembler vectorize)
+  Core
+  LTO
+  MC
+  MCDisassembler
+  Support
+  )
 
 add_definitions( -DLLVM_VERSION_INFO=\"${PACKAGE_VERSION}\" )
 
@@ -9,10 +14,14 @@ set(SOURCES
   lto.cpp
   )
 
-if( NOT WIN32 AND LLVM_ENABLE_PIC )
+set(LLVM_EXPORTED_SYMBOL_FILE ${CMAKE_CURRENT_SOURCE_DIR}/lto.exports)
+
+if( NOT CYGWIN AND LLVM_ENABLE_PIC )
+  set(SHARED_LIB_SOURCES ${SOURCES})
+
   set(bsl ${BUILD_SHARED_LIBS})
   set(BUILD_SHARED_LIBS ON)
-  add_llvm_library(LTO ${SOURCES})
+  add_llvm_library(LTO ${SHARED_LIB_SOURCES})
   set_property(TARGET LTO PROPERTY OUTPUT_NAME "LTO")
   set(BUILD_SHARED_LIBS ${bsl})
   set(LTO_STATIC_TARGET_NAME LTO_static)
@@ -25,7 +34,7 @@ if( NOT BUILD_SHARED_LIBS )
   set_property(TARGET ${LTO_STATIC_TARGET_NAME} PROPERTY OUTPUT_NAME "LTO")
 endif()
 
-if( NOT WIN32 )
+if( NOT CYGWIN )
   install(FILES ${LLVM_MAIN_INCLUDE_DIR}/llvm-c/lto.h
           DESTINATION include/llvm-c)
 endif()

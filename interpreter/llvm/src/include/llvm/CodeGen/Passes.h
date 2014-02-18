@@ -21,21 +21,22 @@
 
 namespace llvm {
 
-  class FunctionPass;
-  class MachineFunctionPass;
-  struct MachineSchedContext;
-  class PassInfo;
-  class PassManagerBase;
-  class ScheduleDAGInstrs;
-  class TargetLoweringBase;
-  class TargetLowering;
-  class TargetRegisterClass;
-  class raw_ostream;
-}
-
-namespace llvm {
-
+class FunctionPass;
+class MachineFunctionPass;
 class PassConfigImpl;
+class PassInfo;
+class ScheduleDAGInstrs;
+class TargetLowering;
+class TargetLoweringBase;
+class TargetRegisterClass;
+class raw_ostream;
+struct MachineSchedContext;
+
+// The old pass manager infrastructure is hidden in a legacy namespace now.
+namespace legacy {
+class PassManagerBase;
+}
+using legacy::PassManagerBase;
 
 /// Discriminated union of Pass ID types.
 ///
@@ -206,9 +207,9 @@ public:
   /// Fully developed targets will not generally override this.
   virtual void addMachinePasses();
 
-  /// createTargetScheduler - Create an instance of ScheduleDAGInstrs to be run
-  /// within the standard MachineScheduler pass for this function and target at
-  /// the current optimization level.
+  /// Create an instance of ScheduleDAGInstrs to be run within the standard
+  /// MachineScheduler pass for this function and target at the current
+  /// optimization level.
   ///
   /// This can also be used to plug a new MachineSchedStrategy into an instance
   /// of the standard ScheduleDAGMI:
@@ -217,6 +218,13 @@ public:
   /// Return NULL to select the default (generic) machine scheduler.
   virtual ScheduleDAGInstrs *
   createMachineScheduler(MachineSchedContext *C) const {
+    return 0;
+  }
+
+  /// Similar to createMachineScheduler but used when postRA machine scheduling
+  /// is enabled.
+  virtual ScheduleDAGInstrs *
+  createPostMachineScheduler(MachineSchedContext *C) const {
     return 0;
   }
 
@@ -381,14 +389,6 @@ namespace llvm {
   /// these register allocator like this: AU.addRequiredID(PHIEliminationID);
   extern char &PHIEliminationID;
 
-  /// StrongPHIElimination - This pass eliminates machine instruction PHI
-  /// nodes by inserting copy instructions.  This destroys SSA information, but
-  /// is the desired input for some register allocators.  This pass is
-  /// "required" by these register allocator like this:
-  ///    AU.addRequiredID(PHIEliminationID);
-  ///  This pass is still in development
-  extern char &StrongPHIEliminationID;
-
   /// LiveIntervals - This analysis keeps track of the live ranges of virtual
   /// and physical registers.
   extern char &LiveIntervalsID;
@@ -409,6 +409,9 @@ namespace llvm {
 
   /// MachineScheduler - This pass schedules machine instructions.
   extern char &MachineSchedulerID;
+
+  /// PostMachineScheduler - This pass schedules machine instructions postRA.
+  extern char &PostMachineSchedulerID;
 
   /// SpillPlacement analysis. Suggest optimal placement of spill code between
   /// basic blocks.
@@ -574,6 +577,11 @@ namespace llvm {
   /// FinalizeMachineBundles - This pass finalize machine instruction
   /// bundles (created earlier, e.g. during pre-RA scheduling).
   extern char &FinalizeMachineBundlesID;
+
+  /// StackMapLiveness - This pass analyses the register live-out set of
+  /// stackmap/patchpoint intrinsics and attaches the calculated information to
+  /// the intrinsic for later emission to the StackMap.
+  extern char &StackMapLivenessID;
 
 } // End llvm namespace
 

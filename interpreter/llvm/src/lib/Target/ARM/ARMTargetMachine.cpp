@@ -51,9 +51,11 @@ ARMBaseTargetMachine::ARMBaseTargetMachine(const Target &T, StringRef TT,
     Subtarget(TT, CPU, FS, Options),
     JITInfo(),
     InstrItins(Subtarget.getInstrItineraryData()) {
-  // Default to soft float ABI
+
+  // Default to triple-appropriate float ABI
   if (Options.FloatABIType == FloatABI::Default)
-    this->Options.FloatABIType = FloatABI::Soft;
+    this->Options.FloatABIType =
+        Subtarget.isTargetHardFloat() ? FloatABI::Hard : FloatABI::Soft;
 }
 
 void ARMBaseTargetMachine::addAnalysisPasses(PassManagerBase &PM) {
@@ -67,6 +69,56 @@ void ARMBaseTargetMachine::addAnalysisPasses(PassManagerBase &PM) {
 
 void ARMTargetMachine::anchor() { }
 
+static std::string computeDataLayout(ARMSubtarget &ST) {
+  // Little endian.
+  std::string Ret = "e";
+
+  Ret += DataLayout::getManglingComponent(ST.getTargetTriple());
+
+  // Pointers are 32 bits and aligned to 32 bits.
+  Ret += "-p:32:32";
+
+  // On thumb, i16,i18 and i1 have natural aligment requirements, but we try to
+  // align to 32.
+  if (ST.isThumb())
+    Ret += "-i1:8:32-i8:8:32-i16:16:32";
+
+  // ABIs other than APC have 64 bit integers with natural alignment.
+  if (!ST.isAPCS_ABI())
+    Ret += "-i64:64";
+
+  // We have 64 bits floats. The APCS ABI requires them to be aligned to 32
+  // bits, others to 64 bits. We always try to align to 64 bits.
+  if (ST.isAPCS_ABI())
+    Ret += "-f64:32:64";
+
+  // We have 128 and 64 bit vectors. The APCS ABI aligns them to 32 bits, others
+  // to 64. We always ty to give them natural alignment.
+  if (ST.isAPCS_ABI())
+    Ret += "-v64:32:64-v128:32:128";
+  else
+    Ret += "-v128:64:128";
+
+  // On thumb and APCS, only try to align aggregates to 32 bits (the default is
+  // 64 bits).
+  if (ST.isThumb() || ST.isAPCS_ABI())
+    Ret += "-a:0:32";
+
+  // Integer registers are 32 bits.
+  Ret += "-n32";
+
+  // The stack is 128 bit aligned on NaCl, 64 bit aligned on AAPCS and 32 bit
+  // aligned everywhere else.
+  if (ST.isTargetNaCl())
+    Ret += "-S128";
+  else if (ST.isAAPCS_ABI())
+    Ret += "-S64";
+  else
+    Ret += "-S32";
+
+  return Ret;
+}
+
 ARMTargetMachine::ARMTargetMachine(const Target &T, StringRef TT,
                                    StringRef CPU, StringRef FS,
                                    const TargetOptions &Options,
@@ -74,14 +126,7 @@ ARMTargetMachine::ARMTargetMachine(const Target &T, StringRef TT,
                                    CodeGenOpt::Level OL)
   : ARMBaseTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
     InstrInfo(Subtarget),
-    DL(Subtarget.isAPCS_ABI() ?
-               std::string("e-p:32:32-f64:32:64-i64:32:64-"
-                           "v128:32:128-v64:32:64-n32-S32") :
-               Subtarget.isAAPCS_ABI() ?
-               std::string("e-p:32:32-f64:64:64-i64:64:64-"
-                           "v128:64:128-v64:64:64-n32-S64") :
-               std::string("e-p:32:32-f64:64:64-i64:64:64-"
-                           "v128:64:128-v64:64:64-n32-S32")),
+    DL(computeDataLayout(Subtarget)),
     TLInfo(*this),
     TSInfo(*this),
     FrameLowering(Subtarget) {
@@ -102,17 +147,7 @@ ThumbTargetMachine::ThumbTargetMachine(const Target &T, StringRef TT,
     InstrInfo(Subtarget.hasThumb2()
               ? ((ARMBaseInstrInfo*)new Thumb2InstrInfo(Subtarget))
               : ((ARMBaseInstrInfo*)new Thumb1InstrInfo(Subtarget))),
-    DL(Subtarget.isAPCS_ABI() ?
-               std::string("e-p:32:32-f64:32:64-i64:32:64-"
-                           "i16:16:32-i8:8:32-i1:8:32-"
-                           "v128:32:128-v64:32:64-a:0:32-n32-S32") :
-               Subtarget.isAAPCS_ABI() ?
-               std::string("e-p:32:32-f64:64:64-i64:64:64-"
-                           "i16:16:32-i8:8:32-i1:8:32-"
-                           "v128:64:128-v64:64:64-a:0:32-n32-S64") :
-               std::string("e-p:32:32-f64:64:64-i64:64:64-"
-                           "i16:16:32-i8:8:32-i1:8:32-"
-                           "v128:64:128-v64:64:64-a:0:32-n32-S32")),
+    DL(computeDataLayout(Subtarget)),
     TLInfo(*this),
     TSInfo(*this),
     FrameLowering(Subtarget.hasThumb2()
@@ -198,7 +233,7 @@ bool ARMPassConfig::addPreSched2() {
   if (getOptLevel() != CodeGenOpt::None) {
     if (!getARMSubtarget().isThumb1Only()) {
       // in v8, IfConversion depends on Thumb instruction widths
-      if (getARMSubtarget().hasV8Ops() &&
+      if (getARMSubtarget().restrictIT() &&
           !getARMSubtarget().prefers32BitThumb())
         addPass(createThumb2SizeReductionPass());
       addPass(&IfConverterID);

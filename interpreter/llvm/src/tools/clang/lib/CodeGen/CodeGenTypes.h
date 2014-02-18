@@ -16,6 +16,7 @@
 
 #include "CGCall.h"
 #include "clang/AST/GlobalDecl.h"
+#include "clang/CodeGen/CGFunctionInfo.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/IR/Module.h"
 #include <vector>
@@ -58,21 +59,18 @@ namespace CodeGen {
 /// CodeGenTypes - This class organizes the cross-module state that is used
 /// while lowering AST types to LLVM types.
 class CodeGenTypes {
-public:
-  // Some of this stuff should probably be left on the CGM.
   CodeGenModule &CGM;
+  // Some of this stuff should probably be left on the CGM.
   ASTContext &Context;
   llvm::Module &TheModule;
   const llvm::DataLayout &TheDataLayout;
   const TargetInfo &Target;
   CGCXXABI &TheCXXABI;
-  const CodeGenOptions &CodeGenOpts;
 
   // This should not be moved earlier, since its initialization depends on some
   // of the previous reference members being already initialized
   const ABIInfo &TheABIInfo;
 
-private:
   /// The opaque type map for Objective-C interfaces. All direct
   /// manipulation is done by the runtime interfaces, which are
   /// responsible for coercing to the appropriate type; these opaque
@@ -116,7 +114,6 @@ public:
   const llvm::DataLayout &getDataLayout() const { return TheDataLayout; }
   ASTContext &getContext() const { return Context; }
   const ABIInfo &getABIInfo() const { return TheABIInfo; }
-  const CodeGenOptions &getCodeGenOpts() const { return CodeGenOpts; }
   const TargetInfo &getTarget() const { return Target; }
   CGCXXABI &getCXXABI() const { return TheCXXABI; }
   llvm::LLVMContext &getLLVMContext() { return TheModule.getContext(); }
@@ -139,8 +136,8 @@ public:
   /// be converted to an LLVM type (i.e. doesn't depend on an incomplete tag
   /// type).
   bool isFuncTypeConvertible(const FunctionType *FT);
-  bool isFuncTypeArgumentConvertible(QualType Ty);
-  
+  bool isFuncParamTypeConvertible(QualType Ty);
+
   /// GetFunctionTypeForVTable - Get the LLVM function type for use in a vtable,
   /// given a CXXMethodDecl. If the method to has an incomplete return type,
   /// and/or incomplete argument types, this will return the opaque type.
@@ -178,10 +175,10 @@ public:
 
   const CGFunctionInfo &arrangeGlobalDeclaration(GlobalDecl GD);
   const CGFunctionInfo &arrangeFunctionDeclaration(const FunctionDecl *FD);
-  const CGFunctionInfo &arrangeFunctionDeclaration(QualType ResTy,
-                                                   const FunctionArgList &Args,
-                                             const FunctionType::ExtInfo &Info,
-                                                   bool isVariadic);
+  const CGFunctionInfo &
+  arrangeFreeFunctionDeclaration(QualType ResTy, const FunctionArgList &Args,
+                                 const FunctionType::ExtInfo &Info,
+                                 bool isVariadic);
 
   const CGFunctionInfo &arrangeObjCMethodDeclaration(const ObjCMethodDecl *MD);
   const CGFunctionInfo &arrangeObjCMessageSendSignature(const ObjCMethodDecl *MD,
@@ -191,6 +188,10 @@ public:
   const CGFunctionInfo &arrangeCXXConstructorDeclaration(
                                                     const CXXConstructorDecl *D,
                                                     CXXCtorType Type);
+  const CGFunctionInfo &arrangeCXXConstructorCall(const CallArgList &Args,
+                                                  const CXXConstructorDecl *D,
+                                                  CXXCtorType CtorKind,
+                                                  unsigned ExtraArgs);
   const CGFunctionInfo &arrangeCXXDestructor(const CXXDestructorDecl *D,
                                              CXXDtorType Type);
 
@@ -219,6 +220,7 @@ public:
   ///
   /// \param argTypes - must all actually be canonical as params
   const CGFunctionInfo &arrangeLLVMFunctionInfo(CanQualType returnType,
+                                                bool IsInstanceMethod,
                                                 ArrayRef<CanQualType> argTypes,
                                                 FunctionType::ExtInfo info,
                                                 RequiredArgs args);

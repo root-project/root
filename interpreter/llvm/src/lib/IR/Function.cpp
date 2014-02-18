@@ -84,6 +84,21 @@ bool Argument::hasByValAttr() const {
     hasAttribute(getArgNo()+1, Attribute::ByVal);
 }
 
+/// \brief Return true if this argument has the inalloca attribute on it in
+/// its containing function.
+bool Argument::hasInAllocaAttr() const {
+  if (!getType()->isPointerTy()) return false;
+  return getParent()->getAttributes().
+    hasAttribute(getArgNo()+1, Attribute::InAlloca);
+}
+
+bool Argument::hasByValOrInAllocaAttr() const {
+  if (!getType()->isPointerTy()) return false;
+  AttributeSet Attrs = getParent()->getAttributes();
+  return Attrs.hasAttribute(getArgNo() + 1, Attribute::ByVal) ||
+         Attrs.hasAttribute(getArgNo() + 1, Attribute::InAlloca);
+}
+
 unsigned Argument::getParamAlignment() const {
   assert(getType()->isPointerTy() && "Only pointers have alignments");
   return getParent()->getParamAlignment(getArgNo()+1);
@@ -454,7 +469,8 @@ enum IIT_Info {
   IIT_EXTEND_VEC_ARG = 23,
   IIT_TRUNC_VEC_ARG = 24,
   IIT_ANYPTR = 25,
-  IIT_V1   = 26
+  IIT_V1   = 26,
+  IIT_VARARG = 27
 };
 
 
@@ -467,6 +483,9 @@ static void DecodeIITType(unsigned &NextElt, ArrayRef<unsigned char> Infos,
   switch (Info) {
   case IIT_Done:
     OutputTable.push_back(IITDescriptor::get(IITDescriptor::Void, 0));
+    return;
+  case IIT_VARARG:
+    OutputTable.push_back(IITDescriptor::get(IITDescriptor::VarArg, 0));
     return;
   case IIT_MMX:
     OutputTable.push_back(IITDescriptor::get(IITDescriptor::MMX, 0));
@@ -613,6 +632,7 @@ static Type *DecodeFixedType(ArrayRef<Intrinsic::IITDescriptor> &Infos,
 
   switch (D.Kind) {
   case IITDescriptor::Void: return Type::getVoidTy(Context);
+  case IITDescriptor::VarArg: return Type::getVoidTy(Context);
   case IITDescriptor::MMX: return Type::getX86_MMXTy(Context);
   case IITDescriptor::Metadata: return Type::getMetadataTy(Context);
   case IITDescriptor::Half: return Type::getHalfTy(Context);
@@ -723,10 +743,8 @@ bool Function::isDefTriviallyDead() const {
 bool Function::callsFunctionThatReturnsTwice() const {
   for (const_inst_iterator
          I = inst_begin(this), E = inst_end(this); I != E; ++I) {
-    const CallInst* callInst = dyn_cast<CallInst>(&*I);
-    if (!callInst)
-      continue;
-    if (callInst->canReturnTwice())
+    ImmutableCallSite CS(&*I);
+    if (CS && CS.hasFnAttr(Attribute::ReturnsTwice))
       return true;
   }
 

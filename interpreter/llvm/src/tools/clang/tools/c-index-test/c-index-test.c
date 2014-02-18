@@ -2,6 +2,7 @@
 
 #include "clang-c/Index.h"
 #include "clang-c/CXCompilationDatabase.h"
+#include "clang-c/BuildSystem.h"
 #include "llvm/Config/config.h"
 #include <ctype.h>
 #include <stdlib.h>
@@ -78,7 +79,32 @@ static unsigned getDefaultParsingOptions() {
   return options;
 }
 
+/// \brief Returns 0 in case of success, non-zero in case of a failure.
 static int checkForErrors(CXTranslationUnit TU);
+
+static void describeLibclangFailure(enum CXErrorCode Err) {
+  switch (Err) {
+  case CXError_Success:
+    fprintf(stderr, "Success\n");
+    return;
+
+  case CXError_Failure:
+    fprintf(stderr, "Failure (no details available)\n");
+    return;
+
+  case CXError_Crashed:
+    fprintf(stderr, "Failure: libclang crashed\n");
+    return;
+
+  case CXError_InvalidArguments:
+    fprintf(stderr, "Failure: invalid arguments passed to a libclang routine\n");
+    return;
+
+  case CXError_ASTReadError:
+    fprintf(stderr, "Failure: AST deserialization error occurred\n");
+    return;
+  }
+}
 
 static void PrintExtent(FILE *out, unsigned begin_line, unsigned begin_column,
                         unsigned end_line, unsigned end_column) {
@@ -88,10 +114,11 @@ static void PrintExtent(FILE *out, unsigned begin_line, unsigned begin_column,
 
 static unsigned CreateTranslationUnit(CXIndex Idx, const char *file,
                                       CXTranslationUnit *TU) {
-
-  *TU = clang_createTranslationUnit(Idx, file);
-  if (!*TU) {
+  enum CXErrorCode Err = clang_createTranslationUnit2(Idx, file, TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to load translation unit from '%s'!\n", file);
+    describeLibclangFailure(Err);
+    *TU = 0;
     return 0;
   }
   return 1;
@@ -107,20 +134,25 @@ void free_remapped_files(struct CXUnsavedFile *unsaved_files,
   free(unsaved_files);
 }
 
-int parse_remapped_files(int argc, const char **argv, int start_arg,
-                         struct CXUnsavedFile **unsaved_files,
-                         int *num_unsaved_files) {
+static int parse_remapped_files_with_opt(const char *opt_name,
+                                         int argc, const char **argv,
+                                         int start_arg,
+                                         struct CXUnsavedFile **unsaved_files,
+                                         int *num_unsaved_files) {
   int i;
   int arg;
-  int prefix_len = strlen("-remap-file=");
+  int prefix_len = strlen(opt_name);
+  int arg_indices[20];
   *unsaved_files = 0;
   *num_unsaved_files = 0;
 
   /* Count the number of remapped files. */
   for (arg = start_arg; arg < argc; ++arg) {
-    if (strncmp(argv[arg], "-remap-file=", prefix_len))
-      break;
+    if (strncmp(argv[arg], opt_name, prefix_len))
+      continue;
 
+    assert(*num_unsaved_files < (int)(sizeof(arg_indices)/sizeof(int)));
+    arg_indices[*num_unsaved_files] = arg;
     ++*num_unsaved_files;
   }
 
@@ -130,17 +162,17 @@ int parse_remapped_files(int argc, const char **argv, int start_arg,
   *unsaved_files
     = (struct CXUnsavedFile *)malloc(sizeof(struct CXUnsavedFile) *
                                      *num_unsaved_files);
-  for (arg = start_arg, i = 0; i != *num_unsaved_files; ++i, ++arg) {
+  for (i = 0; i != *num_unsaved_files; ++i) {
     struct CXUnsavedFile *unsaved = *unsaved_files + i;
-    const char *arg_string = argv[arg] + prefix_len;
+    const char *arg_string = argv[arg_indices[i]] + prefix_len;
     int filename_len;
     char *filename;
     char *contents;
     FILE *to_file;
-    const char *semi = strchr(arg_string, ';');
-    if (!semi) {
+    const char *sep = strchr(arg_string, ',');
+    if (!sep) {
       fprintf(stderr,
-              "error: -remap-file=from;to argument is missing semicolon\n");
+              "error: %sfrom:to argument is missing comma\n", opt_name);
       free_remapped_files(*unsaved_files, i);
       *unsaved_files = 0;
       *num_unsaved_files = 0;
@@ -148,10 +180,10 @@ int parse_remapped_files(int argc, const char **argv, int start_arg,
     }
 
     /* Open the file that we're remapping to. */
-    to_file = fopen(semi + 1, "rb");
+    to_file = fopen(sep + 1, "rb");
     if (!to_file) {
       fprintf(stderr, "error: cannot open file %s that we are remapping to\n",
-              semi + 1);
+              sep + 1);
       free_remapped_files(*unsaved_files, i);
       *unsaved_files = 0;
       *num_unsaved_files = 0;
@@ -167,7 +199,7 @@ int parse_remapped_files(int argc, const char **argv, int start_arg,
     contents = (char *)malloc(unsaved->Length + 1);
     if (fread(contents, 1, unsaved->Length, to_file) != unsaved->Length) {
       fprintf(stderr, "error: unexpected %s reading 'to' file %s\n",
-              (feof(to_file) ? "EOF" : "error"), semi + 1);
+              (feof(to_file) ? "EOF" : "error"), sep + 1);
       fclose(to_file);
       free_remapped_files(*unsaved_files, i);
       free(contents);
@@ -182,13 +214,55 @@ int parse_remapped_files(int argc, const char **argv, int start_arg,
     fclose(to_file);
 
     /* Copy the file name that we're remapping from. */
-    filename_len = semi - arg_string;
+    filename_len = sep - arg_string;
     filename = (char *)malloc(filename_len + 1);
     memcpy(filename, arg_string, filename_len);
     filename[filename_len] = 0;
     unsaved->Filename = filename;
   }
 
+  return 0;
+}
+
+static int parse_remapped_files(int argc, const char **argv, int start_arg,
+                                struct CXUnsavedFile **unsaved_files,
+                                int *num_unsaved_files) {
+  return parse_remapped_files_with_opt("-remap-file=", argc, argv, start_arg,
+      unsaved_files, num_unsaved_files);
+}
+
+static int parse_remapped_files_with_try(int try_idx,
+                                         int argc, const char **argv,
+                                         int start_arg,
+                                         struct CXUnsavedFile **unsaved_files,
+                                         int *num_unsaved_files) {
+  struct CXUnsavedFile *unsaved_files_no_try_idx;
+  int num_unsaved_files_no_try_idx;
+  struct CXUnsavedFile *unsaved_files_try_idx;
+  int num_unsaved_files_try_idx;
+  int ret;
+  char opt_name[32];
+
+  ret = parse_remapped_files(argc, argv, start_arg,
+      &unsaved_files_no_try_idx, &num_unsaved_files_no_try_idx);
+  if (ret)
+    return ret;
+
+  sprintf(opt_name, "-remap-file-%d=", try_idx);
+  ret = parse_remapped_files_with_opt(opt_name, argc, argv, start_arg,
+      &unsaved_files_try_idx, &num_unsaved_files_try_idx);
+  if (ret)
+    return ret;
+
+  *num_unsaved_files = num_unsaved_files_no_try_idx + num_unsaved_files_try_idx;
+  *unsaved_files
+    = (struct CXUnsavedFile *)realloc(unsaved_files_no_try_idx,
+                                      sizeof(struct CXUnsavedFile) *
+                                        *num_unsaved_files);
+  memcpy(*unsaved_files + num_unsaved_files_no_try_idx,
+         unsaved_files_try_idx, sizeof(struct CXUnsavedFile) *
+            num_unsaved_files_try_idx);
+  free(unsaved_files_try_idx);
   return 0;
 }
 
@@ -1160,6 +1234,7 @@ static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
                                          CXClientData d) {
   if (!clang_isInvalid(clang_getCursorKind(cursor))) {
     CXType T = clang_getCursorType(cursor);
+    enum CXRefQualifierKind RQ = clang_Type_getCXXRefQualifier(T);
     PrintCursor(cursor, NULL);
     PrintTypeAndTypeKind(T, " [type=%s] [typekind=%s]");
     if (clang_isConstQualifiedType(T))
@@ -1168,6 +1243,10 @@ static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
       printf(" volatile");
     if (clang_isRestrictQualifiedType(T))
       printf(" restrict");
+    if (RQ == CXRefQualifier_LValue)
+      printf(" lvalue-ref-qualifier");
+    if (RQ == CXRefQualifier_RValue)
+      printf(" rvalue-ref-qualifier");
     /* Print the canonical type if it is different. */
     {
       CXType CT = clang_getCanonicalType(T);
@@ -1367,8 +1446,9 @@ int perform_test_load_source(int argc, const char **argv,
   const char *CommentSchemaFile;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
+  enum CXErrorCode Err;
   int result;
-  
+
   Idx = clang_createIndex(/* excludeDeclsFromPCH */
                           (!strcmp(filter, "local") || 
                            !strcmp(filter, "local-display"))? 1 : 0,
@@ -1384,13 +1464,14 @@ int perform_test_load_source(int argc, const char **argv,
     return -1;
   }
 
-  TU = clang_parseTranslationUnit(Idx, 0,
-                                  argv + num_unsaved_files,
-                                  argc - num_unsaved_files,
-                                  unsaved_files, num_unsaved_files, 
-                                  getDefaultParsingOptions());
-  if (!TU) {
+  Err = clang_parseTranslationUnit2(Idx, 0,
+                                    argv + num_unsaved_files,
+                                    argc - num_unsaved_files,
+                                    unsaved_files, num_unsaved_files,
+                                    getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to load translation unit!\n");
+    describeLibclangFailure(Err);
     free_remapped_files(unsaved_files, num_unsaved_files);
     clang_disposeIndex(Idx);
     return 1;
@@ -1410,7 +1491,9 @@ int perform_test_reparse_source(int argc, const char **argv, int trials,
   CXTranslationUnit TU;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
-  int result;
+  int compiler_arg_idx = 0;
+  enum CXErrorCode Err;
+  int result, i;
   int trial;
   int remap_after_trial = 0;
   char *endptr = 0;
@@ -1423,15 +1506,25 @@ int perform_test_reparse_source(int argc, const char **argv, int trials,
     clang_disposeIndex(Idx);
     return -1;
   }
+
+  for (i = 0; i < argc; ++i) {
+    if (strcmp(argv[i], "--") == 0)
+      break;
+  }
+  if (i < argc)
+    compiler_arg_idx = i+1;
+  if (num_unsaved_files > compiler_arg_idx)
+    compiler_arg_idx = num_unsaved_files;
   
   /* Load the initial translation unit -- we do this without honoring remapped
    * files, so that we have a way to test results after changing the source. */
-  TU = clang_parseTranslationUnit(Idx, 0,
-                                  argv + num_unsaved_files,
-                                  argc - num_unsaved_files,
-                                  0, 0, getDefaultParsingOptions());
-  if (!TU) {
+  Err = clang_parseTranslationUnit2(Idx, 0,
+                                    argv + compiler_arg_idx,
+                                    argc - compiler_arg_idx,
+                                    0, 0, getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to load translation unit!\n");
+    describeLibclangFailure(Err);
     free_remapped_files(unsaved_files, num_unsaved_files);
     clang_disposeIndex(Idx);
     return 1;
@@ -1446,11 +1539,22 @@ int perform_test_reparse_source(int argc, const char **argv, int trials,
   }
 
   for (trial = 0; trial < trials; ++trial) {
-    if (clang_reparseTranslationUnit(TU,
-                             trial >= remap_after_trial ? num_unsaved_files : 0,
-                             trial >= remap_after_trial ? unsaved_files : 0,
-                                     clang_defaultReparseOptions(TU))) {
+    free_remapped_files(unsaved_files, num_unsaved_files);
+    if (parse_remapped_files_with_try(trial, argc, argv, 0,
+                                      &unsaved_files, &num_unsaved_files)) {
+      clang_disposeTranslationUnit(TU);
+      clang_disposeIndex(Idx);
+      return -1;
+    }
+
+    Err = clang_reparseTranslationUnit(
+        TU,
+        trial >= remap_after_trial ? num_unsaved_files : 0,
+        trial >= remap_after_trial ? unsaved_files : 0,
+        clang_defaultReparseOptions(TU));
+    if (Err != CXError_Success) {
       fprintf(stderr, "Unable to reparse translation unit!\n");
+      describeLibclangFailure(Err);
       clang_disposeTranslationUnit(TU);
       free_remapped_files(unsaved_files, num_unsaved_files);
       clang_disposeIndex(Idx);
@@ -1872,7 +1976,8 @@ int perform_code_completion(int argc, const char **argv, int timing_only) {
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
   CXCodeCompleteResults *results = 0;
-  CXTranslationUnit TU = 0;
+  enum CXErrorCode Err;
+  CXTranslationUnit TU;
   unsigned I, Repeats = 1;
   unsigned completionOptions = clang_defaultCodeCompleteOptions();
   
@@ -1897,21 +2002,27 @@ int perform_code_completion(int argc, const char **argv, int timing_only) {
   
   if (getenv("CINDEXTEST_EDITING"))
     Repeats = 5;
-  
-  TU = clang_parseTranslationUnit(CIdx, 0,
-                                  argv + num_unsaved_files + 2,
-                                  argc - num_unsaved_files - 2,
-                                  0, 0, getDefaultParsingOptions());
-  if (!TU) {
+
+  Err = clang_parseTranslationUnit2(CIdx, 0,
+                                    argv + num_unsaved_files + 2,
+                                    argc - num_unsaved_files - 2,
+                                    0, 0, getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to load translation unit!\n");
+    describeLibclangFailure(Err);
     return 1;
   }
 
-  if (clang_reparseTranslationUnit(TU, 0, 0, clang_defaultReparseOptions(TU))) {
+  Err = clang_reparseTranslationUnit(TU, 0, 0,
+                                     clang_defaultReparseOptions(TU));
+
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to reparse translation init!\n");
+    describeLibclangFailure(Err);
+    clang_disposeTranslationUnit(TU);
     return 1;
   }
-  
+
   for (I = 0; I != Repeats; ++I) {
     results = clang_codeCompleteAt(TU, filename, line, column,
                                    unsaved_files, num_unsaved_files,
@@ -1998,6 +2109,7 @@ static int inspect_cursor_at(int argc, const char **argv) {
   int errorCode;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
+  enum CXErrorCode Err;
   CXTranslationUnit TU;
   CXCursor Cursor;
   CursorSourceLocation *Locations = 0;
@@ -2031,15 +2143,15 @@ static int inspect_cursor_at(int argc, const char **argv) {
   /* Parse the translation unit. When we're testing clang_getCursor() after
      reparsing, don't remap unsaved files until the second parse. */
   CIdx = clang_createIndex(1, 1);
-  TU = clang_parseTranslationUnit(CIdx, argv[argc - 1],
-                                  argv + num_unsaved_files + 1 + NumLocations,
-                                  argc - num_unsaved_files - 2 - NumLocations,
-                                  unsaved_files,
-                                  Repeats > 1? 0 : num_unsaved_files,
-                                  getDefaultParsingOptions());
-                                                 
-  if (!TU) {
+  Err = clang_parseTranslationUnit2(CIdx, argv[argc - 1],
+                                   argv + num_unsaved_files + 1 + NumLocations,
+                                   argc - num_unsaved_files - 2 - NumLocations,
+                                   unsaved_files,
+                                   Repeats > 1? 0 : num_unsaved_files,
+                                   getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "unable to parse input\n");
+    describeLibclangFailure(Err);
     return -1;
   }
 
@@ -2047,11 +2159,14 @@ static int inspect_cursor_at(int argc, const char **argv) {
     return -1;
 
   for (I = 0; I != Repeats; ++I) {
-    if (Repeats > 1 &&
-        clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files, 
-                                     clang_defaultReparseOptions(TU))) {
-      clang_disposeTranslationUnit(TU);
-      return 1;
+    if (Repeats > 1) {
+      Err = clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
+                                         clang_defaultReparseOptions(TU));
+      if (Err != CXError_Success) {
+        describeLibclangFailure(Err);
+        clang_disposeTranslationUnit(TU);
+        return 1;
+      }
     }
 
     if (checkForErrors(TU) != 0)
@@ -2164,6 +2279,7 @@ static int find_file_refs_at(int argc, const char **argv) {
   int errorCode;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
+  enum CXErrorCode Err;
   CXTranslationUnit TU;
   CXCursor Cursor;
   CursorSourceLocation *Locations = 0;
@@ -2197,15 +2313,16 @@ static int find_file_refs_at(int argc, const char **argv) {
   /* Parse the translation unit. When we're testing clang_getCursor() after
      reparsing, don't remap unsaved files until the second parse. */
   CIdx = clang_createIndex(1, 1);
-  TU = clang_parseTranslationUnit(CIdx, argv[argc - 1],
-                                  argv + num_unsaved_files + 1 + NumLocations,
-                                  argc - num_unsaved_files - 2 - NumLocations,
-                                  unsaved_files,
-                                  Repeats > 1? 0 : num_unsaved_files,
-                                  getDefaultParsingOptions());
-                                                 
-  if (!TU) {
+  Err = clang_parseTranslationUnit2(CIdx, argv[argc - 1],
+                                    argv + num_unsaved_files + 1 + NumLocations,
+                                    argc - num_unsaved_files - 2 - NumLocations,
+                                    unsaved_files,
+                                    Repeats > 1? 0 : num_unsaved_files,
+                                    getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "unable to parse input\n");
+    describeLibclangFailure(Err);
+    clang_disposeTranslationUnit(TU);
     return -1;
   }
 
@@ -2213,11 +2330,14 @@ static int find_file_refs_at(int argc, const char **argv) {
     return -1;
 
   for (I = 0; I != Repeats; ++I) {
-    if (Repeats > 1 &&
-        clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files, 
-                                     clang_defaultReparseOptions(TU))) {
-      clang_disposeTranslationUnit(TU);
-      return 1;
+    if (Repeats > 1) {
+      Err = clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
+                                         clang_defaultReparseOptions(TU));
+      if (Err != CXError_Success) {
+        describeLibclangFailure(Err);
+        clang_disposeTranslationUnit(TU);
+        return 1;
+      }
     }
 
     if (checkForErrors(TU) != 0)
@@ -2268,6 +2388,7 @@ static int find_file_includes_in(int argc, const char **argv) {
   CXIndex CIdx;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
+  enum CXErrorCode Err;
   CXTranslationUnit TU;
   const char **Filenames = 0;
   unsigned NumFilenames = 0;
@@ -2297,15 +2418,17 @@ static int find_file_includes_in(int argc, const char **argv) {
   /* Parse the translation unit. When we're testing clang_getCursor() after
      reparsing, don't remap unsaved files until the second parse. */
   CIdx = clang_createIndex(1, 1);
-  TU = clang_parseTranslationUnit(CIdx, argv[argc - 1],
-                                  argv + num_unsaved_files + 1 + NumFilenames,
-                                  argc - num_unsaved_files - 2 - NumFilenames,
-                                  unsaved_files,
-                                  Repeats > 1? 0 : num_unsaved_files,
-                                  getDefaultParsingOptions());
+  Err = clang_parseTranslationUnit2(
+      CIdx, argv[argc - 1],
+      argv + num_unsaved_files + 1 + NumFilenames,
+      argc - num_unsaved_files - 2 - NumFilenames,
+      unsaved_files,
+      Repeats > 1 ? 0 : num_unsaved_files, getDefaultParsingOptions(), &TU);
 
-  if (!TU) {
+  if (Err != CXError_Success) {
     fprintf(stderr, "unable to parse input\n");
+    describeLibclangFailure(Err);
+    clang_disposeTranslationUnit(TU);
     return -1;
   }
 
@@ -2313,11 +2436,14 @@ static int find_file_includes_in(int argc, const char **argv) {
     return -1;
 
   for (I = 0; I != Repeats; ++I) {
-    if (Repeats > 1 &&
-        clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
-                                     clang_defaultReparseOptions(TU))) {
-      clang_disposeTranslationUnit(TU);
-      return 1;
+    if (Repeats > 1) {
+      Err = clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
+                                         clang_defaultReparseOptions(TU));
+      if (Err != CXError_Success) {
+        describeLibclangFailure(Err);
+        clang_disposeTranslationUnit(TU);
+        return 1;
+      }
     }
 
     if (checkForErrors(TU) != 0)
@@ -2862,6 +2988,9 @@ static int index_compile_args(int num_args, const char **args,
                                  &IndexCB,sizeof(IndexCB), index_opts,
                                  0, args, num_args, 0, 0, 0,
                                  getDefaultParsingOptions());
+  if (result != CXError_Success)
+    describeLibclangFailure(result);
+
   if (index_data.fail_for_error)
     result = -1;
 
@@ -3113,6 +3242,8 @@ int perform_token_annotation(int argc, const char **argv) {
   CXSourceLocation startLoc, endLoc;
   CXFile file = 0;
   CXCursor *cursors = 0;
+  CXSourceRangeList *skipped_ranges = 0;
+  enum CXErrorCode Err;
   unsigned i;
 
   input += strlen("-test-annotate-tokens=");
@@ -3126,14 +3257,15 @@ int perform_token_annotation(int argc, const char **argv) {
   }
 
   CIdx = clang_createIndex(0, 1);
-  TU = clang_parseTranslationUnit(CIdx, argv[argc - 1],
-                                  argv + num_unsaved_files + 2,
-                                  argc - num_unsaved_files - 3,
-                                  unsaved_files,
-                                  num_unsaved_files,
-                                  getDefaultParsingOptions());
-  if (!TU) {
+  Err = clang_parseTranslationUnit2(CIdx, argv[argc - 1],
+                                    argv + num_unsaved_files + 2,
+                                    argc - num_unsaved_files - 3,
+                                    unsaved_files,
+                                    num_unsaved_files,
+                                    getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "unable to parse input\n");
+    describeLibclangFailure(Err);
     clang_disposeIndex(CIdx);
     free(filename);
     free_remapped_files(unsaved_files, num_unsaved_files);
@@ -3148,9 +3280,11 @@ int perform_token_annotation(int argc, const char **argv) {
 
   if (getenv("CINDEXTEST_EDITING")) {
     for (i = 0; i < 5; ++i) {
-      if (clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
-                                       clang_defaultReparseOptions(TU))) {
+      Err = clang_reparseTranslationUnit(TU, num_unsaved_files, unsaved_files,
+                                         clang_defaultReparseOptions(TU));
+      if (Err != CXError_Success) {
         fprintf(stderr, "Unable to reparse translation unit!\n");
+        describeLibclangFailure(Err);
         errorCode = -1;
         goto teardown;
       }
@@ -3200,6 +3334,19 @@ int perform_token_annotation(int argc, const char **argv) {
     errorCode = -1;
     goto teardown;
   }
+
+  skipped_ranges = clang_getSkippedRanges(TU, file);
+  for (i = 0; i != skipped_ranges->count; ++i) {
+    unsigned start_line, start_column, end_line, end_column;
+    clang_getSpellingLocation(clang_getRangeStart(skipped_ranges->ranges[i]),
+                              0, &start_line, &start_column, 0);
+    clang_getSpellingLocation(clang_getRangeEnd(skipped_ranges->ranges[i]),
+                              0, &end_line, &end_column, 0);
+    printf("Skipping: ");
+    PrintExtent(stdout, start_line, start_column, end_line, end_column);
+    printf("\n");
+  }
+  clang_disposeSourceRangeList(skipped_ranges);
 
   for (i = 0; i != num_tokens; ++i) {
     const char *kind = "<unknown>";
@@ -3501,6 +3648,7 @@ int write_pch_file(const char *filename, int argc, const char *argv[]) {
   CXTranslationUnit TU;
   struct CXUnsavedFile *unsaved_files = 0;
   int num_unsaved_files = 0;
+  enum CXErrorCode Err;
   int result = 0;
   
   Idx = clang_createIndex(/* excludeDeclsFromPCH */1, /* displayDiagnostics=*/1);
@@ -3509,18 +3657,19 @@ int write_pch_file(const char *filename, int argc, const char *argv[]) {
     clang_disposeIndex(Idx);
     return -1;
   }
-  
-  TU = clang_parseTranslationUnit(Idx, 0,
-                                  argv + num_unsaved_files,
-                                  argc - num_unsaved_files,
-                                  unsaved_files,
-                                  num_unsaved_files,
-                                  CXTranslationUnit_Incomplete |
-                                  CXTranslationUnit_DetailedPreprocessingRecord|
-                                    CXTranslationUnit_ForSerialization);
-  if (!TU) {
+
+  Err = clang_parseTranslationUnit2(
+      Idx, 0, argv + num_unsaved_files, argc - num_unsaved_files,
+      unsaved_files, num_unsaved_files,
+      CXTranslationUnit_Incomplete |
+          CXTranslationUnit_DetailedPreprocessingRecord |
+          CXTranslationUnit_ForSerialization,
+      &TU);
+  if (Err != CXError_Success) {
     fprintf(stderr, "Unable to load translation unit!\n");
+    describeLibclangFailure(Err);
     free_remapped_files(unsaved_files, num_unsaved_files);
+    clang_disposeTranslationUnit(TU);
     clang_disposeIndex(Idx);
     return 1;
   }
@@ -3716,6 +3865,11 @@ static int read_diagnostics(const char *filename) {
   return 0;
 }
 
+static int perform_print_build_session_timestamp(void) {
+  printf("%lld\n", clang_getBuildSessionTimestamp());
+  return 0;
+}
+
 /******************************************************************************/
 /* Command line processing.                                                   */
 /******************************************************************************/
@@ -3771,6 +3925,8 @@ static void print_usage(void) {
     "       c-index-test -write-pch <file> <compiler arguments>\n");
   fprintf(stderr,
     "       c-index-test -compilation-db [lookup <filename>] database\n");
+  fprintf(stderr,
+    "       c-index-test -print-build-session-timestamp\n");
   fprintf(stderr,
     "       c-index-test -read-diagnostics <file>\n\n");
   fprintf(stderr,
@@ -3871,6 +4027,8 @@ int cindextest_main(int argc, const char **argv) {
     return write_pch_file(argv[2], argc - 3, argv + 3);
   else if (argc > 2 && strcmp(argv[1], "-compilation-db") == 0)
     return perform_test_compilation_db(argv[argc-1], argc - 3, argv + 2);
+  else if (argc == 2 && strcmp(argv[1], "-print-build-session-timestamp") == 0)
+    return perform_print_build_session_timestamp();
 
   print_usage();
   return 1;

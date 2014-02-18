@@ -14,10 +14,11 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Support/DynamicLibrary.h"
-#include "llvm/Support/ManagedStatic.h"
+#include "llvm-c/Support.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/Config/config.h"
+#include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Mutex.h"
 #include <cstdio>
 #include <cstring>
@@ -172,3 +173,11 @@ void* DynamicLibrary::SearchForAddressOfSymbol(const char *symbolName) {
 }
 
 #endif // LLVM_ON_WIN32
+
+//===----------------------------------------------------------------------===//
+// C API.
+//===----------------------------------------------------------------------===//
+
+LLVMBool LLVMLoadLibraryPermanently(const char* Filename) {
+  return llvm::sys::DynamicLibrary::LoadLibraryPermanently(Filename);
+}

@@ -60,15 +60,6 @@ protected:
   /// Get a null value for unsupported member pointers.
   llvm::Constant *GetBogusMemberPointer(QualType T);
 
-  // FIXME: Every place that calls getVTT{Decl,Value} is something
-  // that needs to be abstracted properly.
-  ImplicitParamDecl *&getVTTDecl(CodeGenFunction &CGF) {
-    return CGF.CXXStructorImplicitParamDecl;
-  }
-  llvm::Value *&getVTTValue(CodeGenFunction &CGF) {
-    return CGF.CXXStructorImplicitParamValue;
-  }
-
   ImplicitParamDecl *&getStructorImplicitParamDecl(CodeGenFunction &CGF) {
     return CGF.CXXStructorImplicitParamDecl;
   }
@@ -76,11 +67,8 @@ protected:
     return CGF.CXXStructorImplicitParamValue;
   }
 
-  /// Build a parameter variable suitable for 'this'.
-  void BuildThisParam(CodeGenFunction &CGF, FunctionArgList &Params);
-
   /// Perform prolog initialization of the parameter variable suitable
-  /// for 'this' emitted by BuildThisParam.
+  /// for 'this' emitted by buildThisParam.
   void EmitThisParam(CodeGenFunction &CGF);
 
   ASTContext &getContext() const { return CGM.getContext(); }
@@ -234,6 +222,12 @@ public:
   virtual llvm::BasicBlock *EmitCtorCompleteObjectHandler(CodeGenFunction &CGF,
                                                           const CXXRecordDecl *RD);
 
+  /// Emit the code to initialize hidden members required
+  /// to handle virtual inheritance, if needed by the ABI.
+  virtual void
+  initializeHiddenVirtualInheritanceMembers(CodeGenFunction &CGF,
+                                            const CXXRecordDecl *RD) {}
+
   /// Emit constructor variants required by this ABI.
   virtual void EmitCXXConstructors(const CXXConstructorDecl *D) = 0;
 
@@ -273,16 +267,18 @@ public:
     return This;
   }
 
-  /// Build the ABI-specific portion of the parameter list for a
-  /// function.  This generally involves a 'this' parameter and
-  /// possibly some extra data for constructors and destructors.
+  /// Build a parameter variable suitable for 'this'.
+  void buildThisParam(CodeGenFunction &CGF, FunctionArgList &Params);
+
+  /// Insert any ABI-specific implicit parameters into the parameter list for a
+  /// function.  This generally involves extra data for constructors and
+  /// destructors.
   ///
   /// ABIs may also choose to override the return type, which has been
   /// initialized with the type of 'this' if HasThisReturn(CGF.CurGD) is true or
   /// the formal return type of the function otherwise.
-  virtual void BuildInstanceFunctionParams(CodeGenFunction &CGF,
-                                           QualType &ResTy,
-                                           FunctionArgList &Params) = 0;
+  virtual void addImplicitStructorParams(CodeGenFunction &CGF, QualType &ResTy,
+                                         FunctionArgList &Params) = 0;
 
   /// Perform ABI-specific "this" parameter adjustment in a virtual function
   /// prologue.
@@ -294,14 +290,43 @@ public:
   /// Emit the ABI-specific prolog for the function.
   virtual void EmitInstanceFunctionProlog(CodeGenFunction &CGF) = 0;
 
-  /// Emit the constructor call. Return the function that is called.
-  virtual void EmitConstructorCall(CodeGenFunction &CGF,
-                                   const CXXConstructorDecl *D,
-                                   CXXCtorType Type,
-                                   bool ForVirtualBase, bool Delegating,
-                                   llvm::Value *This,
-                                   CallExpr::const_arg_iterator ArgBeg,
-                                   CallExpr::const_arg_iterator ArgEnd) = 0;
+  /// Add any ABI-specific implicit arguments needed to call a constructor.
+  ///
+  /// \return The number of args added to the call, which is typically zero or
+  /// one.
+  virtual unsigned
+  addImplicitConstructorArgs(CodeGenFunction &CGF, const CXXConstructorDecl *D,
+                             CXXCtorType Type, bool ForVirtualBase,
+                             bool Delegating, CallArgList &Args) = 0;
+
+  /// Emit the destructor call.
+  virtual void EmitDestructorCall(CodeGenFunction &CGF,
+                                  const CXXDestructorDecl *DD, CXXDtorType Type,
+                                  bool ForVirtualBase, bool Delegating,
+                                  llvm::Value *This) = 0;
+
+  /// Emits the VTable definitions required for the given record type.
+  virtual void emitVTableDefinitions(CodeGenVTables &CGVT,
+                                     const CXXRecordDecl *RD) = 0;
+
+  /// Get the address point of the vtable for the given base subobject while
+  /// building a constructor or a destructor. On return, NeedsVirtualOffset
+  /// tells if a virtual base adjustment is needed in order to get the offset
+  /// of the base subobject.
+  virtual llvm::Value *getVTableAddressPointInStructor(
+      CodeGenFunction &CGF, const CXXRecordDecl *RD, BaseSubobject Base,
+      const CXXRecordDecl *NearestVBase, bool &NeedsVirtualOffset) = 0;
+
+  /// Get the address point of the vtable for the given base subobject while
+  /// building a constexpr.
+  virtual llvm::Constant *
+  getVTableAddressPointForConstExpr(BaseSubobject Base,
+                                    const CXXRecordDecl *VTableClass) = 0;
+
+  /// Get the address of the vtable for the given record decl which should be
+  /// used for the vptr at the given offset in RD.
+  virtual llvm::GlobalVariable *getAddrOfVTable(const CXXRecordDecl *RD,
+                                                CharUnits VPtrOffset) = 0;
 
   /// Build a virtual function pointer in the ABI-specific way.
   virtual llvm::Value *getVirtualFunctionPointer(CodeGenFunction &CGF,
@@ -316,12 +341,24 @@ public:
                                          SourceLocation CallLoc,
                                          llvm::Value *This) = 0;
 
+  virtual void adjustCallArgsForDestructorThunk(CodeGenFunction &CGF,
+                                                GlobalDecl GD,
+                                                CallArgList &CallArgs) {}
+
   /// Emit any tables needed to implement virtual inheritance.  For Itanium,
   /// this emits virtual table tables.  For the MSVC++ ABI, this emits virtual
   /// base tables.
-  virtual void
-      EmitVirtualInheritanceTables(llvm::GlobalVariable::LinkageTypes Linkage,
-                                   const CXXRecordDecl *RD) = 0;
+  virtual void emitVirtualInheritanceTables(const CXXRecordDecl *RD) = 0;
+
+  virtual void setThunkLinkage(llvm::Function *Thunk, bool ForVTable) = 0;
+
+  virtual llvm::Value *performThisAdjustment(CodeGenFunction &CGF,
+                                             llvm::Value *This,
+                                             const ThisAdjustment &TA) = 0;
+
+  virtual llvm::Value *performReturnAdjustment(CodeGenFunction &CGF,
+                                               llvm::Value *Ret,
+                                               const ReturnAdjustment &RA) = 0;
 
   virtual void EmitReturnFromThunk(CodeGenFunction &CGF,
                                    RValue RV, QualType ResultType);
@@ -331,6 +368,10 @@ public:
 
   /// Gets the deleted virtual member call name.
   virtual StringRef GetDeletedVirtualCallName() = 0;
+
+  /// \brief Returns true iff static data members that are initialized in the
+  /// class definition should have linkonce linkage.
+  virtual bool isInlineInitializedStaticDataMemberLinkOnce() { return false; }
 
   /**************************** Array cookies ******************************/
 

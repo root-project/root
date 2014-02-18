@@ -208,12 +208,21 @@ CXDiagnosticSetImpl *cxdiag::lazyCreateDiags(CXTranslationUnit TU,
 extern "C" {
 
 unsigned clang_getNumDiagnostics(CXTranslationUnit Unit) {
+  if (cxtu::isNotUsableTU(Unit)) {
+    LOG_BAD_TU(Unit);
+    return 0;
+  }
   if (!cxtu::getASTUnit(Unit))
     return 0;
   return lazyCreateDiags(Unit, /*checkIfChanged=*/true)->getNumDiagnostics();
 }
 
 CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit, unsigned Index) {
+  if (cxtu::isNotUsableTU(Unit)) {
+    LOG_BAD_TU(Unit);
+    return 0;
+  }
+
   CXDiagnosticSet D = clang_getDiagnosticSetFromTU(Unit);
   if (!D)
     return 0;
@@ -224,8 +233,12 @@ CXDiagnostic clang_getDiagnostic(CXTranslationUnit Unit, unsigned Index) {
 
   return Diags->getDiagnostic(Index);
 }
-  
+
 CXDiagnosticSet clang_getDiagnosticSetFromTU(CXTranslationUnit Unit) {
+  if (cxtu::isNotUsableTU(Unit)) {
+    LOG_BAD_TU(Unit);
+    return 0;
+  }
   if (!cxtu::getASTUnit(Unit))
     return 0;
   return static_cast<CXDiagnostic>(lazyCreateDiags(Unit));
@@ -437,9 +450,10 @@ CXString clang_getDiagnosticFixIt(CXDiagnostic Diag, unsigned FixIt,
 }
 
 void clang_disposeDiagnosticSet(CXDiagnosticSet Diags) {
-  CXDiagnosticSetImpl *D = static_cast<CXDiagnosticSetImpl*>(Diags);
-  if (D->isExternallyManaged())
-    delete D;
+  if (CXDiagnosticSetImpl *D = static_cast<CXDiagnosticSetImpl *>(Diags)) {
+    if (D->isExternallyManaged())
+      delete D;
+  }
 }
   
 CXDiagnostic clang_getDiagnosticInSet(CXDiagnosticSet Diags,

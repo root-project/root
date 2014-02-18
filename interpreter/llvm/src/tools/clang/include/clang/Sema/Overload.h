@@ -242,7 +242,7 @@ namespace clang {
                                    QualType &ConstantType) const;
     bool isPointerConversionToBool() const;
     bool isPointerConversionToVoidPointer(ASTContext& Context) const;
-    void DebugPrint() const;
+    void dump() const;
   };
 
   /// UserDefinedConversionSequence - Represents a user-defined
@@ -288,7 +288,7 @@ namespace clang {
     /// that refers to \c ConversionFunction.
     DeclAccessPair FoundConversionFunction;
 
-    void DebugPrint() const;
+    void dump() const;
   };
 
   /// Represents an ambiguous user-defined conversion sequence.
@@ -554,7 +554,7 @@ namespace clang {
                                      SourceLocation CaretLoc,
                                      const PartialDiagnostic &PDiag) const;
 
-    void DebugPrint() const;
+    void dump() const;
   };
 
   enum OverloadFailureKind {
@@ -579,7 +579,11 @@ namespace clang {
     /// (CUDA) This candidate was not viable because the callee
     /// was not accessible from the caller's target (i.e. host->device,
     /// global->host, device->host).
-    ovl_fail_bad_target
+    ovl_fail_bad_target,
+
+    /// This candidate function was not viable because an enable_if
+    /// attribute disabled it.
+    ovl_fail_enable_if
   };
 
   /// OverloadCandidate - A single candidate in an overload set (C++ 13.3).

@@ -14,7 +14,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Pass.h"
-#include "llvm/Assembly/PrintModulePass.h"
+#include "llvm/IR/Function.h"
+#include "llvm/IR/IRPrintingPasses.h"
 #include "llvm/PassRegistry.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/PassNameParser.h"
@@ -35,7 +36,7 @@ ModulePass::~ModulePass() { }
 
 Pass *ModulePass::createPrinterPass(raw_ostream &O,
                                     const std::string &Banner) const {
-  return createPrintModulePass(&O, false, Banner);
+  return createPrintModulePass(O, Banner);
 }
 
 PassManagerType ModulePass::getPotentialPassManagerType() const {
@@ -130,11 +131,20 @@ void ImmutablePass::initializePass() {
 
 Pass *FunctionPass::createPrinterPass(raw_ostream &O,
                                       const std::string &Banner) const {
-  return createPrintFunctionPass(Banner, &O);
+  return createPrintFunctionPass(O, Banner);
 }
 
 PassManagerType FunctionPass::getPotentialPassManagerType() const {
   return PMT_FunctionPassManager;
+}
+
+bool FunctionPass::skipOptnoneFunction(Function &F) const {
+  if (F.hasFnAttribute(Attribute::OptimizeNone)) {
+    DEBUG(dbgs() << "Skipping pass '" << getPassName()
+          << "' on function " << F.getName() << "\n");
+    return true;
+  }
+  return false;
 }
 
 //===----------------------------------------------------------------------===//
@@ -143,7 +153,7 @@ PassManagerType FunctionPass::getPotentialPassManagerType() const {
 
 Pass *BasicBlockPass::createPrinterPass(raw_ostream &O,
                                         const std::string &Banner) const {
-  return createPrintBasicBlockPass(&O, false, Banner);
+  return createPrintBasicBlockPass(O, Banner);
 }
 
 bool BasicBlockPass::doInitialization(Function &) {
@@ -153,6 +163,18 @@ bool BasicBlockPass::doInitialization(Function &) {
 
 bool BasicBlockPass::doFinalization(Function &) {
   // By default, don't do anything.
+  return false;
+}
+
+bool BasicBlockPass::skipOptnoneFunction(BasicBlock &BB) const {
+  Function *F = BB.getParent();
+  if (F && F->hasFnAttribute(Attribute::OptimizeNone)) {
+    // Report this only once per function.
+    if (&BB == &F->getEntryBlock())
+      DEBUG(dbgs() << "Skipping pass '" << getPassName()
+            << "' on function " << F->getName() << "\n");
+    return true;
+  }
   return false;
 }
 

@@ -358,7 +358,7 @@ bool ThreadSanitizer::runOnFunction(Function &F) {
   // (e.g. variables that do not escape, etc).
 
   // Instrument memory accesses.
-  if (ClInstrumentMemoryAccesses)
+  if (ClInstrumentMemoryAccesses && F.hasFnAttribute(Attribute::SanitizeThread))
     for (size_t i = 0, n = AllLoadsAndStores.size(); i < n; ++i) {
       Res |= instrumentLoadOrStore(AllLoadsAndStores[i]);
     }
@@ -402,8 +402,13 @@ bool ThreadSanitizer::instrumentLoadOrStore(Instruction *I) {
   if (IsWrite && isVtableAccess(I)) {
     DEBUG(dbgs() << "  VPTR : " << *I << "\n");
     Value *StoredValue = cast<StoreInst>(I)->getValueOperand();
-    // StoredValue does not necessary have a pointer type.
-    if (isa<IntegerType>(StoredValue->getType()))
+    // StoredValue may be a vector type if we are storing several vptrs at once.
+    // In this case, just take the first element of the vector since this is
+    // enough to find vptr races.
+    if (isa<VectorType>(StoredValue->getType()))
+      StoredValue = IRB.CreateExtractElement(
+          StoredValue, ConstantInt::get(IRB.getInt32Ty(), 0));
+    if (StoredValue->getType()->isIntegerTy())
       StoredValue = IRB.CreateIntToPtr(StoredValue, IRB.getInt8PtrTy());
     // Call TsanVptrUpdate.
     IRB.CreateCall2(TsanVptrUpdate,
@@ -482,7 +487,7 @@ bool ThreadSanitizer::instrumentMemIntrinsic(Instruction *I) {
 }
 
 // Both llvm and ThreadSanitizer atomic operations are based on C++11/C1x
-// standards.  For background see C++11 standard.  A slightly older, publically
+// standards.  For background see C++11 standard.  A slightly older, publicly
 // available draft of the standard (not entirely up-to-date, but close enough
 // for casual browsing) is available here:
 // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3242.pdf

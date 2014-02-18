@@ -98,6 +98,14 @@ public:
     return SchedModel.getProcResource(PIdx);
   }
 
+#ifndef NDEBUG
+  const char *getResourceName(unsigned PIdx) const {
+    if (!PIdx)
+      return "MOps";
+    return SchedModel.getProcResource(PIdx)->Name;
+  }
+#endif
+
   typedef const MCWriteProcResEntry *ProcResIter;
 
   // \brief Get an iterator into the processor resources consumed by this
@@ -150,9 +158,15 @@ public:
   /// model.
   ///
   /// Compute and return the expected latency of this instruction independent of
-  /// a particular use. computeOperandLatency is the prefered API, but this is
+  /// a particular use. computeOperandLatency is the preferred API, but this is
   /// occasionally useful to help estimate instruction cost.
-  unsigned computeInstrLatency(const MachineInstr *MI) const;
+  ///
+  /// If UseDefaultDefLatency is false and no new machine sched model is
+  /// present this method falls back to TII->getInstrLatency with an empty
+  /// instruction itinerary (this is so we preserve the previous behavior of the
+  /// if converter after moving it to TargetSchedModel).
+  unsigned computeInstrLatency(const MachineInstr *MI,
+                               bool UseDefaultDefLatency = true) const;
 
   /// \brief Output dependency latency of a pair of defs of the same register.
   ///

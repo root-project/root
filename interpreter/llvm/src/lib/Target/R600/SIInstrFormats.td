@@ -19,12 +19,22 @@ class InstSI <dag outs, dag ins, string asm, list<dag> pattern> :
   field bits<1> LGKM_CNT = 0;
   field bits<1> MIMG = 0;
   field bits<1> SMRD = 0;
+  field bits<1> VOP1 = 0;
+  field bits<1> VOP2 = 0;
+  field bits<1> VOP3 = 0;
+  field bits<1> VOPC = 0;
+  field bits<1> SALU = 0;
 
   let TSFlags{0} = VM_CNT;
   let TSFlags{1} = EXP_CNT;
   let TSFlags{2} = LGKM_CNT;
   let TSFlags{3} = MIMG;
   let TSFlags{4} = SMRD;
+  let TSFlags{5} = VOP1;
+  let TSFlags{6} = VOP2;
+  let TSFlags{7} = VOP3;
+  let TSFlags{8} = VOPC;
+  let TSFlags{9} = SALU;
 }
 
 class Enc32 <dag outs, dag ins, string asm, list<dag> pattern> :
@@ -59,6 +69,7 @@ class SOP1 <bits<8> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let SALU = 1;
 }
 
 class SOP2 <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -77,6 +88,7 @@ class SOP2 <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let SALU = 1;
 }
 
 class SOPC <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -94,6 +106,7 @@ class SOPC <bits<7> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let SALU = 1;
 }
 
 class SOPK <bits<5> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -110,6 +123,7 @@ class SOPK <bits<5> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let SALU = 1;
 }
 
 class SOPP <bits<7> op, dag ins, string asm, list<dag> pattern> : Enc32 <
@@ -127,6 +141,7 @@ class SOPP <bits<7> op, dag ins, string asm, list<dag> pattern> : Enc32 <
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let SALU = 1;
 }
 
 class SMRD <bits<5> op, bits<1> imm, dag outs, dag ins, string asm,
@@ -167,6 +182,8 @@ class VOP1 <bits<8> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let UseNamedOperandTable = 1;
+  let VOP1 = 1;
 }
 
 class VOP2 <bits<6> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -185,6 +202,8 @@ class VOP2 <bits<6> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let UseNamedOperandTable = 1;
+  let VOP2 = 1;
 }
 
 class VOP3 <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -213,6 +232,8 @@ class VOP3 <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let UseNamedOperandTable = 1;
+  let VOP3 = 1;
 }
 
 class VOP3b <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
@@ -239,6 +260,8 @@ class VOP3b <bits<9> op, dag outs, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let UseNamedOperandTable = 1;
+  let VOP3 = 1;
 }
 
 class VOPC <bits<8> op, dag ins, string asm, list<dag> pattern> :
@@ -256,6 +279,7 @@ class VOPC <bits<8> op, dag ins, string asm, list<dag> pattern> :
   let mayLoad = 0;
   let mayStore = 0;
   let hasSideEffects = 0;
+  let VOPC = 1;
 }
 
 class VINTRP <bits <2> op, dag outs, dag ins, string asm, list<dag> pattern> :

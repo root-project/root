@@ -17,6 +17,7 @@ namespace llvm {
 class MCAssembler;
 class MCCodeEmitter;
 class MCSectionData;
+class MCSubtargetInfo;
 class MCExpr;
 class MCFragment;
 class MCDataFragment;
@@ -35,21 +36,23 @@ class MCObjectStreamer : public MCStreamer {
   MCSectionData *CurSectionData;
   MCSectionData::iterator CurInsertionPoint;
 
-  virtual void EmitInstToData(const MCInst &Inst) = 0;
+  virtual void EmitInstToData(const MCInst &Inst, const MCSubtargetInfo&) = 0;
   virtual void EmitCFIStartProcImpl(MCDwarfFrameInfo &Frame);
   virtual void EmitCFIEndProcImpl(MCDwarfFrameInfo &Frame);
 
 protected:
-  MCObjectStreamer(StreamerKind Kind, MCContext &Context, MCAsmBackend &TAB,
-                   raw_ostream &_OS, MCCodeEmitter *_Emitter);
-  MCObjectStreamer(StreamerKind Kind, MCContext &Context, MCAsmBackend &TAB,
-                   raw_ostream &_OS, MCCodeEmitter *_Emitter,
-                   MCAssembler *_Assembler);
+  MCObjectStreamer(MCContext &Context, MCAsmBackend &TAB, raw_ostream &_OS,
+                   MCCodeEmitter *_Emitter);
+  MCObjectStreamer(MCContext &Context, MCAsmBackend &TAB, raw_ostream &_OS,
+                   MCCodeEmitter *_Emitter, MCAssembler *_Assembler);
   ~MCObjectStreamer();
 
 public:
   /// state management
   virtual void reset();
+
+  /// Object streamers require the integrated assembler.
+  virtual bool isIntegratedAssemblerRequired() const { return true; }
 
 protected:
   MCSectionData *getCurrentSectionData() const {
@@ -84,11 +87,11 @@ public:
   virtual void EmitWeakReference(MCSymbol *Alias, const MCSymbol *Symbol);
   virtual void ChangeSection(const MCSection *Section,
                              const MCExpr *Subsection);
-  virtual void EmitInstruction(const MCInst &Inst);
+  virtual void EmitInstruction(const MCInst &Inst, const MCSubtargetInfo& STI);
 
   /// \brief Emit an instruction to a special fragment, because this instruction
   /// can change its size during relaxation.
-  virtual void EmitInstToFragment(const MCInst &Inst);
+  virtual void EmitInstToFragment(const MCInst &Inst, const MCSubtargetInfo &);
 
   virtual void EmitBundleAlignMode(unsigned AlignPow2);
   virtual void EmitBundleLock(bool AlignToEnd);
@@ -116,12 +119,6 @@ public:
   virtual void EmitFill(uint64_t NumBytes, uint8_t FillValue);
   virtual void EmitZeros(uint64_t NumBytes);
   virtual void FinishImpl();
-
-  /// @}
-
-  static bool classof(const MCStreamer *S) {
-    return S->getKind() >= SK_ELFStreamer && S->getKind() <= SK_WinCOFFStreamer;
-  }
 };
 
 } // end namespace llvm

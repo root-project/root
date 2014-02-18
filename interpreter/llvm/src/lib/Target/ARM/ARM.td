@@ -70,6 +70,8 @@ def FeatureTrustZone : SubtargetFeature<"trustzone", "HasTrustZone", "true",
 def FeatureCrypto : SubtargetFeature<"crypto", "HasCrypto", "true",
                           "Enable support for Cryptography extensions",
                           [FeatureNEON]>;
+def FeatureCRC : SubtargetFeature<"crc", "HasCRC", "true",
+                          "Enable support for CRC instructions">;
 
 // Some processors have FP multiply-accumulate instructions that don't
 // play nicely with other VFP / NEON instructions, and it's generally better
@@ -117,6 +119,12 @@ def FeatureDSPThumb2 : SubtargetFeature<"t2dsp", "Thumb2DSP", "true",
 def FeatureMP : SubtargetFeature<"mp", "HasMPExtension", "true",
                                  "Supports Multiprocessing extension">;
 
+// Virtualization extension - requires HW divide (ARMv7-AR ARMARM - 4.4.8).
+def FeatureVirtualization : SubtargetFeature<"virtualization",
+                                 "HasVirtualization", "true",
+                                 "Supports Virtualization extension",
+                                 [FeatureHWDiv, FeatureHWDivARM]>;
+
 // M-series ISA
 def FeatureMClass : SubtargetFeature<"mclass", "ARMProcClass", "MClass",
                                      "Is microcontroller profile ('M' series)">;
@@ -146,15 +154,19 @@ def HasV5TEOps  : SubtargetFeature<"v5te", "HasV5TEOps", "true",
 def HasV6Ops    : SubtargetFeature<"v6", "HasV6Ops", "true",
                                    "Support ARM v6 instructions",
                                    [HasV5TEOps]>;
+def HasV6MOps   : SubtargetFeature<"v6m", "HasV6MOps", "true",
+                                   "Support ARM v6M instructions",
+                                   [HasV6Ops]>;
 def HasV6T2Ops  : SubtargetFeature<"v6t2", "HasV6T2Ops", "true",
                                    "Support ARM v6t2 instructions",
-                                   [HasV6Ops, FeatureThumb2]>;
+                                   [HasV6MOps, FeatureThumb2]>;
 def HasV7Ops    : SubtargetFeature<"v7", "HasV7Ops", "true",
                                    "Support ARM v7 instructions",
                                    [HasV6T2Ops, FeaturePerfMon]>;
 def HasV8Ops    : SubtargetFeature<"v8", "HasV8Ops", "true",
                                    "Support ARM v8 instructions",
-                                   [HasV7Ops]>;
+                                   [HasV7Ops, FeatureVirtualization,
+                                    FeatureMP]>;
 
 //===----------------------------------------------------------------------===//
 // ARM Processors supported.
@@ -167,7 +179,14 @@ def ProcA5      : SubtargetFeature<"a5", "ARMProcFamily", "CortexA5",
                                    "Cortex-A5 ARM processors",
                                    [FeatureSlowFPBrcc, FeatureHasSlowFPVMLx,
                                     FeatureVMLxForwarding, FeatureT2XtPk,
-                                    FeatureTrustZone]>;
+                                    FeatureTrustZone, FeatureMP]>;
+def ProcA7      : SubtargetFeature<"a7", "ARMProcFamily", "CortexA7",
+                                   "Cortex-A7 ARM processors",
+                                   [FeatureSlowFPBrcc, FeatureHasSlowFPVMLx,
+                                    FeatureVMLxForwarding, FeatureT2XtPk,
+                                    FeatureVFP4, FeatureMP,
+                                    FeatureHWDiv, FeatureHWDivARM,
+                                    FeatureTrustZone, FeatureVirtualization]>;
 def ProcA8      : SubtargetFeature<"a8", "ARMProcFamily", "CortexA8",
                                    "Cortex-A8 ARM processors",
                                    [FeatureSlowFPBrcc, FeatureHasSlowFPVMLx,
@@ -186,13 +205,36 @@ def ProcSwift   : SubtargetFeature<"swift", "ARMProcFamily", "Swift",
                                     FeatureHWDivARM, FeatureAvoidPartialCPSR,
                                     FeatureAvoidMOVsShOp,
                                     FeatureHasSlowFPVMLx, FeatureTrustZone]>;
+def ProcA12     : SubtargetFeature<"a12", "ARMProcFamily", "CortexA12",
+                                   "Cortex-A12 ARM processors",
+                                   [FeatureVMLxForwarding,
+                                    FeatureT2XtPk, FeatureVFP4,
+                                    FeatureHWDiv, FeatureHWDivARM,
+                                    FeatureAvoidPartialCPSR,
+                                    FeatureVirtualization,
+                                    FeatureTrustZone]>;
+
 
 // FIXME: It has not been determined if A15 has these features.
 def ProcA15      : SubtargetFeature<"a15", "ARMProcFamily", "CortexA15",
                                    "Cortex-A15 ARM processors",
                                    [FeatureT2XtPk, FeatureVFP4,
+                                    FeatureMP, FeatureHWDiv, FeatureHWDivARM,
                                     FeatureAvoidPartialCPSR,
-                                    FeatureTrustZone]>;
+                                    FeatureTrustZone, FeatureVirtualization]>;
+
+def ProcA53     : SubtargetFeature<"a53", "ARMProcFamily", "CortexA53",
+                                   "Cortex-A53 ARM processors",
+                                   [FeatureHWDiv, FeatureHWDivARM,
+                                    FeatureTrustZone, FeatureT2XtPk,
+                                    FeatureCrypto, FeatureCRC]>;
+
+def ProcA57     : SubtargetFeature<"a57", "ARMProcFamily", "CortexA57",
+                                   "Cortex-A57 ARM processors",
+                                   [FeatureHWDiv, FeatureHWDivARM,
+                                    FeatureTrustZone, FeatureT2XtPk,
+                                    FeatureCrypto, FeatureCRC]>;
+
 def ProcR5      : SubtargetFeature<"r5", "ARMProcFamily", "CortexR5",
                                    "Cortex-R5 ARM processors",
                                    [FeatureSlowFPBrcc,
@@ -200,6 +242,26 @@ def ProcR5      : SubtargetFeature<"r5", "ARMProcFamily", "CortexR5",
                                     FeatureHasSlowFPVMLx,
                                     FeatureAvoidPartialCPSR,
                                     FeatureT2XtPk]>;
+
+// FIXME: krait has currently the same features as A9
+// plus VFP4 and hardware division features.
+def ProcKrait   : SubtargetFeature<"krait", "ARMProcFamily", "Krait",
+                                   "Qualcomm ARM processors",
+                                   [FeatureVMLxForwarding,
+                                    FeatureT2XtPk, FeatureFP16,
+                                    FeatureAvoidPartialCPSR,
+                                    FeatureTrustZone,
+                                    FeatureVFP4,
+                                    FeatureHWDiv,
+                                    FeatureHWDivARM]>;
+
+
+def FeatureAPCS  : SubtargetFeature<"apcs", "TargetABI", "ARM_ABI_APCS",
+                                   "Use the APCS ABI">;
+
+def FeatureAAPCS : SubtargetFeature<"aapcs", "TargetABI", "ARM_ABI_AAPCS",
+                                   "Use the AAPCS ABI">;
+
 
 class ProcNoItin<string Name, list<SubtargetFeature> Features>
  : Processor<Name, NoItineraries, Features>;
@@ -254,7 +316,7 @@ def : Processor<"mpcore",           ARMV6Itineraries, [HasV6Ops, FeatureVFP2,
                                                        FeatureHasSlowFPVMLx]>;
 
 // V6M Processors.
-def : Processor<"cortex-m0",        ARMV6Itineraries, [HasV6Ops, FeatureNoARM,
+def : Processor<"cortex-m0",        ARMV6Itineraries, [HasV6MOps, FeatureNoARM,
                                                        FeatureDB, FeatureMClass]>;
 
 // V6T2 Processors.
@@ -270,6 +332,10 @@ def : ProcessorModel<"cortex-a5",   CortexA8Model,
                                     [ProcA5, HasV7Ops, FeatureNEON, FeatureDB,
                                      FeatureVFP4, FeatureDSPThumb2,
                                      FeatureHasRAS, FeatureAClass]>;
+def : ProcessorModel<"cortex-a7",   CortexA8Model,
+                                    [ProcA7, HasV7Ops, FeatureNEON, FeatureDB,
+                                     FeatureDSPThumb2, FeatureHasRAS,
+                                     FeatureAClass]>;
 def : ProcessorModel<"cortex-a8",   CortexA8Model,
                                     [ProcA8, HasV7Ops, FeatureNEON, FeatureDB,
                                      FeatureDSPThumb2, FeatureHasRAS,
@@ -282,16 +348,25 @@ def : ProcessorModel<"cortex-a9-mp", CortexA9Model,
                                     [ProcA9, HasV7Ops, FeatureNEON, FeatureDB,
                                      FeatureDSPThumb2, FeatureMP,
                                      FeatureHasRAS, FeatureAClass]>;
+
+// FIXME: A12 has currently the same Schedule model as A9
+def : ProcessorModel<"cortex-a12", CortexA9Model,
+                                    [ProcA12, HasV7Ops, FeatureNEON, FeatureDB,
+                                     FeatureDSPThumb2, FeatureMP,
+                                     FeatureHasRAS, FeatureAClass]>;
+
 // FIXME: A15 has currently the same ProcessorModel as A9.
 def : ProcessorModel<"cortex-a15",   CortexA9Model,
                                     [ProcA15, HasV7Ops, FeatureNEON, FeatureDB,
                                      FeatureDSPThumb2, FeatureHasRAS,
                                      FeatureAClass]>;
+
 // FIXME: R5 has currently the same ProcessorModel as A8.
 def : ProcessorModel<"cortex-r5",   CortexA8Model,
                                     [ProcR5, HasV7Ops, FeatureDB,
                                      FeatureVFP3, FeatureDSPThumb2,
-                                     FeatureHasRAS, FeatureRClass]>;
+                                     FeatureHasRAS, FeatureVFPOnlySP,
+                                     FeatureD16, FeatureRClass]>;
 
 // V7M Processors.
 def : ProcNoItin<"cortex-m3",       [HasV7Ops,
@@ -303,7 +378,8 @@ def : ProcNoItin<"cortex-m4",       [HasV7Ops,
                                      FeatureThumb2, FeatureNoARM, FeatureDB,
                                      FeatureHWDiv, FeatureDSPThumb2,
                                      FeatureT2XtPk, FeatureVFP4,
-                                     FeatureVFPOnlySP, FeatureMClass]>;
+                                     FeatureVFPOnlySP, FeatureD16,
+                                     FeatureMClass]>;
 
 // Swift uArch Processors.
 def : ProcessorModel<"swift",       SwiftModel,
@@ -312,7 +388,19 @@ def : ProcessorModel<"swift",       SwiftModel,
                                      FeatureHasRAS, FeatureAClass]>;
 
 // V8 Processors
-def : ProcNoItin<"cortex-a53",      [HasV8Ops, FeatureAClass]>;
+def : ProcNoItin<"cortex-a53",      [ProcA53, HasV8Ops, FeatureAClass,
+                                    FeatureDB, FeatureFPARMv8,
+                                    FeatureNEON, FeatureDSPThumb2]>;
+def : ProcNoItin<"cortex-a57",      [ProcA57, HasV8Ops, FeatureAClass,
+                                    FeatureDB, FeatureFPARMv8,
+                                    FeatureNEON, FeatureDSPThumb2]>;
+
+// FIXME: krait has currently the same Schedule model as A9
+def : ProcessorModel<"krait",       CortexA9Model,
+                                    [ProcKrait, HasV7Ops,
+                                     FeatureNEON, FeatureDB,
+                                     FeatureDSPThumb2, FeatureHasRAS,
+                                     FeatureAClass]>;
 
 //===----------------------------------------------------------------------===//
 // Register File Description
@@ -330,17 +418,6 @@ include "ARMInstrInfo.td"
 
 def ARMInstrInfo : InstrInfo;
 
-
-//===----------------------------------------------------------------------===//
-// Assembly printer
-//===----------------------------------------------------------------------===//
-// ARM Uses the MC printer for asm output, so make sure the TableGen
-// AsmWriter bits get associated with the correct class.
-def ARMAsmWriter : AsmWriter {
-  string AsmWriterClassName  = "InstPrinter";
-  bit isMCAsmWriter = 1;
-}
-
 //===----------------------------------------------------------------------===//
 // Declare the target which we are implementing
 //===----------------------------------------------------------------------===//
@@ -348,6 +425,4 @@ def ARMAsmWriter : AsmWriter {
 def ARM : Target {
   // Pull in Instruction Info:
   let InstructionSet = ARMInstrInfo;
-
-  let AssemblyWriters = [ARMAsmWriter];
 }

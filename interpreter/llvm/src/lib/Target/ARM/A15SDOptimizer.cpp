@@ -27,10 +27,9 @@
 #define DEBUG_TYPE "a15-sd-optimizer"
 #include "ARM.h"
 #include "ARMBaseInstrInfo.h"
-#include "ARMSubtarget.h"
 #include "ARMISelLowering.h"
+#include "ARMSubtarget.h"
 #include "ARMTargetMachine.h"
-
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -41,7 +40,6 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetRegisterInfo.h"
-
 #include <set>
 
 using namespace llvm;
@@ -165,7 +163,7 @@ unsigned A15SDOptimizer::getPrefSPRLane(unsigned SReg) {
   if (!MI) return ARM::ssub_0;
   MachineOperand *MO = MI->findRegisterDefOperand(SReg);
 
-  assert(MO->isReg() && "Non register operand found!");
+  assert(MO->isReg() && "Non-register operand found!");
   if (!MO) return ARM::ssub_0;
 
   if (MI->isCopy() && usesRegClass(MI->getOperand(1),

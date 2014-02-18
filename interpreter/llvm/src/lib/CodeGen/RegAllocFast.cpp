@@ -144,7 +144,7 @@ namespace {
     // not be erased.
     bool isBulkSpilling;
 
-    enum {
+    enum LLVM_ENUM_INT_TYPE(unsigned) {
       spillClean = 1,
       spillDirty = 100,
       spillImpossible = ~0u
@@ -569,7 +569,10 @@ RAFast::LiveRegMap::iterator RAFast::allocVirtReg(MachineInstr *MI,
   }
 
   // Nothing we can do. Report an error and keep going with a bad allocation.
-  MI->emitError("ran out of registers during register allocation");
+  if (MI->isInlineAsm())
+    MI->emitError("inline assembly requires more registers than available");
+  else
+    MI->emitError("ran out of registers during register allocation");
   definePhysReg(MI, *AO.begin(), regFree);
   return assignVirtToPhysReg(VirtReg, *AO.begin());
 }

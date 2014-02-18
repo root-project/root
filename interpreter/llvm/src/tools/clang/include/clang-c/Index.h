@@ -30,7 +30,7 @@
  * compatible, thus CINDEX_VERSION_MAJOR is expected to remain stable.
  */
 #define CINDEX_VERSION_MAJOR 0
-#define CINDEX_VERSION_MINOR 20
+#define CINDEX_VERSION_MINOR 23
 
 #define CINDEX_VERSION_ENCODE(major, minor) ( \
       ((major) * 10000)                       \
@@ -71,6 +71,43 @@ extern "C" {
  *
  * @{
  */
+
+/**
+ * \brief Error codes returned by libclang routines.
+ *
+ * Zero (\c CXError_Success) is the only error code indicating success.  Other
+ * error codes, including not yet assigned non-zero values, indicate errors.
+ */
+enum CXErrorCode {
+  /**
+   * \brief No error.
+   */
+  CXError_Success = 0,
+
+  /**
+   * \brief A generic error code, no further details are available.
+   *
+   * Errors of this kind can get their own specific error codes in future
+   * libclang versions.
+   */
+  CXError_Failure = 1,
+
+  /**
+   * \brief libclang crashed while performing the requested operation.
+   */
+  CXError_Crashed = 2,
+
+  /**
+   * \brief The function detected that the arguments violate the function
+   * contract.
+   */
+  CXError_InvalidArguments = 3,
+
+  /**
+   * \brief An AST deserialization error has occurred.
+   */
+  CXError_ASTReadError = 4
+};
 
 /**
  * \brief An "index" that consists of a set of translation units that would
@@ -599,6 +636,32 @@ CINDEX_LINKAGE CXSourceLocation clang_getRangeStart(CXSourceRange range);
 CINDEX_LINKAGE CXSourceLocation clang_getRangeEnd(CXSourceRange range);
 
 /**
+ * \brief Identifies an array of ranges.
+ */
+typedef struct {
+  /** \brief The number of ranges in the \c ranges array. */
+  unsigned count;
+  /**
+   * \brief An array of \c CXSourceRanges.
+   */
+  CXSourceRange *ranges;
+} CXSourceRangeList;
+
+/**
+ * \brief Retrieve all ranges that were skipped by the preprocessor.
+ *
+ * The preprocessor will skip lines when they are surrounded by an
+ * if/ifdef/ifndef directive whose condition does not evaluate to true.
+ */
+CINDEX_LINKAGE CXSourceRangeList *clang_getSkippedRanges(CXTranslationUnit tu,
+                                                         CXFile file);
+
+/**
+ * \brief Destroy the given \c CXSourceRangeList.
+ */
+CINDEX_LINKAGE void clang_disposeSourceRangeList(CXSourceRangeList *ranges);
+
+/**
  * @}
  */
 
@@ -727,7 +790,7 @@ CINDEX_LINKAGE void clang_disposeDiagnosticSet(CXDiagnosticSet Diags);
  * \brief Retrieve the child diagnostics of a CXDiagnostic. 
  *
  * This CXDiagnosticSet does not need to be released by
- * clang_diposeDiagnosticSet.
+ * clang_disposeDiagnosticSet.
  */
 CINDEX_LINKAGE CXDiagnosticSet clang_getChildDiagnostics(CXDiagnostic D);
 
@@ -767,7 +830,7 @@ CINDEX_LINKAGE void clang_disposeDiagnostic(CXDiagnostic Diagnostic);
  * \brief Options to control the display of diagnostics.
  *
  * The values in this enum are meant to be combined to customize the
- * behavior of \c clang_displayDiagnostic().
+ * behavior of \c clang_formatDiagnostic().
  */
 enum CXDiagnosticDisplayOptions {
   /**
@@ -854,7 +917,7 @@ CINDEX_LINKAGE CXString clang_formatDiagnostic(CXDiagnostic Diagnostic,
  * default behavior of the clang compiler.
  *
  * \returns A set of display options suitable for use with \c
- * clang_displayDiagnostic().
+ * clang_formatDiagnostic().
  */
 CINDEX_LINKAGE unsigned clang_defaultDiagnosticDisplayOptions(void);
 
@@ -1050,10 +1113,27 @@ CINDEX_LINKAGE CXTranslationUnit clang_createTranslationUnitFromSourceFile(
                                          struct CXUnsavedFile *unsaved_files);
 
 /**
- * \brief Create a translation unit from an AST file (-emit-ast).
+ * \brief Same as \c clang_createTranslationUnit2, but returns
+ * the \c CXTranslationUnit instead of an error code.  In case of an error this
+ * routine returns a \c NULL \c CXTranslationUnit, without further detailed
+ * error codes.
  */
-CINDEX_LINKAGE CXTranslationUnit clang_createTranslationUnit(CXIndex,
-                                             const char *ast_filename);
+CINDEX_LINKAGE CXTranslationUnit clang_createTranslationUnit(
+    CXIndex CIdx,
+    const char *ast_filename);
+
+/**
+ * \brief Create a translation unit from an AST file (\c -emit-ast).
+ *
+ * \param[out] out_TU A non-NULL pointer to store the created
+ * \c CXTranslationUnit.
+ *
+ * \returns Zero on success, otherwise returns an error code.
+ */
+CINDEX_LINKAGE enum CXErrorCode clang_createTranslationUnit2(
+    CXIndex CIdx,
+    const char *ast_filename,
+    CXTranslationUnit *out_TU);
 
 /**
  * \brief Flags that control the creation of translation units.
@@ -1167,7 +1247,22 @@ enum CXTranslationUnit_Flags {
  * set of optimizations enabled may change from one version to the next.
  */
 CINDEX_LINKAGE unsigned clang_defaultEditingTranslationUnitOptions(void);
-  
+
+/**
+ * \brief Same as \c clang_parseTranslationUnit2, but returns
+ * the \c CXTranslationUnit instead of an error code.  In case of an error this
+ * routine returns a \c NULL \c CXTranslationUnit, without further detailed
+ * error codes.
+ */
+CINDEX_LINKAGE CXTranslationUnit
+clang_parseTranslationUnit(CXIndex CIdx,
+                           const char *source_filename,
+                           const char *const *command_line_args,
+                           int num_command_line_args,
+                           struct CXUnsavedFile *unsaved_files,
+                           unsigned num_unsaved_files,
+                           unsigned options);
+
 /**
  * \brief Parse the given source file and the translation unit corresponding
  * to that file.
@@ -1182,7 +1277,7 @@ CINDEX_LINKAGE unsigned clang_defaultEditingTranslationUnitOptions(void);
  * associated.
  *
  * \param source_filename The name of the source file to load, or NULL if the
- * source file is included in \p command_line_args.
+ * source file is included in \c command_line_args.
  *
  * \param command_line_args The command-line arguments that would be
  * passed to the \c clang executable if it were being invoked out-of-process.
@@ -1191,7 +1286,7 @@ CINDEX_LINKAGE unsigned clang_defaultEditingTranslationUnitOptions(void);
  * '-emit-ast', '-fsyntax-only' (which is the default), and '-o \<output file>'.
  *
  * \param num_command_line_args The number of command-line arguments in
- * \p command_line_args.
+ * \c command_line_args.
  *
  * \param unsaved_files the files that have not yet been saved to disk
  * but may be required for parsing, including the contents of
@@ -1206,18 +1301,22 @@ CINDEX_LINKAGE unsigned clang_defaultEditingTranslationUnitOptions(void);
  * is managed but not its compilation. This should be a bitwise OR of the
  * CXTranslationUnit_XXX flags.
  *
- * \returns A new translation unit describing the parsed code and containing
- * any diagnostics produced by the compiler. If there is a failure from which
- * the compiler cannot recover, returns NULL.
+ * \param[out] out_TU A non-NULL pointer to store the created
+ * \c CXTranslationUnit, describing the parsed code and containing any
+ * diagnostics produced by the compiler.
+ *
+ * \returns Zero on success, otherwise returns an error code.
  */
-CINDEX_LINKAGE CXTranslationUnit clang_parseTranslationUnit(CXIndex CIdx,
-                                                    const char *source_filename,
-                                         const char * const *command_line_args,
-                                                      int num_command_line_args,
-                                            struct CXUnsavedFile *unsaved_files,
-                                                     unsigned num_unsaved_files,
-                                                            unsigned options);
-  
+CINDEX_LINKAGE enum CXErrorCode
+clang_parseTranslationUnit2(CXIndex CIdx,
+                            const char *source_filename,
+                            const char *const *command_line_args,
+                            int num_command_line_args,
+                            struct CXUnsavedFile *unsaved_files,
+                            unsigned num_unsaved_files,
+                            unsigned options,
+                            CXTranslationUnit *out_TU);
+
 /**
  * \brief Flags that control how translation units are saved.
  *
@@ -1369,10 +1468,11 @@ CINDEX_LINKAGE unsigned clang_defaultReparseOptions(CXTranslationUnit TU);
  * The function \c clang_defaultReparseOptions() produces a default set of
  * options recommended for most uses, based on the translation unit.
  *
- * \returns 0 if the sources could be reparsed. A non-zero value will be
+ * \returns 0 if the sources could be reparsed.  A non-zero error code will be
  * returned if reparsing was impossible, such that the translation unit is
- * invalid. In such cases, the only valid call for \p TU is 
- * \c clang_disposeTranslationUnit(TU).
+ * invalid. In such cases, the only valid call for \c TU is
+ * \c clang_disposeTranslationUnit(TU).  The error codes returned by this
+ * routine are described by the \c CXErrorCode enum.
  */
 CINDEX_LINKAGE int clang_reparseTranslationUnit(CXTranslationUnit TU,
                                                 unsigned num_unsaved_files,
@@ -1946,7 +2046,7 @@ enum CXCursorKind {
    */
   CXCursor_CompoundStmt                  = 202,
 
-  /** \brief A case statment.
+  /** \brief A case statement.
    */
   CXCursor_CaseStmt                      = 203,
 
@@ -2369,7 +2469,7 @@ clang_disposeCXPlatformAvailability(CXPlatformAvailability *availability);
 /**
  * \brief Describe the "language" of the entity referred to by a cursor.
  */
-CINDEX_LINKAGE enum CXLanguageKind {
+enum CXLanguageKind {
   CXLanguage_Invalid = 0,
   CXLanguage_C,
   CXLanguage_ObjC,
@@ -2678,7 +2778,8 @@ enum CXTypeKind {
   CXType_Vector = 113,
   CXType_IncompleteArray = 114,
   CXType_VariableArray = 115,
-  CXType_DependentSizedArray = 116
+  CXType_DependentSizedArray = 116,
+  CXType_MemberPointer = 117
 };
 
 /**
@@ -2853,14 +2954,14 @@ CINDEX_LINKAGE CXString clang_getTypeKindSpelling(enum CXTypeKind K);
 CINDEX_LINKAGE enum CXCallingConv clang_getFunctionTypeCallingConv(CXType T);
 
 /**
- * \brief Retrieve the result type associated with a function type.
+ * \brief Retrieve the return type associated with a function type.
  *
  * If a non-function type is passed in, an invalid type is returned.
  */
 CINDEX_LINKAGE CXType clang_getResultType(CXType T);
 
 /**
- * \brief Retrieve the number of non-variadic arguments associated with a
+ * \brief Retrieve the number of non-variadic parameters associated with a
  * function type.
  *
  * If a non-function type is passed in, -1 is returned.
@@ -2868,7 +2969,7 @@ CINDEX_LINKAGE CXType clang_getResultType(CXType T);
 CINDEX_LINKAGE int clang_getNumArgTypes(CXType T);
 
 /**
- * \brief Retrieve the type of an argument of a function type.
+ * \brief Retrieve the type of a parameter of a function type.
  *
  * If a non-function type is passed in or the function does not have enough
  * parameters, an invalid type is returned.
@@ -2881,7 +2982,7 @@ CINDEX_LINKAGE CXType clang_getArgType(CXType T, unsigned i);
 CINDEX_LINKAGE unsigned clang_isFunctionTypeVariadic(CXType T);
 
 /**
- * \brief Retrieve the result type associated with a given cursor.
+ * \brief Retrieve the return type associated with a given cursor.
  *
  * This only returns a valid type if the cursor refers to a function or method.
  */
@@ -2969,6 +3070,13 @@ enum CXTypeLayoutError {
 CINDEX_LINKAGE long long clang_Type_getAlignOf(CXType T);
 
 /**
+ * \brief Return the class type of an member pointer type.
+ *
+ * If a non-member-pointer type is passed in, an invalid type is returned.
+ */
+CINDEX_LINKAGE CXType clang_Type_getClassType(CXType T);
+
+/**
  * \brief Return the size of a type in bytes as per C++[expr.sizeof] standard.
  *
  * If the type declaration is invalid, CXTypeLayoutError_Invalid is returned.
@@ -2993,6 +3101,23 @@ CINDEX_LINKAGE long long clang_Type_getSizeOf(CXType T);
  *   CXTypeLayoutError_InvalidFieldName is returned.
  */
 CINDEX_LINKAGE long long clang_Type_getOffsetOf(CXType T, const char *S);
+
+enum CXRefQualifierKind {
+  /** \brief No ref-qualifier was provided. */
+  CXRefQualifier_None = 0,
+  /** \brief An lvalue ref-qualifier was provided (\c &). */
+  CXRefQualifier_LValue,
+  /** \brief An rvalue ref-qualifier was provided (\c &&). */
+  CXRefQualifier_RValue
+};
+
+/**
+ * \brief Retrieve the ref-qualifier kind of a function or method.
+ *
+ * The ref-qualifier is returned for C++ functions or methods. For other types
+ * or non-C++ declarations, CXRefQualifier_None is returned.
+ */
+CINDEX_LINKAGE enum CXRefQualifierKind clang_Type_getCXXRefQualifier(CXType T);
 
 /**
  * \brief Returns non-zero if the cursor specifies a Record member that is a
@@ -5738,11 +5863,12 @@ typedef enum {
  * \param index_options A bitmask of options that affects how indexing is
  * performed. This should be a bitwise OR of the CXIndexOpt_XXX flags.
  *
- * \param out_TU [out] pointer to store a CXTranslationUnit that can be reused
- * after indexing is finished. Set to NULL if you do not require it.
+ * \param[out] out_TU pointer to store a \c CXTranslationUnit that can be
+ * reused after indexing is finished. Set to \c NULL if you do not require it.
  *
- * \returns If there is a failure from which the there is no recovery, returns
- * non-zero, otherwise returns 0.
+ * \returns 0 on success or if there were errors from which the compiler could
+ * recover.  If there is a failure from which the there is no recovery, returns
+ * a non-zero \c CXErrorCode.
  *
  * The rest of the parameters are the same as #clang_parseTranslationUnit.
  */

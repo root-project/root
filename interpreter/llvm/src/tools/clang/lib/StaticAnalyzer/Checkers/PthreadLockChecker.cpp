@@ -69,7 +69,7 @@ void PthreadLockChecker::checkPostStmt(const CallExpr *CE,
                 false, XNUSemantics);
   else if (FName == "pthread_mutex_trylock" ||
            FName == "pthread_rwlock_tryrdlock" ||
-           FName == "pthread_rwlock_tryrwlock")
+           FName == "pthread_rwlock_trywrlock")
     AcquireLock(C, CE, state->getSVal(CE->getArg(0), LCtx),
                 true, PthreadSemantics);
   else if (FName == "lck_mtx_try_lock" ||
@@ -102,7 +102,7 @@ void PthreadLockChecker::AcquireLock(CheckerContext &C, const CallExpr *CE,
 
   if (state->contains<LockSet>(lockR)) {
     if (!BT_doublelock)
-      BT_doublelock.reset(new BugType("Double locking", "Lock checker"));
+      BT_doublelock.reset(new BugType(this, "Double locking", "Lock checker"));
     ExplodedNode *N = C.generateSink();
     if (!N)
       return;
@@ -165,15 +165,15 @@ void PthreadLockChecker::ReleaseLock(CheckerContext &C, const CallExpr *CE,
   const MemRegion *firstLockR = LS.getHead();
   if (firstLockR != lockR) {
     if (!BT_lor)
-      BT_lor.reset(new BugType("Lock order reversal", "Lock checker"));
+      BT_lor.reset(new BugType(this, "Lock order reversal", "Lock checker"));
     ExplodedNode *N = C.generateSink();
     if (!N)
       return;
     BugReport *report = new BugReport(*BT_lor,
-                                                      "This was not the most "
-                                                      "recently acquired lock. "
-                                                      "Possible lock order "
-                                                      "reversal", N);
+                                               "This was not the most "
+                                               "recently acquired lock. "
+                                               "Possible lock order "
+                                               "reversal", N);
     report->addRange(CE->getArg(0)->getSourceRange());
     C.emitReport(report);
     return;
@@ -183,7 +183,6 @@ void PthreadLockChecker::ReleaseLock(CheckerContext &C, const CallExpr *CE,
   state = state->set<LockSet>(LS.getTail());
   C.addTransition(state);
 }
-
 
 void ento::registerPthreadLockChecker(CheckerManager &mgr) {
   mgr.registerChecker<PthreadLockChecker>();

@@ -58,7 +58,7 @@ namespace {
     // getAnalysisUsage - This pass requires the CallGraph.
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesAll();
-      AU.addRequired<CallGraph>();
+      AU.addRequired<CallGraphWrapperPass>();
     }
   };
 }
@@ -74,8 +74,7 @@ Z("print-callgraph-sccs", "Print SCCs of the Call Graph");
 bool CFGSCC::runOnFunction(Function &F) {
   unsigned sccNum = 0;
   errs() << "SCCs for Function " << F.getName() << " in PostOrder:";
-  for (scc_iterator<Function*> SCCI = scc_begin(&F),
-         E = scc_end(&F); SCCI != E; ++SCCI) {
+  for (scc_iterator<Function*> SCCI = scc_begin(&F); !SCCI.isAtEnd(); ++SCCI) {
     std::vector<BasicBlock*> &nextSCC = *SCCI;
     errs() << "\nSCC #" << ++sccNum << " : ";
     for (std::vector<BasicBlock*>::const_iterator I = nextSCC.begin(),
@@ -92,11 +91,11 @@ bool CFGSCC::runOnFunction(Function &F) {
 
 // run - Print out SCCs in the call graph for the specified module.
 bool CallGraphSCC::runOnModule(Module &M) {
-  CallGraphNode* rootNode = getAnalysis<CallGraph>().getRoot();
+  CallGraph &CG = getAnalysis<CallGraphWrapperPass>().getCallGraph();
   unsigned sccNum = 0;
   errs() << "SCCs for the program in PostOrder:";
-  for (scc_iterator<CallGraphNode*> SCCI = scc_begin(rootNode),
-         E = scc_end(rootNode); SCCI != E; ++SCCI) {
+  for (scc_iterator<CallGraph*> SCCI = scc_begin(&CG); !SCCI.isAtEnd();
+       ++SCCI) {
     const std::vector<CallGraphNode*> &nextSCC = *SCCI;
     errs() << "\nSCC #" << ++sccNum << " : ";
     for (std::vector<CallGraphNode*>::const_iterator I = nextSCC.begin(),

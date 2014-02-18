@@ -14,7 +14,6 @@
 #include "llvm/CodeGen/SelectionDAG.h"
 #include "ScheduleDAGSDNodes.h"
 #include "llvm/ADT/StringExtras.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
@@ -82,7 +81,10 @@ std::string SDNode::getOperationName(const SelectionDAG *G) const {
   case ISD::VALUETYPE:                  return "ValueType";
   case ISD::Register:                   return "Register";
   case ISD::RegisterMask:               return "RegisterMask";
-  case ISD::Constant:                   return "Constant";
+  case ISD::Constant:
+    if (cast<ConstantSDNode>(this)->isOpaque())
+      return "OpaqueConstant";
+    return "Constant";
   case ISD::ConstantFP:                 return "ConstantFP";
   case ISD::GlobalAddress:              return "GlobalAddress";
   case ISD::GlobalTLSAddress:           return "GlobalTLSAddress";
@@ -112,7 +114,10 @@ std::string SDNode::getOperationName(const SelectionDAG *G) const {
   }
 
   case ISD::BUILD_VECTOR:               return "BUILD_VECTOR";
-  case ISD::TargetConstant:             return "TargetConstant";
+  case ISD::TargetConstant:
+    if (cast<ConstantSDNode>(this)->isOpaque())
+      return "OpaqueTargetConstant";
+    return "TargetConstant";
   case ISD::TargetConstantFP:           return "TargetConstantFP";
   case ISD::TargetGlobalAddress:        return "TargetGlobalAddress";
   case ISD::TargetGlobalTLSAddress:     return "TargetGlobalTLSAddress";
@@ -224,6 +229,7 @@ std::string SDNode::getOperationName(const SelectionDAG *G) const {
   case ISD::FP_TO_SINT:                 return "fp_to_sint";
   case ISD::FP_TO_UINT:                 return "fp_to_uint";
   case ISD::BITCAST:                    return "bitcast";
+  case ISD::ADDRSPACECAST:              return "addrspacecast";
   case ISD::FP16_TO_FP32:               return "fp16_to_fp32";
   case ISD::FP32_TO_FP16:               return "fp32_to_fp16";
 
@@ -384,7 +390,7 @@ void SDNode::print_details(raw_ostream &OS, const SelectionDAG *G) const {
              dyn_cast<GlobalAddressSDNode>(this)) {
     int64_t offset = GADN->getOffset();
     OS << '<';
-    WriteAsOperand(OS, GADN->getGlobal());
+    GADN->getGlobal()->printAsOperand(OS);
     OS << '>';
     if (offset > 0)
       OS << " + " << offset;
@@ -475,9 +481,9 @@ void SDNode::print_details(raw_ostream &OS, const SelectionDAG *G) const {
                dyn_cast<BlockAddressSDNode>(this)) {
     int64_t offset = BA->getOffset();
     OS << "<";
-    WriteAsOperand(OS, BA->getBlockAddress()->getFunction(), false);
+    BA->getBlockAddress()->getFunction()->printAsOperand(OS, false);
     OS << ", ";
-    WriteAsOperand(OS, BA->getBlockAddress()->getBasicBlock(), false);
+    BA->getBlockAddress()->getBasicBlock()->printAsOperand(OS, false);
     OS << ">";
     if (offset > 0)
       OS << " + " << offset;
@@ -485,6 +491,13 @@ void SDNode::print_details(raw_ostream &OS, const SelectionDAG *G) const {
       OS << " " << offset;
     if (unsigned int TF = BA->getTargetFlags())
       OS << " [TF=" << TF << ']';
+  } else if (const AddrSpaceCastSDNode *ASC =
+               dyn_cast<AddrSpaceCastSDNode>(this)) {
+    OS << '['
+       << ASC->getSrcAddressSpace()
+       << " -> "
+       << ASC->getDestAddressSpace()
+       << ']';
   }
 
   if (unsigned Order = getIROrder())

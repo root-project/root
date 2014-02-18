@@ -11,6 +11,8 @@ include(CheckFunctionExists)
 include(CheckCXXSourceCompiles)
 include(TestBigEndian)
 
+include(HandleLLVMStdlib)
+
 if( UNIX AND NOT BEOS )
   # Used by check_symbol_exists:
   set(CMAKE_REQUIRED_LIBRARIES m)
@@ -97,6 +99,7 @@ if( NOT PURE_WINDOWS )
   else()
     set(HAVE_LIBZ 0)
   endif()
+  check_library_exists(edit el_init "" HAVE_LIBEDIT)
   if(LLVM_ENABLE_TERMINFO)
     set(HAVE_TERMINFO 0)
     foreach(library tinfo terminfo curses ncurses ncursesw)
@@ -114,7 +117,7 @@ if( NOT PURE_WINDOWS )
 endif()
 
 # function checks
-check_symbol_exists(arc4random "stdlib.h" HAVE_ARC4RANDOM)
+check_symbol_exists(arc4random "stdlib.h" HAVE_DECL_ARC4RANDOM)
 check_symbol_exists(backtrace "execinfo.h" HAVE_BACKTRACE)
 check_symbol_exists(getpagesize unistd.h HAVE_GETPAGESIZE)
 check_symbol_exists(getrusage sys/resource.h HAVE_GETRUSAGE)
@@ -317,8 +320,6 @@ if (LIBXML2_FOUND)
   endif ()
 endif ()
 
-include(CheckCXXCompilerFlag)
-
 check_cxx_compiler_flag("-Wno-variadic-macros" SUPPORTS_NO_VARIADIC_MACROS_FLAG)
 
 set(USE_NO_MAYBE_UNINITIALIZED 0)
@@ -416,6 +417,7 @@ endif ()
 if( MINGW )
   set(HAVE_LIBIMAGEHLP 1)
   set(HAVE_LIBPSAPI 1)
+  set(HAVE_LIBSHELL32 1)
   # TODO: Check existence of libraries.
   #   include(CheckLibraryExists)
   #   CHECK_LIBRARY_EXISTS(imagehlp ??? . HAVE_LIBIMAGEHLP)

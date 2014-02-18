@@ -48,7 +48,7 @@ class BlockFrequencyImpl {
 
   typedef GraphTraits< Inverse<BlockT *> > GT;
 
-  const uint32_t EntryFreq;
+  static const uint64_t EntryFreq = 1 << 14;
 
   std::string getBlockName(BasicBlock *BB) const {
     return BB->getName().str();
@@ -67,7 +67,8 @@ class BlockFrequencyImpl {
 
   void setBlockFreq(BlockT *BB, BlockFrequency Freq) {
     Freqs[BB] = Freq;
-    DEBUG(dbgs() << "Frequency(" << getBlockName(BB) << ") = " << Freq << "\n");
+    DEBUG(dbgs() << "Frequency(" << getBlockName(BB) << ") = ";
+          printBlockFreq(dbgs(), Freq) << "\n");
   }
 
   /// getEdgeFreq - Return edge frequency based on SRC frequency and Src -> Dst
@@ -81,8 +82,9 @@ class BlockFrequencyImpl {
   ///
   void incBlockFreq(BlockT *BB, BlockFrequency Freq) {
     Freqs[BB] += Freq;
-    DEBUG(dbgs() << "Frequency(" << getBlockName(BB) << ") += " << Freq
-                 << " --> " << Freqs[BB] << "\n");
+    DEBUG(dbgs() << "Frequency(" << getBlockName(BB) << ") += ";
+          printBlockFreq(dbgs(), Freq) << " --> ";
+          printBlockFreq(dbgs(), Freqs[BB]) << "\n");
   }
 
   // All blocks in postorder.
@@ -157,7 +159,7 @@ class BlockFrequencyImpl {
       return;
     }
 
-    if(BlockT *Pred = getSingleBlockPred(BB)) {
+    if (BlockT *Pred = getSingleBlockPred(BB)) {
       if (BlocksInLoop.count(Pred))
         setBlockFreq(BB, getEdgeFreq(Pred, BB));
       // TODO: else? irreducible, ignore it for now.
@@ -194,7 +196,8 @@ class BlockFrequencyImpl {
     typename LoopExitProbMap::const_iterator I = LoopExitProb.find(BB);
     assert(I != LoopExitProb.end() && "Loop header missing from table");
     Freqs[BB] /= I->second;
-    DEBUG(dbgs() << "Loop header scaled to " << Freqs[BB] << ".\n");
+    DEBUG(dbgs() << "Loop header scaled to ";
+          printBlockFreq(dbgs(), Freqs[BB]) << ".\n");
   }
 
   /// doLoop - Propagate block frequency down through the loop.
@@ -256,14 +259,15 @@ class BlockFrequencyImpl {
     BranchProbability LEP = BranchProbability(N, D);
     LoopExitProb.insert(std::make_pair(Head, LEP));
     DEBUG(dbgs() << "LoopExitProb[" << getBlockName(Head) << "] = " << LEP
-                 << " from 1 - " << BackFreq << " / " << getBlockFreq(Head)
-                 << ".\n");
+          << " from 1 - ";
+          printBlockFreq(dbgs(), BackFreq) << " / ";
+          printBlockFreq(dbgs(), getBlockFreq(Head)) << ".\n");
   }
 
   friend class BlockFrequencyInfo;
   friend class MachineBlockFrequencyInfo;
 
-  BlockFrequencyImpl() : EntryFreq(BlockFrequency::getEntryFrequency()) { }
+  BlockFrequencyImpl() { }
 
   void doFunction(FunctionT *fn, BlockProbInfoT *bpi) {
     Fn = fn;
@@ -312,6 +316,9 @@ class BlockFrequencyImpl {
   }
 
 public:
+
+  uint64_t getEntryFreq() { return EntryFreq; }
+
   /// getBlockFreq - Return block frequency. Return 0 if we don't have it.
   BlockFrequency getBlockFreq(const BlockT *BB) const {
     typename DenseMap<const BlockT *, BlockFrequency>::const_iterator
@@ -325,14 +332,15 @@ public:
     OS << "\n\n---- Block Freqs ----\n";
     for (typename FunctionT::iterator I = Fn->begin(), E = Fn->end(); I != E;) {
       BlockT *BB = I++;
-      OS << " " << getBlockName(BB) << " = " << getBlockFreq(BB) << "\n";
+      OS << " " << getBlockName(BB) << " = ";
+      printBlockFreq(OS, getBlockFreq(BB)) << "\n";
 
       for (typename GraphTraits<BlockT *>::ChildIteratorType
            SI = GraphTraits<BlockT *>::child_begin(BB),
            SE = GraphTraits<BlockT *>::child_end(BB); SI != SE; ++SI) {
         BlockT *Succ = *SI;
         OS << "  " << getBlockName(BB) << " -> " << getBlockName(Succ)
-           << " = " << getEdgeFreq(BB, Succ) << "\n";
+           << " = "; printBlockFreq(OS, getEdgeFreq(BB, Succ)) << "\n";
       }
     }
   }
@@ -340,6 +348,30 @@ public:
   void dump() const {
     print(dbgs());
   }
+
+  // Utility method that looks up the block frequency associated with BB and
+  // prints it to OS.
+  raw_ostream &printBlockFreq(raw_ostream &OS,
+                              const BlockT *BB) {
+    return printBlockFreq(OS, getBlockFreq(BB));
+  }
+
+  raw_ostream &printBlockFreq(raw_ostream &OS,
+                              const BlockFrequency &Freq) const {
+    // Convert fixed-point number to decimal.
+    uint64_t Frequency = Freq.getFrequency();
+    OS << Frequency / EntryFreq << ".";
+    uint64_t Rem = Frequency % EntryFreq;
+    uint64_t Eps = 1;
+    do {
+      Rem *= 10;
+      Eps *= 10;
+      OS << Rem / EntryFreq;
+      Rem = Rem % EntryFreq;
+    } while (Rem >= Eps/2);
+    return OS;
+  }
+
 };
 
 }

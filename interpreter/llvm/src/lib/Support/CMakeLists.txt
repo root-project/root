@@ -2,6 +2,7 @@ add_llvm_library(LLVMSupport
   APFloat.cpp
   APInt.cpp
   APSInt.cpp
+  ARMBuildAttrs.cpp
   Allocator.cpp
   BlockFrequency.cpp
   BranchProbability.cpp
@@ -30,6 +31,7 @@ add_llvm_library(LLVMSupport
   IntrusiveRefCntPtr.cpp
   IsInf.cpp
   IsNAN.cpp
+  LineIterator.cpp
   Locale.cpp
   LockFileManager.cpp
   ManagedStatic.cpp
@@ -87,6 +89,8 @@ add_llvm_library(LLVMSupport
   TimeValue.cpp
   Valgrind.cpp
   Watchdog.cpp
+
+  ADDITIONAL_HEADERS
   Unix/Host.inc
   Unix/Memory.inc
   Unix/Mutex.inc
@@ -113,3 +117,5 @@ add_llvm_library(LLVMSupport
   Windows/TimeValue.inc
   Windows/Watchdog.inc
   )
+
+link_system_libs(LLVMSupport)

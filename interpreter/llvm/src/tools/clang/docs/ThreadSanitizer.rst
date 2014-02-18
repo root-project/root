@@ -18,9 +18,9 @@ supported.
 Supported Platforms
 -------------------
 
-ThreadSanitizer is supported on Linux x86_64 (tested on Ubuntu 10.04 and 12.04).
-Support for MacOS 10.7 (64-bit only) is planned for 2013.  Support for 32-bit
-platforms is problematic and not yet planned.
+ThreadSanitizer is supported on Linux x86_64 (tested on Ubuntu 12.04).
+Support for other 64-bit architectures is possible, contributions are welcome.
+Support for 32-bit platforms is problematic and is not planned.
 
 Usage
 -----
@@ -91,7 +91,8 @@ Some code should not be instrumented by ThreadSanitizer.
 One may use the function attribute
 :ref:`no_sanitize_thread <langext-thread_sanitizer>`
 to disable instrumentation of plain (non-atomic) loads/stores in a particular function.
-ThreadSanitizer may still instrument such functions to avoid false positives.
+ThreadSanitizer still instruments such functions to avoid false positives and
+provide meaningful stack traces.
 This attribute may not be
 supported by other compilers, so we suggest to use it together with
 ``__has_feature(thread_sanitizer)``.
@@ -101,7 +102,10 @@ Blacklist
 
 ThreadSanitizer supports ``src`` and ``fun`` entity types in
 :doc:`SanitizerSpecialCaseList`, that can be used to suppress data race reports in
-the specified source files or functions.
+the specified source files or functions. Unlike functions marked with
+:ref:`no_sanitize_thread <langext-thread_sanitizer>` attribute,
+blacklisted functions are not instrumented at all. This can lead to false positives
+due to missed synchronization via atomic operations and missed stack frames in reports.
 
 Limitations
 -----------

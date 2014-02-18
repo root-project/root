@@ -14,7 +14,6 @@
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallString.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/MachineDominators.h"
@@ -52,7 +51,8 @@ MCSymbol *MachineBasicBlock::getSymbol() const {
   if (!CachedMCSymbol) {
     const MachineFunction *MF = getParent();
     MCContext &Ctx = MF->getContext();
-    const char *Prefix = Ctx.getAsmInfo()->getPrivateGlobalPrefix();
+    const TargetMachine &TM = MF->getTarget();
+    const char *Prefix = TM.getDataLayout()->getPrivateGlobalPrefix();
     CachedMCSymbol = Ctx.GetOrCreateSymbol(Twine(Prefix) + "BB" +
                                            Twine(MF->getFunctionNumber()) +
                                            "_" + Twine(getNumber()));
@@ -277,7 +277,7 @@ void MachineBasicBlock::print(raw_ostream &OS, SlotIndexes *Indexes) const {
   const char *Comma = "";
   if (const BasicBlock *LBB = getBasicBlock()) {
     OS << Comma << "derived from LLVM BB ";
-    WriteAsOperand(OS, LBB, /*PrintType=*/false);
+    LBB->printAsOperand(OS, /*PrintType=*/false);
     Comma = ", ";
   }
   if (isLandingPad()) { OS << Comma << "EH LANDING PAD"; Comma = ", "; }
@@ -328,6 +328,10 @@ void MachineBasicBlock::print(raw_ostream &OS, SlotIndexes *Indexes) const {
     }
     OS << '\n';
   }
+}
+
+void MachineBasicBlock::printAsOperand(raw_ostream &OS, bool /*PrintType*/) {
+  OS << "BB#" << getNumber();
 }
 
 void MachineBasicBlock::removeLiveIn(unsigned Reg) {
@@ -677,6 +681,11 @@ MachineBasicBlock::SplitCriticalEdge(MachineBasicBlock *Succ, Pass *P) {
   MachineFunction *MF = getParent();
   DebugLoc dl;  // FIXME: this is nowhere
 
+  // Performance might be harmed on HW that implements branching using exec mask
+  // where both sides of the branches are always executed.
+  if (MF->getTarget().requiresStructuredCFG())
+    return NULL;
+
   // We may need to update this's terminator, but we can't do that if
   // AnalyzeBranch fails. If this uses a jump table, we won't touch it.
   const TargetInstrInfo *TII = MF->getTarget().getInstrInfo();
@@ -861,7 +870,7 @@ MachineBasicBlock::SplitCriticalEdge(MachineBasicBlock *Succ, Pass *P) {
           LiveInterval &LI = LIS->getInterval(Reg);
           VNInfo *VNI = LI.getVNInfoAt(PrevIndex);
           assert(VNI && "PHI sources should be live out of their predecessors.");
-          LI.addRange(LiveRange(StartIndex, EndIndex, VNI));
+          LI.addSegment(LiveInterval::Segment(StartIndex, EndIndex, VNI));
         }
       }
     }
@@ -880,9 +889,9 @@ MachineBasicBlock::SplitCriticalEdge(MachineBasicBlock *Succ, Pass *P) {
       if (isLiveOut && isLastMBB) {
         VNInfo *VNI = LI.getVNInfoAt(PrevIndex);
         assert(VNI && "LiveInterval should have VNInfo where it is live.");
-        LI.addRange(LiveRange(StartIndex, EndIndex, VNI));
+        LI.addSegment(LiveInterval::Segment(StartIndex, EndIndex, VNI));
       } else if (!isLiveOut && !isLastMBB) {
-        LI.removeRange(StartIndex, EndIndex);
+        LI.removeSegment(StartIndex, EndIndex);
       }
     }
 
@@ -1114,6 +1123,13 @@ uint32_t MachineBasicBlock::getSuccWeight(const_succ_iterator Succ) const {
   return *getWeightIterator(Succ);
 }
 
+/// Set successor weight of a given iterator.
+void MachineBasicBlock::setSuccWeight(succ_iterator I, uint32_t weight) {
+  if (Weights.empty())
+    return;
+  *getWeightIterator(I) = weight;
+}
+
 /// getWeightIterator - Return wight iterator corresonding to the I successor
 /// iterator
 MachineBasicBlock::weight_iterator MachineBasicBlock::
@@ -1210,9 +1226,3 @@ MachineBasicBlock::computeRegisterLiveness(const TargetRegisterInfo *TRI,
   // At this point we have no idea of the liveness of the register.
   return LQR_Unknown;
 }
-
-void llvm::WriteAsOperand(raw_ostream &OS, const MachineBasicBlock *MBB,
-                          bool t) {
-  OS << "BB#" << MBB->getNumber();
-}
-

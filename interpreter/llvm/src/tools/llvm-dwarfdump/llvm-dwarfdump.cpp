@@ -62,6 +62,8 @@ DumpType("debug-dump", cl::init(DIDT_All),
         clEnumValN(DIDT_Aranges, "aranges", ".debug_aranges"),
         clEnumValN(DIDT_Info, "info", ".debug_info"),
         clEnumValN(DIDT_InfoDwo, "info.dwo", ".debug_info.dwo"),
+        clEnumValN(DIDT_Types, "types", ".debug_types"),
+        clEnumValN(DIDT_TypesDwo, "types.dwo", ".debug_types.dwo"),
         clEnumValN(DIDT_Line, "line", ".debug_line"),
         clEnumValN(DIDT_Loc, "loc", ".debug_loc"),
         clEnumValN(DIDT_Frames, "frames", ".debug_frame"),
@@ -91,11 +93,12 @@ static void DumpInput(const StringRef &Filename) {
     return;
   }
 
-  OwningPtr<ObjectFile> Obj(ObjectFile::createObjectFile(Buff.take()));
-  if (!Obj) {
-    errs() << Filename << ": Unknown object file format\n";
+  ErrorOr<ObjectFile*> ObjOrErr(ObjectFile::createObjectFile(Buff.take()));
+  if (error_code EC = ObjOrErr.getError()) {
+    errs() << Filename << ": " << EC.message() << '\n';
     return;
   }
+  OwningPtr<ObjectFile> Obj(ObjOrErr.get());
 
   OwningPtr<DIContext> DICtx(DIContext::getDWARFContext(Obj.get()));
 

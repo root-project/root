@@ -19,8 +19,8 @@
 #include "ARMTargetMachine.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Target/TargetLowering.h"
 #include "llvm/Target/CostTable.h"
+#include "llvm/Target/TargetLowering.h"
 using namespace llvm;
 
 // Declare the pass initialization routine locally as target-specific passes
@@ -32,7 +32,7 @@ void initializeARMTTIPass(PassRegistry &);
 
 namespace {
 
-class ARMTTI : public ImmutablePass, public TargetTransformInfo {
+class ARMTTI LLVM_FINAL : public ImmutablePass, public TargetTransformInfo {
   const ARMBaseTargetMachine *TM;
   const ARMSubtarget *ST;
   const ARMTargetLowering *TLI;
@@ -52,7 +52,7 @@ public:
     initializeARMTTIPass(*PassRegistry::getPassRegistry());
   }
 
-  virtual void initializePass() {
+  virtual void initializePass() LLVM_OVERRIDE {
     pushTTIStack(this);
   }
 
@@ -60,7 +60,7 @@ public:
     popTTIStack();
   }
 
-  virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+  virtual void getAnalysisUsage(AnalysisUsage &AU) const LLVM_OVERRIDE {
     TargetTransformInfo::getAnalysisUsage(AU);
   }
 
@@ -68,7 +68,7 @@ public:
   static char ID;
 
   /// Provide necessary pointer adjustments for the two base classes.
-  virtual void *getAdjustedAnalysisPointer(const void *ID) {
+  virtual void *getAdjustedAnalysisPointer(const void *ID) LLVM_OVERRIDE {
     if (ID == &TargetTransformInfo::ID)
       return (TargetTransformInfo*)this;
     return this;
@@ -76,8 +76,9 @@ public:
 
   /// \name Scalar TTI Implementations
   /// @{
-
-  virtual unsigned getIntImmCost(const APInt &Imm, Type *Ty) const;
+  using TargetTransformInfo::getIntImmCost;
+  virtual unsigned
+  getIntImmCost(const APInt &Imm, Type *Ty) const LLVM_OVERRIDE;
 
   /// @}
 
@@ -94,7 +95,7 @@ public:
 
     if (ST->isThumb1Only())
       return 8;
-    return 16;
+    return 13;
   }
 
   unsigned getRegisterBitWidth(bool Vector) const {
@@ -129,6 +130,9 @@ public:
   unsigned getArithmeticInstrCost(unsigned Opcode, Type *Ty,
                                   OperandValueKind Op1Info = OK_AnyValue,
                                   OperandValueKind Op2Info = OK_AnyValue) const;
+
+  unsigned getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
+                           unsigned AddressSpace) const;
   /// @}
 };
 
@@ -177,7 +181,7 @@ unsigned ARMTTI::getIntImmCost(const APInt &Imm, Type *Ty) const {
 }
 
 unsigned ARMTTI::getCastInstrCost(unsigned Opcode, Type *Dst,
-                                    Type *Src) const {
+                                  Type *Src) const {
   int ISD = TLI->InstructionOpcodeToISD(Opcode);
   assert(ISD && "Invalid opcode");
 
@@ -466,7 +470,8 @@ unsigned ARMTTI::getShuffleCost(ShuffleKind Kind, Type *Tp, int Index,
   return LT.first * NEONShuffleTbl[Idx].Cost;
 }
 
-unsigned ARMTTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueKind Op1Info,
+unsigned ARMTTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty,
+                                        OperandValueKind Op1Info,
                                         OperandValueKind Op2Info) const {
 
   int ISDOpcode = TLI->InstructionOpcodeToISD(Opcode);
@@ -523,8 +528,32 @@ unsigned ARMTTI::getArithmeticInstrCost(unsigned Opcode, Type *Ty, OperandValueK
   if (Idx != -1)
     return LT.first * CostTbl[Idx].Cost;
 
+  unsigned Cost =
+      TargetTransformInfo::getArithmeticInstrCost(Opcode, Ty, Op1Info, Op2Info);
 
-  return TargetTransformInfo::getArithmeticInstrCost(Opcode, Ty, Op1Info,
-                                                     Op2Info);
+  // This is somewhat of a hack. The problem that we are facing is that SROA
+  // creates a sequence of shift, and, or instructions to construct values.
+  // These sequences are recognized by the ISel and have zero-cost. Not so for
+  // the vectorized code. Because we have support for v2i64 but not i64 those
+  // sequences look particularly beneficial to vectorize.
+  // To work around this we increase the cost of v2i64 operations to make them
+  // seem less beneficial.
+  if (LT.second == MVT::v2i64 &&
+      Op2Info == TargetTransformInfo::OK_UniformConstantValue)
+    Cost += 4;
+
+  return Cost;
 }
 
+unsigned ARMTTI::getMemoryOpCost(unsigned Opcode, Type *Src, unsigned Alignment,
+                                 unsigned AddressSpace) const {
+  std::pair<unsigned, MVT> LT = TLI->getTypeLegalizationCost(Src);
+
+  if (Src->isVectorTy() && Alignment != 16 &&
+      Src->getVectorElementType()->isDoubleTy()) {
+    // Unaligned loads/stores are extremely inefficient.
+    // We need 4 uops for vst.1/vld.1 vs 1uop for vldr/vstr.
+    return LT.first * 4;
+  }
+  return LT.first;
+}

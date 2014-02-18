@@ -345,7 +345,7 @@ long TClingMethodInfo::Property() const
    if (fd->getStorageClass() == clang::SC_Static) {
       property |= kIsStatic;
    }
-   clang::QualType qt = fd->getResultType().getCanonicalType();
+   clang::QualType qt = fd->getReturnType().getCanonicalType();
    if (qt.isConstQualified()) {
       property |= kIsConstant;
    }
@@ -443,7 +443,7 @@ TClingTypeInfo *TClingMethodInfo::Type() const
          ti.Init(qt);
       }
    } else {
-      clang::QualType qt = GetMethodDecl()->getResultType();
+      clang::QualType qt = GetMethodDecl()->getReturnType();
       ti.Init(qt);
    }
    return &ti;

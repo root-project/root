@@ -694,7 +694,7 @@ public:
 };
 
 
-/// IntInit - 7 - Represent an initalization by a literal integer value.
+/// IntInit - 7 - Represent an initialization by a literal integer value.
 ///
 class IntInit : public TypedInit {
   int64_t Value;
@@ -1614,7 +1614,7 @@ public:
 
   /// getValueAsBitOrUnset - This method looks up the specified field and
   /// returns its value as a bit. If the field is unset, sets Unset to true and
-  /// retunrs false.
+  /// returns false.
   ///
   bool getValueAsBitOrUnset(StringRef FieldName, bool &Unset) const;
 

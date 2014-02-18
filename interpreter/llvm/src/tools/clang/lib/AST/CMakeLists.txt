@@ -26,7 +26,6 @@ add_clang_library(clangAST
   DeclOpenMP.cpp
   DeclPrinter.cpp
   DeclTemplate.cpp
-  DumpXML.cpp
   Expr.cpp
   ExprClassification.cpp
   ExprConstant.cpp
@@ -66,6 +65,7 @@ add_dependencies(clangAST
   ClangAttrList
   ClangAttrImpl
   ClangAttrDump
+  ClangAttrVisitor
   ClangCommentCommandInfo
   ClangCommentCommandList
   ClangCommentNodes

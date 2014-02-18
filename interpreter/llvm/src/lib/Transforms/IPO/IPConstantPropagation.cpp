@@ -135,7 +135,7 @@ bool IPCP::PropagateConstantsIntoArguments(Function &F) {
   for (unsigned i = 0, e = ArgumentConstants.size(); i != e; ++i, ++AI) {
     // Do we have a constant argument?
     if (ArgumentConstants[i].second || AI->use_empty() ||
-        (AI->hasByValAttr() && !F.onlyReadsMemory()))
+        AI->hasInAllocaAttr() || (AI->hasByValAttr() && !F.onlyReadsMemory()))
       continue;
   
     Value *V = ArgumentConstants[i].first;
@@ -210,7 +210,7 @@ bool IPCP::PropagateConstantReturn(Function &F) {
         // Different or no known return value? Don't propagate this return
         // value.
         RetVals[i] = 0;
-        // All values non constant? Stop looking.
+        // All values non-constant? Stop looking.
         if (++NumNonConstant == RetVals.size())
           return false;
       }

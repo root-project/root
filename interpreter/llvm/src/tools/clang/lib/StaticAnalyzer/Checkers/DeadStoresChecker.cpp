@@ -124,6 +124,7 @@ class DeadStoreObs : public LiveVariables::Observer {
   const CFG &cfg;
   ASTContext &Ctx;
   BugReporter& BR;
+  const CheckerBase *Checker;
   AnalysisDeclContext* AC;
   ParentMap& Parents;
   llvm::SmallPtrSet<const VarDecl*, 20> Escaped;
@@ -134,11 +135,12 @@ class DeadStoreObs : public LiveVariables::Observer {
   enum DeadStoreKind { Standard, Enclosing, DeadIncrement, DeadInit };
 
 public:
-  DeadStoreObs(const CFG &cfg, ASTContext &ctx,
-               BugReporter& br, AnalysisDeclContext* ac, ParentMap& parents,
-               llvm::SmallPtrSet<const VarDecl*, 20> &escaped)
-    : cfg(cfg), Ctx(ctx), BR(br), AC(ac), Parents(parents),
-      Escaped(escaped), currentBlock(0) {}
+  DeadStoreObs(const CFG &cfg, ASTContext &ctx, BugReporter &br,
+               const CheckerBase *checker, AnalysisDeclContext *ac,
+               ParentMap &parents,
+               llvm::SmallPtrSet<const VarDecl *, 20> &escaped)
+      : cfg(cfg), Ctx(ctx), BR(br), Checker(checker), AC(ac), Parents(parents),
+        Escaped(escaped), currentBlock(0) {}
 
   virtual ~DeadStoreObs() {}
 
@@ -199,7 +201,8 @@ public:
         return;
     }
 
-    BR.EmitBasicReport(AC->getDecl(), BugType, "Dead store", os.str(), L, R);
+    BR.EmitBasicReport(AC->getDecl(), Checker, BugType, "Dead store", os.str(),
+                       L, R);
   }
 
   void CheckVarDecl(const VarDecl *VD, const Expr *Ex, const Expr *Val,
@@ -214,7 +217,8 @@ public:
       return;
 
     if (!isLive(Live, VD) &&
-        !(VD->getAttr<UnusedAttr>() || VD->getAttr<BlocksAttr>())) {
+        !(VD->hasAttr<UnusedAttr>() || VD->hasAttr<BlocksAttr>() ||
+          VD->hasAttr<ObjCPreciseLifetimeAttr>())) {
 
       PathDiagnosticLocation ExLoc =
         PathDiagnosticLocation::createBegin(Ex, BR.getSourceManager(), AC);
@@ -339,8 +343,10 @@ public:
             
             // A dead initialization is a variable that is dead after it
             // is initialized.  We don't flag warnings for those variables
-            // marked 'unused'.
-            if (!isLive(Live, V) && V->getAttr<UnusedAttr>() == 0) {
+            // marked 'unused' or 'objc_precise_lifetime'.
+            if (!isLive(Live, V) &&
+                !V->hasAttr<UnusedAttr>() &&
+                !V->hasAttr<ObjCPreciseLifetimeAttr>()) {
               // Special case: check for initializations with constants.
               //
               //  e.g. : int x = 0;
@@ -436,7 +442,7 @@ public:
       ParentMap &pmap = mgr.getParentMap(D);
       FindEscaped FS;
       cfg.VisitBlockStmts(FS);
-      DeadStoreObs A(cfg, BR.getContext(), BR, AC, pmap, FS.Escaped);
+      DeadStoreObs A(cfg, BR.getContext(), BR, this, AC, pmap, FS.Escaped);
       L->runOnAllBlocks(A);
     }
   }

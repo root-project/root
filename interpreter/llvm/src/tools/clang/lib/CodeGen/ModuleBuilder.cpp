@@ -12,8 +12,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/CodeGen/ModuleBuilder.h"
-#include "CodeGenModule.h"
 #include "CGDebugInfo.h"
+#include "CodeGenModule.h"
 #include "CodeGenTypes.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
@@ -124,6 +124,8 @@ namespace {
 
     virtual void HandleTranslationUnit(ASTContext &Ctx) {
       if (Diags.hasErrorOccurred()) {
+        if (Builder)
+          Builder->clear();
         M.reset();
         return;
       }

@@ -265,6 +265,11 @@ public:
 #include "clang/Basic/OpenMPKinds.def"
 };
 
+void OMPClauseProfiler::VisitOMPIfClause(const OMPIfClause *C) {
+  if (C->getCondition())
+    Profiler->VisitStmt(C->getCondition());
+}
+
 void OMPClauseProfiler::VisitOMPDefaultClause(const OMPDefaultClause *C) { }
 
 template<typename T>
@@ -276,6 +281,10 @@ void OMPClauseProfiler::VisitOMPClauseList(T *Node) {
 }
 
 void OMPClauseProfiler::VisitOMPPrivateClause(const OMPPrivateClause *C) {
+  VisitOMPClauseList(C);
+}
+void OMPClauseProfiler::VisitOMPFirstprivateClause(
+                                         const OMPFirstprivateClause *C) {
   VisitOMPClauseList(C);
 }
 void OMPClauseProfiler::VisitOMPSharedClause(const OMPSharedClause *C) {
@@ -812,13 +821,13 @@ void StmtProfiler::VisitCXXStdInitializerListExpr(
 void StmtProfiler::VisitCXXTypeidExpr(const CXXTypeidExpr *S) {
   VisitExpr(S);
   if (S->isTypeOperand())
-    VisitType(S->getTypeOperand());
+    VisitType(S->getTypeOperandSourceInfo()->getType());
 }
 
 void StmtProfiler::VisitCXXUuidofExpr(const CXXUuidofExpr *S) {
   VisitExpr(S);
   if (S->isTypeOperand())
-    VisitType(S->getTypeOperand());
+    VisitType(S->getTypeOperandSourceInfo()->getType());
 }
 
 void StmtProfiler::VisitMSPropertyRefExpr(const MSPropertyRefExpr *S) {
@@ -881,9 +890,6 @@ StmtProfiler::VisitLambdaExpr(const LambdaExpr *S) {
       VisitDecl(C->getCapturedVar());
       ID.AddBoolean(C->isPackExpansion());
       break;
-    case LCK_Init:
-      VisitDecl(C->getInitCaptureField());
-      break;
     }
   }
   // Note: If we actually needed to be able to match lambda
@@ -945,19 +951,6 @@ void StmtProfiler::VisitOverloadExpr(const OverloadExpr *S) {
 void
 StmtProfiler::VisitUnresolvedLookupExpr(const UnresolvedLookupExpr *S) {
   VisitOverloadExpr(S);
-}
-
-void StmtProfiler::VisitUnaryTypeTraitExpr(const UnaryTypeTraitExpr *S) {
-  VisitExpr(S);
-  ID.AddInteger(S->getTrait());
-  VisitType(S->getQueriedType());
-}
-
-void StmtProfiler::VisitBinaryTypeTraitExpr(const BinaryTypeTraitExpr *S) {
-  VisitExpr(S);
-  ID.AddInteger(S->getTrait());
-  VisitType(S->getLhsType());
-  VisitType(S->getRhsType());
 }
 
 void StmtProfiler::VisitTypeTraitExpr(const TypeTraitExpr *S) {

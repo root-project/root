@@ -17,12 +17,11 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/LoopInfoImpl.h"
 #include "llvm/Analysis/LoopIterator.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/Support/CFG.h"
@@ -47,7 +46,7 @@ VerifyLoopInfoX("verify-loop-info", cl::location(VerifyLoopInfo),
 
 char LoopInfo::ID = 0;
 INITIALIZE_PASS_BEGIN(LoopInfo, "loops", "Natural Loop Information", true, true)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_END(LoopInfo, "loops", "Natural Loop Information", true, true)
 
 // Loop identifier metadata name.
@@ -177,10 +176,6 @@ PHINode *Loop::getCanonicalInductionVariable() const {
 
 /// isLCSSAForm - Return true if the Loop is in LCSSA form
 bool Loop::isLCSSAForm(DominatorTree &DT) const {
-  // Sort the blocks vector so that we can use binary search to do quick
-  // lookups.
-  SmallPtrSet<BasicBlock*, 16> LoopBBs(block_begin(), block_end());
-
   for (block_iterator BI = block_begin(), E = block_end(); BI != E; ++BI) {
     BasicBlock *BB = *BI;
     for (BasicBlock::iterator I = BB->begin(), E = BB->end(); I != E;++I)
@@ -196,7 +191,7 @@ bool Loop::isLCSSAForm(DominatorTree &DT) const {
         // block they are defined in.  Also, blocks not reachable from the
         // entry are special; uses in them don't need to go through PHIs.
         if (UserBB != BB &&
-            !LoopBBs.count(UserBB) &&
+            !contains(UserBB) &&
             DT.isReachableFromEntry(UserBB))
           return false;
       }
@@ -220,12 +215,12 @@ bool Loop::isSafeToClone() const {
   // Return false if any loop blocks contain indirectbrs, or there are any calls
   // to noduplicate functions.
   for (Loop::block_iterator I = block_begin(), E = block_end(); I != E; ++I) {
-    if (isa<IndirectBrInst>((*I)->getTerminator())) {
+    if (isa<IndirectBrInst>((*I)->getTerminator()))
       return false;
-    } else if (const InvokeInst *II = dyn_cast<InvokeInst>((*I)->getTerminator())) {
+
+    if (const InvokeInst *II = dyn_cast<InvokeInst>((*I)->getTerminator()))
       if (II->hasFnAttr(Attribute::NoDuplicate))
         return false;
-    }
 
     for (BasicBlock::iterator BI = (*I)->begin(), BE = (*I)->end(); BI != BE; ++BI) {
       if (const CallInst *CI = dyn_cast<CallInst>(BI)) {
@@ -309,15 +304,15 @@ bool Loop::isAnnotatedParallel() const {
       if (!II->mayReadOrWriteMemory())
         continue;
 
-      if (!II->getMetadata("llvm.mem.parallel_loop_access"))
-        return false;
-
       // The memory instruction can refer to the loop identifier metadata
       // directly or indirectly through another list metadata (in case of
       // nested parallel loops). The loop identifier metadata refers to
       // itself so we can check both cases with the same routine.
-      MDNode *loopIdMD =
-          dyn_cast<MDNode>(II->getMetadata("llvm.mem.parallel_loop_access"));
+      MDNode *loopIdMD = II->getMetadata("llvm.mem.parallel_loop_access");
+
+      if (!loopIdMD)
+        return false;
+
       bool loopIdMDFound = false;
       for (unsigned i = 0, e = loopIdMD->getNumOperands(); i < e; ++i) {
         if (loopIdMD->getOperand(i) == desiredLoopIdMetadata) {
@@ -337,9 +332,6 @@ bool Loop::isAnnotatedParallel() const {
 /// hasDedicatedExits - Return true if no exit block for the loop
 /// has a predecessor that is outside the loop.
 bool Loop::hasDedicatedExits() const {
-  // Sort the blocks vector so that we can use binary search to do quick
-  // lookups.
-  SmallPtrSet<BasicBlock *, 16> LoopBBs(block_begin(), block_end());
   // Each predecessor of each exit block of a normal loop is contained
   // within the loop.
   SmallVector<BasicBlock *, 4> ExitBlocks;
@@ -347,7 +339,7 @@ bool Loop::hasDedicatedExits() const {
   for (unsigned i = 0, e = ExitBlocks.size(); i != e; ++i)
     for (pred_iterator PI = pred_begin(ExitBlocks[i]),
          PE = pred_end(ExitBlocks[i]); PI != PE; ++PI)
-      if (!LoopBBs.count(*PI))
+      if (!contains(*PI))
         return false;
   // All the requirements are met.
   return true;
@@ -362,11 +354,6 @@ Loop::getUniqueExitBlocks(SmallVectorImpl<BasicBlock *> &ExitBlocks) const {
   assert(hasDedicatedExits() &&
          "getUniqueExitBlocks assumes the loop has canonical form exits!");
 
-  // Sort the blocks vector so that we can use binary search to do quick
-  // lookups.
-  SmallVector<BasicBlock *, 128> LoopBBs(block_begin(), block_end());
-  std::sort(LoopBBs.begin(), LoopBBs.end());
-
   SmallVector<BasicBlock *, 32> switchExitBlocks;
 
   for (block_iterator BI = block_begin(), BE = block_end(); BI != BE; ++BI) {
@@ -376,7 +363,7 @@ Loop::getUniqueExitBlocks(SmallVectorImpl<BasicBlock *> &ExitBlocks) const {
 
     for (succ_iterator I = succ_begin(*BI), E = succ_end(*BI); I != E; ++I) {
       // If block is inside the loop then it is not a exit block.
-      if (std::binary_search(LoopBBs.begin(), LoopBBs.end(), *I))
+      if (contains(*I))
         continue;
 
       pred_iterator PI = pred_begin(*I);
@@ -626,7 +613,7 @@ Loop *UnloopUpdater::getNearestLoop(BasicBlock *BB, Loop *BBLoop) {
 //
 bool LoopInfo::runOnFunction(Function &) {
   releaseMemory();
-  LI.Analyze(getAnalysis<DominatorTree>().getBase());
+  LI.Analyze(getAnalysis<DominatorTreeWrapperPass>().getDomTree());
   return false;
 }
 
@@ -717,7 +704,7 @@ void LoopInfo::verifyAnalysis() const {
 
 void LoopInfo::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.setPreservesAll();
-  AU.addRequired<DominatorTree>();
+  AU.addRequired<DominatorTreeWrapperPass>();
 }
 
 void LoopInfo::print(raw_ostream &OS, const Module*) const {

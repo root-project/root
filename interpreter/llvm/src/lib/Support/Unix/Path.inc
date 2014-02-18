@@ -17,7 +17,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "Unix.h"
-#include "llvm/Support/Process.h"
 #include <limits.h>
 #include <stdio.h>
 #if HAVE_SYS_STAT_H
@@ -182,17 +181,17 @@ namespace sys  {
 namespace fs {
 #if defined(__FreeBSD__) || defined (__NetBSD__) || defined(__Bitrig__) || \
     defined(__OpenBSD__) || defined(__minix) || defined(__FreeBSD_kernel__) || \
-    defined(__linux__) || defined(__CYGWIN__)
+    defined(__linux__) || defined(__CYGWIN__) || defined(__DragonFly__)
 static int
-test_dir(char buf[PATH_MAX], char ret[PATH_MAX],
-    const char *dir, const char *bin)
-{
+test_dir(char ret[PATH_MAX], const char *dir, const char *bin)
+{  
   struct stat sb;
+  char fullpath[PATH_MAX];
 
-  snprintf(buf, PATH_MAX, "%s/%s", dir, bin);
-  if (realpath(buf, ret) == NULL)
+  snprintf(fullpath, PATH_MAX, "%s/%s", dir, bin);
+  if (realpath(fullpath, ret) == NULL)
     return (1);
-  if (stat(buf, &sb) != 0)
+  if (stat(fullpath, &sb) != 0)
     return (1);
 
   return (0);
@@ -201,20 +200,21 @@ test_dir(char buf[PATH_MAX], char ret[PATH_MAX],
 static char *
 getprogpath(char ret[PATH_MAX], const char *bin)
 {
-  char *pv, *s, *t, buf[PATH_MAX];
+  char *pv, *s, *t;
 
   /* First approach: absolute path. */
   if (bin[0] == '/') {
-    if (test_dir(buf, ret, "/", bin) == 0)
+    if (test_dir(ret, "/", bin) == 0)
       return (ret);
     return (NULL);
   }
 
   /* Second approach: relative path. */
   if (strchr(bin, '/') != NULL) {
-    if (getcwd(buf, PATH_MAX) == NULL)
+    char cwd[PATH_MAX];
+    if (getcwd(cwd, PATH_MAX) == NULL)
       return (NULL);
-    if (test_dir(buf, ret, buf, bin) == 0)
+    if (test_dir(ret, cwd, bin) == 0)
       return (ret);
     return (NULL);
   }
@@ -226,7 +226,7 @@ getprogpath(char ret[PATH_MAX], const char *bin)
   if (pv == NULL)
     return (NULL);
   while ((t = strsep(&s, ":")) != NULL) {
-    if (test_dir(buf, ret, t, bin) == 0) {
+    if (test_dir(ret, t, bin) == 0) {
       free(pv);
       return (ret);
     }
@@ -251,7 +251,8 @@ std::string getMainExecutable(const char *argv0, void *MainAddr) {
       return link_path;
   }
 #elif defined(__FreeBSD__) || defined (__NetBSD__) || defined(__Bitrig__) || \
-      defined(__OpenBSD__) || defined(__minix) || defined(__FreeBSD_kernel__)
+      defined(__OpenBSD__) || defined(__minix) || defined(__DragonFly__) || \
+      defined(__FreeBSD_kernel__)
   char exe_path[PATH_MAX];
 
   if (getprogpath(exe_path, argv0) != NULL)
@@ -354,19 +355,6 @@ error_code create_hard_link(const Twine &to, const Twine &from) {
   StringRef t = to.toNullTerminatedStringRef(to_storage);
 
   if (::link(t.begin(), f.begin()) == -1)
-    return error_code(errno, system_category());
-
-  return error_code::success();
-}
-
-error_code create_symlink(const Twine &to, const Twine &from) {
-  // Get arguments.
-  SmallString<128> from_storage;
-  SmallString<128> to_storage;
-  StringRef f = from.toNullTerminatedStringRef(from_storage);
-  StringRef t = to.toNullTerminatedStringRef(to_storage);
-
-  if (::symlink(t.begin(), f.begin()) == -1)
     return error_code(errno, system_category());
 
   return error_code::success();
@@ -525,21 +513,24 @@ error_code status(int FD, file_status &Result) {
 error_code setLastModificationAndAccessTime(int FD, TimeValue Time) {
 #if defined(HAVE_FUTIMENS)
   timespec Times[2];
-  Times[0].tv_sec = Time.toPosixTime();
+  Times[0].tv_sec = Time.toEpochTime();
   Times[0].tv_nsec = 0;
   Times[1] = Times[0];
   if (::futimens(FD, Times))
+    return error_code(errno, system_category());
+  return error_code::success();
 #elif defined(HAVE_FUTIMES)
   timeval Times[2];
-  Times[0].tv_sec = Time.toPosixTime();
+  Times[0].tv_sec = Time.toEpochTime();
   Times[0].tv_usec = 0;
   Times[1] = Times[0];
   if (::futimes(FD, Times))
-#else
-#error Missing futimes() and futimens()
-#endif
     return error_code(errno, system_category());
   return error_code::success();
+#else
+#warning Missing futimes() and futimens()
+  return make_error_code(errc::not_supported);
+#endif
 }
 
 error_code mapped_file_region::init(int FD, bool CloseFD, uint64_t Offset) {
@@ -644,7 +635,7 @@ uint64_t mapped_file_region::size() const {
 
 char *mapped_file_region::data() const {
   assert(Mapping && "Mapping failed but used anyway!");
-  assert(Mode != readonly && "Cannot get non const data for readonly mapping!");
+  assert(Mode != readonly && "Cannot get non-const data for readonly mapping!");
   return reinterpret_cast<char*>(Mapping);
 }
 
@@ -792,5 +783,20 @@ error_code openFileForWrite(const Twine &Name, int &ResultFD,
 }
 
 } // end namespace fs
+
+namespace path {
+
+bool home_directory(SmallVectorImpl<char> &result) {
+  if (char *RequestedDir = getenv("HOME")) {
+    result.clear();
+    result.append(RequestedDir, RequestedDir + strlen(RequestedDir));
+    return true;
+  }
+
+  return false;
+}
+
+} // end namespace path
+
 } // end namespace sys
 } // end namespace llvm

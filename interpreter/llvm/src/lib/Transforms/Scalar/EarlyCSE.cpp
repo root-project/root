@@ -17,16 +17,16 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/ScopedHashTable.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/RecyclingAllocator.h"
 #include "llvm/Target/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/Local.h"
-#include <deque>
+#include <vector>
 using namespace llvm;
 
 STATISTIC(NumSimplify, "Number of instructions simplified or DCE'd");
@@ -377,7 +377,7 @@ private:
 
   // This transformation requires dominator postdominator info
   virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-    AU.addRequired<DominatorTree>();
+    AU.addRequired<DominatorTreeWrapperPass>();
     AU.addRequired<TargetLibraryInfo>();
     AU.setPreservesCFG();
   }
@@ -392,7 +392,7 @@ FunctionPass *llvm::createEarlyCSEPass() {
 }
 
 INITIALIZE_PASS_BEGIN(EarlyCSE, "early-cse", "Early CSE", false, false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfo)
 INITIALIZE_PASS_END(EarlyCSE, "early-cse", "Early CSE", false, false)
 
@@ -552,11 +552,14 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
 
 
 bool EarlyCSE::runOnFunction(Function &F) {
-  std::deque<StackNode *> nodesToProcess;
+  if (skipOptnoneFunction(F))
+    return false;
+
+  std::vector<StackNode *> nodesToProcess;
 
   TD = getAnalysisIfAvailable<DataLayout>();
   TLI = &getAnalysis<TargetLibraryInfo>();
-  DT = &getAnalysis<DominatorTree>();
+  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
 
   // Tables that the pass uses when walking the domtree.
   ScopedHTType AVTable;
@@ -570,7 +573,7 @@ bool EarlyCSE::runOnFunction(Function &F) {
   bool Changed = false;
 
   // Process the root node.
-  nodesToProcess.push_front(
+  nodesToProcess.push_back(
       new StackNode(AvailableValues, AvailableLoads, AvailableCalls,
                     CurrentGeneration, DT->getRootNode(),
                     DT->getRootNode()->begin(),
@@ -583,7 +586,7 @@ bool EarlyCSE::runOnFunction(Function &F) {
   while (!nodesToProcess.empty()) {
     // Grab the first item off the stack. Set the current generation, remove
     // the node from the stack, and process it.
-    StackNode *NodeToProcess = nodesToProcess.front();
+    StackNode *NodeToProcess = nodesToProcess.back();
 
     // Initialize class members.
     CurrentGeneration = NodeToProcess->currentGeneration();
@@ -597,7 +600,7 @@ bool EarlyCSE::runOnFunction(Function &F) {
     } else if (NodeToProcess->childIter() != NodeToProcess->end()) {
       // Push the next child onto the stack.
       DomTreeNode *child = NodeToProcess->nextChild();
-      nodesToProcess.push_front(
+      nodesToProcess.push_back(
           new StackNode(AvailableValues,
                         AvailableLoads,
                         AvailableCalls,
@@ -607,7 +610,7 @@ bool EarlyCSE::runOnFunction(Function &F) {
       // It has been processed, and there are no more children to process,
       // so delete it and pop it off the stack.
       delete NodeToProcess;
-      nodesToProcess.pop_front();
+      nodesToProcess.pop_back();
     }
   } // while (!nodes...)
 

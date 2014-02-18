@@ -14,6 +14,7 @@
 #define DEBUG_TYPE "mips16-hard-float"
 #include "Mips16HardFloat.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
@@ -164,6 +165,11 @@ static bool needsFPStubFromParams(Function &F) {
 
 static bool needsFPReturnHelper(Function &F) {
   Type* RetType = F.getReturnType();
+  return whichFPReturnVariant(RetType) != NoFPRet;
+}
+
+static bool needsFPReturnHelper(const FunctionType &FT) {
+  Type* RetType = FT.getReturnType();
   return whichFPReturnVariant(RetType) != NoFPRet;
 }
 
@@ -326,6 +332,7 @@ static void assureFPCallStub(Function &F, Module *M,
 //
 static const char *IntrinsicInline[] =
   {"fabs",
+   "fabsf",
    "llvm.ceil.f32", "llvm.ceil.f64",
    "llvm.copysign.f32", "llvm.copysign.f64",
    "llvm.cos.f32", "llvm.cos.f64",
@@ -399,13 +406,31 @@ static bool fixupFPReturnAndCall
         Value *F = (M->getOrInsertFunction(Name, A, MyVoid, T, NULL));
         CallInst::Create(F, Params, "", &Inst );
       } else if (const CallInst *CI = dyn_cast<CallInst>(I)) {
+          const Value* V = CI->getCalledValue();
+          const Type* T = 0;
+          if (V) T = V->getType();
+          const PointerType *PFT=0;
+          if (T) PFT = dyn_cast<PointerType>(T);
+          const FunctionType *FT=0;
+          if (PFT) FT = dyn_cast<FunctionType>(PFT->getElementType());
+          Function *F_ =  CI->getCalledFunction();
+          if (FT && needsFPReturnHelper(*FT) &&
+              !(F_ && isIntrinsicInline(F_))) {
+            Modified=true;
+            F.addFnAttr("saveS2");
+          }
+          if (F_ && !isIntrinsicInline(F_)) {
           // pic mode calls are handled by already defined
           // helper functions
-          if (Subtarget.getRelocationModel() != Reloc::PIC_ ) {
-            Function *F_ =  CI->getCalledFunction();
-            if (F_ && !isIntrinsicInline(F_) && needsFPHelperFromSig(*F_)) {
-              assureFPCallStub(*F_, M, Subtarget);
+            if (needsFPReturnHelper(*F_)) {
               Modified=true;
+              F.addFnAttr("saveS2");
+            }
+            if (Subtarget.getRelocationModel() != Reloc::PIC_ ) {
+              if (needsFPHelperFromSig(*F_)) {
+                assureFPCallStub(*F_, M, Subtarget);
+                Modified=true;
+              }
             }
           }
       }

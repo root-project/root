@@ -92,6 +92,10 @@
 #  define LIBBUILTIN(ID, TYPE, ATTRS, HEADER, BUILTIN_LANG) BUILTIN(ID, TYPE, ATTRS)
 #endif
 
+#if defined(BUILTIN) && !defined(LANGBUILTIN)
+#  define LANGBUILTIN(ID, TYPE, ATTRS, BUILTIN_LANG) BUILTIN(ID, TYPE, ATTRS)
+#endif
+
 // Standard libc/libm functions:
 BUILTIN(__builtin_atan2 , "ddd"  , "Fnc")
 BUILTIN(__builtin_atan2f, "fff"  , "Fnc")
@@ -239,8 +243,8 @@ BUILTIN(__builtin_nearbyintl, "LdLd", "Fnc")
 BUILTIN(__builtin_nextafter , "ddd", "Fnc")
 BUILTIN(__builtin_nextafterf, "fff", "Fnc")
 BUILTIN(__builtin_nextafterl, "LdLdLd", "Fnc")
-BUILTIN(__builtin_nexttoward , "ddd", "Fnc")
-BUILTIN(__builtin_nexttowardf, "fff", "Fnc")
+BUILTIN(__builtin_nexttoward , "ddLd", "Fnc")
+BUILTIN(__builtin_nexttowardf, "ffLd", "Fnc")
 BUILTIN(__builtin_nexttowardl, "LdLdLd", "Fnc")
 BUILTIN(__builtin_remainder , "ddd", "Fnc")
 BUILTIN(__builtin_remainderf, "fff", "Fnc")
@@ -670,11 +674,11 @@ BUILTIN(__builtin_abort, "v", "Fnr")
 BUILTIN(__builtin_index, "c*cC*i", "Fn")
 BUILTIN(__builtin_rindex, "c*cC*i", "Fn")
 
-// Microsoft builtins.
-BUILTIN(__assume, "vb", "n")
-BUILTIN(__noop, "v.", "n")
-BUILTIN(__debugbreak, "v", "n")
-
+// Microsoft builtins.  These are only active with -fms-extensions.
+LANGBUILTIN(_alloca,      "v*z", "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(__assume,     "vb",  "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(__noop,       "v.",  "n", ALL_MS_LANGUAGES)
+LANGBUILTIN(__debugbreak, "v",   "n", ALL_MS_LANGUAGES)
 
 // C99 library functions
 // C99 stdlib.h
@@ -993,8 +997,8 @@ LIBBUILTIN(nextafter, "ddd", "fne", "math.h", ALL_LANGUAGES)
 LIBBUILTIN(nextafterf, "fff", "fne", "math.h", ALL_LANGUAGES)
 LIBBUILTIN(nextafterl, "LdLdLd", "fne", "math.h", ALL_LANGUAGES)
 
-LIBBUILTIN(nexttoward, "ddd", "fne", "math.h", ALL_LANGUAGES)
-LIBBUILTIN(nexttowardf, "fff", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(nexttoward, "ddLd", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(nexttowardf, "ffLd", "fne", "math.h", ALL_LANGUAGES)
 LIBBUILTIN(nexttowardl, "LdLdLd", "fne", "math.h", ALL_LANGUAGES)
 
 LIBBUILTIN(remainder, "ddd", "fne", "math.h", ALL_LANGUAGES)
@@ -1133,6 +1137,21 @@ LIBBUILTIN(ctanh, "XdXd", "fnc", "complex.h", ALL_LANGUAGES)
 LIBBUILTIN(ctanhf, "XfXf", "fnc", "complex.h", ALL_LANGUAGES)
 LIBBUILTIN(ctanhl, "XLdXLd", "fnc", "complex.h", ALL_LANGUAGES)
 
+// __sinpi and friends are OS X specific library functions, but otherwise much
+// like the standard (non-complex) sin (etc).
+LIBBUILTIN(__sinpi, "dd", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(__sinpif, "ff", "fne", "math.h", ALL_LANGUAGES)
+
+LIBBUILTIN(__cospi, "dd", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(__cospif, "ff", "fne", "math.h", ALL_LANGUAGES)
+
+LIBBUILTIN(__tanpi, "dd", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(__tanpif, "ff", "fne", "math.h", ALL_LANGUAGES)
+
+// Similarly, __exp10 is OS X only
+LIBBUILTIN(__exp10, "dd", "fne", "math.h", ALL_LANGUAGES)
+LIBBUILTIN(__exp10f, "ff", "fne", "math.h", ALL_LANGUAGES)
+
 // Blocks runtime Builtin math library functions
 LIBBUILTIN(_Block_object_assign, "vv*vC*iC", "f", "Blocks.h", ALL_LANGUAGES)
 LIBBUILTIN(_Block_object_dispose, "vvC*iC", "f", "Blocks.h", ALL_LANGUAGES)
@@ -1178,3 +1197,4 @@ BUILTIN(__builtin_addressof, "v*v&", "nct")
 
 #undef BUILTIN
 #undef LIBBUILTIN
+#undef LANGBUILTIN

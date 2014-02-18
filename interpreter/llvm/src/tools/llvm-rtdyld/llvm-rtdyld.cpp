@@ -22,6 +22,8 @@
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/Memory.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Signals.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/system_error.h"
 using namespace llvm;
@@ -60,9 +62,10 @@ public:
   SmallVector<sys::MemoryBlock, 16> DataMemory;
 
   uint8_t *allocateCodeSection(uintptr_t Size, unsigned Alignment,
-                               unsigned SectionID);
+                               unsigned SectionID, StringRef SectionName);
   uint8_t *allocateDataSection(uintptr_t Size, unsigned Alignment,
-                               unsigned SectionID, bool IsReadOnly);
+                               unsigned SectionID, StringRef SectionName,
+                               bool IsReadOnly);
 
   virtual void *getPointerToNamedFunction(const std::string &Name,
                                           bool AbortOnFailure = true) {
@@ -80,7 +83,8 @@ public:
 
 uint8_t *TrivialMemoryManager::allocateCodeSection(uintptr_t Size,
                                                    unsigned Alignment,
-                                                   unsigned SectionID) {
+                                                   unsigned SectionID,
+                                                   StringRef SectionName) {
   sys::MemoryBlock MB = sys::Memory::AllocateRWX(Size, 0, 0);
   FunctionMemory.push_back(MB);
   return (uint8_t*)MB.base();
@@ -89,6 +93,7 @@ uint8_t *TrivialMemoryManager::allocateCodeSection(uintptr_t Size,
 uint8_t *TrivialMemoryManager::allocateDataSection(uintptr_t Size,
                                                    unsigned Alignment,
                                                    unsigned SectionID,
+                                                   StringRef SectionName,
                                                    bool IsReadOnly) {
   sys::MemoryBlock MB = sys::Memory::AllocateRWX(Size, 0, 0);
   DataMemory.push_back(MB);
@@ -146,11 +151,9 @@ static int printLineInfoForInput() {
     OwningPtr<DIContext> Context(DIContext::getDWARFContext(LoadedObject->getObjectFile()));
 
     // Use symbol info to iterate functions in the object.
-    error_code ec;
     for (object::symbol_iterator I = LoadedObject->begin_symbols(),
                                  E = LoadedObject->end_symbols();
-                          I != E && !ec;
-                          I.increment(ec)) {
+         I != E; ++I) {
       object::SymbolRef::Type SymType;
       if (I->getType(SymType)) continue;
       if (SymType == object::SymbolRef::ST_Function) {
@@ -236,6 +239,9 @@ static int executeInput() {
 }
 
 int main(int argc, char **argv) {
+  sys::PrintStackTraceOnErrorSignal();
+  PrettyStackTraceProgram X(argc, argv);
+
   ProgramName = argv[0];
   llvm_shutdown_obj Y;  // Call llvm_shutdown() on exit.
 

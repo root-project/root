@@ -319,6 +319,12 @@ bool InstCombiner::SimplifyAssociativeOrCommutative(BinaryOperator &I) {
 
         Constant *Folded = ConstantExpr::get(Opcode, C1, C2);
         BinaryOperator *New = BinaryOperator::Create(Opcode, A, B);
+        if (isa<FPMathOperator>(New)) {
+          FastMathFlags Flags = I.getFastMathFlags();
+          Flags &= Op0->getFastMathFlags();
+          Flags &= Op1->getFastMathFlags();
+          New->setFastMathFlags(Flags);
+        }
         InsertNewInstWith(New, I);
         New->takeName(Op1);
         I.setOperand(0, New);
@@ -566,9 +572,14 @@ static Value *FoldOperationIntoSelectOperand(Instruction &I, Value *SO,
   if (!ConstIsRHS)
     std::swap(Op0, Op1);
 
-  if (BinaryOperator *BO = dyn_cast<BinaryOperator>(&I))
-    return IC->Builder->CreateBinOp(BO->getOpcode(), Op0, Op1,
+  if (BinaryOperator *BO = dyn_cast<BinaryOperator>(&I)) {
+    Value *RI = IC->Builder->CreateBinOp(BO->getOpcode(), Op0, Op1,
                                     SO->getName()+".op");
+    Instruction *FPInst = dyn_cast<Instruction>(RI);
+    if (FPInst && isa<FPMathOperator>(FPInst))
+      FPInst->copyFastMathFlags(BO);
+    return RI;
+  }
   if (ICmpInst *CI = dyn_cast<ICmpInst>(&I))
     return IC->Builder->CreateICmp(CI->getPredicate(), Op0, Op1,
                                    SO->getName()+".cmp");
@@ -699,7 +710,10 @@ Instruction *InstCombiner::FoldOpIntoPhi(Instruction &I) {
       Value *TrueVInPred = TrueV->DoPHITranslation(PhiTransBB, ThisBB);
       Value *FalseVInPred = FalseV->DoPHITranslation(PhiTransBB, ThisBB);
       Value *InV = 0;
-      if (Constant *InC = dyn_cast<Constant>(PN->getIncomingValue(i)))
+      // Beware of ConstantExpr:  it may eventually evaluate to getNullValue,
+      // even if currently isNullValue gives false.
+      Constant *InC = dyn_cast<Constant>(PN->getIncomingValue(i));
+      if (InC && !isa<ConstantExpr>(InC))
         InV = InC->isNullValue() ? FalseVInPred : TrueVInPred;
       else
         InV = Builder->CreateSelect(PN->getIncomingValue(i),
@@ -1186,14 +1200,16 @@ Instruction *InstCombiner::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   // The GEP pattern is emitted by the SCEV expander for certain kinds of
   // pointer arithmetic.
   if (TD && GEP.getNumIndices() == 1 &&
-      match(GEP.getOperand(1), m_Neg(m_PtrToInt(m_Value()))) &&
-      GEP.getType() == Builder->getInt8PtrTy() &&
-      GEP.getOperand(1)->getType()->getScalarSizeInBits() ==
-          TD->getPointerSizeInBits(GEP.getPointerAddressSpace())) {
-    Operator *Index = cast<Operator>(GEP.getOperand(1));
-    Value *PtrToInt = Builder->CreatePtrToInt(PtrOp, Index->getType());
-    Value *NewSub = Builder->CreateSub(PtrToInt, Index->getOperand(1));
-    return CastInst::Create(Instruction::IntToPtr, NewSub, GEP.getType());
+      match(GEP.getOperand(1), m_Neg(m_PtrToInt(m_Value())))) {
+    unsigned AS = GEP.getPointerAddressSpace();
+    if (GEP.getType() == Builder->getInt8PtrTy(AS) &&
+        GEP.getOperand(1)->getType()->getScalarSizeInBits() ==
+        TD->getPointerSizeInBits(AS)) {
+      Operator *Index = cast<Operator>(GEP.getOperand(1));
+      Value *PtrToInt = Builder->CreatePtrToInt(PtrOp, Index->getType());
+      Value *NewSub = Builder->CreateSub(PtrToInt, Index->getOperand(1));
+      return CastInst::Create(Instruction::IntToPtr, NewSub, GEP.getType());
+    }
   }
 
   // Handle gep(bitcast x) and gep(gep x, 0, 0, 0).
@@ -1204,9 +1220,7 @@ Instruction *InstCombiner::visitGetElementPtrInst(GetElementPtrInst &GEP) {
   if (!StrippedPtrTy)
     return 0;
 
-  if (StrippedPtr != PtrOp &&
-    StrippedPtrTy->getAddressSpace() == GEP.getPointerAddressSpace()) {
-
+  if (StrippedPtr != PtrOp) {
     bool HasZeroPointerIndex = false;
     if (ConstantInt *C = dyn_cast<ConstantInt>(GEP.getOperand(1)))
       HasZeroPointerIndex = C->isZero();
@@ -1260,8 +1274,11 @@ Instruction *InstCombiner::visitGetElementPtrInst(GetElementPtrInst &GEP) {
         Value *NewGEP = GEP.isInBounds() ?
           Builder->CreateInBoundsGEP(StrippedPtr, Idx, GEP.getName()) :
           Builder->CreateGEP(StrippedPtr, Idx, GEP.getName());
+
         // V and GEP are both pointer types --> BitCast
-        return new BitCastInst(NewGEP, GEP.getType());
+        if (StrippedPtrTy->getAddressSpace() == GEP.getPointerAddressSpace())
+          return new BitCastInst(NewGEP, GEP.getType());
+        return new AddrSpaceCastInst(NewGEP, GEP.getType());
       }
 
       // Transform things like:
@@ -1291,8 +1308,11 @@ Instruction *InstCombiner::visitGetElementPtrInst(GetElementPtrInst &GEP) {
             Value *NewGEP = GEP.isInBounds() && NSW ?
               Builder->CreateInBoundsGEP(StrippedPtr, NewIdx, GEP.getName()) :
               Builder->CreateGEP(StrippedPtr, NewIdx, GEP.getName());
+
             // The NewGEP must be pointer typed, so must the old one -> BitCast
-            return new BitCastInst(NewGEP, GEP.getType());
+            if (StrippedPtrTy->getAddressSpace() == GEP.getPointerAddressSpace())
+              return new BitCastInst(NewGEP, GEP.getType());
+            return new AddrSpaceCastInst(NewGEP, GEP.getType());
           }
         }
       }
@@ -1332,7 +1352,9 @@ Instruction *InstCombiner::visitGetElementPtrInst(GetElementPtrInst &GEP) {
               Builder->CreateInBoundsGEP(StrippedPtr, Off, GEP.getName()) :
               Builder->CreateGEP(StrippedPtr, Off, GEP.getName());
             // The NewGEP must be pointer typed, so must the old one -> BitCast
-            return new BitCastInst(NewGEP, GEP.getType());
+            if (StrippedPtrTy->getAddressSpace() == GEP.getPointerAddressSpace())
+              return new BitCastInst(NewGEP, GEP.getType());
+            return new AddrSpaceCastInst(NewGEP, GEP.getType());
           }
         }
       }
@@ -1613,7 +1635,7 @@ Instruction *InstCombiner::visitBranchInst(BranchInst &BI) {
     return &BI;
   }
 
-  // Cannonicalize fcmp_one -> fcmp_oeq
+  // Canonicalize fcmp_one -> fcmp_oeq
   FCmpInst::Predicate FPred; Value *Y;
   if (match(&BI, m_Br(m_FCmp(FPred, m_Value(X), m_Value(Y)),
                              TrueDest, FalseDest)) &&
@@ -1629,7 +1651,7 @@ Instruction *InstCombiner::visitBranchInst(BranchInst &BI) {
       return &BI;
     }
 
-  // Cannonicalize icmp_ne -> icmp_eq
+  // Canonicalize icmp_ne -> icmp_eq
   ICmpInst::Predicate IPred;
   if (match(&BI, m_Br(m_ICmp(IPred, m_Value(X), m_Value(Y)),
                       TrueDest, FalseDest)) &&
@@ -2493,6 +2515,9 @@ public:
 }
 
 bool InstCombiner::runOnFunction(Function &F) {
+  if (skipOptnoneFunction(F))
+    return false;
+
   TD = getAnalysisIfAvailable<DataLayout>();
   TLI = &getAnalysis<TargetLibraryInfo>();
   // Minimizing size?

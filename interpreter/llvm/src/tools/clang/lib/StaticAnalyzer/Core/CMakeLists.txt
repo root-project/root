@@ -14,6 +14,7 @@ add_clang_library(clangStaticAnalyzerCore
   CheckerHelpers.cpp
   CheckerManager.cpp
   CheckerRegistry.cpp
+  CommonBugCategories.cpp
   ConstraintManager.cpp
   CoreEngine.cpp
   Environment.cpp
@@ -50,9 +51,9 @@ add_dependencies(clangStaticAnalyzerCore
   )
 
 target_link_libraries(clangStaticAnalyzerCore
+  clangAST
+  clangAnalysis
   clangBasic
   clangLex
-  clangAST
-  clangFrontend
   clangRewriteCore
   )

@@ -14,11 +14,9 @@
 #ifndef MIPSSUBTARGET_H
 #define MIPSSUBTARGET_H
 
-#include "MCTargetDesc/MipsReginfo.h"
 #include "llvm/MC/MCInstrItineraries.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Target/TargetSubtargetInfo.h"
-
 #include <string>
 
 #define GET_SUBTARGETINFO_HEADER
@@ -118,9 +116,6 @@ protected:
 
   InstrItineraryData InstrItins;
 
-  // The instance to the register info section object
-  MipsReginfo MRI;
-
   // Relocation Model
   Reloc::Model RM;
 
@@ -130,6 +125,7 @@ protected:
 
   MipsTargetMachine *TM;
 
+  Triple TargetTriple;
 public:
   virtual bool enablePostRAScheduler(CodeGenOpt::Level OptLevel,
                                      AntiDepBreakMode& Mode,
@@ -194,12 +190,17 @@ public:
 
   bool mipsSEUsesSoftFloat() const;
 
+  bool enableLongBranchPass() const {
+    return hasStandardEncoding() || allowMixed16_32();
+  }
+
   /// Features related to the presence of specific instructions.
   bool hasSEInReg()   const { return HasSEInReg; }
   bool hasCondMov()   const { return HasCondMov; }
   bool hasSwap()      const { return HasSwap; }
   bool hasBitCount()  const { return HasBitCount; }
   bool hasFPIdx()     const { return HasFPIdx; }
+  bool hasExtractInsert() const { return !inMips16Mode() && hasMips32r2(); }
 
   const InstrItineraryData &getInstrItineraryData() const { return InstrItins; }
   bool allowMixed16_32() const { return inMips16ModeDefault() |
@@ -207,8 +208,15 @@ public:
 
   bool os16() const { return Os16;};
 
-  // Grab MipsRegInfo object
-  const MipsReginfo &getMReginfo() const { return MRI; }
+  bool isTargetNaCl() const { return TargetTriple.isOSNaCl(); }
+  bool isNotTargetNaCl() const { return !TargetTriple.isOSNaCl(); }
+
+// for now constant islands are on for the whole compilation unit but we only
+// really use them if in addition we are in mips16 mode
+//
+static bool useConstantIslands();
+
+  unsigned stackAlignment() const { return hasMips64() ? 16 : 8; }
 
   // Grab relocation model
   Reloc::Model getRelocationModel() const {return RM;}

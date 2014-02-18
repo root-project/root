@@ -9,6 +9,7 @@
 
 #include "MCTargetDesc/X86BaseInfo.h"
 #include "MCTargetDesc/X86FixupKinds.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCAssembler.h"
 #include "llvm/MC/MCELFObjectWriter.h"
@@ -67,9 +68,16 @@ public:
 
 class X86AsmBackend : public MCAsmBackend {
   StringRef CPU;
+  bool HasNopl;
 public:
   X86AsmBackend(const Target &T, StringRef _CPU)
-    : MCAsmBackend(), CPU(_CPU) {}
+    : MCAsmBackend(), CPU(_CPU) {
+    HasNopl = CPU != "generic" && CPU != "i386" && CPU != "i486" &&
+              CPU != "i586" && CPU != "pentium" && CPU != "pentium-mmx" &&
+              CPU != "i686" && CPU != "k6" && CPU != "k6-2" && CPU != "k6-3" &&
+              CPU != "geode" && CPU != "winchip-c6" && CPU != "winchip2" &&
+              CPU != "c3" && CPU != "c3-2";
+  }
 
   unsigned getNumFixupKinds() const {
     return X86::NumTargetFixupKinds;
@@ -209,9 +217,9 @@ static unsigned getRelaxedOpcodeArith(unsigned Op) {
   case X86::CMP64mi8: return X86::CMP64mi32;
 
     // PUSH
-  case X86::PUSHi8: return X86::PUSHi32;
-  case X86::PUSHi16: return X86::PUSHi32;
-  case X86::PUSH64i8: return X86::PUSH64i32;
+  case X86::PUSH32i8:  return X86::PUSHi32;
+  case X86::PUSH16i8:  return X86::PUSHi16;
+  case X86::PUSH64i8:  return X86::PUSH64i32;
   case X86::PUSH64i16: return X86::PUSH64i32;
   }
 }
@@ -306,10 +314,10 @@ bool X86AsmBackend::writeNopData(uint64_t Count, MCObjectWriter *OW) const {
     {0x66, 0x2e, 0x0f, 0x1f, 0x84, 0x00, 0x00, 0x00, 0x00, 0x00},
   };
 
-  // This CPU doesnt support long nops. If needed add more.
+  // This CPU doesn't support long nops. If needed add more.
   // FIXME: Can we get this from the subtarget somehow?
-  if (CPU == "generic" || CPU == "i386" || CPU == "i486" || CPU == "i586" ||
-      CPU == "pentium" || CPU == "pentium-mmx" || CPU == "geode") {
+  // FIXME: We could generated something better than plain 0x90.
+  if (!HasNopl) {
     for (uint64_t i = 0; i < Count; ++i)
       OW->Write8(0x90);
     return true;
@@ -339,14 +347,7 @@ class ELFX86AsmBackend : public X86AsmBackend {
 public:
   uint8_t OSABI;
   ELFX86AsmBackend(const Target &T, uint8_t _OSABI, StringRef CPU)
-    : X86AsmBackend(T, CPU), OSABI(_OSABI) {
-    HasReliableSymbolDifference = true;
-  }
-
-  virtual bool doesSectionRequireSymbols(const MCSection &Section) const {
-    const MCSectionELF &ES = static_cast<const MCSectionELF&>(Section);
-    return ES.getFlags() & ELF::SHF_MERGE;
-  }
+      : X86AsmBackend(T, CPU), OSABI(_OSABI) {}
 };
 
 class ELFX86_32AsmBackend : public ELFX86AsmBackend {
@@ -450,7 +451,9 @@ protected:
 
       switch (Inst.getOperation()) {
       default:
-        llvm_unreachable("cannot handle CFI directive for compact unwind!");
+        // Any other CFI directives indicate a frame that we aren't prepared
+        // to represent via compact unwind, so just bail out.
+        return 0;
       case MCCFIInstruction::OpDefCfaRegister: {
         // Defines a frame pointer. E.g.
         //
@@ -730,17 +733,19 @@ public:
 
 class DarwinX86_64AsmBackend : public DarwinX86AsmBackend {
   bool SupportsCU;
+  const MachO::CPUSubTypeX86 Subtype;
 public:
   DarwinX86_64AsmBackend(const Target &T, const MCRegisterInfo &MRI,
-                         StringRef CPU, bool SupportsCU)
-    : DarwinX86AsmBackend(T, MRI, CPU, true), SupportsCU(SupportsCU) {
+                         StringRef CPU, bool SupportsCU,
+                         MachO::CPUSubTypeX86 st)
+    : DarwinX86AsmBackend(T, MRI, CPU, true), SupportsCU(SupportsCU),
+      Subtype(st) {
     HasReliableSymbolDifference = true;
   }
 
   MCObjectWriter *createObjectWriter(raw_ostream &OS) const {
     return createX86MachObjectWriter(OS, /*Is64Bit=*/true,
-                                     MachO::CPU_TYPE_X86_64,
-                                     MachO::CPU_SUBTYPE_X86_64_ALL);
+                                     MachO::CPU_TYPE_X86_64, Subtype);
   }
 
   virtual bool doesSectionRequireSymbols(const MCSection &Section) const {
@@ -791,7 +796,7 @@ MCAsmBackend *llvm::createX86_32AsmBackend(const Target &T,
                                            StringRef CPU) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin() || TheTriple.getEnvironment() == Triple::MachO)
+  if (TheTriple.isOSBinFormatMachO())
     return new DarwinX86_32AsmBackend(T, MRI, CPU,
                                       TheTriple.isMacOSX() &&
                                       !TheTriple.isMacOSXVersionLT(10, 7));
@@ -809,10 +814,15 @@ MCAsmBackend *llvm::createX86_64AsmBackend(const Target &T,
                                            StringRef CPU) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin() || TheTriple.getEnvironment() == Triple::MachO)
+  if (TheTriple.isOSBinFormatMachO()) {
+    MachO::CPUSubTypeX86 CS =
+        StringSwitch<MachO::CPUSubTypeX86>(TheTriple.getArchName())
+            .Case("x86_64h", MachO::CPU_SUBTYPE_X86_64_H)
+            .Default(MachO::CPU_SUBTYPE_X86_64_ALL);
     return new DarwinX86_64AsmBackend(T, MRI, CPU,
                                       TheTriple.isMacOSX() &&
-                                      !TheTriple.isMacOSXVersionLT(10, 7));
+                                      !TheTriple.isMacOSXVersionLT(10, 7), CS);
+  }
 
   if (TheTriple.isOSWindows() && TheTriple.getEnvironment() != Triple::ELF)
     return new WindowsX86AsmBackend(T, true, CPU);

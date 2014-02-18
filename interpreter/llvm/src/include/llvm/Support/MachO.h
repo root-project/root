@@ -268,8 +268,8 @@ namespace llvm {
     enum {
       EXPORT_SYMBOL_FLAGS_KIND_MASK           = 0x03u,
       EXPORT_SYMBOL_FLAGS_WEAK_DEFINITION     = 0x04u,
-      EXPORT_SYMBOL_FLAGS_INDIRECT_DEFINITION = 0x08u,
-      EXPORT_SYMBOL_FLAGS_HAS_SPECIALIZATIONS = 0x10u
+      EXPORT_SYMBOL_FLAGS_REEXPORT            = 0x08u,
+      EXPORT_SYMBOL_FLAGS_STUB_AND_RESOLVER   = 0x10u
     };
 
     enum ExportSymbolKind {
@@ -948,7 +948,8 @@ namespace llvm {
 
       CPU_SUBTYPE_X86_ALL     = 3,
       CPU_SUBTYPE_X86_64_ALL  = 3,
-      CPU_SUBTYPE_X86_ARCH1   = 4
+      CPU_SUBTYPE_X86_ARCH1   = 4,
+      CPU_SUBTYPE_X86_64_H    = 8
     };
     static inline int CPU_SUBTYPE_INTEL(int Family, int Model) {
       return Family | (Model << 4);
@@ -972,7 +973,7 @@ namespace llvm {
       CPU_SUBTYPE_ARM_V5TEJ   = 7,
       CPU_SUBTYPE_ARM_XSCALE  = 8,
       CPU_SUBTYPE_ARM_V7      = 9,
-      CPU_SUBTYPE_ARM_V7F     = 10,
+      //  unused  ARM_V7F     = 10,
       CPU_SUBTYPE_ARM_V7S     = 11,
       CPU_SUBTYPE_ARM_V7K     = 12,
       CPU_SUBTYPE_ARM_V6M     = 14,

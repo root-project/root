@@ -36,7 +36,8 @@ struct MCProcResourceDesc {
   // some indeterminate cycle after dispatch (e.g. for instructions that may
   // issue out-of-order). Unbuffered resources (BufferSize == 0) always consume
   // their resource some fixed number of cycles after dispatch (e.g. for
-  // instruction interlocking that may stall the pipeline).
+  // instruction interlocking that may stall the pipeline). If BufferSize==1,
+  // the latency between producer and consumer is modeled as a stall.
   int BufferSize;
 
   bool operator==(const MCProcResourceDesc &Other) const {
@@ -124,7 +125,7 @@ struct MCSchedClassDesc {
 /// microarchitecture to the scheduler in the form of properties. It also
 /// optionally refers to scheduler resource tables and itinerary
 /// tables. Scheduler resource tables model the latency and cost for each
-/// instruction type. Itinerary tables are an independant mechanism that
+/// instruction type. Itinerary tables are an independent mechanism that
 /// provides a detailed reservation table describing each cycle of instruction
 /// execution. Subtargets may define any or all of the above categories of data
 /// depending on the type of CPU and selected scheduler.
@@ -149,7 +150,7 @@ public:
   // but we balance those stalls against other heuristics.
   //
   // "> 1" means the processor is out-of-order. This is a machine independent
-  // estimate of highly machine specific characteristics such are the register
+  // estimate of highly machine specific characteristics such as the register
   // renaming pool and reorder buffer.
   unsigned MicroOpBufferSize;
   static const unsigned DefaultMicroOpBufferSize = 0;

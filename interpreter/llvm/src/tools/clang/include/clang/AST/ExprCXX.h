@@ -566,7 +566,7 @@ public:
 
   /// \brief Retrieves the type operand of this typeid() expression after
   /// various required adjustments (removing reference types, cv-qualifiers).
-  QualType getTypeOperand() const;
+  QualType getTypeOperand(ASTContext &Context) const;
 
   /// \brief Retrieve source information for the type operand.
   TypeSourceInfo *getTypeOperandSourceInfo() const {
@@ -701,7 +701,7 @@ public:
 
   /// \brief Retrieves the type operand of this __uuidof() expression after
   /// various required adjustments (removing reference types, cv-qualifiers).
-  QualType getTypeOperand() const;
+  QualType getTypeOperand(ASTContext &Context) const;
 
   /// \brief Retrieve source information for the type operand.
   TypeSourceInfo *getTypeOperandSourceInfo() const {
@@ -1388,9 +1388,6 @@ public:
             LambdaCaptureKind Kind, VarDecl *Var = 0,
             SourceLocation EllipsisLoc = SourceLocation());
 
-    /// \brief Create a new init-capture.
-    Capture(FieldDecl *Field);
-
     /// \brief Determine the kind of capture.
     LambdaCaptureKind getCaptureKind() const;
 
@@ -1404,7 +1401,9 @@ public:
     }
 
     /// \brief Determine whether this is an init-capture.
-    bool isInitCapture() const { return getCaptureKind() == LCK_Init; }
+    bool isInitCapture() const {
+      return capturesVariable() && getCapturedVar()->isInitCapture();
+    }
 
     /// \brief Retrieve the declaration of the local variable being
     /// captured.
@@ -1414,16 +1413,6 @@ public:
     VarDecl *getCapturedVar() const {
       assert(capturesVariable() && "No variable available for 'this' capture");
       return cast<VarDecl>(DeclAndBits.getPointer());
-    }
-
-    /// \brief Retrieve the field for an init-capture.
-    ///
-    /// This works only for an init-capture.  To retrieve the FieldDecl for
-    /// a captured variable or for a capture of \c this, use
-    /// LambdaExpr::getLambdaClass and CXXRecordDecl::getCaptureFields.
-    FieldDecl *getInitCaptureField() const {
-      assert(getCaptureKind() == LCK_Init && "no field for non-init-capture");
-      return cast<FieldDecl>(DeclAndBits.getPointer());
     }
 
     /// \brief Determine whether this was an implicit capture (not
@@ -1573,16 +1562,6 @@ public:
     return capture_init_begin() + NumCaptures;    
   }
 
-  /// \brief Retrieve the initializer for an init-capture.
-  Expr *getInitCaptureInit(capture_iterator Capture) {
-    assert(Capture >= explicit_capture_begin() &&
-           Capture <= explicit_capture_end() && Capture->isInitCapture());
-    return capture_init_begin()[Capture - capture_begin()];
-  }
-  const Expr *getInitCaptureInit(capture_iterator Capture) const {
-    return const_cast<LambdaExpr*>(this)->getInitCaptureInit(Capture);
-  }
-
   /// \brief Retrieve the set of index variables used in the capture 
   /// initializer of an array captured by copy.
   ///
@@ -1605,6 +1584,13 @@ public:
   /// \brief Retrieve the function call operator associated with this
   /// lambda expression. 
   CXXMethodDecl *getCallOperator() const;
+
+  /// \brief If this is a generic lambda expression, retrieve the template 
+  /// parameter list associated with it, or else return null. 
+  TemplateParameterList *getTemplateParameterList() const;
+
+  /// \brief Whether this is a generic lambda.
+  bool isGenericLambda() const { return getTemplateParameterList(); }
 
   /// \brief Retrieve the body of the lambda.
   CompoundStmt *getBody() const;
@@ -2124,138 +2110,12 @@ public:
   child_range children() { return child_range(&Base, &Base + 1); }
 };
 
-/// \brief Represents a GCC or MS unary type trait, as used in the
-/// implementation of TR1/C++11 type trait templates.
-///
-/// Example:
-/// \code
-///   __is_pod(int) == true
-///   __is_enum(std::string) == false
-/// \endcode
-class UnaryTypeTraitExpr : public Expr {
-  /// \brief The trait. A UnaryTypeTrait enum in MSVC compatible unsigned.
-  unsigned UTT : 31;
-  /// The value of the type trait. Unspecified if dependent.
-  bool Value : 1;
-
-  /// \brief The location of the type trait keyword.
-  SourceLocation Loc;
-
-  /// \brief The location of the closing paren.
-  SourceLocation RParen;
-
-  /// \brief The type being queried.
-  TypeSourceInfo *QueriedType;
-
-public:
-  UnaryTypeTraitExpr(SourceLocation loc, UnaryTypeTrait utt,
-                     TypeSourceInfo *queried, bool value,
-                     SourceLocation rparen, QualType ty)
-    : Expr(UnaryTypeTraitExprClass, ty, VK_RValue, OK_Ordinary,
-           false,  queried->getType()->isDependentType(),
-           queried->getType()->isInstantiationDependentType(),
-           queried->getType()->containsUnexpandedParameterPack()),
-      UTT(utt), Value(value), Loc(loc), RParen(rparen), QueriedType(queried) { }
-
-  explicit UnaryTypeTraitExpr(EmptyShell Empty)
-    : Expr(UnaryTypeTraitExprClass, Empty), UTT(0), Value(false),
-      QueriedType() { }
-
-  SourceLocation getLocStart() const LLVM_READONLY { return Loc; }
-  SourceLocation getLocEnd() const LLVM_READONLY { return RParen; }
-
-  UnaryTypeTrait getTrait() const { return static_cast<UnaryTypeTrait>(UTT); }
-
-  QualType getQueriedType() const { return QueriedType->getType(); }
-
-  TypeSourceInfo *getQueriedTypeSourceInfo() const { return QueriedType; }
-
-  bool getValue() const { return Value; }
-
-  static bool classof(const Stmt *T) {
-    return T->getStmtClass() == UnaryTypeTraitExprClass;
-  }
-
-  // Iterators
-  child_range children() { return child_range(); }
-
-  friend class ASTStmtReader;
-};
-
-/// \brief Represents a GCC or MS binary type trait, as used in the
-/// implementation of TR1/C++11 type trait templates.
-///
-/// Example:
-/// \code
-///   __is_base_of(Base, Derived) == true
-/// \endcode
-class BinaryTypeTraitExpr : public Expr {
-  /// \brief The trait. A BinaryTypeTrait enum in MSVC compatible unsigned.
-  unsigned BTT : 8;
-
-  /// The value of the type trait. Unspecified if dependent.
-  bool Value : 1;
-
-  /// \brief The location of the type trait keyword.
-  SourceLocation Loc;
-
-  /// \brief The location of the closing paren.
-  SourceLocation RParen;
-
-  /// \brief The lhs type being queried.
-  TypeSourceInfo *LhsType;
-
-  /// \brief The rhs type being queried.
-  TypeSourceInfo *RhsType;
-
-public:
-  BinaryTypeTraitExpr(SourceLocation loc, BinaryTypeTrait btt,
-                     TypeSourceInfo *lhsType, TypeSourceInfo *rhsType,
-                     bool value, SourceLocation rparen, QualType ty)
-    : Expr(BinaryTypeTraitExprClass, ty, VK_RValue, OK_Ordinary, false,
-           lhsType->getType()->isDependentType() ||
-           rhsType->getType()->isDependentType(),
-           (lhsType->getType()->isInstantiationDependentType() ||
-            rhsType->getType()->isInstantiationDependentType()),
-           (lhsType->getType()->containsUnexpandedParameterPack() ||
-            rhsType->getType()->containsUnexpandedParameterPack())),
-      BTT(btt), Value(value), Loc(loc), RParen(rparen),
-      LhsType(lhsType), RhsType(rhsType) { }
-
-
-  explicit BinaryTypeTraitExpr(EmptyShell Empty)
-    : Expr(BinaryTypeTraitExprClass, Empty), BTT(0), Value(false),
-      LhsType(), RhsType() { }
-
-  SourceLocation getLocStart() const LLVM_READONLY { return Loc; }
-  SourceLocation getLocEnd() const LLVM_READONLY { return RParen; }
-
-  BinaryTypeTrait getTrait() const {
-    return static_cast<BinaryTypeTrait>(BTT);
-  }
-
-  QualType getLhsType() const { return LhsType->getType(); }
-  QualType getRhsType() const { return RhsType->getType(); }
-
-  TypeSourceInfo *getLhsTypeSourceInfo() const { return LhsType; }
-  TypeSourceInfo *getRhsTypeSourceInfo() const { return RhsType; }
-
-  bool getValue() const { assert(!isTypeDependent()); return Value; }
-
-  static bool classof(const Stmt *T) {
-    return T->getStmtClass() == BinaryTypeTraitExprClass;
-  }
-
-  // Iterators
-  child_range children() { return child_range(); }
-
-  friend class ASTStmtReader;
-};
-
 /// \brief A type trait used in the implementation of various C++11 and
 /// Library TR1 trait templates.
 ///
 /// \code
+///   __is_pod(int) == true
+///   __is_enum(std::string) == false
 ///   __is_trivially_constructible(vector<int>, int*, int*)
 /// \endcode
 class TypeTraitExpr : public Expr {
@@ -2348,7 +2208,7 @@ public:
   friend class ASTStmtWriter;
 
 };
-  
+
 /// \brief An Embarcadero array type trait, as used in the implementation of
 /// __array_rank and __array_extent.
 ///
@@ -2776,7 +2636,7 @@ public:
 /// DependentScopeDeclRefExpr node is used only within C++ templates when
 /// the qualification (e.g., X<T>::) refers to a dependent type. In
 /// this case, X<T>::value cannot resolve to a declaration because the
-/// declaration will differ from on instantiation of X<T> to the
+/// declaration will differ from one instantiation of X<T> to the
 /// next. Therefore, DependentScopeDeclRefExpr keeps track of the
 /// qualifier (X<T>::) and the name of the entity being referenced
 /// ("value"). Such expressions will instantiate to a DeclRefExpr once the
@@ -2828,12 +2688,13 @@ public:
   DeclarationName getDeclName() const { return NameInfo.getName(); }
 
   /// \brief Retrieve the location of the name within the expression.
+  ///
+  /// For example, in "X<T>::value" this is the location of "value".
   SourceLocation getLocation() const { return NameInfo.getLoc(); }
 
   /// \brief Retrieve the nested-name-specifier that qualifies the
   /// name, with source location information.
   NestedNameSpecifierLoc getQualifierLoc() const { return QualifierLoc; }
-
 
   /// \brief Retrieve the nested-name-specifier that qualifies this
   /// declaration.
@@ -2906,6 +2767,8 @@ public:
     return getExplicitTemplateArgs().NumTemplateArgs;
   }
 
+  /// Note: getLocStart() is the start of the whole DependentScopeDeclRefExpr,
+  /// and differs from getLocation().getStart().
   SourceLocation getLocStart() const LLVM_READONLY {
     return QualifierLoc.getBeginLoc();
   }
