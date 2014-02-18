@@ -357,7 +357,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
       RooAbsRealLValue* rlv = dynamic_cast<RooAbsRealLValue*>(pa);
       if (rlv) {
 	const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
-	if (rlv->hasRange(rangeName)) {
+	if (rangeName && rlv->hasRange(rangeName)) {
 	  ranges[ha] = std::make_pair(
 	      rlv->getMin(rangeName), rlv->getMax(rangeName));
 	} else if (binning) {
