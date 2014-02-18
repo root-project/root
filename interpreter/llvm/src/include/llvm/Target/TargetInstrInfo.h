@@ -181,6 +181,23 @@ public:
     return false;
   }
 
+  /// Compute the size in bytes and offset within a stack slot of a spilled
+  /// register or subregister.
+  ///
+  /// \param [out] Size in bytes of the spilled value.
+  /// \param [out] Offset in bytes within the stack slot.
+  /// \returns true if both Size and Offset are successfully computed.
+  ///
+  /// Not all subregisters have computable spill slots. For example,
+  /// subregisters registers may not be byte-sized, and a pair of discontiguous
+  /// subregisters has no single offset.
+  ///
+  /// Targets with nontrivial bigendian implementations may need to override
+  /// this, particularly to support spilled vector registers.
+  virtual bool getStackSlotRange(const TargetRegisterClass *RC, unsigned SubIdx,
+                                 unsigned &Size, unsigned &Offset,
+                                 const TargetMachine *TM) const;
+
   /// reMaterialize - Re-issue the specified 'original' instruction at the
   /// specific location targeting a new destination register.
   /// The register in Orig->getOperand(0).getReg() will be substituted by
@@ -823,6 +840,8 @@ public:
                                    const MachineInstr *MI,
                                    unsigned *PredCost = 0) const;
 
+  virtual unsigned getPredicationCost(const MachineInstr *MI) const;
+
   virtual int getInstrLatency(const InstrItineraryData *ItinData,
                               SDNode *Node) const;
 
@@ -937,6 +956,26 @@ public:
   getPartialRegUpdateClearance(const MachineInstr *MI, unsigned OpNum,
                                const TargetRegisterInfo *TRI) const {
     // The default implementation returns 0 for no partial register dependency.
+    return 0;
+  }
+
+  /// \brief Return the minimum clearance before an instruction that reads an
+  /// unused register.
+  ///
+  /// For example, AVX instructions may copy part of an register operand into
+  /// the unused high bits of the destination register.
+  ///
+  /// vcvtsi2sdq %rax, %xmm0<undef>, %xmm14
+  ///
+  /// In the code above, vcvtsi2sdq copies %xmm0[127:64] into %xmm14 creating a
+  /// false dependence on any previous write to %xmm0.
+  ///
+  /// This hook works similarly to getPartialRegUpdateClearance, except that it
+  /// does not take an operand index. Instead sets \p OpNum to the index of the
+  /// unused register.
+  virtual unsigned getUndefRegClearance(const MachineInstr *MI, unsigned &OpNum,
+                                        const TargetRegisterInfo *TRI) const {
+    // The default implementation returns 0 for no undef register dependency.
     return 0;
   }
 

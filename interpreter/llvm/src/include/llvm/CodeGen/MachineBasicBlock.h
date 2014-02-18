@@ -363,6 +363,9 @@ public:
   ///
   void addSuccessor(MachineBasicBlock *succ, uint32_t weight = 0);
 
+  /// Set successor weight of a given iterator.
+  void setSuccWeight(succ_iterator I, uint32_t weight);
+
   /// removeSuccessor - Remove successor from the successors list of this
   /// MachineBasicBlock. The Predecessors list of succ is automatically updated.
   ///
@@ -410,8 +413,8 @@ public:
   /// branch to do so (e.g., a table jump).  True is a conservative answer.
   bool canFallThrough();
 
-  /// Returns a pointer to the first instructon in this block that is not a
-  /// PHINode instruction. When adding instruction to the beginning of the
+  /// Returns a pointer to the first instruction in this block that is not a
+  /// PHINode instruction. When adding instructions to the beginning of the
   /// basic block, they should be added before the returned value, not before
   /// the first instruction, which might be PHI.
   /// Returns end() is there's no non-PHI instruction.
@@ -608,6 +611,9 @@ public:
   void dump() const;
   void print(raw_ostream &OS, SlotIndexes* = 0) const;
 
+  // Printing method used by LoopInfo.
+  void printAsOperand(raw_ostream &OS, bool PrintType = true);
+
   /// getNumber - MachineBasicBlocks are uniquely numbered at the function
   /// level, unless they're not in a MachineFunction yet, in which case this
   /// will return -1.
@@ -654,8 +660,6 @@ private:
 };
 
 raw_ostream& operator<<(raw_ostream &OS, const MachineBasicBlock &MBB);
-
-void WriteAsOperand(raw_ostream &, const MachineBasicBlock*, bool t);
 
 // This is useful when building IndexedMaps keyed on basic block pointers.
 struct MBB2NumberFunctor :

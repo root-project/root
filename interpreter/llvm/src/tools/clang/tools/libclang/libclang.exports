@@ -61,8 +61,10 @@ clang_TParamCommandComment_isParamPositionValid
 clang_TParamCommandComment_getDepth
 clang_TParamCommandComment_getIndex
 clang_Type_getAlignOf
+clang_Type_getClassType
 clang_Type_getSizeOf
 clang_Type_getOffsetOf
+clang_Type_getCXXRefQualifier
 clang_VerbatimBlockLineComment_getText
 clang_VerbatimLineComment_getText
 clang_HTMLTagComment_getAsString
@@ -85,6 +87,7 @@ clang_constructUSR_ObjCProtocol
 clang_createCXCursorSet
 clang_createIndex
 clang_createTranslationUnit
+clang_createTranslationUnit2
 clang_createTranslationUnitFromSourceFile
 clang_defaultCodeCompleteOptions
 clang_defaultDiagnosticDisplayOptions
@@ -99,6 +102,7 @@ clang_disposeDiagnosticSet
 clang_disposeIndex
 clang_disposeOverriddenCursors
 clang_disposeCXPlatformAvailability
+clang_disposeSourceRangeList
 clang_disposeString
 clang_disposeTokens
 clang_disposeTranslationUnit
@@ -116,6 +120,7 @@ clang_formatDiagnostic
 clang_getArgType
 clang_getArrayElementType
 clang_getArraySize
+clang_getBuildSessionTimestamp
 clang_getCString
 clang_getCXTUResourceUsage
 clang_getCXXAccessSpecifier
@@ -205,6 +210,7 @@ clang_getRangeStart
 clang_getRemappings
 clang_getRemappingsFromFileList
 clang_getResultType
+clang_getSkippedRanges
 clang_getSpecializedCursorTemplate
 clang_getSpellingLocation
 clang_getTUResourceUsageName
@@ -257,6 +263,7 @@ clang_loadDiagnostics
 clang_Location_isInSystemHeader
 clang_Location_isFromMainFile
 clang_parseTranslationUnit
+clang_parseTranslationUnit2
 clang_remap_dispose
 clang_remap_getFilenames
 clang_remap_getNumFiles

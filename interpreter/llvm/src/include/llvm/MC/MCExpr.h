@@ -15,6 +15,7 @@
 #include "llvm/Support/DataTypes.h"
 
 namespace llvm {
+class MCAsmInfo;
 class MCAsmLayout;
 class MCAssembler;
 class MCContext;
@@ -159,17 +160,15 @@ public:
     VK_DTPOFF,
     VK_TLVP,      // Mach-O thread local variable relocation
     VK_SECREL,
-    // FIXME: We'd really like to use the generic Kinds listed above for these.
+
     VK_ARM_NONE,
-    VK_ARM_PLT,   // ARM-style PLT references. i.e., (PLT) instead of @PLT
-    VK_ARM_TLSGD, //   ditto for TLSGD, GOT, GOTOFF, TPOFF and GOTTPOFF
-    VK_ARM_GOT,
-    VK_ARM_GOTOFF,
-    VK_ARM_TPOFF,
-    VK_ARM_GOTTPOFF,
     VK_ARM_TARGET1,
     VK_ARM_TARGET2,
     VK_ARM_PREL31,
+    VK_ARM_TLSLDO,         // symbol(tlsldo)
+    VK_ARM_TLSCALL,        // symbol(tlscall)
+    VK_ARM_TLSDESC,        // symbol(tlsdesc)
+    VK_ARM_TLSDESCSEQ,
 
     VK_PPC_LO,             // symbol@l
     VK_PPC_HI,             // symbol@h
@@ -258,9 +257,14 @@ private:
   /// The symbol reference modifier.
   const VariantKind Kind;
 
-  explicit MCSymbolRefExpr(const MCSymbol *_Symbol, VariantKind _Kind)
-    : MCExpr(MCExpr::SymbolRef), Symbol(_Symbol), Kind(_Kind) {
+  /// MCAsmInfo that is used to print symbol variants correctly.
+  const MCAsmInfo *MAI;
+
+  explicit MCSymbolRefExpr(const MCSymbol *_Symbol, VariantKind _Kind,
+                           const MCAsmInfo *_MAI)
+    : MCExpr(MCExpr::SymbolRef), Symbol(_Symbol), Kind(_Kind), MAI(_MAI) {
     assert(Symbol);
+    assert(MAI);
   }
 
 public:
@@ -281,6 +285,7 @@ public:
   /// @{
 
   const MCSymbol &getSymbol() const { return *Symbol; }
+  const MCAsmInfo &getMCAsmInfo() const { return *MAI; }
 
   VariantKind getKind() const { return Kind; }
 

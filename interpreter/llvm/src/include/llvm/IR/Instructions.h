@@ -101,7 +101,7 @@ public:
   /// by the instruction.
   ///
   unsigned getAlignment() const {
-    return (1u << getSubclassDataFromInstruction()) >> 1;
+    return (1u << (getSubclassDataFromInstruction() & 31)) >> 1;
   }
   void setAlignment(unsigned Align);
 
@@ -109,6 +109,20 @@ public:
   /// function and is a constant size.  If so, the code generator will fold it
   /// into the prolog/epilog code, so it is basically free.
   bool isStaticAlloca() const;
+
+  /// \brief Return true if this alloca is used as an inalloca argument to a
+  /// call.  Such allocas are never considered static even if they are in the
+  /// entry block.
+  bool isUsedWithInAlloca() const {
+    return getSubclassDataFromInstruction() & 32;
+  }
+
+  /// \brief Specify whether this alloca is used to represent a the arguments to
+  /// a call.
+  void setUsedWithInAlloca(bool V) {
+    setInstructionSubclassData((getSubclassDataFromInstruction() & ~32) |
+                               (V ? 32 : 0));
+  }
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
   static inline bool classof(const Instruction *I) {
@@ -909,6 +923,18 @@ DEFINE_TRANSPARENT_OPERAND_ACCESSORS(GetElementPtrInst, Value)
 /// must be identical types.
 /// \brief Represent an integer comparison operator.
 class ICmpInst: public CmpInst {
+  void AssertOK() {
+    assert(getPredicate() >= CmpInst::FIRST_ICMP_PREDICATE &&
+           getPredicate() <= CmpInst::LAST_ICMP_PREDICATE &&
+           "Invalid ICmp predicate value");
+    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
+          "Both operands to ICmp instruction are not of the same type!");
+    // Check that the operands are the right type
+    assert((getOperand(0)->getType()->isIntOrIntVectorTy() ||
+            getOperand(0)->getType()->isPtrOrPtrVectorTy()) &&
+           "Invalid operand types for ICmp instruction");
+  }
+
 protected:
   /// \brief Clone an identical ICmpInst
   virtual ICmpInst *clone_impl() const;
@@ -923,15 +949,9 @@ public:
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::ICmp, pred, LHS, RHS, NameStr,
               InsertBefore) {
-    assert(pred >= CmpInst::FIRST_ICMP_PREDICATE &&
-           pred <= CmpInst::LAST_ICMP_PREDICATE &&
-           "Invalid ICmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-          "Both operands to ICmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert((getOperand(0)->getType()->isIntOrIntVectorTy() ||
-            getOperand(0)->getType()->getScalarType()->isPointerTy()) &&
-           "Invalid operand types for ICmp instruction");
+#ifndef NDEBUG
+  AssertOK();
+#endif
   }
 
   /// \brief Constructor with insert-at-end semantics.
@@ -944,15 +964,9 @@ public:
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::ICmp, pred, LHS, RHS, NameStr,
               &InsertAtEnd) {
-    assert(pred >= CmpInst::FIRST_ICMP_PREDICATE &&
-          pred <= CmpInst::LAST_ICMP_PREDICATE &&
-          "Invalid ICmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-          "Both operands to ICmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert((getOperand(0)->getType()->isIntOrIntVectorTy() ||
-            getOperand(0)->getType()->getScalarType()->isPointerTy()) &&
-           "Invalid operand types for ICmp instruction");
+#ifndef NDEBUG
+  AssertOK();
+#endif
   }
 
   /// \brief Constructor with no-insertion semantics
@@ -963,15 +977,9 @@ public:
     const Twine &NameStr = "" ///< Name of the instruction
   ) : CmpInst(makeCmpResultType(LHS->getType()),
               Instruction::ICmp, pred, LHS, RHS, NameStr) {
-    assert(pred >= CmpInst::FIRST_ICMP_PREDICATE &&
-           pred <= CmpInst::LAST_ICMP_PREDICATE &&
-           "Invalid ICmp predicate value");
-    assert(getOperand(0)->getType() == getOperand(1)->getType() &&
-          "Both operands to ICmp instruction are not of the same type!");
-    // Check that the operands are the right type
-    assert((getOperand(0)->getType()->isIntOrIntVectorTy() ||
-            getOperand(0)->getType()->getScalarType()->isPointerTy()) &&
-           "Invalid operand types for ICmp instruction");
+#ifndef NDEBUG
+  AssertOK();
+#endif
   }
 
   /// For example, EQ->EQ, SLE->SLE, UGT->SGT, etc.
@@ -2918,7 +2926,7 @@ public:
   /// removeAttribute - removes the attribute from the list of attributes.
   void removeAttribute(unsigned i, Attribute attr);
 
-  /// \brief Determine whether this call has the NoAlias attribute.
+  /// \brief Determine whether this call has the given attribute.
   bool hasFnAttr(Attribute::AttrKind A) const {
     assert(A != Attribute::NoBuiltin &&
            "Use CallInst::isNoBuiltin() to check for Attribute::NoBuiltin");
@@ -3615,6 +3623,43 @@ public:
   // Methods for support type inquiry through isa, cast, and dyn_cast:
   static inline bool classof(const Instruction *I) {
     return I->getOpcode() == BitCast;
+  }
+  static inline bool classof(const Value *V) {
+    return isa<Instruction>(V) && classof(cast<Instruction>(V));
+  }
+};
+
+//===----------------------------------------------------------------------===//
+//                          AddrSpaceCastInst Class
+//===----------------------------------------------------------------------===//
+
+/// \brief This class represents a conversion between pointers from
+/// one address space to another.
+class AddrSpaceCastInst : public CastInst {
+protected:
+  /// \brief Clone an identical AddrSpaceCastInst
+  virtual AddrSpaceCastInst *clone_impl() const;
+
+public:
+  /// \brief Constructor with insert-before-instruction semantics
+  AddrSpaceCastInst(
+    Value *S,                     ///< The value to be casted
+    Type *Ty,                     ///< The type to casted to
+    const Twine &NameStr = "",    ///< A name for the new instruction
+    Instruction *InsertBefore = 0 ///< Where to insert the new instruction
+  );
+
+  /// \brief Constructor with insert-at-end-of-block semantics
+  AddrSpaceCastInst(
+    Value *S,                     ///< The value to be casted
+    Type *Ty,                     ///< The type to casted to
+    const Twine &NameStr,         ///< A name for the new instruction
+    BasicBlock *InsertAtEnd       ///< The block to insert the instruction into
+  );
+
+  // Methods for support type inquiry through isa, cast, and dyn_cast:
+  static inline bool classof(const Instruction *I) {
+    return I->getOpcode() == AddrSpaceCast;
   }
   static inline bool classof(const Value *V) {
     return isa<Instruction>(V) && classof(cast<Instruction>(V));

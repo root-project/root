@@ -844,7 +844,7 @@ Here are more examples:
 
 .. code-block:: c++
 
-  assert(Ty->isPointerType() && "Can't allocate a non pointer type!");
+  assert(Ty->isPointerType() && "Can't allocate a non-pointer type!");
 
   assert((Opcode == Shl || Opcode == Shr) && "ShiftInst Opcode invalid!");
 
@@ -1190,46 +1190,10 @@ Namespace Indentation
 
 In general, we strive to reduce indentation wherever possible.  This is useful
 because we want code to `fit into 80 columns`_ without wrapping horribly, but
-also because it makes it easier to understand the code.  Namespaces are a funny
-thing: they are often large, and we often desire to put lots of stuff into them
-(so they can be large).  Other times they are tiny, because they just hold an
-enum or something similar.  In order to balance this, we use different
-approaches for small versus large namespaces.
-
-If a namespace definition is small and *easily* fits on a screen (say, less than
-35 lines of code), then you should indent its body.  Here's an example:
-
-.. code-block:: c++
-
-  namespace llvm {
-    namespace X86 {
-      /// \brief An enum for the x86 relocation codes.  Note that
-      /// the terminology here doesn't follow x86 convention - word means
-      /// 32-bit and dword means 64-bit.
-      enum RelocationType {
-        /// \brief PC relative relocation, add the relocated value to
-        /// the value already in memory, after we adjust it for where the PC is.
-        reloc_pcrel_word = 0,
-
-        /// \brief PIC base relative relocation, add the relocated value to
-        /// the value already in memory, after we adjust it for where the
-        /// PIC base is.
-        reloc_picrel_word = 1,
-
-        /// \brief Absolute relocation, just add the relocated value to the
-        /// value already in memory.
-        reloc_absolute_word = 2,
-        reloc_absolute_dword = 3
-      };
-    }
-  }
-
-Since the body is small, indenting adds value because it makes it very clear
-where the namespace starts and ends, and it is easy to take the whole thing in
-in one "gulp" when reading the code.  If the blob of code in the namespace is
-larger (as it typically is in a header in the ``llvm`` or ``clang`` namespaces),
-do not indent the code, and add a comment indicating what namespace is being
-closed.  For example:
+also because it makes it easier to understand the code. To facilitate this and
+avoid some insanely deep nesting on occasion, don't indent namespaces. If it
+helps readability, feel free to add a comment indicating what namespace is
+being closed by a ``}``.  For example:
 
 .. code-block:: c++
 
@@ -1251,12 +1215,12 @@ closed.  For example:
   } // end namespace knowledge
   } // end namespace llvm
 
-Because the class is large, we don't expect that the reader can easily
-understand the entire concept in a glance, and the end of the file (where the
-namespaces end) may be a long ways away from the place they open.  As such,
-indenting the contents of the namespace doesn't add any value, and detracts from
-the readability of the class.  In these cases it is best to *not* indent the
-contents of the namespace.
+
+Feel free to skip the closing comment when the namespace being closed is
+obvious for any reason. For example, the outer-most namespace in a header file
+is rarely a source of confusion. But namespaces both anonymous and named in
+source files that are being closed half way through the file probably could use
+clarification.
 
 .. _static:
 
@@ -1285,12 +1249,12 @@ good:
 .. code-block:: c++
 
   namespace {
-    class StringSort {
-    ...
-    public:
-      StringSort(...)
-      bool operator<(const char *RHS) const;
-    };
+  class StringSort {
+  ...
+  public:
+    StringSort(...)
+    bool operator<(const char *RHS) const;
+  };
   } // end anonymous namespace
 
   static void runHelper() { 
@@ -1306,6 +1270,7 @@ This is bad:
 .. code-block:: c++
 
   namespace {
+
   class StringSort {
   ...
   public:

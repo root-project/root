@@ -49,9 +49,6 @@ ifeq ($(HOST_OS),Darwin)
     endif
     # Include everything from the .a's into the shared library.
     LLVMLibsOptions    := $(LLVMLibsOptions) -all_load
-    # extra options to override libtool defaults 
-    LLVMLibsOptions    := $(LLVMLibsOptions)  \
-                         -Wl,-dead_strip
 
     # Mac OS X 10.4 and earlier tools do not allow a second -install_name on command line
     DARWIN_VERS := $(shell echo $(TARGET_TRIPLE) | sed 's/.*darwin\([0-9]*\).*/\1/')
@@ -62,13 +59,13 @@ ifeq ($(HOST_OS),Darwin)
     endif
 endif
 
-ifeq ($(HOST_OS), $(filter $(HOST_OS), Linux FreeBSD GNU/kFreeBSD OpenBSD GNU Bitrig))
+ifeq ($(HOST_OS), $(filter $(HOST_OS), DragonFly Linux FreeBSD GNU/kFreeBSD OpenBSD GNU Bitrig))
     # Include everything from the .a's into the shared library.
     LLVMLibsOptions := -Wl,--whole-archive $(LLVMLibsOptions) \
                        -Wl,--no-whole-archive
 endif
 
-ifeq ($(HOST_OS), $(filter $(HOST_OS), Linux FreeBSD GNU/kFreeBSD GNU))
+ifeq ($(HOST_OS), $(filter $(HOST_OS), DragonFly Linux FreeBSD GNU/kFreeBSD GNU))
     # Add soname to the library.
     LLVMLibsOptions += -Wl,--soname,lib$(LIBRARYNAME)$(SHLIBEXT)
 endif

@@ -58,6 +58,13 @@ static cl::opt<unsigned> AlignAllBlock("align-all-blocks",
                                                 "blocks in the function."),
                                        cl::init(0), cl::Hidden);
 
+// FIXME: Find a good default for this flag and remove the flag.
+static cl::opt<unsigned>
+ExitBlockBias("block-placement-exit-block-bias",
+              cl::desc("Block frequency percentage a loop exit block needs "
+                       "over the original exit to be considered the new exit."),
+              cl::init(0), cl::Hidden);
+
 namespace {
 class BlockChain;
 /// \brief Type for our function-wide basic block -> block chain mapping.
@@ -145,7 +152,7 @@ public:
 
 #ifndef NDEBUG
   /// \brief Dump the blocks in this chain.
-  void dump() LLVM_ATTRIBUTE_USED {
+  LLVM_DUMP_METHOD void dump() {
     for (iterator I = begin(), E = end(); I != E; ++I)
       (*I)->dump();
   }
@@ -360,7 +367,8 @@ MachineBasicBlock *MachineBlockPlacement::selectBestSuccessor(
     // any CFG constraints.
     if (SuccChain.LoopPredecessors != 0) {
       if (SuccProb < HotProb) {
-        DEBUG(dbgs() << "    " << getBlockName(*SI) << " -> CFG conflict\n");
+        DEBUG(dbgs() << "    " << getBlockName(*SI) << " -> " << SuccProb
+                     << " (prob) (CFG conflict)\n");
         continue;
       }
 
@@ -383,8 +391,8 @@ MachineBasicBlock *MachineBlockPlacement::selectBestSuccessor(
         }
       }
       if (BadCFGConflict) {
-        DEBUG(dbgs() << "    " << getBlockName(*SI)
-                               << " -> non-cold CFG conflict\n");
+        DEBUG(dbgs() << "    " << getBlockName(*SI) << " -> " << SuccProb
+                     << " (prob) (non-cold CFG conflict)\n");
         continue;
       }
     }
@@ -453,8 +461,8 @@ MachineBasicBlock *MachineBlockPlacement::selectBestCandidateBlock(
     assert(SuccChain.LoopPredecessors == 0 && "Found CFG-violating block");
 
     BlockFrequency CandidateFreq = MBFI->getBlockFreq(*WBI);
-    DEBUG(dbgs() << "    " << getBlockName(*WBI) << " -> " << CandidateFreq
-                 << " (freq)\n");
+    DEBUG(dbgs() << "    " << getBlockName(*WBI) << " -> ";
+                 MBFI->printBlockFreq(dbgs(), CandidateFreq) << " (freq)\n");
     if (BestBlock && BestFreq >= CandidateFreq)
       continue;
     BestBlock = *WBI;
@@ -575,8 +583,8 @@ MachineBlockPlacement::findBestLoopTop(MachineLoop &L,
     if (!LoopBlockSet.count(Pred))
       continue;
     DEBUG(dbgs() << "    header pred: " << getBlockName(Pred) << ", "
-                 << Pred->succ_size() << " successors, "
-                 << MBFI->getBlockFreq(Pred) << " freq\n");
+                 << Pred->succ_size() << " successors, ";
+                 MBFI->printBlockFreq(dbgs(), Pred) << " freq\n");
     if (Pred->succ_size() > 1)
       continue;
 
@@ -690,14 +698,17 @@ MachineBlockPlacement::findBestLoopExit(MachineFunction &F,
       BlockFrequency ExitEdgeFreq = MBFI->getBlockFreq(*I) * SuccProb;
       DEBUG(dbgs() << "    exiting: " << getBlockName(*I) << " -> "
                    << getBlockName(*SI) << " [L:" << SuccLoopDepth
-                   << "] (" << ExitEdgeFreq << ")\n");
-      // Note that we slightly bias this toward an existing layout successor to
-      // retain incoming order in the absence of better information.
-      // FIXME: Should we bias this more strongly? It's pretty weak.
+                   << "] (";
+                   MBFI->printBlockFreq(dbgs(), ExitEdgeFreq) << ")\n");
+      // Note that we bias this toward an existing layout successor to retain
+      // incoming order in the absence of better information. The exit must have
+      // a frequency higher than the current exit before we consider breaking
+      // the layout.
+      BranchProbability Bias(100 - ExitBlockBias, 100);
       if (!ExitingBB || BestExitLoopDepth < SuccLoopDepth ||
           ExitEdgeFreq > BestExitEdgeFreq ||
           ((*I)->isLayoutSuccessor(*SI) &&
-           !(ExitEdgeFreq < BestExitEdgeFreq))) {
+           !(ExitEdgeFreq < BestExitEdgeFreq * Bias))) {
         BestExitEdgeFreq = ExitEdgeFreq;
         ExitingBB = *I;
       }
@@ -939,7 +950,9 @@ void MachineBlockPlacement::buildCFGChains(MachineFunction &F) {
   BlockChain &FunctionChain = *BlockToChain[&F.front()];
   buildChain(&F.front(), FunctionChain, BlockWorkList);
 
+#ifndef NDEBUG
   typedef SmallPtrSet<MachineBasicBlock *, 16> FunctionBlockSetType;
+#endif
   DEBUG({
     // Crash at the end so we get all of the debugging output first.
     bool BadFunc = false;

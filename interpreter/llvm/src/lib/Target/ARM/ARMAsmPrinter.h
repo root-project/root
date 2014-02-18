@@ -63,6 +63,10 @@ public:
                                      unsigned AsmVariant, const char *ExtraCode,
                                      raw_ostream &O) LLVM_OVERRIDE;
 
+  virtual void emitInlineAsmEnd(const MCSubtargetInfo &StartInfo,
+                                const MCSubtargetInfo *EndInfo) const
+      LLVM_OVERRIDE;
+
   void EmitJumpTable(const MachineInstr *MI);
   void EmitJump2Table(const MachineInstr *MI);
   virtual void EmitInstruction(const MachineInstr *MI) LLVM_OVERRIDE;
@@ -84,9 +88,6 @@ private:
   // Helpers for EmitStartOfAsmFile() and EmitEndOfAsmFile()
   void emitAttributes();
 
-  // Helper for ELF .o only
-  void emitARMAttributeSection();
-
   // Generic helper used to emit e.g. ARMv5 mul pseudos
   void EmitPatchedInstruction(const MachineInstr *MI, unsigned TargetOpc);
 
@@ -103,7 +104,7 @@ public:
 
   virtual unsigned getISAEncoding() LLVM_OVERRIDE {
     // ARM/Darwin adds ISA to the DWARF info for each function.
-    if (!Subtarget->isTargetDarwin())
+    if (!Subtarget->isTargetMachO())
       return 0;
     return Subtarget->isThumb() ?
       ARM::DW_ISA_ARM_thumb : ARM::DW_ISA_ARM_arm;
@@ -115,7 +116,7 @@ private:
 
   MCSymbol *GetARMSJLJEHLabel() const;
 
-  MCSymbol *GetARMGVSymbol(const GlobalValue *GV);
+  MCSymbol *GetARMGVSymbol(const GlobalValue *GV, unsigned char TargetFlags);
 
 public:
   /// EmitMachineConstantPoolValue - Print a machine constantpool value to

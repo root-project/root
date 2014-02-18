@@ -14,7 +14,12 @@
 namespace SIInstrFlags {
 enum {
   MIMG = 1 << 3,
-  SMRD = 1 << 4
+  SMRD = 1 << 4,
+  VOP1 = 1 << 5,
+  VOP2 = 1 << 6,
+  VOP3 = 1 << 7,
+  VOPC = 1 << 8,
+  SALU = 1 << 9
 };
 }
 

@@ -17,7 +17,6 @@
 
 #include "llvm/Analysis/Passes.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/DebugInfo.h"
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"

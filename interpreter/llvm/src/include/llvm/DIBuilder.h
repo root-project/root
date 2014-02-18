@@ -289,7 +289,7 @@ namespace llvm {
                                     uint64_t SizeInBits, uint64_t AlignInBits,
                                     uint64_t OffsetInBits, unsigned Flags,
                                     DIType DerivedFrom, DIArray Elements,
-                                    DIType VTableHolder = NULL,
+                                    DIType VTableHolder = DIType(),
                                     MDNode *TemplateParms = 0,
                                     StringRef UniqueIdentifier = StringRef());
 
@@ -309,7 +309,7 @@ namespace llvm {
                                      uint64_t SizeInBits, uint64_t AlignInBits,
                                      unsigned Flags, DIType DerivedFrom,
                                      DIArray Elements, unsigned RunTimeLang = 0,
-                                     DIType VTableHolder = NULL,
+                                     DIType VTableHolder = DIType(),
                                      StringRef UniqueIdentifier = StringRef());
 
     /// createUnionType - Create debugging information entry for an union.
@@ -415,10 +415,13 @@ namespace llvm {
         StringRef UniqueIdentifier = StringRef());
 
     /// createSubroutineType - Create subroutine type.
-    /// @param File           File in which this subroutine is defined.
-    /// @param ParameterTypes An array of subroutine parameter types. This
-    ///                       includes return type at 0th index.
-    DICompositeType createSubroutineType(DIFile File, DIArray ParameterTypes);
+    /// @param File            File in which this subroutine is defined.
+    /// @param ParameterTypes  An array of subroutine parameter types. This
+    ///                        includes return type at 0th index.
+    /// @param Flags           E.g.: LValueReference.
+    ///                        These flags are used to emit dwarf attributes.
+    DICompositeType createSubroutineType(DIFile File, DIArray ParameterTypes,
+                                         unsigned Flags = 0);
 
     /// createArtificialType - Create a new DIType with "artificial" flag set.
     DIType createArtificialType(DIType Ty);
@@ -506,8 +509,8 @@ namespace llvm {
     /// @param Ty          Variable Type
     /// @param AlwaysPreserve Boolean. Set to true if debug info for this
     ///                       variable should be preserved in optimized build.
-    /// @param Flags          Flags, e.g. artificial variable.
-    /// @param ArgNo       If this variable is an arugment then this argument's
+    /// @param Flags       Flags, e.g. artificial variable.
+    /// @param ArgNo       If this variable is an argument then this argument's
     ///                    number. 1 indicates 1st argument.
     DIVariable createLocalVariable(unsigned Tag, DIDescriptor Scope,
                                    StringRef Name,
@@ -527,7 +530,7 @@ namespace llvm {
     /// @param LineNo      Line number.
     /// @param Ty          Variable Type
     /// @param Addr        An array of complex address operations.
-    /// @param ArgNo       If this variable is an arugment then this argument's
+    /// @param ArgNo       If this variable is an argument then this argument's
     ///                    number. 1 indicates 1st argument.
     DIVariable createComplexVariable(unsigned Tag, DIDescriptor Scope,
                                      StringRef Name, DIFile F, unsigned LineNo,
@@ -542,15 +545,29 @@ namespace llvm {
     /// @param File          File where this variable is defined.
     /// @param LineNo        Line number.
     /// @param Ty            Function type.
-    /// @param isLocalToUnit True if this function is not externally visible..
+    /// @param isLocalToUnit True if this function is not externally visible.
     /// @param isDefinition  True if this is a function definition.
     /// @param ScopeLine     Set to the beginning of the scope this starts
     /// @param Flags         e.g. is this function prototyped or not.
-    ///                      This flags are used to emit dwarf attributes.
+    ///                      These flags are used to emit dwarf attributes.
     /// @param isOptimized   True if optimization is ON.
     /// @param Fn            llvm::Function pointer.
     /// @param TParam        Function template parameters.
     DISubprogram createFunction(DIDescriptor Scope, StringRef Name,
+                                StringRef LinkageName,
+                                DIFile File, unsigned LineNo,
+                                DICompositeType Ty, bool isLocalToUnit,
+                                bool isDefinition,
+                                unsigned ScopeLine,
+                                unsigned Flags = 0,
+                                bool isOptimized = false,
+                                Function *Fn = 0,
+                                MDNode *TParam = 0,
+                                MDNode *Decl = 0);
+
+    /// FIXME: this is added for dragonegg. Once we update dragonegg
+    /// to call resolve function, this will be removed.
+    DISubprogram createFunction(DIScopeRef Scope, StringRef Name,
                                 StringRef LinkageName,
                                 DIFile File, unsigned LineNo,
                                 DICompositeType Ty, bool isLocalToUnit,
@@ -587,7 +604,7 @@ namespace llvm {
                               DICompositeType Ty, bool isLocalToUnit,
                               bool isDefinition,
                               unsigned Virtuality = 0, unsigned VTableIndex = 0,
-                              DIType VTableHolder = NULL,
+                              DIType VTableHolder = DIType(),
                               unsigned Flags = 0,
                               bool isOptimized = false,
                               Function *Fn = 0,

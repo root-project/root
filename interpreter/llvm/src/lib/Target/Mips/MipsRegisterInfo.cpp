@@ -27,6 +27,7 @@
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/DebugInfo.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
@@ -133,6 +134,13 @@ getReservedRegs(const MachineFunction &MF) const {
   for (unsigned I = 0; I < array_lengthof(ReservedGPR32); ++I)
     Reserved.set(ReservedGPR32[I]);
 
+  // Reserve registers for the NaCl sandbox.
+  if (Subtarget.isTargetNaCl()) {
+    Reserved.set(Mips::T6);   // Reserved for control flow mask.
+    Reserved.set(Mips::T7);   // Reserved for memory access mask.
+    Reserved.set(Mips::T8);   // Reserved for thread pointer.
+  }
+
   for (unsigned I = 0; I < array_lengthof(ReservedGPR64); ++I)
     Reserved.set(ReservedGPR64[I]);
 
@@ -183,6 +191,8 @@ getReservedRegs(const MachineFunction &MF) const {
     Reserved.set(Mips::RA_64);
     Reserved.set(Mips::T0);
     Reserved.set(Mips::T1);
+    if (MF.getFunction()->hasFnAttribute("saveS2"))
+      Reserved.set(Mips::S2);
   }
 
   // Reserve GP if small section is used.
@@ -240,12 +250,3 @@ getFrameRegister(const MachineFunction &MF) const {
 
 }
 
-unsigned MipsRegisterInfo::
-getEHExceptionRegister() const {
-  llvm_unreachable("What is the exception register");
-}
-
-unsigned MipsRegisterInfo::
-getEHHandlerRegister() const {
-  llvm_unreachable("What is the exception handler register");
-}

@@ -31,8 +31,7 @@ Optional<std::pair<std::string, int> >
 LockFileManager::readLockFile(StringRef LockFileName) {
   // Check whether the lock file exists. If not, clearly there's nothing
   // to read, so we just return.
-  bool Exists = false;
-  if (sys::fs::exists(LockFileName, Exists) || !Exists)
+  if (!sys::fs::exists(LockFileName))
     return None;
 
   // Read the owning host and PID out of the lock file. If it appears that the
@@ -111,8 +110,7 @@ LockFileManager::LockFileManager(StringRef FileName)
       // We failed to write out PID, so make up an excuse, remove the
       // unique lock file, and fail.
       Error = make_error_code(errc::no_space_on_device);
-      bool Existed;
-      sys::fs::remove(UniqueLockFileName.c_str(), Existed);
+      sys::fs::remove(UniqueLockFileName.c_str());
       return;
     }
   }
@@ -137,14 +135,13 @@ LockFileManager::LockFileManager(StringRef FileName)
 
   // Someone else managed to create the lock file first. Wipe out our unique
   // lock file (it's useless now) and read the process ID from the lock file.
-  bool Existed;
-  sys::fs::remove(UniqueLockFileName.str(), Existed);
+  sys::fs::remove(UniqueLockFileName.str());
   if ((Owner = readLockFile(LockFileName)))
     return;
 
   // There is a lock file that nobody owns; try to clean it up and report
   // an error.
-  sys::fs::remove(LockFileName.str(), Existed);
+  sys::fs::remove(LockFileName.str());
   Error = EC;
 }
 
@@ -163,9 +160,8 @@ LockFileManager::~LockFileManager() {
     return;
 
   // Since we own the lock, remove the lock file and our own unique lock file.
-  bool Existed;
-  sys::fs::remove(LockFileName.str(), Existed);
-  sys::fs::remove(UniqueLockFileName.str(), Existed);
+  sys::fs::remove(LockFileName.str());
+  sys::fs::remove(UniqueLockFileName.str());
 }
 
 void LockFileManager::waitForUnlock() {
@@ -192,23 +188,22 @@ void LockFileManager::waitForUnlock() {
 #else
     nanosleep(&Interval, NULL);
 #endif
-    bool Exists = false;
     bool LockFileJustDisappeared = false;
 
     // If the lock file is still expected to be there, check whether it still
     // is.
     if (!LockFileGone) {
+      bool Exists;
       if (!sys::fs::exists(LockFileName.str(), Exists) && !Exists) {
         LockFileGone = true;
         LockFileJustDisappeared = true;
-        Exists = false;
       }
     }
 
     // If the lock file is no longer there, check if the original file is
     // available now.
     if (LockFileGone) {
-      if (!sys::fs::exists(FileName.str(), Exists) && Exists) {
+      if (sys::fs::exists(FileName.str())) {
         return;
       }
 

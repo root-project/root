@@ -869,7 +869,7 @@ static const Expr *peelOffOuterExpr(const Expr *Ex,
 
   // Peel off the ternary operator.
   if (const ConditionalOperator *CO = dyn_cast<ConditionalOperator>(Ex)) {
-    // Find a node where the branching occured and find out which branch
+    // Find a node where the branching occurred and find out which branch
     // we took (true/false) by looking at the ExplodedGraph.
     const ExplodedNode *NI = N;
     do {
@@ -1087,7 +1087,9 @@ PathDiagnosticPiece *NilReceiverBRVisitor::VisitNode(const ExplodedNode *N,
   llvm::raw_svector_ostream OS(Buf);
 
   if (const ObjCMessageExpr *ME = dyn_cast<ObjCMessageExpr>(S)) {
-    OS << "'" << ME->getSelector().getAsString() << "' not called";
+    OS << "'";
+    ME->getSelector().print(OS);
+    OS << "' not called";
   }
   else {
     OS << "No method is called";
@@ -1357,7 +1359,8 @@ ConditionBRVisitor::VisitTrueTest(const Expr *Cond,
 
   // For non-assignment operations, we require that we can understand
   // both the LHS and RHS.
-  if (LhsString.empty() || RhsString.empty())
+  if (LhsString.empty() || RhsString.empty() ||
+      !BinaryOperator::isComparisonOp(Op))
     return 0;
   
   // Should we invert the strings if the LHS is not a variable name?
@@ -1548,6 +1551,25 @@ LikelyFalsePositiveSuppressionBRVisitor::getEndPath(BugReporterContext &BRC,
           return 0;
         }
       }
+
+      // The analyzer issues a false positive on
+      //   std::basic_string<uint8_t> v; v.push_back(1);
+      // and
+      //   std::u16string s; s += u'a';
+      // because we cannot reason about the internal invariants of the
+      // datastructure.
+      for (const LocationContext *LCtx = N->getLocationContext(); LCtx;
+           LCtx = LCtx->getParent()) {
+        const CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(LCtx->getDecl());
+        if (!MD)
+          continue;
+
+        const CXXRecordDecl *CD = MD->getParent();
+        if (CD->getName() == "basic_string") {
+          BR.markInvalid(getTag(), 0);
+          return 0;
+        }
+      }
     }
   }
 
@@ -1584,8 +1606,10 @@ UndefOrNullArgVisitor::VisitNode(const ExplodedNode *N,
   CallEventManager &CEMgr = BRC.getStateManager().getCallEventManager();
   CallEventRef<> Call = CEMgr.getCaller(CEnter->getCalleeContext(), State);
   unsigned Idx = 0;
-  for (CallEvent::param_iterator I = Call->param_begin(),
-                                 E = Call->param_end(); I != E; ++I, ++Idx) {
+  ArrayRef<ParmVarDecl*> parms = Call->parameters();
+
+  for (ArrayRef<ParmVarDecl*>::iterator I = parms.begin(), E = parms.end();
+                              I != E; ++I, ++Idx) {
     const MemRegion *ArgReg = Call->getArgSVal(Idx).getAsRegion();
 
     // Are we tracking the argument or its subregion?

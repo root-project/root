@@ -14,7 +14,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/Pass.h"
 
 using namespace llvm;
@@ -31,12 +31,11 @@ namespace {
 
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesAll();
-      AU.addRequired<DominatorTree>();
-
+      AU.addRequired<DominatorTreeWrapperPass>();
     }
 
     virtual bool runOnFunction(Function &F) {
-      getAnalysis<DominatorTree>().dump();
+      getAnalysis<DominatorTreeWrapperPass>().dump();
       return false;
     }
   };

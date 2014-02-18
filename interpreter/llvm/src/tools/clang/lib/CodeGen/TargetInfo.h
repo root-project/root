@@ -17,10 +17,11 @@
 
 #include "clang/AST/Type.h"
 #include "clang/Basic/LLVM.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringRef.h"
 
 namespace llvm {
+  class Constant;
   class GlobalValue;
   class Type;
   class Value;
@@ -136,6 +137,13 @@ namespace clang {
       return "";
     }
 
+    /// Return a constant used by UBSan as a signature to identify functions
+    /// possessing type information, or 0 if the platform is unsupported.
+    virtual llvm::Constant *getUBSanFunctionSignature(
+        CodeGen::CodeGenModule &CGM) const {
+      return 0;
+    }
+
     /// Determine whether a call to an unprototyped functions under
     /// the given calling convention should use the variadic
     /// convention or the non-variadic convention.
@@ -168,7 +176,7 @@ namespace clang {
     /// However, some platforms make the conventions identical except
     /// for passing additional out-of-band information to a variadic
     /// function: for example, x86-64 passes the number of SSE
-    /// arguments in %al.  On these platforms, it is desireable to
+    /// arguments in %al.  On these platforms, it is desirable to
     /// call unprototyped functions using the variadic convention so
     /// that unprototyped calls to varargs functions still succeed.
     ///

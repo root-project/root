@@ -131,8 +131,8 @@ class MachineFunction {
   /// about the control flow of such functions.
   bool ExposesReturnsTwice;
 
-  /// True if the function includes MS-style inline assembly.
-  bool HasMSInlineAsm;
+  /// True if the function includes any inline assembly.
+  bool HasInlineAsm;
 
   MachineFunction(const MachineFunction &) LLVM_DELETED_FUNCTION;
   void operator=(const MachineFunction&) LLVM_DELETED_FUNCTION;
@@ -218,15 +218,14 @@ public:
     ExposesReturnsTwice = B;
   }
 
-  /// Returns true if the function contains any MS-style inline assembly.
-  bool hasMSInlineAsm() const {
-    return HasMSInlineAsm;
+  /// Returns true if the function contains any inline assembly.
+  bool hasInlineAsm() const {
+    return HasInlineAsm;
   }
 
-  /// Set a flag that indicates that the function contains MS-style inline
-  /// assembly.
-  void setHasMSInlineAsm(bool B) {
-    HasMSInlineAsm = B;
+  /// Set a flag that indicates that the function contains inline assembly.
+  void setHasInlineAsm(bool B) {
+    HasInlineAsm = B;
   }
   
   /// getInfo - Keep track of various per-function pieces of information for
@@ -425,6 +424,15 @@ public:
   /// Cap must be the same capacity that was used to allocate the array.
   void deallocateOperandArray(OperandCapacity Cap, MachineOperand *Array) {
     OperandRecycler.deallocate(Cap, Array);
+  }
+
+  /// \brief Allocate and initialize a register mask with @p NumRegister bits.
+  uint32_t *allocateRegisterMask(unsigned NumRegister) {
+    unsigned Size = (NumRegister + 31) / 32;
+    uint32_t *Mask = Allocator.Allocate<uint32_t>(Size);
+    for (unsigned i = 0; i != Size; ++i)
+      Mask[i] = 0;
+    return Mask;
   }
 
   /// allocateMemRefsArray - Allocate an array to hold MachineMemOperand

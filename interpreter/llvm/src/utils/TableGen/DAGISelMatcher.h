@@ -10,6 +10,7 @@
 #ifndef TBLGEN_DAGISELMATCHER_H
 #define TBLGEN_DAGISELMATCHER_H
 
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -55,6 +56,7 @@ public:
 
     // Predicate checking.
     CheckSame,            // Fail if not same as prev match.
+    CheckChildSame,       // Fail if child not same as prev match.
     CheckPatternPredicate,
     CheckPredicate,       // Fail if node predicate fails.
     CheckOpcode,          // Fail if not opcode.
@@ -63,6 +65,7 @@ public:
     SwitchType,           // Dispatch based on type.
     CheckChildType,       // Fail if child has wrong type.
     CheckInteger,         // Fail if wrong val.
+    CheckChildInteger,    // Fail if child is wrong val.
     CheckCondCode,        // Fail if not condcode.
     CheckValueType,
     CheckComplexPat,
@@ -122,12 +125,14 @@ public:
     switch (getKind()) {
     default: return false;
     case CheckSame:
+    case CheckChildSame:
     case CheckPatternPredicate:
     case CheckPredicate:
     case CheckOpcode:
     case CheckType:
     case CheckChildType:
     case CheckInteger:
+    case CheckChildInteger:
     case CheckCondCode:
     case CheckValueType:
     case CheckAndImm:
@@ -186,8 +191,8 @@ protected:
 class ScopeMatcher : public Matcher {
   SmallVector<Matcher*, 4> Children;
 public:
-  ScopeMatcher(Matcher *const *children, unsigned numchildren)
-    : Matcher(Scope), Children(children, children+numchildren) {
+  ScopeMatcher(ArrayRef<Matcher *> children)
+    : Matcher(Scope), Children(children.begin(), children.end()) {
   }
   virtual ~ScopeMatcher();
 
@@ -392,6 +397,34 @@ private:
   virtual unsigned getHashImpl() const { return getMatchNumber(); }
 };
 
+/// CheckChildSameMatcher - This checks to see if child node is exactly the same
+/// node as the specified match that was recorded with 'Record'.  This is used
+/// when patterns have the same name in them, like '(mul GPR:$in, GPR:$in)'.
+class CheckChildSameMatcher : public Matcher {
+  unsigned ChildNo;
+  unsigned MatchNumber;
+public:
+  CheckChildSameMatcher(unsigned childno, unsigned matchnumber)
+    : Matcher(CheckChildSame), ChildNo(childno), MatchNumber(matchnumber) {}
+
+  unsigned getChildNo() const { return ChildNo; }
+  unsigned getMatchNumber() const { return MatchNumber; }
+
+  static inline bool classof(const Matcher *N) {
+    return N->getKind() == CheckChildSame;
+  }
+
+  virtual bool isSafeToReorderWithPatternPredicate() const { return true; }
+
+private:
+  virtual void printImpl(raw_ostream &OS, unsigned indent) const;
+  virtual bool isEqualImpl(const Matcher *M) const {
+    return cast<CheckChildSameMatcher>(M)->ChildNo == ChildNo &&
+           cast<CheckChildSameMatcher>(M)->MatchNumber == MatchNumber;
+  }
+  virtual unsigned getHashImpl() const { return (MatchNumber << 2) | ChildNo; }
+};
+
 /// CheckPatternPredicateMatcher - This checks the target-specific predicate
 /// to see if the entire pattern is capable of matching.  This predicate does
 /// not take a node as input.  This is used for subtarget feature checks etc.
@@ -472,9 +505,9 @@ private:
 class SwitchOpcodeMatcher : public Matcher {
   SmallVector<std::pair<const SDNodeInfo*, Matcher*>, 8> Cases;
 public:
-  SwitchOpcodeMatcher(const std::pair<const SDNodeInfo*, Matcher*> *cases,
-                      unsigned numcases)
-    : Matcher(SwitchOpcode), Cases(cases, cases+numcases) {}
+  SwitchOpcodeMatcher(ArrayRef<std::pair<const SDNodeInfo*, Matcher*> > cases)
+    : Matcher(SwitchOpcode), Cases(cases.begin(), cases.end()) {}
+  virtual ~SwitchOpcodeMatcher();
 
   static inline bool classof(const Matcher *N) {
     return N->getKind() == SwitchOpcode;
@@ -526,9 +559,9 @@ private:
 class SwitchTypeMatcher : public Matcher {
   SmallVector<std::pair<MVT::SimpleValueType, Matcher*>, 8> Cases;
 public:
-  SwitchTypeMatcher(const std::pair<MVT::SimpleValueType, Matcher*> *cases,
-                    unsigned numcases)
-  : Matcher(SwitchType), Cases(cases, cases+numcases) {}
+  SwitchTypeMatcher(ArrayRef<std::pair<MVT::SimpleValueType, Matcher*> > cases)
+  : Matcher(SwitchType), Cases(cases.begin(), cases.end()) {}
+  virtual ~SwitchTypeMatcher();
 
   static inline bool classof(const Matcher *N) {
     return N->getKind() == SwitchType;
@@ -598,6 +631,34 @@ private:
     return cast<CheckIntegerMatcher>(M)->Value == Value;
   }
   virtual unsigned getHashImpl() const { return Value; }
+  virtual bool isContradictoryImpl(const Matcher *M) const;
+};
+
+/// CheckChildIntegerMatcher - This checks to see if the child node is a
+/// ConstantSDNode with a specified integer value, if not it fails to match.
+class CheckChildIntegerMatcher : public Matcher {
+  unsigned ChildNo;
+  int64_t Value;
+public:
+  CheckChildIntegerMatcher(unsigned childno, int64_t value)
+    : Matcher(CheckChildInteger), ChildNo(childno), Value(value) {}
+
+  unsigned getChildNo() const { return ChildNo; }
+  int64_t getValue() const { return Value; }
+
+  static inline bool classof(const Matcher *N) {
+    return N->getKind() == CheckChildInteger;
+  }
+
+  virtual bool isSafeToReorderWithPatternPredicate() const { return true; }
+
+private:
+  virtual void printImpl(raw_ostream &OS, unsigned indent) const;
+  virtual bool isEqualImpl(const Matcher *M) const {
+    return cast<CheckChildIntegerMatcher>(M)->ChildNo == ChildNo &&
+           cast<CheckChildIntegerMatcher>(M)->Value == Value;
+  }
+  virtual unsigned getHashImpl() const { return (Value << 3) | ChildNo; }
   virtual bool isContradictoryImpl(const Matcher *M) const;
 };
 
@@ -871,8 +932,8 @@ private:
 class EmitMergeInputChainsMatcher : public Matcher {
   SmallVector<unsigned, 3> ChainNodes;
 public:
-  EmitMergeInputChainsMatcher(const unsigned *nodes, unsigned NumNodes)
-    : Matcher(EmitMergeInputChains), ChainNodes(nodes, nodes+NumNodes) {}
+  EmitMergeInputChainsMatcher(ArrayRef<unsigned> nodes)
+    : Matcher(EmitMergeInputChains), ChainNodes(nodes.begin(), nodes.end()) {}
 
   unsigned getNumNodes() const { return ChainNodes.size(); }
 
@@ -964,13 +1025,13 @@ class EmitNodeMatcherCommon : public Matcher {
   int NumFixedArityOperands;
 public:
   EmitNodeMatcherCommon(const std::string &opcodeName,
-                        const MVT::SimpleValueType *vts, unsigned numvts,
-                        const unsigned *operands, unsigned numops,
+                        ArrayRef<MVT::SimpleValueType> vts,
+                        ArrayRef<unsigned> operands,
                         bool hasChain, bool hasInGlue, bool hasOutGlue,
                         bool hasmemrefs,
                         int numfixedarityoperands, bool isMorphNodeTo)
     : Matcher(isMorphNodeTo ? MorphNodeTo : EmitNode), OpcodeName(opcodeName),
-      VTs(vts, vts+numvts), Operands(operands, operands+numops),
+      VTs(vts.begin(), vts.end()), Operands(operands.begin(), operands.end()),
       HasChain(hasChain), HasInGlue(hasInGlue), HasOutGlue(hasOutGlue),
       HasMemRefs(hasmemrefs), NumFixedArityOperands(numfixedarityoperands) {}
 
@@ -1014,12 +1075,12 @@ class EmitNodeMatcher : public EmitNodeMatcherCommon {
   unsigned FirstResultSlot;
 public:
   EmitNodeMatcher(const std::string &opcodeName,
-                  const MVT::SimpleValueType *vts, unsigned numvts,
-                  const unsigned *operands, unsigned numops,
+                  ArrayRef<MVT::SimpleValueType> vts,
+                  ArrayRef<unsigned> operands,
                   bool hasChain, bool hasInFlag, bool hasOutFlag,
                   bool hasmemrefs,
                   int numfixedarityoperands, unsigned firstresultslot)
-  : EmitNodeMatcherCommon(opcodeName, vts, numvts, operands, numops, hasChain,
+  : EmitNodeMatcherCommon(opcodeName, vts, operands, hasChain,
                           hasInFlag, hasOutFlag, hasmemrefs,
                           numfixedarityoperands, false),
     FirstResultSlot(firstresultslot) {}
@@ -1037,12 +1098,12 @@ class MorphNodeToMatcher : public EmitNodeMatcherCommon {
   const PatternToMatch &Pattern;
 public:
   MorphNodeToMatcher(const std::string &opcodeName,
-                     const MVT::SimpleValueType *vts, unsigned numvts,
-                     const unsigned *operands, unsigned numops,
+                     ArrayRef<MVT::SimpleValueType> vts,
+                     ArrayRef<unsigned> operands,
                      bool hasChain, bool hasInFlag, bool hasOutFlag,
                      bool hasmemrefs,
                      int numfixedarityoperands, const PatternToMatch &pattern)
-    : EmitNodeMatcherCommon(opcodeName, vts, numvts, operands, numops, hasChain,
+    : EmitNodeMatcherCommon(opcodeName, vts, operands, hasChain,
                             hasInFlag, hasOutFlag, hasmemrefs,
                             numfixedarityoperands, true),
       Pattern(pattern) {
@@ -1061,8 +1122,8 @@ public:
 class MarkGlueResultsMatcher : public Matcher {
   SmallVector<unsigned, 3> GlueResultNodes;
 public:
-  MarkGlueResultsMatcher(const unsigned *nodes, unsigned NumNodes)
-    : Matcher(MarkGlueResults), GlueResultNodes(nodes, nodes+NumNodes) {}
+  MarkGlueResultsMatcher(ArrayRef<unsigned> nodes)
+    : Matcher(MarkGlueResults), GlueResultNodes(nodes.begin(), nodes.end()) {}
 
   unsigned getNumNodes() const { return GlueResultNodes.size(); }
 
@@ -1090,9 +1151,9 @@ class CompleteMatchMatcher : public Matcher {
   SmallVector<unsigned, 2> Results;
   const PatternToMatch &Pattern;
 public:
-  CompleteMatchMatcher(const unsigned *results, unsigned numresults,
+  CompleteMatchMatcher(ArrayRef<unsigned> results,
                        const PatternToMatch &pattern)
-  : Matcher(CompleteMatch), Results(results, results+numresults),
+  : Matcher(CompleteMatch), Results(results.begin(), results.end()),
     Pattern(pattern) {}
 
   unsigned getNumResults() const { return Results.size(); }

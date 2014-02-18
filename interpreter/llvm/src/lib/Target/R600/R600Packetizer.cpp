@@ -66,7 +66,7 @@ private:
   }
 
   /// \returns register to PV chan mapping for bundle/single instructions that
-  /// immediatly precedes I.
+  /// immediately precedes I.
   DenseMap<unsigned, unsigned> getPreviousVector(MachineBasicBlock::iterator I)
       const {
     DenseMap<unsigned, unsigned> Result;
@@ -206,6 +206,14 @@ public:
         return false;
       }
     }
+
+    bool ARDef = TII->definesAddressRegister(MII) ||
+                 TII->definesAddressRegister(MIJ);
+    bool ARUse = TII->usesAddressRegister(MII) ||
+                 TII->usesAddressRegister(MIJ);
+    if (ARDef && ARUse)
+      return false;
+
     return true;
   }
 
@@ -340,7 +348,7 @@ bool R600Packetizer::runOnMachineFunction(MachineFunction &Fn) {
     MachineBasicBlock::iterator End = MBB->end();
     MachineBasicBlock::iterator MI = MBB->begin();
     while (MI != End) {
-      if (MI->isKill() ||
+      if (MI->isKill() || MI->getOpcode() == AMDGPU::IMPLICIT_DEF ||
           (MI->getOpcode() == AMDGPU::CF_ALU && !MI->getOperand(8).getImm())) {
         MachineBasicBlock::iterator DeleteMI = MI;
         ++MI;

@@ -71,6 +71,7 @@ public:
       ".end_data_region");
 
     // Special section directives.
+    addDirectiveHandler<&DarwinAsmParser::ParseSectionDirectiveBss>(".bss");
     addDirectiveHandler<&DarwinAsmParser::ParseSectionDirectiveConst>(".const");
     addDirectiveHandler<&DarwinAsmParser::ParseSectionDirectiveConstData>(
       ".const_data");
@@ -182,6 +183,10 @@ public:
   bool ParseDirectiveDataRegionEnd(StringRef, SMLoc);
 
   // Named Section Directive
+  bool ParseSectionDirectiveBss(StringRef, SMLoc) {
+    return ParseSectionSwitch("__DATA", "__bss");
+  }
+
   bool ParseSectionDirectiveConst(StringRef, SMLoc) {
     return ParseSectionSwitch("__TEXT", "__const");
   }
@@ -384,7 +389,7 @@ bool DarwinAsmParser::ParseSectionSwitch(const char *Segment,
   // is no good reason for someone to intentionally emit incorrectly sized
   // values into the implicitly aligned sections.
   if (Align)
-    getStreamer().EmitValueToAlignment(Align, 0, 1, 0);
+    getStreamer().EmitValueToAlignment(Align);
 
   return false;
 }

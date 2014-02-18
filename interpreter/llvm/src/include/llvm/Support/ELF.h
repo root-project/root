@@ -20,6 +20,7 @@
 #ifndef LLVM_SUPPORT_ELF_H
 #define LLVM_SUPPORT_ELF_H
 
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/DataTypes.h"
 #include <cstring>
 
@@ -804,6 +805,8 @@ enum LLVM_ENUM_INT_TYPE(unsigned) {
   EF_MIPS_NOREORDER = 0x00000001, // Don't reorder instructions
   EF_MIPS_PIC       = 0x00000002, // Position independent code
   EF_MIPS_CPIC      = 0x00000004, // Call object with Position independent code
+  EF_MIPS_ABI2      = 0x00000020,
+  EF_MIPS_32BITMODE = 0x00000100,
   EF_MIPS_ABI_O32   = 0x00001000, // This file follows the first MIPS 32 bit ABI
 
   //ARCH_ASE
@@ -880,6 +883,21 @@ enum {
   R_MIPS_GLOB_DAT          = 51,
   R_MIPS_COPY              = 126,
   R_MIPS_JUMP_SLOT         = 127,
+  R_MICROMIPS_26_S1        = 133,
+  R_MICROMIPS_HI16         = 134,
+  R_MICROMIPS_LO16         = 135,
+  R_MICROMIPS_GOT16        = 138,
+  R_MICROMIPS_PC16_S1      = 141,
+  R_MICROMIPS_CALL16       = 142,
+  R_MICROMIPS_GOT_DISP     = 145,
+  R_MICROMIPS_GOT_PAGE     = 146,
+  R_MICROMIPS_GOT_OFST     = 147,
+  R_MICROMIPS_TLS_GD          = 162,
+  R_MICROMIPS_TLS_LDM         = 163,
+  R_MICROMIPS_TLS_DTPREL_HI16 = 164,
+  R_MICROMIPS_TLS_DTPREL_LO16 = 165,
+  R_MICROMIPS_TLS_TPREL_HI16  = 169,
+  R_MICROMIPS_TLS_TPREL_LO16  = 170,
   R_MIPS_NUM               = 218
 };
 
@@ -1073,6 +1091,94 @@ enum {
   R_390_IRELATIVE   = 61
 };
 
+// ELF Relocation type for Sparc.
+enum {
+  R_SPARC_NONE        = 0,
+  R_SPARC_8           = 1,
+  R_SPARC_16          = 2,
+  R_SPARC_32          = 3,
+  R_SPARC_DISP8       = 4,
+  R_SPARC_DISP16      = 5,
+  R_SPARC_DISP32      = 6,
+  R_SPARC_WDISP30     = 7,
+  R_SPARC_WDISP22     = 8,
+  R_SPARC_HI22        = 9,
+  R_SPARC_22          = 10,
+  R_SPARC_13          = 11,
+  R_SPARC_LO10        = 12,
+  R_SPARC_GOT10       = 13,
+  R_SPARC_GOT13       = 14,
+  R_SPARC_GOT22       = 15,
+  R_SPARC_PC10        = 16,
+  R_SPARC_PC22        = 17,
+  R_SPARC_WPLT30      = 18,
+  R_SPARC_COPY        = 19,
+  R_SPARC_GLOB_DAT    = 20,
+  R_SPARC_JMP_SLOT    = 21,
+  R_SPARC_RELATIVE    = 22,
+  R_SPARC_UA32        = 23,
+  R_SPARC_PLT32       = 24,
+  R_SPARC_HIPLT22     = 25,
+  R_SPARC_LOPLT10     = 26,
+  R_SPARC_PCPLT32     = 27,
+  R_SPARC_PCPLT22     = 28,
+  R_SPARC_PCPLT10     = 29,
+  R_SPARC_10          = 30,
+  R_SPARC_11          = 31,
+  R_SPARC_64          = 32,
+  R_SPARC_OLO10       = 33,
+  R_SPARC_HH22        = 34,
+  R_SPARC_HM10        = 35,
+  R_SPARC_LM22        = 36,
+  R_SPARC_PC_HH22     = 37,
+  R_SPARC_PC_HM10     = 38,
+  R_SPARC_PC_LM22     = 39,
+  R_SPARC_WDISP16     = 40,
+  R_SPARC_WDISP19     = 41,
+  R_SPARC_7           = 43,
+  R_SPARC_5           = 44,
+  R_SPARC_6           = 45,
+  R_SPARC_DISP64      = 46,
+  R_SPARC_PLT64       = 47,
+  R_SPARC_HIX22       = 48,
+  R_SPARC_LOX10       = 49,
+  R_SPARC_H44         = 50,
+  R_SPARC_M44         = 51,
+  R_SPARC_L44         = 52,
+  R_SPARC_REGISTER    = 53,
+  R_SPARC_UA64        = 54,
+  R_SPARC_UA16        = 55,
+  R_SPARC_TLS_GD_HI22   = 56,
+  R_SPARC_TLS_GD_LO10   = 57,
+  R_SPARC_TLS_GD_ADD    = 58,
+  R_SPARC_TLS_GD_CALL   = 59,
+  R_SPARC_TLS_LDM_HI22  = 60,
+  R_SPARC_TLS_LDM_LO10  = 61,
+  R_SPARC_TLS_LDM_ADD   = 62,
+  R_SPARC_TLS_LDM_CALL  = 63,
+  R_SPARC_TLS_LDO_HIX22 = 64,
+  R_SPARC_TLS_LDO_LOX10 = 65,
+  R_SPARC_TLS_LDO_ADD   = 66,
+  R_SPARC_TLS_IE_HI22   = 67,
+  R_SPARC_TLS_IE_LO10   = 68,
+  R_SPARC_TLS_IE_LD     = 69,
+  R_SPARC_TLS_IE_LDX    = 70,
+  R_SPARC_TLS_IE_ADD    = 71,
+  R_SPARC_TLS_LE_HIX22  = 72,
+  R_SPARC_TLS_LE_LOX10  = 73,
+  R_SPARC_TLS_DTPMOD32  = 74,
+  R_SPARC_TLS_DTPMOD64  = 75,
+  R_SPARC_TLS_DTPOFF32  = 76,
+  R_SPARC_TLS_DTPOFF64  = 77,
+  R_SPARC_TLS_TPOFF32   = 78,
+  R_SPARC_TLS_TPOFF64   = 79,
+  R_SPARC_GOTDATA_HIX22 = 80,
+  R_SPARC_GOTDATA_LOX22 = 81,
+  R_SPARC_GOTDATA_OP_HIX22 = 82,
+  R_SPARC_GOTDATA_OP_LOX22 = 83,
+  R_SPARC_GOTDATA_OP    = 84
+};
+
 // Section header.
 struct Elf32_Shdr {
   Elf32_Word sh_name;      // Section name (index into string table)
@@ -1229,8 +1335,30 @@ enum LLVM_ENUM_INT_TYPE(unsigned) {
   // for faster accesses
   SHF_HEX_GPREL = 0x10000000,
 
-  // Do not strip this section. FIXME: We need target specific SHF_ enums.
-  SHF_MIPS_NOSTRIP = 0x8000000
+  // Section contains text/data which may be replicated in other sections.
+  // Linker must retain only one copy.
+  SHF_MIPS_NODUPES = 0x01000000,
+
+  // Linker must generate implicit hidden weak names.
+  SHF_MIPS_NAMES   = 0x02000000,
+
+  // Section data local to process.
+  SHF_MIPS_LOCAL   = 0x04000000,
+
+  // Do not strip this section.
+  SHF_MIPS_NOSTRIP = 0x08000000,
+
+  // Section must be part of global data area.
+  SHF_MIPS_GPREL   = 0x10000000,
+
+  // This section should be merged.
+  SHF_MIPS_MERGE   = 0x20000000,
+
+  // Address size to be inferred from section entry size.
+  SHF_MIPS_ADDR    = 0x40000000,
+
+  // Section data is string data by default.
+  SHF_MIPS_STRING  = 0x80000000
 };
 
 // Section Group Flags
@@ -1447,7 +1575,12 @@ enum {
   PT_ARM_ARCHEXT = 0x70000000, // Platform architecture compatibility info
   // These all contain stack unwind tables.
   PT_ARM_EXIDX   = 0x70000001,
-  PT_ARM_UNWIND  = 0x70000001
+  PT_ARM_UNWIND  = 0x70000001,
+
+  // MIPS program header types.
+  PT_MIPS_REGINFO  = 0x70000000,  // Register usage information.
+  PT_MIPS_RTPROC   = 0x70000001,  // Runtime procedure table.
+  PT_MIPS_OPTIONS  = 0x70000002   // Options segment.
 };
 
 // Segment flag bits.
@@ -1529,6 +1662,7 @@ enum {
   DT_RELCOUNT     = 0x6FFFFFFA, // ELF32_Rel count.
 
   DT_FLAGS_1      = 0X6FFFFFFB, // Flags_1.
+  DT_VERSYM       = 0x6FFFFFF0, // The address of .gnu.version section.
   DT_VERDEF       = 0X6FFFFFFC, // The address of the version definition table.
   DT_VERDEFNUM    = 0X6FFFFFFD, // The number of entries in DT_VERDEF.
   DT_VERNEED      = 0X6FFFFFFE, // The address of the version Dependency table.

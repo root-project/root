@@ -85,7 +85,8 @@ namespace CodeGen {
   class CGCUDARuntime;
   class BlockFieldFlags;
   class FunctionArgList;
-  
+  class PGOProfileData;
+
   struct OrderGlobalInits {
     unsigned int priority;
     unsigned int lex_order;
@@ -236,7 +237,7 @@ class CodeGenModule : public CodeGenTypeCache {
   DiagnosticsEngine &Diags;
   const llvm::DataLayout &TheDataLayout;
   const TargetInfo &Target;
-  CGCXXABI &ABI;
+  llvm::OwningPtr<CGCXXABI> ABI;
   llvm::LLVMContext &VMContext;
 
   CodeGenTBAA *TBAA;
@@ -250,7 +251,6 @@ class CodeGenModule : public CodeGenTypeCache {
  
   /// VTables - Holds information about C++ vtables.
   CodeGenVTables VTables;
-  friend class CodeGenVTables;
 
   CGObjCRuntime* ObjCRuntime;
   CGOpenCLRuntime* OpenCLRuntime;
@@ -259,6 +259,7 @@ class CodeGenModule : public CodeGenTypeCache {
   ARCEntrypoints *ARCData;
   llvm::MDNode *NoObjCARCExceptionsMetadata;
   RREntrypoints *RRData;
+  PGOProfileData *PGOData;
 
   // WeakRefReferences - A set of references that have only been seen via
   // a weakref so far. This is used to remove the weak of the reference if we
@@ -274,7 +275,22 @@ class CodeGenModule : public CodeGenTypeCache {
   /// DeferredDeclsToEmit - This is a list of deferred decls which we have seen
   /// that *are* actually referenced.  These get code generated when the module
   /// is done.
-  std::vector<GlobalDecl> DeferredDeclsToEmit;
+  struct DeferredGlobal {
+    DeferredGlobal(llvm::GlobalValue *GV, GlobalDecl GD) : GV(GV), GD(GD) {}
+    llvm::AssertingVH<llvm::GlobalValue> GV;
+    GlobalDecl GD;
+  };
+  std::vector<DeferredGlobal> DeferredDeclsToEmit;
+  void addDeferredDeclToEmit(llvm::GlobalValue *GV, GlobalDecl GD) {
+    DeferredDeclsToEmit.push_back(DeferredGlobal(GV, GD));
+  }
+
+  /// List of alias we have emitted. Used to make sure that what they point to
+  /// is defined once we get to the end of the of the translation unit.
+  std::vector<GlobalDecl> Aliases;
+
+  typedef llvm::StringMap<llvm::TrackingVH<llvm::Constant> > ReplacementsTy;
+  ReplacementsTy Replacements;
 
   /// DeferredVTables - A queue of (optional) vtables to consider emitting.
   std::vector<const CXXRecordDecl*> DeferredVTables;
@@ -311,6 +327,9 @@ class CodeGenModule : public CodeGenTypeCache {
 
   llvm::DenseMap<QualType, llvm::Constant *> AtomicSetterHelperFnMap;
   llvm::DenseMap<QualType, llvm::Constant *> AtomicGetterHelperFnMap;
+
+  /// Map used to get unique type descriptor constants for sanitizers.
+  llvm::DenseMap<QualType, llvm::Constant *> TypeDescriptorMap;
 
   /// Map used to track internal linkage functions declared within
   /// extern "C" regions.
@@ -424,6 +443,8 @@ public:
 
   ~CodeGenModule();
 
+  void clear();
+
   /// Release - Finalize LLVM code generation.
   void Release();
 
@@ -460,6 +481,10 @@ public:
     return *RRData;
   }
 
+  PGOProfileData *getPGOData() const {
+    return PGOData;
+  }
+
   llvm::Constant *getStaticLocalDeclAddress(const VarDecl *D) {
     return StaticLocalDeclMap[D];
   }
@@ -492,6 +517,13 @@ public:
     AtomicGetterHelperFnMap[Ty] = Fn;
   }
 
+  llvm::Constant *getTypeDescriptor(QualType Ty) {
+    return TypeDescriptorMap[Ty];
+  }
+  void setTypeDescriptor(QualType Ty, llvm::Constant *C) {
+    TypeDescriptorMap[Ty] = C;
+  }
+
   CGDebugInfo *getModuleDebugInfo() { return DebugInfo; }
 
   llvm::MDNode *getNoObjCARCExceptionsMetadata() {
@@ -509,7 +541,7 @@ public:
   DiagnosticsEngine &getDiags() const { return Diags; }
   const llvm::DataLayout &getDataLayout() const { return TheDataLayout; }
   const TargetInfo &getTarget() const { return Target; }
-  CGCXXABI &getCXXABI() { return ABI; }
+  CGCXXABI &getCXXABI() const { return *ABI; }
   llvm::LLVMContext &getLLVMContext() { return VMContext; }
   
   bool shouldUseTBAA() const { return TBAA != 0; }
@@ -520,10 +552,12 @@ public:
  
   CodeGenVTables &getVTables() { return VTables; }
 
-  VTableContext &getVTableContext() { return VTables.getVTableContext(); }
+  ItaniumVTableContext &getItaniumVTableContext() {
+    return VTables.getItaniumVTableContext();
+  }
 
-  MicrosoftVFTableContext &getVFTableContext() {
-    return VTables.getVFTableContext();
+  MicrosoftVTableContext &getMicrosoftVTableContext() {
+    return VTables.getMicrosoftVTableContext();
   }
 
   llvm::MDNode *getTBAAInfo(QualType QTy);
@@ -558,21 +592,6 @@ public:
   /// setTLSMode - Set the TLS mode for the given LLVM GlobalVariable
   /// for the thread-local variable declaration D.
   void setTLSMode(llvm::GlobalVariable *GV, const VarDecl &D) const;
-
-  /// TypeVisibilityKind - The kind of global variable that is passed to 
-  /// setTypeVisibility
-  enum TypeVisibilityKind {
-    TVK_ForVTT,
-    TVK_ForVTable,
-    TVK_ForConstructionVTable,
-    TVK_ForRTTI,
-    TVK_ForRTTIName
-  };
-
-  /// setTypeVisibility - Set the visibility for the given global
-  /// value which holds information about a type.
-  void setTypeVisibility(llvm::GlobalValue *GV, const CXXRecordDecl *D,
-                         TypeVisibilityKind TVK) const;
 
   static llvm::GlobalValue::VisibilityTypes GetLLVMVisibility(Visibility V) {
     switch (V) {
@@ -621,9 +640,9 @@ public:
   /// GetAddrOfFunction - Return the address of the given function.  If Ty is
   /// non-null, then this function will use the specified type if it has to
   /// create it.
-  llvm::Constant *GetAddrOfFunction(GlobalDecl GD,
-                                    llvm::Type *Ty = 0,
-                                    bool ForVTable = false);
+  llvm::Constant *GetAddrOfFunction(GlobalDecl GD, llvm::Type *Ty = 0,
+                                    bool ForVTable = false,
+                                    bool DontDefer = false);
 
   /// GetAddrOfRTTIDescriptor - Get the address of the RTTI descriptor 
   /// for the given type.
@@ -751,14 +770,16 @@ public:
   /// given type.
   llvm::GlobalValue *GetAddrOfCXXConstructor(const CXXConstructorDecl *ctor,
                                              CXXCtorType ctorType,
-                                             const CGFunctionInfo *fnInfo = 0);
+                                             const CGFunctionInfo *fnInfo = 0,
+                                             bool DontDefer = false);
 
   /// GetAddrOfCXXDestructor - Return the address of the constructor of the
   /// given type.
   llvm::GlobalValue *GetAddrOfCXXDestructor(const CXXDestructorDecl *dtor,
                                             CXXDtorType dtorType,
                                             const CGFunctionInfo *fnInfo = 0,
-                                            llvm::FunctionType *fnType = 0);
+                                            llvm::FunctionType *fnType = 0,
+                                            bool DontDefer = false);
 
   /// getBuiltinLibFunction - Given a builtin id for a function like
   /// "__builtin_fabsf", return a Function* for "fabsf".
@@ -915,6 +936,10 @@ public:
 
   void EmitVTable(CXXRecordDecl *Class, bool DefinitionRequired);
 
+  /// EmitFundamentalRTTIDescriptors - Emit the RTTI descriptors for the
+  /// builtin types.
+  void EmitFundamentalRTTIDescriptors();
+
   /// \brief Appends Opts to the "Linker Options" metadata value.
   void AppendLinkerOptions(StringRef Opts);
 
@@ -987,12 +1012,11 @@ public:
 private:
   llvm::GlobalValue *GetGlobalValue(StringRef Ref);
 
-  llvm::Constant *GetOrCreateLLVMFunction(StringRef MangledName,
-                                          llvm::Type *Ty,
-                                          GlobalDecl D,
-                                          bool ForVTable,
-                                          llvm::AttributeSet ExtraAttrs =
-                                            llvm::AttributeSet());
+  llvm::Constant *
+  GetOrCreateLLVMFunction(StringRef MangledName, llvm::Type *Ty, GlobalDecl D,
+                          bool ForVTable, bool DontDefer = false,
+                          llvm::AttributeSet ExtraAttrs = llvm::AttributeSet());
+
   llvm::Constant *GetOrCreateLLVMGlobal(StringRef MangledName,
                                         llvm::PointerType *PTy,
                                         const VarDecl *D,
@@ -1015,9 +1039,9 @@ private:
                              llvm::Function *F,
                              bool IsIncompleteFunction);
 
-  void EmitGlobalDefinition(GlobalDecl D);
+  void EmitGlobalDefinition(GlobalDecl D, llvm::GlobalValue *GV = 0);
 
-  void EmitGlobalFunctionDefinition(GlobalDecl GD);
+  void EmitGlobalFunctionDefinition(GlobalDecl GD, llvm::GlobalValue *GV);
   void EmitGlobalVarDefinition(const VarDecl *D);
   void EmitAliasDefinition(GlobalDecl GD);
   void EmitObjCPropertyImplementations(const ObjCImplementationDecl *D);
@@ -1025,7 +1049,8 @@ private:
   
   // C++ related functions.
 
-  bool TryEmitDefinitionAsAlias(GlobalDecl Alias, GlobalDecl Target);
+  bool TryEmitDefinitionAsAlias(GlobalDecl Alias, GlobalDecl Target,
+                                bool InEveryTU);
   bool TryEmitBaseDestructorAsAlias(const CXXDestructorDecl *D);
 
   void EmitNamespace(const NamespaceDecl *D);
@@ -1068,13 +1093,14 @@ private:
   /// given type.
   void EmitFundamentalRTTIDescriptor(QualType Type);
 
-  /// EmitFundamentalRTTIDescriptors - Emit the RTTI descriptors for the
-  /// builtin types.
-  void EmitFundamentalRTTIDescriptors();
-
   /// EmitDeferred - Emit any needed decls for which code generation
   /// was deferred.
   void EmitDeferred();
+
+  /// Call replaceAllUsesWith on all pairs in Replacements.
+  void applyReplacements();
+
+  void checkAliases();
 
   /// EmitDeferredVTables - Emit any vtables which we deferred and
   /// still have a use for.
@@ -1092,6 +1118,9 @@ private:
   void EmitStaticExternCAliases();
 
   void EmitDeclMetadata();
+
+  /// \brief Emit the Clang version as llvm.ident metadata.
+  void EmitVersionIdentMetadata();
 
   /// EmitCoverageFile - Emit the llvm.gcov metadata used to tell LLVM where
   /// to emit the .gcno and .gcda files in a way that persists in .bc files.

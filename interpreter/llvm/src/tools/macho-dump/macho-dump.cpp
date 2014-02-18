@@ -96,9 +96,9 @@ static int DumpSectionData(const MachOObjectFile &Obj, unsigned Index,
   // Dump the relocation entries.
   outs() << "  ('_relocations', [\n";
   unsigned RelNum = 0;
-  error_code EC;
-  for (relocation_iterator I = Obj.getSectionRelBegin(Index),
-         E = Obj.getSectionRelEnd(Index); I != E; I.increment(EC), ++RelNum) {
+  for (relocation_iterator I = Obj.section_rel_begin(Index),
+                           E = Obj.section_rel_end(Index);
+       I != E; ++I, ++RelNum) {
     MachO::any_relocation_info RE = Obj.getRelocation(I->getRawDataRefImpl());
     outs() << "    # Relocation " << RelNum << "\n";
     outs() << "    (('word-0', " << format("0x%x", RE.r_word0) << "),\n";
@@ -201,10 +201,9 @@ static int DumpSymtabCommand(const MachOObjectFile &Obj) {
 
   // Dump the symbol table.
   outs() << "  ('_symbols', [\n";
-  error_code EC;
   unsigned SymNum = 0;
-  for (symbol_iterator I = Obj.begin_symbols(), E = Obj.end_symbols(); I != E;
-       I.increment(EC), ++SymNum) {
+  for (symbol_iterator I = Obj.symbol_begin(), E = Obj.symbol_end(); I != E;
+       ++I, ++SymNum) {
     DataRefImpl DRI = I->getRawDataRefImpl();
     if (Obj.is64Bit()) {
       MachO::nlist_64 STE = Obj.getSymbol64TableEntry(DRI);
@@ -379,9 +378,10 @@ int main(int argc, char **argv) {
 
   cl::ParseCommandLineOptions(argc, argv, "llvm Mach-O dumping tool\n");
 
-  OwningPtr<Binary> Binary;
-  if (error_code EC = createBinary(InputFile, Binary))
+  ErrorOr<Binary *> BinaryOrErr = createBinary(InputFile);
+  if (error_code EC = BinaryOrErr.getError())
     return Error("unable to read input: '" + EC.message() + "'");
+  OwningPtr<Binary> Binary(BinaryOrErr.get());
 
   const MachOObjectFile *InputObject = dyn_cast<MachOObjectFile>(Binary.get());
   if (!InputObject)

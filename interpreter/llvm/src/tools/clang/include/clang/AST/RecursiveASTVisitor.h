@@ -14,6 +14,7 @@
 #ifndef LLVM_CLANG_AST_RECURSIVEASTVISITOR_H
 #define LLVM_CLANG_AST_RECURSIVEASTVISITOR_H
 
+#include "clang/AST/Attr.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclFriend.h"
@@ -182,6 +183,13 @@ public:
   /// otherwise (including when the argument is a Null type location).
   bool TraverseTypeLoc(TypeLoc TL);
 
+  /// \brief Recursively visit an attribute, by dispatching to
+  /// Traverse*Attr() based on the argument's dynamic type.
+  ///
+  /// \returns false if the visitation was terminated early, true
+  /// otherwise (including when the argument is a Null type location).
+  bool TraverseAttr(Attr *At);
+
   /// \brief Recursively visit a declaration, by dispatching to
   /// Traverse*Decl() based on the argument's dynamic type.
   ///
@@ -253,6 +261,16 @@ public:
   ///
   /// \returns false if the visitation was terminated early, true otherwise.
   bool TraverseLambdaBody(LambdaExpr *LE);
+
+  // ---- Methods on Attrs ----
+
+  // \brief Visit an attribute.
+  bool VisitAttr(Attr *A) { return true; }
+
+  // Declare Traverse* and empty Visit* for all Attr classes.
+#define ATTR_VISITOR_DECLS_ONLY
+#include "clang/AST/AttrVisitor.inc"
+#undef ATTR_VISITOR_DECLS_ONLY
 
   // ---- Methods on Stmts ----
 
@@ -623,6 +641,12 @@ bool RecursiveASTVisitor<Derived>::TraverseTypeLoc(TypeLoc TL) {
 }
 
 
+// Define the Traverse*Attr(Attr* A) methods
+#define VISITORCLASS RecursiveASTVisitor
+#include "clang/AST/AttrVisitor.inc"
+#undef VISITORCLASS
+
+
 template<typename Derived>
 bool RecursiveASTVisitor<Derived>::TraverseDecl(Decl *D) {
   if (!D)
@@ -636,10 +660,18 @@ bool RecursiveASTVisitor<Derived>::TraverseDecl(Decl *D) {
   switch (D->getKind()) {
 #define ABSTRACT_DECL(DECL)
 #define DECL(CLASS, BASE) \
-  case Decl::CLASS: DISPATCH(CLASS##Decl, CLASS##Decl, D);
+  case Decl::CLASS: \
+    if (!getDerived().Traverse##CLASS##Decl(static_cast<CLASS##Decl*>(D))) \
+      return false; \
+    break;
 #include "clang/AST/DeclNodes.inc"
- }
+  }
 
+  // Visit any attributes attached to this declaration.
+  for (Decl::attr_iterator I=D->attr_begin(), E=D->attr_end(); I != E; ++I) {
+    if (!getDerived().TraverseAttr(*I))
+      return false;
+  }
   return true;
 }
 
@@ -825,7 +857,7 @@ template<typename Derived>
 bool RecursiveASTVisitor<Derived>::TraverseLambdaCapture(
     LambdaExpr *LE, const LambdaExpr::Capture *C) {
   if (C->isInitCapture())
-    TRY_TO(TraverseStmt(LE->getInitCaptureInit(C)));
+    TRY_TO(TraverseDecl(C->getCapturedVar()));
   return true;
 }
 
@@ -874,6 +906,10 @@ DEF_TRAVERSE_TYPE(MemberPointerType, {
     TRY_TO(TraverseType(T->getPointeeType()));
   })
 
+DEF_TRAVERSE_TYPE(AdjustedType, {
+    TRY_TO(TraverseType(T->getOriginalType()));
+  })
+
 DEF_TRAVERSE_TYPE(DecayedType, {
     TRY_TO(TraverseType(T->getOriginalType()));
   })
@@ -911,25 +947,24 @@ DEF_TRAVERSE_TYPE(ExtVectorType, {
     TRY_TO(TraverseType(T->getElementType()));
   })
 
-DEF_TRAVERSE_TYPE(FunctionNoProtoType, {
-    TRY_TO(TraverseType(T->getResultType()));
-  })
+DEF_TRAVERSE_TYPE(FunctionNoProtoType,
+                  { TRY_TO(TraverseType(T->getReturnType())); })
 
 DEF_TRAVERSE_TYPE(FunctionProtoType, {
-    TRY_TO(TraverseType(T->getResultType()));
+  TRY_TO(TraverseType(T->getReturnType()));
 
-    for (FunctionProtoType::arg_type_iterator A = T->arg_type_begin(),
-                                           AEnd = T->arg_type_end();
-         A != AEnd; ++A) {
-      TRY_TO(TraverseType(*A));
-    }
+  for (FunctionProtoType::param_type_iterator A = T->param_type_begin(),
+                                              AEnd = T->param_type_end();
+       A != AEnd; ++A) {
+    TRY_TO(TraverseType(*A));
+  }
 
-    for (FunctionProtoType::exception_iterator E = T->exception_begin(),
-                                            EEnd = T->exception_end();
-         E != EEnd; ++E) {
-      TRY_TO(TraverseType(*E));
-    }
-  })
+  for (FunctionProtoType::exception_iterator E = T->exception_begin(),
+                                             EEnd = T->exception_end();
+       E != EEnd; ++E) {
+    TRY_TO(TraverseType(*E));
+  }
+})
 
 DEF_TRAVERSE_TYPE(UnresolvedUsingType, { })
 DEF_TRAVERSE_TYPE(TypedefType, { })
@@ -1084,6 +1119,10 @@ DEF_TRAVERSE_TYPELOC(MemberPointerType, {
     TRY_TO(TraverseTypeLoc(TL.getPointeeLoc()));
   })
 
+DEF_TRAVERSE_TYPELOC(AdjustedType, {
+    TRY_TO(TraverseTypeLoc(TL.getOriginalLoc()));
+  })
+
 DEF_TRAVERSE_TYPELOC(DecayedType, {
     TRY_TO(TraverseTypeLoc(TL.getOriginalLoc()));
   })
@@ -1135,20 +1174,20 @@ DEF_TRAVERSE_TYPELOC(ExtVectorType, {
   })
 
 DEF_TRAVERSE_TYPELOC(FunctionNoProtoType, {
-    TRY_TO(TraverseTypeLoc(TL.getResultLoc()));
+    TRY_TO(TraverseTypeLoc(TL.getReturnLoc()));
   })
 
 // FIXME: location of exception specifications (attributes?)
 DEF_TRAVERSE_TYPELOC(FunctionProtoType, {
-    TRY_TO(TraverseTypeLoc(TL.getResultLoc()));
+    TRY_TO(TraverseTypeLoc(TL.getReturnLoc()));
 
     const FunctionProtoType *T = TL.getTypePtr();
 
-    for (unsigned I = 0, E = TL.getNumArgs(); I != E; ++I) {
-      if (TL.getArg(I)) {
-        TRY_TO(TraverseDecl(TL.getArg(I)));
-      } else if (I < T->getNumArgs()) {
-        TRY_TO(TraverseType(T->getArgType(I)));
+    for (unsigned I = 0, E = TL.getNumParams(); I != E; ++I) {
+      if (TL.getParam(I)) {
+        TRY_TO(TraverseDecl(TL.getParam(I)));
+      } else if (I < T->getNumParams()) {
+        TRY_TO(TraverseType(T->getParamType(I)));
       }
     }
 
@@ -1409,18 +1448,18 @@ DEF_TRAVERSE_DECL(ObjCProtocolDecl, {
   })
 
 DEF_TRAVERSE_DECL(ObjCMethodDecl, {
-    if (D->getResultTypeSourceInfo()) {
-      TRY_TO(TraverseTypeLoc(D->getResultTypeSourceInfo()->getTypeLoc()));
-    }
-    for (ObjCMethodDecl::param_iterator
-           I = D->param_begin(), E = D->param_end(); I != E; ++I) {
-      TRY_TO(TraverseDecl(*I));
-    }
-    if (D->isThisDeclarationADefinition()) {
-      TRY_TO(TraverseStmt(D->getBody()));
-    }
-    return true;
-  })
+  if (D->getReturnTypeSourceInfo()) {
+    TRY_TO(TraverseTypeLoc(D->getReturnTypeSourceInfo()->getTypeLoc()));
+  }
+  for (ObjCMethodDecl::param_iterator I = D->param_begin(), E = D->param_end();
+       I != E; ++I) {
+    TRY_TO(TraverseDecl(*I));
+  }
+  if (D->isThisDeclarationADefinition()) {
+    TRY_TO(TraverseStmt(D->getBody()));
+  }
+  return true;
+})
 
 DEF_TRAVERSE_DECL(ObjCPropertyDecl, {
     // FIXME: implement
@@ -2133,15 +2172,6 @@ DEF_TRAVERSE_STMT(CXXUuidofExpr, {
       TRY_TO(TraverseTypeLoc(S->getTypeOperandSourceInfo()->getTypeLoc()));
   })
 
-DEF_TRAVERSE_STMT(UnaryTypeTraitExpr, {
-    TRY_TO(TraverseTypeLoc(S->getQueriedTypeSourceInfo()->getTypeLoc()));
-  })
-
-DEF_TRAVERSE_STMT(BinaryTypeTraitExpr, {
-    TRY_TO(TraverseTypeLoc(S->getLhsTypeSourceInfo()->getTypeLoc()));
-    TRY_TO(TraverseTypeLoc(S->getRhsTypeSourceInfo()->getTypeLoc()));
-  })
-
 DEF_TRAVERSE_STMT(TypeTraitExpr, {
   for (unsigned I = 0, N = S->getNumArgs(); I != N; ++I)
     TRY_TO(TraverseTypeLoc(S->getArg(I)->getTypeLoc()));
@@ -2184,11 +2214,11 @@ bool RecursiveASTVisitor<Derived>::TraverseLambdaExpr(LambdaExpr *S) {
     } else if (FunctionProtoTypeLoc Proto = TL.getAs<FunctionProtoTypeLoc>()) {
       if (S->hasExplicitParameters()) {
         // Visit parameters.
-        for (unsigned I = 0, N = Proto.getNumArgs(); I != N; ++I) {
-          TRY_TO(TraverseDecl(Proto.getArg(I)));
+        for (unsigned I = 0, N = Proto.getNumParams(); I != N; ++I) {
+          TRY_TO(TraverseDecl(Proto.getParam(I)));
         }
       } else {
-        TRY_TO(TraverseTypeLoc(Proto.getResultLoc()));
+        TRY_TO(TraverseTypeLoc(Proto.getReturnLoc()));
       }        
     }
   }
@@ -2347,6 +2377,12 @@ bool RecursiveASTVisitor<Derived>::TraverseOMPClause(OMPClause *C) {
 }
 
 template<typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPIfClause(OMPIfClause *C) {
+  TraverseStmt(C->getCondition());
+  return true;
+}
+
+template<typename Derived>
 bool RecursiveASTVisitor<Derived>::VisitOMPDefaultClause(OMPDefaultClause *C) {
   return true;
 }
@@ -2362,6 +2398,13 @@ void RecursiveASTVisitor<Derived>::VisitOMPClauseList(T *Node) {
 
 template<typename Derived>
 bool RecursiveASTVisitor<Derived>::VisitOMPPrivateClause(OMPPrivateClause *C) {
+  VisitOMPClauseList(C);
+  return true;
+}
+
+template<typename Derived>
+bool RecursiveASTVisitor<Derived>::VisitOMPFirstprivateClause(
+                                                    OMPFirstprivateClause *C) {
   VisitOMPClauseList(C);
   return true;
 }

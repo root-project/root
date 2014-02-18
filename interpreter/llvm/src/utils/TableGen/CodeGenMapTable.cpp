@@ -116,7 +116,7 @@ public:
     ColFields = MapRec->getValueAsListInit("ColFields");
 
     // Values for the fields/attributes listed in 'ColFields'.
-    // Ex: KeyCol = 'noPred' -- key instruction is non predicated
+    // Ex: KeyCol = 'noPred' -- key instruction is non-predicated
     KeyCol = MapRec->getValueAsListInit("KeyCol");
 
     // List of values for the fields/attributes listed in 'ColFields', one for
@@ -240,7 +240,6 @@ public:
 
 void MapTableEmitter::buildRowInstrMap() {
   for (unsigned i = 0, e = InstrDefs.size(); i < e; i++) {
-    std::vector<Record*> InstrList;
     Record *CurInstr = InstrDefs[i];
     std::vector<Init*> KeyValue;
     ListInit *RowFields = InstrMapDesc.getRowFields();

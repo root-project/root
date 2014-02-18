@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/IR/LLVMContext.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/Assembly/PrintModulePass.h"
-#include "llvm/Bitcode/ReaderWriter.h"
+#include "llvm/Bitcode/BitcodeWriterPass.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/IRPrintingPasses.h"
+#include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IRReader/IRReader.h"
 #include "llvm/PassManager.h"
@@ -272,7 +272,7 @@ int main(int argc, char **argv) {
   }
 
   if (OutputAssembly)
-    Passes.add(createPrintModulePass(&Out.os()));
+    Passes.add(createPrintModulePass(Out.os()));
   else if (Force || !CheckBitcodeOutputToConsole(Out.os(), true))
     Passes.add(createBitcodeWriterPass(Out.os()));
 

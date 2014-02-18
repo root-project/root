@@ -9,14 +9,12 @@
 
 #define DEBUG_TYPE "calcspillweights"
 
-#include "llvm/ADT/SmallSet.h"
 #include "llvm/CodeGen/CalcSpillWeights.h"
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/SlotIndexes.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetInstrInfo.h"
@@ -24,38 +22,22 @@
 #include "llvm/Target/TargetRegisterInfo.h"
 using namespace llvm;
 
-char CalculateSpillWeights::ID = 0;
-INITIALIZE_PASS_BEGIN(CalculateSpillWeights, "calcspillweights",
-                "Calculate spill weights", false, false)
-INITIALIZE_PASS_DEPENDENCY(LiveIntervals)
-INITIALIZE_PASS_DEPENDENCY(MachineLoopInfo)
-INITIALIZE_PASS_END(CalculateSpillWeights, "calcspillweights",
-                "Calculate spill weights", false, false)
-
-void CalculateSpillWeights::getAnalysisUsage(AnalysisUsage &au) const {
-  au.addRequired<LiveIntervals>();
-  au.addRequired<MachineBlockFrequencyInfo>();
-  au.addRequired<MachineLoopInfo>();
-  au.setPreservesAll();
-  MachineFunctionPass::getAnalysisUsage(au);
-}
-
-bool CalculateSpillWeights::runOnMachineFunction(MachineFunction &MF) {
-
+void llvm::calculateSpillWeightsAndHints(LiveIntervals &LIS,
+                           MachineFunction &MF,
+                           const MachineLoopInfo &MLI,
+                           const MachineBlockFrequencyInfo &MBFI,
+                           VirtRegAuxInfo::NormalizingFn norm) {
   DEBUG(dbgs() << "********** Compute Spill Weights **********\n"
                << "********** Function: " << MF.getName() << '\n');
 
-  LiveIntervals &LIS = getAnalysis<LiveIntervals>();
   MachineRegisterInfo &MRI = MF.getRegInfo();
-  VirtRegAuxInfo VRAI(MF, LIS, getAnalysis<MachineLoopInfo>(),
-                      getAnalysis<MachineBlockFrequencyInfo>());
+  VirtRegAuxInfo VRAI(MF, LIS, MLI, MBFI, norm);
   for (unsigned i = 0, e = MRI.getNumVirtRegs(); i != e; ++i) {
     unsigned Reg = TargetRegisterInfo::index2VirtReg(i);
     if (MRI.reg_nodbg_empty(Reg))
       continue;
-    VRAI.CalculateWeightAndHint(LIS.getInterval(Reg));
+    VRAI.calculateSpillWeightAndHint(LIS.getInterval(Reg));
   }
-  return false;
 }
 
 // Return the preferred allocation register for reg, given a COPY instruction.
@@ -111,7 +93,7 @@ static bool isRematerializable(const LiveInterval &LI,
 }
 
 void
-VirtRegAuxInfo::CalculateWeightAndHint(LiveInterval &li) {
+VirtRegAuxInfo::calculateSpillWeightAndHint(LiveInterval &li) {
   MachineRegisterInfo &mri = MF.getRegInfo();
   const TargetRegisterInfo &tri = *MF.getTarget().getRegisterInfo();
   MachineBasicBlock *mbb = 0;
@@ -150,7 +132,7 @@ VirtRegAuxInfo::CalculateWeightAndHint(LiveInterval &li) {
       bool reads, writes;
       tie(reads, writes) = mi->readsWritesVirtualRegister(li.reg);
       weight = LiveIntervals::getSpillWeight(
-          writes, reads, MBFI.getBlockFreq(mi->getParent()));
+        writes, reads, &MBFI, mi);
 
       // Give extra weight to what looks like a loop induction variable update.
       if (writes && isExiting && LIS.isLiveOutOfMBB(li, mbb))
@@ -201,5 +183,5 @@ VirtRegAuxInfo::CalculateWeightAndHint(LiveInterval &li) {
   if (isRematerializable(li, LIS, *MF.getTarget().getInstrInfo()))
     totalWeight *= 0.5F;
 
-  li.weight = normalizeSpillWeight(totalWeight, li.getSize());
+  li.weight = normalize(totalWeight, li.getSize());
 }

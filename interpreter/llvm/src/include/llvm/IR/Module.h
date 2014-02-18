@@ -22,6 +22,7 @@
 #include "llvm/IR/Metadata.h"
 #include "llvm/Support/CBindingWrapping.h"
 #include "llvm/Support/DataTypes.h"
+#include "llvm/Support/system_error.h"
 
 namespace llvm {
 
@@ -142,12 +143,6 @@ public:
   /// The named metadata constant interators.
   typedef NamedMDListType::const_iterator const_named_metadata_iterator;
 
-  /// An enumeration for describing the endianess of the target machine.
-  enum Endianness  { AnyEndianness, LittleEndian, BigEndian };
-
-  /// An enumeration for describing the size of a pointer on the target machine.
-  enum PointerSize { AnyPointerSize, Pointer32, Pointer64 };
-
   /// This enumeration defines the supported behaviors of module flags.
   enum ModFlagBehavior {
     /// Emits an error if two values disagree, otherwise the resulting value is
@@ -156,7 +151,7 @@ public:
 
     /// Emits a warning if two values disagree. The result value will be the
     /// operand for the flag from the first module being linked.
-    Warning  = 2,
+    Warning = 2,
 
     /// Adds a requirement that another module flag be present and have a
     /// specified value after linking is performed. The value must be a metadata
@@ -235,14 +230,6 @@ public:
   /// Get the target triple which is a string describing the target host.
   /// @returns a string containing the target triple.
   const std::string &getTargetTriple() const { return TargetTriple; }
-
-  /// Get the target endian information.
-  /// @returns Endianess - an enumeration for the endianess of the target
-  Endianness getEndianness() const;
-
-  /// Get the target pointer size.
-  /// @returns PointerSize - an enumeration for the size of the target's pointer
-  PointerSize getPointerSize() const;
 
   /// Get the global data context.
   /// @returns LLVMContext - a container for LLVM's global information
@@ -391,7 +378,7 @@ public:
 /// @name Named Metadata Accessors
 /// @{
 
-  /// getNamedMetadata - Return the NamedMDNode in the module with the
+  /// getNamedMetadata - Return the first NamedMDNode in the module with the
   /// specified name. This method returns null if a NamedMDNode with the
   /// specified name is not found.
   NamedMDNode *getNamedMetadata(const Twine &Name) const;
@@ -464,18 +451,13 @@ public:
   /// materialized lazily.  If !isDematerializable(), this method is a noop.
   void Dematerialize(GlobalValue *GV);
 
-  /// MaterializeAll - Make sure all GlobalValues in this Module are fully read.
-  /// If the module is corrupt, this returns true and fills in the optional
-  /// string with information about the problem.  If successful, this returns
-  /// false.
-  bool MaterializeAll(std::string *ErrInfo = 0);
+  /// Make sure all GlobalValues in this Module are fully read.
+  error_code materializeAll();
 
-  /// MaterializeAllPermanently - Make sure all GlobalValues in this Module are
-  /// fully read and clear the Materializer.  If the module is corrupt, this
-  /// returns true, fills in the optional string with information about the
-  /// problem, and DOES NOT clear the old Materializer.  If successful, this
-  /// returns false.
-  bool MaterializeAllPermanently(std::string *ErrInfo = 0);
+  /// Make sure all GlobalValues in this Module are fully read and clear the
+  /// Materializer. If the module is corrupt, this DOES NOT clear the old
+  /// Materializer.
+  error_code materializeAllPermanently();
 
 /// @}
 /// @name Direct access to the globals list, functions list, and symbol table

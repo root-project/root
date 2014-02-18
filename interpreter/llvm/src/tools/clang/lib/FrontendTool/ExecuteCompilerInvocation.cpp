@@ -21,6 +21,7 @@
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Frontend/FrontendPluginRegistry.h"
+#include "clang/Frontend/Utils.h"
 #include "clang/Rewrite/Frontend/FrontendActions.h"
 #include "clang/StaticAnalyzer/Frontend/FrontendActions.h"
 #include "llvm/Option/OptTable.h"
@@ -33,11 +34,11 @@ using namespace llvm::opt;
 static FrontendAction *CreateFrontendBaseAction(CompilerInstance &CI) {
   using namespace clang::frontend;
   StringRef Action("unknown");
+  (void)Action;
 
   switch (CI.getFrontendOpts().ProgramAction) {
   case ASTDeclList:            return new ASTDeclListAction();
   case ASTDump:                return new ASTDumpAction();
-  case ASTDumpXML:             return new ASTDumpXMLAction();
   case ASTPrint:               return new ASTPrintAction();
   case ASTView:                return new ASTViewAction();
   case DumpRawTokens:          return new DumpRawTokensAction();
@@ -64,6 +65,7 @@ static FrontendAction *CreateFrontendBaseAction(CompilerInstance &CI) {
   case InitOnly:               return new InitOnlyAction();
   case ParseSyntaxOnly:        return new SyntaxOnlyAction();
   case ModuleFileInfo:         return new DumpModuleInfoAction();
+  case VerifyPCH:              return new VerifyPCHAction();
 
   case PluginAction: {
     for (FrontendPluginRegistry::iterator it =
@@ -142,30 +144,29 @@ static FrontendAction *CreateFrontendAction(CompilerInstance &CI) {
 #endif
   
 #ifdef CLANG_ENABLE_ARCMT
-  // Potentially wrap the base FE action in an ARC Migrate Tool action.
-  switch (FEOpts.ARCMTAction) {
-  case FrontendOptions::ARCMT_None:
-    break;
-  case FrontendOptions::ARCMT_Check:
-    Act = new arcmt::CheckAction(Act);
-    break;
-  case FrontendOptions::ARCMT_Modify:
-    Act = new arcmt::ModifyAction(Act);
-    break;
-  case FrontendOptions::ARCMT_Migrate:
-    Act = new arcmt::MigrateAction(Act,
-                                   FEOpts.MTMigrateDir,
-                                   FEOpts.ARCMTMigrateReportOut,
-                                   FEOpts.ARCMTMigrateEmitARCErrors);
-    break;
-  }
+  if (CI.getFrontendOpts().ProgramAction != frontend::MigrateSource) {
+    // Potentially wrap the base FE action in an ARC Migrate Tool action.
+    switch (FEOpts.ARCMTAction) {
+    case FrontendOptions::ARCMT_None:
+      break;
+    case FrontendOptions::ARCMT_Check:
+      Act = new arcmt::CheckAction(Act);
+      break;
+    case FrontendOptions::ARCMT_Modify:
+      Act = new arcmt::ModifyAction(Act);
+      break;
+    case FrontendOptions::ARCMT_Migrate:
+      Act = new arcmt::MigrateAction(Act,
+                                     FEOpts.MTMigrateDir,
+                                     FEOpts.ARCMTMigrateReportOut,
+                                     FEOpts.ARCMTMigrateEmitARCErrors);
+      break;
+    }
 
-  if (FEOpts.ObjCMTAction != FrontendOptions::ObjCMT_None) {
-    Act = new arcmt::ObjCMigrateAction(Act, FEOpts.MTMigrateDir,
-                   FEOpts.ObjCMTAction & FrontendOptions::ObjCMT_Literals,
-                   FEOpts.ObjCMTAction & FrontendOptions::ObjCMT_Subscripting,
-                   FEOpts.ObjCMTAction & FrontendOptions::ObjCMT_Property,
-                   FEOpts.ObjCMTAction & FrontendOptions::ObjCMT_ReadonlyProperty);
+    if (FEOpts.ObjCMTAction != FrontendOptions::ObjCMT_None) {
+      Act = new arcmt::ObjCMigrateAction(Act, FEOpts.MTMigrateDir,
+                                         FEOpts.ObjCMTAction);
+    }
   }
 #endif
 
@@ -237,6 +238,6 @@ bool clang::ExecuteCompilerInvocation(CompilerInstance *Clang) {
     return false;
   bool Success = Clang->ExecuteAction(*Act);
   if (Clang->getFrontendOpts().DisableFree)
-    Act.take();
+    BuryPointer(Act.take());
   return Success;
 }

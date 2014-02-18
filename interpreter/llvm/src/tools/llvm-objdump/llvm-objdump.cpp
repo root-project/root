@@ -149,10 +149,11 @@ YAMLCFG("yaml-cfg",
 
 static StringRef ToolName;
 
-bool llvm::error(error_code ec) {
-  if (!ec) return false;
+bool llvm::error(error_code EC) {
+  if (!EC)
+    return false;
 
-  outs() << ToolName << ": error reading file: " << ec.message() << ".\n";
+  outs() << ToolName << ": error reading file: " << EC.message() << ".\n";
   outs().flush();
   return true;
 }
@@ -381,33 +382,45 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     }
   }
 
+  // Create a mapping, RelocSecs = SectionRelocMap[S], where sections
+  // in RelocSecs contain the relocations for section S.
+  error_code EC;
+  std::map<SectionRef, SmallVector<SectionRef, 1> > SectionRelocMap;
+  for (section_iterator I = Obj->section_begin(), E = Obj->section_end();
+       I != E; ++I) {
+    section_iterator Sec2 = I->getRelocatedSection();
+    if (Sec2 != Obj->section_end())
+      SectionRelocMap[*Sec2].push_back(*I);
+  }
 
-  error_code ec;
-  for (section_iterator i = Obj->begin_sections(),
-                        e = Obj->end_sections();
-                        i != e; i.increment(ec)) {
-    if (error(ec)) break;
-    bool text;
-    if (error(i->isText(text))) break;
-    if (!text) continue;
+  for (section_iterator I = Obj->section_begin(), E = Obj->section_end();
+       I != E; ++I) {
+    bool Text;
+    if (error(I->isText(Text)))
+      break;
+    if (!Text)
+      continue;
 
     uint64_t SectionAddr;
-    if (error(i->getAddress(SectionAddr))) break;
+    if (error(I->getAddress(SectionAddr)))
+      break;
 
     // Make a list of all the symbols in this section.
     std::vector<std::pair<uint64_t, StringRef> > Symbols;
-    for (symbol_iterator si = Obj->begin_symbols(),
-                         se = Obj->end_symbols();
-                         si != se; si.increment(ec)) {
+    for (symbol_iterator SI = Obj->symbol_begin(), SE = Obj->symbol_end();
+         SI != SE; ++SI) {
       bool contains;
-      if (!error(i->containsSymbol(*si, contains)) && contains) {
+      if (!error(I->containsSymbol(*SI, contains)) && contains) {
         uint64_t Address;
-        if (error(si->getAddress(Address))) break;
-        if (Address == UnknownAddressOrSize) continue;
+        if (error(SI->getAddress(Address)))
+          break;
+        if (Address == UnknownAddressOrSize)
+          continue;
         Address -= SectionAddr;
 
         StringRef Name;
-        if (error(si->getName(Name))) break;
+        if (error(SI->getName(Name)))
+          break;
         Symbols.push_back(std::make_pair(Address, Name));
       }
     }
@@ -418,11 +431,14 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     // Make a list of all the relocations for this section.
     std::vector<RelocationRef> Rels;
     if (InlineRelocs) {
-      for (relocation_iterator ri = i->begin_relocations(),
-                               re = i->end_relocations();
-                               ri != re; ri.increment(ec)) {
-        if (error(ec)) break;
-        Rels.push_back(*ri);
+      SmallVectorImpl<SectionRef> *RelocSecs = &SectionRelocMap[*I];
+      for (SmallVectorImpl<SectionRef>::iterator RelocSec = RelocSecs->begin(),
+                                                 E = RelocSecs->end();
+           RelocSec != E; ++RelocSec) {
+        for (relocation_iterator RI = RelocSec->relocation_begin(),
+                                 RE = RelocSec->relocation_end();
+             RI != RE; ++RI)
+          Rels.push_back(*RI);
       }
     }
 
@@ -430,13 +446,13 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     std::sort(Rels.begin(), Rels.end(), RelocAddressLess);
 
     StringRef SegmentName = "";
-    if (const MachOObjectFile *MachO =
-        dyn_cast<const MachOObjectFile>(Obj)) {
-      DataRefImpl DR = i->getRawDataRefImpl();
+    if (const MachOObjectFile *MachO = dyn_cast<const MachOObjectFile>(Obj)) {
+      DataRefImpl DR = I->getRawDataRefImpl();
       SegmentName = MachO->getSectionFinalSegmentName(DR);
     }
     StringRef name;
-    if (error(i->getName(name))) break;
+    if (error(I->getName(name)))
+      break;
     outs() << "Disassembly of section ";
     if (!SegmentName.empty())
       outs() << SegmentName << ",";
@@ -452,12 +468,14 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     raw_svector_ostream CommentStream(Comments);
 
     StringRef Bytes;
-    if (error(i->getContents(Bytes))) break;
+    if (error(I->getContents(Bytes)))
+      break;
     StringRefMemoryObject memoryObject(Bytes, SectionAddr);
     uint64_t Size;
     uint64_t Index;
     uint64_t SectSize;
-    if (error(i->getSize(SectSize))) break;
+    if (error(I->getSize(SectSize)))
+      break;
 
     std::vector<RelocationRef>::const_iterator rel_cur = Rels.begin();
     std::vector<RelocationRef>::const_iterator rel_end = Rels.end();
@@ -479,9 +497,9 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
       outs() << '\n' << Symbols[si].second << ":\n";
 
 #ifndef NDEBUG
-        raw_ostream &DebugOut = DebugFlag ? dbgs() : nulls();
+      raw_ostream &DebugOut = DebugFlag ? dbgs() : nulls();
 #else
-        raw_ostream &DebugOut = nulls();
+      raw_ostream &DebugOut = nulls();
 #endif
 
       for (Index = Start; Index < End; Index += Size) {
@@ -534,20 +552,16 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
 }
 
 static void PrintRelocations(const ObjectFile *o) {
-  error_code ec;
-  for (section_iterator si = o->begin_sections(), se = o->end_sections();
-                                                  si != se; si.increment(ec)){
-    if (error(ec)) return;
-    if (si->begin_relocations() == si->end_relocations())
+  for (section_iterator si = o->section_begin(), se = o->section_end();
+       si != se; ++si) {
+    if (si->relocation_begin() == si->relocation_end())
       continue;
     StringRef secname;
     if (error(si->getName(secname))) continue;
     outs() << "RELOCATION RECORDS FOR [" << secname << "]:\n";
-    for (relocation_iterator ri = si->begin_relocations(),
-                             re = si->end_relocations();
-                             ri != re; ri.increment(ec)) {
-      if (error(ec)) return;
-
+    for (relocation_iterator ri = si->relocation_begin(),
+                             re = si->relocation_end();
+         ri != re; ++ri) {
       bool hidden;
       uint64_t address;
       SmallString<32> relocname;
@@ -566,13 +580,12 @@ static void PrintRelocations(const ObjectFile *o) {
 static void PrintSectionHeaders(const ObjectFile *o) {
   outs() << "Sections:\n"
             "Idx Name          Size      Address          Type\n";
-  error_code ec;
   unsigned i = 0;
-  for (section_iterator si = o->begin_sections(), se = o->end_sections();
-                                                  si != se; si.increment(ec)) {
-    if (error(ec)) return;
+  for (section_iterator si = o->section_begin(), se = o->section_end();
+       si != se; ++si) {
     StringRef Name;
-    if (error(si->getName(Name))) return;
+    if (error(si->getName(Name)))
+      return;
     uint64_t Address;
     if (error(si->getAddress(Address))) return;
     uint64_t Size;
@@ -590,11 +603,9 @@ static void PrintSectionHeaders(const ObjectFile *o) {
 }
 
 static void PrintSectionContents(const ObjectFile *o) {
-  error_code ec;
-  for (section_iterator si = o->begin_sections(),
-                        se = o->end_sections();
-                        si != se; si.increment(ec)) {
-    if (error(ec)) return;
+  error_code EC;
+  for (section_iterator si = o->section_begin(), se = o->section_end();
+       si != se; ++si) {
     StringRef Name;
     StringRef Contents;
     uint64_t BaseAddr;
@@ -685,19 +696,16 @@ static void PrintSymbolTable(const ObjectFile *o) {
   if (const COFFObjectFile *coff = dyn_cast<const COFFObjectFile>(o))
     PrintCOFFSymbolTable(coff);
   else {
-    error_code ec;
-    for (symbol_iterator si = o->begin_symbols(),
-                         se = o->end_symbols(); si != se; si.increment(ec)) {
-      if (error(ec)) return;
+    for (symbol_iterator si = o->symbol_begin(), se = o->symbol_end();
+         si != se; ++si) {
       StringRef Name;
       uint64_t Address;
       SymbolRef::Type Type;
       uint64_t Size;
-      uint32_t Flags;
-      section_iterator Section = o->end_sections();
+      uint32_t Flags = si->getFlags();
+      section_iterator Section = o->section_end();
       if (error(si->getName(Name))) continue;
       if (error(si->getAddress(Address))) continue;
-      if (error(si->getFlags(Flags))) continue;
       if (error(si->getType(Type))) continue;
       if (error(si->getSize(Size))) continue;
       if (error(si->getSection(Section))) continue;
@@ -735,7 +743,7 @@ static void PrintSymbolTable(const ObjectFile *o) {
              << ' ';
       if (Absolute)
         outs() << "*ABS*";
-      else if (Section == o->end_sections())
+      else if (Section == o->section_end())
         outs() << "*UND*";
       else {
         if (const MachOObjectFile *MachO =
@@ -770,6 +778,14 @@ static void PrintUnwindInfo(const ObjectFile *o) {
   }
 }
 
+static void printPrivateFileHeader(const ObjectFile *o) {
+  if (o->isELF()) {
+    printELFFileHeader(o);
+  } else if (o->isCOFF()) {
+    printCOFFFileHeader(o);
+  }
+}
+
 static void DumpObject(const ObjectFile *o) {
   outs() << '\n';
   outs() << o->getFileName()
@@ -787,19 +803,19 @@ static void DumpObject(const ObjectFile *o) {
     PrintSymbolTable(o);
   if (UnwindInfo)
     PrintUnwindInfo(o);
-  if (PrivateHeaders && o->isELF())
-    printELFFileHeader(o);
+  if (PrivateHeaders)
+    printPrivateFileHeader(o);
 }
 
 /// @brief Dump each object file in \a a;
 static void DumpArchive(const Archive *a) {
-  for (Archive::child_iterator i = a->begin_children(),
-                               e = a->end_children(); i != e; ++i) {
+  for (Archive::child_iterator i = a->child_begin(), e = a->child_end(); i != e;
+       ++i) {
     OwningPtr<Binary> child;
-    if (error_code ec = i->getAsBinary(child)) {
+    if (error_code EC = i->getAsBinary(child)) {
       // Ignore non-object files.
-      if (ec != object_error::invalid_file_type)
-        errs() << ToolName << ": '" << a->getFileName() << "': " << ec.message()
+      if (EC != object_error::invalid_file_type)
+        errs() << ToolName << ": '" << a->getFileName() << "': " << EC.message()
                << ".\n";
       continue;
     }
@@ -825,11 +841,12 @@ static void DumpInput(StringRef file) {
   }
 
   // Attempt to open the binary.
-  OwningPtr<Binary> binary;
-  if (error_code ec = createBinary(file, binary)) {
-    errs() << ToolName << ": '" << file << "': " << ec.message() << ".\n";
+  ErrorOr<Binary *> BinaryOrErr = createBinary(file);
+  if (error_code EC = BinaryOrErr.getError()) {
+    errs() << ToolName << ": '" << file << "': " << EC.message() << ".\n";
     return;
   }
+  OwningPtr<Binary> binary(BinaryOrErr.get());
 
   if (Archive *a = dyn_cast<Archive>(binary.get()))
     DumpArchive(a);

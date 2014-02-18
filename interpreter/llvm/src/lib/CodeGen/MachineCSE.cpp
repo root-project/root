@@ -131,9 +131,24 @@ bool MachineCSE::PerformTrivialCoalescing(MachineInstr *MI,
     unsigned SrcReg = DefMI->getOperand(1).getReg();
     if (!TargetRegisterInfo::isVirtualRegister(SrcReg))
       continue;
-    if (DefMI->getOperand(0).getSubReg() || DefMI->getOperand(1).getSubReg())
+    if (DefMI->getOperand(0).getSubReg())
       continue;
-    if (!MRI->constrainRegClass(SrcReg, MRI->getRegClass(Reg)))
+    // FIXME: We should trivially coalesce subregister copies to expose CSE
+    // opportunities on instructions with truncated operands (see
+    // cse-add-with-overflow.ll). This can be done here as follows:
+    // if (SrcSubReg)
+    //  RC = TRI->getMatchingSuperRegClass(MRI->getRegClass(SrcReg), RC,
+    //                                     SrcSubReg);
+    // MO.substVirtReg(SrcReg, SrcSubReg, *TRI);
+    //
+    // The 2-addr pass has been updated to handle coalesced subregs. However,
+    // some machine-specific code still can't handle it.
+    // To handle it properly we also need a way find a constrained subregister
+    // class given a super-reg class and subreg index.
+    if (DefMI->getOperand(1).getSubReg())
+      continue;
+    const TargetRegisterClass *RC = MRI->getRegClass(Reg);
+    if (!MRI->constrainRegClass(SrcReg, RC))
       continue;
     DEBUG(dbgs() << "Coalescing: " << *DefMI);
     DEBUG(dbgs() << "***     to: " << *MI);
@@ -513,7 +528,7 @@ bool MachineCSE::ProcessBlock(MachineBasicBlock *MBB) {
     bool DoCSE = true;
     unsigned NumDefs = MI->getDesc().getNumDefs() +
                        MI->getDesc().getNumImplicitDefs();
-    
+
     for (unsigned i = 0, e = MI->getNumOperands(); NumDefs && i != e; ++i) {
       MachineOperand &MO = MI->getOperand(i);
       if (!MO.isReg() || !MO.isDef())

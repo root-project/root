@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Basic/IdentifierTable.h"
-#include "clang/Basic/LangOptions.h"
 #include "clang/Basic/CharInfo.h"
+#include "clang/Basic/LangOptions.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -139,8 +139,8 @@ static void AddKeyword(StringRef Keyword,
   else if (LangOpts.ObjC2 && (Flags & KEYARC)) AddResult = 2;
   else if (LangOpts.CPlusPlus && (Flags & KEYCXX11)) AddResult = 3;
 
-  // Don't add this keyword under MicrosoftMode.
-  if (LangOpts.MicrosoftMode && (Flags & KEYNOMS))
+  // Don't add this keyword under MSVCCompat.
+  if (LangOpts.MSVCCompat && (Flags & KEYNOMS))
      return;
   // Don't add this keyword if disabled in this language.
   if (AddResult == 0) return;
@@ -398,6 +398,10 @@ std::string Selector::getAsString() const {
   return getMultiKeywordSelector()->getName();
 }
 
+void Selector::print(llvm::raw_ostream &OS) const {
+  OS << getAsString();
+}
+
 /// Interpreting the given string using the normal CamelCase
 /// conventions, determine whether the given string starts with the
 /// given "word", which is assumed to end in a lowercase letter.
@@ -464,13 +468,12 @@ ObjCInstanceTypeFamily Selector::getInstTypeMethodFamily(Selector sel) {
       if (startsWithWord(name, "array")) return OIT_Array;
       break;
     case 'd':
+      if (startsWithWord(name, "default")) return OIT_ReturnsSelf;
       if (startsWithWord(name, "dictionary")) return OIT_Dictionary;
-      if (startsWithWord(name, "default")) return OIT_Singleton;
       break;
     case 's':
-      if (startsWithWord(name, "shared") ||
-          startsWithWord(name, "standard"))
-        return OIT_Singleton;
+      if (startsWithWord(name, "shared")) return OIT_ReturnsSelf;
+      if (startsWithWord(name, "standard")) return OIT_Singleton;
     case 'i':
       if (startsWithWord(name, "init")) return OIT_Init;
     default:

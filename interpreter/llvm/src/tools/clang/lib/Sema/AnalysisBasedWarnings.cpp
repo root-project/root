@@ -78,6 +78,107 @@ static void CheckUnreachable(Sema &S, AnalysisDeclContext &AC) {
 }
 
 //===----------------------------------------------------------------------===//
+// Check for infinite self-recursion in functions
+//===----------------------------------------------------------------------===//
+
+// All blocks are in one of three states.  States are ordered so that blocks
+// can only move to higher states.
+enum RecursiveState {
+  FoundNoPath,
+  FoundPath,
+  FoundPathWithNoRecursiveCall
+};
+
+static void checkForFunctionCall(Sema &S, const FunctionDecl *FD,
+                                 CFGBlock &Block, unsigned ExitID,
+                                 llvm::SmallVectorImpl<RecursiveState> &States,
+                                 RecursiveState State) {
+  unsigned ID = Block.getBlockID();
+
+  // A block's state can only move to a higher state.
+  if (States[ID] >= State)
+    return;
+
+  States[ID] = State;
+
+  // Found a path to the exit node without a recursive call.
+  if (ID == ExitID && State == FoundPathWithNoRecursiveCall)
+    return;
+
+  if (State == FoundPathWithNoRecursiveCall) {
+    // If the current state is FoundPathWithNoRecursiveCall, the successors
+    // will be either FoundPathWithNoRecursiveCall or FoundPath.  To determine
+    // which, process all the Stmt's in this block to find any recursive calls.
+    for (CFGBlock::iterator I = Block.begin(), E = Block.end(); I != E; ++I) {
+      if (I->getKind() != CFGElement::Statement)
+        continue;
+
+      const CallExpr *CE = dyn_cast<CallExpr>(I->getAs<CFGStmt>()->getStmt());
+      if (CE && CE->getCalleeDecl() &&
+          CE->getCalleeDecl()->getCanonicalDecl() == FD) {
+
+        // Skip function calls which are qualified with a templated class.
+        if (const DeclRefExpr *DRE = dyn_cast<DeclRefExpr>(
+                CE->getCallee()->IgnoreParenImpCasts())) {
+          if (NestedNameSpecifier *NNS = DRE->getQualifier()) {
+            if (NNS->getKind() == NestedNameSpecifier::TypeSpec &&
+                isa<TemplateSpecializationType>(NNS->getAsType())) {
+               continue;
+            }
+          }
+        }
+
+        if (const CXXMemberCallExpr *MCE = dyn_cast<CXXMemberCallExpr>(CE)) {
+          if (isa<CXXThisExpr>(MCE->getImplicitObjectArgument()) ||
+              !MCE->getMethodDecl()->isVirtual()) {
+            State = FoundPath;
+            break;
+          }
+        } else {
+          State = FoundPath;
+          break;
+        }
+      }
+    }
+  }
+
+  for (CFGBlock::succ_iterator I = Block.succ_begin(), E = Block.succ_end();
+       I != E; ++I)
+    if (*I)
+      checkForFunctionCall(S, FD, **I, ExitID, States, State);
+}
+
+static void checkRecursiveFunction(Sema &S, const FunctionDecl *FD,
+                                   const Stmt *Body,
+                                   AnalysisDeclContext &AC) {
+  FD = FD->getCanonicalDecl();
+
+  // Only run on non-templated functions and non-templated members of
+  // templated classes.
+  if (FD->getTemplatedKind() != FunctionDecl::TK_NonTemplate &&
+      FD->getTemplatedKind() != FunctionDecl::TK_MemberSpecialization)
+    return;
+
+  CFG *cfg = AC.getCFG();
+  if (cfg == 0) return;
+
+  // If the exit block is unreachable, skip processing the function.
+  if (cfg->getExit().pred_empty())
+    return;
+
+  // Mark all nodes as FoundNoPath, then begin processing the entry block.
+  llvm::SmallVector<RecursiveState, 16> states(cfg->getNumBlockIDs(),
+                                               FoundNoPath);
+  checkForFunctionCall(S, FD, cfg->getEntry(), cfg->getExit().getBlockID(),
+                       states, FoundPathWithNoRecursiveCall);
+
+  // Check that the exit block is reachable.  This prevents triggering the
+  // warning on functions that do not terminate.
+  if (states[cfg->getExit().getBlockID()] == FoundPath)
+    S.Diag(Body->getLocStart(), diag::warn_infinite_recursive_function);
+}
+
+//===----------------------------------------------------------------------===//
 // Check for missing return value.
 //===----------------------------------------------------------------------===//
 
@@ -330,18 +431,18 @@ static void CheckFallThroughForBody(Sema &S, const Decl *D, const Stmt *Body,
   bool HasNoReturn = false;
 
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
-    ReturnsVoid = FD->getResultType()->isVoidType();
+    ReturnsVoid = FD->getReturnType()->isVoidType();
     HasNoReturn = FD->isNoReturn();
   }
   else if (const ObjCMethodDecl *MD = dyn_cast<ObjCMethodDecl>(D)) {
-    ReturnsVoid = MD->getResultType()->isVoidType();
+    ReturnsVoid = MD->getReturnType()->isVoidType();
     HasNoReturn = MD->hasAttr<NoReturnAttr>();
   }
   else if (isa<BlockDecl>(D)) {
     QualType BlockTy = blkExpr->getType();
     if (const FunctionType *FT =
           BlockTy->getPointeeType()->getAs<FunctionType>()) {
-      if (FT->getResultType()->isVoidType())
+      if (FT->getReturnType()->isVoidType())
         ReturnsVoid = true;
       if (FT->getNoReturnAttr())
         HasNoReturn = true;
@@ -1477,6 +1578,34 @@ public:
     }
   }
   
+  void warnLoopStateMismatch(SourceLocation Loc, StringRef VariableName) {
+    PartialDiagnosticAt Warning(Loc, S.PDiag(diag::warn_loop_state_mismatch) <<
+      VariableName);
+    
+    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
+  }
+  
+  void warnParamReturnTypestateMismatch(SourceLocation Loc,
+                                        StringRef VariableName,
+                                        StringRef ExpectedState,
+                                        StringRef ObservedState) {
+    
+    PartialDiagnosticAt Warning(Loc, S.PDiag(
+      diag::warn_param_return_typestate_mismatch) << VariableName <<
+        ExpectedState << ObservedState);
+    
+    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
+  }
+  
+  void warnParamTypestateMismatch(SourceLocation Loc, StringRef ExpectedState,
+                                  StringRef ObservedState) {
+    
+    PartialDiagnosticAt Warning(Loc, S.PDiag(
+      diag::warn_param_typestate_mismatch) << ExpectedState << ObservedState);
+    
+    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
+  }
+  
   void warnReturnTypestateForUnconsumableType(SourceLocation Loc,
                                               StringRef TypeName) {
     PartialDiagnosticAt Warning(Loc, S.PDiag(
@@ -1494,45 +1623,20 @@ public:
     Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
   }
   
-  void warnUnnecessaryTest(StringRef VariableName, StringRef VariableState,
-                           SourceLocation Loc) {
-
-    PartialDiagnosticAt Warning(Loc, S.PDiag(diag::warn_unnecessary_test) <<
-                                 VariableName << VariableState);
-    
-    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
-  }
-  
-  void warnUseOfTempWhileConsumed(StringRef MethodName, SourceLocation Loc) {
+  void warnUseOfTempInInvalidState(StringRef MethodName, StringRef State,
+                                   SourceLocation Loc) {
                                                     
     PartialDiagnosticAt Warning(Loc, S.PDiag(
-      diag::warn_use_of_temp_while_consumed) << MethodName);
+      diag::warn_use_of_temp_in_invalid_state) << MethodName << State);
     
     Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
   }
   
-  void warnUseOfTempInUnknownState(StringRef MethodName, SourceLocation Loc) {
+  void warnUseInInvalidState(StringRef MethodName, StringRef VariableName,
+                                  StringRef State, SourceLocation Loc) {
   
-    PartialDiagnosticAt Warning(Loc, S.PDiag(
-      diag::warn_use_of_temp_in_unknown_state) << MethodName);
-    
-    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
-  }
-  
-  void warnUseWhileConsumed(StringRef MethodName, StringRef VariableName,
-                            SourceLocation Loc) {
-  
-    PartialDiagnosticAt Warning(Loc, S.PDiag(diag::warn_use_while_consumed) <<
-                                MethodName << VariableName);
-    
-    Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
-  }
-  
-  void warnUseInUnknownState(StringRef MethodName, StringRef VariableName,
-                             SourceLocation Loc) {
-
-    PartialDiagnosticAt Warning(Loc, S.PDiag(diag::warn_use_in_unknown_state) <<
-                                MethodName << VariableName);
+    PartialDiagnosticAt Warning(Loc, S.PDiag(diag::warn_use_in_invalid_state) <<
+                                MethodName << VariableName << State);
     
     Warnings.push_back(DelayedDiag(Warning, OptionalNotes()));
   }
@@ -1570,7 +1674,7 @@ clang::sema::AnalysisBasedWarnings::AnalysisBasedWarnings(Sema &s)
     (D.getDiagnosticLevel(diag::warn_double_lock, SourceLocation()) !=
      DiagnosticsEngine::Ignored);
   DefaultPolicy.enableConsumedAnalysis = (unsigned)
-    (D.getDiagnosticLevel(diag::warn_use_while_consumed, SourceLocation()) !=
+    (D.getDiagnosticLevel(diag::warn_use_in_invalid_state, SourceLocation()) !=
      DiagnosticsEngine::Ignored);
 }
 
@@ -1616,6 +1720,7 @@ AnalysisBasedWarnings::IssueWarnings(sema::AnalysisBasedWarnings::Policy P,
   const Stmt *Body = D->getBody();
   assert(Body);
 
+  // Construct the analysis context with the specified CFG build options.
   AnalysisDeclContext AC(/* AnalysisDeclContextManager */ 0, D);
 
   // Don't generate EH edges for CallExprs as we'd like to avoid the n^2
@@ -1625,6 +1730,7 @@ AnalysisBasedWarnings::IssueWarnings(sema::AnalysisBasedWarnings::Policy P,
   AC.getCFGBuildOptions().AddInitializers = true;
   AC.getCFGBuildOptions().AddImplicitDtors = true;
   AC.getCFGBuildOptions().AddTemporaryDtors = true;
+  AC.getCFGBuildOptions().AddCXXNewAllocator = false;
 
   // Force that certain expressions appear as CFGElements in the CFG.  This
   // is used to speed up various analyses.
@@ -1649,8 +1755,7 @@ AnalysisBasedWarnings::IssueWarnings(sema::AnalysisBasedWarnings::Policy P,
       .setAlwaysAdd(Stmt::AttributedStmtClass);
   }
 
-  // Construct the analysis context with the specified CFG build options.
-  
+
   // Emit delayed diagnostics.
   if (!fscope->PossiblyUnreachableDiags.empty()) {
     bool analyzed = false;
@@ -1785,6 +1890,16 @@ AnalysisBasedWarnings::IssueWarnings(sema::AnalysisBasedWarnings::Policy P,
       Diags.getDiagnosticLevel(diag::warn_arc_repeated_use_of_weak,
                                D->getLocStart()) != DiagnosticsEngine::Ignored)
     diagnoseRepeatedUseOfWeak(S, fscope, D, AC.getParentMap());
+
+
+  // Check for infinite self-recursion in functions
+  if (Diags.getDiagnosticLevel(diag::warn_infinite_recursive_function,
+                               D->getLocStart())
+      != DiagnosticsEngine::Ignored) {
+    if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
+      checkRecursiveFunction(S, FD, Body, AC);
+    }
+  }
 
   // Collect statistics about the CFG if it was built.
   if (S.CollectStats && AC.isCFGBuilt()) {

@@ -1,5 +1,3 @@
-include_directories( ${CMAKE_CURRENT_BINARY_DIR}/.. ${CMAKE_CURRENT_SOURCE_DIR}/.. )
-
 add_llvm_library(LLVMARMDisassembler
   ARMDisassembler.cpp
   )
@@ -10,4 +8,3 @@ set_property(
   PROPERTY COMPILE_FLAGS "/Od"
   )
 endif()
-add_dependencies(LLVMARMDisassembler ARMCommonTableGen)

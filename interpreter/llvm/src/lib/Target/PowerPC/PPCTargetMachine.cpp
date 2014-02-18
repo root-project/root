@@ -33,6 +33,36 @@ extern "C" void LLVMInitializePowerPCTarget() {
   RegisterTargetMachine<PPC64TargetMachine> C(ThePPC64LETarget);
 }
 
+/// Return the datalayout string of a subtarget.
+static std::string getDataLayoutString(const PPCSubtarget &ST) {
+  const Triple &T = ST.getTargetTriple();
+
+  // PPC is big endian.
+  std::string Ret = "E";
+
+  Ret += DataLayout::getManglingComponent(T);
+
+  // PPC32 has 32 bit pointers. The PS3 (OS Lv2) is a PPC64 machine with 32 bit
+  // pointers.
+  if (!ST.isPPC64() || T.getOS() == Triple::Lv2)
+    Ret += "-p:32:32";
+
+  // Note, the alignment values for f64 and i64 on ppc64 in Darwin
+  // documentation are wrong; these are correct (i.e. "what gcc does").
+  if (ST.isPPC64() || ST.isSVR4ABI())
+    Ret += "-i64:64";
+  else
+    Ret += "-f64:32:64";
+
+  // PPC64 has 32 and 64 bit registers, PPC32 has only 32 bit ones.
+  if (ST.isPPC64())
+    Ret += "-n32:64";
+  else
+    Ret += "-n32";
+
+  return Ret;
+}
+
 PPCTargetMachine::PPCTargetMachine(const Target &T, StringRef TT,
                                    StringRef CPU, StringRef FS,
                                    const TargetOptions &Options,
@@ -41,7 +71,7 @@ PPCTargetMachine::PPCTargetMachine(const Target &T, StringRef TT,
                                    bool is64Bit)
   : LLVMTargetMachine(T, TT, CPU, FS, Options, RM, CM, OL),
     Subtarget(TT, CPU, FS, is64Bit),
-    DL(Subtarget.getDataLayoutString()), InstrInfo(*this),
+    DL(getDataLayoutString(Subtarget)), InstrInfo(*this),
     FrameLowering(Subtarget), JITInfo(*this, is64Bit),
     TLInfo(*this), TSInfo(*this),
     InstrItins(Subtarget.getInstrItineraryData()) {

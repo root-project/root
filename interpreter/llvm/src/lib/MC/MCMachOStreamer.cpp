@@ -16,6 +16,7 @@
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCMachOSymbolFlags.h"
+#include "llvm/MC/MCObjectFileInfo.h"
 #include "llvm/MC/MCObjectStreamer.h"
 #include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCSectionMachO.h"
@@ -30,20 +31,18 @@ namespace {
 
 class MCMachOStreamer : public MCObjectStreamer {
 private:
-  virtual void EmitInstToData(const MCInst &Inst);
+  virtual void EmitInstToData(const MCInst &Inst, const MCSubtargetInfo &STI);
 
   void EmitDataRegion(DataRegionData::KindTy Kind);
   void EmitDataRegionEnd();
 public:
   MCMachOStreamer(MCContext &Context, MCAsmBackend &MAB, raw_ostream &OS,
                   MCCodeEmitter *Emitter)
-      : MCObjectStreamer(SK_MachOStreamer, Context, MAB, OS, Emitter) {}
+      : MCObjectStreamer(Context, MAB, OS, Emitter) {}
 
   /// @name MCStreamer Interface
   /// @{
 
-  virtual void InitSections();
-  virtual void InitToTextSection();
   virtual void EmitLabel(MCSymbol *Symbol);
   virtual void EmitDebugLabel(MCSymbol *Symbol);
   virtual void EmitEHSymAttributes(const MCSymbol *Symbol,
@@ -82,30 +81,17 @@ public:
     // FIXME: Just ignore the .file; it isn't important enough to fail the
     // entire assembly.
 
-    //report_fatal_error("unsupported directive: '.file'");
+    // report_fatal_error("unsupported directive: '.file'");
+  }
+
+  virtual void EmitIdent(StringRef IdentString) {
+    llvm_unreachable("macho doesn't support this directive");
   }
 
   virtual void FinishImpl();
-
-  /// @}
-
-  static bool classof(const MCStreamer *S) {
-    return S->getKind() == SK_MachOStreamer;
-  }
 };
 
 } // end anonymous namespace.
-
-void MCMachOStreamer::InitSections() {
-  InitToTextSection();
-}
-
-void MCMachOStreamer::InitToTextSection() {
-  SwitchSection(getContext().getMachOSection(
-                                    "__TEXT", "__text",
-                                    MCSectionMachO::S_ATTR_PURE_INSTRUCTIONS, 0,
-                                    SectionKind::getText()));
-}
 
 void MCMachOStreamer::EmitEHSymAttributes(const MCSymbol *Symbol,
                                           MCSymbol *EHSymbol) {
@@ -337,9 +323,7 @@ void MCMachOStreamer::EmitCommonSymbol(MCSymbol *Symbol, uint64_t Size,
 void MCMachOStreamer::EmitLocalCommonSymbol(MCSymbol *Symbol, uint64_t Size,
                                             unsigned ByteAlignment) {
   // '.lcomm' is equivalent to '.zerofill'.
-  return EmitZerofill(getContext().getMachOSection("__DATA", "__bss",
-                                                   MCSectionMachO::S_ZEROFILL,
-                                                   0, SectionKind::getBSS()),
+  return EmitZerofill(getContext().getObjectFileInfo()->getDataBSSSection(),
                       Symbol, Size, ByteAlignment);
 }
 
@@ -380,13 +364,14 @@ void MCMachOStreamer::EmitTBSSSymbol(const MCSection *Section, MCSymbol *Symbol,
   return;
 }
 
-void MCMachOStreamer::EmitInstToData(const MCInst &Inst) {
+void MCMachOStreamer::EmitInstToData(const MCInst &Inst,
+                                     const MCSubtargetInfo &STI) {
   MCDataFragment *DF = getOrCreateDataFragment();
 
   SmallVector<MCFixup, 4> Fixups;
   SmallString<256> Code;
   raw_svector_ostream VecOS(Code);
-  getAssembler().getEmitter().EncodeInstruction(Inst, VecOS, Fixups);
+  getAssembler().getEmitter().EncodeInstruction(Inst, VecOS, Fixups, STI);
   VecOS.flush();
 
   // Add the fixups and data.

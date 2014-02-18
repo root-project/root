@@ -194,9 +194,9 @@ public:
 
   const char *getCommentKindName() const;
 
-  LLVM_ATTRIBUTE_USED void dump() const;
-  LLVM_ATTRIBUTE_USED void dumpColor() const;
-  LLVM_ATTRIBUTE_USED void dump(const ASTContext &Context) const;
+  void dump() const;
+  void dumpColor() const;
+  void dump(const ASTContext &Context) const;
   void dump(raw_ostream &OS, const CommandTraits *Traits,
             const SourceManager *SM) const;
 
@@ -699,7 +699,7 @@ private:
   unsigned ParamIndex;
 
 public:
-  enum {
+  enum LLVM_ENUM_INT_TYPE(unsigned) {
     InvalidParamIndex = ~0U,
     VarArgParamIndex = ~0U/*InvalidParamIndex*/ - 1U
   };
@@ -981,9 +981,9 @@ struct DeclInfo {
   /// that we consider a "function".
   ArrayRef<const ParmVarDecl *> ParamVars;
 
-  /// Function result type if \c CommentDecl is something that we consider
+  /// Function return type if \c CommentDecl is something that we consider
   /// a "function".
-  QualType ResultType;
+  QualType ReturnType;
 
   /// Template parameters that can be referenced by \\tparam if \c CommentDecl is
   /// a template (\c IsTemplateDecl or \c IsTemplatePartialSpecialization is

@@ -25,6 +25,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Format.h"
 #include "llvm/Support/Host.h"
+#include "llvm/Support/Mutex.h"
 #include "llvm/Support/SwapByteOrder.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/system_error.h"
@@ -147,6 +148,9 @@ protected:
   typedef SmallVector<SectionEntry, 64> SectionList;
   SectionList Sections;
 
+  typedef unsigned SID; // Type for SectionIDs
+  #define RTDYLD_INVALID_SECTION_ID ((SID)(-1))
+
   // Keep a map of sections from object file to the SectionID which
   // references it.
   typedef std::map<SectionRef, unsigned> ObjSectionToIDMap;
@@ -181,30 +185,22 @@ protected:
   typedef std::map<RelocationValueRef, uintptr_t> StubMap;
 
   Triple::ArchType Arch;
+  bool IsTargetLittleEndian;
 
-  inline unsigned getMaxStubSize() {
-    if (Arch == Triple::aarch64)
-      return 20; // movz; movk; movk; movk; br
-    if (Arch == Triple::arm || Arch == Triple::thumb)
-      return 8; // 32-bit instruction and 32-bit address
-    else if (Arch == Triple::mipsel || Arch == Triple::mips)
-      return 16;
-    else if (Arch == Triple::ppc64 || Arch == Triple::ppc64le)
-      return 44;
-    else if (Arch == Triple::x86_64)
-      return 6; // 2-byte jmp instruction + 32-bit relative address
-    else if (Arch == Triple::systemz)
-      return 16;
-    else
-      return 0;
-  }
+  // This mutex prevents simultaneously loading objects from two different
+  // threads.  This keeps us from having to protect individual data structures
+  // and guarantees that section allocation requests to the memory manager
+  // won't be interleaved between modules.  It is also used in mapSectionAddress
+  // and resolveRelocations to protect write access to internal data structures.
+  //
+  // loadObject may be called on the same thread during the handling of of
+  // processRelocations, and that's OK.  The handling of the relocation lists
+  // is written in such a way as to work correctly if new elements are added to
+  // the end of the list while the list is being processed.
+  sys::Mutex lock;
 
-  inline unsigned getStubAlignment() {
-    if (Arch == Triple::systemz)
-      return 8;
-    else
-      return 1;
-  }
+  virtual unsigned getMaxStubSize() = 0;
+  virtual unsigned getStubAlignment() = 0;
 
   bool HasError;
   std::string ErrorStr;
@@ -225,14 +221,14 @@ protected:
   }
 
   void writeInt16BE(uint8_t *Addr, uint16_t Value) {
-    if (sys::IsLittleEndianHost)
+    if (IsTargetLittleEndian)
       Value = sys::SwapByteOrder(Value);
     *Addr     = (Value >> 8) & 0xFF;
     *(Addr+1) = Value & 0xFF;
   }
 
   void writeInt32BE(uint8_t *Addr, uint32_t Value) {
-    if (sys::IsLittleEndianHost)
+    if (IsTargetLittleEndian)
       Value = sys::SwapByteOrder(Value);
     *Addr     = (Value >> 24) & 0xFF;
     *(Addr+1) = (Value >> 16) & 0xFF;
@@ -241,7 +237,7 @@ protected:
   }
 
   void writeInt64BE(uint8_t *Addr, uint64_t Value) {
-    if (sys::IsLittleEndianHost)
+    if (IsTargetLittleEndian)
       Value = sys::SwapByteOrder(Value);
     *Addr     = (Value >> 56) & 0xFF;
     *(Addr+1) = (Value >> 48) & 0xFF;
@@ -315,28 +311,45 @@ protected:
   virtual void updateGOTEntries(StringRef Name, uint64_t Addr) {}
 
   virtual ObjectImage *createObjectImage(ObjectBuffer *InputBuffer);
+  virtual ObjectImage *createObjectImageFromFile(object::ObjectFile *InputObject);
+
+  // \brief Compute an upper bound of the memory that is required to load all sections
+  void computeTotalAllocSize(ObjectImage &Obj, 
+                             uint64_t& CodeSize, 
+                             uint64_t& DataSizeRO, 
+                             uint64_t& DataSizeRW); 
+  
+  // \brief Compute the stub buffer size required for a section
+  unsigned computeSectionStubBufSize(ObjectImage &Obj, const SectionRef &Section); 
+
+  // This is the implementation for the two public overloads
+  ObjectImage *loadObject(ObjectImage *InputObject);
+
 public:
   RuntimeDyldImpl(RTDyldMemoryManager *mm) : MemMgr(mm), HasError(false) {}
 
   virtual ~RuntimeDyldImpl();
 
   ObjectImage *loadObject(ObjectBuffer *InputBuffer);
+  ObjectImage *loadObject(object::ObjectFile *InputObject);
 
   void *getSymbolAddress(StringRef Name) {
     // FIXME: Just look up as a function for now. Overly simple of course.
     // Work in progress.
-    if (GlobalSymbolTable.find(Name) == GlobalSymbolTable.end())
+    SymbolTableMap::const_iterator pos = GlobalSymbolTable.find(Name);
+    if (pos == GlobalSymbolTable.end())
       return 0;
-    SymbolLoc Loc = GlobalSymbolTable.lookup(Name);
+    SymbolLoc Loc = pos->second;
     return getSectionAddress(Loc.first) + Loc.second;
   }
 
   uint64_t getSymbolLoadAddress(StringRef Name) {
     // FIXME: Just look up as a function for now. Overly simple of course.
     // Work in progress.
-    if (GlobalSymbolTable.find(Name) == GlobalSymbolTable.end())
+    SymbolTableMap::const_iterator pos = GlobalSymbolTable.find(Name);
+    if (pos == GlobalSymbolTable.end())
       return 0;
-    SymbolLoc Loc = GlobalSymbolTable.lookup(Name);
+    SymbolLoc Loc = pos->second;
     return getSectionLoadAddress(Loc.first) + Loc.second;
   }
 
@@ -356,13 +369,15 @@ public:
   StringRef getErrorString() { return ErrorStr; }
 
   virtual bool isCompatibleFormat(const ObjectBuffer *Buffer) const = 0;
+  virtual bool isCompatibleFile(const ObjectFile *Obj) const = 0;
 
-  virtual StringRef getEHFrameSection();
+  virtual void registerEHFrames();
 
-  virtual void finalizeLoad() {}
+  virtual void deregisterEHFrames();
+
+  virtual void finalizeLoad(ObjSectionToIDMap &SectionMap) {}
 };
 
 } // end namespace llvm
-
 
 #endif

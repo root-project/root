@@ -23,9 +23,9 @@
 #include "clang/Frontend/Utils.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/OwningPtr.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/Option/ArgList.h"
 #include "llvm/Option/OptTable.h"
 #include "llvm/Option/Option.h"
@@ -37,6 +37,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Path.h"
 #include "llvm/Support/PrettyStackTrace.h"
+#include "llvm/Support/Process.h"
 #include "llvm/Support/Program.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/Signals.h"
@@ -168,7 +169,7 @@ static void ApplyQAOverride(SmallVectorImpl<const char*> &Args,
     OS = &llvm::nulls();
   }
 
-  *OS << "### QA_OVERRIDE_GCC3_OPTIONS: " << OverrideStr << "\n";
+  *OS << "### CCC_OVERRIDE_OPTIONS: " << OverrideStr << "\n";
 
   // This does not need to be efficient.
 
@@ -292,8 +293,16 @@ int main(int argc_, const char **argv_) {
   llvm::sys::PrintStackTraceOnErrorSignal();
   llvm::PrettyStackTraceProgram X(argc_, argv_);
 
+  SmallVector<const char *, 256> argv;
+  llvm::SpecificBumpPtrAllocator<char> ArgAllocator;
+  llvm::error_code EC = llvm::sys::Process::GetArgumentVector(
+      argv, llvm::ArrayRef<const char *>(argv_, argc_), ArgAllocator);
+  if (EC) {
+    llvm::errs() << "error: couldn't get arguments: " << EC.message() << '\n';
+    return 1;
+  }
+
   std::set<std::string> SavedStrings;
-  SmallVector<const char*, 256> argv(argv_, argv_ + argc_);
   StringSetSaver Saver(SavedStrings);
   llvm::cl::ExpandResponseFiles(Saver, llvm::cl::TokenizeGNUCommandLine, argv);
 
@@ -321,10 +330,14 @@ int main(int argc_, const char **argv_) {
     }
   }
 
-  // Handle QA_OVERRIDE_GCC3_OPTIONS and CCC_ADD_ARGS, used for editing a
-  // command line behind the scenes.
-  if (const char *OverrideStr = ::getenv("QA_OVERRIDE_GCC3_OPTIONS")) {
+  // Handle CCC_OVERRIDE_OPTIONS, used for editing a command line behind the
+  // scenes. Temporarily accept the old QA_OVERRIDE_GCC3_OPTIONS name
+  // for this, to ease the transition. FIXME: Remove support for that old name
+  // after a while.
+  if (const char *OverrideStr = ::getenv("CCC_OVERRIDE_OPTIONS")) {
     // FIXME: Driver shouldn't take extra initial argument.
+    ApplyQAOverride(argv, OverrideStr, SavedStrings);
+  } else if (const char *OverrideStr = ::getenv("QA_OVERRIDE_GCC3_OPTIONS")) {
     ApplyQAOverride(argv, OverrideStr, SavedStrings);
   }
 
@@ -351,7 +364,7 @@ int main(int argc_, const char **argv_) {
   // use clang-cl.exe as the prefix to avoid confusion between clang and MSVC.
   StringRef ExeBasename(llvm::sys::path::filename(Path));
   if (ExeBasename.equals_lower("cl.exe"))
-    ExeBasename = "clang cl.exe";
+    ExeBasename = "clang-cl.exe";
   DiagClient->setPrefix(ExeBasename);
 
   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs());

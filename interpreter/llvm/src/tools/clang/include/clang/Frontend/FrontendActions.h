@@ -56,12 +56,6 @@ protected:
                                          StringRef InFile);
 };
 
-class ASTDumpXMLAction : public ASTFrontendAction {
-protected:
-  virtual ASTConsumer *CreateASTConsumer(CompilerInstance &CI,
-                                         StringRef InFile);
-};
-
 class ASTViewAction : public ASTFrontendAction {
 protected:
   virtual ASTConsumer *CreateASTConsumer(CompilerInstance &CI,
@@ -149,6 +143,17 @@ public:
   virtual bool hasPCHSupport() const { return false; }
   virtual bool hasASTFileSupport() const { return true; }
   virtual bool hasIRSupport() const { return false; }
+  virtual bool hasCodeCompletionSupport() const { return false; }
+};
+
+class VerifyPCHAction : public ASTFrontendAction {
+protected:
+  virtual ASTConsumer *CreateASTConsumer(CompilerInstance &CI,
+                                         StringRef InFile);
+
+  virtual void ExecuteAction();
+
+public:
   virtual bool hasCodeCompletionSupport() const { return false; }
 };
 

@@ -106,12 +106,13 @@ void PathPieces::flattenTo(PathPieces &Primary, PathPieces &Current,
 
 PathDiagnostic::~PathDiagnostic() {}
 
-PathDiagnostic::PathDiagnostic(const Decl *declWithIssue,
+PathDiagnostic::PathDiagnostic(StringRef CheckName, const Decl *declWithIssue,
                                StringRef bugtype, StringRef verboseDesc,
                                StringRef shortDesc, StringRef category,
                                PathDiagnosticLocation LocationToUnique,
                                const Decl *DeclToUnique)
-  : DeclWithIssue(declWithIssue),
+  : CheckName(CheckName),
+    DeclWithIssue(declWithIssue),
     BugType(StripTrailingDots(bugtype)),
     VerboseDesc(StripTrailingDots(verboseDesc)),
     ShortDesc(StripTrailingDots(shortDesc)),
@@ -560,7 +561,8 @@ getLocationForCaller(const StackFrameContext *SFC,
                                              SM, CallerCtx);
   }
   case CFGElement::DeleteDtor: {
-    llvm_unreachable("not yet implemented!");
+    const CFGDeleteDtor &Dtor = Source.castAs<CFGDeleteDtor>();
+    return PathDiagnosticLocation(Dtor.getDeleteExpr(), SM, CallerCtx);
   }
   case CFGElement::BaseDtor:
   case CFGElement::MemberDtor: {
@@ -570,6 +572,7 @@ getLocationForCaller(const StackFrameContext *SFC,
     return PathDiagnosticLocation::create(CallerInfo->getDecl(), SM);
   }
   case CFGElement::TemporaryDtor:
+  case CFGElement::NewAllocator:
     llvm_unreachable("not yet implemented!");
   }
 
@@ -607,6 +610,14 @@ PathDiagnosticLocation
                                             const SourceManager &SM) {
   return PathDiagnosticLocation(BO->getOperatorLoc(), SM, SingleLocK);
 }
+
+PathDiagnosticLocation
+  PathDiagnosticLocation::createConditionalColonLoc(
+                                            const ConditionalOperator *CO,
+                                            const SourceManager &SM) {
+  return PathDiagnosticLocation(CO->getColonLoc(), SM, SingleLocK);
+}
+
 
 PathDiagnosticLocation
   PathDiagnosticLocation::createMemberLoc(const MemberExpr *ME,
@@ -730,8 +741,12 @@ PathDiagnosticLocation
   assert(N && "Cannot create a location with a null node.");
   const Stmt *S = getStmt(N);
 
-  if (!S)
+  if (!S) {
+    // If this is an implicit call, return the implicit call point location.
+    if (Optional<PreImplicitCall> PIE = N->getLocationAs<PreImplicitCall>())
+      return PathDiagnosticLocation(PIE->getLocation(), SM);
     S = getNextStmt(N);
+  }
 
   if (S) {
     ProgramPoint P = N->getLocation();

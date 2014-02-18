@@ -23,6 +23,7 @@
 #include "clang/AST/RecordLayout.h"
 #include "clang/AST/StmtObjC.h"
 #include "clang/Basic/LangOptions.h"
+#include "clang/CodeGen/CGFunctionInfo.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/SetVector.h"
@@ -242,8 +243,8 @@ public:
     Params.push_back(Ctx.getPointerDiffType()->getCanonicalTypeUnqualified());
     Params.push_back(Ctx.BoolTy);
     llvm::FunctionType *FTy =
-      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(IdType, Params,
-                                                    FunctionType::ExtInfo(),
+      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(IdType, false, Params,
+                                                          FunctionType::ExtInfo(),
                                                           RequiredArgs::All));
     return CGM.CreateRuntimeFunction(FTy, "objc_getProperty");
   }
@@ -262,8 +263,9 @@ public:
     Params.push_back(Ctx.BoolTy);
     Params.push_back(Ctx.BoolTy);
     llvm::FunctionType *FTy =
-      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, Params,
-                                                     FunctionType::ExtInfo(),
+      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, false,
+                                                          Params,
+                                                          FunctionType::ExtInfo(),
                                                           RequiredArgs::All));
     return CGM.CreateRuntimeFunction(FTy, "objc_setProperty");
   }
@@ -288,7 +290,8 @@ public:
     Params.push_back(IdType);
     Params.push_back(Ctx.getPointerDiffType()->getCanonicalTypeUnqualified());
     llvm::FunctionType *FTy =
-    Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, Params,
+    Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, false,
+                                                        Params,
                                                         FunctionType::ExtInfo(),
                                                         RequiredArgs::All));
     const char *name;
@@ -315,8 +318,9 @@ public:
     Params.push_back(Ctx.BoolTy);
     Params.push_back(Ctx.BoolTy);
     llvm::FunctionType *FTy =
-      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, Params,
-                                                     FunctionType::ExtInfo(),
+      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, false,
+                                                          Params,
+                                                          FunctionType::ExtInfo(),
                                                           RequiredArgs::All));
     return CGM.CreateRuntimeFunction(FTy, "objc_copyStruct");
   }
@@ -334,8 +338,9 @@ public:
     Params.push_back(Ctx.VoidPtrTy);
     Params.push_back(Ctx.VoidPtrTy);
     llvm::FunctionType *FTy =
-      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, Params,
-                                                     FunctionType::ExtInfo(),
+      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, false,
+                                                          Params,
+                                                          FunctionType::ExtInfo(),
                                                           RequiredArgs::All));
     return CGM.CreateRuntimeFunction(FTy, "objc_copyCppObjectAtomic");
   }
@@ -347,8 +352,9 @@ public:
     SmallVector<CanQualType,1> Params;
     Params.push_back(Ctx.getCanonicalParamType(Ctx.getObjCIdType()));
     llvm::FunctionType *FTy =
-      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, Params,
-                                                      FunctionType::ExtInfo(),
+      Types.GetFunctionType(Types.arrangeLLVMFunctionInfo(Ctx.VoidTy, false,
+                                                          Params,
+                                                          FunctionType::ExtInfo(),
                                                       RequiredArgs::All));
     return CGM.CreateRuntimeFunction(FTy, "objc_enumerationMutation");
   }
@@ -1877,8 +1883,8 @@ CGObjCCommonMac::EmitMessageSend(CodeGen::CodeGenFunction &CGF,
   MessageSendInfo MSI = getMessageSendInfo(Method, ResultType, ActualArgs);
 
   if (Method)
-    assert(CGM.getContext().getCanonicalType(Method->getResultType()) ==
-           CGM.getContext().getCanonicalType(ResultType) &&
+    assert(CGM.getContext().getCanonicalType(Method->getReturnType()) ==
+               CGM.getContext().getCanonicalType(ResultType) &&
            "Result type mismatch!");
 
   NullReturnState nullReturn;
@@ -4292,14 +4298,14 @@ llvm::Value *CGObjCMac::EmitIvarOffset(CodeGen::CodeGenFunction &CGF,
 ///   unsigned flags;
 /// };
 enum ImageInfoFlags {
-  eImageInfo_FixAndContinue      = (1 << 0),
+  eImageInfo_FixAndContinue      = (1 << 0), // This flag is no longer set by clang.
   eImageInfo_GarbageCollected    = (1 << 1),
   eImageInfo_GCOnly              = (1 << 2),
-  eImageInfo_OptimizedByDyld     = (1 << 3), // FIXME: When is this set.
+  eImageInfo_OptimizedByDyld     = (1 << 3), // This flag is set by the dyld shared cache.
 
   // A flag indicating that the module has no instances of a @synthesize of a
   // superclass variable. <rdar://problem/6803242>
-  eImageInfo_CorrectedSynthesize = (1 << 4),
+  eImageInfo_CorrectedSynthesize = (1 << 4), // This flag is no longer set by clang.
   eImageInfo_ImageIsSimulated    = (1 << 5)
 };
 
@@ -5757,6 +5763,9 @@ llvm::GlobalVariable * CGObjCNonFragileABIMac::BuildClassMetaData(
   };
   if (!Values[1])
     Values[1] = llvm::Constant::getNullValue(ObjCTypes.ClassnfABIPtrTy);
+  if (!Values[3])
+    Values[3] = llvm::Constant::getNullValue(
+                  llvm::PointerType::getUnqual(ObjCTypes.ImpnfABITy));
   llvm::Constant *Init = llvm::ConstantStruct::get(ObjCTypes.ClassnfABITy,
                                                    Values);
   llvm::GlobalVariable *GV = GetClassGlobal(ClassName);
@@ -5800,14 +5809,21 @@ void CGObjCNonFragileABIMac::GenerateClass(const ObjCImplementationDecl *ID) {
       llvm::GlobalValue::ExternalLinkage,
       0,
       "_objc_empty_cache");
-
-    ObjCEmptyVtableVar = new llvm::GlobalVariable(
-      CGM.getModule(),
-      ObjCTypes.ImpnfABITy,
-      false,
-      llvm::GlobalValue::ExternalLinkage,
-      0,
-      "_objc_empty_vtable");
+    
+    // Make this entry NULL for any iOS device target, any iOS simulator target,
+    // OS X with deployment target 10.9 or later.
+    const llvm::Triple &Triple = CGM.getTarget().getTriple();
+    if (Triple.isiOS() || (Triple.isMacOSX() && !Triple.isMacOSXVersionLT(10, 9)))
+      // This entry will be null.
+      ObjCEmptyVtableVar = 0;
+    else
+      ObjCEmptyVtableVar = new llvm::GlobalVariable(
+                                                    CGM.getModule(),
+                                                    ObjCTypes.ImpnfABITy,
+                                                    false,
+                                                    llvm::GlobalValue::ExternalLinkage,
+                                                    0,
+                                                    "_objc_empty_vtable");
   }
   assert(ID->getClassInterface() &&
          "CGObjCNonFragileABIMac::GenerateClass - class is 0");

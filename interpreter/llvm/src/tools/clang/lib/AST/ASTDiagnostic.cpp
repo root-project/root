@@ -12,6 +12,7 @@
 //===----------------------------------------------------------------------===//
 #include "clang/AST/ASTDiagnostic.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/Attr.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/DeclTemplate.h"
 #include "clang/AST/ExprCXX.h"
@@ -48,6 +49,11 @@ static QualType Desugar(ASTContext &Context, QualType QT, bool &ShouldAKA) {
     }
     // ...or an attributed type...
     if (const AttributedType *AT = dyn_cast<AttributedType>(Ty)) {
+      QT = AT->desugar();
+      continue;
+    }
+    // ...or an adjusted type...
+    if (const AdjustedType *AT = dyn_cast<AdjustedType>(Ty)) {
       QT = AT->desugar();
       continue;
     }
@@ -354,6 +360,14 @@ void clang::FormatASTNodeDiagnosticArgument(
       NeedQuotes = false;
       break;
     }
+    case DiagnosticsEngine::ak_attr: {
+      const Attr *At = reinterpret_cast<Attr *>(Val);
+      assert(At && "Received null Attr object!");
+      OS << '\'' << At->getSpelling() << '\'';
+      NeedQuotes = false;
+      break;
+    }
+
   }
 
   OS.flush();
@@ -831,8 +845,10 @@ class TemplateDiff {
   void DiffTemplate(const TemplateSpecializationType *FromTST,
                     const TemplateSpecializationType *ToTST) {
     // Begin descent into diffing template tree.
-    TemplateParameterList *Params =
+    TemplateParameterList *ParamsFrom =
         FromTST->getTemplateName().getAsTemplateDecl()->getTemplateParameters();
+    TemplateParameterList *ParamsTo =
+        ToTST->getTemplateName().getAsTemplateDecl()->getTemplateParameters();
     unsigned TotalArgs = 0;
     for (TSTiterator FromIter(Context, FromTST), ToIter(Context, ToTST);
          !FromIter.isEnd() || !ToIter.isEnd(); ++TotalArgs) {
@@ -841,15 +857,18 @@ class TemplateDiff {
       // Get the parameter at index TotalArgs.  If index is larger
       // than the total number of parameters, then there is an
       // argument pack, so re-use the last parameter.
-      NamedDecl *ParamND = Params->getParam(
-          (TotalArgs < Params->size()) ? TotalArgs
-                                       : Params->size() - 1);
+      unsigned ParamIndex = std::min(TotalArgs, ParamsFrom->size() - 1);
+      NamedDecl *ParamND = ParamsFrom->getParam(ParamIndex);
+
       // Handle Types
       if (TemplateTypeParmDecl *DefaultTTPD =
               dyn_cast<TemplateTypeParmDecl>(ParamND)) {
         QualType FromType, ToType;
         FromType = GetType(FromIter, DefaultTTPD);
-        ToType = GetType(ToIter, DefaultTTPD);
+        // A forward declaration can have no default arg but the actual class
+        // can, don't mix up iterators and get the original parameter.
+        ToType = GetType(
+            ToIter, cast<TemplateTypeParmDecl>(ParamsTo->getParam(ParamIndex)));
         Tree.SetNode(FromType, ToType);
         Tree.SetDefault(FromIter.isEnd() && !FromType.isNull(),
                         ToIter.isEnd() && !ToType.isNull());
@@ -1344,8 +1363,7 @@ class TemplateDiff {
         FromType.getLocalUnqualifiedType() ==
         ToType.getLocalUnqualifiedType()) {
       Qualifiers FromQual = FromType.getLocalQualifiers(),
-                 ToQual = ToType.getLocalQualifiers(),
-                 CommonQual;
+                 ToQual = ToType.getLocalQualifiers();
       PrintQualifiers(FromQual, ToQual);
       FromType.getLocalUnqualifiedType().print(OS, Policy);
       return;

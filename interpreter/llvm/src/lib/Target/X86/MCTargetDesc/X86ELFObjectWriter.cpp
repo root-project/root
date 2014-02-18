@@ -57,6 +57,7 @@ unsigned X86ELFObjectWriter::GetRelocType(const MCValue &Target,
       case FK_Data_8: Type = ELF::R_X86_64_PC64; break;
       case FK_Data_4: Type = ELF::R_X86_64_PC32; break;
       case FK_Data_2: Type = ELF::R_X86_64_PC16; break;
+      case FK_Data_1: Type = ELF::R_X86_64_PC8; break;
 
       case FK_PCRel_8:
         assert(Modifier == MCSymbolRefExpr::VK_None);
@@ -108,6 +109,12 @@ unsigned X86ELFObjectWriter::GetRelocType(const MCValue &Target,
         case MCSymbolRefExpr::VK_None:
           Type = ELF::R_X86_64_64;
           break;
+        case MCSymbolRefExpr::VK_GOT:
+          Type = ELF::R_X86_64_GOT64;
+          break;
+        case MCSymbolRefExpr::VK_GOTOFF:
+          Type = ELF::R_X86_64_GOTOFF64;
+          break;
         case MCSymbolRefExpr::VK_TPOFF:
           Type = ELF::R_X86_64_TPOFF64;
           break;
@@ -152,6 +159,28 @@ unsigned X86ELFObjectWriter::GetRelocType(const MCValue &Target,
 
       case X86::reloc_global_offset_table:
         Type = ELF::R_386_GOTPC;
+        break;
+
+      case FK_PCRel_1:
+      case FK_Data_1:
+        switch (Modifier) {
+        default:
+          llvm_unreachable("Unimplemented");
+        case MCSymbolRefExpr::VK_None:
+          Type = ELF::R_386_PC8;
+          break;
+        }
+        break;
+
+      case FK_PCRel_2:
+      case FK_Data_2:
+        switch (Modifier) {
+        default:
+          llvm_unreachable("Unimplemented");
+        case MCSymbolRefExpr::VK_None:
+          Type = ELF::R_386_PC16;
+          break;
+        }
         break;
 
       case X86::reloc_signed_4byte:

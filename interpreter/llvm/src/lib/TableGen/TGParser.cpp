@@ -380,10 +380,11 @@ static bool isObjectStart(tgtok::TokKind K) {
          K == tgtok::MultiClass || K == tgtok::Foreach;
 }
 
-static std::string GetNewAnonymousName() {
-  static unsigned AnonCounter = 0;
+/// GetNewAnonymousName - Generate a unique anonymous name that can be used as
+/// an identifier.
+std::string TGParser::GetNewAnonymousName() {
   unsigned Tmp = AnonCounter++; // MSVC2012 ICEs without this.
-  return "anonymous." + utostr(Tmp);
+  return "anonymous_" + utostr(Tmp);
 }
 
 /// ParseObjectName - If an object name is specified, return it.  Otherwise,
@@ -1215,10 +1216,7 @@ Init *TGParser::ParseSimpleValue(Record *CurRec, RecTy *ItemType,
     SMLoc EndLoc = Lex.getLoc();
 
     // Create the new record, set it as CurRec temporarily.
-    static unsigned AnonCounter = 0;
-    Record *NewRec = new Record("anonymous.val."+utostr(AnonCounter++),
-                                NameLoc,
-                                Records,
+    Record *NewRec = new Record(GetNewAnonymousName(), NameLoc, Records,
                                 /*IsAnonymous=*/true);
     SubClassReference SCRef;
     SCRef.RefRange = SMRange(NameLoc, EndLoc);
@@ -1227,8 +1225,36 @@ Init *TGParser::ParseSimpleValue(Record *CurRec, RecTy *ItemType,
     // Add info about the subclass to NewRec.
     if (AddSubClass(NewRec, SCRef))
       return 0;
-    NewRec->resolveReferences();
-    Records.addDef(NewRec);
+    if (!CurMultiClass) {
+      NewRec->resolveReferences();
+      Records.addDef(NewRec);
+    } else {
+      // Otherwise, we're inside a multiclass, add it to the multiclass.
+      CurMultiClass->DefPrototypes.push_back(NewRec);
+
+      // Copy the template arguments for the multiclass into the def.
+      const std::vector<Init *> &TArgs =
+                                  CurMultiClass->Rec.getTemplateArgs();
+
+      for (unsigned i = 0, e = TArgs.size(); i != e; ++i) {
+        const RecordVal *RV = CurMultiClass->Rec.getValue(TArgs[i]);
+        assert(RV && "Template arg doesn't exist?");
+        NewRec->addValue(*RV);
+      }
+
+      // We can't return the prototype def here, instead return:
+      // !cast<ItemType>(!strconcat(NAME, AnonName)).
+      const RecordVal *MCNameRV = CurMultiClass->Rec.getValue("NAME");
+      assert(MCNameRV && "multiclass record must have a NAME");
+
+      return UnOpInit::get(UnOpInit::CAST,
+                           BinOpInit::get(BinOpInit::STRCONCAT,
+                                          VarInit::get(MCNameRV->getName(),
+                                                       MCNameRV->getType()),
+                                          NewRec->getNameInit(),
+                                          StringRecTy::get()),
+                           Class->getDefInit()->getType());
+    }
 
     // The result of the expression is a reference to the new record.
     return DefInit::get(NewRec);
@@ -1964,7 +1990,18 @@ bool TGParser::ParseDef(MultiClass *CurMultiClass) {
       return true;
     }
     Records.addDef(CurRec);
+
+    if (ParseObjectBody(CurRec))
+      return true;
   } else if (CurMultiClass) {
+    // Parse the body before adding this prototype to the DefPrototypes vector.
+    // That way implicit definitions will be added to the DefPrototypes vector
+    // before this object, instantiated prior to defs derived from this object,
+    // and this available for indirect name resolution when defs derived from
+    // this object are instantiated.
+    if (ParseObjectBody(CurRec))
+      return true;
+
     // Otherwise, a def inside a multiclass, add it to the multiclass.
     for (unsigned i = 0, e = CurMultiClass->DefPrototypes.size(); i != e; ++i)
       if (CurMultiClass->DefPrototypes[i]->getNameInit()
@@ -1974,9 +2011,7 @@ bool TGParser::ParseDef(MultiClass *CurMultiClass) {
         return true;
       }
     CurMultiClass->DefPrototypes.push_back(CurRec);
-  }
-
-  if (ParseObjectBody(CurRec))
+  } else if (ParseObjectBody(CurRec))
     return true;
 
   if (CurMultiClass == 0)  // Def's in multiclasses aren't really defs.
@@ -2271,7 +2306,7 @@ bool TGParser::ParseMultiClass() {
 Record *TGParser::
 InstantiateMulticlassDef(MultiClass &MC,
                          Record *DefProto,
-                         Init *DefmPrefix,
+                         Init *&DefmPrefix,
                          SMRange DefmPrefixRange) {
   // We need to preserve DefProto so it can be reused for later
   // instantiations, so create a new Record to inherit from it.

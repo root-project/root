@@ -78,6 +78,7 @@ static unsigned GetEncodedCastOpcode(unsigned Opcode) {
   case Instruction::PtrToInt: return bitc::CAST_PTRTOINT;
   case Instruction::IntToPtr: return bitc::CAST_INTTOPTR;
   case Instruction::BitCast : return bitc::CAST_BITCAST;
+  case Instruction::AddrSpaceCast: return bitc::CAST_ADDRSPACECAST;
   }
 }
 
@@ -168,6 +169,8 @@ static uint64_t getAttrKindEncoding(Attribute::AttrKind Kind) {
     return bitc::ATTR_KIND_BUILTIN;
   case Attribute::ByVal:
     return bitc::ATTR_KIND_BY_VAL;
+  case Attribute::InAlloca:
+    return bitc::ATTR_KIND_IN_ALLOCA;
   case Attribute::Cold:
     return bitc::ATTR_KIND_COLD;
   case Attribute::InlineHint:
@@ -381,7 +384,6 @@ static void WriteTypeTable(const ValueEnumerator &VE, BitstreamWriter &Stream) {
     unsigned Code = 0;
 
     switch (T->getTypeID()) {
-    default: llvm_unreachable("Unknown type!");
     case Type::VoidTyID:      Code = bitc::TYPE_CODE_VOID;      break;
     case Type::HalfTyID:      Code = bitc::TYPE_CODE_HALF;      break;
     case Type::FloatTyID:     Code = bitc::TYPE_CODE_FLOAT;     break;
@@ -479,8 +481,6 @@ static unsigned getEncodedLinkage(const GlobalValue *GV) {
   case GlobalValue::AppendingLinkage:                return 2;
   case GlobalValue::InternalLinkage:                 return 3;
   case GlobalValue::LinkOnceAnyLinkage:              return 4;
-  case GlobalValue::DLLImportLinkage:                return 5;
-  case GlobalValue::DLLExportLinkage:                return 6;
   case GlobalValue::ExternalWeakLinkage:             return 7;
   case GlobalValue::CommonLinkage:                   return 8;
   case GlobalValue::PrivateLinkage:                  return 9;
@@ -489,7 +489,6 @@ static unsigned getEncodedLinkage(const GlobalValue *GV) {
   case GlobalValue::AvailableExternallyLinkage:      return 12;
   case GlobalValue::LinkerPrivateLinkage:            return 13;
   case GlobalValue::LinkerPrivateWeakLinkage:        return 14;
-  case GlobalValue::LinkOnceODRAutoHideLinkage:      return 15;
   }
   llvm_unreachable("Invalid linkage");
 }
@@ -501,6 +500,15 @@ static unsigned getEncodedVisibility(const GlobalValue *GV) {
   case GlobalValue::ProtectedVisibility: return 2;
   }
   llvm_unreachable("Invalid visibility");
+}
+
+static unsigned getEncodedDLLStorageClass(const GlobalValue *GV) {
+  switch (GV->getDLLStorageClass()) {
+  case GlobalValue::DefaultStorageClass:   return 0;
+  case GlobalValue::DLLImportStorageClass: return 1;
+  case GlobalValue::DLLExportStorageClass: return 2;
+  }
+  llvm_unreachable("Invalid DLL storage class");
 }
 
 static unsigned getEncodedThreadLocalMode(const GlobalVariable *GV) {
@@ -606,7 +614,7 @@ static void WriteModuleInfo(const Module *M, const ValueEnumerator &VE,
 
     // GLOBALVAR: [type, isconst, initid,
     //             linkage, alignment, section, visibility, threadlocal,
-    //             unnamed_addr]
+    //             unnamed_addr, externally_initialized, dllstorageclass]
     Vals.push_back(VE.getTypeID(GV->getType()));
     Vals.push_back(GV->isConstant());
     Vals.push_back(GV->isDeclaration() ? 0 :
@@ -616,11 +624,13 @@ static void WriteModuleInfo(const Module *M, const ValueEnumerator &VE,
     Vals.push_back(GV->hasSection() ? SectionMap[GV->getSection()] : 0);
     if (GV->isThreadLocal() ||
         GV->getVisibility() != GlobalValue::DefaultVisibility ||
-        GV->hasUnnamedAddr() || GV->isExternallyInitialized()) {
+        GV->hasUnnamedAddr() || GV->isExternallyInitialized() ||
+        GV->getDLLStorageClass() != GlobalValue::DefaultStorageClass) {
       Vals.push_back(getEncodedVisibility(GV));
       Vals.push_back(getEncodedThreadLocalMode(GV));
       Vals.push_back(GV->hasUnnamedAddr());
       Vals.push_back(GV->isExternallyInitialized());
+      Vals.push_back(getEncodedDLLStorageClass(GV));
     } else {
       AbbrevToUse = SimpleGVarAbbrev;
     }
@@ -645,6 +655,7 @@ static void WriteModuleInfo(const Module *M, const ValueEnumerator &VE,
     Vals.push_back(F->hasUnnamedAddr());
     Vals.push_back(F->hasPrefixData() ? (VE.getValueID(F->getPrefixData()) + 1)
                                       : 0);
+    Vals.push_back(getEncodedDLLStorageClass(F));
 
     unsigned AbbrevToUse = 0;
     Stream.EmitRecord(bitc::MODULE_CODE_FUNCTION, Vals, AbbrevToUse);
@@ -659,6 +670,7 @@ static void WriteModuleInfo(const Module *M, const ValueEnumerator &VE,
     Vals.push_back(VE.getValueID(AI->getAliasee()));
     Vals.push_back(getEncodedLinkage(AI));
     Vals.push_back(getEncodedVisibility(AI));
+    Vals.push_back(getEncodedDLLStorageClass(AI));
     unsigned AbbrevToUse = 0;
     Stream.EmitRecord(bitc::MODULE_CODE_ALIAS, Vals, AbbrevToUse);
     Vals.clear();

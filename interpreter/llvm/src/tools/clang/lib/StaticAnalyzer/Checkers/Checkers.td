@@ -100,6 +100,10 @@ def CastToStructChecker : Checker<"CastToStruct">,
   HelpText<"Check for cast from non-struct pointer to struct pointer">,
   DescFile<"CastToStructChecker.cpp">;
 
+def IdenticalExprChecker : Checker<"IdenticalExpr">,
+  HelpText<"Warn about unintended use of identical expressions in operators">,
+  DescFile<"IdenticalExprChecker.cpp">;
+
 def FixedAddressChecker : Checker<"FixedAddr">,
   HelpText<"Check for assignment of a fixed address to a pointer">,
   DescFile<"FixedAddressChecker.cpp">;
@@ -198,10 +202,6 @@ def DeadStoresChecker : Checker<"DeadStores">,
 } // end DeadCode
 
 let ParentPackage = DeadCodeAlpha in {
-
-def IdempotentOperationChecker : Checker<"IdempotentOperations">,
-  HelpText<"Warn about idempotent operations">,
-  DescFile<"IdempotentOperationChecker.cpp">;
 
 def UnreachableCodeChecker : Checker<"UnreachableCode">,
   HelpText<"Check unreachable code">,

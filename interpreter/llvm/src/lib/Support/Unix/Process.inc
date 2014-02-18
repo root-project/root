@@ -190,6 +190,14 @@ Optional<std::string> Process::GetEnv(StringRef Name) {
   return std::string(Val);
 }
 
+error_code Process::GetArgumentVector(SmallVectorImpl<const char *> &ArgsOut,
+                                      ArrayRef<const char *> ArgsIn,
+                                      SpecificBumpPtrAllocator<char> &) {
+  ArgsOut.append(ArgsIn.begin(), ArgsIn.end());
+
+  return error_code::success();
+}
+
 bool Process::StandardInIsUserInput() {
   return FileDescriptorIsDisplayed(STDIN_FILENO);
 }
@@ -335,7 +343,7 @@ const char *Process::ResetColor() {
   return "\033[0m";
 }
 
-#if !defined(HAVE_ARC4RANDOM)
+#if !defined(HAVE_DECL_ARC4RANDOM) || !HAVE_DECL_ARC4RANDOM
 static unsigned GetRandomNumberSeed() {
   // Attempt to get the initial seed from /dev/urandom, if possible.
   if (FILE *RandomSource = ::fopen("/dev/urandom", "r")) {
@@ -356,7 +364,7 @@ static unsigned GetRandomNumberSeed() {
 #endif
 
 unsigned llvm::sys::Process::GetRandomNumber() {
-#if defined(HAVE_ARC4RANDOM)
+#if defined(HAVE_DECL_ARC4RANDOM) && HAVE_DECL_ARC4RANDOM
   return arc4random();
 #else
   static int x = (::srand(GetRandomNumberSeed()), 0);

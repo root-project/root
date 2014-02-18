@@ -34,6 +34,10 @@ class TestingProgressDisplay(object):
 
     def update(self, test):
         self.completed += 1
+
+        if self.opts.incremental:
+            update_incremental_cache(test)
+
         if self.progressBar:
             self.progressBar.update(float(self.completed)/self.numTests,
                                     test.getFullName())
@@ -108,12 +112,25 @@ def write_test_results(run, lit_config, testing_time, output_path):
     finally:
         f.close()
 
+def update_incremental_cache(test):
+    if not test.result.code.isFailure:
+        return
+    fname = test.getFilePath()
+    os.utime(fname, None)
+
+def sort_by_incremental_cache(run):
+    def sortIndex(test):
+        fname = test.getFilePath()
+        try:
+            return -os.path.getmtime(fname)
+        except:
+            return 0
+    run.tests.sort(key = lambda t: sortIndex(t))
+
 def main(builtinParameters = {}):
-    # Bump the GIL check interval, its more important to get any one thread to a
-    # blocking operation (hopefully exec) than to try and unblock other threads.
-    #
-    # FIXME: This is a hack.
-    sys.setcheckinterval(1000)
+    # Use processes by default on Unix platforms.
+    isWindows = platform.system() == 'Windows'
+    useProcessesIsDefault = not isWindows
 
     global options
     from optparse import OptionParser, OptionGroup
@@ -181,6 +198,10 @@ def main(builtinParameters = {}):
     group.add_option("", "--shuffle", dest="shuffle",
                      help="Run tests in random order",
                      action="store_true", default=False)
+    group.add_option("-i", "--incremental", dest="incremental",
+                     help="Run modified and failing tests first (updates "
+                     "mtimes)",
+                     action="store_true", default=False)
     group.add_option("", "--filter", dest="filter", metavar="REGEX",
                      help=("Only run tests with paths matching the given "
                            "regular expression"),
@@ -199,10 +220,10 @@ def main(builtinParameters = {}):
                       action="store_true", default=False)
     group.add_option("", "--use-processes", dest="useProcesses",
                       help="Run tests in parallel with processes (not threads)",
-                      action="store_true", default=False)
+                      action="store_true", default=useProcessesIsDefault)
     group.add_option("", "--use-threads", dest="useProcesses",
                       help="Run tests in parallel with threads (not processes)",
-                      action="store_false", default=False)
+                      action="store_false", default=useProcessesIsDefault)
     parser.add_option_group(group)
 
     (opts, args) = parser.parse_args()
@@ -241,7 +262,7 @@ def main(builtinParameters = {}):
         valgrindArgs = opts.valgrindArgs,
         noExecute = opts.noExecute,
         debug = opts.debug,
-        isWindows = (platform.system()=='Windows'),
+        isWindows = isWindows,
         params = userParams,
         config_prefix = opts.configPrefix)
 
@@ -294,6 +315,8 @@ def main(builtinParameters = {}):
     # Then select the order.
     if opts.shuffle:
         random.shuffle(run.tests)
+    elif opts.incremental:
+        sort_by_incremental_cache(run)
     else:
         run.tests.sort(key = lambda t: t.getFullName())
 

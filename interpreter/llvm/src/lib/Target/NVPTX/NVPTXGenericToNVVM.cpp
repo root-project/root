@@ -13,20 +13,19 @@
 //===----------------------------------------------------------------------===//
 
 #include "NVPTX.h"
-#include "NVPTXUtilities.h"
 #include "MCTargetDesc/NVPTXBaseInfo.h"
-
-#include "llvm/PassManager.h"
+#include "NVPTXUtilities.h"
+#include "llvm/ADT/ValueMap.h"
+#include "llvm/CodeGen/MachineFunctionAnalysis.h"
+#include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/ADT/ValueMap.h"
-#include "llvm/CodeGen/MachineFunctionAnalysis.h"
-#include "llvm/CodeGen/ValueTypes.h"
-#include "llvm/IR/IRBuilder.h"
+#include "llvm/PassManager.h"
 
 using namespace llvm;
 
@@ -64,7 +63,7 @@ private:
   GVMapTy GVMap;
   ConstantToValueMapTy ConstantToValueMap;
 };
-}
+} // end namespace
 
 char GenericToNVVM::ID = 0;
 
@@ -142,7 +141,7 @@ bool GenericToNVVM::runOnModule(Module &M) {
     GlobalVariable *GV = I->first;
     GlobalVariable *NewGV = I->second;
     ++I;
-    Constant *BitCastNewGV = ConstantExpr::getBitCast(NewGV, GV->getType());
+    Constant *BitCastNewGV = ConstantExpr::getPointerCast(NewGV, GV->getType());
     // At this point, the remaining uses of GV should be found only in global
     // variable initializers, as other uses have been already been removed
     // while walking through the instructions in function definitions.

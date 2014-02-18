@@ -30,7 +30,6 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SparseSet.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/CodeGen/LiveInterval.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
@@ -44,7 +43,9 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
 #include "llvm/CodeGen/SlotIndexes.h"
+#include "llvm/CodeGen/StackProtector.h"
 #include "llvm/DebugInfo.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -117,6 +118,8 @@ class StackColoring : public MachineFunctionPass {
   VNInfo::Allocator VNInfoAllocator;
   /// SlotIndex analysis object.
   SlotIndexes *Indexes;
+  /// The stack protector object.
+  StackProtector *SP;
 
   /// The list of lifetime markers found. These markers are to be removed
   /// once the coloring is done.
@@ -170,7 +173,7 @@ private:
   /// slots to use the joint slots.
   void remapInstructions(DenseMap<int, int> &SlotRemap);
 
-  /// The input program may contain intructions which are not inside lifetime
+  /// The input program may contain instructions which are not inside lifetime
   /// markers. This can happen due to a bug in the compiler or due to a bug in
   /// user code (for example, returning a reference to a local variable).
   /// This procedure checks all of the instructions in the function and
@@ -191,6 +194,7 @@ INITIALIZE_PASS_BEGIN(StackColoring,
                    "stack-coloring", "Merge disjoint stack slots", false, false)
 INITIALIZE_PASS_DEPENDENCY(MachineDominatorTree)
 INITIALIZE_PASS_DEPENDENCY(SlotIndexes)
+INITIALIZE_PASS_DEPENDENCY(StackProtector)
 INITIALIZE_PASS_END(StackColoring,
                    "stack-coloring", "Merge disjoint stack slots", false, false)
 
@@ -198,6 +202,7 @@ void StackColoring::getAnalysisUsage(AnalysisUsage &AU) const {
   AU.addRequired<MachineDominatorTree>();
   AU.addPreserved<MachineDominatorTree>();
   AU.addRequired<SlotIndexes>();
+  AU.addRequired<StackProtector>();
   MachineFunctionPass::getAnalysisUsage(AU);
 }
 
@@ -450,14 +455,14 @@ void StackColoring::calculateLiveIntervals(unsigned NumSlots) {
       SlotIndex F = Finishes[i];
       if (S < F) {
         // We have a single consecutive region.
-        Intervals[i]->addRange(LiveRange(S, F, ValNum));
+        Intervals[i]->addSegment(LiveInterval::Segment(S, F, ValNum));
       } else {
-        // We have two non consecutive regions. This happens when
+        // We have two non-consecutive regions. This happens when
         // LIFETIME_START appears after the LIFETIME_END marker.
         SlotIndex NewStart = Indexes->getMBBStartIdx(MBB);
         SlotIndex NewFin = Indexes->getMBBEndIdx(MBB);
-        Intervals[i]->addRange(LiveRange(NewStart, F, ValNum));
-        Intervals[i]->addRange(LiveRange(S, NewFin, ValNum));
+        Intervals[i]->addSegment(LiveInterval::Segment(NewStart, F, ValNum));
+        Intervals[i]->addSegment(LiveInterval::Segment(S, NewFin, ValNum));
       }
     }
   }
@@ -503,6 +508,28 @@ void StackColoring::remapInstructions(DenseMap<int, int> &SlotRemap) {
     const AllocaInst *To = MFI->getObjectAllocation(it->second);
     assert(To && From && "Invalid allocation object");
     Allocas[From] = To;
+
+    // AA might be used later for instruction scheduling, and we need it to be
+    // able to deduce the correct aliasing releationships between pointers
+    // derived from the alloca being remapped and the target of that remapping.
+    // The only safe way, without directly informing AA about the remapping
+    // somehow, is to directly update the IR to reflect the change being made
+    // here.
+    Instruction *Inst = const_cast<AllocaInst *>(To);
+    if (From->getType() != To->getType()) {
+      BitCastInst *Cast = new BitCastInst(Inst, From->getType());
+      Cast->insertAfter(Inst);
+      Inst = Cast;
+    }
+
+    // Allow the stack protector to adjust its value map to account for the
+    // upcoming replacement.
+    SP->adjustForColoring(From, To);
+
+    // Note that this will not replace uses in MMOs (which we'll update below),
+    // or anywhere else (which is why we won't delete the original
+    // instruction).
+    const_cast<AllocaInst *>(From)->replaceAllUsesWith(Inst);
   }
 
   // Remap all instructions to the new stack slots.
@@ -526,20 +553,18 @@ void StackColoring::remapInstructions(DenseMap<int, int> &SlotRemap) {
         if (!V)
           continue;
 
-        const PseudoSourceValue *PSV = dyn_cast<const PseudoSourceValue>(V);
-        if (PSV && PSV->isConstant(MFI))
+        // FIXME: In order to enable the use of TBAA when using AA in CodeGen,
+        // we'll also need to update the TBAA nodes in MMOs with values
+        // derived from the merged allocas. When doing this, we'll need to use
+        // the same variant of GetUnderlyingObjects that is used by the
+        // instruction scheduler (that can look through ptrtoint/inttoptr
+        // pairs).
+
+        // We've replaced IR-level uses of the remapped allocas, so we only
+        // need to replace direct uses here.
+        if (!isa<AllocaInst>(V))
           continue;
 
-        // Climb up and find the original alloca.
-        V = GetUnderlyingObject(V);
-        // If we did not find one, or if the one that we found is not in our
-        // map, then move on.
-        if (!V || !isa<AllocaInst>(V)) {
-          // Clear mem operand since we don't know for sure that it doesn't
-          // alias a merged alloca.
-          MMO->setValue(0);
-          continue;
-        }
         const AllocaInst *AI= cast<AllocaInst>(V);
         if (!Allocas.count(AI))
           continue;
@@ -665,6 +690,7 @@ bool StackColoring::runOnMachineFunction(MachineFunction &Func) {
   MF = &Func;
   MFI = MF->getFrameInfo();
   Indexes = &getAnalysis<SlotIndexes>();
+  SP = &getAnalysis<StackProtector>();
   BlockLiveness.clear();
   BasicBlocks.clear();
   BasicBlockNumbering.clear();
@@ -763,7 +789,7 @@ bool StackColoring::runOnMachineFunction(MachineFunction &Func) {
         // Merge disjoint slots.
         if (!First->overlaps(*Second)) {
           Changed = true;
-          First->MergeRangesInAsValue(*Second, First->getValNumInfo(0));
+          First->MergeSegmentsInAsValue(*Second, First->getValNumInfo(0));
           SlotRemap[SecondSlot] = FirstSlot;
           SortedSlots[J] = -1;
           DEBUG(dbgs()<<"Merging #"<<FirstSlot<<" and slots #"<<

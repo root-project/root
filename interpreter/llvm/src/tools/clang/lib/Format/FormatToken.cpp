@@ -22,21 +22,51 @@
 namespace clang {
 namespace format {
 
+// FIXME: This is copy&pasted from Sema. Put it in a common place and remove
+// duplication.
+bool FormatToken::isSimpleTypeSpecifier() const {
+  switch (Tok.getKind()) {
+  case tok::kw_short:
+  case tok::kw_long:
+  case tok::kw___int64:
+  case tok::kw___int128:
+  case tok::kw_signed:
+  case tok::kw_unsigned:
+  case tok::kw_void:
+  case tok::kw_char:
+  case tok::kw_int:
+  case tok::kw_half:
+  case tok::kw_float:
+  case tok::kw_double:
+  case tok::kw_wchar_t:
+  case tok::kw_bool:
+  case tok::kw___underlying_type:
+  case tok::annot_typename:
+  case tok::kw_char16_t:
+  case tok::kw_char32_t:
+  case tok::kw_typeof:
+  case tok::kw_decltype:
+    return true;
+  default:
+    return false;
+  }
+}
+
 TokenRole::~TokenRole() {}
 
 void TokenRole::precomputeFormattingInfos(const FormatToken *Token) {}
 
-unsigned CommaSeparatedList::format(LineState &State,
-                                    ContinuationIndenter *Indenter,
-                                    bool DryRun) {
-  if (!State.NextToken->Previous || !State.NextToken->Previous->Previous ||
-      Commas.size() <= 2)
+unsigned CommaSeparatedList::formatAfterToken(LineState &State,
+                                              ContinuationIndenter *Indenter,
+                                              bool DryRun) {
+  if (!State.NextToken->Previous || !State.NextToken->Previous->Previous)
     return 0;
 
   // Ensure that we start on the opening brace.
   const FormatToken *LBrace = State.NextToken->Previous->Previous;
   if (LBrace->isNot(tok::l_brace) ||
       LBrace->BlockKind == BK_Block ||
+      LBrace->Type == TT_DictLiteral ||
       LBrace->Next->Type == TT_DesignatedInitializerPeriod)
     return 0;
 
@@ -47,8 +77,11 @@ unsigned CommaSeparatedList::format(LineState &State,
 
   // Find the best ColumnFormat, i.e. the best number of columns to use.
   const ColumnFormat *Format = getColumnFormat(RemainingCodePoints);
+  // If no ColumnFormat can be used, the braced list would generally be
+  // bin-packed. Add a severe penalty to this so that column layouts are
+  // preferred if possible.
   if (!Format)
-    return 0;
+    return 10000;
 
   // Format the entire list.
   unsigned Penalty = 0;
@@ -78,6 +111,14 @@ unsigned CommaSeparatedList::format(LineState &State,
   return Penalty;
 }
 
+unsigned CommaSeparatedList::formatFromToken(LineState &State,
+                                             ContinuationIndenter *Indenter,
+                                             bool DryRun) {
+  if (HasNestedBracedList)
+    State.Stack.back().AvoidBinPacking = true;
+  return 0;
+}
+
 // Returns the lengths in code points between Begin and End (both included),
 // assuming that the entire sequence is put on a single line.
 static unsigned CodePointsBetween(const FormatToken *Begin,
@@ -104,6 +145,8 @@ void CommaSeparatedList::precomputeFormattingInfos(const FormatToken *Token) {
       ItemBegin = ItemBegin->Next;
 
     MustBreakBeforeItem.push_back(ItemBegin->MustBreakBefore);
+    if (ItemBegin->is(tok::l_brace))
+      HasNestedBracedList = true;
     const FormatToken *ItemEnd = NULL;
     if (i == Commas.size()) {
       ItemEnd = Token->MatchingParen;
@@ -135,16 +178,24 @@ void CommaSeparatedList::precomputeFormattingInfos(const FormatToken *Token) {
     ItemBegin = ItemEnd->Next;
   }
 
+  // If this doesn't have a nested list, we require at least 6 elements in order
+  // create a column layout. If it has a nested list, column layout ensures one
+  // list element per line.
+  if (HasNestedBracedList || Commas.size() < 5 ||
+      Token->NestingLevel != 0)
+    return;
+
   // We can never place more than ColumnLimit / 3 items in a row (because of the
   // spaces and the comma).
   for (unsigned Columns = 1; Columns <= Style.ColumnLimit / 3; ++Columns) {
     ColumnFormat Format;
     Format.Columns = Columns;
     Format.ColumnSizes.resize(Columns);
-    Format.LineCount = 0;
+    Format.LineCount = 1;
     bool HasRowWithSufficientColumns = false;
     unsigned Column = 0;
     for (unsigned i = 0, e = ItemLengths.size(); i != e; ++i) {
+      assert(i < MustBreakBeforeItem.size());
       if (MustBreakBeforeItem[i] || Column == Columns) {
         ++Format.LineCount;
         Column = 0;

@@ -25,11 +25,13 @@ static bool CheapToScalarize(Value *V, bool isConstant) {
     if (isConstant) return true;
 
     // If all elts are the same, we can extract it and use any of the values.
-    Constant *Op0 = C->getAggregateElement(0U);
-    for (unsigned i = 1, e = V->getType()->getVectorNumElements(); i != e; ++i)
-      if (C->getAggregateElement(i) != Op0)
-        return false;
-    return true;
+    if (Constant *Op0 = C->getAggregateElement(0U)) {
+      for (unsigned i = 1, e = V->getType()->getVectorNumElements(); i != e;
+           ++i)
+        if (C->getAggregateElement(i) != Op0)
+          return false;
+      return true;
+    }
   }
   Instruction *I = dyn_cast<Instruction>(V);
   if (!I) return false;
@@ -281,6 +283,38 @@ Instruction *InstCombiner::visitExtractElementInst(ExtractElementInst &EI) {
                                                   EI.getIndexOperand());
         Worklist.AddValue(EE);
         return CastInst::Create(CI->getOpcode(), EE, EI.getType());
+      }
+    } else if (SelectInst *SI = dyn_cast<SelectInst>(I)) {
+      if (SI->hasOneUse()) {
+        // TODO: For a select on vectors, it might be useful to do this if it
+        // has multiple extractelement uses. For vector select, that seems to
+        // fight the vectorizer.
+
+        // If we are extracting an element from a vector select or a select on
+        // vectors, a select on the scalars extracted from the vector arguments.
+        Value *TrueVal = SI->getTrueValue();
+        Value *FalseVal = SI->getFalseValue();
+
+        Value *Cond = SI->getCondition();
+        if (Cond->getType()->isVectorTy()) {
+          Cond = Builder->CreateExtractElement(Cond,
+                                               EI.getIndexOperand(),
+                                               Cond->getName() + ".elt");
+        }
+
+        Value *V1Elem
+          = Builder->CreateExtractElement(TrueVal,
+                                          EI.getIndexOperand(),
+                                          TrueVal->getName() + ".elt");
+
+        Value *V2Elem
+          = Builder->CreateExtractElement(FalseVal,
+                                          EI.getIndexOperand(),
+                                          FalseVal->getName() + ".elt");
+        return SelectInst::Create(Cond,
+                                  V1Elem,
+                                  V2Elem,
+                                  SI->getName() + ".elt");
       }
     }
   }
@@ -606,6 +640,8 @@ static Value *BuildNew(Instruction *I, ArrayRef<Value*> NewOps) {
       if (isa<PossiblyExactOperator>(BO)) {
         New->setIsExact(BO->isExact());
       }
+      if (isa<FPMathOperator>(BO))
+        New->copyFastMathFlags(I);
       return New;
     }
     case Instruction::ICmp:
@@ -731,9 +767,10 @@ InstCombiner::EvaluateInDifferentElementOrder(Value *V, ArrayRef<int> Mask) {
         }
       }
 
+      // If element is not in Mask, no need to handle the operand 1 (element to
+      // be inserted). Just evaluate values in operand 0 according to Mask.
       if (!Found)
-        return UndefValue::get(
-            VectorType::get(V->getType()->getScalarType(), Mask.size()));
+        return EvaluateInDifferentElementOrder(I->getOperand(0), Mask);
 
       Value *V = EvaluateInDifferentElementOrder(I->getOperand(0), Mask);
       return InsertElementInst::Create(V, I->getOperand(1),
@@ -978,7 +1015,7 @@ Instruction *InstCombiner::visitShuffleVectorInst(ShuffleVectorInst &SVI) {
       // references from RHSOp0 to LHSOp0, so we don't need to shift the mask.
       // If newRHS == newLHS, we want to remap any references from newRHS to
       // newLHS so that we can properly identify splats that may occur due to
-      // obfuscation accross the two vectors.
+      // obfuscation across the two vectors.
       if (eltMask >= 0 && newRHS != NULL && newLHS != newRHS)
         eltMask += newLHSWidth;
     }

@@ -181,8 +181,8 @@ public:
 class RegexDirective : public Directive {
 public:
   RegexDirective(SourceLocation DirectiveLoc, SourceLocation DiagnosticLoc,
-                 StringRef Text, unsigned Min, unsigned Max)
-    : Directive(DirectiveLoc, DiagnosticLoc, Text, Min, Max), Regex(Text) { }
+                 StringRef Text, unsigned Min, unsigned Max, StringRef RegexStr)
+    : Directive(DirectiveLoc, DiagnosticLoc, Text, Min, Max), Regex(RegexStr) { }
 
   virtual bool isValid(std::string &Error) {
     if (Regex.isValid(Error))
@@ -240,12 +240,36 @@ public:
       if (!EnsureStartOfWord
             // Check if string literal starts a new word.
             || P == Begin || isWhitespace(P[-1])
-            // Or it could be preceeded by the start of a comment.
+            // Or it could be preceded by the start of a comment.
             || (P > (Begin + 1) && (P[-1] == '/' || P[-1] == '*')
                                 &&  P[-2] == '/'))
         return true;
       // Otherwise, skip and search again.
     } while (Advance());
+    return false;
+  }
+
+  // Return true if a CloseBrace that closes the OpenBrace at the current nest
+  // level is found. When true, P marks begin-position of CloseBrace.
+  bool SearchClosingBrace(StringRef OpenBrace, StringRef CloseBrace) {
+    unsigned Depth = 1;
+    P = C;
+    while (P < End) {
+      StringRef S(P, End - P);
+      if (S.startswith(OpenBrace)) {
+        ++Depth;
+        P += OpenBrace.size();
+      } else if (S.startswith(CloseBrace)) {
+        --Depth;
+        if (Depth == 0) {
+          PEnd = P + CloseBrace.size();
+          return true;
+        }
+        P += CloseBrace.size();
+      } else {
+        ++P;
+      }
+    }
     return false;
   }
 
@@ -437,7 +461,7 @@ static bool ParseDirective(StringRef S, ExpectedData *ED, SourceManager &SM,
     const char* const ContentBegin = PH.C; // mark content begin
 
     // Search for token: }}
-    if (!PH.Search("}}")) {
+    if (!PH.SearchClosingBrace("{{", "}}")) {
       Diags.Report(Pos.getLocWithOffset(PH.C-PH.Begin),
                    diag::err_verify_missing_end) << KindStr;
       continue;
@@ -458,6 +482,13 @@ static bool ParseDirective(StringRef S, ExpectedData *ED, SourceManager &SM,
     }
     if (Text.empty())
       Text.assign(ContentBegin, ContentEnd);
+
+    // Check that regex directives contain at least one regex.
+    if (RegexKind && Text.find("{{") == StringRef::npos) {
+      Diags.Report(Pos.getLocWithOffset(ContentBegin-PH.Begin),
+                   diag::err_verify_missing_regex) << Text;
+      return false;
+    }
 
     // Construct new directive.
     Directive *D = Directive::create(RegexKind, Pos, ExpectedLoc, Text,
@@ -823,7 +854,31 @@ void VerifyDiagnosticConsumer::CheckDiagnostics() {
 Directive *Directive::create(bool RegexKind, SourceLocation DirectiveLoc,
                              SourceLocation DiagnosticLoc, StringRef Text,
                              unsigned Min, unsigned Max) {
-  if (RegexKind)
-    return new RegexDirective(DirectiveLoc, DiagnosticLoc, Text, Min, Max);
-  return new StandardDirective(DirectiveLoc, DiagnosticLoc, Text, Min, Max);
+  if (!RegexKind)
+    return new StandardDirective(DirectiveLoc, DiagnosticLoc, Text, Min, Max);
+
+  // Parse the directive into a regular expression.
+  std::string RegexStr;
+  StringRef S = Text;
+  while (!S.empty()) {
+    if (S.startswith("{{")) {
+      S = S.drop_front(2);
+      size_t RegexMatchLength = S.find("}}");
+      assert(RegexMatchLength != StringRef::npos);
+      // Append the regex, enclosed in parentheses.
+      RegexStr += "(";
+      RegexStr.append(S.data(), RegexMatchLength);
+      RegexStr += ")";
+      S = S.drop_front(RegexMatchLength + 2);
+    } else {
+      size_t VerbatimMatchLength = S.find("{{");
+      if (VerbatimMatchLength == StringRef::npos)
+        VerbatimMatchLength = S.size();
+      // Escape and append the fixed string.
+      RegexStr += llvm::Regex::escape(S.substr(0, VerbatimMatchLength));
+      S = S.drop_front(VerbatimMatchLength);
+    }
+  }
+
+  return new RegexDirective(DirectiveLoc, DiagnosticLoc, Text, Min, Max, RegexStr);
 }

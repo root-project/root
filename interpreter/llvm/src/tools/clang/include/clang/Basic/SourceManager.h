@@ -1299,9 +1299,7 @@ public:
   /// whether it came from a file other than the main file. This is different
   /// from isWrittenInMainFile() because it takes line marker directives into
   /// account.
-  bool isInMainFile(SourceLocation Loc) const {
-    return getPresumedLoc(Loc).getIncludeLoc().isInvalid();
-  }
+  bool isInMainFile(SourceLocation Loc) const;
 
   /// \brief Returns true if the spelling locations for both SourceLocations
   /// are part of the same file buffer.
@@ -1334,7 +1332,7 @@ public:
     return loc.isMacroID() && isInSystemHeader(getSpellingLoc(loc));
   }
 
-  /// \brief The size of the SLocEnty that \p FID represents.
+  /// \brief The size of the SLocEntry that \p FID represents.
   unsigned getFileIDSize(FileID FID) const;
 
   /// \brief Given a specific FileID, returns true if \p Loc is inside that

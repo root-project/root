@@ -17,11 +17,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/STLExtras.h"
-#include "Windows.h"
 #include <fcntl.h>
 #include <io.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+
+// These two headers must be included last, and make sure shlobj is required
+// after Windows.h to make sure it picks up our definition of _WIN32_WINNT
+#include "WindowsSupport.h"
+#include <shlobj.h>
 
 #undef max
 
@@ -41,15 +45,6 @@ using llvm::sys::windows::UTF8ToUTF16;
 using llvm::sys::windows::UTF16ToUTF8;
 
 namespace {
-  typedef BOOLEAN (WINAPI *PtrCreateSymbolicLinkW)(
-    /*__in*/ LPCWSTR lpSymlinkFileName,
-    /*__in*/ LPCWSTR lpTargetFileName,
-    /*__in*/ DWORD dwFlags);
-
-  PtrCreateSymbolicLinkW create_symbolic_link_api = PtrCreateSymbolicLinkW(
-    ::GetProcAddress(::GetModuleHandleA("kernel32.dll"),
-                     "CreateSymbolicLinkW"));
-
   error_code TempDir(SmallVectorImpl<wchar_t> &result) {
   retry_temp_dir:
     DWORD len = ::GetTempPathW(result.capacity(), result.begin());
@@ -109,26 +104,14 @@ static error_code createUniqueEntity(const Twine &model, int &result_fd,
   // needed if the randomly chosen path already exists.
   SmallVector<wchar_t, 128> random_path_utf16;
 
-  // Get a Crypto Provider for CryptGenRandom.
-  HCRYPTPROV HCPC;
-  if (!::CryptAcquireContextW(&HCPC,
-                              NULL,
-                              NULL,
-                              PROV_RSA_FULL,
-                              CRYPT_VERIFYCONTEXT))
-    return windows_error(::GetLastError());
-  ScopedCryptContext CryptoProvider(HCPC);
-
 retry_random_path:
   random_path_utf16.set_size(0);
   for (SmallVectorImpl<wchar_t>::const_iterator i = model_utf16.begin(),
                                                 e = model_utf16.end();
                                                 i != e; ++i) {
     if (*i == L'%') {
-      BYTE val = 0;
-      if (!::CryptGenRandom(CryptoProvider, 1, &val))
-          return windows_error(::GetLastError());
-      random_path_utf16.push_back("0123456789abcdef"[val & 15]);
+      unsigned val = sys::Process::GetRandomNumber();
+      random_path_utf16.push_back(L"0123456789abcdef"[val & 15]);
     }
     else
       random_path_utf16.push_back(*i);
@@ -216,9 +199,28 @@ namespace sys  {
 namespace fs {
 
 std::string getMainExecutable(const char *argv0, void *MainExecAddr) {
-  char pathname[MAX_PATH];
-  DWORD ret = ::GetModuleFileNameA(NULL, pathname, MAX_PATH);
-  return ret != MAX_PATH ? pathname : "";
+  SmallVector<wchar_t, MAX_PATH> PathName;
+  DWORD Size = ::GetModuleFileNameW(NULL, PathName.data(), PathName.capacity());
+
+  // A zero return value indicates a failure other than insufficient space.
+  if (Size == 0)
+    return "";
+
+  // Insufficient space is determined by a return value equal to the size of
+  // the buffer passed in.
+  if (Size == PathName.capacity())
+    return "";
+
+  // On success, GetModuleFileNameW returns the number of characters written to
+  // the buffer not including the NULL terminator.
+  PathName.set_size(Size);
+
+  // Convert the result from UTF-16 to UTF-8.
+  SmallVector<char, MAX_PATH> PathNameUTF8;
+  if (UTF16ToUTF8(PathName.data(), PathName.size(), PathNameUTF8))
+    return "";
+
+  return std::string(PathNameUTF8.data());
 }
 
 UniqueID file_status::getUniqueID() const {
@@ -241,22 +243,23 @@ TimeValue file_status::getLastModificationTime() const {
 }
 
 error_code current_path(SmallVectorImpl<char> &result) {
-  SmallVector<wchar_t, 128> cur_path;
-  cur_path.reserve(128);
-retry_cur_dir:
-  DWORD len = ::GetCurrentDirectoryW(cur_path.capacity(), cur_path.data());
+  SmallVector<wchar_t, MAX_PATH> cur_path;
+  DWORD len = MAX_PATH;
 
-  // A zero return value indicates a failure other than insufficient space.
-  if (len == 0)
-    return windows_error(::GetLastError());
-
-  // If there's insufficient space, the len returned is larger than the len
-  // given.
-  if (len > cur_path.capacity()) {
+  do {
     cur_path.reserve(len);
-    goto retry_cur_dir;
-  }
+    len = ::GetCurrentDirectoryW(cur_path.capacity(), cur_path.data());
 
+    // A zero return value indicates a failure other than insufficient space.
+    if (len == 0)
+      return windows_error(::GetLastError());
+
+    // If there's insufficient space, the len returned is larger than the len
+    // given.
+  } while (len > cur_path.capacity());
+
+  // On success, GetCurrentDirectoryW returns the number of characters not
+  // including the null-terminator.
   cur_path.set_size(len);
   return UTF16ToUTF8(cur_path.begin(), cur_path.size(), result);
 }
@@ -295,29 +298,6 @@ error_code create_hard_link(const Twine &to, const Twine &from) {
   if (error_code ec = UTF8ToUTF16(t, wide_to)) return ec;
 
   if (!::CreateHardLinkW(wide_from.begin(), wide_to.begin(), NULL))
-    return windows_error(::GetLastError());
-
-  return error_code::success();
-}
-
-error_code create_symlink(const Twine &to, const Twine &from) {
-  // Only do it if the function is available at runtime.
-  if (!create_symbolic_link_api)
-    return make_error_code(errc::function_not_supported);
-
-  // Get arguments.
-  SmallString<128> from_storage;
-  SmallString<128> to_storage;
-  StringRef f = from.toStringRef(from_storage);
-  StringRef t = to.toStringRef(to_storage);
-
-  // Convert to utf-16.
-  SmallVector<wchar_t, 128> wide_from;
-  SmallVector<wchar_t, 128> wide_to;
-  if (error_code ec = UTF8ToUTF16(f, wide_from)) return ec;
-  if (error_code ec = UTF8ToUTF16(t, wide_to)) return ec;
-
-  if (!create_symbolic_link_api(wide_from.begin(), wide_to.begin(), 0))
     return windows_error(::GetLastError());
 
   return error_code::success();
@@ -671,12 +651,11 @@ error_code mapped_file_region::init(int FD, bool CloseFD, uint64_t Offset) {
   case priv:      flprotect = PAGE_WRITECOPY; break;
   }
 
-  FileMappingHandle = ::CreateFileMapping(FileHandle,
-                                          0,
-                                          flprotect,
-                                          (Offset + Size) >> 32,
-                                          (Offset + Size) & 0xffffffff,
-                                          0);
+  FileMappingHandle =
+      ::CreateFileMappingW(FileHandle, 0, flprotect,
+                           (Offset + Size) >> 32,
+                           (Offset + Size) & 0xffffffff,
+                           0);
   if (FileMappingHandle == NULL) {
     error_code ec = windows_error(GetLastError());
     if (FileDescriptor) {
@@ -840,7 +819,7 @@ uint64_t mapped_file_region::size() const {
 }
 
 char *mapped_file_region::data() const {
-  assert(Mode != readonly && "Cannot get non const data for readonly mapping!");
+  assert(Mode != readonly && "Cannot get non-const data for readonly mapping!");
   assert(Mapping && "Mapping failed but used anyway!");
   return reinterpret_cast<char*>(Mapping);
 }
@@ -1041,6 +1020,22 @@ error_code openFileForWrite(const Twine &Name, int &ResultFD,
   return error_code::success();
 }
 } // end namespace fs
+
+namespace path {
+
+bool home_directory(SmallVectorImpl<char> &result) {
+  wchar_t Path[MAX_PATH];
+  if (::SHGetFolderPathW(0, CSIDL_APPDATA | CSIDL_FLAG_CREATE, 0,
+                         /*SHGFP_TYPE_CURRENT*/0, Path) != S_OK)
+    return false;
+
+  if (UTF16ToUTF8(Path, ::wcslen(Path), result))
+    return false;
+
+  return true;
+}
+
+} // end namespace path
 
 namespace windows {
 llvm::error_code UTF8ToUTF16(llvm::StringRef utf8,

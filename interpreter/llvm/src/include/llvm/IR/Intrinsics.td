@@ -166,6 +166,8 @@ def llvm_v4i64_ty      : LLVMType<v4i64>;    //  4 x i64
 def llvm_v8i64_ty      : LLVMType<v8i64>;    //  8 x i64
 def llvm_v16i64_ty     : LLVMType<v16i64>;   // 16 x i64
 
+def llvm_v2f16_ty      : LLVMType<v2f16>;    //  2 x half (__fp16)
+def llvm_v4f16_ty      : LLVMType<v4f16>;    //  4 x half (__fp16)
 def llvm_v8f16_ty      : LLVMType<v8f16>;    //  8 x half (__fp16)
 def llvm_v1f32_ty      : LLVMType<v1f32>;    //  1 x float
 def llvm_v2f32_ty      : LLVMType<v2f32>;    //  2 x float
@@ -326,7 +328,7 @@ def int_sigsetjmp  : Intrinsic<[llvm_i32_ty] , [llvm_ptr_ty, llvm_i32_ty]>;
 def int_siglongjmp : Intrinsic<[], [llvm_ptr_ty, llvm_i32_ty], [IntrNoReturn]>;
 
 // Internal interface for object size checking
-def int_objectsize : Intrinsic<[llvm_anyint_ty], [llvm_ptr_ty, llvm_i1_ty],
+def int_objectsize : Intrinsic<[llvm_anyint_ty], [llvm_anyptr_ty, llvm_i1_ty],
                                [IntrNoMem]>,
                                GCCBuiltin<"__builtin_object_size">;
 
@@ -452,6 +454,19 @@ def int_invariant_end   : Intrinsic<[],
                                     [llvm_descriptor_ty, llvm_i64_ty,
                                      llvm_ptr_ty],
                                     [IntrReadWriteArgMem, NoCapture<2>]>;
+
+//===------------------------ Stackmap Intrinsics -------------------------===//
+//
+def int_experimental_stackmap : Intrinsic<[],
+                                  [llvm_i64_ty, llvm_i32_ty, llvm_vararg_ty]>;
+def int_experimental_patchpoint_void : Intrinsic<[],
+                                                 [llvm_i64_ty, llvm_i32_ty,
+                                                  llvm_ptr_ty, llvm_i32_ty,
+                                                  llvm_vararg_ty]>;
+def int_experimental_patchpoint_i64 : Intrinsic<[llvm_i64_ty],
+                                                [llvm_i64_ty, llvm_i32_ty,
+                                                 llvm_ptr_ty, llvm_i32_ty,
+                                                 llvm_vararg_ty]>;
 
 //===-------------------------- Other Intrinsics --------------------------===//
 //

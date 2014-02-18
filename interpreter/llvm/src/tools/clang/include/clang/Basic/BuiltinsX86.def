@@ -642,6 +642,10 @@ BUILTIN(__builtin_ia32_pdep_di, "ULLiULLiULLi", "")
 BUILTIN(__builtin_ia32_pext_si, "UiUiUi", "")
 BUILTIN(__builtin_ia32_pext_di, "ULLiULLiULLi", "")
 
+// TBM
+BUILTIN(__builtin_ia32_bextri_u32, "UiUiIUi", "")
+BUILTIN(__builtin_ia32_bextri_u64, "ULLiULLiIULLi", "")
+
 // SHA
 BUILTIN(__builtin_ia32_sha1rnds4, "V4iV4iV4iIc", "")
 BUILTIN(__builtin_ia32_sha1nexte, "V4iV4iV4i", "")

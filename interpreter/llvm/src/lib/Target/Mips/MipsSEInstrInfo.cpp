@@ -154,6 +154,10 @@ void MipsSEInstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     else if (Mips::FGR64RegClass.contains(DestReg))
       Opc = Mips::DMTC1;
   }
+  else if (Mips::MSA128BRegClass.contains(DestReg)) { // Copy to MSA reg
+    if (Mips::MSA128BRegClass.contains(SrcReg))
+      Opc = Mips::MOVE_V;
+  }
 
   assert(Opc && "Cannot copy registers");
 
@@ -261,6 +265,27 @@ bool MipsSEInstrInfo::expandPostRAPseudo(MachineBasicBlock::iterator MI) const {
     return false;
   case Mips::RetRA:
     expandRetRA(MBB, MI, Mips::RET);
+    break;
+  case Mips::PseudoMFHI:
+    expandPseudoMFHiLo(MBB, MI, Mips::MFHI);
+    break;
+  case Mips::PseudoMFLO:
+    expandPseudoMFHiLo(MBB, MI, Mips::MFLO);
+    break;
+  case Mips::PseudoMFHI64:
+    expandPseudoMFHiLo(MBB, MI, Mips::MFHI64);
+    break;
+  case Mips::PseudoMFLO64:
+    expandPseudoMFHiLo(MBB, MI, Mips::MFLO64);
+    break;
+  case Mips::PseudoMTLOHI:
+    expandPseudoMTLoHi(MBB, MI, Mips::MTLO, Mips::MTHI, false);
+    break;
+  case Mips::PseudoMTLOHI64:
+    expandPseudoMTLoHi(MBB, MI, Mips::MTLO64, Mips::MTHI64, false);
+    break;
+  case Mips::PseudoMTLOHI_DSP:
+    expandPseudoMTLoHi(MBB, MI, Mips::MTLO_DSP, Mips::MTHI_DSP, true);
     break;
   case Mips::PseudoCVT_S_W:
     expandCvtFPInt(MBB, MI, Mips::CVT_S_W, Mips::MTC1, false);
@@ -410,6 +435,41 @@ MipsSEInstrInfo::compareOpndSize(unsigned Opc,
   return std::make_pair(DstRegSize > SrcRegSize, DstRegSize < SrcRegSize);
 }
 
+void MipsSEInstrInfo::expandPseudoMFHiLo(MachineBasicBlock &MBB,
+                                         MachineBasicBlock::iterator I,
+                                         unsigned NewOpc) const {
+  BuildMI(MBB, I, I->getDebugLoc(), get(NewOpc), I->getOperand(0).getReg());
+}
+
+void MipsSEInstrInfo::expandPseudoMTLoHi(MachineBasicBlock &MBB,
+                                         MachineBasicBlock::iterator I,
+                                         unsigned LoOpc,
+                                         unsigned HiOpc,
+                                         bool HasExplicitDef) const {
+  // Expand
+  //  lo_hi pseudomtlohi $gpr0, $gpr1
+  // to these two instructions:
+  //  mtlo $gpr0
+  //  mthi $gpr1
+
+  DebugLoc DL = I->getDebugLoc();
+  const MachineOperand &SrcLo = I->getOperand(1), &SrcHi = I->getOperand(2);
+  MachineInstrBuilder LoInst = BuildMI(MBB, I, DL, get(LoOpc));
+  MachineInstrBuilder HiInst = BuildMI(MBB, I, DL, get(HiOpc));
+  LoInst.addReg(SrcLo.getReg(), getKillRegState(SrcLo.isKill()));
+  HiInst.addReg(SrcHi.getReg(), getKillRegState(SrcHi.isKill()));
+
+  // Add lo/hi registers if the mtlo/hi instructions created have explicit
+  // def registers.
+  if (HasExplicitDef) {
+    unsigned DstReg = I->getOperand(0).getReg();
+    unsigned DstLo = getRegisterInfo().getSubReg(DstReg, Mips::sub_lo);
+    unsigned DstHi = getRegisterInfo().getSubReg(DstReg, Mips::sub_hi);
+    LoInst.addReg(DstLo, RegState::Define);
+    HiInst.addReg(DstHi, RegState::Define);
+  }
+}
+
 void MipsSEInstrInfo::expandCvtFPInt(MachineBasicBlock &MBB,
                                      MachineBasicBlock::iterator I,
                                      unsigned CvtOpc, unsigned MovOpc,
@@ -460,8 +520,13 @@ void MipsSEInstrInfo::expandBuildPairF64(MachineBasicBlock &MBB,
   DebugLoc dl = I->getDebugLoc();
   const TargetRegisterInfo &TRI = getRegisterInfo();
 
-  // mtc1 Lo, $fp
-  // mtc1 Hi, $fp + 1
+  // For FP32 mode:
+  //   mtc1 Lo, $fp
+  //   mtc1 Hi, $fp + 1
+  // For FP64 mode:
+  //   mtc1 Lo, $fp
+  //   mthc1 Hi, $fp
+
   BuildMI(MBB, I, dl, Mtc1Tdd, TRI.getSubReg(DstReg, Mips::sub_lo))
     .addReg(LoReg);
 

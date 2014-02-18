@@ -14,8 +14,8 @@
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCRelocationInfo.h"
 #include "llvm/MC/MCSymbol.h"
-#include "llvm/Object/MachO.h"
 #include "llvm/Object/ELFObjectFile.h"
+#include "llvm/Object/MachO.h"
 #include "llvm/Support/raw_ostream.h"
 #include <algorithm>
 
@@ -52,10 +52,8 @@ MCMachObjectSymbolizer(MCContext &Ctx, OwningPtr<MCRelocationInfo> &RelInfo,
     : MCObjectSymbolizer(Ctx, RelInfo, MOOF), MOOF(MOOF),
       StubsStart(0), StubsCount(0), StubSize(0), StubsIndSymIndex(0) {
 
-  error_code ec;
-  for (section_iterator SI = MOOF->begin_sections(), SE = MOOF->end_sections();
-       SI != SE; SI.increment(ec)) {
-    if (ec) break;
+  for (section_iterator SI = MOOF->section_begin(), SE = MOOF->section_end();
+       SI != SE; ++SI) {
     StringRef Name; SI->getName(Name);
     if (Name == "__stubs") {
       SectionRef StubsSec = *SI;
@@ -90,13 +88,11 @@ StringRef MCMachObjectSymbolizer::findExternalFunctionAt(uint64_t Addr) {
     MOOF->getIndirectSymbolTableEntry(MOOF->getDysymtabLoadCommand(), StubIdx);
 
   StringRef SymName;
-  symbol_iterator SI = MOOF->begin_symbols();
-  error_code ec;
-  for (uint32_t i = 0; i != SymtabIdx; ++i) {
-    SI.increment(ec);
-  }
+  symbol_iterator SI = MOOF->symbol_begin();
+  for (uint32_t i = 0; i != SymtabIdx; ++i)
+    ++SI;
   SI->getName(SymName);
-  assert(SI != MOOF->end_symbols() && "Stub wasn't found in the symbol table!");
+  assert(SI != MOOF->symbol_end() && "Stub wasn't found in the symbol table!");
   assert(SymName.front() == '_' && "Mach-O symbol doesn't start with '_'!");
   return SymName.substr(1);
 }
@@ -159,10 +155,8 @@ tryAddingSymbolicOperand(MCInst &MI, raw_ostream &cStream,
     return false;
   uint64_t UValue = Value;
   // FIXME: map instead of looping each time?
-  error_code ec;
-  for (symbol_iterator SI = Obj->begin_symbols(), SE = Obj->end_symbols();
-       SI != SE; SI.increment(ec)) {
-    if (ec) break;
+  for (symbol_iterator SI = Obj->symbol_begin(), SE = Obj->symbol_end();
+       SI != SE; ++SI) {
     uint64_t SymAddr; SI->getAddress(SymAddr);
     uint64_t SymSize; SI->getSize(SymSize);
     StringRef SymName; SI->getName(SymName);
@@ -239,11 +233,8 @@ const RelocationRef *MCObjectSymbolizer::findRelocationAt(uint64_t Addr) {
 }
 
 void MCObjectSymbolizer::buildSectionList() {
-  error_code ec;
-  for (section_iterator SI = Obj->begin_sections(), SE = Obj->end_sections();
-                        SI != SE; SI.increment(ec)) {
-    if (ec) break;
-
+  for (section_iterator SI = Obj->section_begin(), SE = Obj->section_end();
+       SI != SE; ++SI) {
     bool RequiredForExec; SI->isRequiredForExecution(RequiredForExec);
     if (RequiredForExec == false)
       continue;
@@ -263,13 +254,10 @@ void MCObjectSymbolizer::buildSectionList() {
 }
 
 void MCObjectSymbolizer::buildRelocationByAddrMap() {
-  error_code ec;
-  for (section_iterator SI = Obj->begin_sections(), SE = Obj->end_sections();
-                        SI != SE; SI.increment(ec)) {
-    if (ec) break;
-
+  for (section_iterator SI = Obj->section_begin(), SE = Obj->section_end();
+       SI != SE; ++SI) {
     section_iterator RelSecI = SI->getRelocatedSection();
-    if (RelSecI == Obj->end_sections())
+    if (RelSecI == Obj->section_end())
       continue;
 
     uint64_t StartAddr; RelSecI->getAddress(StartAddr);
@@ -277,11 +265,9 @@ void MCObjectSymbolizer::buildRelocationByAddrMap() {
     bool RequiredForExec; RelSecI->isRequiredForExecution(RequiredForExec);
     if (RequiredForExec == false || Size == 0)
       continue;
-    for (relocation_iterator RI = SI->begin_relocations(),
-                             RE = SI->end_relocations();
-                             RI != RE;
-                             RI.increment(ec)) {
-      if (ec) break;
+    for (relocation_iterator RI = SI->relocation_begin(),
+                             RE = SI->relocation_end();
+         RI != RE; ++RI) {
       // FIXME: libObject is inconsistent regarding error handling. The
       // overwhelming majority of methods always return object_error::success,
       // and assert for simple errors.. Here, ELFObjectFile::getRelocationOffset

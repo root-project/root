@@ -47,9 +47,12 @@ std::string X86_MC::ParseX86Triple(StringRef TT) {
   Triple TheTriple(TT);
   std::string FS;
   if (TheTriple.getArch() == Triple::x86_64)
-    FS = "+64bit-mode";
+    FS = "+64bit-mode,-32bit-mode,-16bit-mode";
+  else if (TheTriple.getEnvironment() != Triple::CODE16)
+    FS = "-64bit-mode,+32bit-mode,-16bit-mode";
   else
-    FS = "-64bit-mode";
+    FS = "-64bit-mode,-32bit-mode,+16bit-mode";
+
   return FS;
 }
 
@@ -268,7 +271,7 @@ static MCAsmInfo *createX86MCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
   bool is64Bit = TheTriple.getArch() == Triple::x86_64;
 
   MCAsmInfo *MAI;
-  if (TheTriple.isOSDarwin() || TheTriple.getEnvironment() == Triple::MachO) {
+  if (TheTriple.isOSBinFormatMachO()) {
     if (is64Bit)
       MAI = new X86_64MCAsmInfoDarwin(TheTriple);
     else
@@ -358,11 +361,12 @@ static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
                                     MCContext &Ctx, MCAsmBackend &MAB,
                                     raw_ostream &_OS,
                                     MCCodeEmitter *_Emitter,
+                                    const MCSubtargetInfo &STI,
                                     bool RelaxAll,
                                     bool NoExecStack) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin() || TheTriple.getEnvironment() == Triple::MachO)
+  if (TheTriple.isOSBinFormatMachO())
     return createMachOStreamer(Ctx, MAB, _OS, _Emitter, RelaxAll);
 
   if (TheTriple.isOSWindows() && TheTriple.getEnvironment() != Triple::ELF)
@@ -387,7 +391,7 @@ static MCInstPrinter *createX86MCInstPrinter(const Target &T,
 static MCRelocationInfo *createX86MCRelocationInfo(StringRef TT,
                                                    MCContext &Ctx) {
   Triple TheTriple(TT);
-  if (TheTriple.isEnvironmentMachO() && TheTriple.getArch() == Triple::x86_64)
+  if (TheTriple.isOSBinFormatMachO() && TheTriple.getArch() == Triple::x86_64)
     return createX86_64MachORelocationInfo(Ctx);
   else if (TheTriple.isOSBinFormatELF())
     return createX86_64ELFRelocationInfo(Ctx);

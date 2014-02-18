@@ -508,6 +508,16 @@ public:
                                       SmallVectorImpl<
                                         PartialDiagnosticAt> &Diags);
 
+  /// isPotentialConstantExprUnevaluted - Return true if this expression might
+  /// be usable in a constant expression in C++11 in an unevaluated context, if
+  /// it were in function FD marked constexpr. Return false if the function can
+  /// never produce a constant expression, along with diagnostics describing
+  /// why not.
+  static bool isPotentialConstantExprUnevaluated(Expr *E,
+                                                 const FunctionDecl *FD,
+                                                 SmallVectorImpl<
+                                                   PartialDiagnosticAt> &Diags);
+
   /// isConstantInitializer - Returns true if this expression can be emitted to
   /// IR as a constant, and thus can be used as a constant initializer in C.
   bool isConstantInitializer(ASTContext &Ctx, bool ForRef) const;
@@ -579,15 +589,14 @@ public:
   /// \brief Determine whether this expression involves a call to any function
   /// that is not trivial.
   bool hasNonTrivialCall(ASTContext &Ctx);
-  
+
   /// EvaluateKnownConstInt - Call EvaluateAsRValue and return the folded
   /// integer. This must be called on an expression that constant folds to an
   /// integer.
   llvm::APSInt EvaluateKnownConstInt(const ASTContext &Ctx,
                           SmallVectorImpl<PartialDiagnosticAt> *Diag=0) const;
-  
-  void EvaluateForOverflow(const ASTContext &Ctx,
-                           SmallVectorImpl<PartialDiagnosticAt> *Diag) const;
+
+  void EvaluateForOverflow(const ASTContext &Ctx) const;
 
   /// EvaluateAsLValue - Evaluate an expression to see if we can fold it to an
   /// lvalue with link time known address, with no side-effects.
@@ -600,6 +609,14 @@ public:
   bool EvaluateAsInitializer(APValue &Result, const ASTContext &Ctx,
                              const VarDecl *VD,
                              SmallVectorImpl<PartialDiagnosticAt> &Notes) const;
+
+  /// EvaluateWithSubstitution - Evaluate an expression as if from the context
+  /// of a call to the given function with the given arguments, inside an
+  /// unevaluated context. Returns true if the expression could be folded to a
+  /// constant.
+  bool EvaluateWithSubstitution(APValue &Value, ASTContext &Ctx,
+                                const FunctionDecl *Callee,
+                                llvm::ArrayRef<const Expr*> Args) const;
 
   /// \brief Enumeration used to describe the kind of Null pointer constant
   /// returned from \c isNullPointerConstant().
@@ -765,11 +782,6 @@ public:
       SmallVectorImpl<const Expr *> &CommaLHS,
       SmallVectorImpl<SubobjectAdjustment> &Adjustments) const;
 
-  /// Skip irrelevant expressions to find what should be materialize for
-  /// binding with a reference.
-  const Expr *
-  findMaterializedTemporary(const MaterializeTemporaryExpr *&MTE) const;
-
   static bool classof(const Stmt *T) {
     return T->getStmtClass() >= firstExprConstant &&
            T->getStmtClass() <= lastExprConstant;
@@ -893,7 +905,7 @@ class DeclRefExpr : public Expr {
   bool hasFoundDecl() const { return DeclRefExprBits.HasFoundDecl; }
 
   /// \brief Helper to retrieve the optional NamedDecl through which this
-  /// reference occured.
+  /// reference occurred.
   NamedDecl *&getInternalFoundDecl() {
     assert(hasFoundDecl());
     if (hasQualifier())
@@ -902,7 +914,7 @@ class DeclRefExpr : public Expr {
   }
 
   /// \brief Helper to retrieve the optional NamedDecl through which this
-  /// reference occured.
+  /// reference occurred.
   NamedDecl *getInternalFoundDecl() const {
     return const_cast<DeclRefExpr *>(this)->getInternalFoundDecl();
   }
@@ -1000,7 +1012,7 @@ public:
     return getInternalQualifierLoc();
   }
 
-  /// \brief Get the NamedDecl through which this reference occured.
+  /// \brief Get the NamedDecl through which this reference occurred.
   ///
   /// This Decl may be different from the ValueDecl actually referred to in the
   /// presence of using declarations, etc. It always returns non-NULL, and may
@@ -1151,6 +1163,7 @@ public:
     Func,
     Function,
     LFunction,  // Same as Function, but as wide string.
+    FuncDName,
     PrettyFunction,
     /// PrettyFunctionNoVirtual - The same as PrettyFunction, except that the
     /// 'virtual' keyword is omitted for virtual member functions.
@@ -2238,9 +2251,9 @@ public:
   /// this function call.
   unsigned getNumCommas() const { return NumArgs ? NumArgs - 1 : 0; }
 
-  /// isBuiltinCall - If this is a call to a builtin, return the builtin ID.  If
-  /// not, return 0.
-  unsigned isBuiltinCall() const;
+  /// getBuiltinCallee - If this is a call to a builtin, return the builtin ID
+  /// of the callee. If not, return 0.
+  unsigned getBuiltinCallee() const;
 
   /// \brief Returns \c true if this is a call to a builtin which does not
   /// evaluate side-effects within its arguments.
@@ -2633,7 +2646,7 @@ public:
 private:
   Stmt *Op;
 
-  void CheckCastConsistency() const;
+  bool CastConsistency() const;
 
   const CXXBaseSpecifier * const *path_buffer() const {
     return const_cast<CastExpr*>(this)->path_buffer();
@@ -2664,9 +2677,7 @@ protected:
     assert(kind != CK_Invalid && "creating cast with invalid cast kind");
     CastExprBits.Kind = kind;
     setBasePathSize(BasePathSize);
-#ifndef NDEBUG
-    CheckCastConsistency();
-#endif
+    assert(CastConsistency());
   }
 
   /// \brief Construct an empty cast.
@@ -3733,7 +3744,7 @@ class InitListExpr : public Expr {
   SourceLocation LBraceLoc, RBraceLoc;
 
   /// The alternative form of the initializer list (if it exists).
-  /// The int part of the pair stores whether this initalizer list is
+  /// The int part of the pair stores whether this initializer list is
   /// in semantic form. If not null, the pointer points to:
   ///   - the syntactic form, if this is in semantic form;
   ///   - the semantic form, if this is in syntactic form.
@@ -3774,6 +3785,14 @@ public:
   void setInit(unsigned Init, Expr *expr) {
     assert(Init < getNumInits() && "Initializer access out of range!");
     InitExprs[Init] = expr;
+
+    if (expr) {
+      ExprBits.TypeDependent |= expr->isTypeDependent();
+      ExprBits.ValueDependent |= expr->isValueDependent();
+      ExprBits.InstantiationDependent |= expr->isInstantiationDependent();
+      ExprBits.ContainsUnexpandedParameterPack |=
+          expr->containsUnexpandedParameterPack();
+    }
   }
 
   /// \brief Reserve space for some number of initializers.
@@ -3824,6 +3843,10 @@ public:
     return const_cast<InitListExpr *>(this)->getInitializedFieldInUnion();
   }
   void setInitializedFieldInUnion(FieldDecl *FD) {
+    assert((FD == 0
+            || getInitializedFieldInUnion() == 0
+            || getInitializedFieldInUnion() == FD)
+           && "Only one field of a union may be initialized at a time!");
     ArrayFillerOrUnionFieldInit = FD;
   }
 
@@ -3914,7 +3937,7 @@ public:
 /// The InitListExpr contains three DesignatedInitExprs, the first of
 /// which covers @c [2].y=1.0. This DesignatedInitExpr will have two
 /// designators, one array designator for @c [2] followed by one field
-/// designator for @c .y. The initalization expression will be 1.0.
+/// designator for @c .y. The initialization expression will be 1.0.
 class DesignatedInitExpr : public Expr {
 public:
   /// \brief Forward declaration of the Designator class.
@@ -4182,18 +4205,14 @@ public:
   /// and array-range designators.
   unsigned getNumSubExprs() const { return NumSubExprs; }
 
-  Expr *getSubExpr(unsigned Idx) {
+  Expr *getSubExpr(unsigned Idx) const {
     assert(Idx < NumSubExprs && "Subscript out of range");
-    char* Ptr = static_cast<char*>(static_cast<void *>(this));
-    Ptr += sizeof(DesignatedInitExpr);
-    return reinterpret_cast<Expr**>(reinterpret_cast<void**>(Ptr))[Idx];
+    return cast<Expr>(reinterpret_cast<Stmt *const *>(this + 1)[Idx]);
   }
 
   void setSubExpr(unsigned Idx, Expr *E) {
     assert(Idx < NumSubExprs && "Subscript out of range");
-    char* Ptr = static_cast<char*>(static_cast<void *>(this));
-    Ptr += sizeof(DesignatedInitExpr);
-    reinterpret_cast<Expr**>(reinterpret_cast<void**>(Ptr))[Idx] = E;
+    reinterpret_cast<Stmt **>(this + 1)[Idx] = E;
   }
 
   /// \brief Replaces the designator at index @p Idx with the series
@@ -4617,7 +4636,7 @@ class PseudoObjectExpr : public Expr {
 public:
   /// NoResult - A value for the result index indicating that there is
   /// no semantic result.
-  enum { NoResult = ~0U };
+  enum LLVM_ENUM_INT_TYPE(unsigned) { NoResult = ~0U };
 
   static PseudoObjectExpr *Create(const ASTContext &Context, Expr *syntactic,
                                   ArrayRef<Expr*> semantic,

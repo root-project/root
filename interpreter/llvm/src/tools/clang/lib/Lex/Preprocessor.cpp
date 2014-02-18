@@ -26,7 +26,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Lex/Preprocessor.h"
-#include "clang/Lex/MacroArgs.h"
 #include "clang/Basic/FileManager.h"
 #include "clang/Basic/SourceManager.h"
 #include "clang/Basic/TargetInfo.h"
@@ -35,6 +34,7 @@
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/LexDiagnostic.h"
 #include "clang/Lex/LiteralSupport.h"
+#include "clang/Lex/MacroArgs.h"
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/ModuleLoader.h"
 #include "clang/Lex/Pragma.h"
@@ -42,8 +42,8 @@
 #include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Lex/ScratchBuffer.h"
 #include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/Capacity.h"
 #include "llvm/Support/ConvertUTF.h"
@@ -65,9 +65,10 @@ Preprocessor::Preprocessor(IntrusiveRefCntPtr<PreprocessorOptions> PPOpts,
       TheModuleLoader(TheModuleLoader), ExternalSource(0),
       Identifiers(opts, IILookup), IncrementalProcessing(IncrProcessing),
       CodeComplete(0), CodeCompletionFile(0), CodeCompletionOffset(0),
+      LastTokenWasAt(false), ModuleImportExpectsIdentifier(false),
       CodeCompletionReached(0), SkipMainFilePreamble(0, true), CurPPLexer(0),
-      CurDirLookup(0), CurLexerKind(CLK_Lexer), Callbacks(0),
-      MacroArgCache(0), Record(0), MIChainHead(0), MICache(0),
+      CurDirLookup(0), CurLexerKind(CLK_Lexer), CurSubmodule(0),
+      Callbacks(0), MacroArgCache(0), Record(0), MIChainHead(0), MICache(0),
       DeserialMIChainHead(0) {
   OwnsHeaderSearch = OwnsHeaders;
   
@@ -719,14 +720,15 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
   if (II.isExtensionToken() && !DisableMacroExpansion)
     Diag(Identifier, diag::ext_token_used);
   
-  // If this is the 'import' contextual keyword, note
+  // If this is the 'import' contextual keyword following an '@', note
   // that the next token indicates a module name.
   //
   // Note that we do not treat 'import' as a contextual
   // keyword when we're in a caching lexer, because caching lexers only get
   // used in contexts where import declarations are disallowed.
-  if (II.isModulesImport() && !InMacroArgs && !DisableMacroExpansion &&
-      getLangOpts().Modules && CurLexerKind != CLK_CachingLexer) {
+  if (LastTokenWasAt && II.isModulesImport() && !InMacroArgs && 
+      !DisableMacroExpansion && getLangOpts().Modules && 
+      CurLexerKind != CLK_CachingLexer) {
     ModuleImportLoc = Identifier.getLocation();
     ModuleImportPath.clear();
     ModuleImportExpectsIdentifier = true;
@@ -759,6 +761,8 @@ void Preprocessor::Lex(Token &Result) {
       break;
     }
   } while (!ReturnedToken);
+
+  LastTokenWasAt = Result.is(tok::at);
 }
 
 
@@ -844,6 +848,24 @@ bool Preprocessor::FinishLexStringLiteral(Token &Result, std::string &String,
   }
 
   String = Literal.GetString();
+  return true;
+}
+
+bool Preprocessor::parseSimpleIntegerLiteral(Token &Tok, uint64_t &Value) {
+  assert(Tok.is(tok::numeric_constant));
+  SmallString<8> IntegerBuffer;
+  bool NumberInvalid = false;
+  StringRef Spelling = getSpelling(Tok, IntegerBuffer, &NumberInvalid);
+  if (NumberInvalid)
+    return false;
+  NumericLiteralParser Literal(Spelling, Tok.getLocation(), *this);
+  if (Literal.hadError || !Literal.isIntegerLiteral() || Literal.hasUDSuffix())
+    return false;
+  llvm::APInt APVal(64, 0);
+  if (Literal.GetIntegerValue(APVal))
+    return false;
+  Lex(Tok);
+  Value = APVal.getLimitedValue();
   return true;
 }
 

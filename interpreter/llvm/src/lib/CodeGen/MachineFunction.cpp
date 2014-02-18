@@ -17,7 +17,6 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Analysis/ConstantFolding.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/CodeGen/MachineConstantPool.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -425,7 +424,16 @@ unsigned MachineFunction::addLiveIn(unsigned PReg,
   MachineRegisterInfo &MRI = getRegInfo();
   unsigned VReg = MRI.getLiveInVirtReg(PReg);
   if (VReg) {
-    assert(MRI.getRegClass(VReg) == RC && "Register class mismatch!");
+    const TargetRegisterClass *VRegRC = MRI.getRegClass(VReg);
+    (void)VRegRC;
+    // A physical register can be added several times.
+    // Between two calls, the register class of the related virtual register
+    // may have been constrained to match some operation constraints.
+    // In that case, check that the current register class includes the
+    // physical register and is a sub class of the specified RC.
+    assert((VRegRC == RC || (VRegRC->contains(PReg) &&
+                             RC->hasSubClassEq(VRegRC))) &&
+            "Register class mismatch!");
     return VReg;
   }
   VReg = MRI.createVirtualRegister(RC);
@@ -438,12 +446,12 @@ unsigned MachineFunction::addLiveIn(unsigned PReg,
 /// normal 'L' label is returned.
 MCSymbol *MachineFunction::getJTISymbol(unsigned JTI, MCContext &Ctx, 
                                         bool isLinkerPrivate) const {
+  const DataLayout *DL = getTarget().getDataLayout();
   assert(JumpTableInfo && "No jump tables");
   assert(JTI < JumpTableInfo->getJumpTables().size() && "Invalid JTI!");
-  const MCAsmInfo &MAI = *getTarget().getMCAsmInfo();
 
-  const char *Prefix = isLinkerPrivate ? MAI.getLinkerPrivateGlobalPrefix() :
-                                         MAI.getPrivateGlobalPrefix();
+  const char *Prefix = isLinkerPrivate ? DL->getLinkerPrivateGlobalPrefix() :
+                                         DL->getPrivateGlobalPrefix();
   SmallString<60> Name;
   raw_svector_ostream(Name)
     << Prefix << "JTI" << getFunctionNumber() << '_' << JTI;
@@ -453,8 +461,8 @@ MCSymbol *MachineFunction::getJTISymbol(unsigned JTI, MCContext &Ctx,
 /// getPICBaseSymbol - Return a function-local symbol to represent the PIC
 /// base.
 MCSymbol *MachineFunction::getPICBaseSymbol() const {
-  const MCAsmInfo &MAI = *Target.getMCAsmInfo();
-  return Ctx.GetOrCreateSymbol(Twine(MAI.getPrivateGlobalPrefix())+
+  const DataLayout *DL = getTarget().getDataLayout();
+  return Ctx.GetOrCreateSymbol(Twine(DL->getPrivateGlobalPrefix())+
                                Twine(getFunctionNumber())+"$pb");
 }
 
@@ -490,14 +498,13 @@ static inline unsigned clampStackAlignment(bool ShouldClamp, unsigned Align,
 /// a nonnegative identifier to represent it.
 ///
 int MachineFrameInfo::CreateStackObject(uint64_t Size, unsigned Alignment,
-                      bool isSS, bool MayNeedSP, const AllocaInst *Alloca) {
+                      bool isSS, const AllocaInst *Alloca) {
   assert(Size != 0 && "Cannot allocate zero size stack objects!");
   Alignment =
     clampStackAlignment(!getFrameLowering()->isStackRealignable() ||
                           !RealignOption,
                         Alignment, getFrameLowering()->getStackAlignment());
-  Objects.push_back(StackObject(Size, Alignment, 0, false, isSS, MayNeedSP,
-                                Alloca));
+  Objects.push_back(StackObject(Size, Alignment, 0, false, isSS, Alloca));
   int Index = (int)Objects.size() - NumFixedObjects - 1;
   assert(Index >= 0 && "Bad frame index!");
   ensureMaxAlignment(Alignment);
@@ -514,7 +521,7 @@ int MachineFrameInfo::CreateSpillStackObject(uint64_t Size,
     clampStackAlignment(!getFrameLowering()->isStackRealignable() ||
                           !RealignOption,
                         Alignment, getFrameLowering()->getStackAlignment()); 
-  CreateStackObject(Size, Alignment, true, false);
+  CreateStackObject(Size, Alignment, true);
   int Index = (int)Objects.size() - NumFixedObjects - 1;
   ensureMaxAlignment(Alignment);
   return Index;
@@ -525,13 +532,14 @@ int MachineFrameInfo::CreateSpillStackObject(uint64_t Size,
 /// variable sized object is created, whether or not the index returned is
 /// actually used.
 ///
-int MachineFrameInfo::CreateVariableSizedObject(unsigned Alignment) {
+int MachineFrameInfo::CreateVariableSizedObject(unsigned Alignment,
+                                                const AllocaInst *Alloca) {
   HasVarSizedObjects = true;
   Alignment =
     clampStackAlignment(!getFrameLowering()->isStackRealignable() ||
                           !RealignOption,
                         Alignment, getFrameLowering()->getStackAlignment()); 
-  Objects.push_back(StackObject(0, Alignment, 0, false, false, true, 0));
+  Objects.push_back(StackObject(0, Alignment, 0, false, false, Alloca));
   ensureMaxAlignment(Alignment);
   return (int)Objects.size()-NumFixedObjects-1;
 }
@@ -556,7 +564,6 @@ int MachineFrameInfo::CreateFixedObject(uint64_t Size, int64_t SPOffset,
                         Align, getFrameLowering()->getStackAlignment()); 
   Objects.insert(Objects.begin(), StackObject(Size, Align, SPOffset, Immutable,
                                               /*isSS*/   false,
-                                              /*NeedSP*/ false,
                                               /*Alloca*/ 0));
   return -++NumFixedObjects;
 }
@@ -910,7 +917,7 @@ void MachineConstantPool::print(raw_ostream &OS) const {
     if (Constants[i].isMachineConstantPoolEntry())
       Constants[i].Val.MachineCPVal->print(OS);
     else
-      WriteAsOperand(OS, Constants[i].Val.ConstVal, /*PrintType=*/false);
+      Constants[i].Val.ConstVal->printAsOperand(OS, /*PrintType=*/false);
     OS << ", align=" << Constants[i].getAlignment();
     OS << "\n";
   }

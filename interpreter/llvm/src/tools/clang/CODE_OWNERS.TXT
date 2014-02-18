@@ -8,6 +8,10 @@ beautification by scripts.  The fields are: name (N), email (E), web-address
 (W), PGP key ID and fingerprint (P), description (D), and snail-mail address
 (S).
 
+N: Aaron Ballman
+E: aaron@aaronballman.com
+D: Clang attributes
+
 N: Chandler Carruth
 E: chandlerc@gmail.com
 E: chandlerc@google.com
@@ -32,7 +36,7 @@ E: rjmccall@apple.com
 D: Clang LLVM IR generation
 
 N: Chad Rosier
-E: chad.rosier@gmail.com
+E: mcrosier@codeaurora.org
 D: MS-inline asm, and the compiler driver
 
 N: Richard Smith

@@ -40,16 +40,18 @@ bool CXXTypeidExpr::isPotentiallyEvaluated() const {
   return false;
 }
 
-QualType CXXTypeidExpr::getTypeOperand() const {
+QualType CXXTypeidExpr::getTypeOperand(ASTContext &Context) const {
   assert(isTypeOperand() && "Cannot call getTypeOperand for typeid(expr)");
-  return Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType()
-                                                        .getUnqualifiedType();
+  Qualifiers Quals;
+  return Context.getUnqualifiedArrayType(
+      Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType(), Quals);
 }
 
-QualType CXXUuidofExpr::getTypeOperand() const {
+QualType CXXUuidofExpr::getTypeOperand(ASTContext &Context) const {
   assert(isTypeOperand() && "Cannot call getTypeOperand for __uuidof(expr)");
-  return Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType()
-                                                        .getUnqualifiedType();
+  Qualifiers Quals;
+  return Context.getUnqualifiedArrayType(
+      Operand.get<TypeSourceInfo *>()->getType().getNonReferenceType(), Quals);
 }
 
 // static
@@ -60,7 +62,7 @@ UuidAttr *CXXUuidofExpr::GetUuidAttrOfType(QualType QT,
   if (QT->isPointerType() || QT->isReferenceType())
     Ty = QT->getPointeeType().getTypePtr();
   else if (QT->isArrayType())
-    Ty = cast<ArrayType>(QT)->getElementType().getTypePtr();
+    Ty = Ty->getBaseElementTypeUnsafe();
 
   // Loop all record redeclaration looking for an uuid attribute.
   CXXRecordDecl *RD = Ty->getAsCXXRecordDecl();
@@ -118,7 +120,7 @@ UuidAttr *CXXUuidofExpr::GetUuidAttrOfType(QualType QT,
 StringRef CXXUuidofExpr::getUuidAsStringRef(ASTContext &Context) const {
   StringRef Uuid;
   if (isTypeOperand())
-    Uuid = CXXUuidofExpr::GetUuidAttrOfType(getTypeOperand())->getGuid();
+    Uuid = CXXUuidofExpr::GetUuidAttrOfType(getTypeOperand(Context))->getGuid();
   else {
     // Special case: __uuidof(0) means an all-zero GUID.
     Expr *Op = getExprOperand();
@@ -454,6 +456,7 @@ DependentScopeDeclRefExpr::Create(const ASTContext &C,
                                   SourceLocation TemplateKWLoc,
                                   const DeclarationNameInfo &NameInfo,
                                   const TemplateArgumentListInfo *Args) {
+  assert(QualifierLoc && "should be created for dependent qualifiers");
   std::size_t size = sizeof(DependentScopeDeclRefExpr);
   if (Args)
     size += ASTTemplateKWAndArgsInfo::sizeFor(Args->size());
@@ -903,25 +906,14 @@ LambdaExpr::Capture::Capture(SourceLocation Loc, bool Implicit,
   case LCK_ByRef:
     assert(Var && "capture must have a variable!");
     break;
-
-  case LCK_Init:
-    llvm_unreachable("don't use this constructor for an init-capture");
   }
   DeclAndBits.setInt(Bits);
 }
-
-LambdaExpr::Capture::Capture(FieldDecl *Field)
-    : DeclAndBits(Field,
-                  Field->getType()->isReferenceType() ? 0 : Capture_ByCopy),
-      Loc(Field->getLocation()), EllipsisLoc() {}
 
 LambdaCaptureKind LambdaExpr::Capture::getCaptureKind() const {
   Decl *D = DeclAndBits.getPointer();
   if (!D)
     return LCK_This;
-
-  if (isa<FieldDecl>(D))
-    return LCK_Init;
 
   return (DeclAndBits.getInt() & Capture_ByCopy) ? LCK_ByCopy : LCK_ByRef;
 }
@@ -1076,13 +1068,13 @@ CXXRecordDecl *LambdaExpr::getLambdaClass() const {
 
 CXXMethodDecl *LambdaExpr::getCallOperator() const {
   CXXRecordDecl *Record = getLambdaClass();
-  DeclarationName Name
-    = Record->getASTContext().DeclarationNames.getCXXOperatorName(OO_Call);
-  DeclContext::lookup_result Calls = Record->lookup(Name);
-  assert(!Calls.empty() && "Missing lambda call operator!");
-  assert(Calls.size() == 1 && "More than one lambda call operator!");
-  CXXMethodDecl *Result = cast<CXXMethodDecl>(Calls.front());
-  return Result;
+  return Record->getLambdaCallOperator();  
+}
+
+TemplateParameterList *LambdaExpr::getTemplateParameterList() const {
+  CXXRecordDecl *Record = getLambdaClass();
+  return Record->getGenericLambdaTemplateParameterList();
+
 }
 
 CompoundStmt *LambdaExpr::getBody() const {
@@ -1299,16 +1291,11 @@ static bool hasOnlyNonStaticMemberFunctions(UnresolvedSetIterator begin,
     NamedDecl *decl = *begin;
     if (isa<UnresolvedUsingValueDecl>(decl))
       return false;
-    if (isa<UsingShadowDecl>(decl))
-      decl = cast<UsingShadowDecl>(decl)->getUnderlyingDecl();
 
     // Unresolved member expressions should only contain methods and
     // method templates.
-    assert(isa<CXXMethodDecl>(decl) || isa<FunctionTemplateDecl>(decl));
-
-    if (isa<FunctionTemplateDecl>(decl))
-      decl = cast<FunctionTemplateDecl>(decl)->getTemplatedDecl();
-    if (cast<CXXMethodDecl>(decl)->isStatic())
+    if (cast<CXXMethodDecl>(decl->getUnderlyingDecl()->getAsFunction())
+            ->isStatic())
       return false;
   } while (++begin != end);
 

@@ -28,28 +28,23 @@ class MCSymbolData;
 class raw_ostream;
 
 class MCELFStreamer : public MCObjectStreamer {
-protected:
-  MCELFStreamer(StreamerKind Kind, MCContext &Context, MCAsmBackend &TAB,
-                raw_ostream &OS, MCCodeEmitter *Emitter)
-      : MCObjectStreamer(Kind, Context, TAB, OS, Emitter) {}
-
 public:
   MCELFStreamer(MCContext &Context, MCAsmBackend &TAB, raw_ostream &OS,
                 MCCodeEmitter *Emitter)
-      : MCObjectStreamer(SK_ELFStreamer, Context, TAB, OS, Emitter) {}
+      : MCObjectStreamer(Context, TAB, OS, Emitter),
+        SeenIdent(false) {}
 
   MCELFStreamer(MCContext &Context, MCAsmBackend &TAB, raw_ostream &OS,
                 MCCodeEmitter *Emitter, MCAssembler *Assembler)
-      : MCObjectStreamer(SK_ELFStreamer, Context, TAB, OS, Emitter,
-                         Assembler) {}
+      : MCObjectStreamer(Context, TAB, OS, Emitter, Assembler),
+        SeenIdent(false) {}
 
   virtual ~MCELFStreamer();
 
   /// @name MCStreamer Interface
   /// @{
 
-  virtual void InitSections();
-  virtual void InitToTextSection();
+  virtual void InitSections(bool Force);
   virtual void ChangeSection(const MCSection *Section,
                              const MCExpr *Subsection);
   virtual void EmitLabel(MCSymbol *Symbol);
@@ -81,28 +76,25 @@ public:
 
   virtual void EmitFileDirective(StringRef Filename);
 
-  virtual void EmitTCEntry(const MCSymbol &S);
+  virtual void EmitIdent(StringRef IdentString);
 
   virtual void EmitValueToAlignment(unsigned, int64_t, unsigned, unsigned);
 
   virtual void Flush();
 
   virtual void FinishImpl();
-  /// @}
-
-  static bool classof(const MCStreamer *S) {
-    return S->getKind() == SK_ELFStreamer || S->getKind() == SK_ARMELFStreamer;
-  }
 
 private:
-  virtual void EmitInstToFragment(const MCInst &Inst);
-  virtual void EmitInstToData(const MCInst &Inst);
+  virtual void EmitInstToFragment(const MCInst &Inst, const MCSubtargetInfo &);
+  virtual void EmitInstToData(const MCInst &Inst, const MCSubtargetInfo &);
 
   virtual void EmitBundleAlignMode(unsigned AlignPow2);
   virtual void EmitBundleLock(bool AlignToEnd);
   virtual void EmitBundleUnlock();
 
   void fixSymbolsInTLSFixups(const MCExpr *expr);
+
+  bool SeenIdent;
 
   struct LocalCommon {
     MCSymbolData *SD;
@@ -113,14 +105,12 @@ private:
   std::vector<LocalCommon> LocalCommons;
 
   SmallPtrSet<MCSymbol *, 16> BindingExplicitlySet;
-
-
-  void SetSection(StringRef Section, unsigned Type, unsigned Flags,
-                  SectionKind Kind);
-  void SetSectionData();
-  void SetSectionText();
-  void SetSectionBss();
 };
+
+MCELFStreamer *createARMELFStreamer(MCContext &Context, MCAsmBackend &TAB,
+                                    raw_ostream &OS, MCCodeEmitter *Emitter,
+                                    bool RelaxAll, bool NoExecStack,
+                                    bool IsThumb);
 
 } // end namespace llvm
 

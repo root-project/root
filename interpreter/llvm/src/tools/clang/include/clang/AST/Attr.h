@@ -15,6 +15,7 @@
 #define LLVM_CLANG_AST_ATTR_H
 
 #include "clang/AST/AttrIterator.h"
+#include "clang/AST/Decl.h"
 #include "clang/AST/Type.h"
 #include "clang/Basic/AttrKinds.h"
 #include "clang/Basic/LLVM.h"
@@ -47,10 +48,9 @@ protected:
   /// An index into the spelling list of an
   /// attribute defined in Attr.td file.
   unsigned SpellingListIndex : 4;
-
   bool Inherited : 1;
-
   bool IsPackExpansion : 1;
+  bool Implicit : 1;
 
   virtual ~Attr();
 
@@ -75,7 +75,7 @@ public:
 protected:
   Attr(attr::Kind AK, SourceRange R, unsigned SpellingListIndex = 0)
     : Range(R), AttrKind(AK), SpellingListIndex(SpellingListIndex),
-      Inherited(false), IsPackExpansion(false) {}
+      Inherited(false), IsPackExpansion(false), Implicit(false) {}
 
 public:
 
@@ -84,12 +84,18 @@ public:
   }
   
   unsigned getSpellingListIndex() const { return SpellingListIndex; }
+  virtual const char *getSpelling() const = 0;
 
   SourceLocation getLocation() const { return Range.getBegin(); }
   SourceRange getRange() const { return Range; }
   void setRange(SourceRange R) { Range = R; }
 
   bool isInherited() const { return Inherited; }
+
+  /// \brief Returns true if the attribute has been implicitly created instead
+  /// of explicitly written by the user.
+  bool isImplicit() const { return Implicit; }
+  void setImplicit(bool I) { Implicit = I; }
 
   void setPackExpansion(bool PE) { IsPackExpansion = PE; }
   bool isPackExpansion() const { return IsPackExpansion; }
@@ -102,6 +108,11 @@ public:
   // Pretty print this attribute.
   virtual void printPretty(raw_ostream &OS,
                            const PrintingPolicy &Policy) const = 0;
+
+  /// \brief By default, attributes cannot be duplicated when being merged;
+  /// however, an attribute can override this. Returns true if the attribute
+  /// can be duplicated when merging.
+  virtual bool duplicatesAllowed() const { return false; }
 };
 
 class InheritableAttr : public Attr {
@@ -135,23 +146,21 @@ public:
   }
 };
 
-class MSInheritanceAttr : public InheritableAttr {
-  virtual void anchor();
-protected:
-  MSInheritanceAttr(attr::Kind AK, SourceRange R, unsigned SpellingListIndex = 0)
-    : InheritableAttr(AK, R, SpellingListIndex) {}
-
-public:
-  // Implement isa/cast/dyncast/etc.
-  static bool classof(const Attr *A) {
-    // Relies on relative order of enum emission with respect to param attrs.
-    return (A->getKind() <= attr::LAST_MS_INHERITANCE &&
-            A->getKind() > attr::LAST_INHERITABLE_PARAM);
-  }
-};
-
 #include "clang/AST/Attrs.inc"
 
+inline const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
+                                           const Attr *At) {
+  DB.AddTaggedVal(reinterpret_cast<intptr_t>(At),
+                  DiagnosticsEngine::ak_attr);
+  return DB;
+}
+
+inline const PartialDiagnostic &operator<<(const PartialDiagnostic &PD,
+                                           const Attr *At) {
+  PD.AddTaggedVal(reinterpret_cast<intptr_t>(At),
+                  DiagnosticsEngine::ak_attr);
+  return PD;
+}
 }  // end namespace clang
 
 #endif

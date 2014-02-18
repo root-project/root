@@ -16,6 +16,7 @@
 #include "CGCXXABI.h"
 #include "CGDebugInfo.h"
 #include "CGObjCRuntime.h"
+#include "clang/CodeGen/CGFunctionInfo.h"
 #include "clang/Frontend/CodeGenOptions.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/Support/CallSite.h"
@@ -86,7 +87,8 @@ RValue CodeGenFunction::EmitCXXMemberCallExpr(const CXXMemberCallExpr *CE,
     // The method is static, emit it as we would a regular call.
     llvm::Value *Callee = CGM.GetAddrOfFunction(MD);
     return EmitCall(getContext().getPointerType(MD->getType()), Callee,
-                    ReturnValue, CE->arg_begin(), CE->arg_end());
+                    CE->getLocStart(), ReturnValue, CE->arg_begin(),
+                    CE->arg_end());
   }
 
   // Compute the object pointer.
@@ -117,8 +119,8 @@ RValue CodeGenFunction::EmitCXXMemberCallExpr(const CXXMemberCallExpr *CE,
     // type of MD and has a prefix.
     // For now we just avoid devirtualizing these covariant cases.
     if (DevirtualizedMethod &&
-        DevirtualizedMethod->getResultType().getCanonicalType() !=
-        MD->getResultType().getCanonicalType())
+        DevirtualizedMethod->getReturnType().getCanonicalType() !=
+            MD->getReturnType().getCanonicalType())
       DevirtualizedMethod = NULL;
   }
 
@@ -272,8 +274,8 @@ CodeGenFunction::EmitCXXMemberPointerCallExpr(const CXXMemberCallExpr *E,
   
   // And the rest of the call args
   EmitCallArgs(Args, FPT, E->arg_begin(), E->arg_end());
-  return EmitCall(CGM.getTypes().arrangeCXXMethodCall(Args, FPT, required), Callee, 
-                  ReturnValue, Args);
+  return EmitCall(CGM.getTypes().arrangeCXXMethodCall(Args, FPT, required),
+                  Callee, ReturnValue, Args);
 }
 
 RValue
@@ -314,7 +316,7 @@ static void EmitNullBaseClassInitialization(CodeGenFunction &CGF,
 
   const ASTRecordLayout &Layout = CGF.getContext().getASTRecordLayout(Base);
   CharUnits Size = Layout.getNonVirtualSize();
-  CharUnits Align = Layout.getNonVirtualAlign();
+  CharUnits Align = Layout.getNonVirtualAlignment();
 
   llvm::Value *SizeVal = CGF.CGM.getSize(Size);
 
@@ -441,8 +443,7 @@ CodeGenFunction::EmitSynthesizedCXXCopyCtor(llvm::Value *Dest,
   
   assert(!getContext().getAsConstantArrayType(E->getType())
          && "EmitSynthesizedCXXCopyCtor - Copied-in Array");
-  EmitSynthesizedCXXCopyCtorCall(CD, Dest, Src,
-                                 E->arg_begin(), E->arg_end());
+  EmitSynthesizedCXXCopyCtorCall(CD, Dest, Src, E->arg_begin(), E->arg_end());
 }
 
 static CharUnits CalculateCookiePadding(CodeGenFunction &CGF,
@@ -719,7 +720,7 @@ static llvm::Value *EmitCXXNewAllocSize(CodeGenFunction &CGF,
 
 static void StoreAnyExprIntoOneUnit(CodeGenFunction &CGF, const Expr *Init,
                                     QualType AllocType, llvm::Value *NewPtr) {
-
+  // FIXME: Refactor with EmitExprAsInit.
   CharUnits Alignment = CGF.getContext().getTypeAlignInChars(AllocType);
   switch (CGF.getEvaluationKind(AllocType)) {
   case TEK_Scalar:
@@ -765,9 +766,21 @@ CodeGenFunction::EmitNewArrayInitializer(const CXXNewExpr *E,
   QualType::DestructionKind dtorKind = elementType.isDestructedType();
   EHScopeStack::stable_iterator cleanup;
   llvm::Instruction *cleanupDominator = 0;
+
   // If the initializer is an initializer list, first do the explicit elements.
   if (const InitListExpr *ILE = dyn_cast<InitListExpr>(Init)) {
     initializerElements = ILE->getNumInits();
+
+    // If this is a multi-dimensional array new, we will initialize multiple
+    // elements with each init list element.
+    QualType AllocType = E->getAllocatedType();
+    if (const ConstantArrayType *CAT = dyn_cast_or_null<ConstantArrayType>(
+            AllocType->getAsArrayTypeUnsafe())) {
+      unsigned AS = explicitPtr->getType()->getPointerAddressSpace();
+      llvm::Type *AllocPtrTy = ConvertTypeForMem(AllocType)->getPointerTo(AS);
+      explicitPtr = Builder.CreateBitCast(explicitPtr, AllocPtrTy);
+      initializerElements *= getContext().getConstantArrayElementCount(CAT);
+    }
 
     // Enter a partial-destruction cleanup if necessary.
     if (needsEHCleanup(dtorKind)) {
@@ -787,12 +800,16 @@ CodeGenFunction::EmitNewArrayInitializer(const CXXNewExpr *E,
       // element.  TODO: some of these stores can be trivially
       // observed to be unnecessary.
       if (endOfInit) Builder.CreateStore(explicitPtr, endOfInit);
-      StoreAnyExprIntoOneUnit(*this, ILE->getInit(i), elementType, explicitPtr);
-      explicitPtr =Builder.CreateConstGEP1_32(explicitPtr, 1, "array.exp.next");
+      StoreAnyExprIntoOneUnit(*this, ILE->getInit(i),
+                              ILE->getInit(i)->getType(), explicitPtr);
+      explicitPtr = Builder.CreateConstGEP1_32(explicitPtr, 1,
+                                               "array.exp.next");
     }
 
     // The remaining elements are filled with the array filler expression.
     Init = ILE->getArrayFiller();
+
+    explicitPtr = Builder.CreateBitCast(explicitPtr, beginPtr->getType());
   }
 
   // Create the continuation block.
@@ -847,9 +864,29 @@ CodeGenFunction::EmitNewArrayInitializer(const CXXNewExpr *E,
     cleanupDominator->eraseFromParent();
   }
 
-  // Advance to the next element.
-  llvm::Value *nextPtr = Builder.CreateConstGEP1_32(curPtr, 1, "array.next");
+  // FIXME: The code below intends to initialize the individual array base
+  // elements, one at a time - but when dealing with multi-dimensional arrays -
+  // the pointer arithmetic can get confused - so the fix below entails casting
+  // to the allocated type to ensure that we get the pointer arithmetic right.
+  // It seems like the right approach here, it to really initialize the
+  // individual array base elements one at a time since it'll generate less
+  // code. I think the problem is that the wrong type is being passed into
+  // StoreAnyExprIntoOneUnit, but directly fixing that doesn't really work,
+  // because the Init expression has the wrong type at this point.
+  // So... this is ok for a quick fix, but we can and should do a lot better
+  // here long-term.
 
+  // Advance to the next element by adjusting the pointer type as necessary.
+  // For new int[10][20][30], alloc type is int[20][30], base type is 'int'.
+  QualType AllocType = E->getAllocatedType();
+  llvm::Type *AllocPtrTy = ConvertTypeForMem(AllocType)->getPointerTo(
+      curPtr->getType()->getPointerAddressSpace());
+  llvm::Value *curPtrAllocTy = Builder.CreateBitCast(curPtr, AllocPtrTy);
+  llvm::Value *nextPtrAllocTy =
+      Builder.CreateConstGEP1_32(curPtrAllocTy, 1, "array.next");
+  // Cast it back to the base type so that we can compare it to the endPtr.
+  llvm::Value *nextPtr =
+      Builder.CreateBitCast(nextPtrAllocTy, endPtr->getType());
   // Check whether we've gotten to the end of the array and, if so,
   // exit the loop.
   llvm::Value *isEnd = Builder.CreateICmpEQ(nextPtr, endPtr, "array.atend");
@@ -977,17 +1014,17 @@ namespace {
     void Emit(CodeGenFunction &CGF, Flags flags) {
       const FunctionProtoType *FPT
         = OperatorDelete->getType()->getAs<FunctionProtoType>();
-      assert(FPT->getNumArgs() == NumPlacementArgs + 1 ||
-             (FPT->getNumArgs() == 2 && NumPlacementArgs == 0));
+      assert(FPT->getNumParams() == NumPlacementArgs + 1 ||
+             (FPT->getNumParams() == 2 && NumPlacementArgs == 0));
 
       CallArgList DeleteArgs;
 
       // The first argument is always a void*.
-      FunctionProtoType::arg_type_iterator AI = FPT->arg_type_begin();
+      FunctionProtoType::param_type_iterator AI = FPT->param_type_begin();
       DeleteArgs.add(RValue::get(Ptr), *AI++);
 
       // A member 'operator delete' can take an extra 'size_t' argument.
-      if (FPT->getNumArgs() == NumPlacementArgs + 2)
+      if (FPT->getNumParams() == NumPlacementArgs + 2)
         DeleteArgs.add(RValue::get(AllocSize), *AI++);
 
       // Pass the rest of the arguments, which must match exactly.
@@ -1032,17 +1069,17 @@ namespace {
     void Emit(CodeGenFunction &CGF, Flags flags) {
       const FunctionProtoType *FPT
         = OperatorDelete->getType()->getAs<FunctionProtoType>();
-      assert(FPT->getNumArgs() == NumPlacementArgs + 1 ||
-             (FPT->getNumArgs() == 2 && NumPlacementArgs == 0));
+      assert(FPT->getNumParams() == NumPlacementArgs + 1 ||
+             (FPT->getNumParams() == 2 && NumPlacementArgs == 0));
 
       CallArgList DeleteArgs;
 
       // The first argument is always a void*.
-      FunctionProtoType::arg_type_iterator AI = FPT->arg_type_begin();
+      FunctionProtoType::param_type_iterator AI = FPT->param_type_begin();
       DeleteArgs.add(Ptr.restore(CGF), *AI++);
 
       // A member 'operator delete' can take an extra 'size_t' argument.
-      if (FPT->getNumArgs() == NumPlacementArgs + 2) {
+      if (FPT->getNumParams() == NumPlacementArgs + 2) {
         RValue RV = AllocSize.restore(CGF);
         DeleteArgs.add(RV, *AI++);
       }
@@ -1128,35 +1165,12 @@ llvm::Value *CodeGenFunction::EmitCXXNewExpr(const CXXNewExpr *E) {
   
   allocatorArgs.add(RValue::get(allocSize), sizeType);
 
-  // Emit the rest of the arguments.
-  // FIXME: Ideally, this should just use EmitCallArgs.
-  CXXNewExpr::const_arg_iterator placementArg = E->placement_arg_begin();
-
-  // First, use the types from the function type.
   // We start at 1 here because the first argument (the allocation size)
   // has already been emitted.
-  for (unsigned i = 1, e = allocatorType->getNumArgs(); i != e;
-       ++i, ++placementArg) {
-    QualType argType = allocatorType->getArgType(i);
-
-    assert(getContext().hasSameUnqualifiedType(argType.getNonReferenceType(),
-                                               placementArg->getType()) &&
-           "type mismatch in call argument!");
-
-    EmitCallArg(allocatorArgs, *placementArg, argType);
-  }
-
-  // Either we've emitted all the call args, or we have a call to a
-  // variadic function.
-  assert((placementArg == E->placement_arg_end() ||
-          allocatorType->isVariadic()) &&
-         "Extra arguments to non-variadic function!");
-
-  // If we still have any arguments, emit them using the type of the argument.
-  for (CXXNewExpr::const_arg_iterator placementArgsEnd = E->placement_arg_end();
-       placementArg != placementArgsEnd; ++placementArg) {
-    EmitCallArg(allocatorArgs, *placementArg, placementArg->getType());
-  }
+  EmitCallArgs(allocatorArgs, allocatorType->isVariadic(),
+               allocatorType->param_type_begin() + 1,
+               allocatorType->param_type_end(), E->placement_arg_begin(),
+               E->placement_arg_end());
 
   // Emit the allocation call.  If the allocator is a global placement
   // operator, just "inline" it directly.
@@ -1272,14 +1286,14 @@ void CodeGenFunction::EmitDeleteCall(const FunctionDecl *DeleteFD,
   // Check if we need to pass the size to the delete operator.
   llvm::Value *Size = 0;
   QualType SizeTy;
-  if (DeleteFTy->getNumArgs() == 2) {
-    SizeTy = DeleteFTy->getArgType(1);
+  if (DeleteFTy->getNumParams() == 2) {
+    SizeTy = DeleteFTy->getParamType(1);
     CharUnits DeleteTypeSize = getContext().getTypeSizeInChars(DeleteTy);
     Size = llvm::ConstantInt::get(ConvertType(SizeTy), 
                                   DeleteTypeSize.getQuantity());
   }
-  
-  QualType ArgTy = DeleteFTy->getArgType(0);
+
+  QualType ArgTy = DeleteFTy->getParamType(0);
   llvm::Value *DeletePtr = Builder.CreateBitCast(Ptr, ConvertType(ArgTy));
   DeleteArgs.add(RValue::get(DeletePtr), ArgTy);
 
@@ -1408,19 +1422,19 @@ namespace {
     void Emit(CodeGenFunction &CGF, Flags flags) {
       const FunctionProtoType *DeleteFTy =
         OperatorDelete->getType()->getAs<FunctionProtoType>();
-      assert(DeleteFTy->getNumArgs() == 1 || DeleteFTy->getNumArgs() == 2);
+      assert(DeleteFTy->getNumParams() == 1 || DeleteFTy->getNumParams() == 2);
 
       CallArgList Args;
       
       // Pass the pointer as the first argument.
-      QualType VoidPtrTy = DeleteFTy->getArgType(0);
+      QualType VoidPtrTy = DeleteFTy->getParamType(0);
       llvm::Value *DeletePtr
         = CGF.Builder.CreateBitCast(Ptr, CGF.ConvertType(VoidPtrTy));
       Args.add(RValue::get(DeletePtr), VoidPtrTy);
 
       // Pass the original requested size as the second argument.
-      if (DeleteFTy->getNumArgs() == 2) {
-        QualType size_t = DeleteFTy->getArgType(1);
+      if (DeleteFTy->getNumParams() == 2) {
+        QualType size_t = DeleteFTy->getParamType(1);
         llvm::IntegerType *SizeTy
           = cast<llvm::IntegerType>(CGF.ConvertType(size_t));
         
@@ -1589,8 +1603,8 @@ llvm::Value *CodeGenFunction::EmitCXXTypeidExpr(const CXXTypeidExpr *E) {
     ConvertType(E->getType())->getPointerTo();
   
   if (E->isTypeOperand()) {
-    llvm::Constant *TypeInfo = 
-      CGM.GetAddrOfRTTIDescriptor(E->getTypeOperand());
+    llvm::Constant *TypeInfo =
+        CGM.GetAddrOfRTTIDescriptor(E->getTypeOperand(getContext()));
     return Builder.CreateBitCast(TypeInfo, StdTypeInfoPtrTy);
   }
 

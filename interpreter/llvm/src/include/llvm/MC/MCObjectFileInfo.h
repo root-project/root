@@ -129,6 +129,8 @@ protected:
   const MCSection *DwarfGnuPubNamesSection;
   const MCSection *DwarfGnuPubTypesSection;
 
+  const MCSection *COFFDebugSymbolsSection;
+
   // Extra TLS Variable Data section.  If the target needs to put additional
   // information for a TLS variable, it'll go here.
   const MCSection *TLSExtraDataSection;
@@ -142,6 +144,8 @@ protected:
   /// ELF and MachO only.
   const MCSection *TLSBSSSection;         // Defaults to ".tbss".
 
+  /// StackMap section.
+  const MCSection *StackMapSection;
 
   /// EHFrameSection - EH frame section. It is initialized on demand so it
   /// can be overwritten (with uniquing).
@@ -260,6 +264,8 @@ public:
   const MCSection *getDwarfInfoDWOSection() const {
     return DwarfInfoDWOSection;
   }
+  const MCSection *getDwarfTypesSection(uint64_t Hash) const;
+  const MCSection *getDwarfTypesDWOSection(uint64_t Hash) const;
   const MCSection *getDwarfAbbrevDWOSection() const {
     return DwarfAbbrevDWOSection;
   }
@@ -279,11 +285,17 @@ public:
     return DwarfAddrSection;
   }
 
+  const MCSection *getCOFFDebugSymbolsSection() const {
+    return COFFDebugSymbolsSection;
+  }
+
   const MCSection *getTLSExtraDataSection() const {
     return TLSExtraDataSection;
   }
   const MCSection *getTLSDataSection() const { return TLSDataSection; }
   const MCSection *getTLSBSSSection() const { return TLSBSSSection; }
+
+  const MCSection *getStackMapSection() const { return StackMapSection; }
 
   /// ELF specific sections.
   ///
@@ -349,8 +361,12 @@ public:
     return EHFrameSection;
   }
 
-private:
   enum Environment { IsMachO, IsELF, IsCOFF };
+  Environment getObjectFileType() const {
+    return Env;
+  }
+
+private:
   Environment Env;
   Reloc::Model RelocM;
   CodeModel::Model CMModel;

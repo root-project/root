@@ -450,7 +450,12 @@ namespace COFF {
     uint32_t AddressOfNewExeHeader;
   };
 
-  struct PEHeader {
+  struct PE32Header {
+    enum {
+      PE32 = 0x10b,
+      PE32_PLUS = 0x20b
+    };
+
     uint16_t Magic;
     uint8_t  MajorLinkerVersion;
     uint8_t  MinorLinkerVersion;
@@ -460,7 +465,7 @@ namespace COFF {
     uint32_t AddressOfEntryPoint; // RVA
     uint32_t BaseOfCode; // RVA
     uint32_t BaseOfData; // RVA
-    uint64_t ImageBase;
+    uint32_t ImageBase;
     uint32_t SectionAlignment;
     uint32_t FileAlignment;
     uint16_t MajorOperatingSystemVersion;
@@ -475,10 +480,10 @@ namespace COFF {
     uint32_t CheckSum;
     uint16_t Subsystem;
     uint16_t DLLCharacteristics;
-    uint64_t SizeOfStackReserve;
-    uint64_t SizeOfStackCommit;
-    uint64_t SizeOfHeapReserve;
-    uint64_t SizeOfHeapCommit;
+    uint32_t SizeOfStackReserve;
+    uint32_t SizeOfStackCommit;
+    uint32_t SizeOfHeapReserve;
+    uint32_t SizeOfHeapCommit;
     uint32_t LoaderFlags;
     uint32_t NumberOfRvaAndSize;
   };
@@ -526,6 +531,8 @@ namespace COFF {
   };
 
   enum DLLCharacteristics {
+    /// ASLR with 64 bit address space.
+    IMAGE_DLL_CHARACTERISTICS_HIGH_ENTROPY_VA = 0x0020,
     /// DLL can be relocated at load time.
     IMAGE_DLL_CHARACTERISTICS_DYNAMIC_BASE = 0x0040,
     /// Code integrity checks are enforced.
@@ -609,6 +616,13 @@ namespace COFF {
     ImportNameType getNameType() const {
       return static_cast<ImportNameType>((TypeInfo & 0x1C) >> 3);
     }
+  };
+
+  enum CodeViewLineTableIdentifiers {
+    DEBUG_SECTION_MAGIC           = 0x4,
+    DEBUG_LINE_TABLE_SUBSECTION   = 0xF2,
+    DEBUG_STRING_TABLE_SUBSECTION = 0xF3,
+    DEBUG_INDEX_SUBSECTION        = 0xF4
   };
 
 } // End namespace COFF.

@@ -12,16 +12,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "ARMBaseInfo.h"
-#include "ARMELFStreamer.h"
 #include "ARMMCAsmInfo.h"
 #include "ARMMCTargetDesc.h"
 #include "InstPrinter/ARMInstPrinter.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/MC/MCCodeGenInfo.h"
+#include "llvm/MC/MCELFStreamer.h"
 #include "llvm/MC/MCInstrAnalysis.h"
 #include "llvm/MC/MCInstrInfo.h"
 #include "llvm/MC/MCRegisterInfo.h"
-#include "llvm/MC/MCStreamer.h"
 #include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/TargetRegistry.h"
@@ -63,6 +62,17 @@ static bool getMCRDeprecationInfo(MCInst &MI, MCSubtargetInfo &STI,
   return false;
 }
 
+static bool getITDeprecationInfo(MCInst &MI, MCSubtargetInfo &STI,
+                                  std::string &Info) {
+  if (STI.getFeatureBits() & llvm::ARM::HasV8Ops &&
+      MI.getOperand(1).isImm() && MI.getOperand(1).getImm() != 8) {
+    Info = "applying IT instruction to more than one subsequent instruction is deprecated";
+    return true;
+  }
+
+  return false;
+}
+
 #define GET_INSTRINFO_MC_DESC
 #include "ARMGenInstrInfo.inc"
 
@@ -79,22 +89,24 @@ std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
   unsigned Idx = 0;
 
   // FIXME: Enhance Triple helper class to extract ARM version.
-  bool isThumb = false;
+  bool isThumb = triple.getArch() == Triple::thumb;
   if (Len >= 5 && TT.substr(0, 4) == "armv")
     Idx = 4;
-  else if (Len >= 6 && TT.substr(0, 5) == "thumb") {
-    isThumb = true;
-    if (Len >= 7 && TT[5] == 'v')
-      Idx = 6;
-  }
+  else if (Len >= 7 && TT.substr(0, 6) == "thumbv")
+    Idx = 6;
 
   bool NoCPU = CPU == "generic" || CPU.empty();
   std::string ARMArchFeature;
   if (Idx) {
     unsigned SubVer = TT[Idx];
     if (SubVer == '8') {
-      // FIXME: Parse v8 features
-      ARMArchFeature = "+v8,+db";
+      if (NoCPU)
+        // v8a: FeatureDB, FeatureFPARMv8, FeatureNEON, FeatureDSPThumb2, FeatureMP,
+        //      FeatureHWDiv, FeatureHWDivARM, FeatureTrustZone, FeatureT2XtPk, FeatureCrypto, FeatureCRC
+        ARMArchFeature = "+v8,+db,+fp-armv8,+neon,+t2dsp,+mp,+hwdiv,+hwdiv-arm,+trustzone,+t2xtpk,+crypto,+crc";
+      else
+        // Use CPU to figure out the exact features
+        ARMArchFeature = "+v8";
     } else if (SubVer == '7') {
       if (Len >= Idx+2 && TT[Idx+1] == 'm') {
         isThumb = true;
@@ -114,9 +126,9 @@ std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
           ARMArchFeature = "+v7";
       } else if (Len >= Idx+2 && TT[Idx+1] == 's') {
         if (NoCPU)
-          // v7s: FeatureNEON, FeatureDB, FeatureDSPThumb2, FeatureT2XtPk
+          // v7s: FeatureNEON, FeatureDB, FeatureDSPThumb2, FeatureHasRAS
           //      Swift
-          ARMArchFeature = "+v7,+swift,+neon,+db,+t2dsp,+t2xtpk";
+          ARMArchFeature = "+v7,+swift,+neon,+db,+t2dsp,+ras";
         else
           // Use CPU to figure out the exact features.
           ARMArchFeature = "+v7";
@@ -139,7 +151,7 @@ std::string ARM_MC::ParseARMTriple(StringRef TT, StringRef CPU) {
         isThumb = true;
         if (NoCPU)
           // v6m: FeatureNoARM, FeatureMClass
-          ARMArchFeature = "+v6,+noarm,+mclass";
+          ARMArchFeature = "+v6m,+noarm,+mclass";
         else
           ARMArchFeature = "+v6";
       } else
@@ -200,10 +212,16 @@ static MCRegisterInfo *createARMMCRegisterInfo(StringRef Triple) {
 static MCAsmInfo *createARMMCAsmInfo(const MCRegisterInfo &MRI, StringRef TT) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin())
-    return new ARMMCAsmInfoDarwin();
+  MCAsmInfo *MAI;
+  if (TheTriple.isOSBinFormatMachO())
+    MAI = new ARMMCAsmInfoDarwin();
+  else
+    MAI = new ARMELFMCAsmInfo();
 
-  return new ARMELFMCAsmInfo();
+  unsigned Reg = MRI.getDwarfRegNum(ARM::SP, true);
+  MAI->addInitialFrameState(MCCFIInstruction::createDefCfa(0, Reg, 0));
+
+  return MAI;
 }
 
 static MCCodeGenInfo *createARMMCCodeGenInfo(StringRef TT, Reloc::Model RM,
@@ -224,12 +242,16 @@ static MCStreamer *createMCStreamer(const Target &T, StringRef TT,
                                     MCContext &Ctx, MCAsmBackend &MAB,
                                     raw_ostream &OS,
                                     MCCodeEmitter *Emitter,
+                                    const MCSubtargetInfo &STI,
                                     bool RelaxAll,
                                     bool NoExecStack) {
   Triple TheTriple(TT);
 
-  if (TheTriple.isOSDarwin())
-    return createMachOStreamer(Ctx, MAB, OS, Emitter, false);
+  if (TheTriple.isOSBinFormatMachO()) {
+    MCStreamer *S = createMachOStreamer(Ctx, MAB, OS, Emitter, false);
+    new ARMTargetStreamer(*S);
+    return S;
+  }
 
   if (TheTriple.isOSWindows()) {
     llvm_unreachable("ARM does not support Windows COFF format");
@@ -253,7 +275,7 @@ static MCInstPrinter *createARMMCInstPrinter(const Target &T,
 static MCRelocationInfo *createARMMCRelocationInfo(StringRef TT,
                                                    MCContext &Ctx) {
   Triple TheTriple(TT);
-  if (TheTriple.isEnvironmentMachO())
+  if (TheTriple.isOSBinFormatMachO())
     return createARMMachORelocationInfo(Ctx);
   // Default to the stock relocation info.
   return llvm::createMCRelocationInfo(TT, Ctx);
@@ -339,6 +361,10 @@ extern "C" void LLVMInitializeARMTargetMC() {
   // Register the object streamer.
   TargetRegistry::RegisterMCObjectStreamer(TheARMTarget, createMCStreamer);
   TargetRegistry::RegisterMCObjectStreamer(TheThumbTarget, createMCStreamer);
+
+  // Register the asm streamer.
+  TargetRegistry::RegisterAsmStreamer(TheARMTarget, createMCAsmStreamer);
+  TargetRegistry::RegisterAsmStreamer(TheThumbTarget, createMCAsmStreamer);
 
   // Register the MCInstPrinter.
   TargetRegistry::RegisterMCInstPrinter(TheARMTarget, createARMMCInstPrinter);

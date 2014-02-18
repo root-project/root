@@ -15,7 +15,7 @@
 #define DEBUG_TYPE "partialinlining"
 #include "llvm/Transforms/IPO.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
@@ -119,8 +119,8 @@ Function* PartialInliner::unswitchFunction(Function* F) {
       
   // The CodeExtractor needs a dominator tree.
   DominatorTree DT;
-  DT.runOnFunction(*duplicateFunction);
-  
+  DT.recalculate(*duplicateFunction);
+
   // Extract the body of the if.
   Function* extractedFunction
     = CodeExtractor(toExtract, &DT).extractCodeRegion();

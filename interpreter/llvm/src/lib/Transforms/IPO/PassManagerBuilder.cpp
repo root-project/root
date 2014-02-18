@@ -17,7 +17,7 @@
 #include "llvm-c/Transforms/PassManagerBuilder.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Analysis/Passes.h"
-#include "llvm/Analysis/Verifier.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/PassManager.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ManagedStatic.h"
@@ -29,20 +29,15 @@
 using namespace llvm;
 
 static cl::opt<bool>
-RunLoopVectorization("vectorize-loops",
+RunLoopVectorization("vectorize-loops", cl::Hidden,
                      cl::desc("Run the Loop vectorization passes"));
 
 static cl::opt<bool>
-LateVectorization("late-vectorize", cl::init(true), cl::Hidden,
-                  cl::desc("Run the vectorization pasess late in the pass "
-                           "pipeline (after the inliner)"));
-
-static cl::opt<bool>
-RunSLPVectorization("vectorize-slp",
+RunSLPVectorization("vectorize-slp", cl::Hidden,
                     cl::desc("Run the SLP vectorization passes"));
 
 static cl::opt<bool>
-RunBBVectorization("vectorize-slp-aggressive",
+RunBBVectorization("vectorize-slp-aggressive", cl::Hidden,
                     cl::desc("Run the BB vectorization passes"));
 
 static cl::opt<bool>
@@ -54,6 +49,10 @@ static cl::opt<bool> UseNewSROA("use-new-sroa",
   cl::init(true), cl::Hidden,
   cl::desc("Enable the new, experimental SROA pass"));
 
+static cl::opt<bool>
+RunLoopRerolling("reroll-loops", cl::Hidden,
+                 cl::desc("Run the loop rerolling pass"));
+
 PassManagerBuilder::PassManagerBuilder() {
     OptLevel = 2;
     SizeLevel = 0;
@@ -64,7 +63,7 @@ PassManagerBuilder::PassManagerBuilder() {
     BBVectorize = RunBBVectorization;
     SLPVectorize = RunSLPVectorization;
     LoopVectorize = RunLoopVectorization;
-    LateVectorize = LateVectorization;
+    RerollLoops = RunLoopRerolling;
 }
 
 PassManagerBuilder::~PassManagerBuilder() {
@@ -195,9 +194,6 @@ void PassManagerBuilder::populateModulePassManager(PassManagerBase &MPM) {
   MPM.add(createLoopIdiomPass());             // Recognize idioms like memset.
   MPM.add(createLoopDeletionPass());          // Delete dead loops
 
-  if (!LateVectorize && LoopVectorize)
-      MPM.add(createLoopVectorizePass(DisableUnrollLoops));
-
   if (!DisableUnrollLoops)
     MPM.add(createLoopUnrollPass());          // Unroll small loops
   addExtensionsToPM(EP_LoopOptimizerEnd, MPM);
@@ -216,6 +212,8 @@ void PassManagerBuilder::populateModulePassManager(PassManagerBase &MPM) {
 
   addExtensionsToPM(EP_ScalarOptimizerLate, MPM);
 
+  if (RerollLoops)
+    MPM.add(createLoopRerollPass());
   if (SLPVectorize)
     MPM.add(createSLPVectorizerPass());   // Vectorize parallel scalar chains.
 
@@ -236,21 +234,18 @@ void PassManagerBuilder::populateModulePassManager(PassManagerBase &MPM) {
   MPM.add(createCFGSimplificationPass()); // Merge & remove BBs
   MPM.add(createInstructionCombiningPass());  // Clean up after everything.
 
-  // As an experimental mode, run any vectorization passes in a separate
-  // pipeline from the CGSCC pass manager that runs iteratively with the
-  // inliner.
-  if (LateVectorize && LoopVectorize) {
-    // FIXME: This is a HACK! The inliner pass above implicitly creates a CGSCC
-    // pass manager that we are specifically trying to avoid. To prevent this
-    // we must insert a no-op module pass to reset the pass manager.
-    MPM.add(createBarrierNoopPass());
-
-    // Add the various vectorization passes and relevant cleanup passes for
-    // them since we are no longer in the middle of the main scalar pipeline.
-    MPM.add(createLoopVectorizePass(DisableUnrollLoops));
-    MPM.add(createInstructionCombiningPass());
-    MPM.add(createCFGSimplificationPass());
-  }
+  // FIXME: This is a HACK! The inliner pass above implicitly creates a CGSCC
+  // pass manager that we are specifically trying to avoid. To prevent this
+  // we must insert a no-op module pass to reset the pass manager.
+  MPM.add(createBarrierNoopPass());
+  MPM.add(createLoopVectorizePass(DisableUnrollLoops, LoopVectorize));
+  // FIXME: Because of #pragma vectorize enable, the passes below are always
+  // inserted in the pipeline, even when the vectorizer doesn't run (ex. when
+  // on -O1 and no #pragma is found). Would be good to have these two passes
+  // as function calls, so that we can only pass them when the vectorizer
+  // changed the code.
+  MPM.add(createInstructionCombiningPass());
+  MPM.add(createCFGSimplificationPass());
 
   if (!DisableUnitAtATime) {
     // FIXME: We shouldn't bother with this anymore.

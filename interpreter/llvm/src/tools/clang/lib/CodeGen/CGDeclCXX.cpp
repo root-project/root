@@ -96,7 +96,8 @@ static void EmitDeclDestroy(CodeGenFunction &CGF, const VarDecl &D,
     CXXDestructorDecl *dtor = record->getDestructor();
 
     function = CGM.GetAddrOfCXXDestructor(dtor, Dtor_Complete);
-    argument = addr;
+    argument = llvm::ConstantExpr::getBitCast(
+        addr, CGF.getTypes().ConvertType(type)->getPointerTo());
 
   // Otherwise, the standard logic requires a helper function.
   } else {
@@ -280,9 +281,8 @@ CodeGenModule::EmitCXXGlobalVarDeclInitFunc(const VarDecl *D,
     // FIXME: We only need to register one __cxa_thread_atexit function for the
     // entire TU.
     CXXThreadLocalInits.push_back(Fn);
-  } else if (D->hasAttr<InitPriorityAttr>()) {
-    unsigned int order = D->getAttr<InitPriorityAttr>()->getPriority();
-    OrderGlobalInits Key(order, PrioritizedCXXGlobalInits.size());
+  } else if (const InitPriorityAttr *IPA = D->getAttr<InitPriorityAttr>()) {
+    OrderGlobalInits Key(IPA->getPriority(), PrioritizedCXXGlobalInits.size());
     PrioritizedCXXGlobalInits.push_back(std::make_pair(Key, Fn));
     DelayedCXXInitPosition.erase(D);
   } else if (D->getTemplateSpecializationKind() != TSK_ExplicitSpecialization &&
@@ -502,11 +502,9 @@ llvm::Function *CodeGenFunction::generateDestroyHelper(
   FunctionArgList args;
   ImplicitParamDecl dst(0, SourceLocation(), 0, getContext().VoidPtrTy);
   args.push_back(&dst);
-  
-  const CGFunctionInfo &FI = 
-    CGM.getTypes().arrangeFunctionDeclaration(getContext().VoidTy, args,
-                                              FunctionType::ExtInfo(),
-                                              /*variadic*/ false);
+
+  const CGFunctionInfo &FI = CGM.getTypes().arrangeFreeFunctionDeclaration(
+      getContext().VoidTy, args, FunctionType::ExtInfo(), /*variadic=*/false);
   llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(FI);
   llvm::Function *fn = 
     CreateGlobalInitOrDestructFunction(CGM, FTy, "__cxx_global_array_dtor");

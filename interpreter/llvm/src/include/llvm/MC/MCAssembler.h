@@ -17,8 +17,10 @@
 #include "llvm/ADT/ilist_node.h"
 #include "llvm/MC/MCFixup.h"
 #include "llvm/MC/MCInst.h"
+#include "llvm/MC/MCSubtargetInfo.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/DataTypes.h"
+#include <algorithm>
 #include <vector> // FIXME: Shouldn't be needed.
 
 namespace llvm {
@@ -32,6 +34,7 @@ class MCFragment;
 class MCObjectWriter;
 class MCSection;
 class MCSectionData;
+class MCSubtargetInfo;
 class MCSymbol;
 class MCSymbolData;
 class MCValue;
@@ -287,6 +290,11 @@ class MCRelaxableFragment : public MCEncodedFragmentWithFixups {
   /// Inst - The instruction this is a fragment for.
   MCInst Inst;
 
+  /// STI - The MCSubtargetInfo in effect when the instruction was encoded.
+  /// Keep a copy instead of a reference to make sure that updates to STI
+  /// in the assembler are not seen here.
+  const MCSubtargetInfo STI;
+
   /// Contents - Binary data for the currently encoded instruction.
   SmallVector<char, 8> Contents;
 
@@ -294,8 +302,10 @@ class MCRelaxableFragment : public MCEncodedFragmentWithFixups {
   SmallVector<MCFixup, 1> Fixups;
 
 public:
-  MCRelaxableFragment(const MCInst &_Inst, MCSectionData *SD = 0)
-    : MCEncodedFragmentWithFixups(FT_Relaxable, SD), Inst(_Inst) {
+  MCRelaxableFragment(const MCInst &_Inst,
+                      const MCSubtargetInfo &_STI,
+                      MCSectionData *SD = 0)
+    : MCEncodedFragmentWithFixups(FT_Relaxable, SD), Inst(_Inst), STI(_STI) {
   }
 
   virtual SmallVectorImpl<char> &getContents() { return Contents; }
@@ -303,6 +313,8 @@ public:
 
   const MCInst &getInst() const { return Inst; }
   void setInst(const MCInst& Value) { Inst = Value; }
+
+  const MCSubtargetInfo &getSubtargetInfo() { return STI; }
 
   SmallVectorImpl<MCFixup> &getFixups() {
     return Fixups;
@@ -816,6 +828,9 @@ public:
   typedef SymbolDataListType::const_iterator const_symbol_iterator;
   typedef SymbolDataListType::iterator symbol_iterator;
 
+  typedef std::vector<std::string> FileNameVectorType;
+  typedef FileNameVectorType::const_iterator const_file_name_iterator;
+
   typedef std::vector<IndirectSymbolData>::const_iterator
     const_indirect_symbol_iterator;
   typedef std::vector<IndirectSymbolData>::iterator indirect_symbol_iterator;
@@ -858,6 +873,9 @@ private:
 
   /// The list of linker options to propagate into the object file.
   std::vector<std::vector<std::string> > LinkerOptions;
+
+  /// List of declared file names
+  FileNameVectorType FileNames;
 
   /// The set of function symbols for which a .thumb_func directive has
   /// been seen.
@@ -1135,6 +1153,10 @@ public:
     return *Entry;
   }
 
+  bool hasSymbolData(const MCSymbol &Symbol) const {
+    return SymbolMap.lookup(&Symbol) != 0;
+  }
+
   MCSymbolData &getSymbolData(const MCSymbol &Symbol) const {
     MCSymbolData *Entry = SymbolMap.lookup(&Symbol);
     assert(Entry && "Missing symbol data!");
@@ -1150,6 +1172,20 @@ public:
       Entry = new MCSymbolData(Symbol, 0, 0, this);
 
     return *Entry;
+  }
+
+  const_file_name_iterator file_names_begin() const {
+    return FileNames.begin();
+  }
+
+  const_file_name_iterator file_names_end() const {
+    return FileNames.end();
+  }
+
+  void addFileName(StringRef FileName) {
+    if (std::find(file_names_begin(), file_names_end(), FileName) ==
+        file_names_end())
+      FileNames.push_back(FileName);
   }
 
   /// @}

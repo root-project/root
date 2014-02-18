@@ -32,6 +32,7 @@ class DeclarationName;
 class DependentDiagnostic;
 class EnumDecl;
 class FunctionDecl;
+class FunctionType;
 class LinkageComputer;
 class LinkageSpecDecl;
 class Module;
@@ -302,8 +303,24 @@ protected:
 
   template<typename decl_type> friend class Redeclarable;
 
+  /// \brief Allocate memory for a deserialized declaration.
+  ///
+  /// This routine must be used to allocate memory for any declaration that is
+  /// deserialized from a module file.
+  ///
+  /// \param Size The size of the allocated object.
+  /// \param Ctx The context in which we will allocate memory.
+  /// \param ID The global ID of the deserialized declaration.
+  /// \param Extra The amount of extra space to allocate after the object.
+  void *operator new(std::size_t Size, const ASTContext &Ctx, unsigned ID,
+                     std::size_t Extra = 0);
+
+  /// \brief Allocate memory for a non-deserialized declaration.
+  void *operator new(std::size_t Size, const ASTContext &Ctx,
+                     DeclContext *Parent, std::size_t Extra = 0);
+
 private:
-  void CheckAccessDeclContext() const;
+  bool AccessDeclContextSanity() const;
 
 protected:
 
@@ -329,18 +346,6 @@ protected:
   }
 
   virtual ~Decl();
-
-  /// \brief Allocate memory for a deserialized declaration.
-  ///
-  /// This routine must be used to allocate memory for any declaration that is
-  /// deserialized from a module file.
-  ///
-  /// \param Context The context in which we will allocate memory.
-  /// \param ID The global ID of the deserialized declaration.
-  /// \param Size The size of the allocated object.
-  static void *AllocateDeserializedDecl(const ASTContext &Context,
-                                        unsigned ID,
-                                        unsigned Size);
 
   /// \brief Update a potentially out-of-date declaration.
   void updateOutOfDate(IdentifierInfo &II) const;
@@ -409,15 +414,11 @@ public:
 
   void setAccess(AccessSpecifier AS) {
     Access = AS;
-#ifndef NDEBUG
-    CheckAccessDeclContext();
-#endif
+    assert(AccessDeclContextSanity());
   }
 
   AccessSpecifier getAccess() const {
-#ifndef NDEBUG
-    CheckAccessDeclContext();
-#endif
+    assert(AccessDeclContextSanity());
     return AccessSpecifier(Access);
   }
 
@@ -508,7 +509,7 @@ public:
   /// \brief Set whether the declaration is used, in the sense of odr-use.
   ///
   /// This should only be used immediately after creating a declaration.
-  void setIsUsed(bool U) { Used = U; }
+  void setIsUsed() { Used = true; }
 
   /// \brief Mark the declaration used, in the sense of odr-use.
   ///
@@ -785,7 +786,12 @@ public:
   const Decl *getPreviousDecl() const { 
     return const_cast<Decl *>(this)->getPreviousDeclImpl();
   }
-  
+
+  /// \brief True if this is the first declaration in its redeclaration chain.
+  bool isFirstDecl() const {
+    return getPreviousDecl() == 0;
+  }
+
   /// \brief Retrieve the most recent declaration that declares the same entity
   /// as this declaration (which may be this declaration).
   Decl *getMostRecentDecl() { return getMostRecentDeclImpl(); }
@@ -831,7 +837,19 @@ public:
   bool isTemplateDecl() const;
 
   /// \brief Whether this declaration is a function or function template.
-  bool isFunctionOrFunctionTemplate() const;
+  bool isFunctionOrFunctionTemplate() const {
+    return (DeclKind >= Decl::firstFunction &&
+            DeclKind <= Decl::lastFunction) ||
+           DeclKind == FunctionTemplate;
+  }
+
+  /// \brief Returns the function itself, or the templated function if this is a
+  /// function template.
+  FunctionDecl *getAsFunction() LLVM_READONLY;
+
+  const FunctionDecl *getAsFunction() const {
+    return const_cast<Decl *>(this)->getAsFunction();
+  }
 
   /// \brief Changes the namespace of this declaration to reflect that it's
   /// a function-local extern declaration.
@@ -933,13 +951,15 @@ public:
                          raw_ostream &Out, const PrintingPolicy &Policy,
                          unsigned Indentation = 0);
   // Debuggers don't usually respect default arguments.
-  LLVM_ATTRIBUTE_USED void dump() const;
+  void dump() const;
   // Same as dump(), but forces color printing.
-  LLVM_ATTRIBUTE_USED void dumpColor() const;
+  void dumpColor() const;
   void dump(raw_ostream &Out) const;
-  // Debuggers don't usually respect default arguments.
-  LLVM_ATTRIBUTE_USED void dumpXML() const;
-  void dumpXML(raw_ostream &OS) const;
+
+  /// \brief Looks through the Decl's underlying type to extract a FunctionType
+  /// when possible. Will return null if the type underlying the Decl does not
+  /// have a FunctionType.
+  const FunctionType *getFunctionType(bool BlocksToo = true) const;
 
 private:
   void setAttrsImpl(const AttrVec& Attrs, ASTContext &Ctx);
@@ -1156,6 +1176,14 @@ public:
   /// Examples of transparent contexts include: enumerations (except for
   /// C++0x scoped enums), and C++ linkage specifications.
   bool isTransparentContext() const;
+
+  /// \brief Determines whether this context or some of its ancestors is a
+  /// linkage specification context that specifies C linkage.
+  bool isExternCContext() const;
+
+  /// \brief Determines whether this context or some of its ancestors is a
+  /// linkage specification context that specifies C++ linkage.
+  bool isExternCXXContext() const;
 
   /// \brief Determine whether this declaration context is equivalent
   /// to the declaration context DC.
@@ -1606,9 +1634,9 @@ public:
   static bool classof(const Decl *D);
   static bool classof(const DeclContext *D) { return true; }
 
-  LLVM_ATTRIBUTE_USED void dumpDeclContext() const;
-  LLVM_ATTRIBUTE_USED void dumpLookups() const;
-  LLVM_ATTRIBUTE_USED void dumpLookups(llvm::raw_ostream &OS) const;
+  void dumpDeclContext() const;
+  void dumpLookups() const;
+  void dumpLookups(llvm::raw_ostream &OS) const;
 
 private:
   void reconcileExternalVisibleStorage();

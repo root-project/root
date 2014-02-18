@@ -15,8 +15,8 @@
 #ifndef POWERPC32_REGISTERINFO_H
 #define POWERPC32_REGISTERINFO_H
 
-#include "llvm/ADT/DenseMap.h"
 #include "PPC.h"
+#include "llvm/ADT/DenseMap.h"
 
 #define GET_REGINFO_HEADER
 #include "PPCGenRegisterInfo.inc"
@@ -97,10 +97,6 @@ public:
   bool hasBasePointer(const MachineFunction &MF) const;
   bool canRealignStack(const MachineFunction &MF) const;
   bool needsStackRealignment(const MachineFunction &MF) const;
-
-  // Exception handling queries.
-  unsigned getEHExceptionRegister() const;
-  unsigned getEHHandlerRegister() const;
 };
 
 } // end namespace llvm

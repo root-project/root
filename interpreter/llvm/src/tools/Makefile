@@ -30,15 +30,11 @@ endif
 # large and three small executables. This is done to minimize memory load
 # in parallel builds.  Please retain this ordering.
 DIRS := llvm-config
-PARALLEL_DIRS := opt llvm-as llvm-dis \
-                 llc llvm-ar llvm-nm \
-                 llvm-prof llvm-link \
-                 lli llvm-extract llvm-mc \
-                 bugpoint llvm-bcanalyzer \
-                 llvm-diff macho-dump llvm-objdump llvm-readobj \
-	         llvm-rtdyld llvm-dwarfdump llvm-cov \
-	         llvm-size llvm-stress llvm-mcmarkup \
-	         llvm-symbolizer obj2yaml yaml2obj
+PARALLEL_DIRS := opt llvm-as llvm-dis llc llvm-ar llvm-nm llvm-link \
+                 lli llvm-extract llvm-mc bugpoint llvm-bcanalyzer llvm-diff \
+                 macho-dump llvm-objdump llvm-readobj llvm-rtdyld \
+                 llvm-dwarfdump llvm-cov llvm-size llvm-stress llvm-mcmarkup \
+                 llvm-symbolizer obj2yaml yaml2obj llvm-c-test
 
 # If Intel JIT Events support is configured, build an extra tool to test it.
 ifeq ($(USE_INTEL_JITEVENTS), 1)
@@ -74,8 +70,6 @@ endif
 # On Win32, loadable modules can be built with ENABLE_SHARED.
 ifneq ($(ENABLE_SHARED),1)
   ifneq (,$(filter $(HOST_OS), Cygwin MingW))
-    DIRS := $(filter-out llvm-lto, \
-                        $(DIRS))
     PARALLEL_DIRS := $(filter-out bugpoint-passes, \
                         $(PARALLEL_DIRS))
   endif

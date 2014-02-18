@@ -35,8 +35,6 @@ namespace llvm {
 
       Wrapper,      // Wrapper - A wrapper node for TargetConstantPool,
                     // TargetExternalSymbol, and TargetGlobalAddress.
-      WrapperDYN,   // WrapperDYN - A wrapper node for TargetGlobalAddress in
-                    // DYN mode.
       WrapperPIC,   // WrapperPIC - A wrapper node for TargetGlobalAddress in
                     // PIC mode.
       WrapperJT,    // WrapperJT - A wrapper node for TargetJumpTable
@@ -52,6 +50,7 @@ namespace llvm {
       BR_JT,        // Jumptable branch.
       BR2_JT,       // Jumptable branch (2 level - jumptable entry is a jump).
       RET_FLAG,     // Return with a flag operand.
+      INTRET_FLAG,  // Interrupt return with an LR-offset and a flag operand.
 
       PIC_ADD,      // Add with a PC operand and a PIC label.
 
@@ -114,10 +113,6 @@ namespace llvm {
       VSHL,         // ...left
       VSHRs,        // ...right (signed)
       VSHRu,        // ...right (unsigned)
-      VSHLLs,       // ...left long (signed)
-      VSHLLu,       // ...left long (unsigned)
-      VSHLLi,       // ...left long (with maximum shift count)
-      VSHRN,        // ...right narrow
 
       // Vector rounding shift by immediate:
       VRSHRs,       // ...right (signed)
@@ -274,7 +269,8 @@ namespace llvm {
     /// allowsUnalignedMemoryAccesses - Returns true if the target allows
     /// unaligned memory accesses of the specified type. Returns whether it
     /// is "fast" by reference in the second argument.
-    virtual bool allowsUnalignedMemoryAccesses(EVT VT, bool *Fast) const;
+    virtual bool allowsUnalignedMemoryAccesses(EVT VT, unsigned AddrSpace,
+                                               bool *Fast) const;
 
     virtual EVT getOptimalMemOpType(uint64_t Size,
                                     unsigned DstAlign, unsigned SrcAlign,
@@ -362,6 +358,12 @@ namespace llvm {
     /// be used for loads / stores from the global.
     virtual unsigned getMaximalGlobalOffset() const;
 
+    /// Returns true if a cast between SrcAS and DestAS is a noop.
+    virtual bool isNoopAddrSpaceCast(unsigned SrcAS, unsigned DestAS) const {
+      // Addrspacecasts are always noops.
+      return true;
+    }
+
     /// createFastISel - This method returns a target specific FastISel object,
     /// or null if the target does not support "fast" ISel.
     virtual FastISel *createFastISel(FunctionLoweringInfo &funcInfo,
@@ -380,6 +382,12 @@ namespace llvm {
     virtual bool getTgtMemIntrinsic(IntrinsicInfo &Info,
                                     const CallInst &I,
                                     unsigned Intrinsic) const;
+
+    /// \brief Returns true if it is beneficial to convert a load of a constant
+    /// to just the constant itself.
+    virtual bool shouldConvertConstantLoadToIntImm(const APInt &Imm,
+                                                   Type *Ty) const;
+
   protected:
     std::pair<const TargetRegisterClass*, uint8_t>
     findRepresentativeClass(MVT VT) const;
@@ -447,6 +455,7 @@ namespace llvm {
                             const ARMSubtarget *ST) const;
     SDValue LowerBUILD_VECTOR(SDValue Op, SelectionDAG &DAG,
                               const ARMSubtarget *ST) const;
+    SDValue LowerFSINCOS(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerDivRem(SDValue Op, SelectionDAG &DAG) const;
 
     /// isFMAFasterThanFMulAndFAdd - Return true if an FMA operation is faster

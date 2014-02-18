@@ -179,14 +179,14 @@ let Namespace = "Mips" in {
             DwarfRegNum<[!add(I, 32)]>;
 
   // Hi/Lo registers
-  def HI0 : Register<"ac0">, DwarfRegNum<[64]>;
-  def HI1 : Register<"ac1">, DwarfRegNum<[176]>;
-  def HI2 : Register<"ac2">, DwarfRegNum<[178]>;
-  def HI3 : Register<"ac3">, DwarfRegNum<[180]>;
-  def LO0 : Register<"ac0">, DwarfRegNum<[65]>;
-  def LO1 : Register<"ac1">, DwarfRegNum<[177]>;
-  def LO2 : Register<"ac2">, DwarfRegNum<[179]>;
-  def LO3 : Register<"ac3">, DwarfRegNum<[181]>;
+  def HI0 : MipsReg<0, "ac0">, DwarfRegNum<[64]>;
+  def HI1 : MipsReg<1, "ac1">, DwarfRegNum<[176]>;
+  def HI2 : MipsReg<2, "ac2">, DwarfRegNum<[178]>;
+  def HI3 : MipsReg<3, "ac3">, DwarfRegNum<[180]>;
+  def LO0 : MipsReg<0, "ac0">, DwarfRegNum<[65]>;
+  def LO1 : MipsReg<1, "ac1">, DwarfRegNum<[177]>;
+  def LO2 : MipsReg<2, "ac2">, DwarfRegNum<[179]>;
+  def LO3 : MipsReg<3, "ac3">, DwarfRegNum<[181]>;
 
   let SubRegIndices = [sub_32] in {
   def HI0_64  : RegisterWithSubRegs<"hi", [HI0]>;
@@ -237,14 +237,14 @@ let Namespace = "Mips" in {
                                             DSPOutFlag23]>;
 
   // MSA-ASE control registers.
-  def MSAIR : Register<"0">;
-  def MSACSR : Register<"1">;
-  def MSAAccess : Register<"2">;
-  def MSASave : Register<"3">;
-  def MSAModify : Register<"4">;
-  def MSARequest : Register<"5">;
-  def MSAMap : Register<"6">;
-  def MSAUnmap : Register<"7">;
+  def MSAIR      : MipsReg<0, "0">;
+  def MSACSR     : MipsReg<1, "1">;
+  def MSAAccess  : MipsReg<2, "2">;
+  def MSASave    : MipsReg<3, "3">;
+  def MSAModify  : MipsReg<4, "4">;
+  def MSARequest : MipsReg<5, "5">;
+  def MSAMap     : MipsReg<6, "6">;
+  def MSAUnmap   : MipsReg<7, "7">;
 }
 
 //===----------------------------------------------------------------------===//
@@ -456,6 +456,11 @@ def MSA128DAsmOperand : MipsAsmRegOperand {
   let ParserMethod = "parseMSA128DRegs";
 }
 
+def MSA128CRAsmOperand : MipsAsmRegOperand {
+  let Name = "MSA128CRAsm";
+  let ParserMethod = "parseMSA128CtrlRegs";
+}
+
 def GPR32Opnd : RegisterOperand<GPR32> {
   let ParserMatchClass = GPR32AsmOperand;
 }
@@ -536,5 +541,9 @@ def MSA128WOpnd : RegisterOperand<MSA128W> {
 
 def MSA128DOpnd : RegisterOperand<MSA128D> {
   let ParserMatchClass = MSA128DAsmOperand;
+}
+
+def MSA128CROpnd : RegisterOperand<MSACtrl> {
+  let ParserMatchClass = MSA128CRAsmOperand;
 }
 

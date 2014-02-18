@@ -182,6 +182,8 @@ void Value::setName(const Twine &NewName) {
 
   SmallString<256> NameData;
   StringRef NameRef = NewName.toStringRef(NameData);
+  assert(NameRef.find_first_of(0) == StringRef::npos &&
+         "Null bytes are not allowed in names");
 
   // Name isn't changing?
   if (getName() == NameRef)
@@ -365,7 +367,8 @@ static Value *stripPointerCastsAndOffsets(Value *V) {
         break;
       }
       V = GEP->getPointerOperand();
-    } else if (Operator::getOpcode(V) == Instruction::BitCast) {
+    } else if (Operator::getOpcode(V) == Instruction::BitCast ||
+               Operator::getOpcode(V) == Instruction::AddrSpaceCast) {
       V = cast<Operator>(V)->getOperand(0);
     } else if (GlobalAlias *GA = dyn_cast<GlobalAlias>(V)) {
       if (StripKind == PSK_ZeroIndices || GA->mayBeOverridden())
@@ -734,9 +737,5 @@ void ValueHandleBase::ValueIsRAUWd(Value *Old, Value *New) {
 #endif
 }
 
-// Default implementation for CallbackVH.
-void CallbackVH::allUsesReplacedWith(Value *) {}
-
-void CallbackVH::deleted() {
-  setValPtr(NULL);
-}
+// Pin the vtable to this file.
+void CallbackVH::anchor() {}

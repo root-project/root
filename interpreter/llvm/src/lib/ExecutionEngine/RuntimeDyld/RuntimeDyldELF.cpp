@@ -25,6 +25,8 @@
 #include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/ELF.h"
+#include "llvm/Support/MemoryBuffer.h"
+
 using namespace llvm;
 using namespace llvm::object;
 
@@ -151,12 +153,64 @@ void DyldELFObject<ELFT>::updateSymbolAddress(const SymbolRef &SymRef,
 
 namespace llvm {
 
-StringRef RuntimeDyldELF::getEHFrameSection() {
-  for (int i = 0, e = Sections.size(); i != e; ++i) {
-    if (Sections[i].Name == ".eh_frame")
-      return StringRef((const char*)Sections[i].Address, Sections[i].Size);
+void RuntimeDyldELF::registerEHFrames() {
+  if (!MemMgr)
+    return;
+  for (int i = 0, e = UnregisteredEHFrameSections.size(); i != e; ++i) {
+    SID EHFrameSID = UnregisteredEHFrameSections[i];
+    uint8_t *EHFrameAddr = Sections[EHFrameSID].Address;
+    uint64_t EHFrameLoadAddr = Sections[EHFrameSID].LoadAddress;
+    size_t EHFrameSize = Sections[EHFrameSID].Size;
+    MemMgr->registerEHFrames(EHFrameAddr, EHFrameLoadAddr, EHFrameSize);
+    RegisteredEHFrameSections.push_back(EHFrameSID);
   }
-  return StringRef();
+  UnregisteredEHFrameSections.clear();
+}
+
+void RuntimeDyldELF::deregisterEHFrames() {
+  if (!MemMgr)
+    return;
+  for (int i = 0, e = RegisteredEHFrameSections.size(); i != e; ++i) {
+    SID EHFrameSID = RegisteredEHFrameSections[i];
+    uint8_t *EHFrameAddr = Sections[EHFrameSID].Address;
+    uint64_t EHFrameLoadAddr = Sections[EHFrameSID].LoadAddress;
+    size_t EHFrameSize = Sections[EHFrameSID].Size;
+    MemMgr->deregisterEHFrames(EHFrameAddr, EHFrameLoadAddr, EHFrameSize);
+  }
+  RegisteredEHFrameSections.clear();
+}
+
+ObjectImage *RuntimeDyldELF::createObjectImageFromFile(object::ObjectFile *ObjFile) {
+  if (!ObjFile)
+    return NULL;
+
+  error_code ec;
+  MemoryBuffer* Buffer = MemoryBuffer::getMemBuffer(ObjFile->getData(), 
+                                                    "", 
+                                                    false);
+
+  if (ObjFile->getBytesInAddress() == 4 && ObjFile->isLittleEndian()) {
+    DyldELFObject<ELFType<support::little, 2, false> > *Obj =
+      new DyldELFObject<ELFType<support::little, 2, false> >(Buffer, ec);
+    return new ELFObjectImage<ELFType<support::little, 2, false> >(NULL, Obj);
+  }
+  else if (ObjFile->getBytesInAddress() == 4 && !ObjFile->isLittleEndian()) {
+    DyldELFObject<ELFType<support::big, 2, false> > *Obj =
+      new DyldELFObject<ELFType<support::big, 2, false> >(Buffer, ec);
+    return new ELFObjectImage<ELFType<support::big, 2, false> >(NULL, Obj);
+  }
+  else if (ObjFile->getBytesInAddress() == 8 && !ObjFile->isLittleEndian()) {
+    DyldELFObject<ELFType<support::big, 2, true> > *Obj =
+      new DyldELFObject<ELFType<support::big, 2, true> >(Buffer, ec);
+    return new ELFObjectImage<ELFType<support::big, 2, true> >(NULL, Obj);
+  }
+  else if (ObjFile->getBytesInAddress() == 8 && ObjFile->isLittleEndian()) {
+    DyldELFObject<ELFType<support::little, 2, true> > *Obj =
+      new DyldELFObject<ELFType<support::little, 2, true> >(Buffer, ec);
+    return new ELFObjectImage<ELFType<support::little, 2, true> >(NULL, Obj);
+  }
+  else
+    llvm_unreachable("Unexpected ELF format");
 }
 
 ObjectImage *RuntimeDyldELF::createObjectImage(ObjectBuffer *Buffer) {
@@ -400,6 +454,48 @@ void RuntimeDyldELF::resolveAArch64Relocation(const SectionEntry &Section,
     assert((*TargetPtr >> 21 & 0x3) == 0 && "invalid shift for relocation");
     break;
   }
+  case ELF::R_AARCH64_ADR_PREL_PG_HI21: {
+    // Operation: Page(S+A) - Page(P)
+    uint64_t Result = ((Value + Addend) & ~0xfffULL) - (FinalAddress & ~0xfffULL);
+
+    // Check that -2^32 <= X < 2^32
+    assert(static_cast<int64_t>(Result) >= (-1LL << 32) &&
+           static_cast<int64_t>(Result) < (1LL << 32) &&
+           "overflow check failed for relocation");
+
+    // AArch64 code is emitted with .rela relocations. The data already in any
+    // bits affected by the relocation on entry is garbage.
+    *TargetPtr &= 0x9f00001fU;
+    // Immediate goes in bits 30:29 + 5:23 of ADRP instruction, taken
+    // from bits 32:12 of X.
+    *TargetPtr |= ((Result & 0x3000U) << (29 - 12));
+    *TargetPtr |= ((Result & 0x1ffffc000ULL) >> (14 - 5));
+    break;
+  }
+  case ELF::R_AARCH64_LDST32_ABS_LO12_NC: {
+    // Operation: S + A
+    uint64_t Result = Value + Addend;
+
+    // AArch64 code is emitted with .rela relocations. The data already in any
+    // bits affected by the relocation on entry is garbage.
+    *TargetPtr &= 0xffc003ffU;
+    // Immediate goes in bits 21:10 of LD/ST instruction, taken
+    // from bits 11:2 of X
+    *TargetPtr |= ((Result & 0xffc) << (10 - 2));
+    break;
+  }
+  case ELF::R_AARCH64_LDST64_ABS_LO12_NC: {
+    // Operation: S + A
+    uint64_t Result = Value + Addend;
+
+    // AArch64 code is emitted with .rela relocations. The data already in any
+    // bits affected by the relocation on entry is garbage.
+    *TargetPtr &= 0xffc003ffU;
+    // Immediate goes in bits 21:10 of LD/ST instruction, taken
+    // from bits 11:3 of X
+    *TargetPtr |= ((Result & 0xff8) << (10 - 3));
+    break;
+  }
   }
 }
 
@@ -427,8 +523,11 @@ void RuntimeDyldELF::resolveARMRelocation(const SectionEntry &Section,
   default:
     llvm_unreachable("Not implemented relocation type!");
 
+  case ELF::R_ARM_NONE:
+    break;
   // Write a 32bit value to relocation address, taking into account the
   // implicit addend encoded in the target.
+  case ELF::R_ARM_PREL31:
   case ELF::R_ARM_TARGET1:
   case ELF::R_ARM_ABS32:
     *TargetPtr = *Placeholder + Value;
@@ -564,10 +663,8 @@ void RuntimeDyldELF::findOPDEntrySection(ObjectImage &Obj,
                                          RelocationValueRef &Rel) {
   // Get the ELF symbol value (st_value) to compare with Relocation offset in
   // .opd entries
-
-  error_code err;
-  for (section_iterator si = Obj.begin_sections(),
-     se = Obj.end_sections(); si != se; si.increment(err)) {
+  for (section_iterator si = Obj.begin_sections(), se = Obj.end_sections();
+       si != se; ++si) {
     section_iterator RelSecI = si->getRelocatedSection();
     if (RelSecI == Obj.end_sections())
       continue;
@@ -577,16 +674,14 @@ void RuntimeDyldELF::findOPDEntrySection(ObjectImage &Obj,
     if (RelSectionName != ".opd")
       continue;
 
-    for (relocation_iterator i = si->begin_relocations(),
-         e = si->end_relocations(); i != e;) {
-      check(err);
-
+    for (relocation_iterator i = si->relocation_begin(),
+         e = si->relocation_end(); i != e;) {
       // The R_PPC64_ADDR64 relocation indicates the first field
       // of a .opd entry
       uint64_t TypeFunc;
       check(i->getType(TypeFunc));
       if (TypeFunc != ELF::R_PPC64_ADDR64) {
-        i.increment(err);
+        ++i;
         continue;
       }
 
@@ -596,10 +691,9 @@ void RuntimeDyldELF::findOPDEntrySection(ObjectImage &Obj,
       int64_t Addend;
       check(getELFRelocationAddend(*i, Addend));
 
-      i = i.increment(err);
+      ++i;
       if (i == e)
         break;
-      check(err);
 
       // Just check if following relocation is a R_PPC64_TOC
       uint64_t TypeTOC;
@@ -1012,8 +1106,8 @@ void RuntimeDyldELF::processRelocationRef(unsigned SectionID,
     //  Look up for existing stub.
     StubMap::const_iterator i = Stubs.find(Value);
     if (i != Stubs.end()) {
-      resolveRelocation(Section, Offset,
-                        (uint64_t)Section.Address + i->second, RelType, 0);
+      RelocationEntry RE(SectionID, Offset, RelType, i->second);
+      addRelocationForSection(RE, SectionID);
       DEBUG(dbgs() << " Stub function found\n");
     } else {
       // Create a new stub function.
@@ -1038,9 +1132,8 @@ void RuntimeDyldELF::processRelocationRef(unsigned SectionID,
         addRelocationForSection(RELo, Value.SectionID);
       }
 
-      resolveRelocation(Section, Offset,
-                        (uint64_t)Section.Address + Section.StubOffset,
-                        RelType, 0);
+      RelocationEntry RE(SectionID, Offset, RelType, Section.StubOffset);
+      addRelocationForSection(RE, SectionID);
       Section.StubOffset += getMaxStubSize();
     }
   } else if (Arch == Triple::ppc64 || Arch == Triple::ppc64le) {
@@ -1250,9 +1343,16 @@ void RuntimeDyldELF::processRelocationRef(unsigned SectionID,
 }
 
 void RuntimeDyldELF::updateGOTEntries(StringRef Name, uint64_t Addr) {
-  for (int i = 0, e = GOTEntries.size(); i != e; ++i) {
-    if (GOTEntries[i].SymbolName != 0 && GOTEntries[i].SymbolName == Name) {
-      GOTEntries[i].Offset = Addr;
+
+  SmallVectorImpl<std::pair<SID, GOTRelocations> >::iterator it;
+  SmallVectorImpl<std::pair<SID, GOTRelocations> >::iterator end = GOTs.end();
+
+  for (it = GOTs.begin(); it != end; ++it) {
+    GOTRelocations &GOTEntries = it->second;
+    for (int i = 0, e = GOTEntries.size(); i != e; ++i) {
+      if (GOTEntries[i].SymbolName != 0 && GOTEntries[i].SymbolName == Name) {
+        GOTEntries[i].Offset = Addr;
+      }
     }
   }
 }
@@ -1283,69 +1383,93 @@ size_t RuntimeDyldELF::getGOTEntrySize() {
 
 uint64_t RuntimeDyldELF::findGOTEntry(uint64_t LoadAddress,
                                       uint64_t Offset) {
-  assert(GOTSectionID != 0
-         && "Attempting to lookup GOT entry but the GOT was never allocated.");
-  if (GOTSectionID == 0) {
-    return 0;
-  }
 
-  size_t GOTEntrySize = getGOTEntrySize();
+  const size_t GOTEntrySize = getGOTEntrySize();
 
-  // Find the matching entry in our vector.
+  SmallVectorImpl<std::pair<SID, GOTRelocations> >::const_iterator it;
+  SmallVectorImpl<std::pair<SID, GOTRelocations> >::const_iterator end = GOTs.end();
+
   int GOTIndex = -1;
-  uint64_t SymbolOffset = 0;
-  for (int i = 0, e = GOTEntries.size(); i != e; ++i) {
-    if (GOTEntries[i].SymbolName == 0) {
-      if (getSectionLoadAddress(GOTEntries[i].SectionID) == LoadAddress &&
-          GOTEntries[i].Offset == Offset) {
-        GOTIndex = i;
-        SymbolOffset = GOTEntries[i].Offset;
-        break;
-      }
-    } else {
-      // GOT entries for external symbols use the addend as the address when
-      // the external symbol has been resolved.
-      if (GOTEntries[i].Offset == LoadAddress) {
-        GOTIndex = i;
-        // Don't use the Addend here.  The relocation handler will use it.
-        break;
+  for (it = GOTs.begin(); it != end; ++it) {
+    SID GOTSectionID = it->first;
+    const GOTRelocations &GOTEntries = it->second;
+
+    // Find the matching entry in our vector.
+    uint64_t SymbolOffset = 0;
+    for (int i = 0, e = GOTEntries.size(); i != e; ++i) {
+      if (GOTEntries[i].SymbolName == 0) {
+        if (getSectionLoadAddress(GOTEntries[i].SectionID) == LoadAddress &&
+            GOTEntries[i].Offset == Offset) {
+          GOTIndex = i;
+          SymbolOffset = GOTEntries[i].Offset;
+          break;
+        }
+      } else {
+        // GOT entries for external symbols use the addend as the address when
+        // the external symbol has been resolved.
+        if (GOTEntries[i].Offset == LoadAddress) {
+          GOTIndex = i;
+          // Don't use the Addend here.  The relocation handler will use it.
+          break;
+        }
       }
     }
+
+    if (GOTIndex != -1) {
+      if (GOTEntrySize == sizeof(uint64_t)) {
+        uint64_t *LocalGOTAddr = (uint64_t*)getSectionAddress(GOTSectionID);
+        // Fill in this entry with the address of the symbol being referenced.
+        LocalGOTAddr[GOTIndex] = LoadAddress + SymbolOffset;
+      } else {
+        uint32_t *LocalGOTAddr = (uint32_t*)getSectionAddress(GOTSectionID);
+        // Fill in this entry with the address of the symbol being referenced.
+        LocalGOTAddr[GOTIndex] = (uint32_t)(LoadAddress + SymbolOffset);
+      }
+
+      // Calculate the load address of this entry
+      return getSectionLoadAddress(GOTSectionID) + (GOTIndex * GOTEntrySize);
+    }
   }
+
   assert(GOTIndex != -1 && "Unable to find requested GOT entry.");
-  if (GOTIndex == -1)
-    return 0;
-
-  if (GOTEntrySize == sizeof(uint64_t)) {
-    uint64_t *LocalGOTAddr = (uint64_t*)getSectionAddress(GOTSectionID);
-    // Fill in this entry with the address of the symbol being referenced.
-    LocalGOTAddr[GOTIndex] = LoadAddress + SymbolOffset;
-  } else {
-    uint32_t *LocalGOTAddr = (uint32_t*)getSectionAddress(GOTSectionID);
-    // Fill in this entry with the address of the symbol being referenced.
-    LocalGOTAddr[GOTIndex] = (uint32_t)(LoadAddress + SymbolOffset);
-  }
-
-  // Calculate the load address of this entry
-  return getSectionLoadAddress(GOTSectionID) + (GOTIndex * GOTEntrySize);
+  return 0;
 }
 
-void RuntimeDyldELF::finalizeLoad() {
-  // Allocate the GOT if necessary
-  size_t numGOTEntries = GOTEntries.size();
-  if (numGOTEntries != 0) {
-    // Allocate memory for the section
-    unsigned SectionID = Sections.size();
-    size_t TotalSize = numGOTEntries * getGOTEntrySize();
-    uint8_t *Addr = MemMgr->allocateDataSection(TotalSize, getGOTEntrySize(),
-                                                SectionID, false);
-    if (!Addr)
-      report_fatal_error("Unable to allocate memory for GOT!");
-    Sections.push_back(SectionEntry(".got", Addr, TotalSize, 0));
-    // For now, initialize all GOT entries to zero.  We'll fill them in as
-    // needed when GOT-based relocations are applied.
-    memset(Addr, 0, TotalSize);
-    GOTSectionID = SectionID;
+void RuntimeDyldELF::finalizeLoad(ObjSectionToIDMap &SectionMap) {
+  // If necessary, allocate the global offset table
+  if (MemMgr) {
+    // Allocate the GOT if necessary
+    size_t numGOTEntries = GOTEntries.size();
+    if (numGOTEntries != 0) {
+      // Allocate memory for the section
+      unsigned SectionID = Sections.size();
+      size_t TotalSize = numGOTEntries * getGOTEntrySize();
+      uint8_t *Addr = MemMgr->allocateDataSection(TotalSize, getGOTEntrySize(),
+                                                  SectionID, ".got", false);
+      if (!Addr)
+        report_fatal_error("Unable to allocate memory for GOT!");
+
+      GOTs.push_back(std::make_pair(SectionID, GOTEntries));
+      Sections.push_back(SectionEntry(".got", Addr, TotalSize, 0));
+      // For now, initialize all GOT entries to zero.  We'll fill them in as
+      // needed when GOT-based relocations are applied.
+      memset(Addr, 0, TotalSize);
+    }
+  }
+  else {
+    report_fatal_error("Unable to allocate memory for GOT!");
+  }
+
+  // Look for and record the EH frame section.
+  ObjSectionToIDMap::iterator i, e;
+  for (i = SectionMap.begin(), e = SectionMap.end(); i != e; ++i) {
+    const SectionRef &Section = i->first;
+    StringRef Name;
+    Section.getName(Name);
+    if (Name == ".eh_frame") {
+      UnregisteredEHFrameSections.push_back(i->second);
+      break;
+    }
   }
 }
 
@@ -1354,4 +1478,9 @@ bool RuntimeDyldELF::isCompatibleFormat(const ObjectBuffer *Buffer) const {
     return false;
   return (memcmp(Buffer->getBufferStart(), ELF::ElfMagic, strlen(ELF::ElfMagic))) == 0;
 }
+
+bool RuntimeDyldELF::isCompatibleFile(const object::ObjectFile *Obj) const {
+  return Obj->isELF();
+}
+
 } // namespace llvm

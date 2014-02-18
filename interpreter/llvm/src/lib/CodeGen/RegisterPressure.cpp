@@ -147,7 +147,7 @@ void RegionPressure::openBottom(MachineBasicBlock::const_iterator PrevBottom) {
   LiveInRegs.clear();
 }
 
-const LiveInterval *RegPressureTracker::getInterval(unsigned Reg) const {
+const LiveRange *RegPressureTracker::getLiveRange(unsigned Reg) const {
   if (TargetRegisterInfo::isVirtualRegister(Reg))
     return &LIS->getInterval(Reg);
   return LIS->getCachedRegUnit(Reg);
@@ -498,10 +498,26 @@ bool RegPressureTracker::recede(SmallVectorImpl<unsigned> *LiveUses,
   // TODO: consider earlyclobbers?
   for (unsigned i = 0, e = RegOpers.Defs.size(); i < e; ++i) {
     unsigned Reg = RegOpers.Defs[i];
-    if (LiveRegs.erase(Reg))
-      decreaseRegPressure(Reg);
-    else
-      discoverLiveOut(Reg);
+    bool DeadDef = false;
+    if (RequireIntervals) {
+      const LiveRange *LR = getLiveRange(Reg);
+      if (LR) {
+        LiveQueryResult LRQ = LR->Query(SlotIdx);
+        DeadDef = LRQ.isDeadDef();
+      }
+    }
+    if (DeadDef) {
+      // LiveIntervals knows this is a dead even though it's MachineOperand is
+      // not flagged as such. Since this register will not be recorded as
+      // live-out, increase its PDiff value to avoid underflowing pressure.
+      if (PDiff)
+        PDiff->addPressureChange(Reg, false, MRI);
+    } else {
+      if (LiveRegs.erase(Reg))
+        decreaseRegPressure(Reg);
+      else
+        discoverLiveOut(Reg);
+    }
   }
 
   // Generate liveness for uses.
@@ -510,10 +526,9 @@ bool RegPressureTracker::recede(SmallVectorImpl<unsigned> *LiveUses,
     if (!LiveRegs.contains(Reg)) {
       // Adjust liveouts if LiveIntervals are available.
       if (RequireIntervals) {
-        const LiveInterval *LI = getInterval(Reg);
-        // Check if this LR is killed and not redefined here.
-        if (LI) {
-          LiveRangeQuery LRQ(*LI, SlotIdx);
+        const LiveRange *LR = getLiveRange(Reg);
+        if (LR) {
+          LiveQueryResult LRQ = LR->Query(SlotIdx);
           if (!LRQ.isKill() && !LRQ.valueDefined())
             discoverLiveOut(Reg);
         }
@@ -570,8 +585,8 @@ bool RegPressureTracker::advance() {
     // Kill liveness at last uses.
     bool lastUse = false;
     if (RequireIntervals) {
-      const LiveInterval *LI = getInterval(Reg);
-      lastUse = LI && LiveRangeQuery(*LI, SlotIdx).isKill();
+      const LiveRange *LR = getLiveRange(Reg);
+      lastUse = LR && LR->Query(SlotIdx).isKill();
     }
     else {
       // Allocatable physregs are always single-use before register rewriting.
@@ -703,8 +718,19 @@ void RegPressureTracker::bumpUpwardPressure(const MachineInstr *MI) {
   // Kill liveness at live defs.
   for (unsigned i = 0, e = RegOpers.Defs.size(); i < e; ++i) {
     unsigned Reg = RegOpers.Defs[i];
-    if (!containsReg(RegOpers.Uses, Reg))
-      decreaseRegPressure(Reg);
+    bool DeadDef = false;
+    if (RequireIntervals) {
+      const LiveRange *LR = getLiveRange(Reg);
+      if (LR) {
+        SlotIndex SlotIdx = LIS->getInstructionIndex(MI);
+        LiveQueryResult LRQ = LR->Query(SlotIdx);
+        DeadDef = LRQ.isDeadDef();
+      }
+    }
+    if (!DeadDef) {
+      if (!containsReg(RegOpers.Uses, Reg))
+        decreaseRegPressure(Reg);
+    }
   }
   // Generate liveness for uses.
   for (unsigned i = 0, e = RegOpers.Uses.size(); i < e; ++i) {
@@ -894,11 +920,12 @@ void RegPressureTracker::bumpDownwardPressure(const MachineInstr *MI) {
       // FIXME: allow the caller to pass in the list of vreg uses that remain
       // to be bottom-scheduled to avoid searching uses at each query.
       SlotIndex CurrIdx = getCurrSlot();
-      const LiveInterval *LI = getInterval(Reg);
-      if (LI) {
-        LiveRangeQuery LRQ(*LI, SlotIdx);
-        if (LRQ.isKill() && !findUseBetween(Reg, CurrIdx, SlotIdx, MRI, LIS))
+      const LiveRange *LR = getLiveRange(Reg);
+      if (LR) {
+        LiveQueryResult LRQ = LR->Query(SlotIdx);
+        if (LRQ.isKill() && !findUseBetween(Reg, CurrIdx, SlotIdx, MRI, LIS)) {
           decreaseRegPressure(Reg);
+        }
       }
     }
     else if (!TargetRegisterInfo::isVirtualRegister(Reg)) {

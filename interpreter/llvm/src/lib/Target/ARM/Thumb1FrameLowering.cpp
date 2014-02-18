@@ -127,7 +127,6 @@ void Thumb1FrameLowering::emitPrologue(MachineFunction &MF) const {
     case ARM::LR:
       if (Reg == FramePtr)
         FramePtrSpillFI = FI;
-      AFI->addGPRCalleeSavedArea1Frame(FI);
       GPRCS1Size += 4;
       break;
     case ARM::R8:
@@ -136,16 +135,12 @@ void Thumb1FrameLowering::emitPrologue(MachineFunction &MF) const {
     case ARM::R11:
       if (Reg == FramePtr)
         FramePtrSpillFI = FI;
-      if (STI.isTargetIOS()) {
-        AFI->addGPRCalleeSavedArea2Frame(FI);
+      if (STI.isTargetMachO())
         GPRCS2Size += 4;
-      } else {
-        AFI->addGPRCalleeSavedArea1Frame(FI);
+      else
         GPRCS1Size += 4;
-      }
       break;
     default:
-      AFI->addDPRCalleeSavedAreaFrame(FI);
       DPRCSSize += 8;
     }
   }
@@ -169,10 +164,17 @@ void Thumb1FrameLowering::emitPrologue(MachineFunction &MF) const {
   AFI->setDPRCalleeSavedAreaOffset(DPRCSOffset);
   NumBytes = DPRCSOffset;
 
+  int FramePtrOffsetInBlock = 0;
+  if (tryFoldSPUpdateIntoPushPop(STI, MF, prior(MBBI), NumBytes)) {
+    FramePtrOffsetInBlock = NumBytes;
+    NumBytes = 0;
+  }
+
   // Adjust FP so it point to the stack slot that contains the previous FP.
   if (HasFP) {
+    FramePtrOffsetInBlock += MFI->getObjectOffset(FramePtrSpillFI) + GPRCS1Size;
     AddDefaultPred(BuildMI(MBB, MBBI, dl, TII.get(ARM::tADDrSPi), FramePtr)
-      .addFrameIndex(FramePtrSpillFI).addImm(0)
+      .addReg(ARM::SP).addImm(FramePtrOffsetInBlock / 4)
       .setMIFlags(MachineInstr::FrameSetup));
     if (NumBytes > 508)
       // If offset is > 508 then sp cannot be adjusted in a single instruction,
@@ -211,13 +213,6 @@ void Thumb1FrameLowering::emitPrologue(MachineFunction &MF) const {
   // checks for hasVarSizedObjects.
   if (MFI->hasVarSizedObjects())
     AFI->setShouldRestoreSPFromFP(true);
-}
-
-static bool isCalleeSavedRegister(unsigned Reg, const uint16_t *CSRegs) {
-  for (unsigned i = 0; CSRegs[i]; ++i)
-    if (Reg == CSRegs[i])
-      return true;
-  return false;
 }
 
 static bool isCSRestore(MachineInstr *MI, const uint16_t *CSRegs) {
@@ -296,8 +291,9 @@ void Thumb1FrameLowering::emitEpilogue(MachineFunction &MF,
           &MBB.front() != MBBI &&
           prior(MBBI)->getOpcode() == ARM::tPOP) {
         MachineBasicBlock::iterator PMBBI = prior(MBBI);
-        emitSPUpdate(MBB, PMBBI, TII, dl, *RegInfo, NumBytes);
-      } else
+        if (!tryFoldSPUpdateIntoPushPop(STI, MF, PMBBI, NumBytes))
+          emitSPUpdate(MBB, PMBBI, TII, dl, *RegInfo, NumBytes);
+      } else if (!tryFoldSPUpdateIntoPushPop(STI, MF, MBBI, NumBytes))
         emitSPUpdate(MBB, MBBI, TII, dl, *RegInfo, NumBytes);
     }
   }
@@ -308,9 +304,9 @@ void Thumb1FrameLowering::emitEpilogue(MachineFunction &MF,
     // we need to update the SP after popping the value. Therefore, we
     // pop the old LR into R3 as a temporary.
 
-    // Move back past the callee-saved register restoration
-    while (MBBI != MBB.end() && isCSRestore(MBBI, CSRegs))
-      ++MBBI;
+    // Get the last instruction, tBX_RET
+    MBBI = MBB.getLastNonDebugInstr();
+    assert (MBBI->getOpcode() == ARM::tBX_RET);
     // Epilogue for vararg functions: pop LR to R3 and branch off it.
     AddDefaultPred(BuildMI(MBB, MBBI, dl, TII.get(ARM::tPOP)))
       .addReg(ARM::R3, RegState::Define);

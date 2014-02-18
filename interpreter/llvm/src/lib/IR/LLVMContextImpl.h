@@ -238,9 +238,12 @@ public:
   
   LLVMContext::InlineAsmDiagHandlerTy InlineAsmDiagHandler;
   void *InlineAsmDiagContext;
-  
-  typedef DenseMap<DenseMapAPIntKeyInfo::KeyTy, ConstantInt*, 
-                         DenseMapAPIntKeyInfo> IntMapTy;
+
+  LLVMContext::DiagnosticHandlerTy DiagnosticHandler;
+  void *DiagnosticContext;
+
+  typedef DenseMap<DenseMapAPIntKeyInfo::KeyTy, ConstantInt *,
+                   DenseMapAPIntKeyInfo> IntMapTy;
   IntMapTy IntConstants;
   
   typedef DenseMap<DenseMapAPFloatKeyInfo::KeyTy, ConstantFP*, 
@@ -278,8 +281,8 @@ public:
   
   StringMap<ConstantDataSequential*> CDSConstants;
 
-  
-  DenseMap<std::pair<Function*, BasicBlock*> , BlockAddress*> BlockAddresses;
+  DenseMap<std::pair<const Function *, const BasicBlock *>, BlockAddress *>
+    BlockAddresses;
   ConstantUniqueMap<ExprMapKeyType, const ExprMapKeyType&, Type, ConstantExpr>
     ExprConstants;
 

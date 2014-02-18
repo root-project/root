@@ -644,31 +644,28 @@ llvm::Constant *RTTIBuilder::BuildTypeInfo(QualType Ty, bool Force) {
     OldGV->eraseFromParent();
   }
 
-  // GCC only relies on the uniqueness of the type names, not the
-  // type_infos themselves, so we can emit these as hidden symbols.
-  // But don't do this if we're worried about strict visibility
-  // compatibility.
-  if (const RecordType *RT = dyn_cast<RecordType>(Ty)) {
-    const CXXRecordDecl *RD = cast<CXXRecordDecl>(RT->getDecl());
+  // The Itanium ABI specifies that type_info objects must be globally
+  // unique, with one exception: if the type is an incomplete class
+  // type or a (possibly indirect) pointer to one.  That exception
+  // affects the general case of comparing type_info objects produced
+  // by the typeid operator, which is why the comparison operators on
+  // std::type_info generally use the type_info name pointers instead
+  // of the object addresses.  However, the language's built-in uses
+  // of RTTI generally require class types to be complete, even when
+  // manipulating pointers to those class types.  This allows the
+  // implementation of dynamic_cast to rely on address equality tests,
+  // which is much faster.
 
-    CGM.setTypeVisibility(GV, RD, CodeGenModule::TVK_ForRTTI);
-    CGM.setTypeVisibility(TypeName, RD, CodeGenModule::TVK_ForRTTIName);
-  } else {
-    Visibility TypeInfoVisibility = DefaultVisibility;
-    if (CGM.getCodeGenOpts().HiddenWeakVTables &&
-        Linkage == llvm::GlobalValue::LinkOnceODRLinkage)
-      TypeInfoVisibility = HiddenVisibility;
+  // All of this is to say that it's important that both the type_info
+  // object and the type_info name be uniqued when weakly emitted.
 
-    // The type name should have the same visibility as the type itself.
-    Visibility ExplicitVisibility = Ty->getVisibility();
-    TypeName->setVisibility(CodeGenModule::
-                            GetLLVMVisibility(ExplicitVisibility));
-  
-    TypeInfoVisibility = minVisibility(TypeInfoVisibility, Ty->getVisibility());
-    GV->setVisibility(CodeGenModule::GetLLVMVisibility(TypeInfoVisibility));
-  }
-
-  GV->setUnnamedAddr(true);
+  // Give the type_info object and name the formal visibility of the
+  // type itself.
+  Visibility formalVisibility = Ty->getVisibility();
+  llvm::GlobalValue::VisibilityTypes llvmVisibility =
+    CodeGenModule::GetLLVMVisibility(formalVisibility);
+  TypeName->setVisibility(llvmVisibility);
+  GV->setVisibility(llvmVisibility);
 
   return llvm::ConstantExpr::getBitCast(GV, CGM.Int8PtrTy);
 }
@@ -846,7 +843,7 @@ void RTTIBuilder::BuildVMIClassTypeInfo(const CXXRecordDecl *RD) {
     CharUnits Offset;
     if (Base->isVirtual())
       Offset = 
-        CGM.getVTableContext().getVirtualBaseOffsetOffset(RD, BaseDecl);
+        CGM.getItaniumVTableContext().getVirtualBaseOffsetOffset(RD, BaseDecl);
     else {
       const ASTRecordLayout &Layout = CGM.getContext().getASTRecordLayout(RD);
       Offset = Layout.getBaseClassOffset(BaseDecl);

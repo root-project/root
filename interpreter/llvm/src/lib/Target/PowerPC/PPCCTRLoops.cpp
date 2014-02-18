@@ -26,13 +26,15 @@
 #define DEBUG_TYPE "ctrloops"
 
 #include "llvm/Transforms/Scalar.h"
-#include "llvm/ADT/Statistic.h"
+#include "PPC.h"
+#include "PPCTargetMachine.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/ScalarEvolutionExpander.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -42,12 +44,10 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ValueHandle.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetLibraryInfo.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
-#include "llvm/Target/TargetLibraryInfo.h"
-#include "PPCTargetMachine.h"
-#include "PPC.h"
 
 #ifndef NDEBUG
 #include "llvm/CodeGen/MachineDominators.h"
@@ -96,8 +96,8 @@ namespace {
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.addRequired<LoopInfo>();
       AU.addPreserved<LoopInfo>();
-      AU.addRequired<DominatorTree>();
-      AU.addPreserved<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
+      AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addRequired<ScalarEvolution>();
     }
 
@@ -145,7 +145,7 @@ namespace {
 
 INITIALIZE_PASS_BEGIN(PPCCTRLoops, "ppc-ctr-loops", "PowerPC CTR Loops",
                       false, false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(LoopInfo)
 INITIALIZE_PASS_DEPENDENCY(ScalarEvolution)
 INITIALIZE_PASS_END(PPCCTRLoops, "ppc-ctr-loops", "PowerPC CTR Loops",
@@ -170,7 +170,7 @@ FunctionPass *llvm::createPPCCTRLoopsVerify() {
 bool PPCCTRLoops::runOnFunction(Function &F) {
   LI = &getAnalysis<LoopInfo>();
   SE = &getAnalysis<ScalarEvolution>();
-  DT = &getAnalysis<DominatorTree>();
+  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   TD = getAnalysisIfAvailable<DataLayout>();
   LibInfo = getAnalysisIfAvailable<TargetLibraryInfo>();
 

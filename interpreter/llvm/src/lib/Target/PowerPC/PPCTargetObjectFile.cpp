@@ -8,10 +8,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "PPCTargetObjectFile.h"
+#include "llvm/IR/Mangler.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSectionELF.h"
-#include "llvm/Target/Mangler.h"
 
 using namespace llvm;
 
@@ -22,9 +22,9 @@ Initialize(MCContext &Ctx, const TargetMachine &TM) {
   InitializeELF(TM.Options.UseInitArray);
 }
 
-const MCSection * PPC64LinuxTargetObjectFile::
-SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind,
-                       Mangler *Mang, const TargetMachine &TM) const {
+const MCSection *PPC64LinuxTargetObjectFile::SelectSectionForGlobal(
+    const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
+    const TargetMachine &TM) const {
 
   const MCSection *DefaultSection = 
     TargetLoweringObjectFileELF::SelectSectionForGlobal(GV, Kind, Mang, TM);

@@ -169,11 +169,13 @@ public:
   void printNeonMovImmShiftOperand(const MCInst *MI, unsigned OpNum,
                                    raw_ostream &O);
   void printNeonUImm0Operand(const MCInst *MI, unsigned OpNum, raw_ostream &O);
-  void printNeonUImm8Operand(const MCInst *MI, unsigned OpNum, raw_ostream &O);
-  void printNeonUImm8OperandBare(const MCInst *MI, unsigned OpNum,
-                                 raw_ostream &O);
+  void printUImmHexOperand(const MCInst *MI, unsigned OpNum, raw_ostream &O);
+  void printUImmBareOperand(const MCInst *MI, unsigned OpNum, raw_ostream &O);
   void printNeonUImm64MaskOperand(const MCInst *MI, unsigned OpNum,
                                   raw_ostream &O);
+
+  template <A64Layout::VectorLayout Layout, unsigned Count>
+  void printVectorList(const MCInst *MI, unsigned OpNum, raw_ostream &O);
 };
 }
 

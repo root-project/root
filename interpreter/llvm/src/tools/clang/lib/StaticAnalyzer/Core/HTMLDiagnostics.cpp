@@ -99,9 +99,7 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
   // Create the HTML directory if it is missing.
   if (!createdDir) {
     createdDir = true;
-    bool existed;
-    if (llvm::error_code ec =
-            llvm::sys::fs::create_directories(Directory, existed)) {
+    if (llvm::error_code ec = llvm::sys::fs::create_directories(Directory)) {
       llvm::errs() << "warning: could not create directory '"
                    << Directory << "': " << ec.message() << '\n';
 
@@ -220,6 +218,10 @@ void HTMLDiagnostics::ReportDiag(const PathDiagnostic& D,
     os << "\n<!-- BUGLINE "
        << path.back()->getLocation().asLocation().getExpansionLineNumber()
        << " -->\n";
+
+    os << "\n<!-- BUGCOLUMN "
+      << path.back()->getLocation().asLocation().getExpansionColumnNumber()
+      << " -->\n";
 
     os << "\n<!-- BUGPATHLENGTH " << path.size() << " -->\n";
 

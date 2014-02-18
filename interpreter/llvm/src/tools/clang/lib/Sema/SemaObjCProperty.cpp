@@ -126,7 +126,7 @@ CheckPropertyAgainstProtocol(Sema &S, ObjCPropertyDecl *Prop,
   DeclContext::lookup_result R = Proto->lookup(Prop->getDeclName());
   for (unsigned I = 0, N = R.size(); I != N; ++I) {
     if (ObjCPropertyDecl *ProtoProp = dyn_cast<ObjCPropertyDecl>(R[I])) {
-      S.DiagnosePropertyMismatch(Prop, ProtoProp, Proto->getIdentifier());
+      S.DiagnosePropertyMismatch(Prop, ProtoProp, Proto->getIdentifier(), true);
       return;
     }
   }
@@ -208,7 +208,7 @@ Decl *Sema::ActOnProperty(Scope *S, SourceLocation AtLoc,
       DeclContext::lookup_result R = Super->lookup(Res->getDeclName());
       for (unsigned I = 0, N = R.size(); I != N; ++I) {
         if (ObjCPropertyDecl *SuperProp = dyn_cast<ObjCPropertyDecl>(R[I])) {
-          DiagnosePropertyMismatch(Res, SuperProp, Super->getIdentifier());
+          DiagnosePropertyMismatch(Res, SuperProp, Super->getIdentifier(), false);
           FoundInSuper = true;
           break;
         }
@@ -434,6 +434,8 @@ Sema::HandlePropertyInClassExtension(Scope *S,
   // with continuation class's readwrite property attribute!
   unsigned PIkind = PIDecl->getPropertyAttributesAsWritten();
   if (isReadWrite && (PIkind & ObjCPropertyDecl::OBJC_PR_readonly)) {
+    PIkind &= ~ObjCPropertyDecl::OBJC_PR_readonly;
+    PIkind |= ObjCPropertyDecl::OBJC_PR_readwrite;
     PIkind |= deduceWeakPropertyFromType(*this, PIDecl->getType());
     unsigned ClassExtensionMemoryModel = getOwnershipRule(Attributes);
     unsigned PrimaryClassMemoryModel = getOwnershipRule(PIkind);
@@ -442,9 +444,37 @@ Sema::HandlePropertyInClassExtension(Scope *S,
       Diag(AtLoc, diag::warn_property_attr_mismatch);
       Diag(PIDecl->getLocation(), diag::note_property_declare);
     }
+    else if (getLangOpts().ObjCAutoRefCount) {
+      QualType PrimaryPropertyQT =
+        Context.getCanonicalType(PIDecl->getType()).getUnqualifiedType();
+      if (isa<ObjCObjectPointerType>(PrimaryPropertyQT)) {
+        bool PropertyIsWeak = ((PIkind & ObjCPropertyDecl::OBJC_PR_weak) != 0);
+        Qualifiers::ObjCLifetime PrimaryPropertyLifeTime =
+          PrimaryPropertyQT.getObjCLifetime();
+        if (PrimaryPropertyLifeTime == Qualifiers::OCL_None &&
+            (Attributes & ObjCDeclSpec::DQ_PR_weak) &&
+            !PropertyIsWeak) {
+              Diag(AtLoc, diag::warn_property_implicitly_mismatched);
+              Diag(PIDecl->getLocation(), diag::note_property_declare);
+            }
+        }
+    }
+    
     DeclContext *DC = cast<DeclContext>(CCPrimary);
     if (!ObjCPropertyDecl::findPropertyDecl(DC,
                                  PIDecl->getDeclName().getAsIdentifierInfo())) {
+      // In mrr mode, 'readwrite' property must have an explicit
+      // memory attribute. If none specified, select the default (assign).
+      if (!getLangOpts().ObjCAutoRefCount) {
+        if (!(PIkind & (ObjCDeclSpec::DQ_PR_assign |
+                        ObjCDeclSpec::DQ_PR_retain |
+                        ObjCDeclSpec::DQ_PR_strong |
+                        ObjCDeclSpec::DQ_PR_copy |
+                        ObjCDeclSpec::DQ_PR_unsafe_unretained |
+                        ObjCDeclSpec::DQ_PR_weak)))
+          PIkind |= ObjCPropertyDecl::OBJC_PR_assign;
+      }
+      
       // Protocol is not in the primary class. Must build one for it.
       ObjCDeclSpec ProtocolPropertyODS;
       // FIXME. Assuming that ObjCDeclSpec::ObjCPropertyAttributeKind
@@ -775,75 +805,6 @@ DiagnosePropertyMismatchDeclInProtocols(Sema &S, SourceLocation AtLoc,
     S.Diag(AtLoc, diag::note_property_synthesize);
 }
 
-/// DiagnoseClassAndClassExtPropertyMismatch - diagnose inconsistant property
-/// attribute declared in primary class and attributes overridden in any of its
-/// class extensions.
-static void
-DiagnoseClassAndClassExtPropertyMismatch(Sema &S, ObjCInterfaceDecl *ClassDecl, 
-                                         ObjCPropertyDecl *property) {
-  unsigned Attributes = property->getPropertyAttributesAsWritten();
-  bool warn = (Attributes & ObjCDeclSpec::DQ_PR_readonly);
-  for (ObjCInterfaceDecl::known_extensions_iterator
-         Ext = ClassDecl->known_extensions_begin(),
-         ExtEnd = ClassDecl->known_extensions_end();
-       Ext != ExtEnd; ++Ext) {
-    ObjCPropertyDecl *ClassExtProperty = 0;
-    DeclContext::lookup_result R = Ext->lookup(property->getDeclName());
-    for (unsigned I = 0, N = R.size(); I != N; ++I) {
-      ClassExtProperty = dyn_cast<ObjCPropertyDecl>(R[0]);
-      if (ClassExtProperty)
-        break;
-    }
-
-    if (ClassExtProperty) {
-      warn = false;
-      unsigned classExtPropertyAttr = 
-        ClassExtProperty->getPropertyAttributesAsWritten();
-      // We are issuing the warning that we postponed because class extensions
-      // can override readonly->readwrite and 'setter' attributes originally
-      // placed on class's property declaration now make sense in the overridden
-      // property.
-      if (Attributes & ObjCDeclSpec::DQ_PR_readonly) {
-        if (!classExtPropertyAttr ||
-            (classExtPropertyAttr & 
-              (ObjCDeclSpec::DQ_PR_readwrite|
-               ObjCDeclSpec::DQ_PR_assign |
-               ObjCDeclSpec::DQ_PR_unsafe_unretained |
-               ObjCDeclSpec::DQ_PR_copy |
-               ObjCDeclSpec::DQ_PR_retain |
-               ObjCDeclSpec::DQ_PR_strong)))
-          continue;
-        warn = true;
-        break;
-      }
-    }
-  }
-  if (warn) {
-    unsigned setterAttrs = (ObjCDeclSpec::DQ_PR_assign |
-                            ObjCDeclSpec::DQ_PR_unsafe_unretained |
-                            ObjCDeclSpec::DQ_PR_copy |
-                            ObjCDeclSpec::DQ_PR_retain |
-                            ObjCDeclSpec::DQ_PR_strong);
-    if (Attributes & setterAttrs) {
-      const char * which =     
-      (Attributes & ObjCDeclSpec::DQ_PR_assign) ?
-      "assign" :
-      (Attributes & ObjCDeclSpec::DQ_PR_unsafe_unretained) ?
-      "unsafe_unretained" :
-      (Attributes & ObjCDeclSpec::DQ_PR_copy) ?
-      "copy" : 
-      (Attributes & ObjCDeclSpec::DQ_PR_retain) ?
-      "retain" : "strong";
-      
-      S.Diag(property->getLocation(), 
-             diag::warn_objc_property_attr_mutually_exclusive)
-      << "readonly" << which;
-    }
-  }
-  
-  
-}
-
 /// ActOnPropertyImplDecl - This routine performs semantic checks and
 /// builds the AST node for a property implementation declaration; declared
 /// as \@synthesize or \@dynamic.
@@ -927,7 +888,7 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       
       if (!ReadWriteProperty) {
         Diag(property->getLocation(), diag::warn_auto_readonly_iboutlet_property)
-            << property->getName();
+            << property;
         SourceLocation readonlyLoc;
         if (LocPropertyAttribute(Context, "readonly", 
                                  property->getLParenLoc(), readonlyLoc)) {
@@ -942,8 +903,6 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
     }
     if (Synthesize && isa<ObjCProtocolDecl>(property->getDeclContext()))
       DiagnosePropertyMismatchDeclInProtocols(*this, AtLoc, IDecl, property);
-    
-    DiagnoseClassAndClassExtPropertyMismatch(*this, IDecl, property);
         
   } else if ((CatImplClass = dyn_cast<ObjCCategoryImplDecl>(ClassImpDecl))) {
     if (Synthesize) {
@@ -1201,19 +1160,20 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       ImplicitParamDecl *SelfDecl = getterMethod->getSelfDecl();
       DeclRefExpr *SelfExpr = 
         new (Context) DeclRefExpr(SelfDecl, false, SelfDecl->getType(),
-                                  VK_RValue, PropertyDiagLoc);
+                                  VK_LValue, PropertyDiagLoc);
       MarkDeclRefReferenced(SelfExpr);
+      Expr *LoadSelfExpr =
+        ImplicitCastExpr::Create(Context, SelfDecl->getType(),
+                                 CK_LValueToRValue, SelfExpr, 0, VK_RValue);
       Expr *IvarRefExpr =
         new (Context) ObjCIvarRefExpr(Ivar, Ivar->getType(), PropertyDiagLoc,
                                       Ivar->getLocation(),
-                                      SelfExpr, true, true);
-      ExprResult Res = 
-        PerformCopyInitialization(InitializedEntity::InitializeResult(
-                                    PropertyDiagLoc,
-                                    getterMethod->getResultType(),
-                                    /*NRVO=*/false),
-                                  PropertyDiagLoc,
-                                  Owned(IvarRefExpr));
+                                      LoadSelfExpr, true, true);
+      ExprResult Res = PerformCopyInitialization(
+          InitializedEntity::InitializeResult(PropertyDiagLoc,
+                                              getterMethod->getReturnType(),
+                                              /*NRVO=*/false),
+          PropertyDiagLoc, Owned(IvarRefExpr));
       if (!Res.isInvalid()) {
         Expr *ResExpr = Res.takeAs<Expr>();
         if (ResExpr)
@@ -1249,12 +1209,15 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
       ImplicitParamDecl *SelfDecl = setterMethod->getSelfDecl();
       DeclRefExpr *SelfExpr = 
         new (Context) DeclRefExpr(SelfDecl, false, SelfDecl->getType(),
-                                  VK_RValue, PropertyDiagLoc);
+                                  VK_LValue, PropertyDiagLoc);
       MarkDeclRefReferenced(SelfExpr);
+      Expr *LoadSelfExpr =
+        ImplicitCastExpr::Create(Context, SelfDecl->getType(),
+                                 CK_LValueToRValue, SelfExpr, 0, VK_RValue);
       Expr *lhs =
         new (Context) ObjCIvarRefExpr(Ivar, Ivar->getType(), PropertyDiagLoc,
                                       Ivar->getLocation(),
-                                      SelfExpr, true, true);
+                                      LoadSelfExpr, true, true);
       ObjCMethodDecl::param_iterator P = setterMethod->param_begin();
       ParmVarDecl *Param = (*P);
       QualType T = Param->getType().getNonReferenceType();
@@ -1353,31 +1316,41 @@ Decl *Sema::ActOnPropertyImplDecl(Scope *S,
 void
 Sema::DiagnosePropertyMismatch(ObjCPropertyDecl *Property,
                                ObjCPropertyDecl *SuperProperty,
-                               const IdentifierInfo *inheritedName) {
+                               const IdentifierInfo *inheritedName,
+                               bool OverridingProtocolProperty) {
   ObjCPropertyDecl::PropertyAttributeKind CAttr =
-  Property->getPropertyAttributes();
+    Property->getPropertyAttributes();
   ObjCPropertyDecl::PropertyAttributeKind SAttr =
-  SuperProperty->getPropertyAttributes();
-  if ((CAttr & ObjCPropertyDecl::OBJC_PR_readonly)
-      && (SAttr & ObjCPropertyDecl::OBJC_PR_readwrite))
-    Diag(Property->getLocation(), diag::warn_readonly_property)
-      << Property->getDeclName() << inheritedName;
-  if ((CAttr & ObjCPropertyDecl::OBJC_PR_copy)
-      != (SAttr & ObjCPropertyDecl::OBJC_PR_copy))
-    Diag(Property->getLocation(), diag::warn_property_attribute)
-      << Property->getDeclName() << "copy" << inheritedName;
-  else if (!(SAttr & ObjCPropertyDecl::OBJC_PR_readonly)){
-    unsigned CAttrRetain = 
-      (CAttr & 
-       (ObjCPropertyDecl::OBJC_PR_retain | ObjCPropertyDecl::OBJC_PR_strong));
-    unsigned SAttrRetain = 
-      (SAttr & 
-       (ObjCPropertyDecl::OBJC_PR_retain | ObjCPropertyDecl::OBJC_PR_strong));
-    bool CStrong = (CAttrRetain != 0);
-    bool SStrong = (SAttrRetain != 0);
-    if (CStrong != SStrong)
+    SuperProperty->getPropertyAttributes();
+  
+  // We allow readonly properties without an explicit ownership
+  // (assign/unsafe_unretained/weak/retain/strong/copy) in super class
+  // to be overridden by a property with any explicit ownership in the subclass.
+  if (!OverridingProtocolProperty &&
+      !getOwnershipRule(SAttr) && getOwnershipRule(CAttr))
+    ;
+  else {
+    if ((CAttr & ObjCPropertyDecl::OBJC_PR_readonly)
+        && (SAttr & ObjCPropertyDecl::OBJC_PR_readwrite))
+      Diag(Property->getLocation(), diag::warn_readonly_property)
+        << Property->getDeclName() << inheritedName;
+    if ((CAttr & ObjCPropertyDecl::OBJC_PR_copy)
+        != (SAttr & ObjCPropertyDecl::OBJC_PR_copy))
       Diag(Property->getLocation(), diag::warn_property_attribute)
-        << Property->getDeclName() << "retain (or strong)" << inheritedName;
+        << Property->getDeclName() << "copy" << inheritedName;
+    else if (!(SAttr & ObjCPropertyDecl::OBJC_PR_readonly)){
+      unsigned CAttrRetain =
+        (CAttr &
+         (ObjCPropertyDecl::OBJC_PR_retain | ObjCPropertyDecl::OBJC_PR_strong));
+      unsigned SAttrRetain =
+        (SAttr &
+         (ObjCPropertyDecl::OBJC_PR_retain | ObjCPropertyDecl::OBJC_PR_strong));
+      bool CStrong = (CAttrRetain != 0);
+      bool SStrong = (SAttrRetain != 0);
+      if (CStrong != SStrong)
+        Diag(Property->getLocation(), diag::warn_property_attribute)
+          << Property->getDeclName() << "retain (or strong)" << inheritedName;
+    }
   }
 
   if ((CAttr & ObjCPropertyDecl::OBJC_PR_nonatomic)
@@ -1422,7 +1395,7 @@ bool Sema::DiagnosePropertyAccessorMismatch(ObjCPropertyDecl *property,
                                             SourceLocation Loc) {
   if (!GetterMethod)
     return false;
-  QualType GetterType = GetterMethod->getResultType().getNonReferenceType();
+  QualType GetterType = GetterMethod->getReturnType().getNonReferenceType();
   QualType PropertyIvarType = property->getType().getNonReferenceType();
   bool compat = Context.hasSameType(PropertyIvarType, GetterType);
   if (!compat) {
@@ -1587,7 +1560,7 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
           !IMPDecl->getInstanceMethod(Prop->getSetterName()) &&
           !IDecl->HasUserDeclaredSetterMethod(Prop)) {
             Diag(Prop->getLocation(), diag::warn_no_autosynthesis_property)
-              << Prop->getIdentifier()->getName();
+              << Prop->getIdentifier();
             Diag(PropInSuperClass->getLocation(), diag::note_property_declare);
       }
       continue;
@@ -1596,16 +1569,18 @@ void Sema::DefaultSynthesizeProperties(Scope *S, ObjCImplDecl* IMPDecl,
         IMPDecl->FindPropertyImplIvarDecl(Prop->getIdentifier())) {
       if (PID->getPropertyDecl() != Prop) {
         Diag(Prop->getLocation(), diag::warn_no_autosynthesis_shared_ivar_property)
-        << Prop->getIdentifier()->getName();
+          << Prop->getIdentifier();
         if (!PID->getLocation().isInvalid())
           Diag(PID->getLocation(), diag::note_property_synthesize);
       }
       continue;
     }
-    if (isa<ObjCProtocolDecl>(Prop->getDeclContext())) {
+    if (ObjCProtocolDecl *Proto =
+          dyn_cast<ObjCProtocolDecl>(Prop->getDeclContext())) {
       // We won't auto-synthesize properties declared in protocols.
       Diag(IMPDecl->getLocation(), 
-           diag::warn_auto_synthesizing_protocol_property);
+           diag::warn_auto_synthesizing_protocol_property)
+        << Prop << Proto;
       Diag(Prop->getLocation(), diag::note_property_declare);
       continue;
     }
@@ -1836,9 +1811,6 @@ void Sema::DiagnoseOwningPropertyGetterSynthesis(const ObjCImplementationDecl *D
   for (ObjCImplementationDecl::propimpl_iterator
          i = D->propimpl_begin(), e = D->propimpl_end(); i != e; ++i) {
     ObjCPropertyImplDecl *PID = *i;
-    if (PID->getPropertyImplementation() != ObjCPropertyImplDecl::Synthesize)
-      continue;
-    
     const ObjCPropertyDecl *PD = PID->getPropertyDecl();
     if (PD && !PD->hasAttr<NSReturnsNotRetainedAttr>() &&
         !D->getInstanceMethod(PD->getGetterName())) {
@@ -1849,11 +1821,38 @@ void Sema::DiagnoseOwningPropertyGetterSynthesis(const ObjCImplementationDecl *D
       if (family == OMF_alloc || family == OMF_copy ||
           family == OMF_mutableCopy || family == OMF_new) {
         if (getLangOpts().ObjCAutoRefCount)
-          Diag(PID->getLocation(), diag::err_ownin_getter_rule);
+          Diag(PD->getLocation(), diag::err_cocoa_naming_owned_rule);
         else
-          Diag(PID->getLocation(), diag::warn_owning_getter_rule);
-        Diag(PD->getLocation(), diag::note_property_declare);
+          Diag(PD->getLocation(), diag::warn_cocoa_naming_owned_rule);
       }
+    }
+  }
+}
+
+void Sema::DiagnoseMissingDesignatedInitOverrides(
+                                            const ObjCImplementationDecl *ImplD,
+                                            const ObjCInterfaceDecl *IFD) {
+  assert(IFD->hasDesignatedInitializers());
+  const ObjCInterfaceDecl *SuperD = IFD->getSuperClass();
+  if (!SuperD)
+    return;
+
+  SelectorSet InitSelSet;
+  for (ObjCImplementationDecl::instmeth_iterator
+         I = ImplD->instmeth_begin(), E = ImplD->instmeth_end(); I!=E; ++I)
+    if ((*I)->getMethodFamily() == OMF_init)
+      InitSelSet.insert((*I)->getSelector());
+
+  SmallVector<const ObjCMethodDecl *, 8> DesignatedInits;
+  SuperD->getDesignatedInitializers(DesignatedInits);
+  for (SmallVector<const ObjCMethodDecl *, 8>::iterator
+         I = DesignatedInits.begin(), E = DesignatedInits.end(); I != E; ++I) {
+    const ObjCMethodDecl *MD = *I;
+    if (!InitSelSet.count(MD->getSelector())) {
+      Diag(ImplD->getLocation(),
+           diag::warn_objc_implementation_missing_designated_init_override)
+        << MD->getSelector();
+      Diag(MD->getLocation(), diag::note_objc_designated_init_marked_here);
     }
   }
 }
@@ -1894,8 +1893,8 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property,
     ObjCPropertyDecl::PropertyAttributeKind CAttr =
       property->getPropertyAttributes();
     if ((!(CAttr & ObjCPropertyDecl::OBJC_PR_readonly)) &&
-        Context.getCanonicalType(SetterMethod->getResultType()) !=
-          Context.VoidTy)
+        Context.getCanonicalType(SetterMethod->getReturnType()) !=
+            Context.VoidTy)
       Diag(SetterMethod->getLocation(), diag::err_setter_type_void);
     if (SetterMethod->param_size() != 1 ||
         !Context.hasSameUnqualifiedType(
@@ -1941,12 +1940,16 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property,
     if (lexicalDC)
       GetterMethod->setLexicalDeclContext(lexicalDC);
     if (property->hasAttr<NSReturnsNotRetainedAttr>())
-      GetterMethod->addAttr(
-        ::new (Context) NSReturnsNotRetainedAttr(Loc, Context));
+      GetterMethod->addAttr(NSReturnsNotRetainedAttr::CreateImplicit(Context,
+                                                                     Loc));
     
     if (property->hasAttr<ObjCReturnsInnerPointerAttr>())
       GetterMethod->addAttr(
-        ::new (Context) ObjCReturnsInnerPointerAttr(Loc, Context));
+        ObjCReturnsInnerPointerAttr::CreateImplicit(Context, Loc));
+    
+    if (const SectionAttr *SA = property->getAttr<SectionAttr>())
+      GetterMethod->addAttr(SectionAttr::CreateImplicit(Context, SA->getName(),
+                                                        Loc));
 
     if (getLangOpts().ObjCAutoRefCount)
       CheckARCMethodDecl(GetterMethod);
@@ -1997,7 +2000,9 @@ void Sema::ProcessPropertyDecl(ObjCPropertyDecl *property,
       // and the real context should be the same.
       if (lexicalDC)
         SetterMethod->setLexicalDeclContext(lexicalDC);
-
+      if (const SectionAttr *SA = property->getAttr<SectionAttr>())
+        SetterMethod->addAttr(SectionAttr::CreateImplicit(Context,
+                                                          SA->getName(), Loc));
       // It's possible for the user to have set a very odd custom
       // setter selector that causes it to have a method family.
       if (getLangOpts().ObjCAutoRefCount)
@@ -2045,62 +2050,29 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
   // FIXME: Improve the reported location.
   if (!PDecl || PDecl->isInvalidDecl())
     return;
-
-  ObjCPropertyDecl *PropertyDecl = cast<ObjCPropertyDecl>(PDecl);
-  QualType PropertyTy = PropertyDecl->getType(); 
-
-  if (getLangOpts().ObjCAutoRefCount &&
-      (Attributes & ObjCDeclSpec::DQ_PR_readonly) &&
-      PropertyTy->isObjCRetainableType()) {
-    // 'readonly' property with no obvious lifetime.
-    // its life time will be determined by its backing ivar.
-    unsigned rel = (ObjCDeclSpec::DQ_PR_unsafe_unretained |
-                    ObjCDeclSpec::DQ_PR_copy |
-                    ObjCDeclSpec::DQ_PR_retain |
-                    ObjCDeclSpec::DQ_PR_strong |
-                    ObjCDeclSpec::DQ_PR_weak |
-                    ObjCDeclSpec::DQ_PR_assign);
-    if ((Attributes & rel) == 0)
-      return;
-  }
   
-  if (propertyInPrimaryClass) {
-    // we postpone most property diagnosis until class's implementation
-    // because, its readonly attribute may be overridden in its class 
-    // extensions making other attributes, which make no sense, to make sense.
-    if ((Attributes & ObjCDeclSpec::DQ_PR_readonly) &&
-        (Attributes & ObjCDeclSpec::DQ_PR_readwrite))
-      Diag(Loc, diag::err_objc_property_attr_mutually_exclusive) 
-        << "readonly" << "readwrite";
-  }
-  // readonly and readwrite/assign/retain/copy conflict.
-  else if ((Attributes & ObjCDeclSpec::DQ_PR_readonly) &&
-           (Attributes & (ObjCDeclSpec::DQ_PR_readwrite |
-                     ObjCDeclSpec::DQ_PR_assign |
-                     ObjCDeclSpec::DQ_PR_unsafe_unretained |
-                     ObjCDeclSpec::DQ_PR_copy |
-                     ObjCDeclSpec::DQ_PR_retain |
-                     ObjCDeclSpec::DQ_PR_strong))) {
-    const char * which = (Attributes & ObjCDeclSpec::DQ_PR_readwrite) ?
-                          "readwrite" :
-                         (Attributes & ObjCDeclSpec::DQ_PR_assign) ?
-                          "assign" :
-                         (Attributes & ObjCDeclSpec::DQ_PR_unsafe_unretained) ?
-                          "unsafe_unretained" :
-                         (Attributes & ObjCDeclSpec::DQ_PR_copy) ?
-                          "copy" : "retain";
+  if ((Attributes & ObjCDeclSpec::DQ_PR_readonly) &&
+      (Attributes & ObjCDeclSpec::DQ_PR_readwrite))
+    Diag(Loc, diag::err_objc_property_attr_mutually_exclusive)
+    << "readonly" << "readwrite";
+  
+  ObjCPropertyDecl *PropertyDecl = cast<ObjCPropertyDecl>(PDecl);
+  QualType PropertyTy = PropertyDecl->getType();
+  unsigned PropertyOwnership = getOwnershipRule(Attributes);
 
-    Diag(Loc, (Attributes & (ObjCDeclSpec::DQ_PR_readwrite)) ?
-                 diag::err_objc_property_attr_mutually_exclusive :
-                 diag::warn_objc_property_attr_mutually_exclusive)
-      << "readonly" << which;
-  }
+  // 'readonly' property with no obvious lifetime.
+  // its life time will be determined by its backing ivar.
+  if (getLangOpts().ObjCAutoRefCount &&
+      Attributes & ObjCDeclSpec::DQ_PR_readonly &&
+      PropertyTy->isObjCRetainableType() &&
+      !PropertyOwnership)
+    return;
 
   // Check for copy or retain on non-object types.
   if ((Attributes & (ObjCDeclSpec::DQ_PR_weak | ObjCDeclSpec::DQ_PR_copy |
                     ObjCDeclSpec::DQ_PR_retain | ObjCDeclSpec::DQ_PR_strong)) &&
       !PropertyTy->isObjCRetainableType() &&
-      !PropertyDecl->getAttr<ObjCNSObjectAttr>()) {
+      !PropertyDecl->hasAttr<ObjCNSObjectAttr>()) {
     Diag(Loc, diag::err_objc_property_requires_object)
       << (Attributes & ObjCDeclSpec::DQ_PR_weak ? "weak" :
           Attributes & ObjCDeclSpec::DQ_PR_copy ? "copy" : "retain (or strong)");
@@ -2132,7 +2104,7 @@ void Sema::CheckObjCPropertyAttributes(Decl *PDecl,
         << "assign" << "weak";
       Attributes &= ~ObjCDeclSpec::DQ_PR_weak;
     }
-    if (PropertyDecl->getAttr<IBOutletCollectionAttr>())
+    if (PropertyDecl->hasAttr<IBOutletCollectionAttr>())
       Diag(Loc, diag::warn_iboutletcollection_property_assign);
   } else if (Attributes & ObjCDeclSpec::DQ_PR_unsafe_unretained) {
     if (Attributes & ObjCDeclSpec::DQ_PR_copy) {

@@ -1005,9 +1005,11 @@ void InitListChecker::CheckScalarType(const InitializedEntity &Entity,
 
   Expr *expr = IList->getInit(Index);
   if (InitListExpr *SubIList = dyn_cast<InitListExpr>(expr)) {
+    // FIXME: This is invalid, and accepting it causes overload resolution
+    // to pick the wrong overload in some corner cases.
     if (!VerifyOnly)
       SemaRef.Diag(SubIList->getLocStart(),
-                   diag::warn_many_braces_around_scalar_init)
+                   diag::ext_many_braces_around_scalar_init)
         << SubIList->getSourceRange();
 
     CheckScalarType(Entity, SubIList, DeclType, Index, StructuredList,
@@ -1538,7 +1540,7 @@ void InitListChecker::CheckStructUnionTypes(const InitializedEntity &Entity,
          it != end; ++it) {
       if (!it->isUnnamedBitfield() && !it->hasInClassInitializer()) {
         SemaRef.Diag(IList->getSourceRange().getEnd(),
-                     diag::warn_missing_field_initializers) << it->getName();
+                     diag::warn_missing_field_initializers) << *it;
         break;
       }
     }
@@ -1868,8 +1870,29 @@ InitListChecker::CheckDesignatedInitializer(const InitializedEntity &Entity,
     // the initializer list.
     if (RT->getDecl()->isUnion()) {
       FieldIndex = 0;
-      if (!VerifyOnly)
+      if (!VerifyOnly) {
+        FieldDecl *CurrentField = StructuredList->getInitializedFieldInUnion();
+        if (CurrentField && CurrentField != *Field) {
+          assert(StructuredList->getNumInits() == 1
+                 && "A union should never have more than one initializer!");
+
+          // we're about to throw away an initializer, emit warning
+          SemaRef.Diag(D->getFieldLoc(),
+                       diag::warn_initializer_overrides)
+            << D->getSourceRange();
+          Expr *ExistingInit = StructuredList->getInit(0);
+          SemaRef.Diag(ExistingInit->getLocStart(),
+                       diag::note_previous_initializer)
+            << /*FIXME:has side effects=*/0
+            << ExistingInit->getSourceRange();
+
+          // remove existing initializer
+          StructuredList->resizeInits(SemaRef.Context, 0);
+          StructuredList->setInitializedFieldInUnion(0);
+        }
+
         StructuredList->setInitializedFieldInUnion(*Field);
+      }
     }
 
     // Make sure we can use this declaration.
@@ -2485,7 +2508,7 @@ DeclarationName InitializedEntity::getName() const {
     return VariableOrMember->getDeclName();
 
   case EK_LambdaCapture:
-    return Capture.Var->getDeclName();
+    return DeclarationName(Capture.VarID);
       
   case EK_Result:
   case EK_Exception:
@@ -2587,7 +2610,7 @@ unsigned InitializedEntity::dumpImpl(raw_ostream &OS) const {
   case EK_BlockElement: OS << "Block"; break;
   case EK_LambdaCapture:
     OS << "LambdaCapture ";
-    getCapturedVar()->printName(OS);
+    OS << DeclarationName(Capture.VarID);
     break;
   }
 
@@ -3499,10 +3522,13 @@ static OverloadingResult TryRefInitWithConversionFunction(Sema &S,
         if (ConvTemplate)
           S.AddTemplateConversionCandidate(ConvTemplate, I.getPair(),
                                            ActingDC, Initializer,
-                                           DestType, CandidateSet);
+                                           DestType, CandidateSet,
+                                           /*AllowObjCConversionOnExplicit=*/
+                                             false);
         else
           S.AddConversionCandidate(Conv, I.getPair(), ActingDC,
-                                   Initializer, DestType, CandidateSet);
+                                   Initializer, DestType, CandidateSet,
+                                   /*AllowObjCConversionOnExplicit=*/false);
       }
     }
   }
@@ -3524,7 +3550,7 @@ static OverloadingResult TryRefInitWithConversionFunction(Sema &S,
 
   // Compute the returned type of the conversion.
   if (isa<CXXConversionDecl>(Function))
-    T2 = Function->getResultType();
+    T2 = Function->getReturnType();
   else
     T2 = cv1T1;
 
@@ -4122,10 +4148,11 @@ static void TryUserDefinedConversion(Sema &S,
           if (ConvTemplate)
             S.AddTemplateConversionCandidate(ConvTemplate, I.getPair(),
                                              ActingDC, Initializer, DestType,
-                                             CandidateSet);
+                                             CandidateSet, AllowExplicit);
           else
             S.AddConversionCandidate(Conv, I.getPair(), ActingDC,
-                                     Initializer, DestType, CandidateSet);
+                                     Initializer, DestType, CandidateSet,
+                                     AllowExplicit);
         }
       }
     }
@@ -4439,6 +4466,14 @@ void InitializationSequence::InitializeFrom(Sema &S,
   Expr *Initializer = 0;
   if (Args.size() == 1) {
     Initializer = Args[0];
+    if (S.getLangOpts().ObjC1) {
+      if (S.CheckObjCBridgeRelatedConversions(Initializer->getLocStart(),
+                                              DestType, Initializer->getType(),
+                                              Initializer) ||
+          S.ConversionToObjCStringLiteralCheck(DestType, Initializer))
+        Args[0] = Initializer;
+        
+    }
     if (!isa<InitListExpr>(Initializer))
       SourceType = Initializer->getType();
   }
@@ -5853,7 +5888,7 @@ InitializationSequence::Perform(Sema &S,
 
         CastKind = CK_UserDefinedConversion;
 
-        CreatedObject = Conversion->getResultType()->isRecordType();
+        CreatedObject = Conversion->getReturnType()->isRecordType();
       }
 
       bool RequiresCopy = !IsCopy && !isReferenceBinding(Steps.back());
@@ -6175,7 +6210,7 @@ InitializationSequence::Perform(Sema &S,
 
     case SK_OCLSamplerInit: {
       assert(Step->Type->isSamplerT() && 
-             "Sampler initialization on non sampler type.");
+             "Sampler initialization on non-sampler type.");
 
       QualType SourceType = CurInit.get()->getType();
 
@@ -6191,7 +6226,7 @@ InitializationSequence::Perform(Sema &S,
     }
     case SK_OCLZeroEvent: {
       assert(Step->Type->isEventT() && 
-             "Event initialization on non event type.");
+             "Event initialization on non-event type.");
 
       CurInit = S.ImpCastExprToType(CurInit.take(), Step->Type,
                                     CK_ZeroToOCLEvent,
@@ -6272,6 +6307,28 @@ static void emitBadConversionNotes(Sema &S, const InitializedEntity &entity,
   }
 }
 
+static void diagnoseListInit(Sema &S, const InitializedEntity &Entity,
+                             InitListExpr *InitList) {
+  QualType DestType = Entity.getType();
+
+  QualType E;
+  if (S.getLangOpts().CPlusPlus11 && S.isStdInitializerList(DestType, &E)) {
+    QualType ArrayType = S.Context.getConstantArrayType(
+        E.withConst(),
+        llvm::APInt(S.Context.getTypeSize(S.Context.getSizeType()),
+                    InitList->getNumInits()),
+        clang::ArrayType::Normal, 0);
+    InitializedEntity HiddenArray =
+        InitializedEntity::InitializeTemporary(ArrayType);
+    return diagnoseListInit(S, HiddenArray, InitList);
+  }
+
+  InitListChecker DiagnoseInitList(S, Entity, InitList, DestType,
+                                   /*VerifyOnly=*/false);
+  assert(DiagnoseInitList.HadError() &&
+         "Inconsistent init list check result.");
+}
+
 bool InitializationSequence::Diagnose(Sema &S,
                                       const InitializedEntity &Entity,
                                       const InitializationKind &Kind,
@@ -6319,7 +6376,7 @@ bool InitializationSequence::Diagnose(Sema &S,
     break;
   case FK_ArrayTypeMismatch:
   case FK_NonConstantArrayInit:
-    S.Diag(Kind.getLocation(), 
+    S.Diag(Kind.getLocation(),
            (Failure == FK_ArrayTypeMismatch
               ? diag::err_array_init_different_type
               : diag::err_array_init_non_constant_array))
@@ -6611,12 +6668,8 @@ bool InitializationSequence::Diagnose(Sema &S,
 
   case FK_ListInitializationFailed: {
     // Run the init list checker again to emit diagnostics.
-    InitListExpr* InitList = cast<InitListExpr>(Args[0]);
-    QualType DestType = Entity.getType();
-    InitListChecker DiagnoseInitList(S, Entity, InitList,
-            DestType, /*VerifyOnly=*/false);
-    assert(DiagnoseInitList.HadError() &&
-           "Inconsistent init list check result.");
+    InitListExpr *InitList = cast<InitListExpr>(Args[0]);
+    diagnoseListInit(S, Entity, InitList);
     break;
   }
 
@@ -6837,13 +6890,13 @@ void InitializationSequence::dump(raw_ostream &OS) const {
 
     case SK_ConversionSequence:
       OS << "implicit conversion sequence (";
-      S->ICS->DebugPrint(); // FIXME: use OS
+      S->ICS->dump(); // FIXME: use OS
       OS << ")";
       break;
 
     case SK_ConversionSequenceNoNarrowing:
       OS << "implicit conversion sequence with narrowing prohibited (";
-      S->ICS->DebugPrint(); // FIXME: use OS
+      S->ICS->dump(); // FIXME: use OS
       OS << ")";
       break;
 
@@ -6959,11 +7012,9 @@ static void DiagnoseNarrowingInInitList(Sema &S,
     // narrowing conversion even if the value is a constant and can be
     // represented exactly as an integer.
     S.Diag(PostInit->getLocStart(),
-           S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11? 
-             diag::warn_init_list_type_narrowing
-           : S.isSFINAEContext()?
-             diag::err_init_list_type_narrowing_sfinae
-           : diag::err_init_list_type_narrowing)
+           (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+               ? diag::warn_init_list_type_narrowing
+               : diag::ext_init_list_type_narrowing)
       << PostInit->getSourceRange()
       << PreNarrowingType.getLocalUnqualifiedType()
       << EntityType.getLocalUnqualifiedType();
@@ -6972,11 +7023,9 @@ static void DiagnoseNarrowingInInitList(Sema &S,
   case NK_Constant_Narrowing:
     // A constant value was narrowed.
     S.Diag(PostInit->getLocStart(),
-           S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11? 
-             diag::warn_init_list_constant_narrowing
-           : S.isSFINAEContext()?
-             diag::err_init_list_constant_narrowing_sfinae
-           : diag::err_init_list_constant_narrowing)
+           (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+               ? diag::warn_init_list_constant_narrowing
+               : diag::ext_init_list_constant_narrowing)
       << PostInit->getSourceRange()
       << ConstantValue.getAsString(S.getASTContext(), ConstantType)
       << EntityType.getLocalUnqualifiedType();
@@ -6985,11 +7034,9 @@ static void DiagnoseNarrowingInInitList(Sema &S,
   case NK_Variable_Narrowing:
     // A variable's value may have been narrowed.
     S.Diag(PostInit->getLocStart(),
-           S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11? 
-             diag::warn_init_list_variable_narrowing
-           : S.isSFINAEContext()?
-             diag::err_init_list_variable_narrowing_sfinae
-           : diag::err_init_list_variable_narrowing)
+           (S.getLangOpts().MicrosoftExt || !S.getLangOpts().CPlusPlus11)
+               ? diag::warn_init_list_variable_narrowing
+               : diag::ext_init_list_variable_narrowing)
       << PostInit->getSourceRange()
       << PreNarrowingType.getLocalUnqualifiedType()
       << EntityType.getLocalUnqualifiedType();

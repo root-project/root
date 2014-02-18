@@ -166,9 +166,9 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_None:
         Type = ELF::R_ARM_REL32;
         break;
-      case MCSymbolRefExpr::VK_ARM_TLSGD:
+      case MCSymbolRefExpr::VK_TLSGD:
         llvm_unreachable("unimplemented");
-      case MCSymbolRefExpr::VK_ARM_GOTTPOFF:
+      case MCSymbolRefExpr::VK_GOTTPOFF:
         Type = ELF::R_ARM_TLS_IE32;
         break;
       }
@@ -176,8 +176,11 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
     case ARM::fixup_arm_blx:
     case ARM::fixup_arm_uncondbl:
       switch (Modifier) {
-      case MCSymbolRefExpr::VK_ARM_PLT:
+      case MCSymbolRefExpr::VK_PLT:
         Type = ELF::R_ARM_PLT32;
+        break;
+      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+        Type = ELF::R_ARM_TLS_CALL;
         break;
       default:
         Type = ELF::R_ARM_CALL;
@@ -211,7 +214,14 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       break;
     case ARM::fixup_arm_thumb_bl:
     case ARM::fixup_arm_thumb_blx:
-      Type = ELF::R_ARM_THM_CALL;
+      switch (Modifier) {
+      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+        Type = ELF::R_ARM_THM_TLS_CALL;
+        break;
+      default:
+        Type = ELF::R_ARM_THM_CALL;
+        break;
+      }
       break;
     }
   } else {
@@ -223,22 +233,22 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
       case MCSymbolRefExpr::VK_ARM_NONE:
         Type = ELF::R_ARM_NONE;
         break;
-      case MCSymbolRefExpr::VK_ARM_GOT:
+      case MCSymbolRefExpr::VK_GOT:
         Type = ELF::R_ARM_GOT_BREL;
         break;
-      case MCSymbolRefExpr::VK_ARM_TLSGD:
+      case MCSymbolRefExpr::VK_TLSGD:
         Type = ELF::R_ARM_TLS_GD32;
         break;
-      case MCSymbolRefExpr::VK_ARM_TPOFF:
+      case MCSymbolRefExpr::VK_TPOFF:
         Type = ELF::R_ARM_TLS_LE32;
         break;
-      case MCSymbolRefExpr::VK_ARM_GOTTPOFF:
+      case MCSymbolRefExpr::VK_GOTTPOFF:
         Type = ELF::R_ARM_TLS_IE32;
         break;
       case MCSymbolRefExpr::VK_None:
         Type = ELF::R_ARM_ABS32;
         break;
-      case MCSymbolRefExpr::VK_ARM_GOTOFF:
+      case MCSymbolRefExpr::VK_GOTOFF:
         Type = ELF::R_ARM_GOTOFF32;
         break;
       case MCSymbolRefExpr::VK_ARM_TARGET1:
@@ -249,6 +259,18 @@ unsigned ARMELFObjectWriter::GetRelocTypeInner(const MCValue &Target,
         break;
       case MCSymbolRefExpr::VK_ARM_PREL31:
         Type = ELF::R_ARM_PREL31;
+        break;
+      case MCSymbolRefExpr::VK_ARM_TLSLDO:
+        Type = ELF::R_ARM_TLS_LDO32;
+        break;
+      case MCSymbolRefExpr::VK_ARM_TLSCALL:
+        Type = ELF::R_ARM_TLS_CALL;
+        break;
+      case MCSymbolRefExpr::VK_ARM_TLSDESC:
+        Type = ELF::R_ARM_TLS_GOTDESC;
+        break;
+      case MCSymbolRefExpr::VK_ARM_TLSDESCSEQ:
+        Type = ELF::R_ARM_TLS_DESCSEQ;
         break;
       }
       break;

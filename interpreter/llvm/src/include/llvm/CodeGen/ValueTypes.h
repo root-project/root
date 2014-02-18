@@ -95,16 +95,17 @@ namespace llvm {
       LAST_INTEGER_VECTOR_VALUETYPE = v16i64,
 
       v2f16          =  42,   //  2 x f16
-      v8f16          =  43,   //  8 x f16
-      v1f32          =  44,   //  1 x f32
-      v2f32          =  45,   //  2 x f32
-      v4f32          =  46,   //  4 x f32
-      v8f32          =  47,   //  8 x f32
-      v16f32         =  48,   // 16 x f32
-      v1f64          =  49,   //  1 x f64
-      v2f64          =  50,   //  2 x f64
-      v4f64          =  51,   //  4 x f64
-      v8f64          =  52,   //  8 x f64
+      v4f16          =  43,   //  4 x f16
+      v8f16          =  44,   //  8 x f16
+      v1f32          =  45,   //  1 x f32
+      v2f32          =  46,   //  2 x f32
+      v4f32          =  47,   //  4 x f32
+      v8f32          =  48,   //  8 x f32
+      v16f32         =  49,   // 16 x f32
+      v1f64          =  50,   //  1 x f64
+      v2f64          =  51,   //  2 x f64
+      v4f64          =  52,   //  4 x f64
+      v8f64          =  53,   //  8 x f64
 
       FIRST_FP_VECTOR_VALUETYPE = v2f16,
       LAST_FP_VECTOR_VALUETYPE = v8f64,
@@ -112,17 +113,17 @@ namespace llvm {
       FIRST_VECTOR_VALUETYPE = v2i1,
       LAST_VECTOR_VALUETYPE  = v8f64,
 
-      x86mmx         =  53,   // This is an X86 MMX value
+      x86mmx         =  54,   // This is an X86 MMX value
 
-      Glue           =  54,   // This glues nodes together during pre-RA sched
+      Glue           =  55,   // This glues nodes together during pre-RA sched
 
-      isVoid         =  55,   // This has no value
+      isVoid         =  56,   // This has no value
 
-      Untyped        =  56,   // This value takes a register, but has
+      Untyped        =  57,   // This value takes a register, but has
                               // unspecified type.  The register class
                               // will be determined by the opcode.
 
-      LAST_VALUETYPE =  57,   // This always remains at the end of the list.
+      LAST_VALUETYPE =  58,   // This always remains at the end of the list.
 
       // This is the current maximum for LAST_VALUETYPE.
       // MVT::MAX_ALLOWED_VALUETYPE is used for asserts and to size bit vectors
@@ -207,7 +208,7 @@ namespace llvm {
     bool is64BitVector() const {
       return (SimpleTy == MVT::v8i8  || SimpleTy == MVT::v4i16 ||
               SimpleTy == MVT::v2i32 || SimpleTy == MVT::v1i64 ||
-              SimpleTy == MVT::v2f32);
+              SimpleTy == MVT::v1f64 || SimpleTy == MVT::v2f32);
     }
 
     /// is128BitVector - Return true if this is a 128-bit vector type.
@@ -234,6 +235,12 @@ namespace llvm {
     /// is1024BitVector - Return true if this is a 1024-bit vector type.
     bool is1024BitVector() const {
       return (SimpleTy == MVT::v16i64);
+    }
+
+    /// isOverloaded - Return true if this is an overloaded type for TableGen.
+    bool isOverloaded() const {
+      return (SimpleTy==MVT::iAny || SimpleTy==MVT::fAny ||
+              SimpleTy==MVT::vAny || SimpleTy==MVT::iPTRAny);
     }
 
     /// isPow2VectorType - Returns true if the given vector is a power of 2.
@@ -293,6 +300,7 @@ namespace llvm {
       case v8i64:
       case v16i64: return i64;
       case v2f16:
+      case v4f16:
       case v8f16: return f16;
       case v1f32:
       case v2f32:
@@ -334,6 +342,7 @@ namespace llvm {
       case v4i16:
       case v4i32:
       case v4i64:
+      case v4f16:
       case v4f32:
       case v4f64: return 4;
       case v2i1:
@@ -395,6 +404,7 @@ namespace llvm {
       case v4i16:
       case v2i32:
       case v1i64:
+      case v4f16:
       case v2f32:
       case v1f64: return 64;
       case f80 :  return 80;
@@ -538,6 +548,7 @@ namespace llvm {
         break;
       case MVT::f16:
         if (NumElements == 2)  return MVT::v2f16;
+        if (NumElements == 4)  return MVT::v4f16;
         if (NumElements == 8)  return MVT::v8f16;
         break;
       case MVT::f32:
@@ -875,18 +886,18 @@ namespace llvm {
     static EVT getExtendedIntegerVT(LLVMContext &C, unsigned BitWidth);
     static EVT getExtendedVectorVT(LLVMContext &C, EVT VT,
                                    unsigned NumElements);
-    bool isExtendedFloatingPoint() const;
-    bool isExtendedInteger() const;
-    bool isExtendedVector() const;
-    bool isExtended16BitVector() const;
-    bool isExtended32BitVector() const;
-    bool isExtended64BitVector() const;
-    bool isExtended128BitVector() const;
-    bool isExtended256BitVector() const;
-    bool isExtended512BitVector() const;
-    bool isExtended1024BitVector() const;
+    bool isExtendedFloatingPoint() const LLVM_READONLY;
+    bool isExtendedInteger() const LLVM_READONLY;
+    bool isExtendedVector() const LLVM_READONLY;
+    bool isExtended16BitVector() const LLVM_READONLY;
+    bool isExtended32BitVector() const LLVM_READONLY;
+    bool isExtended64BitVector() const LLVM_READONLY;
+    bool isExtended128BitVector() const LLVM_READONLY;
+    bool isExtended256BitVector() const LLVM_READONLY;
+    bool isExtended512BitVector() const LLVM_READONLY;
+    bool isExtended1024BitVector() const LLVM_READONLY;
     EVT getExtendedVectorElementType() const;
-    unsigned getExtendedVectorNumElements() const;
+    unsigned getExtendedVectorNumElements() const LLVM_READONLY;
     unsigned getExtendedSizeInBits() const;
   };
 

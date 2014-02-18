@@ -36,8 +36,7 @@ void FileRemapper::clear(StringRef outputDir) {
   assert(ToFromMappings.empty());
   if (!outputDir.empty()) {
     std::string infoFile = getRemapInfoFile(outputDir);
-    bool existed;
-    llvm::sys::fs::remove(infoFile, existed);
+    llvm::sys::fs::remove(infoFile);
   }
 }
 
@@ -112,8 +111,7 @@ bool FileRemapper::initFromFile(StringRef filePath, DiagnosticsEngine &Diag,
 bool FileRemapper::flushToDisk(StringRef outputDir, DiagnosticsEngine &Diag) {
   using namespace llvm::sys;
 
-  bool existed;
-  if (fs::create_directory(outputDir, existed) != llvm::errc::success)
+  if (fs::create_directory(outputDir) != llvm::errc::success)
     return report("Could not create directory: " + outputDir, Diag);
 
   std::string infoFile = getRemapInfoFile(outputDir);
@@ -272,9 +270,7 @@ void FileRemapper::resetTarget(Target &targ) {
 }
 
 bool FileRemapper::report(const Twine &err, DiagnosticsEngine &Diag) {
-  SmallString<128> buf;
-  unsigned ID = Diag.getDiagnosticIDs()->getCustomDiagID(DiagnosticIDs::Error,
-                                                         err.toStringRef(buf));
-  Diag.Report(ID);
+  Diag.Report(Diag.getCustomDiagID(DiagnosticsEngine::Error, "%0"))
+      << err.str();
   return true;
 }

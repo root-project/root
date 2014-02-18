@@ -259,7 +259,7 @@ public:
   }
 
   LookupResultKind getResultKind() const {
-    sanity();
+    assert(sanity());
     return ResultKind;
   }
 
@@ -637,13 +637,7 @@ private:
   void configure();
 
   // Sanity checks.
-  void sanityImpl() const;
-
-  void sanity() const {
-#ifndef NDEBUG
-    sanityImpl();
-#endif
-  }
+  bool sanity() const;
 
   bool sanityCheckUnresolved() const {
     for (iterator I = begin(), E = end(); I != E; ++I)
@@ -733,7 +727,8 @@ public:
     Decls.erase(cast<NamedDecl>(D->getCanonicalDecl()));
   }
 
-  class iterator {
+  class iterator
+      : public std::iterator<std::forward_iterator_tag, NamedDecl *> {
     typedef llvm::DenseMap<NamedDecl*,NamedDecl*>::iterator inner_iterator;
     inner_iterator iter;
 
@@ -745,7 +740,7 @@ public:
     iterator &operator++() { ++iter; return *this; }
     iterator operator++(int) { return iterator(iter++); }
 
-    NamedDecl *operator*() const { return iter->second; }
+    value_type operator*() const { return iter->second; }
 
     bool operator==(const iterator &other) const { return iter == other.iter; }
     bool operator!=(const iterator &other) const { return iter != other.iter; }

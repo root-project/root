@@ -20,21 +20,20 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/Hashing.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/ConstantFolding.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
 #include "llvm/Analysis/PHITransAddr.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Assembly/Writer.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -678,13 +677,13 @@ namespace {
 
     // This transformation requires dominator postdominator info
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-      AU.addRequired<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<TargetLibraryInfo>();
       if (!NoLoads)
         AU.addRequired<MemoryDependenceAnalysis>();
       AU.addRequired<AliasAnalysis>();
 
-      AU.addPreserved<DominatorTree>();
+      AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addPreserved<AliasAnalysis>();
     }
 
@@ -727,7 +726,7 @@ FunctionPass *llvm::createGVNPass(bool NoLoads) {
 
 INITIALIZE_PASS_BEGIN(GVN, "gvn", "Global Value Numbering", false, false)
 INITIALIZE_PASS_DEPENDENCY(MemoryDependenceAnalysis)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfo)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
 INITIALIZE_PASS_END(GVN, "gvn", "Global Value Numbering", false, false)
@@ -818,8 +817,7 @@ SpeculationFailure:
     // Mark as unavailable.
     EntryVal = 0;
 
-    for (succ_iterator I = succ_begin(Entry), E = succ_end(Entry); I != E; ++I)
-      BBWorklist.push_back(*I);
+    BBWorklist.append(succ_begin(Entry), succ_end(Entry));
   } while (!BBWorklist.empty());
 
   return false;
@@ -1088,14 +1086,15 @@ static int AnalyzeLoadFromClobberingMemInst(Type *LoadTy, Value *LoadPtr,
   if (Offset == -1)
     return Offset;
 
+  unsigned AS = Src->getType()->getPointerAddressSpace();
   // Otherwise, see if we can constant fold a load from the constant with the
   // offset applied as appropriate.
   Src = ConstantExpr::getBitCast(Src,
-                                 llvm::Type::getInt8PtrTy(Src->getContext()));
+                                 Type::getInt8PtrTy(Src->getContext(), AS));
   Constant *OffsetCst =
     ConstantInt::get(Type::getInt64Ty(Src->getContext()), (unsigned)Offset);
   Src = ConstantExpr::getGetElementPtr(Src, OffsetCst);
-  Src = ConstantExpr::getBitCast(Src, PointerType::getUnqual(LoadTy));
+  Src = ConstantExpr::getBitCast(Src, PointerType::get(LoadTy, AS));
   if (ConstantFoldLoadFromConstPtr(Src, &TD))
     return Offset;
   return -1;
@@ -1172,7 +1171,7 @@ static Value *GetLoadValueForLoad(LoadInst *SrcVal, unsigned Offset,
     Type *DestPTy =
       IntegerType::get(LoadTy->getContext(), NewLoadSize*8);
     DestPTy = PointerType::get(DestPTy,
-                       cast<PointerType>(PtrVal->getType())->getAddressSpace());
+                               PtrVal->getType()->getPointerAddressSpace());
     Builder.SetCurrentDebugLocation(SrcVal->getDebugLoc());
     PtrVal = Builder.CreateBitCast(PtrVal, DestPTy);
     LoadInst *NewLoad = Builder.CreateLoad(PtrVal);
@@ -1247,15 +1246,16 @@ static Value *GetMemInstValueForLoad(MemIntrinsic *SrcInst, unsigned Offset,
   // Otherwise, this is a memcpy/memmove from a constant global.
   MemTransferInst *MTI = cast<MemTransferInst>(SrcInst);
   Constant *Src = cast<Constant>(MTI->getSource());
+  unsigned AS = Src->getType()->getPointerAddressSpace();
 
   // Otherwise, see if we can constant fold a load from the constant with the
   // offset applied as appropriate.
   Src = ConstantExpr::getBitCast(Src,
-                                 llvm::Type::getInt8PtrTy(Src->getContext()));
+                                 Type::getInt8PtrTy(Src->getContext(), AS));
   Constant *OffsetCst =
-  ConstantInt::get(Type::getInt64Ty(Src->getContext()), (unsigned)Offset);
+    ConstantInt::get(Type::getInt64Ty(Src->getContext()), (unsigned)Offset);
   Src = ConstantExpr::getGetElementPtr(Src, OffsetCst);
-  Src = ConstantExpr::getBitCast(Src, PointerType::getUnqual(LoadTy));
+  Src = ConstantExpr::getBitCast(Src, PointerType::get(LoadTy, AS));
   return ConstantFoldLoadFromConstPtr(Src, &TD);
 }
 
@@ -1710,7 +1710,7 @@ bool GVN::processNonLocalLoad(LoadInst *LI) {
       !Deps[0].getResult().isDef() && !Deps[0].getResult().isClobber()) {
     DEBUG(
       dbgs() << "GVN: non-local load ";
-      WriteAsOperand(dbgs(), LI);
+      LI->printAsOperand(dbgs());
       dbgs() << " has unknown dependencies\n";
     );
     return false;
@@ -1787,7 +1787,7 @@ static void patchReplacementInstruction(Instruction *I, Value *Repl) {
         ReplInst->setMetadata(Kind, MDNode::getMostGenericRange(IMD, ReplMD));
         break;
       case LLVMContext::MD_prof:
-        llvm_unreachable("MD_prof in a non terminator instruction");
+        llvm_unreachable("MD_prof in a non-terminator instruction");
         break;
       case LLVMContext::MD_fpmath:
         ReplInst->setMetadata(Kind, MDNode::getMostGenericFPMath(IMD, ReplMD));
@@ -1888,7 +1888,7 @@ bool GVN::processLoad(LoadInst *L) {
     DEBUG(
       // fast print dep, using operator<< on instruction is too slow.
       dbgs() << "GVN: load ";
-      WriteAsOperand(dbgs(), L);
+      L->printAsOperand(dbgs());
       Instruction *I = Dep.getInst();
       dbgs() << " is clobbered by " << *I << '\n';
     );
@@ -1903,7 +1903,7 @@ bool GVN::processLoad(LoadInst *L) {
     DEBUG(
       // fast print dep, using operator<< on instruction is too slow.
       dbgs() << "GVN: load ";
-      WriteAsOperand(dbgs(), L);
+      L->printAsOperand(dbgs());
       dbgs() << " has unknown dependence\n";
     );
     return false;
@@ -2312,9 +2312,12 @@ bool GVN::processInstruction(Instruction *I) {
 
 /// runOnFunction - This is the main transformation entry point for a function.
 bool GVN::runOnFunction(Function& F) {
+  if (skipOptnoneFunction(F))
+    return false;
+
   if (!NoLoads)
     MD = &getAnalysis<MemoryDependenceAnalysis>();
-  DT = &getAnalysis<DominatorTree>();
+  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
   TD = getAnalysisIfAvailable<DataLayout>();
   TLI = &getAnalysis<TargetLibraryInfo>();
   VN.setAliasAnalysis(&getAnalysis<AliasAnalysis>());
@@ -2728,10 +2731,19 @@ void GVN::addDeadBlock(BasicBlock *BB) {
     if (DeadBlocks.count(B))
       continue;
 
-    for (pred_iterator PI = pred_begin(B), PE = pred_end(B); PI != PE; PI++) {
+    SmallVector<BasicBlock *, 4> Preds(pred_begin(B), pred_end(B));
+    for (SmallVectorImpl<BasicBlock *>::iterator PI = Preds.begin(),
+           PE = Preds.end(); PI != PE; PI++) {
       BasicBlock *P = *PI;
+
       if (!DeadBlocks.count(P))
         continue;
+
+      if (isCriticalEdge(P->getTerminator(), GetSuccessorNumber(P, B))) {
+        if (BasicBlock *S = splitCriticalEdges(P, B))
+          DeadBlocks.insert(P = S);
+      }
+
       for (BasicBlock::iterator II = B->begin(); isa<PHINode>(II); ++II) {
         PHINode &Phi = cast<PHINode>(*II);
         Phi.setIncomingValue(Phi.getBasicBlockIndex(P),

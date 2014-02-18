@@ -70,6 +70,10 @@ namespace ISD {
   /// BUILD_VECTOR where all of the elements are 0 or undef.
   bool isBuildVectorAllZeros(const SDNode *N);
 
+  /// \brief Return true if the specified node is a BUILD_VECTOR node of
+  /// all ConstantSDNode or undef.
+  bool isBuildVectorOfConstantSDNodes(const SDNode *N);
+
   /// isScalarToVector - Return true if the specified node is a
   /// ISD::SCALAR_TO_VECTOR node or a BUILD_VECTOR node where only the low
   /// element is not an undef.
@@ -942,18 +946,29 @@ public:
 class HandleSDNode : public SDNode {
   SDUse Op;
 public:
-  // FIXME: Remove the "noinline" attribute once <rdar://problem/5852746> is
-  // fixed.
-#if __GNUC__==4 && __GNUC_MINOR__==2 && defined(__APPLE__) && !defined(__llvm__)
-  explicit __attribute__((__noinline__)) HandleSDNode(SDValue X)
-#else
   explicit HandleSDNode(SDValue X)
-#endif
     : SDNode(ISD::HANDLENODE, 0, DebugLoc(), getSDVTList(MVT::Other)) {
     InitOperands(&Op, X);
   }
   ~HandleSDNode();
   const SDValue &getValue() const { return Op; }
+};
+
+class AddrSpaceCastSDNode : public UnarySDNode {
+private:
+  unsigned SrcAddrSpace;
+  unsigned DestAddrSpace;
+
+public:
+  AddrSpaceCastSDNode(unsigned Order, DebugLoc dl, EVT VT, SDValue X,
+                      unsigned SrcAS, unsigned DestAS);
+
+  unsigned getSrcAddressSpace() const { return SrcAddrSpace; }
+  unsigned getDestAddressSpace() const { return DestAddrSpace; }
+
+  static bool classof(const SDNode *N) {
+    return N->getOpcode() == ISD::ADDRSPACECAST;
+  }
 };
 
 /// Abstact virtual class for operations for memory operations
@@ -1073,7 +1088,6 @@ public:
 ///
 class AtomicSDNode : public MemSDNode {
   SDUse Ops[4];
-  SDUse* DynOps;
 
   void InitAtomic(AtomicOrdering Ordering, SynchronizationScope SynchScope) {
     // This must match encodeMemSDNodeFlags() in SelectionDAG.cpp.
@@ -1101,7 +1115,7 @@ public:
                SDValue Chain, SDValue Ptr,
                SDValue Cmp, SDValue Swp, MachineMemOperand *MMO,
                AtomicOrdering Ordering, SynchronizationScope SynchScope)
-    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO), DynOps(NULL) {
+    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO) {
     InitAtomic(Ordering, SynchScope);
     InitOperands(Ops, Chain, Ptr, Cmp, Swp);
   }
@@ -1110,7 +1124,7 @@ public:
                SDValue Chain, SDValue Ptr,
                SDValue Val, MachineMemOperand *MMO,
                AtomicOrdering Ordering, SynchronizationScope SynchScope)
-    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO), DynOps(NULL) {
+    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO) {
     InitAtomic(Ordering, SynchScope);
     InitOperands(Ops, Chain, Ptr, Val);
   }
@@ -1119,21 +1133,19 @@ public:
                SDValue Chain, SDValue Ptr,
                MachineMemOperand *MMO,
                AtomicOrdering Ordering, SynchronizationScope SynchScope)
-    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO), DynOps(NULL) {
+    : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO) {
     InitAtomic(Ordering, SynchScope);
     InitOperands(Ops, Chain, Ptr);
   }
   AtomicSDNode(unsigned Opc, unsigned Order, DebugLoc dl, SDVTList VTL, EVT MemVT,
-               SDValue* AllOps, unsigned NumOps,
+               SDValue* AllOps, SDUse *DynOps, unsigned NumOps,
                MachineMemOperand *MMO,
                AtomicOrdering Ordering, SynchronizationScope SynchScope)
     : MemSDNode(Opc, Order, dl, VTL, MemVT, MMO) {
-    DynOps = new SDUse[NumOps];
     InitAtomic(Ordering, SynchScope);
-    InitOperands(DynOps, AllOps, NumOps);
-  }
-  ~AtomicSDNode() {
-    delete[] DynOps;
+    assert((DynOps || NumOps <= array_lengthof(Ops)) &&
+           "Too many ops for internal storage!");
+    InitOperands(DynOps ? DynOps : Ops, AllOps, NumOps);
   }
 
   const SDValue &getBasePtr() const { return getOperand(1); }
@@ -1238,9 +1250,10 @@ public:
 class ConstantSDNode : public SDNode {
   const ConstantInt *Value;
   friend class SelectionDAG;
-  ConstantSDNode(bool isTarget, const ConstantInt *val, EVT VT)
+  ConstantSDNode(bool isTarget, bool isOpaque, const ConstantInt *val, EVT VT)
     : SDNode(isTarget ? ISD::TargetConstant : ISD::Constant,
              0, DebugLoc(), getSDVTList(VT)), Value(val) {
+    SubclassData |= (uint16_t)isOpaque;
   }
 public:
 
@@ -1252,6 +1265,8 @@ public:
   bool isOne() const { return Value->isOne(); }
   bool isNullValue() const { return Value->isNullValue(); }
   bool isAllOnesValue() const { return Value->isAllOnesValue(); }
+
+  bool isOpaque() const { return SubclassData & 1; }
 
   static bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::Constant ||
@@ -1479,6 +1494,8 @@ public:
   bool isConstantSplat(APInt &SplatValue, APInt &SplatUndef,
                        unsigned &SplatBitSize, bool &HasAnyUndefs,
                        unsigned MinSplatBits = 0, bool isBigEndian = false);
+
+  bool isConstant() const;
 
   static inline bool classof(const SDNode *N) {
     return N->getOpcode() == ISD::BUILD_VECTOR;

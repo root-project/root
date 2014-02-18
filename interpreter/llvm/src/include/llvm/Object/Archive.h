@@ -17,6 +17,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/ErrorOr.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/MemoryBuffer.h"
 
@@ -163,6 +164,7 @@ public:
   };
 
   Archive(MemoryBuffer *source, error_code &ec);
+  static ErrorOr<Archive *> create(MemoryBuffer *Source);
 
   enum Kind {
     K_GNU,
@@ -174,11 +176,11 @@ public:
     return Format;
   }
 
-  child_iterator begin_children(bool SkipInternal = true) const;
-  child_iterator end_children() const;
+  child_iterator child_begin(bool SkipInternal = true) const;
+  child_iterator child_end() const;
 
-  symbol_iterator begin_symbols() const;
-  symbol_iterator end_symbols() const;
+  symbol_iterator symbol_begin() const;
+  symbol_iterator symbol_end() const;
 
   // Cast methods.
   static inline bool classof(Binary const *v) {

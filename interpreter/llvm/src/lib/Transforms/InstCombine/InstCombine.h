@@ -51,6 +51,15 @@ static inline unsigned getComplexity(Value *V) {
   return isa<Constant>(V) ? (isa<UndefValue>(V) ? 0 : 1) : 2;
 }
 
+/// AddOne - Add one to a Constant
+static inline Constant *AddOne(Constant *C) {
+  return ConstantExpr::getAdd(C, ConstantInt::get(C->getType(), 1));
+}
+/// SubOne - Subtract one from a Constant
+static inline Constant *SubOne(Constant *C) {
+  return ConstantExpr::getSub(C, ConstantInt::get(C->getType(), 1));
+}
+
 
 /// InstCombineIRInserter - This is an IRBuilder insertion helper that works
 /// just like the normal insertion helper, but also adds any new instructions
@@ -116,7 +125,7 @@ public:
   Instruction *visitSub(BinaryOperator &I);
   Instruction *visitFSub(BinaryOperator &I);
   Instruction *visitMul(BinaryOperator &I);
-  Value *foldFMulConst(Instruction *FMulOrDiv, ConstantFP *C,
+  Value *foldFMulConst(Instruction *FMulOrDiv, Constant *C,
                        Instruction *InsertBefore);
   Instruction *visitFMul(BinaryOperator &I);
   Instruction *visitURem(BinaryOperator &I);
@@ -178,6 +187,7 @@ public:
   Instruction *visitPtrToInt(PtrToIntInst &CI);
   Instruction *visitIntToPtr(IntToPtrInst &CI);
   Instruction *visitBitCast(BitCastInst &CI);
+  Instruction *visitAddrSpaceCast(AddrSpaceCastInst &CI);
   Instruction *FoldSelectOpOp(SelectInst &SI, Instruction *TI,
                               Instruction *FI);
   Instruction *FoldSelectIntoOp(SelectInst &SI, Value*, Value*);

@@ -73,10 +73,6 @@ class ELFObjectWriter : public MCObjectWriter {
 
       // Support lexicographic sorting.
       bool operator<(const ELFSymbolData &RHS) const {
-        if (MCELF::GetType(*SymbolData) == ELF::STT_FILE)
-          return true;
-        if (MCELF::GetType(*RHS.SymbolData) == ELF::STT_FILE)
-          return false;
         return SymbolData->getSymbol().getName() <
                RHS.SymbolData->getSymbol().getName();
       }
@@ -98,6 +94,7 @@ class ELFObjectWriter : public MCObjectWriter {
     /// @{
 
     SmallString<256> StringTable;
+    std::vector<uint64_t> FileSymbolData;
     std::vector<ELFSymbolData> LocalSymbolData;
     std::vector<ELFSymbolData> ExternalSymbolData;
     std::vector<ELFSymbolData> UndefinedSymbolData;
@@ -535,6 +532,41 @@ void ELFObjectWriter::ExecutePostLayoutBinding(MCAssembler &Asm,
   }
 }
 
+static uint8_t mergeTypeForSet(uint8_t origType, uint8_t newType) {
+  uint8_t Type = newType;
+
+  // Propagation rules:
+  // IFUNC > FUNC > OBJECT > NOTYPE
+  // TLS_OBJECT > OBJECT > NOTYPE
+  //
+  // dont let the new type degrade the old type
+  switch (origType) {
+  default:
+    break;
+  case ELF::STT_GNU_IFUNC:
+    if (Type == ELF::STT_FUNC || Type == ELF::STT_OBJECT ||
+        Type == ELF::STT_NOTYPE || Type == ELF::STT_TLS)
+      Type = ELF::STT_GNU_IFUNC;
+    break;
+  case ELF::STT_FUNC:
+    if (Type == ELF::STT_OBJECT || Type == ELF::STT_NOTYPE ||
+        Type == ELF::STT_TLS)
+      Type = ELF::STT_FUNC;
+    break;
+  case ELF::STT_OBJECT:
+    if (Type == ELF::STT_NOTYPE)
+      Type = ELF::STT_OBJECT;
+    break;
+  case ELF::STT_TLS:
+    if (Type == ELF::STT_OBJECT || Type == ELF::STT_NOTYPE ||
+        Type == ELF::STT_GNU_IFUNC || Type == ELF::STT_FUNC)
+      Type = ELF::STT_TLS;
+    break;
+  }
+
+  return Type;
+}
+
 void ELFObjectWriter::WriteSymbol(MCDataFragment *SymtabF,
                                   MCDataFragment *ShndxF,
                                   ELFSymbolData &MSD,
@@ -548,14 +580,13 @@ void ELFObjectWriter::WriteSymbol(MCDataFragment *SymtabF,
 
   // Binding and Type share the same byte as upper and lower nibbles
   uint8_t Binding = MCELF::GetBinding(OrigData);
-  uint8_t Type = MCELF::GetType(Data);
+  uint8_t Type = mergeTypeForSet(MCELF::GetType(OrigData), MCELF::GetType(Data));
   uint8_t Info = (Binding << ELF_STB_Shift) | (Type << ELF_STT_Shift);
 
-  // Other and Visibility share the same byte with Visability using the lower
+  // Other and Visibility share the same byte with Visibility using the lower
   // 2 bits
   uint8_t Visibility = MCELF::GetVisibility(OrigData);
-  uint8_t Other = MCELF::getOther(OrigData) <<
-    (ELF_Other_Shift - ELF_STV_Shift);
+  uint8_t Other = MCELF::getOther(OrigData) << (ELF_STO_Shift - ELF_STV_Shift);
   Other |= Visibility;
 
   uint64_t Value = SymbolValue(Data, Layout);
@@ -590,8 +621,15 @@ void ELFObjectWriter::WriteSymbolTable(MCDataFragment *SymtabF,
   // The first entry is the undefined symbol entry.
   WriteSymbolEntry(SymtabF, ShndxF, 0, 0, 0, 0, 0, 0, false);
 
+  for (unsigned i = 0, e = FileSymbolData.size(); i != e; ++i) {
+    WriteSymbolEntry(SymtabF, ShndxF, FileSymbolData[i],
+                     ELF::STT_FILE | ELF::STB_LOCAL, 0, 0,
+                     ELF::STV_DEFAULT, ELF::SHN_ABS, true);
+  }
+
   // Write the symbol table entries.
-  LastLocalSymbolIndex = LocalSymbolData.size() + 1;
+  LastLocalSymbolIndex = FileSymbolData.size() + LocalSymbolData.size() + 1;
+
   for (unsigned i = 0, e = LocalSymbolData.size(); i != e; ++i) {
     ELFSymbolData &MSD = LocalSymbolData[i];
     WriteSymbol(SymtabF, ShndxF, MSD, Layout);
@@ -717,6 +755,12 @@ void ELFObjectWriter::RecordRelocation(const MCAssembler &Asm,
       MCSymbolData &SDB = Asm.getSymbolData(SymbolB);
       IsPCRel = true;
 
+      if (!SDB.getFragment())
+        Asm.getContext().FatalError(
+            Fixup.getLoc(),
+            Twine("symbol '") + SymbolB.getName() +
+                "' can not be undefined in a subtraction expression");
+
       // Offset of the symbol in the section
       int64_t a = Layout.getSymbolOffset(&SDB);
 
@@ -804,9 +848,6 @@ bool ELFObjectWriter::isInSymtab(const MCAssembler &Asm,
   if (!Symbol.isVariable() && Symbol.isUndefined() && !IsGlobal)
     return false;
 
-  if (!Asm.isSymbolLinkerVisible(Symbol) && !Symbol.isUndefined())
-    return false;
-
   if (Symbol.isTemporary())
     return false;
 
@@ -879,6 +920,20 @@ void ELFObjectWriter::ComputeSymbolTable(MCAssembler &Asm,
 
   // FIXME: We could optimize suffixes in strtab in the same way we
   // optimize them in shstrtab.
+
+  for (MCAssembler::const_file_name_iterator it = Asm.file_names_begin(),
+                                            ie = Asm.file_names_end();
+                                            it != ie;
+                                            ++it) {
+    StringRef Name = *it;
+    uint64_t &Entry = StringIndexMap[Name];
+    if (!Entry) {
+      Entry = StringTable.size();
+      StringTable += Name;
+      StringTable += '\x00';
+    }
+    FileSymbolData.push_back(Entry);
+  }
 
   // Add the data for the symbols.
   for (MCAssembler::symbol_iterator it = Asm.symbol_begin(),
@@ -964,7 +1019,7 @@ void ELFObjectWriter::ComputeSymbolTable(MCAssembler &Asm,
 
   // Set the symbol indices. Local symbols must come before all other
   // symbols with non-local bindings.
-  unsigned Index = 1;
+  unsigned Index = FileSymbolData.size() + 1;
   for (unsigned i = 0, e = LocalSymbolData.size(); i != e; ++i)
     LocalSymbolData[i].SymbolData->setIndex(Index++);
 
@@ -1005,8 +1060,8 @@ void ELFObjectWriter::CreateRelocationSections(MCAssembler &Asm,
     unsigned Flags = 0;
     StringRef Group = "";
     if (Section.getFlags() & ELF::SHF_GROUP) {
-        Flags = ELF::SHF_GROUP;
-        Group = Section.getGroup()->getName();
+      Flags = ELF::SHF_GROUP;
+      Group = Section.getGroup()->getName();
     }
 
     const MCSectionELF *RelaSection =
@@ -1073,7 +1128,7 @@ void ELFObjectWriter::WriteRelocationsFragment(const MCAssembler &Asm,
     else if (entry.Index < 0)
       entry.Index = getSymbolIndexInSymbolTable(Asm, entry.Symbol);
     else
-      entry.Index += LocalSymbolData.size();
+      entry.Index += FileSymbolData.size() + LocalSymbolData.size();
     if (is64Bit()) {
       String64(*F, entry.r_offset);
       if (TargetObjectWriter->isN64()) {
@@ -1298,10 +1353,12 @@ void ELFObjectWriter::WriteSection(MCAssembler &Asm,
     // Remove ".rel" and ".rela" prefixes.
     unsigned SecNameLen = (Section.getType() == ELF::SHT_REL) ? 4 : 5;
     StringRef SectionName = Section.getSectionName().substr(SecNameLen);
+    StringRef GroupName =
+        Section.getGroup() ? Section.getGroup()->getName() : "";
 
-    InfoSection = Asm.getContext().getELFSection(SectionName,
-                                                 ELF::SHT_PROGBITS, 0,
-                                                 SectionKind::getReadOnly());
+    InfoSection = Asm.getContext().getELFSection(SectionName, ELF::SHT_PROGBITS,
+                                                 0, SectionKind::getReadOnly(),
+                                                 0, GroupName);
     sh_info = SectionIndexMap.lookup(InfoSection);
     break;
   }
@@ -1351,11 +1408,12 @@ void ELFObjectWriter::WriteSection(MCAssembler &Asm,
                                        ELF::SHF_EXECINSTR | ELF::SHF_ALLOC,
                                        SectionKind::getText()));
     } else if (SecName.startswith(".ARM.exidx")) {
-      sh_link = SectionIndexMap.lookup(
-        Asm.getContext().getELFSection(SecName.substr(sizeof(".ARM.exidx") - 1),
-                                       ELF::SHT_PROGBITS,
-                                       ELF::SHF_EXECINSTR | ELF::SHF_ALLOC,
-                                       SectionKind::getText()));
+      StringRef GroupName =
+          Section.getGroup() ? Section.getGroup()->getName() : "";
+      sh_link = SectionIndexMap.lookup(Asm.getContext().getELFSection(
+          SecName.substr(sizeof(".ARM.exidx") - 1), ELF::SHT_PROGBITS,
+          ELF::SHF_EXECINSTR | ELF::SHF_ALLOC, SectionKind::getText(), 0,
+          GroupName));
     }
   }
 
@@ -1584,7 +1642,7 @@ ELFObjectWriter::IsSymbolRefDifferenceFullyResolvedImpl(const MCAssembler &Asm,
                                                       const MCFragment &FB,
                                                       bool InSet,
                                                       bool IsPCRel) const {
-  if (DataA.getFlags() & ELF_STB_Weak)
+  if (DataA.getFlags() & ELF_STB_Weak || MCELF::GetType(DataA) == ELF::STT_GNU_IFUNC)
     return false;
   return MCObjectWriter::IsSymbolRefDifferenceFullyResolvedImpl(
                                                  Asm, DataA, FB,InSet, IsPCRel);

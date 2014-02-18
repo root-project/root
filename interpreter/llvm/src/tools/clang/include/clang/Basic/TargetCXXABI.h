@@ -135,14 +135,14 @@ public:
     return !isMicrosoft();
   }
 
-  /// Are temporary objects passed by value to a call destroyed by the callee?
+  /// Are arguments to a call destroyed left to right in the callee?
   /// This is a fundamental language change, since it implies that objects
   /// passed by value do *not* live to the end of the full expression.
   /// Temporaries passed to a function taking a const reference live to the end
   /// of the full expression as usual.  Both the caller and the callee must
   /// have access to the destructor, while only the caller needs the
   /// destructor if this is false.
-  bool isArgumentDestroyedByCallee() const {
+  bool areArgsDestroyedLeftToRightInCallee() const {
     return isMicrosoft();
   }
 
@@ -230,7 +230,7 @@ public:
 
     /// Only allocate objects in the tail padding of a base class if
     /// the base class is not POD according to the rules of C++ TR1.
-    /// This is non strictly conforming in C++11 mode.
+    /// This is non-strictly conforming in C++11 mode.
     UseTailPaddingUnlessPOD03,
 
     /// Only allocate objects in the tail padding of a base class if

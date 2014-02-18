@@ -257,11 +257,6 @@ Class type
 ``dag``
     This type represents a nestable directed graph of elements.
 
-``code``
-    This represents a big hunk of text.  This is lexically distinct from string
-    values because it doesn't require escaping double quotes and other common
-    characters that occur in code.
-
 To date, these types have been sufficient for describing things that TableGen
 has been used for, but it is straight-forward to extend this list if needed.
 
@@ -294,7 +289,7 @@ supported include:
     string value
 
 ``[{ ... }]``
-    code fragment
+    usually called a "code fragment", but is just a multiline string literal
 
 ``[ X, Y, Z ]<type>``
     list value.  <type> is the type of the list element and is usually optional.
@@ -601,7 +596,7 @@ the classes multiple times yourself, e.g. by writing:
   ...
 
 A ``defm`` can also be used inside a multiclass providing several levels of
-multiclass instanciations.
+multiclass instantiations.
 
 .. code-block:: llvm
 
@@ -727,7 +722,7 @@ opened, as in the case with the ``CALL*`` instructions above.
 
 It's also possible to use "let" expressions inside multiclasses, providing more
 ways to factor out commonality from the records, specially if using several
-levels of multiclass instanciations. This also avoids the need of using "let"
+levels of multiclass instantiations. This also avoids the need of using "let"
 expressions within subsequent records inside a multiclass.
 
 .. code-block:: llvm

@@ -407,10 +407,11 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
       return false;
     break;
   
+  case Type::Adjusted:
   case Type::Decayed:
     if (!IsStructurallyEquivalent(Context,
-                                  cast<DecayedType>(T1)->getPointeeType(),
-                                  cast<DecayedType>(T2)->getPointeeType()))
+                                  cast<AdjustedType>(T1)->getOriginalType(),
+                                  cast<AdjustedType>(T2)->getOriginalType()))
       return false;
     break;
 
@@ -534,12 +535,11 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   case Type::FunctionProto: {
     const FunctionProtoType *Proto1 = cast<FunctionProtoType>(T1);
     const FunctionProtoType *Proto2 = cast<FunctionProtoType>(T2);
-    if (Proto1->getNumArgs() != Proto2->getNumArgs())
+    if (Proto1->getNumParams() != Proto2->getNumParams())
       return false;
-    for (unsigned I = 0, N = Proto1->getNumArgs(); I != N; ++I) {
-      if (!IsStructurallyEquivalent(Context, 
-                                    Proto1->getArgType(I),
-                                    Proto2->getArgType(I)))
+    for (unsigned I = 0, N = Proto1->getNumParams(); I != N; ++I) {
+      if (!IsStructurallyEquivalent(Context, Proto1->getParamType(I),
+                                    Proto2->getParamType(I)))
         return false;
     }
     if (Proto1->isVariadic() != Proto2->isVariadic())
@@ -570,9 +570,8 @@ static bool IsStructurallyEquivalent(StructuralEquivalenceContext &Context,
   case Type::FunctionNoProto: {
     const FunctionType *Function1 = cast<FunctionType>(T1);
     const FunctionType *Function2 = cast<FunctionType>(T2);
-    if (!IsStructurallyEquivalent(Context, 
-                                  Function1->getResultType(),
-                                  Function2->getResultType()))
+    if (!IsStructurallyEquivalent(Context, Function1->getReturnType(),
+                                  Function2->getReturnType()))
       return false;
       if (Function1->getExtInfo() != Function2->getExtInfo())
         return false;
@@ -1586,7 +1585,7 @@ QualType
 ASTNodeImporter::VisitFunctionNoProtoType(const FunctionNoProtoType *T) {
   // FIXME: What happens if we're importing a function without a prototype 
   // into C++? Should we make it variadic?
-  QualType ToResultType = Importer.Import(T->getResultType());
+  QualType ToResultType = Importer.Import(T->getReturnType());
   if (ToResultType.isNull())
     return QualType();
 
@@ -1595,14 +1594,14 @@ ASTNodeImporter::VisitFunctionNoProtoType(const FunctionNoProtoType *T) {
 }
 
 QualType ASTNodeImporter::VisitFunctionProtoType(const FunctionProtoType *T) {
-  QualType ToResultType = Importer.Import(T->getResultType());
+  QualType ToResultType = Importer.Import(T->getReturnType());
   if (ToResultType.isNull())
     return QualType();
   
   // Import argument types
   SmallVector<QualType, 4> ArgTypes;
-  for (FunctionProtoType::arg_type_iterator A = T->arg_type_begin(),
-                                         AEnd = T->arg_type_end();
+  for (FunctionProtoType::param_type_iterator A = T->param_type_begin(),
+                                              AEnd = T->param_type_end();
        A != AEnd; ++A) {
     QualType ArgType = Importer.Import(*A);
     if (ArgType.isNull())
@@ -1631,7 +1630,7 @@ QualType ASTNodeImporter::VisitFunctionProtoType(const FunctionProtoType *T) {
   ToEPI.RefQualifier = FromEPI.RefQualifier;
   ToEPI.NumExceptions = ExceptionTypes.size();
   ToEPI.Exceptions = ExceptionTypes.data();
-  ToEPI.ConsumedArguments = FromEPI.ConsumedArguments;
+  ToEPI.ConsumedParameters = FromEPI.ConsumedParameters;
   ToEPI.ExceptionSpecType = FromEPI.ExceptionSpecType;
   ToEPI.NoexceptExpr = Importer.Import(FromEPI.NoexceptExpr);
   ToEPI.ExceptionSpecDecl = cast_or_null<FunctionDecl>(
@@ -1709,7 +1708,8 @@ QualType ASTNodeImporter::VisitAutoType(const AutoType *T) {
       return QualType();
   }
   
-  return Importer.getToContext().getAutoType(ToDeduced, T->isDecltypeAuto());
+  return Importer.getToContext().getAutoType(ToDeduced, T->isDecltypeAuto(), 
+                                             /*IsDependent*/false);
 }
 
 QualType ASTNodeImporter::VisitRecordType(const RecordType *T) {
@@ -1945,6 +1945,7 @@ bool ASTNodeImporter::ImportDefinition(RecordDecl *From, RecordDecl *To,
     ToData.HasProtectedFields = FromData.HasProtectedFields;
     ToData.HasPublicFields = FromData.HasPublicFields;
     ToData.HasMutableFields = FromData.HasMutableFields;
+    ToData.HasVariantMembers = FromData.HasVariantMembers;
     ToData.HasOnlyCMembers = FromData.HasOnlyCMembers;
     ToData.HasInClassInitializer = FromData.HasInClassInitializer;
     ToData.HasUninitializedReferenceMember
@@ -1982,9 +1983,6 @@ bool ASTNodeImporter::ImportDefinition(RecordDecl *From, RecordDecl *To,
       = FromData.HasDeclaredCopyConstructorWithConstParam;
     ToData.HasDeclaredCopyAssignmentWithConstParam
       = FromData.HasDeclaredCopyAssignmentWithConstParam;
-    ToData.FailedImplicitMoveConstructor
-      = FromData.FailedImplicitMoveConstructor;
-    ToData.FailedImplicitMoveAssignment = FromData.FailedImplicitMoveAssignment;
     ToData.IsLambda = FromData.IsLambda;
 
     SmallVector<CXXBaseSpecifier *, 4> Bases;
@@ -2177,8 +2175,17 @@ bool ASTNodeImporter::ImportTemplateArguments(const TemplateArgument *FromArgs,
 
 bool ASTNodeImporter::IsStructuralMatch(RecordDecl *FromRecord, 
                                         RecordDecl *ToRecord, bool Complain) {
+  // Eliminate a potential failure point where we attempt to re-import
+  // something we're trying to import while completing ToRecord.
+  Decl *ToOrigin = Importer.GetOriginalDecl(ToRecord);
+  if (ToOrigin) {
+    RecordDecl *ToOriginRecord = dyn_cast<RecordDecl>(ToOrigin);
+    if (ToOriginRecord)
+      ToRecord = ToOriginRecord;
+  }
+
   StructuralEquivalenceContext Ctx(Importer.getFromContext(),
-                                   Importer.getToContext(),
+                                   ToRecord->getASTContext(),
                                    Importer.getNonEquivalentDecls(),
                                    false, Complain);
   return Ctx.IsStructurallyEquivalent(FromRecord, ToRecord);
@@ -2709,7 +2716,7 @@ Decl *ASTNodeImporter::VisitFunctionDecl(FunctionDecl *D) {
         FromEPI.NoexceptExpr) {
       FunctionProtoType::ExtProtoInfo DefaultEPI;
       FromTy = Importer.getFromContext().getFunctionType(
-          FromFPT->getResultType(), FromFPT->getArgTypes(), DefaultEPI);
+          FromFPT->getReturnType(), FromFPT->getParamTypes(), DefaultEPI);
       usedDifferentExceptionSpec = true;
     }
   }
@@ -3207,11 +3214,11 @@ Decl *ASTNodeImporter::VisitObjCMethodDecl(ObjCMethodDecl *D) {
         continue;
 
       // Check return types.
-      if (!Importer.IsStructurallyEquivalent(D->getResultType(),
-                                             FoundMethod->getResultType())) {
+      if (!Importer.IsStructurallyEquivalent(D->getReturnType(),
+                                             FoundMethod->getReturnType())) {
         Importer.ToDiag(Loc, diag::err_odr_objc_method_result_type_inconsistent)
-          << D->isInstanceMethod() << Name
-          << D->getResultType() << FoundMethod->getResultType();
+            << D->isInstanceMethod() << Name << D->getReturnType()
+            << FoundMethod->getReturnType();
         Importer.ToDiag(FoundMethod->getLocation(), 
                         diag::note_odr_objc_method_here)
           << D->isInstanceMethod() << Name;
@@ -3262,25 +3269,17 @@ Decl *ASTNodeImporter::VisitObjCMethodDecl(ObjCMethodDecl *D) {
   }
 
   // Import the result type.
-  QualType ResultTy = Importer.Import(D->getResultType());
+  QualType ResultTy = Importer.Import(D->getReturnType());
   if (ResultTy.isNull())
     return 0;
 
-  TypeSourceInfo *ResultTInfo = Importer.Import(D->getResultTypeSourceInfo());
+  TypeSourceInfo *ReturnTInfo = Importer.Import(D->getReturnTypeSourceInfo());
 
-  ObjCMethodDecl *ToMethod
-    = ObjCMethodDecl::Create(Importer.getToContext(),
-                             Loc,
-                             Importer.Import(D->getLocEnd()),
-                             Name.getObjCSelector(),
-                             ResultTy, ResultTInfo, DC,
-                             D->isInstanceMethod(),
-                             D->isVariadic(),
-                             D->isPropertyAccessor(),
-                             D->isImplicit(),
-                             D->isDefined(),
-                             D->getImplementationControl(),
-                             D->hasRelatedResultType());
+  ObjCMethodDecl *ToMethod = ObjCMethodDecl::Create(
+      Importer.getToContext(), Loc, Importer.Import(D->getLocEnd()),
+      Name.getObjCSelector(), ResultTy, ReturnTInfo, DC, D->isInstanceMethod(),
+      D->isVariadic(), D->isPropertyAccessor(), D->isImplicit(), D->isDefined(),
+      D->getImplementationControl(), D->hasRelatedResultType());
 
   // FIXME: When we decide to merge method definitions, we'll need to
   // deal with implicit parameters.
@@ -4232,8 +4231,7 @@ Decl *ASTNodeImporter::VisitVarTemplateDecl(VarTemplateDecl *D) {
     return 0;
 
   VarTemplateDecl *D2 = VarTemplateDecl::Create(
-      Importer.getToContext(), DC, Loc, Name, TemplateParams, D2Templated,
-      /*PrevDecl=*/0);
+      Importer.getToContext(), DC, Loc, Name, TemplateParams, D2Templated);
   D2Templated->setDescribedVarTemplate(D2);
 
   D2->setAccess(D->getAccess());

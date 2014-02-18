@@ -11,6 +11,7 @@
 #define CLANG_DRIVER_TOOLCHAIN_H_
 
 #include "clang/Driver/Action.h"
+#include "clang/Driver/Multilib.h"
 #include "clang/Driver/Types.h"
 #include "clang/Driver/Util.h"
 #include "llvm/ADT/OwningPtr.h"
@@ -73,7 +74,11 @@ private:
   Tool *getLink() const;
   Tool *getClangAs() const;
 
+  mutable OwningPtr<SanitizerArgs> SanitizerArguments;
+
 protected:
+  MultilibSet Multilibs;
+
   ToolChain(const Driver &D, const llvm::Triple &T,
             const llvm::opt::ArgList &Args);
 
@@ -111,6 +116,9 @@ public:
   StringRef getPlatform() const { return Triple.getVendorName(); }
   StringRef getOS() const { return Triple.getOSName(); }
 
+  /// \brief Returns true if the toolchain is targeting a non-native architecture.
+  bool isCrossCompiling() const;
+
   /// \brief Provide the default architecture name (as expected by -arch) for
   /// this toolchain. Note t
   std::string getDefaultUniversalArchName() const;
@@ -124,6 +132,8 @@ public:
 
   path_list &getProgramPaths() { return ProgramPaths; }
   const path_list &getProgramPaths() const { return ProgramPaths; }
+
+  const MultilibSet &getMultilibs() const { return Multilibs; }
 
   const SanitizerArgs& getSanitizerArgs() const;
 
@@ -175,17 +185,9 @@ public:
   /// \brief Check if the toolchain should use the integrated assembler.
   bool useIntegratedAs() const;
 
-  /// IsStrictAliasingDefault - Does this tool chain use -fstrict-aliasing by
-  /// default.
-  virtual bool IsStrictAliasingDefault() const { return true; }
-
   /// IsMathErrnoDefault - Does this tool chain use -fmath-errno by default.
   virtual bool IsMathErrnoDefault() const { return true; }
 
-  /// IsObjCDefaultSynthPropertiesDefault - Does this tool chain enable
-  /// -fobjc-default-synthesize-properties by default.
-  virtual bool IsObjCDefaultSynthPropertiesDefault() const { return true; }
-  
   /// IsEncodeExtendedBlockSignatureDefault - Does this tool chain enable
   /// -fencode-extended-block-signature by default.
   virtual bool IsEncodeExtendedBlockSignatureDefault() const { return false; }
@@ -199,7 +201,7 @@ public:
   virtual bool UseObjCMixedDispatch() const { return false; }
 
   /// GetDefaultStackProtectorLevel - Get the default stack protector level for
-  /// this tool chain (0=off, 1=on, 2=all).
+  /// this tool chain (0=off, 1=on, 2=strong, 3=all).
   virtual unsigned GetDefaultStackProtectorLevel(bool KernelOrKext) const {
     return 0;
   }

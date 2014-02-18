@@ -928,8 +928,9 @@ struct PragmaDebugHandler : public PragmaHandler {
 #ifdef _MSC_VER
     #pragma warning(disable : 4717)
 #endif
-  void DebugOverflowStack() {
-    DebugOverflowStack();
+  static void DebugOverflowStack() {
+    void (*volatile Self)() = DebugOverflowStack;
+    Self();
   }
 #ifdef _MSC_VER
     #pragma warning(default : 4717)
@@ -1009,24 +1010,6 @@ public:
   }
 };
 
-// Returns 0 on failure.
-static unsigned LexSimpleUint(Preprocessor &PP, Token &Tok) {
-  assert(Tok.is(tok::numeric_constant));
-  SmallString<8> IntegerBuffer;
-  bool NumberInvalid = false;
-  StringRef Spelling = PP.getSpelling(Tok, IntegerBuffer, &NumberInvalid);
-  if (NumberInvalid)
-    return 0;
-  NumericLiteralParser Literal(Spelling, Tok.getLocation(), PP);
-  if (Literal.hadError || !Literal.isIntegerLiteral() || Literal.hasUDSuffix())
-    return 0;
-  llvm::APInt APVal(32, 0);
-  if (Literal.GetIntegerValue(APVal))
-    return 0;
-  PP.Lex(Tok);
-  return unsigned(APVal.getLimitedValue(UINT_MAX));
-}
-
 /// "\#pragma warning(...)".  MSVC's diagnostics do not map cleanly to clang's
 /// diagnostics, so we don't really implement this pragma.  We parse it and
 /// ignore it to avoid -Wunknown-pragma warnings.
@@ -1038,7 +1021,7 @@ struct PragmaWarningHandler : public PragmaHandler {
     // Parse things like:
     // warning(push, 1)
     // warning(pop)
-    // warning(disable : 1 2 3 ; error 4 5 6 ; suppress 7 8 9)
+    // warning(disable : 1 2 3 ; error : 4 5 6 ; suppress : 7 8 9)
     SourceLocation DiagLoc = Tok.getLocation();
     PPCallbacks *Callbacks = PP.getPPCallbacks();
 
@@ -1057,13 +1040,15 @@ struct PragmaWarningHandler : public PragmaHandler {
 
     if (II->isStr("push")) {
       // #pragma warning( push[ ,n ] )
-      unsigned Level = 0;
+      int Level = -1;
       PP.Lex(Tok);
       if (Tok.is(tok::comma)) {
         PP.Lex(Tok);
-        if (Tok.is(tok::numeric_constant))
-          Level = LexSimpleUint(PP, Tok);
-        if (Level < 1 || Level > 4) {
+        uint64_t Value;
+        if (Tok.is(tok::numeric_constant) &&
+            PP.parseSimpleIntegerLiteral(Tok, Value))
+          Level = int(Value);
+        if (Level < 0 || Level > 4) {
           PP.Diag(Tok, diag::warn_pragma_warning_push_level);
           return;
         }
@@ -1106,12 +1091,13 @@ struct PragmaWarningHandler : public PragmaHandler {
         SmallVector<int, 4> Ids;
         PP.Lex(Tok);
         while (Tok.is(tok::numeric_constant)) {
-          unsigned Id = LexSimpleUint(PP, Tok);
-          if (Id == 0 || Id >= INT_MAX) {
+          uint64_t Value;
+          if (!PP.parseSimpleIntegerLiteral(Tok, Value) || Value == 0 ||
+              Value > INT_MAX) {
             PP.Diag(Tok, diag::warn_pragma_warning_expected_number);
             return;
           }
-          Ids.push_back(Id);
+          Ids.push_back(int(Value));
         }
         if (Callbacks)
           Callbacks->PragmaWarning(DiagLoc, Specifier, Ids);

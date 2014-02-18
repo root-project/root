@@ -18,6 +18,7 @@
 #include "clang/Frontend/FrontendPluginRegistry.h"
 #include "clang/Frontend/LayoutOverrideSource.h"
 #include "clang/Frontend/MultiplexConsumer.h"
+#include "clang/Frontend/Utils.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/ParseAST.h"
@@ -180,7 +181,7 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
            "This action does not have AST file support!");
 
     IntrusiveRefCntPtr<DiagnosticsEngine> Diags(&CI.getDiagnostics());
-    std::string Error;
+
     ASTUnit *AST = ASTUnit::LoadFromASTFile(InputFile, Diags,
                                             CI.getFileSystemOpts());
     if (!AST)
@@ -403,9 +404,9 @@ void FrontendAction::EndSourceFile() {
   //
   // FIXME: There is more per-file stuff we could just drop here?
   if (CI.getFrontendOpts().DisableFree) {
-    CI.takeASTConsumer();
+    BuryPointer(CI.takeASTConsumer());
     if (!isCurrentFileAST()) {
-      CI.takeSema();
+      BuryPointer(CI.takeSema());
       CI.resetAndLeakASTContext();
     }
   } else {

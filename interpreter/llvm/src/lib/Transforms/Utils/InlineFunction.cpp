@@ -144,7 +144,6 @@ BasicBlock *InvokeInliningInfo::getInnerResumeDest() {
 void InvokeInliningInfo::forwardResume(ResumeInst *RI,
                                SmallPtrSet<LandingPadInst*, 16> &InlinedLPads) {
   BasicBlock *Dest = getInnerResumeDest();
-  LandingPadInst *OuterLPad = getLandingPadInst();
   BasicBlock *Src = RI->getParent();
 
   BranchInst::Create(Dest, Src);
@@ -155,16 +154,6 @@ void InvokeInliningInfo::forwardResume(ResumeInst *RI,
 
   InnerEHValuesPHI->addIncoming(RI->getOperand(0), Src);
   RI->eraseFromParent();
-
-  // Append the clauses from the outer landing pad instruction into the inlined
-  // landing pad instructions.
-  for (SmallPtrSet<LandingPadInst*, 16>::iterator I = InlinedLPads.begin(),
-         E = InlinedLPads.end(); I != E; ++I) {
-    LandingPadInst *InlinedLPad = *I;
-    for (unsigned OuterIdx = 0, OuterNum = OuterLPad->getNumClauses();
-         OuterIdx != OuterNum; ++OuterIdx)
-      InlinedLPad->addClause(OuterLPad->getClause(OuterIdx));
-  }
 }
 
 /// HandleCallsInBlockInlinedThroughInvoke - When we inline a basic block into
@@ -172,28 +161,18 @@ void InvokeInliningInfo::forwardResume(ResumeInst *RI,
 /// invokes.  This function analyze BB to see if there are any calls, and if so,
 /// it rewrites them to be invokes that jump to InvokeDest and fills in the PHI
 /// nodes in that block with the values specified in InvokeDestPHIValues.
-///
-/// Returns true to indicate that the next block should be skipped.
-static bool HandleCallsInBlockInlinedThroughInvoke(BasicBlock *BB,
+static void HandleCallsInBlockInlinedThroughInvoke(BasicBlock *BB,
                                                    InvokeInliningInfo &Invoke) {
-  LandingPadInst *LPI = Invoke.getLandingPadInst();
-
   for (BasicBlock::iterator BBI = BB->begin(), E = BB->end(); BBI != E; ) {
     Instruction *I = BBI++;
-
-    if (LandingPadInst *L = dyn_cast<LandingPadInst>(I)) {
-      unsigned NumClauses = LPI->getNumClauses();
-      L->reserveClauses(NumClauses);
-      for (unsigned i = 0; i != NumClauses; ++i)
-        L->addClause(LPI->getClause(i));
-    }
 
     // We only need to check for function calls: inlined invoke
     // instructions require no special handling.
     CallInst *CI = dyn_cast<CallInst>(I);
 
     // If this call cannot unwind, don't convert it to an invoke.
-    if (!CI || CI->doesNotThrow())
+    // Inline asm calls cannot throw.
+    if (!CI || CI->doesNotThrow() || isa<InlineAsm>(CI->getCalledValue()))
       continue;
 
     // Convert this function call into an invoke instruction.  First, split the
@@ -222,10 +201,8 @@ static bool HandleCallsInBlockInlinedThroughInvoke(BasicBlock *BB,
     // Update any PHI nodes in the exceptional block to indicate that there is
     // now a new entry in them.
     Invoke.addIncomingPHIValuesFor(BB);
-    return false;
+    return;
   }
-
-  return false;
 }
 
 /// HandleInlinedInvoke - If we inlined an invoke site, we need to convert calls
@@ -251,13 +228,23 @@ static void HandleInlinedInvoke(InvokeInst *II, BasicBlock *FirstNewBlock,
     if (InvokeInst *II = dyn_cast<InvokeInst>(I->getTerminator()))
       InlinedLPads.insert(II->getLandingPadInst());
 
+  // Append the clauses from the outer landing pad instruction into the inlined
+  // landing pad instructions.
+  LandingPadInst *OuterLPad = Invoke.getLandingPadInst();
+  for (SmallPtrSet<LandingPadInst*, 16>::iterator I = InlinedLPads.begin(),
+         E = InlinedLPads.end(); I != E; ++I) {
+    LandingPadInst *InlinedLPad = *I;
+    unsigned OuterNum = OuterLPad->getNumClauses();
+    InlinedLPad->reserveClauses(OuterNum);
+    for (unsigned OuterIdx = 0; OuterIdx != OuterNum; ++OuterIdx)
+      InlinedLPad->addClause(OuterLPad->getClause(OuterIdx));
+    if (OuterLPad->isCleanup())
+      InlinedLPad->setCleanup(true);
+  }
+
   for (Function::iterator BB = FirstNewBlock, E = Caller->end(); BB != E; ++BB){
     if (InlinedCodeInfo.ContainsCalls)
-      if (HandleCallsInBlockInlinedThroughInvoke(BB, Invoke)) {
-        // Honor a request to skip the next block.
-        ++BB;
-        continue;
-      }
+      HandleCallsInBlockInlinedThroughInvoke(BB, Invoke);
 
     // Forward any resumes that are remaining here.
     if (ResumeInst *RI = dyn_cast<ResumeInst>(BB->getTerminator()))

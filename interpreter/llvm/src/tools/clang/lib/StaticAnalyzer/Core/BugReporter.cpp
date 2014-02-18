@@ -20,8 +20,8 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/ParentMap.h"
-#include "clang/AST/StmtObjC.h"
 #include "clang/AST/StmtCXX.h"
+#include "clang/AST/StmtObjC.h"
 #include "clang/Analysis/CFG.h"
 #include "clang/Analysis/ProgramPoint.h"
 #include "clang/Basic/SourceManager.h"
@@ -243,6 +243,41 @@ static void adjustCallLocations(PathPieces &Pieces,
 
     assert(ThisCallLocation && "Outermost call has an invalid location");
     adjustCallLocations(Call->path, ThisCallLocation);
+  }
+}
+
+/// Remove edges in and out of C++ default initializer expressions. These are
+/// for fields that have in-class initializers, as opposed to being initialized
+/// explicitly in a constructor or braced list.
+static void removeEdgesToDefaultInitializers(PathPieces &Pieces) {
+  for (PathPieces::iterator I = Pieces.begin(), E = Pieces.end(); I != E;) {
+    if (PathDiagnosticCallPiece *C = dyn_cast<PathDiagnosticCallPiece>(*I))
+      removeEdgesToDefaultInitializers(C->path);
+
+    if (PathDiagnosticMacroPiece *M = dyn_cast<PathDiagnosticMacroPiece>(*I))
+      removeEdgesToDefaultInitializers(M->subPieces);
+
+    if (PathDiagnosticControlFlowPiece *CF =
+          dyn_cast<PathDiagnosticControlFlowPiece>(*I)) {
+      const Stmt *Start = CF->getStartLocation().asStmt();
+      const Stmt *End = CF->getEndLocation().asStmt();
+      if (Start && isa<CXXDefaultInitExpr>(Start)) {
+        I = Pieces.erase(I);
+        continue;
+      } else if (End && isa<CXXDefaultInitExpr>(End)) {
+        PathPieces::iterator Next = llvm::next(I);
+        if (Next != E) {
+          if (PathDiagnosticControlFlowPiece *NextCF =
+                dyn_cast<PathDiagnosticControlFlowPiece>(*Next)) {
+            NextCF->setStartLocation(CF->getStartLocation());
+          }
+        }
+        I = Pieces.erase(I);
+        continue;
+      }
+    }
+
+    I++;
   }
 }
 
@@ -1594,6 +1629,10 @@ static const Stmt *getTerminatorCondition(const CFGBlock *B) {
 
 static const char StrEnteringLoop[] = "Entering loop body";
 static const char StrLoopBodyZero[] = "Loop body executed 0 times";
+static const char StrLoopRangeEmpty[] =
+  "Loop body skipped when range is empty";
+static const char StrLoopCollectionEmpty[] =
+  "Loop body skipped when collection is empty";
 
 static bool
 GenerateAlternateExtensivePathDiagnostic(PathDiagnostic& PD,
@@ -1792,7 +1831,13 @@ GenerateAlternateExtensivePathDiagnostic(PathDiagnostic& PD,
 
             if (isJumpToFalseBranch(&*BE)) {
               if (!IsInLoopBody) {
-                str = StrLoopBodyZero;
+                if (isa<ObjCForCollectionStmt>(Term)) {
+                  str = StrLoopCollectionEmpty;
+                } else if (isa<CXXForRangeStmt>(Term)) {
+                  str = StrLoopRangeEmpty;
+                } else {
+                  str = StrLoopBodyZero;
+                }
               }
             } else {
               str = StrEnteringLoop;
@@ -2037,7 +2082,8 @@ static void simplifySimpleBranches(PathPieces &pieces) {
       PathDiagnosticEventPiece *EV = dyn_cast<PathDiagnosticEventPiece>(*NextI);
       if (EV) {
         StringRef S = EV->getString();
-        if (S == StrEnteringLoop || S == StrLoopBodyZero) {
+        if (S == StrEnteringLoop || S == StrLoopBodyZero ||
+            S == StrLoopCollectionEmpty || S == StrLoopRangeEmpty) {
           ++NextI;
           continue;
         }
@@ -2488,7 +2534,7 @@ static void dropFunctionEntryEdge(PathPieces &Path,
 //===----------------------------------------------------------------------===//
 // Methods for BugType and subclasses.
 //===----------------------------------------------------------------------===//
-BugType::~BugType() { }
+void BugType::anchor() { }
 
 void BugType::FlushReports(BugReporter &BR) {}
 
@@ -3163,7 +3209,6 @@ bool GRBugReporter::generatePathDiagnostic(PathDiagnostic& PD,
 
       // Redirect all call pieces to have valid locations.
       adjustCallLocations(PD.getMutablePieces());
-
       removePiecesWithInvalidLocations(PD.getMutablePieces());
 
       if (ActiveScheme == PathDiagnosticConsumer::AlternateExtensive) {
@@ -3180,9 +3225,11 @@ bool GRBugReporter::generatePathDiagnostic(PathDiagnostic& PD,
         dropFunctionEntryEdge(PD.getMutablePieces(), LCM, SM);
       }
 
-      // Remove messages that are basically the same.
+      // Remove messages that are basically the same, and edges that may not
+      // make sense.
       // We have to do this after edge optimization in the Extensive mode.
       removeRedundantMsgs(PD.getMutablePieces());
+      removeEdgesToDefaultInitializers(PD.getMutablePieces());
     }
 
     // We found a report and didn't suppress it.
@@ -3373,7 +3420,8 @@ void BugReporter::FlushReport(BugReport *exampleReport,
   BugType& BT = exampleReport->getBugType();
 
   OwningPtr<PathDiagnostic>
-    D(new PathDiagnostic(exampleReport->getDeclWithIssue(),
+    D(new PathDiagnostic(exampleReport->getBugType().getCheckName(),
+                         exampleReport->getDeclWithIssue(),
                          exampleReport->getBugType().getName(),
                          exampleReport->getDescription(),
                          exampleReport->getShortDescription(/*Fallback=*/false),
@@ -3425,35 +3473,45 @@ void BugReporter::FlushReport(BugReport *exampleReport,
 }
 
 void BugReporter::EmitBasicReport(const Decl *DeclWithIssue,
-                                  StringRef name,
-                                  StringRef category,
+                                  const CheckerBase *Checker,
+                                  StringRef Name, StringRef Category,
+                                  StringRef Str, PathDiagnosticLocation Loc,
+                                  ArrayRef<SourceRange> Ranges) {
+  EmitBasicReport(DeclWithIssue, Checker->getCheckName(), Name, Category, Str,
+                  Loc, Ranges);
+}
+void BugReporter::EmitBasicReport(const Decl *DeclWithIssue,
+                                  CheckName CheckName,
+                                  StringRef name, StringRef category,
                                   StringRef str, PathDiagnosticLocation Loc,
-                                  SourceRange* RBeg, unsigned NumRanges) {
+                                  ArrayRef<SourceRange> Ranges) {
 
   // 'BT' is owned by BugReporter.
-  BugType *BT = getBugTypeForName(name, category);
+  BugType *BT = getBugTypeForName(CheckName, name, category);
   BugReport *R = new BugReport(*BT, str, Loc);
   R->setDeclWithIssue(DeclWithIssue);
-  for ( ; NumRanges > 0 ; --NumRanges, ++RBeg) R->addRange(*RBeg);
+  for (ArrayRef<SourceRange>::iterator I = Ranges.begin(), E = Ranges.end();
+       I != E; ++I)
+    R->addRange(*I);
   emitReport(R);
 }
 
-BugType *BugReporter::getBugTypeForName(StringRef name,
+BugType *BugReporter::getBugTypeForName(CheckName CheckName, StringRef name,
                                         StringRef category) {
   SmallString<136> fullDesc;
-  llvm::raw_svector_ostream(fullDesc) << name << ":" << category;
+  llvm::raw_svector_ostream(fullDesc) << CheckName.getName() << ":" << name
+                                      << ":" << category;
   llvm::StringMapEntry<BugType *> &
       entry = StrBugTypes.GetOrCreateValue(fullDesc);
   BugType *BT = entry.getValue();
   if (!BT) {
-    BT = new BugType(name, category);
+    BT = new BugType(CheckName, name, category);
     entry.setValue(BT);
   }
   return BT;
 }
 
-
-void PathPieces::dump() const {
+LLVM_DUMP_METHOD void PathPieces::dump() const {
   unsigned index = 0;
   for (PathPieces::const_iterator I = begin(), E = end(); I != E; ++I) {
     llvm::errs() << "[" << index++ << "]  ";

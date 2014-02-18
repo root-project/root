@@ -363,6 +363,7 @@ private:
                                       AddStmtChoice asc);
   CFGBlock *VisitCXXCatchStmt(CXXCatchStmt *S);
   CFGBlock *VisitCXXConstructExpr(CXXConstructExpr *C, AddStmtChoice asc);
+  CFGBlock *VisitCXXNewExpr(CXXNewExpr *DE, AddStmtChoice asc);
   CFGBlock *VisitCXXDeleteExpr(CXXDeleteExpr *DE, AddStmtChoice asc);
   CFGBlock *VisitCXXForRangeStmt(CXXForRangeStmt *S);
   CFGBlock *VisitCXXFunctionalCastExpr(CXXFunctionalCastExpr *E,
@@ -458,6 +459,9 @@ private:
   }
   void appendInitializer(CFGBlock *B, CXXCtorInitializer *I) {
     B->appendInitializer(I, cfg->getBumpVectorContext());
+  }
+  void appendNewAllocator(CFGBlock *B, CXXNewExpr *NE) {
+    B->appendNewAllocator(NE, cfg->getBumpVectorContext());
   }
   void appendBaseDtor(CFGBlock *B, const CXXBaseSpecifier *BS) {
     B->appendBaseDtor(BS, cfg->getBumpVectorContext());
@@ -1121,6 +1125,9 @@ CFGBlock *CFGBuilder::Visit(Stmt * S, AddStmtChoice asc) {
 
     case Stmt::CXXConstructExprClass:
       return VisitCXXConstructExpr(cast<CXXConstructExpr>(S), asc);
+
+    case Stmt::CXXNewExprClass:
+      return VisitCXXNewExpr(cast<CXXNewExpr>(S), asc);
 
     case Stmt::CXXDeleteExprClass:
       return VisitCXXDeleteExpr(cast<CXXDeleteExpr>(S), asc);
@@ -3124,6 +3131,23 @@ CFGBlock *CFGBuilder::VisitCXXConstructExpr(CXXConstructExpr *C,
   return VisitChildren(C);
 }
 
+CFGBlock *CFGBuilder::VisitCXXNewExpr(CXXNewExpr *NE,
+                                      AddStmtChoice asc) {
+
+  autoCreateBlock();
+  appendStmt(Block, NE);
+
+  if (NE->getInitializer())
+    Block = Visit(NE->getInitializer());
+  if (BuildOpts.AddCXXNewAllocator)
+    appendNewAllocator(Block, NE);
+  if (NE->isArray())
+    Block = Visit(NE->getArraySize());
+  for (CXXNewExpr::arg_iterator I = NE->placement_arg_begin(),
+       E = NE->placement_arg_end(); I != E; ++I)
+    Block = Visit(*I);
+  return Block;
+}
 
 CFGBlock *CFGBuilder::VisitCXXDeleteExpr(CXXDeleteExpr *DE,
                                          AddStmtChoice asc) {
@@ -3426,6 +3450,7 @@ CFGImplicitDtor::getDestructorDecl(ASTContext &astContext) const {
   switch (getKind()) {
     case CFGElement::Statement:
     case CFGElement::Initializer:
+    case CFGElement::NewAllocator:
       llvm_unreachable("getDestructorDecl should only be used with "
                        "ImplicitDtors");
     case CFGElement::AutomaticObjectDtor: {
@@ -3615,7 +3640,9 @@ class CFGBlockTerminatorPrint
 public:
   CFGBlockTerminatorPrint(raw_ostream &os, StmtPrinterHelper* helper,
                           const PrintingPolicy &Policy)
-    : OS(os), Helper(helper), Policy(Policy) {}
+    : OS(os), Helper(helper), Policy(Policy) {
+    this->Policy.IncludeNewlines = false;
+  }
 
   void VisitIfStmt(IfStmt *I) {
     OS << "if ";
@@ -3708,35 +3735,32 @@ public:
 };
 } // end anonymous namespace
 
-static void print_elem(raw_ostream &OS, StmtPrinterHelper* Helper,
+static void print_elem(raw_ostream &OS, StmtPrinterHelper &Helper,
                        const CFGElement &E) {
   if (Optional<CFGStmt> CS = E.getAs<CFGStmt>()) {
     const Stmt *S = CS->getStmt();
     
-    if (Helper) {
+    // special printing for statement-expressions.
+    if (const StmtExpr *SE = dyn_cast<StmtExpr>(S)) {
+      const CompoundStmt *Sub = SE->getSubStmt();
 
-      // special printing for statement-expressions.
-      if (const StmtExpr *SE = dyn_cast<StmtExpr>(S)) {
-        const CompoundStmt *Sub = SE->getSubStmt();
-
-        if (Sub->children()) {
-          OS << "({ ... ; ";
-          Helper->handledStmt(*SE->getSubStmt()->body_rbegin(),OS);
-          OS << " })\n";
-          return;
-        }
-      }
-      // special printing for comma expressions.
-      if (const BinaryOperator* B = dyn_cast<BinaryOperator>(S)) {
-        if (B->getOpcode() == BO_Comma) {
-          OS << "... , ";
-          Helper->handledStmt(B->getRHS(),OS);
-          OS << '\n';
-          return;
-        }
+      if (Sub->children()) {
+        OS << "({ ... ; ";
+        Helper.handledStmt(*SE->getSubStmt()->body_rbegin(),OS);
+        OS << " })\n";
+        return;
       }
     }
-    S->printPretty(OS, Helper, PrintingPolicy(Helper->getLangOpts()));
+    // special printing for comma expressions.
+    if (const BinaryOperator* B = dyn_cast<BinaryOperator>(S)) {
+      if (B->getOpcode() == BO_Comma) {
+        OS << "... , ";
+        Helper.handledStmt(B->getRHS(),OS);
+        OS << '\n';
+        return;
+      }
+    }
+    S->printPretty(OS, &Helper, PrintingPolicy(Helper.getLangOpts()));
 
     if (isa<CXXOperatorCallExpr>(S)) {
       OS << " (OperatorCall)";
@@ -3762,21 +3786,25 @@ static void print_elem(raw_ostream &OS, StmtPrinterHelper* Helper,
     const CXXCtorInitializer *I = IE->getInitializer();
     if (I->isBaseInitializer())
       OS << I->getBaseClass()->getAsCXXRecordDecl()->getName();
+    else if (I->isDelegatingInitializer())
+      OS << I->getTypeSourceInfo()->getType()->getAsCXXRecordDecl()->getName();
     else OS << I->getAnyMember()->getName();
 
     OS << "(";
     if (Expr *IE = I->getInit())
-      IE->printPretty(OS, Helper, PrintingPolicy(Helper->getLangOpts()));
+      IE->printPretty(OS, &Helper, PrintingPolicy(Helper.getLangOpts()));
     OS << ")";
 
     if (I->isBaseInitializer())
       OS << " (Base initializer)\n";
+    else if (I->isDelegatingInitializer())
+      OS << " (Delegating initializer)\n";
     else OS << " (Member initializer)\n";
 
   } else if (Optional<CFGAutomaticObjDtor> DE =
                  E.getAs<CFGAutomaticObjDtor>()) {
     const VarDecl *VD = DE->getVarDecl();
-    Helper->handleDecl(VD, OS);
+    Helper.handleDecl(VD, OS);
 
     const Type* T = VD->getType().getTypePtr();
     if (const ReferenceType* RT = T->getAs<ReferenceType>())
@@ -3786,13 +3814,18 @@ static void print_elem(raw_ostream &OS, StmtPrinterHelper* Helper,
     OS << ".~" << T->getAsCXXRecordDecl()->getName().str() << "()";
     OS << " (Implicit destructor)\n";
 
+  } else if (Optional<CFGNewAllocator> NE = E.getAs<CFGNewAllocator>()) {
+    OS << "CFGNewAllocator(";
+    if (const CXXNewExpr *AllocExpr = NE->getAllocatorExpr())
+      AllocExpr->getType().print(OS, PrintingPolicy(Helper.getLangOpts()));
+    OS << ")\n";
   } else if (Optional<CFGDeleteDtor> DE = E.getAs<CFGDeleteDtor>()) {
     const CXXRecordDecl *RD = DE->getCXXRecordDecl();
     if (!RD)
       return;
     CXXDeleteExpr *DelExpr =
         const_cast<CXXDeleteExpr*>(DE->getDeleteExpr());
-    Helper->handledStmt(cast<Stmt>(DelExpr->getArgument()), OS);
+    Helper.handledStmt(cast<Stmt>(DelExpr->getArgument()), OS);
     OS << "->~" << RD->getName().str() << "()";
     OS << " (Implicit destructor)\n";
   } else if (Optional<CFGBaseDtor> BE = E.getAs<CFGBaseDtor>()) {
@@ -3810,18 +3843,17 @@ static void print_elem(raw_ostream &OS, StmtPrinterHelper* Helper,
   } else if (Optional<CFGTemporaryDtor> TE = E.getAs<CFGTemporaryDtor>()) {
     const CXXBindTemporaryExpr *BT = TE->getBindTemporaryExpr();
     OS << "~";
-    BT->getType().print(OS, PrintingPolicy(Helper->getLangOpts()));
+    BT->getType().print(OS, PrintingPolicy(Helper.getLangOpts()));
     OS << "() (Temporary object destructor)\n";
   }
 }
 
 static void print_block(raw_ostream &OS, const CFG* cfg,
                         const CFGBlock &B,
-                        StmtPrinterHelper* Helper, bool print_edges,
+                        StmtPrinterHelper &Helper, bool print_edges,
                         bool ShowColors) {
 
-  if (Helper)
-    Helper->setBlockID(B.getBlockID());
+  Helper.setBlockID(B.getBlockID());
 
   // Print the header.
   if (ShowColors)
@@ -3851,19 +3883,19 @@ static void print_block(raw_ostream &OS, const CFG* cfg,
       OS << L->getName();
     else if (CaseStmt *C = dyn_cast<CaseStmt>(Label)) {
       OS << "case ";
-      C->getLHS()->printPretty(OS, Helper,
-                               PrintingPolicy(Helper->getLangOpts()));
+      C->getLHS()->printPretty(OS, &Helper,
+                               PrintingPolicy(Helper.getLangOpts()));
       if (C->getRHS()) {
         OS << " ... ";
-        C->getRHS()->printPretty(OS, Helper,
-                                 PrintingPolicy(Helper->getLangOpts()));
+        C->getRHS()->printPretty(OS, &Helper,
+                                 PrintingPolicy(Helper.getLangOpts()));
       }
     } else if (isa<DefaultStmt>(Label))
       OS << "default";
     else if (CXXCatchStmt *CS = dyn_cast<CXXCatchStmt>(Label)) {
       OS << "catch (";
       if (CS->getExceptionDecl())
-        CS->getExceptionDecl()->print(OS, PrintingPolicy(Helper->getLangOpts()),
+        CS->getExceptionDecl()->print(OS, PrintingPolicy(Helper.getLangOpts()),
                                       0);
       else
         OS << "...";
@@ -3887,8 +3919,7 @@ static void print_block(raw_ostream &OS, const CFG* cfg,
 
     OS << llvm::format("%3d", j) << ": ";
 
-    if (Helper)
-      Helper->setStmtID(j);
+    Helper.setStmtID(j);
 
     print_elem(OS, Helper, *I);
   }
@@ -3900,10 +3931,10 @@ static void print_block(raw_ostream &OS, const CFG* cfg,
 
     OS << "   T: ";
 
-    if (Helper) Helper->setBlockID(-1);
+    Helper.setBlockID(-1);
 
-    PrintingPolicy PP(Helper ? Helper->getLangOpts() : LangOptions());
-    CFGBlockTerminatorPrint TPrinter(OS, Helper, PP);
+    PrintingPolicy PP(Helper.getLangOpts());
+    CFGBlockTerminatorPrint TPrinter(OS, &Helper, PP);
     TPrinter.Visit(const_cast<Stmt*>(B.getTerminator().getStmt()));
     OS << '\n';
     
@@ -3985,7 +4016,7 @@ void CFG::print(raw_ostream &OS, const LangOptions &LO, bool ShowColors) const {
   StmtPrinterHelper Helper(this, LO);
 
   // Print the entry block.
-  print_block(OS, this, getEntry(), &Helper, true, ShowColors);
+  print_block(OS, this, getEntry(), Helper, true, ShowColors);
 
   // Iterate through the CFGBlocks and print them one by one.
   for (const_iterator I = Blocks.begin(), E = Blocks.end() ; I != E ; ++I) {
@@ -3993,11 +4024,11 @@ void CFG::print(raw_ostream &OS, const LangOptions &LO, bool ShowColors) const {
     if (&(**I) == &getEntry() || &(**I) == &getExit())
       continue;
 
-    print_block(OS, this, **I, &Helper, true, ShowColors);
+    print_block(OS, this, **I, Helper, true, ShowColors);
   }
 
   // Print the exit block.
-  print_block(OS, this, getExit(), &Helper, true, ShowColors);
+  print_block(OS, this, getExit(), Helper, true, ShowColors);
   OS << '\n';
   OS.flush();
 }
@@ -4013,7 +4044,7 @@ void CFGBlock::dump(const CFG* cfg, const LangOptions &LO,
 void CFGBlock::print(raw_ostream &OS, const CFG* cfg,
                      const LangOptions &LO, bool ShowColors) const {
   StmtPrinterHelper Helper(cfg, LO);
-  print_block(OS, cfg, *this, &Helper, true, ShowColors);
+  print_block(OS, cfg, *this, Helper, true, ShowColors);
   OS << '\n';
 }
 
@@ -4115,7 +4146,7 @@ struct DOTGraphTraits<const CFG*> : public DefaultDOTGraphTraits {
 #ifndef NDEBUG
     std::string OutSStr;
     llvm::raw_string_ostream Out(OutSStr);
-    print_block(Out,Graph, *Node, GraphHelper, false, false);
+    print_block(Out,Graph, *Node, *GraphHelper, false, false);
     std::string& OutStr = Out.str();
 
     if (OutStr[0] == '\n') OutStr.erase(OutStr.begin());

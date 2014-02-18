@@ -22,6 +22,7 @@ using namespace clang;
 static const Builtin::Info BuiltinInfo[] = {
   { "not a builtin function", 0, 0, 0, ALL_LANGUAGES },
 #define BUILTIN(ID, TYPE, ATTRS) { #ID, TYPE, ATTRS, 0, ALL_LANGUAGES },
+#define LANGBUILTIN(ID, TYPE, ATTRS, BUILTIN_LANG) { #ID, TYPE, ATTRS, 0, BUILTIN_LANG },
 #define LIBBUILTIN(ID, TYPE, ATTRS, HEADER, BUILTIN_LANG) { #ID, TYPE, ATTRS, HEADER,\
                                                             BUILTIN_LANG },
 #include "clang/Basic/Builtins.def"
@@ -54,10 +55,12 @@ bool Builtin::Context::BuiltinIsSupported(const Builtin::Info &BuiltinInfo,
     llvm::StringRef(BuiltinInfo.HeaderName).equals("math.h");
   bool GnuModeUnsupported = !LangOpts.GNUMode &&
                             (BuiltinInfo.builtin_lang & GNU_LANG);
+  bool MSModeUnsupported = !LangOpts.MicrosoftExt &&
+                           (BuiltinInfo.builtin_lang & MS_LANG);
   bool ObjCUnsupported = !LangOpts.ObjC1 &&
                          BuiltinInfo.builtin_lang == OBJC_LANG;
   return !BuiltinsUnsupported && !MathBuiltinsUnsupported &&
-         !GnuModeUnsupported && !ObjCUnsupported;
+         !GnuModeUnsupported && !MSModeUnsupported && !ObjCUnsupported;
 }
 
 /// InitializeBuiltins - Mark the identifiers for all the builtins with their
@@ -94,40 +97,35 @@ void Builtin::Context::ForgetBuiltin(unsigned ID, IdentifierTable &Table) {
   Table.get(GetRecord(ID).Name).setBuiltinID(0);
 }
 
-bool
-Builtin::Context::isPrintfLike(unsigned ID, unsigned &FormatIdx,
-                               bool &HasVAListArg) {
-  const char *Printf = strpbrk(GetRecord(ID).Attributes, "pP");
-  if (!Printf)
+bool Builtin::Context::isLike(unsigned ID, unsigned &FormatIdx,
+                              bool &HasVAListArg, const char *Fmt) const {
+  assert(Fmt && "Not passed a format string");
+  assert(::strlen(Fmt) == 2 &&
+         "Format string needs to be two characters long");
+  assert(::toupper(Fmt[0]) == Fmt[1] &&
+         "Format string is not in the form \"xX\"");
+
+  const char *Like = ::strpbrk(GetRecord(ID).Attributes, Fmt);
+  if (!Like)
     return false;
 
-  HasVAListArg = (*Printf == 'P');
+  HasVAListArg = (*Like == Fmt[1]);
 
-  ++Printf;
-  assert(*Printf == ':' && "p or P specifier must have be followed by a ':'");
-  ++Printf;
+  ++Like;
+  assert(*Like == ':' && "Format specifier must be followed by a ':'");
+  ++Like;
 
-  assert(strchr(Printf, ':') && "printf specifier must end with a ':'");
-  FormatIdx = strtol(Printf, 0, 10);
+  assert(::strchr(Like, ':') && "Format specifier must end with a ':'");
+  FormatIdx = ::strtol(Like, 0, 10);
   return true;
 }
 
-// FIXME: Refactor with isPrintfLike.
-bool
-Builtin::Context::isScanfLike(unsigned ID, unsigned &FormatIdx,
-                              bool &HasVAListArg) {
-  const char *Scanf = strpbrk(GetRecord(ID).Attributes, "sS");
-  if (!Scanf)
-    return false;
-
-  HasVAListArg = (*Scanf == 'S');
-
-  ++Scanf;
-  assert(*Scanf == ':' && "s or S specifier must have be followed by a ':'");
-  ++Scanf;
-
-  assert(strchr(Scanf, ':') && "printf specifier must end with a ':'");
-  FormatIdx = strtol(Scanf, 0, 10);
-  return true;
+bool Builtin::Context::isPrintfLike(unsigned ID, unsigned &FormatIdx,
+                                    bool &HasVAListArg) {
+  return isLike(ID, FormatIdx, HasVAListArg, "pP");
 }
 
+bool Builtin::Context::isScanfLike(unsigned ID, unsigned &FormatIdx,
+                                   bool &HasVAListArg) {
+  return isLike(ID, FormatIdx, HasVAListArg, "sS");
+}

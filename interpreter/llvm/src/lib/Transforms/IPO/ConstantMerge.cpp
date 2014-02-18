@@ -77,8 +77,8 @@ static void FindUsedValues(GlobalVariable *LLVMUsed,
 }
 
 // True if A is better than B.
-static bool IsBetterCannonical(const GlobalVariable &A,
-                               const GlobalVariable &B) {
+static bool IsBetterCanonical(const GlobalVariable &A,
+                              const GlobalVariable &B) {
   if (!A.hasLocalLinkage() && B.hasLocalLinkage())
     return true;
 
@@ -93,9 +93,12 @@ bool ConstantMerge::hasKnownAlignment(GlobalVariable *GV) const {
 }
 
 unsigned ConstantMerge::getAlignment(GlobalVariable *GV) const {
+  unsigned Align = GV->getAlignment();
+  if (Align)
+    return Align;
   if (TD)
     return TD->getPreferredAlignment(GV);
-  return GV->getAlignment();
+  return 0;
 }
 
 bool ConstantMerge::runOnModule(Module &M) {
@@ -157,7 +160,7 @@ bool ConstantMerge::runOnModule(Module &M) {
       // If this is the first constant we find or if the old one is local,
       // replace with the current one. If the current is externally visible
       // it cannot be replace, but can be the canonical constant we merge with.
-      if (Slot == 0 || IsBetterCannonical(*GV, *Slot))
+      if (Slot == 0 || IsBetterCanonical(*GV, *Slot))
         Slot = GV;
     }
 
@@ -210,9 +213,9 @@ bool ConstantMerge::runOnModule(Module &M) {
       // Bump the alignment if necessary.
       if (Replacements[i].first->getAlignment() ||
           Replacements[i].second->getAlignment()) {
-        Replacements[i].second->setAlignment(std::max(
-            Replacements[i].first->getAlignment(),
-            Replacements[i].second->getAlignment()));
+        Replacements[i].second->setAlignment(
+            std::max(getAlignment(Replacements[i].first),
+                     getAlignment(Replacements[i].second)));
       }
 
       // Eliminate any uses of the dead global.

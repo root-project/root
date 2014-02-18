@@ -46,12 +46,20 @@ static void ContractNodes(OwningPtr<Matcher> &MatcherPtr,
       if (MC->getChildNo() < 8)  // Only have RecordChild0...7
         New = new RecordChildMatcher(MC->getChildNo(), RM->getWhatFor(),
                                      RM->getResultNo());
-    
+
     if (CheckTypeMatcher *CT = dyn_cast<CheckTypeMatcher>(MC->getNext()))
       if (MC->getChildNo() < 8 &&  // Only have CheckChildType0...7
           CT->getResNo() == 0)     // CheckChildType checks res #0
         New = new CheckChildTypeMatcher(MC->getChildNo(), CT->getType());
-    
+
+    if (CheckSameMatcher *CS = dyn_cast<CheckSameMatcher>(MC->getNext()))
+      if (MC->getChildNo() < 4)  // Only have CheckChildSame0...3
+        New = new CheckChildSameMatcher(MC->getChildNo(), CS->getMatchNumber());
+
+    if (CheckIntegerMatcher *CS = dyn_cast<CheckIntegerMatcher>(MC->getNext()))
+      if (MC->getChildNo() < 5)  // Only have CheckChildInteger0...4
+        New = new CheckChildIntegerMatcher(MC->getChildNo(), CS->getValue());
+
     if (New) {
       // Insert the new node.
       New->setNext(MatcherPtr.take());
@@ -132,8 +140,7 @@ static void ContractNodes(OwningPtr<Matcher> &MatcherPtr,
         const SmallVectorImpl<MVT::SimpleValueType> &VTs = EN->getVTList();
         const SmallVectorImpl<unsigned> &Operands = EN->getOperandList();
         MatcherPtr.reset(new MorphNodeToMatcher(EN->getOpcodeName(),
-                                                VTs.data(), VTs.size(),
-                                                Operands.data(),Operands.size(),
+                                                VTs, Operands,
                                                 EN->hasChain(), EN->hasInFlag(),
                                                 EN->hasOutFlag(),
                                                 EN->hasMemRefs(),
@@ -376,7 +383,7 @@ static void FactorNodes(OwningPtr<Matcher> &MatcherPtr) {
       EqualMatchers[i] = Tmp;
     }
     
-    Shared->setNext(new ScopeMatcher(&EqualMatchers[0], EqualMatchers.size()));
+    Shared->setNext(new ScopeMatcher(EqualMatchers));
 
     // Recursively factor the newly created node.
     FactorNodes(Shared->getNextPtr());
@@ -451,7 +458,7 @@ static void FactorNodes(OwningPtr<Matcher> &MatcherPtr) {
       Cases.push_back(std::make_pair(&COM->getOpcode(), COM->getNext()));
     }
     
-    MatcherPtr.reset(new SwitchOpcodeMatcher(&Cases[0], Cases.size()));
+    MatcherPtr.reset(new SwitchOpcodeMatcher(Cases));
     return;
   }
   
@@ -478,7 +485,7 @@ static void FactorNodes(OwningPtr<Matcher> &MatcherPtr) {
         }
         
         Matcher *Entries[2] = { PrevMatcher, MatcherWithoutCTM };
-        Cases[Entry-1].second = new ScopeMatcher(Entries, 2);
+        Cases[Entry-1].second = new ScopeMatcher(Entries);
         continue;
       }
       
@@ -487,7 +494,7 @@ static void FactorNodes(OwningPtr<Matcher> &MatcherPtr) {
     }
     
     if (Cases.size() != 1) {
-      MatcherPtr.reset(new SwitchTypeMatcher(&Cases[0], Cases.size()));
+      MatcherPtr.reset(new SwitchTypeMatcher(Cases));
     } else {
       // If we factored and ended up with one case, create it now.
       MatcherPtr.reset(new CheckTypeMatcher(Cases[0].first, 0));

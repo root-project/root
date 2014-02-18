@@ -15,7 +15,7 @@
 #define DEBUG_TYPE "dwarfehprepare"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
@@ -42,10 +42,10 @@ namespace {
 
   public:
     static char ID; // Pass identification, replacement for typeid.
-    DwarfEHPrepare(const TargetMachine *TM) :
-      FunctionPass(ID), TM(TM), RewindFunction(0) {
-        initializeDominatorTreePass(*PassRegistry::getPassRegistry());
-      }
+    DwarfEHPrepare(const TargetMachine *TM)
+        : FunctionPass(ID), TM(TM), RewindFunction(0) {
+      initializeDominatorTreeWrapperPassPass(*PassRegistry::getPassRegistry());
+    }
 
     virtual bool runOnFunction(Function &Fn);
 

@@ -39,6 +39,7 @@ public:
     VExt,   // The value is vector-widened in the location.
             // FIXME: Not implemented yet. Code that uses AExt to mean
             // vector-widen should be fixed to use VExt instead.
+    FPExt,  // The floating-point value is fp-extended in the location.
     Indirect // The location contains pointer to the value.
     // TODO: a subset of the value is in the location.
   };
@@ -344,6 +345,15 @@ public:
   /// Version of AllocateStack with extra register to be shadowed.
   unsigned AllocateStack(unsigned Size, unsigned Align, unsigned ShadowReg) {
     MarkAllocated(ShadowReg);
+    return AllocateStack(Size, Align);
+  }
+
+  /// Version of AllocateStack with list of extra registers to be shadowed.
+  /// Note that, unlike AllocateReg, this shadows ALL of the shadow registers.
+  unsigned AllocateStack(unsigned Size, unsigned Align,
+                         const uint16_t *ShadowRegs, unsigned NumShadowRegs) {
+    for (unsigned i = 0; i < NumShadowRegs; ++i)
+      MarkAllocated(ShadowRegs[i]);
     return AllocateStack(Size, Align);
   }
 

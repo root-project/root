@@ -217,6 +217,13 @@ public:
                                 diag::Mapping mapping, StringRef Str) {
   }
 
+  /// \brief Called when an OpenCL extension is either disabled or
+  /// enabled with a pragma.
+  virtual void PragmaOpenCLExtension(SourceLocation NameLoc, 
+                                     const IdentifierInfo *Name,
+                                     SourceLocation StateLoc, unsigned State) {
+  }
+
   /// \brief Callback invoked when a \#pragma warning directive is read.
   virtual void PragmaWarning(SourceLocation Loc, StringRef WarningSpec,
                              ArrayRef<int> Ids) {
@@ -260,6 +267,10 @@ public:
   virtual void SourceRangeSkipped(SourceRange Range) {
   }
 
+  enum ConditionValueKind {
+    CVK_NotEvaluated, CVK_False, CVK_True
+  };
+
   /// \brief Hook called whenever an \#if is seen.
   /// \param Loc the source location of the directive.
   /// \param ConditionRange The SourceRange of the expression being tested.
@@ -267,7 +278,7 @@ public:
   ///
   // FIXME: better to pass in a list (or tree!) of Tokens.
   virtual void If(SourceLocation Loc, SourceRange ConditionRange,
-                  bool ConditionValue) {
+                  ConditionValueKind ConditionValue) {
   }
 
   /// \brief Hook called whenever an \#elif is seen.
@@ -277,7 +288,7 @@ public:
   /// \param IfLoc the source location of the \#if/\#ifdef/\#ifndef directive.
   // FIXME: better to pass in a list (or tree!) of Tokens.
   virtual void Elif(SourceLocation Loc, SourceRange ConditionRange,
-                    bool ConditionValue, SourceLocation IfLoc) {
+                    ConditionValueKind ConditionValue, SourceLocation IfLoc) {
   }
 
   /// \brief Hook called whenever an \#ifdef is seen.
@@ -413,6 +424,13 @@ public:
     Second->PragmaDiagnostic(Loc, Namespace, mapping, Str);
   }
 
+  virtual void PragmaOpenCLExtension(SourceLocation NameLoc, 
+                                     const IdentifierInfo *Name,
+                                     SourceLocation StateLoc, unsigned State) {
+    First->PragmaOpenCLExtension(NameLoc, Name, StateLoc, State);
+    Second->PragmaOpenCLExtension(NameLoc, Name, StateLoc, State);
+  }
+
   virtual void PragmaWarning(SourceLocation Loc, StringRef WarningSpec,
                              ArrayRef<int> Ids) {
     First->PragmaWarning(Loc, WarningSpec, Ids);
@@ -459,14 +477,14 @@ public:
 
   /// \brief Hook called whenever an \#if is seen.
   virtual void If(SourceLocation Loc, SourceRange ConditionRange,
-                  bool ConditionValue) {
+                  ConditionValueKind ConditionValue) {
     First->If(Loc, ConditionRange, ConditionValue);
     Second->If(Loc, ConditionRange, ConditionValue);
   }
 
   /// \brief Hook called whenever an \#elif is seen.
   virtual void Elif(SourceLocation Loc, SourceRange ConditionRange,
-                    bool ConditionValue, SourceLocation IfLoc) {
+                    ConditionValueKind ConditionValue, SourceLocation IfLoc) {
     First->Elif(Loc, ConditionRange, ConditionValue, IfLoc);
     Second->Elif(Loc, ConditionRange, ConditionValue, IfLoc);
   }

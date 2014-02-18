@@ -122,18 +122,23 @@ void Sema::AddAlignmentAttributesForRecord(RecordDecl *RD) {
   // Otherwise, check to see if we need a max field alignment attribute.
   if (unsigned Alignment = Stack->getAlignment()) {
     if (Alignment == PackStackEntry::kMac68kAlignmentSentinel)
-      RD->addAttr(::new (Context) AlignMac68kAttr(SourceLocation(), Context));
+      RD->addAttr(AlignMac68kAttr::CreateImplicit(Context));
     else
-      RD->addAttr(::new (Context) MaxFieldAlignmentAttr(SourceLocation(),
-                                                        Context,
+      RD->addAttr(MaxFieldAlignmentAttr::CreateImplicit(Context,
                                                         Alignment * 8));
   }
 }
 
 void Sema::AddMsStructLayoutForRecord(RecordDecl *RD) {
-  if (!MSStructPragmaOn)
-    return;
-  RD->addAttr(::new (Context) MsStructAttr(SourceLocation(), Context));
+  if (MSStructPragmaOn)
+    RD->addAttr(MsStructAttr::CreateImplicit(Context));
+
+  // FIXME: We should merge AddAlignmentAttributesForRecord with
+  // AddMsStructLayoutForRecord into AddPragmaAttributesForRecord, which takes
+  // all active pragmas and applies them as attributes to class definitions.
+  if (VtorDispModeStack.back() != getLangOpts().VtorDispMode)
+    RD->addAttr(
+        MSVtorDispAttr::CreateImplicit(Context, VtorDispModeStack.back()));
 }
 
 void Sema::ActOnPragmaOptionsAlign(PragmaOptionsAlignKind Kind,
@@ -247,8 +252,8 @@ void Sema::ActOnPragmaPack(PragmaPackKind Kind, IdentifierInfo *Name,
       // If a name was specified then failure indicates the name
       // wasn't found. Otherwise failure indicates the stack was
       // empty.
-      Diag(PragmaLoc, diag::warn_pragma_pack_pop_failed)
-        << (Name ? "no record matching name" : "stack empty");
+      Diag(PragmaLoc, diag::warn_pragma_pop_failed)
+          << "pack" << (Name ? "no record matching name" : "stack empty");
 
       // FIXME: Warn about popping named records as MSVC does.
     } else {
@@ -288,6 +293,38 @@ void Sema::ActOnPragmaDetectMismatch(StringRef Name, StringRef Value) {
   Consumer.HandleDetectMismatch(Name, Value);
 }
 
+void Sema::ActOnPragmaMSPointersToMembers(
+    LangOptions::PragmaMSPointersToMembersKind RepresentationMethod,
+    SourceLocation PragmaLoc) {
+  MSPointerToMemberRepresentationMethod = RepresentationMethod;
+  ImplicitMSInheritanceAttrLoc = PragmaLoc;
+}
+
+void Sema::ActOnPragmaMSVtorDisp(PragmaVtorDispKind Kind,
+                                 SourceLocation PragmaLoc,
+                                 MSVtorDispAttr::Mode Mode) {
+  switch (Kind) {
+  case PVDK_Set:
+    VtorDispModeStack.back() = Mode;
+    break;
+  case PVDK_Push:
+    VtorDispModeStack.push_back(Mode);
+    break;
+  case PVDK_Reset:
+    VtorDispModeStack.clear();
+    VtorDispModeStack.push_back(MSVtorDispAttr::Mode(LangOpts.VtorDispMode));
+    break;
+  case PVDK_Pop:
+    VtorDispModeStack.pop_back();
+    if (VtorDispModeStack.empty()) {
+      Diag(PragmaLoc, diag::warn_pragma_pop_failed) << "vtordisp"
+                                                    << "stack empty";
+      VtorDispModeStack.push_back(MSVtorDispAttr::Mode(LangOpts.VtorDispMode));
+    }
+    break;
+  }
+}
+
 void Sema::ActOnPragmaUnused(const Token &IdTok, Scope *curScope,
                              SourceLocation PragmaLoc) {
 
@@ -312,7 +349,7 @@ void Sema::ActOnPragmaUnused(const Token &IdTok, Scope *curScope,
   if (VD->isUsed())
     Diag(PragmaLoc, diag::warn_used_but_marked_unused) << Name;
 
-  VD->addAttr(::new (Context) UnusedAttr(IdTok.getLocation(), Context));
+  VD->addAttr(UnusedAttr::CreateImplicit(Context, IdTok.getLocation()));
 }
 
 void Sema::AddCFAuditedAttribute(Decl *D) {
@@ -324,11 +361,11 @@ void Sema::AddCFAuditedAttribute(Decl *D) {
       D->hasAttr<CFUnknownTransferAttr>())
     return;
 
-  D->addAttr(::new (Context) CFAuditedTransferAttr(Loc, Context));
+  D->addAttr(CFAuditedTransferAttr::CreateImplicit(Context, Loc));
 }
 
 typedef std::vector<std::pair<unsigned, SourceLocation> > VisStack;
-enum { NoVisibility = (unsigned) -1 };
+enum LLVM_ENUM_INT_TYPE(unsigned) { NoVisibility = ~0U };
 
 void Sema::AddPushedVisibilityAttribute(Decl *D) {
   if (!VisContext)
@@ -346,7 +383,7 @@ void Sema::AddPushedVisibilityAttribute(Decl *D) {
     = (VisibilityAttr::VisibilityType) rawType;
   SourceLocation loc = Stack->back().second;
 
-  D->addAttr(::new (Context) VisibilityAttr(loc, Context, type));
+  D->addAttr(VisibilityAttr::CreateImplicit(Context, type, loc));
 }
 
 /// FreeVisContext - Deallocate and null out VisContext.

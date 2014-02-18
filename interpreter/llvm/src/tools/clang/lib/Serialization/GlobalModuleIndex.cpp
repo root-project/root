@@ -229,7 +229,8 @@ GlobalModuleIndex::readIndex(StringRef Path) {
   llvm::sys::path::append(IndexPath, IndexFileName);
 
   llvm::OwningPtr<llvm::MemoryBuffer> Buffer;
-  if (llvm::MemoryBuffer::getFile(IndexPath, Buffer) != llvm::errc::success)
+  if (llvm::MemoryBuffer::getFile(IndexPath.c_str(), Buffer) !=
+      llvm::errc::success)
     return std::make_pair((GlobalModuleIndex *)0, EC_NotFound);
 
   /// \brief The bitstream reader from which we'll read the AST file.
@@ -806,13 +807,12 @@ GlobalModuleIndex::writeIndex(FileManager &FileMgr, StringRef Path) {
     return EC_IOError;
 
   // Remove the old index file. It isn't relevant any more.
-  bool OldIndexExisted;
-  llvm::sys::fs::remove(IndexPath.str(), OldIndexExisted);
+  llvm::sys::fs::remove(IndexPath.str());
 
   // Rename the newly-written index file to the proper name.
   if (llvm::sys::fs::rename(IndexTmpPath.str(), IndexPath.str())) {
     // Rename failed; just remove the 
-    llvm::sys::fs::remove(IndexTmpPath.str(), OldIndexExisted);
+    llvm::sys::fs::remove(IndexTmpPath.str());
     return EC_IOError;
   }
 

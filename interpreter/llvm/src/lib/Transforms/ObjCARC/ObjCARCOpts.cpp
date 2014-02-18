@@ -382,7 +382,7 @@ namespace {
     void clear();
 
     /// Conservatively merge the two RRInfo. Returns true if a partial merge has
-    /// occured, false otherwise.
+    /// occurred, false otherwise.
     bool Merge(const RRInfo &Other);
 
   };
@@ -432,7 +432,7 @@ namespace {
     bool Partial;
 
     /// The current position in the sequence.
-    Sequence Seq : 8;
+    unsigned char Seq : 8;
 
     /// Unidirectional information about the current sequence.
     RRInfo RRI;
@@ -498,7 +498,7 @@ namespace {
     }
 
     Sequence GetSeq() const {
-      return Seq;
+      return static_cast<Sequence>(Seq);
     }
 
     void ClearSequenceProgress() {
@@ -538,7 +538,7 @@ namespace {
 
 void
 PtrState::Merge(const PtrState &Other, bool TopDown) {
-  Seq = MergeSeqs(Seq, Other.Seq, TopDown);
+  Seq = MergeSeqs(GetSeq(), Other.GetSeq(), TopDown);
   KnownPositiveRefCount &= Other.KnownPositiveRefCount;
 
   // If we're not in a sequence (anymore), drop all associated state.
@@ -659,7 +659,7 @@ namespace {
     /// which pass through this block. This is only valid after both the
     /// top-down and bottom-up traversals are complete.
     ///
-    /// Returns true if overflow occured. Returns false if overflow did not
+    /// Returns true if overflow occurred. Returns false if overflow did not
     /// occur.
     bool GetAllPathCountWithOverflow(unsigned &PathCount) const {
       if (TopDownPathCount == OverflowOccurredValue ||
@@ -667,7 +667,7 @@ namespace {
         return true;
       unsigned long long Product =
         (unsigned long long)TopDownPathCount*BottomUpPathCount;
-      // Overflow occured if any of the upper bits of Product are set or if all
+      // Overflow occurred if any of the upper bits of Product are set or if all
       // the lower bits of Product are all set.
       return (Product >> 32) ||
              ((PathCount = Product) == OverflowOccurredValue);
@@ -711,7 +711,7 @@ void BBState::MergePred(const BBState &Other) {
 
   // In order to be consistent, we clear the top down pointers when by adding
   // TopDownPathCount becomes OverflowOccurredValue even though "true" overflow
-  // has not occured.
+  // has not occurred.
   if (TopDownPathCount == OverflowOccurredValue) {
     clearTopDownPointers();
     return;
@@ -755,7 +755,7 @@ void BBState::MergeSucc(const BBState &Other) {
 
   // In order to be consistent, we clear the top down pointers when by adding
   // BottomUpPathCount becomes OverflowOccurredValue even though "true" overflow
-  // has not occured.
+  // has not occurred.
   if (BottomUpPathCount == OverflowOccurredValue) {
     clearBottomUpPointers();
     return;
@@ -1005,7 +1005,7 @@ static void GenerateARCAnnotation(unsigned InstMDId,
     // llvm-arc-annotation-processor tool to cross reference where the source
     // pointer is in the LLVM IR since the LLVM IR parser does not submit such
     // information via debug info for backends to use (since why would anyone
-    // need such a thing from LLVM IR besides in non standard cases
+    // need such a thing from LLVM IR besides in non-standard cases
     // [i.e. this]).
     MDString *SourcePtrMDNode =
       AppendMDNodeToSourcePtr(PtrMDId, Ptr);
@@ -1808,13 +1808,13 @@ ObjCARCOpt::VisitInstructionBottomUp(Instruction *Inst,
     // pointer has multiple owners implying that we must be more conservative.
     //
     // This comes up in the context of a pointer being ``KnownSafe''. In the
-    // presense of a block being initialized, the frontend will emit the
+    // presence of a block being initialized, the frontend will emit the
     // objc_retain on the original pointer and the release on the pointer loaded
     // from the alloca. The optimizer will through the provenance analysis
     // realize that the two are related, but since we only require KnownSafe in
     // one direction, will match the inner retain on the original pointer with
     // the guard release on the original pointer. This is fixed by ensuring that
-    // in the presense of allocas we only unconditionally remove pointers if
+    // in the presence of allocas we only unconditionally remove pointers if
     // both our retain and our release are KnownSafe.
     if (StoreInst *SI = dyn_cast<StoreInst>(Inst)) {
       if (AreAnyUnderlyingObjectsAnAlloca(SI->getPointerOperand())) {
@@ -2405,7 +2405,15 @@ ObjCARCOpt::ConnectTDBUTraversals(DenseMap<const BasicBlock *, BBState>
         if (Jt == Releases.end())
           return false;
         const RRInfo &NewRetainReleaseRRI = Jt->second;
-        assert(NewRetainReleaseRRI.Calls.count(NewRetain));
+
+        // If the release does not have a reference to the retain as well,
+        // something happened which is unaccounted for. Do not do anything.
+        //
+        // This can happen if we catch an additive overflow during path count
+        // merging.
+        if (!NewRetainReleaseRRI.Calls.count(NewRetain))
+          return false;
+
         if (ReleasesToMove.Calls.insert(NewRetainRelease)) {
 
           // If we overflow when we compute the path count, don't remove/move
@@ -2481,9 +2489,16 @@ ObjCARCOpt::ConnectTDBUTraversals(DenseMap<const BasicBlock *, BBState>
         if (Jt == Retains.end())
           return false;
         const RRInfo &NewReleaseRetainRRI = Jt->second;
-        assert(NewReleaseRetainRRI.Calls.count(NewRelease));
-        if (RetainsToMove.Calls.insert(NewReleaseRetain)) {
 
+        // If the retain does not have a reference to the release as well,
+        // something happened which is unaccounted for. Do not do anything.
+        //
+        // This can happen if we catch an additive overflow during path count
+        // merging.
+        if (!NewReleaseRetainRRI.Calls.count(NewRelease))
+          return false;
+
+        if (RetainsToMove.Calls.insert(NewReleaseRetain)) {
           // If we overflow when we compute the path count, don't remove/move
           // anything.
           const BBState &NRRBBState = BBStates[NewReleaseRetain->getParent()];

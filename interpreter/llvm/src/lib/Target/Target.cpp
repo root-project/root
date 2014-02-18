@@ -88,6 +88,14 @@ LLVMTypeRef LLVMIntPtrTypeForAS(LLVMTargetDataRef TD, unsigned AS) {
   return wrap(unwrap(TD)->getIntPtrType(getGlobalContext(), AS));
 }
 
+LLVMTypeRef LLVMIntPtrTypeInContext(LLVMContextRef C, LLVMTargetDataRef TD) {
+  return wrap(unwrap(TD)->getIntPtrType(*unwrap(C)));
+}
+
+LLVMTypeRef LLVMIntPtrTypeForASInContext(LLVMContextRef C, LLVMTargetDataRef TD, unsigned AS) {
+  return wrap(unwrap(TD)->getIntPtrType(*unwrap(C), AS));
+}
+
 unsigned long long LLVMSizeOfTypeInBits(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
   return unwrap(TD)->getTypeSizeInBits(unwrap(Ty));
 }
@@ -105,7 +113,7 @@ unsigned LLVMABIAlignmentOfType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
 }
 
 unsigned LLVMCallFrameAlignmentOfType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {
-  return unwrap(TD)->getCallFrameTypeAlignment(unwrap(Ty));
+  return unwrap(TD)->getABITypeAlignment(unwrap(Ty));
 }
 
 unsigned LLVMPreferredAlignmentOfType(LLVMTargetDataRef TD, LLVMTypeRef Ty) {

@@ -55,7 +55,7 @@ unsigned char X86Subtarget::
 ClassifyGlobalReference(const GlobalValue *GV, const TargetMachine &TM) const {
   // DLLImport only exists on windows, it is implemented as a load from a
   // DLLIMPORT stub.
-  if (GV->hasDLLImportLinkage())
+  if (GV->hasDLLImportStorageClass())
     return X86II::MO_DLLIMPORT;
 
   // Determine whether this is a reference to a definition or a declaration.
@@ -263,6 +263,15 @@ void X86Subtarget::AutoDetectSubtargetFeatures() {
       ToggleFeature(X86::FeatureSlowBTMem);
     }
 
+    // Determine if SHLD/SHRD instructions have higher latency then the
+    // equivalent series of shifts/or instructions. 
+    // FIXME: Add Intel's processors that have SHLD instructions with very
+    // poor latency. 
+    if (IsAMD) {
+      IsSHLDSlow = true;
+      ToggleFeature(X86::FeatureSlowSHLD);
+    }
+
     // If it's an Intel chip since Nehalem and not an Atom chip, unaligned
     // memory access is fast. We hard code model numbers here because they
     // aren't strictly increasing for Intel chips it seems.
@@ -276,7 +285,12 @@ void X86Subtarget::AutoDetectSubtargetFeatures() {
          (Family == 6 && Model == 0x2F) || // Westmere: Westmere-EX
          (Family == 6 && Model == 0x2A) || // SandyBridge
          (Family == 6 && Model == 0x2D) || // SandyBridge: SandyBridge-E*
-         (Family == 6 && Model == 0x3A))) {// IvyBridge
+         (Family == 6 && Model == 0x3A) || // IvyBridge
+         (Family == 6 && Model == 0x3E) || // IvyBridge EP
+         (Family == 6 && Model == 0x3C) || // Haswell
+         (Family == 6 && Model == 0x3F) || // ...
+         (Family == 6 && Model == 0x45) || // ...
+         (Family == 6 && Model == 0x46))) { // ...
       IsUAMemFast = true;
       ToggleFeature(X86::FeatureFastUAMem);
     }
@@ -468,6 +482,12 @@ void X86Subtarget::resetSubtargetFeatures(StringRef CPU, StringRef FS) {
   // target data structure which is shared with MC code emitter, etc.
   if (In64BitMode)
     ToggleFeature(X86::Mode64Bit);
+  else if (In32BitMode)
+    ToggleFeature(X86::Mode32Bit);
+  else if (In16BitMode)
+    ToggleFeature(X86::Mode16Bit);
+  else
+    llvm_unreachable("Not 16-bit, 32-bit or 64-bit mode!");
 
   DEBUG(dbgs() << "Subtarget features: SSELevel " << X86SSELevel
                << ", 3DNowLevel " << X863DNowLevel
@@ -514,6 +534,7 @@ void X86Subtarget::initializeEnvironment() {
   HasPRFCHW = false;
   HasRDSEED = false;
   IsBTMemSlow = false;
+  IsSHLDSlow = false;
   IsUAMemFast = false;
   HasVectorUAMem = false;
   HasCmpxchg16b = false;
@@ -530,13 +551,17 @@ void X86Subtarget::initializeEnvironment() {
 
 X86Subtarget::X86Subtarget(const std::string &TT, const std::string &CPU,
                            const std::string &FS,
-                           unsigned StackAlignOverride, bool is64Bit)
+                           unsigned StackAlignOverride)
   : X86GenSubtargetInfo(TT, CPU, FS)
   , X86ProcFamily(Others)
   , PICStyle(PICStyles::None)
   , TargetTriple(TT)
   , StackAlignOverride(StackAlignOverride)
-  , In64BitMode(is64Bit) {
+  , In64BitMode(TargetTriple.getArch() == Triple::x86_64)
+  , In32BitMode(TargetTriple.getArch() == Triple::x86 &&
+                TargetTriple.getEnvironment() != Triple::CODE16)
+  , In16BitMode(TargetTriple.getArch() == Triple::x86 &&
+                TargetTriple.getEnvironment() == Triple::CODE16) {
   initializeEnvironment();
   resetSubtargetFeatures(CPU, FS);
 }

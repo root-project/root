@@ -19,8 +19,8 @@
 #include "PPCInstrInfo.h"
 #include "PPCRegisterInfo.h"
 #include "PPCSubtarget.h"
-#include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/CallingConvLower.h"
+#include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/Target/TargetLowering.h"
 
 namespace llvm {
@@ -176,6 +176,10 @@ namespace llvm {
       /// ch, gl = CR6[UN]SET ch, inglue - Toggle CR bit 6 for SVR4 vararg calls
       CR6SET,
       CR6UNSET,
+
+      /// GPRC = address of _GLOBAL_OFFSET_TABLE_. Used by initial-exec TLS
+      /// on PPC32.
+      PPC32_GOT,
 
       /// G8RC = ADDIS_GOT_TPREL_HA %X2, Symbol - Used by the initial-exec
       /// TLS model, produces an ADDIS8 instruction that adds the GOT
@@ -457,7 +461,9 @@ namespace llvm {
 
     /// Is unaligned memory access allowed for the given type, and is it fast
     /// relative to software emulation.
-    virtual bool allowsUnalignedMemoryAccesses(EVT VT, bool *Fast = 0) const;
+    virtual bool allowsUnalignedMemoryAccesses(EVT VT,
+                                               unsigned AddrSpace,
+                                               bool *Fast = 0) const;
 
     /// isFMAFasterThanFMulAndFAdd - Return true if an FMA operation is faster
     /// than a pair of fmul and fadd instructions. fmuladd intrinsics will be

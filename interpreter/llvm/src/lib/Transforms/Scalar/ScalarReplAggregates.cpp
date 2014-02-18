@@ -24,7 +24,6 @@
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/Loads.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/DIBuilder.h"
@@ -32,6 +31,7 @@
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/IRBuilder.h"
@@ -196,7 +196,7 @@ namespace {
     // getAnalysisUsage - This pass does not require any passes, but we know it
     // will not alter the CFG, so say so.
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
-      AU.addRequired<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.setPreservesCFG();
     }
   };
@@ -224,7 +224,7 @@ char SROA_SSAUp::ID = 0;
 
 INITIALIZE_PASS_BEGIN(SROA_DT, "scalarrepl",
                 "Scalar Replacement of Aggregates (DT)", false, false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_END(SROA_DT, "scalarrepl",
                 "Scalar Replacement of Aggregates (DT)", false, false)
 
@@ -963,7 +963,7 @@ ConvertScalar_InsertValue(Value *SV, Value *Old,
   if (SV->getType()->isFloatingPointTy() || SV->getType()->isVectorTy())
     SV = Builder.CreateBitCast(SV, IntegerType::get(SV->getContext(),SrcWidth));
   else if (SV->getType()->isPointerTy())
-    SV = Builder.CreatePtrToInt(SV, TD.getIntPtrType(SV->getContext()));
+    SV = Builder.CreatePtrToInt(SV, TD.getIntPtrType(SV->getType()));
 
   // Zero extend or truncate the value if needed.
   if (SV->getType() != AllocaType) {
@@ -1020,6 +1020,9 @@ ConvertScalar_InsertValue(Value *SV, Value *Old,
 
 
 bool SROA::runOnFunction(Function &F) {
+  if (skipOptnoneFunction(F))
+    return false;
+
   TD = getAnalysisIfAvailable<DataLayout>();
 
   bool Changed = performPromotion(F);
@@ -1407,7 +1410,7 @@ bool SROA::performPromotion(Function &F) {
   std::vector<AllocaInst*> Allocas;
   DominatorTree *DT = 0;
   if (HasDomTree)
-    DT = &getAnalysis<DominatorTree>();
+    DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
 
   BasicBlock &BB = F.getEntryBlock();  // Get the entry node for the function
   DIBuilder DIB(*F.getParent());
@@ -1731,7 +1734,7 @@ void SROA::isSafeGEP(GetElementPtrInst *GEPI,
   // Compute the offset due to this GEP and check if the alloca has a
   // component element at that offset.
   SmallVector<Value*, 8> Indices(GEPI->op_begin() + 1, GEPI->op_end());
-  // If this GEP is non constant then the last operand must have been a
+  // If this GEP is non-constant then the last operand must have been a
   // dynamic index into a vector.  Pop this now as it has no impact on the
   // constant part of the offset.
   if (NonConstant)

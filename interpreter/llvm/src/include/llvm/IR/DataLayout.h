@@ -34,6 +34,7 @@ class Type;
 class IntegerType;
 class StructType;
 class StructLayout;
+class Triple;
 class GlobalVariable;
 class LLVMContext;
 template<typename T>
@@ -45,8 +46,7 @@ enum AlignTypeEnum {
   INTEGER_ALIGN = 'i',               ///< Integer type alignment
   VECTOR_ALIGN = 'v',                ///< Vector type alignment
   FLOAT_ALIGN = 'f',                 ///< Floating point type alignment
-  AGGREGATE_ALIGN = 'a',             ///< Aggregate alignment
-  STACK_ALIGN = 's'                  ///< Stack objects alignment
+  AGGREGATE_ALIGN = 'a'              ///< Aggregate alignment
 };
 
 /// Layout alignment element.
@@ -78,12 +78,12 @@ struct LayoutAlignElem {
 struct PointerAlignElem {
   unsigned            ABIAlign;       ///< ABI alignment for this type/bitw
   unsigned            PrefAlign;      ///< Pref. alignment for this type/bitw
-  uint32_t            TypeBitWidth;   ///< Type bit width
+  uint32_t            TypeByteWidth;  ///< Type byte width
   uint32_t            AddressSpace;   ///< Address space for the pointer type
 
   /// Initializer
-  static PointerAlignElem get(uint32_t addr_space, unsigned abi_align,
-                             unsigned pref_align, uint32_t bit_width);
+  static PointerAlignElem get(uint32_t AddressSpace, unsigned ABIAlign,
+                             unsigned PrefAlign, uint32_t TypeByteWidth);
   /// Equality predicate
   bool operator==(const PointerAlignElem &rhs) const;
 };
@@ -99,6 +99,15 @@ class DataLayout : public ImmutablePass {
 private:
   bool          LittleEndian;          ///< Defaults to false
   unsigned      StackNaturalAlign;     ///< Stack natural alignment
+
+  enum ManglingModeT {
+    MM_None,
+    MM_ELF,
+    MM_MachO,
+    MM_WINCOFF,
+    MM_Mips
+  };
+  ManglingModeT ManglingMode;
 
   SmallVector<unsigned char, 8> LegalIntWidths; ///< Legal Integers.
 
@@ -129,8 +138,8 @@ private:
                             bool ABIAlign, Type *Ty) const;
 
   //! Set/initialize pointer alignments
-  void setPointerAlignment(uint32_t addr_space, unsigned abi_align,
-      unsigned pref_align, uint32_t bit_width);
+  void setPointerAlignment(uint32_t AddrSpace, unsigned ABIAlign,
+                           unsigned PrefAlign, uint32_t TypeByteWidth);
 
   //! Internal helper method that returns requested alignment for type.
   unsigned getAlignment(Type *Ty, bool abi_or_pref) const;
@@ -175,6 +184,7 @@ public:
     ImmutablePass(ID),
     LittleEndian(DL.isLittleEndian()),
     StackNaturalAlign(DL.StackNaturalAlign),
+    ManglingMode(DL.ManglingMode),
     LegalIntWidths(DL.LegalIntWidths),
     Alignments(DL.Alignments),
     Pointers(DL.Pointers),
@@ -223,6 +233,50 @@ public:
     return (StackNaturalAlign != 0) && (Align > StackNaturalAlign);
   }
 
+  bool hasMicrosoftFastStdCallMangling() const {
+    return ManglingMode == MM_WINCOFF;
+  }
+
+  bool hasLinkerPrivateGlobalPrefix() const {
+    return ManglingMode == MM_MachO;
+  }
+
+  const char *getLinkerPrivateGlobalPrefix() const {
+    if (ManglingMode == MM_MachO)
+      return "l";
+    return getPrivateGlobalPrefix();
+  }
+
+  char getGlobalPrefix() const {
+    switch (ManglingMode) {
+    case MM_None:
+    case MM_ELF:
+    case MM_Mips:
+      return '\0';
+    case MM_MachO:
+    case MM_WINCOFF:
+      return '_';
+    }
+    llvm_unreachable("invalid mangling mode");
+  }
+
+  const char *getPrivateGlobalPrefix() const {
+    switch (ManglingMode) {
+    case MM_None:
+      return "";
+    case MM_ELF:
+      return ".L";
+    case MM_Mips:
+      return "$";
+    case MM_MachO:
+    case MM_WINCOFF:
+      return "L";
+    }
+    llvm_unreachable("invalid mangling mode");
+  }
+
+  static const char *getManglingComponent(const Triple &T);
+
   /// fitsInLegalInteger - This function returns true if the specified type fits
   /// in a native integer type supported by the CPU.  For example, if the CPU
   /// only supports i32 as a native integer type, then i27 fits in a legal
@@ -263,7 +317,7 @@ public:
     if (val == Pointers.end()) {
       val = Pointers.find(0);
     }
-    return val->second.TypeBitWidth;
+    return val->second.TypeByteWidth;
   }
   /// Layout pointer size, in bits
   /// FIXME: The defaults need to be removed once all of
@@ -343,10 +397,6 @@ public:
   /// getABIIntegerTypeAlignment - Return the minimum ABI-required alignment for
   /// an integer type of the specified bitwidth.
   unsigned getABIIntegerTypeAlignment(unsigned BitWidth) const;
-
-  /// getCallFrameTypeAlignment - Return the minimum ABI-required alignment
-  /// for the specified type when it is part of a call frame.
-  unsigned getCallFrameTypeAlignment(Type *Ty) const;
 
   /// getPrefTypeAlignment - Return the preferred stack/global alignment for
   /// the specified type.  This is always at least as good as the ABI alignment.

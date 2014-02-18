@@ -94,6 +94,9 @@ namespace llvm {
       /// operand, usually produced by a CMP instruction.
       SETCC,
 
+      /// X86 Select
+      SELECT,
+
       // Same as SETCC except it's materialized with a sbb and the value is all
       // one's or all zero's.
       SETCC_CARRY,  // R = carry_bit ? ~0 : 0
@@ -101,7 +104,7 @@ namespace llvm {
       /// X86 FP SETCC, implemented with CMP{cc}SS/CMP{cc}SD.
       /// Operands are two FP values to compare; result is a mask of
       /// 0s or 1s.  Generally DTRT for C/C++ with NaNs.
-      FSETCCss, FSETCCsd,
+      FSETCC,
 
       /// X86 MOVMSK{pd|ps}, extracts sign bits of two or four FP values,
       /// result in an integer GPR.  Needs masking for scalar result.
@@ -242,11 +245,8 @@ namespace llvm {
       /// the list of operands.
       TC_RETURN,
 
-      // VZEXT_MOVL - Vector move low and zero extend.
+      // VZEXT_MOVL - Vector move to low scalar and zero higher vector elements.
       VZEXT_MOVL,
-
-      // VSEXT_MOVL - Vector move low and sign extend.
-      VSEXT_MOVL,
 
       // VZEXT - Vector integer zero-extend.
       VZEXT,
@@ -292,9 +292,6 @@ namespace llvm {
       ADD, SUB, ADC, SBB, SMUL,
       INC, DEC, OR, XOR, AND,
 
-      BLSI,   // BLSI - Extract lowest set isolated bit
-      BLSMSK, // BLSMSK - Get mask up to lowest set bit
-      BLSR,   // BLSR - Reset lowest set bit
       BZHI,   // BZHI - Zero high bits
       BEXTR,  // BEXTR - Bit field extract
 
@@ -309,12 +306,12 @@ namespace llvm {
       // TESTP - Vector packed fp sign bitwise comparisons.
       TESTP,
 
-      // TESTM - Vector "test" in AVX-512, the result is in a mask vector.
+      // TESTM, TESTNM - Vector "test" in AVX-512, the result is in a mask vector.
       TESTM,
+      TESTNM,
 
       // OR/AND test for masks
       KORTEST,
-      KTEST,
 
       // Several flavors of instructions with vector shuffle behaviors.
       PALIGNR,
@@ -337,12 +334,15 @@ namespace llvm {
       VPERMILP,
       VPERMV,
       VPERMV3,
+      VPERMIV3,
       VPERMI,
       VPERM2X128,
       VBROADCAST,
       // masked broadcast
       VBROADCASTM,
+      // Insert/Extract vector element
       VINSERT,
+      VEXTRACT,
 
       // PMULUDQ - Vector multiply packed unsigned doubleword integers
       PMULUDQ,
@@ -576,7 +576,8 @@ namespace llvm {
     /// allowsUnalignedMemoryAccesses - Returns true if the target allows
     /// unaligned memory accesses. of the specified type. Returns whether it
     /// is "fast" by reference in the second argument.
-    virtual bool allowsUnalignedMemoryAccesses(EVT VT, bool *Fast) const;
+    virtual bool allowsUnalignedMemoryAccesses(EVT VT, unsigned AS,
+                                               bool *Fast) const;
 
     /// LowerOperation - Provide custom lowering hooks for some operations.
     ///
@@ -761,6 +762,11 @@ namespace llvm {
       return isTargetFTOL() && VT == MVT::i64;
     }
 
+    /// \brief Returns true if it is beneficial to convert a load of a constant
+    /// to just the constant itself.
+    virtual bool shouldConvertConstantLoadToIntImm(const APInt &Imm,
+                                                   Type *Ty) const;
+
     /// createFastISel - This method returns a target specific FastISel object,
     /// or null if the target does not support "fast" ISel.
     virtual FastISel *createFastISel(FunctionLoweringInfo &funcInfo,
@@ -774,6 +780,8 @@ namespace llvm {
 
     SDValue BuildFILD(SDValue Op, EVT SrcVT, SDValue Chain, SDValue StackSlot,
                       SelectionDAG &DAG) const;
+
+    virtual bool isNoopAddrSpaceCast(unsigned SrcAS, unsigned DestAS) const LLVM_OVERRIDE;
 
     /// \brief Reset the operation actions based on target options.
     virtual void resetOperationActions();
@@ -863,7 +871,6 @@ namespace llvm {
     SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalTLSAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerExternalSymbol(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerShiftParts(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerSINT_TO_FP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerUINT_TO_FP(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerUINT_TO_FP_i64(SDValue Op, SelectionDAG &DAG) const;
@@ -872,9 +879,6 @@ namespace llvm {
     SDValue LowerTRUNCATE(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_TO_SINT(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerFP_TO_UINT(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerFABS(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerFNEG(SDValue Op, SelectionDAG &DAG) const;
-    SDValue LowerFCOPYSIGN(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerToBT(SDValue And, ISD::CondCode CC,
                       SDLoc dl, SelectionDAG &DAG) const;
     SDValue LowerSETCC(SDValue Op, SelectionDAG &DAG) const;
@@ -925,6 +929,8 @@ namespace llvm {
                    const SmallVectorImpl<ISD::OutputArg> &Outs,
                    LLVMContext &Context) const;
 
+    virtual const uint16_t *getScratchRegisters(CallingConv::ID CC) const;
+
     /// Utility function to emit atomic-load-arith operations (and, or, xor,
     /// nand, max, min, umax, umin). It takes the corresponding instruction to
     /// expand, the associated machine basic block, and the associated X86
@@ -968,6 +974,9 @@ namespace llvm {
 
     MachineBasicBlock *emitEHSjLjLongJmp(MachineInstr *MI,
                                          MachineBasicBlock *MBB) const;
+
+    MachineBasicBlock *emitFMA3Instr(MachineInstr *MI,
+                                     MachineBasicBlock *MBB) const;
 
     /// Emit nodes that will be selected as "test Op0,Op0", or something
     /// equivalent, for use with the given x86 condition code.

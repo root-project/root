@@ -77,7 +77,9 @@ unsigned clang::getOpenMPSimpleClauseType(OpenMPClauseKind Kind,
              .Default(OMPC_DEFAULT_unknown);
   case OMPC_unknown:
   case OMPC_threadprivate:
+  case OMPC_if:
   case OMPC_private:
+  case OMPC_firstprivate:
   case OMPC_shared:
   case NUM_OPENMP_CLAUSES:
     break;
@@ -99,7 +101,9 @@ const char *clang::getOpenMPSimpleClauseTypeName(OpenMPClauseKind Kind,
     llvm_unreachable("Invalid OpenMP 'default' clause type");
   case OMPC_unknown:
   case OMPC_threadprivate:
+  case OMPC_if:
   case OMPC_private:
+  case OMPC_firstprivate:
   case OMPC_shared:
   case NUM_OPENMP_CLAUSES:
     break;

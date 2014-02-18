@@ -10,9 +10,9 @@
 // This file implements the C++ related Decl classes.
 //
 //===----------------------------------------------------------------------===//
-
 #include "clang/AST/DeclCXX.h"
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/ASTLambda.h"
 #include "clang/AST/ASTMutationListener.h"
 #include "clang/AST/CXXInheritance.h"
 #include "clang/AST/DeclTemplate.h"
@@ -31,8 +31,7 @@ using namespace clang;
 void AccessSpecDecl::anchor() { }
 
 AccessSpecDecl *AccessSpecDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(AccessSpecDecl));
-  return new (Mem) AccessSpecDecl(EmptyShell());
+  return new (C, ID) AccessSpecDecl(EmptyShell());
 }
 
 void LazyASTUnresolvedSet::getFromExternalSource(ASTContext &C) const {
@@ -51,7 +50,7 @@ CXXRecordDecl::DefinitionData::DefinitionData(CXXRecordDecl *D)
     Aggregate(true), PlainOldData(true), Empty(true), Polymorphic(false),
     Abstract(false), IsStandardLayout(true), HasNoNonEmptyBases(true),
     HasPrivateFields(false), HasProtectedFields(false), HasPublicFields(false),
-    HasMutableFields(false), HasOnlyCMembers(true),
+    HasMutableFields(false), HasVariantMembers(false), HasOnlyCMembers(true),
     HasInClassInitializer(false), HasUninitializedReferenceMember(false),
     NeedOverloadResolutionForMoveConstructor(false),
     NeedOverloadResolutionForMoveAssignment(false),
@@ -71,7 +70,6 @@ CXXRecordDecl::DefinitionData::DefinitionData(CXXRecordDecl *D)
     ImplicitCopyAssignmentHasConstParam(true),
     HasDeclaredCopyConstructorWithConstParam(false),
     HasDeclaredCopyAssignmentWithConstParam(false),
-    FailedImplicitMoveConstructor(false), FailedImplicitMoveAssignment(false),
     IsLambda(false), NumBases(0), NumVBases(0), Bases(), VBases(),
     Definition(D), FirstFriend() {
 }
@@ -96,8 +94,8 @@ CXXRecordDecl *CXXRecordDecl::Create(const ASTContext &C, TagKind TK,
                                      SourceLocation IdLoc, IdentifierInfo *Id,
                                      CXXRecordDecl* PrevDecl,
                                      bool DelayTypeCreation) {
-  CXXRecordDecl* R = new (C) CXXRecordDecl(CXXRecord, TK, DC, StartLoc, IdLoc,
-                                           Id, PrevDecl);
+  CXXRecordDecl *R = new (C, DC) CXXRecordDecl(CXXRecord, TK, DC, StartLoc,
+                                               IdLoc, Id, PrevDecl);
   R->MayHaveOutOfDateDef = C.getLangOpts().Modules;
 
   // FIXME: DelayTypeCreation seems like such a hack
@@ -108,11 +106,15 @@ CXXRecordDecl *CXXRecordDecl::Create(const ASTContext &C, TagKind TK,
 
 CXXRecordDecl *CXXRecordDecl::CreateLambda(const ASTContext &C, DeclContext *DC,
                                            TypeSourceInfo *Info, SourceLocation Loc,
-                                           bool Dependent) {
-  CXXRecordDecl* R = new (C) CXXRecordDecl(CXXRecord, TTK_Class, DC, Loc, Loc,
-                                           0, 0);
+                                           bool Dependent, bool IsGeneric, 
+                                           LambdaCaptureDefault CaptureDefault) {
+  CXXRecordDecl *R =
+      new (C, DC) CXXRecordDecl(CXXRecord, TTK_Class, DC, Loc, Loc, 0, 0);
   R->IsBeingDefined = true;
-  R->DefinitionData = new (C) struct LambdaDefinitionData(R, Info, Dependent);
+  R->DefinitionData = new (C) struct LambdaDefinitionData(R, Info, 
+                                                          Dependent, 
+                                                          IsGeneric, 
+                                                          CaptureDefault);
   R->MayHaveOutOfDateDef = false;
   R->setImplicit(true);
   C.getTypeDeclType(R, /*PrevDecl=*/0);
@@ -121,10 +123,8 @@ CXXRecordDecl *CXXRecordDecl::CreateLambda(const ASTContext &C, DeclContext *DC,
 
 CXXRecordDecl *
 CXXRecordDecl::CreateDeserialized(const ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(CXXRecordDecl));
-  CXXRecordDecl *R = new (Mem) CXXRecordDecl(CXXRecord, TTK_Struct, 0,
-                                             SourceLocation(), SourceLocation(),
-                                             0, 0);
+  CXXRecordDecl *R = new (C, ID) CXXRecordDecl(
+      CXXRecord, TTK_Struct, 0, SourceLocation(), SourceLocation(), 0, 0);
   R->MayHaveOutOfDateDef = false;
   return R;
 }
@@ -653,7 +653,13 @@ void CXXRecordDecl::addedMember(Decl *D) {
     // Keep track of the presence of mutable fields.
     if (Field->isMutable())
       data().HasMutableFields = true;
-    
+
+    // C++11 [class.union]p8, DR1460:
+    //   If X is a union, a non-static data member of X that is not an anonymous
+    //   union is a variant member of X.
+    if (isUnion() && !Field->isAnonymousStructOrUnion())
+      data().HasVariantMembers = true;
+
     // C++0x [class]p9:
     //   A POD struct is a class that is both a trivial class and a 
     //   standard-layout class, and has no non-static data members of type 
@@ -689,7 +695,9 @@ void CXXRecordDecl::addedMember(Decl *D) {
     if (!T->isLiteralType(Context) || T.isVolatileQualified())
       data().HasNonLiteralTypeFieldsOrBases = true;
 
-    if (Field->hasInClassInitializer()) {
+    if (Field->hasInClassInitializer() ||
+        (Field->isAnonymousStructOrUnion() &&
+         Field->getType()->getAsCXXRecordDecl()->hasInClassInitializer())) {
       data().HasInClassInitializer = true;
 
       // C++11 [class]p5:
@@ -721,6 +729,13 @@ void CXXRecordDecl::addedMember(Decl *D) {
       CXXRecordDecl* FieldRec = cast<CXXRecordDecl>(RecordTy->getDecl());
       if (FieldRec->getDefinition()) {
         addedClassSubobject(FieldRec);
+
+        // We may need to perform overload resolution to determine whether a
+        // field can be moved if it's const or volatile qualified.
+        if (T.getCVRQualifiers() & (Qualifiers::Const | Qualifiers::Volatile)) {
+          data().NeedOverloadResolutionForMoveConstructor = true;
+          data().NeedOverloadResolutionForMoveAssignment = true;
+        }
 
         // C++11 [class.ctor]p5, C++11 [class.copy]p11:
         //   A defaulted [special member] for a class X is defined as
@@ -799,7 +814,7 @@ void CXXRecordDecl::addedMember(Decl *D) {
         // Virtual bases and virtual methods make a class non-empty, but they
         // also make it non-standard-layout so we needn't check here.
         // A non-empty base class may leave the class standard-layout, but not
-        // if we have arrived here, and have at least on non-static data
+        // if we have arrived here, and have at least one non-static data
         // member. If IsStandardLayout remains true, then the first non-static
         // data member must come through here with Empty still true, and Empty
         // will subsequently be set to false below.
@@ -852,6 +867,13 @@ void CXXRecordDecl::addedMember(Decl *D) {
         if (FieldRec->hasUninitializedReferenceMember() &&
             !Field->hasInClassInitializer())
           data().HasUninitializedReferenceMember = true;
+
+        // C++11 [class.union]p8, DR1460:
+        //   a non-static data member of an anonymous union that is a member of
+        //   X is also a variant member of X.
+        if (FieldRec->hasVariantMembers() &&
+            Field->isAnonymousStructOrUnion())
+          data().HasVariantMembers = true;
       }
     } else {
       // Base element type of field is a non-class type.
@@ -942,6 +964,43 @@ bool CXXRecordDecl::isCLike() const {
 
   return isPOD() && data().HasOnlyCMembers;
 }
+ 
+bool CXXRecordDecl::isGenericLambda() const { 
+  if (!isLambda()) return false;
+  return getLambdaData().IsGenericLambda;
+}
+
+CXXMethodDecl* CXXRecordDecl::getLambdaCallOperator() const {
+  if (!isLambda()) return 0;
+  DeclarationName Name = 
+    getASTContext().DeclarationNames.getCXXOperatorName(OO_Call);
+  DeclContext::lookup_const_result Calls = lookup(Name);
+
+  assert(!Calls.empty() && "Missing lambda call operator!");
+  assert(Calls.size() == 1 && "More than one lambda call operator!"); 
+   
+  NamedDecl *CallOp = Calls.front();
+  if (FunctionTemplateDecl *CallOpTmpl = 
+                    dyn_cast<FunctionTemplateDecl>(CallOp)) 
+    return cast<CXXMethodDecl>(CallOpTmpl->getTemplatedDecl());
+  
+  return cast<CXXMethodDecl>(CallOp);
+}
+
+CXXMethodDecl* CXXRecordDecl::getLambdaStaticInvoker() const {
+  if (!isLambda()) return 0;
+  DeclarationName Name = 
+    &getASTContext().Idents.get(getLambdaStaticInvokerName());
+  DeclContext::lookup_const_result Invoker = lookup(Name);
+  if (Invoker.empty()) return 0;
+  assert(Invoker.size() == 1 && "More than one static invoker operator!");  
+  NamedDecl *InvokerFun = Invoker.front();
+  if (FunctionTemplateDecl *InvokerTemplate =
+                  dyn_cast<FunctionTemplateDecl>(InvokerFun)) 
+    return cast<CXXMethodDecl>(InvokerTemplate->getTemplatedDecl());
+  
+  return cast<CXXMethodDecl>(InvokerFun); 
+}
 
 void CXXRecordDecl::getCaptureFields(
        llvm::DenseMap<const VarDecl *, FieldDecl *> &Captures,
@@ -958,17 +1017,22 @@ void CXXRecordDecl::getCaptureFields(
     else if (C->capturesVariable())
       Captures[C->getCapturedVar()] = *Field;
   }
+  assert(Field == field_end());
 }
 
+TemplateParameterList * 
+CXXRecordDecl::getGenericLambdaTemplateParameterList() const {
+  if (!isLambda()) return 0;
+  CXXMethodDecl *CallOp = getLambdaCallOperator();     
+  if (FunctionTemplateDecl *Tmpl = CallOp->getDescribedFunctionTemplate())
+    return Tmpl->getTemplateParameters();
+  return 0;
+}
 
 static CanQualType GetConversionType(ASTContext &Context, NamedDecl *Conv) {
-  QualType T;
-  if (isa<UsingShadowDecl>(Conv))
-    Conv = cast<UsingShadowDecl>(Conv)->getTargetDecl();
-  if (FunctionTemplateDecl *ConvTemp = dyn_cast<FunctionTemplateDecl>(Conv))
-    T = ConvTemp->getTemplatedDecl()->getResultType();
-  else 
-    T = cast<CXXConversionDecl>(Conv)->getConversionType();
+  QualType T =
+      cast<CXXConversionDecl>(Conv->getUnderlyingDecl()->getAsFunction())
+          ->getConversionType();
   return Context.getCanonicalType(T);
 }
 
@@ -1150,7 +1214,7 @@ CXXRecordDecl::setInstantiationOfMemberClass(CXXRecordDecl *RD,
                                              TemplateSpecializationKind TSK) {
   assert(TemplateOrInstantiation.isNull() && 
          "Previous template or instantiation?");
-  assert(!isa<ClassTemplateSpecializationDecl>(this));
+  assert(!isa<ClassTemplatePartialSpecializationDecl>(this));
   TemplateOrInstantiation 
     = new (getASTContext()) MemberSpecializationInfo(RD, TSK);
 }
@@ -1281,21 +1345,8 @@ bool CXXMethodDecl::isStatic() const {
   if (MD->getStorageClass() == SC_Static)
     return true;
 
-  DeclarationName Name = getDeclName();
-  // [class.free]p1:
-  // Any allocation function for a class T is a static member
-  // (even if not explicitly declared static).
-  if (Name.getCXXOverloadedOperator() == OO_New ||
-      Name.getCXXOverloadedOperator() == OO_Array_New)
-    return true;
-
-  // [class.free]p6 Any deallocation function for a class X is a static member
-  // (even if not explicitly declared static).
-  if (Name.getCXXOverloadedOperator() == OO_Delete ||
-      Name.getCXXOverloadedOperator() == OO_Array_Delete)
-    return true;
-
-  return false;
+  OverloadedOperatorKind OOK = getDeclName().getCXXOverloadedOperator();
+  return isStaticOverloadedOperator(OOK);
 }
 
 static bool recursivelyOverrides(const CXXMethodDecl *DerivedMD,
@@ -1361,17 +1412,14 @@ CXXMethodDecl::Create(ASTContext &C, CXXRecordDecl *RD,
                       QualType T, TypeSourceInfo *TInfo,
                       StorageClass SC, bool isInline,
                       bool isConstexpr, SourceLocation EndLocation) {
-  return new (C) CXXMethodDecl(CXXMethod, RD, StartLoc, NameInfo, T, TInfo,
-                               SC, isInline, isConstexpr,
-                               EndLocation);
+  return new (C, RD) CXXMethodDecl(CXXMethod, RD, StartLoc, NameInfo, T, TInfo,
+                                   SC, isInline, isConstexpr, EndLocation);
 }
 
 CXXMethodDecl *CXXMethodDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(CXXMethodDecl));
-  return new (Mem) CXXMethodDecl(CXXMethod, 0, SourceLocation(), 
-                                 DeclarationNameInfo(), QualType(),
-                                 0, SC_None, false, false,
-                                 SourceLocation());
+  return new (C, ID) CXXMethodDecl(CXXMethod, 0, SourceLocation(),
+                                   DeclarationNameInfo(), QualType(), 0,
+                                   SC_None, false, false, SourceLocation());
 }
 
 bool CXXMethodDecl::isUsualDeallocationFunction() const {
@@ -1509,10 +1557,16 @@ bool CXXMethodDecl::hasInlineBody() const {
 }
 
 bool CXXMethodDecl::isLambdaStaticInvoker() const {
-  return getParent()->isLambda() && 
-         getIdentifier() && getIdentifier()->getName() == "__invoke";
+  const CXXRecordDecl *P = getParent();
+  if (P->isLambda()) {
+    if (const CXXMethodDecl *StaticInvoker = P->getLambdaStaticInvoker()) {
+      if (StaticInvoker == this) return true;
+      if (P->isGenericLambda() && this->isFunctionTemplateSpecialization())
+        return StaticInvoker == this->getPrimaryTemplate()->getTemplatedDecl();
+    }
+  }
+  return false;
 }
-
 
 CXXCtorInitializer::CXXCtorInitializer(ASTContext &Context,
                                        TypeSourceInfo *TInfo, bool IsVirtual,
@@ -1628,9 +1682,9 @@ void CXXConstructorDecl::anchor() { }
 
 CXXConstructorDecl *
 CXXConstructorDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(CXXConstructorDecl));
-  return new (Mem) CXXConstructorDecl(0, SourceLocation(),DeclarationNameInfo(),
-                                      QualType(), 0, false, false, false,false);
+  return new (C, ID) CXXConstructorDecl(0, SourceLocation(),
+                                        DeclarationNameInfo(), QualType(),
+                                        0, false, false, false, false);
 }
 
 CXXConstructorDecl *
@@ -1643,9 +1697,9 @@ CXXConstructorDecl::Create(ASTContext &C, CXXRecordDecl *RD,
   assert(NameInfo.getName().getNameKind()
          == DeclarationName::CXXConstructorName &&
          "Name must refer to a constructor");
-  return new (C) CXXConstructorDecl(RD, StartLoc, NameInfo, T, TInfo,
-                                    isExplicit, isInline, isImplicitlyDeclared,
-                                    isConstexpr);
+  return new (C, RD) CXXConstructorDecl(RD, StartLoc, NameInfo, T, TInfo,
+                                        isExplicit, isInline,
+                                        isImplicitlyDeclared, isConstexpr);
 }
 
 CXXConstructorDecl *CXXConstructorDecl::getTargetConstructor() const {
@@ -1778,9 +1832,8 @@ void CXXDestructorDecl::anchor() { }
 
 CXXDestructorDecl *
 CXXDestructorDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(CXXDestructorDecl));
-  return new (Mem) CXXDestructorDecl(0, SourceLocation(), DeclarationNameInfo(),
-                                   QualType(), 0, false, false);
+  return new (C, ID) CXXDestructorDecl(
+      0, SourceLocation(), DeclarationNameInfo(), QualType(), 0, false, false);
 }
 
 CXXDestructorDecl *
@@ -1792,18 +1845,18 @@ CXXDestructorDecl::Create(ASTContext &C, CXXRecordDecl *RD,
   assert(NameInfo.getName().getNameKind()
          == DeclarationName::CXXDestructorName &&
          "Name must refer to a destructor");
-  return new (C) CXXDestructorDecl(RD, StartLoc, NameInfo, T, TInfo, isInline,
-                                   isImplicitlyDeclared);
+  return new (C, RD) CXXDestructorDecl(RD, StartLoc, NameInfo, T, TInfo,
+                                       isInline, isImplicitlyDeclared);
 }
 
 void CXXConversionDecl::anchor() { }
 
 CXXConversionDecl *
 CXXConversionDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(CXXConversionDecl));
-  return new (Mem) CXXConversionDecl(0, SourceLocation(), DeclarationNameInfo(),
-                                     QualType(), 0, false, false, false,
-                                     SourceLocation());
+  return new (C, ID) CXXConversionDecl(0, SourceLocation(),
+                                       DeclarationNameInfo(), QualType(),
+                                       0, false, false, false,
+                                       SourceLocation());
 }
 
 CXXConversionDecl *
@@ -1816,9 +1869,9 @@ CXXConversionDecl::Create(ASTContext &C, CXXRecordDecl *RD,
   assert(NameInfo.getName().getNameKind()
          == DeclarationName::CXXConversionFunctionName &&
          "Name must refer to a conversion function");
-  return new (C) CXXConversionDecl(RD, StartLoc, NameInfo, T, TInfo,
-                                   isInline, isExplicit, isConstexpr,
-                                   EndLocation);
+  return new (C, RD) CXXConversionDecl(RD, StartLoc, NameInfo, T, TInfo,
+                                       isInline, isExplicit, isConstexpr,
+                                       EndLocation);
 }
 
 bool CXXConversionDecl::isLambdaToBlockPointerConversion() const {
@@ -1834,13 +1887,13 @@ LinkageSpecDecl *LinkageSpecDecl::Create(ASTContext &C,
                                          SourceLocation LangLoc,
                                          LanguageIDs Lang,
                                          bool HasBraces) {
-  return new (C) LinkageSpecDecl(DC, ExternLoc, LangLoc, Lang, HasBraces);
+  return new (C, DC) LinkageSpecDecl(DC, ExternLoc, LangLoc, Lang, HasBraces);
 }
 
-LinkageSpecDecl *LinkageSpecDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(LinkageSpecDecl));
-  return new (Mem) LinkageSpecDecl(0, SourceLocation(), SourceLocation(),
-                                   lang_c, false);
+LinkageSpecDecl *LinkageSpecDecl::CreateDeserialized(ASTContext &C,
+                                                     unsigned ID) {
+  return new (C, ID) LinkageSpecDecl(0, SourceLocation(), SourceLocation(),
+                                     lang_c, false);
 }
 
 void UsingDirectiveDecl::anchor() { }
@@ -1854,16 +1907,15 @@ UsingDirectiveDecl *UsingDirectiveDecl::Create(ASTContext &C, DeclContext *DC,
                                                DeclContext *CommonAncestor) {
   if (NamespaceDecl *NS = dyn_cast_or_null<NamespaceDecl>(Used))
     Used = NS->getOriginalNamespace();
-  return new (C) UsingDirectiveDecl(DC, L, NamespaceLoc, QualifierLoc,
-                                    IdentLoc, Used, CommonAncestor);
+  return new (C, DC) UsingDirectiveDecl(DC, L, NamespaceLoc, QualifierLoc,
+                                        IdentLoc, Used, CommonAncestor);
 }
 
-UsingDirectiveDecl *
-UsingDirectiveDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(UsingDirectiveDecl));
-  return new (Mem) UsingDirectiveDecl(0, SourceLocation(), SourceLocation(),
-                                      NestedNameSpecifierLoc(),
-                                      SourceLocation(), 0, 0);
+UsingDirectiveDecl *UsingDirectiveDecl::CreateDeserialized(ASTContext &C,
+                                                           unsigned ID) {
+  return new (C, ID) UsingDirectiveDecl(0, SourceLocation(), SourceLocation(),
+                                        NestedNameSpecifierLoc(),
+                                        SourceLocation(), 0, 0);
 }
 
 NamespaceDecl *UsingDirectiveDecl::getNominatedNamespace() {
@@ -1873,8 +1925,6 @@ NamespaceDecl *UsingDirectiveDecl::getNominatedNamespace() {
   return cast_or_null<NamespaceDecl>(NominatedNamespace);
 }
 
-void NamespaceDecl::anchor() { }
-
 NamespaceDecl::NamespaceDecl(DeclContext *DC, bool Inline, 
                              SourceLocation StartLoc,
                              SourceLocation IdLoc, IdentifierInfo *Id,
@@ -1882,7 +1932,7 @@ NamespaceDecl::NamespaceDecl(DeclContext *DC, bool Inline,
   : NamedDecl(Namespace, DC, IdLoc, Id), DeclContext(Namespace),
     LocStart(StartLoc), RBraceLoc(), AnonOrFirstNamespaceAndInline(0, Inline) 
 {
-  setPreviousDeclaration(PrevDecl);
+  setPreviousDecl(PrevDecl);
   
   if (PrevDecl)
     AnonOrFirstNamespaceAndInline.setPointer(PrevDecl->getOriginalNamespace());
@@ -1892,13 +1942,22 @@ NamespaceDecl *NamespaceDecl::Create(ASTContext &C, DeclContext *DC,
                                      bool Inline, SourceLocation StartLoc,
                                      SourceLocation IdLoc, IdentifierInfo *Id,
                                      NamespaceDecl *PrevDecl) {
-  return new (C) NamespaceDecl(DC, Inline, StartLoc, IdLoc, Id, PrevDecl);
+  return new (C, DC) NamespaceDecl(DC, Inline, StartLoc, IdLoc, Id, PrevDecl);
 }
 
 NamespaceDecl *NamespaceDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(NamespaceDecl));
-  return new (Mem) NamespaceDecl(0, false, SourceLocation(), SourceLocation(), 
-                                 0, 0);
+  return new (C, ID) NamespaceDecl(0, false, SourceLocation(), SourceLocation(),
+                                   0, 0);
+}
+
+NamespaceDecl *NamespaceDecl::getNextRedeclaration() {
+  return RedeclLink.getNext();
+}
+NamespaceDecl *NamespaceDecl::getPreviousDeclImpl() {
+  return getPreviousDecl();
+}
+NamespaceDecl *NamespaceDecl::getMostRecentDeclImpl() {
+  return getMostRecentDecl();
 }
 
 void NamespaceAliasDecl::anchor() { }
@@ -1912,24 +1971,22 @@ NamespaceAliasDecl *NamespaceAliasDecl::Create(ASTContext &C, DeclContext *DC,
                                                NamedDecl *Namespace) {
   if (NamespaceDecl *NS = dyn_cast_or_null<NamespaceDecl>(Namespace))
     Namespace = NS->getOriginalNamespace();
-  return new (C) NamespaceAliasDecl(DC, UsingLoc, AliasLoc, Alias, 
-                                    QualifierLoc, IdentLoc, Namespace);
+  return new (C, DC) NamespaceAliasDecl(DC, UsingLoc, AliasLoc, Alias,
+                                        QualifierLoc, IdentLoc, Namespace);
 }
 
 NamespaceAliasDecl *
 NamespaceAliasDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(NamespaceAliasDecl));
-  return new (Mem) NamespaceAliasDecl(0, SourceLocation(), SourceLocation(), 0,
-                                      NestedNameSpecifierLoc(), 
-                                      SourceLocation(), 0);
+  return new (C, ID) NamespaceAliasDecl(0, SourceLocation(), SourceLocation(),
+                                        0, NestedNameSpecifierLoc(),
+                                        SourceLocation(), 0);
 }
 
 void UsingShadowDecl::anchor() { }
 
 UsingShadowDecl *
 UsingShadowDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(UsingShadowDecl));
-  return new (Mem) UsingShadowDecl(0, SourceLocation(), 0, 0);
+  return new (C, ID) UsingShadowDecl(0, SourceLocation(), 0, 0);
 }
 
 UsingDecl *UsingShadowDecl::getUsingDecl() const {
@@ -1977,13 +2034,12 @@ UsingDecl *UsingDecl::Create(ASTContext &C, DeclContext *DC, SourceLocation UL,
                              NestedNameSpecifierLoc QualifierLoc,
                              const DeclarationNameInfo &NameInfo,
                              bool HasTypename) {
-  return new (C) UsingDecl(DC, UL, QualifierLoc, NameInfo, HasTypename);
+  return new (C, DC) UsingDecl(DC, UL, QualifierLoc, NameInfo, HasTypename);
 }
 
 UsingDecl *UsingDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(UsingDecl));
-  return new (Mem) UsingDecl(0, SourceLocation(), NestedNameSpecifierLoc(),
-                             DeclarationNameInfo(), false);
+  return new (C, ID) UsingDecl(0, SourceLocation(), NestedNameSpecifierLoc(),
+                               DeclarationNameInfo(), false);
 }
 
 SourceRange UsingDecl::getSourceRange() const {
@@ -1999,15 +2055,14 @@ UnresolvedUsingValueDecl::Create(ASTContext &C, DeclContext *DC,
                                  SourceLocation UsingLoc,
                                  NestedNameSpecifierLoc QualifierLoc,
                                  const DeclarationNameInfo &NameInfo) {
-  return new (C) UnresolvedUsingValueDecl(DC, C.DependentTy, UsingLoc,
-                                          QualifierLoc, NameInfo);
+  return new (C, DC) UnresolvedUsingValueDecl(DC, C.DependentTy, UsingLoc,
+                                              QualifierLoc, NameInfo);
 }
 
 UnresolvedUsingValueDecl *
 UnresolvedUsingValueDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(UnresolvedUsingValueDecl));
-  return new (Mem) UnresolvedUsingValueDecl(0, QualType(), SourceLocation(),
-                                            NestedNameSpecifierLoc(),
+  return new (C, ID) UnresolvedUsingValueDecl(0, QualType(), SourceLocation(),
+                                              NestedNameSpecifierLoc(),
                                             DeclarationNameInfo());
 }
 
@@ -2026,20 +2081,16 @@ UnresolvedUsingTypenameDecl::Create(ASTContext &C, DeclContext *DC,
                                     NestedNameSpecifierLoc QualifierLoc,
                                     SourceLocation TargetNameLoc,
                                     DeclarationName TargetName) {
-  return new (C) UnresolvedUsingTypenameDecl(DC, UsingLoc, TypenameLoc,
-                                             QualifierLoc, TargetNameLoc,
-                                             TargetName.getAsIdentifierInfo());
+  return new (C, DC) UnresolvedUsingTypenameDecl(
+      DC, UsingLoc, TypenameLoc, QualifierLoc, TargetNameLoc,
+      TargetName.getAsIdentifierInfo());
 }
 
 UnresolvedUsingTypenameDecl *
 UnresolvedUsingTypenameDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, 
-                                       sizeof(UnresolvedUsingTypenameDecl));
-  return new (Mem) UnresolvedUsingTypenameDecl(0, SourceLocation(),
-                                               SourceLocation(),
-                                               NestedNameSpecifierLoc(),
-                                               SourceLocation(),
-                                               0);
+  return new (C, ID) UnresolvedUsingTypenameDecl(
+      0, SourceLocation(), SourceLocation(), NestedNameSpecifierLoc(),
+      SourceLocation(), 0);
 }
 
 void StaticAssertDecl::anchor() { }
@@ -2050,15 +2101,29 @@ StaticAssertDecl *StaticAssertDecl::Create(ASTContext &C, DeclContext *DC,
                                            StringLiteral *Message,
                                            SourceLocation RParenLoc,
                                            bool Failed) {
-  return new (C) StaticAssertDecl(DC, StaticAssertLoc, AssertExpr, Message,
-                                  RParenLoc, Failed);
+  return new (C, DC) StaticAssertDecl(DC, StaticAssertLoc, AssertExpr, Message,
+                                      RParenLoc, Failed);
 }
 
-StaticAssertDecl *StaticAssertDecl::CreateDeserialized(ASTContext &C, 
+StaticAssertDecl *StaticAssertDecl::CreateDeserialized(ASTContext &C,
                                                        unsigned ID) {
-  void *Mem = AllocateDeserializedDecl(C, ID, sizeof(StaticAssertDecl));
-  return new (Mem) StaticAssertDecl(0, SourceLocation(), 0, 0,
-                                    SourceLocation(), false);
+  return new (C, ID) StaticAssertDecl(0, SourceLocation(), 0, 0,
+                                      SourceLocation(), false);
+}
+
+MSPropertyDecl *MSPropertyDecl::Create(ASTContext &C, DeclContext *DC,
+                                       SourceLocation L, DeclarationName N,
+                                       QualType T, TypeSourceInfo *TInfo,
+                                       SourceLocation StartL,
+                                       IdentifierInfo *Getter,
+                                       IdentifierInfo *Setter) {
+  return new (C, DC) MSPropertyDecl(DC, L, N, T, TInfo, StartL, Getter, Setter);
+}
+
+MSPropertyDecl *MSPropertyDecl::CreateDeserialized(ASTContext &C,
+                                                   unsigned ID) {
+  return new (C, ID) MSPropertyDecl(0, SourceLocation(), DeclarationName(),
+                                    QualType(), 0, SourceLocation(), 0, 0);
 }
 
 static const char *getAccessName(AccessSpecifier AS) {

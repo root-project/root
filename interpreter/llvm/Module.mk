@@ -166,6 +166,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		--prefix=$(ROOT_OBJDIR)/$(LLVMDIRI) \
 		--disable-docs --disable-bindings \
 		--disable-visibility-inlines-hidden \
+		--disable-compiler-version-checks \
 		$$LLVMCXX11 \
 		$$LLVMLIBCXX \
 		$(LLVMOPTFLAGS) \

@@ -21,8 +21,8 @@
 #include "llvm/CodeGen/LiveIntervalAnalysis.h"
 #include "llvm/CodeGen/LiveRangeEdit.h"
 #include "llvm/CodeGen/LiveStackAnalysis.h"
-#include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineBlockFrequencyInfo.h"
+#include "llvm/CodeGen/MachineDominators.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -578,7 +578,7 @@ MachineInstr *InlineSpiller::traceSiblingValue(unsigned UseReg, VNInfo *UseVNI,
     if (unsigned SrcReg = isFullCopyOf(MI, Reg)) {
       if (isSibling(SrcReg)) {
         LiveInterval &SrcLI = LIS.getInterval(SrcReg);
-        LiveRangeQuery SrcQ(SrcLI, VNI->def);
+        LiveQueryResult SrcQ = SrcLI.Query(VNI->def);
         assert(SrcQ.valueIn() && "Copy from non-existing value");
         // Check if this COPY kills its source.
         SVI->second.KillsSource = SrcQ.isKill();
@@ -1057,6 +1057,9 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr*, unsigned> > Ops,
   bool WasCopy = MI->isCopy();
   unsigned ImpReg = 0;
 
+  bool SpillSubRegs = (MI->getOpcode() == TargetOpcode::PATCHPOINT ||
+                       MI->getOpcode() == TargetOpcode::STACKMAP);
+
   // TargetInstrInfo::foldMemoryOperand only expects explicit, non-tied
   // operands.
   SmallVector<unsigned, 8> FoldOps;
@@ -1068,7 +1071,7 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr*, unsigned> > Ops,
       continue;
     }
     // FIXME: Teach targets to deal with subregs.
-    if (MO.getSubReg())
+    if (!SpillSubRegs && MO.getSubReg())
       return false;
     // We cannot fold a load instruction into a def.
     if (LoadMI && MO.isDef())
@@ -1095,21 +1098,20 @@ foldMemoryOperand(ArrayRef<std::pair<MachineInstr*, unsigned> > Ops,
         MRI.isReserved(Reg)) {
       continue;
     }
+    // Skip non-Defs, including undef uses and internal reads.
+    if (MO->isUse())
+      continue;
     MIBundleOperands::PhysRegInfo RI =
       MIBundleOperands(FoldMI).analyzePhysReg(Reg, &TRI);
-    if (MO->readsReg()) {
-      assert(RI.Reads && "Cannot fold physreg reader");
-      continue;
-    }
     if (RI.Defines)
       continue;
     // FoldMI does not define this physreg. Remove the LI segment.
     assert(MO->isDead() && "Cannot fold physreg def");
     for (MCRegUnitIterator Units(Reg, &TRI); Units.isValid(); ++Units) {
-      if (LiveInterval *LI = LIS.getCachedRegUnit(*Units)) {
+      if (LiveRange *LR = LIS.getCachedRegUnit(*Units)) {
         SlotIndex Idx = LIS.getInstructionIndex(MI).getRegSlot();
-        if (VNInfo *VNI = LI->getVNInfoAt(Idx))
-          LI->removeValNo(VNI);
+        if (VNInfo *VNI = LR->getVNInfoAt(Idx))
+          LR->removeValNo(VNI);
       }
     }
   }
@@ -1295,8 +1297,8 @@ void InlineSpiller::spillAll() {
 
   assert(StackInt->getNumValNums() == 1 && "Bad stack interval values");
   for (unsigned i = 0, e = RegsToSpill.size(); i != e; ++i)
-    StackInt->MergeRangesInAsValue(LIS.getInterval(RegsToSpill[i]),
-                                   StackInt->getValNumInfo(0));
+    StackInt->MergeSegmentsInAsValue(LIS.getInterval(RegsToSpill[i]),
+                                     StackInt->getValNumInfo(0));
   DEBUG(dbgs() << "Merged spilled regs: " << *StackInt << '\n');
 
   // Spill around uses of all RegsToSpill.
@@ -1337,7 +1339,7 @@ void InlineSpiller::spill(LiveRangeEdit &edit) {
 
   DEBUG(dbgs() << "Inline spilling "
                << MRI.getRegClass(edit.getReg())->getName()
-               << ':' << PrintReg(edit.getReg()) << ' ' << edit.getParent()
+               << ':' << edit.getParent()
                << "\nFrom original " << PrintReg(Original) << '\n');
   assert(edit.getParent().isSpillable() &&
          "Attempting to spill already spilled value.");

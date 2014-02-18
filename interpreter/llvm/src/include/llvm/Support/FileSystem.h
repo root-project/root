@@ -49,10 +49,9 @@ namespace llvm {
 namespace sys {
 namespace fs {
 
-/// file_type - An "enum class" enumeration for the file system's view of the
-///             type.
+/// An "enum class" enumeration for the file system's view of the type.
 struct file_type {
-  enum _ {
+  enum Impl {
     status_error,
     file_not_found,
     regular_file,
@@ -65,12 +64,11 @@ struct file_type {
     type_unknown
   };
 
-  file_type(_ v) : v_(v) {}
-  explicit file_type(int v) : v_(_(v)) {}
-  operator int() const {return v_;}
+  file_type(Impl V) : V(V) {}
+  operator Impl() const { return V; }
 
 private:
-  int v_;
+  Impl V;
 };
 
 /// space_info - Self explanatory.
@@ -238,7 +236,9 @@ struct file_magic {
     macho_dsym_companion,     ///< Mach-O dSYM companion file
     macho_universal_binary,   ///< Mach-O universal binary
     coff_object,              ///< COFF object file
-    pecoff_executable         ///< PECOFF executable file
+    coff_import_library,      ///< COFF import library
+    pecoff_executable,        ///< PECOFF executable file
+    windows_resource          ///< Windows compiled resource file (.rc)
   };
 
   bool is_object() const {
@@ -308,14 +308,6 @@ inline error_code create_directory(const Twine &Path) {
 ///          , otherwise a platform specific error_code.
 error_code create_hard_link(const Twine &to, const Twine &from);
 
-/// @brief Create a symbolic link from \a from to \a to.
-///
-/// @param to The path to symbolically link to.
-/// @param from The path to symbolically link from. This is created.
-/// @returns errc::success if exists(to) && exists(from) && is_symlink(from),
-///          otherwise a platform specific error_code.
-error_code create_symlink(const Twine &to, const Twine &from);
-
 /// @brief Get the current path.
 ///
 /// @param result Holds the current path on return.
@@ -337,22 +329,6 @@ error_code remove(const Twine &path, bool &existed);
 inline error_code remove(const Twine &Path) {
   bool Existed;
   return remove(Path, Existed);
-}
-
-/// @brief Recursively remove all files below \a path, then \a path. Files are
-///        removed as if by POSIX remove().
-///
-/// @param path Input path.
-/// @param num_removed Number of files removed.
-/// @returns errc::success if path has been removed and num_removed has been
-///          successfully set, otherwise a platform specific error_code.
-error_code remove_all(const Twine &path, uint32_t &num_removed);
-
-/// @brief Convenience function for clients that don't need to know how many
-///        files were removed.
-inline error_code remove_all(const Twine &Path) {
-  uint32_t Removed;
-  return remove_all(Path, Removed);
 }
 
 /// @brief Rename \a from to \a to. Files are renamed as if by POSIX rename().
@@ -543,6 +519,11 @@ inline error_code file_size(const Twine &Path, uint64_t &Result) {
   return error_code::success();
 }
 
+/// @brief Set the file modification and access time.
+///
+/// @returns errc::success if the file times were successfully set, otherwise a
+///          platform specific error_code or errc::not_supported on platforms
+///          where the functionality isn't available.
 error_code setLastModificationAndAccessTime(int FD, TimeValue Time);
 
 /// @brief Is status available?
@@ -638,17 +619,6 @@ error_code openFileForWrite(const Twine &Name, int &ResultFD, OpenFlags Flags,
 
 error_code openFileForRead(const Twine &Name, int &ResultFD);
 
-/// @brief Canonicalize path.
-///
-/// Sets result to the file system's idea of what path is. The result is always
-/// absolute and has the same capitalization as the file system.
-///
-/// @param path Input path.
-/// @param result Set to the canonicalized version of \a path.
-/// @returns errc::success if result has been successfully set, otherwise a
-///          platform specific error_code.
-error_code canonicalize(const Twine &path, SmallVectorImpl<char> &result);
-
 /// @brief Are \a path's first bytes \a magic?
 ///
 /// @param path Input path.
@@ -731,7 +701,7 @@ public:
   ///               should begin. Must be a multiple of
   ///               mapped_file_region::alignment().
   /// \param ec This is set to errc::success if the map was constructed
-  ///           sucessfully. Otherwise it is set to a platform dependent error.
+  ///           successfully. Otherwise it is set to a platform dependent error.
   mapped_file_region(const Twine &path,
                      mapmode mode,
                      uint64_t length,

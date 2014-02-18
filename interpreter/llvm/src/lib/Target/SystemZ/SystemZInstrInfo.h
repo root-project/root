@@ -116,7 +116,19 @@ class SystemZInstrInfo : public SystemZGenInstrInfo {
 
   void splitMove(MachineBasicBlock::iterator MI, unsigned NewOpcode) const;
   void splitAdjDynAlloc(MachineBasicBlock::iterator MI) const;
-
+  void expandRIPseudo(MachineInstr *MI, unsigned LowOpcode,
+                      unsigned HighOpcode, bool ConvertHigh) const;
+  void expandRIEPseudo(MachineInstr *MI, unsigned LowOpcode,
+                       unsigned LowOpcodeK, unsigned HighOpcode) const;
+  void expandRXYPseudo(MachineInstr *MI, unsigned LowOpcode,
+                       unsigned HighOpcode) const;
+  void expandZExtPseudo(MachineInstr *MI, unsigned LowOpcode,
+                        unsigned Size) const;
+  void emitGRX32Move(MachineBasicBlock &MBB, MachineBasicBlock::iterator MBBI,
+                     DebugLoc DL, unsigned DestReg, unsigned SrcReg,
+                     unsigned LowLowOpcode, unsigned Size, bool KillSrc) const;
+  virtual void anchor();
+  
 public:
   explicit SystemZInstrInfo(SystemZTargetMachine &TM);
 

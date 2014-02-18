@@ -137,7 +137,7 @@ char FunctionAttrs::ID = 0;
 INITIALIZE_PASS_BEGIN(FunctionAttrs, "functionattrs",
                 "Deduce function attributes", false, false)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
-INITIALIZE_AG_DEPENDENCY(CallGraph)
+INITIALIZE_PASS_DEPENDENCY(CallGraphWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfo)
 INITIALIZE_PASS_END(FunctionAttrs, "functionattrs",
                 "Deduce function attributes", false, false)
@@ -414,6 +414,10 @@ determinePointerReadAttrs(Argument *A,
   SmallSet<Use*, 32> Visited;
   int Count = 0;
 
+  // inalloca arguments are always clobbered by the call.
+  if (A->hasInAllocaAttr())
+    return Attribute::None;
+
   bool IsRead = false;
   // We don't need to track IsWritten. If A is written to, return immediately.
 
@@ -437,6 +441,7 @@ determinePointerReadAttrs(Argument *A,
     case Instruction::GetElementPtr:
     case Instruction::PHI:
     case Instruction::Select:
+    case Instruction::AddrSpaceCast:
       // The original value is not read/written via this if the new value isn't.
       for (Instruction::use_iterator UI = I->use_begin(), UE = I->use_end();
            UI != UE; ++UI) {
@@ -599,8 +604,7 @@ bool FunctionAttrs::AddArgumentAttrs(const CallGraphSCC &SCC) {
   // made.  If the definition doesn't have a 'nocapture' attribute by now, it
   // captures.
 
-  for (scc_iterator<ArgumentGraph*> I = scc_begin(&AG), E = scc_end(&AG);
-       I != E; ++I) {
+  for (scc_iterator<ArgumentGraph*> I = scc_begin(&AG); !I.isAtEnd(); ++I) {
     std::vector<ArgumentGraphNode*> &ArgumentSCC = *I;
     if (ArgumentSCC.size() == 1) {
       if (!ArgumentSCC[0]->Definition) continue;  // synthetic root node
@@ -723,6 +727,7 @@ bool FunctionAttrs::IsFunctionMallocLike(Function *F,
         // Extend the analysis by looking upwards.
         case Instruction::BitCast:
         case Instruction::GetElementPtr:
+        case Instruction::AddrSpaceCast:
           FlowsToReturn.insert(RVI->getOperand(0));
           continue;
         case Instruction::Select: {

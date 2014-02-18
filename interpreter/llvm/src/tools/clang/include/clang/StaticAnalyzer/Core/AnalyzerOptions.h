@@ -54,6 +54,7 @@ NumConstraints
 enum AnalysisDiagClients {
 #define ANALYSIS_DIAGNOSTICS(NAME, CMDFLAG, DESC, CREATFN) PD_##NAME,
 #include "clang/StaticAnalyzer/Core/Analyses.def"
+PD_NONE,
 NUM_ANALYSIS_DIAG_CLIENTS
 };
 
@@ -198,6 +199,9 @@ private:
   /// \sa mayInlineTemplateFunctions
   Optional<bool> InlineTemplateFunctions;
 
+  /// \sa mayInlineCXXAllocator
+  Optional<bool> InlineCXXAllocator;
+
   /// \sa mayInlineCXXContainerCtorsAndDtors
   Optional<bool> InlineCXXContainerCtorsAndDtors;
 
@@ -289,6 +293,12 @@ public:
   /// This is controlled by the 'c++-template-inlining' config option, which
   /// accepts the values "true" and "false".
   bool mayInlineTemplateFunctions();
+
+  /// Returns whether or not allocator call may be considered for inlining.
+  ///
+  /// This is controlled by the 'c++-allocator-inlining' config option, which
+  /// accepts the values "true" and "false".
+  bool mayInlineCXXAllocator();
 
   /// Returns whether or not constructors and destructors of C++ container
   /// objects may be considered for inlining.

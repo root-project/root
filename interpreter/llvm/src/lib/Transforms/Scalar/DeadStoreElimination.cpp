@@ -22,12 +22,12 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/CaptureTracking.h"
-#include "llvm/Analysis/Dominators.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Instructions.h"
@@ -54,9 +54,12 @@ namespace {
     }
 
     virtual bool runOnFunction(Function &F) {
+      if (skipOptnoneFunction(F))
+        return false;
+
       AA = &getAnalysis<AliasAnalysis>();
       MD = &getAnalysis<MemoryDependenceAnalysis>();
-      DT = &getAnalysis<DominatorTree>();
+      DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
       TLI = AA->getTargetLibraryInfo();
 
       bool Changed = false;
@@ -78,11 +81,11 @@ namespace {
 
     virtual void getAnalysisUsage(AnalysisUsage &AU) const {
       AU.setPreservesCFG();
-      AU.addRequired<DominatorTree>();
+      AU.addRequired<DominatorTreeWrapperPass>();
       AU.addRequired<AliasAnalysis>();
       AU.addRequired<MemoryDependenceAnalysis>();
       AU.addPreserved<AliasAnalysis>();
-      AU.addPreserved<DominatorTree>();
+      AU.addPreserved<DominatorTreeWrapperPass>();
       AU.addPreserved<MemoryDependenceAnalysis>();
     }
   };
@@ -90,7 +93,7 @@ namespace {
 
 char DSE::ID = 0;
 INITIALIZE_PASS_BEGIN(DSE, "dse", "Dead Store Elimination", false, false)
-INITIALIZE_PASS_DEPENDENCY(DominatorTree)
+INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(MemoryDependenceAnalysis)
 INITIALIZE_AG_DEPENDENCY(AliasAnalysis)
 INITIALIZE_PASS_END(DSE, "dse", "Dead Store Elimination", false, false)
@@ -374,8 +377,8 @@ static OverwriteResult isOverwrite(const AliasAnalysis::Location &Later,
     return OverwriteUnknown;
 
   // Check to see if the later store is to the entire object (either a global,
-  // an alloca, or a byval argument).  If so, then it clearly overwrites any
-  // other store to the same object.
+  // an alloca, or a byval/inalloca argument).  If so, then it clearly
+  // overwrites any other store to the same object.
   const DataLayout *TD = AA.getDataLayout();
 
   const Value *UO1 = GetUnderlyingObject(P1, TD),
@@ -742,11 +745,11 @@ bool DSE::handleEndBlock(BasicBlock &BB) {
       DeadStackObjects.insert(I);
   }
 
-  // Treat byval arguments the same, stores to them are dead at the end of the
-  // function.
+  // Treat byval or inalloca arguments the same, stores to them are dead at the
+  // end of the function.
   for (Function::arg_iterator AI = BB.getParent()->arg_begin(),
        AE = BB.getParent()->arg_end(); AI != AE; ++AI)
-    if (AI->hasByValAttr())
+    if (AI->hasByValOrInAllocaAttr())
       DeadStackObjects.insert(AI);
 
   // Scan the basic block backwards

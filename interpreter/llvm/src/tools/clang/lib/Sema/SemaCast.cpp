@@ -21,6 +21,7 @@
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/RecordLayout.h"
 #include "clang/Basic/PartialDiagnostic.h"
+#include "clang/Basic/TargetInfo.h"
 #include "clang/Sema/Initialization.h"
 #include "llvm/ADT/SmallVector.h"
 #include <set>
@@ -1346,7 +1347,8 @@ TryStaticMemberPointerUpcast(Sema &Self, ExprResult &SrcExpr, QualType SrcType,
   QualType DestClass(DestMemPtr->getClass(), 0);
   CXXBasePaths Paths(/*FindAmbiguities=*/true, /*RecordPaths=*/true,
                   /*DetectVirtual=*/true);
-  if (!Self.IsDerivedFrom(SrcClass, DestClass, Paths)) {
+  if (Self.RequireCompleteType(OpRange.getBegin(), SrcClass, 0) ||
+      !Self.IsDerivedFrom(SrcClass, DestClass, Paths)) {
     return TC_NotApplicable;
   }
 
@@ -1430,6 +1432,10 @@ TryStaticImplicitCast(Sema &Self, ExprResult &SrcExpr, QualType DestType,
                                     diag::err_allocation_of_abstract_type)) {
       msg = 0;
       return TC_Failed;
+    }
+  } else if (DestType->isMemberPointerType()) {
+    if (Self.Context.getTargetInfo().getCXXABI().isMicrosoft()) {
+      Self.RequireCompleteType(OpRange.getBegin(), DestType, 0);
     }
   }
 
@@ -1778,6 +1784,13 @@ static TryCastResult TryReinterpretCast(Sema &Self, ExprResult &SrcExpr,
       return TC_Failed;
     }
 
+    if (Self.Context.getTargetInfo().getCXXABI().isMicrosoft()) {
+      // We need to determine the inheritance model that the class will use if
+      // haven't yet.
+      Self.RequireCompleteType(OpRange.getBegin(), SrcType, 0);
+      Self.RequireCompleteType(OpRange.getBegin(), DestType, 0);
+    }
+
     // Don't allow casting between member pointers of different sizes.
     if (Self.Context.getTypeSize(DestMemPtr) !=
         Self.Context.getTypeSize(SrcMemPtr)) {
@@ -2074,6 +2087,8 @@ void CastOperation::CheckCXXCStyleCast(bool FunctionalStyle,
 
   if (Self.getLangOpts().ObjCAutoRefCount && tcr == TC_Success)
     checkObjCARCConversion(CCK);
+  else if (Self.getLangOpts().ObjC1 && tcr == TC_Success)
+    Self.CheckTollFreeBridgeCast(DestType, SrcExpr.get());
 
   if (tcr != TC_Success && msg != 0) {
     if (SrcExpr.get()->getType() == Self.Context.OverloadTy) {
@@ -2167,6 +2182,21 @@ void CastOperation::CheckCStyleCast() {
   QualType SrcType = SrcExpr.get()->getType();
 
   assert(!SrcType->isPlaceholderType());
+
+  // OpenCL v1 s6.5: Casting a pointer to address space A to a pointer to
+  // address space B is illegal.
+  if (Self.getLangOpts().OpenCL && DestType->isPointerType() &&
+      SrcType->isPointerType()) {
+    if (DestType->getPointeeType().getAddressSpace() !=
+        SrcType->getPointeeType().getAddressSpace()) {
+      Self.Diag(OpRange.getBegin(),
+                diag::err_typecheck_incompatible_address_space)
+          << SrcType << DestType << Sema::AA_Casting
+          << SrcExpr.get()->getSourceRange();
+      SrcExpr = ExprError();
+      return;
+    }
+  }
 
   if (Self.RequireCompleteType(OpRange.getBegin(), DestType,
                                diag::err_typecheck_cast_to_incomplete)) {
@@ -2319,6 +2349,9 @@ void CastOperation::CheckCStyleCast() {
       return;
     }
   }
+  else if (Self.getLangOpts().ObjC1)
+    Self.CheckTollFreeBridgeCast(DestType, SrcExpr.get());
+  
   DiagnoseCastOfObjCSEL(Self, SrcExpr, DestType);
   DiagnoseBadFunctionCast(Self, SrcExpr, DestType);
   Kind = Self.PrepareScalarCast(SrcExpr, DestType);

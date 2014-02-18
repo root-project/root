@@ -8,6 +8,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/MC/MCObjectFileInfo.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSection.h"
@@ -78,16 +79,10 @@ void MCObjectFileInfo::InitMachOMCObjectFileInfo(Triple T) {
                            MCSectionMachO::S_8BYTE_LITERALS,
                            SectionKind::getMergeableConst8());
 
-  // ld_classic doesn't support .literal16 in 32-bit mode, and ld64 falls back
-  // to using it in -static mode.
-  SixteenByteConstantSection = 0;
-  if (RelocM != Reloc::Static &&
-      T.getArch() != Triple::x86_64 && T.getArch() != Triple::ppc64 &&
-      T.getArch() != Triple::ppc64le)
-    SixteenByteConstantSection =   // .literal16
-      Ctx->getMachOSection("__TEXT", "__literal16",
-                           MCSectionMachO::S_16BYTE_LITERALS,
-                           SectionKind::getMergeableConst16());
+  SixteenByteConstantSection // .literal16
+      = Ctx->getMachOSection("__TEXT", "__literal16",
+                             MCSectionMachO::S_16BYTE_LITERALS,
+                             SectionKind::getMergeableConst16());
 
   ReadOnlySection  // .const
     = Ctx->getMachOSection("__TEXT", "__const", 0,
@@ -148,6 +143,8 @@ void MCObjectFileInfo::InitMachOMCObjectFileInfo(Triple T) {
   // Exception Handling.
   LSDASection = Ctx->getMachOSection("__TEXT", "__gcc_except_tab", 0,
                                      SectionKind::getReadOnlyWithRel());
+
+  COFFDebugSymbolsSection = 0;
 
   if (T.isMacOSX() && !T.isMacOSXVersionLT(10, 6)) {
     CompactUnwindSection =
@@ -234,6 +231,9 @@ void MCObjectFileInfo::InitMachOMCObjectFileInfo(Triple T) {
     Ctx->getMachOSection("__DWARF", "__debug_inlined",
                          MCSectionMachO::S_ATTR_DEBUG,
                          SectionKind::getMetadata());
+  StackMapSection =
+    Ctx->getMachOSection("__LLVM_STACKMAPS", "__llvm_stackmaps", 0,
+                         SectionKind::getMetadata());
 
   TLSExtraDataSection = TLSTLVSection;
 }
@@ -307,6 +307,33 @@ void MCObjectFileInfo::InitELFMCObjectFileInfo(Triple T) {
     FDEEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_udata8;
     TTypeEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
       dwarf::DW_EH_PE_udata8;
+  } else if (T.getArch() == Triple::sparc) {
+    if (RelocM == Reloc::PIC_) {
+      LSDAEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
+      PersonalityEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
+        dwarf::DW_EH_PE_sdata4;
+      FDEEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
+      TTypeEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
+        dwarf::DW_EH_PE_sdata4;
+    } else {
+      LSDAEncoding = dwarf::DW_EH_PE_absptr;
+      PersonalityEncoding = dwarf::DW_EH_PE_absptr;
+      FDEEncoding = dwarf::DW_EH_PE_udata4;
+      TTypeEncoding = dwarf::DW_EH_PE_absptr;
+    }
+  } else if (T.getArch() == Triple::sparcv9) {
+    LSDAEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
+    if (RelocM == Reloc::PIC_) {
+      PersonalityEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
+        dwarf::DW_EH_PE_sdata4;
+      FDEEncoding = dwarf::DW_EH_PE_pcrel | dwarf::DW_EH_PE_sdata4;
+      TTypeEncoding = dwarf::DW_EH_PE_indirect | dwarf::DW_EH_PE_pcrel |
+        dwarf::DW_EH_PE_sdata4;
+    } else {
+      PersonalityEncoding = dwarf::DW_EH_PE_absptr;
+      FDEEncoding = dwarf::DW_EH_PE_udata4;
+      TTypeEncoding = dwarf::DW_EH_PE_absptr;
+    }
   } else if (T.getArch() == Triple::systemz) {
     // All currently-defined code models guarantee that 4-byte PC-relative
     // values will be in range.
@@ -426,6 +453,8 @@ void MCObjectFileInfo::InitELFMCObjectFileInfo(Triple T) {
     Ctx->getELFSection(".gcc_except_table", ELF::SHT_PROGBITS,
                        ELF::SHF_ALLOC,
                        SectionKind::getReadOnly());
+
+  COFFDebugSymbolsSection = 0;
 
   // Debug Info Sections.
   DwarfAbbrevSection =
@@ -578,6 +607,13 @@ void MCObjectFileInfo::InitCOFFMCObjectFileInfo(Triple T) {
                         SectionKind::getReadOnly());
 
   // Debug info.
+  COFFDebugSymbolsSection =
+    Ctx->getCOFFSection(".debug$S",
+                        COFF::IMAGE_SCN_MEM_DISCARDABLE |
+                        COFF::IMAGE_SCN_CNT_INITIALIZED_DATA |
+                        COFF::IMAGE_SCN_MEM_READ,
+                        SectionKind::getMetadata());
+
   DwarfAbbrevSection =
     Ctx->getCOFFSection(".debug_abbrev",
                         COFF::IMAGE_SCN_MEM_DISCARDABLE |
@@ -713,6 +749,18 @@ void MCObjectFileInfo::InitMCObjectFileInfo(StringRef TT, Reloc::Model relocm,
     Env = IsELF;
     InitELFMCObjectFileInfo(T);
   }
+}
+
+const MCSection *MCObjectFileInfo::getDwarfTypesSection(uint64_t Hash) const {
+  return Ctx->getELFSection(".debug_types", ELF::SHT_PROGBITS, ELF::SHF_GROUP,
+                            SectionKind::getMetadata(), 0, utostr(Hash));
+}
+
+const MCSection *
+MCObjectFileInfo::getDwarfTypesDWOSection(uint64_t Hash) const {
+  return Ctx->getELFSection(".debug_types.dwo", ELF::SHT_PROGBITS,
+                            ELF::SHF_GROUP, SectionKind::getMetadata(), 0,
+                            utostr(Hash));
 }
 
 void MCObjectFileInfo::InitEHFrameSection() {

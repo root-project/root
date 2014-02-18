@@ -68,7 +68,7 @@ PreprocessorLexer *Preprocessor::getCurrentFileLexer() const {
 
 /// EnterSourceFile - Add a source file to the top of the include stack and
 /// start lexing tokens from it instead of the current buffer.
-void Preprocessor::EnterSourceFile(FileID FID, const DirectoryLookup *CurDir,
+bool Preprocessor::EnterSourceFile(FileID FID, const DirectoryLookup *CurDir,
                                    SourceLocation Loc) {
   assert(!CurTokenLexer && "Cannot #include a file inside a macro!");
   ++NumEnteredSourceFiles;
@@ -79,7 +79,7 @@ void Preprocessor::EnterSourceFile(FileID FID, const DirectoryLookup *CurDir,
   if (PTH) {
     if (PTHLexer *PL = PTH->CreateLexer(FID)) {
       EnterSourceFileWithPTH(PL, CurDir);
-      return;
+      return false;
     }
   }
   
@@ -91,7 +91,7 @@ void Preprocessor::EnterSourceFile(FileID FID, const DirectoryLookup *CurDir,
     SourceLocation FileStart = SourceMgr.getLocForStartOfFile(FID);
     Diag(Loc, diag::err_pp_error_opening_file)
       << std::string(SourceMgr.getBufferName(FileStart)) << "";
-    return;
+    return true;
   }
 
   if (isCodeCompletionEnabled() &&
@@ -102,7 +102,7 @@ void Preprocessor::EnterSourceFile(FileID FID, const DirectoryLookup *CurDir,
   }
 
   EnterSourceFileWithLexer(new Lexer(FID, InputFile, *this), CurDir);
-  return;
+  return false;
 }
 
 /// EnterSourceFileWithLexer - Add a source file to the top of the include stack
@@ -117,6 +117,7 @@ void Preprocessor::EnterSourceFileWithLexer(Lexer *TheLexer,
   CurLexer.reset(TheLexer);
   CurPPLexer = TheLexer;
   CurDirLookup = CurDir;
+  CurSubmodule = 0;
   if (CurLexerKind != CLK_LexAfterModuleImport)
     CurLexerKind = CLK_Lexer;
   
@@ -141,6 +142,7 @@ void Preprocessor::EnterSourceFileWithPTH(PTHLexer *PL,
   CurDirLookup = CurDir;
   CurPTHLexer.reset(PL);
   CurPPLexer = CurPTHLexer.get();
+  CurSubmodule = 0;
   if (CurLexerKind != CLK_LexAfterModuleImport)
     CurLexerKind = CLK_PTHLexer;
   
@@ -244,6 +246,29 @@ void Preprocessor::PropagateLineStartLeadingSpaceInfo(Token &Result) {
   // but it might if they're empty?
 }
 
+/// \brief Determine the location to use as the end of the buffer for a lexer.
+///
+/// If the file ends with a newline, form the EOF token on the newline itself,
+/// rather than "on the line following it", which doesn't exist.  This makes
+/// diagnostics relating to the end of file include the last file that the user
+/// actually typed, which is goodness.
+const char *Preprocessor::getCurLexerEndPos() {
+  const char *EndPos = CurLexer->BufferEnd;
+  if (EndPos != CurLexer->BufferStart &&
+      (EndPos[-1] == '\n' || EndPos[-1] == '\r')) {
+    --EndPos;
+
+    // Handle \n\r and \r\n:
+    if (EndPos != CurLexer->BufferStart &&
+        (EndPos[-1] == '\n' || EndPos[-1] == '\r') &&
+        EndPos[-1] != EndPos[0])
+      --EndPos;
+  }
+
+  return EndPos;
+}
+
+
 /// HandleEndOfFile - This callback is invoked when the lexer hits the end of
 /// the current file.  This either returns the EOF token or pops a level off
 /// the include stack and keeps going.
@@ -264,19 +289,32 @@ bool Preprocessor::HandleEndOfFile(Token &Result, bool isEndOfMacro) {
           if (!ControllingMacro->hasMacroDefinition() &&
               DefinedMacro != ControllingMacro &&
               HeaderInfo.FirstTimeLexingFile(FE)) {
-            // Emit a warning for a bad header guard.
-            Diag(CurPPLexer->MIOpt.GetMacroLocation(),
-                 diag::warn_header_guard)
-                << CurPPLexer->MIOpt.GetMacroLocation()
-                << ControllingMacro;
-            Diag(CurPPLexer->MIOpt.GetDefinedLocation(),
-                 diag::note_header_guard)
-                << CurPPLexer->MIOpt.GetDefinedLocation()
-                << DefinedMacro
-                << ControllingMacro
-                << FixItHint::CreateReplacement(
-                       CurPPLexer->MIOpt.GetDefinedLocation(),
-                       ControllingMacro->getName());
+
+            // If the edit distance between the two macros is more than 50%,
+            // DefinedMacro may not be header guard, or can be header guard of
+            // another header file. Therefore, it maybe defining something
+            // completely different. This can be observed in the wild when
+            // handling feature macros or header guards in different files.
+
+            const StringRef ControllingMacroName = ControllingMacro->getName();
+            const StringRef DefinedMacroName = DefinedMacro->getName();
+            const size_t MaxHalfLength = std::max(ControllingMacroName.size(),
+                                                  DefinedMacroName.size()) / 2;
+            const unsigned ED = ControllingMacroName.edit_distance(
+                DefinedMacroName, true, MaxHalfLength);
+            if (ED <= MaxHalfLength) {
+              // Emit a warning for a bad header guard.
+              Diag(CurPPLexer->MIOpt.GetMacroLocation(),
+                   diag::warn_header_guard)
+                  << CurPPLexer->MIOpt.GetMacroLocation() << ControllingMacro;
+              Diag(CurPPLexer->MIOpt.GetDefinedLocation(),
+                   diag::note_header_guard)
+                  << CurPPLexer->MIOpt.GetDefinedLocation() << DefinedMacro
+                  << ControllingMacro
+                  << FixItHint::CreateReplacement(
+                         CurPPLexer->MIOpt.GetDefinedLocation(),
+                         ControllingMacro->getName());
+            }
           }
         }
       }
@@ -329,7 +367,18 @@ bool Preprocessor::HandleEndOfFile(Token &Result, bool isEndOfMacro) {
     FileID ExitedFID;
     if (Callbacks && !isEndOfMacro && CurPPLexer)
       ExitedFID = CurPPLexer->getFileID();
-    
+
+    bool LeavingSubmodule = CurSubmodule && CurLexer;
+    if (LeavingSubmodule) {
+      // Notify the parser that we've left the module.
+      const char *EndPos = getCurLexerEndPos();
+      Result.startToken();
+      CurLexer->BufferPtr = EndPos;
+      CurLexer->FormTokenWithChars(Result, EndPos, tok::annot_module_end);
+      Result.setAnnotationEndLoc(Result.getLocation());
+      Result.setAnnotationValue(CurSubmodule);
+    }
+
     // We're done with the #included file.
     RemoveTopOfLexerStack();
 
@@ -344,27 +393,13 @@ bool Preprocessor::HandleEndOfFile(Token &Result, bool isEndOfMacro) {
                              PPCallbacks::ExitFile, FileType, ExitedFID);
     }
 
-    // Client should lex another token.
-    return false;
+    // Client should lex another token unless we generated an EOM.
+    return LeavingSubmodule;
   }
 
-  // If the file ends with a newline, form the EOF token on the newline itself,
-  // rather than "on the line following it", which doesn't exist.  This makes
-  // diagnostics relating to the end of file include the last file that the user
-  // actually typed, which is goodness.
+  // If this is the end of the main file, form an EOF token.
   if (CurLexer) {
-    const char *EndPos = CurLexer->BufferEnd;
-    if (EndPos != CurLexer->BufferStart &&
-        (EndPos[-1] == '\n' || EndPos[-1] == '\r')) {
-      --EndPos;
-
-      // Handle \n\r and \r\n:
-      if (EndPos != CurLexer->BufferStart &&
-          (EndPos[-1] == '\n' || EndPos[-1] == '\r') &&
-          EndPos[-1] != EndPos[0])
-        --EndPos;
-    }
-
+    const char *EndPos = getCurLexerEndPos();
     Result.startToken();
     CurLexer->BufferPtr = EndPos;
     CurLexer->FormTokenWithChars(Result, EndPos, tok::eof);
