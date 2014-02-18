@@ -293,7 +293,7 @@ Double_t PiecewiseInterpolation::evaluate() const
      //     RooArgSet* myset = new RooArgSet();
      //     cout << "integral = " << analyticalIntegralWN(code, myset) << endl;
   } else if(sum<0){
-     cout <<"sum < 0, not forcing positive definite"<<endl;
+     cxcoutD(Tracing) <<"PiecewiseInterpolation::evaluate -  sum < 0, not forcing positive definite"<<endl;
   }
   return sum;
 
