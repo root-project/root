@@ -1313,6 +1313,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                }
             }
          }
+         else if (obj->InheritsFrom("TCanvas") &&
+                  fNewBrowser->GetTabRight()->GetTabTab(obj->GetName())) {
+            // avoid potential crash when drawing a canvas with the same name
+            // than a canvas already embedded in one of the browser's tab
+            obj->DrawClone();
+         }
          else obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
