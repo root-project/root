@@ -42,6 +42,7 @@ class TInterpreterValue;
 class TMethod;
 class TObjArray;
 class TVirtualMutex;
+class TEnum;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
@@ -160,7 +161,6 @@ public:
    virtual Bool_t   CheckClassTemplate(const char *name) = 0;
    virtual Long_t   Calc(const char *line, EErrorCode* error = 0) = 0;
    virtual void     CreateListOfBaseClasses(TClass *cl) const = 0;
-   virtual void     CreateListOfEnums(TClass *cl) const = 0;
    virtual void     CreateListOfDataMembers(TClass *cl) const = 0;
    virtual void     CreateListOfMethods(TClass *cl) const = 0;
    virtual void     CreateListOfMethodArgs(TFunction *m) const = 0;
@@ -226,6 +226,10 @@ public:
    virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name) const = 0;
    virtual DeclId_t GetDataMemberAtAddr(const void *addr) const = 0;
    virtual DeclId_t GetDataMemberWithValue(const void *ptrvalue) const = 0;
+   virtual DeclId_t GetEnum(TClass *cl, const char *name) const = 0;
+   virtual TEnum*   CreateEnum(void *VD, TClass *cl) const = 0;
+   virtual void     UpdateEnumConstants(TEnum* enumObj, TClass* cl) const = 0;
+   virtual void     LoadEnums(TClass* cl) const = 0;
    virtual DeclId_t GetFunction(ClassInfo_t *cl, const char *funcname) = 0;
    virtual DeclId_t GetFunctionWithPrototype(ClassInfo_t *cl, const char* method, const char* proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) = 0;
    virtual DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE) = 0;

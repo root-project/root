@@ -39,7 +39,6 @@ public:
 
    Long64_t     GetValue() const { return fValue; }
    const TEnum *GetType() const { return fEnum; }
-   virtual bool Update(DataMemberInfo_t *info);
 
    ClassDef(TEnumConstant,1)  //Enum type constant
 };

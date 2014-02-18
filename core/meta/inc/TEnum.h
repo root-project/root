@@ -29,11 +29,18 @@
 #ifndef ROOT_TString
 #include "TString.h"
 #endif
+#ifndef ROOT_TDictionary
+#include "TDictionary.h"
+#endif
+
+
 
 class TClass;
 class TEnumConstant;
 
 class TEnum : public TNamed {
+
+typedef TDictionary::DeclId_t DeclId_t;
 
 private:
    THashList fConstantList;     //list of constants the enum type
@@ -43,15 +50,17 @@ private:
 public:
 
    TEnum(): fInfo(0) {}
-   TEnum(const char* name, bool isGlobal, void* info, TClass* cls);
+   TEnum(const char* name, void* info, TClass* cls);
    virtual ~TEnum();
 
-   void AddConstant(TEnumConstant* constant);
-   TClass* GetClass() const { return fClass; }
+   void                  AddConstant(TEnumConstant* constant);
+   TClass*               GetClass() const { return fClass; }
    const TSeqCollection* GetConstants() const { return &fConstantList; }
-   const TEnumConstant* GetConstant(const char* name) const {
+   const TEnumConstant*  GetConstant(const char* name) const {
       return (TEnumConstant*) fConstantList.FindObject(name);
    }
+   DeclId_t              GetDeclId() const { return (DeclId_t)fInfo; }
+   void                  Update(DeclId_t id);
 
    ClassDef(TEnum,2)  //Enum type class
 };
