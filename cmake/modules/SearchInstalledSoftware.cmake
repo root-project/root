@@ -1,6 +1,17 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
 
+#---Check for Cocoa/Quartz graphics backend (MacOS X only)
+if(cocoa)
+  if(APPLE)
+    set(x11 OFF CACHE BOOL "" FORCE)
+    set(builtin_freetype ON CACHE BOOL "" FORCE)
+  else()
+    message(STATUS "Cocoa option can only be enabled on MacOSX platform")
+    set(cocoa OFF CACHE BOOL "" FORCE)
+  endif()
+endif()
+
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
@@ -29,9 +40,9 @@ if(builtin_freetype)
   set(FREETYPE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/graf2d/freetype/freetype-2.3.12/include)
   set(FREETYPE_INCLUDE_DIRS ${FREETYPE_INCLUDE_DIR})
   if(WIN32)
-    set(FREETYPE_LIBRARIES "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib")     
+    set(FREETYPE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/freetype.lib)
   else()
-    set(FREETYPE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lfreetype")
+    set(FREETYPE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libfreetype.a)
   endif()
 endif()
 
@@ -93,15 +104,6 @@ if(builtin_lzma)
   endif()
 endif()
 
-#---Check for Cocoa/Quartz graphics backend (MacOS X only)
-if(cocoa)
-  if(APPLE)
-    set(x11 OFF CACHE BOOL "" FORCE)
-  else()
-    message(STATUS "Cocoa option can only be enabled on MacOSX platform")
-    set(cocoa OFF CACHE BOOL "" FORCE)
-  endif()
-endif()
 
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)

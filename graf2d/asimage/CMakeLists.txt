@@ -10,8 +10,12 @@ if(builtin_afterimage)
   if(WIN32)
     set(AFTERIMAGE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libAfterImage.lib)
   else()
-    set(AFTERIMAGE_LIBRARIES "-L${CMAKE_LIBRARY_OUTPUT_DIRECTORY} -lAfterImage")
+    set(AFTERIMAGE_LIBRARIES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libAfterImage.a)
   endif()
+endif()
+
+if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
+  set(ASEXTRA_LIBRARIES)
 endif()
 
 #---Build ASImage/ASImageGui libraries---------------------------------------
