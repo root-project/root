@@ -472,7 +472,7 @@ void TSpectrum2Painter::ColorModel(unsigned ui, unsigned ui1, unsigned ui2,
    //    -ui1,ui2,ui3
    //    represent r, g, b color components of the basic pen color.
 
-   unsigned uinc1=0,uinc2=0,uinc3=0,upom,i;
+   unsigned long uinc1=0,uinc2=0,uinc3=0,upom,i;
    Double_t a,b,c,d,h,v,s,f;
    Int_t j,iv=ui;
    Double_t red=0,green=0,blue=0;
