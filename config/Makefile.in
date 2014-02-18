@@ -392,6 +392,7 @@ BUILDMINUIT2   := @buildminuit2@
 BUILDUNURAN    := @buildunuran@
 
 BUILDVC        := @buildvc@
+BUILDVDT       := @buildvdt@
 AVXCXXFLAG     := @avxcxxflag@
 SIMDCXXFLAGS   := @avxcxxflag@ @ssecxxflags@
 VCFLAGS        := @abiversioncxxflag@ @vcflags@

@@ -35,5 +35,6 @@ if(vc)
   add_subdirectory(vc)
 endif()
 
-
-
+if(vdt)
+  add_subdirectory(vdt)
+endif()

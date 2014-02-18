@@ -123,6 +123,9 @@ endif
 ifeq ($(BUILDVC),yes)
 MODULES      += math/vc
 endif
+ifeq ($(BUILDVDT),yes)
+MODULES      += math/vdt
+endif
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
@@ -317,7 +320,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx math/vc
+                graf2d/quartz graf2d/cocoa core/macosx math/vc math/vdt
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
