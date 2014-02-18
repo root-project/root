@@ -591,6 +591,7 @@ if(cling)
                  -DLLVM_INCLUDE_EXAMPLES=OFF
                  -DLLVM_BUILD_TOOLS=OFF
                  -DLLVM_TARGETS_TO_BUILD=X86
+                 -DLLVM_FORCE_USE_OLD_TOOLCHAIN=ON
                  -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
