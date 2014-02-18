@@ -2871,8 +2871,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
              == headerFileName.data() + headerFileName.size()
              && "Mismatched partitioning of file name!");
       const DirectoryLookup* FoundDir = 0;
-      FELong = HdrSearch.LookupFile(trailingPart, true /*isAngled*/,
-                                    0/*FromDir*/, FoundDir, 0/*CurFileEntry*/,
+      FELong = HdrSearch.LookupFile(trailingPart, SourceLocation(),
+                                    true /*isAngled*/, 0/*FromDir*/, FoundDir,
+                                    ArrayRef<const FileEntry*>(),
                                     0/*Searchpath*/, 0/*RelPath*/,
                                     0/*SuggModule*/);
    }
@@ -2895,8 +2896,9 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
       const DirectoryLookup* FoundDir = 0;
       // Can we find it, and is it the same file as the long version?
       // (or are we back to the previously found spelling, which is fine, too)
-      if (HdrSearch.LookupFile(trailingPart, true /*isAngled*/, 0/*FromDir*/,
-                               FoundDir, 0/*CurFileEntry*/, 0/*Searchpath*/,
+      if (HdrSearch.LookupFile(trailingPart, SourceLocation(),
+                               true /*isAngled*/, 0/*FromDir*/, FoundDir,
+                               ArrayRef<const FileEntry*>(), 0/*Searchpath*/,
                                0/*RelPath*/, 0/*SuggModule*/) == FELong) {
          return trailingPart;
       }
@@ -3087,9 +3089,11 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
    for (const char** hdr = headers; hdr && *hdr; ++hdr) {
       const clang::DirectoryLookup* CurDir;
       const clang::FileEntry* hdrFileEntry
-         =  HdrSearch.LookupFile(*hdr, false /*isAngled*/, 0 /*FromDir*/,
-                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
-                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
+         =  HdrSearch.LookupFile(*hdr, clang::SourceLocation(),
+                                 false /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 llvm::ArrayRef<const clang::FileEntry*>(),
+                                 0 /*SearchPath*/, 0 /*RelativePath*/,
+                                 0 /*SuggestedModule*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "
             "Cannot find header file " << *hdr

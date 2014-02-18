@@ -141,9 +141,11 @@ TModuleGenerator::GetSourceFileKind(const char* filename) const
       clang::HeaderSearch& HdrSearch = PP.getHeaderSearchInfo();
       const clang::DirectoryLookup* CurDir = 0;
       const clang::FileEntry* hdrFileEntry
-         =  HdrSearch.LookupFile(filename, true /*isAngled*/, 0 /*FromDir*/,
-                                 CurDir, 0 /*CurFileEnt*/, 0 /*SearchPath*/,
-                                 0 /*RelativePath*/, 0 /*SuggestedModule*/);
+         =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
+                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 clang::ArrayRef<const clang::FileEntry*>(),
+                                 0 /*SearchPath*/, 0 /*RelativePath*/,
+                                 0 /*SuggestedModule*/);
       if (hdrFileEntry) {
          return kSFKHeader;
       }

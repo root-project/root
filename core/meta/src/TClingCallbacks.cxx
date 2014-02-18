@@ -492,7 +492,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    // EvaluateTSynthesizer at all!
     
    SourceRange invalidRange;
-   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime"));
+   Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__ResolveAtRuntime", 0));
    if (Result) {
       // Here we have the scope but we cannot do Sema::PushDeclContext, because
       // on pop it will try to go one level up, which we don't want.
@@ -593,7 +593,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
       // FIXME: We should move this in cling, when we implement turning it on 
       // and off.
       SourceRange invalidRange;
-      Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto"));
+      Result->addAttr(new (C) AnnotateAttr(invalidRange, C, "__Auto", 0));
 
       R.addDecl(Result);
       // Say that we can handle the situation. Clang should try to recover

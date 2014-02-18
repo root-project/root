@@ -364,7 +364,7 @@ void AnnotateFieldDecl(clang::NamedDecl& decl,
             else
                userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
             ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
-            decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty));
+            decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
          }
       }
    }
@@ -413,7 +413,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          const std::string& value = iter->second;
          userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
-         CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty));
+         CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
       }
    }
 
@@ -445,7 +445,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             commentRange = SourceRange(commentSLoc, commentSLoc.getLocWithOffset(comment.size()));
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro){
-               CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
+               CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, comment.str(), 0));
             }
             else if (!selectionRules.IsSelectionXMLFile()){
                // Here we check if we are in presence of a selction file so that
@@ -453,7 +453,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
                // rootcling is not relevant.
-               (*I)->addAttr(new (C) AnnotateAttr(commentRange, C, comment.str()));
+               (*I)->addAttr(new (C) AnnotateAttr(commentRange, C, comment.str(), 0));
             }
          }
          // Match decls with sel rules if we are in presence of a selection file
@@ -2138,8 +2138,9 @@ static int GenerateModule(TModuleGenerator& modGen,
    modGen.WriteRegistrationSource(dictStream);
 
    if (!modGen.IsPCH()) {
-      CI->getPreprocessor().getHeaderSearchInfo().
-         setModuleCachePath(modGen.GetModuleDirName().c_str());
+      clang::HeaderSearch& HS = CI->getPreprocessor().getHeaderSearchInfo();
+      HS.loadTopLevelSystemModules();
+      HS.setModuleCachePath(modGen.GetModuleDirName().c_str());
    }
 
    clang::Module* module = 0;

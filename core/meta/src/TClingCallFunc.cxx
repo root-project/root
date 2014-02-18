@@ -802,7 +802,7 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
       make_narg_ctor_with_return(N, class_name, buf, indent_level);
       return;
    }
-   QualType QT = FD->getResultType().getCanonicalType();
+   QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isVoidType()) {
       ostringstream typedefbuf;
       ostringstream callbuf;
@@ -2184,7 +2184,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
                                                 cling::Value(gv, QT));
       return;
    }
-   QualType QT = FD->getResultType().getCanonicalType();
+   QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
       GenericValue gv;
       exec(address, &gv.PointerVal);
@@ -2766,7 +2766,7 @@ TClingCallFunc::ExecInt(void* address)
       return 0L;
    }
    const FunctionDecl* decl = fMethod->GetMethodDecl();
-   if (decl->getResultType().getCanonicalType()->isRecordType())
+   if (decl->getReturnType().getCanonicalType()->isRecordType())
       ((TCling*)gCling)->RegisterTemporary(ret);
    return static_cast<Long_t>(sv_to_long_long(ret));
 }
@@ -2787,7 +2787,7 @@ TClingCallFunc::ExecInt64(void* address)
       return 0LL;
    }
    const FunctionDecl* decl = fMethod->GetMethodDecl();
-   if (decl->getResultType().getCanonicalType()->isRecordType())
+   if (decl->getReturnType().getCanonicalType()->isRecordType())
       ((TCling*)gCling)->RegisterTemporary(ret);
    return sv_to_long_long(ret);
 }
