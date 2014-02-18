@@ -850,8 +850,8 @@ Int_t TMinuit::GetNumFreePars() const
 //______________________________________________________________________________
 Int_t TMinuit::GetNumPars() const
 {
-// returns the total number of parameters that have been defined.
-// (fixed and free)
+// returns the total number of parameters that have been defined
+// as fixed or free. The constant parameters are not counted.
 
    return fNpar + fNpfix;
 }
