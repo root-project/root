@@ -2167,6 +2167,7 @@ static int GenerateModule(TModuleGenerator& modGen,
                              /*CreateMissingDirectories*/false);
    if (OS) {
       // Emit the PCH file
+
       CI->getFrontendOpts().RelocatablePCH = true;
       std::string ISysRoot("/DUMMY_SYSROOT/include/");
 #ifdef ROOTBUILD
@@ -3566,6 +3567,8 @@ int RootCling(int argc,
    pcmArgs.push_back(incCurDir);
 
    TModuleGenerator modGen(interp.getCI(), sharedLibraryPathName.c_str());
+   if ( modGen.IsPCH() )
+      interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
    modGen.ParseArgs(pcmArgs);
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
        || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
