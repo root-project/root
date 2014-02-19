@@ -74,10 +74,14 @@ void TClingTypedefInfo::Init(const char *name)
    fIterStack.clear();
    // Ask the cling interpreter to lookup the name for us.
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   clang::QualType QT = lh.findType(name);
+   clang::QualType QT = lh.findType(name,
+                                    gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                    : cling::LookupHelper::NoDiagnostics);
    if (QT.isNull()) {
       std::string buf = TClassEdit::InsertStd(name);
-      QT = lh.findType(buf);
+      QT = lh.findType(buf,
+                       gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                       : cling::LookupHelper::NoDiagnostics);
 
       if (QT.isNull()) {
          fDecl = 0;

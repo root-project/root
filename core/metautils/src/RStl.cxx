@@ -199,7 +199,10 @@ void ROOT::RStl::WriteClassInit(std::ostream &ostr,
          // We do not have a complete definition, we need to force the instantiation
          // and findScope can do that.
          const cling::LookupHelper& lh = interp.getLookupHelper();
-         result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(iter->GetNormalizedName(),0));
+         result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(iter->GetNormalizedName(),
+                                                                            cling::LookupHelper::NoDiagnostics,
+                                                                            0)
+                                                               );
 
          if (!result || !iter->GetRecordDecl()->getDefinition()) {
             fprintf(stderr,"Error: incomplete definition for %s\n",iter->GetNormalizedName());

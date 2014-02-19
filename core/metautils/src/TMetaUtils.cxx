@@ -251,6 +251,13 @@ static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecor
    return 0;
 }
 
+static
+cling::LookupHelper::DiagSetting ToLHDS(bool wantDiags) {
+   return wantDiags
+      ? cling::LookupHelper::WithDiagnostics
+      : cling::LookupHelper::NoDiagnostics;
+}
+
 } // end of anonymous namespace
 
 namespace ROOT{
@@ -363,21 +370,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 
 }
 
-
-
 //______________________________________________________________________________
 TClingLookupHelper::TClingLookupHelper(cling::Interpreter &interpreter,
-                                       TNormalizedCtxt &normCtxt):
-   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt)
+                                       TNormalizedCtxt &normCtxt,
+                                       const int* pgDebug /*= 0*/):
+   fInterpreter(&interpreter),fNormalizedCtxt(&normCtxt), fPDebug(pgDebug)
 {
-
 }
 
 //______________________________________________________________________________
 void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   clang::QualType t = lh.findType(nameLong);
+   clang::QualType t = lh.findType(nameLong, ToLHDS(WantDiags()));
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && (dest != t))
@@ -390,7 +395,7 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
                                                          const std::string &nameLong)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   clang::QualType t = lh.findType(nondef.c_str());
+   clang::QualType t = lh.findType(nondef.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && (dest != t) &&
@@ -404,7 +409,7 @@ bool TClingLookupHelper::IsAlreadyPartiallyDesugaredName(const std::string &nond
 bool TClingLookupHelper::IsDeclaredScope(const std::string &base)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   if (!lh.findScope(base.c_str(), 0)) {
+   if (!lh.findScope(base.c_str(), ToLHDS(WantDiags()), 0)) {
       // the nesting namespace is not declared
       return false;
    }
@@ -416,7 +421,7 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
                                                                     std::string &result)
 {
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   clang::QualType t = lh.findType(tname.c_str());
+   clang::QualType t = lh.findType(tname.c_str(), ToLHDS(WantDiags()));
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
       if (!dest.isNull() && dest != t) {
@@ -449,23 +454,23 @@ ROOT::TMetaUtils::TNormalizedCtxt::TNormalizedCtxt(const cling::LookupHelper &lh
    // (Double32_t and Float16_t).
    // This might be specific to an interpreter.
 
-   clang::QualType toSkip = lh.findType("Double32_t");
+   clang::QualType toSkip = lh.findType("Double32_t", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
       fConfig.m_toSkip.insert(toSkip.getTypePtr());
       fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
-   toSkip = lh.findType("Float16_t");
+   toSkip = lh.findType("Float16_t", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
       fConfig.m_toSkip.insert(toSkip.getTypePtr());
       fTypeWithAlternative.insert(toSkip.getTypePtr());
    }
-   toSkip = lh.findType("Long64_t");
+   toSkip = lh.findType("Long64_t", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
-   toSkip = lh.findType("ULong64_t");
+   toSkip = lh.findType("ULong64_t", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
-   toSkip = lh.findType("string");
+   toSkip = lh.findType("string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) fConfig.m_toSkip.insert(toSkip.getTypePtr());
-   toSkip = lh.findType("std::string");
+   toSkip = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
    if (!toSkip.isNull()) {
       fConfig.m_toSkip.insert(toSkip.getTypePtr());
 
@@ -505,15 +510,26 @@ bool ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::RecordDecl *cl, const c
 }
 
 //______________________________________________________________________________
-const clang::CXXRecordDecl *ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp, const clang::Type** resultType)
+const clang::CXXRecordDecl *
+ROOT::TMetaUtils::ScopeSearch(const char *name, const cling::Interpreter &interp,
+                              bool diagnose, const clang::Type** resultType)
 {
    // Return the scope corresponding to 'name' or std::'name'
    const cling::LookupHelper& lh = interp.getLookupHelper();
-   const clang::CXXRecordDecl *result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(name,resultType));
+   const clang::CXXRecordDecl *result
+      = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
+      (lh.findScope(name,
+                    diagnose ? cling::LookupHelper::NoDiagnostics
+                    : cling::LookupHelper::NoDiagnostics,
+                    resultType));
    if (!result) {
       std::string std_name("std::");
       std_name += name;
-      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(std_name,resultType));
+      result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>
+         (lh.findScope(std_name,
+                       diagnose ? cling::LookupHelper::NoDiagnostics
+                       : cling::LookupHelper::NoDiagnostics,
+                       resultType));
    }
    return result;
 }
@@ -544,7 +560,8 @@ bool ROOT::TMetaUtils::IsBase(const clang::FieldDecl &m, const char* basename, c
       return false;
    }
 
-   const clang::NamedDecl *base = ScopeSearch(basename, interp);
+   const clang::NamedDecl *base
+      = ScopeSearch(basename, interp, true /*diagnose*/, 0);
 
    if (base) {
       return IsBase(CRD, llvm::dyn_cast<clang::CXXRecordDecl>( base ),
@@ -562,7 +579,8 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
                                       const char *tcl)
 {
 
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TObject", interp);
+   static const clang::CXXRecordDecl *TObject_decl
+      = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, 0);
    enum {
       kBIT_ISTOBJECT     = 0x10000000,
       kBIT_HASSTREAMER   = 0x20000000,
@@ -799,10 +817,14 @@ bool ROOT::TMetaUtils::CheckConstructor(const clang::CXXRecordDecl *cl,
 
 //______________________________________________________________________________
 const clang::CXXMethodDecl *GetMethodWithProto(const clang::Decl* cinfo,
-                                               const char *method, const char *proto, const cling::Interpreter &interp)
+                                               const char *method, const char *proto,
+                                               const cling::Interpreter &interp,
+                                               bool diagnose)
 {
    const clang::FunctionDecl* funcD
-   = interp.getLookupHelper().findFunctionProto(cinfo, method, proto);
+      = interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
+                                                   diagnose ? cling::LookupHelper::WithDiagnostics
+                                                   : cling::LookupHelper::NoDiagnostics);
    if (funcD) {
       return llvm::dyn_cast<const clang::CXXMethodDecl>(funcD);
    }
@@ -818,7 +840,7 @@ namespace ROOT {
          const cling::LookupHelper& lh = interp.getLookupHelper();
          // We can not use findScope since the type we are given are usually,
          // only forward declared (and findScope explicitly reject them).
-         clang::QualType instanceType = lh.findType(type_of_arg);
+         clang::QualType instanceType = lh.findType(type_of_arg, cling::LookupHelper::WithDiagnostics);
          if (!instanceType.isNull())
             fArgType = instanceType->getAsCXXRecordDecl();
       }
@@ -862,7 +884,9 @@ bool ROOT::TMetaUtils::HasIOConstructor(const clang::CXXRecordDecl *cl,
       if (result) {
          const char *name = "operator new";
          proto = "size_t";
-         const clang::CXXMethodDecl *method = GetMethodWithProto(cl,name,proto.c_str(), interp);
+         const clang::CXXMethodDecl *method
+            = GetMethodWithProto(cl,name,proto.c_str(), interp,
+                                 cling::LookupHelper::NoDiagnostics);
          if (method && method->getAccess() != clang::AS_public) {
             result = false;
          }
@@ -891,13 +915,17 @@ bool ROOT::TMetaUtils::NeedDestructor(const clang::CXXRecordDecl *cl)
 
 //______________________________________________________________________________
 bool ROOT::TMetaUtils::CheckPublicFuncWithProto(const clang::CXXRecordDecl *cl,
-                                                 const char *methodname,
+                                                const char *methodname,
                                                 const char *proto,
-                                                const cling::Interpreter &interp)
+                                                const cling::Interpreter &interp,
+                                                bool diagnose)
 {
    // Return true, if the function (defined by the name and prototype) exists and is public
 
-   const clang::CXXMethodDecl *method = GetMethodWithProto(cl,methodname,proto, interp);
+   const clang::CXXMethodDecl *method
+      = GetMethodWithProto(cl,methodname,proto, interp,
+                           diagnose ? cling::LookupHelper::WithDiagnostics
+                           : cling::LookupHelper::NoDiagnostics);
    return (method && method->getAccess() == clang::AS_public);
 }
 
@@ -912,7 +940,7 @@ bool ROOT::TMetaUtils::HasDirectoryAutoAdd(const clang::CXXRecordDecl *cl, const
    const char *proto = "TDirectory*";
    const char *name = "DirectoryAutoAdd";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp);
+   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
 }
 
 
@@ -927,7 +955,7 @@ bool ROOT::TMetaUtils::HasNewMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*,TFileMergeInfo*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto,interp);
+   return CheckPublicFuncWithProto(cl,name,proto,interp, false /*diags*/);
 }
 
 //______________________________________________________________________________
@@ -941,7 +969,7 @@ bool ROOT::TMetaUtils::HasOldMerge(const clang::CXXRecordDecl *cl, const cling::
    const char *proto = "TCollection*";
    const char *name = "Merge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp);
+   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
 }
 
 
@@ -957,7 +985,7 @@ bool ROOT::TMetaUtils::HasResetAfterMerge(const clang::CXXRecordDecl *cl, const 
    const char *proto = "TFileMergeInfo*";
    const char *name = "ResetAfterMerge";
 
-   return CheckPublicFuncWithProto(cl,name,proto, interp);
+   return CheckPublicFuncWithProto(cl,name,proto, interp, false /*diags*/);
 }
 
 
@@ -971,10 +999,13 @@ bool ROOT::TMetaUtils::HasCustomStreamerMemberFunction(const AnnotatedRecordDecl
 
    static const char *proto = "TBuffer&";
 
-   const clang::CXXMethodDecl *method = GetMethodWithProto(clxx,"Streamer",proto, interp);
+   const clang::CXXMethodDecl *method
+      = GetMethodWithProto(clxx,"Streamer",proto, interp,
+                           cling::LookupHelper::NoDiagnostics);
    const clang::DeclContext *clxx_as_context = llvm::dyn_cast<clang::DeclContext>(clxx);
 
-   return (method && method->getDeclContext() == clxx_as_context && ( cl.RequestNoStreamer() || !cl.RequestStreamerInfo()));
+   return (method && method->getDeclContext() == clxx_as_context
+           && ( cl.RequestNoStreamer() || !cl.RequestStreamerInfo()));
 }
 
 //______________________________________________________________________________
@@ -1125,9 +1156,12 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
 const clang::FunctionDecl *ROOT::TMetaUtils::GetFuncWithProto(const clang::Decl* cinfo,
                                                               const char *method,
                                                               const char *proto,
-                                                              const cling::Interpreter &interp)
+                                                              const cling::Interpreter &interp,
+                                                              bool diagnose)
 {
-   return interp.getLookupHelper().findFunctionProto(cinfo, method, proto);
+   return interp.getLookupHelper().findFunctionProto(cinfo, method, proto,
+                                                     diagnose ? cling::LookupHelper::WithDiagnostics
+                                                     : cling::LookupHelper::NoDiagnostics);
 }
 
 //______________________________________________________________________________
@@ -1243,13 +1277,14 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(const AnnotatedRecordDecl &cl,
    const clang::CXXRecordDecl* clxx =  llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl());
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
-   clang::QualType instanceType = interp.getLookupHelper().findType(cl.GetNormalizedName());
+   clang::QualType instanceType = interp.getLookupHelper().findType(cl.GetNormalizedName(),
+                                                                    cling::LookupHelper::WithDiagnostics);
    if (instanceType.isNull()) {
       //Error(0,"Could not find the clang::Type for %s\n",cl.GetNormalizedName());
       return false;
-   } else {
-      return ROOT::TMetaUtils::hasOpaqueTypedef(instanceType, normCtxt);
    }
+
+   return ROOT::TMetaUtils::hasOpaqueTypedef(instanceType, normCtxt);
 }
 
 //______________________________________________________________________________
@@ -1466,7 +1501,9 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       //      snprintf(funcname,ncha,"%s<%s >",versionFunc,classname.c_str());
       std::string proto = classname + "*";
       const clang::Decl* ctxt = llvm::dyn_cast<clang::Decl>((*cl).getDeclContext());
-      const clang::FunctionDecl *methodinfo = ROOT::TMetaUtils::GetFuncWithProto(ctxt, versionFunc, proto.c_str(), interp);
+      const clang::FunctionDecl *methodinfo
+         = ROOT::TMetaUtils::GetFuncWithProto(ctxt, versionFunc, proto.c_str(),
+                                              interp, cling::LookupHelper::NoDiagnostics);
       //      delete [] funcname;
 
       if (methodinfo &&
@@ -1777,8 +1814,14 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
    const char *protoPlacement = "size_t,void*";
 
    // First search in the enclosing namespaces
-   const clang::FunctionDecl *operatornew = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()), name, proto, interp);
-   const clang::FunctionDecl *operatornewPlacement = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()), name, protoPlacement, interp);
+   const clang::FunctionDecl *operatornew
+      = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()),
+                                           name, proto, interp,
+                                           cling::LookupHelper::NoDiagnostics);
+   const clang::FunctionDecl *operatornewPlacement
+      = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl.getDeclContext()),
+                                           name, protoPlacement, interp,
+                                           cling::LookupHelper::NoDiagnostics);
 
    const clang::DeclContext *ctxtnew = 0;
    const clang::DeclContext *ctxtnewPlacement = 0;
@@ -1791,8 +1834,11 @@ bool ROOT::TMetaUtils::HasCustomOperatorNewPlacement(const char *which, const cl
    }
 
    // Then in the class and base classes
-   operatornew = ROOT::TMetaUtils::GetFuncWithProto(&cl, name, proto, interp);
-   operatornewPlacement = ROOT::TMetaUtils::GetFuncWithProto(&cl, name, protoPlacement, interp);
+   operatornew = ROOT::TMetaUtils::GetFuncWithProto(&cl, name, proto, interp,
+                                                    false /*diags*/);
+   operatornewPlacement
+      = ROOT::TMetaUtils::GetFuncWithProto(&cl, name, protoPlacement, interp,
+                                           false /*diags*/);
 
    if (operatornew) {
       ctxtnew = operatornew->getParent();
@@ -3251,7 +3297,9 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 }
 
 //______________________________________________________________________________
-llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter)
+llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &decl,
+                                                  clang::SourceLocation *loc,
+                                                  const cling::Interpreter &interpreter)
 {
    // Return the class comment after the ClassDef:
    // class MyClass {
@@ -3266,7 +3314,8 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
    Sema& sema = interpreter.getCI()->getSema();
 
    const Decl* DeclFileLineDecl
-      = interpreter.getLookupHelper().findFunctionProto(&decl, "DeclFileLine", "");
+      = interpreter.getLookupHelper().findFunctionProto(&decl, "DeclFileLine", "",
+                                                        cling::LookupHelper::NoDiagnostics);
    if (!DeclFileLineDecl) return llvm::StringRef();
 
    // For now we allow only a special macro (ClassDef) to have meaningful comments
@@ -3360,7 +3409,7 @@ bool ROOT::TMetaUtils::IsOfType(const clang::CXXRecordDecl &cl, const std::strin
    // We may use a map which becomes an unordered map if c++11 is enabled?
 
    const clang::CXXRecordDecl *thisDecl =
-      llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(typ));
+      llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(typ, cling::LookupHelper::WithDiagnostics));
 
    // this would be probably an assert given that this state is not reachable unless a mistake is somewhere
    if (! thisDecl){

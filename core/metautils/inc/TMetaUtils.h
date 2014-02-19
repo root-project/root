@@ -110,8 +110,11 @@ class TClingLookupHelper : public TClassEdit::TInterpreterLookupHelper {
 private:
    cling::Interpreter *fInterpreter;
    TNormalizedCtxt    *fNormalizedCtxt;
+   const int          *fPDebug; // debug flag, might change at runtime thus *
+   bool WantDiags() const { return fPDebug && *fPDebug > 5; }
 public:
-   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt);
+   TClingLookupHelper(cling::Interpreter &interpreter, TNormalizedCtxt &normCtxt,
+                      const int *pgDebug = 0);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
    virtual void GetPartiallyDesugaredName(std::string &nameLong);
    virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
@@ -333,7 +336,8 @@ bool NeedDestructor(clang::CXXRecordDecl const*);
 bool NeedTemplateKeyword(clang::CXXRecordDecl const*);
 
 //______________________________________________________________________________
-bool CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*, const cling::Interpreter&);
+bool CheckPublicFuncWithProto(clang::CXXRecordDecl const*, char const*, char const*,
+                              const cling::Interpreter&, bool diagnose);
 
 //______________________________________________________________________________
 long GetLineNumber(clang::Decl const*);
@@ -405,7 +409,10 @@ clang::RecordDecl *GetUnderlyingRecordDecl(clang::QualType type);
 std::string TrueName(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
-const clang::CXXRecordDecl *ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
+const clang::CXXRecordDecl *ScopeSearch(const char *name,
+                                        const cling::Interpreter &gInterp,
+                                        bool diagnose,
+                                        const clang::Type** resultType);
 
 //______________________________________________________________________________
 void WriteAuxFunctions(std::ostream& finalString,
@@ -418,9 +425,10 @@ void WriteAuxFunctions(std::ostream& finalString,
 
 //______________________________________________________________________________
 const clang::FunctionDecl *GetFuncWithProto(const clang::Decl* cinfo,
-                                               const char *method,
-                                               const char *proto,
-                                               const cling::Interpreter &gInterp);
+                                            const char *method,
+                                            const char *proto,
+                                            const cling::Interpreter &gInterp,
+                                            bool diagnose);
 
 //______________________________________________________________________________
 void WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
