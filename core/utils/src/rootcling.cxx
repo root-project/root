@@ -330,7 +330,7 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 }
 
 //______________________________________________________________________________
-void AnnotateFieldDecl(clang::NamedDecl& decl,
+void AnnotateFieldDecl(clang::FieldDecl& decl,
                        const std::list<VariableSelectionRule>& fieldSelRules)
 {
 
@@ -462,8 +462,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
             const std::list<VariableSelectionRule>& fieldSelRules = thisClassSelectionRule->GetFieldSelectionRules();
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
-            if (NamedDecl* namedDecl  = dyn_cast<NamedDecl>(*I)){
-               AnnotateFieldDecl(*namedDecl,fieldSelRules);
+            if (FieldDecl* fieldDecl  = dyn_cast<FieldDecl>(*I)){
+               AnnotateFieldDecl(*fieldDecl,fieldSelRules);
             }
          } // End presence of XML selection file
       }
