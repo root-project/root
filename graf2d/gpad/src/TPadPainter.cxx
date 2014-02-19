@@ -575,23 +575,6 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
 void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
    // Paint filled area.
-/*
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   Int_t fillstyle = gVirtualX->GetFillStyle();
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
-   }
-   if (fillstyle == 0) {
-      pxy[n].fX = pxy[0].fX;
-      pxy[n].fY = pxy[0].fY;
-      gVirtualX->DrawFillArea(n+1,pxy);
-   } else {
-      gVirtualX->DrawFillArea(n,pxy);
-   }
-   if (n >= kPXY) delete [] pxy;
-*/
    if (n < 3)
       return;
    
@@ -621,24 +604,6 @@ void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
    // Paint filled area.
-/*
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   Int_t fillstyle = gVirtualX->GetFillStyle();
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
-   }
-   if (fillstyle == 0) {
-      pxy[n].fX = pxy[0].fX;
-      pxy[n].fY = pxy[0].fY;
-      gVirtualX->DrawFillArea(n+1,pxy);
-   } else {
-      gVirtualX->DrawFillArea(n,pxy);
-   }
-   if (n >= kPXY) delete [] pxy;
-*/
-   // Paint filled area.
    if (n < 3)
       return;
    
@@ -667,16 +632,6 @@ void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
    // Paint polyline.
-/*
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
-   }
-   gVirtualX->DrawPolyLine(n,pxy);
-   if (n >= kPXY) delete [] pxy;
-*/
    std::vector<TPoint> xy;
 
    const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
@@ -699,15 +654,6 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 void TPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
    // Paint polyline.
-/*
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
-   }
-   gVirtualX->DrawPolyLine(n,pxy);
-   if (n >= kPXY) delete [] pxy;*/
    std::vector<TPoint> xy;
 
    const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
