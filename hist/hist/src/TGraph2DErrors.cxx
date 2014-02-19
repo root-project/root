@@ -150,7 +150,53 @@ TGraph2DErrors::~TGraph2DErrors()
    delete [] fEZ;
 }
 
+//______________________________________________________________________________
+TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g) 
+: TGraph2D(g)
+{
+   // Copy constructor. 
+   // Copy everything except list of functions
+   if (fSize > 0) {
+      fEX = new Double_t[fSize];
+      fEY = new Double_t[fSize];
+      fEZ = new Double_t[fSize];
+      for (Int_t n = 0; n < fSize; n++) {
+         fEX[n] = g.fEX[n];
+         fEY[n] = g.fEY[n];
+         fEZ[n] = g.fEZ[n];
+      }
+   }
+}
 
+//______________________________________________________________________________
+TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g) 
+{ 
+   // Assignment operator 
+   // Copy everything except list of functions
+
+   if (this == &g) return *this;
+
+   // call operator= on TGraph2D
+   this->TGraph2D::operator=(static_cast<const TGraph2D&>(g) ); 
+
+   // delete before existing contained objects
+   if (fEX) delete [] fEX;
+   if (fEY) delete [] fEY;
+   if (fEZ) delete [] fEZ;
+
+   fEX   = (fSize) ? new Double_t[fSize] : 0;
+   fEY   = (fSize) ? new Double_t[fSize] : 0;
+   fEZ   = (fSize) ? new Double_t[fSize] : 0;
+
+
+   // copy error arrays
+   for (Int_t n = 0; n < fSize; n++) {
+      fEX[n] = g.fEX[n];
+      fEY[n] = g.fEY[n];
+      fEZ[n] = g.fEZ[n];
+   }
+   return *this; 
+}
 //______________________________________________________________________________
 Double_t TGraph2DErrors::GetErrorX(Int_t i) const
 {
