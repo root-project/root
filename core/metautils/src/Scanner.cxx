@@ -688,8 +688,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
    // If typeDecl is not a RecordDecl, try to fetch the RecordDecl behind the TypedefDecl
    if (!recordDecl && typedefNameDecl) {
-      ROOT::TMetaUtils::Info("RScanner::TreatRecordDeclOrTypedefNameDecl",
-                             "Typedef is called %s.\n", typedefNameDecl->getNameAsString().c_str());
       recordDecl = ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
       }
 
