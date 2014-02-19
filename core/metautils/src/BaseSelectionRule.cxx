@@ -245,7 +245,9 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          // Try a real match!
          
          const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-         const clang::CXXRecordDecl *target = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp);
+         const clang::CXXRecordDecl *target
+            = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
+                                            true /*diagnose*/, 0);
          
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;

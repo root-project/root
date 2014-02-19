@@ -1448,7 +1448,9 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   const clang::Decl *scopeDecl = lh.findScope(clname);
+   // Diags will complain about private classes:
+   const clang::Decl *scopeDecl
+      = lh.findScope(clname, cling::LookupHelper::NoDiagnostics);
    if (!scopeDecl) {
       Error("InspectMembers", "Cannot find Decl for class %s", clname);
       return;
@@ -2142,7 +2144,9 @@ Int_t TCling::DeleteVariable(const char* name)
    const clang::DeclContext* declCtx = 0;
    if (posScope != llvm::StringRef::npos) {
       const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-      const clang::Decl* scopeDecl = lh.findScope(srName.substr(0, posScope));
+      const clang::Decl* scopeDecl
+         = lh.findScope(srName.substr(0, posScope),
+                        cling::LookupHelper::WithDiagnostics);
       if (!scopeDecl) {
          Error("DeleteVariable", "Cannot find enclosing scope for variable %s",
                name);
@@ -2378,10 +2382,17 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload /*= kTRUE*/)
    // this forward declaration.
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
    const clang::Type *type = 0;
-   const clang::Decl *decl = lh.findScope(classname, &type, /* intantiateTemplate= */ false );
+   const clang::Decl *decl
+      = lh.findScope(classname,
+                     gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                     : cling::LookupHelper::NoDiagnostics,
+                     &type, /* intantiateTemplate= */ false );
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(classname);
-      decl = lh.findScope(buf,&type,false);
+      decl = lh.findScope(buf,
+                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics,
+                          &type,false);
    }
    delete[] classname;
 
@@ -2454,11 +2465,16 @@ Bool_t TCling::CheckClassTemplate(const char *name)
    // Return true if there is a class template by the given name ...
 
    const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   const clang::Decl *decl = lh.findClassTemplate(name);
+   const clang::Decl *decl
+      = lh.findClassTemplate(name,
+                             gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                             : cling::LookupHelper::NoDiagnostics);
    if (!decl) {
       std::string strname = "std::";
       strname += name;
-      decl = lh.findClassTemplate(strname);
+      decl = lh.findClassTemplate(strname,
+                                  gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                  : cling::LookupHelper::NoDiagnostics);
    }
    return 0 != decl;
 }

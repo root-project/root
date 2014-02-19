@@ -486,7 +486,8 @@ size_t GetFullArrayLength(const clang::ConstantArrayType *arrayType)
 bool InheritsFromTObject(const clang::RecordDecl *cl,
                          const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TObject", interp);
+   static const clang::CXXRecordDecl *TObject_decl
+      = ROOT::TMetaUtils::ScopeSearch("TObject", interp, true /*diag*/, 0);
 
    const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    return ROOT::TMetaUtils::IsBase(clxx, TObject_decl);
@@ -496,7 +497,8 @@ bool InheritsFromTObject(const clang::RecordDecl *cl,
 bool InheritsFromTSelector(const clang::RecordDecl *cl,
                            const cling::Interpreter &interp)
 {
-   static const clang::CXXRecordDecl *TObject_decl = ROOT::TMetaUtils::ScopeSearch("TSelector", interp);
+   static const clang::CXXRecordDecl *TObject_decl
+      = ROOT::TMetaUtils::ScopeSearch("TSelector", interp, true /*diag*/, 0);
 
    return ROOT::TMetaUtils::IsBase(llvm::dyn_cast<clang::CXXRecordDecl>(cl), TObject_decl);
 }
@@ -828,12 +830,15 @@ bool CheckInputOperator(const char *what,
    // resquested a custom version.
 
 
-   const clang::FunctionDecl *method = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto, interp);
+   const clang::FunctionDecl *method
+      = ROOT::TMetaUtils::GetFuncWithProto(llvm::dyn_cast<clang::Decl>(cl->getDeclContext()), what, proto, interp,
+                                           false /*diags*/);
    if (!method) {
       // This intended to find the global scope.
       clang::TranslationUnitDecl *TU =
          cl->getASTContext().getTranslationUnitDecl();
-      method = ROOT::TMetaUtils::GetFuncWithProto(TU, what, proto, interp);
+      method = ROOT::TMetaUtils::GetFuncWithProto(TU, what, proto, interp,
+                                                  false /*diags*/);
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {

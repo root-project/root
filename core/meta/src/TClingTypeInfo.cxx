@@ -59,14 +59,18 @@ void TClingTypeInfo::Init(const char *name)
               "TClingTypeInfo::Init(name): looking up clang type: %s", name);
    }
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   clang::QualType QT = lh.findType(name);
+   clang::QualType QT = lh.findType(name,
+                                    gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                    : cling::LookupHelper::NoDiagnostics);
    if (QT.isNull()) {
       if (gDebug > 0) {
          fprintf(stderr,
                  "TClingTypeInfo::Init(name): clang type not found: %s", name);
       }
       std::string buf = TClassEdit::InsertStd(name);
-      QT = lh.findType(buf);
+      QT = lh.findType(buf,
+                       gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                       : cling::LookupHelper::NoDiagnostics);
       if (QT.isNull()) {
          if (gDebug > 0) {
             fprintf(stderr,

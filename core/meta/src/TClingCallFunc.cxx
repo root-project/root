@@ -2715,7 +2715,9 @@ void
 TClingCallFunc::EvaluateArgList(const string& ArgList)
 {
    SmallVector<Expr*, 4> exprs;
-   fInterp->getLookupHelper().findArgList(ArgList, exprs);
+   fInterp->getLookupHelper().findArgList(ArgList, exprs,
+                                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                          : cling::LookupHelper::NoDiagnostics);
    for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
       cling::StoredValueRef val = EvaluateExpr(fInterp, *I);

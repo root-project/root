@@ -103,10 +103,16 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const Type *type = 0;
-   const Decl *decl = lh.findScope(name,&type, /* intantiateTemplate= */ true );
+   const Decl *decl = lh.findScope(name,
+                                   gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                   : cling::LookupHelper::NoDiagnostics,
+                                   &type, /* intantiateTemplate= */ true );
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf,&type, /* intantiateTemplate= */ true );
+      decl = lh.findScope(buf,
+                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics,
+                          &type, /* intantiateTemplate= */ true );
    }
    if (!decl && type) {
       const TagType *tagtype =type->getAs<TagType>();
@@ -258,7 +264,10 @@ const FunctionTemplateDecl *TClingClassInfo::GetFunctionTemplate(const char *fna
       }
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
-   const FunctionTemplateDecl *fd = lh.findFunctionTemplate(fDecl, fname, false);
+   const FunctionTemplateDecl *fd
+      = lh.findFunctionTemplate(fDecl, fname,
+                                gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                : cling::LookupHelper::NoDiagnostics, false);
    if (fd) return fd->getCanonicalDecl();
    return 0;
 }
@@ -269,7 +278,10 @@ const clang::ValueDecl *TClingClassInfo::GetDataMember(const char *name) const
    // the given name declared in this scope.
 
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
-   const ValueDecl *vd = lh.findDataMember(fDecl, name);
+   const ValueDecl *vd
+      = lh.findDataMember(fDecl, name,
+                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics);
    if (vd) return llvm::dyn_cast<ValueDecl>(vd->getCanonicalDecl());
    else return 0;
 }
@@ -297,7 +309,11 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
       }
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
-   const FunctionDecl *fd = lh.findAnyFunction(fDecl, fname, false);
+   const FunctionDecl *fd
+      = lh.findAnyFunction(fDecl, fname,
+                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                           : cling::LookupHelper::NoDiagnostics,
+                           false);
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);
@@ -346,14 +362,20 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
    if (mode == kConversionMatch) {
-      fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
+      fd = lh.findFunctionProto(fDecl, fname, proto,
+                                gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                : cling::LookupHelper::NoDiagnostics,
+                                objectIsConst);
    } else if (mode == kExactMatch) {
-      fd = lh.matchFunctionProto(fDecl, fname, proto, objectIsConst);
+      fd = lh.matchFunctionProto(fDecl, fname, proto,
+                                 gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                 : cling::LookupHelper::NoDiagnostics,
+                                 objectIsConst);
    } else {
       Error("TClingClassInfo::GetMethod",
             "The MatchMode %d is not supported.", mode);
       TClingMethodInfo tmi(fInterp);
-      return tmi;      
+      return tmi;
    }
    if (!fd) {
       // Function not found.
@@ -411,9 +433,15 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
    const FunctionDecl *fd;
    if (mode == kConversionMatch) {
-      fd = lh.findFunctionProto(fDecl, fname, proto, objectIsConst);
+      fd = lh.findFunctionProto(fDecl, fname, proto,
+                                gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                : cling::LookupHelper::NoDiagnostics,
+                                objectIsConst);
    } else if (mode == kExactMatch) {
-      fd = lh.matchFunctionProto(fDecl, fname, proto, objectIsConst);
+      fd = lh.matchFunctionProto(fDecl, fname, proto,
+                                 gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                                 : cling::LookupHelper::NoDiagnostics,
+                                 objectIsConst);
    } else {
       Error("TClingClassInfo::GetMethod",
             "The MatchMode %d is not supported.", mode);
@@ -478,7 +506,11 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       arglist = "";
    }
    const cling::LookupHelper &lh = fInterp->getLookupHelper();
-   const FunctionDecl *fd = lh.findFunctionArgs(fDecl, fname, arglist, objectIsConst);
+   const FunctionDecl *fd
+      = lh.findFunctionArgs(fDecl, fname, arglist,
+                            gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                            : cling::LookupHelper::NoDiagnostics,
+                            objectIsConst);
    if (!fd) {
       // Function not found.
       TClingMethodInfo tmi(fInterp);
@@ -630,7 +662,10 @@ bool TClingClassInfo::HasDefaultConstructor() const
 bool TClingClassInfo::HasMethod(const char *name) const
 {
    if (IsLoaded() && !llvm::isa<EnumDecl>(fDecl)) {
-      return fInterp->getLookupHelper().hasFunction(fDecl, name);
+      return fInterp->getLookupHelper()
+         .hasFunction(fDecl, name,
+                      gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                      : cling::LookupHelper::NoDiagnostics);
    }
    return false;
 }
@@ -644,10 +679,14 @@ void TClingClassInfo::Init(const char *name)
    fType = 0;
    fIterStack.clear();
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
-   fDecl = lh.findScope(name,&fType, /* intantiateTemplate= */ true );
+   fDecl = lh.findScope(name, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics,
+                        &fType, /* intantiateTemplate= */ true );
    if (!fDecl) {
       std::string buf = TClassEdit::InsertStd(name);
-      fDecl = lh.findScope(buf,&fType, /* intantiateTemplate= */ true );
+      fDecl = lh.findScope(buf, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics,
+                           &fType, /* intantiateTemplate= */ true );
    }
    if (!fDecl && fType) {
       const TagType *tagtype =fType->getAs<TagType>();
