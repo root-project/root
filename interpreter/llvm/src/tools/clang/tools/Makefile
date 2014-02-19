@@ -27,8 +27,6 @@ ifeq ($(ENABLE_CLANG_ARCMT), 1)
   DIRS += libclang c-index-test c-arcmt-test
   PARALLEL_DIRS += arcmt-test
 endif
-else
-DIRS := libclang
 endif
 
 # Recurse into the extra repository of tools if present.
