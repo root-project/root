@@ -4087,6 +4087,7 @@ int invokeRootCling(const std::string& verbosity,
                     const std::vector<std::string>& includes,
                     const std::vector<std::string>& preprocDefines,
                     const std::vector<std::string>& preprocUndefines,
+                    const std::vector<std::string>& warnings,
                     const std::string& rootmapFileName,
                     bool newRmfFormat,
                     const std::string& rootmapLibName,
@@ -4182,6 +4183,7 @@ int invokeRootCling(const std::string& verbosity,
    AddToArgVector(argvVector, includes, "-I");
    AddToArgVector(argvVector, preprocDefines, "-D");
    AddToArgVector(argvVector, preprocUndefines, "-U");
+   AddToArgVector(argvVector, warnings, "-W");
 
    AddToArgVector(argvVector, headersNames);
 
@@ -4219,6 +4221,7 @@ int invokeManyRootCling(const std::string& verbosity,
                         const std::vector<std::string>& includes,
                         const std::vector<std::string>& preprocDefines,
                         const std::vector<std::string>& preprocUndefines,
+                        const std::vector<std::string>& warnings,
                         const std::string& rootmapFileName,
                         bool newRmfFormat,
                         const std::string& rootmapLibName,
@@ -4251,6 +4254,7 @@ int invokeManyRootCling(const std::string& verbosity,
                                        includes,
                                        preprocDefines,
                                        preprocUndefines,
+                                       warnings,
                                        rootmapFileName,
                                        newRmfFormat,
                                        rootmapLibName,
@@ -4368,7 +4372,8 @@ int GenReflex(int argc, char **argv)
                        // Don't show up in the help
                        PREPROCDEFINE,
                        PREPROCUNDEFINE,
-                       INCLUDE};
+                       INCLUDE,
+                       WARNING};
 
    enum  optionTypes { NOTYPE, STRING } ;
 
@@ -4538,6 +4543,12 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         ""},
 
+      {WARNING,
+        STRING ,
+        "W" , "" ,
+        option::FullArg::Required,
+        ""},        
+        
       // Options that rise warnings
       {NOMEMBERTYPEDEFS,
         STRING ,
@@ -4673,6 +4684,10 @@ int GenReflex(int argc, char **argv)
    // Includes
    std::vector<std::string> includes;
    extractMultipleOptions(options,INCLUDE, includes);
+   
+   // Warnings
+   std::vector<std::string> warnings;
+   extractMultipleOptions(options, WARNING, warnings);   
 
    // The outputfilename(s)
    // There are two cases:
@@ -4698,6 +4713,7 @@ int GenReflex(int argc, char **argv)
                                     includes,
                                     preprocDefines,
                                     preprocUndefines,
+                                    warnings,
                                     rootmapFileName,
                                     newRmfFormat,
                                     rootmapLibName,
@@ -4716,6 +4732,7 @@ int GenReflex(int argc, char **argv)
                                         includes,
                                         preprocDefines,
                                         preprocUndefines,
+                                        warnings,
                                         rootmapFileName,
                                         newRmfFormat,
                                         rootmapLibName,
