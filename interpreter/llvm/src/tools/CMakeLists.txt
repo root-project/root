@@ -66,6 +66,10 @@ endif()
 
 add_llvm_external_project(clang)
 
+if(LLVM_NOCLING)
+  ignore_llvm_tool_subdirectory(cling)
+endif()
+
 if( NOT LLVM_INCLUDE_TOOLS STREQUAL "bootstrap-only" )
   add_llvm_external_project(lld)
   add_llvm_external_project(lldb)
