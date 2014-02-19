@@ -42,8 +42,8 @@ TGeoNodeCache::TGeoNodeCache()
 {
 // Dummy constructor
    fGeoCacheMaxLevels    = 100;
-   fGeoCacheStackSize    = 1000;
-   fGeoInfoStackSize     = 1000;
+   fGeoCacheStackSize    = 10;
+   fGeoInfoStackSize     = 100;
    fLevel       = 0;
    fStackLevel  = 0;
    fInfoLevel   = 0;
@@ -67,7 +67,7 @@ TGeoNodeCache::TGeoNodeCache(TGeoNode *top, Bool_t nodeid, Int_t capacity)
 {
 // Default constructor
    fGeoCacheMaxLevels    = capacity;
-   fGeoCacheStackSize    = 1000;
+   fGeoCacheStackSize    = 10;
    fGeoInfoStackSize     = 100;
    fLevel       = 0;
    fStackLevel  = 0;
@@ -334,8 +334,8 @@ Int_t TGeoNodeCache::PushState(Bool_t ovlp, Int_t startlevel, Int_t nmany, Doubl
 {
 // Push current state into heap.
    if (fStackLevel>=fGeoCacheStackSize) {
-      printf("ERROR TGeoNodeCach::PushSate() : stack of states full\n");
-      return 0;
+      for (Int_t ist=0; ist<fGeoCacheStackSize; ist++)
+         fStack->Add(new TGeoCacheState(fGeoCacheMaxLevels));
    }
    ((TGeoCacheState*)fStack->At(fStackLevel))->SetState(fLevel,startlevel,nmany,ovlp,point);
    return ++fStackLevel;

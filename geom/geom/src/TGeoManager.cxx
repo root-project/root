@@ -817,7 +817,7 @@ TGeoNavigator *TGeoManager::AddNavigator()
 //      Error("AddNavigator", "Navigators are locked. Use SetNavigatorsLock(false) first.");
 //      return 0;
 //   }
-   Long_t threadId = (fMultiThread)?TThread::SelfId():999;
+   Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
    if (it != fNavigators.end()) array = it->second;
@@ -859,7 +859,7 @@ TGeoNavigator *TGeoManager::GetCurrentNavigator() const
 TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 {
 // Get list of navigators for the calling thread.
-   Long_t threadId = (fMultiThread)?TThread::SelfId():999;
+   Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) return 0;
    TGeoNavigatorArray *array = it->second;
@@ -870,7 +870,7 @@ TGeoNavigatorArray *TGeoManager::GetListOfNavigators() const
 Bool_t TGeoManager::SetCurrentNavigator(Int_t index)
 {
 // Switch to another existing navigator for the calling thread.
-   Long_t threadId = (fMultiThread)?TThread::SelfId():999;
+   Long_t threadId = TThread::SelfId();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    if (it == fNavigators.end()) {
       Error("SetCurrentNavigator", "No navigator defined for thread %ld\n", threadId);
@@ -913,12 +913,13 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 {
 // Clear a single navigator.
    if (fMultiThread) TThread::Lock();
-   for (NavigatorsMap_t::const_iterator it = fNavigators.begin();
+   for (NavigatorsMap_t::iterator it = fNavigators.begin();
         it != fNavigators.end(); it++) {
       TGeoNavigatorArray *arr = (*it).second;
       if (arr) {
          if ((TGeoNavigator*)arr->Remove((TObject*)nav)) {
             delete nav;
+            if (!arr->GetEntries()) fNavigators.erase(it);
             if (fMultiThread) TThread::UnLock();
             return;
          }
@@ -936,7 +937,7 @@ void TGeoManager::SetMaxThreads(Int_t nthreads)
       ClearThreadsMap();
       ClearThreadData();
    }
-   fMaxThreads = nthreads;
+   fMaxThreads = nthreads+1;
    if (fMaxThreads>0) {
       fMultiThread = kTRUE;
       CreateThreadData();
