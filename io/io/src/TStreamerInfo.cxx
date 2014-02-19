@@ -1279,6 +1279,157 @@ namespace {
       }
       return kFALSE;
    }
+
+   TClass *FindAlternate(TClass *context, const std::string &name)
+   {
+      // Return a class whose has the name as oldClass and can be found
+      // within the scope of the class 'context'.
+
+      std::string alternate(context->GetName());
+      alternate.append("::");
+      alternate.append(name);
+
+      TClass *altcl = TClass::GetClass(alternate.c_str(),/*load=*/ false,true);
+      if (altcl) return altcl;
+
+      size_t ctxt_cursor = strlen(context->GetName());
+      for (size_t level = 0; ctxt_cursor != 0; --ctxt_cursor) {
+         switch (context->GetName()[ctxt_cursor]) {
+            case '<': --level; break;
+            case '>': ++level; break;
+            case ':': if (level == 0) {
+               // we encountered a scope not within a template
+               // parameter.
+               alternate.clear();
+               alternate.append(context->GetName(),ctxt_cursor+1);
+               alternate.append(name);
+               altcl = TClass::GetClass(alternate.c_str(),/*load=*/ false,true);
+               if (altcl) {
+                  return altcl;
+               }
+            }
+         }
+      }
+      return 0;
+   }
+
+   bool HasScope(const std::string &name)
+   {
+      // return true if the type name has a scope in it.
+
+      for(size_t i = 0, level = 0; i<name.length(); ++i) {
+         switch (name[i]) {
+            case '<': ++level; break;
+            case '>': --level; break;
+            case ':': if (level == 0) {
+               // we encountered a scope not within a template
+               // parameter.
+               return true;
+            }
+         }
+      } // for each in name
+      return false;
+   }
+
+   TClass *FixCollectionV5(TClass *context, TClass *oldClass, TClass *newClass)
+   {
+      assert(oldClass->GetCollectionProxy() && newClass->GetCollectionProxy());
+
+      TVirtualCollectionProxy *old = oldClass->GetCollectionProxy();
+      TVirtualCollectionProxy *current = newClass->GetCollectionProxy();
+      Int_t stlkind = old->GetCollectionType();
+
+      if (stlkind == ROOT::kSTLmap || stlkind == ROOT::kSTLmultimap) {
+
+         TVirtualStreamerInfo *info = current->GetValueClass()->GetStreamerInfo();
+         if (info->GetElements()->GetEntries() != 2) {
+            return oldClass;
+         }
+         TStreamerElement *f = (TStreamerElement*) info->GetElements()->At(0);
+         TStreamerElement *s = (TStreamerElement*) info->GetElements()->At(1);
+
+         info = old->GetValueClass()->GetStreamerInfo();
+         assert(info->GetElements()->GetEntries() == 2);
+         TStreamerElement *of = (TStreamerElement*) info->GetElements()->At(0);
+         TStreamerElement *os = (TStreamerElement*) info->GetElements()->At(1);
+
+         TClass *firstNewCl  = f ? f->GetClass() : 0;
+         TClass *secondNewCl = s ? s->GetClass() : 0;
+
+         TClass *firstOldCl  = of ? of->GetClass() : 0;
+         TClass *secondOldCl = os ? os->GetClass() : 0;
+
+         if ((firstNewCl && !firstOldCl) || (secondNewCl && !secondOldCl))
+         {
+            std::vector<std::string> inside;
+            int nestedLoc;
+            TClassEdit::GetSplit( oldClass->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
+
+            TClass *firstAltCl = firstOldCl;
+            TClass *secondAltCl = secondOldCl;
+            if (firstNewCl && !HasScope(inside[1])) {
+               firstAltCl = FindAlternate(context, inside[1]);
+            }
+            if (secondNewCl && !HasScope(inside[2])) {
+               secondAltCl = FindAlternate(context, inside[2]);
+            }
+            if ((firstNewCl && firstAltCl != firstOldCl) ||
+                (secondNewCl && secondAltCl != secondOldCl) ) {
+
+               // Need to produce new name.
+               std::string alternate = inside[0];
+               alternate.append("<");
+               alternate.append(firstAltCl ? firstAltCl->GetName() : inside[1]);
+               alternate.append(",");
+               alternate.append(secondAltCl? secondAltCl->GetName(): inside[2]);
+               // We are intentionally dropping any further arguments,
+               // they would be using the wrong typename and would also be
+               // somewhat superflous since this is for the old layout.
+               if (alternate[alternate.length()-1]=='>') {
+                  alternate.append(" ");
+               }
+               alternate.append(">");
+               return TClass::GetClass(alternate.c_str(),true,true);
+            }
+         }
+
+      } else if (current->GetValueClass() && !old->GetValueClass()
+          && old->GetType() == kInt_t) {
+
+         // The old CollectionProxy claims it contains int (or enums) while
+         // the new one claims to contain a class.  It is likely that we have
+         // in the collection name a class (typedef) name that is missing its
+         // scope.  Let's try to check.
+
+         std::vector<std::string> inside;
+         int nestedLoc;
+         TClassEdit::GetSplit( oldClass->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
+
+         // Does the type already have a scope, in which case,
+         // (at least for now), let's assume it is already fine.
+         if (HasScope(inside[1])) {
+            return oldClass;
+         }
+
+         // Now let's if we can find this missing type.
+         TClass *altcl = FindAlternate(context, inside[1]);
+
+         if (altcl) {
+            std::string alternate = inside[0];
+            alternate.append("<");
+            alternate.append(altcl->GetName());
+            // We are intentionally dropping any further arguments,
+            // they would be using the wrong typename and would also be
+            // somewhat superflous since this is for the old layout.
+            if (alternate[alternate.length()-1]=='>') {
+               alternate.append(" ");
+            }
+            alternate.append(">");
+            return TClass::GetClass(alternate.c_str(),true,true);
+         }
+      }
+      return 0;
+   }
 }
 
 //______________________________________________________________________________
@@ -1736,7 +1887,14 @@ void TStreamerInfo::BuildOld()
             } else {
                element->SetNewType(-2);
             }
-         } else if (oldClass  && oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
+         } else if (oldClass && oldClass->GetCollectionProxy() && newClass->GetCollectionProxy()) {
+            {
+               TClass *oldFixedClass = FixCollectionV5(GetClass(),oldClass,newClass);
+               if (oldFixedClass && oldFixedClass != oldClass) {
+                  element->Update(oldClass,oldFixedClass);
+                  oldClass = oldFixedClass;
+               }
+            }
             if (CollectionMatch(oldClass, newClass)) {
                Int_t oldkind = TMath::Abs(TClassEdit::IsSTLCont( oldClass->GetName() ));
                Int_t newkind = TMath::Abs(TClassEdit::IsSTLCont( newClass->GetName() ));
