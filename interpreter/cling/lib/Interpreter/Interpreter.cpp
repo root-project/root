@@ -666,8 +666,6 @@ namespace cling {
     ExecutionContext::ExecutionResult ExeRes =
        m_ExecutionContext->executeFunction(mangledNameIfNeeded.c_str(),
                                            FD->getReturnType(), res);
-    if (res && res->isValid())
-      res->get().setLLVMType(getLLVMType(res->get().getClangType()));
     return ConvertExecutionResult(ExeRes);
   }
 
@@ -1050,15 +1048,6 @@ namespace cling {
     // Return a symbol's address, and whether it was jitted.
     llvm::Module* module = m_IncrParser->getCodeGenerator()->GetModule();
     return m_ExecutionContext->getAddressOfGlobal(module, SymName, fromJIT);
-  }
-
-  const llvm::Type* Interpreter::getLLVMType(QualType QT) {
-    if (!m_IncrParser->hasCodeGenerator())
-      return 0;
-
-    // Note: The first thing this routine does is getCanonicalType(), so we
-    //       do not need to do that first.
-    return getCodeGenerator()->ConvertType(QT);
   }
 
 } // namespace cling

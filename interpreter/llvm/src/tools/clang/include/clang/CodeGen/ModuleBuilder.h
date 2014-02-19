@@ -20,14 +20,12 @@
 namespace llvm {
   class LLVMContext;
   class Module;
-  class Type;
 }
 
 namespace clang {
   class DiagnosticsEngine;
   class LangOptions;
   class CodeGenOptions;
-  class QualType;
   class TargetOptions;
 
   class CodeGenerator : public ASTConsumer {
@@ -35,7 +33,6 @@ namespace clang {
   public:
     virtual llvm::Module* GetModule() = 0;
     virtual llvm::Module* ReleaseModule() = 0;
-    virtual llvm::Type* ConvertType(QualType T) = 0;
   };
 
   /// CreateLLVMCodeGen - Create a CodeGenerator instance.
