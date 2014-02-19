@@ -2502,7 +2502,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 //______________________________________________________________________________
 int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
-                         const std::list<std::string>& templateDefsList,
+                         const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
                          const std::vector<std::string>& typedefNames)
@@ -2523,10 +2523,10 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    }
 
    // Add the template definitions
-   if (!templateDefsList.empty()){
+   if (!classesDefsList.empty()){
       rootmapFile << "{ decls }\n";
-      for (std::list<std::string>::const_iterator tdefIt=templateDefsList.begin();
-         tdefIt!=templateDefsList.end();++tdefIt){
+      for (std::list<std::string>::const_iterator tdefIt=classesDefsList.begin();
+           tdefIt!=classesDefsList.end();++tdefIt){
          rootmapFile << *tdefIt << std::endl;
       }
       rootmapFile << "\n";
@@ -2561,25 +2561,6 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 
    return 0;
 
-}
-
-//______________________________________________________________________________
-int HasAnyDefaultArgument(const clang::TemplateParameterList& tmplParamList)
-{
-   using namespace clang;
-   // Check if any of the template parameters has a default value
-   for (TemplateParameterList::const_iterator tmplParamIt = tmplParamList.begin();
-        tmplParamIt != tmplParamList.end(); ++tmplParamIt) {
-      if (TemplateTypeParmDecl *ITypeParm = llvm::dyn_cast<TemplateTypeParmDecl>(*tmplParamIt)) {
-         if (ITypeParm->hasDefaultArgument()) return 1;
-      } else if (NonTypeTemplateParmDecl *INonTypeParm = llvm::dyn_cast<NonTypeTemplateParmDecl>(*tmplParamIt)) {
-         if (INonTypeParm->hasDefaultArgument()) return 1;
-      } else {
-         TemplateTemplateParmDecl* ITemplateParm = llvm::cast<TemplateTemplateParmDecl>(*tmplParamIt);
-         if (ITemplateParm->hasDefaultArgument()) return 1;
-      }
-   }
-   return 0;
 }
 
 //______________________________________________________________________________
@@ -2665,17 +2646,55 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
    templateArgs+=">";
    return 0;
 }
-   
+
 //______________________________________________________________________________
-int ExtractTemplateDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
-                                            cling::Interpreter& interpreter,
-                                            std::string& definitionStr)
+void EncloseInNamespaces(const clang::RecordDecl& rDecl,
+                         std::string& definitionStr)
 {
+   // Take the namespaces which enclose the decl and put them around the
+   // definition string.
+   // For example, if the definition string is "myClass" which is enclosed by
+   // the namespaces ns1 and ns2, one would get:
+   // namespace ns2{ namespace ns1 { class myClass; } }
+   
+   std::list<std::pair<std::string,bool> > enclosingNamespaces;
+   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(rDecl,enclosingNamespaces);
+   // Check if we have enclosing namespaces
+   // FIXME: this should be active also for classes
+   for (std::list<std::pair<std::string, bool> >::const_iterator enclosingNamespaceIt = enclosingNamespaces.begin();
+      enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
+      const std::string& nsName= enclosingNamespaceIt->first;
+      const std::string isInline ((enclosingNamespaceIt->second ? "inline ":""));
+      definitionStr = isInline + "namespace " + nsName + " { " + definitionStr + " }";
+   }
+}
+
+//______________________________________________________________________________
+int ExtractNamespacesDefinition(const clang::RecordDecl& rDecl,
+                                std::string& definitionStr)
+{
+   // Extract the namespace definition for rDecl
+   
+   const clang::RecordDecl* definition = rDecl.getDefinition();
+   if (!definition)
+      return 1;
+   EncloseInNamespaces(*definition, definitionStr);
+
+   
+   return 0;
+}
   
+//______________________________________________________________________________
+int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
+                                    cling::Interpreter& interpreter,
+                                    std::string& definitionStr)
+{
+   // Detect if the rDecl is a template instance.
+   // If No: just extract the definition of the enclosing namespaces
+   // If yes; extract the full blown template fwd declaration
    const clang::ClassTemplateSpecializationDecl* tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&rDecl);
    if (!tmplSpecDecl){ // Should never happen
-      TMetaUtils::Error(0, "%s does not seem to be a template", rDecl.getNameAsString().c_str());
-      return 1;
+      return ExtractNamespacesDefinition(rDecl,definitionStr);
    }
 
    const clang::TemplateDecl* templDecl = tmplSpecDecl->getSpecializedTemplate();
@@ -2688,12 +2707,15 @@ int ExtractTemplateDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
 
    return ExtractTemplateDefinition (*templDecl,interpreter,definitionStr,definition);
 }
+
 //______________________________________________________________________________
 int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
                               cling::Interpreter& interpreter,
                               std::string& definitionStr,
                               const clang::RecordDecl* definition)
 {
+
+   // Operate on the template declaration in order to get its forward declaration
    
    const clang::TemplateParameterList *tmplParamList= templDecl.getTemplateParameters();
    if (!tmplParamList){ // Should never happen
@@ -2718,17 +2740,8 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
       definitionStr += " ;";
       
       // Check if we have enclosing namespaces
-      // FIXME: this should be active also for classes
-         
-      std::list<std::pair<std::string,bool> > enclosingNamespaces;
-      ROOT::TMetaUtils::ExtractEnclosingNameSpaces(*definition,enclosingNamespaces);
-      for (std::list<std::pair<std::string, bool> >::iterator enclosingNamespaceIt = enclosingNamespaces.begin();
-         enclosingNamespaceIt != enclosingNamespaces.end(); enclosingNamespaceIt++){
-         const std::string& nsName= enclosingNamespaceIt->first;
-         const std::string isInline ((enclosingNamespaceIt->second ? "inline ":""));
-         definitionStr = isInline + "namespace " + nsName +
-                      " { " + definitionStr + " }";
-      }
+      // FIXME: this should be active also for classes         
+      EncloseInNamespaces(*definition, definitionStr);
    }
 
    
@@ -2739,7 +2752,7 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
 void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
                                            std::list<std::string>& classesList,
                                            std::list<std::string>& classesListForRootmap,
-                                           std::list<std::string>& templateDefsList,
+                                           std::list<std::string>& fwdDeclarationsList,
                                            cling::Interpreter& interpreter)
 {
 
@@ -2757,14 +2770,13 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
       // Get template definition if needed
-      if ( clang::isa<clang::ClassTemplateSpecializationDecl>(*rDecl) ){
-         std::string templateDefSrcStr;
-         int retCode = ExtractTemplateDefinitionFromRecordDecl(*rDecl,interpreter,templateDefSrcStr);
-         // Linear search. Probably optimisable
-         if (retCode==0 &&
-            std::count (templateDefsList.begin(), templateDefsList.end(), templateDefSrcStr) == 0 )
-            templateDefsList.push_back(templateDefSrcStr);
-      }
+      std::string fwdDeclaration;
+      int retCode = ExtractDefinitionFromRecordDecl(*rDecl,interpreter,fwdDeclaration);
+      // Linear search. Probably optimisable
+      if (retCode==0 &&
+         std::count (fwdDeclarationsList.begin(), fwdDeclarationsList.end(), fwdDeclaration) == 0 )
+         fwdDeclarationsList.push_back(fwdDeclaration);
+
 
       // Loop on attributes, if rootmap=false, don't put it in the list!
       for (clang::RecordDecl::attr_iterator ait = rDecl->attr_begin ();
@@ -2778,7 +2790,7 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          }
       }
       if (isClassSelected){
-         classesListForRootmap.push_back(normalizedName);
+          classesListForRootmap.push_back(normalizedName);
       }
    }
    classesListForRootmap.sort();
@@ -3872,14 +3884,14 @@ int RootCling(int argc,
 
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
-   std::list<std::string> templateDefsList;
+   std::list<std::string> classesDefsList;
    std::list<std::string> nsNames;
 
    if (rootMapNeeded || capaNeeded){
       ExtractSelectedClassesAndTemplateDefs(scan,
                                             classesNames,
                                             classesNamesForRootmap,
-                                            templateDefsList,
+                                            classesDefsList,
                                             interp);
    }
    if (rootMapNeeded){
@@ -3901,7 +3913,7 @@ int RootCling(int argc,
       if (useNewRmfFormat){
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
-                                             templateDefsList,
+                                             classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
                                              scan.fSelectedTypedefNames);
