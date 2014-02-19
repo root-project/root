@@ -29,8 +29,6 @@ class TGraph2DErrors : public TGraph2D {
 
 private:
 
-   TGraph2DErrors(const TGraph2DErrors&); // Not implemented
-   TGraph2DErrors& operator=(const TGraph2DErrors&); // Not implemented
 
 protected:
    Double_t *fEX; //[fNpoints] array of X errors
@@ -42,6 +40,8 @@ public:
    TGraph2DErrors(Int_t n);
    TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                   Double_t *ex=0, Double_t *ey=0, Double_t *ez=0, Option_t *option="");
+   TGraph2DErrors(const TGraph2DErrors&); 
+   TGraph2DErrors& operator=(const TGraph2DErrors&); 
    virtual ~TGraph2DErrors();
    Double_t        GetErrorX(Int_t bin) const;
    Double_t        GetErrorY(Int_t bin) const;

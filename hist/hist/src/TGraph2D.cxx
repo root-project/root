@@ -512,18 +512,28 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
 //______________________________________________________________________________
 TGraph2D::TGraph2D(const TGraph2D &g)
-   : TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g)
+: TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g), 
+   fX(0), fY(0), fZ(0), fHistogram(0)
 {
    // Graph2D copy constructor.
+   // copy everything apart from the list of contained functions
+   fFunctions = new TList();   // do not copy the functions
 
-   fNpoints = g.fNpoints;
-   Build(fNpoints);
 
-   for (Int_t n = 0; n < fNpoints; n++) {
-      fX[n] = g.fX[n];
-      fY[n] = g.fY[n];
-      fZ[n] = g.fZ[n];
+   // use operator=
+   (*this) = g;
+
+
+   // append Tgraph to gdirectory
+   if (TH1::AddDirectoryStatus()) {
+      fDirectory = gDirectory;
+      if (fDirectory) {
+         // append without replacing existing objects
+         fDirectory->Append(this);
+      }
    }
+
+   
 }
 
 
@@ -543,16 +553,41 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
 
    if (this == &g) return *this;
 
-   Clear();
-
+   // delete before existing contained objects
+   if (fX) delete [] fX;
+   if (fY) delete [] fY;
+   if (fZ) delete [] fZ;
+   if (fHistogram &&  !fUserHisto) {
+      delete fHistogram;
+      fHistogram = 0;
+   }
+   // copy everyting except the function list
    fNpoints = g.fNpoints;
-   Build(fNpoints);
+   fNpx = g.fNpx; 
+   fNpy = g.fNpy;
+   fMaxIter = g.fMaxIter; 
+   fSize = fNpoints; // force size to be the same    
+   fSize = g.fSize;
+   fX         = (fSize) ? new Double_t[fSize] : 0;
+   fY         = (fSize) ? new Double_t[fSize] : 0;
+   fZ         = (fSize) ? new Double_t[fSize] : 0;
+   fMinimum = g.fMinimum; 
+   fMaximum = g.fMaximum; 
+   fMargin = g.fMargin; 
+   fZout = g.fZout; 
+   fUserHisto = g.fUserHisto; 
+   if (g.fHistogram) 
+      fHistogram = (fUserHisto ) ? g.fHistogram : new TH2D(*g.fHistogram);
 
+   
+
+   // copy the points
    for (Int_t n = 0; n < fNpoints; n++) {
       fX[n] = g.fX[n];
       fY[n] = g.fY[n];
       fZ[n] = g.fZ[n];
    }
+
    return *this;
 }
 
@@ -607,11 +642,11 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
 {
    // Free all memory allocated by this object.
 
-   delete [] fX;
+   if (fX) delete [] fX;
    fX = 0;
-   delete [] fY;
+   if (fY) delete [] fY;
    fY = 0;
-   delete [] fZ;
+   if (fZ) delete [] fZ;
    fZ = 0;
    fSize = fNpoints = 0;
    if (fHistogram && !fUserHisto) {
