@@ -3152,6 +3152,24 @@ std::ostream* CreateStreamPtrForSplitDict(const std::string& dictpathname,
 }
 
 //______________________________________________________________________________
+void CheckForMinusW(const char* arg,
+                    std::list<std::string>& diagnosticPragmas)
+{
+   // Transform -W statements in diagnostic pragmas for cling reacting on "-Wno-"
+   // For example
+   // -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+   
+   const std::string pattern("-Wno-");
+   
+   std::string localArg(arg);
+   if ( localArg.find(pattern) != 0 ) return;
+   
+   ReplaceAll(localArg,pattern,"#pragma clang diagnostic ignored \"-W");
+   localArg+="\"";
+   diagnosticPragmas.push_back(localArg);      
+}
+
+//______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
               bool isDeep=false,
@@ -3338,6 +3356,10 @@ int RootCling(int argc,
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
 
+   // Collect the diagnostic pragmas linked to the usage of -W
+   // Workaround for ROOT-5656
+   std::list<std::string> diagnosticPragmas;
+   
    int nextStart = 0;
    while (ic < argc) {
       if (*argv[ic] == '-' || *argv[ic] == '+') {
@@ -3413,6 +3435,7 @@ int RootCling(int argc,
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
                 && strcmp("-p", argv[ic]))
                {
+                  CheckForMinusW(argv[ic],diagnosticPragmas);
                   clingArgs.push_back(argv[ic]);
                }
          }
@@ -3458,6 +3481,7 @@ int RootCling(int argc,
 #endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
+   
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
@@ -3585,6 +3609,12 @@ int RootCling(int argc,
 
    TModuleGenerator modGen(interp.getCI(), sharedLibraryPathName.c_str());
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
+   
+   // Add the diagnostic pragmas distilled from the -Wno-xyz
+   for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
+        dPrIt != diagnosticPragmas.end(); dPrIt++){
+           interp.declare(*dPrIt);
+      }   
    modGen.ParseArgs(pcmArgs);
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
        || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
