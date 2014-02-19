@@ -50,7 +50,7 @@ void func(const char * name) {
    Float_t flt = 1;
    tree1->Branch("branch",&flt,"temp/F");
 
-   for(int i; i < 500; i++) {
+   for (int i = 0; i < 500; i++) {
       tree1->Fill();
    }
 
