@@ -238,7 +238,7 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
          }
          for(int i = 0 ; i<2 ; ++i) {
             TStreamerElement *sourceElement = (TStreamerElement*)sourceInfo->GetElements()->At(i);
-            TStreamerElement *targetElement = (TStreamerElement*)sourceInfo->GetElements()->At(i);
+            TStreamerElement *targetElement = (TStreamerElement*)targetInfo->GetElements()->At(i);
             if (sourceElement->GetClass()) {
                if (!targetElement->GetClass()) {
                   return kFALSE;
