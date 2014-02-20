@@ -79,7 +79,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
             cout << "stressRooStats ERROR: reference file must be local file in writing mode" << endl ;
-            return kFALSE ;
+            return -1 ;
          }
          fref = new TWebFile(refFile) ;
       } else {
@@ -87,7 +87,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       }
       if (fref->IsZombie()) {
          cout << "stressRooStats ERROR: cannot open reference file " << refFile << endl ;
-         return kFALSE ;
+         return -1 ;
       }
    }
 
@@ -205,6 +205,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
    gBenchmark->Start("stressRooStats");
 
+   int nFailed = 0;
    {
       Int_t i;
       list<RooUnitTest*>::iterator iter;
@@ -217,7 +218,9 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
                if (doDump) {
                   (*iter)->setDebug(kTRUE);
                }
-               StatusPrint(i, (*iter)->GetName(), (*iter)->isTestAvailable() ? (*iter)->runTest() : -1, lineWidth);
+               int status =  (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
+               StatusPrint(i, (*iter)->GetName(), status , lineWidth);
+               if (!status) nFailed++;  // do not count the skipped tests
             }
             delete *iter;
          }
@@ -277,7 +280,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    delete gBenchmark ;
    gBenchmark = 0 ;
 
-   return 0;
+   return nFailed;
 }
 
 //_____________________________batch only_____________________
@@ -369,8 +372,7 @@ int main(int argc, const char *argv[])
    RooMath::cacheCERF(kFALSE) ;
 
    gBenchmark = new TBenchmark();
-   stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
-   return 0;
+   return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 
 #endif

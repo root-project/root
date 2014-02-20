@@ -54,12 +54,13 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    // Save memory directory location
    RooUnitTest::setMemDir(gDirectory) ;
 
+   std::cout << "using reference file " << refFile << std::endl;
    TFile* fref = 0 ;
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
             cout << "stressHistFactory ERROR: reference file must be local file in writing mode" << endl ;
-            return kFALSE ;
+            return -1 ;
          }
          fref = new TWebFile(refFile) ;
       } else {
@@ -67,7 +68,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
       }
       if (fref->IsZombie()) {
          cout << "stressHistFactory ERROR: cannot open reference file " << refFile << endl ;
-         return kFALSE ;
+         return -1;
       }
    }
 
@@ -104,16 +105,20 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
    gBenchmark->Start("stressHistFactory");
 
+   int nFailed = 0; 
    {
       Int_t i;
       list<RooUnitTest*>::iterator iter;
 
       if (oneTest && (testNumber <= 0 || (UInt_t) testNumber > testList.size())) {
          cout << "Tests are numbered from 1 to " << testList.size() << endl;
+         return -1; 
       } else {
          for (iter = testList.begin(), i = 1; iter != testList.end(); iter++, i++) {
             if (!oneTest || testNumber == i) {
-               StatusPrint(i, (*iter)->GetName(), (*iter)->isTestAvailable() ? (*iter)->runTest() : -1, lineWidth);
+               int status = (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
+               StatusPrint(i, (*iter)->GetName(), status , lineWidth);
+               if (!status) nFailed++; 
             }
             delete *iter;
          }
@@ -173,7 +178,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
    delete gBenchmark ;
    gBenchmark = 0 ;
 
-   return 0;
+   return nFailed;
 }
 
 //_____________________________batch only_____________________
@@ -189,6 +194,7 @@ int main(int argc, const char *argv[])
    Bool_t dryRun      = kFALSE;
 
    string refFileName = "$ROOTSYS/test/stressHistFactory_ref.root" ;
+
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
@@ -241,8 +247,7 @@ int main(int argc, const char *argv[])
    RooMath::cacheCERF(kFALSE) ;
 
    gBenchmark = new TBenchmark();
-   stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
-   return 0;
+   return stressHistFactory(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun);
 }
 
 #endif
