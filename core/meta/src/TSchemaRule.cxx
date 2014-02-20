@@ -22,12 +22,12 @@ ClassImp(TSchemaRule)
 using namespace ROOT;
 
 namespace {
-   Bool_t IsIrrelevantCharacter(char c)
+   static Bool_t IsIrrelevantCharacter(char c)
    {
       return (c == ' ' || c == '\n' || c == '\t');
    }
 
-   void AdvanceOverIrrelevantCharacter(const char*& str)
+   static void AdvanceOverIrrelevantCharacter(const char*& str)
    {
       while (IsIrrelevantCharacter(*str)) {
          ++str;
@@ -36,7 +36,7 @@ namespace {
 
    // check if lhs matches rhs if we ignore irelevant white space differences
 
-   Bool_t IsCodeEquivalent(const TString& lhs, const TString& rhs)
+   static Bool_t IsCodeEquivalent(const TString& lhs, const TString& rhs)
    {
       Bool_t result = kTRUE;
 
