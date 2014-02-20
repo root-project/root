@@ -103,10 +103,10 @@ TH1* RooStats::HistFactory::HistoSys::GetHistoHigh() {
 
 void RooStats::HistFactory::HistoSys::Print( std::ostream& stream ) {
   stream << "\t \t Name: " << fName
-	 << "\t InputFileLow: " << fInputFileLow
+	 << "\t HistoFileLow: " << fInputFileLow
 	 << "\t HistoNameLow: " << fHistoNameLow
 	 << "\t HistoPathLow: " << fHistoPathLow
-	 << "\t InputFileHigh: " << fInputFileHigh
+	 << "\t HistoFileHigh: " << fInputFileHigh
 	 << "\t HistoNameHigh: " << fHistoNameHigh
 	 << "\t HistoPathHigh: " << fHistoPathHigh
 	 << std::endl;
@@ -114,11 +114,11 @@ void RooStats::HistFactory::HistoSys::Print( std::ostream& stream ) {
 
 void RooStats::HistFactory::HistoSys::PrintXML( std::ostream& xml ) {
   xml << "      <HistoSys Name=\"" << GetName() << "\" "
-      << " InputFileLow=\""  << GetInputFileLow()  << "\" "
+      << " HistoFileLow=\""  << GetInputFileLow()  << "\" "
       << " HistoNameLow=\""  << GetHistoNameLow()  << "\" "
       << " HistoPathLow=\""  << GetHistoPathLow()  << "\" "
 
-      << " InputFileHigh=\""  << GetInputFileHigh()  << "\" "
+      << " HistoFileHigh=\""  << GetInputFileHigh()  << "\" "
       << " HistoNameHigh=\""  << GetHistoNameHigh()  << "\" "
       << " HistoPathHigh=\""  << GetHistoPathHigh()  << "\" "
       << "  /> " << std::endl;
