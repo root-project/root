@@ -5565,6 +5565,13 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
 }
 
 //______________________________________________________________________________
+void SetDeclAttr(DeclId_t declId, const char* attribute)
+{
+   Decl* decl = (Decl*) declId;
+   declId->addAttr( new AnnotateAttr( decl->getASTContext(), attribute ) );
+}
+
+//______________________________________________________________________________
 //
 // Function Template interface
 //

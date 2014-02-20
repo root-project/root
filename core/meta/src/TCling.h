@@ -126,6 +126,7 @@ private: // Data Members
    void* fAutoLoadCallBack;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
+   
 
 public: // Public Interface
    virtual ~TCling();
@@ -384,7 +385,9 @@ public: // Public Interface
    virtual const char* DataMemberInfo_Name(DataMemberInfo_t* dminfo) const;
    virtual const char* DataMemberInfo_Title(DataMemberInfo_t* dminfo) const;
    virtual const char* DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) const;
-
+   virtual void SetDeclAttr(DeclId_t, const char* /* attribute */);
+   
+   
    // Function Template interface
    virtual DeclId_t GetDeclId(FuncTempInfo_t *info) const;
    virtual void   FuncTempInfo_Delete(FuncTempInfo_t * /* ft_info */) const;
