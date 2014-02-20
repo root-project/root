@@ -96,6 +96,8 @@
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////
 
+//To emulate keyboard focus change when window is 'unmapped'.
+@property (nonatomic, assign) BOOL          fHasFocus;
 
 //"Back buffer" is a bitmap, used by canvas window (only).
 @property (nonatomic, retain) QuartzPixmap *fBackBuffer;

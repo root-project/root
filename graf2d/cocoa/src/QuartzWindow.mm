@@ -491,6 +491,33 @@ NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
 }
 
 //______________________________________________________________________________
+void WindowLostFocus(Window_t winID)
+{
+   //XQuartz (and other X11
+   if (![NSApp isActive])
+      return;
+
+   const Util::AutoreleasePool pool;
+   
+   NSArray * const orderedWindows = [NSApp orderedWindows];
+   for (NSWindow *nsWindow in orderedWindows) {
+      if (![nsWindow isKindOfClass : [QuartzWindow class]])
+         continue;
+
+      QuartzWindow * const qWindow = (QuartzWindow *)nsWindow;
+      
+      if (qWindow.fIsDeleted || qWindow.fMapState != kIsViewable || qWindow.fID == winID)
+         continue;
+      
+      if (qWindow.fContentView.fOverrideRedirect)
+         continue;
+      
+      [qWindow makeKeyAndOrderFront : qWindow];
+      break;
+   }
+}
+
+//______________________________________________________________________________
 void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
 {
    assert(view != nil && "ClipToShapeMask, view parameter is nil");
@@ -893,18 +920,7 @@ void print_mask_info(ULong_t mask)
 }
 
 @synthesize fMainWindow;
-
-/*
-//______________________________________________________________________________
-- (BOOL) canBecomeKeyWindow
-{
-   //Before I did not need this. Default implementation returns NO for a window
-   //without a title-bar and ... when (for example) switching between applications
-   //with alt-tab, the Z-order breaks :( Strange enough, for previous versions
-   //it was enough to make such a window a child of another window
-   //(it's always a popup and derived classes), but now it's not enough :(
-   return YES;
-}*/
+@synthesize fHasFocus;
 
 //QuartzWindow's life cycle.
 //______________________________________________________________________________
@@ -936,6 +952,7 @@ void print_mask_info(ULong_t mask)
          X11::SetWindowAttributes(attr, self);
       
       fIsDeleted = NO;
+      fHasFocus = NO;
    }
    
    return self;
@@ -961,6 +978,7 @@ void print_mask_info(ULong_t mask)
       [self setContentView : fContentView];
       fDelayedTransient = NO;
       fIsDeleted = NO;
+      fHasFocus = NO;
    }
    
    return self;
@@ -1028,9 +1046,9 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) makeKeyAndOrderFront:(id)sender
+- (void) makeKeyAndOrderFront : (id) sender
 {
-   (void) sender;
+#pragma unused(sender)
    //The more I know Cocoa, the less I like it.
    //Window behavior between spaces is a total mess.
    //Set the window to join all spaces.
@@ -1183,7 +1201,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setFParentView : (QuartzView *) parent
 {
-   (void)parent;
+#pragma unused(parent)
 }
 
 //______________________________________________________________________________
@@ -1379,7 +1397,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) windowShouldClose : (id) sender
 {
-   (void)sender;
+#pragma unused(sender)
 
    assert(fContentView != nil && "windowShouldClose, content view is nil");
 
@@ -1408,26 +1426,32 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) windowDidBecomeKey : (NSNotification *) aNotification
 {
+#pragma unused(aNotification)
+
    assert(fContentView != nil && "windowDidBecomeKey, fContentView is nil");
-   
-   (void) aNotification;
 
    if (!fContentView.fOverrideRedirect) {
+      //TEST: "fix" a keyboard focus.
+      fHasFocus = YES;
+      //
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
       assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
       vx->GetEventTranslator()->GenerateFocusChangeEvent(self.fContentView);
    }
 }
 
-/*
+
 //______________________________________________________________________________
 - (void) windowDidResignKey : (NSNotification *) aNotification
 {
+#pragma unused(aNotification)
 //   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
 //   assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
 //   vx->GetEventTranslator()->GenerateFocusChangeEvent(nil);
+
+   //TEST: "fix" a keyboard focus.
+   fHasFocus = NO;
 }
-*/
 
 /*
 //______________________________________________________________________________
@@ -2079,6 +2103,17 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (BOOL) fHasFocus
+{
+   return NO;
+}
+
+//______________________________________________________________________________
+- (void) setFHasFocus
+{
+}
+
+//______________________________________________________________________________
 - (QuartzPixmap *) fBackBuffer
 {
    return fBackBuffer;//No autorelease, I know the object's lifetime myself.
@@ -2164,7 +2199,7 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) getAttributes : (WindowAttributes_t *)attr
+- (void) getAttributes : (WindowAttributes_t *) attr
 {
    assert(attr != 0 && "getAttributes, attr parameter is null");
    
@@ -2671,9 +2706,9 @@ void print_mask_info(ULong_t mask)
 //First responder staff.
 
 //______________________________________________________________________________
-- (BOOL) acceptsFirstMouse : (NSEvent *)theEvent
+- (BOOL) acceptsFirstMouse : (NSEvent *) theEvent
 {
-   (void)theEvent;
+#pragma unused(theEvent)
    return YES;
 }
 

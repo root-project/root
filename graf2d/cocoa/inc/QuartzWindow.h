@@ -100,6 +100,8 @@
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////
 
+@property (nonatomic, assign) BOOL          fHasFocus;
+
 //"Back buffer" is a bitmap, attached to a window by TCanvas.
 @property (nonatomic, assign) QuartzView            *fParentView;
 @property (nonatomic, readonly) NSView<X11Window>   *fContentView;
@@ -186,6 +188,8 @@
 
 //End of SetWindowAttributes_t/WindowAttributes_t
 /////////////////////////////////////////////////////////////////
+
+@property (nonatomic, assign) BOOL          fHasFocus;
 
 
 @property (nonatomic, retain) QuartzPixmap        *fBackBuffer;
@@ -316,6 +320,7 @@ NSView<X11Window> *FindViewUnderPointer();
 //These two functions use coordinates from the event to find a window/view.
 QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent);
 NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent);
+void WindowLostFocus(Window_t winID);
 
 //Add shape mask to context.
 void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx);
