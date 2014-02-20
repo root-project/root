@@ -31,7 +31,7 @@ LLVMDIR      := $(MODDIR)
 LLVMDIRS     := $(MODDIRS)
 
 ##### libllvm #####
-LLVMLIB      := $(LLVMDIRI)/lib/libclang.a
+LLVMLIB      := $(LLVMDIRI)/lib/libclangSema.a
 LLVMDEPO     := $(LLVMDIRO)/Makefile.config
 LLVMDEPS     := $(LLVMDIRS)/Makefile
 ifeq ($(strip $(LLVMCONFIG)),)
