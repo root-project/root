@@ -152,7 +152,7 @@ TGraph2DErrors::~TGraph2DErrors()
 
 //______________________________________________________________________________
 TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g) 
-: TGraph2D(g)
+: TGraph2D(g), fEX(0), fEY(0), fEZ(0)
 {
    // Copy constructor. 
    // Copy everything except list of functions
@@ -184,9 +184,9 @@ TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
    if (fEY) delete [] fEY;
    if (fEZ) delete [] fEZ;
 
-   fEX   = (fSize) ? new Double_t[fSize] : 0;
-   fEY   = (fSize) ? new Double_t[fSize] : 0;
-   fEZ   = (fSize) ? new Double_t[fSize] : 0;
+   fEX   = (fSize > 0) ? new Double_t[fSize] : 0;
+   fEY   = (fSize > 0) ? new Double_t[fSize] : 0;
+   fEZ   = (fSize > 0) ? new Double_t[fSize] : 0;
 
 
    // copy error arrays
