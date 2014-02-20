@@ -216,24 +216,6 @@ void TDataMember::Init()
    fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
    fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
    SetName(gCling->DataMemberInfo_Name(fInfo));
-   
-   // These lines are here since pcms are not yet available:
-   // When pcms are there, we will be able to annotate decls in the ast with rootcling
-   // and we will read those back. If a decl corresponding to a data member has an annotation,
-   // the system (TClingDataMemberInfo::Title()) returns it as title instead of the comment in 
-   // the source.
-   // Now, in the case we have genreflex, there is a special property of data members, "comment", 
-   // which is there to mimick the presence of comments in the code. The aforementioned mechanism
-   // would be perfect to implement this: it would just be necessary to copy the content of "comment"
-   // into an annotation.
-   // Without pcms, we can only transmit this information to rootmeta in code generated in the 
-   // dictionaries. The only way to pick this information up is to Init twice.
-   // If this is not the first time we call init, it can well be that we have attributes
-   // in the attributes map
-   
-   // If everything above is consistent, the map must be there already.
-
-   
    const char *t = gCling->DataMemberInfo_Title(fInfo);
    SetTitle(t);
    if (t && t[0] != '!') SetBit(kObjIsPersistent);
