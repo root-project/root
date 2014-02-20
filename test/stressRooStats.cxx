@@ -1,3 +1,5 @@
+// @(#)root/roofitcore:$name:  $:$id$
+// Authors: Wouter Verkerke  November 2007
 
 // C/C++ headers
 #include <string>
@@ -51,16 +53,19 @@ using namespace RooFit ;
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
 
 
+//------------------------------------------------------------------------
+void StatusPrint(const Int_t id, const TString &title, const Int_t status, const Int_t lineWidth)
+{
+   // Print test program number and its title
+   TString header = TString::Format("Test %d : %s ", id, title.Data());
+   cout << left << setw(lineWidth) << setfill('.') << header << " " << (status > 0 ? "OK" : (status < 0 ? "SKIPPED" : "FAILED")) << endl;
+}
+
 //______________________________________________________________________________
 Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
 {
    // width of lines when printing test results
    const Int_t lineWidth = 120;
-
-   // global test suite status
-   // 0     = all tests passed
-   // n < 0 = n tests failed
-   Int_t testSuiteStatus = 0;
 
    // Save memory directory location
    RooUnitTest::setMemDir(gDirectory) ;
@@ -74,7 +79,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
             cout << "stressRooStats ERROR: reference file must be local file in writing mode" << endl ;
-            return kFALSE ;
+            return -1 ;
          }
          fref = new TWebFile(refFile) ;
       } else {
@@ -82,7 +87,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       }
       if (fref->IsZombie()) {
          cout << "stressRooStats ERROR: cannot open reference file " << refFile << endl ;
-         return kFALSE ;
+         return -1 ;
       }
    }
 
@@ -110,65 +115,65 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    list<RooUnitTest*> testList;
 
 
-   // TEST PLC CONFINT SIMPLE GAUSSIAN : Confidence Level range is (0,1)
+   // 1-5 TEST PLC CONFINT SIMPLE GAUSSIAN : Confidence Level range is (0,1)
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 0.99999)); // boundary case CL -> 1
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 2 * ROOT::Math::normal_cdf(3) - 1)); // 3 sigma
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 2 * ROOT::Math::normal_cdf(2) - 1)); // 2 sigma
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 2 * ROOT::Math::normal_cdf(1) - 1)); // 1 sigma
    testList.push_back(new TestProfileLikelihoodCalculator1(fref, writeRef, verbose, 0.00001)); // boundary case CL -> 0
 
-   // TEST PLC CONFINT SIMPLE POISSON : Observed value range is [0,1000]
+   // 6-10 TEST PLC CONFINT SIMPLE POISSON : Observed value range is [0,1000]
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 0)); // boundary Poisson value (0)
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 1));
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 5));
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 100));
    testList.push_back(new TestProfileLikelihoodCalculator2(fref, writeRef, verbose, 800)); // boundary Poisson value
 
-   // TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
+   // 11-13 TEST PLC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestProfileLikelihoodCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
-   // TEST PLC HYPOTEST ON/OFF MODEL
+   // 14 TEST PLC HYPOTEST ON/OFF MODEL
    testList.push_back(new TestProfileLikelihoodCalculator4(fref, writeRef, verbose));
 
-   // TEST BC CONFINT CENTRAL SIMPLE POISSON : Observed value range is [0,100]
+   // 15-18 TEST BC CONFINT CENTRAL SIMPLE POISSON : Observed value range is [0,100]
    testList.push_back(new TestBayesianCalculator1(fref, writeRef, verbose, 1));
    testList.push_back(new TestBayesianCalculator1(fref, writeRef, verbose, 3));
    testList.push_back(new TestBayesianCalculator1(fref, writeRef, verbose, 10));
    testList.push_back(new TestBayesianCalculator1(fref, writeRef, verbose, 50));
 
-   // TEST BC CONFINT SHORTEST SIMPLE POISSON
+   // 19 TEST BC CONFINT SHORTEST SIMPLE POISSON
    testList.push_back(new TestBayesianCalculator2(fref, writeRef, verbose));
 
-   // TEST BC CONFINT CENTRAL PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
+   // 20-22 TEST BC CONFINT CENTRAL PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestBayesianCalculator3(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
-   // TEST MCMCC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
+   // 23-25 TEST MCMCC CONFINT PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 10, 30));
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 20, 25));
    testList.push_back(new TestMCMCCalculator(fref, writeRef, verbose, 15, 20, 2 * ROOT::Math::normal_cdf(2) - 1));
 
-   // TEST ZBI SIGNIFICANCE
+   // 26 TEST ZBI SIGNIFICANCE
    testList.push_back(new TestZBi(fref, writeRef, verbose));
 
-   // TEST PLC VS AC SIGNIFICANCE : Observed value range is [0,300] for on source and [0,1100] for off-source; tau has the range [0.1,5.0]
+   // 27-31 TEST PLC VS AC SIGNIFICANCE : Observed value range is [0,300] for on source and [0,1100] for off-source; tau has the range [0.1,5.0]
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 100, 1.0));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 200, 100, 1.0));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 105, 100, 1.0));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 10, 0.1));
    testList.push_back(new TestHypoTestCalculator1(fref, writeRef, verbose, 150, 400, 4.0));
 
-   // TEST HTC SIGNIFICANCE 
+   // 32-36 TEST HTC SIGNIFICANCE 
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kAsymptotic));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kSimpleLR));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kRatioLR));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kFrequentist, kProfileLROneSidedDiscovery));
    testList.push_back(new TestHypoTestCalculator2(fref, writeRef, verbose, kHybrid, kProfileLROneSidedDiscovery));
 
-   // TEST HTI PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
+   // 37-43 TEST HTI PRODUCT POISSON : Observed value range is [0,30] for x=s+b and [0,80] for y=2*s*1.2^beta
    testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 10, 30));
    testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 20, 25));
    testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kAsymptotic, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
@@ -177,19 +182,19 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kFrequentist, kProfileLR, 15, 20, 2 * normal_cdf(2) - 1));
    testList.push_back(new TestHypoTestInverter1(fref, writeRef, verbose, kHybrid, kProfileLR, 10, 30));
 
-   // TEST HTI S+B+E POISSON : Observed value range is [0,50] for x = e*s+b
+   // 44-48 TEST HTI S+B+E POISSON : Observed value range is [0,50] for x = e*s+b
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kAsymptotic, kProfileLROneSided, 10));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kAsymptotic, kProfileLROneSided, 20));
-   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 10));
-   testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 20));
+//    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 10));
+//    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kSimpleLR, 20));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kRatioLR));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kFrequentist, kProfileLROneSided));
    testList.push_back(new TestHypoTestInverter2(fref, writeRef, verbose, kHybrid, kSimpleLR));
  
    
    TString suiteType = TString::Format(" Starting S.T.R.E.S.S. %s",
-      allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite")
-   );
+                                       allTests ? "full suite" : (oneTest ? TString::Format("test %d", testNumber).Data() : "basic suite")
+                                      );
 
    cout << "*" << setw(lineWidth - 3) << setfill(' ') << suiteType << " *" << endl;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
@@ -200,6 +205,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
    gBenchmark->Start("stressRooStats");
 
+   int nFailed = 0;
    {
       Int_t i;
       list<RooUnitTest*>::iterator iter;
@@ -212,14 +218,9 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
                if (doDump) {
                   (*iter)->setDebug(kTRUE);
                }
-
-               Bool_t testPassed = (*iter)->runTest();
-               
-               // See convention for testSuiteStatus near the beginning of function
-               if(testPassed == kFALSE) testSuiteStatus--;
-      
-               cout << left << setw(lineWidth) << setfill('.') << TString::Format("Test %d : %s ", i, (*iter)->GetName()) 
-                    << " " << (testPassed ? "OK" : "FAILED" ) << endl;
+               int status =  (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
+               StatusPrint(i, (*iter)->GetName(), status , lineWidth);
+               if (!status) nFailed++;  // do not count the skipped tests
             }
             delete *iter;
          }
@@ -233,18 +234,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    gBenchmark->Stop("stressRooStats");
 
 
-   // Print global test suite status
-   // See convention for testSuiteStatus near the beginning of function
-   cout << setw(lineWidth) << setfill('*') << "" << endl;
-   cout << left << setw(lineWidth) << setfill('.') << "SUMMARY : stressRooStats test suite " << " " 
-        << (testSuiteStatus < 0 ? "FAILED" : "OK") << endl;
-   if (testSuiteStatus < 0) {
-      cout << "         " << -testSuiteStatus << (testSuiteStatus < -1 ? " tests " : " test ") 
-           << "failed" << endl;
-   }
-
-
-   // Print table with results
+   //Print table with results
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    if (UNIX) {
@@ -290,7 +280,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    delete gBenchmark ;
    gBenchmark = 0 ;
 
-   return testSuiteStatus;
+   return nFailed;
 }
 
 //_____________________________batch only_____________________
@@ -382,7 +372,6 @@ int main(int argc, const char *argv[])
    RooMath::cacheCERF(kFALSE) ;
 
    gBenchmark = new TBenchmark();
-
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 
