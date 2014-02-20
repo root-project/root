@@ -232,7 +232,7 @@ void TDataMember::Init()
    // in the attributes map
    
    // If everything above is consistent, the map must be there already.
-   theMember_m_a->GetAttributeMap()
+
    
    const char *t = gCling->DataMemberInfo_Title(fInfo);
    SetTitle(t);

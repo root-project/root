@@ -221,7 +221,7 @@ public:
    virtual DeclId_t GetDeclId(MethodInfo_t *info) const = 0;
    virtual DeclId_t GetDeclId(TypedefInfo_t *info) const = 0;
 
-   virtual void SetDeclAttr(DeclId_t, const char* /* attribute */);
+   virtual void SetDeclAttr(DeclId_t, const char* /* attribute */) = 0 ;
 
    virtual DeclId_t GetDataMember(ClassInfo_t *cl, const char *name) const = 0;
    virtual DeclId_t GetDataMemberAtAddr(const void *addr) const = 0;
