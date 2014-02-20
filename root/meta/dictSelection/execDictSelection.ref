@@ -19,7 +19,7 @@ Class category: foreign.
 Class category: foreign.
  * Version: -1
  o Members (1):
-  * int transientMember [ isBasic isTransient ]
+  * int transientMember [ isBasic isTransient "!" ]
 --- End Class classTransientMember
 
 --- Class classTestAutoselect
@@ -59,7 +59,7 @@ Class category: foreign.
  * Version: -1
  o Members (3):
   * classAutoselectedFromTemplateElaborate1 autoselectedMember
-  * classVanilla transientMember [ isTransient ]
-  * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient ]
+  * classVanilla transientMember [ isTransient "!" ]
+  * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient "!" ]
 --- End Class classTemplateElaborate<char>
 (int) 0
