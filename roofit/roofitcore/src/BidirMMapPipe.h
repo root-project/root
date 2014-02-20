@@ -16,6 +16,7 @@
 #include <vector>
 #include <cassert>
 #include <cstring>
+#include <unistd.h>
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
