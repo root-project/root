@@ -257,7 +257,7 @@ void RooStats::HistFactory::Measurement::PrintTree( std::ostream& stream )
 
 
 
-void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::string NewOutputPrefix )
+void RooStats::HistFactory::Measurement::PrintXML( std::string directory, std::string newOutputPrefix )
 {
   // create XML files for this measurement in the given directory
   // XML files can be configured with a different output prefix
@@ -268,10 +268,10 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   // First, check that the directory exists:
 
-  if( Directory != "" && gSystem->OpenDirectory( Directory.c_str() ) == 0 ) {
-    int success = gSystem->MakeDirectory(Directory.c_str() );    
+  if( directory != "" && gSystem->OpenDirectory( directory.c_str() ) == 0 ) {
+    int success = gSystem->MakeDirectory(directory.c_str() );    
     if( success != 0 ) {
-      std::cout << "Error: Failed to make directory: " << Directory << std::endl;
+      std::cout << "Error: Failed to make directory: " << directory << std::endl;
       throw hf_exc();
     }
   }
@@ -281,7 +281,7 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   std::cout << "Printing XML Files for measurement: " << GetName() << std::endl;
 
   std::string XMLName = std::string(GetName()) + ".xml";
-  if( Directory != "" ) XMLName = Directory + "/" + XMLName;
+  if( directory != "" ) XMLName = directory + "/" + XMLName;
 
   ofstream xml( XMLName.c_str() );
 
@@ -319,7 +319,8 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   xml << "<!DOCTYPE Combination  SYSTEM 'HistFactorySchema.dtd'>" << std::endl << std::endl;
 
   // Add the combination name
-  xml << "<Combination OutputFilePrefix=\"" << NewOutputPrefix /*OutputFilePrefix*/ << "\" >" << std::endl << std::endl;
+  if (newOutputPrefix.empty() ) newOutputPrefix = fOutputFilePrefix;  
+  xml << "<Combination OutputFilePrefix=\"" << newOutputPrefix /*OutputFilePrefix*/ << "\" >" << std::endl << std::endl;
 
   // Add the Preprocessed Functions
   for( unsigned int i = 0; i < fFunctionObjects.size(); ++i ) {
@@ -337,7 +338,9 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
 
   // Add the list of channels
   for( unsigned int i = 0; i < fChannels.size(); ++i ) {
-    xml << "  <Input>" << "./" << Directory << "/" << GetName() << "_" << fChannels.at(i).GetName() << ".xml" << "</Input>" << std::endl;
+     xml << "  <Input>" << "./";
+     if (!directory.empty() ) xml << directory << "/";
+     xml << GetName() << "_" << fChannels.at(i).GetName() << ".xml" << "</Input>" << std::endl;
   }
 
   xml << std::endl;
@@ -410,10 +413,10 @@ void RooStats::HistFactory::Measurement::PrintXML( std::string Directory, std::s
   // Now, make the xml files 
   // for the individual channels:
 
-  std::string Prefix = std::string(GetName()) + "_";
+  std::string prefix = std::string(GetName()) + "_";
 
   for( unsigned int i = 0; i < fChannels.size(); ++i ) {
-    fChannels.at(i).PrintXML( Directory, Prefix );
+    fChannels.at(i).PrintXML( directory, prefix );
   }
 
 

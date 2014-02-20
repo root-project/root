@@ -35,17 +35,17 @@ void buildAPI_XML_TestModel(TString prefix)
 
   // create channel for signal region with observed data
   HistFactory::Channel SignalRegion("SignalRegion");
-  SignalRegion.SetData("API_vs_XML/SignalRegion/Data","HistFactory_input.root");
+  SignalRegion.SetData("Data","HistFactory_input.root","API_vs_XML/SignalRegion/");
   SignalRegion.SetStatErrorConfig(0.05,HistFactory::Constraint::Poisson);
 
   // add signal sample to signal region
-  HistFactory::Sample Signal("signal","API_vs_XML/SignalRegion/signal","HistFactory_input.root");
+  HistFactory::Sample Signal("signal","signal","HistFactory_input.root","API_vs_XML/SignalRegion/");
   Signal.AddNormFactor("mu",1,0,10);
   Signal.AddOverallSys("AccSys",0.95,1.05);
   SignalRegion.AddSample(Signal);
 
   // add background1 sample to signal region
-  HistFactory::Sample Background1("background1","API_vs_XML/SignalRegion/background1","HistFactory_input.root");
+  HistFactory::Sample Background1("background1","background1","HistFactory_input.root","API_vs_XML/SignalRegion/");
   Background1.ActivateStatError();
   Background1.AddHistoSys("bkg1_shape_unc","background1_Low","HistFactory_input.root","API_vs_XML/SignalRegion/",
    			  "background1_High","HistFactory_input.root","API_vs_XML/SignalRegion/");
@@ -53,7 +53,7 @@ void buildAPI_XML_TestModel(TString prefix)
   SignalRegion.AddSample(Background1);
 
   // add background2 sample to signal region
-  HistFactory::Sample Background2("background2","API_vs_XML/SignalRegion/background2","HistFactory_input.root");
+  HistFactory::Sample Background2("background2","background2","HistFactory_input.root","API_vs_XML/SignalRegion/");
   Background2.SetNormalizeByTheory(kFALSE);
   Background2.AddNormFactor("bkg",1,0,20);
   Background2.AddOverallSys("bkg_unc",0.9,1.2);
@@ -62,7 +62,7 @@ void buildAPI_XML_TestModel(TString prefix)
   
   // create channel for sideband region with observed data
   HistFactory::Channel SidebandRegion("SidebandRegion");
-  SidebandRegion.SetData("API_vs_XML/SidebandRegion/Data","HistFactory_input.root");
+  SidebandRegion.SetData("Data","HistFactory_input.root","API_vs_XML/SidebandRegion/");
 
   // add background sample to sideband region
   HistFactory::Sample Background3("background","unitHist","HistFactory_input.root","API_vs_XML/SidebandRegion/");
@@ -74,10 +74,12 @@ void buildAPI_XML_TestModel(TString prefix)
   // add channels to measurement
   meas.AddChannel(SignalRegion);
   meas.AddChannel(SidebandRegion);
-  
+ 
   // get histograms
   meas.CollectHistograms();
 
   // build model
   HistFactory::MakeModelAndMeasurementFast(meas);
+
+  meas.PrintXML();
 }
