@@ -56,7 +56,7 @@
 #endif
 #endif
 
-#if defined(__CYGWIN__) && defined(__GNUC__)
+#if defined(__CYGWIN__) && defined(__GNUC__) && !defined(F_LOCK) && !defined(F_ULOCK) 
 #define F_LOCK F_WRLCK
 #define F_ULOCK F_UNLCK
 static int fcntl_lockf(int fd, int op, off_t off)
