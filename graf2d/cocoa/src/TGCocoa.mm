@@ -841,6 +841,9 @@ void TGCocoa::DestroyWindow(Window_t wid)
    if (fPimpl->IsRootWindow(wid))
       return;
    
+   BOOL needFocusChange = NO;
+   
+   {
    const Util::AutoreleasePool pool;//TODO: check.
 
    fPimpl->fX11EventTranslator.CheckUnmappedView(wid);
@@ -850,6 +853,10 @@ void TGCocoa::DestroyWindow(Window_t wid)
    NSObject<X11Window> * const window = fPimpl->GetWindow(wid);   
    if (fPimpl->fX11CommandBuffer.BufferSize())
       fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(wid);
+   
+   //TEST: "fix" a keyboard focus.
+   if ((needFocusChange = window == window.fQuartzWindow && window.fQuartzWindow.fHasFocus))
+      window.fHasFocus = NO;//If any.
 
    DestroySubwindows(wid);
    if (window.fEventMask & kStructureNotifyMask)
@@ -861,6 +868,11 @@ void TGCocoa::DestroyWindow(Window_t wid)
       gClient->SetWaitForWindow(kNone);
 
    fPimpl->DeleteDrawable(wid);
+   }
+   
+   //TEST: "fix" a keyboard focus.
+   if (needFocusChange)
+      X11::WindowLostFocus(wid);
 }
 
 //______________________________________________________________________________
@@ -1091,7 +1103,14 @@ void TGCocoa::UnmapWindow(Window_t wid)
    
    //If this window is a grab window or a parent of a grab window.
    fPimpl->fX11EventTranslator.CheckUnmappedView(wid);
-   [fPimpl->GetWindow(wid) unmapWindow];
+   
+   NSObject<X11Window> * const win = fPimpl->GetWindow(wid);
+   [win unmapWindow];
+
+   win.fHasFocus = NO;
+
+   if (win == win.fQuartzWindow && win.fQuartzWindow.fHasFocus)
+      X11::WindowLostFocus(win.fID);
 
    //if (window.fEventMask & kStructureNotifyMask)
    //   fPimpl->fX11EventTranslator.GenerateUnmapNotify(wid);//??? TODO
