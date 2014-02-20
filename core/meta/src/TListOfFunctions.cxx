@@ -221,6 +221,60 @@ TObject *TListOfFunctions::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
+TList* TListOfFunctions::GetListForObjectNonConst(const char* name)
+{
+   // Return the set of overloads for this name, collecting all available ones.
+   // Can construct and insert new TFunction-s.
+   TList* overloads = (TList*)fOverloads.FindObject(name);
+   TExMap overloadsSet;
+   Bool_t wasEmpty = true;
+   if (!overloads) {
+      overloads = new TList();
+      overloads->SetName(name);
+      fOverloads.Add(overloads);
+   } else {
+      TIter iOverload(overloads);
+      while (TFunction* over = (TFunction*)iOverload()) {
+         wasEmpty = false;
+         overloadsSet.Add((Long64_t)(ULong64_t)over->GetDeclId(),
+                          (Long64_t)(ULong64_t)over);
+      }
+   }
+
+   // Update if needed.
+   std::vector<DeclId_t> overloadDecls;
+   ClassInfo_t* ci = fClass ? fClass->GetClassInfo() : 0;
+   gInterpreter->GetFunctionOverloads(ci, name, overloadDecls);
+   for (std::vector<DeclId_t>::const_iterator iD = overloadDecls.begin(),
+           eD = overloadDecls.end(); iD != eD; ++iD) {
+      TFunction* over = Get(*iD);
+      if (wasEmpty || !overloadsSet.GetValue((Long64_t)(ULong64_t)over->GetDeclId())) {
+          overloads->Add(over);
+      }
+   }
+
+   return overloads;
+}
+
+//______________________________________________________________________________
+TList* TListOfFunctions::GetListForObject(const char* name) const
+{
+   // Return the set of overloads for this name, collecting all available ones.
+   // Can construct and insert new TFunction-s.
+   return const_cast<TListOfFunctions*>(this)->GetListForObjectNonConst(name);
+}
+
+//______________________________________________________________________________
+TList* TListOfFunctions::GetListForObject(const TObject* obj) const
+{
+   // Return the set of overloads for function obj, collecting all available ones.
+   // Can construct and insert new TFunction-s.
+   if (!obj) return 0;
+   return const_cast<TListOfFunctions*>(this)
+      ->GetListForObjectNonConst(obj->GetName());
+}
+
+//______________________________________________________________________________
 TFunction *TListOfFunctions::Get(DeclId_t id)
 {
    // Return (after creating it if necessary) the TMethod or TFunction

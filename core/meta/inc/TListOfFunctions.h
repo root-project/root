@@ -26,6 +26,10 @@
 #include "THashList.h"
 #endif
 
+#ifndef ROOT_THastTable
+#include "THashTable.h"
+#endif
+
 #ifndef ROOT_TDictionary
 #include "TDictionary.h"
 #endif
@@ -41,9 +45,11 @@ private:
    
    TExMap    *fIds;      // Map from DeclId_t to TFunction*
    THashList *fUnloaded; // Holder of TFunction for unloaded functions.
+   THashTable fOverloads; // TLists of overloads.
    
    TListOfFunctions(const TListOfFunctions&);              // not implemented
    TListOfFunctions& operator=(const TListOfFunctions&);   // not implemented
+   TList     *GetListForObjectNonConst(const char* name);
    
 public:
    
@@ -55,6 +61,8 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
+   virtual TList     *GetListForObject(const char* name) const;
+   virtual TList     *GetListForObject(const TObject* obj) const;
 
    TFunction *Get(DeclId_t id);
 

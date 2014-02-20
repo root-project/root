@@ -77,6 +77,7 @@
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
+#include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 
 #include "cling/Interpreter/ClangInternalState.h"
@@ -2964,6 +2965,39 @@ TInterpreter::DeclId_t TCling::GetFunction(ClassInfo_t *opaque_cl, const char* m
    }
    return f;
 
+}
+
+//______________________________________________________________________________
+void TCling::GetFunctionOverloads(ClassInfo_t *cl, const char *funcname,
+                                  std::vector<DeclId_t>& res) const
+{
+   // Insert overloads of name in cl to res.
+   clang::Sema& S = fInterpreter->getSema();
+   const clang::Decl* CtxDecl
+      = cl ? (const clang::Decl*)((TClingClassInfo*)cl)->GetDeclId():
+      S.Context.getTranslationUnitDecl();
+   const clang::DeclContext*
+      DeclCtx = llvm::dyn_cast<const clang::RecordDecl>(CtxDecl);
+   if (!DeclCtx)
+      DeclCtx = dyn_cast<clang::NamespaceDecl>(CtxDecl);
+   if (!DeclCtx) return;
+   clang::DeclarationName DName
+      = &S.Context.Idents.get(funcname);
+   clang::LookupResult R(S, DName, clang::SourceLocation(),
+                         Sema::LookupOrdinaryName, clang::Sema::ForRedeclaration);
+   S.LookupQualifiedName(R, const_cast<DeclContext*>(DeclCtx));
+   if (R.empty()) return;
+   R.resolveKind();
+   res.reserve(res.size() + (R.end() - R.begin()));
+   for (clang::LookupResult::iterator IR = R.begin(), ER = R.end();
+        IR != ER; ++IR) {
+      if (const clang::FunctionDecl* FD
+          = llvm::dyn_cast<const clang::FunctionDecl>(*IR)) {
+         if (!FD->getDescribedFunctionTemplate()) {
+            res.push_back(FD);
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
