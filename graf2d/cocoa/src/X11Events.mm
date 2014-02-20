@@ -1271,8 +1271,10 @@ void EventTranslator::GenerateButtonReleaseEvent(NSView<X11Window> *eventView, N
 //______________________________________________________________________________
 void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
+   //TODO: change the interface? (remove view parameter).
+#pragma unused(view)
+
    assert(view != nil && "GenerateKeyPressEvent, view parameter is nil");
-   (void)view;//TODO: change interface?
    assert(theEvent != nil && "GenerateKeyPressEvent, theEvent parameter is nil");
    
    if (![[theEvent charactersIgnoringModifiers] length])
@@ -1288,8 +1290,10 @@ void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *view, NSEvent *th
 //______________________________________________________________________________
 void EventTranslator::GenerateKeyReleaseEvent(NSView<X11Window> *view, NSEvent *theEvent)
 {
+   //TODO: change interface?
+#pragma unused(view)
+
    assert(view != nil && "GenerateKeyReleaseEvent, view parameter is nil");
-   (void)view;//TODO: change interface?
    assert(theEvent != nil && "GenerateKeyReleaseEvent, theEvent parameter is nil");
 
    if (![[theEvent charactersIgnoringModifiers] length])
