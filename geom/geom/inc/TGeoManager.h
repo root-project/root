@@ -431,7 +431,7 @@ public:
    static Int_t           GetMaxDaughters();
    static Int_t           GetMaxLevels();
    static Int_t           GetMaxXtruVert();
-   Int_t                  GetMaxThreads() const {return fMaxThreads;}
+   Int_t                  GetMaxThreads() const {return fMaxThreads-1;}
    void                   SetMaxThreads(Int_t nthreads);
    void                   SetMultiThread(Bool_t flag=kTRUE) {fMultiThread = flag;}
    Bool_t                 IsMultiThread() const {return fMultiThread;}
