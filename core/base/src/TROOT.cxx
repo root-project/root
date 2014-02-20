@@ -1282,6 +1282,13 @@ TListOfFunctions *TROOT::GetGlobalFunctions()
 }
 
 //______________________________________________________________________________
+TCollection *TROOT::GetListOfFunctionOverloads(const char* name) const
+{
+   // Return the collection of functions named "name".
+   return ((TListOfFunctions*)fFunctions)->GetListForObject(name);
+}
+
+//______________________________________________________________________________
 TFunction *TROOT::GetGlobalFunction(const char *function, const char *params,
                                     Bool_t load)
 {

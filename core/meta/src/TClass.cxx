@@ -3186,6 +3186,14 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 }
 
 //______________________________________________________________________________
+TCollection *TClass::GetListOfFunctionOverloads(const char* name) const
+{
+   // Return the collection of functions named "name".
+   return ((TListOfFunctions*)fMethod)->GetListForObject(name);
+}
+
+
+//______________________________________________________________________________
 const TList *TClass::GetListOfAllPublicMethods(Bool_t load /* = kTRUE */)
 {
    // Returns a list of all public methods of this class and its base classes.

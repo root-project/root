@@ -208,6 +208,7 @@ public:
    TSeqCollection   *GetListOfCanvases() const    { return fCanvases; }
    TSeqCollection   *GetListOfStyles() const      { return fStyles; }
    TCollection      *GetListOfFunctions() const   { return fFunctions; }
+   TCollection      *GetListOfFunctionOverloads(const char* name) const;
    TSeqCollection   *GetListOfGeometries() const  { return fGeometries; }
    TSeqCollection   *GetListOfBrowsers() const    { return fBrowsers; }
    TSeqCollection   *GetListOfSpecials() const    { return fSpecials; }
