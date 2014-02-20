@@ -48,7 +48,8 @@ extern "C" {
    TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx);
    Decl* TCling__GetObjectDecl(TObject *obj);
    int TCling__AutoLoadCallback(const char* className);
-   int TCling__IsAutoLoadNamespaceCandidate(const char* name);
+//    int TCling__IsAutoLoadNamespaceCandidate(const char* name);
+   int TCling__IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* name);
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
                   std::string &args, std::string &io, std::string &fname);
@@ -58,7 +59,7 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
    : InterpreterCallbacks(interp, /*enableExternalSemaSourceCallbacks*/true,
                           /*enableDeserializationListenerCallbacks*/true,
                           /*enablePPCallbacks*/true),
-     fLastLookupCtx(0), fROOTSpecialNamespace(0), fDeclContextToLookIn(0),
+     fLastLookupCtx(0), fROOTSpecialNamespace(0),
      fFirstRun(true), fIsAutoloading(false), fIsAutoloadingRecursively(false),
      fPPOldFlag(false), fPPChanged(false) {
    Transaction* T = 0;
@@ -170,7 +171,6 @@ bool TClingCallbacks::FileNotFound(llvm::StringRef FileName,
    return false;
 }
 
-
 // On a failed lookup we have to try to more things before issuing an error.
 // The symbol might need to be loaded by ROOT's autoloading mechanism or
 // it might be a ROOT special object. 
@@ -183,6 +183,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
    // Don't do any extra work if an error that is not still recovered occurred.
    if (m_Interpreter->getSema().getDiagnostics().hasErrorOccurred())
       return false;
+   
    if (tryAutoloadInternal(R.getLookupName().getAsString(), R, S))
       return true; // happiness.
 
@@ -204,27 +205,43 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 
    if (fIsAutoloadingRecursively)
       return false;
-
+   
    // Finally try to resolve this name as a dynamic name, i.e delay its 
    // resolution for runtime.
    return tryResolveAtRuntimeInternal(R, S);
 }
 
-bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name){
+bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) {
    if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return false;
    // Get the 'lookup' decl context.
-   if (!fDeclContextToLookIn)
+   // We need to cast away the constness because we will lookup items of this
+   // namespace/DeclContext
+   NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(const_cast<DeclContext*>(DC));
+   if (!NSD)
       return false;
-   const DeclContext* primaryDC = fDeclContextToLookIn->getPrimaryContext();
+   
+   if ( !TCling__IsAutoLoadNamespaceCandidate(NSD) )
+      return false;
+   
+   const DeclContext* primaryDC = NSD->getPrimaryContext();
    if (primaryDC != DC)
       return false;
 
    Sema &SemaR = m_Interpreter->getSema();
    LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
    R.suppressDiagnostics();
-   std::string qualName 
-      = fDeclContextToLookIn->getQualifiedNameAsString() + "::" + Name.getAsString();
-   fDeclContextToLookIn = 0;
+   // We need the qualified name for TCling to find the right library.
+   std::string qualName
+      = NSD->getQualifiedNameAsString() + "::" + Name.getAsString();
+      
+
+   // We want to avoid qualified lookups, because they are expensive and
+   // difficult to construct. This is why we *artificially* push a scope and
+   // a decl context, where Sema should do the lookup.
+   clang::Scope S(SemaR.TUScope, clang::Scope::DeclScope, SemaR.getDiagnostics());
+   S.setEntity(const_cast<DeclContext*>(DC));
+   Sema::ContextAndScopeRAII pushedDCAndS(SemaR, const_cast<DeclContext*>(DC), &S);
+   
    if (tryAutoloadInternal(qualName, R, SemaR.getCurScope())) {
       llvm::SmallVector<NamedDecl*, 4> lookupResults;
       for(LookupResult::iterator I = R.begin(), E = R.end(); I < E; ++I)
@@ -266,12 +283,12 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
                                           C.getTypeDeclType(Specialization),
                                           *m_Interpreter,
                                           *tNormCtxt);                                               
-                     
       // This would mean it is probably a template. Try autoload template.
       if (TCling__AutoLoadCallback(Name.c_str())) {
          return true;
       }
    }
+   
    return false;
 }
 
@@ -290,13 +307,13 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
      // Avoid tail chasing.
      if (fIsAutoloadingRecursively)
        return false;
-
+     
      // We should try autoload only for special lookup failures. 
      Sema::LookupNameKind kind = R.getLookupKind();
      if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName
            || kind == Sema::LookupNestedNameSpecifierName)) 
         return false;
-
+         
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
@@ -327,26 +344,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
            pushedDCAndS.pop();
            cleanupRAII.pop();
            lookupSuccess = SemaR.LookupName(R, S);
-        } else if (TCling__IsAutoLoadNamespaceCandidate(Name.data())) {
-           // FIXME: Since the current token is tok::semi and there is no 
-           // 'neutral' token, this will force clang to create the so called in
-           // C++11 EmptyDecl. It is not a big issue, but still suboptimal.
-           cling::Transaction* T = 0;
-           cling::Interpreter::CompilationResult CR
-              = m_Interpreter->declare("namespace " + Name.str() + "{}", &T);
-           (void) CR;
-           assert(CR != cling::Interpreter::kFailure && "Must not happen!");
-           pushedDCAndS.pop();
-           cleanupRAII.pop();
-           // The first decl in T will be EmptyDecl unless the FIXME above gets
-           // fixed.
-           DeclGroupRef DGR = (*(T->decls_begin() + 1)).m_DGR;
-           NamespaceDecl* NSD = cast<NamespaceDecl>(DGR.getSingleDecl());
-           NSD->setHasExternalVisibleStorage();
-           fDeclContextToLookIn = NSD;
-           R.addDecl(NSD);
-           lookupSuccess = true;
-        } 
+        }
      }
 
      fIsAutoloadingRecursively = false;
