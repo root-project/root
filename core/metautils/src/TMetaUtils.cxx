@@ -1471,7 +1471,62 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol << "*)" << "\n" << "   {" << "\n";
 
+   /* If the attribute "comment" is present for data members, trigger the manipulaition of 
+    * the decls.
+    * 1) Seek the decl of the class thanks to the interpreter
+    * 2) Annotate the decl with the value of the comment
+    */
+   
+//        ClassInfo_t* CI = gInterpreter->ClassInfo_Factory("A");      
+//       DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);
+//       while (gInterpreter->DataMemberInfo_Next(DMI)) {
+//          if (!strcmp("m_b", gInterpreter->DataMemberInfo_Name(DMI))) {
+//             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),"Poppo ciao");
+//             break;
+//             }
+//       }
+   
+   
+   std::string attribute_s,attrName, attrValue;
+   bool infrastructureGenerated=false;
+   for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
+          internalDeclIt != decl->decls_end(); ++internalDeclIt){      
+      
+      clang::FieldDecl* dMember = clang::dyn_cast<clang::FieldDecl>(*internalDeclIt);      
+      // Check if this is a field and if it has any attribute
+      if (dMember && !dMember->hasAttrs()) continue;
 
+      // Now loop on its attributes
+      for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
+              attrIt!=internalDeclIt->attr_end();++attrIt){         
+
+         // Get the attribute as string
+         if ( 0!=ROOT::TMetaUtils::extractAttrString(*attrIt,attribute_s)) continue;
+
+         // Split in name value
+         if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) continue;
+         
+         // Check if this is a "comment"
+         if (attrName != "comment") continue;
+         
+         if (!infrastructureGenerated){
+            finalString << "      ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
+                        << "      DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
+                        << "      while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";      
+            infrastructureGenerated=true;            
+         }
+         const std::string memberName(dMember->getName());
+         finalString << "         if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI)))\n"
+                     << "            gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
+                     
+      } // end loop on annotations of the decl 
+   
+   } // end loop on class internal decls
+   if (infrastructureGenerated)
+      finalString << "      }\n";
+   
+      
+      
 
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
 
@@ -1701,21 +1756,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             // Prepare a string to get the data member, it can be used later.
             const std::string dataMemberCreation= "      TDataMember* "+cppMemberName+" = theClass->GetDataMember(\""+memberName+"\");\n";
             
-            // Let's treat the transiency first, which is a special case as it is
-            // expressed with "//!" or "///<!" and is not a regular attribute:
-            std::string attributeNoSpaces_s (attribute_s);
-            std::remove(attributeNoSpaces_s.begin(), attributeNoSpaces_s.end(), ' ');
-            if (attributeNoSpaces_s.find("!") == 0 ){
-               manipString+=dataMemberCreation;
-               manipString+="      "+cppMemberName+"->ResetBit(BIT(2));\n"; //FIXME: Make it less cryptic
-               memberPtrCreated=true;
-            }
-
             // Let's now attack regular properties
             
             if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
                continue;
             }
+            
+            // Skip these
+            if (attrName == "comment") continue;
             
             if (!memberPtrCreated){
                manipString+=dataMemberCreation;
