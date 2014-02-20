@@ -30,6 +30,13 @@ ROOT_LINKER_LIBRARY(MathCore *.cxx G__Math.cxx G__MathCore.cxx G__MathFit.cxx LI
 
 ROOT_INSTALL_HEADERS()
 
+#LM : this does not work in 5.34
+#ROOT_ADD_TEST_SUBDIRECTORY(test)
+
+if(testing)
+  include(RootCTest)
+  add_subdirectory(test)
+endif()
 
 
 
