@@ -217,7 +217,7 @@ int TClingDataMemberInfo::InternalNext()
    
    bool increment = true;
    // Move to next acceptable data member.
-   while (*fIter) {
+   while (fFirstTime || *fIter) {
       // Move to next decl in context.
       if (fFirstTime) {
          fFirstTime = false;
