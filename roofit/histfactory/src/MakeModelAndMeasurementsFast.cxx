@@ -135,22 +135,21 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     // assume there is a file prefix after the last "/" that we remove 
     // to get the directory name.
     // We do by finding last occurrence of "/" and using as directory name what is before
+    // if we do not have a "/" in the prefix there is no output directory to be checked or created
     size_t pos = prefix.rfind("/"); 
-    std::string outputDir = prefix; 
-    if (pos != std::string::npos) 
-       outputDir = prefix.substr(0,pos);
-
-    std::cout << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
-    if (gSystem->OpenDirectory( outputDir.c_str() )  == 0 ) { 
-       std::cout << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
-       int success = gSystem->MakeDirectory( outputDir.c_str() );    
-       if( success != 0 ) {
-          std::string fullOutputDir = std::string(gSystem->pwd()) + std::string("/") + outputDir; 
-          std::cout << "Error: Failed to make output directory: " <<  fullOutputDir << std::endl;
-          throw hf_exc();
-       }
-    } 
-    
+    if (pos != std::string::npos) {
+       std::string outputDir = prefix.substr(0,pos);
+       std::cout << "Checking if output directory : " << outputDir << " -  exists" << std::endl;
+       if (gSystem->OpenDirectory( outputDir.c_str() )  == 0 ) { 
+          std::cout << "Output directory : " << outputDir << " - does not exist, try to create" << std::endl;
+          int success = gSystem->MakeDirectory( outputDir.c_str() );    
+          if( success != 0 ) {
+             std::string fullOutputDir = std::string(gSystem->pwd()) + std::string("/") + outputDir; 
+             std::cout << "Error: Failed to make output directory: " <<  fullOutputDir << std::endl;
+             throw hf_exc();
+          }
+       } 
+    }    
 
     // This holds the TGraphs that are created during the fit
     std::string outputFileName = measurement.GetOutputFilePrefix() + "_" + measurement.GetName() + ".root";

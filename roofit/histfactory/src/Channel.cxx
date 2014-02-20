@@ -104,13 +104,13 @@ void RooStats::HistFactory::Channel::Print( std::ostream& stream ) {
 }  
 
 
-void RooStats::HistFactory::Channel::PrintXML( std::string Directory, std::string Prefix ) {
+void RooStats::HistFactory::Channel::PrintXML( std::string directory, std::string prefix ) {
 
   // Create an XML file for this channel
   std::cout << "Printing XML Files for channel: " << GetName() << std::endl;
   
-  std::string XMLName = Prefix + fName + ".xml";
-  if( Directory != "" ) XMLName = Directory + "/" + XMLName;
+  std::string XMLName = prefix + fName + ".xml";
+  if( directory != "" ) XMLName = directory + "/" + XMLName;
   
   ofstream xml( XMLName.c_str() );
 

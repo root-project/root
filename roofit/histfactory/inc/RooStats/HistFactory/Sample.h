@@ -32,6 +32,7 @@ public:
   Sample();
   Sample(std::string Name);
   Sample(const Sample& other);
+  /// constructor from name, file and path. Name of the histogram should not include the path
   Sample(std::string Name, std::string HistoName, std::string InputFile, std::string HistoPath="");
   ~Sample();
 
@@ -45,6 +46,8 @@ public:
   void SetValue( Double_t Val );
 
   // Some helper functions
+  /// Note that histogram name should not include the path of the histogram in the file.  
+  /// This has to be given separatly 
 
   void ActivateStatError();
   void ActivateStatError( std::string HistoName, std::string InputFile, std::string HistoPath="" );
