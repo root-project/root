@@ -5567,7 +5567,7 @@ const char* TCling::DataMemberInfo_ValidArrayIndex(DataMemberInfo_t* dminfo) con
 //______________________________________________________________________________
 void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 {
-   Decl* decl = (Decl*) declId;
+   Decl* decl = static_cast<Decl*>(const_cast<void*>(declId));
    ASTContext &C = decl->getASTContext();
    SourceRange commentRange; // this is a fake comment range
    decl->addAttr( new (C) AnnotateAttr( commentRange, C, attribute, 0 ) );
