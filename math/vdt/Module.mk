@@ -22,9 +22,7 @@ VDTH    := include/vdt/asin.h\
 	include/vdt/vdtMath.h
 
 # We create a stamp file as vdt is the only module without a library.
-VDTSTAMP := vdt.stamp
-
-ALLLIBS      += $(VDTSTAMP)
+ALLHDRS      += $(patsubst $(MODDIRI)/vdt/%.h, include/%.h, $(VDTH) )
 
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME) \
@@ -36,14 +34,11 @@ include/vdt/%.h: $(MODDIRI)/vdt/%.h
 		fi)
 		cp $< $@
 
-$(VDTSTAMP): $(VDTH)
-	@touch $(MODDIR)/$(VDTSTAMP)
-
-all-$(MODNAME): $(VDTSTAMP)
+all-$(MODNAME): 
 	$(noop)
 
 clean-$(MODNAME):
-	@rm $(MODDIR)/$(VDTSTAMP)
+	$(noop)
 
 clean:: clean-$(MODNAME)
 	$(noop)
