@@ -23,7 +23,7 @@ const uint32_t SIZE= 16777216;
 //------------------------------------------------------------------------------
 // Not good for floating point, but just to get the bit difference
 template <class T> 
-uint64_t fp2uint (T x)
+uint64_t fp2uint (T /*x*/)
 {
    T::not_implemented; // "Static assert" in C++03
 }
@@ -114,7 +114,6 @@ void fillRandom(std::vector<T>& randomV,
 
 template<typename T>
 void treatBinDiffHisto(TH1F& histo,
-                       const std::vector<T>& Input,
                        const std::vector<T>& VDTVals,
                        const std::vector<T>& SystemVals)
 {
@@ -213,12 +212,12 @@ inline void compareFunctions(const std::string& label,
    histo.Reset();
    histo.SetName(label.c_str());
    histo.SetTitle(title.c_str());
-   treatBinDiffHisto(histo,inputVector,outputVectorVDT,outputVectorSystem);   
+   treatBinDiffHisto(histo,outputVectorVDT,outputVectorSystem);   
    double meandiffBit = histo.GetMean();   
    maxdiffBit = 0;
    const uint32_t xmax=histo.GetXaxis()->GetXmax();
    
-   for (int i=1;i<=xmax;i++){
+   for (uint32_t i=1;i<=xmax;i++){
       if ( histo.GetBinContent(i) > 0.f )
          maxdiffBit=i-1;
    }
