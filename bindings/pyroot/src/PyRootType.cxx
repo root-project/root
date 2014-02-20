@@ -19,6 +19,7 @@
 // Standard
 #include <string.h>
 #include <string>
+#include <vector>
 
 
 namespace PyROOT {
@@ -107,14 +108,19 @@ namespace {
 
                // tickle lazy lookup of functions
                   if ( ! attr ) {
-                     TFunction* m =
-                        (TFunction*)((TClass*)klass.Id())->GetListOfMethods()->FindObject( name.c_str() );
-                     if ( m ) {
+                     if ( ((TClass*)klass.Id())->GetListOfMethods()->FindObject( name.c_str() ) ) {
+                     // function exists, now collect overloads
+                        std::vector< PyCallable* > overloads;
+                        for ( size_t i = 0; i < klass.FunctionMemberSize(); ++i ) {
+                           TMemberAdapter m = klass.FunctionMemberAt( i );
+                           if ( m.Name() == name )
+                              overloads.push_back( new TClassMethodHolder( klass, m ) );
+                        }
+
                      // Note: can't re-use Utility::AddClass here, as there's the risk of
                      // a recursive call. Simply add method directly, as we're guaranteed
                      // that it doesn't exist yet.
-                        PyCallable* pyfunc = new TClassMethodHolder( klass, m );
-                        attr = (PyObject*)MethodProxy_New( name.c_str(), pyfunc );
+                        attr = (PyObject*)MethodProxy_New( name.c_str(), overloads );
                      }
                   }
 
