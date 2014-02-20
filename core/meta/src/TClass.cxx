@@ -3186,7 +3186,7 @@ TList *TClass::GetListOfMethods(Bool_t load /* = kTRUE */)
 }
 
 //______________________________________________________________________________
-TCollection *TClass::GetListOfFunctionOverloads(const char* name) const
+TCollection *TClass::GetListOfMethodOverloads(const char* name) const
 {
    // Return the collection of functions named "name".
    return ((TListOfFunctions*)fMethod)->GetListForObject(name);
