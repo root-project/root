@@ -2655,15 +2655,7 @@ void EncloseInNamespaces(const clang::RecordDecl& rDecl,
    // definition string.
    // For example, if the definition string is "myClass" which is enclosed by
    // the namespaces ns1 and ns2, one would get:
-   // namespace ns2{ namespace ns1 { class myClass; } }
-   
-   // Workaround ROOT-6094
-   // We insert something in the namespace in order to allow PyROOT to resolve 
-   // functions' overloads. The least intrusive, almost undetectable entity 
-   // I can come up with is an anonymous empty namespace. It could well be 
-   // a typedef/class fwd decl/variable with special name.
-   if (definitionStr.empty())
-      definitionStr = "namespace {} ";
+   // namespace ns2{ namespace ns1 { class myClass; } }   
    
    std::list<std::pair<std::string,bool> > enclosingNamespaces;
    ROOT::TMetaUtils::ExtractEnclosingNameSpaces(rDecl,enclosingNamespaces);
