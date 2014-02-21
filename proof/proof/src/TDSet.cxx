@@ -1026,7 +1026,7 @@ Bool_t TDSet::Add(const char *file, const char *objname, const char *dir,
    if (gProof && gProof->IsLite()) {
       TUrl u(file, kTRUE);
       if (!strcmp(u.GetProtocol(), "file")) {
-         fn = u.GetFile();
+         fn = u.GetFileAndOptions();
          gSystem->ExpandPathName(fn);
          if (!gSystem->IsAbsoluteFileName(fn))
             gSystem->PrependPathName(gSystem->WorkingDirectory(), fn);
