@@ -84,34 +84,49 @@ public:
 
     // get API workspace and ModelConfig
     TFile* pAPIFile = TFile::Open("API_XML_TestModel_combined_Test_model.root");
-    if(pAPIFile->IsZombie())
-      return kFALSE;
+    if(!pAPIFile || pAPIFile->IsZombie()) {
+       Error("testCode","Error opening the file API_XML_TestModel_combined_Test_model.root");
+       return kFALSE;
+    }
     
     RooWorkspace* pWS_API = (RooWorkspace*)pAPIFile->Get("combined");
-    if(!pWS_API)
-      return kFALSE;
+    if(!pWS_API) {
+       Error("testCode","Error retrieving the workspace combined");
+       return kFALSE;
+    }
 
     ModelConfig* pMC_API = (ModelConfig*)pWS_API->obj("ModelConfig");
-    if(!pMC_API)
-      return kFALSE;
-
+    if(!pMC_API) {
+       Error("testCode","Error retrieving the ModelConfig");
+       return kFALSE;
+    }
     // build model using XML files
     gSystem->ChangeDirectory(fTestDirectory + "/XML/");
     TString cmd = "hist2workspace config/Measurement.xml";
-    gSystem->Exec(cmd);
+    int ret = gSystem->Exec(cmd);
+    if (ret != 0) { 
+       Error("testCode","Error running hist2workspace");
+       return kFALSE;
+    }
 
     // get XML workspace and ModelConfig
     TFile* pXMLFile = TFile::Open("results/API_XML_TestModel_combined_Test_model.root");
-    if(pXMLFile->IsZombie())
-      return kFALSE;
+    if(!pXMLFile || pXMLFile->IsZombie()) {
+       Error("testCode","Error opening the file results/API_XML_TestModel_combined_Test_model.root");
+       return kFALSE;
+    }
     
     RooWorkspace* pWS_XML = (RooWorkspace*)pXMLFile->Get("combined");
-    if(!pWS_XML)
-      return kFALSE;
+    if(!pWS_XML) {
+       Error("testCode","Error retrieving the workspace combined");
+       return kFALSE;
+    }
 
     ModelConfig* pMC_XML = (ModelConfig*)pWS_XML->obj("ModelConfig");
-    if(!pMC_XML)
-      return kFALSE;
+    if(!pMC_XML) {
+       Error("testCode","Error retrieving the ModelConfig");
+       return kFALSE;
+    }
     
     // cancel redirection
     gSystem->RedirectOutput(0);
