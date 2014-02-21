@@ -15,7 +15,7 @@
 #include "TBranchObject.h"
 #include "TBranchElement.h"
 #include "TIndArray.h"
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
 #endif
 #include <map>
@@ -75,13 +75,13 @@ class TBranchSTL: public TBranch {
       TIndArray                fInd;          //! Indices
       TString                  fContName;     //  Class name of referenced object
       TString                  fClassName;    //  Name of the parent class, if we're the data member
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
       mutable std::atomic<Int_t> fClassVersion; //  Version number of the class
 #else
       mutable Int_t            fClassVersion; //  Version number of the class
 #endif
       UInt_t                   fClCheckSum;   //  Class checksum
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
       mutable std::atomic<TStreamerInfo*> fInfo; //! The streamer info
 #else
       mutable TStreamerInfo   *fInfo;         //! The streamer info

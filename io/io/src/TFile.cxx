@@ -121,7 +121,7 @@
 
 using std::sqrt;
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 std::atomic<Long64_t> TFile::fgBytesRead{0};
 std::atomic<Long64_t> TFile::fgBytesWrite{0};
 std::atomic<Long64_t> TFile::fgFileCounter{0};

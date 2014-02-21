@@ -43,6 +43,9 @@
 #ifndef ROOT_TTimer
 #include "TTimer.h"
 #endif
+#ifndef ROOT_ThreadLocalStorage
+#include "ThreadLocalStorage.h"
+#endif
 
 class TSeqCollection;
 class TFdSet;
@@ -286,7 +289,6 @@ protected:
    Bool_t           fInControl;        //True if in eventloop
    Bool_t           fDone;             //True if eventloop should be finished
    Int_t            fLevel;            //Level of nested eventloops
-   TString          fLastErrorString;  //Last system error message
 
    TSeqCollection  *fTimers;           //List of timers
    TSeqCollection  *fSignalHandler;    //List of signal handlers
@@ -316,8 +318,10 @@ protected:
    TSeqCollection  *fCompiled;         //List of shared libs from compiled macros to be deleted
    TSeqCollection  *fHelpers;          //List of helper classes for alternative file/directory access
 
-#if __cplusplus > 199711L
-   static thread_local TString   fgLastErrorString;  //Last system error message
+#if __cplusplus >= 201103L
+   static TTHREAD_TLS(TString)   fgLastErrorString;  //Last system error message
+#else
+   static TString                fgLastErrorString;  //Last system error message
 #endif
 
    TSystem               *FindHelper(const char *path, void *dirptr = 0);
@@ -344,11 +348,7 @@ public:
    virtual void            SetProgname(const char *name);
    virtual void            SetDisplay();
    void                    SetErrorStr(const char *errstr);
-#if __cplusplus > 199711L
    const char             *GetErrorStr() const { return fgLastErrorString; }
-#else
-   const char             *GetErrorStr() const { return fLastErrorString; }
-#endif
    virtual const char     *GetError();
    void                    RemoveOnExit(TObject *obj);
    virtual const char     *HostName();

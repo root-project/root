@@ -21,7 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
 #endif
 #ifndef ROOT_TDirectoryFile
@@ -108,7 +108,7 @@ protected:
    static UInt_t    fgOpenTimeout;           //Timeout for open operations in ms  - 0 corresponds to blocking i/o
    static Bool_t    fgOnlyStaged ;           //Before the file is opened, it is checked, that the file is staged, if not, the open fails
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    static std::atomic<Long64_t>  fgBytesWrite;            //Number of bytes written by all TFile objects
    static std::atomic<Long64_t>  fgBytesRead;             //Number of bytes read by all TFile objects
    static std::atomic<Long64_t>  fgFileCounter;           //Counter for all opened files

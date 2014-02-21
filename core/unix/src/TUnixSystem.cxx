@@ -38,7 +38,7 @@
 #include "TObjArray.h"
 #include <map>
 #include <algorithm>
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
 #endif
 
@@ -400,7 +400,7 @@ static void SigHandler(ESignals sig)
 //______________________________________________________________________________
 static const char *GetExePath()
 {
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    static thread_local TString exepath;
 #else
    static TString exepath;
@@ -548,12 +548,6 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
 }
 #endif
 
-#if __cplusplus > 199711L
-#define LAST_ERROR_STRING fgLastErrorString
-#else
-#define LAST_ERROR_STRING fLastErrorString
-#endif
-
 ClassImp(TUnixSystem)
 
 //______________________________________________________________________________
@@ -698,8 +692,8 @@ const char *TUnixSystem::GetError()
    // Return system error string.
 
    Int_t err = GetErrno();
-   if (err == 0 && LAST_ERROR_STRING != "")
-      return LAST_ERROR_STRING;
+   if (err == 0 && fgLastErrorString != "")
+      return fgLastErrorString;
 
 #if defined(R__SOLARIS) || defined (R__LINUX) || defined(R__AIX) || \
     defined(R__FBSD) || defined(R__OBSD) || defined(R__HURD)
@@ -1504,7 +1498,7 @@ Bool_t TUnixSystem::AccessPathName(const char *path, EAccessMode mode)
 
    if (::access(StripOffProto(path, "file:"), mode) == 0)
       return kFALSE;
-   LAST_ERROR_STRING = GetError();
+   fgLastErrorString = GetError();
 
    return kTRUE;
 }
@@ -1552,7 +1546,7 @@ int TUnixSystem::Rename(const char *f, const char *t)
    // Rename a file. Returns 0 when successful, -1 in case of failure.
 
    int ret = ::rename(f, t);
-   LAST_ERROR_STRING = GetError();
+   fgLastErrorString = GetError();
    return ret;
 }
 
@@ -1750,7 +1744,7 @@ needshell:
       } else {
          hd = UnixHomedirectory(0);
          if (hd == 0) {
-            LAST_ERROR_STRING = GetError();
+            fgLastErrorString = GetError();
             return kTRUE;
          }
          cmd += hd;
@@ -1760,7 +1754,7 @@ needshell:
       cmd += stuffedPat;
 
    if ((pf = ::popen(cmd.Data(), "r")) == 0) {
-      LAST_ERROR_STRING = GetError();
+      fgLastErrorString = GetError();
       return kTRUE;
    }
 
@@ -1783,7 +1777,7 @@ again:
    while (ch != EOF) {
       ch = fgetc(pf);
       if (ch == ' ' || ch == '\t') {
-         LAST_ERROR_STRING = "expression ambigous";
+         fgLastErrorString = "expression ambigous";
          ::pclose(pf);
          return kTRUE;
       }
@@ -3603,13 +3597,8 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
    // If ignore is true ignore the specified signal, else restore previous
    // behaviour.
 
-#if __cplusplus > 199711L
-   static thread_local Bool_t ignoreSig[kMAXSIGNALS] = { kFALSE };
-   static thread_local struct sigaction oldsigact[kMAXSIGNALS];
-#else
-   static Bool_t ignoreSig[kMAXSIGNALS] = { kFALSE };
-   static struct sigaction oldsigact[kMAXSIGNALS];
-#endif
+   static TTHREAD_TLS(Bool_t) ignoreSig[kMAXSIGNALS] = { kFALSE };
+   static TTHREAD_TLS(struct sigaction) oldsigact[kMAXSIGNALS];
 
    if (ignore != ignoreSig[sig]) {
       ignoreSig[sig] = ignore;
@@ -3713,7 +3702,7 @@ Long64_t TUnixSystem::UnixNow()
 {
    // Get current time in milliseconds since 0:00 Jan 1 1995.
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    static std::atomic<time_t> jan95{0};
 #else
    static time_t jan95 = 0;

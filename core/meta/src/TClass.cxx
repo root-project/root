@@ -102,13 +102,12 @@ namespace {
    };
 }
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 std::atomic<Int_t> TClass::fgClassCount;
-thread_local TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
 #else
 Int_t TClass::fgClassCount;
-TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
 #endif
+TTHREAD_TLS(TClass::ENewType) TClass::fgCallingNew = TClass::kRealNew;
 
 struct ObjRepoValue {
    ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
@@ -1543,7 +1542,7 @@ TClass::~TClass()
       for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
          delete it->second;
       }
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
       delete fConversionStreamerInfo.load();
 #else
       delete fConversionStreamerInfo;
