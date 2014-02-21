@@ -232,7 +232,6 @@ AutoDict_*.cxx
 
 # /root/io/datamodelevolution/stl/
 /root/io/datamodelevolution/stl/stlinnerevo.root
-/root/io/datamodelevolution/stl/libcond
 
 # /root/io/dirdelete/
 /root/io/dirdelete/test.root

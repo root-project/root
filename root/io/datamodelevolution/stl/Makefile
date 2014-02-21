@@ -1,7 +1,7 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog libcond
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
@@ -31,6 +31,10 @@ endif
 
 include $(ROOTTEST_HOME)/scripts/Rules.mk
 
+clean: localclean
+
+localclean:
+	$(CMDECHO) $(MAKE) --no-print-directory -C libcond -f libcondMakefile clean
 
 # The name of this target should be changed according to the test being run.  Any name changes
 #  should also be reflected in the TEST_TARGETS variable above.
@@ -64,6 +68,7 @@ execWriteFile.log: writeFile_C.$(DllSuf)
 execReadFile.log: readFile_C.$(DllSuf) execWriteFile.success
 
 libcond/libcond.$(DllSuf): 
-	$(CMDECHO) $(CALLROOTEXE) -q -b -l createLibCond.C > libcond.build.log 2>&1 || handleError.sh --cmd='root.exe -b -l -q createLibCond.C' --result=$$? --log=libcond.build.log --test=$< && patch -p0 < libcond.patch && cd libcond && sh MAKEP >> libcond.build.log 2>&1 || handleError.sh --cmd='./MAKEP' --result=$$? --log=libcond.build.log --test=$< 
+	$(CMDECHO) $(MAKE) --no-print-directory -C libcond -f libcondMakefile libcond.$(DllSuf)
 
 execMapContent.log: libcond/libcond.$(DllSuf)
+
