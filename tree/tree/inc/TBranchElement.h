@@ -98,6 +98,7 @@ protected:
    TStreamerInfoActions::TActionSequence *fReadActionSequence;  //! Set of actions to be executed to extract the data from the basket.
    TStreamerInfoActions::TActionSequence *fFillActionSequence; //! Set of actions to be executed to write the data to the basket.
    TVirtualCollectionIterators           *fIterators;     //! holds the iterators when the branch is of fType==4.
+   TVirtualCollectionIterators           *fWriteIterators;//! holds the read (non-staging) iterators when the branch is of fType==4 and associative containers.
    TVirtualCollectionPtrIterators        *fPtrIterators;  //! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
 
 // Not implemented
@@ -147,6 +148,7 @@ protected:
    void FillLeavesCollectionSplitVectorPtrMember(TBuffer& b);
    void FillLeavesCollectionSplitPtrMember(TBuffer& b);
    void FillLeavesCollectionMember(TBuffer& b);
+   void FillLeavesAssociativeCollectionMember(TBuffer& b);
    void FillLeavesClones(TBuffer& b);
    void FillLeavesClonesMember(TBuffer& b);
    void FillLeavesCustomStreamer(TBuffer& b);
