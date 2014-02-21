@@ -63,7 +63,11 @@
 
 #ifdef __cplusplus
 
-#if __cplusplus >= 201103L
+#ifdef __CINT__
+
+#  define TTHREAD_TLS(type) type
+
+#elif __cplusplus >= 201103L
 
 #  define TTHREAD_TLS(type) thread_local type
 

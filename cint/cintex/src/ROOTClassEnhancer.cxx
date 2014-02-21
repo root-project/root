@@ -36,7 +36,7 @@
 #include <sstream>
 #include <memory>
 #include <string>
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
 #endif
 
@@ -58,7 +58,7 @@ namespace ROOT { namespace Cintex {
 
       Type                     fType;
       string                   fName;
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
      std::atomic<TClass*>      fTclass;
 #else
       TClass*                  fTclass;

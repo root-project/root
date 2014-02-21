@@ -35,8 +35,11 @@
 #endif
 #include <map>
 #include <string>
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
+#endif
+#ifndef ROOT_ThreadLocalStorage
+#include "ThreadLocalStorage.h"
 #endif
 class TBaseClass;
 class TBrowser;
@@ -97,7 +100,7 @@ public:
 private:
 
    mutable TObjArray *fStreamerInfo;    //Array of TVirtualStreamerInfo
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    mutable std::atomic<std::map<std::string, TObjArray*>*> fConversionStreamerInfo; //Array of the streamer infos derived from another class.
 #else
    mutable std::map<std::string, TObjArray*> *fConversionStreamerInfo; //Array of the streamer infos derived from another class.
@@ -144,7 +147,7 @@ private:
 
    mutable Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    mutable std::atomic<Bool_t> fVersionUsed;     //!Indicates whether GetClassVersion has been called
 #else
    mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
@@ -153,7 +156,7 @@ private:
    mutable Bool_t     fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
 #else
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
@@ -189,11 +192,10 @@ private:
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
    
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
-#if __cplusplus > 199711L 
-   static thread_local ENewType  fgCallingNew;  //Intent of why/how TClass::New() is called
+   static TTHREAD_TLS(ENewType)  fgCallingNew;  //Intent of why/how TClass::New() is called
+#if __cplusplus >= 201103L
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
 #else
-   static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
 #endif
                                         //stored in TObject::fUniqueID

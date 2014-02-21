@@ -34,7 +34,7 @@
 #include <string.h>
 #include <snprintf.h>   // part of stdio.h on systems that have it
 #include <strlcpy.h>    // part of string.h on systems that have it
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 #include <atomic>
 #endif
 
@@ -270,7 +270,7 @@ namespace ROOT {
 #include "TGenericClassInfo.h"
 #endif
 
-#if __cplusplus > 199711L
+#if __cplusplus >= 201103L
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 #else
 typedef TClass* atomic_TClass_ptr;
