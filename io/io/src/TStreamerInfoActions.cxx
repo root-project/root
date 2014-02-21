@@ -365,7 +365,7 @@ namespace TStreamerInfoActions
    public:
       Long_t fIncrement; // Either a value to increase the cursor by and 
    public:
-      TVectorLoopConfig(Long_t increment) : fIncrement(increment) {};
+      TVectorLoopConfig(Long_t increment, Bool_t /* read */) : fIncrement(increment) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TVectorLoopConfig() {};
       void Print() const
@@ -389,7 +389,7 @@ namespace TStreamerInfoActions
    public:
       TVirtualCollectionProxy *fProxy;
    public:
-      TAssocLoopConfig(TVirtualCollectionProxy *proxy) : fProxy(proxy) {};
+      TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : fProxy(proxy) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
       virtual ~TAssocLoopConfig() {};
       void Print() const
@@ -416,16 +416,16 @@ namespace TStreamerInfoActions
    class TGenericLoopConfig : public TLoopConfiguration {
       // Configuration object for the generic case of member wise streaming looping.
    private:
-      void Init() {
+      void Init(Bool_t read) {
          if (fProxy) {
             if (fProxy->HasPointers()) {
                fNext = TVirtualCollectionPtrIterators::Next;
                fCopyIterator = TVirtualCollectionPtrIterators::CopyIterator;
                fDeleteIterator = TVirtualCollectionPtrIterators::DeleteIterator;               
             } else {
-               fNext = fProxy->GetFunctionNext();
-               fCopyIterator = fProxy->GetFunctionCopyIterator();
-               fDeleteIterator = fProxy->GetFunctionDeleteIterator();
+               fNext = fProxy->GetFunctionNext(read);
+               fCopyIterator = fProxy->GetFunctionCopyIterator(read);
+               fDeleteIterator = fProxy->GetFunctionDeleteIterator(read);
             }
          }
       }
@@ -435,9 +435,9 @@ namespace TStreamerInfoActions
       TVirtualCollectionProxy::CopyIterator_t       fCopyIterator;
       TVirtualCollectionProxy::DeleteIterator_t     fDeleteIterator;
       
-      TGenericLoopConfig(TVirtualCollectionProxy *proxy) : fProxy(proxy), fNext(0), fCopyIterator(0), fDeleteIterator(0)
+      TGenericLoopConfig(TVirtualCollectionProxy *proxy, Bool_t read) : fProxy(proxy), fNext(0), fCopyIterator(0), fDeleteIterator(0)
       { 
-         Init(); 
+         Init(read);
       }
       virtual ~TGenericLoopConfig() {};
       void Print() const
@@ -881,7 +881,7 @@ namespace TStreamerInfoActions
          UInt_t n = (((void**)end)-((void**)start));
          info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size() );
+         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);         
@@ -907,7 +907,7 @@ namespace TStreamerInfoActions
          UInt_t n = (((char*)end)-((char*)start))/((TVectorLoopConfig*)loopconf)->fIncrement;
          info->ReadBufferSkip(b,&ptr,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size() );
+         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);
@@ -934,7 +934,7 @@ namespace TStreamerInfoActions
          UInt_t n = proxy->Size();
          info->ReadBufferSkip(b, *proxy,config->fElemId,info->GetTypes()[config->fElemId]+TStreamerInfo::kSkip,aElement,n,0);
       } else {
-         TVectorLoopConfig cached_config( cached->fClass->Size() );
+         TVectorLoopConfig cached_config( cached->fClass->Size(), /* read */ kTRUE );
          void *cached_start = (*cached)[0];
          void *cached_end = ((char*)cached_start) + cached->fSize * cached_config.fIncrement;
          config->fAction(b,cached_start,cached_end,&cached_config);
@@ -1876,7 +1876,7 @@ namespace TStreamerInfoActions
             // We can not get here with a split vector of pointer, so we can indeed assume
             // that actions->fConfiguration != null.
             
-            TGenericLoopConfig loopconf(newProxy);
+            TGenericLoopConfig loopconf(newProxy, /* read */ kTRUE);
             ActionHolder::Action(buf,begin,end,&loopconf,config);
             
             if (begin != &(startbuf[0])) {
@@ -2883,15 +2883,15 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       
       // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(increment);
+      sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);
    } else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
               || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) 
    {
       Long_t increment = proxy.GetIncrement();
-      sequence->fLoopConfig = new TVectorLoopConfig(increment);
+      sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kTRUE);
       // sequence->fLoopConfig = new TAssocLoopConfig(proxy);
    } else {
-      sequence->fLoopConfig = new TGenericLoopConfig(&proxy);
+      sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kTRUE);
    }
    for (UInt_t i = 0; i < ndata; ++i) {
       TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
@@ -2986,7 +2986,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
          // We can speed up the iteration in case of vector.  We also know that all emulated collection are stored internally as a vector.
          Long_t increment = proxy.GetIncrement();
-         sequence->fLoopConfig = new TVectorLoopConfig(increment);
+         sequence->fLoopConfig = new TVectorLoopConfig(increment, /* read */ kFALSE);
       /*} else if (proxy.GetCollectionType() == TClassEdit::kSet || proxy.GetCollectionType() == TClassEdit::kMultiSet
                  || proxy.GetCollectionType() == TClassEdit::kMap || proxy.GetCollectionType() == TClassEdit::kMultiMap) 
       {
@@ -2994,7 +2994,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
          sequence->fLoopConfig = new TVectorLoopConfig(increment);
          // sequence->fLoopConfig = new TAssocLoopConfig(proxy); */
       } else {        
-         sequence->fLoopConfig = new TGenericLoopConfig(&proxy);
+         sequence->fLoopConfig = new TGenericLoopConfig(&proxy, /* read */ kFALSE);
       }
       for (UInt_t i = 0; i < ndata; ++i) {
          TStreamerElement *element = (TStreamerElement*) info->GetElements()->At(i);
