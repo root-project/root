@@ -1,7 +1,7 @@
 # File: roottest/python/cpp/PyROOT_advancedtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 06/04/05
-# Last: 12/16/13
+# Last: 02/18/14
 
 """C++ advanced language interface unit tests for PyROOT package."""
 
@@ -23,6 +23,7 @@ __all__ = [
    'Cpp09LongExpressions',
    'Cpp10StandardExceptions',
    'Cpp11PointerContainers',
+   'Cpp12NamespaceLazyFunctions',
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -439,6 +440,42 @@ class Cpp11PointerContainers( MyTestCase ):
 
       m = fill( self )
       self.assertEqual( m[0].m_val, "aap" )
+
+
+### Test lookup of lazily created functions in namespaces ====================
+class Cpp12NamespaceLazyFunctions( MyTestCase ):
+   def test1NamespaceLazyFunctions( self ):
+      """Lazy lookup of late created functions"""
+
+      import cppyy
+      cppyy.gbl.gInterpreter.ProcessLine( 'namespace PyCpp12_ns_test1 {}' )
+      cppyy.gbl.gInterpreter.ProcessLine(
+         'namespace PyCpp12_ns_test1 { class PyCpp12_A {}; int PyCpp12_f() {return 32;}; }' )
+
+      self.assert_( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_A() )
+      self.assertEqual( cppyy.gbl.PyCpp12_ns_test1.PyCpp12_f(), 32 )
+
+   def test2NamespaceOverloadedLazyFunctions( self ):
+      """Lazy lookup of late created overloaded functions"""
+
+      import cppyy
+      cppyy.gbl.gInterpreter.ProcessLine( 'namespace PyCpp12_ns_test2 {}')
+      cppyy.gbl.gInterpreter.ProcessLine(
+         'namespace PyCpp12_ns_test2 { class PyCpp12_A {}; \
+          int PyCpp12_f(int n) {return 32*n;} \
+          int PyCpp12_f() {return 32;}; }')
+
+      self.assert_( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_A() )
+      self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(2), 64 )
+      self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_f(),  32 )
+
+      cppyy.gbl.gInterpreter.ProcessLine(
+         'namespace PyCpp12_ns_test2 { \
+          int PyCpp12_g(const std::string&) {return 42;} \
+          int PyCpp12_g() {return 13;}; }')
+
+      self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_g(''), 42 )
+      self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_g(),   13 )
 
 
 ## actual test run

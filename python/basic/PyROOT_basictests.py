@@ -366,12 +366,6 @@ class Basic5PythonizationTestCase( MyTestCase ):
 
 ## actual test run
 if __name__ == '__main__':
-   from MyTextTestRunner import MyTextTestRunner
-
-   loader = unittest.TestLoader()
-   testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
-
-   runner = MyTextTestRunner( verbosity = 2 )
-   result = not runner.run( testSuite ).wasSuccessful()
-
-   sys.exit( result )
+   import common
+   result = common.run_pytest(__file__)
+   sys.exit(result)

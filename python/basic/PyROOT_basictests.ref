@@ -1,26 +1,23 @@
-Test import error handling ... ok
-Test the availability of ROOT globals ... ok
-Test overwritability of ROOT globals ... ok
-Test creation and access of new ROOT globals ... ok
-Test auto-loading by retrieving a non-preloaded class ... ok
-Test accessibility to macro classes ... ok
-Test doc strings existence ... ok
-Test (un)bound method calls ... ok
-Test whether the GIL can be properly released ... ok
-Test passing a TString by value through an interpreted function ... ok
-Test passing a TString by reference through an interpreted function ... ok
-Test passing a TLorentzVector by value through an interpreted function ... ok
-Test passing a TLorentzVector by reference through an interpreted function ... ok
-Test passing a TString by value through a compiled function ... ok
-Test passing a TString by reference through a compiled function ... ok
-Test passing a TLorentzVector by value through a compiled function ... ok
-Test passing a TLorentzVector by reference through a compiled function ... ok
-Test passing by-reference of builtin types ... ok
-Test string/TString/TObjString compatibility ... ok
-Test list/TList behavior and compatibility ... ok
-Test TVector2/3/T behavior ... ok
-Test TObjArray iterator-based copying ... ok
+. PyROOT_basictests.py::Basic1ModuleTestCase::test1Import
+. PyROOT_basictests.py::Basic2SetupTestCase::test1Globals
+. PyROOT_basictests.py::Basic2SetupTestCase::test2AccessToGlobals
+. PyROOT_basictests.py::Basic2SetupTestCase::test3AccessToGlobalsFromROOT
+. PyROOT_basictests.py::Basic2SetupTestCase::test4AutoLoading
+. PyROOT_basictests.py::Basic2SetupTestCase::test5MacroLoading
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test1HaveDocString
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test2BoundUnboundMethodCalls
+. PyROOT_basictests.py::Basic3PythonLanguageTestCase::test3ThreadingSupport
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test1TStringByValueInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test2TStringByRefInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test3TLorentzVectorByValueInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test4TLorentzVectorByRefInterpreted
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test5TStringByValueCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test6TStringByRefCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test7TLorentzVectorByValueCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test8TLorentzVectorByRefCompiled
+. PyROOT_basictests.py::Basic4ArgumentPassingTestCase::test9ByRefPassing
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test1Strings
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test2Lists
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test3TVector
+. PyROOT_basictests.py::Basic5PythonizationTestCase::test4TObjArray
 
-----------------------------------------------------------------------
-
-OK

@@ -1,282 +1,285 @@
-/*
-  File: roottest/python/basic/DataTypes.C
-  Author: Wim Lavrijsen@lbl.gov
-  Created: 05/11/05
-  Last: 11/22/13
-*/
+#include "DataTypes.h"
 
-const int N = 5;
 
-struct Pod {
-   Int_t    fInt;
-   Double_t fDouble;
+//===========================================================================
+CppyyTestData::CppyyTestData() : m_owns_arrays(false)
+{
+    m_bool    = false;
+    m_char    = 'a';
+    m_schar   = 'b';
+    m_uchar   = 'c';
+    m_short   = -11;
+    m_ushort  =  11u;
+    m_int     = -22;
+    m_uint    =  22u;
+    m_long    = -33l;
+    m_ulong   =  33ul;
+    m_llong   = -44ll;
+    m_ullong  =  44ull;
+    m_long64  = -55ll;
+    m_ulong64 =  55ull;
+    m_float   = -66.f;
+    m_double  = -77.;
+    m_ldouble = -88.l;
+    m_enum    = kNothing;
+
+    m_bool_array2   = new bool[N];
+    m_short_array2  = new short[N];
+    m_ushort_array2 = new unsigned short[N];
+    m_int_array2    = new int[N];
+    m_uint_array2   = new unsigned int[N];
+    m_long_array2   = new long[N];
+    m_ulong_array2  = new unsigned long[N];
+
+    m_float_array2  = new float[N];
+    m_double_array2 = new double[N];
+
+    for (int i = 0; i < N; ++i) {
+        m_bool_array[i]    =  bool(i%2);
+        m_bool_array2[i]   =  bool((i+1)%2);
+        m_short_array[i]   =  -1*i;
+        m_short_array2[i]  =  -2*i;
+        m_ushort_array[i]  =   3u*i;
+        m_ushort_array2[i] =   4u*i;
+        m_int_array[i]     =  -5*i;
+        m_int_array2[i]    =  -6*i;
+        m_uint_array[i]    =   7u*i;
+        m_uint_array2[i]   =   8u*i;
+        m_long_array[i]    =  -9l*i;
+        m_long_array2[i]   = -10l*i;
+        m_ulong_array[i]   =  11ul*i;
+        m_ulong_array2[i]  =  12ul*i;
+
+        m_float_array[i]   = -13.f*i;
+        m_float_array2[i]  = -14.f*i;
+        m_double_array[i]  = -15.*i;
+        m_double_array2[i] = -16.*i;
+    }
+
+    m_owns_arrays = true;
+
+    m_pod.m_int    = 888;
+    m_pod.m_double = 3.14;
+
+    m_ppod = &m_pod;
 };
 
-enum EFruit { kApple = 78, kBanana = 29, kCitrus = 34 };
-
-typedef signed char SChar_t;
-
-class ClassWithData {
-public:
-   enum EWhat { kNothing = 6, kSomething = 111, kLots = 42 };
-
-   ClassWithData() : fOwnsArrays( false )
-   {
-      fBool    = kFALSE;
-      fChar    = 'a';
-      fSChar   = 'b';
-      fUChar   = 'c';
-      fShort   = -11;
-      fUShort  =  11u;
-      fInt     = -22;
-      fUInt    =  22u;
-      fLong    = -33l;
-      fULong   =  33ul;
-      fLong64  = -44l;
-      fULong64 =  44ul;
-      fFloat   = -55.f;
-      fDouble  = -66.;
-      fEnum    = kNothing;
-
-      fBoolArray2   = new Bool_t[N];
-      fShortArray2  = new Short_t[N];
-      fUShortArray2 = new UShort_t[N];
-      fIntArray2    = new Int_t[N];
-      fUIntArray2   = new UInt_t[N];
-      fLongArray2   = new Long_t[N];
-      fULongArray2  = new ULong_t[N];
-
-      fFloatArray2  = new Float_t[N];
-      fDoubleArray2 = new Double_t[N];
-
-      for ( int i = 0; i < N; ++i ) {
-         fBoolArray[i]    =  Bool_t(i%2);
-         fBoolArray2[i]   =  Bool_t((i+1)%2);
-         fShortArray[i]   =  -1*i;
-         fShortArray2[i]  =  -2*i;
-         fUShortArray[i]  =   3u*i;
-         fUShortArray2[i] =   4u*i;
-         fIntArray[i]     =  -5*i;
-         fIntArray2[i]    =  -6*i;
-         fUIntArray[i]    =   7u*i;
-         fUIntArray2[i]   =   8u*i;
-         fLongArray[i]    =  -9l*i;
-         fLongArray2[i]   = -10l*i;
-         fULongArray[i]   =  11ul*i;
-         fULongArray2[i]  =  12ul*i;
-
-         fFloatArray[i]   = -13.f*i;
-         fFloatArray2[i]  = -14.f*i;
-         fDoubleArray[i]  = -15.*i;
-         fDoubleArray2[i] = -16.*i;
-      }
-
-      fOwnsArrays = true;
-
-      fPod.fInt    = 888;
-      fPod.fDouble = 3.14;
-   };
-
-   ~ClassWithData()
-   {
-      DestroyArrays();
-   }
-
-   void DestroyArrays() {
-      if ( fOwnsArrays == true ) {
-         delete[] fBoolArray2;
-         delete[] fShortArray2;
-         delete[] fUShortArray2;
-         delete[] fIntArray2;
-         delete[] fUIntArray2;
-         delete[] fLongArray2;
-         delete[] fULongArray2;
-
-         delete[] fFloatArray2;
-         delete[] fDoubleArray2;
-
-         fOwnsArrays = false;
-      }
-   }
-
-// getters
-   Bool_t    GetBool()    { return fBool; }
-   Char_t    GetChar()    { return fChar; }
-   SChar_t   GetSChar()   { return fSChar; }
-   UChar_t   GetUChar()   { return fUChar; }
-   Short_t   GetShort()   { return fShort; }
-   UShort_t  GetUShort()  { return fUShort; }
-   Int_t     GetInt()     { return fInt; }
-   UInt_t    GetUInt()    { return fUInt; }
-   Long_t    GetLong()    { return fLong; }
-   ULong_t   GetULong()   { return fULong; }
-   Long64_t  GetLong64()  { return fLong64; }
-   ULong64_t GetULong64() { return fULong64; }
-   Float_t   GetFloat()   { return fFloat; }
-   Double_t  GetDouble()  { return fDouble; }
-   EWhat     GetEnum()    { return fEnum; }
-
-   Bool_t*   GetBoolArray()    { return fBoolArray; }
-   Bool_t*   GetBoolArray2()   { return fBoolArray2; }
-   Short_t*  GetShortArray()   { return fShortArray; }
-   Short_t*  GetShortArray2()  { return fShortArray2; }
-   UShort_t* GetUShortArray()  { return fUShortArray; }
-   UShort_t* GetUShortArray2() { return fUShortArray2; }
-   Int_t*    GetIntArray()     { return fIntArray; }
-   Int_t*    GetIntArray2()    { return fIntArray2; }
-   UInt_t*   GetUIntArray()    { return fUIntArray; }
-   UInt_t*   GetUIntArray2()   { return fUIntArray2; }
-   Long_t*   GetLongArray()    { return fLongArray; }
-   Long_t*   GetLongArray2()   { return fLongArray2; }
-   ULong_t*  GetULongArray()   { return fULongArray; }
-   ULong_t*  GetULongArray2()  { return fULongArray2; }
-
-   Float_t*  GetFloatArray()   { return fFloatArray; }
-   Float_t*  GetFloatArray2()  { return fFloatArray2; }
-   Double_t* GetDoubleArray()  { return fDoubleArray; }
-   Double_t* GetDoubleArray2() { return fDoubleArray2; }
-
-// getters const-ref
-   const Bool_t&    GetBoolCR()    { return fBool; }
-   const Char_t&    GetCharCR()    { return fChar; }
-   const SChar_t&   GetSCharCR()   { return fSChar; }
-   const UChar_t&   GetUCharCR()   { return fUChar; }
-   const Short_t&   GetShortCR()   { return fShort; }
-   const UShort_t&  GetUShortCR()  { return fUShort; }
-   const Int_t&     GetIntCR()     { return fInt; }
-   const UInt_t&    GetUIntCR()    { return fUInt; }
-   const Long_t&    GetLongCR()    { return fLong; }
-   const ULong_t&   GetULongCR()   { return fULong; }
-   const Long64_t&  GetLong64CR()  { return fLong64; }
-   const ULong64_t& GetULong64CR() { return fULong64; }
-   const Float_t&   GetFloatCR()   { return fFloat; }
-   const Double_t&  GetDoubleCR()  { return fDouble; }
-   const EWhat&     GetEnumCR()    { return fEnum; }
-
-// setters
-   void SetBool( Bool_t b )        { fBool   = b;   }
-   void SetChar( Char_t c )        { fChar   = c;   }
-   void SetSChar( SChar_t sc )     { fSChar  = sc;  }
-   void SetUChar( UChar_t uc )     { fUChar  = uc;  }
-   void SetShort( Short_t s )      { fShort  = s;   }
-   void SetUShort( UShort_t us )   { fUShort = us;  }
-   void SetInt( Int_t i )          { fInt    = i;   }
-   void SetUInt( UInt_t ui )       { fUInt   = ui;  }
-   void SetLong( Long_t l )        { fLong   = l;   }
-   void SetULong( ULong_t ul )     { fULong  = ul;  }
-   void SetLong64( Long64_t l )    { fLong64 = l;   }
-   void SetULong64( ULong64_t ul ) { fULong64 = ul; }
-   void SetFloat( Float_t f )      { fFloat  = f;   }
-   void SetDouble( Double_t d )    { fDouble = d;   }
-   void SetEnum( EWhat e )         { fEnum   = e;   }
-
-// setters const-ref
-   void SetBoolCR( const Bool_t& b )        { fBool   = b;   }
-   void SetCharCR( const Char_t& c )        { fChar   = c;   }
-   void SetSCharCR( const SChar_t& sc )     { fSChar  = sc;  }
-   void SetUCharCR( const UChar_t& uc )     { fUChar  = uc;  }
-   void SetShortCR( const Short_t& s )      { fShort  = s;   }
-   void SetUShortCR( const UShort_t& us )   { fUShort = us;  }
-   void SetIntCR( const Int_t& i )          { fInt    = i;   }
-   void SetUIntCR( const UInt_t& ui )       { fUInt   = ui;  }
-   void SetLongCR( const Long_t& l )        { fLong   = l;   }
-   void SetULongCR( const ULong_t& ul )     { fULong  = ul;  }
-   void SetLong64CR( const Long64_t& l )    { fLong64 = l;   }
-   void SetULong64CR( const ULong64_t& ul ) { fULong64 = ul; }
-   void SetFloatCR( const Float_t& f )      { fFloat  = f;   }
-   void SetDoubleCR( const Double_t& d )    { fDouble = d;   }
-   void SetEnumCR( const EWhat& e )         { fEnum   = e;   }
-
-public:
-// basic types
-   Bool_t    fBool;
-   Char_t    fChar;
-   SChar_t   fSChar;
-   UChar_t   fUChar;
-   Short_t   fShort;
-   UShort_t  fUShort;
-   Int_t     fInt;
-   UInt_t    fUInt;
-   Long_t    fLong;
-   ULong_t   fULong;
-   Long64_t  fLong64;
-   ULong64_t fULong64;
-   Float_t   fFloat;
-   Double_t  fDouble;
-   EWhat     fEnum;
-
-// array types
-   Bool_t    fBoolArray[N];
-   Bool_t*   fBoolArray2;
-   Short_t   fShortArray[N];
-   Short_t*  fShortArray2;
-   UShort_t  fUShortArray[N];
-   UShort_t* fUShortArray2;
-   Int_t     fIntArray[N];
-   Int_t*    fIntArray2;
-   UInt_t    fUIntArray[N];
-   UInt_t*   fUIntArray2;
-   Long_t    fLongArray[N];
-   Long_t*   fLongArray2;
-   ULong_t   fULongArray[N];
-   ULong_t*  fULongArray2;
-
-   Float_t   fFloatArray[N];
-   Float_t*  fFloatArray2;
-   Double_t  fDoubleArray[N];
-   Double_t* fDoubleArray2;
-
-// object types
-   Pod fPod;
-
-public:
-   static Bool_t    sBool;
-   static Char_t    sChar;
-   static SChar_t   sSChar;
-   static UChar_t   sUChar;
-   static Short_t   sShort;
-   static UShort_t  sUShort;
-   static Int_t     sInt;
-   static UInt_t    sUInt;
-   static Long_t    sLong;
-   static ULong_t   sULong;
-   static Float_t   sFloat;
-   static Long64_t  sLong64;
-   static ULong64_t sULong64;
-   static Double_t  sDouble;
-   static EFruit    sEnum;
-
-private:
-   bool fOwnsArrays;
-};
-
-Bool_t    ClassWithData::sBool    = kFALSE;
-Char_t    ClassWithData::sChar    = 's';
-SChar_t   ClassWithData::sSChar   = 'S';
-UChar_t   ClassWithData::sUChar   = 'u';
-Short_t   ClassWithData::sShort   = -101;
-UShort_t  ClassWithData::sUShort  =  255u;
-Int_t     ClassWithData::sInt     = -202;
-UInt_t    ClassWithData::sUInt    =  202u;
-Long_t    ClassWithData::sLong    = -303l;
-ULong_t   ClassWithData::sULong   =  303ul;
-Long64_t  ClassWithData::sLong64  = -404l;
-ULong64_t ClassWithData::sULong64 = 404ul;
-Float_t   ClassWithData::sFloat   = -505.f;
-Double_t  ClassWithData::sDouble  = -606.;
-EFruit    ClassWithData::sEnum    = kApple;
-
-long GetPodAddress( ClassWithData& c )
+CppyyTestData::~CppyyTestData()
 {
-   return (long)&c.fPod;
+    destroy_arrays();
 }
 
-long GetIntAddress( ClassWithData& c )
-{
-   return (long)&c.fPod.fInt;
+void CppyyTestData::destroy_arrays() {
+    if (m_owns_arrays == true) {
+        delete[] m_bool_array2;
+        delete[] m_short_array2;
+        delete[] m_ushort_array2;
+        delete[] m_int_array2;
+        delete[] m_uint_array2;
+        delete[] m_long_array2;
+        delete[] m_ulong_array2;
+
+        delete[] m_float_array2;
+        delete[] m_double_array2;
+
+        m_owns_arrays = false;
+    }
 }
 
-long GetDoubleAddress( ClassWithData& c )
+//- getters -----------------------------------------------------------------
+bool                 CppyyTestData::get_bool()    { return m_bool; }
+char                 CppyyTestData::get_char()    { return m_char; }
+unsigned char        CppyyTestData::get_uchar()   { return m_uchar; }
+signed char          CppyyTestData::get_schar()   { return m_schar; }
+short                CppyyTestData::get_short()   { return m_short; }
+unsigned short       CppyyTestData::get_ushort()  { return m_ushort; }
+int                  CppyyTestData::get_int()     { return m_int; }
+unsigned int         CppyyTestData::get_uint()    { return m_uint; }
+long                 CppyyTestData::get_long()    { return m_long; }
+unsigned long        CppyyTestData::get_ulong()   { return m_ulong; }
+long long            CppyyTestData::get_llong()   { return m_llong; }
+unsigned long long   CppyyTestData::get_ullong()  { return m_ullong; }
+Long64_t             CppyyTestData::get_long64()  { return m_long64; }
+ULong64_t            CppyyTestData::get_ulong64() { return m_ulong64; }
+float                CppyyTestData::get_float()   { return m_float; }
+double               CppyyTestData::get_double()  { return m_double; }
+long double          CppyyTestData::get_ldouble() { return m_ldouble; }
+CppyyTestData::EWhat CppyyTestData::get_enum()    { return m_enum; }
+
+bool*           CppyyTestData::get_bool_array()    { return m_bool_array; }
+bool*           CppyyTestData::get_bool_array2()   { return m_bool_array2; }
+short*          CppyyTestData::get_short_array()   { return m_short_array; }
+short*          CppyyTestData::get_short_array2()  { return m_short_array2; }
+unsigned short* CppyyTestData::get_ushort_array()  { return m_ushort_array; }
+unsigned short* CppyyTestData::get_ushort_array2() { return m_ushort_array2; }
+int*            CppyyTestData::get_int_array()     { return m_int_array; }
+int*            CppyyTestData::get_int_array2()    { return m_int_array2; }
+unsigned int*   CppyyTestData::get_uint_array()    { return m_uint_array; }
+unsigned int*   CppyyTestData::get_uint_array2()   { return m_uint_array2; }
+long*           CppyyTestData::get_long_array()    { return m_long_array; }
+long*           CppyyTestData::get_long_array2()   { return m_long_array2; }
+unsigned long*  CppyyTestData::get_ulong_array()   { return m_ulong_array; }
+unsigned long*  CppyyTestData::get_ulong_array2()  { return m_ulong_array2; }
+
+float*  CppyyTestData::get_float_array()   { return m_float_array; }
+float*  CppyyTestData::get_float_array2()  { return m_float_array2; }
+double* CppyyTestData::get_double_array()  { return m_double_array; }
+double* CppyyTestData::get_double_array2() { return m_double_array2; }
+
+CppyyTestPod CppyyTestData::get_pod_val() { return m_pod; }
+CppyyTestPod* CppyyTestData::get_pod_val_ptr() { return &m_pod; }
+CppyyTestPod& CppyyTestData::get_pod_val_ref() { return m_pod; }
+CppyyTestPod*& CppyyTestData::get_pod_ptrref() { return m_ppod; }
+
+CppyyTestPod* CppyyTestData::get_pod_ptr() { return m_ppod; }
+
+//- getters const-ref -------------------------------------------------------
+const bool&                 CppyyTestData::get_bool_cr()    { return m_bool; }
+const char&                 CppyyTestData::get_char_cr()    { return m_char; }
+const signed char&          CppyyTestData::get_schar_cr()   { return m_schar; }
+const unsigned char&        CppyyTestData::get_uchar_cr()   { return m_uchar; }
+const short&                CppyyTestData::get_short_cr()   { return m_short; }
+const unsigned short&       CppyyTestData::get_ushort_cr()  { return m_ushort; }
+const int&                  CppyyTestData::get_int_cr()     { return m_int; }
+const unsigned int&         CppyyTestData::get_uint_cr()    { return m_uint; }
+const long&                 CppyyTestData::get_long_cr()    { return m_long; }
+const unsigned long&        CppyyTestData::get_ulong_cr()   { return m_ulong; }
+const long long&            CppyyTestData::get_llong_cr()   { return m_llong; }
+const unsigned long long&   CppyyTestData::get_ullong_cr()  { return m_ullong; }
+const Long64_t&             CppyyTestData::get_long64_cr()  { return m_long64; }
+const ULong64_t&            CppyyTestData::get_ulong64_cr() { return m_ulong64; }
+const float&                CppyyTestData::get_float_cr()   { return m_float; }
+const double&               CppyyTestData::get_double_cr()  { return m_double; }
+const long double&          CppyyTestData::get_ldouble_cr() { return m_ldouble; }
+const CppyyTestData::EWhat& CppyyTestData::get_enum_cr()    { return m_enum; }
+
+//- setters -----------------------------------------------------------------
+void CppyyTestData::set_bool(bool b)                       { m_bool    = b; }
+void CppyyTestData::set_char(char c)                       { m_char    = c; }
+void CppyyTestData::set_schar(signed char sc)              { m_schar   = sc; }
+void CppyyTestData::set_uchar(unsigned char uc)            { m_uchar   = uc; }
+void CppyyTestData::set_short(short s)                     { m_short   = s; }
+void CppyyTestData::set_ushort(unsigned short us)          { m_ushort  = us; }
+void CppyyTestData::set_int(int i)                         { m_int     = i; }
+void CppyyTestData::set_uint(unsigned int ui)              { m_uint    = ui; }
+void CppyyTestData::set_long(long l)                       { m_long    = l; }
+void CppyyTestData::set_ulong(unsigned long ul)            { m_ulong   = ul; }
+void CppyyTestData::set_llong(long long ll)                { m_llong   = ll; }
+void CppyyTestData::set_ullong(unsigned long long ull)     { m_ullong  = ull; }
+void CppyyTestData::set_long64(Long64_t l64)               { m_long64  = l64; }
+void CppyyTestData::set_ulong64(ULong64_t ul64)            { m_ulong64 = ul64; }
+void CppyyTestData::set_float(float f)                     { m_float   = f; }
+void CppyyTestData::set_double(double d)                   { m_double  = d; }
+void CppyyTestData::set_ldouble(long double ld)            { m_ldouble = ld; }
+void CppyyTestData::set_enum(EWhat w)                      { m_enum    = w; }
+
+void CppyyTestData::set_pod_val(CppyyTestPod p)            { m_pod = p; }
+void CppyyTestData::set_pod_ptr_in(CppyyTestPod* pp)       { m_pod = *pp; }
+void CppyyTestData::set_pod_ptr_out(CppyyTestPod* pp)      { *pp = m_pod; }
+void CppyyTestData::set_pod_ref(const CppyyTestPod& rp)    { m_pod = rp; }
+void CppyyTestData::set_pod_ptrptr_in(CppyyTestPod** ppp)  { m_pod = **ppp; }
+void CppyyTestData::set_pod_void_ptrptr_in(void** pp)        { m_pod = **((CppyyTestPod**)pp); }
+void CppyyTestData::set_pod_ptrptr_out(CppyyTestPod** ppp) { delete *ppp; *ppp = new CppyyTestPod(m_pod); }
+void CppyyTestData::set_pod_void_ptrptr_out(void** pp)       { delete *((CppyyTestPod**)pp);
+                                                                 *((CppyyTestPod**)pp) = new CppyyTestPod(m_pod); }
+
+void CppyyTestData::set_pod_ptr(CppyyTestPod* pp)          { m_ppod = pp; }
+
+//- setters const-ref -------------------------------------------------------
+void CppyyTestData::set_bool_cr(const bool& b)                   { m_bool    = b; }
+void CppyyTestData::set_char_cr(const char& c)                   { m_char    = c; }
+void CppyyTestData::set_schar_cr(const signed char& sc)          { m_schar   = sc; }
+void CppyyTestData::set_uchar_cr(const unsigned char& uc)        { m_uchar   = uc; }
+void CppyyTestData::set_short_cr(const short& s)                 { m_short   = s; }
+void CppyyTestData::set_ushort_cr(const unsigned short& us)      { m_ushort  = us; }
+void CppyyTestData::set_int_cr(const int& i)                     { m_int     = i; }
+void CppyyTestData::set_uint_cr(const unsigned int& ui)          { m_uint    = ui; }
+void CppyyTestData::set_long_cr(const long& l)                   { m_long    = l; }
+void CppyyTestData::set_ulong_cr(const unsigned long& ul)        { m_ulong   = ul; }
+void CppyyTestData::set_llong_cr(const long long& ll)            { m_llong   = ll; }
+void CppyyTestData::set_ullong_cr(const unsigned long long& ull) { m_ullong  = ull; }
+void CppyyTestData::set_long64_cr(const Long64_t& l64)           { m_long64  = l64; }
+void CppyyTestData::set_ulong64_cr(const ULong64_t& ul64)        { m_ulong64 = ul64; }
+void CppyyTestData::set_float_cr(const float& f)                 { m_float   = f; }
+void CppyyTestData::set_double_cr(const double& d)               { m_double  = d; }
+void CppyyTestData::set_ldouble_cr(const long double& ld)        { m_ldouble = ld; }
+void CppyyTestData::set_enum_cr(const EWhat& w)                  { m_enum    = w; }
+
+//- passers -----------------------------------------------------------------
+short*          CppyyTestData::pass_array(short* a)          { return a; }
+unsigned short* CppyyTestData::pass_array(unsigned short* a) { return a; }
+int*            CppyyTestData::pass_array(int* a)            { return a; }
+unsigned int*   CppyyTestData::pass_array(unsigned int* a)   { return a; }
+long*           CppyyTestData::pass_array(long* a)           { return a; }
+unsigned long*  CppyyTestData::pass_array(unsigned long* a)  { return a; }
+float*          CppyyTestData::pass_array(float* a)          { return a; }
+double*         CppyyTestData::pass_array(double* a)         { return a; }
+
+bool                 CppyyTestData::s_bool    = false;
+char                 CppyyTestData::s_char    = 'c';
+signed char          CppyyTestData::s_schar   = 's';
+unsigned char        CppyyTestData::s_uchar   = 'u';
+short                CppyyTestData::s_short   = -101;
+unsigned short       CppyyTestData::s_ushort  =  255u;
+int                  CppyyTestData::s_int     = -202;
+unsigned int         CppyyTestData::s_uint    =  202u;
+long                 CppyyTestData::s_long    = -303l;
+unsigned long        CppyyTestData::s_ulong   =  303ul;
+long long            CppyyTestData::s_llong   = -404ll;
+unsigned long long   CppyyTestData::s_ullong  =  404ull;
+Long64_t             CppyyTestData::s_long64  = -505ll;
+ULong64_t            CppyyTestData::s_ulong64 = 505ull;
+float                CppyyTestData::s_float   = -606.f;
+double               CppyyTestData::s_double  = -707.;
+long double          CppyyTestData::s_ldouble = -808.l;
+CppyyTestData::EWhat CppyyTestData::s_enum    = CppyyTestData::kNothing;
+
+//- strings -----------------------------------------------------------------
+const char* CppyyTestData::get_valid_string(const char* in) { return in; }
+const char* CppyyTestData::get_invalid_string() { return (const char*)0; }
+
+
+//= global functions ========================================================
+long get_pod_address(CppyyTestData& c)
 {
-   return (long)&c.fPod.fDouble;
+    return (long)&c.m_pod;
+}
+
+long get_int_address(CppyyTestData& c)
+{
+    return (long)&c.m_pod.m_int;
+}
+
+long get_double_address(CppyyTestData& c)
+{
+    return (long)&c.m_pod.m_double;
+}
+
+//= global variables/pointers ===============================================
+int g_int = 42;
+
+void set_global_int(int i) {
+   g_int = i;
+}
+
+int get_global_int() {
+   return g_int;
+}
+
+CppyyTestPod* g_pod = (CppyyTestPod*)0;
+
+bool is_global_pod(CppyyTestPod* t) {
+   return t == g_pod;
+}
+
+void set_global_pod(CppyyTestPod* t) {
+   g_pod = t;
+}
+
+CppyyTestPod* get_global_pod() {
+   return g_pod;
+}
+
+CppyyTestPod* get_null_pod() {
+   return (CppyyTestPod*)0;
 }

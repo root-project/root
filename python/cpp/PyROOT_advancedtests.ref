@@ -20,6 +20,8 @@ Verify access to array of doubles ... ok
 Test life time of temporary in long expression ... ok
 Access C++ standard exception objects from python ... ok
 Assignment operator on pointers ... ok
+Lazy lookup of late created functions ... ok
+Lazy lookup of late created overloaded functions ... ok
 
 ----------------------------------------------------------------------
 
