@@ -187,7 +187,7 @@ struct staticInitHelper{
       referenceValues["Tan"]   =  std::make_pair(1.f,7);  
       referenceValues["Atan"]  =  std::make_pair(1.f,4);  
       referenceValues["Log"]   =  std::make_pair(1.f,4);  
-      referenceValues["Isqrt"] =  std::make_pair(1.f,4);  
+      referenceValues["Isqrt"] =  std::make_pair(.4.f,4);  // Fix fluctuation on x86_64-slc5-gcc47 
       referenceValues["Asin"]  =  std::make_pair(1.f,4);  
       referenceValues["Acos"]  =  std::make_pair(1.f,13);    
   }
