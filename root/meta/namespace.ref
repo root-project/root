@@ -174,3 +174,6 @@ OS_OS.I.Also
 OS_OS.I.Also.I                                    
 OS_OS.I.Also.I.Storage        -42                 
 OS_OS.I.Also.I.Also           0                   
+Empty A: got 0 funs
+More A: got 1 funs
+Full A: there are 2 A::f() overloads.

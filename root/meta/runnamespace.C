@@ -1,5 +1,4 @@
 {
-// Fill out the code of the actual test
    gROOT->ProcessLine(".L fornamespace.C+");
 gROOT->GetClass("MySpace::MyClass");
 #ifdef ClingWorkAroundMissingDynamicScope
@@ -17,4 +16,24 @@ gROOT->GetListOfGlobalFunctions()->FindObject("globalFunc")->Print();
 gROOT->GetListOfGlobalFunctions()->FindObject("globalFuncInline")->Print();
 
  storeACl();
+
+
+ // Tests for the ROOT/Meta side of ROOT-6079, ROOT-6094:
+   gROOT->ProcessLine("namespace A {}");
+   TClass* clA = TClass::GetClass("A");
+   TList* funs = clA->GetListOfMethods(true);
+   printf("Empty A: got %d funs\n", funs ? funs->GetEntries() : 0);
+   gROOT->ProcessLine("namespace A {void f();}");
+   funs = clA->GetListOfMethods(true);
+   printf("More A: got %d funs\n", funs ? funs->GetEntries() : 0);
+   gROOT->ProcessLine("namespace A {void f(int); void g(); void f_();}");
+   TCollection* methods = clA->GetListOfMethods();
+   TMethod* meth = dynamic_cast<TMethod*>(methods->FindObject("f"));
+   if (!meth) {
+      printf("Cannot find any A::f()!\n");
+      exit(1);
+   }
+   TCollection* overloads = clA->GetListOfMethodOverloads("f");
+   printf ("Full A: there are %d A::f() overloads.\n", overloads->GetSize());
+   return 0;
 };
