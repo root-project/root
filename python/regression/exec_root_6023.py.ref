@@ -1,2 +1,0 @@
-exec_root_6023.py:8: RuntimeWarning: creating executor for unknown type "string(&)[2]"
-  b = c.value()
