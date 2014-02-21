@@ -2690,11 +2690,9 @@ int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
                                     std::string& definitionStr)
 {
    // Detect if the rDecl is a template instance.
-   // If No: just extract the definition of the enclosing namespaces
-   // If yes; extract the full blown template fwd declaration
    const clang::ClassTemplateSpecializationDecl* tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&rDecl);
-   if (!tmplSpecDecl){ // Should never happen
-      return ExtractNamespacesDefinition(rDecl,definitionStr);
+   if (!tmplSpecDecl){ 
+      return 1;
    }
 
    const clang::TemplateDecl* templDecl = tmplSpecDecl->getSpecializedTemplate();
@@ -2749,6 +2747,17 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
 }
 
 //______________________________________________________________________________
+template <class T>
+bool AppendIfNotThere(const T& el, std::list<T>& el_list)
+{
+   if (std::count (el_list.begin(), el_list.end(), el) == 0 ){
+      el_list.push_back(el);
+      return true;
+   }
+   return false;
+}
+
+//______________________________________________________________________________
 void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
                                            std::list<std::string>& classesList,
                                            std::list<std::string>& classesListForRootmap,
@@ -2769,13 +2778,16 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       classesList.push_back(normalizedName);
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
-      // Get template definition if needed
+      // Get always the containing namespace, put it in the list if not there
       std::string fwdDeclaration;
-      int retCode = ExtractDefinitionFromRecordDecl(*rDecl,interpreter,fwdDeclaration);
+      int retCode = ExtractNamespacesDefinition(*rDecl, fwdDeclaration);
+      if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
+
+      // Get template definition and put it in if not there
+      fwdDeclaration = "";
+      retCode = ExtractDefinitionFromRecordDecl(*rDecl,interpreter,fwdDeclaration);
       // Linear search. Probably optimisable
-      if (retCode==0 &&
-         std::count (fwdDeclarationsList.begin(), fwdDeclarationsList.end(), fwdDeclaration) == 0 )
-         fwdDeclarationsList.push_back(fwdDeclaration);
+      if (retCode==0) AppendIfNotThere(fwdDeclaration,fwdDeclarationsList);
 
 
       // Loop on attributes, if rootmap=false, don't put it in the list!
