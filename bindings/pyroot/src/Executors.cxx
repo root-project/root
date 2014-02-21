@@ -205,6 +205,8 @@ PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
    ULongLong, ULong64_t, ULong64_t,  PyLong_FromUnsignedLongLong, PyLongOrInt_AsULong64,   PRCallFuncExecInt64 )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
 PYROOT_IMPLEMENT_BASIC_REFEXECUTOR( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
+PYROOT_IMPLEMENT_BASIC_REFEXECUTOR(
+   LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble, PRCallFuncExecDouble )
 
 //____________________________________________________________________________
 PyObject* PyROOT::TSTLStringRefExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
@@ -523,6 +525,7 @@ namespace {
    PYROOT_EXECUTOR_FACTORY( FloatRef )
    PYROOT_EXECUTOR_FACTORY( Double )
    PYROOT_EXECUTOR_FACTORY( DoubleRef )
+   PYROOT_EXECUTOR_FACTORY( LongDoubleRef )
    PYROOT_EXECUTOR_FACTORY( Void )
    PYROOT_EXECUTOR_FACTORY( LongLong )
    PYROOT_EXECUTOR_FACTORY( LongLongRef )
@@ -550,6 +553,8 @@ namespace {
 
    NFp_t factories_[] = {
    // factories for built-ins
+      NFp_t( "bool",               &CreateBoolExecutor                ),
+      NFp_t( "const bool&",        &CreateBoolConstRefExecutor        ),
       NFp_t( "char",               &CreateCharExecutor                ),
       NFp_t( "signed char",        &CreateCharExecutor                ),
       NFp_t( "unsigned char",      &CreateCharExecutor                ),
@@ -578,15 +583,14 @@ namespace {
       NFp_t( "ULong64_t",          &CreateULongLongExecutor           ),
       NFp_t( "unsigned long long&", &CreateULongLongRefExecutor       ),
       NFp_t( "ULong64_t&",         &CreateULongLongRefExecutor        ),
+
       NFp_t( "float",              &CreateDoubleExecutor              ),
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
+      NFp_t( "long double",        &CreateDoubleExecutor              ),   // TODO: lost precision
+      NFp_t( "long double&",       &CreateLongDoubleRefExecutor       ),
       NFp_t( "void",               &CreateVoidExecutor                ),
-      NFp_t( "bool",               &CreateBoolExecutor                ),
-      NFp_t( "const bool&",        &CreateBoolConstRefExecutor        ),
-      NFp_t( "const char*",        &CreateCStringExecutor             ),
-      NFp_t( "char*",              &CreateCStringExecutor             ),
 
    // pointer/array factories
       NFp_t( "void*",              &CreateVoidArrayExecutor           ),
@@ -601,6 +605,8 @@ namespace {
       NFp_t( "double*",            &CreateDoubleArrayExecutor         ),
 
    // factories for special cases
+      NFp_t( "const char*",        &CreateCStringExecutor             ),
+      NFp_t( "char*",              &CreateCStringExecutor             ),
       NFp_t( "std::string",        &CreateSTLStringExecutor           ),
       NFp_t( "string",             &CreateSTLStringExecutor           ),
       NFp_t( "std::string&",       &CreateSTLStringRefExecutor        ),

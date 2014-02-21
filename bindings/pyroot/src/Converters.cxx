@@ -364,12 +364,13 @@ Bool_t PyROOT::TDoubleConverter::SetArg(
    if ( para.fDouble == -1.0 && PyErr_Occurred() )
       return kFALSE;
    else if ( func )
-      gInterpreter->CallFunc_SetArg( func,  para.fDouble );
+      gInterpreter->CallFunc_SetArg( func, para.fDouble );
    return kTRUE;
 }
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,      Float_t,      Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Double,     Double_t,     Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleRefConverter::SetArg(
@@ -398,8 +399,9 @@ Bool_t PyROOT::TDoubleRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( DoubleRef )
 
 //____________________________________________________________________________
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,  Float_t,  PyFloat_AsDouble, VerifyPyFloat )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double, Double_t, PyFloat_AsDouble, VerifyPyFloat )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Float,      Float_t,      PyFloat_AsDouble, VerifyPyFloat )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Double,     Double_t,     PyFloat_AsDouble, VerifyPyFloat )
+PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( LongDouble, LongDouble_t, PyFloat_AsDouble, VerifyPyFloat )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TVoidConverter::SetArg( PyObject*, TParameter_t&, CallFunc_t*, Long_t )
@@ -1249,6 +1251,8 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
    PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstDoubleRef )
+   PYROOT_BASIC_CONVERTER_FACTORY( LongDouble )
+   PYROOT_BASIC_CONVERTER_FACTORY( ConstLongDoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstLongLongRef )
@@ -1310,12 +1314,14 @@ namespace {
       NFp_t( "const unsigned long long&", &CreateConstULongLongRefConverter  ),
       NFp_t( "ULong64_t",                 &CreateULongLongConverter          ),
       NFp_t( "const ULong64_t&",          &CreateConstULongLongRefConverter  ),
+
       NFp_t( "float",                     &CreateFloatConverter              ),
       NFp_t( "const float&",              &CreateConstFloatRefConverter      ),
-
       NFp_t( "double",                    &CreateDoubleConverter             ),
       NFp_t( "double&",                   &CreateDoubleRefConverter          ),
       NFp_t( "const double&",             &CreateConstDoubleRefConverter     ),
+      NFp_t( "long double",               &CreateLongDoubleConverter         ),
+      NFp_t( "const long double&",        &CreateConstLongDoubleRefConverter ),
       NFp_t( "void",                      &CreateVoidConverter               ),
 
    // pointer/array factories
