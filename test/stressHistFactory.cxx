@@ -118,7 +118,7 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
             if (!oneTest || testNumber == i) {
                int status = (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
                StatusPrint(i, (*iter)->GetName(), status , lineWidth);
-               if (!status) nFailed++; 
+               if (status <= 0) nFailed++; // successfull tests return a positive number
             }
             delete *iter;
          }
@@ -155,11 +155,8 @@ Int_t stressHistFactory(const char* refFile, Bool_t writeRef, Int_t verbose, Boo
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    gBenchmark->Print("stressHistFactory");
-#ifdef __CINT__
-   Double_t reftime = 186.34; //pcbrun4 interpreted
-#else
-   Double_t reftime = 93.59; //pcbrun4 compiled
-#endif
+
+   Double_t reftime = 2.4; //maclm compiled
    const Double_t rootmarks = 860 * reftime / gBenchmark->GetCpuTime("stressHistFactory");
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
