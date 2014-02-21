@@ -235,11 +235,13 @@ TGraphErrors::TGraphErrors(const char *filename, const char *format, Option_t *o
    //  format = "%lg %lg"         read only 2 first columns into X,Y
    //  format = "%lg %lg %lg"     read only 3 first columns into X,Y and EY
    //  format = "%lg %lg %lg %lg" read only 4 first columns into X,Y,EX,EY.
+   //
    // For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
    // you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
    // e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';') 
    // used once (e.g. "1;1") or in a combined way (" 1;,;;  1"). 
    // Note in that case, the instanciation is about 2 times slower.
+   // In case a delimiter is specified, the format "%lg %lg %lg" will read X,Y,EX.
 
    if (!CtorAllocate()) return;
    Double_t x, y, ex, ey;
