@@ -1049,7 +1049,7 @@ void TClass::Init(const char *name, Version_t cversion,
    // Initialize a TClass object. This object contains the full dictionary
    // of a class. It has list to baseclasses, datamembers and methods.
    if (!gROOT)
-      ::Fatal("TClass::TClass", "ROOT system not initialized");
+      ::Fatal("TClass::Init", "ROOT system not initialized");
 
    // Always strip the default STL template arguments (from any template argument or the class name)
    fName           = TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str();
@@ -1143,7 +1143,7 @@ void TClass::Init(const char *name, Version_t cversion,
 
       if (shouldLoad) {
          if (!gInterpreter)
-            ::Fatal("TClass::TClass", "gInterpreter not initialized");
+            ::Fatal("TClass::Init", "gInterpreter not initialized");
 
          gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
          if (!fClassInfo) {
@@ -1157,9 +1157,9 @@ void TClass::Init(const char *name, Version_t cversion,
    if (!silent && !fClassInfo && !isStl && fName.First('@')==kNPOS &&
        !TClassEdit::IsInterpreterDetail(fName.Data()) ) {
       if (fState == kHasTClassInit) {
-         ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+         ::Error("TClass::Init", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
       } else {
-         ::Warning("TClass::TClass", "no dictionary for class %s is available", fName.Data());
+         ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
       }
    }
 
