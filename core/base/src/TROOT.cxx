@@ -104,6 +104,7 @@
 #include "TMap.h"
 #include "TObjString.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #ifdef R__HAS_CLING
 # include "TCintWithCling.h"
 #else
@@ -1821,25 +1822,18 @@ void TROOT::ReadGitInfo()
    delete [] filename;
 }
 
-static thread_local Bool_t fgReadingObject = false;
+static TTHREAD_TLS(Bool_t) fgReadingObject = false;
+
 //______________________________________________________________________________
 Bool_t TROOT::ReadingObject() const 
 { 
    /* Deprecated (will be removed in next release) */ 
-#if __cplusplus > 199711L
    return fgReadingObject;
-#else
-   return fReadingObject;
-#endif
 }
 
 void TROOT::SetReadingObject(Bool_t flag) 
 { 
-#if __cplusplus > 199711L
    fgReadingObject = flag;
-#else
-   fReadingObject = flag; 
-#endif
 }
 
 

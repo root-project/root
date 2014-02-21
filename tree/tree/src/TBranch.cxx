@@ -43,7 +43,8 @@
 #include <string.h>
 #include <stdio.h>
 
-R__EXTERN thread_local TTree* gTree;
+#include "ThreadLocalStorage.h"
+R__EXTERN TTHREAD_TLS(TTree*) gTree;
 
 Int_t TBranch::fgCount = 0;
 

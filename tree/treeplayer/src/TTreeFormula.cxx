@@ -54,8 +54,9 @@
 #include <algorithm>
 
 const Int_t kMaxLen     = 1024;
-R__EXTERN thread_local TTree *gTree;
 
+#include "ThreadLocalStorage.h"
+R__EXTERN TTHREAD_TLS(TTree*) gTree;
 
 ClassImp(TTreeFormula)
 

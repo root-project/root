@@ -99,12 +99,13 @@
 #include "TVirtualMutex.h"
 #include "TSystem.h"
 #include "TObjString.h"
+#include "ThreadLocalStorage.h"
 
 
 TPluginManager *gPluginMgr;   // main plugin manager created in TROOT
 
 static TVirtualMutex *gPluginManagerMutex;
-static thread_local bool fgReadingDirs = false;
+static TTHREAD_TLS(bool) fgReadingDirs (false);
 
 ClassImp(TPluginHandler)
 

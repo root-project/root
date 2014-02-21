@@ -31,7 +31,8 @@
 
 #include <cstring>
 
-R__EXTERN thread_local TTree* gTree;
+#include "ThreadLocalStorage.h"
+R__EXTERN TTHREAD_TLS(TTree*) gTree;
 
 ClassImp(TBranchClones)
 
