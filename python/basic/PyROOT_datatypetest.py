@@ -73,9 +73,8 @@ class TestClassDATATYPES:
         assert round(c.get_float_cr()   + 66.,  5) == 0
         assert round(c.m_double         + 77., 11) == 0
         assert round(c.get_double_cr()  + 77., 11) == 0
-        if not PYTEST_MIGRATION:
-           assert round(c.m_ldouble        + 88., 24) == 0
-           assert round(c.get_ldouble_cr() + 88., 24) == 0
+        assert round(c.m_ldouble        + 88., 24) == 0
+        assert round(c.get_ldouble_cr() + 88., 24) == 0
 
         # reading of enum types
         assert c.m_enum == CppyyTestData.kNothing
@@ -190,7 +189,7 @@ class TestClassDATATYPES:
         # float types through functions
         c.set_float(0.123);   assert round(c.get_float()   - 0.123,  5) == 0
         c.set_double(0.456);  assert round(c.get_double()  - 0.456, 11) == 0
-        if not PYTEST_MIGRATION:
+        if not FIXCLING:
             c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 24) == 0
 
         # float types through data members
@@ -200,7 +199,7 @@ class TestClassDATATYPES:
         c.m_double = 0.678;      assert round(c.get_double()  - 0.678, 11) == 0
         c.set_double(0.890);     assert round(c.m_double      - 0.890, 11) == 0
         c.set_double_cr(0.012);  assert round(c.m_double      - 0.012, 11) == 0
-        if not PYTEST_MIGRATION:
+        if not FIXCLING:
             c.m_ldouble = 0.345;     assert round(c.get_ldouble() - 0.345, 24) == 0
             c.set_ldouble(0.678);    assert round(c.m_ldouble     - 0.678, 24) == 0
             c.set_ldouble_cr(0.902); assert round(c.m_ldouble     - 0.902, 24) == 0
@@ -316,9 +315,8 @@ class TestClassDATATYPES:
         assert round(c.s_float               + 606.,  5) == 0
         assert round(CppyyTestData.s_double  + 707., 11) == 0
         assert round(c.s_double              + 707., 11) == 0
-        if not PYTEST_MIGRATION:
-            assert round(CppyyTestData.s_ldouble + 808., 24) == 0
-            assert round(c.s_double              + 808., 42) == 0
+        assert round(CppyyTestData.s_ldouble + 808., 24) == 0
+        assert round(c.s_ldouble              + 808., 42) == 0
 
         assert c.s_enum             == CppyyTestData.kNothing
         assert CppyyTestData.s_enum == CppyyTestData.kNothing
@@ -402,11 +400,10 @@ class TestClassDATATYPES:
         assert CppyyTestData.s_double           == -math.pi
         CppyyTestData.s_double                   =  math.pi
         assert c.s_double                       ==  math.pi
-        if not PYTEST_MIGRATION:
-            c.s_ldouble                              = -math.pi
-            assert CppyyTestData.s_ldouble          == -math.pi
-            CppyyTestData.s_ldouble                  =  math.pi
-            assert c.s_ldouble                      ==  math.pi
+        c.s_ldouble                              = -math.pi
+        assert CppyyTestData.s_ldouble          == -math.pi
+        CppyyTestData.s_ldouble                  =  math.pi
+        assert c.s_ldouble                      ==  math.pi
 
         if not FIXCLING:
             c.s_enum                     = CppyyTestData.kSomething
