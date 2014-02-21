@@ -102,7 +102,9 @@ public:
     }
     // build model using XML files
     gSystem->ChangeDirectory(fTestDirectory + "/XML/");
-    TString cmd = "hist2workspace config/Measurement.xml";
+    // be sure libraries are found for running hist2workspace
+    gSystem->AddDynamicPath("$ROOTSYS/lib");
+    TString cmd = "$ROOTSYS/bin/hist2workspace config/Measurement.xml";
     int ret = gSystem->Exec(cmd);
     if (ret != 0) { 
        Error("testCode","Error running hist2workspace");

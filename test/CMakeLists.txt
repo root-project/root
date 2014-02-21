@@ -162,7 +162,7 @@ if(ROOT_roofit_FOUND)
 if(ROOT_xml_FOUND)
   ROOT_EXECUTABLE(stressHistFactory stressHistFactory.cxx LIBRARIES RooStats HistFactory XMLParser)
   file(COPY ${CMAKE_SOURCE_DIR}/test/HistFactoryTest.tar DESTINATION  ${CMAKE_CURRENT_BINARY_DIR} )
-  ROOT_ADD_TEST(test-stressHistFactory COMMAND stressHistFactory -f ${CMAKE_SOURCE_DIR}/test/stressHistFactory_ref.root FAILREGEX "FAILED")  
+  ROOT_ADD_TEST(test-stressHistFactory ENVIRONMENT ROOTSYS=${CMAKE_BINARY_DIR} COMMAND stressHistFactory -f ${CMAKE_SOURCE_DIR}/test/stressHistFactory_ref.root FAILREGEX "FAILED")  
 endif()
 endif()
 
