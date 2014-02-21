@@ -18,7 +18,7 @@ Class category: foreign.
   * class1& class1::operator=(const class1&)
  o Members (2):
   * int m_i [ isBasic ]
-  * int m_j [ isBasic isTransient ]
+  * int m_j [ isBasic isTransient "!" ]
 --- End Class class1
 
 --- Class class2
@@ -110,7 +110,7 @@ Class category: foreign.
   * class4& class4::operator=(const class4&)
  o Members (3):
   * int m_i [ isBasic ]
-  * int m_j [ isBasic isTransient ]
+  * int m_j [ isBasic isTransient "!" ]
   * double* m_dArray [ isPtr isBasic "[m_i]" ]
 --- End Class class4
 
