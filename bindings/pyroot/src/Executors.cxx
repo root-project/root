@@ -394,6 +394,14 @@ PyObject* PyROOT::TRootObjectPtrRefExecutor::Execute( CallFunc_t* func, void* se
 }
 
 //____________________________________________________________________________
+PyObject* PyROOT::TRootObjectArrayExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
+{
+// execute <func> with argument <self>, construct TTupleOfInstances from return value
+   return BindRootObjectArray( (void*)PRCallFuncExecInt( func, self, release_gil ), fClass, fArraySize );
+}
+
+
+//____________________________________________________________________________
 PyObject* PyROOT::TConstructorExecutor::Execute( CallFunc_t* func, void* klass, Bool_t release_gil )
 {
 // package return address in PyObject* for caller to handle appropriately
@@ -441,6 +449,13 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
    if ( h != gExecFactories.end() )
       return (h->second)();
 
+// CLING WORKAROUND -- if the type is a fixed-size array, it will have a funky
+// resolved type like MyClass(&)[N], which TClass::GetClass() fails on. So, strip
+// it down:
+   if ( cpd == "[]" )
+      realType = realType.substr( 0, realType.rfind("(") );
+// -- CLING WORKAROUND
+
 // ROOT classes and special cases (enum)
    TExecutor* result = 0;
    if ( TClass* klass = TClass::GetClass( realType.c_str() ) ) {
@@ -452,6 +467,13 @@ PyROOT::TExecutor* PyROOT::CreateExecutor( const std::string& fullType )
          result = new TRootObjectPtrPtrExecutor( klass );
       else if ( cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrRefExecutor( klass );
+      else if ( cpd == "[]" ) {
+         Py_ssize_t asize = Utility::ArraySize( resolvedType );
+         if ( 0 < asize )
+            result = new TRootObjectArrayExecutor( klass, asize );
+         else
+            result = new TRootObjectPtrRefExecutor( klass );
+      }
       else
          result = new TRootObjectExecutor( klass );
    } else if ( gInterpreter->ClassInfo_IsEnum( realType.c_str() ) ) {

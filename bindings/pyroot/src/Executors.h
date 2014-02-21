@@ -126,6 +126,16 @@ namespace PyROOT {
       virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
    };
 
+   class TRootObjectArrayExecutor : public TRootObjectExecutor {
+   public:
+      TRootObjectArrayExecutor( const TClassRef& klass, Py_ssize_t array_size )
+         : TRootObjectExecutor ( klass ), fArraySize( array_size ) {}
+      virtual PyObject* Execute( CallFunc_t*, void*, Bool_t release_gil );
+
+   protected:
+      Py_ssize_t fArraySize;
+   };
+
 // factories
    typedef TExecutor* (*ExecutorFactory_t) ();
    typedef std::map< std::string, ExecutorFactory_t > ExecFactories_t;

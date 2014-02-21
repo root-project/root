@@ -79,6 +79,7 @@ namespace PyROOT {
 
    // meta information
       const std::string Compound( const std::string& name );
+      Py_ssize_t ArraySize( const std::string& name );
       const std::string ClassName( PyObject* pyobj );
       const std::string ResolveTypedef( const std::string& name, TClass* containing_scope = 0 );
 

@@ -123,6 +123,13 @@ namespace {
       }
    } initOperatorMapping_;
 
+   inline void RemoveConst( std::string& cleanName ) {
+      std::string::size_type spos = std::string::npos;
+      while ( ( spos = cleanName.find( "const" ) ) != std::string::npos ) {
+         cleanName.swap( cleanName.erase( spos, 5 ) );
+      }
+   }
+
 } // unnamed namespace
 
 
@@ -589,10 +596,7 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
 {
 // Break down the compound of a fully qualified type name.
    std::string cleanName = name;
-   std::string::size_type spos = std::string::npos;
-   while ( ( spos = cleanName.find( "const" ) ) != std::string::npos ) {
-      cleanName.swap( cleanName.erase( spos, 5 ) );
-   }
+   RemoveConst( cleanName );
 
    std::string compound = "";
    for ( int ipos = (int)cleanName.size()-1; 0 <= ipos; --ipos ) {
@@ -608,6 +612,24 @@ const std::string PyROOT::Utility::Compound( const std::string& name )
        return "[]";
  
    return compound;
+}
+
+//____________________________________________________________________________
+Py_ssize_t PyROOT::Utility::ArraySize( const std::string& name )
+{
+// Extract size from an array type, if available.
+   std::string cleanName = name;
+   RemoveConst( cleanName );
+
+   if ( cleanName[cleanName.size()-1] == ']' ) {
+      std::string::size_type idx = cleanName.rfind( '[' );
+      if ( idx != std::string::npos ) {
+         const std::string asize = cleanName.substr( idx+1, cleanName.size()-2 );
+         return strtoul( asize.c_str(), NULL, 0 );
+      }
+   }
+
+   return -1;
 }
 
 //____________________________________________________________________________
