@@ -86,7 +86,9 @@
 
 
 R__EXTERN Foption_t Foption;
-R__EXTERN  thread_local TTree *gTree;
+
+#include "ThreadLocalStorage.h"
+R__EXTERN TTHREAD_TLS(TTree*) gTree;
 
 TVirtualFitter *tFitter=0;
 

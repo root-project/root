@@ -115,6 +115,7 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
+#include "ThreadLocalStorage.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -2102,25 +2103,18 @@ void TROOT::ReadGitInfo()
    delete [] filename;
 }
 
-static thread_local Bool_t fgReadingObject = false;
+static TTHREAD_TLS(Bool_t) fgReadingObject = false;
+
 //______________________________________________________________________________
 Bool_t TROOT::ReadingObject() const 
 { 
    /* Deprecated (will be removed in next release) */ 
-#if __cplusplus > 199711L
    return fgReadingObject;
-#else
-   return fReadingObject;
-#endif
 }
 
 void TROOT::SetReadingObject(Bool_t flag) 
 { 
-#if __cplusplus > 199711L
    fgReadingObject = flag;
-#else
-   fReadingObject = flag; 
-#endif
 }
 
 

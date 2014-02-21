@@ -377,7 +377,8 @@
 Int_t    TTree::fgBranchStyle = 1;  // Use new TBranch style with TBranchElement.
 Long64_t TTree::fgMaxTreeSize = 100000000000LL;
 
-thread_local TTree* gTree;
+#include "ThreadLocalStorage.h"
+TTHREAD_TLS(TTree*) gTree;
 
 ClassImp(TTree)
 
