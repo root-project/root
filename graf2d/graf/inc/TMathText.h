@@ -64,7 +64,7 @@ public:
 			std::ostream &out, Option_t *option = "");
 		friend class TMathTextRenderer;
 
-		ClassDef(TMathText,1)
+		ClassDef(TMathText,1) //TeX mathematical formula
 };
 
 #endif
