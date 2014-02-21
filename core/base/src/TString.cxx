@@ -2345,6 +2345,8 @@ TString TString::Format(const char *va_(fmt), ...)
 
 //---- Global String Handling Functions ----------------------------------------
 
+#include "ThreadLocalStorage.h"
+
 static const int cb_size  = 4096;
 static const int fld_size = 2048;
 
@@ -2354,9 +2356,14 @@ static thread_local char gFormbuf[cb_size];       // some slob for form overflow
 static thread_local char *gBfree  = gFormbuf;
 static thread_local char *gEndbuf = &gFormbuf[cb_size-1];
 #else
+typedef char formBuf_t[cb_size];
+TTHREAD_TLS_INIT2(formBuf_t,gFormbuf,); // some slob for form overflow
+TTHREAD_TLS_INIT(char*,gFormbuf,gFormbuf);
+TTHREAD_TLS_INIT(char*,gFormend,&gFormbuf[cb_size-1]);
 static char gFormbuf[cb_size];       // some slob for form overflow
 static char *gBfree  = gFormbuf;
 static char *gEndbuf = &gFormbuf[cb_size-1];
+TTHREAD_TLS_INIT(char*,gEndbuf,&gFormbuf[cb_size-1]);
 #endif
 //______________________________________________________________________________
 static char *SlowFormat(const char *format, va_list ap, int hint)

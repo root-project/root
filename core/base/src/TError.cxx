@@ -199,8 +199,8 @@ void ErrorHandler(Int_t level, const char *location, const char *fmt, va_list ap
    // General error handler function. It calls the user set error handler.
 
 
-   static thread_local Int_t buf_size = 2048;
-   static thread_local char *buf = 0;
+   TTHREAD_TLS_INIT(Int_t,buf_size,2048);
+   TTHREAD_TLS_INIT(char*,buf,0);
 
    int vc = 0;
    va_list sap;
@@ -234,7 +234,6 @@ again:
 
    char *bp;
    if (level >= kSysError && level < kFatal) {
-      R__LOCKGUARD2(gErrorMutex);
       bp = Form("%s (%s)", buf, gSystem->GetError());
    } else
       bp = buf;
