@@ -1212,6 +1212,26 @@ void TGCocoa::IconifyWindow(Window_t wid)
    // Iconifies the window "wid".
    if (!wid)
       return;
+   
+   assert(!fPimpl->IsRootWindow(wid) && "IconifyWindow, can not iconify the root window");
+   assert(fPimpl->GetWindow(wid).fIsPixmap == NO && "IconifyWindow, invalid window id");
+
+   NSObject<X11Window> * const win = fPimpl->GetWindow(wid);
+   assert(win.fQuartzWindow == win && "IconifyWindow, can be called only for a top level window");
+   
+   fPimpl->fX11EventTranslator.CheckUnmappedView(wid);
+
+   NSObject<X11Window> * const window = fPimpl->GetWindow(wid);   
+   if (fPimpl->fX11CommandBuffer.BufferSize())
+      fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(wid);
+   
+   //TEST: "fix" a keyboard focus.
+   if (window.fQuartzWindow.fHasFocus) {
+      X11::WindowLostFocus(win.fID);
+      window.fQuartzWindow.fHasFocus = NO;//If any.
+   }
+   
+   [win.fQuartzWindow miniaturize : win.fQuartzWindow];
 }
 
 //______________________________________________________________________________
