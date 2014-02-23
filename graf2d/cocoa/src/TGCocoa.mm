@@ -1225,10 +1225,9 @@ void TGCocoa::IconifyWindow(Window_t wid)
    if (fPimpl->fX11CommandBuffer.BufferSize())
       fPimpl->fX11CommandBuffer.RemoveOperationsForDrawable(wid);
    
-   //TEST: "fix" a keyboard focus.
    if (window.fQuartzWindow.fHasFocus) {
       X11::WindowLostFocus(win.fID);
-      window.fQuartzWindow.fHasFocus = NO;//If any.
+      window.fQuartzWindow.fHasFocus = NO;
    }
    
    [win.fQuartzWindow miniaturize : win.fQuartzWindow];
