@@ -249,8 +249,10 @@ inline void compareFunctions(const std::string& label,
 //
 void checkFunction(const std::string& label,float speedup, uint32_t maxdiffBit)
 {
-   if (gbl.referenceValues[label].first > speedup)
-      std::cerr << "WARNING " << label << " is too slow!\n";
+// Remove check on the speed as routinely this program is ran on virtual build nodes
+// and several factors may cause fluctuations in the result.
+//   if (gbl.referenceValues[label].first > speedup)
+//      std::cerr << "Note " << label << " was slower than the system library.\n";
    if (gbl.referenceValues[label].second < maxdiffBit)
       std::cerr << "WARNING " << label << " is too inaccurate!\n";
 }
