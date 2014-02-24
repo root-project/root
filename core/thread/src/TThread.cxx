@@ -33,6 +33,7 @@
 #include "TInterpreter.h"
 #include "TError.h"
 #include "Varargs.h"
+#include "ThreadLocalStorage.h"
 
 TThreadImp     *TThread::fgThreadImp = 0;
 Long_t          TThread::fgMainId = 0;
@@ -449,7 +450,10 @@ TThread *TThread::Self()
 {
    // Static method returning pointer to current thread.
 
-   return GetThread(SelfId());
+   static TTHREAD_TLS(TThread*) self = 0;
+
+   if (!self) self = GetThread(SelfId());
+   return self;
 }
 
 
