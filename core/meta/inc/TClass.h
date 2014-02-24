@@ -158,8 +158,10 @@ private:
    Int_t              fStreamerType;    //!cached of the streaming method to use
 #if __cplusplus >= 201103L
    mutable std::atomic<TVirtualStreamerInfo*>  fCurrentInfo;     //!cached current streamer info.
+   mutable std::atomic<TVirtualStreamerInfo*>  fLastReadInfo;    //!cached streamer info used in the last read.
 #else
    mutable TVirtualStreamerInfo     *fCurrentInfo;     //!cached current streamer info.
+   mutable TVirtualStreamerInfo     *fLastReadInfo;    //!cached streamer info used in the last read.
 #endif
    TClassRef         *fRefStart;        //!List of references to this object
    TVirtualRefProxy  *fRefProxy;        //!Pointer to reference proxy if this class represents a reference
@@ -192,7 +194,7 @@ private:
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
    
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
-   static TTHREAD_TLS(ENewType)  fgCallingNew;  //Intent of why/how TClass::New() is called
+   static TTHREAD_TLS(enum ENewType)  fgCallingNew;  //Intent of why/how TClass::New() is called
 #if __cplusplus >= 201103L
    static std::atomic<Int_t>     fgClassCount;  //provides unique id for a each class
 #else
@@ -299,6 +301,8 @@ public:
       if (fCurrentInfo) return fCurrentInfo;
       else return DetermineCurrentStreamerInfo();
    }
+   TVirtualStreamerInfo     *GetLastReadInfo() const { return fLastReadInfo; }
+   void                      SetLastReadInfo(TVirtualStreamerInfo *info) { fLastReadInfo = info; }
    TList             *GetListOfDataMembers();
    TList             *GetListOfBases();
    TList             *GetListOfMethods();

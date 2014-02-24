@@ -3743,19 +3743,27 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    //---------------------------------------------------------------------------
    // Get local streamer info
    //---------------------------------------------------------------------------
-   else {
-      R__LOCKGUARD(gCINTMutex);
+   else { 
       // The StreamerInfo should exist at this point.
-      TObjArray *infos = cl->GetStreamerInfos();
-      Int_t infocapacity = infos->Capacity();
-      if (infocapacity) {
-         if (version < -1 || version >= infocapacity) {
-            Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-                  cl->GetName(), version, Length());
-            CheckByteCount(R__s, R__c, cl);
-            return 0;
+      TStreamerInfo *guess = (TStreamerInfo*)cl->GetLastReadInfo();
+      if (guess && guess->GetClassVersion() == version) {
+         sinfo = guess;
+      } else {
+         R__LOCKGUARD(gCINTMutex);
+
+         TObjArray *infos = cl->GetStreamerInfos();
+         Int_t infocapacity = infos->Capacity();
+         if (infocapacity) {
+            if (version < -1 || version >= infocapacity) {
+               Error("ReadClassBuffer","class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                     cl->GetName(), version, Length());
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            }
+            sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
+            // const_cast okay because of the lock on gCINTMutex.
+            const_cast<TClass*>(cl)->SetLastReadInfo(sinfo);
          }
-         sinfo = (TStreamerInfo*) infos->UncheckedAt(version);
       }
       if (sinfo == 0) {
          // Unless the data is coming via a socket connection from with schema evolution
@@ -3765,6 +3773,9 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
          // We could also get here if there old class version was '1' and the new class version is higher than 1
          // AND the checksum is the same.
          if (v2file || version == cl->GetClassVersion() || version == 1 ) {
+            R__LOCKGUARD(gCINTMutex);
+            TObjArray *infos = cl->GetStreamerInfos();
+
             const_cast<TClass*>(cl)->BuildRealData(pointer);
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             infos->AddAtAndExpand(sinfo,version);
@@ -3789,6 +3800,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
       { 
          // Streamer info has not been compiled, but exists.
          // Therefore it was read in from a file and we have to do schema evolution?
+         R__LOCKGUARD(gCINTMutex);
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo->BuildOld();
       }
