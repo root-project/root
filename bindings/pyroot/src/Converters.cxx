@@ -99,17 +99,13 @@ static inline char PyROOT_PyUnicode_AsChar( PyObject* pyobject ) {
 }
 
 
-#if PY_VERSION_HEX >= 0x02070000
 static inline Bool_t VerifyPyLong( PyObject* pyobject )
-#else
-static inline Bool_t VerifyPyLong( PyObject* )
-#endif
 {
-#if PY_VERSION_HEX >= 0x02070000
-// p2.7 silently converts floats to long ...
+// p2.7 and later silently converts floats to long, therefore require this
+// check; earlier pythons may raise a SystemError which should be avoided as
+// it is confusing
    if ( ! (PyLong_Check( pyobject ) || PyInt_Check( pyobject )) )
       return kFALSE;
-#endif
    return kTRUE;
 }
 
@@ -199,9 +195,7 @@ Bool_t PyROOT::TLongConverter::SetArg(
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )
 {
 // convert <pyobject> to C++ long, set arg for call
-#if PY_VERSION_HEX >= 0x02070000
    if ( ! VerifyPyLong( pyobject ) ) return kFALSE;
-#endif
    para.fLong = PyLong_AsLong( pyobject );
    if ( para.fLong == -1 && PyErr_Occurred() )
       return kFALSE;

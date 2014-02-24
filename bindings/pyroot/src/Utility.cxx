@@ -743,7 +743,7 @@ Long_t PyROOT::Utility::UpcastOffset( ClassInfo_t* clDerived, ClassInfo_t* clBas
       std::string dName = gInterpreter->ClassInfo_FullName( clDerived ); //  of static buffer
       std::ostringstream msg;
       msg << "failed offset calculation between " << bName << " and " << dName << std::endl;
-      PyErr_Warn( PyExc_RuntimeWarning, msg.str().c_str() );
+      PyErr_Warn( PyExc_RuntimeWarning, const_cast<char*>( msg.str().c_str() ) );
       return 0;
    }
 
