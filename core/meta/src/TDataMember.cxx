@@ -203,15 +203,17 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
 
    Init();
 }
+#include <iostream>
 
 //______________________________________________________________________________
 void TDataMember::Init()
 {
    // Routines called by the constructor and Update to reset the member's
    // information.
-
+//    std::cout << "TDataMemberInfo in TDataMember is " << fInfo << std::endl;
    if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
-
+   
+     
    fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
    fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
    fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
