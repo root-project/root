@@ -329,8 +329,9 @@ Bool_t PyROOT::TDoubleConverter::SetArg(
    return kTRUE;
 }
 
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Double, Double_t, Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
-PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,  Float_t,  Double_t, PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Float,      Float_t,      Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( Double,     Double_t,     Double_t,     PyFloat_FromDouble, PyFloat_AsDouble )
+PYROOT_IMPLEMENT_BASIC_CONVERTER( LongDouble, LongDouble_t, LongDouble_t, PyFloat_FromDouble, PyFloat_AsDouble )
 
 //____________________________________________________________________________
 Bool_t PyROOT::TDoubleRefConverter::SetArg(
@@ -1156,6 +1157,7 @@ namespace {
    PYROOT_BASIC_CONVERTER_FACTORY( Double )
    PYROOT_BASIC_CONVERTER_FACTORY( DoubleRef )
    PYROOT_BASIC_CONVERTER_FACTORY( ConstDoubleRef )
+   PYROOT_BASIC_CONVERTER_FACTORY( LongDouble )
    PYROOT_BASIC_CONVERTER_FACTORY( Void )
    PYROOT_BASIC_CONVERTER_FACTORY( Macro )
    PYROOT_BASIC_CONVERTER_FACTORY( LongLong )
@@ -1205,6 +1207,7 @@ namespace {
       NFp_t( "double",             &CreateDoubleConverter             ),
       NFp_t( "double&",            &CreateDoubleRefConverter          ),
       NFp_t( "const double&",      &CreateConstDoubleRefConverter     ),
+      NFp_t( "long double",        &CreateLongDoubleConverter         ),
       NFp_t( "void",               &CreateVoidConverter               ),
       NFp_t( "#define",            &CreateMacroConverter              ),
 

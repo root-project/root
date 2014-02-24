@@ -83,6 +83,7 @@ namespace PyROOT {
    PYROOT_DECLARE_BASIC_CONVERTER( ULongLong );
    PYROOT_DECLARE_BASIC_CONVERTER( Double );
    PYROOT_DECLARE_BASIC_CONVERTER2( Float, Double );
+   PYROOT_DECLARE_BASIC_CONVERTER2( LongDouble, Double );
    PYROOT_DECLARE_BASIC_CONVERTER( DoubleRef );
 
    class TConstLongRefConverter : public TLongConverter {

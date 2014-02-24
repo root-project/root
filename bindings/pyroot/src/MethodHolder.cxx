@@ -404,6 +404,8 @@ Int_t PyROOT::TMethodHolder< T, M >::GetPriority()
             priority -= 100;  // void* shouldn't be too greedy
          else if ( aname == "float" )
             priority -= 30;   // double preferred over float (no float in python)
+         else if ( aname == "long double" )
+            priority -= 15;   // id, but better than float
          else if ( aname == "double" )
             priority -= 10;   // char, int, long preferred over double
 

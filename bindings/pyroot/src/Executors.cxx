@@ -474,6 +474,7 @@ namespace {
       NFp_t( "float&",             &CreateFloatRefExecutor            ),
       NFp_t( "double",             &CreateDoubleExecutor              ),
       NFp_t( "double&",            &CreateDoubleRefExecutor           ),
+      NFp_t( "long double",        &CreateDoubleExecutor              ),   // TODO: lost precision
       NFp_t( "void",               &CreateVoidExecutor                ),
       NFp_t( "bool",               &CreateBoolExecutor                ),
       NFp_t( "const char*",        &CreateCStringExecutor             ),
