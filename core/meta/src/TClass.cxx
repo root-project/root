@@ -906,7 +906,7 @@ TClass::TClass() :
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
-   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 
 {
@@ -932,7 +932,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
-   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -1087,7 +1087,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
-   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -1116,7 +1116,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
-   fCurrentInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -1434,6 +1434,7 @@ TClass::TClass(const TClass& cl) :
   fStreamerType(cl.fStreamerType),
   fState(cl.fState),
   fCurrentInfo(0),
+  fLastReadInfo(0),
   fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
   fSchemaRules(cl.fSchemaRules),
@@ -3657,7 +3658,7 @@ void TClass::RemoveRef(TClassRef *ref)
       ref->fPrevious = ref->fNext = 0;
    } else {
       TClassRef *next = ref->fNext;
-      ref->fPrevious->fNext = next;
+      if (ref->fPrevious) ref->fPrevious->fNext = next;
       if (next) next->fPrevious = ref->fPrevious;
       ref->fPrevious = ref->fNext = 0;
    }
@@ -4115,6 +4116,24 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    //           with TStreamer::Optimize()!
    //
 
+   TVirtualStreamerInfo *guess = fLastReadInfo;
+   if (guess && guess->GetClassVersion() == version) {
+      // If it was assigned to fLastReadInfo, it was already used
+      // and thus already properly setup
+      if (!guess->IsCompiled()) {
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution?
+         // Or it didn't have a dictionary before, but does now?
+         R__LOCKGUARD(gCINTMutex);
+         guess->BuildOld();
+      } else if (guess->IsOptimized() && !TVirtualStreamerInfo::CanOptimize()) {
+         // Undo optimization if the global flag tells us to.
+         R__LOCKGUARD(gCINTMutex);
+        guess->Compile();
+      }
+      return guess;
+   }
+
    R__LOCKGUARD(gInterpreterMutex);
 
    // Handle special version, 0 means currently loaded version.
@@ -4180,6 +4199,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
    if (version == fClassVersion) {
       fCurrentInfo = sinfo;
    }
+   fLastReadInfo = sinfo;
    return sinfo;
 }
 
@@ -6121,20 +6141,26 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
-   if (fCheckSum == checksum) return GetStreamerInfo();
+   TVirtualStreamerInfo *guess = fLastReadInfo;
+   if (guess && guess->GetCheckSum() == checksum) {
+      return guess;
+   } else {
+      if (fCheckSum == checksum) return GetStreamerInfo();
 
-   R__LOCKGUARD(gInterpreterMutex);
-   Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
-   for (Int_t i=-1;i<ninfos;++i) {
-      // TClass::fStreamerInfos has a lower bound not equal to 0,
-      // so we have to use At and should not use UncheckedAt
-      TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->UncheckedAt(i);
-      if (info && info->GetCheckSum() == checksum) {
-         // R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
-         return info;
+      R__LOCKGUARD(gInterpreterMutex);
+      Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
+      for (Int_t i=-1;i<ninfos;++i) {
+         // TClass::fStreamerInfos has a lower bound not equal to 0,
+         // so we have to use At and should not use UncheckedAt
+         TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->UncheckedAt(i);
+         if (info && info->GetCheckSum() == checksum) {
+            // R__ASSERT(i==info->GetClassVersion() || (i==-1&&info->GetClassVersion()==1));
+            fLastReadInfo = info;
+            return info;
+         }
       }
+      return 0;
    }
-   return 0;
 }
 
 //______________________________________________________________________________
