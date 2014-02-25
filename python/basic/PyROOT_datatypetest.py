@@ -153,7 +153,15 @@ class TestClassDATATYPES:
         c.set_uchar('g');    assert c.get_uchar_cr() == 'g'
         c.set_uchar_cr('h'); assert c.get_uchar()    == 'h'
 
-        # char types through data members
+        # ints as char through functions
+        c.set_char(ord('c'));     assert c.get_char_cr()  == 'c'
+        c.set_char_cr(ord('d'));  assert c.get_char()     == 'd'
+        c.set_schar(ord('e'));    assert c.get_schar_cr() == 'e'
+        c.set_schar_cr(ord('f')); assert c.get_schar()    == 'f'
+        c.set_uchar(ord('g'));    assert c.get_uchar_cr() == 'g'
+        c.set_uchar_cr(ord('h')); assert c.get_uchar()    == 'h'
+
+        # char types through data members, as char and as int
         c.m_char = 'b';   assert c.get_char()  ==     'b'
         c.m_char = 40;    assert c.get_char()  == chr(40)
         c.set_char('c');  assert c.m_char      ==     'c'
