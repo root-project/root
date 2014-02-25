@@ -47,15 +47,25 @@ ExeSuf        = .exe
 DllSuf        = dll
 OutPutOpt     = -out:
 
+# Win32 system with Microsoft Visual C/C++
+
 ## VS2012 (VC11): configure subsystem version
 ## See: https://blogs.msdn.com/b/vcblog/archive/2012/10/08/10357555.aspx
 ## (APPVER used in win32.mak to set subsystem version)
-!if ([nmake /? 2>&1 | findstr /c:"Version 11\." > nul ] == 0)
-APPVER        = 5.01
-!endif
-
-# Win32 system with Microsoft Visual C/C++
+!if ([nmake /? 2>&1 | findstr /c:"Version 11\." > nul ] == 0) || \
+    ([nmake /? 2>&1 | findstr /c:"Version 12\." > nul ] == 0)
+APPVER    = 5.01
+cc        = cl
+link      = link
+implib    = lib
+lflags    = $(lflags) /INCREMENTAL:NO /NOLOGO
+DLLENTRY  = @12
+conlflags = $(lflags) -subsystem:console
+guilflags = $(lflags) -subsystem:windows
+dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
+!else
 !include <win32.mak>
+!endif
 CC            = $(cc)
 CXX           = $(cc)
 CXXFLAGS      = -nologo -EHsc- -GR -DWIN32 -W3 -D_WIN32 -D_WINDOWS \
@@ -81,7 +91,9 @@ LDOPT         = -debug
 MT_EXE        = mt -nologo -manifest $@.manifest -outputresource:$@;1
 MT_DLL        = mt -nologo -manifest $@.manifest -outputresource:$@;2
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
-!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0)
+!else if ([nmake /? 2>&1 | findstr /c:"Version 10\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 11\." > nul ] == 0) || \
+         ([nmake /? 2>&1 | findstr /c:"Version 12\." > nul ] == 0)
 EXTRAFLAGS    = -D_CRT_SECURE_NO_DEPRECATE
 !else
 MT_EXE        = 
@@ -257,6 +269,12 @@ STRESSROOSTATSS = stressRooStats.$(SrcSuf)
 STRESSROOSTATS  = stressRooStats$(ExeSuf)
 !endif
 
+!if exist("$(ROOTSYS)\lib\libHistFactory.lib")
+STRESSHISTFACTORYO  = stressHistFactory.$(ObjSuf)
+STRESSHISTFACTORYS  = stressHistFactory.$(SrcSuf)
+STRESSHISTFACTORY   = stressHistFactory$(ExeSuf)
+!endif
+
 STRESSFITO    = stressFit.$(ObjSuf)
 STRESSFITS    = stressFit.$(SrcSuf)
 STRESSFIT     = stressFit$(ExeSuf)
@@ -325,7 +343,8 @@ OBJS          = $(EVENTO) $(MAINEVENTO) $(EVENTMTO) $(HWORLDO) $(HSIMPLEO) $(MIN
                 $(STRESSGO) $(STRESSSPO) $(TESTBITSO) \
                 $(CTORTUREO) $(QPRANDOMO) $(THREADSO) $(STRESSVECO) \
                 $(STRESSMATHO) $(STRESSFITO) $(STRESSHISTOFITO) $(STRESSHEPIXO) \
-                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSROOSTATSO) $(STRESSPROOFO) \
+                $(STRESSENTRYLISTO) $(STRESSROOFITO) $(STRESSROOSTATSO) \
+                $(STRESSHISTFACTORYO) $(STRESSPROOFO) \
                 $(STRESSMATHMOREO) $(STRESSTMVAO) $(STRESSINTERPO) $(STRESSITERO) \
                 $(STRESSHISTO) $(STRESSGUIO) $(GUITESTO) $(GUIVIEWERO) $(TETRISO) \
 
@@ -335,7 +354,8 @@ PROGRAMS      = $(EVENT) $(EVENTMTSO) $(HWORLD) $(HSIMPLE) $(MINEXAM) $(TSTRING)
                 $(STRESSSHAPES) $(STRESSGEOMETRY) $(STRESSL) $(STRESSG) \
                 $(TESTBITS) $(CTORTURE) $(QPRANDOM) $(THREADS) $(STRESSSP) \
                 $(STRESSVEC) $(STRESSFIT) $(STRESSHISTOFIT) $(STRESSHEPIX) \
-                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) $(STRESSPROOF) $(STRESSMATH) \
+                $(STRESSENTRYLIST) $(STRESSROOFIT) $(STRESSROOSTATS) \
+                $(STRESSHISTFACTORY) $(STRESSPROOF) $(STRESSMATH) \
                 $(STRESSMATHMORE) $(STRESSTMVA) $(STRESSINTERP) $(STRESSITER) \
                 $(STRESSHIST) $(STRESSGUI) $(GUITEST) $(GUIVIEWER) $(TETRISSO) \
 
@@ -512,6 +532,13 @@ $(STRESSROOFIT):  $(STRESSROOFITO)
 !if exist("$(ROOTSYS)\lib\libRooStats.lib")
 $(STRESSROOSTATS): $(STRESSROOSTATSO)
                 $(LD) $(LDFLAGS)  $(STRESSROOSTATSO) $(LIBS) $(ROOTSYS)\lib\libRooStats.lib $(ROOTSYS)\lib\libRooFit.lib $(ROOTSYS)\lib\libRooFitCore.lib $(OutPutOpt)$@
+                $(MT_EXE)
+                @echo "$@ done"
+!endif
+
+!if exist("$(ROOTSYS)\lib\libHistFactory.lib")
+$(STRESSHISTFACTORY): $(STRESSHISTFACTORYO)
+                $(LD) $(LDFLAGS)  $(STRESSHISTFACTORYO) $(LIBS) $(ROOTSYS)\lib\libHistFactory.lib $(ROOTSYS)\lib\libRooStats.lib $(ROOTSYS)\lib\libRooFit.lib $(ROOTSYS)\lib\libRooFitCore.lib $(ROOTSYS)\lib\libHtml.lib $(ROOTSYS)\lib\libThread.lib $(ROOTSYS)\lib\libMinuit.lib $(ROOTSYS)\lib\libFoam.lib $(ROOTSYS)\lib\libProof.lib $(EXTRAROOFITLIBS) $(OutPutOpt)$@
                 $(MT_EXE)
                 @echo "$@ done"
 !endif
