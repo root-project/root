@@ -10,6 +10,10 @@ ROOT_USE_PACKAGE(net/auth)
 include_directories(${KRB5_INCLUDE_DIRS})
 set_directory_properties(PROPERTIES COMPILE_DEFINITIONS R__KRB5INIT="${KRB5_INIT}")
 
+if(MACOSX_KRB5_DEPRECATED)
+  add_definitions(-Wno-deprecated-declarations)
+endif()
+
 
 ROOT_GENERATE_DICTIONARY(G__Krb5Auth TKSocket.h LINKDEF LinkDef.h)
 ROOT_GENERATE_ROOTMAP(Krb5Auth LINKDEF LinkDef.h DEPENDENCIES RootAuth Net)

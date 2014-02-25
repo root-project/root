@@ -26,7 +26,7 @@ if(NOT ssl OR NOT CRYPTLIBS)
   add_definitions(-DR__NO_CRYPTO)
 endif()
 
-if(MACOSX_MINOR EQUAL 7)
+if(MACOSX_SSL_DEPRECATED)
   set_source_files_properties(src/TSSLSocket.cxx COMPILE_FLAGS "-Wno-deprecated-declarations" )
 endif()
 

@@ -136,16 +136,32 @@ ROOT_BUILD_OPTION(gnuinstall OFF "Perform installation following the GNU guideli
 ROOT_BUILD_OPTION(table OFF "Build libTable contrib library")
 ROOT_BUILD_OPTION(tmva ON "Build TMVA multi variate analysis library")
 ROOT_BUILD_OPTION(unuran OFF "UNURAN - package for generating non-uniform random numbers")
+ROOT_BUILD_OPTION(vc OFF "Vc adds a few new types for portable and intuitive SIMD programming")
+ROOT_BUILD_OPTION(vdt OFF "VDT adds a set of fast and vectorisable mathematical functions")
 ROOT_BUILD_OPTION(winrtdebug OFF "Link against the Windows debug runtime library")
 ROOT_BUILD_OPTION(xft ON "Xft support (X11 antialiased fonts)")
 ROOT_BUILD_OPTION(xml ON "XML parser interface")
 ROOT_BUILD_OPTION(x11 ${x11_defvalue} "X11 support")
 ROOT_BUILD_OPTION(xrootd ON "Build xrootd file server and its client (if supported)")
-
+  
 option(fail-on-missing "Fail the configure step if a required external package is missing" OFF)
 option(minimal "Do not automatically search for support libraries" OFF)
 option(gminimal "Do not automatically search for support libraries, but include X11" OFF)
+option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
+
+if(all)
+ set(gdml    ON CACHE BOOL "" FORCE)
+ set(qt      ON CACHE BOOL "" FORCE)
+ set(qtgsi   ON CACHE BOOL "" FORCE)
+ set(roofit  ON CACHE BOOL "" FORCE)
+ set(ruby    ON CACHE BOOL "" FORCE)
+ set(minuit2 ON CACHE BOOL "" FORCE)
+ set(table   ON CACHE BOOL "" FORCE)
+ set(unuran  ON CACHE BOOL "" FORCE)
+ set(vc      ON CACHE BOOL "" FORCE)
+ set(vdt     ON CACHE BOOL "" FORCE)
+endif()
 
 #---General Build options----------------------------------------------------------------------
 # use, i.e. don't skip the full RPATH for the build tree

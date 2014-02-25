@@ -17,6 +17,12 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/i
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts)
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros)
 
+#---Install the headers which are needed to run the tests from the binary tree-----------------
+add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
+                                   -DCOMPONENTS="headers\;tutorials"
+                                   -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
+
+
 #--Add all subdirectories with tests-----------------------------------------------------------
 
 get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)

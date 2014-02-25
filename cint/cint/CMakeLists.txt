@@ -117,6 +117,10 @@ endforeach()
 
 
 include_directories(src)
+if(MACOSX_TMPNAM_DEPRECATED)
+  add_definitions(-Wno-deprecated-declarations)
+endif()
+
 
 #---Define libraries and executables to be build------------------------------------------------------------
 
