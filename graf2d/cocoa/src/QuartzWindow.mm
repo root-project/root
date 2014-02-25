@@ -41,6 +41,8 @@ namespace ROOT {
 namespace MacOSX {
 namespace X11 {
 
+#pragma mark - Create a window or a view.
+
 //______________________________________________________________________________
 QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t /*border*/, Int_t depth,
                                    UInt_t clss, void */*visual*/, SetWindowAttributes_t *attr, UInt_t)
@@ -51,13 +53,17 @@ QuartzWindow *CreateTopLevelWindow(Int_t x, Int_t y, UInt_t w, UInt_t h, UInt_t 
    winRect.size.width = w;
    winRect.size.height = h;
 
-   //TODO check mask.
-   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
-   //
-   QuartzWindow * const newWindow = [[QuartzWindow alloc] initWithContentRect : winRect styleMask : styleMask backing : NSBackingStoreBuffered defer : YES windowAttributes : attr];
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask |
+                                NSMiniaturizableWindowMask | NSResizableWindowMask;
+
+   QuartzWindow * const newWindow = [[QuartzWindow alloc] initWithContentRect : winRect
+                                                                    styleMask : styleMask
+                                                                      backing : NSBackingStoreBuffered
+                                                                        defer : YES
+                                                             windowAttributes : attr];
    if (!newWindow)
       throw std::runtime_error("CreateTopLevelWindow failed");
-   //
+
    newWindow.fDepth = depth;
    newWindow.fClass = clss;
 
@@ -81,11 +87,13 @@ QuartzView *CreateChildView(QuartzView * /*parent*/, Int_t x, Int_t y, UInt_t w,
    return view;
 }
 
+#pragma mark - root window (does not really exist, it's our desktop built of all screens).
+
 //______________________________________________________________________________
 void GetRootWindowAttributes(WindowAttributes_t *attr)
 {
    //'root' window does not exist, but we can request its attributes.
-   assert(attr != 0 && "GetRootWindowAttributes, attr parameter is null");
+   assert(attr != 0 && "GetRootWindowAttributes, parameter 'attr' is null");
 
    
    NSArray * const screens = [NSScreen screens];
@@ -114,14 +122,12 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
 }
 
 
-//Coordinate conversion.
-
-//TODO: check how TGX11 extracts/changes window attributes.
+#pragma mark - Coordinate conversions.
 
 //______________________________________________________________________________
 NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint)
 {
-   assert(window != nil && "ConvertPointFromBaseToScreen, window parameter is nil");
+   assert(window != nil && "ConvertPointFromBaseToScreen, parameter 'window' is nil");
    
    //I have no idea why apple deprecated function for a point conversion and requires rect conversion,
    //point conversion seems to produce wrong results with HiDPI.
@@ -137,7 +143,7 @@ NSPoint ConvertPointFromBaseToScreen(NSWindow *window, NSPoint windowPoint)
 //______________________________________________________________________________
 NSPoint ConvertPointFromScreenToBase(NSPoint screenPoint, NSWindow *window)
 {
-   assert(window != nil && "ConvertPointFromScreenToBase, window parameter is nil");
+   assert(window != nil && "ConvertPointFromScreenToBase, parameter 'window' is nil");
 
    //I have no idea why apple deprecated function for a point conversion and requires rect conversion,
    //point conversion seems to produce wrong results with HiDPI.
@@ -226,7 +232,7 @@ int LocalYROOTToCocoa(NSObject<X11Drawable> *drawable, CGFloat yROOT)
 //______________________________________________________________________________
 NSPoint TranslateToScreen(NSView<X11Window> *from, NSPoint point)
 {
-   assert(from != nil && "TranslateToScreen, 'from' parameter is nil");
+   assert(from != nil && "TranslateToScreen, parameter 'from' is nil");
    
    const NSPoint winPoint = [from convertPoint : point toView : nil];
 
@@ -240,7 +246,7 @@ NSPoint TranslateToScreen(NSView<X11Window> *from, NSPoint point)
 //______________________________________________________________________________
 NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to)
 {
-   assert(to != nil && "TranslateFromScreen, 'to' parameter is nil");
+   assert(to != nil && "TranslateFromScreen, parameter 'to' is nil");
    
    point.x = GlobalXROOTToCocoa(point.x);
    point.y = GlobalYROOTToCocoa(point.y);
@@ -253,8 +259,8 @@ NSPoint TranslateFromScreen(NSPoint point, NSView<X11Window> *to)
 NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSPoint sourcePoint)
 {
    //Both views are valid.
-   assert(from != nil && "TranslateCoordinates, 'from' parameter is nil");
-   assert(to != nil && "TranslateCoordinates, 'to' parameter is nil");
+   assert(from != nil && "TranslateCoordinates, parameter 'from' is nil");
+   assert(to != nil && "TranslateCoordinates, parameter 'to' is nil");
 
    if ([from window] == [to window]) {
       //Both views are in the same window.
@@ -277,7 +283,7 @@ NSPoint TranslateCoordinates(NSView<X11Window> *from, NSView<X11Window> *to, NSP
 //______________________________________________________________________________
 bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y)
 {
-   assert(view != nil && "ScreenPointIsInView, view parameter is nil");
+   assert(view != nil && "ScreenPointIsInView, parameter 'view' is nil");
    
    NSPoint point = {};
    point.x = x, point.y = y;
@@ -292,10 +298,13 @@ bool ScreenPointIsInView(NSView<X11Window> *view, Int_t x, Int_t y)
    return true;
 }
 
+#pragma mark - Different FindView/Window functions iterating on the ROOT's windows/views.
+
 //______________________________________________________________________________
 QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
 {
-   const Util::AutoreleasePool pool;//array's counter is increased, all object in array are also retained.
+   //array's counter is increased, all object in array are also retained.
+   const Util::AutoreleasePool pool;
 
    NSArray * const orderedWindows = [NSApp orderedWindows];
    for (NSWindow *window in orderedWindows) {
@@ -313,10 +322,11 @@ QuartzWindow *FindWindowInPoint(Int_t x, Int_t y)
 }
 
 //______________________________________________________________________________
-NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth)
+NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID,
+                                           Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth)
 {
-   assert(children != nil && "FindDNDAwareViewInPoint, children parameter is nil");
-   
+   assert(children != nil && "FindDNDAwareViewInPoint, parameter 'children' is nil");
+
    if (maxDepth <= 0)
       return nil;
 
@@ -327,7 +337,8 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID
       if (child.fIsDNDAware && child.fID != dragWinID && child.fID != inputWinID)
          return child;//got it!
             
-      NSView<X11Window> * const testView = FindDNDAwareViewInPoint([child subviews], dragWinID, inputWinID, x, y, maxDepth - 1);
+      NSView<X11Window> * const testView = FindDNDAwareViewInPoint([child subviews], dragWinID,
+                                                                   inputWinID, x, y, maxDepth - 1);
       if (testView)
          return testView;
    }
@@ -336,7 +347,8 @@ NSView<X11Window> *FindDNDAwareViewInPoint(NSArray *children, Window_t dragWinID
 }
 
 //______________________________________________________________________________
-NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinID, Window_t inputWinID, Int_t x, Int_t y, Int_t maxDepth)
+NSView<X11Window> *FindDNDAwareViewInPoint(NSView *parentView, Window_t dragWinID, Window_t inputWinID,
+                                           Int_t x, Int_t y, Int_t maxDepth)
 {
    //X and Y are ROOT's screen coordinates (Y is inverted).
    if (maxDepth <= 0)
@@ -400,7 +412,8 @@ QuartzWindow *FindWindowUnderPointer()
       
       const NSPoint mousePosition = [qWindow mouseLocationOutsideOfEventStream];
       const NSSize windowSize = qWindow.frame.size;
-      if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width && mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
+      if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width &&
+          mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
          return qWindow;
    }
 
@@ -424,10 +437,12 @@ NSView<X11Window> *FindViewUnderPointer()
 //______________________________________________________________________________
 QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
 {
-   //FindWindowForPointerEvent is required because due to grabs the receiver of the event
-   //can be different from the actual window under cursor.
+   //FindWindowForPointerEvent is required because due to grabs
+   //the receiver of the event can be different from the actual
+   //window under cursor.
 
-   assert(pointerEvent != nil && "FindWindowForPointerEvent, pointerEvent parameter is nil");
+   assert(pointerEvent != nil &&
+          "FindWindowForPointerEvent, parameter 'pointerEvent' is nil");
 
    const Util::AutoreleasePool pool;
 
@@ -441,7 +456,8 @@ QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
       if (qWindow.fIsDeleted)//Because of reference counting this can happen.
          continue;
       
-      if (qWindow.fMapState != kIsViewable)//Can it be false and still in this array???
+      //Can it be false and still in this array???
+      if (qWindow.fMapState != kIsViewable)
          continue;
 
       NSPoint mousePosition = [pointerEvent locationInWindow];
@@ -458,7 +474,8 @@ QuartzWindow *FindWindowForPointerEvent(NSEvent *pointerEvent)
       mousePosition = ConvertPointFromScreenToBase(mousePosition, qWindow);
 
       const NSSize windowSize = qWindow.frame.size;
-      if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width && mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
+      if (mousePosition.x >= 0 && mousePosition.x <= windowSize.width &&
+          mousePosition.y >= 0 && mousePosition.y <= windowSize.height)
          return qWindow;
    }
 
@@ -471,7 +488,8 @@ NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
    //FindViewForPointerEvent is required because of grabs - the receiver of the
    //event can be different from the actual window under cursor.
    
-   assert(pointerEvent != nil && "FindViewForPointerEvent, pointerEvent parameter is nil");
+   assert(pointerEvent != nil &&
+          "FindViewForPointerEvent, parameter 'pointerEvent' is nil");
    
    const Util::AutoreleasePool pool;
    
@@ -489,6 +507,8 @@ NSView<X11Window> *FindViewForPointerEvent(NSEvent *pointerEvent)
 
    return nil;
 }
+
+#pragma mark - "Focus management" - just make another window key window.
 
 //______________________________________________________________________________
 void WindowLostFocus(Window_t winID)
@@ -517,15 +537,19 @@ void WindowLostFocus(Window_t winID)
    }
 }
 
+#pragma mark - 'shape mask' - to create a window with arbitrary (probably non-rectangle) shape.
+
 //______________________________________________________________________________
 void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
 {
-   assert(view != nil && "ClipToShapeMask, view parameter is nil");
-   assert(ctx != 0 && "ClipToShapeMask, ctx parameter is null");
+   assert(view != nil && "ClipToShapeMask, parameter 'view' is nil");
+   assert(ctx != 0 && "ClipToShapeMask, parameter 'ctx' is null");
    
    QuartzWindow * const topLevelParent = view.fQuartzWindow;
-   assert(topLevelParent.fShapeCombineMask != nil && "ClipToShapeMask, fShapeCombineMask is nil on a top-level window");
-   assert(topLevelParent.fShapeCombineMask.fImage != 0 && "ClipToShapeMask, shape mask is null");
+   assert(topLevelParent.fShapeCombineMask != nil &&
+          "ClipToShapeMask, fShapeCombineMask is nil on a top-level window");
+   assert(topLevelParent.fShapeCombineMask.fImage != 0 &&
+          "ClipToShapeMask, shape mask is null");
    
    //Important: shape mask should have the same width and height as
    //a top-level window. In ROOT it does not :( Say hello to visual artifacts.
@@ -534,15 +558,18 @@ void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
    NSRect clipRect = view.frame;
    if (!view.fParentView) {
       //'view' is a top-level view.
-      clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth, topLevelParent.fShapeCombineMask.fHeight);
+      clipRect = CGRectMake(0, 0, topLevelParent.fShapeCombineMask.fWidth,
+                                  topLevelParent.fShapeCombineMask.fHeight);
       CGContextClipToMask(ctx, clipRect, topLevelParent.fShapeCombineMask.fImage);
    } else {
       //More complex case: 'self' is a child view, we have to create a subimage from shape mask.
       clipRect.origin = [view.fParentView convertPoint : clipRect.origin toView : [view window].contentView];
-      clipRect.origin.y = X11::LocalYROOTToCocoa((NSView<X11Window> *)[view window].contentView, clipRect.origin.y + clipRect.size.height);
+      clipRect.origin.y = X11::LocalYROOTToCocoa((NSView<X11Window> *)[view window].contentView,
+                                                  clipRect.origin.y + clipRect.size.height);
       
       if (AdjustCropArea(topLevelParent.fShapeCombineMask, clipRect)) {
-         const Util::CFScopeGuard<CGImageRef> clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
+         const Util::CFScopeGuard<CGImageRef>
+            clipImageGuard(CGImageCreateWithImageInRect(topLevelParent.fShapeCombineMask.fImage, clipRect));
          clipRect.origin = CGPointZero;
          CGContextClipToMask(ctx, clipRect, clipImageGuard.Get());
       } else {
@@ -553,11 +580,13 @@ void ClipToShapeMask(NSView<X11Window> *view, CGContextRef ctx)
    }
 }
 
+#pragma mark - Window's geometry and attributes.
+
 //______________________________________________________________________________
 void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> *window)
 {
-   assert(attr != 0 && "SetWindowAttributes, attr parameter is null");
-   assert(window != nil && "SetWindowAttributes, window parameter is nil");
+   assert(attr != 0 && "SetWindowAttributes, parameter 'attr' is null");
+   assert(window != nil && "SetWindowAttributes, parameter 'window' is nil");
 
    const Mask_t mask = attr->fMask;
 
@@ -591,8 +620,8 @@ void SetWindowAttributes(const SetWindowAttributes_t *attr, NSObject<X11Window> 
 //______________________________________________________________________________
 void GetWindowGeometry(NSObject<X11Window> *win, WindowAttributes_t *dst)
 {
-   assert(win != nil && "GetWindowGeometry, win parameter is nil");
-   assert(dst != 0 && "GetWindowGeometry, dst paremeter is null");
+   assert(win != nil && "GetWindowGeometry, parameter 'win' is nil");
+   assert(dst != 0 && "GetWindowGeometry, parameter 'dst' is null");
    
    dst->fX = win.fX;
    dst->fY = win.fY;
@@ -604,8 +633,8 @@ void GetWindowGeometry(NSObject<X11Window> *win, WindowAttributes_t *dst)
 //______________________________________________________________________________
 void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
 {
-   assert(window != nil && "GetWindowAttributes, window parameter is nil");
-   assert(dst != 0 && "GetWindowAttributes, attr parameter is null");
+   assert(window != nil && "GetWindowAttributes, parameter 'window' is nil");
+   assert(dst != 0 && "GetWindowAttributes, parameter 'attr' is null");
    
    *dst = WindowAttributes_t();
    
@@ -653,10 +682,12 @@ void GetWindowAttributes(NSObject<X11Window> *window, WindowAttributes_t *dst)
 //the linkage of callback functions, API + language dialects == MESS. I declare/define this comparators here
 //as having "C++" linkage. If one good day clang will start to complane, I'll have to change this.
 
+#pragma mark - Comparators (I need them when changing a window's z-order).
+
 //______________________________________________________________________________
 NSComparisonResult CompareViewsToLower(id view1, id view2, void *context)
 {
-    id topView = (id)context;//ARC will require _brigde cast, but NO ARC! :)
+    id topView = (id)context;
     if (view1 == topView)
         return NSOrderedAscending;
     if (view2 == topView)
@@ -677,10 +708,12 @@ NSComparisonResult CompareViewsToRaise(id view1, id view2, void *context)
    return NSOrderedSame;
 }
 
+#pragma mark - Cursor's area.
+
 //______________________________________________________________________________
 NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
 {
-   assert(image != nil && "CursroHotSpot, image parameter is nil");
+   assert(image != nil && "CursroHotSpot, parameter 'image' is nil");
    
    const NSSize imageSize = image.size;
 
@@ -700,6 +733,9 @@ NSPoint GetCursorHotStop(NSImage *image, ECursor cursor)
 //TODO: possibly refactor these functions in a more generic way - not
 //to have two separate versions for text and html.
 
+
+#pragma mark - Workarounds for a text view and its descendants.
+
 //______________________________________________________________________________
 bool ViewIsTextView(unsigned viewID)
 {
@@ -712,7 +748,7 @@ bool ViewIsTextView(unsigned viewID)
 //______________________________________________________________________________
 bool ViewIsTextView(NSView<X11Window> *view)
 {
-   assert(view != nil && "ViewIsTextView, view parameter is nil");
+   assert(view != nil && "ViewIsTextView, parameter 'view' is nil");
 
    return ViewIsTextView(view.fID);
 }
@@ -720,7 +756,7 @@ bool ViewIsTextView(NSView<X11Window> *view)
 //______________________________________________________________________________
 bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent)
 {
-   assert(view != nil && "ViewIsTextViewFrame, view parameter is nil");
+   assert(view != nil && "ViewIsTextViewFrame, parameter 'view' is nil");
    
    const TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window)
@@ -750,7 +786,7 @@ bool ViewIsHtmlView(unsigned viewID)
 //______________________________________________________________________________
 bool ViewIsHtmlView(NSView<X11Window> *view)
 {
-   assert(view != nil && "ViewIsHtmlView, view parameter is nil");
+   assert(view != nil && "ViewIsHtmlView, parameter 'view' is nil");
 
    return ViewIsHtmlView(view.fID);
 }
@@ -759,7 +795,7 @@ bool ViewIsHtmlView(NSView<X11Window> *view)
 bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent)
 {
    //
-   assert(view != nil && "ViewIsHtmlViewFrame, view parameter is nil");
+   assert(view != nil && "ViewIsHtmlViewFrame, parameter 'view' is nil");
    
    const TGWindow * const window = gClient->GetWindowById(view.fID);
    if (!window)
@@ -780,7 +816,7 @@ bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent)
 //______________________________________________________________________________
 NSView<X11Window> *FrameForTextView(NSView<X11Window> *textView)
 {
-   assert(textView != nil && "FrameForTextView, textView parameter is nil");
+   assert(textView != nil && "FrameForTextView, parameter 'textView' is nil");
    
    for (NSView<X11Window> *child in [textView subviews]) {
       if (ViewIsTextViewFrame(child, false))
@@ -793,7 +829,7 @@ NSView<X11Window> *FrameForTextView(NSView<X11Window> *textView)
 //______________________________________________________________________________
 NSView<X11Window> *FrameForHtmlView(NSView<X11Window> *htmlView)
 {
-   assert(htmlView != nil && "FrameForHtmlView, htmlView parameter is nil");
+   assert(htmlView != nil && "FrameForHtmlView, parameter 'htmlView' is nil");
    
    for (NSView<X11Window> *child in [htmlView subviews]) {
       if (ViewIsHtmlViewFrame(child, false))
@@ -803,11 +839,14 @@ NSView<X11Window> *FrameForHtmlView(NSView<X11Window> *htmlView)
    return nil;
 }
 
+#pragma mark - Workarounds for 'paint out of paint events'.
+
 //______________________________________________________________________________
 bool LockFocus(NSView<X11Window> *view)
 {
-   assert(view != nil && "LockFocus, view parameter is nil");
-   assert([view isKindOfClass : [QuartzView class]] && "LockFocus, QuartzView is expected");
+   assert(view != nil && "LockFocus, parameter 'view' is nil");
+   assert([view isKindOfClass : [QuartzView class]] &&
+          "LockFocus, QuartzView is expected");
    
    if ([view lockFocusIfCanDraw]) {
       NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
@@ -826,8 +865,9 @@ bool LockFocus(NSView<X11Window> *view)
 //______________________________________________________________________________
 void UnlockFocus(NSView<X11Window> *view)
 {
-   assert(view != nil && "UnlockFocus, view parameter is nil");
-   assert([view isKindOfClass : [QuartzView class]] && "UnlockFocus, QuartzView is expected");
+   assert(view != nil && "UnlockFocus, parameter 'view' is nil");
+   assert([view isKindOfClass : [QuartzView class]] &&
+          "UnlockFocus, QuartzView is expected");
    
    [view unlockFocus];
    ((QuartzView *)view).fContext = 0;
@@ -842,6 +882,8 @@ namespace Util = ROOT::MacOSX::Util;
 namespace X11 = ROOT::MacOSX::X11;
 
 #ifdef DEBUG_ROOT_COCOA
+
+#pragma mark - 'loggers'.
 
 namespace {
 
@@ -922,12 +964,15 @@ void print_mask_info(ULong_t mask)
 @synthesize fMainWindow;
 @synthesize fHasFocus;
 
-//QuartzWindow's life cycle.
+#pragma mark - QuartzWindow's life cycle.
+
 //______________________________________________________________________________
-- (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle backing : (NSBackingStoreType) bufferingType 
-       defer : (BOOL) deferCreation  windowAttributes : (const SetWindowAttributes_t *)attr
+- (id) initWithContentRect : (NSRect) contentRect styleMask : (NSUInteger) windowStyle
+       backing : (NSBackingStoreType) bufferingType defer : (BOOL) deferCreation
+       windowAttributes : (const SetWindowAttributes_t *) attr
 {
-   self = [super initWithContentRect : contentRect styleMask : windowStyle backing : bufferingType defer : deferCreation];
+   self = [super initWithContentRect : contentRect styleMask : windowStyle
+                             backing : bufferingType defer : deferCreation];
 
    if (self) {
       //ROOT's not able to draw GUI concurrently, thanks to global variables and gVirtualX itself.
@@ -961,14 +1006,16 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (id) initWithGLView : (ROOTOpenGLView *) glView
 {
-   assert(glView != nil && "initWithGLView, glView parameter is nil");
+   assert(glView != nil && "-initWithGLView, parameter 'glView' is nil");
    
-   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
+   const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask |
+                                NSMiniaturizableWindowMask | NSResizableWindowMask;
 
    NSRect contentRect = glView.frame;
    contentRect.origin = CGPointZero;
 
-   self = [super initWithContentRect : contentRect styleMask : styleMask backing : NSBackingStoreBuffered defer : NO];
+   self = [super initWithContentRect : contentRect styleMask : styleMask
+                             backing : NSBackingStoreBuffered defer : NO];
 
    if (self) {
       //ROOT's not able to draw GUI concurrently, thanks to global variables and gVirtualX itself.
@@ -1003,12 +1050,12 @@ void print_mask_info(ULong_t mask)
    fIsDeleted = deleted;
 }
 
-//I want to forward a lot of property setters/getters to content view.
+#pragma mark - Forwaring: I want to forward a lot of property setters/getters to the content view.
 
 //______________________________________________________________________________
 - (void) forwardInvocation : (NSInvocation *) anInvocation
 {
-   assert(fContentView != nil && "forwardInvocation:, fContentView is nil");
+   assert(fContentView != nil && "-forwardInvocation:, fContentView is nil");
 
    if ([fContentView respondsToSelector : [anInvocation selector]]) {
       [anInvocation invokeWithTarget : fContentView];
@@ -1023,7 +1070,7 @@ void print_mask_info(ULong_t mask)
    NSMethodSignature *signature = [super methodSignatureForSelector : selector];
 
    if (!signature) {
-      assert(fContentView != nil && "methodSignatureForSelector:, fContentView is nil");
+      assert(fContentView != nil && "-methodSignatureForSelector:, fContentView is nil");
       signature = [fContentView methodSignatureForSelector : selector];
    }
 
@@ -1033,11 +1080,19 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addTransientWindow : (QuartzWindow *) window
 {
-   assert(window != nil && "addTransientWindow, window parameter is nil");
+   //Transient window: all the popups (menus, dialogs, popups, comboboxes, etc.)
+   //always should be on the top of its 'parent' window.
+   //To enforce this ordering, I have to connect such windows with parent/child
+   //relation (it's not the same as a view hierarchy - both child and parent
+   //windows are top-level windows).
+
+   assert(window != nil && "-addTransientWindow:, parameter 'window' is nil");
 
    window.fMainWindow = self;
    
    if (window.fMapState != kIsViewable) {
+      //If I add it as child, it'll immediately make a window visible
+      //and this thing sucks.
       window.fDelayedTransient = YES;
    } else {
       [self addChildWindow : window ordered : NSWindowAbove];
@@ -1049,6 +1104,7 @@ void print_mask_info(ULong_t mask)
 - (void) makeKeyAndOrderFront : (id) sender
 {
 #pragma unused(sender)
+
    //The more I know Cocoa, the less I like it.
    //Window behavior between spaces is a total mess.
    //Set the window to join all spaces.
@@ -1079,23 +1135,24 @@ void print_mask_info(ULong_t mask)
       if (mask) {
          fShapeCombineMask = [mask retain];
          
-         //Check window's shadow???
+         //TODO: Check window's shadow???
       }
    }
 }
 
-///////////////////////////////////////////////////////////
-//X11Drawable's protocol.
+#pragma mark - X11Drawable's protocol.
 
 //______________________________________________________________________________
 - (BOOL) fIsPixmap
 {
+   //Never.
    return NO;
 }
 
 //______________________________________________________________________________
 - (BOOL) fIsOpenGLWidget
 {
+   //Never.
    return NO;
 }
 
@@ -1123,7 +1180,7 @@ void print_mask_info(ULong_t mask)
    //NSWindow's frame (height component) also includes title-bar.
    //So I have to use content view's height.
    //Obviously, there is a "hole" == 22 pixels.
-   assert(fContentView != nil && "fHeight, content view is nil");
+   assert(fContentView != nil && "-fHeight:, content view is nil");
    
    return fContentView.frame.size.height;
 }
@@ -1132,8 +1189,8 @@ void print_mask_info(ULong_t mask)
 - (void) setDrawableSize : (NSSize) newSize
 {
    //Can not simply do self.frame.size = newSize.
-   assert(!(newSize.width < 0) && "setDrawableSize, width is negative");
-   assert(!(newSize.height < 0) && "setDrawableSize, height is negative");
+   assert(!(newSize.width < 0) && "-setDrawableSize:, width is negative");
+   assert(!(newSize.height < 0) && "-setDrawableSize:, height is negative");
    
    NSRect frame = self.frame;
    //dY is potentially a titlebar height.
@@ -1143,9 +1200,6 @@ void print_mask_info(ULong_t mask)
    frame.size = newSize;
    frame.size.height += dY;
    [self setFrame : frame display : YES];
-   
-   //Was before: MOVES window (top-left corner).
-   //[self setContentSize : newSize];
 }
 
 //______________________________________________________________________________
@@ -1175,9 +1229,10 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *) mask
+         clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
-   assert(fContentView != nil && "copy:area:toPoint:, fContentView is nil");
+   assert(fContentView != nil && "-copy:area:toPoint:, fContentView is nil");
 
    [fContentView copy : src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
 }
@@ -1185,12 +1240,12 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (unsigned char *) readColorBits : (X11::Rectangle) area
 {
-   assert(fContentView != nil && "readColorBits:, fContentView is nil");
+   assert(fContentView != nil && "-readColorBits:, fContentView is nil");
    
    return [fContentView readColorBits : area];
 }
 
-//X11Window protocol's implementation.
+#pragma mark - X11Window protocol's implementation.
 
 //______________________________________________________________________________
 - (QuartzView *) fParentView
@@ -1216,15 +1271,12 @@ void print_mask_info(ULong_t mask)
    return self;
 }
 
-/////////////////////////////////////////////////////////////
-//SetWindowAttributes_t/WindowAttributes_t.
-
-//... forwards to fContentView.
+//... many forwards to fContentView.
 
 //______________________________________________________________________________
 - (void) setFBackgroundPixel : (unsigned long) backgroundColor
 {
-   assert(fContentView != nil && "setFBackgroundPixel, fContentView is nil");
+   assert(fContentView != nil && "-setFBackgroundPixel:, fContentView is nil");
 
    if (!fShapeCombineMask) {
       CGFloat rgba[] = {0., 0., 0., 1.};
@@ -1239,7 +1291,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (unsigned long) fBackgroundPixel
 {
-   assert(fContentView != nil && "fBackgroundPixel, fContentView is nil");
+   assert(fContentView != nil && "-fBackgroundPixel, fContentView is nil");
 
    return fContentView.fBackgroundPixel;
 }
@@ -1248,8 +1300,8 @@ void print_mask_info(ULong_t mask)
 - (int) fMapState
 {
    //Top-level window can be only kIsViewable or kIsUnmapped (not unviewable).
-   assert(fContentView != nil && "fMapState, content view is nil");
-   
+   assert(fContentView != nil && "-fMapState, fContentView is nil");
+
    if ([fContentView isHidden])
       return kIsUnmapped;
       
@@ -1259,11 +1311,13 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addChild : (NSView<X11Window> *) child
 {
-   assert(child != nil && "addChild, child view is nil");
+   assert(child != nil && "-addChild:, parameter 'child' is nil");
  
    if (!fContentView) {
       //This can happen only in case of re-parent operation.
-      assert([child isKindOfClass : [QuartzView class]] && "addChild: gl view in a top-level window as content view is not supported");
+      assert([child isKindOfClass : [QuartzView class]] &&
+             "-addChild: gl view in a top-level window as content view is not supported");
+
       fContentView = (QuartzView *)child;
       [self setContentView : child];
       fContentView.fParentView = nil;
@@ -1274,16 +1328,16 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) getAttributes : (WindowAttributes_t *) attr
 {
-   assert(fContentView != 0 && "getAttributes, content view is nil");
-   assert(attr && "getAttributes, attr parameter is nil");
+   assert(fContentView != 0 && "-getAttributes:, fContentView is nil");
+   assert(attr && "-getAttributes:, parameter 'attr' is nil");
 
    X11::GetWindowAttributes(self, attr);
 }
 
 //______________________________________________________________________________
-- (void) setAttributes : (const SetWindowAttributes_t *)attr
+- (void) setAttributes : (const SetWindowAttributes_t *) attr
 {
-   assert(attr != 0 && "setAttributes, attr parameter is null");
+   assert(attr != 0 && "-setAttributes:, parameter 'attr' is null");
 
 #ifdef DEBUG_ROOT_COCOA
    log_attributes(attr, self.fID);
@@ -1295,7 +1349,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapRaised
 {
-   assert(fContentView && "mapRaised, content view is nil");
+   assert(fContentView && "-mapRaised, fContentView is nil");
    
    const Util::AutoreleasePool pool;
 
@@ -1312,10 +1366,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapWindow
 {
-   assert(fContentView != nil && "mapWindow, content view is nil");
+   assert(fContentView != nil && "-mapWindow, fContentView is nil");
 
    const Util::AutoreleasePool pool;
-//   [self orderFront : self];
+
    [fContentView setHidden : NO];
    [self makeKeyAndOrderFront : self];
    [fContentView configureNotifyTree];
@@ -1329,7 +1383,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapSubwindows
 {
-   assert(fContentView != nil && "mapSubwindows, content view is nil");
+   assert(fContentView != nil && "-mapSubwindows, fContentView is nil");
 
    const Util::AutoreleasePool pool;
 
@@ -1340,7 +1394,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) unmapWindow
 {
-   assert(fContentView != nil && "unmapWindow, content view is nil");
+   assert(fContentView != nil && "-unmapWindow, fContentView is nil");
 
    [fContentView setHidden : YES];
    [self orderOut : self];
@@ -1351,12 +1405,16 @@ void print_mask_info(ULong_t mask)
    }
 }
 
-//Events.
+#pragma mark - Events.
 
 //______________________________________________________________________________
 - (void) sendEvent : (NSEvent *) theEvent
 {
-   assert(fContentView != nil && "sendEvent, content view is nil");
+   //With XQuartz, if you open a menu and try to move a window without closing this menu,
+   //window does not move, menu closes, and after that you can start draggin a window again.
+   //With Cocoa I can not do such a thing (window WILL move), but still can report button release event
+   //to close a menu.
+   assert(fContentView != nil && "-sendEvent:, fContentView is nil");
 
    if (theEvent.type == NSLeftMouseDown || theEvent.type == NSRightMouseDown) {
       bool generateFakeRelease = false;
@@ -1369,41 +1427,42 @@ void print_mask_info(ULong_t mask)
       if (windowPoint.y <= 4 || windowPoint.y >= self.fHeight - 4)
          generateFakeRelease = true;
       
-      //convertPointFromBase is deprectated.
-      //const NSPoint viewPoint =  [fContentView convertPointFromBase : windowPoint];
       const NSPoint viewPoint =  [fContentView convertPoint : windowPoint fromView : nil];
 
       if (viewPoint.y <= 0 && windowPoint.y >= 0)
          generateFakeRelease = true;
 
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "sendEvent, gVirtualX is either null or not of TGCocoa type");
+      assert(vx != 0 && "-sendEvent:, gVirtualX is either null or not of TGCocoa type");
+      
       if (vx->GetEventTranslator()->HasPointerGrab() && generateFakeRelease) {
-         vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent, theEvent.type == NSLeftMouseDown ? kButton1 : kButton3);//yes, button release???
-
+         vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent,
+                                                              theEvent.type == NSLeftMouseDown ?
+                                                              kButton1 : kButton3);
          //Yes, ignore this event completely (this means, you are not able to immediately start
          //resizing a window, if some popup is open. Actually, this is more or less
-         //the same as with X11.app and X11 version.
+         //the same as with XQuartz and X11 version.
          return;
       }
    }
 
-   //Always call default version.
    [super sendEvent : theEvent];
 }
 
-//NSWindowDelegate's methods.
+#pragma mark - NSWindowDelegate's methods.
 
 //______________________________________________________________________________
 - (BOOL) windowShouldClose : (id) sender
 {
 #pragma unused(sender)
 
-   assert(fContentView != nil && "windowShouldClose, content view is nil");
+   assert(fContentView != nil && "-windowShouldClose:, fContentView is nil");
 
    //TODO: check this!!! Children are
    //transient windows and ROOT does not handle
-   //such a deletion properly, noop then.
+   //such a deletion properly, noop then:
+   //you can not close some window, if there is a
+   //modal dialog above.
    if ([[self childWindows] count])
       return NO;
 
@@ -1416,10 +1475,12 @@ void print_mask_info(ULong_t mask)
    closeEvent.fUser[0] = TGCocoa::fgDeleteWindowAtom;
    //Place it into the queue.
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "windowShouldClose, gVirtualX is either null or has a type different from TGCocoa");
+   assert(vx != 0 &&
+          "-windowShouldClose:, gVirtualX is either null or has a type different from TGCocoa");
    vx->SendEvent(fContentView.fID, &closeEvent);
 
-   //Do not let AppKit to close a window.
+   //Do not let AppKit to close a window,
+   //ROOT will do.
    return NO;
 }
 
@@ -1428,14 +1489,13 @@ void print_mask_info(ULong_t mask)
 {
 #pragma unused(aNotification)
 
-   assert(fContentView != nil && "windowDidBecomeKey, fContentView is nil");
+   assert(fContentView != nil && "-windowDidBecomeKey:, fContentView is nil");
 
    if (!fContentView.fOverrideRedirect) {
-      //TEST: "fix" a keyboard focus.
       fHasFocus = YES;
       //
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
+      assert(vx != 0 && "-windowDidBecomeKey:, gVirtualX is null or not of TGCocoa type");
       vx->GetEventTranslator()->GenerateFocusChangeEvent(self.fContentView);
    }
 }
@@ -1445,31 +1505,12 @@ void print_mask_info(ULong_t mask)
 - (void) windowDidResignKey : (NSNotification *) aNotification
 {
 #pragma unused(aNotification)
-//   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-//   assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
-//   vx->GetEventTranslator()->GenerateFocusChangeEvent(nil);
-
-   //TEST: "fix" a keyboard focus.
    fHasFocus = NO;
 }
 
-/*
-//______________________________________________________________________________
--(BOOL)canBecomeKeyWindow
-{
-   assert(fContentView != nil && "canBecomeKeyWindow, fContentView is nil");
-
-   return !fContentView.fOverrideRedirect;
-}
-*/
-
 @end
 
-//
-//
-//
-//
-//Passive key grab info.
+#pragma mark - Passive key grab info.
 
 @implementation PassiveKeyGrab {
    unichar fKeyCode;
@@ -1513,9 +1554,8 @@ void print_mask_info(ULong_t mask)
 
 @end
 
-//
-//
-//X11 "property".
+#pragma mark - X11 property emulation.
+
 @interface QuartzWindowProperty : NSObject {
    NSData *fPropertyData;
    Atom_t fType;
@@ -1554,10 +1594,11 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) resetPropertyData : (unsigned char *) data size : (unsigned) dataSize type : (Atom_t) type format : (unsigned) format
+- (void) resetPropertyData : (unsigned char *) data size : (unsigned) dataSize
+         type : (Atom_t) type format : (unsigned) format
 {
    [fPropertyData release];
-   
+
    fFormat = format;
    if (format == 16)
       dataSize *= 2;
@@ -1583,6 +1624,11 @@ void print_mask_info(ULong_t mask)
 
 @end
 
+#pragma mark - QuartzView.
+
+//
+//QuartzView is a children view (also is a content view for a top-level QuartzWindow).
+//
 
 @implementation QuartzView {
    QuartzPixmap   *fBackBuffer;
@@ -1620,6 +1666,8 @@ void print_mask_info(ULong_t mask)
 @synthesize fSnapshotDraw;
 @synthesize fCurrentCursor;
 @synthesize fIsDNDAware;
+
+#pragma mark - Lifetime.
 
 //______________________________________________________________________________
 - (id) initWithFrame : (NSRect) frame windowAttributes : (const SetWindowAttributes_t *)attr
@@ -1665,8 +1713,12 @@ void print_mask_info(ULong_t mask)
    [super dealloc];
 }
 
+#pragma mark - Tracking area.
+
+//Tracking area is required to ... track mouse motion events inside a view.
+
 //______________________________________________________________________________
-- (void)updateTrackingAreas
+- (void) updateTrackingAreas
 {
    if (!fID)
       return;
@@ -1685,13 +1737,16 @@ void print_mask_info(ULong_t mask)
       }
    }
    
-   const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited | NSTrackingActiveInActiveApp | NSTrackingInVisibleRect
-                                    | NSTrackingEnabledDuringMouseDrag;
+   const NSUInteger trackerOptions = NSTrackingMouseMoved | NSTrackingMouseEnteredAndExited |
+                                     NSTrackingActiveInActiveApp | NSTrackingInVisibleRect |
+                                     NSTrackingEnabledDuringMouseDrag;
+
    NSRect frame = {};
    frame.size.width = self.fWidth;
    frame.size.height = self.fHeight;
    
-   NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame options : trackerOptions owner : self userInfo : nil];
+   NSTrackingArea * const tracker = [[NSTrackingArea alloc] initWithRect : frame
+                                     options : trackerOptions owner : self userInfo : nil];
    [self addTrackingArea : tracker];
    [tracker release];
 }
@@ -1700,11 +1755,13 @@ void print_mask_info(ULong_t mask)
 - (void) updateTrackingAreasAfterRaise
 {
    [self updateTrackingAreas];
+
    for (QuartzView *childView in [self subviews])
       [childView updateTrackingAreasAfterRaise];
 }
 
-//X11Drawable protocol.
+#pragma mark - X11Drawable protocol.
+
 //______________________________________________________________________________
 - (BOOL) fIsPixmap
 {
@@ -1744,8 +1801,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setDrawableSize : (NSSize) newSize
 {
-   assert(!(newSize.width < 0) && "setDrawableSize, width is negative");
-   assert(!(newSize.height < 0) && "setDrawableSize, height is negative");
+   assert(!(newSize.width < 0) && "-setDrawableSize, width is negative");
+   assert(!(newSize.height < 0) && "-setDrawableSize, height is negative");
    
    //This will cause redraw(?)
    
@@ -1780,19 +1837,23 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area
+          withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY
+          toPoint : (X11::Point) dstPoint
 {
-   //TODO: test and fix all possible cases with crop area and masks.
-
    //Check parameters.
-   assert(srcImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, srcImage parameter is nil");
-   assert(srcImage.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, srcImage.fImage is nil");
+   assert(srcImage != nil &&
+          "-copyImage:area:withMask:clipOrigin:toPoint:, parameter 'srcImage' is nil");
+   assert(srcImage.fImage != nil &&
+          "-copyImage:area:withMask:clipOrigin:toPoint:, srcImage.fImage is nil");
 
    //Check self.
-   assert(self.fContext != 0 && "copyImage:area:withMask:clipOrigin:toPoint:, self.fContext is null");
+   assert(self.fContext != 0 &&
+          "-copyImage:area:withMask:clipOrigin:toPoint:, self.fContext is null");
    
    if (!X11::AdjustCropArea(srcImage, area)) {
-      NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:, srcRect and copyRect do not intersect");
+      NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:,"
+             " srcRect and copyRect do not intersect");
       return;
    }
    
@@ -1804,7 +1865,8 @@ void print_mask_info(ULong_t mask)
       needSubImage = true;
       subImage = X11::CreateSubImage(srcImage, area);
       if (!subImage) {
-         NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:, subimage creation failed");
+         NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:,"
+                " subimage creation failed");
          return;
       }
    } else
@@ -1819,8 +1881,10 @@ void print_mask_info(ULong_t mask)
    //Set clip mask on a context.
    
    if (mask) {
-      assert(mask.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
-      assert(CGImageIsMask(mask.fImage) == true && "copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
+      assert(mask.fImage != nil &&
+             "-copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
+      assert(CGImageIsMask(mask.fImage) == true &&
+             "-copyImage:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
       //clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
       const CGFloat clipY = X11::LocalYROOTToCocoa(self, CGFloat(clipXY.fY) + mask.fHeight);
       //const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
@@ -1847,7 +1911,7 @@ void print_mask_info(ULong_t mask)
    
    //TODO: this code must be tested, with all possible cases.
 
-   assert(srcView != nil && "copyView:area:toPoint:, srcView parameter is nil");
+   assert(srcView != nil && "-copyView:area:toPoint:, parameter 'srcView' is nil");
 
    const NSRect frame = [srcView frame];   
    //imageRep is in autorelease pool now.
@@ -1857,8 +1921,8 @@ void print_mask_info(ULong_t mask)
       return;
    }
    
-   assert(srcView != nil && "copyView:area:toPoint:, srcView parameter is nil");
-   assert(self.fContext != 0 && "copyView:area:toPoint, self.fContext is null");
+   assert(srcView != nil && "-copyView:area:toPoint:, parameter 'srcView' is nil");
+   assert(self.fContext != 0 && "-copyView:area:toPoint, self.fContext is null");
 
    //It can happen, that src and self are the same.
    //cacheDisplayInRect calls drawRect with bitmap context 
@@ -1878,7 +1942,9 @@ void print_mask_info(ULong_t mask)
    }
 
    const Quartz::CGStateGuard ctxGuard(self.fContext);
-   const CGRect imageRect = CGRectMake(dstPoint.fX, [self visibleRect].size.height - (CGFloat(dstPoint.fY) + area.fHeight), area.fWidth, area.fHeight);
+   const CGRect imageRect = CGRectMake(dstPoint.fX,
+                                       [self visibleRect].size.height - (CGFloat(dstPoint.fY) + area.fHeight),
+                                       area.fWidth, area.fHeight);
 
    CGContextTranslateCTM(self.fContext, 0., [self visibleRect].size.height); 
    CGContextScaleCTM(self.fContext, 1., -1.);
@@ -1887,18 +1953,21 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area
+         withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    //Check parameters.
-   assert(srcPixmap != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, srcPixmap parameter is nil");
+   assert(srcPixmap != nil && "-copyPixmap:area:withMask:clipOrigin:toPoint:, parameter 'srcPixmap' is nil");
 
    if (!X11::AdjustCropArea(srcPixmap, area)) {
-      NSLog(@"QuartzView: -copyPixmap:area:withMask:clipOrigin:toPoint, no intersection between pixmap rectangle and cropArea");
+      NSLog(@"QuartzView: -copyPixmap:area:withMask:clipOrigin:toPoint,"
+             " no intersection between pixmap rectangle and cropArea");
       return;
    }
    
    //Check self.
-   assert(self.fContext != 0 && "copyPixmap:area:withMask:clipOrigin:toPoint:, self.fContext is null");
+   assert(self.fContext != 0 &&
+          "-copyPixmap:area:withMask:clipOrigin:toPoint:, self.fContext is null");
 
    //Save context state.
    const Quartz::CGStateGuard ctxGuard(self.fContext);
@@ -1907,7 +1976,8 @@ void print_mask_info(ULong_t mask)
    CGContextScaleCTM(self.fContext, 1., -1.);
 
    const Util::CFScopeGuard<CGImageRef> imageFromPixmap([srcPixmap createImageFromPixmap]);
-   assert(imageFromPixmap.Get() != 0 && "copyPixmap:area:withMask:clipOrigin:toPoint:, createImageFromPixmap failed");
+   assert(imageFromPixmap.Get() != 0 &&
+          "-copyPixmap:area:withMask:clipOrigin:toPoint:, createImageFromPixmap failed");
 
    CGImageRef subImage = 0;
    bool needSubImage = false;
@@ -1916,16 +1986,18 @@ void print_mask_info(ULong_t mask)
       const CGRect subImageRect = CGRectMake(area.fX, area.fY, area.fHeight, area.fWidth);
       subImage = CGImageCreateWithImageInRect(imageFromPixmap.Get(), subImageRect);
       if (!subImage) {
-         NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:, subimage creation failed");
+         NSLog(@"QuartzView: -copyImage:area:withMask:clipOrigin:toPoint:,"
+                " subimage creation failed");
          return;
       }
    } else
       subImage = imageFromPixmap.Get();
    
    if (mask) {
-      //TODO: testtesttest!!!
-      assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
-      assert(CGImageIsMask(mask.fImage) == true && "copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
+      assert(mask.fImage != nil &&
+             "-copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is nil");
+      assert(CGImageIsMask(mask.fImage) == true &&
+             "-copyPixmap:area:withMask:clipOrigin:toPoint:, mask.fImage is not a mask");
 
       //clipXY.fY = X11::LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
       const CGFloat clipY = X11::LocalYROOTToCocoa(self, CGFloat(clipXY.fY) + mask.fHeight);
@@ -1945,11 +2017,12 @@ void print_mask_info(ULong_t mask)
 
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area toPoint : (X11::Point) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area
+           toPoint : (X11::Point) dstPoint
 {
-   assert(srcImage != nil && "copyImage:area:toPoint:, srcImage parameter is nil");
-   assert(srcImage.fImage != nil && "copyImage:area:toPoint:, srcImage.fImage is nil");
-   assert(self.fContext != 0 && "copyImage:area:toPoint:, fContext is null");
+   assert(srcImage != nil && "-copyImage:area:toPoint:, parameter 'srcImage' is nil");
+   assert(srcImage.fImage != nil && "-copyImage:area:toPoint:, srcImage.fImage is nil");
+   assert(self.fContext != 0 && "-copyImage:area:toPoint:, fContext is null");
 
    if (!X11::AdjustCropArea(srcImage, area)) {
       NSLog(@"QuartzView: -copyImage:area:toPoint, image and copy area do not intersect");
@@ -1984,10 +2057,11 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area
+     withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
-   assert(src != nil && "copy:area:withMask:clipOrigin:toPoint:, src parameter is nil");
-   assert(area.fWidth && area.fHeight && "copy:area:withMask:clipOrigin:toPoint:, area to copy is empty");
+   assert(src != nil && "-copy:area:withMask:clipOrigin:toPoint:, parameter 'src' is nil");
+   assert(area.fWidth && area.fHeight && "-copy:area:withMask:clipOrigin:toPoint:, area to copy is empty");
    
    if ([src isKindOfClass : [QuartzWindow class]]) {
       //Forget about mask (can I have it???)
@@ -2002,25 +2076,30 @@ void print_mask_info(ULong_t mask)
    } else if ([src isKindOfClass : [QuartzImage class]]) {
       [self copyImage : (QuartzImage *)src area : area withMask : mask clipOrigin : clipXY toPoint : dstPoint];
    } else {
-      assert(0 && "copy:area:withMask:clipOrigin:toPoint:, src is of unknown type");
+      assert(0 && "-copy:area:withMask:clipOrigin:toPoint:, src is of unknown type");
    }
 }
 
 //______________________________________________________________________________
 - (unsigned char *) readColorBits : (X11::Rectangle) area
 {
-   //
-   assert(area.fWidth && area.fHeight && "readColorBits:, area to copy is empty");
+   //This is quite a bad idea - to read pixels back from a view,
+   //but our GUI does exactly this. In case of Cocoa it's expensive
+   //and not guaranteed to work.
+
+   assert(area.fWidth && area.fHeight && "-readColorBits:, area to copy is empty");
 
    const NSRect visRect = [self visibleRect];
-   const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y), unsigned(visRect.size.width), unsigned(visRect.size.height));
+   const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y),
+                                unsigned(visRect.size.width), unsigned(visRect.size.height));
    
    if (!X11::AdjustCropArea(srcRect, area)) {
       NSLog(@"QuartzView: -readColorBits:, visible rect of view and copy area do not intersect");
       return 0;
    }
 
-   NSBitmapImageRep * const imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];//imageRect is autoreleased.
+   //imageRep is autoreleased.
+   NSBitmapImageRep * const imageRep = [self bitmapImageRepForCachingDisplayInRect : visRect];
    if (!imageRep) {
       NSLog(@"QuartzView: -readColorBits:, bitmapImageRepForCachingDisplayInRect failed");
       return 0;
@@ -2176,7 +2255,9 @@ void print_mask_info(ULong_t mask)
 - (BOOL) acceptsCrossingEvents : (unsigned) eventMask
 {
    bool accepts = fEventMask & eventMask;
-   if (fCurrentGrabType == X11::kPGPassiveGrab)//In ROOT passive grabs are always with owner_events == true.
+   
+   //In ROOT passive grabs are always with owner_events == true.
+   if (fCurrentGrabType == X11::kPGPassiveGrab)
       accepts = accepts || (fPassiveGrabEventMask & eventMask);
 
    if (fCurrentGrabType == X11::kPGActiveGrab) {
@@ -2192,7 +2273,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) addChild : (NSView<X11Window> *) child
 {
-   assert(child != nil && "addChild, child view is nil");
+   assert(child != nil && "-addChild:, parameter 'child' is nil");
 
    [self addSubview : child];
    child.fParentView = self;
@@ -2201,7 +2282,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) getAttributes : (WindowAttributes_t *) attr
 {
-   assert(attr != 0 && "getAttributes, attr parameter is null");
+   assert(attr != 0 && "-getAttributes:, parameter 'attr' is null");
    
    X11::GetWindowAttributes(self, attr);
 }
@@ -2209,7 +2290,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) setAttributes : (const SetWindowAttributes_t *)attr
 {
-   assert(attr != 0 && "setAttributes, attr parameter is null");
+   assert(attr != 0 && "-setAttributes:, parameter 'attr' is null");
 
 #ifdef DEBUG_ROOT_COCOA
    log_attributes(attr, fID);
@@ -2221,7 +2302,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapRaised
 {
-   //Move view to the top of subviews (in UIKit there is a special method).   
+   //Move view to the top of subviews.
    QuartzView * const parent = fParentView;
    [self removeFromSuperview];
    [parent addSubview : self];
@@ -2237,10 +2318,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mapSubwindows
 {
-   for (QuartzView * v in [self subviews]) {
-      [v setHidden : NO]; 
-      //[v mapSubwindows];
-   }
+   for (QuartzView * v in [self subviews])
+      [v setHidden : NO];
 }
 
 //______________________________________________________________________________
@@ -2266,6 +2345,17 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) raiseWindow
 {
+   //Now, I can not remove window and add it ...
+   //For example, if you click on a tab, this:
+   //1. Creates (potentially) a passive button grab
+   //2. Raises this tab - changes the window order.
+   //3. On a button release - grab is release.
+   //The tough problem is, if I remove a view from subviews
+   //and add it ... it will never receve the
+   //release event thus a grab will 'hang' on
+   //view leading to bugs and artifacts.
+   //So instead I have to ... SORT!!!!!
+
    using namespace X11;//Comparators.
 
    for (QuartzView *sibling in [fParentView subviews]) {
@@ -2273,12 +2363,10 @@ void print_mask_info(ULong_t mask)
          continue;
       if ([sibling isHidden])
          continue;
-      //TODO: equal test is not good :) I have a baaad feeling about this ;)
+
       if (CGRectEqualToRect(sibling.frame, self.frame)) {
          [sibling setOverlapped : YES];
-         //
          [sibling setHidden : YES];
-         //
       }
    }
 
@@ -2290,12 +2378,14 @@ void print_mask_info(ULong_t mask)
    //
    [self updateTrackingAreasAfterRaise];
    //
-   [self setNeedsDisplay : YES];//?
+   [self setNeedsDisplay : YES];
 }
 
 //______________________________________________________________________________
 - (void) lowerWindow
 {
+   //See comment about sorting in -raiseWindow.
+
    using namespace X11;
 
    NSEnumerator * const reverseEnumerator = [[fParentView subviews] reverseObjectEnumerator];
@@ -2318,14 +2408,14 @@ void print_mask_info(ULong_t mask)
       }
    }
    
-   [fParentView sortSubviewsUsingFunction : CompareViewsToLower context : (void*)self];//NO ARC! No __bridge!
+   [fParentView sortSubviewsUsingFunction : CompareViewsToLower context : (void*)self];
 }
 
 //______________________________________________________________________________
 - (BOOL) isFlipped
 {
    //Now view's placement, geometry, moving and resizing can be
-   //done with ROOT's (X11) coordinates without conversion.
+   //done with ROOT's (X11) coordinates without conversion - we're are 'flipped'.
    return YES;
 }
 
@@ -2335,7 +2425,8 @@ void print_mask_info(ULong_t mask)
    if (self.fMapState == kIsViewable || fIsOverlapped == YES) {
       if (fEventMask & kStructureNotifyMask) {
          TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-         assert(vx && "configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
+         assert(vx &&
+                "-configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       }
 
@@ -2344,13 +2435,14 @@ void print_mask_info(ULong_t mask)
    }
 }
 
-//Key grabs.
+#pragma mark - Key grabs.
+
 //______________________________________________________________________________
 - (void) addPassiveKeyGrab : (unichar) keyCode modifiers : (NSUInteger) modifiers
 {
-   //TODO: why am I removing the old one??? :)
    [self removePassiveKeyGrab : keyCode modifiers : modifiers];
-   PassiveKeyGrab * const newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode modifiers : modifiers];
+   PassiveKeyGrab * const newGrab = [[PassiveKeyGrab alloc] initWithKey : keyCode
+                                                              modifiers : modifiers];
    [fPassiveKeyGrabs addObject : newGrab];
    [newGrab release];
 }
@@ -2393,28 +2485,29 @@ void print_mask_info(ULong_t mask)
    return nil;
 }
 
-//Painting mechanics.
+#pragma mark - Painting mechanics.
 
 //______________________________________________________________________________
 - (void) drawRect : (NSRect) dirtyRect
 {
-   using namespace X11;
+#pragma unused(dirtyRect)
 
-   (void)dirtyRect;
+   using namespace X11;
 
    if (fID) {
       if (TGWindow * const window = gClient->GetWindowById(fID)) {
-         if (ViewIsTextViewFrame(self, true) ||ViewIsHtmlViewFrame(self, true))//It's never painted, parent renders child. true == check the parent also.
+         //It's never painted, parent renders child. true == check the parent also.
+         if (ViewIsTextViewFrame(self, true) ||ViewIsHtmlViewFrame(self, true))
             return;
 
          NSGraphicsContext * const nsContext = [NSGraphicsContext currentContext];
-         assert(nsContext != nil && "drawRect, currentContext returned nil");
+         assert(nsContext != nil && "-drawRect:, currentContext returned nil");
 
          TGCocoa * const vx = (TGCocoa *)gVirtualX;
          vx->CocoaDrawON();
 
          fContext = (CGContextRef)[nsContext graphicsPort];
-         assert(fContext != 0 && "drawRect, graphicsPort returned null");
+         assert(fContext != 0 && "-drawRect:, graphicsPort returned null");
 
          const Quartz::CGStateGuard ctxGuard(fContext);
 
@@ -2429,12 +2522,11 @@ void print_mask_info(ULong_t mask)
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
                NSView<X11Window> * const viewFrame = FrameForTextView(self);
-               if (viewFrame)
-                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);//Now we set fExposedRegion for TGView.
+               if (viewFrame)//Now we set fExposedRegion for TGView.
+                  vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
             }
             
             if (ViewIsHtmlView(self)) {
-               //TODO: remove code duplication here.
                NSView<X11Window> *const viewFrame = FrameForHtmlView(self);
                if (viewFrame)
                   vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, [viewFrame visibleRect]);
@@ -2454,8 +2546,8 @@ void print_mask_info(ULong_t mask)
          if (fBackBuffer) {
             //Very "special" window.
             const X11::Rectangle copyArea(0, 0, fBackBuffer.fWidth, fBackBuffer.fHeight);
-
-            [self copy : fBackBuffer area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
+            [self copy : fBackBuffer area : copyArea withMask : nil
+                  clipOrigin : X11::Point() toPoint : X11::Point()];
          }
      
          vx->CocoaDrawOFF();
@@ -2467,13 +2559,13 @@ void print_mask_info(ULong_t mask)
          fContext = 0;         
       } else {
 #ifdef DEBUG_ROOT_COCOA
-         NSLog(@"QuartzView: -drawRect method, no window for id %u was found", fID);
+         NSLog(@"QuartzView: -drawRect: method, no window for id %u was found", fID);
 #endif
       }
    }
 }
 
-//Event handling.
+#pragma mark - Geometry.
 
 //______________________________________________________________________________
 - (void) setFrame : (NSRect) newFrame
@@ -2503,23 +2595,27 @@ void print_mask_info(ULong_t mask)
    [self setNeedsDisplay : YES];//?
 }
 
+#pragma mark - Event handling.
+
 //______________________________________________________________________________
 - (void) mouseDown : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseDown, fID is 0");
+   assert(fID != 0 && "-mouseDown:, fID is 0");
    
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseDown, gVirtualX is either null or has a type, different from TGCocoa");
+   assert(vx != 0 &&
+          "-mouseDown:, gVirtualX is either null or has a type, different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
 }
 
 //______________________________________________________________________________
 - (void) scrollWheel : (NSEvent*) theEvent
 {
-   assert(fID != 0 && "scrollWheel, fID is 0");
+   assert(fID != 0 && "-scrollWheel:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "scrollWheel, gVirtualX is either null or has a type, different from TGCocoa");
+   assert(vx != 0 &&
+          "-scrollWheel:, gVirtualX is either null or has a type, different from TGCocoa");
 
    const CGFloat deltaY = [theEvent deltaY];
    if (deltaY < 0) {
@@ -2535,7 +2631,7 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) printViewInformation
 {
-   assert(fID != 0 && "printWindowInformation, fID is 0");
+   assert(fID != 0 && "-printWindowInformation, fID is 0");
    const TGWindow * const window = gClient->GetWindowById(fID);
    assert(window != 0 && "printWindowInformation, window not found");
 
@@ -2545,7 +2641,8 @@ void print_mask_info(ULong_t mask)
    print_mask_info(fEventMask);
    NSLog(@"grab mask is:");
    print_mask_info(fPassiveGrabEventMask);
-   NSLog(@"view's geometry: x == %g, y == %g, w == %g, h == %g", self.frame.origin.x, self.frame.origin.y, self.frame.size.width, self.frame.size.height);
+   NSLog(@"view's geometry: x == %g, y == %g, w == %g, h == %g", self.frame.origin.x,
+         self.frame.origin.y, self.frame.size.width, self.frame.size.height);
    NSLog(@"----------------End of view info------------------");
 }
 #endif
@@ -2553,21 +2650,22 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) rightMouseDown : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "rightMouseDown, fID is 0");
+   assert(fID != 0 && "-rightMouseDown:, fID is 0");
 
 #ifdef DEBUG_ROOT_COCOA
    [self printViewInformation];
 #endif
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "rightMouseDown, gVirtualX is either null or has type different from TGCocoa");
+   assert(vx != 0 &&
+          "-rightMouseDown:, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton3);
 }
 
 //______________________________________________________________________________
 - (void) otherMouseDown : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "otherMouseDown, fID is 0");
+   assert(fID != 0 && "-otherMouseDown:, fID is 0");
    
    //Funny enough, [theEvent buttonNumber] is not the same thing as button masked in [NSEvent pressedMouseButtons],
    //button number actually is a kind of right operand for bitshift for pressedMouseButtons.
@@ -2575,7 +2673,8 @@ void print_mask_info(ULong_t mask)
       //I do not care about mouse buttons after left/right/wheel - ROOT does not have
       //any code for this.
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "otherMouseDown, gVirtualX is either null or has type different from TGCocoa");
+      assert(vx != 0 &&
+             "-otherMouseDown:, gVirtualX is either null or has type different from TGCocoa");
       vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton2);
    }
 }
@@ -2583,10 +2682,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mouseUp : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseUp, fID is 0");
+   assert(fID != 0 && "-mouseUp:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx && "mouseUp, gVirtualX is either null or has type different from TGCocoa");
+   assert(vx && "-mouseUp:, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton1);
 }
 
@@ -2594,31 +2693,33 @@ void print_mask_info(ULong_t mask)
 - (void) rightMouseUp : (NSEvent *) theEvent
 {
 
-   assert(fID != 0 && "rightMouseUp, fID is 0");
+   assert(fID != 0 && "-rightMouseUp:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "rightMouseUp, gVirtualX is either null or has type different from TGCocoa");
+   assert(vx != 0 &&
+          "-rightMouseUp:, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton3);
 }
 
 //______________________________________________________________________________
 - (void) otherMouseUp : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "otherMouseUp, fID is 0");
+   assert(fID != 0 && "-otherMouseUp:, fID is 0");
    
    //Here I assume it's always kButton2.
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "otherMouseUp, gVirtualX is either null or has type different from TGCocoa");
+   assert(vx != 0 &&
+          "-otherMouseUp:, gVirtualX is either null or has type different from TGCocoa");
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton2);
 }
 
 //______________________________________________________________________________
 - (void) mouseEntered : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseEntered, fID is 0");
+   assert(fID != 0 && "-mouseEntered:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseEntered, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-mouseEntered:, gVirtualX is null or not of TGCocoa type");
 
    vx->GetEventTranslator()->GenerateCrossingEvent(theEvent);
 }
@@ -2626,10 +2727,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mouseExited : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseExited, fID is 0");
+   assert(fID != 0 && "-mouseExited:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseExited, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-mouseExited:, gVirtualX is null or not of TGCocoa type");
 
    vx->GetEventTranslator()->GenerateCrossingEvent(theEvent);
 }
@@ -2637,47 +2738,47 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) mouseMoved : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseMoved, fID is 0");
+   assert(fID != 0 && "-mouseMoved:, fID is 0");
    
    if (fParentView)//Suppress events in all views, except the top-level one.
       return;      //TODO: check, that it does not create additional problems.
 
    TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseMoved, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-mouseMoved:, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
 }
 
 //______________________________________________________________________________
-- (void) mouseDragged : (NSEvent *)theEvent
+- (void) mouseDragged : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "mouseDragged, fID is 0");
+   assert(fID != 0 && "-mouseDragged:, fID is 0");
    
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "mouseDragged, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-mouseDragged:, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);   
 }
 
 //______________________________________________________________________________
-- (void) rightMouseDragged : (NSEvent *)theEvent
+- (void) rightMouseDragged : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "rightMouseDragged, fID is 0");
+   assert(fID != 0 && "-rightMouseDragged:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "rightMouseDragged, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-rightMouseDragged:, gVirtualX is null or not of TGCocoa type");
    
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
 }
 
 //______________________________________________________________________________
-- (void) otherMouseDragged : (NSEvent *)theEvent
+- (void) otherMouseDragged : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "otherMouseDragged, fID is 0");
+   assert(fID != 0 && "-otherMouseDragged:, fID is 0");
 
    if ([theEvent buttonNumber] == 2) {
       TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "otherMouseDragged, gVirtualX is null or not of TGCocoa type");
+      assert(vx != 0 && "-otherMouseDragged:, gVirtualX is null or not of TGCocoa type");
       vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
    }
 }
@@ -2685,10 +2786,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) keyDown : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "keyDown, fID is 0");
+   assert(fID != 0 && "-keyDown:, fID is 0");
   
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "keyDown, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-keyDown:, gVirtualX is null or not of TGCocoa type");
    
    NSView<X11Window> *eventView = self;
    if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
@@ -2700,10 +2801,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) keyUp : (NSEvent *) theEvent
 {
-   assert(fID != 0 && "keyUp, fID is 0");
+   assert(fID != 0 && "-keyUp:, fID is 0");
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "keyUp, gVirtualX is null or not of TGCocoa type");
+   assert(vx != 0 && "-keyUp:, gVirtualX is null or not of TGCocoa type");
 
    NSView<X11Window> *eventView = self;
    if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
@@ -2712,7 +2813,7 @@ void print_mask_info(ULong_t mask)
    vx->GetEventTranslator()->GenerateKeyReleaseEvent(eventView, theEvent);
 }
 
-//First responder staff.
+#pragma mark - First responder stuff.
 
 //______________________________________________________________________________
 - (BOOL) acceptsFirstMouse : (NSEvent *) theEvent
@@ -2727,42 +2828,8 @@ void print_mask_info(ULong_t mask)
    return YES;
 }
 
-/*
-//______________________________________________________________________________
-- (BOOL) becomeFirstResponder
-{
-   if (!fOverrideRedirect) {
-      //Change focus.
-      NSView<X11Window> *focusView = nil;
-      for (NSView<X11Window> *view = self; view; view = view.fParentView) {
-         if (view.fEventMask & kFocusChangeMask) {
-            focusView = view;
-            break;
-         }
-      }
+#pragma mark - Cursors.
 
-      if (!focusView)
-         focusView = ((QuartzWindow *)[self window]).fContentView;
-      
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "becomeFirstResponder, gVirtualX is null or not of TGCocoa type");
-      vx->GetEventTranslator()->GenerateFocusChangeEvent(focusView);
-   }
-   
-   return YES;
-}
-
-//______________________________________________________________________________
-- (BOOL) resignFirstResponder
-{
-   //Change focus.
-   
-   //NSResponder returns YES, so do I.
-   return YES;
-}
-*/
-
-//Cursors.
 //______________________________________________________________________________
 - (void) setFCurrentCursor : (ECursor) cursor
 {
@@ -2805,7 +2872,7 @@ void print_mask_info(ULong_t mask)
    }
    
    if (pngFileName) {
-      const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);//This must be deleted.
+      const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);
       const Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {
@@ -2814,14 +2881,14 @@ void print_mask_info(ULong_t mask)
       }
       
       NSString *nsPath = [NSString stringWithFormat : @"%s", path];//in autorelease pool.
-      NSImage * const cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];//must call release.
-
+      NSImage * const cursorImage = [[NSImage alloc] initWithContentsOfFile : nsPath];
 
       if (!cursorImage)
          return nil;
 
       NSPoint hotSpot = X11::GetCursorHotStop(cursorImage, fCurrentCursor);
-      NSCursor * const customCursor = [[[NSCursor alloc] initWithImage : cursorImage hotSpot : hotSpot] autorelease];//in autorelease pool.
+      NSCursor * const customCursor = [[[NSCursor alloc] initWithImage : cursorImage
+                                                         hotSpot : hotSpot] autorelease];
       
       [cursorImage release];
       
@@ -2880,12 +2947,15 @@ void print_mask_info(ULong_t mask)
       [super resetCursorRects];
 }
 
+#pragma mark - Emulated X11 properties.
+
 //______________________________________________________________________________
-- (void) setProperty : (const char *) propName data : (unsigned char *) propData size : (unsigned) dataSize forType : (Atom_t) dataType format : (unsigned) format
+- (void) setProperty : (const char *) propName data : (unsigned char *) propData
+         size : (unsigned) dataSize forType : (Atom_t) dataType format : (unsigned) format
 {
-   assert(propName != 0 && "setProperty:data:size:forType:, propName parameter is null");
-   assert(propData != 0 && "setProperty:data:size:forType:, propData parameter is null");
-   assert(dataSize != 0 && "setProperty:data:size:forType:, dataSize parameter is 0");
+   assert(propName != 0 && "-setProperty:data:size:forType:, parameter 'propName' is null");
+   assert(propData != 0 && "-setProperty:data:size:forType:, parameter 'propData' is null");
+   assert(dataSize != 0 && "-setProperty:data:size:forType:, parameter 'dataSize' is 0");
 
    NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
    QuartzWindowProperty * property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
@@ -2895,7 +2965,8 @@ void print_mask_info(ULong_t mask)
       [property resetPropertyData : propData size : dataSize type : dataType format : format];
    else {
       //No property found, add a new one.
-      property = [[QuartzWindowProperty alloc] initWithData : propData size : dataSize type : dataType format : format];
+      property = [[QuartzWindowProperty alloc] initWithData : propData size : dataSize
+                                               type : dataType format : format];
       [fX11Properties setObject : property forKey : key];
       [property release];
    }
@@ -2904,8 +2975,8 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) hasProperty : (const char *) propName
 {
-   assert(propName != 0 && "hasProperty, propName parameter is null");
-   
+   assert(propName != 0 && "-hasProperty:, propName parameter is null");
+
    NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
    QuartzWindowProperty * const property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
 
@@ -2916,14 +2987,19 @@ void print_mask_info(ULong_t mask)
 - (unsigned char *) getProperty : (const char *) propName returnType : (Atom_t *) type 
    returnFormat : (unsigned *) format nElements : (unsigned *) nElements
 {
-   assert(propName != 0 && "getProperty:returnType:returnFormat:nElements, propName parameter is null");
-   assert(type != 0 && "getProperty:returnType:returnFormat:nElements, type parameter is null");
-   assert(format != 0 && "getProperty:returnType:returnFormat:nElements, format parameter is null");
-   assert(nElements != 0 && "getProperty:returnType:returnFormat:nElements, nElements parameter is null");
+   assert(propName != 0 &&
+          "-getProperty:returnType:returnFormat:nElements:, parameter 'propName' is null");
+   assert(type != 0 &&
+          "-getProperty:returnType:returnFormat:nElements:, parameter 'type' is null");
+   assert(format != 0 &&
+          "-getProperty:returnType:returnFormat:nElements:, parameter 'format' is null");
+   assert(nElements != 0 &&
+          "-getProperty:returnType:returnFormat:nElements:, parameter 'nElements' is null");
 
    NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
    QuartzWindowProperty * const property = (QuartzWindowProperty *)[fX11Properties valueForKey : key];
-   assert(property != 0 && "getProperty:returnType:returnFormat:nElements, property not found");
+   assert(property != 0 &&
+          "-getProperty:returnType:returnFormat:nElements, property not found");
 
    NSData * const propData = property.fPropertyData;
    
@@ -2932,7 +3008,9 @@ void print_mask_info(ULong_t mask)
    try {
       buff = new unsigned char[dataSize]();
    } catch (const std::bad_alloc &) {
-      NSLog(@"QuartzWindow: -getProperty:returnType:returnFormat:nElements, memory allocation failed");//Hmm, can I log, if new failed? :)
+      //Hmm, can I log, if new failed? :)
+      NSLog(@"QuartzWindow: -getProperty:returnType:returnFormat:nElements:,"
+            " memory allocation failed");
       return 0;
    }
 
@@ -2954,9 +3032,10 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (void) removeProperty : (const char *) propName
 {
-   assert(propName != 0 && "removeProperty:, propName parameter is null");
+   assert(propName != 0 && "-removeProperty:, parameter 'propName' is null");
    
-   NSString * const key = [NSString stringWithCString : propName encoding : NSASCIIStringEncoding];
+   NSString * const key = [NSString stringWithCString : propName
+                           encoding : NSASCIIStringEncoding];
    [fX11Properties removeObjectForKey : key];
 }
 
@@ -3002,12 +3081,15 @@ void print_mask_info(ULong_t mask)
          const NSUInteger len = [item lengthOfBytesUsingEncoding : NSASCIIStringEncoding] + 1;
          try {
             std::vector<unsigned char> propertyData(len);
-            [item getCString : (char *)&propertyData[0] maxLength : propertyData.size() encoding : NSASCIIStringEncoding];
+            [item getCString : (char *)&propertyData[0] maxLength : propertyData.size()
+             encoding : NSASCIIStringEncoding];
             //There is no any guarantee, that this will ever work, logic in TGDNDManager is totally crazy.
             NSView<X11Window> * const targetView = self.fQuartzWindow.fContentView;
-            [targetView setProperty : "_XC_DND_DATA" data : &propertyData[0] size : propertyData.size() forType : textUriAtom format : 8];
+            [targetView setProperty : "_XC_DND_DATA" data : &propertyData[0]
+                        size : propertyData.size() forType : textUriAtom format : 8];
          } catch (const std::bad_alloc &) {
-            NSLog(@"QuartzView: -performDragOperation, memory allocation failed");//Hehe, can I log something in case of bad_alloc??? ;)
+            //Hehe, can I log something in case of bad_alloc??? ;)
+            NSLog(@"QuartzView: -performDragOperation:, memory allocation failed");
             return NO;
          }
 
