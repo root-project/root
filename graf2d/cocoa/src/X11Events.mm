@@ -1269,41 +1269,39 @@ void EventTranslator::GenerateButtonReleaseEvent(NSView<X11Window> *eventView, N
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyPressEvent(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   //TODO: change the interface? (remove view parameter).
-#pragma unused(view)
-
-   assert(view != nil && "GenerateKeyPressEvent, view parameter is nil");
-   assert(theEvent != nil && "GenerateKeyPressEvent, theEvent parameter is nil");
+   assert(eventView != nil && "GenerateKeyPressEvent, parameter 'eventView' is nil");
+   assert(theEvent != nil && "GenerateKeyPressEvent, parameter 'theEvent' is nil");
    
    if (![[theEvent charactersIgnoringModifiers] length])
       return;
 
-   if (!fKeyGrabView && !fFocusView)
+   if (!fFocusView)
       return;
 
-   !fKeyGrabView ? GenerateKeyPressEventNoGrab(theEvent) :
-                   GenerateKeyEventActiveGrab(theEvent);
+   !fKeyGrabView ? GenerateKeyPressEventNoGrab(eventView, theEvent) :
+                   GenerateKeyEventActiveGrab(eventView, theEvent);
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyReleaseEvent(NSView<X11Window> *view, NSEvent *theEvent)
+void EventTranslator::GenerateKeyReleaseEvent(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   //TODO: change interface?
-#pragma unused(view)
-
-   assert(view != nil && "GenerateKeyReleaseEvent, view parameter is nil");
-   assert(theEvent != nil && "GenerateKeyReleaseEvent, theEvent parameter is nil");
+   assert(eventView != nil && "GenerateKeyReleaseEvent, parameter 'eventView' is nil");
+   assert(theEvent != nil && "GenerateKeyReleaseEvent, parameter 'theEvent' is nil");
 
    if (![[theEvent charactersIgnoringModifiers] length])
       return;
 
-   if (!fKeyGrabView && !fFocusView)
+   if (!fFocusView)
       return;
    
-   !fKeyGrabView ? GenerateKeyReleaseEventNoGrab(theEvent) : 
-                   GenerateKeyEventActiveGrab(theEvent);
+   !fKeyGrabView ? GenerateKeyReleaseEventNoGrab(eventView, theEvent) :
+                   //GenerateKeyEventActiveGrab(eventView, theEvent);
+                   GenerateKeyEventForView(fKeyGrabView, theEvent);
+
+   //Oh, only God forgives.
+   fKeyGrabView = nil;
 }
 
 //______________________________________________________________________________
@@ -1669,46 +1667,45 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *ev
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyPressEventNoGrab(NSEvent *theEvent)
+void EventTranslator::GenerateKeyPressEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   assert(theEvent != nil && "GenerateKeyPressEventNoGrab, theEvent parameter is nil");
+   assert(eventView != nil && "GenerateKeyPressEventNoGrab, parameter 'eventView' is nil");
+   assert(theEvent != nil && "GenerateKeyPressEventNoGrab, parameter 'theEvent' is nil");
    assert(fFocusView != nil && "GenerateKeyPressEventNoGrab, fFocusView is nil");
 
-   FindKeyGrabView(fFocusView, theEvent);
-   
-   if (!fKeyGrabView) {
-      NSView<X11Window> *candidateView = nil;
+   FindKeyGrabView(eventView, theEvent);
 
-      if ((candidateView = FindViewUnderPointer())) {
-         if (Detail::IsParent(fFocusView, candidateView)) {
-            FindKeyGrabView(candidateView, theEvent);
-         }
+   if (!fKeyGrabView) {
+      NSView<X11Window> *candidateView = fFocusView;
+      if (Detail::IsParent(fFocusView, eventView)) {
+         //TODO: test theEvent.type? Can it be neither NSKeyDown nor NSKeyUp?
+         NSView<X11Window> *testView = Detail::FindViewToPropagateEvent(eventView, NSKeyDown ? kKeyPressMask : kKeyReleaseMask);
+         if (testView && (testView == fFocusView || Detail::IsParent(fFocusView, testView)))
+            candidateView = testView;
       }
-      
-      if (!fKeyGrabView) {
-         if (candidateView && Detail::IsParent(fFocusView, candidateView)) {
-            GenerateKeyEventForView(candidateView, theEvent);
-         } else
-            GenerateKeyEventForView(fFocusView, theEvent);
-         return;
-      }
-   }
-   
-   GenerateKeyEventActiveGrab(theEvent);
+
+      //TODO: test if focus (if it's chosen) want the event?
+      GenerateKeyEventForView(candidateView, theEvent);
+   } else
+      GenerateKeyEventForView(fKeyGrabView, theEvent);
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyEventActiveGrab(NSEvent *theEvent)
+void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   assert(theEvent != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
-   assert(fKeyGrabView != nil && "GenerateKeyEventActiveGrab, theEvent parameter is nil");
-   
-   if (NSView<X11Window> * const candidateView = FindViewUnderPointer()) {
-      //Since owner_events is always true in ROOT ...
-      GenerateKeyEventForView(candidateView, theEvent);
-   } else {// else part for grab view??
-      GenerateKeyEventForView(fKeyGrabView, theEvent);
-   }
+   assert(eventView != nil && "GenerateKeyEventActiveGrab, parameter 'eventView' is nil");
+   assert(theEvent != nil && "GenerateKeyEventActiveGrab, parameter 'theEvent' is nil");
+   assert(fFocusView != nil && "GenerateKeyEventActiveGrab, fFocusView is nil");
+
+   //TODO: assert on possible event types?
+   const Mask_t eventMask = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
+
+   if (Detail::IsParent(fFocusView, eventView) || fFocusView == eventView) {
+      NSView<X11Window> * const testView = Detail::FindViewToPropagateEvent(eventView, eventMask);
+      if (testView && (testView == fFocusView || Detail::IsParent(fFocusView, testView)))
+         GenerateKeyEventForView(testView, theEvent);
+   } else
+      GenerateKeyEventForView(fFocusView, theEvent);//Should I check the mask???
    
    if (theEvent.type == NSKeyUp && fKeyGrabView) {
       //Cancel grab?
@@ -1716,22 +1713,32 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSEvent *theEvent)
       assert(characters != nil && "GenerateKeyEventActiveGrab, [theEvent characters] returned nil");
       assert([characters length] > 0 && "GenerateKeyEventActiveGrab, characters is an empty string");
 
-      if ([fKeyGrabView findPassiveKeyGrab : [characters characterAtIndex : 0]])
-         fKeyGrabView = nil;//Cancel grab.
+      //Here I have a real trouble: on a key press GUI removes ... passive key grabs ...
+      //this "does not affect any active grab", but later on a key release ... I'm not
+      //able to find a grab to remove and can not ... cancel the grab.
+      //I do it the same way it's done on Windows after all.
+      //So, the condition was commented :(
+      //if ([fKeyGrabView findPassiveKeyGrab : [characters characterAtIndex : 0]])
+      fKeyGrabView = nil;//Cancel grab.
    }
 }
 
 //______________________________________________________________________________
-void EventTranslator::GenerateKeyReleaseEventNoGrab(NSEvent *theEvent)
+void EventTranslator::GenerateKeyReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   assert(theEvent != nil && "GenerateKeyReleaseEventNoGrab, theEvent parameter is nil");
-   
-   NSView<X11Window> * const candidateView = FindViewUnderPointer();
+   assert(eventView != nil && "GenerateKeyReleaseEventNoGrab, parameter 'eventView' is nil");
+   assert(theEvent != nil && "GenerateKeyReleaseEventNoGrab, parameter 'theEvent' is nil");
 
-   if (candidateView && Detail::IsParent(fFocusView, candidateView))
-      GenerateKeyEventForView(candidateView, theEvent);
-   else
-      GenerateKeyEventForView(fFocusView, theEvent);
+   NSView<X11Window> *candidateView = fFocusView;
+   
+   if (eventView == fFocusView || Detail::IsParent(fFocusView, eventView)) {
+      NSView<X11Window> * const testView = Detail::FindViewToPropagateEvent(eventView, kKeyReleaseMask);
+      if (testView && (testView == fFocusView || Detail::IsParent(fFocusView, testView)))
+         candidateView = testView;
+   }
+   
+   //TODO: do I have to check if focus (if it was chosen) has a corresponding mask?
+   GenerateKeyEventForView(candidateView, theEvent);
 }
 
 //______________________________________________________________________________
@@ -1744,18 +1751,10 @@ void EventTranslator::GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *
           "GenerateKeyEvenForView, event's type must be keydown or keyup");
    
    const Mask_t eventType = theEvent.type == NSKeyDown ? kKeyPressMask : kKeyReleaseMask;
+
+   //TODO: this is not implemented, do I need it? (can require interface changes then).
    NSView<X11Window> *childView = nil;
-/*
-   for (;;) {
-      if (!view.isHidden && (view.fEventMask & eventType))
-         break;
-      if (!view.fParentView)
-         return;
-      //TODO: Also, check do not propagate mask here?
-      childView = view.isHidden ? nil : view;
-      view = view.fParentView;
-   }
- */
+
    NSPoint mousePosition = {};
    if (QuartzWindow * const topLevel = FindWindowUnderPointer())
       mousePosition = [topLevel mouseLocationOutsideOfEventStream];
@@ -1815,21 +1814,25 @@ void EventTranslator::FindButtonGrab(NSView<X11Window> *fromView, NSEvent *theEv
 }
 
 //______________________________________________________________________________
-void EventTranslator::FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theEvent)
+void EventTranslator::FindKeyGrabView(NSView<X11Window> *eventView, NSEvent *theEvent)
 {
-   assert(fromView != nil && "FindKeyGrabView, fromView parameter is nil");
-   assert(theEvent != nil && "FindKeyGrabView, theEvent parameter is nil");
+   assert(eventView != nil && "FindKeyGrabView, parameter 'eventView' is nil");
+   assert(theEvent != nil && "FindKeyGrabView, parameter 'theEvent' is nil");
 
    NSString * const characters = [theEvent charactersIgnoringModifiers];
    assert(characters != nil && "FindKeyGrabView, [theEvent characters] returned nil");
    assert([characters length] > 0 && "FindKeyGrabView, characters is an empty string");
 
-   const NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
    const unichar keyCode = [characters characterAtIndex : 0];
+   const NSUInteger modifiers = [theEvent modifierFlags] & NSDeviceIndependentModifierFlagsMask;
 
-   for (NSView<X11Window> *v = fromView; v; v = v.fParentView) {
-      if ([v findPassiveKeyGrab : keyCode modifiers : modifiers])
-         fKeyGrabView = v;
+   NSView<X11Window> *currentView = fFocusView;
+   if (eventView != fFocusView && Detail::IsParent(fFocusView, eventView))
+      currentView = eventView;
+
+   for (; currentView; currentView = currentView.fParentView) {
+      if ([currentView findPassiveKeyGrab : keyCode modifiers : modifiers])
+         fKeyGrabView = currentView;
    }
 }
 

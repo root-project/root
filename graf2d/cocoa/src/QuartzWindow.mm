@@ -2683,13 +2683,18 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) keyDown:(NSEvent *)theEvent
+- (void) keyDown : (NSEvent *) theEvent
 {
    assert(fID != 0 && "keyDown, fID is 0");
   
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "keyDown, gVirtualX is null or not of TGCocoa type");
-   vx->GetEventTranslator()->GenerateKeyPressEvent(self, theEvent);
+   
+   NSView<X11Window> *eventView = self;
+   if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
+      eventView = pointerView;
+
+   vx->GetEventTranslator()->GenerateKeyPressEvent(eventView, theEvent);
 }
 
 //______________________________________________________________________________
@@ -2699,8 +2704,12 @@ void print_mask_info(ULong_t mask)
 
    TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
    assert(vx != 0 && "keyUp, gVirtualX is null or not of TGCocoa type");
-   vx->GetEventTranslator()->GenerateKeyReleaseEvent(self, theEvent);
 
+   NSView<X11Window> *eventView = self;
+   if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
+      eventView = pointerView;
+
+   vx->GetEventTranslator()->GenerateKeyReleaseEvent(eventView, theEvent);
 }
 
 //First responder staff.
