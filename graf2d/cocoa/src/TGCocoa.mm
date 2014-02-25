@@ -76,7 +76,7 @@ namespace OpenGL = ROOT::MacOSX::OpenGL;
 
 namespace {
 
-//Display configuration management.
+#pragma mark - Display configuration management.
 
 //______________________________________________________________________________
 void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChangeSummaryFlags flags, void * /*userInfo*/)
@@ -91,7 +91,7 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
    }
 }
 
-//Aux. functions called from GUI-rendering part.
+#pragma mark - Aux. functions called from GUI-rendering part.
 
 //______________________________________________________________________________
 void SetStrokeForegroundColorFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
@@ -560,7 +560,7 @@ X11::Rectangle TGCocoa::GetDisplayGeometry()const
    return fDisplayRect;
 }
 
-//Window management part.
+#pragma mark - Window management part.
 
 //______________________________________________________________________________
 Window_t TGCocoa::GetDefaultRootWindow() const
@@ -1446,13 +1446,13 @@ void TGCocoa::SetWindowName(Window_t wid, char *name)
 //______________________________________________________________________________
 void TGCocoa::SetIconName(Window_t /*wid*/, char * /*name*/)
 {
-   // Sets the window icon name.
+   //Noop.
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetIconPixmap(Window_t /*wid*/, Pixmap_t /*pix*/)
 {
-   // Sets the icon name pixmap.
+   //Noop.
 }
 
 //______________________________________________________________________________
@@ -1498,7 +1498,7 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    }
 }
 
-//"Window manager hints" set of functions.
+#pragma mark - "Window manager hints" set of functions.
 
 //______________________________________________________________________________
 void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*input*/)
@@ -1541,23 +1541,20 @@ void TGCocoa::SetMWMHints(Window_t wid, UInt_t value, UInt_t funcs, UInt_t /*inp
 //______________________________________________________________________________
 void TGCocoa::SetWMPosition(Window_t /*wid*/, Int_t /*x*/, Int_t /*y*/)
 {
-   // Tells the window manager the desired position [x,y] of window "wid".
+   //Noop.
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetWMSize(Window_t /*wid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
-   // Tells window manager the desired size of window "wid".
-   //
-   // w - the width
-   // h - the height
+   //Noop.
 }
 
 //______________________________________________________________________________
 void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t /*wInc*/, UInt_t /*hInc*/)
 {
    //
-   assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "SetWMSizeHints, called for root window");
 
    const NSUInteger styleMask = NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask | NSResizableWindowMask;
    const NSRect minRect = [NSWindow frameRectForContentRect : CGRectMake(0., 0., wMin, hMin) styleMask : styleMask];
@@ -1571,8 +1568,7 @@ void TGCocoa::SetWMSizeHints(Window_t wid, UInt_t wMin, UInt_t hMin, UInt_t wMax
 //______________________________________________________________________________
 void TGCocoa::SetWMState(Window_t /*wid*/, EInitialState /*state*/)
 {
-   // Sets the initial state of the window "wid": either kNormalState
-   // or kIconicState.
+   //Noop.
 }
 
 //______________________________________________________________________________
@@ -1611,17 +1607,17 @@ void TGCocoa::SetWMTransientHint(Window_t wid, Window_t mainWid)
       Warning("SetWMTransientHint", "transient and main windows are the same window");
 }
 
-/////////////////////////////////////////
-//GUI-rendering part.
+#pragma mark - GUI-rendering part.
+
 //______________________________________________________________________________
 void TGCocoa::DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    //Can be called directly of when flushing command buffer.
-   assert(!fPimpl->IsRootWindow(wid) && "DrawLineAux, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawLineAux, called for root window");
    
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
-   assert(ctx != 0 && "DrawLineAux, ctx is null");
+   assert(ctx != 0 && "DrawLineAux, context is null");
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore state back.
    //Draw a line.
@@ -1662,11 +1658,12 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
    //b) for 'direct rendering' - operation was initiated by ROOT's GUI, not by 
    //   drawRect.
 
-   if (!wid) //From TGX11.
+   //From TGX11:
+   if (!wid)
       return;
    
-   assert(!fPimpl->IsRootWindow(wid) && "DrawLine, called for 'root' window");   
-   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawLine, strange context index");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawLine, called for root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawLine, invalid context index");
 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
    
@@ -1701,7 +1698,7 @@ void TGCocoa::DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t 
 //______________________________________________________________________________
 void TGCocoa::DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments)
 {
-   assert(!fPimpl->IsRootWindow(wid) && "DrawSegmentsAux, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawSegmentsAux, called for root window");
    assert(segments != 0 && "DrawSegmentsAux, segments parameter is null");
    assert(nSegments > 0 && "DrawSegmentsAux, nSegments <= 0");
    
@@ -1713,12 +1710,14 @@ void TGCocoa::DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Se
 void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments)
 {
    //Draw multiple line segments. Each line is specified by a pair of points.
-   if (!wid)//From TGX11.
+
+   //From TGX11:
+   if (!wid)
       return;
       
-   assert(!fPimpl->IsRootWindow(wid) && "DrawSegments, called for 'root' window");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawSegments, bad GContext_t");
-   assert(segments != 0 && "DrawSegments, segments parameter is null");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawSegments, called for root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawSegments, invalid context index");
+   assert(segments != 0 && "DrawSegments, parameter 'segments' is null");
    assert(nSegments > 0 && "DrawSegments, number of segments <= 0");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
@@ -1753,7 +1752,7 @@ void TGCocoa::DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, I
 void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    //Can be called directly or during flushing command buffer.
-   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangleAux, called for root window");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
 
@@ -1771,7 +1770,7 @@ void TGCocoa::DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    }
 
    CGContextRef ctx = fPimpl->GetDrawable(wid).fContext;
-   assert(ctx && "DrawRectangleAux, ctx is null");
+   assert(ctx && "DrawRectangleAux, context is null");
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
 
    CGContextSetAllowsAntialiasing(ctx, false);
@@ -1793,8 +1792,8 @@ void TGCocoa::DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    if (!wid)//From TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangle, called for 'root' window");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawRectangle, bad GContext_t");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawRectangle, called for root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawRectangle, invalid context index");
 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
    
@@ -1831,10 +1830,12 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
 {
    //Can be called directly or when flushing command buffer.
   //Can be called directly or when flushing command buffer.
-   if (!wid)//From TGX11.
+
+   //From TGX11:
+   if (!wid)
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillRectangleAux, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "FillRectangleAux, called for root window");
    
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
@@ -1858,14 +1859,14 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
    }
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will restore context state.
-   //TODO: At the moment I ignore: clip_mask, clip_x_origin, clip_y_origin, stipple and tile origins,
-   //check if any widget uses them.
 
    if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
       PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
 
       if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
-         assert(gcVals.fStipple != kNone && "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled, but no stipple is set in a context");
+         assert(gcVals.fStipple != kNone &&
+                "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled,"
+                " but no stipple is set in a context");
 
          patternContext.fForeground = gcVals.fForeground;
          patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
@@ -1873,7 +1874,8 @@ void TGCocoa::FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x
          if (HasFillOpaqueStippledStyle(gcVals))
             patternContext.fBackground = gcVals.fBackground;
       } else {
-         assert(gcVals.fTile != kNone && "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
+         assert(gcVals.fTile != kNone &&
+                "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
          
          patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
       }
@@ -1894,11 +1896,12 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
    //Can be called in a 'normal way' - from drawRect method (QuartzView)
    //or directly by ROOT.
 
-   if (!wid)//From TGX11.
+   //From TGX11:
+   if (!wid)
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillRectangle, called for 'root' window");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "FillRectangle, bad GContext_t");
+   assert(!fPimpl->IsRootWindow(wid) && "FillRectangle, called for root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "FillRectangle, invalid context index");
 
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
@@ -1921,29 +1924,22 @@ void TGCocoa::FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UIn
          else
             FillRectangleAux(wid, gcVals, x, y, w, h);
       }
-   } else {
-      /*
-      if (!IsCocoaDraw())
-         fPimpl->fX11CommandBuffer.AddFillRectangle(wid, gcVals, x, y, w, h);
-      else
-      */
-      //Commented part: looks like it was not good idea: we can draw into 
-      //pixmap just to set the contents of this pixmap, outside of any GUI rendering.
-      //TODO: check, if other functions are also affected.
+   } else
       FillRectangleAux(wid, gcVals, x, y, w, h);
-   }   
 }
 
 //______________________________________________________________________________
 void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) 
 {
    //Can be called directly or when flushing command buffer.
-   if (!wid)//From TGX11.
+
+   //From TGX11:
+   if (!wid)
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for 'root' window");
-   assert(polygon != 0 && "FillPolygonAux, polygon parameter is null");
-   assert(nPoints > 0 && "FillPolygonAux, nPoints <= 0");
+   assert(!fPimpl->IsRootWindow(wid) && "FillPolygonAux, called for root window");
+   assert(polygon != 0 && "FillPolygonAux, parameter 'polygon' is null");
+   assert(nPoints > 0 && "FillPolygonAux, number of points must be positive");
    
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
@@ -1961,14 +1957,13 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    
    CGContextSetAllowsAntialiasing(ctx, false);
 
-   //TODO: At the moment I ignore: clip_mask, clip_x_origin, clip_y_origin, stipple and tile origins,
-   //check if any widget uses them.
-
    if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals) ||  HasFillTiledStyle(gcVals)) {
       PatternContext patternContext = {gcVals.fMask, gcVals.fFillStyle, 0, 0, nil, patternPhase};
 
       if (HasFillStippledStyle(gcVals) || HasFillOpaqueStippledStyle(gcVals)) {
-         assert(gcVals.fStipple != kNone && "FillRectangleAux, fill_style is FillStippled/FillOpaqueStippled, but no stipple is set in a context");
+         assert(gcVals.fStipple != kNone &&
+                "FillRectangleAux, fill style is FillStippled/FillOpaqueStippled,"
+                " but no stipple is set in a context");
 
          patternContext.fForeground = gcVals.fForeground;
          patternContext.fImage = fPimpl->GetDrawable(gcVals.fStipple);
@@ -1976,7 +1971,8 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
          if (HasFillOpaqueStippledStyle(gcVals))
             patternContext.fBackground = gcVals.fBackground;
       } else {
-         assert(gcVals.fTile != kNone && "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
+         assert(gcVals.fTile != kNone &&
+                "FillRectangleAux, fill_style is FillTiled, but not tile is set in a context");
          
          patternContext.fImage = fPimpl->GetDrawable(gcVals.fTile);
       }
@@ -1985,7 +1981,7 @@ void TGCocoa::FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point
    } else
       SetFilledAreaColorFromX11Context(ctx, gcVals);
 
-   //These +2 -2 shit is the result of ROOT's GUI producing strange coordinates out of ....
+   //This +2 -2 shit is the result of ROOT's GUI producing strange coordinates out of ....
    // - first noticed on checkmarks in a menu - they were all shifted.
    
    CGContextBeginPath(ctx);
@@ -2019,12 +2015,13 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
    // tile-stipple-x-origin, and tile-stipple-y-origin.
    // (see also the GCValues_t structure)
    
-   if (!wid)//from TGX11.
+   //From TGX11:
+   if (!wid)
       return;
    
-   assert(polygon != 0 && "FillPolygon, 'points' array is null");
-   assert(nPoints > 0 && "FillPolygon, bad number of points");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "FillPolygon, bad CGContext_t");
+   assert(polygon != 0 && "FillPolygon, parameter 'polygon' is null");
+   assert(nPoints > 0 && "FillPolygon, number of points must be positive");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "FillPolygon, invalid context index");
    
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
@@ -2055,15 +2052,16 @@ void TGCocoa::FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t n
 }
 
 //______________________________________________________________________________
-void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVals, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
+void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVals, Int_t srcX, Int_t srcY,
+                          UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
 {
    //Called directly or when flushing command buffer.
    if (!src || !dst)//Can this happen? From TGX11.
       return;
    
-   assert(!fPimpl->IsRootWindow(src) && "CopyAreaAux, src parameter is 'root' window");
-   assert(!fPimpl->IsRootWindow(dst) && "CopyAreaAux, dst parameter is 'root' window");
-   
+   assert(!fPimpl->IsRootWindow(src) && "CopyAreaAux, src parameter is root window");
+   assert(!fPimpl->IsRootWindow(dst) && "CopyAreaAux, dst parameter is root window");
+
    //Some copy operations create autoreleased cocoa objects,
    //I do not want them to wait till run loop's iteration end to die.
    const Util::AutoreleasePool pool;
@@ -2076,7 +2074,8 @@ void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVa
 
    QuartzImage *mask = nil;
    if ((gcVals.fMask & kGCClipMask) && gcVals.fClipMask) {
-      assert(fPimpl->GetDrawable(gcVals.fClipMask).fIsPixmap == YES && "CopyArea, mask is not a pixmap");
+      assert(fPimpl->GetDrawable(gcVals.fClipMask).fIsPixmap == YES &&
+             "CopyArea, mask is not a pixmap");
       mask = (QuartzImage *)fPimpl->GetDrawable(gcVals.fClipMask);
    }
    
@@ -2090,14 +2089,15 @@ void TGCocoa::CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gcVa
 }
 
 //______________________________________________________________________________
-void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
+void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY,
+                       UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
 {
    if (!src || !dst)//Can this happen? From TGX11.
       return;
       
-   assert(!fPimpl->IsRootWindow(src) && "CopyArea, src parameter is 'root' window");
-   assert(!fPimpl->IsRootWindow(dst) && "CopyArea, dst parameter is 'root' window");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "CopyArea, bad GContext_t");
+   assert(!fPimpl->IsRootWindow(src) && "CopyArea, src parameter is root window");
+   assert(!fPimpl->IsRootWindow(dst) && "CopyArea, dst parameter is root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "CopyArea, invalid context index");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(dst);
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
@@ -2136,11 +2136,11 @@ void TGCocoa::CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX
 void TGCocoa::DrawStringAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, const char *text, Int_t len)
 {
    //Can be called by ROOT directly, or indirectly by AppKit.
-   assert(!fPimpl->IsRootWindow(wid) && "DrawStringAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawStringAux, called for root window");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    CGContextRef ctx = drawable.fContext;
-   assert(ctx != 0 && "DrawStringAux, ctx is null");
+   assert(ctx != 0 && "DrawStringAux, context is null");
 
    const Quartz::CGStateGuard ctxGuard(ctx);//Will reset parameters back.
 
@@ -2183,8 +2183,8 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
    if (!wid)//from TGX11.
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "DrawString, called for the 'root' window");
-   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawString, bad GContext_t");
+   assert(!fPimpl->IsRootWindow(wid) && "DrawString, called for root window");
+   assert(gc > 0 && gc <= fX11Contexts.size() && "DrawString, invalid context index");
 
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
    const GCValues_t &gcVals = fX11Contexts[gc - 1];
@@ -2226,7 +2226,7 @@ void TGCocoa::DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const 
 //______________________________________________________________________________
 void TGCocoa::ClearAreaAux(Window_t windowID, Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
-   assert(!fPimpl->IsRootWindow(windowID) && "ClearAreaAux, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(windowID) && "ClearAreaAux, called for root window");
    
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
    assert(view.fContext != 0 && "ClearAreaAux, view.fContext is null");
@@ -2268,12 +2268,14 @@ void TGCocoa::ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
    //Can be called from drawRect method and also by ROOT's GUI directly.
    //Should not be called for pixmap?
    
-   if (!wid) //From TGX11.
+   //From TGX11:
+   if (!wid)
       return;
 
-   assert(!fPimpl->IsRootWindow(wid) && "ClearArea, called for the 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "ClearArea, called for root window");
    
-   QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;//If wid is pixmap or image, this will crush.
+   //If wid is pixmap or image, this will crush.
+   QuartzView * const view = (QuartzView *)fPimpl->GetWindow(wid).fContentView;
 
    if (ParentRendersToChild(view)) {
       if (X11::LockFocus(view)) {
@@ -2294,15 +2296,16 @@ void TGCocoa::ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TGCocoa::ClearWindow(Window_t wid)
 {
-   // Clears the entire area in the specified window. Comment from TGX11.
+   //Clears the entire area in the specified window (comment from TGX11).
 
-   if (!wid)//From TGX11.
+   //From TGX11:
+   if (!wid)
       return;
 
    ClearArea(wid, 0, 0, 0, 0);
 }
 
-//Pixmap management.
+#pragma mark - Pixmap management.
 
 //______________________________________________________________________________
 Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
@@ -2312,13 +2315,15 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    newSize.width = w;
    newSize.height = h;
 
-   //TODO: what about multi-head setup?
-   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
+   //TODO: what about multi-head setup and scaling factor?
+   Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h
+                                           scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
       pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
       return (Int_t)pixmap.Get().fID;
    } else {
-      Error("OpenPixmap", "QuartzPixmap initialization failed");//More concrete message was issued by QuartzPixmap.
+      //Detailed error message was issued by QuartzPixmap by this point:
+      Error("OpenPixmap", "QuartzPixmap initialization failed");
       return -1;
    }
 }
@@ -2326,17 +2331,17 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
 //______________________________________________________________________________
 Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
 {
-   assert(!fPimpl->IsRootWindow(wid) && "ResizePixmap, called for 'root' window");
+   assert(!fPimpl->IsRootWindow(wid) && "ResizePixmap, called for root window");
 
-   NSObject<X11Drawable> *drawable = fPimpl->GetDrawable(wid);
-   assert(drawable.fIsPixmap == YES && "ResizePixmap, object is not a pixmap");
+   NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(wid);
+   assert(drawable.fIsPixmap == YES && "ResizePixmap, invalid drawable");
 
    QuartzPixmap *pixmap = (QuartzPixmap *)drawable;
    if (w == pixmap.fWidth && h == pixmap.fHeight)
       return 1;
    
-   //TODO: what about multi-head setup?
-   if ([pixmap resizeW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]])//This can throw std::bad_alloc, ok, no resource will leak.
+   //TODO: what about multi-head setup and scale factor?
+   if ([pixmap resizeW : w H : h scaleFactor : [[NSScreen mainScreen] backingScaleFactor]])
       return 1;
 
    return -1;
@@ -2345,7 +2350,8 @@ Int_t TGCocoa::ResizePixmap(Int_t wid, UInt_t w, UInt_t h)
 //______________________________________________________________________________
 void TGCocoa::SelectPixmap(Int_t pixmapID)
 {
-   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() && "SelectPixmap, pixmapID parameter is not a valid id");
+   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
+          "SelectPixmap, parameter 'pixmapID' is not a valid id");
 
    fSelectedDrawable = pixmapID;
 }
@@ -2353,11 +2359,14 @@ void TGCocoa::SelectPixmap(Int_t pixmapID)
 //______________________________________________________________________________
 void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 {
-   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() && "CopyPixmap, pixmapID parameter is not a valid id");
-   assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "CopyPixmap, fSelectedDrawable is not a valid window id");
+   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
+          "CopyPixmap, parameter 'pixmapID' is not a valid id");
+   assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
+          "CopyPixmap, fSelectedDrawable is not a valid window id");
    
    NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
-   assert([source isKindOfClass : [QuartzPixmap class]] && "CopyPixmap, source is not a pixmap");
+   assert([source isKindOfClass : [QuartzPixmap class]] &&
+          "CopyPixmap, source is not a pixmap");
    QuartzPixmap * const pixmap = (QuartzPixmap *)source;
    
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
@@ -2370,14 +2379,15 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
       if (window.fBackBuffer) {
          destination = window.fBackBuffer;
       } else {
-         Warning("CopyPixmap", "Operation skipped, since destination window is not double buffered");
+         Warning("CopyPixmap", "Operation skipped, since destination"
+                               " window is not double buffered");
          return;
       }
    }
 
    const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
    const X11::Point dstPoint(x, y);
-   
+
    [destination copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
 }
 
