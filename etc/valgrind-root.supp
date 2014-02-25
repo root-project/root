@@ -116,8 +116,6 @@
    fun:_ZN8TStorage11ObjectAllocE?
    fun:_ZN7TObjectnwE?
    fun:_ZN7TThread4InitEv
-   fun:_ZN7TThread11ConstructorEv
-   fun:_ZN7TThreadC1EPKcPFPvS2_ES2_NS_9EPriorityE
 }
 
 {
