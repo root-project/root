@@ -8,6 +8,7 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "TH1F.h"
+#include "TMinuit.h"
 
 // RooFit headers
 #include "RooUnitTest.h"
@@ -440,8 +441,18 @@ private:
     *pVars1 = *pVars2;
 
     // do the fit
-    RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer("Minuit2"));
-    RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer("Minuit2"));
+    std::string minimizerType = "Minuit2";
+    int prec = gErrorIgnoreLevel;
+    gErrorIgnoreLevel = kFatal;
+    if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
+    gErrorIgnoreLevel=prec;
+
+    RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
+    //L.M:  for minuit we need ot rest otherwise fit could fail
+    if (minimizerType == "Minuit") { 
+       if (gMinuit) { delete gMinuit; gMinuit=0; }
+    }
+    RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
     
     if(_verb > 0)
     {
