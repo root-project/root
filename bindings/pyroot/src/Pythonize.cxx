@@ -2274,9 +2274,6 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
    }
 
    if ( name == "TChain" ) {
-   // pretend a using
-      Utility::AddUsingToClass( pyclass, "Process" );
-
    // allow SetBranchAddress to take object directly, w/o needing AddressOf()
       MethodProxy* original = (MethodProxy*)PyObject_GetAttr( pyclass, PyStrings::gSetBranchAddress );
       MethodProxy* method = MethodProxy_New( "SetBranchAddress", new TChainSetBranchAddress( original ) );
