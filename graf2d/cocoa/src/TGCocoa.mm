@@ -86,7 +86,8 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
 
    if (flags & kCGDisplayDesktopShapeChangedFlag) {
       TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(gCocoa != 0 && "DisplayReconfigurationCallback, gVirtualX is either null or has a wrong type");
+      assert(gCocoa != 0 && "DisplayReconfigurationCallback, gVirtualX"
+                            " is either null or has a wrong type");
       gCocoa->ReconfigureDisplay();
    }
 }
@@ -102,7 +103,8 @@ void SetStrokeForegroundColorFromX11Context(CGContextRef ctx, const GCValues_t &
    if (gcVals.fMask & kGCForeground)
       X11::PixelToRGB(gcVals.fForeground, rgb);
    else
-      ::Warning("SetStrokeForegroundColorFromX11Context", "x11 context does not have line color information");
+      ::Warning("SetStrokeForegroundColorFromX11Context",
+                "x11 context does not have line color information");
 
    CGContextSetRGBStrokeColor(ctx, rgb[0], rgb[1], rgb[2], 1.);
 }
@@ -116,7 +118,8 @@ void SetStrokeDashFromX11Context(CGContextRef ctx, const GCValues_t &gcVals)
    SetStrokeForegroundColorFromX11Context(ctx, gcVals);
    
    static const std::size_t maxLength = sizeof gcVals.fDashes / sizeof gcVals.fDashes[0];   
-   assert(maxLength >= std::size_t(gcVals.fDashLen) && "SetStrokeDashFromX11Context, x11 context has bad dash length > sizeof(fDashes)");
+   assert(maxLength >= std::size_t(gcVals.fDashLen) &&
+          "SetStrokeDashFromX11Context, x11 context has bad dash length > sizeof(fDashes)");
 
    CGFloat dashes[maxLength] = {};
    for (Int_t i = 0; i < gcVals.fDashLen; ++i)
@@ -155,7 +158,8 @@ void SetStrokeParametersFromX11Context(CGContextRef ctx, const GCValues_t &gcVal
       else if (gcVals.fLineStyle == kLineDoubleDash)
          SetStrokeDoubleDashFromX11Context(ctx ,gcVals);
       else {
-         ::Warning("SetStrokeParametersFromX11Context", "line style bit is set, but line style is unknown");
+         ::Warning("SetStrokeParametersFromX11Context", "line style bit is set,"
+                                                        " but line style is unknown");
          SetStrokeForegroundColorFromX11Context(ctx, gcVals);
       }
    } else 
