@@ -85,15 +85,6 @@ static inline Bool_t VerifyPyBool( PyObject* pyobject )
    return kTRUE;
 }
 
-static inline Bool_t VerifyPyChar( PyObject* pyobject )
-{
-   if ( PyROOT_PyUnicode_Check( pyobject ) && PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 )
-      return kTRUE;
-   PyErr_Format( PyExc_TypeError,
-      "char expected, got string of size " PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
-   return kFALSE;
-}
-
 static inline char PyROOT_PyUnicode_AsChar( PyObject* pyobject ) {
    return PyROOT_PyUnicode_AsString( pyobject )[0];
 }
@@ -114,12 +105,48 @@ static inline Bool_t VerifyPyFloat( PyObject* )
    return kTRUE;
 }
 
+static inline Int_t ExtractChar( PyObject* pyobject, const char* tname, Int_t low, Int_t high )
+{
+   Int_t lchar = -1;
+   if ( PyROOT_PyUnicode_Check( pyobject ) ) {
+      if ( PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 )
+         lchar = (Int_t)PyROOT_PyUnicode_AsChar( pyobject );
+      else
+         PyErr_Format( PyExc_TypeError, "%s expected, got string of size " PY_SSIZE_T_FORMAT,
+             tname, PyROOT_PyUnicode_GET_SIZE( pyobject ) );
+   } else {
+      lchar = PyLong_AsLong( pyobject );
+      if ( lchar == -1 && PyErr_Occurred() )
+         ; // empty, as error already set
+      else if ( ! ( low <= lchar && lchar <= high ) ) {
+         PyErr_Format( PyExc_ValueError,
+            "integer to character: value %d not in range [%d,%d]", lchar, low, high );
+         lchar = -1;
+      }
+   }
+   return lchar;
+}
+
+
 #define PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( name, type, F1, verifier )\
 Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
       PyObject* pyobject, TParameter_t& /* para */, CallFunc_t* func, Long_t )\
 {                                                                             \
    if ( ! verifier( pyobject ) ) return kFALSE;                               \
    fBuffer = (type)F1( pyobject );                                            \
+   if ( fBuffer == (type)-1 && PyErr_Occurred() )                             \
+      return kFALSE;                                                          \
+   else if ( func )                                                           \
+      gInterpreter->CallFunc_SetArg( func, (Long_t)&fBuffer );                \
+   return kTRUE;                                                              \
+}
+
+#define PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( name, type, low, high )\
+Bool_t PyROOT::TConst##name##RefConverter::SetArg(                            \
+      PyObject* pyobject, TParameter_t& /* para */, CallFunc_t* func, Long_t )\
+{                                                                             \
+/* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
+   fBuffer = (type)ExtractChar( pyobject, #type, low, high );                 \
    if ( fBuffer == (type)-1 && PyErr_Occurred() )                             \
       return kFALSE;                                                          \
    else if ( func )                                                           \
@@ -134,27 +161,11 @@ Bool_t PyROOT::T##name##Converter::SetArg(                                    \
       PyObject* pyobject, TParameter_t& para, CallFunc_t* func, Long_t )      \
 {                                                                             \
 /* convert <pyobject> to C++ <<type>>, set arg for call, allow int -> char */ \
-   if ( PyROOT_PyUnicode_Check( pyobject ) ) {                                \
-      if ( PyROOT_PyUnicode_GET_SIZE( pyobject ) == 1 ) {                     \
-         para.fLong = (Long_t)PyROOT_PyUnicode_AsChar( pyobject );            \
-         if ( func )                                                          \
-            gInterpreter->CallFunc_SetArg( func,  para.fLong );               \
-      } else {                                                                \
-         PyErr_Format( PyExc_TypeError,                                       \
-            #type" expected, got string of size " PY_SSIZE_T_FORMAT, PyROOT_PyUnicode_GET_SIZE( pyobject ) );\
-         return kFALSE;                                                       \
-      }                                                                       \
-   } else {                                                                   \
-      para.fLong = PyLong_AsLong( pyobject );                                 \
-      if ( para.fLong == -1 && PyErr_Occurred() ) {                           \
-         return kFALSE;                                                       \
-      } else if ( ! ( low <= para.fLong && para.fLong <= high ) ) {           \
-         PyErr_Format( PyExc_ValueError,                                      \
-            "integer to character: value %ld not in range [%d,%d]", para.fLong, low, high );\
-         return kFALSE;                                                       \
-      } else if ( func )                                                      \
-         gInterpreter->CallFunc_SetArg( func,  para.fLong );                  \
-   }                                                                          \
+   para.fLong = ExtractChar( pyobject, #type, low, high );                    \
+   if ( para.fLong == -1 && PyErr_Occurred() )                                \
+      return kFALSE;                                                          \
+   if ( func )                                                                \
+      gInterpreter->CallFunc_SetArg( func,  para.fLong );                     \
    return kTRUE;                                                              \
 }                                                                             \
                                                                               \
@@ -231,8 +242,9 @@ Bool_t PyROOT::TLongRefConverter::SetArg(
 PYROOT_IMPLEMENT_BASIC_REF_CONVERTER( LongRef )
 
 //____________________________________________________________________________
+PYROOT_IMPLEMENT_BASIC_CONST_CHAR_REF_CONVERTER( Char, Char_t, CHAR_MIN, CHAR_MAX )
+
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Bool,      Bool_t,    PyInt_AsLong, VerifyPyBool )
-PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Char,      Char_t,    PyROOT_PyUnicode_AsChar, VerifyPyChar )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Short,     Short_t,   PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( UShort,    UShort_t,  PyInt_AsLong, VerifyPyLong )
 PYROOT_IMPLEMENT_BASIC_CONST_REF_CONVERTER( Int,       Int_t,     PyInt_AsLong, VerifyPyLong )
