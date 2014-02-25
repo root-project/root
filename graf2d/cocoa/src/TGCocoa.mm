@@ -3879,12 +3879,12 @@ void TGCocoa::DeleteProperty(Window_t windowID, Atom_t &propertyID)
    //Strange signature - why propertyID is a reference?
    //TODO: check, if ROOT sets/deletes properties on a 'root' window.
    assert(!fPimpl->IsRootWindow(windowID) &&
-          "DeleteProperty, windowID parameter is a 'root' window");
+          "DeleteProperty, parameter 'windowID' is root window");
    assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
-          "DeleteProperty, windowID parameter is not a valid window");
+          "DeleteProperty, parameter 'windowID' is not a valid window");
    assert(propertyID && propertyID <= fAtomToName.size() &&
-          "DeleteProperty, propertyID parameter is invalid atom");
-   
+          "DeleteProperty, parameter 'propertyID' is not a valid atom");
+
    const std::string &atomString = fAtomToName[propertyID - 1];
    [fPimpl->GetWindow(windowID) removeProperty : atomString.c_str()];
 }
@@ -3902,8 +3902,10 @@ void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
    //I simply put all data for a property into a vector and set the property (either creating
    //a new property or replacing the existing).
    
-   assert(windowID > fPimpl->GetRootWindowID() && "SetDNDAware, windowID parameter is a bad window id");
-   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "SetDNDAware, windowID parameter is not a window");
+   assert(windowID > fPimpl->GetRootWindowID() &&
+          "SetDNDAware, parameter 'windowID' is not a valid window id");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
+          "SetDNDAware, parameter 'windowID' is not a window");
    
    const Util::AutoreleasePool pool;
    
@@ -3920,7 +3922,7 @@ void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
    const Atom_t xaAtomAtom = FindAtom("XA_ATOM", false);
 
    assert(xaAtomAtom == 4 && "SetDNDAware, XA_ATOM is not defined");//This is a predefined atom.
-   
+
    //ROOT's GUI uses Atom_t, which is unsigned long, and it's 64-bit.
    //While calling XChangeProperty, it passes the address of this typelist
    //and format is ... 32. I have to pack data into unsigned and force the size:
@@ -3935,7 +3937,8 @@ void TGCocoa::SetDNDAware(Window_t windowID, Atom_t *typeList)
          propertyData.push_back(unsigned(typeList[i]));//hehe.
    }
    
-   [view setProperty : "XdndAware" data : (unsigned char *)&propertyData[0] size : propertyData.size() forType : xaAtomAtom format : 32];
+   [view setProperty : "XdndAware" data : (unsigned char *)&propertyData[0]
+                size : propertyData.size() forType : xaAtomAtom format : 32];
 }
 
 //______________________________________________________________________________
@@ -3943,10 +3946,11 @@ Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
 {
    //Checks if the Window is DND aware. typeList is ignored.
 
-   if (windowID <= fPimpl->GetRootWindowID())//kNone or 'root'.
+   if (windowID <= fPimpl->GetRootWindowID())//kNone or root.
       return kFALSE;
    
-   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "IsDNDAware, windowID parameter is not a window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
+          "IsDNDAware, windowID parameter is not a window");
 
    QuartzView * const view = (QuartzView *)fPimpl->GetWindow(windowID).fContentView;
    return view.fIsDNDAware;
@@ -3956,10 +3960,8 @@ Bool_t TGCocoa::IsDNDAware(Window_t windowID, Atom_t * /*typeList*/)
 void TGCocoa::SetTypeList(Window_t, Atom_t, Atom_t *)
 {
    // Add the list of drag and drop types to the Window win.
-   
    //It's never called from GUI.
-   
-   Warning("SetTypeList", "Not implemented");
+   ::Warning("SetTypeList", "Not implemented");
 }
 
 //______________________________________________________________________________
@@ -3982,15 +3984,16 @@ Window_t TGCocoa::FindRWindow(Window_t winID, Window_t dragWinID, Window_t input
    //about child. Since X11 version is more readable, I'm reproducing X11 version here,
    //and ... my code can't be wrong, since there is nothing right about this function.
 
-   NSView<X11Window> * const testView = X11::FindDNDAwareViewInPoint(fPimpl->IsRootWindow(winID) ? nil : fPimpl->GetWindow(winID).fContentView, 
-                                                                     dragWinID, inputWinID, x, y, maxDepth);
+   NSView<X11Window> * const testView = X11::FindDNDAwareViewInPoint(
+                                                      fPimpl->IsRootWindow(winID) ? nil : fPimpl->GetWindow(winID).fContentView,
+                                                      dragWinID, inputWinID, x, y, maxDepth);
    if (testView)
       return testView.fID;
    
    return kNone;
 }
 
-//////////////
+#pragma mark - Noops.
 
 //______________________________________________________________________________
 UInt_t TGCocoa::ExecCommand(TGWin32Command * /*code*/)
@@ -4010,7 +4013,7 @@ Int_t TGCocoa::GetDoubleBuffer(Int_t /*wid*/)
 void TGCocoa::GetCharacterUp(Float_t &chupx, Float_t &chupy)
 {
    // Returns character up vector.
-   chupx = chupy = 0;
+   chupx = chupy = 0.f;
 }
 
 //______________________________________________________________________________
@@ -4342,6 +4345,8 @@ void TGCocoa::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
    // Returns smallest enclosing rectangle.
 }
 
+#pragma mark - Details and aux. functions.
+
 //______________________________________________________________________________
 ROOT::MacOSX::X11::EventTranslator *TGCocoa::GetEventTranslator()const
 {
@@ -4378,7 +4383,8 @@ void *TGCocoa::GetCurrentContext()
 {
    NSObject<X11Drawable> * const drawable = fPimpl->GetDrawable(fSelectedDrawable);
    if (!drawable.fIsPixmap) {
-      Error("GetCurrentContext", "TCanvas/TPad's internal error, selected drawable is not a pixmap!");
+      Error("GetCurrentContext", "TCanvas/TPad's internal error,"
+                                 " selected drawable is not a pixmap!");
       return 0;
    }
    
@@ -4388,7 +4394,7 @@ void *TGCocoa::GetCurrentContext()
 //______________________________________________________________________________
 bool TGCocoa::MakeProcessForeground()
 {
-   //We start root in a terminal window, so it's considered as a 
+   //We start ROOT in a terminal window, so it's considered as a
    //background process. Background process has a lot of problems
    //if it tries to create and manage windows.
    //So, first time we convert process to foreground, next time
@@ -4469,7 +4475,8 @@ void TGCocoa::SetApplicationIcon()
          const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "RootIcon.ico", kReadPermission));
          if (fileName.Get()) {
             const Util::AutoreleasePool pool;
-            NSString *cocoaStr = [NSString stringWithCString : fileName.Get() encoding : NSASCIIStringEncoding];//Aha, ASCII ;) do not install root in ...
+            //Aha, ASCII ;) do not install ROOT in ...
+            NSString *cocoaStr = [NSString stringWithCString : fileName.Get() encoding : NSASCIIStringEncoding];
             NSImage *image = [[[NSImage alloc] initWithContentsOfFile : cocoaStr] autorelease];
             [NSApp setApplicationIconImage : image];
          }
