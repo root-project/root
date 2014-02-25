@@ -42,7 +42,6 @@
 #include "TGFrame.h"
 #include "TGCocoa.h"
 #include "TError.h"
-#include "TClass.h"
 #include "TColor.h"
 #include "TROOT.h"
 #include "TEnv.h"
@@ -1470,9 +1469,12 @@ void TGCocoa::ShapeCombineMask(Window_t windowID, Int_t /*x*/, Int_t /*y*/, Pixm
    // windows to the System.
    // This allows for making shaped (partially transparent) windows
    
-   assert(!fPimpl->IsRootWindow(windowID) && "ShapeCombineMask, windowID parameter is a 'root' window");
-   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO && "ShapeCombineMask, windowID parameter is a bad window id");
-   assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] && "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
+   assert(!fPimpl->IsRootWindow(windowID) &&
+          "ShapeCombineMask, windowID parameter is a 'root' window");
+   assert(fPimpl->GetDrawable(windowID).fIsPixmap == NO &&
+          "ShapeCombineMask, windowID parameter is a bad window id");
+   assert([fPimpl->GetDrawable(pixmapID) isKindOfClass : [QuartzImage class]] &&
+          "ShapeCombineMask, pixmapID parameter must point to QuartzImage object");
    
    //TODO: nonrectangular window can be only NSWindow object,
    //not NSView (and mask is attached to a window).
@@ -2730,9 +2732,7 @@ Window_t TGCocoa::GetInputFocus()
 void TGCocoa::SetInputFocus(Window_t wid)
 {
    // Changes the input focus to specified window "wid".
-   assert(!fPimpl->IsRootWindow(wid) && "SetInputFocus, called for 'root' window");
-   
-   NSLog(@"set input focus %lu %s", wid, gClient->GetWindowById(wid)->IsA()->GetName());
+   assert(!fPimpl->IsRootWindow(wid) && "SetInputFocus, called for root window");
    
    if (wid == kNone)
       fPimpl->fX11EventTranslator.SetInputFocus(nil);
