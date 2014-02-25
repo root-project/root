@@ -1709,9 +1709,10 @@ void EventTranslator::GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, N
    
    if (theEvent.type == NSKeyUp && fKeyGrabView) {
       //Cancel grab?
-      NSString *characters = [theEvent charactersIgnoringModifiers];
-      assert(characters != nil && "GenerateKeyEventActiveGrab, [theEvent characters] returned nil");
-      assert([characters length] > 0 && "GenerateKeyEventActiveGrab, characters is an empty string");
+      
+      //NSString *characters = [theEvent charactersIgnoringModifiers];
+      //assert(characters != nil && "GenerateKeyEventActiveGrab, [theEvent characters] returned nil");
+      //assert([characters length] > 0 && "GenerateKeyEventActiveGrab, characters is an empty string");
 
       //Here I have a real trouble: on a key press GUI removes ... passive key grabs ...
       //this "does not affect any active grab", but later on a key release ... I'm not
