@@ -1,0 +1,31 @@
+MDFILES=titlepage.md Spectrum.md
+
+OPTIONS=-s -S -f markdown --toc --chapters --number-sections
+OPTIONSHTML=-H css/github.css --mathjax
+OPTIONSEPUB=--mathml --epub-cover-image=figures/cover.png
+OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
+OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
+
+.PHONY: pdfa4 pdfletter html tex epub
+
+all: pdfa4 pdfletter html tex epub
+
+pdfa4: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSPDFA4) $(MDFILES) -o Spectrum.pdf
+
+pdfletter: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSPDFLETTER) $(MDFILES) -o SpectrumLetter.pdf
+
+html: $(MDFILES)
+	pandoc $(OPTIONS) $(OPTIONSHTML) -t html $(MDFILES) -o Spectrum.html
+
+tex: $(MDFILES)
+	pandoc $(OPTIONS) -t latex $(MDFILES) -o Spectrum.tex
+
+epub: $(MDFILES) metadata.xml title.txt
+	pandoc $(OPTIONS) $(OPTIONSEPUB) --epub-metadata=metadata.xml \
+	   title.txt $(MDFILES) -o Spectrum.epub
+
+clean:
+	rm -f Spectrum.pdf SpectrumLetter.pdf Spectrum.html \
+	   Spectrum.tex Spectrum.epub
