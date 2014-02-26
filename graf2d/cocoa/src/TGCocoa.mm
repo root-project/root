@@ -2672,7 +2672,7 @@ void TGCocoa::GrabPointer(Window_t wid, UInt_t eventMask, Window_t /*confine*/, 
    } else {
       //unset cursor?
       //cancel grab.
-      fPimpl->fX11EventTranslator.CancelPointerGrab(false);//false == no crossing events.
+      fPimpl->fX11EventTranslator.CancelPointerGrab();
    }
 }
 

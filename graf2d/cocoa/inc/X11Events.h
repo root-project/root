@@ -70,7 +70,7 @@ public:
    void GenerateFocusChangeEvent(NSView<X11Window> *eventView);
    
    void SetPointerGrab(NSView<X11Window> *grabView, unsigned eventMask, bool ownerEvents);
-   void CancelPointerGrab(bool generateCrossingEvent);
+   void CancelPointerGrab();
    
    void SetInputFocus(NSView<X11Window> *focusView);
    unsigned GetInputFocus()const;
