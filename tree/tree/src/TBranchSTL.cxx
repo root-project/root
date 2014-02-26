@@ -560,7 +560,7 @@ TStreamerInfo* TBranchSTL::GetInfo() const
       //------------------------------------------------------------------------
       // If the checksum is there and we're dealing with the foreign class
       //------------------------------------------------------------------------
-      if( fClCheckSum && cl->IsForeign() ) {
+      if( fClCheckSum && !cl->IsVersioned() ) {
          //---------------------------------------------------------------------
          // Loop over the infos
          //---------------------------------------------------------------------

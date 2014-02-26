@@ -984,8 +984,11 @@ void TStreamerInfo::BuildCheck()
                fClass->SetBit(TClass::kWarned);
             }
          } else {
-            if (fClass->IsForeign()) {
-               R__ASSERT(0);
+            if (!fClass->IsVersioned()) {
+               Fatal("BuildCheck", "\n\
+   The StreamerInfo of unversioned class %s \n\
+   has the same version (=%d) as the active class but an old checksum.\n\
+   This should not happen. An assert will follow.\n", GetName(), fClassVersion);
             }
          }
       }
@@ -3958,10 +3961,10 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
 void TStreamerInfo::ls(Option_t *option) const
 {
    //  List the TStreamerElement list and also the precomputed tables
-   if (fClass && fClass->IsForeign() && fClass->GetClassVersion()<2) {
-      Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
-   } else {
+   if (!fClass || fClass->IsVersioned()) {
       Printf("\nStreamerInfo for class: %s, version=%d, checksum=0x%x",GetName(),fClassVersion,GetCheckSum());
+   } else {
+      Printf("\nStreamerInfo for class: %s, checksum=0x%x",GetName(),GetCheckSum());
    }
 
    if (fElements) {
