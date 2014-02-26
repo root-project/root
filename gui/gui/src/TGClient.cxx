@@ -49,7 +49,7 @@
 #include "TError.h"
 
 // Global pointer to the TGClient object
-TGClient *gClient = 0;
+static TGClient *gClientGlobal = 0;
 
 // Initialize gClient in case libGui is loaded in batch mode
 void TriggerDictionaryInitialization_libGui();
@@ -66,12 +66,19 @@ public:
          new TGClient();
       }
       TApplication::NeedGraphicsLibs(); 
-      if (gApplication)
-         gApplication->InitializeGraphics();
    }
 };
 static TGClientInit gClientInit;
 
+//______________________________________________________________________________
+TGClient *TGClient::Instance()
+{
+   // Returns global gClient (initialize graphics first, if not already done)
+
+   if (!gClientGlobal && gApplication)
+      gApplication->InitializeGraphics();
+   return gClientGlobal;
+}
 
 //----- Graphics Input handler -------------------------------------------------
 //______________________________________________________________________________
@@ -110,7 +117,7 @@ TGClient::TGClient(const char *dpyName)
    fUWHandlers   = 0;
    fIdleHandlers = 0;
 
-   if (gClient) {
+   if (gClientGlobal) {
       Error("TGClient", "only one instance of TGClient allowed");
       MakeZombie();
       return;
@@ -188,7 +195,7 @@ TGClient::TGClient(const char *dpyName)
    if (style.Contains("modern", TString::kIgnoreCase))
       fStyle = 1;
 
-   gClient = this;
+   gClientGlobal = this;
 }
 
 //______________________________________________________________________________

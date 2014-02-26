@@ -165,9 +165,13 @@ public:
    THashList       *GetListOfWindows() const { return fWlist; }
    TList           *GetListOfPopups() const { return fPlist; }
 
+   static TGClient *Instance();
+
    ClassDef(TGClient,0)  // Class making connection to display server
 };
 
-R__EXTERN TGClient *gClient;
+#ifndef __CINT__
+#define gClient (TGClient::Instance())
+#endif
 
 #endif
