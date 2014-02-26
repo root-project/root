@@ -380,14 +380,14 @@ check_libcompat() {
 
     case $arch in
     macosx)
-        logmsg " lipo -info $chklibcompat | grep ' i386'"
-        if lipo -info $chklibcompat | grep ' i386' > /dev/null 2>& 1 ; then
+        logmsg " otool -fhv $chklibcompat | grep -i ' i386'"
+        if otool -fhv $chklibcompat | grep -i ' i386' > /dev/null 2>& 1 ; then
             ret=1
         fi
         ;;
     macosx64)
-        logmsg " lipo -info $chklibcompat | grep ' x86_64'"
-        if lipo -info $chklibcompat | grep ' x86_64' > /dev/null 2>& 1 ; then
+        logmsg " otool -fhv $chklibcompat | grep -i ' x86_64'"
+        if otool -fhv $chklibcompat | grep -i ' x86_64' > /dev/null 2>& 1 ; then
             ret=1
         fi
         ;;
