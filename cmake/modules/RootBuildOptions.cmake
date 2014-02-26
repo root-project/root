@@ -185,8 +185,8 @@ include_regular_expression("^[^.]+$|[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
 #---according to the setting of CMAKE_INSTALL_DIR
 
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND NOT gnuinstall)
-  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${ROOTSYS}")
-  set(CMAKE_INSTALL_PREFIX ${ROOTSYS} CACHE PATH "Default installation of ROOT" FORCE)
+  message(STATUS "Setting default installation prefix CMAKE_INSTALL_PREFIX to ${CMAKE_BINARY_DIR}/root")
+  set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/root CACHE PATH "Default installation of ROOT" FORCE)
 endif()
 
 #---Add defines for CINT limits-----------------------------------------------------------------

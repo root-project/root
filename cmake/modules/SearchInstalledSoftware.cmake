@@ -576,24 +576,28 @@ if(xrootd)
     find_package(XROOTD)
     if(NOT XROOTD_FOUND)
       message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
-      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'") 
+      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'")
       message(STATUS "                  For the time being switching OFF 'xrootd' option")
       set(xrootd OFF CACHE BOOL "" FORCE)
     endif()
-  else()
-    set(xrootd_version 3.1.0)
-    set(xrootd_versionnum 300010000)
-    message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
-    ExternalProject_Add(
-      XROOTD
-      URL http://xrootd.slac.stanford.edu/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-    )
-    set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd)
-    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lXrdMain -lXrdUtils -lXrdClient)
-    set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   endif()
+endif()
+if(builtin_xrootd)
+  set(xrootd_version 3.3.6)
+  set(xrootd_versionnum 300030006)
+  message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  ExternalProject_Add(
+    XROOTD
+    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+  )
+  set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
+  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/lib/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX})
+  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
+  set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 
 #---Check for gfal-------------------------------------------------------------------
