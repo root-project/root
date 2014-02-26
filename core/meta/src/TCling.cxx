@@ -2070,7 +2070,9 @@ void TCling::ResetGlobals()
    // Note: Right now, all we do is run the global destructors.
    //
    R__LOCKGUARD(gInterpreterMutex);
-   fInterpreter->runStaticDestructorsOnce();
+   // TODO:
+   // Here we should iterate over the transactions (N-3) and revert.
+   // N-3 because the first three internal to cling.
 }
 
 //______________________________________________________________________________
