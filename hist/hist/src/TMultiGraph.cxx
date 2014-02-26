@@ -443,7 +443,7 @@ void TMultiGraph::Draw(Option_t *option)
 {
    // Draw this multigraph with its current attributes.
    //
-   //   Options to draw a graph are described in TGraphPainter
+   //   Options to draw a graph are described in TGraphPainter.
    //
    //  The drawing option for each TGraph may be specified as an optional
    //  second argument of the Add function. You can use GetGraphDrawOption
@@ -1005,22 +1005,28 @@ void TMultiGraph::Paint(Option_t *option)
    if (fGraphs->GetSize() == 0) return;
 
    char *l;
-   static char chopt[33];
    Int_t nch = strlen(option);
-   Int_t i;
-   for (i=0;i<nch;i++) chopt[i] = toupper(option[i]);
-   chopt[nch] = 0;
 
-   l = (char*)strstr(chopt,"3D");
+   TString chopt = option;
+   chopt.ToUpper();
+
+   l = (char*)strstr(chopt.Data(),"3D");
    if (l) {
-      l = (char*)strstr(chopt,"L");
-      if (l) PaintPolyLine3D(chopt);
+      l = (char*)strstr(chopt.Data(),"L");
+      if (l) PaintPolyLine3D(chopt.Data());
+      return;
+   }
+
+   l = (char*)strstr(chopt.Data(),"PADS");
+   if (l) {
+      chopt.ReplaceAll("PADS","");
+      PaintPads(chopt.Data());
       return;
    }
 
    TGraph *g;
 
-   l = (char*)strstr(chopt,"A");
+   l = (char*)strstr(chopt.Data(),"A");
    if (l) {
       *l = ' ';
       TIter   next(fGraphs);
@@ -1153,6 +1159,8 @@ void TMultiGraph::Paint(Option_t *option)
       TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
       TObject *obj = 0;
 
+      chopt.ReplaceAll("A","");
+
       while (lnk) {
 
          obj = lnk->GetObject();
@@ -1160,10 +1168,13 @@ void TMultiGraph::Paint(Option_t *option)
          gPad->PushSelectableObject(obj);
 
          if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && obj == gPad->GetSelected())) {
-            if (strlen(lnk->GetOption()))
-               obj->Paint(lnk->GetOption());
-            else
-               obj->Paint(chopt);
+            TString opt = lnk->GetOption();
+            if (!opt.IsWhitespace())
+               obj->Paint(opt.ReplaceAll("A","").Data());
+            else {
+               if (!chopt.IsWhitespace()) obj->Paint(chopt.Data());
+               else                       obj->Paint("L");
+            }
          }
 
          lnk = (TObjOptLink*)lnk->Next();
@@ -1187,6 +1198,55 @@ void TMultiGraph::Paint(Option_t *option)
    }
 
    if (fit) gfit->PaintStats(fit);
+}
+
+
+//______________________________________________________________________________
+void TMultiGraph::PaintPads(Option_t *option)
+{
+   // Divides the active pad and draws all Graphs in the Multigraph separately.
+
+   TIter next(fGraphs);
+   Int_t neededPads = fGraphs->GetSize();
+   Int_t existingPads = 0;
+   TString opt = (TString)option;
+
+   TVirtualPad *curPad = gPad;
+   TObject *obj;
+   TIter nextPad(curPad->GetListOfPrimitives());
+
+   while ((obj = nextPad())) {
+      if (obj->InheritsFrom(TVirtualPad::Class())) existingPads++;
+   }
+   if (existingPads < neededPads) {
+      curPad->Clear();
+      Int_t nx = (Int_t)TMath::Sqrt((Double_t)neededPads);
+      if (nx*nx < neededPads) nx++;
+      Int_t ny = nx;
+      if (((nx*ny)-nx) >= neededPads) ny--;
+      curPad->Divide(nx,ny);
+   }
+   Int_t i = 0;
+   TGraph *g;
+
+   TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
+   obj = 0;
+
+   while (lnk) {
+      g = (TGraph*)lnk->GetObject();
+      i++;
+      curPad->cd(i);
+      TString apopt = lnk->GetOption();
+      if (strlen(apopt)) {
+         g->Draw((apopt.Append("A")).Data());
+      } else {
+         if (strlen(opt)) g->Draw(opt.Append("A"));
+         else             g->Draw("LA");
+      }
+      lnk = (TObjOptLink*)lnk->Next();
+   }
+
+   curPad->cd();
 }
 
 

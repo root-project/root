@@ -215,6 +215,8 @@
     be added with the option it had in `multigraph`.
 -   The option "A" in the `Draw()` was not cleaning properly the 
     current pad.
+-   Implement this option `pads`. This option is equivalent to the one in 
+    `THStack`. It allows to draw all the `TGraphs` in separated pads.
 
 ### THStack
 
