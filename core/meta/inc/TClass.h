@@ -326,6 +326,7 @@ public:
    Bool_t             IsLoaded() const;
    Bool_t             IsForeign() const;
    Bool_t             IsStartingWithTObject() const;
+   Bool_t             IsVersioned() const { return !( GetClassVersion()<=1 && IsForeign() ); }
    Bool_t             IsTObject() const;
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
