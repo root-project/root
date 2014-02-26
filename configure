@@ -6193,6 +6193,10 @@ if test ! "x$enable_cintex" = "xno"; then
                     enable_cintex="yes"
                     result "yes"
                     ;;
+                armv7l)
+                    enable_cintex="yes"
+                    result "yes"
+                    ;;
                 *)
                     logmsg " incompatible Cintex architecture $chip"
                     enable_cintex=""
