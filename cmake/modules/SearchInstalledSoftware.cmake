@@ -1,5 +1,6 @@
 #---Check for installed packages depending on the build options/components eamnbled -
 include(ExternalProject)
+include(FindPackageHandleStandardArgs)
 
 #---Check for Cocoa/Quartz graphics backend (MacOS X only)
 if(cocoa)
@@ -254,17 +255,23 @@ endif()
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
-  find_package(OpenGL)
-  if(NOT OPENGL_FOUND OR NOT OPENGL_GLU_FOUND)
+  if(APPLE AND NOT cocoa)
+    find_path(OPENGL_INCLUDE_DIR GL/gl.h  PATHS /usr/X11R6/include)
+    find_library(OPENGL_gl_LIBRARY NAMES GL PATHS /usr/X11R6/lib)
+    find_library(OPENGL_glu_LIBRARY NAMES GLU PATHS /usr/X11R6/lib)
+    find_package_handle_standard_args(OpenGL REQUIRED_VARS OPENGL_INCLUDE_DIR OPENGL_gl_LIBRARY OPENGL_glu_LIBRARY)
+    set(OPENGL_LIBRARIES ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY})
+    mark_as_advanced(OPENGL_INCLUDE_DIR OPENGL_glu_LIBRARY OPENGL_gl_LIBRARY)
+  else()
+    find_package(OpenGL)
+  endif()
+  if(NOT OPENGL_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "OpenGL package not found and opengl option required")
     else()
       message(STATUS "OpenGL not found. Switching off opengl option")
       set(opengl OFF CACHE BOOL "" FORCE)
     endif()
-  endif()
-  if(APPLE)
-    find_path(OPENGL_INCLUDE_DIR GL/gl.h DOC "Include for OpenGL on OSX")
   endif()
 endif()
 
@@ -556,25 +563,28 @@ if(xrootd)
     find_package(XROOTD)
     if(NOT XROOTD_FOUND)
       message(STATUS "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation")
-      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'") 
+      message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'")
       message(STATUS "                  For the time being switching OFF 'xrootd' option")
       set(xrootd OFF CACHE BOOL "" FORCE)
     endif()
-  else()
-    set(xrootd_version 3.1.0)
-    set(xrootd_versionnum 300010000)
-    message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
-    ExternalProject_Add(
-      XROOTD
-      PREFIX XROOTD
-      URL http://xrootd.slac.stanford.edu/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-    )
-    set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd)
-    set(XROOTD_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -lXrdMain -lXrdUtils -lXrdClient)
-    set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   endif()
+endif()
+if(builtin_xrootd)
+  set(xrootd_version 3.3.6)
+  set(xrootd_versionnum 300030006)
+  message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  ExternalProject_Add(
+    XROOTD
+    URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+  )
+  set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
+  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/lib/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX})
+  set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
+  set(xrootd ON CACHE BOOL "" FORCE)
 endif()
 
 #---Check for cling and llvm ----------------------------------------------------------------
