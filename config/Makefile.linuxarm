@@ -14,13 +14,16 @@ else
 OPT           = $(OPTFLAGS)
 NOOPT         =
 endif
+ifeq ($(CXX11),yes)
+CXX11FLAGS    = -std=c++11 -Wno-deprecated-declarations
+endif
 
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
 CFLAGS        = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS)
-CINTCXXFLAGS  = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) \
+CINTCXXFLAGS  = -Wall -fsigned-char -fPIC $(EXTRA_CXXFLAGS) $(CXX11FLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO
 CINTCFLAGS    = -Wall -fsigned-char -fPIC $(EXTRA_CFLAGS) \
