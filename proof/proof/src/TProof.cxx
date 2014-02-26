@@ -11507,7 +11507,7 @@ TFileCollection *TProof::GetStagingStatusDataSet(const char *dataset)
 //______________________________________________________________________________
 void TProof::ShowStagingStatusDataSet(const char *dataset, const char *opt)
 {
-   // Like GetStagingStatusDataSet, but displays results immediately
+   // Like GetStagingStatusDataSet, but displays results immediately.
 
    TFileCollection *fc = GetStagingStatusDataSet(dataset);
    if (fc) {
