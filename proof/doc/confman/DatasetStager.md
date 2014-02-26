@@ -125,10 +125,8 @@ dsmgrd.stagecmd *shell\_command*
 dsmgrd.cmdtimeoutsecs *secs*
 :   Timeout on staging command, expressed in seconds: after this
     timeout, the command is considered failed and it is killed (in first
-    place with `SIGSTOP`, then if it is unresponsive with `SIGKILL`). It
-    defaults to zero, which means "no timeout", i.e. external command
-    may run forever, if no value is specified. Defaults to **0 (no
-    timeout)**.
+    place with `SIGSTOP`, then if it is unresponsive with `SIGKILL`).
+    Defaults to **0 (no timeout)**.
 
 dsmgrd.corruptafterfails *n*
 :   Set this to a number above zero to tell the daemon to mark files as
