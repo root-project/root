@@ -258,9 +258,9 @@ namespace ROOT
       if( it2 != rule.end() ) {
          if( it2->second.size() < 2 || it2->second[0] != '[' ||
              it2->second[it2->second.size()-1] != ']' ) {
-            error_string = warning + " - a comma separated list of ints ";
-            error_string += "enclosed in square brackets expected";
-            error_string += "as a value of checksum parameter";
+            error_string = warning + " - a comma separated list of ints";
+            error_string += " enclosed in square brackets expected";
+            error_string += " as a value of checksum parameter";
             return false;
          }
 
@@ -703,7 +703,7 @@ namespace ROOT
          }
 
          //--------------------------------------------------------------------
-         // Deal with nonmandatory keys
+         // Deal with non mandatory keys
          //--------------------------------------------------------------------
          if( it->find( "funcname" ) != it->end() ) {
             std::string code = (*it)["code"];
@@ -795,7 +795,7 @@ namespace ROOT
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          std::cout << error_string << '\n';
-         std::cout << "The following rule has been omited:" << std::endl;
+         std::cout << "The following rule has been omitted:" << std::endl;
          std::cout << "   read " << args << std::endl;
          return;
       }
@@ -827,7 +827,7 @@ namespace ROOT
       std::string error_string;
       if( !ParseRule( args, rule, error_string ) ) {
          std::cout << error_string << '\n';
-         std::cout << "The following rule has been omited:" << std::endl;
+         std::cout << "The following rule has been omitted:" << std::endl;
          std::cout << "   readraw " << args << std::endl;
          return;
       }
