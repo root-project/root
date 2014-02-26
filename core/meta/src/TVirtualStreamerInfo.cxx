@@ -19,6 +19,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TClass.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h"
 #include "TVirtualStreamerInfo.h"
 #include "TPluginManager.h"
 #include "TStreamerElement.h"
@@ -92,8 +94,12 @@ TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countNam
    // Get pointer to a TStreamerBasicType in TClass *cl
    //static function
 
-   TObjArray *sinfos = cl->GetStreamerInfos();
-   TVirtualStreamerInfo *info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
+   TVirtualStreamerInfo *info;
+   {
+      R__LOCKGUARD(gCINTMutex);
+      TObjArray *sinfos = cl->GetStreamerInfos();
+      info = (TVirtualStreamerInfo *)sinfos->At(cl->GetClassVersion());
+   }
 
    if (!info || !info->IsBuilt()) {
       // Even if the streamerInfo exist, it could still need to be 'build'

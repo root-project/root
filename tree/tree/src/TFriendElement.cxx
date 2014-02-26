@@ -30,7 +30,7 @@
 #include "TFile.h"
 #include "TROOT.h"
 
-R__EXTERN TTree *gTree;
+R__EXTERN thread_local TTree *gTree;
 
 ClassImp(TFriendElement)
 

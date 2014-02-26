@@ -82,7 +82,7 @@
 #include "Math/MinimizerOptions.h"
 
 R__EXTERN Foption_t Foption;
-R__EXTERN  TTree *gTree;
+R__EXTERN  thread_local TTree *gTree;
 
 TVirtualFitter *tFitter=0;
 

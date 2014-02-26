@@ -20,6 +20,9 @@
 // Describe Streamer information for one class version                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+#if __cplusplus > 199711L
+#include <atomic>
+#endif
 
 #ifndef ROOT_TVirtualStreamerInfo
 #include "TVirtualStreamerInfo.h"
@@ -104,15 +107,23 @@ private:
    Version_t         fOldVersion;        //! Version of the TStreamerInfo object read from the file
    Int_t             fNVirtualInfoLoc;   //! Number of virtual info location to update.
    ULong_t          *fVirtualInfoLoc;    //![fNVirtualInfoLoc] Location of the pointer to the TStreamerInfo inside the object (when emulated)
+#if __cplusplus > 199711L
+   std::atomic<ULong_t> fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
+#else
    ULong_t           fLiveCount;         //! Number of outstanding pointer to this StreamerInfo.
-
+#endif
    TStreamerInfoActions::TActionSequence *fReadObjectWise;      //! List of read action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fReadMemberWise;      //! List of read action resulting from the compilation for use in member wise streaming.
    TStreamerInfoActions::TActionSequence *fWriteObjectWise;     //! List of write action resulting from the compilation.
    TStreamerInfoActions::TActionSequence *fWriteMemberWise;     //! List of write action resulting from the compilation for use in member wise streaming.
 
+#if __cplusplus > 199711L
+   static std::atomic<Int_t>             fgCount;     //Number of TStreamerInfo instances
+   static thread_local TStreamerElement *fgElement;   //Pointer to current TStreamerElement
+#else
    static  Int_t     fgCount;            //Number of TStreamerInfo instances
    static TStreamerElement *fgElement;   //Pointer to current TStreamerElement
+#endif
    template <typename T> static T GetTypedValueAux(Int_t type, void *ladd, int k, Int_t len);
    static void       PrintValueAux(char *ladd, Int_t atype, TStreamerElement * aElement, Int_t aleng, Int_t *count);
 
@@ -133,7 +144,8 @@ public:
           kIgnoreTObjectStreamer = BIT(13),  // eventhough BIT(13) is taken up by TObject (to preserverse forward compatibility)
           kRecovered             = BIT(14),
           kNeedCheck             = BIT(15),
-          kIsCompiled            = BIT(16)
+          kIsCompiled            = BIT(16),
+	  kBuildOldUsed          = BIT(17)
    };
 
    enum EReadWrite {

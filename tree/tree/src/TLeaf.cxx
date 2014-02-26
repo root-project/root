@@ -24,7 +24,7 @@
 
 #include <ctype.h>
 
-R__EXTERN TTree* gTree;
+R__EXTERN thread_local TTree* gTree;
 
 ClassImp(TLeaf)
 
