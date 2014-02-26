@@ -44,6 +44,7 @@
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
+
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
 : fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0), fContextIdx(0U)
@@ -70,14 +71,14 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       // Move to first data member.
       InternalNext();
       fFirstTime = true;
-   }   
+   }
 }
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
 : fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp)), fFirstTime(true),
-    fTitle(""), fSingleDecl(ValD), fContextIdx(0U){
+    fTitle(""), fSingleDecl(ValD), fContextIdx(0U) {
    using namespace llvm;
    assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
           (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
@@ -470,7 +471,6 @@ const char *TClingDataMemberInfo::TypeName() const
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-      
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
       clang::QualType vdType = vd->getType();
       // In CINT's version, the type name returns did *not* include any array
@@ -494,11 +494,9 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    if (!IsValid()) {
       return 0;
    }
-      
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-   
    if (const clang::ValueDecl *vd = llvm::dyn_cast<clang::ValueDecl>(GetDecl())) {
       // if (we_need_to_do_the_subst_because_the_class_is_a_template_instance_of_double32_t)
       clang::QualType vdType = ROOT::TMetaUtils::ReSubstTemplateArg(vd->getType(), fClassInfo->GetType());
@@ -527,7 +525,6 @@ const char *TClingDataMemberInfo::Name() const
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
-
    if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetDecl())) {
       clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
       llvm::raw_string_ostream stream(buf);
@@ -548,21 +545,10 @@ const char *TClingDataMemberInfo::Title()
    //if (fTitle.size())
    //   return fTitle.c_str();
    
-   bool titleFound=false;
    // Try to get the comment either from the annotation or the header file if present
-   std::string attribute_s;
-   const Decl* decl = GetDecl();
-   for (Decl::attr_iterator attrIt = decl->attr_begin();
-        attrIt!=decl->attr_end() && !titleFound ;++attrIt){
-      ROOT::TMetaUtils::extractAttrString(*attrIt, attribute_s);
-      if (!attribute_s.empty() &&
-          attribute_s.find(ROOT::TMetaUtils::PropertyNameValSeparator) == std::string::npos){
-         fTitle = attribute_s;
-         titleFound=true;
-      }        
-   }
-
-   if (!titleFound && !GetDecl()->isFromASTFile()) {
+   if (AnnotateAttr *A = GetDecl()->getAttr<AnnotateAttr>())
+      fTitle = A->getAnnotation().str();
+   else if (!GetDecl()->isFromASTFile()) {
       // Try to get the comment from the header file if present
       // but not for decls from AST file, where rootcling would have
       // created an annotation

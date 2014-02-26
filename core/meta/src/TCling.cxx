@@ -5533,31 +5533,21 @@ int TCling::DataMemberInfo_TypeSize(DataMemberInfo_t* dminfo) const
 const char* TCling::DataMemberInfo_TypeName(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
-   const Decl* decl = TClinginfo->GetDecl();
-   static std::string iotype;
-   bool found = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"iotype",iotype);
-   return found ? iotype.c_str() : TClinginfo->TypeName();   
+   return TClinginfo->TypeName();
 }
 
 //______________________________________________________________________________
 const char* TCling::DataMemberInfo_TypeTrueName(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
-   const Decl* decl = TClinginfo->GetDecl();
-   static std::string iotype;
-   bool found = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"iotype",iotype);
-   return found ? iotype.c_str() : TClinginfo->TypeTrueName(*fNormalizedCtxt);
-
+   return TClinginfo->TypeTrueName(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 const char* TCling::DataMemberInfo_Name(DataMemberInfo_t* dminfo) const
 {
    TClingDataMemberInfo* TClinginfo = (TClingDataMemberInfo*) dminfo;
-   const Decl* decl = TClinginfo->GetDecl();
-   static std::string ioname;
-   bool found = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",ioname);   
-   return found ? ioname.c_str() : TClinginfo->Name();
+   return TClinginfo->Name();
 }
 
 //______________________________________________________________________________

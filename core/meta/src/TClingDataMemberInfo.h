@@ -53,7 +53,7 @@ class TClingClassInfo;
 class TClingDataMemberInfo {
    
 private:
-
+   
    cling::Interpreter    *fInterp;    // Cling interpreter, we do *not* own.
    TClingClassInfo       *fClassInfo; // Class we are iterating over, we own.
    bool                   fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
@@ -63,7 +63,7 @@ private:
    const clang::ValueDecl *fSingleDecl; // The single member
 
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
-   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.   
+   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
 
 public:
    
@@ -122,7 +122,7 @@ public:
    long               TypeProperty() const;
    int                TypeSize() const;
    const char        *TypeName() const;
-   const char        *TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;   
+   const char        *TypeTrueName(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const char        *Name() const;
    const char        *Title();
    const char        *ValidArrayIndex() const;

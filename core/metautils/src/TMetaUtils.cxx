@@ -1321,32 +1321,9 @@ int ROOT::TMetaUtils::extractPropertyNameValFromString(const std::string attribu
 int ROOT::TMetaUtils::extractPropertyNameVal(clang::Attr* attribute, std::string& attrName, std::string& attrValue)
 {
    std::string attrString;
-   int ret = extractAttrString(attribute, attrString);
+   int ret = ROOT::TMetaUtils::extractAttrString(attribute, attrString);
    if (0!=ret) return ret;
-   return extractPropertyNameValFromString(attrString, attrName,attrValue);
-}
-
-//______________________________________________________________________________
-bool ROOT::TMetaUtils::ExtractAttrPropertyFromName(const clang::Decl& decl,
-                                                   const std::string& propName,
-                                                   std::string& propValue)
-{   
-   // This routine counts on the "propName<separator>propValue" format
-   for (clang::Decl::attr_iterator attrIt = decl.attr_begin();
-        attrIt!=decl.attr_end();++attrIt){
-
-      clang::AnnotateAttr* annAttr = clang::dyn_cast<clang::AnnotateAttr>(*attrIt);      
-      if (!annAttr) continue;
-      
-      llvm::StringRef attribute = annAttr->getAnnotation();
-      std::pair<llvm::StringRef,llvm::StringRef> split = attribute.split(PropertyNameValSeparator.c_str());
-      if (split.first != propName.c_str()) continue;      
-      else {
-         propValue = split.second;
-         return true;
-      }            
-   }   
-   return false;   
+   return ROOT::TMetaUtils::extractPropertyNameValFromString(attrString, attrName,attrValue);
 }
 
 //______________________________________________________________________________
@@ -1519,30 +1496,23 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          // Split in name value
          if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) continue;
 
-         // Check if this is a "comment", "ioname" or "iotype"
-         if (attrName != "comment" &&
-             attrName != "ioname" &&
-             attrName != "iotype") continue;
+         // Check if this is a "comment"
+         if (attrName != "comment") continue;
 
-         // If this is not a comment, we must add the key-value pair
-         if (attrName != "comment")
-            attrValue = attrName + ROOT::TMetaUtils::PropertyNameValSeparator + attrValue;
-         
          if (!infrastructureGenerated){
-            finalString << "      if (gInterpreter){\n"
-                        << "         ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
-                        << "         DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
-                        << "         while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
+            finalString << "      ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
+                        << "      DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
+                        << "      while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
             infrastructureGenerated=true;
          }
          const std::string memberName(dMember->getName());
-         finalString << "            if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI)))\n"
-                     << "               gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
+         finalString << "         if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI)))\n"
+                     << "            gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
       } // end loop on annotations of the decl
 
    } // end loop on class internal decls
    if (infrastructureGenerated)
-      finalString << "         }\n      }\n";
+      finalString << "      }\n";
 
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
 
