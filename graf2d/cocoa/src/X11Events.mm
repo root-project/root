@@ -1381,44 +1381,48 @@ void EventTranslator::SetPointerGrab(NSView<X11Window> *grabView, unsigned event
 }
 
 //______________________________________________________________________________
-void EventTranslator::CancelPointerGrab(bool generateCrossingEvents)
+void EventTranslator::CancelPointerGrab()
 {
    if (fButtonGrabView)
       //Cancel grab (active, passive, implicit).
       [fButtonGrabView cancelGrab];
 
    //We generate sequence of leave/enter notify events (if any) as if we jumped from the grab view to the pointer view.
-   if (generateCrossingEvents) {
-      if (NSView<X11Window> * const candidateView = FindViewUnderPointer()) {
-         const NSPoint location = [[candidateView window] mouseLocationOutsideOfEventStream];
-         const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [candidateView window]
-                                                           location : location ]);
-         
-         if (!event.Get()) {
-            //Hehe, if this happend, is it still possible to log????
-            NSLog(@"EventTranslator::CancelPointerGrab, crossing event initialization failed");
-            return;
-         }
 
-         Detail::GenerateCrossingEvents(fEventQueue, fButtonGrabView, candidateView, event.Get(), kNotifyUngrab);
-      } else if (fButtonGrabView) {
-         //convertScreenToBase is deprecated.
-         //const NSPoint location = [[fButtonGrabView window] convertScreenToBase : [NSEvent mouseLocation]];
-         const NSPoint location = ConvertPointFromScreenToBase([NSEvent mouseLocation], [fButtonGrabView window]);
-         
-         const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [fButtonGrabView window]
-                                                            location : location ]);
-
-         if (!event.Get()) {
-            //Hehe, if this happend, is it still possible to log????
-            NSLog(@"EventTranslator::CancelPointerGrab, crossing event initialization failed");
-            fViewUnderPointer = nil;
-            return;
-         }
-
-         Detail::GenerateCrossingEvents(fEventQueue, fButtonGrabView, nil, event.Get(), kNotifyUngrab);//Ufff, done!!!
+   if (NSView<X11Window> * const candidateView = FindViewUnderPointer()) {
+      const NSPoint location = [[candidateView window] mouseLocationOutsideOfEventStream];
+      const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [candidateView window]
+                                                        location : location ]);
+      
+      if (!event.Get()) {
+         //Hehe, if this happend, is it still possible to log????
+         NSLog(@"EventTranslator::CancelPointerGrab, crossing event initialization failed");
+         return;
       }
+
+      Detail::GenerateCrossingEvents(fEventQueue, fButtonGrabView, candidateView, event.Get(), kNotifyUngrab);
+      //
+      fViewUnderPointer = candidateView;
+   } else if (fButtonGrabView) {
+      //convertScreenToBase is deprecated.
+      //const NSPoint location = [[fButtonGrabView window] convertScreenToBase : [NSEvent mouseLocation]];
+      const NSPoint location = ConvertPointFromScreenToBase([NSEvent mouseLocation], [fButtonGrabView window]);
+      
+      const Util::NSScopeGuard<FakeCrossingEvent> event([[FakeCrossingEvent alloc] initWithWindow : [fButtonGrabView window]
+                                                         location : location ]);
+
+      if (!event.Get()) {
+         //Hehe, if this happend, is it still possible to log????
+         NSLog(@"EventTranslator::CancelPointerGrab, crossing event initialization failed");
+         fViewUnderPointer = nil;
+         return;
+      }
+
+      Detail::GenerateCrossingEvents(fEventQueue, fButtonGrabView, nil, event.Get(), kNotifyUngrab);//Ufff, done!!!
+      //
+      fViewUnderPointer = nil;
    }
+
 
    fImplicitGrabButton = kAnyButton;
    fButtonGrabView = nil;
@@ -1482,7 +1486,7 @@ void EventTranslator::CheckUnmappedView(Window_t winID)
    if (fButtonGrabView) {
       for (NSView<X11Window> *view = fButtonGrabView; view; view = view.fParentView) {
          if (view.fID == winID) {
-            CancelPointerGrab(true);
+            CancelPointerGrab();
             break;
          }
       }
@@ -1669,7 +1673,7 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *ev
 
    if (!fButtonGrabView) {
       //Still we have to cancel this grab (it's implicit grab on a root window).
-      CancelPointerGrab(true);
+      CancelPointerGrab();
       return;
    }
    
@@ -1691,15 +1695,15 @@ void EventTranslator::GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *ev
             Detail::SendButtonReleaseEvent(fEventQueue, fButtonGrabView, theEvent, btn);
       }
    } else {
-      CancelPointerGrab(true);//root window had a grab, cancel it now.
+      CancelPointerGrab();//root window had a grab, cancel it now.
    }
 
    if (fPointerGrabType == kPGPassiveGrab &&
        (btn == fButtonGrabView.fPassiveGrabButton || fButtonGrabView.fPassiveGrabButton == kAnyButton))
-      CancelPointerGrab(true);
+      CancelPointerGrab();
       
    if (fPointerGrabType == kPGImplicitGrab && btn == fImplicitGrabButton)
-      CancelPointerGrab(true);
+      CancelPointerGrab();
 }
 
 //______________________________________________________________________________
