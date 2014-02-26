@@ -60,7 +60,11 @@ static void ThreadInternalUnLock() { if (gMainInternalMutex) gMainInternalMutex-
 class TGlobalMutexGuard {
 public:
    TGlobalMutexGuard() { }
-   ~TGlobalMutexGuard() { gGlobalMutex = 0; }
+   ~TGlobalMutexGuard() {
+      TVirtualMutex *m = gGlobalMutex;
+      gGlobalMutex = 0;
+      delete m;
+   }
 };
 static TGlobalMutexGuard gGlobalMutexGuardInit;
 
