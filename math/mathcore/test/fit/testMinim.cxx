@@ -724,9 +724,11 @@ int testChebyQuad() {
 
    iret |= testNewMinimizer(func,x0,s0, "Minuit2","");
    iret |= testNewMinimizer(func,x0,s0, "Minuit","");
+#ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","ConjugatePR");
    iret |= testNewMinimizer(func,x0,s0, "GSLMultiMin","BFGS");
+#endif
 
    return iret;
 }
