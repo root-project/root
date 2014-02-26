@@ -74,6 +74,7 @@ public:
    TAxis            *GetXaxis() const;
    TAxis            *GetYaxis() const;
    virtual void      Paint(Option_t *chopt="");
+   void              PaintPads(Option_t *chopt="");
    void              PaintPolyLine3D(Option_t *chopt="");
    virtual void      Print(Option_t *chopt="") const;
    virtual void      RecursiveRemove(TObject *obj);
