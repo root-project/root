@@ -6870,7 +6870,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
             // Check if dataset exists beforehand: if it does, staging has
             // already been requested
             if (fDataSetStgRepo->ExistsDataSet(validUri.Data())) {
-               Warning("HandleDataSet", "staging of %s already requested",
+               Warning("HandleDataSets", "staging of %s already requested",
                   uri.Data());
                return -1;
             }
@@ -6900,7 +6900,7 @@ Int_t TProofServ::HandleDataSets(TMessage *mess, TString *slb)
             if (fDataSetStgRepo->WriteDataSet(dsGroup, dsUser,
                dsName, fc) == 0) {
                // Error, can't save dataset
-               Error("HandleDataSet",
+               Error("HandleDataSets",
                   "can't register staging request for %s", uri.Data());
                delete fc;
                return -1;

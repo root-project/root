@@ -39,6 +39,8 @@
 #include "TObjString.h"
 #include "TPluginManager.h"
 #include "TDataSetManager.h"
+#include "TDataSetManagerFile.h"
+#include "TPRegexp.h"
 #include "TProofQueryResult.h"
 #include "TProofServ.h"
 #include "TQueryResultManager.h"
@@ -77,6 +79,8 @@ TProofLite::TProofLite(const char *url, const char *conffile, const char *confdi
    fQueryLock = 0;
    fQMgr = 0;
    fDataSetManager = 0;
+   fDataSetStgRepo = 0;
+   fReInvalid = new TPMERegexp("[^A-Za-z0-9._-]");
    InitMembers();
 
    // This may be needed during init
@@ -382,6 +386,10 @@ TProofLite::~TProofLite()
       gSystem->Unlink(fQueryLock->GetName());
       fQueryLock->Unlock();
    }
+
+   SafeDelete(fReInvalid);
+   SafeDelete(fDataSetManager);
+   SafeDelete(fDataSetStgRepo);
 
    // Cleanup the socket
    SafeDelete(fServSock);
@@ -1431,6 +1439,26 @@ Int_t TProofLite::InitDataSetManager()
             fDataSetManager->TestBit(TDataSetManager::kIsSandbox));
    }
 
+   // Dataset manager for staging requests
+   TString dsReqCfg = gEnv->GetValue("Proof.DataSetStagingRequests", "");
+   if (!dsReqCfg.IsNull()) {
+      TPMERegexp reReqDir("(^| )(dir:)?([^ ]+)( |$)");
+
+      if (reReqDir.Match(dsReqCfg) == 5) {
+         TString dsDirFmt;
+         dsDirFmt.Form("dir:%s perms:open", reReqDir[3].Data());
+         fDataSetStgRepo = new TDataSetManagerFile("_stage_", "_stage_", dsDirFmt);
+         if (fDataSetStgRepo && fDataSetStgRepo->TestBit(TObject::kInvalidObject)) {
+            Warning("InitDataSetManager", "failed init of dataset staging requests repository");
+            SafeDelete(fDataSetStgRepo);
+         }
+      } else {
+         Warning("InitDataSetManager", "specify, with [dir:]<path>, a valid path for staging requests");
+      }
+   } else if (gDebug > 0) {
+      Warning("InitDataSetManager", "no repository for staging requests available");
+   }
+
    // Done
    return (fDataSetManager ? 0 : -1);
 }
@@ -2038,6 +2066,132 @@ Int_t TProofLite::RemoveDataSet(const char *uri, const char *)
 
    // Done
    return 0;
+}
+
+//______________________________________________________________________________
+Bool_t TProofLite::RequestStagingDataSet(const char *dataset)
+{
+   // Allows users to request staging of a particular dataset. Requests are
+   // saved in a special dataset repository and must be honored by the endpoint.
+   // This is the special PROOF-Lite re-implementation of the TProof function
+   // and includes code originally implemented in TProofServ.
+
+   if (!dataset) {
+      Error("RequestStagingDataSet", "invalid dataset specified");
+      return kFALSE;
+   }
+
+   if (!fDataSetStgRepo) {
+      Error("RequestStagingDataSet", "no dataset staging request repository available");
+      return kFALSE;
+   }
+
+   TString dsUser, dsGroup, dsName, dsTree;
+
+   // Transform input URI in a valid dataset name
+   TString validUri = dataset;
+   while (fReInvalid->Substitute(validUri, "_")) {}
+
+   // Check if dataset exists beforehand: if it does, staging has already been requested
+   if (fDataSetStgRepo->ExistsDataSet(validUri.Data())) {
+      Warning("RequestStagingDataSet", "staging of %s already requested", dataset);
+      return kFALSE;
+   }
+
+   // Try to get dataset from current manager
+   TFileCollection *fc = fDataSetManager->GetDataSet(dataset);
+   if (!fc || (fc->GetNFiles() == 0)) {
+      Error("RequestStagingDataSet", "empty dataset or no dataset returned");
+      if (fc) delete fc;
+      return kFALSE;
+   }
+
+   // Reset all staged bits and remove unnecessary URLs (all but last)
+   TIter it(fc->GetList());
+   TFileInfo *fi;
+   while ((fi = dynamic_cast<TFileInfo *>(it.Next()))) {
+      fi->ResetBit(TFileInfo::kStaged);
+      Int_t nToErase = fi->GetNUrls() - 1;
+      for (Int_t i=0; i<nToErase; i++)
+         fi->RemoveUrlAt(0);
+   }
+
+   fc->Update();  // absolutely necessary
+
+   // Save request
+   fDataSetStgRepo->ParseUri(validUri, &dsGroup, &dsUser, &dsName);
+   if (fDataSetStgRepo->WriteDataSet(dsGroup, dsUser, dsName, fc) == 0) {
+      // Error, can't save dataset
+      Error("RequestStagingDataSet", "can't register staging request for %s", dataset);
+      delete fc;
+      return kFALSE;
+   }
+
+   Info("RequestStagingDataSet", "Staging request registered for %s", dataset);
+   delete fc;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+Bool_t TProofLite::CancelStagingDataSet(const char *dataset)
+{
+   // Cancels a dataset staging request. Returns kTRUE on success, kFALSE on
+   // failure. Dataset not found equals to a failure. PROOF-Lite
+   // re-implementation of the equivalent function in TProofServ.
+
+   if (!dataset) {
+      Error("CancelStagingDataSet", "invalid dataset specified");
+      return kFALSE;
+   }
+
+   if (!fDataSetStgRepo) {
+      Error("CancelStagingDataSet", "no dataset staging request repository available");
+      return kFALSE;
+   }
+
+   // Transform URI in a valid dataset name
+   TString validUri = dataset;
+   while (fReInvalid->Substitute(validUri, "_")) {}
+
+   if (!fDataSetStgRepo->RemoveDataSet(validUri.Data()))
+      return kFALSE;
+
+   return kTRUE;
+}
+
+//______________________________________________________________________________
+TFileCollection *TProofLite::GetStagingStatusDataSet(const char *dataset)
+{
+   // Obtains a TFileCollection showing the staging status of the specified
+   // dataset. A valid dataset manager and dataset staging requests repository
+   // must be present on the endpoint. PROOF-Lite version of the equivalent
+   // function from TProofServ.
+
+   if (!dataset) {
+      Error("GetStagingStatusDataSet", "invalid dataset specified");
+      return 0;
+   }
+
+   if (!fDataSetStgRepo) {
+      Error("GetStagingStatusDataSet", "no dataset staging request repository available");
+      return 0;
+   }
+
+   // Transform URI in a valid dataset name
+   TString validUri = dataset;
+   while (fReInvalid->Substitute(validUri, "_")) {}
+
+   // Get the list
+   TFileCollection *fc = fDataSetStgRepo->GetDataSet(validUri.Data());
+   if (!fc) {
+      // No such dataset (not an error)
+      Info("GetStagingStatusDataSet", "no pending staging request for %s", dataset);
+      return 0;
+   }
+
+   // Dataset found: return it (must be cleaned by caller)
+   return fc;
 }
 
 //______________________________________________________________________________
