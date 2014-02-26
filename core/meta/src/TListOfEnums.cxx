@@ -347,5 +347,59 @@ void TListOfEnums::Load()
 
    if (fClass && fClass->GetClassInfo() == 0) return;
 
+   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+      // Class and union are not extendable, if we already
+      // loaded all the data member there is no need to recheck
+      if (fIsLoaded) return;
+   }
+   // In the case of namespace, even if we have loaded before we need to
+   // load again in case there was new data member added.
+   // (We may want to avoid doing it if there was no change in the AST).
+
+   // Mark the list as loaded to avoid an infinite recursion in the case
+   // where we have a data member that is a variable size array.  In that
+   // case TDataMember::Init needs to get/load the list to find the data
+   // member used as the array size.
+   fIsLoaded = kTRUE;
+
    gInterpreter->LoadEnums(fClass);
+}
+
+//______________________________________________________________________________
+void TListOfEnums::Unload()
+{
+   // Mark 'all func' as being unloaded.
+   // After the unload, the data member can no longer be found directly,
+   // until the decl can be found again in the interpreter (in which
+   // the func object will be reused.
+
+   TObjLink *lnk = FirstLink();
+   while (lnk) {
+      TEnum *data = (TEnum *)lnk->GetObject();
+
+      fIds->Remove((Long64_t)data->GetDeclId());
+      fUnloaded->Add(data);
+
+      lnk = lnk->Next();
+   }
+
+   THashList::Clear();
+   fIsLoaded = kFALSE;
+}
+
+//______________________________________________________________________________
+void TListOfEnums::Unload(TEnum *e)
+{
+   // Mark 'func' as being unloaded.
+   // After the unload, the data member can no longer be found directly,
+   // until the decl can be found again in the interpreter (in which
+   // the func object will be reused.
+
+   if (THashList::Remove(e)) {
+      // We contains the object, let remove it from the other internal
+      // list and move it to the list of unloaded objects.
+
+      fIds->Remove((Long64_t)e->GetDeclId());
+      fUnloaded->Add(e);
+   }
 }

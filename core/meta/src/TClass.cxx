@@ -5003,6 +5003,9 @@ void TClass::SetUnloaded()
    if (fData) {
       fData->Unload();
    }
+   if (fEnums) {
+      fEnums->Unload();
+   }
 
    if (fState <= kForwardDeclared && fStreamerInfo->GetEntries() != 0) {
       fState = kEmulated;

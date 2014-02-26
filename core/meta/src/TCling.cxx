@@ -281,24 +281,25 @@ TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
    // Create the enum type.
    TEnum* enumType = 0;
    const clang::Decl* D = static_cast<const clang::Decl*>(VD);
+   std::string buf;
    if (const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D)) {
       // Get name of the enum type.
-      std::string buf;
       PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
       llvm::raw_string_ostream stream(buf);
       ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
       // If the enum is unnamed we do not add it to the list of enums i.e unusable.
-      if (buf.empty()) {
-         return 0;
-      }
-      const char* name = buf.c_str();
-      if (cl) {
-         enumType = new TEnum(name, VD, cl);
-      } else {
-         enumType = new TEnum(name, VD, cl);
-      }
-      UpdateEnumConstants(enumType, cl);
    }
+   if (buf.empty()) {
+      return 0;
+   }
+   const char* name = buf.c_str();
+   if (cl) {
+      enumType = new TEnum(name, VD, cl);
+   } else {
+      enumType = new TEnum(name, VD, cl);
+   }
+   UpdateEnumConstants(enumType, cl);
+
    return enumType;
 }
 
@@ -2512,6 +2513,7 @@ void TCling::LoadEnums(TClass* cl) const
                PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
                llvm::raw_string_ostream stream(buf);
                ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+               stream.flush();
                // If the enum is unnamed we do not add it to the list of enums i.e unusable.
                if (!buf.empty()) {
                   const char* name = buf.c_str();
@@ -2779,6 +2781,9 @@ TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
             Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
          }
       }
+   } else {
+      // If it is a global enum.
+      possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
    }
    if (possibleEnum && isa<clang::EnumDecl>(possibleEnum)) {
       return possibleEnum;

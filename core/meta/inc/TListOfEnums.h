@@ -75,6 +75,8 @@ public:
    TObject   *Remove(TObjLink *lnk);
 
    void Load();
+   void Unload();
+   void Unload(TEnum *e);
 
    ClassDef(TListOfEnums,0);  // List of TDataMembers for a class
 };
