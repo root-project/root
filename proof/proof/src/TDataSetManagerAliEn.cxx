@@ -309,10 +309,22 @@ ClassImp(TDataSetManagerAliEn);
 void TDataSetManagerAliEn::Init(TString cacheDir, TString urlTpl,
   ULong_t cacheExpire_s)
 {
+  kfNoopRedirUrl = new TUrl("noop://redir");
+  kfNoopUnknownUrl = new TUrl("noop://unknown");
+  kfNoopNoneUrl = new TUrl("noop://none");
+
   fCacheExpire_s = cacheExpire_s;
   fUrlRe = new TPMERegexp("^alien://(.*)$");
   fUrlTpl = urlTpl;
-  fUrlTpl.ReplaceAll("<path>", "$1");
+
+  if (fUrlTpl.Contains("<path>")) {
+    // Ordinary pattern, something like root://host/prefix/<path>
+    fUrlTpl.ReplaceAll("<path>", "$1");
+  }
+  else {
+    // No <path> to substitute: assume it is a SE (storage element) name
+    fReadFromSE = kTRUE;
+  }
 
   TString dsDirFmt;
   dsDirFmt.Form("dir:%s perms:open", cacheDir.Data());
@@ -338,14 +350,16 @@ void TDataSetManagerAliEn::Init(TString cacheDir, TString urlTpl,
 //______________________________________________________________________________
 TDataSetManagerAliEn::TDataSetManagerAliEn(const char *cacheDir,
   const char *urlTpl, ULong_t cacheExpire_s)
-  : TDataSetManager("", "", ""), fUrlRe(0), fCache(0)
+  : TDataSetManager("", "", ""), fUrlRe(0), fCache(0), fReadFromSE(kFALSE),
+    kfNoopRedirUrl(0), kfNoopUnknownUrl(0), kfNoopNoneUrl(0)
 {
   Init(cacheDir, urlTpl, cacheExpire_s);
 }
 
 //______________________________________________________________________________
 TDataSetManagerAliEn::TDataSetManagerAliEn(const char *, const char *,
-  const char *cfgStr) : TDataSetManager("", "", ""), fUrlRe(0), fCache(0)
+  const char *cfgStr) : TDataSetManager("", "", ""), fUrlRe(0), fCache(0),
+  fReadFromSE(kFALSE), kfNoopRedirUrl(0), kfNoopUnknownUrl(0), kfNoopNoneUrl(0)
 {
   // Compatibility with the plugin manager
 
@@ -378,6 +392,9 @@ TDataSetManagerAliEn::~TDataSetManagerAliEn()
 {
   if (fCache) delete fCache;
   if (fUrlRe) delete fUrlRe;
+  if (kfNoopRedirUrl) delete kfNoopRedirUrl;
+  if (kfNoopUnknownUrl) delete kfNoopUnknownUrl;
+  if (kfNoopNoneUrl) delete kfNoopNoneUrl;
 }
 
 //______________________________________________________________________________
@@ -518,9 +535,8 @@ TList *TDataSetManagerAliEn::GetFindCommandsFromUri(TString &uri,
         //}
         continue;
       }
-      else {
-        Info("TDataSetManagerAliEn::GetFindCommandsFromUri",
-          "Run found: %d", (*runList)[i]);
+      else if (gDebug >= 1) {
+        Info("TDataSetManagerAliEn::GetFindCommandsFromUri", "Run found: %d", (*runList)[i]);
       }
 
       // Here we need to assemble the find string
@@ -750,6 +766,98 @@ Bool_t TDataSetManagerAliEn::ParseOfficialDataUri(TString &uri, Bool_t sim,
 }
 
 //______________________________________________________________________________
+TUrl *TDataSetManagerAliEn::AliEnWhereIs(TUrl *alienUrl, TString &closeSE,
+  Bool_t onlyFromCloseSE) {
+
+  // Performs an AliEn "whereis -r" on the given input AliEn URL. The input URL
+  // is assumed to be an AliEn one, with alien:// as protocol. The "whereis"
+  // command returns the full list of XRootD URLs actually pointing to the files
+  // (the PFNs). The "-r" switch resolves pointers to files in archives to their
+  // PFNs.
+  // With closeSE a "close storage element" can be specified (like
+  // "ALICE::Torino::SE"): if onlyFromCloseSE is kTRUE, the endpoint URL will be
+  // returned only if there is one endpoint matching that SE (NULL is returned
+  // otherwise). Elsewhere, the first URL found is returned.
+  // This function might return NULL if it does not find a suitable endpoint URL
+  // for the given file.
+
+  if (!alienUrl) {
+    ::Error("TDataSetManagerAliEn::AliEnWhereIs", "input AliEn URL not given!");
+    return NULL;
+  }
+
+  if (!gGrid || (strcmp(gGrid->GetGrid(), "alien") != 0)) {
+    ::Error("TDataSetManagerAliEn::AliEnWhereIs", "no AliEn grid connection available!");
+    return NULL;
+  }
+
+  TString cmd = "whereis -r ";
+  cmd.Append(alienUrl->GetFile());
+  TList *resp;
+
+  resp = dynamic_cast<TList *>( gGrid->Command(cmd.Data()) );
+  if (!resp) {
+    ::Error("TDataSetManagerAliEn::AliEnWhereIs", "cannot get response from AliEn");
+    return NULL;
+  }
+
+  TIter nextPfn(resp);
+  TMap *pfn;
+  TString se, pfnUrl, validPfnUrl;
+  while ( (pfn = dynamic_cast<TMap *>( nextPfn() )) != NULL ) {
+
+    if ((pfn->GetValue("se") == NULL) || (pfn->GetValue("pfn") == NULL)) {
+      continue;  // skip invalid result
+    }
+
+    pfnUrl = pfn->GetValue("pfn")->GetName();
+    se = pfn->GetValue("se")->GetName();
+
+    if (se.EqualTo(closeSE, TString::kIgnoreCase)) {
+      // Found matching URL from the preferred SE
+      validPfnUrl = pfnUrl;
+      break;
+    }
+    else if (!onlyFromCloseSE && validPfnUrl.IsNull()) {
+      validPfnUrl = pfnUrl;
+    }
+
+    // TIter nextPair(pfn);
+    // TObjString *keyos;
+    // while ( (keyos = dynamic_cast<TObjString *>( nextPair() )) != NULL ) {
+    //   const char *key = keyos->GetName();
+    //   const char *val = pfn->GetValue(key)->GetName();
+    //   ::Info("TDataSetManagerAliEn::AliEnWhereIs", "%s-->%s", key, val);
+    //   // se, pfn, guid
+    // }
+
+  }
+
+  delete resp;
+
+  if (validPfnUrl.IsNull()) {
+    if (gDebug >= 1) {
+      ::Error("TDataSetManagerAliEn::AliEnWhereIs", "cannot find endpoint URL for %s", alienUrl->GetUrl());
+    }
+    return NULL;
+  }
+
+  TUrl *pfnTUrl = new TUrl( validPfnUrl.Data() );
+
+  // Append original options and the zip=<anchor> if applicable (needed!)
+  TString options = alienUrl->GetOptions();
+  TString anchor = alienUrl->GetAnchor();
+  if (!anchor.IsNull()) {
+    options.Append("&zip=");
+    options.Append(anchor);
+    pfnTUrl->SetAnchor(anchor.Data());
+    pfnTUrl->SetOptions(options.Data());
+  }
+
+  return pfnTUrl;
+}
+
+//______________________________________________________________________________
 std::vector<Int_t> *TDataSetManagerAliEn::ExpandRunSpec(TString &runSpec) {
 
   std::vector<Int_t> *runNumsPtr = new std::vector<Int_t>();
@@ -883,15 +991,35 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
       TIter itCache(newFc->GetList());
       TString tUrl;
       while ((fi = dynamic_cast<TFileInfo *>(itCache.Next()))) {
-        tUrl = fi->GetCurrentUrl()->GetUrl();
-        fUrlRe->Substitute(tUrl, fUrlTpl);
-        fi->AddUrl(tUrl.Data(), kTRUE);  // kTRUE == prepend URL
-        fi->ResetUrl();
+
+        if (fReadFromSE) {
+          TUrl *seUrl;
+          seUrl = AliEnWhereIs( fi->GetCurrentUrl(), fUrlTpl, kTRUE );
+
+          if (seUrl) {
+            // File is present (according to catalog) in the given SE
+            fi->AddUrl(seUrl->GetUrl(), kTRUE);  // kTRUE == prepend URL
+            fi->ResetUrl();
+            delete seUrl;
+          }
+          else {
+            // File not found in that SE
+            fi->AddUrl(kfNoopNoneUrl->GetUrl(), kTRUE);
+          }
+
+        }
+        else {
+          tUrl = fi->GetCurrentUrl()->GetUrl();
+          fUrlRe->Substitute(tUrl, fUrlTpl);
+          fi->AddUrl(tUrl.Data(), kTRUE);  // kTRUE == prepend URL
+          fi->ResetUrl();
+        }
+
       }
 
       // Add endpoint?
       if (dataMode == kDataLocal) {
-        fillLocality = kTRUE;  // will fill
+        fillLocality = kTRUE;
       }
       else {
         // Don't make the user waste time: don't cache dataset locality info at
@@ -900,7 +1028,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
           Info("GetDataSet", "Not caching data locality information now");
         itCache.Reset();
         while ((fi = dynamic_cast<TFileInfo *>(itCache.Next())))
-          fi->AddUrl("noop://unknown", kTRUE);
+          fi->AddUrl(kfNoopUnknownUrl->GetUrl(), kTRUE);
       }
 
       // Update summary information and save to cache!
@@ -914,8 +1042,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
 
       fi = dynamic_cast<TFileInfo *>(newFc->GetList()->At(0));
       if (fi) {
-        if ((strcmp(fi->GetCurrentUrl()->GetProtocol(), "noop") == 0) &&
-            (strcmp(fi->GetCurrentUrl()->GetHost(), "unknown") == 0)) {
+        if ( strcmp(fi->GetCurrentUrl()->GetUrl(), kfNoopUnknownUrl->GetUrl()) == 0 ) {
           if (gDebug >= 1)
             Info("GetDataSet", "No dataset locality information in cache");
           hasEndp = kFALSE;
@@ -928,8 +1055,7 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
         // Remove first dummy URL everywhere
         TIter itCache(newFc->GetList());
         while ((fi = dynamic_cast<TFileInfo *>(itCache.Next()))) {
-          fi->RemoveUrlAt(0);
-          //fi->RemoveUrl("noop://unknown");
+          fi->RemoveUrl( kfNoopUnknownUrl->GetUrl() );
         }
 
         fillLocality = kTRUE;  // will locate
@@ -940,37 +1066,63 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
 
     // Fill locality: initialize stager, locate URLs
     if (fillLocality) {
-      fi = dynamic_cast<TFileInfo *>(newFc->GetList()->At(0));
-      if (fi) {
-        Info("GetDataSet", "Filling dataset locality information: "
-          "it might take time, be patient!");
 
-        // Lazy stager initialization
-        if (!fstg) fstg = TFileStager::Open(fi->GetCurrentUrl()->GetUrl());
+      if (fReadFromSE) {
 
-        if (!fstg) {  // seems nonsense but look carefully :)
-          Error("GetDataSet", "Can't create file stager");
-          delete newFc;
-          delete fc;
-          delete findCmds;
-          return NULL;
+        // If we have the redirector's URL, file is staged; elsewhere, assume
+        // that it is not. This way of filling locality info does not imply
+        // queries. The "dummy" URL signalling that no suitable redirector is
+        // there is not removed (it will be in the final results)
+
+        TIter nxtLoc(newFc->GetList());
+        while (( fi = dynamic_cast<TFileInfo *>(nxtLoc()) )) {
+          if (fi->FindByUrl( kfNoopNoneUrl->GetUrl() )) {
+            fi->ResetBit(TFileInfo::kStaged);
+          }
+          else {
+            fi->SetBit(TFileInfo::kStaged);
+          }
         }
-        else {
-          Int_t rv = fstg->LocateCollection(newFc, kTRUE);
-          if (rv < 0) {
-            Error("GetDataSet", "Endpoint lookup returned an error");
-            delete fstg;
+
+      }
+      else {
+
+        // Fill locality with a redirector
+
+        fi = dynamic_cast<TFileInfo *>(newFc->GetList()->At(0));
+        if (fi) {
+          Info("GetDataSet", "Filling dataset locality information: "
+            "it might take time, be patient!");
+
+          // Lazy stager initialization
+          if (!fstg)
+            fstg = TFileStager::Open(fi->GetCurrentUrl()->GetUrl());
+
+          if (!fstg) {
+            Error("GetDataSet", "Can't create file stager");
             delete newFc;
             delete fc;
             delete findCmds;
             return NULL;
           }
-          else if (gDebug >= 1) {
-            Info("GetDataSet", "Lookup successful for %d file(s)", rv);
+          else {
+            Int_t rv = fstg->LocateCollection(newFc, kTRUE);
+            if (rv < 0) {
+              Error("GetDataSet", "Endpoint lookup returned an error");
+              delete fstg;
+              delete newFc;
+              delete fc;
+              delete findCmds;
+              return NULL;
+            }
+            else if (gDebug >= 1) {
+              Info("GetDataSet", "Lookup successful for %d file(s)", rv);
+            }
           }
-        }
-      } // end if fi
-    }
+        } // end if fi
+      }
+
+    } // end if fillLocality
 
     // Save (back) to cache if requested
     if (saveToCache) {
@@ -984,16 +1136,18 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
     }
 
     // Just print the newFc (debug)
-    //newFc->Print("filter:SsCc");
+    // newFc->Print("filter:SsCc");
 
     // Now we prepare the final dataset, by appending proper information from
-    // newFc to fc
+    // newFc to fc. Cache has been already saved (possibly with locality info)
 
     TIter itCache(newFc->GetList());
     while ((fi = dynamic_cast<TFileInfo *>(itCache.Next()))) {
 
       // We no longer have unknowns. Instead we might have: redir, none. Let's
       // eliminate them. For each entry we always have three URLs
+
+      fi->ResetUrl();
 
       if (dataMode == kDataRemote) {
         // Set everything as staged and remove first two URLs: only AliEn needed
@@ -1005,11 +1159,17 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
         // Access from redirector, pretend that everything is staged
         fi->SetBit(TFileInfo::kStaged);
         fi->RemoveUrlAt(0);
+        if (fReadFromSE) {
+          // If reading from SE, it might happen that we have holes in the whereis
+          // response, resulting in an invalid redirector URL: in such a case we
+          // access directly from alien:// and we get rid of the invalid result
+          fi->RemoveUrl( kfNoopNoneUrl->GetUrl() );
+        }
       }
       else {  // dataMode == kLocal
         // Remove dummy URLs, trust staged bit
-        fi->RemoveUrl("noop://none");
-        fi->RemoveUrl("noop://redir");
+          fi->RemoveUrl( kfNoopNoneUrl->GetUrl() );
+          fi->RemoveUrl( kfNoopRedirUrl->GetUrl() );
       }
 
       // Append to big file collection used for analysis
