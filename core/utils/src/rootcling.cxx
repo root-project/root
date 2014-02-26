@@ -2750,7 +2750,7 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
 template <class T>
 bool AppendIfNotThere(const T& el, std::list<T>& el_list)
 {
-   if (std::count (el_list.begin(), el_list.end(), el) == 0 ){
+   if (std::find (el_list.begin(), el_list.end(), el) == el_list.end() ){
       el_list.push_back(el);
       return true;
    }
