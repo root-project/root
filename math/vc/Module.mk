@@ -45,8 +45,12 @@ $(VCLIBVC): $(VCLIBVCOBJ)
 	$(MAKEDIR)
 	@echo "Create static library $@"
 	@rm -f $@
+ifeq ($(PLATFORM),win32)
+	link.exe -lib /out:$@ $(VCLIBVCOBJ)
+else
 	@ar r $@ $?
 	@ranlib $@
+endif
 
 $(VCBUILDDIR)/avx_%.cpp.o: $(MODDIRS)/avx_%.cpp
 	$(MAKEDIR)
