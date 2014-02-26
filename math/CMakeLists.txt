@@ -28,6 +28,15 @@ endif()
 if(fftw3)
   add_subdirectory(fftw)
 endif()
+if(vc)
+  if(testing)
+    set(vc_tests ON)
+  endif()
+  add_subdirectory(vc)
+endif()
 
+if(vdt)
+  add_subdirectory(vdt)
+endif()
 
 

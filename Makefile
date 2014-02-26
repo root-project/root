@@ -113,6 +113,12 @@ endif
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
+ifeq ($(BUILDVC),yes)
+MODULES      += math/vc
+endif
+ifeq ($(BUILDVDT),yes)
+MODULES      += math/vdt
+endif
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
