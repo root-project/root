@@ -563,19 +563,24 @@ Int_t TGLFontManager::GetFontSize(Int_t ds, Int_t min, Int_t max)
 const char* TGLFontManager::GetFontNameFromId(Int_t id)
 {
    // Get font name from TAttAxis font id.
-
    if (fgStaticInitDone == kFALSE) InitStatics();
+   
+   Int_t fontIndex = id / 10;
+   
+   if (fontIndex > fgFontFileArray.GetEntries() || !fontIndex)
+      fontIndex = 5;//arialbd
+   else
+      fontIndex -= 1;
 
-   TObjString* os = (TObjString*)fgFontFileArray[id / 10];
-   return os->String().Data();
+   TObjString* os = (TObjString*)fgFontFileArray[fontIndex];
+
+   return os ? os->String().Data() : "arialbd";
 }
 
 //______________________________________________________________________________
 void TGLFontManager::InitStatics()
 {
    // Create a list of available font files and allowed font sizes.
-
-   fgFontFileArray.Add(new TObjString("arialbd"));  //   0
 
    fgFontFileArray.Add(new TObjString("timesi"));   //  10
    fgFontFileArray.Add(new TObjString("timesbd"));  //  20
@@ -594,7 +599,7 @@ void TGLFontManager::InitStatics()
    fgFontFileArray.Add(new TObjString("symbol"));   // 120
    fgFontFileArray.Add(new TObjString("times"));    // 130
    fgFontFileArray.Add(new TObjString("wingding")); // 140
-
+   fgFontFileArray.Add(new TObjString("symbol"));   // 150
 
    // font sizes
    for (Int_t i = 8; i <= 20; i+=2)
