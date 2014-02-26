@@ -119,6 +119,7 @@ endforeach()
 include_directories(src)
 if(MACOSX_TMPNAM_DEPRECATED)
   add_definitions(-Wno-deprecated-declarations)
+  add_definitions(-Wno-constant-logical-operand)
 endif()
 
 
