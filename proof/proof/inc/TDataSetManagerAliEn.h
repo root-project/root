@@ -102,6 +102,11 @@ class TDataSetManagerAliEn : public TDataSetManager {
       TString              fUrlTpl;
       TDataSetManagerFile *fCache;
       Long_t               fCacheExpire_s;
+      Bool_t               fReadFromSE;
+
+      const TUrl          *kfNoopRedirUrl;
+      const TUrl          *kfNoopUnknownUrl;
+      const TUrl          *kfNoopNoneUrl;
 
       static std::vector<Int_t> *ExpandRunSpec(TString &runSpec);
 
@@ -112,6 +117,9 @@ class TDataSetManagerAliEn : public TDataSetManager {
       static Bool_t ParseOfficialDataUri(TString &uri, Bool_t sim,
          TString &period, Int_t &year, std::vector<Int_t> *&runList,
          Bool_t &esd, Int_t &aodNum, TString &pass);
+
+      static TUrl *AliEnWhereIs(TUrl *alienUrl, TString &closeSE,
+         Bool_t onlyFromCloseSE);
 
       virtual void Init(TString cacheDir, TString urlTpl,
          ULong_t cacheExpire_s);
