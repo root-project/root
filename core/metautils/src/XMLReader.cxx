@@ -798,12 +798,25 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             }
 
             std::stringstream pragmaLineStream;
-            pragmaLineStream << "sourceClass=\"" << pragmaArgs["sourceClass"] << "\""
-                             << " version=\""<< pragmaArgs["version"] << "\""
-                             << " targetClass=\""<< pragmaArgs["targetClass"] << "\""
-                             << " target=\""<< pragmaArgs["target"] << "\""
-                             << " source=\""<< pragmaArgs["source"] << "\""
-                             << " code=\"{"+pragmaArgs["code"]+"}\"";
+            const std::string attrs[10] ={"sourceClass",
+                                          "version",
+                                          "targetClass",
+                                          "target",
+                                          "source",
+                                          "code",
+                                          "checksum",
+                                          "embed",
+                                          "include",
+                                          "attributes"};
+            std::string attr,value;
+            for (unsigned int i=0;i<10;++i) {
+               attr = attrs[i];               
+               if ( pragmaArgs.count(attr) == 1){ 
+                  value= pragmaArgs[attr];
+                  if (attr == "code")  value= "{"+value+"}";
+                  pragmaLineStream << " " << attr << "=\""<< value << "\"";
+                  }
+               }
                              
             // Now send them to the pragma processor. The info will be put
             // in a global then read by the TMetaUtils
