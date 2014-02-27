@@ -1145,8 +1145,15 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    if ( h != gConvFactories.end() )
       return (h->second)( user );
 
-//-- still nothing? try pointer instead of ref, if ref
-   if ( cpd == "&" ) {
+// CLING WORKAROUND -- if the type is a fixed-size array, it will have a funky
+// resolved type like MyClass(&)[N], which TClass::GetClass() fails on. So, strip
+// it down:
+   if ( cpd == "[]" )
+      realType = TClassEdit::CleanType( realType.substr( 0, realType.rfind("(") ).c_str(), 1 );
+// -- CLING WORKAROUND
+
+//-- still nothing? try pointer instead of ref or array (for builtins)
+   if ( cpd == "&" || cpd == "[]" ) {
       h = gConvFactories.find( realType + "*" );
       if ( h != gConvFactories.end() )
          return (h->second)( user );
@@ -1155,13 +1162,6 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
 //-- still nothing? use a generalized converter
    Bool_t isConst = resolvedType.substr(0, 5) == "const";
    Bool_t control = cpd == "&" || isConst;
-
-// CLING WORKAROUND -- if the type is a fixed-size array, it will have a funky
-// resolved type like MyClass(&)[N], which TClass::GetClass() fails on. So, strip
-// it down:
-   if ( cpd == "[]" )
-      realType = realType.substr( 0, realType.rfind("(") );
-// -- CLING WORKAROUND
 
 // converters for known/ROOT classes and default (void*)
    TConverter* result = 0;
