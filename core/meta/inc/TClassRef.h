@@ -33,19 +33,20 @@
 class TClassRef {
 
 private:
-   std::string  fClassName; //Name of referenced class
-   TClass      *fClassPtr;  //! Ptr to the TClass object
-   TClassRef   *fPrevious;  //! link to the previous refs
-   TClassRef   *fNext;      //! link to the next refs 
+   std::string   fClassName; //Name of referenced class
+#ifdef __CINT__
+   TClass      **fClassPtr;  //! Ptr to the permanent TClass ptr/reference
+#else
+   TClass *const*fClassPtr;  //! Ptr to the permanent TClass ptr/reference
+#endif
 
    friend class TClass;
 
    void Assign(const TClassRef &);
    void Assign(TClass *);
    TClass   *InternalGetClass() const;
-   void      ListReset();
 public:
-   TClassRef() : fClassName(), fClassPtr(0), fPrevious(0), fNext(0) {}
+   TClassRef() : fClassName(), fClassPtr(0) {}
    TClassRef(TClass *cl);
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);
@@ -58,24 +59,24 @@ public:
    }
    inline TClassRef &operator=(TClass *rhs) {
       // Inline implementation of operator= to speed the no-op case.
-      if (this->fClassPtr != rhs) {
+      if ( this->fClassPtr==0 || *(this->fClassPtr) != rhs) {
          this->Assign(rhs);
       }
       return *this;
    }      
 
-   ~TClassRef() { if (fClassPtr) fClassPtr->RemoveRef(this); };
+   ~TClassRef() { };
 
    void SetName(const char* new_name) { 
       if ( fClassPtr && fClassName != new_name ) Reset(); 
       fClassName = new_name; 
    }
    const char *GetClassName() { return fClassName.c_str(); }
-   TClass *GetClass()  const { return fClassPtr ? fClassPtr : InternalGetClass(); }
-   void Reset() { if (fClassPtr) fClassPtr->RemoveRef(this); fClassPtr = 0; }
+   TClass *GetClass()  const { return (fClassPtr && *fClassPtr) ? *fClassPtr : InternalGetClass(); }
+   void Reset() { fClassPtr = 0; }
 
-   TClass* operator->() const { return fClassPtr ? fClassPtr : InternalGetClass(); }
-   operator TClass*() const { return fClassPtr ? fClassPtr : InternalGetClass(); }
+   TClass* operator->() const { return (fClassPtr && *fClassPtr) ? *fClassPtr : InternalGetClass(); }
+   operator TClass*() const { return (fClassPtr && *fClassPtr )? *fClassPtr : InternalGetClass(); }
 
 };
 

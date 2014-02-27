@@ -14,7 +14,7 @@
 namespace {
 
    TClassRef GetGlobalNamespace() {
-      static TClass c;
+      static TClass c("ROOT::GlobalScopePlaceHolder",0,"","",-1,-1,kTRUE);
       return &c;
    }
 
