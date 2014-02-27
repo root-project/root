@@ -52,7 +52,7 @@ namespace {
          // of the data member's lifetime, if it is a bound type (it doesn't matter
          // for builtin types, b/c those are copied over into python types and thus
          // end up being "stand-alone")
-         if ( ObjectProxy_Check( result ) ) {
+         if ( pyobj && ObjectProxy_Check( result ) ) {
             if ( PyObject_SetAttr( result, PyStrings::gLifeLine, (PyObject*)pyobj ) == -1 )
                PyErr_Clear();     // ignored
          }
