@@ -81,9 +81,6 @@ using namespace llvm;
 using namespace clang;
 using namespace std;
 
-// This ought to be declared by the implementer .. oh well...
-extern void unresolvedSymbol();
-
 static unsigned long long wrapper_serial = 0LL;
 static const string indent_string("   ");
 
