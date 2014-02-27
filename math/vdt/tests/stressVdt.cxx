@@ -26,6 +26,7 @@ template <class T>
 uint64_t fp2uint (T /*x*/)
 {
    T::not_implemented; // "Static assert" in C++03
+   return 1;
 }
 
 template <>
