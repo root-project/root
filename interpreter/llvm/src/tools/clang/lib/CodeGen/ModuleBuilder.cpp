@@ -27,7 +27,7 @@
 #include "llvm/IR/Module.h"
 using namespace clang;
 
-namespace {
+namespace clang {
   class CodeGeneratorImpl : public CodeGenerator {
     DiagnosticsEngine &Diags;
     OwningPtr<const llvm::DataLayout> TD;
