@@ -2537,11 +2537,17 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // Returns 0 in case class is not found.
 
    if (!name || !strlen(name)) return 0;
+
    R__LOCKGUARD(gCINTMutex);
+
    if (!gROOT->GetListOfClasses())    return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
-   
+
+   // Early return to release the lock without having to execute the
+   // long-ish TSplitType
+   if (cl && cl->IsLoaded()) return cl;
+
    TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
 
    if (!cl) {
