@@ -784,6 +784,7 @@ ClassImp(TClass)
 //______________________________________________________________________________
 TClass::TClass() :
    TDictionary(),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0), 
@@ -796,7 +797,7 @@ TClass::TClass() :
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 
 {
@@ -809,6 +810,7 @@ TClass::TClass() :
 //______________________________________________________________________________
 TClass::TClass(const char *name, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
@@ -821,7 +823,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -859,6 +861,7 @@ TClass::TClass(const char *name, Bool_t silent) :
 TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il, Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
@@ -871,7 +874,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -888,6 +891,7 @@ TClass::TClass(const char *name, Version_t cversion,
                const char *dfil, const char *ifil, Int_t dl, Int_t il,
                Bool_t silent) :
    TDictionary(name),
+   fPersistentRef(0),
    fStreamerInfo(0), fConversionStreamerInfo(0), fRealData(0),
    fBase(0), fData(0), fMethod(0), fAllPubData(0), fAllPubMethod(0),
    fClassMenuList(0),
@@ -900,7 +904,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE), 
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
-   fCurrentInfo(0), fLastReadInfo(0), fRefStart(0), fRefProxy(0),
+   fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
 {
    // Create a TClass object. This object contains the full dictionary
@@ -975,7 +979,17 @@ void TClass::Init(const char *name, Version_t cversion,
       return;
    }
 
+   TClass **persistentRef = 0;
    if (oldcl) {
+
+#if __cplusplus >= 201103L
+      persistentRef = oldcl->fPersistentRef.exchange(0);
+#else
+      persistentRef = oldcl->fPersistentRef;
+      oldcl->fPersistentRef = 0;
+#endif
+
+      // The code from here is also in ForceReload.
       TClass::RemoveClass(oldcl);
       // move the StreamerInfo immediately so that there are
       // properly updated!
@@ -993,7 +1007,8 @@ void TClass::Init(const char *name, Version_t cversion,
          fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
       }
       oldcl->GetStreamerInfos()->Clear();
-      
+      // The code diverges here from ForceReload.
+
       // Move the Schema Rules too.
       fSchemaRules = oldcl->fSchemaRules;
       oldcl->fSchemaRules = 0;
@@ -1089,20 +1104,39 @@ void TClass::Init(const char *name, Version_t cversion,
 
       if (resolvedThis != fName) {
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedThis);
-         if (oldcl && oldcl != this)
+         if (oldcl && oldcl != this) {
+#if __cplusplus >= 201103L
+            persistentRef = oldcl->fPersistentRef.exchange(0);
+#else
+            persistentRef = oldcl->fPersistentRef;
+            oldcl->fPersistentRef = 0;
+#endif
             ForceReload (oldcl);
+         }
       }
       TIter next( fgClassTypedefHash->GetListForObject(resolvedThis) );
       while ( TNameMapNode* htmp = static_cast<TNameMapNode*> (next()) ) {
          if (resolvedThis != htmp->String()) continue;
          oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(htmp->fOrigName); // gROOT->GetClass (htmp->fOrigName, kFALSE);
          if (oldcl && oldcl != this) {
+#if __cplusplus >= 201103L
+            persistentRef = oldcl->fPersistentRef.exchange(0);
+#else
+            persistentRef = oldcl->fPersistentRef;
+            oldcl->fPersistentRef = 0;
+#endif
             ForceReload (oldcl);
          }
       }
    }
    if (fClassInfo) SetTitle(gCint->ClassInfo_Title(fClassInfo));
 
+   if (persistentRef) {
+      fPersistentRef = persistentRef;
+   } else {
+      fPersistentRef = new TClass*;
+   }
+   *fPersistentRef = this;
    ResetBit(kLoading);
 
    if ( isStl || !strncmp(GetName(),"stdext::hash_",13) || !strncmp(GetName(),"__gnu_cxx::hash_",16) ) {
@@ -1129,6 +1163,7 @@ void TClass::Init(const char *name, Version_t cversion,
 //______________________________________________________________________________
 TClass::TClass(const TClass& cl) :
   TDictionary(cl),
+  fPersistentRef(0),
   fStreamerInfo(cl.fStreamerInfo),
   fConversionStreamerInfo(0),
   fRealData(cl.fRealData),
@@ -1175,7 +1210,6 @@ TClass::TClass(const TClass& cl) :
   fStreamerType(cl.fStreamerType),
   fCurrentInfo(0),
   fLastReadInfo(0),
-  fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
   fSchemaRules(cl.fSchemaRules),
   fStreamerImpl(0)
@@ -1239,11 +1273,12 @@ TClass::~TClass()
    delete fAllPubData;     fAllPubData  =0;
    delete fAllPubMethod;   fAllPubMethod=0;
 
-   if (fRefStart) {
-      // Inform the TClassRef object that we are going away.
-      fRefStart->ListReset();
-      fRefStart = 0;
-   }
+#if __cplusplus >= 201103L
+   delete fPersistentRef;
+#else
+   delete fPersistentRef;
+#endif
+
    if (fBase)
       fBase->Delete();
    delete fBase;   fBase=0;
@@ -1512,22 +1547,6 @@ void TClass::AddImplFile(const char* filename, int line) {
 
    fImplFileName = filename;
    fImplFileLine = line;
-}
-
-//______________________________________________________________________________
-void TClass::AddRef(TClassRef *ref)
-{
-   // Register a TClassRef object which points to this TClass object.
-   // When this TClass object is deleted, 'ref' will be 'Reset'.
-
-   R__LOCKGUARD(gCINTMutex);
-   if (fRefStart==0) {
-      fRefStart = ref;
-   } else {
-      fRefStart->fPrevious = ref;
-      ref->fNext = fRefStart;
-      fRefStart = ref;
-   }
 }
 
 //______________________________________________________________________________
@@ -2589,12 +2608,36 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
                // Remove the existing (soon to be invalid) TClass object to
                // avoid an infinite recursion.
                gROOT->GetListOfClasses()->Remove(cl);
+#if __cplusplus >= 201103L
+               TClass **persistentRef = cl->fPersistentRef.exchange(0);
+#else
+               TClass **persistentRef = cl->fPersistentRef;
+               cl->fPersistentRef = 0;
+#endif
                TClass *newcl = GetClass(altname.c_str(),load);
                
+               // Pass along the persistentRef.  It would safe to change it here
+               // as we own the lock and nobody else can find the new TClass
+               // until we release the lock ... However, it was already captured
+               // by the TClassRef in the CollectionProxy so the ref must be
+               // deleted only after the ForceReload
+#if __cplusplus >= 201103L
+               persistentRef = newcl->fPersistentRef.exchange(persistentRef);
+#else
+               TClass **todelete = newcl->fPersistentRef;
+               newcl->fPersistentRef = persistentRef;
+               persistentRef = todelete;
+#endif
+               *(newcl->fPersistentRef) = newcl;
+               // Force a refresh
+               *persistentRef = 0;
+
                // since the name are different but we got a TClass, we assume
                // we need to replace and delete this class.
                assert(newcl!=cl);
                newcl->ForceReload(cl);
+
+               delete persistentRef;
                return newcl;
             }
          }
@@ -3181,24 +3224,6 @@ Bool_t TClass::IsFolder(void *obj) const
    // Return kTRUE if the class has elements.
 
    return Browse(obj,(TBrowser*)0);
-}
-
-//______________________________________________________________________________
-void TClass::RemoveRef(TClassRef *ref)
-{
-   // Unregister the TClassRef object.
-
-   R__LOCKGUARD(gCINTMutex);
-   if (ref==fRefStart) {
-      fRefStart = ref->fNext;
-      if (fRefStart) fRefStart->fPrevious = 0;
-      ref->fPrevious = ref->fNext = 0;
-   } else {
-      TClassRef *next = ref->fNext;
-      if (ref->fPrevious) ref->fPrevious->fNext = next;
-      if (next) next->fPrevious = ref->fPrevious;
-      ref->fPrevious = ref->fNext = 0;
-   }
 }
 
 //______________________________________________________________________________
