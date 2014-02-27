@@ -54,48 +54,47 @@ namespace clang {
       return M.take();
     }
 
-     void print(llvm::raw_ostream& out) {
-        //llvm::SmallPtrSet<llvm::GlobalValue*, 10> WeakRefReferences;
-        //llvm::StringMap<GlobalDecl> DeferredDecls;
-        //std::vector<DeferredGlobal> DeferredDeclsToEmit;
-        //std::vector<GlobalDecl> Aliases;
-        //ReplacementsTy Replacements;
-        //std::vector<const CXXRecordDecl*> DeferredVTables;
-        //std::vector<llvm::WeakVH> LLVMUsed;
-        //CtorList GlobalCtors;
-        //CtorList GlobalDtors;
-        //llvm::DenseMap<GlobalDecl, StringRef> MangledDeclNames;
-        //std::vector<llvm::Constant*> Annotations;
-        //llvm::StringMap<llvm::Constant*> AnnotationStrings;
-        //llvm::StringMap<llvm::Constant*> CFConstantStringMap;
-        //llvm::StringMap<llvm::GlobalVariable*> ConstantStringMap;
-        out << "\n\nCodeGen:\n";
-        out << " ConstantStringMap @ " << &Builder->ConstantStringMap << "\n";
-        for(llvm::StringMap<llvm::GlobalVariable*>::const_iterator I
-               = Builder->ConstantStringMap.begin(),
-               E = Builder->ConstantStringMap.end(); I != E;
-            ++I) {
-           out << I->getKey().str().c_str() << " : " << I->getValue() << "\n";
-        }
-        //llvm::DenseMap<const Decl*, llvm::Constant *> StaticLocalDeclMap;
-        //llvm::DenseMap<const Decl*, llvm::GlobalVariable*> StaticLocalDeclGuardMap;
-        //llvm::DenseMap<const Expr*, llvm::Constant *> MaterializedGlobalTemporaryMap;
-        //llvm::DenseMap<QualType, llvm::Constant *> AtomicSetterHelperFnMap;
-        //llvm::DenseMap<QualType, llvm::Constant *> AtomicGetterHelperFnMap;
-        //llvm::DenseMap<QualType, llvm::Constant *> TypeDescriptorMap;
-        //StaticExternCMap StaticExternCValues;
-        //std::vector<std::pair<const VarDecl *, llvm::GlobalVariable *> >
-        // CXXThreadLocals;
-        //std::vector<llvm::Constant*> CXXThreadLocalInits;
-        //std::vector<llvm::Constant*> CXXGlobalInits;
-        //llvm::DenseMap<const Decl*, unsigned> DelayedCXXInitPosition;
-        //SmallVector<GlobalInitData, 8> PrioritizedCXXGlobalInits;
-        //std::vector<std::pair<llvm::WeakVH,llvm::Constant*> > CXXGlobalDtors;
-        //llvm::SetVector<clang::Module *> ImportedModules;
-        //SmallVector<llvm::Value *, 16> LinkerOptionsMetadata;
-        //
-        out.flush();
-     }
+    void print(llvm::raw_ostream& out) {
+      //llvm::SmallPtrSet<llvm::GlobalValue*, 10> WeakRefReferences;
+      //llvm::StringMap<GlobalDecl> DeferredDecls;
+      //std::vector<DeferredGlobal> DeferredDeclsToEmit;
+      //std::vector<GlobalDecl> Aliases;
+      //ReplacementsTy Replacements;
+      //std::vector<const CXXRecordDecl*> DeferredVTables;
+      //std::vector<llvm::WeakVH> LLVMUsed;
+      //CtorList GlobalCtors;
+      //CtorList GlobalDtors;
+      //llvm::DenseMap<GlobalDecl, StringRef> MangledDeclNames;
+      //std::vector<llvm::Constant*> Annotations;
+      //llvm::StringMap<llvm::Constant*> AnnotationStrings;
+      //llvm::StringMap<llvm::Constant*> CFConstantStringMap;
+      //llvm::StringMap<llvm::GlobalVariable*> ConstantStringMap;
+      out << "\n\nCodeGen:\n";
+      out << " ConstantStringMap @ " << &Builder->ConstantStringMap << "\n";
+      for(llvm::StringMap<llvm::GlobalVariable*>::const_iterator I
+            = Builder->ConstantStringMap.begin(),
+            E = Builder->ConstantStringMap.end(); I != E; ++I) {
+        out << I->getKey().str().c_str() << " : " << I->getValue() << "\n";
+      }
+      //llvm::DenseMap<const Decl*, llvm::Constant *> StaticLocalDeclMap;
+      //llvm::DenseMap<const Decl*, llvm::GlobalVariable*> StaticLocalDeclGuardMap;
+      //llvm::DenseMap<const Expr*, llvm::Constant *> MaterializedGlobalTemporaryMap;
+      //llvm::DenseMap<QualType, llvm::Constant *> AtomicSetterHelperFnMap;
+      //llvm::DenseMap<QualType, llvm::Constant *> AtomicGetterHelperFnMap;
+      //llvm::DenseMap<QualType, llvm::Constant *> TypeDescriptorMap;
+      //StaticExternCMap StaticExternCValues;
+      //std::vector<std::pair<const VarDecl *, llvm::GlobalVariable *> >
+      // CXXThreadLocals;
+      //std::vector<llvm::Constant*> CXXThreadLocalInits;
+      //std::vector<llvm::Constant*> CXXGlobalInits;
+      //llvm::DenseMap<const Decl*, unsigned> DelayedCXXInitPosition;
+      //SmallVector<GlobalInitData, 8> PrioritizedCXXGlobalInits;
+      //std::vector<std::pair<llvm::WeakVH,llvm::Constant*> > CXXGlobalDtors;
+      //llvm::SetVector<clang::Module *> ImportedModules;
+      //SmallVector<llvm::Value *, 16> LinkerOptionsMetadata;
+      //
+      out.flush();
+    }
 
     virtual void Initialize(ASTContext &Context) {
       Ctx = &Context;
