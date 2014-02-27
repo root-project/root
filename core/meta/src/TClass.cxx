@@ -2669,6 +2669,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
+   // Early return to release the lock without having to execute the
+   // long-ish TSplitType
+   if (cl && cl->IsLoaded()) return cl;
+
    TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
 
    if (!cl) {
