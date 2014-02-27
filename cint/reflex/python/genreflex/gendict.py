@@ -2819,6 +2819,10 @@ def ClassDefImplementation(selclasses, self) :
       returnValue += '      b.WriteClassBuffer(' + clname  + '::Class(),this);\n'
       returnValue += '   }\n'
       returnValue += '}\n'
+      #must strip of leading '::' to avoid ambiguity with embedded type in atomic_TClass_ptr
+      if len(specclname) > 2:
+        if specclname[:2] == '::':
+          specclname = specclname[2:]        
       returnValue += template + 'atomic_TClass_ptr ' + specclname + '::fgIsA(0);\n'
       returnValue += namespacelevel * '}' + '\n'
     elif derivesFromTObject :
