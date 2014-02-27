@@ -250,8 +250,8 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
    //and all subsequent drawings will go into
    //this pixmap. For OpenGL this means the change of
    //coordinate system and viewport.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
       Int_t px = 0, py = 0;
@@ -315,8 +315,8 @@ void TGLPadPainter::InvalidateCS()
 {
    //When TPad::Range for gPad is called, projection
    //must be changed in OpenGL.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    glMatrixMode(GL_PROJECTION);
    glLoadIdentity();
@@ -332,8 +332,8 @@ void TGLPadPainter::LockPainter()
    //Locked state of painter means, that
    //GL context can be invalid, so no GL calls
    //can be executed.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    glFinish();
    fLocked = kTRUE;
@@ -349,6 +349,7 @@ const Double_t lineWidthTS = 3.;
 void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    //Draw line segment.
+
    if (fLocked) {
       //GL pad painter can be called in non-standard situation:
       //not from TPad::Paint, but
@@ -392,8 +393,8 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
    //Draw line segment in NDC coordinates.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
@@ -409,8 +410,8 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
 void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EBoxMode mode)
 {
    //Draw filled or hollow box.
-   if (fLocked)
-      return;
+   
+   if (fLocked) return;
 
    if (mode == kHollow) {
       const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, 0, fLimits.GetMaxLineWidth(), kTRUE);
@@ -429,8 +430,8 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
 void TGLPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
 {
    //Draw tesselated polygon (probably, outline only).
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    if (!gVirtualX->GetFillStyle()) {
       fIsHollowArea = kTRUE;
@@ -463,8 +464,8 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 {
    //Draw tesselated polygon (never called, probably, since TPad::PaintFillArea for floats
    //is deprecated).
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    if (!gVirtualX->GetFillStyle()) {
       fIsHollowArea = kTRUE;
@@ -495,8 +496,8 @@ void TGLPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
 void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 {
    //Draw poly-line in user coordinates.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
 
@@ -532,8 +533,8 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
 void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 {
    //Never called?
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
 
@@ -554,8 +555,8 @@ void TGLPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
 void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
    //Poly line in NDC.
-   if (fLocked)
-      return;
+   
+   if (fLocked) return;
 
    const Rgl::Pad::LineAttribSet lineAttribs(kTRUE, gVirtualX->GetLineStyle(), fLimits.GetMaxLineWidth(), kTRUE);
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
@@ -582,8 +583,8 @@ void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::v
 void TGLPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
 {
    //Poly-marker.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    ConvertMarkerPoints(n, x, y, fPoly);
    DrawPolyMarker();
@@ -593,8 +594,8 @@ void TGLPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y
 void TGLPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 {
    //Poly-marker.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    ConvertMarkerPoints(n, x, y, fPoly);
    DrawPolyMarker();
@@ -604,8 +605,8 @@ void TGLPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 void TGLPadPainter::DrawPolyMarker()
 {
    //Poly-marker.
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
 
    SaveProjectionMatrix();
    glLoadIdentity();
@@ -685,16 +686,11 @@ void TGLPadPainter::DrawPolyMarker()
 }
 
 //______________________________________________________________________________
-void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode /*mode*/)
+template<class Char>
+void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETextMode mode)
 {
-   //Draw text. This operation is especially
-   //dangerous if in locked state -
-   //ftgl will assert on zero texture size
-   //(which is result of bad GL context).
-   if (fLocked)
-      return;
-
    SaveProjectionMatrix();
+
    glLoadIdentity();
    //
    glOrtho(0, gPad->GetAbsWNDC() * gPad->GetWw(), 0, gPad->GetAbsHNDC() * gPad->GetWh(), -10., 10.);
@@ -705,9 +701,9 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    Rgl::Pad::ExtractRGB(gVirtualX->GetTextColor(), rgba);
    glColor3fv(rgba);
 
-   fFM.RegisterFont(Int_t(gVirtualX->GetTextSize()) - 1,
-                    TGLFontManager::GetFontNameFromId(gVirtualX->GetTextFont()),
-                    TGLFont::kTexture, fF);
+   fFM.RegisterFont(TMath::Max(Int_t(gVirtualX->GetTextSize()) - 1, 10),
+                            TGLFontManager::GetFontNameFromId(gVirtualX->GetTextFont()),
+                            TGLFont::kTexture, fF);
    fF.PreRender();
 
    const UInt_t padH = UInt_t(gPad->GetAbsHNDC() * gPad->GetWh());
@@ -715,7 +711,34 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
 
    fF.PostRender();
    RestoreProjectionMatrix();
+
    glMatrixMode(GL_MODELVIEW);
+}
+
+//______________________________________________________________________________
+void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
+{
+   //Draw text. This operation is especially
+   //dangerous if in locked state -
+   //ftgl will assert on zero texture size
+   //(which is result of bad GL context).
+
+   if (fLocked) return;
+
+   DrawTextHelper(x, y, text, mode);
+}
+
+//______________________________________________________________________________
+void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
+{
+   //Draw text. This operation is especially
+   //dangerous if in locked state -
+   //ftgl will assert on zero texture size
+   //(which is result of bad GL context).
+
+   if (fLocked) return;
+
+   DrawTextHelper(x, y, text, mode);
 }
 
 //______________________________________________________________________________
@@ -725,8 +748,23 @@ void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextM
    //dangerous if in locked state -
    //ftgl will assert on zero texture size
    //(which is result of bad GL context).
-   if (fLocked)
-      return;
+
+   if (fLocked) return;
+
+   const Double_t xRange = gPad->GetX2() - gPad->GetX1();
+   const Double_t yRange = gPad->GetY2() - gPad->GetY1();
+   DrawText(gPad->GetX1() + u * xRange, gPad->GetY1() + v * yRange, text, mode);
+}
+
+//______________________________________________________________________________
+void TGLPadPainter::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, ETextMode mode)
+{
+   //Draw text in NDC. This operation is especially
+   //dangerous if in locked state -
+   //ftgl will assert on zero texture size
+   //(which is result of bad GL context).
+
+   if (fLocked) return;
 
    const Double_t xRange = gPad->GetX2() - gPad->GetX1();
    const Double_t yRange = gPad->GetY2() - gPad->GetY1();
@@ -854,3 +892,4 @@ void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::v
 }
 
 }
+

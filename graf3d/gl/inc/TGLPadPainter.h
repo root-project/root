@@ -49,6 +49,9 @@ private:
    Bool_t                      fIsHollowArea;
    
    Bool_t                      fLocked;
+   
+   template<class Char_t>
+   void DrawTextHelper(Double_t x, Double_t y, const Char_t *text, ETextMode mode);
 public:
    TGLPadPainter();
    
@@ -114,9 +117,9 @@ public:
    void     DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y);
    
    void     DrawText(Double_t x, Double_t y, const char *text, ETextMode mode);
-   void     DrawText(Double_t, Double_t, const wchar_t *, ETextMode){}
+   void     DrawText(Double_t, Double_t, const wchar_t *, ETextMode);
    void     DrawTextNDC(Double_t x, Double_t y, const char *text, ETextMode mode);
-   void     DrawTextNDC(Double_t, Double_t, const wchar_t *, ETextMode){}
+   void     DrawTextNDC(Double_t, Double_t, const wchar_t *, ETextMode);
    
    //jpg, png, gif and bmp output.
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
@@ -145,3 +148,4 @@ private:
 };
 
 #endif
+
