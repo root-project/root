@@ -46,6 +46,9 @@ private:
    TListOfDataMembers(const TListOfDataMembers&);              // not implemented
    TListOfDataMembers& operator=(const TListOfDataMembers&);   // not implemented
 
+   void       MapObject(TObject *obj);
+   void       UnmapObject(TObject *obj);
+
 public:
 
    TListOfDataMembers(TClass *cl);
@@ -56,6 +59,7 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
+   virtual TObject   *FindObject(TObject *obj) const;
 
    TDictionary *Get(DeclId_t id);
    TDictionary *Get(DataMemberInfo_t *info);

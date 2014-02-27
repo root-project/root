@@ -50,6 +50,9 @@ private:
    TListOfFunctions(const TListOfFunctions&);              // not implemented
    TListOfFunctions& operator=(const TListOfFunctions&);   // not implemented
    TList     *GetListForObjectNonConst(const char* name);
+
+   void       MapObject(TObject *obj);
+   void       UnmapObject(TObject *obj);
    
 public:
    
@@ -61,6 +64,7 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
+   virtual TObject   *FindObject(TObject *obj) const;
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
 

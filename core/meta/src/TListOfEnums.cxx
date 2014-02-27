@@ -50,17 +50,23 @@ TListOfEnums::~TListOfEnums()
 }
 
 //______________________________________________________________________________
+void TListOfEnums::MapObject(TObject *obj)
+{
+   // Add pair<id, object> to the map of functions and their ids.
+
+   TEnum *e = dynamic_cast<TEnum*>(obj);
+   if (e) {
+      fIds->Add((Long64_t)e->GetDeclId(),(Long64_t)e);
+   }
+}
+
+//______________________________________________________________________________
 void TListOfEnums::AddFirst(TObject *obj)
 {
    // Add object at the beginning of the list.
 
    THashList::AddFirst(obj);
-
-   TEnum *d = dynamic_cast<TEnum*>(obj);
-   if (d) {
-      DeclId_t id = d->GetDeclId();
-      fIds->Add((Long64_t)id,(Long64_t)d);
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -73,14 +79,7 @@ void TListOfEnums::AddFirst(TObject *obj, Option_t *opt)
    // method. It allows the same object to be drawn in different ways.
 
    THashList::AddFirst(obj,opt);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -89,14 +88,7 @@ void TListOfEnums::AddLast(TObject *obj)
    // Add object at the end of the list.
 
    THashList::AddLast(obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -109,14 +101,7 @@ void TListOfEnums::AddLast(TObject *obj, Option_t *opt)
    // method. It allows the same object to be drawn in different ways.
 
    THashList::AddLast(obj, opt);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -125,14 +110,7 @@ void TListOfEnums::AddAt(TObject *obj, Int_t idx)
    // Insert object at location idx in the list.
 
    THashList::AddAt(obj, idx);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -141,14 +119,7 @@ void TListOfEnums::AddAfter(const TObject *after, TObject *obj)
    // Insert object after object after in the list.
 
    THashList::AddAfter(after, obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -157,14 +128,7 @@ void TListOfEnums::AddAfter(TObjLink *after, TObject *obj)
    // Insert object after object after in the list.
 
    THashList::AddAfter(after, obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -173,14 +137,7 @@ void TListOfEnums::AddBefore(const TObject *before, TObject *obj)
    // Insert object before object before in the list.
 
    THashList::AddBefore(before, obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -189,14 +146,7 @@ void TListOfEnums::AddBefore(TObjLink *before, TObject *obj)
    // Insert object before object before in the list.
 
    THashList::AddBefore(before, obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Add((Long64_t)id,(Long64_t)d);
-      }
-   }
+   MapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -238,6 +188,15 @@ TObject *TListOfEnums::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
+TObject *TListOfEnums::FindObject(TObject *obj) const
+{
+   // Specialize FindObject to do search for the
+   // a enum or create it if its not already in the list
+
+   return FindObject(obj->GetName());
+}
+
+//______________________________________________________________________________
 TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 {
    // Return (after creating it if necessary) the TEnum
@@ -271,6 +230,16 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 }
 
 //______________________________________________________________________________
+void TListOfEnums::UnmapObject(TObject *obj)
+{
+   // Remove a pair<id, object> from the map of functions and their ids.
+   TEnum *e = dynamic_cast<TEnum*>(obj);
+   if (e) {
+      fIds->Remove((Long64_t)e->GetDeclId());
+   }
+}
+
+//______________________________________________________________________________
 void TListOfEnums::RecursiveRemove(TObject *obj)
 {
    // Remove object from this collection and recursively remove the object
@@ -285,14 +254,7 @@ void TListOfEnums::RecursiveRemove(TObject *obj)
 
    THashList::RecursiveRemove(obj);
    fUnloaded->RecursiveRemove(obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Remove((Long64_t)id);
-      }
-   }
+   UnmapObject(obj);
 }
 
 //______________________________________________________________________________
@@ -306,13 +268,7 @@ TObject* TListOfEnums::Remove(TObject *obj)
    if (!found) {
       found = fUnloaded->Remove(obj);
    }
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Remove((Long64_t)id);
-      }
-   }
+   UnmapObject(obj);
    if (found) return obj;
    else return 0;
 }
@@ -328,14 +284,7 @@ TObject* TListOfEnums::Remove(TObjLink *lnk)
 
    THashList::Remove(lnk);
    fUnloaded->Remove(obj);
-
-   if (fClass) {
-      TEnum *d = dynamic_cast<TEnum*>(obj);
-      if (d) {
-         DeclId_t id = d->GetDeclId();
-         fIds->Remove((Long64_t)id);
-      }
-   }
+   UnmapObject(obj);
    return obj;
 }
 

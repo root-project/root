@@ -46,6 +46,9 @@ private:
    TListOfEnums(const TListOfEnums&);              // not implemented
    TListOfEnums& operator=(const TListOfEnums&);   // not implemented
 
+   void       MapObject(TObject *obj);
+   void       UnmapObject(TObject *obj);
+
 public:
 
    TListOfEnums(TClass *cl);
@@ -56,6 +59,7 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
+   virtual TObject   *FindObject(TObject *obj) const;
 
    TEnum *Get(DeclId_t id, const char *name);
 
