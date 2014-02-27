@@ -109,13 +109,23 @@ def load_reflection_info(name):
 
 #--- Other functions needed -------------------------------------------
 if not _builtin_cppyy:
+   class _ns_meta( type ):
+      def __getattr__( cls, name ):
+         attr = _backend.LookupRootEntity( name )
+         if type(attr) is _backend.PropertyProxy:
+            setattr( cls.__class__, name, attr )
+            return attr.__get__(cls)
+         return attr
+
    class _stdmeta( type ):
-      def __getattr__( cls, attr ):   # for non-templated classes in std
-         klass = _backend.MakeRootClass( attr, cls )
-         setattr( cls, attr, klass )
+      def __getattr__( cls, name ):   # for non-templated classes in std
+         klass = _backend.MakeRootClass( name, cls )
+         setattr( cls, name, klass )
          return klass
 
    class _global_cpp:
+      __metaclass__ = _ns_meta
+
       class std( object ):
          __metaclass__ = _stdmeta
 
@@ -127,7 +137,6 @@ if not _builtin_cppyy:
 
          string = _backend.MakeRootClass( 'string' )
 
-   _backend.SetRootLazyLookup( _global_cpp.__dict__ )
 else:
    _global_cpp = _backend
  

@@ -509,10 +509,13 @@ PyObject* PyROOT::MakeRootClassFromString( const std::string& fullname, PyObject
    if ( ! (Bool_t)klass ) {   // if so, all options have been exhausted: it doesn't exist as such
       if ( ! scope && fullname.find( "ROOT::" ) == std::string::npos ) { // not already in ROOT::
       // final attempt, for convenience, the "ROOT" namespace isn't required, try again ...
-         PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
-         PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
-         Py_DECREF( rtns );
-         return pyclass;
+         klass = TScopeAdapter::ByName( "ROOT::"+fullname );
+         if ( (Bool_t)klass ) {
+            PyObject* rtns = PyObject_GetAttr( gRootModule, PyStrings::gROOTns );
+            PyObject* pyclass = PyObject_GetAttrString( rtns, (char*)fullname.c_str() );
+            Py_DECREF( rtns );
+            return pyclass;
+         }
       }
 
       PyErr_Format( PyExc_TypeError, "requested class \'%s\' does not exist", lookup.c_str() );

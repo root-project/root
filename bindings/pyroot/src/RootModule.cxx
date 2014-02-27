@@ -165,7 +165,7 @@ namespace {
    {
    // first search dictionary itself
       PyDictEntry* ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
-      if ( ! ep || ep->me_value != 0 || gDictLookupActive )
+      if ( ! ep || (ep->me_key && ep->me_value) || gDictLookupActive )
          return ep;
 
    // filter for builtins
@@ -181,23 +181,26 @@ namespace {
 
       if ( val != 0 ) {
       // success ...
-         if ( PropertyProxy_Check( val ) ) {
-         // pretend something was actually found, but don't add to dictionary
-            Py_INCREF( key );
-            ep->me_key   = key;
-            ep->me_hash  = hash;
-            ep->me_value = Py_TYPE(val)->tp_descr_get( val, NULL, NULL );
-         } else {
-         // add reference to ROOT entity in the given dictionary
-            PYROOT_GET_DICT_LOOKUP( mp ) = gDictLookupOrg;     // prevent recursion
-            if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
-               ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
-            } else {
-               ep->me_key   = 0;
-               ep->me_value = 0;
-            }
-            PYROOT_GET_DICT_LOOKUP( mp ) = RootLookDictString; // restore
+
+         if ( PropertyProxy_CheckExact( val ) ) {
+         // don't want to add to dictionary (the proper place would be the
+         // dictionary of the (meta)class), but modifying ep will be noticed no
+         // matter what; just return the actual value and live with the copy in
+         // the dictionary (mostly, this is correct)
+            PyObject* actual_val = Py_TYPE(val)->tp_descr_get( val, NULL, NULL );
+            Py_DECREF( val );
+            val = actual_val;
          }
+
+      // add reference to ROOT entity in the given dictionary
+         PYROOT_GET_DICT_LOOKUP( mp ) = gDictLookupOrg;     // prevent recursion
+         if ( PyDict_SetItem( (PyObject*)mp, key, val ) == 0 ) {
+            ep = PYROOT_ORGDICT_LOOKUP( mp, key, hash, value_addr );
+         } else {
+            ep->me_key   = 0;
+            ep->me_value = 0;
+         }
+         PYROOT_GET_DICT_LOOKUP( mp ) = RootLookDictString; // restore
 
       // done with val
          Py_DECREF( val );
