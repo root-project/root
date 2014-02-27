@@ -41,6 +41,9 @@ private:
 
    Float_t          fDepth;  // depth of extruded fonts, enforced at render time.
 
+   template<class Char>
+   void RenderHelper(const Char *txt, Double_t x, Double_t y, Double_t angle, Double_t /*mgn*/) const;
+
 protected:
    Int_t            fSize;   // free-type face size
    Int_t            fFile;   // free-type file name
@@ -81,8 +84,12 @@ public:
    void  BBox(const char* txt,
               Float_t& llx, Float_t& lly, Float_t& llz,
               Float_t& urx, Float_t& ury, Float_t& urz) const;
+   void  BBox(const wchar_t* txt,
+              Float_t& llx, Float_t& lly, Float_t& llz,
+              Float_t& urx, Float_t& ury, Float_t& urz) const;
 
    void  Render(const char* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
+   void  Render(const wchar_t* txt, Double_t x, Double_t y, Double_t angle, Double_t mgn) const;
    void  Render(const TString &txt) const;
    void  Render(const TString &txt, Float_t x, Float_t y, Float_t z, ETextAlignH_e alignH, ETextAlignV_e alignV) const;
 
@@ -155,3 +162,4 @@ public:
 };
 
 #endif
+

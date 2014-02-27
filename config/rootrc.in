@@ -270,6 +270,8 @@ OpenGL.SavePictureFallbackToBB:             yes
 # Set to 1 to use lowest available settings or a higher integer to request
 # a specific number of samples per pixel (4 (linux) or 8 (mac) is reasonable).
 OpenGL.Framebuffer.Multisample:             0
+# Flag to set CanvasPreferGL via gStyle
+OpenGL.CanvasPreferGL:                      0
 
 # EVE options (defaults are shown)
 # Autmoatically hide/roll up GL viewer menu-bars.

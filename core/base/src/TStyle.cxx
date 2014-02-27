@@ -22,6 +22,7 @@
 #include "TSystem.h"
 #include "TVirtualPad.h"
 #include "TVirtualMutex.h"
+#include "TEnv.h"
 
 TStyle  *gStyle;
 const UInt_t kTakeStyle = BIT(17);
@@ -448,7 +449,8 @@ void TStyle::Reset(Option_t *opt)
    fXaxis.ResetAttAxis("X");
    fYaxis.ResetAttAxis("Y");
    fZaxis.ResetAttAxis("Z");
-   fCanvasPreferGL = kFALSE;
+   if (gEnv) fCanvasPreferGL = gEnv->GetValue("OpenGL.CanvasPreferGL",0);
+   else      fCanvasPreferGL = kFALSE;
    fCanvasColor    = 19;
    fCanvasBorderSize= 2;
    fCanvasBorderMode= 1;
