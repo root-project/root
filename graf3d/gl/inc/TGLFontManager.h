@@ -137,6 +137,9 @@ protected:
    FontList_t           fFontTrash;      // fonts to purge
 
    static TObjArray     fgFontFileArray;      // map font-id to ttf-font-file
+   // Default fonts - for gl/eve, "extended" - for gl-pad
+   static Int_t         fgExtendedFontStart;
+   
    static FontSizeVec_t fgFontSizeArray;      // map of valid font-size
    static Bool_t        fgStaticInitDone;     // global initialization flag
    static void          InitStatics();
@@ -152,6 +155,7 @@ public:
    static TObjArray*        GetFontFileArray();
    static FontSizeVec_t*    GetFontSizeArray();
 
+   static Int_t             GetExtendedFontStartIndex();
    static Int_t             GetFontSize(Int_t ds);
    static Int_t             GetFontSize(Int_t ds, Int_t min, Int_t max);
    static const char*       GetFontNameFromId(Int_t);
