@@ -1,8 +1,4 @@
-// This macro draws 4 Latex-style formula in a canvas and prints the canvas
-// as a Postscript file.
-// Note that this macro relies on a first implementation of the TLatex class.
-// There are still some discrepancies between the result on the screen
-// and the result on Postscript.
+// This macro draws 4 Latex-style formula in a canvas and prints the canvas as a Postscript file.
 //Author: Rene Brun
 void latex2(){
    TCanvas *c1 = new TCanvas("c1");
