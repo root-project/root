@@ -268,7 +268,10 @@ void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
 
          // Add the global constants to the list of Globals.
          if (!cl) {
-            gROOT->GetListOfGlobals()->Add(enumConstant);
+            TCollection* globals = gROOT->GetListOfGlobals(false);
+            if (!globals->FindObject(constantName)) {
+               globals->Add(enumConstant);
+            }
          }
       }
    }
@@ -357,9 +360,12 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
          return;
 
-      // ROOT says that global is enum/var/field declared on the global
-      // scope.
+      // Enums are lazyly created, thus we don not need to handle them here.
+      if (isa<EnumDecl>(ND))
+         return;
 
+      // ROOT says that global is enum(lazylycreated)/var/field declared on the global
+      // scope.
       if (!(isa<VarDecl>(ND)))
          return;
 
