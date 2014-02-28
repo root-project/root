@@ -687,7 +687,7 @@ void TGLPadPainter::DrawPolyMarker()
 
 //______________________________________________________________________________
 template<class Char>
-void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETextMode mode)
+void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETextMode /*mode*/)
 {
    SaveProjectionMatrix();
 
