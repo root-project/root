@@ -875,6 +875,11 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
    image->WriteImage(fileName, (TImage::EImageFileTypes)type);
 }
 
+//______________________________________________________________________________
+void TGLPadPainter::DrawPixels(const unsigned char * /*pixelData*/, Int_t /*srcX*/, Int_t /*srcY*/,
+                             UInt_t /*width*/, UInt_t /*height*/, Int_t /*dstX*/, Int_t /*dstY*/)
+{
+}
 
 //Aux. functions.
 namespace {

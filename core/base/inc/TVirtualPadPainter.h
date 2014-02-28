@@ -62,6 +62,10 @@ public:
    virtual void     CopyDrawable(Int_t device, Int_t px, Int_t py) = 0;
    virtual void     DestroyDrawable() = 0;//gVirtualX->CloseWindow
    virtual void     SelectDrawable(Int_t device) = 0;//gVirtualX->SelectWindow
+
+   //TASImage support.
+   virtual void     DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
+                               UInt_t width, UInt_t height, Int_t dstX, Int_t dstY) = 0;
    //
    //These functions are not required by X11/GDI.
    virtual void     InitPainter();
