@@ -95,6 +95,10 @@ public:
    void     DestroyDrawable();
    void     SelectDrawable(Int_t device);
 
+   //TASImage support.
+   void     DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
+                       UInt_t width, UInt_t height, Int_t dstX, Int_t dstY);
+
    void     InitPainter();
    void     InvalidateCS();
    void     LockPainter();

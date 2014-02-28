@@ -66,6 +66,11 @@ public:
    void     CopyDrawable(Int_t id, Int_t px, Int_t py);
    void     DestroyDrawable();
    void     SelectDrawable(Int_t device);
+   
+   //TASImage support (noop for a non-gl pad).
+   void     DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
+                       UInt_t width, UInt_t height, Int_t dstX, Int_t dstY);
+   
 
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
    void     DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
