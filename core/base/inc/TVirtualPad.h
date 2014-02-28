@@ -54,6 +54,7 @@ class TFrame;
 class TLegend;
 class TBox;
 class TVirtualViewer3D;
+class TVirtualPadPainter;
 
 class TVirtualPad : public TObject, public TAttLine, public TAttFill,
                     public TAttPad, public TQObject {
@@ -250,8 +251,9 @@ public:
    virtual Bool_t            HasViewer3D() const = 0;
    virtual void              ReleaseViewer3D(Option_t * type = "")  = 0;
 
-   virtual Int_t    GetGLDevice() = 0;
-   virtual void     SetCopyGLDevice(Bool_t copy) = 0;
+   virtual Int_t               GetGLDevice() = 0;
+   virtual void                SetCopyGLDevice(Bool_t copy) = 0;
+   virtual TVirtualPadPainter *GetPainter() = 0;
    
    virtual Bool_t PadInSelectionMode() const;
    virtual Bool_t PadInHighlightMode() const;

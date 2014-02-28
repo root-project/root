@@ -888,9 +888,57 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 }
 
 //______________________________________________________________________________
-void TGLPadPainter::DrawPixels(const unsigned char * /*pixelData*/, Int_t /*srcX*/, Int_t /*srcY*/,
-                             UInt_t /*width*/, UInt_t /*height*/, Int_t /*dstX*/, Int_t /*dstY*/)
+void TGLPadPainter::DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
+                               UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
 {
+   //TODO: simplify the interface and get rid of src coords.
+   //TODO: test that height and width are reasonable
+   //(not using high-order bit for transparency).
+
+   (void)srcX;
+   (void)srcY;
+   
+   if (fLocked)
+      return;
+
+   if (!pixelData) {
+      Error("DrawPixels", "pixelData is null");
+      return;
+   }
+   
+   if ((UInt_t)TMath::Abs(srcX) >= width) {
+      Error("DrawPixel", "invalid srcX");
+      return;
+   }
+   
+   if ((UInt_t)TMath::Abs(srcY) >= height) {
+      Error("DrawPixel", "invalid srcY");
+      return;
+   }
+   
+   srcX = TMath::Max(srcX, Int_t(0));
+   srcY = TMath::Max(srcY, Int_t(0));
+
+   GLint oldPos[4] = {};
+   glGetIntegerv(GL_CURRENT_RASTER_POSITION, oldPos);
+   
+   glRasterPos2i(dstX, dstY);
+   //
+   glPixelStorei(GL_PACK_ALIGNMENT, 1);
+   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+   //HOHOHO! FUGLY-FUGLY!!!
+   //TODO: use scale and translate instead!
+   std::vector<unsigned char> upsideDownImage(4 * width * height);
+   const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
+   unsigned char *dstLine = &upsideDownImage[0];
+   for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
+      std::copy(srcLine, srcLine + 4 * width, dstLine);
+   
+   glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
+   
+   //
+   glRasterPos2i(oldPos[0], oldPos[1]);
 }
 
 //Aux. functions.
