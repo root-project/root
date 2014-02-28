@@ -489,8 +489,8 @@ namespace ROOT { namespace Cintex {
          else if (narg == 4) fCode = (char*)f4a;
          char* b = fCode;
          for ( size_t o = 0; o < 1000; o++, b++) {
-            if ( ((*(size_t*)b) & 0x000F0FFFUL) == 0x000D0ADAUL && ((*((size_t*)b + 1)) & 0x000F0FFFUL) == 0x000D0ADAUL ) fa_offset = o;
-            if ( ((*(size_t*)b) & 0x000F0FFFUL) == 0x000F0AFAUL && ((*((size_t*)b + 1)) & 0x000F0FFFUL) == 0x000F0AFAUL ) f_offset = o;
+            if ( *(size_t*)b == DATAPATTERN ) fa_offset = o;
+            if ( *(size_t*)b == FUNCPATTERN ) f_offset = o;
             if ( f_offset && fa_offset ) {
                fSize = (o + 256) & ~0xF;
                break;
@@ -506,28 +506,14 @@ namespace ROOT { namespace Cintex {
 #undef DATAPATTERN
 #undef FUNCPATTERN
 
-
-   void armv7l_set_address(void* destination, void* address)
-   {
-      size_t addr16, addr16_mov;
-      // Lower part (MOVW)
-      addr16 = (size_t)address & 0x0000FFFFUL; // 32-bit aligned lower part
-      addr16_mov = (addr16 | ((addr16 << 4) & 0x000F0000UL)) & 0x000F0FFFUL; // make imm4:imm12 bit mask
-      *(size_t*)destination = (*(size_t*)destination & 0xFFF0F000UL) | addr16_mov; // apply address correction
-      // Top part (MOVT)
-      addr16 = ((size_t)address & 0xFFFF0000UL) >> 16;
-      addr16_mov = (addr16 | ((addr16 << 4) & 0x000F0000UL)) & 0x000F0FFFUL;
-      *((size_t*)destination + 1) = (*((size_t*)destination + 1) & 0xFFF0F000UL) | addr16_mov;
-   } 
-
    G__InterfaceMethod Allocate_stub_function( StubContext_t* obj, 
                                               int (*fun)(StubContext_t*, G__value*, G__CONST char*, G__param*, int ) )
    {
       // Allocate a stub function.
       static FunctionCode_t s_func4arg(4);
       char* code = Allocate_code(s_func4arg.fCode, s_func4arg.fSize );
-      armv7l_set_address((void**)&code[s_func4arg.fa_offset], (void*)obj);
-      armv7l_set_address((void**)&code[s_func4arg.f_offset], (void*)fun);
+      *(void**)&code[s_func4arg.fa_offset] = (void*)obj;
+      *(void**)&code[s_func4arg.f_offset] = (void*)fun;
       obj->fMethodCode = (G__InterfaceMethod)code;
       return obj->fMethodCode;
    }
@@ -538,8 +524,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func0arg(0);
       char* code = Allocate_code(s_func0arg.fCode, s_func0arg.fSize);
-      armv7l_set_address((void**)&code[s_func0arg.fa_offset], (void*)obj);
-      armv7l_set_address((void**)&code[s_func0arg.f_offset], (void*)fun);
+      *(void**)&code[s_func0arg.fa_offset] = (void*)obj;
+      *(void**)&code[s_func0arg.f_offset] = (void*)fun;
       return (FuncVoidPtr_t)code;
    }
 
@@ -548,8 +534,8 @@ namespace ROOT { namespace Cintex {
       // Allocate a stub function.
       static FunctionCode_t s_func1arg(1);
       char* code = Allocate_code(s_func1arg.fCode, s_func1arg.fSize);
-      armv7l_set_address((void**)&code[s_func1arg.fa_offset], (void*)obj);
-      armv7l_set_address((void**)&code[s_func1arg.fa_offset], (void*)fun);
+      *(void**)&code[s_func1arg.fa_offset] = (void*)obj;
+      *(void**)&code[s_func1arg.fa_offset] = (void*)fun;
       return (FuncArg1Ptr_t)code;
    }
 
