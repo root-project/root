@@ -207,8 +207,12 @@ tryfile:
    u = s;
    t = s;
 again:
-   if ((s = strchr(t, '@')) && (((x = strchr(t, '/')) && s < x) ||
-       ((x = strchr(t, '?')) && s < x) || ((x = strchr(t, '#')) && s < x))) {
+   if ((s = strchr(t, '@')) && (
+       ((x = strchr(t, '/')) && s < x) ||
+       ((x = strchr(t, '?')) && s < x) ||
+       ((x = strchr(t, '#')) && s < x) ||
+       (!strchr(t, '/'))
+      )) {
       if (*(s-1) == '\\') {
          t = s+1;
          goto again;
