@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdexcept>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -894,16 +895,26 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       return;
 
    if (!pixelData) {
+      //I'd prefer an assert.
       Error("DrawPixels", "pixel data is null");
       return;
    }
    
+   if (std::numeric_limits<UInt_t>::digits >= 32) {
+      //TASImage uses bit 31 as ...
+      //alpha channel flag! FUUUUUUUUUUUUU .....   !!!
+      CLRBIT(width, 31);
+      CLRBIT(height, 31);
+   }
+   
    if (!width) {
+      //Assert is better.
       Error("DrawPixels", "invalid width");
       return;
    }
    
    if (!height) {
+      //Assert is better.
       Error("DrawPixels", "invalid height");
       return;
    }
@@ -921,10 +932,9 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       GLdouble oldPos[4] = {};
       //Save the previous raster pos.
       glGetDoublev(GL_CURRENT_RASTER_POSITION, oldPos);
-      
-      glRasterPos2d(rasterX, rasterY);
 
-      //TODO: Find something better than this ... (scale and translate?)
+      glRasterPos2d(rasterX, rasterY);
+      //Stupid asimage provides us upside-down image.
       std::vector<unsigned char> upsideDownImage(4 * width * height);
       const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
       unsigned char *dstLine = &upsideDownImage[0];
@@ -933,7 +943,7 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       
       glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
       
-      //Restore.
+      //Restore raster pos.
       glRasterPos2d(oldPos[0], oldPos[1]);
    } else
       Error("DrawPixels", "no pad found to draw");
