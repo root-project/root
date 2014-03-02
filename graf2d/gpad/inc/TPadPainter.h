@@ -68,8 +68,8 @@ public:
    void     SelectDrawable(Int_t device);
    
    //TASImage support (noop for a non-gl pad).
-   void     DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
-                       UInt_t width, UInt_t height, Int_t dstX, Int_t dstY);
+   void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
+                       Int_t dstX, Int_t dstY);
 
 
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);

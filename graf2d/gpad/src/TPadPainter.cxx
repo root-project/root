@@ -526,8 +526,8 @@ void TPadPainter::SelectDrawable(Int_t device)
 }
 
 //______________________________________________________________________________
-void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, Int_t /*srcX*/, Int_t /*srcY*/,
-                             UInt_t /*width*/, UInt_t /*height*/, Int_t /*dstX*/, Int_t /*dstY*/)
+void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width*/, UInt_t /*height*/,
+                             Int_t /*dstX*/, Int_t /*dstY*/)
 {
    //Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 }
