@@ -435,7 +435,7 @@ void TGL5DPainter::SetSurfaceColor(ConstSurfIter_t it)const
    //Set the color for iso-surface.
    Color_t ind = it->fColor;
    Float_t rgba[] = {0.f, 0.f, 0.f, static_cast<Float_t>(it->fAlpha / 100.)};
-   Rgl::Pad::ExtractRGB(ind, rgba);
+   Rgl::Pad::ExtractRGBA(ind, rgba);
    //Set color for surface.
    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, rgba);
    const Float_t specColor[] = {1.f, 1.f, 1.f, 1.f};
@@ -474,7 +474,7 @@ void TGL5DPainter::DrawSubCloud(Double_t v4, Double_t range, Color_t ci)const
    const TGLDisableGuard light(GL_LIGHTING);
 
    Float_t rgb[4] = {};
-   Rgl::Pad::ExtractRGB(ci, rgb);
+   Rgl::Pad::ExtractRGBA(ci, rgb);
 
    glColor3fv(rgb);
    glPointSize(3.f);
