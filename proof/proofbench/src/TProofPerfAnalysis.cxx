@@ -115,7 +115,7 @@ public:
 class TProofPerfAnalysis::TWrkInfoFile : public TNamed {
 public:
    TWrkInfoFile(const char *ord, const char *name) :  TNamed(ord, name) { }
-   ~TWrkInfoFile() {fPackets.SetOwner(kFALSE); fPackets.Clear();}
+   ~TWrkInfoFile() {fPackets.SetOwner(kFALSE); fPackets.Clear("nodelete");}
    TList     fPackets;          // Packest from this file processed by this worker
    void Print(Option_t *opt= "") const {
       if (!strcmp(opt, "R")) {
