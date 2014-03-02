@@ -109,6 +109,7 @@
 #include "TInterpreter.h"
 #include "TListOfTypes.h"
 #include "TListOfDataMembers.h"
+#include "TListOfEnums.h"
 #include "TListOfFunctions.h"
 #include "TFunctionTemplate.h"
 
@@ -422,7 +423,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    //fIdMap           = new IdMap_t;
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
-   fEnums           = new THashTable(200, 3); // FIXME: should be 1.2 * number of ROOT global enums at startup
 
    // initialize plugin manager early
    fPluginManager->LoadHandlersFromEnv(gEnv);
@@ -1357,6 +1357,15 @@ TObject *TROOT::GetGeometry(const char *name) const
    // Return pointer to Geometry with name
 
    return GetListOfGeometries()->FindObject(name);
+}
+
+//______________________________________________________________________________
+TCollection *TROOT::GetListOfEnums()
+{
+   if(!fEnums) {
+      fEnums = new TListOfEnums(0);
+   }
+   return fEnums;
 }
 
 //______________________________________________________________________________

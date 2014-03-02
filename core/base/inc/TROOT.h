@@ -54,6 +54,7 @@ class TClassGenerator;
 class TVirtualMutex;
 class TROOT;
 class TListOfDataMembers;
+class TListOfEnums;
 class TListOfFunctions;
 class TFunctionTemplate;
 
@@ -221,7 +222,7 @@ public:
    TSeqCollection   *GetListOfProofs() const { return fProofs; }
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
-   TCollection      *GetListOfEnums() const { return fEnums; }
+   TCollection      *GetListOfEnums();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}

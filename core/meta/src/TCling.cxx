@@ -62,6 +62,7 @@
 #include "compiledata.h"
 #include "TMetaUtils.h"
 #include "TVirtualCollectionProxy.h"
+#include "TListOfEnums.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -237,38 +238,10 @@ static void TCling__UpdateClassInfo(const NamedDecl* TD)
    }
 }
 
-void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) const
-{
-   // Handle new enum declaration for either global and nested enums.
-
-   // Get name of the enum type.
-   std::string buf;
-   if (const NamedDecl* ND = llvm::dyn_cast<NamedDecl>(D)) {
-      PrintingPolicy Policy(D->getASTContext().getPrintingPolicy());
-      llvm::raw_string_ostream stream(buf);
-      ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
-   }
-
-   // If the enum is unnamed we do not add it to the list of enums i.e unusable.
-   if (buf.empty()) return ;
-   const char* name = buf.c_str();
-
-   // Create the enum type.
-   TEnum* enumType = new TEnum(name, false /*!global*/, &D, cl);
-   // Check TEnum is created.
-   if (!enumType) {
-      Error ("HandleEnumDecl", "The enum type %s was not created.", name);
-   } else {
-      // Add global enums to the list of globals TEnums.
-      if (isGlobal) {
-         gROOT->GetListOfEnums()->Add(enumType);
-      } else {
-         cl->fEnums->Add(enumType);
-      }
-   }
-
-   // Add the constants to the enum type.
-   if (const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D)) {
+void TCling::UpdateEnumConstants(TEnum* enumObj, TClass* cl) const {
+   const clang::Decl* D = static_cast<const clang::Decl*>(enumObj->GetDeclId());
+   if(const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(D)) {
+      // Add the constants to the enum type.
       for (EnumDecl::enumerator_iterator EDI = ED->enumerator_begin(),
                 EDE = ED->enumerator_end(); EDI != EDE; ++EDI) {
          // Get name of the enum type.
@@ -291,19 +264,46 @@ void TCling::HandleEnumDecl(const clang::Decl* D, bool isGlobal, TClass *cl) con
 
          // Create the TEnumConstant.
          TEnumConstant* enumConstant = new TEnumConstant((DataMemberInfo_t*)new TClingDataMemberInfo(fInterpreter, *EDI, (TClingClassInfo*)(cl ? cl->GetClassInfo() : 0))
-                                                         , constantName, value, enumType);
-         // Check that the constant was created.
-         if (!enumConstant) {
-            Error ("HandleEnumDecl", "The enum constant %s was not created.", constantName);
-         } else {
-            // Add the global constants to the list of Globals.
-            if (isGlobal) {
-               gROOT->GetListOfGlobals()->Add(enumConstant);
-            }
+                                                         , constantName, value, enumObj);
 
+         // Add the global constants to the list of Globals.
+         if (!cl) {
+            TCollection* globals = gROOT->GetListOfGlobals(false);
+            if (!globals->FindObject(constantName)) {
+               globals->Add(enumConstant);
+            }
          }
       }
    }
+}
+
+TEnum* TCling::CreateEnum(void *VD, TClass *cl) const
+{
+   // Handle new enum declaration for either global and nested enums.
+
+   // Create the enum type.
+   TEnum* enumType = 0;
+   const clang::Decl* D = static_cast<const clang::Decl*>(VD);
+   std::string buf;
+   if (const EnumDecl* ED = llvm::dyn_cast<EnumDecl>(D)) {
+      // Get name of the enum type.
+      PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
+      llvm::raw_string_ostream stream(buf);
+      ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+      // If the enum is unnamed we do not add it to the list of enums i.e unusable.
+   }
+   if (buf.empty()) {
+      return 0;
+   }
+   const char* name = buf.c_str();
+   if (cl) {
+      enumType = new TEnum(name, VD, cl);
+   } else {
+      enumType = new TEnum(name, VD, cl);
+   }
+   UpdateEnumConstants(enumType, cl);
+
+   return enumType;
 }
 
 void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*> &modifiedTClasses) {
@@ -360,10 +360,13 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
          return;
 
-      // ROOT says that global is enum/var/field declared on the global
-      // scope.
+      // Enums are lazyly created, thus we don not need to handle them here.
+      if (isa<EnumDecl>(ND))
+         return;
 
-      if (!(isa<EnumDecl>(ND) || isa<VarDecl>(ND)))
+      // ROOT says that global is enum(lazylycreated)/var/field declared on the global
+      // scope.
+      if (!(isa<VarDecl>(ND)))
          return;
 
       // Skip if already in the list.
@@ -371,16 +374,9 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          return;
 
       // Put the global constants and global enums in the coresponding lists.
-      if (const EnumDecl *ED = dyn_cast<EnumDecl>(D)) {
-         if (!gROOT->GetListOfEnums()->FindObject(ND->getNameAsString().c_str())) {
-            HandleEnumDecl(ED, true /* is global*/);
-         }
-      } else {
-         gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
-                                                    new TClingDataMemberInfo(fInterpreter,
-                                                                             cast<ValueDecl>(ND), 0)));
-      }
-
+      gROOT->GetListOfGlobals()->Add(new TGlobal((DataMemberInfo_t *)
+                                                new TClingDataMemberInfo(fInterpreter,
+                                                                        cast<ValueDecl>(ND), 0)));
    }
 }
 
@@ -478,7 +474,6 @@ void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
       }
       // Could trigger deserialization of decls.
       cling::Interpreter::PushTransactionRAII RAII(interp);
-      ((TCling*)gCling)->UpdateListOfEnums(*I);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
 
@@ -2494,17 +2489,19 @@ void TCling::CreateListOfBaseClasses(TClass* cl) const
 }
 
 //______________________________________________________________________________
-void TCling::CreateListOfEnums(TClass* cl) const
+void TCling::LoadEnums(TClass* cl) const
 {
    // Create list of pointers to enums for TClass cl.
    R__LOCKGUARD2(gInterpreterMutex);
-   if (cl->fEnums) {
-      return;
-   }
-   cl->fEnums = new TList;
-   cl->fEnums->SetOwner();
-   const Decl * D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
 
+   const Decl * D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
+   TListOfEnums* enumList;
+   if (cl) {
+      enumList = (TListOfEnums*)cl->GetListOfEnums(false);
+   }
+   else {
+      enumList = (TListOfEnums*)gROOT->GetListOfEnums();
+   }
    // Iterate on the decl of the class and get the enums.
    if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
       cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
@@ -2517,7 +2514,18 @@ void TCling::CreateListOfEnums(TClass* cl) const
          for (clang::DeclContext::decl_iterator DI = (*declIter)->decls_begin(),
               DE = (*declIter)->decls_end(); DI != DE; ++DI) {
             if (const clang::EnumDecl* ED = dyn_cast<clang::EnumDecl>(*DI)) {
-               HandleEnumDecl(ED, false /* not global*/, cl);
+               // Get name of the enum type.
+               std::string buf;
+               PrintingPolicy Policy(ED->getASTContext().getPrintingPolicy());
+               llvm::raw_string_ostream stream(buf);
+               ED->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
+               stream.flush();
+               // If the enum is unnamed we do not add it to the list of enums i.e unusable.
+               if (!buf.empty()) {
+                  const char* name = buf.c_str();
+                  // Add the enum to the list of loaded enums.
+                  enumList->Get(ED, name);
+               }
             }
          }
       }
@@ -2548,15 +2556,6 @@ void TCling::UpdateListOfMethods(TClass* cl) const
    // Update the list of pointers to method for TClass cl
    // This is now a nop.  The creation and updating is handled in
    // TListOfFunctions.
-}
-
-//______________________________________________________________________________
-void TCling::UpdateListOfEnums(TClass* cl) const
-{
-   // Update the list of pointers to enums for TClass cl.
-   delete cl->fEnums;
-   cl->fEnums = 0;
-   CreateListOfEnums(cl);
 }
 
 //______________________________________________________________________________
@@ -2760,6 +2759,42 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
       d = gcl.GetDataMember(name);
    }
    return d;
+}
+
+//______________________________________________________________________________
+TInterpreter::DeclId_t TCling::GetEnum(TClass *cl, const char *name) const
+{
+   // Return pointer to cling Decl of global/static variable that is located
+   // at the address given by addr.
+
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   const clang::Decl* possibleEnum = 0;
+   // FInd the context of the decl.
+   if (cl) {
+      TClingClassInfo *cci = (TClingClassInfo*)cl->GetClassInfo();
+      if (cci) {
+         const clang::DeclContext* dc = 0;
+         if (const clang::Decl* D = cci->GetDecl()) {
+            if (!(dc = dyn_cast<clang::NamespaceDecl>(D))) {
+               dc = dyn_cast<clang::RecordDecl>(D);
+            }
+         }
+         if (dc) {
+            // If it is a data member enum.
+            possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name, dc);
+         } else {
+            Error("TCling::GetEnum", "DeclContext not found for %s .\n", name);
+         }
+      }
+   } else {
+      // If it is a global enum.
+      possibleEnum = cling::utils::Lookup::Named(&fInterpreter->getSema(), name);
+   }
+   if (possibleEnum && isa<clang::EnumDecl>(possibleEnum)) {
+      return possibleEnum;
+   }
+   return 0;
 }
 
 //______________________________________________________________________________

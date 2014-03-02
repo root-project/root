@@ -38,20 +38,3 @@ TEnumConstant::~TEnumConstant()
 {
    //Destructor
 }
-
-//______________________________________________________________________________
-Bool_t TEnumConstant::Update(DataMemberInfo_t * /* info */)
-{
-   // Update the TFunction to reflect the new info.
-   //
-   // This can be used to implement unloading (info == 0) and then reloading
-   // (info being the 'new' decl address).
-
-
-   // Technically the TEnum and the value could have change after a reload.
-   // However unloading of enums does not work yet and
-   // the necessary routines are not yet available in TInterpreter.h
-   // (to get the value of the constant in particular).
-   // So assume nothing has change since last time.
-   return kFALSE;
-}
