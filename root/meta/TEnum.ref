@@ -1,7 +1,7 @@
 
 Processing runTEnum.C...
 Enums in A::B::C:
-Collection name='TList', class='TList', size=2
+Collection name='TListOfEnums', class='TListOfEnums', size=2
  OBJ: TEnum	enumC1	An enum type
  OBJ: TEnum	enumC2	An enum type
 Collection name='THashList', class='THashList', size=2
@@ -10,7 +10,7 @@ Collection name='THashList', class='THashList', size=2
 
 
 Enums in N:
-Collection name='TList', class='TList', size=1
+Collection name='TListOfEnums', class='TListOfEnums', size=1
  OBJ: TEnum	namespaceEnum	An enum type
 Collection name='THashList', class='THashList', size=1
  OBJ: TEnumConstant	kNamespace	
