@@ -131,7 +131,7 @@ FillAttribSet::FillAttribSet(const PolygonStippleSet &set, Bool_t ignoreStipple)
 
    // Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   ExtractRGB(gVirtualX->GetFillColor(), rgba);
+   ExtractRGBA(gVirtualX->GetFillColor(), rgba);
    fAlpha = rgba[3];
    if (fAlpha<1.) {
       glEnable(GL_BLEND);
@@ -188,7 +188,7 @@ LineAttribSet::LineAttribSet(Bool_t smooth, UInt_t stipple, Double_t maxWidth, B
 
    //Color and transparency
    Float_t rgba[] = {0.f, 0.f, 0.f, 0.8f};
-   ExtractRGB(gVirtualX->GetLineColor(), rgba);
+   ExtractRGBA(gVirtualX->GetLineColor(), rgba);
    fAlpha = rgba[3];
    if (fAlpha<0.8) {
       glEnable(GL_BLEND);
@@ -666,12 +666,12 @@ Double_t GLLimits::GetMaxPointSize()const
 
 
 //______________________________________________________________________________
-void ExtractRGB(Color_t colorIndex, Float_t *rgb)
+void ExtractRGBA(Color_t colorIndex, Float_t *rgba)
 {
    const TColor *color = gROOT->GetColor(colorIndex);
    if (color) {
-      color->GetRGB(rgb[0], rgb[1], rgb[2]);
-      rgb[3] = color->GetAlpha();
+      color->GetRGB(rgba[0], rgba[1], rgba[2]);
+      rgba[3] = color->GetAlpha();
    }
 }
 

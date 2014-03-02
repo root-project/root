@@ -617,8 +617,8 @@ void TGLPadPainter::DrawPolyMarker()
    glMatrixMode(GL_MODELVIEW);
    //
    Float_t rgba[4] = {};
-   Rgl::Pad::ExtractRGB(gVirtualX->GetMarkerColor(), rgba);
-   glColor3fv(rgba);
+   Rgl::Pad::ExtractRGBA(gVirtualX->GetMarkerColor(), rgba);
+   glColor4fv(rgba);
 
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = gVirtualX->GetMarkerStyle();
@@ -699,8 +699,8 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
    glMatrixMode(GL_MODELVIEW);
 
    Float_t rgba[4] = {};
-   Rgl::Pad::ExtractRGB(gVirtualX->GetTextColor(), rgba);
-   glColor3fv(rgba);
+   Rgl::Pad::ExtractRGBA(gVirtualX->GetTextColor(), rgba);
+   glColor4fv(rgba);
 
    //10 is the first valid font index.
    //20 is FreeSerifBold, as in TTF.cxx and in TGLFontManager.cxx.

@@ -205,7 +205,7 @@ private:
    Bool_t fTop;
 };
 
-void ExtractRGB(Color_t colorIndex, Float_t * rgb);
+void ExtractRGBA(Color_t colorIndex, Float_t *rgba);
 
 class GLLimits {
 public:
