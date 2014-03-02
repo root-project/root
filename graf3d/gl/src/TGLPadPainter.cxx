@@ -888,57 +888,65 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 }
 
 //______________________________________________________________________________
-void TGLPadPainter::DrawPixels(const unsigned char *pixelData, Int_t srcX, Int_t srcY,
-                               UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
+void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
+                               Int_t dstX, Int_t dstY)
 {
-   //TODO: simplify the interface and get rid of src coords.
-   //TODO: test that height and width are reasonable
-   //(not using high-order bit for transparency).
-
-   (void)srcX;
-   (void)srcY;
-   
    if (fLocked)
       return;
 
    if (!pixelData) {
-      Error("DrawPixels", "pixelData is null");
+      //I'd prefer an assert.
+      Error("DrawPixels", "pixel data is null");
       return;
    }
    
-   if ((UInt_t)TMath::Abs(srcX) >= width) {
-      Error("DrawPixel", "invalid srcX");
+   if (std::numeric_limits<UInt_t>::digits >= 32) {
+      //TASImage uses bit 31 as ...
+      //alpha channel flag! FUUUUUUUUUUUUU .....   !!!
+      CLRBIT(width, 31);
+      CLRBIT(height, 31);
+   }
+   
+   if (!width) {
+      //Assert is better.
+      Error("DrawPixels", "invalid width");
       return;
    }
    
-   if ((UInt_t)TMath::Abs(srcY) >= height) {
-      Error("DrawPixel", "invalid srcY");
+   if (!height) {
+      //Assert is better.
+      Error("DrawPixels", "invalid height");
       return;
    }
    
-   srcX = TMath::Max(srcX, Int_t(0));
-   srcY = TMath::Max(srcY, Int_t(0));
+   if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
+      //TASImage passes pixel coordinates in pad's pixmap coordinate space.
+      //While glRasterPosX said to work with 'window' coordinates,
+      //this 'window' means only the coordinate system is top-left-corner based.
+      //X and Y itself must be in our own coordiantes system, as specified in SelectDrawable.
+      const Double_t rasterX = Double_t(dstX) / (pad->GetAbsWNDC() * pad->GetWw()) *
+                                (pad->GetX2() - pad->GetX1()) + pad->GetX1();
+      const Double_t rasterY = Double_t(dstY) / (pad->GetAbsHNDC() * pad->GetWh()) *
+                                (pad->GetY2() - pad->GetY1()) + pad->GetY1();
 
-   GLint oldPos[4] = {};
-   glGetIntegerv(GL_CURRENT_RASTER_POSITION, oldPos);
-   
-   glRasterPos2i(dstX, dstY);
-   //
-   glPixelStorei(GL_PACK_ALIGNMENT, 1);
-   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+      GLdouble oldPos[4] = {};
+      //Save the previous raster pos.
+      glGetDoublev(GL_CURRENT_RASTER_POSITION, oldPos);
 
-   //HOHOHO! FUGLY-FUGLY!!!
-   //TODO: use scale and translate instead!
-   std::vector<unsigned char> upsideDownImage(4 * width * height);
-   const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
-   unsigned char *dstLine = &upsideDownImage[0];
-   for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
-      std::copy(srcLine, srcLine + 4 * width, dstLine);
-   
-   glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
-   
-   //
-   glRasterPos2i(oldPos[0], oldPos[1]);
+      glRasterPos2d(rasterX, rasterY);
+      //Stupid asimage provides us upside-down image.
+      std::vector<unsigned char> upsideDownImage(4 * width * height);
+      const unsigned char *srcLine = pixelData + 4 * width * (height - 1);
+      unsigned char *dstLine = &upsideDownImage[0];
+      for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
+         std::copy(srcLine, srcLine + 4 * width, dstLine);
+      
+      glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
+      
+      //Restore raster pos.
+      glRasterPos2d(oldPos[0], oldPos[1]);
+   } else
+      Error("DrawPixels", "no pad found to draw");
 }
 
 //Aux. functions.
