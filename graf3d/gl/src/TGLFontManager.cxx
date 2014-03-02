@@ -563,6 +563,16 @@ TGLFontManager::FontSizeVec_t* TGLFontManager::GetFontSizeArray()
 }
 
 //______________________________________________________________________________
+Int_t TGLFontManager::GetExtendedFontStartIndex()
+{
+   if (fgStaticInitDone == kFALSE) InitStatics();
+
+   assert(fgExtendedFontStart > 0 && "GetExtendedFontStartIndex, invalid index");
+   
+   return fgExtendedFontStart;
+}
+
+//______________________________________________________________________________
 Int_t TGLFontManager::GetFontSize(Int_t ds)
 {
    // Get availabe font size.
