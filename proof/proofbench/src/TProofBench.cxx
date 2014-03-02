@@ -333,8 +333,8 @@ Int_t TProofBench::RunCPU(Long64_t nevents, Int_t start, Int_t stop, Int_t step)
    fUnlinkOutfile = kFALSE;
 
    SafeDelete(fRunCPU);
-   TPBHistType htype(TPBHistType::kHist1D);
-   fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
+   TPBHistType *htype = new TPBHistType(TPBHistType::kHist1D); // Owned by the input list
+   fRunCPU = new TProofBenchRunCPU(htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
    fRunCPU->Run(nevents, start, stop, step, fNtries, fDebug, -1);
@@ -361,8 +361,8 @@ Int_t TProofBench::RunCPUx(Long64_t nevents, Int_t start, Int_t stop)
    fUnlinkOutfile = kFALSE;
 
    SafeDelete(fRunCPU);
-   TPBHistType htype(TPBHistType::kHist1D);
-   fRunCPU = new TProofBenchRunCPU(&htype, fNHist, fOutFile);
+   TPBHistType *htype = new TPBHistType(TPBHistType::kHist1D); // Owned by the input list
+   fRunCPU = new TProofBenchRunCPU(htype, fNHist, fOutFile);
    if (!fCPUSel.IsNull()) fRunCPU->SetSelName(fCPUSel);
    if (!fCPUPar.IsNull()) fRunCPU->SetParList(fCPUPar);
    fRunCPU->Run(nevents, start, stop, -2, fNtries, fDebug, -1);
