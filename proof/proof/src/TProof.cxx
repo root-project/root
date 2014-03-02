@@ -1749,6 +1749,7 @@ void TProof::Close(Option_t *opt)
          fAllUniqueSlaves->Clear("nodelete");
          fNonUniqueMasters->Clear("nodelete");
          fBadSlaves->Clear("nodelete");
+         fInactiveSlaves->Clear("nodelete");
          fSlaves->Delete();
       }
    }
