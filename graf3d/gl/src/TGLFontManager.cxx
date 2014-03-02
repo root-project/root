@@ -413,6 +413,7 @@ void TGLFont::PostRender() const
 ClassImp(TGLFontManager);
 
 TObjArray   TGLFontManager::fgFontFileArray;
+Int_t TGLFontManager::fgExtendedFontStart;
 TGLFontManager::FontSizeVec_t TGLFontManager::fgFontSizeArray;
 Bool_t  TGLFontManager::fgStaticInitDone = kFALSE;
 
@@ -450,7 +451,10 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
       ttpath = gEnv->GetValue("Root.TTGLFontPath", "$(ROOTSYS)/fonts");
 # endif
       {
-         char *fp = gSystem->Which(ttpath, ((TObjString*)fgFontFileArray[fileID])->String());
+         //For extenede we have both ttf and otf.
+         char *fp = gSystem->Which(ttpath, fileID < fgExtendedFontStart ?
+                                   ((TObjString*)fgFontFileArray[fileID])->String() + ".ttf" :
+                                   ((TObjString*)fgFontFileArray[fileID])->String());
          file = fp;
          delete [] fp;
       }
@@ -478,7 +482,7 @@ void TGLFontManager::RegisterFont(Int_t sizeIn, Int_t fileID, TGLFont::EMode mod
             ftfont = new FTGLTextureFont(file);
             break;
          default:
-            Error("TGLFontManager::GetFont", "invalid FTGL type");
+            Error("TGLFontManager::RegisterFont", "invalid FTGL type");
             return;
             break;
       }
@@ -514,10 +518,10 @@ void TGLFontManager::RegisterFont(Int_t size, const char* name, TGLFont::EMode m
       cnt++;
    }
 
-   if (cnt < farr->GetSize())
+   if (cnt < farr->GetEntries())
       RegisterFont(size, cnt, mode, out);
    else
-      Error("TGLFontManager::GetFont", "unknown font name %s", name);
+      Error("TGLFontManager::RegisterFont", "unknown font name %s", name);
 }
 
 //______________________________________________________________________________
@@ -596,17 +600,37 @@ const char* TGLFontManager::GetFontNameFromId(Int_t id)
       fontIndex -= 1;
 
    TObjString* os = (TObjString*)fgFontFileArray[fontIndex];
-
-   return os ? os->String().Data() : "arialbd";
+   return os->String().Data();
 }
 
 //______________________________________________________________________________
 void TGLFontManager::InitStatics()
 {
    // Create a list of available font files and allowed font sizes.
+   fgFontFileArray.Add(new TObjString("timesi"));   //  10
+   fgFontFileArray.Add(new TObjString("timesbd"));  //  20
+   fgFontFileArray.Add(new TObjString("timesbi"));  //  30
 
-   fgFontFileArray.Add(new TObjString("FreeSerifItalic.otf"));      //  10
-   fgFontFileArray.Add(new TObjString("FreeSerifBold.otf"));        //  20
+   fgFontFileArray.Add(new TObjString("arial"));    //  40
+   fgFontFileArray.Add(new TObjString("ariali"));   //  50
+   fgFontFileArray.Add(new TObjString("arialbd"));  //  60
+   fgFontFileArray.Add(new TObjString("arialbi"));  //  70
+
+   fgFontFileArray.Add(new TObjString("cour"));     //  80
+   fgFontFileArray.Add(new TObjString("couri"));    //  90
+   fgFontFileArray.Add(new TObjString("courbd"));   // 100
+   fgFontFileArray.Add(new TObjString("courbi"));   // 110
+
+   fgFontFileArray.Add(new TObjString("symbol"));   // 120
+   fgFontFileArray.Add(new TObjString("times"));    // 130
+   fgFontFileArray.Add(new TObjString("wingding")); // 140
+   fgFontFileArray.Add(new TObjString("symbol"));   // 150
+
+   fgExtendedFontStart = fgFontFileArray.GetEntries();
+   //"Extended" fonts for gl-pad.
+   //fgPadFontStart + ...
+   fgFontFileArray.Add(new TObjString("FreeSerifItalic.otf"));      //  10 (160)
+   fgFontFileArray.Add(new TObjString("FreeSerifBold.otf"));        //  20 (170)
    fgFontFileArray.Add(new TObjString("FreeSerifBoldItalic.otf"));  //  30
 
    fgFontFileArray.Add(new TObjString("FreeSans.otf"));             //  40

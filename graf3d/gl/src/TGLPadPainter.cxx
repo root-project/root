@@ -701,9 +701,20 @@ void TGLPadPainter::DrawTextHelper(Double_t x, Double_t y, const Char *text, ETe
    Rgl::Pad::ExtractRGB(gVirtualX->GetTextColor(), rgba);
    glColor3fv(rgba);
 
-   fFM.RegisterFont(TMath::Max(Int_t(gVirtualX->GetTextSize()) - 1, 10),
-                            TGLFontManager::GetFontNameFromId(gVirtualX->GetTextFont()),
-                            TGLFont::kTexture, fF);
+   //10 is the first valid font index.
+   //20 is FreeSerifBold, as in TTF.cxx and in TGLFontManager.cxx.
+   //shift - is the shift to access "extended" fonts.
+   const Int_t shift = TGLFontManager::GetExtendedFontStartIndex();
+   
+   Int_t fontIndex = TMath::Max(Short_t(10), gVirtualX->GetTextFont());
+   if (fontIndex / 10 + shift > TGLFontManager::GetFontFileArray()->GetEntries())
+      fontIndex = 20 + shift * 10;
+   else
+      fontIndex += shift * 10;
+
+   fFM.RegisterFont(TMath::Max(Int_t(gVirtualX->GetTextSize()) - 1, 10),//kTexture does not work if size < 10.
+                               TGLFontManager::GetFontNameFromId(fontIndex),
+                               TGLFont::kTexture, fF);
    fF.PreRender();
 
    const UInt_t padH = UInt_t(gPad->GetAbsHNDC() * gPad->GetWh());
