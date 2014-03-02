@@ -261,7 +261,12 @@ void TGLPadPainter::SelectDrawable(Int_t /*device*/)
 
       py = gPad->GetWh() - py;
       //
-      glViewport(px, py, GLsizei(gPad->GetWw() * pad->GetAbsWNDC()), GLsizei(gPad->GetWh() * pad->GetAbsHNDC()));
+      TGLUtil::InitializeIfNeeded();
+      const Float_t scale = TGLUtil::GetScreenScalingFactor();
+      
+      glViewport(GLint(px * scale), GLint(py * scale),
+                 GLsizei(gPad->GetWw() * pad->GetAbsWNDC() * scale),
+                 GLsizei(gPad->GetWh() * pad->GetAbsHNDC() * scale));
 
       glMatrixMode(GL_PROJECTION);
       glLoadIdentity();
