@@ -64,7 +64,7 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
-   virtual TObject   *FindObject(TObject *obj) const;
+   virtual TObject   *FindObject(const TObject *obj) const;
    virtual TList     *GetListForObject(const char* name) const;
    virtual TList     *GetListForObject(const TObject* obj) const;
 

@@ -188,7 +188,7 @@ TObject *TListOfEnums::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TListOfEnums::FindObject(TObject *obj) const
+TObject *TListOfEnums::FindObject(const TObject *obj) const
 {
    // Specialize FindObject to do search for the
    // a enum or create it if its not already in the list

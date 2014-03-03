@@ -187,7 +187,7 @@ TObject *TListOfFunctions::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TListOfFunctions::FindObject(TObject *obj) const
+TObject *TListOfFunctions::FindObject(const TObject *obj) const
 {
    // Specialize FindObject to do search for the
    // a function or create it if its not already in the list

@@ -59,7 +59,7 @@ public:
 
    using THashList::FindObject;
    virtual TObject   *FindObject(const char *name) const;
-   virtual TObject   *FindObject(TObject *obj) const;
+   virtual TObject   *FindObject(const TObject *obj) const;
 
    TEnum *Get(DeclId_t id, const char *name);
 
