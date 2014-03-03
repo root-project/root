@@ -205,7 +205,7 @@ if(NOT WIN32 AND ROOT_xrootd_FOUND)
   ROOT_EXECUTABLE(stressProof stressProof.cxx LIBRARIES Proof ProofPlayer Hist)
   ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// 
                                          -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
-                                         -l /tmp/stressProof-%d.log -cleanlog -noprogress
+                                         -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
                                          FAILREGEX "FAILED")  
 endif()
 
