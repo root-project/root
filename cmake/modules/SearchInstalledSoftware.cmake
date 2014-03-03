@@ -608,6 +608,8 @@ if(cling)
                  -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                  -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                  -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+                 -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                 -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                  -DLLVM_NOCLING=ON
     )
     #---The list of libraires is optatined by runnning 'llvm-config --libs'
@@ -681,6 +683,9 @@ if(cling)
                -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+
     )
     set(CLING_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CLING-install/include)
     set(CLING_LIBRARIES ${CMAKE_BINARY_DIR}/CLING-install/lib/libclingInterpreter.a
