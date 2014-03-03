@@ -203,7 +203,8 @@ int stressProof(const char *url = 0,
                 const char *h1src = 0, const char *eventsrc = 0,
                 Bool_t dryrun = kFALSE, Bool_t showcpu = kFALSE,
                 Bool_t clearcache = kFALSE, Bool_t useprogress = kTRUE,
-                const char *tutdir = 0, Bool_t cleanlog = kFALSE, Bool_t keeplog = kTRUE);
+                const char *tutdir = 0, Bool_t cleanlog = kFALSE,
+                Bool_t keeplog = kTRUE, Bool_t catlog = kFALSE);
 
 //_____________________________batch only_____________________
 #ifndef __CINT__
@@ -241,12 +242,15 @@ int main(int argc,const char *argv[])
       printf("                 The log file path can be also passed via the env STRESSPROOF_LOGFILE.\n");
       printf("                 In case of failure, the log files of the nodes (master and workers) are saved into\n");
       printf("                 a file called <logfile>.nodes .\n");
-      printf("   -c,-cleanlog  Delete the logfile specified via '-l' in case of a successful run; by default\n");
+      printf("   -c,-cleanlog  delete the logfile specified via '-l' in case of a successful run; by default\n");
       printf("                 the file specified by '-l' is kept in all cases (default log files are deleted\n");
       printf("                 on success); adding this switch allows to keep a user-defined log file only\n");
       printf("                 in case of error.\n");
-      printf("   -k,-keeplog   Keep all logfiles, including the ones fro the PROOF nodes (in one single file).\n");
+      printf("   -k,-keeplog   keep all logfiles, including the ones from the PROOF nodes (in one single file)\n");
       printf("                 The paths are printed on the screen.\n");
+      printf("   -catlog       prints all the logfiles (also the ones from PROOF nodes) on stdout; useful for");
+      printf("                 presenting a single aggregated output for automatic tests. If specified in\n");
+      printf("                 conjunction with -cleanlog it will only print the logfiles in case of errors\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
       printf("   -ds           force the dataset test if skipped by default\n");
       printf("   -t tests      run only tests in the comma-separated list and those from which they\n");
@@ -289,6 +293,7 @@ int main(int argc,const char *argv[])
    Bool_t useprogress = kTRUE;
    Bool_t cleanlog = kFALSE;
    Bool_t keeplog = kFALSE;
+   Bool_t catlog = kFALSE;
    const char *logfile = 0;
    const char *h1src = 0;
    const char *eventsrc = 0;
@@ -323,11 +328,14 @@ int main(int argc,const char *argv[])
             logfile = argv[i+1];
             i += 2;
          }
-      } else if (!strncmp(argv[i],"-c",2) || !strncmp(argv[i],"-cleanlog",11)) {
+      } else if (!strcmp(argv[i], "-c") || !strcmp(argv[i], "-cleanlog")) {
          cleanlog = kTRUE;
          i++;
-      } else if (!strncmp(argv[i],"-k",2) || !strncmp(argv[i],"-keeplog",10)) {
+      } else if (!strcmp(argv[i], "-k") || !strcmp(argv[i], "-keeplog")) {
          keeplog = kTRUE;
+         i++;
+      } else if (!strcmp(argv[i], "-catlog")) {
+         catlog = kTRUE;
          i++;
       } else if (!strncmp(argv[i],"-v",2)) {
          // For backward compatibility
@@ -404,7 +412,8 @@ int main(int argc,const char *argv[])
    }
 
    int rc = stressProof(url, tests, nWrks, verbose, logfile, gDynamicStartup, gSkipDataSetTest,
-                        h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir, cleanlog, keeplog);
+                        h1src, eventsrc, dryrun, showcpu, clearcache, useprogress, tutdir, cleanlog,
+                        keeplog, catlog);
 
    gSystem->Exit(rc);
 }
@@ -795,7 +804,7 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
                 const char *verbose, const char *logfile, Bool_t dyn, Bool_t skipds,
                 const char *h1src, const char *eventsrc,
                 Bool_t dryrun, Bool_t showcpu, Bool_t clearcache, Bool_t useprogress,
-                const char *tutdir, Bool_t cleanlog, Bool_t keeplog)
+                const char *tutdir, Bool_t cleanlog, Bool_t keeplog, Bool_t catlog)
 {
    printf("******************************************************************\n");
    printf("*  Starting  P R O O F - S T R E S S  suite                      *\n");
@@ -1267,6 +1276,43 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
       }         
       printf("******************************************************************\n");
       printf(" Main log file kept at %s (Proof logs in %s)\n", glogfile.Data(), logfiles.Data());
+      if (catlog) {
+
+         // Display all logfiles directly on this terminal. Useful for getting
+         // test results without accessing the test machine (i.e. with CDash)
+         const size_t readbuf_size = 500;
+         char readbuf[readbuf_size];
+
+         printf("******************************************************************\n");
+         printf("Content of the main log file: %s\n", glogfile.Data());
+         printf("******************************************************************\n");
+         ifstream glogfile_is( glogfile.Data() );
+         if (!glogfile_is) {
+            printf("Cannot open %s", glogfile.Data());
+         }
+         else {
+            while ( glogfile_is.good() ) {
+               glogfile_is.getline(readbuf, readbuf_size);
+               cout << readbuf << endl;
+            }
+            glogfile_is.close();
+         }
+
+         printf("******************************************************************\n");
+         printf("Content of the PROOF servers log files: %s\n", logfiles.Data());
+         printf("******************************************************************\n");
+         ifstream logfiles_is( logfiles.Data() );
+         if (!logfiles_is) {
+            printf("Cannot open %s", logfiles.Data());
+         }
+         else {
+            while ( logfiles_is.good() ) {
+               logfiles_is.getline(readbuf, readbuf_size);
+               cout << readbuf << endl;
+            }
+            logfiles_is.close();
+         }
+      }
    } else {
       // Remove log file if not passed by the user
       gSystem->Unlink(glogfile);
