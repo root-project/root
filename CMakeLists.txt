@@ -35,6 +35,10 @@ include(MacroEnsureVersion)
 
 #---Enable CTest package -----------------------------------------------------------------------
 #include(CTest)
+if(testing)
+  enable_testing()
+endif()
+
 #---Check if the user wants to build the project in the source directory------------------------
 ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
