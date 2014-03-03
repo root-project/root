@@ -88,14 +88,11 @@ struct PointerAlignElem {
   bool operator==(const PointerAlignElem &rhs) const;
 };
 
-
-/// DataLayout - This class holds a parsed version of the target data layout
-/// string in a module and provides methods for querying it.  The target data
-/// layout string is specified *by the target* - a frontend generating LLVM IR
-/// is required to generate the right target data for the target being codegen'd
-/// to.  If some measure of portability is desired, an empty string may be
-/// specified in the module.
-class DataLayout : public ImmutablePass {
+/// This class holds a parsed version of the target data layout string in a
+/// module and provides methods for querying it. The target data layout string
+/// is specified *by the target* - a frontend generating LLVM IR is required to
+/// generate the right target data for the target being codegen'd to.
+class DataLayout {
 private:
   bool          LittleEndian;          ///< Defaults to false
   unsigned      StackNaturalAlign;     ///< Stack natural alignment
@@ -113,12 +110,20 @@ private:
 
   /// Alignments - Where the primitive type alignment data is stored.
   ///
-  /// @sa init().
+  /// @sa reset().
   /// @note Could support multiple size pointer alignments, e.g., 32-bit
   /// pointers vs. 64-bit pointers by extending LayoutAlignment, but for now,
   /// we don't.
   SmallVector<LayoutAlignElem, 16> Alignments;
-  DenseMap<unsigned, PointerAlignElem> Pointers;
+  typedef SmallVector<PointerAlignElem, 8> PointersTy;
+  PointersTy Pointers;
+
+  PointersTy::const_iterator
+  findPointerLowerBound(uint32_t AddressSpace) const {
+    return const_cast<DataLayout *>(this)->findPointerLowerBound(AddressSpace);
+  }
+
+  PointersTy::iterator findPointerLowerBound(uint32_t AddressSpace);
 
   /// InvalidAlignmentElem - This member is a signal that a requested alignment
   /// type and bit width were not found in the SmallVector.
@@ -164,42 +169,38 @@ private:
   /// malformed.
   void parseSpecifier(StringRef LayoutDescription);
 
-public:
-  /// Default ctor.
-  ///
-  /// @note This has to exist, because this is a pass, but it should never be
-  /// used.
-  DataLayout();
+  // Free all internal data structures.
+  void clear();
 
-  /// Constructs a DataLayout from a specification string. See init().
-  explicit DataLayout(StringRef LayoutDescription)
-    : ImmutablePass(ID) {
-    init(LayoutDescription);
+public:
+  /// Constructs a DataLayout from a specification string. See reset().
+  explicit DataLayout(StringRef LayoutDescription) : LayoutMap(0) {
+    reset(LayoutDescription);
   }
 
   /// Initialize target data from properties stored in the module.
   explicit DataLayout(const Module *M);
 
-  DataLayout(const DataLayout &DL) :
-    ImmutablePass(ID),
-    LittleEndian(DL.isLittleEndian()),
-    StackNaturalAlign(DL.StackNaturalAlign),
-    ManglingMode(DL.ManglingMode),
-    LegalIntWidths(DL.LegalIntWidths),
-    Alignments(DL.Alignments),
-    Pointers(DL.Pointers),
-    LayoutMap(0)
-  { }
+  DataLayout(const DataLayout &DL) : LayoutMap(0) { *this = DL; }
+
+  DataLayout &operator=(const DataLayout &DL) {
+    clear();
+    LittleEndian = DL.isLittleEndian();
+    StackNaturalAlign = DL.StackNaturalAlign;
+    ManglingMode = DL.ManglingMode;
+    LegalIntWidths = DL.LegalIntWidths;
+    Alignments = DL.Alignments;
+    Pointers = DL.Pointers;
+    return *this;
+  }
+
+  bool operator==(const DataLayout &Other) const;
+  bool operator!=(const DataLayout &Other) const { return !(*this == Other); }
 
   ~DataLayout();  // Not virtual, do not subclass this class
 
-  /// DataLayout is an immutable pass, but holds state.  This allows the pass
-  /// manager to clear its mutable state.
-  bool doFinalization(Module &M);
-
-  /// Parse a data layout string (with fallback to default values). Ensure that
-  /// the data layout pass is registered.
-  void init(StringRef LayoutDescription);
+  /// Parse a data layout string (with fallback to default values).
+  void reset(StringRef LayoutDescription);
 
   /// Layout endianness...
   bool isLittleEndian() const { return LittleEndian; }
@@ -291,34 +292,18 @@ public:
   /// Layout pointer alignment
   /// FIXME: The defaults need to be removed once all of
   /// the backends/clients are updated.
-  unsigned getPointerABIAlignment(unsigned AS = 0) const {
-    DenseMap<unsigned, PointerAlignElem>::const_iterator val = Pointers.find(AS);
-    if (val == Pointers.end()) {
-      val = Pointers.find(0);
-    }
-    return val->second.ABIAlign;
-  }
+  unsigned getPointerABIAlignment(unsigned AS = 0) const;
 
   /// Return target's alignment for stack-based pointers
   /// FIXME: The defaults need to be removed once all of
   /// the backends/clients are updated.
-  unsigned getPointerPrefAlignment(unsigned AS = 0) const {
-    DenseMap<unsigned, PointerAlignElem>::const_iterator val = Pointers.find(AS);
-    if (val == Pointers.end()) {
-      val = Pointers.find(0);
-    }
-    return val->second.PrefAlign;
-  }
+  unsigned getPointerPrefAlignment(unsigned AS = 0) const;
+
   /// Layout pointer size
   /// FIXME: The defaults need to be removed once all of
   /// the backends/clients are updated.
-  unsigned getPointerSize(unsigned AS = 0) const {
-    DenseMap<unsigned, PointerAlignElem>::const_iterator val = Pointers.find(AS);
-    if (val == Pointers.end()) {
-      val = Pointers.find(0);
-    }
-    return val->second.TypeByteWidth;
-  }
+  unsigned getPointerSize(unsigned AS = 0) const;
+
   /// Layout pointer size, in bits
   /// FIXME: The defaults need to be removed once all of
   /// the backends/clients are updated.
@@ -458,6 +443,23 @@ public:
     assert((Alignment & (Alignment-1)) == 0 && "Alignment must be power of 2!");
     return (Val + (Alignment-1)) & ~UIntTy(Alignment-1);
   }
+};
+
+class DataLayoutPass : public ImmutablePass {
+  DataLayout DL;
+
+public:
+  /// This has to exist, because this is a pass, but it should never be used.
+  DataLayoutPass();
+  ~DataLayoutPass();
+
+  const DataLayout &getDataLayout() const { return DL; }
+
+  // For use with the C API. C++ code should always use the constructor that
+  // takes a module.
+  explicit DataLayoutPass(const DataLayout &DL);
+
+  explicit DataLayoutPass(const Module *M);
 
   static char ID; // Pass identification, replacement for typeid
 };

@@ -1188,10 +1188,6 @@ class CallInst : public Instruction {
   inline CallInst(Value *Func, ArrayRef<Value *> Args,
                   const Twine &NameStr, BasicBlock *InsertAtEnd);
 
-  CallInst(Value *F, Value *Actual, const Twine &NameStr,
-           Instruction *InsertBefore);
-  CallInst(Value *F, Value *Actual, const Twine &NameStr,
-           BasicBlock *InsertAtEnd);
   explicit CallInst(Value *F, const Twine &NameStr,
                     Instruction *InsertBefore);
   CallInst(Value *F, const Twine &NameStr, BasicBlock *InsertAtEnd);
@@ -1258,6 +1254,10 @@ public:
   ///
   Value *getArgOperand(unsigned i) const { return getOperand(i); }
   void setArgOperand(unsigned i, Value *v) { setOperand(i, v); }
+
+  /// \brief Wrappers for getting the \c Use of a call argument.
+  const Use &getArgOperandUse(unsigned i) const { return getOperandUse(i); }
+  Use &getArgOperandUse(unsigned i) { return getOperandUse(i); }
 
   /// getCallingConv/setCallingConv - Get or set the calling convention of this
   /// function call.
@@ -2902,6 +2902,10 @@ public:
   ///
   Value *getArgOperand(unsigned i) const { return getOperand(i); }
   void setArgOperand(unsigned i, Value *v) { setOperand(i, v); }
+
+  /// \brief Wrappers for getting the \c Use of a call argument.
+  const Use &getArgOperandUse(unsigned i) const { return getOperandUse(i); }
+  Use &getArgOperandUse(unsigned i) { return getOperandUse(i); }
 
   /// getCallingConv/setCallingConv - Get or set the calling convention of this
   /// function call.

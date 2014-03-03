@@ -1013,7 +1013,8 @@ bool LazyValueInfo::runOnFunction(Function &F) {
   if (PImpl)
     getCache(PImpl).clear();
 
-  TD = getAnalysisIfAvailable<DataLayout>();
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  DL = DLP ? &DLP->getDataLayout() : 0;
   TLI = &getAnalysis<TargetLibraryInfo>();
 
   // Fully lazy.
@@ -1073,7 +1074,7 @@ LazyValueInfo::getPredicateOnEdge(unsigned Pred, Value *V, Constant *C,
   // If we know the value is a constant, evaluate the conditional.
   Constant *Res = 0;
   if (Result.isConstant()) {
-    Res = ConstantFoldCompareInstOperands(Pred, Result.getConstant(), C, TD,
+    Res = ConstantFoldCompareInstOperands(Pred, Result.getConstant(), C, DL,
                                           TLI);
     if (ConstantInt *ResCI = dyn_cast<ConstantInt>(Res))
       return ResCI->isZero() ? False : True;
@@ -1115,14 +1116,14 @@ LazyValueInfo::getPredicateOnEdge(unsigned Pred, Value *V, Constant *C,
     if (Pred == ICmpInst::ICMP_EQ) {
       // !C1 == C -> false iff C1 == C.
       Res = ConstantFoldCompareInstOperands(ICmpInst::ICMP_NE,
-                                            Result.getNotConstant(), C, TD,
+                                            Result.getNotConstant(), C, DL,
                                             TLI);
       if (Res->isNullValue())
         return False;
     } else if (Pred == ICmpInst::ICMP_NE) {
       // !C1 != C -> true iff C1 == C.
       Res = ConstantFoldCompareInstOperands(ICmpInst::ICMP_NE,
-                                            Result.getNotConstant(), C, TD,
+                                            Result.getNotConstant(), C, DL,
                                             TLI);
       if (Res->isNullValue())
         return True;

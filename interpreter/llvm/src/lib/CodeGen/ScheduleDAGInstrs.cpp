@@ -148,31 +148,32 @@ static void getUnderlyingObjectsForInstr(const MachineInstr *MI,
   if (!V)
     return;
 
+  if (const PseudoSourceValue *PSV = dyn_cast<PseudoSourceValue>(V)) {
+    // For now, ignore PseudoSourceValues which may alias LLVM IR values
+    // because the code that uses this function has no way to cope with
+    // such aliases.
+    if (!PSV->isAliased(MFI)) {
+      bool MayAlias = PSV->mayAlias(MFI);
+      Objects.push_back(UnderlyingObjectsVector::value_type(V, MayAlias));
+    }
+    return;
+  }
+
   SmallVector<Value *, 4> Objs;
   getUnderlyingObjects(V, Objs);
 
   for (SmallVectorImpl<Value *>::iterator I = Objs.begin(), IE = Objs.end();
          I != IE; ++I) {
-    bool MayAlias = true;
     V = *I;
 
-    if (const PseudoSourceValue *PSV = dyn_cast<PseudoSourceValue>(V)) {
-      // For now, ignore PseudoSourceValues which may alias LLVM IR values
-      // because the code that uses this function has no way to cope with
-      // such aliases.
+    assert(!isa<PseudoSourceValue>(V) && "Underlying value is a stack slot!");
 
-      if (PSV->isAliased(MFI)) {
-        Objects.clear();
-        return;
-      }
-
-      MayAlias = PSV->mayAlias(MFI);
-    } else if (!isIdentifiedObject(V)) {
+    if (!isIdentifiedObject(V)) {
       Objects.clear();
       return;
     }
 
-    Objects.push_back(UnderlyingObjectsVector::value_type(V, MayAlias));
+    Objects.push_back(UnderlyingObjectsVector::value_type(V, true));
   }
 }
 
@@ -564,10 +565,10 @@ static bool MIsNeedChainEdge(AliasAnalysis *AA, const MachineFrameInfo *MFI,
   int64_t Overlapb = MMOb->getSize() + MMOb->getOffset() - MinOffset;
 
   AliasAnalysis::AliasResult AAResult = AA->alias(
-  AliasAnalysis::Location(MMOa->getValue(), Overlapa,
-                          UseTBAA ? MMOa->getTBAAInfo() : 0),
-  AliasAnalysis::Location(MMOb->getValue(), Overlapb,
-                          UseTBAA ? MMOb->getTBAAInfo() : 0));
+      AliasAnalysis::Location(MMOa->getValue(), Overlapa,
+                              UseTBAA ? MMOa->getTBAAInfo() : 0),
+      AliasAnalysis::Location(MMOb->getValue(), Overlapb,
+                              UseTBAA ? MMOb->getTBAAInfo() : 0));
 
   return (AAResult != AliasAnalysis::NoAlias);
 }

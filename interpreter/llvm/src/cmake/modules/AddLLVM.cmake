@@ -127,6 +127,10 @@ function(add_llvm_symbol_exports target_name export_file)
     PROPERTY ADDITIONAL_MAKE_CLEAN_FILES ${native_export_file})
 
   add_dependencies(${target_name} ${target_name}_exports)
+
+  # Add dependency to *_exports later -- CMake issue 14747
+  list(APPEND LLVM_COMMON_DEPENDS ${target_name}_exports)
+  set(LLVM_COMMON_DEPENDS ${LLVM_COMMON_DEPENDS} PARENT_SCOPE)
 endfunction(add_llvm_symbol_exports)
 
 function(add_dead_strip target_name)
@@ -184,14 +188,18 @@ function(llvm_add_library name)
   cmake_parse_arguments(ARG
     "MODULE;SHARED;STATIC"
     "OUTPUT_NAME"
-    "ADDITIONAL_HEADERS;DEPENDS;LINK_COMPONENTS;LINK_LIBS"
+    "ADDITIONAL_HEADERS;DEPENDS;LINK_COMPONENTS;LINK_LIBS;OBJLIBS"
     ${ARGN})
   list(APPEND LLVM_COMMON_DEPENDS ${ARG_DEPENDS})
   if(ARG_ADDITIONAL_HEADERS)
     # Pass through ADDITIONAL_HEADERS.
     set(ARG_ADDITIONAL_HEADERS ADDITIONAL_HEADERS ${ARG_ADDITIONAL_HEADERS})
   endif()
-  llvm_process_sources(ALL_FILES ${ARG_UNPARSED_ARGUMENTS} ${ARG_ADDITIONAL_HEADERS})
+  if(ARG_OBJLIBS)
+    set(ALL_FILES ${ARG_OBJLIBS})
+  else()
+    llvm_process_sources(ALL_FILES ${ARG_UNPARSED_ARGUMENTS} ${ARG_ADDITIONAL_HEADERS})
+  endif()
 
   if(ARG_MODULE)
     if(ARG_SHARED OR ARG_STATIC)
@@ -208,6 +216,39 @@ function(llvm_add_library name)
     if(NOT ARG_SHARED)
       set(ARG_STATIC TRUE)
     endif()
+  endif()
+
+  # Generate objlib
+  if(ARG_SHARED AND ARG_STATIC)
+    # Generate an obj library for both targets.
+    set(obj_name "obj.${name}")
+    add_library(${obj_name} OBJECT EXCLUDE_FROM_ALL
+      ${ALL_FILES}
+      )
+    llvm_update_compile_flags(${obj_name})
+    set(ALL_FILES "$<TARGET_OBJECTS:${obj_name}>")
+
+    # Do add_dependencies(obj) later due to CMake issue 14747.
+    list(APPEND objlibs ${obj_name})
+
+    set_target_properties(${obj_name} PROPERTIES FOLDER "Object Libraries")
+  endif()
+
+  if(ARG_SHARED AND ARG_STATIC)
+    # static
+    set(name_static "${name}_static")
+    if(ARG_OUTPUT_NAME)
+      set(output_name OUTPUT_NAME "${ARG_OUTPUT_NAME}")
+    endif()
+    # DEPENDS has been appended to LLVM_COMMON_LIBS.
+    llvm_add_library(${name_static} STATIC
+      ${output_name}
+      OBJLIBS ${ALL_FILES} # objlib
+      LINK_LIBS ${ARG_LINK_LIBS}
+      LINK_COMPONENTS ${ARG_LINK_COMPONENTS}
+      )
+    # FIXME: Add name_static to anywhere in TARGET ${name}'s PROPERTY.
+    set(ARG_STATIC)
   endif()
 
   if(ARG_MODULE)
@@ -248,12 +289,54 @@ function(llvm_add_library name)
     endif()
   endif()
 
-  target_link_libraries(${name} ${ARG_LINK_LIBS})
+  # Add the explicit dependency information for this library.
+  #
+  # It would be nice to verify that we have the dependencies for this library
+  # name, but using get_property(... SET) doesn't suffice to determine if a
+  # property has been set to an empty value.
+  get_property(lib_deps GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_${name})
 
-  llvm_config(${name} ${ARG_LINK_COMPONENTS} ${LLVM_LINK_COMPONENTS})
+  llvm_map_components_to_libnames(llvm_libs
+    ${ARG_LINK_COMPONENTS}
+    ${LLVM_LINK_COMPONENTS}
+    )
+
+  if(CMAKE_VERSION VERSION_LESS 2.8.12)
+    # Link libs w/o keywords, assuming PUBLIC.
+    target_link_libraries(${name}
+      ${ARG_LINK_LIBS}
+      ${lib_deps}
+      ${llvm_libs}
+      )
+  elseif(ARG_STATIC)
+    target_link_libraries(${name} INTERFACE
+      ${ARG_LINK_LIBS}
+      ${lib_deps}
+      ${llvm_libs}
+      )
+  elseif(ARG_SHARED AND BUILD_SHARED_LIBS)
+    # FIXME: It may be PRIVATE since SO knows its dependent libs.
+    target_link_libraries(${name} PUBLIC
+      ${ARG_LINK_LIBS}
+      ${lib_deps}
+      ${llvm_libs}
+      )
+  else()
+    # MODULE|SHARED
+    target_link_libraries(${name} PRIVATE
+      ${ARG_LINK_LIBS}
+      ${lib_deps}
+      ${llvm_libs}
+      )
+  endif()
 
   if(LLVM_COMMON_DEPENDS)
     add_dependencies(${name} ${LLVM_COMMON_DEPENDS})
+    # Add dependencies also to objlibs.
+    # CMake issue 14747 --  add_dependencies() might be ignored to objlib's user.
+    foreach(objlib ${objlibs})
+      add_dependencies(${objlib} ${LLVM_COMMON_DEPENDS})
+    endforeach()
   endif()
 endfunction()
 
@@ -277,14 +360,6 @@ macro(add_llvm_library name)
     set_property(GLOBAL APPEND PROPERTY LLVM_EXPORTS ${name})
   endif()
   set_target_properties(${name} PROPERTIES FOLDER "Libraries")
-
-  # Add the explicit dependency information for this library.
-  #
-  # It would be nice to verify that we have the dependencies for this library
-  # name, but using get_property(... SET) doesn't suffice to determine if a
-  # property has been set to an empty value.
-  get_property(lib_deps GLOBAL PROPERTY LLVMBUILD_LIB_DEPS_${name})
-  target_link_libraries(${name} ${lib_deps})
 endmacro(add_llvm_library name)
 
 macro(add_llvm_loadable_module name)

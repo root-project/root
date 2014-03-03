@@ -164,7 +164,7 @@ class DataFlowSanitizer : public ModulePass {
     WK_Custom
   };
 
-  DataLayout *DL;
+  const DataLayout *DL;
   Module *Mod;
   LLVMContext *Ctx;
   IntegerType *ShadowTy;
@@ -343,9 +343,10 @@ FunctionType *DataFlowSanitizer::getCustomFunctionType(FunctionType *T) {
 }
 
 bool DataFlowSanitizer::doInitialization(Module &M) {
-  DL = getAnalysisIfAvailable<DataLayout>();
-  if (!DL)
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  if (!DLP)
     return false;
+  DL = &DLP->getDataLayout();
 
   Mod = &M;
   Ctx = &M.getContext();

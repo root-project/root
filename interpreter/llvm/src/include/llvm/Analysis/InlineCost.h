@@ -99,7 +99,6 @@ public:
 
 /// \brief Cost analyzer used by inliner.
 class InlineCostAnalysis : public CallGraphSCCPass {
-  const DataLayout *TD;
   const TargetTransformInfo *TTI;
 
 public:

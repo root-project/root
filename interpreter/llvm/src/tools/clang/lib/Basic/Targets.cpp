@@ -3353,6 +3353,7 @@ public:
 
 namespace {
 class AArch64TargetInfo : public TargetInfo {
+  virtual void setDescriptionString() = 0;
   static const char * const GCCRegNames[];
   static const TargetInfo::GCCRegAlias GCCRegAliases[];
 
@@ -3367,12 +3368,13 @@ class AArch64TargetInfo : public TargetInfo {
 
 public:
   AArch64TargetInfo(const llvm::Triple &Triple) : TargetInfo(Triple) {
-    BigEndian = false;
+    IntMaxType = SignedLong;
+    UIntMaxType = UnsignedLong;
+    Int64Type = SignedLong;
     LongWidth = LongAlign = 64;
     LongDoubleWidth = LongDoubleAlign = 128;
     PointerWidth = PointerAlign = 64;
     SuitableAlign = 128;
-    DescriptionString = "e-m:e-i64:64-i128:128-n32:64-S128";
 
     WCharType = UnsignedInt;
     if (getTriple().getOS() == llvm::Triple::NetBSD)
@@ -3391,7 +3393,6 @@ public:
                                 MacroBuilder &Builder) const {
     // GCC defines theses currently
     Builder.defineMacro("__aarch64__");
-    Builder.defineMacro("__AARCH64EL__");
 
     // ACLE predefines. Many can only have one possible value on v8 AArch64.
     Builder.defineMacro("__ARM_ACLE",         "200");
@@ -3474,6 +3475,9 @@ public:
       if (Features[i] == "+crypto")
         Crypto = 1;
     }
+
+    setDescriptionString();
+
     return true;
   }
 
@@ -3594,6 +3598,38 @@ const Builtin::Info AArch64TargetInfo::BuiltinInfo[] = {
 #define LIBBUILTIN(ID, TYPE, ATTRS, HEADER) { #ID, TYPE, ATTRS, HEADER,\
                                               ALL_LANGUAGES },
 #include "clang/Basic/BuiltinsAArch64.def"
+};
+
+class AArch64leTargetInfo : public AArch64TargetInfo {
+  virtual void setDescriptionString() {
+    DescriptionString = "e-m:e-i64:64-i128:128-n32:64-S128";
+  }
+
+public:
+  AArch64leTargetInfo(const llvm::Triple &Triple)
+    : AArch64TargetInfo(Triple) {
+    BigEndian = false;
+    }
+  virtual void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const {
+    Builder.defineMacro("__AARCH64EL__");
+    AArch64TargetInfo::getTargetDefines(Opts, Builder);
+  }
+};
+
+class AArch64beTargetInfo : public AArch64TargetInfo {
+  virtual void setDescriptionString() {
+    DescriptionString = "E-m:e-i64:64-i128:128-n32:64-S128";
+  }
+
+public:
+  AArch64beTargetInfo(const llvm::Triple &Triple)
+    : AArch64TargetInfo(Triple) { }
+  virtual void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const {
+    Builder.defineMacro("__AARCH64EB__");
+    AArch64TargetInfo::getTargetDefines(Opts, Builder);
+  }
 };
 
 } // end anonymous namespace
@@ -4593,6 +4629,22 @@ public:
       Builder.defineMacro("__sparcv9__");
     }
   }
+
+  virtual bool setCPU(const std::string &Name) {
+    bool CPUKnown = llvm::StringSwitch<bool>(Name)
+      .Case("v9", true)
+      .Case("ultrasparc", true)
+      .Case("ultrasparc3", true)
+      .Case("niagara", true)
+      .Case("niagara2", true)
+      .Case("niagara3", true)
+      .Case("niagara4", true)
+      .Default(false);
+
+    // No need to store the CPU yet.  There aren't any CPU-specific
+    // macros to define.
+    return CPUKnown;
+  }
 };
 
 } // end anonymous namespace.
@@ -4905,6 +4957,13 @@ public:
     return true;
   }
   void getDefaultFeatures(llvm::StringMap<bool> &Features) const {
+    // The backend enables certain ABI's by default according to the
+    // architecture.
+    // Disable both possible defaults so that we don't end up with multiple
+    // ABI's selected and trigger an assertion.
+    Features["o32"] = false;
+    Features["n64"] = false;
+
     Features[ABI] = true;
     Features[CPU] = true;
   }
@@ -5584,11 +5643,21 @@ static TargetInfo *AllocateTarget(const llvm::Triple &Triple) {
   case llvm::Triple::aarch64:
     switch (os) {
     case llvm::Triple::Linux:
-      return new LinuxTargetInfo<AArch64TargetInfo>(Triple);
+      return new LinuxTargetInfo<AArch64leTargetInfo>(Triple);
     case llvm::Triple::NetBSD:
-      return new NetBSDTargetInfo<AArch64TargetInfo>(Triple);
+      return new NetBSDTargetInfo<AArch64leTargetInfo>(Triple);
     default:
-      return new AArch64TargetInfo(Triple);
+      return new AArch64leTargetInfo(Triple);
+    }
+
+  case llvm::Triple::aarch64_be:
+    switch (os) {
+    case llvm::Triple::Linux:
+      return new LinuxTargetInfo<AArch64beTargetInfo>(Triple);
+    case llvm::Triple::NetBSD:
+      return new NetBSDTargetInfo<AArch64beTargetInfo>(Triple);
+    default:
+      return new AArch64beTargetInfo(Triple);
     }
 
   case llvm::Triple::arm:

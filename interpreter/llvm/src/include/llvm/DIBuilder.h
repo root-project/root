@@ -55,7 +55,7 @@ namespace llvm {
   class DIBuilder {
     private:
     Module &M;
-    LLVMContext & VMContext;
+    LLVMContext &VMContext;
 
     MDNode *TempEnumTypes;
     MDNode *TempRetainTypes;
@@ -74,6 +74,7 @@ namespace llvm {
     SmallVector<Value *, 4> AllGVs;
     SmallVector<Value *, 4> AllImportedModules;
 
+    // Private use for multiple types of template parameters.
     DITemplateValueParameter
     createTemplateValueParameter(unsigned Tag, DIDescriptor Scope,
                                  StringRef Name, DIType Ty, Value *Val,
@@ -86,6 +87,7 @@ namespace llvm {
     public:
     explicit DIBuilder(Module &M);
     enum ComplexAddrKind { OpPlus=1, OpDeref };
+    enum DebugEmissionKind { FullDebug=1, LineTablesOnly };
 
     /// finalize - Construct any deferred debug info descriptors.
     void finalize();
@@ -95,8 +97,8 @@ namespace llvm {
     /// @param Lang     Source programming language, eg. dwarf::DW_LANG_C99
     /// @param File     File name
     /// @param Dir      Directory
-    /// @param Producer String identify producer of debugging information.
-    ///                 Usuall this is a compiler version string.
+    /// @param Producer Identify the producer of debugging information and code.
+    ///                 Usually this is a compiler version string.
     /// @param isOptimized A boolean flag which indicates whether optimization
     ///                    is ON or not.
     /// @param Flags    This string lists command line options. This string is
@@ -110,7 +112,8 @@ namespace llvm {
                                     StringRef Dir, StringRef Producer,
                                     bool isOptimized, StringRef Flags,
                                     unsigned RV,
-                                    StringRef SplitName = StringRef());
+                                    StringRef SplitName = StringRef(),
+                                    DebugEmissionKind Kind = FullDebug);
 
     /// createFile - Create a file descriptor to hold debugging information
     /// for a file.
@@ -442,7 +445,7 @@ namespace llvm {
     /// through debug info anchors.
     void retainType(DIType T);
 
-    /// createUnspecifiedParameter - Create unspeicified type descriptor
+    /// createUnspecifiedParameter - Create unspecified type descriptor
     /// for a subroutine type.
     DIDescriptor createUnspecifiedParameter();
 

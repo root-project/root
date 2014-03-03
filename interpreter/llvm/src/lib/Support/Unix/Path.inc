@@ -85,95 +85,22 @@ namespace {
 
     operator int() const {return FileDescriptor;}
   };
-
-  error_code TempDir(SmallVectorImpl<char> &result) {
-    // FIXME: Don't use TMPDIR if program is SUID or SGID enabled.
-    const char *dir = 0;
-    (dir = std::getenv("TMPDIR" )) ||
-    (dir = std::getenv("TMP"    )) ||
-    (dir = std::getenv("TEMP"   )) ||
-    (dir = std::getenv("TEMPDIR")) ||
-#ifdef P_tmpdir
-    (dir = P_tmpdir) ||
-#endif
-    (dir = "/tmp");
-
-    result.clear();
-    StringRef d(dir);
-    result.append(d.begin(), d.end());
-    return error_code::success();
-  }
 }
 
-static error_code createUniqueEntity(const Twine &Model, int &ResultFD,
-                                     SmallVectorImpl<char> &ResultPath,
-                                     bool MakeAbsolute, unsigned Mode,
-                                     FSEntity Type) {
-  SmallString<128> ModelStorage;
-  Model.toVector(ModelStorage);
+static error_code TempDir(SmallVectorImpl<char> &result) {
+  // FIXME: Don't use TMPDIR if program is SUID or SGID enabled.
+  const char *dir = 0;
+  (dir = std::getenv("TMPDIR")) || (dir = std::getenv("TMP")) ||
+      (dir = std::getenv("TEMP")) || (dir = std::getenv("TEMPDIR")) ||
+#ifdef P_tmpdir
+      (dir = P_tmpdir) ||
+#endif
+      (dir = "/tmp");
 
-  if (MakeAbsolute) {
-    // Make model absolute by prepending a temp directory if it's not already.
-    bool absolute = sys::path::is_absolute(Twine(ModelStorage));
-    if (!absolute) {
-      SmallString<128> TDir;
-      if (error_code ec = TempDir(TDir)) return ec;
-      sys::path::append(TDir, Twine(ModelStorage));
-      ModelStorage.swap(TDir);
-    }
-  }
-
-  // From here on, DO NOT modify model. It may be needed if the randomly chosen
-  // path already exists.
-  ResultPath = ModelStorage;
-  // Null terminate.
-  ResultPath.push_back(0);
-  ResultPath.pop_back();
-
-retry_random_path:
-  // Replace '%' with random chars.
-  for (unsigned i = 0, e = ModelStorage.size(); i != e; ++i) {
-    if (ModelStorage[i] == '%')
-      ResultPath[i] = "0123456789abcdef"[sys::Process::GetRandomNumber() & 15];
-  }
-
-  // Try to open + create the file.
-  switch (Type) {
-  case FS_File: {
-    int RandomFD = ::open(ResultPath.begin(), O_RDWR | O_CREAT | O_EXCL, Mode);
-    if (RandomFD == -1) {
-      int SavedErrno = errno;
-      // If the file existed, try again, otherwise, error.
-      if (SavedErrno == errc::file_exists)
-        goto retry_random_path;
-      return error_code(SavedErrno, system_category());
-    }
-
-    ResultFD = RandomFD;
-    return error_code::success();
-  }
-
-  case FS_Name: {
-    bool Exists;
-    error_code EC = sys::fs::exists(ResultPath.begin(), Exists);
-    if (EC)
-      return EC;
-    if (Exists)
-      goto retry_random_path;
-    return error_code::success();
-  }
-
-  case FS_Dir: {
-    bool Existed;
-    error_code EC = sys::fs::create_directory(ResultPath.begin(), Existed);
-    if (EC)
-      return EC;
-    if (Existed)
-      goto retry_random_path;
-    return error_code::success();
-  }
-  }
-  llvm_unreachable("Invalid Type");
+  result.clear();
+  StringRef d(dir);
+  result.append(d.begin(), d.end());
+  return error_code::success();
 }
 
 namespace llvm {
@@ -333,16 +260,14 @@ error_code current_path(SmallVectorImpl<char> &result) {
   return error_code::success();
 }
 
-error_code create_directory(const Twine &path, bool &existed) {
+error_code create_directory(const Twine &path, bool IgnoreExisting) {
   SmallString<128> path_storage;
   StringRef p = path.toNullTerminatedStringRef(path_storage);
 
   if (::mkdir(p.begin(), S_IRWXU | S_IRWXG) == -1) {
-    if (errno != errc::file_exists)
+    if (errno != errc::file_exists || !IgnoreExisting)
       return error_code(errno, system_category());
-    existed = true;
-  } else
-    existed = false;
+  }
 
   return error_code::success();
 }
@@ -360,15 +285,14 @@ error_code create_hard_link(const Twine &to, const Twine &from) {
   return error_code::success();
 }
 
-error_code remove(const Twine &path, bool &existed) {
+error_code remove(const Twine &path, bool IgnoreNonExisting) {
   SmallString<128> path_storage;
   StringRef p = path.toNullTerminatedStringRef(path_storage);
 
   struct stat buf;
   if (stat(p.begin(), &buf) != 0) {
-    if (errno != errc::no_such_file_or_directory)
+    if (errno != errc::no_such_file_or_directory || !IgnoreNonExisting)
       return error_code(errno, system_category());
-    existed = false;
     return error_code::success();
   }
 
@@ -381,11 +305,9 @@ error_code remove(const Twine &path, bool &existed) {
     return make_error_code(errc::operation_not_permitted);
 
   if (::remove(p.begin()) == -1) {
-    if (errno != errc::no_such_file_or_directory)
+    if (errno != errc::no_such_file_or_directory || !IgnoreNonExisting)
       return error_code(errno, system_category());
-    existed = false;
-  } else
-    existed = true;
+  }
 
   return error_code::success();
 }
@@ -763,7 +685,12 @@ error_code openFileForWrite(const Twine &Name, int &ResultFD,
   assert((!(Flags & sys::fs::F_Excl) || !(Flags & sys::fs::F_Append)) &&
          "Cannot specify both 'excl' and 'append' file creation flags!");
 
-  int OpenFlags = O_WRONLY | O_CREAT;
+  int OpenFlags = O_CREAT;
+
+  if (Flags & F_RW)
+    OpenFlags |= O_RDWR;
+  else
+    OpenFlags |= O_WRONLY;
 
   if (Flags & F_Append)
     OpenFlags |= O_APPEND;

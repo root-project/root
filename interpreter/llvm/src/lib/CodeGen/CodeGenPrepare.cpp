@@ -14,7 +14,7 @@
 //===----------------------------------------------------------------------===//
 
 #define DEBUG_TYPE "codegenprepare"
-#include "llvm/Transforms/Scalar.h"
+#include "llvm/CodeGen/Passes.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/Statistic.h"
@@ -132,6 +132,7 @@ typedef DenseMap<Instruction *, Type *> InstrToOrigTy;
     bool MoveExtToFormExtLoad(Instruction *I);
     bool OptimizeExtUses(Instruction *I);
     bool OptimizeSelectInst(SelectInst *SI);
+    bool OptimizeShuffleVectorInst(ShuffleVectorInst *SI);
     bool DupRetToEnableTailCallOpts(BasicBlock *BB);
     bool PlaceDbgValues(Function &F);
   };
@@ -1376,6 +1377,8 @@ private:
                                             ExtAddrMode &AMBefore,
                                             ExtAddrMode &AMAfter);
   bool ValueAlreadyLiveAtInst(Value *Val, Value *KnownLive1, Value *KnownLive2);
+  bool IsPromotionProfitable(unsigned MatchedSize, unsigned SizeWithPromotion,
+                             Value *PromotedOperand) const;
 };
 
 /// MatchScaledValue - Try adding ScaleReg*Scale to the current addressing mode.
@@ -1728,6 +1731,40 @@ TypePromotionHelper::promoteOperandForOther(Instruction *SExt,
   return SExtOpnd;
 }
 
+/// IsPromotionProfitable - Check whether or not promoting an instruction
+/// to a wider type was profitable.
+/// \p MatchedSize gives the number of instructions that have been matched
+/// in the addressing mode after the promotion was applied.
+/// \p SizeWithPromotion gives the number of created instructions for
+/// the promotion plus the number of instructions that have been
+/// matched in the addressing mode before the promotion.
+/// \p PromotedOperand is the value that has been promoted.
+/// \return True if the promotion is profitable, false otherwise.
+bool
+AddressingModeMatcher::IsPromotionProfitable(unsigned MatchedSize,
+                                             unsigned SizeWithPromotion,
+                                             Value *PromotedOperand) const {
+  // We folded less instructions than what we created to promote the operand.
+  // This is not profitable.
+  if (MatchedSize < SizeWithPromotion)
+    return false;
+  if (MatchedSize > SizeWithPromotion)
+    return true;
+  // The promotion is neutral but it may help folding the sign extension in
+  // loads for instance.
+  // Check that we did not create an illegal instruction.
+  Instruction *PromotedInst = dyn_cast<Instruction>(PromotedOperand);
+  if (!PromotedInst)
+    return false;
+  int ISDOpcode = TLI.InstructionOpcodeToISD(PromotedInst->getOpcode());
+  // If the ISDOpcode is undefined, it was undefined before the promotion.
+  if (!ISDOpcode)
+    return true;
+  // Otherwise, check if the promoted instruction is legal or not.
+  return TLI.isOperationLegalOrCustom(ISDOpcode,
+                                      EVT::getEVT(PromotedInst->getType()));
+}
+
 /// MatchOperationAddr - Given an instruction or constant expr, see if we can
 /// fold the operation into the addressing mode.  If so, update the addressing
 /// mode and return true, otherwise return false without modifying AddrMode.
@@ -1935,9 +1972,8 @@ bool AddressingModeMatcher::MatchOperationAddr(User *AddrInst, unsigned Opcode,
     unsigned OldSize = AddrModeInsts.size();
 
     if (!MatchAddr(PromotedOperand, Depth) ||
-        // We fold less instructions than what we created.
-        // Undo at this point.
-        (OldSize + CreatedInsts > AddrModeInsts.size())) {
+        !IsPromotionProfitable(AddrModeInsts.size(), OldSize + CreatedInsts,
+                               PromotedOperand)) {
       AddrMode = BackupAddrMode;
       AddrModeInsts.resize(OldSize);
       DEBUG(dbgs() << "Sign extension does not pay off: rollback\n");
@@ -2689,6 +2725,74 @@ bool CodeGenPrepare::OptimizeSelectInst(SelectInst *SI) {
   return true;
 }
 
+
+bool isBroadcastShuffle(ShuffleVectorInst *SVI) {
+  SmallVector<int, 16> Mask(SVI->getShuffleMask());
+  int SplatElem = -1;
+  for (unsigned i = 0; i < Mask.size(); ++i) {
+    if (SplatElem != -1 && Mask[i] != -1 && Mask[i] != SplatElem)
+      return false;
+    SplatElem = Mask[i];
+  }
+
+  return true;
+}
+
+/// Some targets have expensive vector shifts if the lanes aren't all the same
+/// (e.g. x86 only introduced "vpsllvd" and friends with AVX2). In these cases
+/// it's often worth sinking a shufflevector splat down to its use so that
+/// codegen can spot all lanes are identical.
+bool CodeGenPrepare::OptimizeShuffleVectorInst(ShuffleVectorInst *SVI) {
+  BasicBlock *DefBB = SVI->getParent();
+
+  // Only do this xform if variable vector shifts are particularly expensive.
+  if (!TLI || !TLI->isVectorShiftByScalarCheap(SVI->getType()))
+    return false;
+
+  // We only expect better codegen by sinking a shuffle if we can recognise a
+  // constant splat.
+  if (!isBroadcastShuffle(SVI))
+    return false;
+
+  // InsertedShuffles - Only insert a shuffle in each block once.
+  DenseMap<BasicBlock*, Instruction*> InsertedShuffles;
+
+  bool MadeChange = false;
+  for (Value::use_iterator UI = SVI->use_begin(), E = SVI->use_end();
+       UI != E; ++UI) {
+    Instruction *User = cast<Instruction>(*UI);
+
+    // Figure out which BB this ext is used in.
+    BasicBlock *UserBB = User->getParent();
+    if (UserBB == DefBB) continue;
+
+    // For now only apply this when the splat is used by a shift instruction.
+    if (!User->isShift()) continue;
+
+    // Everything checks out, sink the shuffle if the user's block doesn't
+    // already have a copy.
+    Instruction *&InsertedShuffle = InsertedShuffles[UserBB];
+
+    if (!InsertedShuffle) {
+      BasicBlock::iterator InsertPt = UserBB->getFirstInsertionPt();
+      InsertedShuffle = new ShuffleVectorInst(SVI->getOperand(0),
+                                              SVI->getOperand(1),
+                                              SVI->getOperand(2), "", InsertPt);
+    }
+
+    User->replaceUsesOfWith(SVI, InsertedShuffle);
+    MadeChange = true;
+  }
+
+  // If we removed all uses, nuke the shuffle.
+  if (SVI->use_empty()) {
+    SVI->eraseFromParent();
+    MadeChange = true;
+  }
+
+  return MadeChange;
+}
+
 bool CodeGenPrepare::OptimizeInst(Instruction *I) {
   if (PHINode *P = dyn_cast<PHINode>(I)) {
     // It is possible for very late stage optimizations (such as SimplifyCFG)
@@ -2760,6 +2864,9 @@ bool CodeGenPrepare::OptimizeInst(Instruction *I) {
 
   if (SelectInst *SI = dyn_cast<SelectInst>(I))
     return OptimizeSelectInst(SI);
+
+  if (ShuffleVectorInst *SVI = dyn_cast<ShuffleVectorInst>(I))
+    return OptimizeShuffleVectorInst(SVI);
 
   return false;
 }

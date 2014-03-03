@@ -159,6 +159,7 @@
 // RUN:     /arch:sse2 \
 // RUN:     /clr:pure \
 // RUN:     /docname \
+// RUN:     /d2Zi+ \
 // RUN:     /EHsc \
 // RUN:     /EP \
 // RUN:     /F \
@@ -248,6 +249,12 @@
 
 // We support -m32 and -m64.
 // RUN: %clang_cl /Zs /WX -m32 -m64 -- %s
+
+// Use -fno-rtti by default.
+// RUN: %clang_cl /c -### -- %s 2>&1 | FileCheck -check-prefix=NoRTTI %s
+// NoRTTI: "-fno-rtti"
+// RUN: %clang_cl /c /GR -### -- %s 2>&1 | FileCheck -check-prefix=RTTI %s
+// RTTI-NOT: "-fno-rtti"
 
 
 void f() { }

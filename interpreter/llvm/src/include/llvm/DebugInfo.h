@@ -427,6 +427,7 @@ public:
   DIArray getImportedEntities() const;
 
   StringRef getSplitDebugFilename() const { return getStringField(12); }
+  unsigned getEmissionKind() const { return getUnsignedField(13); }
 
   /// Verify - Verify that a compile unit is well formed.
   bool Verify() const;
@@ -550,6 +551,13 @@ public:
   DIScope getContext() const { return getFieldAs<DIScope>(2); }
   StringRef getName() const { return getStringField(3); }
   unsigned getLineNumber() const { return getUnsignedField(4); }
+  bool Verify() const;
+};
+
+/// DIUnspecifiedParameter - This is a wrapper for unspecified parameters.
+class DIUnspecifiedParameter : public DIDescriptor {
+public:
+  explicit DIUnspecifiedParameter(const MDNode *N = 0) : DIDescriptor(N) {}
   bool Verify() const;
 };
 

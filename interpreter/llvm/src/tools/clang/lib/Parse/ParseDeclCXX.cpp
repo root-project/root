@@ -279,27 +279,16 @@ Decl *Parser::ParseNamespaceAlias(SourceLocation NamespaceLoc,
 ///         'extern' string-literal declaration
 ///
 Decl *Parser::ParseLinkage(ParsingDeclSpec &DS, unsigned Context) {
-  assert(Tok.is(tok::string_literal) && "Not a string literal!");
-  SmallString<8> LangBuffer;
-  bool Invalid = false;
-  StringRef Lang = PP.getSpelling(Tok, LangBuffer, &Invalid);
-  if (Invalid)
-    return 0;
-
-  // FIXME: This is incorrect: linkage-specifiers are parsed in translation
-  // phase 7, so string-literal concatenation is supposed to occur.
-  //   extern "" "C" "" "+" "+" { } is legal.
-  if (Tok.hasUDSuffix())
-    Diag(Tok, diag::err_invalid_string_udl);
-  SourceLocation Loc = ConsumeStringToken();
+  assert(isTokenStringLiteral() && "Not a string literal!");
+  ExprResult Lang = ParseStringLiteralExpression(false);
 
   ParseScope LinkageScope(this, Scope::DeclScope);
-  Decl *LinkageSpec
-    = Actions.ActOnStartLinkageSpecification(getCurScope(),
-                                             DS.getSourceRange().getBegin(),
-                                             Loc, Lang,
-                                      Tok.is(tok::l_brace) ? Tok.getLocation()
-                                                           : SourceLocation());
+  Decl *LinkageSpec =
+      Lang.isInvalid()
+          ? 0
+          : Actions.ActOnStartLinkageSpecification(
+                getCurScope(), DS.getSourceRange().getBegin(), Lang.take(),
+                Tok.is(tok::l_brace) ? Tok.getLocation() : SourceLocation());
 
   ParsedAttributesWithRange attrs(AttrFactory);
   MaybeParseCXX11Attributes(attrs);
@@ -313,8 +302,9 @@ Decl *Parser::ParseLinkage(ParsingDeclSpec &DS, unsigned Context) {
     // ... but anyway remember that such an "extern" was seen.
     DS.setExternInLinkageSpec(true);
     ParseExternalDeclaration(attrs, &DS);
-    return Actions.ActOnFinishLinkageSpecification(getCurScope(), LinkageSpec,
-                                                   SourceLocation());
+    return LinkageSpec ? Actions.ActOnFinishLinkageSpecification(
+                             getCurScope(), LinkageSpec, SourceLocation())
+                       : 0;
   }
 
   DS.abort();
@@ -331,8 +321,9 @@ Decl *Parser::ParseLinkage(ParsingDeclSpec &DS, unsigned Context) {
   }
 
   T.consumeClose();
-  return Actions.ActOnFinishLinkageSpecification(getCurScope(), LinkageSpec,
-                                                 T.getCloseLocation());
+  return LinkageSpec ? Actions.ActOnFinishLinkageSpecification(
+                           getCurScope(), LinkageSpec, T.getCloseLocation())
+                     : 0;
 }
 
 /// ParseUsingDirectiveOrDeclaration - Parse C++ using using-declaration or
@@ -1785,8 +1776,8 @@ void Parser::HandleMemberFunctionDeclDelays(Declarator& DeclaratorInfo,
   DeclaratorChunk::FunctionTypeInfo &FTI
     = DeclaratorInfo.getFunctionTypeInfo();
 
-  for (unsigned ParamIdx = 0; ParamIdx < FTI.NumArgs; ++ParamIdx) {
-    if (LateMethod || FTI.ArgInfo[ParamIdx].DefaultArgTokens) {
+  for (unsigned ParamIdx = 0; ParamIdx < FTI.NumParams; ++ParamIdx) {
+    if (LateMethod || FTI.Params[ParamIdx].DefaultArgTokens) {
       if (!LateMethod) {
         // Push this method onto the stack of late-parsed method
         // declarations.
@@ -1796,17 +1787,16 @@ void Parser::HandleMemberFunctionDeclDelays(Declarator& DeclaratorInfo,
 
         // Add all of the parameters prior to this one (they don't
         // have default arguments).
-        LateMethod->DefaultArgs.reserve(FTI.NumArgs);
+        LateMethod->DefaultArgs.reserve(FTI.NumParams);
         for (unsigned I = 0; I < ParamIdx; ++I)
           LateMethod->DefaultArgs.push_back(
-                             LateParsedDefaultArgument(FTI.ArgInfo[I].Param));
+              LateParsedDefaultArgument(FTI.Params[I].Param));
       }
 
       // Add this parameter to the list of parameters (it may or may
       // not have a default argument).
-      LateMethod->DefaultArgs.push_back(
-        LateParsedDefaultArgument(FTI.ArgInfo[ParamIdx].Param,
-                                  FTI.ArgInfo[ParamIdx].DefaultArgTokens));
+      LateMethod->DefaultArgs.push_back(LateParsedDefaultArgument(
+          FTI.Params[ParamIdx].Param, FTI.Params[ParamIdx].DefaultArgTokens));
     }
   }
 }

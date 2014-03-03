@@ -1867,6 +1867,7 @@ public:
   void VisitLambdaExpr(const LambdaExpr *E);
   void VisitOMPExecutableDirective(const OMPExecutableDirective *D);
   void VisitOMPParallelDirective(const OMPParallelDirective *D);
+  void VisitOMPSimdDirective(const OMPSimdDirective *D);
 
 private:
   void AddDeclarationNameInfo(const Stmt *S);
@@ -2257,6 +2258,10 @@ void EnqueueVisitor::VisitOMPParallelDirective(const OMPParallelDirective *D) {
   VisitOMPExecutableDirective(D);
 }
 
+void EnqueueVisitor::VisitOMPSimdDirective(const OMPSimdDirective *D) {
+  VisitOMPExecutableDirective(D);
+}
+
 void CursorVisitor::EnqueueWorkList(VisitorWorkList &WL, const Stmt *S) {
   EnqueueVisitor(WL, MakeCXCursor(S, StmtParent, TU,RegionOfInterest)).Visit(S);
 }
@@ -2624,6 +2629,9 @@ CXTranslationUnit clang_createTranslationUnit(CXIndex CIdx,
 enum CXErrorCode clang_createTranslationUnit2(CXIndex CIdx,
                                               const char *ast_filename,
                                               CXTranslationUnit *out_TU) {
+  if (out_TU)
+    *out_TU = NULL;
+
   if (!CIdx || !ast_filename || !out_TU)
     return CXError_InvalidArguments;
 
@@ -2686,16 +2694,17 @@ static void clang_parseTranslationUnit_Impl(void *UserData) {
   unsigned options = PTUI->options;
   CXTranslationUnit *out_TU = PTUI->out_TU;
 
+  // Set up the initial return values.
+  if (out_TU)
+    *out_TU = NULL;
+  PTUI->result = CXError_Failure;
+
   // Check arguments.
   if (!CIdx || !out_TU ||
       (unsaved_files == NULL && num_unsaved_files != 0)) {
     PTUI->result = CXError_InvalidArguments;
     return;
   }
-
-  // Set up the initial return values.
-  *out_TU = NULL;
-  PTUI->result = CXError_Failure;
 
   CIndexer *CXXIdx = static_cast<CIndexer *>(CIdx);
 
@@ -2826,12 +2835,8 @@ clang_parseTranslationUnit(CXIndex CIdx,
       CIdx, source_filename, command_line_args, num_command_line_args,
       unsaved_files, num_unsaved_files, options, &TU);
   (void)Result;
-
-  // FIXME: This probably papers over a problem. If the result is not success,
-  // no TU should be set.
-  if (Result != CXError_Success)
-    return 0;
-
+  assert((TU && Result == CXError_Success) ||
+         (!TU && Result != CXError_Success));
   return TU;
 }
 
@@ -3911,7 +3916,9 @@ CXString clang_getCursorKindSpelling(enum CXCursorKind Kind) {
   case CXCursor_ModuleImportDecl:
     return cxstring::createRef("ModuleImport");
   case CXCursor_OMPParallelDirective:
-      return cxstring::createRef("OMPParallelDirective");
+    return cxstring::createRef("OMPParallelDirective");
+  case CXCursor_OMPSimdDirective:
+    return cxstring::createRef("OMPSimdDirective");
   }
 
   llvm_unreachable("Unhandled CXCursorKind");

@@ -78,7 +78,7 @@ namespace {
 struct ThreadSanitizer : public FunctionPass {
   ThreadSanitizer(StringRef BlacklistFile = StringRef())
       : FunctionPass(ID),
-        TD(0),
+        DL(0),
         BlacklistFile(BlacklistFile.empty() ? ClBlacklistFile
                                             : BlacklistFile) { }
   const char *getPassName() const;
@@ -96,7 +96,7 @@ struct ThreadSanitizer : public FunctionPass {
   bool addrPointsToConstantData(Value *Addr);
   int getMemoryAccessFuncIndex(Value *Addr);
 
-  DataLayout *TD;
+  const DataLayout *DL;
   Type *IntptrTy;
   SmallString<64> BlacklistFile;
   OwningPtr<SpecialCaseList> BL;
@@ -224,14 +224,15 @@ void ThreadSanitizer::initializeCallbacks(Module &M) {
 }
 
 bool ThreadSanitizer::doInitialization(Module &M) {
-  TD = getAnalysisIfAvailable<DataLayout>();
-  if (!TD)
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  if (!DLP)
     return false;
+  DL = &DLP->getDataLayout();
   BL.reset(SpecialCaseList::createOrDie(BlacklistFile));
 
   // Always insert a call to __tsan_init into the module's CTORs.
   IRBuilder<> IRB(M.getContext());
-  IntptrTy = IRB.getIntPtrTy(TD);
+  IntptrTy = IRB.getIntPtrTy(DL);
   Value *TsanInit = M.getOrInsertFunction("__tsan_init",
                                           IRB.getVoidTy(), NULL);
   appendToGlobalCtors(M, cast<Function>(TsanInit), 0);
@@ -320,7 +321,7 @@ static bool isAtomic(Instruction *I) {
 }
 
 bool ThreadSanitizer::runOnFunction(Function &F) {
-  if (!TD) return false;
+  if (!DL) return false;
   if (BL->isIn(F)) return false;
   initializeCallbacks(*F.getParent());
   SmallVector<Instruction*, 8> RetVec;
@@ -573,7 +574,7 @@ int ThreadSanitizer::getMemoryAccessFuncIndex(Value *Addr) {
   Type *OrigPtrTy = Addr->getType();
   Type *OrigTy = cast<PointerType>(OrigPtrTy)->getElementType();
   assert(OrigTy->isSized());
-  uint32_t TypeSize = TD->getTypeStoreSizeInBits(OrigTy);
+  uint32_t TypeSize = DL->getTypeStoreSizeInBits(OrigTy);
   if (TypeSize != 8  && TypeSize != 16 &&
       TypeSize != 32 && TypeSize != 64 && TypeSize != 128) {
     NumAccessesWithBadSize++;

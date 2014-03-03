@@ -109,7 +109,7 @@ namespace {
     PPCTargetMachine *TM;
     LoopInfo *LI;
     ScalarEvolution *SE;
-    DataLayout *TD;
+    const DataLayout *DL;
     DominatorTree *DT;
     const TargetLibraryInfo *LibInfo;
   };
@@ -171,7 +171,8 @@ bool PPCCTRLoops::runOnFunction(Function &F) {
   LI = &getAnalysis<LoopInfo>();
   SE = &getAnalysis<ScalarEvolution>();
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-  TD = getAnalysisIfAvailable<DataLayout>();
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  DL = DLP ? &DLP->getDataLayout() : 0;
   LibInfo = getAnalysisIfAvailable<TargetLibraryInfo>();
 
   bool MadeChange = false;
@@ -184,6 +185,13 @@ bool PPCCTRLoops::runOnFunction(Function &F) {
   }
 
   return MadeChange;
+}
+
+static bool isLargeIntegerTy(bool Is32Bit, Type *Ty) {
+  if (IntegerType *ITy = dyn_cast<IntegerType>(Ty))
+    return ITy->getBitWidth() > (Is32Bit ? 32U : 64U);
+
+  return false;
 }
 
 bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
@@ -352,13 +360,11 @@ bool PPCCTRLoops::mightUseCTR(const Triple &TT, BasicBlock *BB) {
       CastInst *CI = cast<CastInst>(J);
       if (CI->getSrcTy()->getScalarType()->isPPC_FP128Ty() ||
           CI->getDestTy()->getScalarType()->isPPC_FP128Ty() ||
-          (TT.isArch32Bit() &&
-           (CI->getSrcTy()->getScalarType()->isIntegerTy(64) ||
-            CI->getDestTy()->getScalarType()->isIntegerTy(64))
-          ))
+          isLargeIntegerTy(TT.isArch32Bit(), CI->getSrcTy()->getScalarType()) ||
+          isLargeIntegerTy(TT.isArch32Bit(), CI->getDestTy()->getScalarType()))
         return true;
-    } else if (TT.isArch32Bit() &&
-               J->getType()->getScalarType()->isIntegerTy(64) &&
+    } else if (isLargeIntegerTy(TT.isArch32Bit(),
+                                J->getType()->getScalarType()) &&
                (J->getOpcode() == Instruction::UDiv ||
                 J->getOpcode() == Instruction::SDiv ||
                 J->getOpcode() == Instruction::URem ||

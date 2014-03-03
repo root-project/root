@@ -19,6 +19,7 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include <cctype>
+#include <limits>
 
 using namespace llvm;
 using namespace object;
@@ -50,6 +51,40 @@ static error_code getObject(const T *&Obj, const MemoryBuffer *M,
   }
   Obj = reinterpret_cast<const T *>(Addr);
   return object_error::success;
+}
+
+// Decode a string table entry in base 64 (//AAAAAA). Expects \arg Str without
+// prefixed slashes.
+static bool decodeBase64StringEntry(StringRef Str, uint32_t &Result) {
+  assert(Str.size() <= 6 && "String too long, possible overflow.");
+  if (Str.size() > 6)
+    return true;
+
+  uint64_t Value = 0;
+  while (!Str.empty()) {
+    unsigned CharVal;
+    if (Str[0] >= 'A' && Str[0] <= 'Z') // 0..25
+      CharVal = Str[0] - 'A';
+    else if (Str[0] >= 'a' && Str[0] <= 'z') // 26..51
+      CharVal = Str[0] - 'a' + 26;
+    else if (Str[0] >= '0' && Str[0] <= '9') // 52..61
+      CharVal = Str[0] - '0' + 52;
+    else if (Str[0] == '+') // 62
+      CharVal = 62;
+    else if (Str[0] == '/') // 63
+      CharVal = 63;
+    else
+      return true;
+
+    Value = (Value * 64) + CharVal;
+    Str = Str.substr(1);
+  }
+
+  if (Value > std::numeric_limits<uint32_t>::max())
+    return true;
+
+  Result = static_cast<uint32_t>(Value);
+  return false;
 }
 
 const coff_symbol *COFFObjectFile::toSymb(DataRefImpl Ref) const {
@@ -374,22 +409,35 @@ error_code COFFObjectFile::initSymbolTablePtr() {
       getObject(StringTable, Data, StringTableAddr, StringTableSize))
     return EC;
 
+  // Treat table sizes < 4 as empty because contrary to the PECOFF spec, some
+  // tools like cvtres write a size of 0 for an empty table instead of 4.
+  if (StringTableSize < 4)
+      StringTableSize = 4;
+
   // Check that the string table is null terminated if has any in it.
-  if (StringTableSize < 4 ||
-      (StringTableSize > 4 && StringTable[StringTableSize - 1] != 0))
+  if (StringTableSize > 4 && StringTable[StringTableSize - 1] != 0)
     return  object_error::parse_failed;
   return object_error::success;
 }
 
+// Returns the file offset for the given VA.
+error_code COFFObjectFile::getVaPtr(uint64_t Addr, uintptr_t &Res) const {
+  uint64_t ImageBase = PE32Header ? (uint64_t)PE32Header->ImageBase
+                                  : (uint64_t)PE32PlusHeader->ImageBase;
+  uint64_t Rva = Addr - ImageBase;
+  assert(Rva <= UINT32_MAX);
+  return getRvaPtr((uint32_t)Rva, Res);
+}
+
 // Returns the file offset for the given RVA.
-error_code COFFObjectFile::getRvaPtr(uint32_t Rva, uintptr_t &Res) const {
+error_code COFFObjectFile::getRvaPtr(uint32_t Addr, uintptr_t &Res) const {
   for (section_iterator I = section_begin(), E = section_end(); I != E;
        ++I) {
     const coff_section *Section = getCOFFSection(I);
     uint32_t SectionStart = Section->VirtualAddress;
     uint32_t SectionEnd = Section->VirtualAddress + Section->VirtualSize;
-    if (SectionStart <= Rva && Rva < SectionEnd) {
-      uint32_t Offset = Rva - SectionStart;
+    if (SectionStart <= Addr && Addr < SectionEnd) {
+      uint32_t Offset = Addr - SectionStart;
       Res = uintptr_t(base()) + Section->PointerToRawData + Offset;
       return object_error::success;
     }
@@ -540,17 +588,17 @@ COFFObjectFile::COFFObjectFile(MemoryBuffer *Object, error_code &EC,
   EC = object_error::success;
 }
 
-symbol_iterator COFFObjectFile::symbol_begin() const {
+basic_symbol_iterator COFFObjectFile::symbol_begin_impl() const {
   DataRefImpl Ret;
   Ret.p = reinterpret_cast<uintptr_t>(SymbolTable);
-  return symbol_iterator(SymbolRef(Ret, this));
+  return basic_symbol_iterator(SymbolRef(Ret, this));
 }
 
-symbol_iterator COFFObjectFile::symbol_end() const {
+basic_symbol_iterator COFFObjectFile::symbol_end_impl() const {
   // The symbol table ends where the string table begins.
   DataRefImpl Ret;
   Ret.p = reinterpret_cast<uintptr_t>(StringTable);
-  return symbol_iterator(SymbolRef(Ret, this));
+  return basic_symbol_iterator(SymbolRef(Ret, this));
 }
 
 library_iterator COFFObjectFile::needed_library_begin() const {
@@ -757,8 +805,13 @@ error_code COFFObjectFile::getSectionName(const coff_section *Sec,
   // Check for string table entry. First byte is '/'.
   if (Name[0] == '/') {
     uint32_t Offset;
-    if (Name.substr(1).getAsInteger(10, Offset))
-      return object_error::parse_failed;
+    if (Name[1] == '/') {
+      if (decodeBase64StringEntry(Name.substr(2), Offset))
+        return object_error::parse_failed;
+    } else {
+      if (Name.substr(1).getAsInteger(10, Offset))
+        return object_error::parse_failed;
+    }
     if (error_code EC = getString(Offset, Name))
       return EC;
   }
@@ -823,8 +876,8 @@ const coff_symbol *COFFObjectFile::getCOFFSymbol(symbol_iterator &It) const {
   return toSymb(It->getRawDataRefImpl());
 }
 
-const coff_relocation *COFFObjectFile::getCOFFRelocation(
-                                             relocation_iterator &It) const {
+const coff_relocation *
+COFFObjectFile::getCOFFRelocation(relocation_iterator &It) const {
   return toRel(It->getRawDataRefImpl());
 }
 

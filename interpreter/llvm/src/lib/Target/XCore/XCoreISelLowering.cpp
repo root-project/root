@@ -50,6 +50,7 @@ getTargetNodeName(unsigned Opcode) const
     case XCoreISD::PCRelativeWrapper : return "XCoreISD::PCRelativeWrapper";
     case XCoreISD::DPRelativeWrapper : return "XCoreISD::DPRelativeWrapper";
     case XCoreISD::CPRelativeWrapper : return "XCoreISD::CPRelativeWrapper";
+    case XCoreISD::LDWSP             : return "XCoreISD::LDWSP";
     case XCoreISD::STWSP             : return "XCoreISD::STWSP";
     case XCoreISD::RETSP             : return "XCoreISD::RETSP";
     case XCoreISD::LADD              : return "XCoreISD::LADD";
@@ -180,8 +181,11 @@ XCoreTargetLowering::XCoreTargetLowering(XCoreTargetMachine &XTM)
   // We have target-specific dag combine patterns for the following nodes:
   setTargetDAGCombine(ISD::STORE);
   setTargetDAGCombine(ISD::ADD);
+  setTargetDAGCombine(ISD::INTRINSIC_VOID);
+  setTargetDAGCombine(ISD::INTRINSIC_W_CHAIN);
 
   setMinFunctionAlignment(1);
+  setPrefFunctionAlignment(2);
 }
 
 bool XCoreTargetLowering::isZExtFree(SDValue Val, EVT VT2) const {
@@ -1075,6 +1079,52 @@ XCoreTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
   }
 }
 
+/// LowerCallResult - Lower the result values of a call into the
+/// appropriate copies out of appropriate physical registers / memory locations.
+static SDValue
+LowerCallResult(SDValue Chain, SDValue InFlag,
+                const SmallVectorImpl<CCValAssign> &RVLocs,
+                SDLoc dl, SelectionDAG &DAG,
+                SmallVectorImpl<SDValue> &InVals) {
+  SmallVector<std::pair<int, unsigned>, 4> ResultMemLocs;
+  // Copy results out of physical registers.
+  for (unsigned i = 0, e = RVLocs.size(); i != e; ++i) {
+    const CCValAssign &VA = RVLocs[i];
+    if (VA.isRegLoc()) {
+      Chain = DAG.getCopyFromReg(Chain, dl, VA.getLocReg(), VA.getValVT(),
+                                 InFlag).getValue(1);
+      InFlag = Chain.getValue(2);
+      InVals.push_back(Chain.getValue(0));
+    } else {
+      assert(VA.isMemLoc());
+      ResultMemLocs.push_back(std::make_pair(VA.getLocMemOffset(),
+                                             InVals.size()));
+      // Reserve space for this result.
+      InVals.push_back(SDValue());
+    }
+  }
+
+  // Copy results out of memory.
+  SmallVector<SDValue, 4> MemOpChains;
+  for (unsigned i = 0, e = ResultMemLocs.size(); i != e; ++i) {
+    int offset = ResultMemLocs[i].first;
+    unsigned index = ResultMemLocs[i].second;
+    SDVTList VTs = DAG.getVTList(MVT::i32, MVT::Other);
+    SDValue Ops[] = { Chain, DAG.getConstant(offset / 4, MVT::i32) };
+    SDValue load = DAG.getNode(XCoreISD::LDWSP, dl, VTs, Ops, 2);
+    InVals[index] = load;
+    MemOpChains.push_back(load.getValue(1));
+  }
+
+  // Transform all loads nodes into one single node because
+  // all load nodes are independent of each other.
+  if (!MemOpChains.empty())
+    Chain = DAG.getNode(ISD::TokenFactor, dl, MVT::Other,
+                        &MemOpChains[0], MemOpChains.size());
+
+  return Chain;
+}
+
 /// LowerCCCCallTo - functions arguments are copied from virtual
 /// regs to (physical regs)/(stack frame), CALLSEQ_START and
 /// CALLSEQ_END are emitted.
@@ -1100,8 +1150,15 @@ XCoreTargetLowering::LowerCCCCallTo(SDValue Chain, SDValue Callee,
 
   CCInfo.AnalyzeCallOperands(Outs, CC_XCore);
 
+  SmallVector<CCValAssign, 16> RVLocs;
+  // Analyze return values to determine the number of bytes of stack required.
+  CCState RetCCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
+                    getTargetMachine(), RVLocs, *DAG.getContext());
+  RetCCInfo.AllocateStack(CCInfo.getNextStackOffset(), 4);
+  RetCCInfo.AnalyzeCallResult(Ins, RetCC_XCore);
+
   // Get a count of how many bytes are to be pushed on the stack.
-  unsigned NumBytes = CCInfo.getNextStackOffset();
+  unsigned NumBytes = RetCCInfo.getNextStackOffset();
 
   Chain = DAG.getCALLSEQ_START(Chain,DAG.getConstant(NumBytes,
                                  getPointerTy(), true), dl);
@@ -1199,35 +1256,7 @@ XCoreTargetLowering::LowerCCCCallTo(SDValue Chain, SDValue Callee,
 
   // Handle result values, copying them out of physregs into vregs that we
   // return.
-  return LowerCallResult(Chain, InFlag, CallConv, isVarArg,
-                         Ins, dl, DAG, InVals);
-}
-
-/// LowerCallResult - Lower the result values of a call into the
-/// appropriate copies out of appropriate physical registers.
-SDValue
-XCoreTargetLowering::LowerCallResult(SDValue Chain, SDValue InFlag,
-                                     CallingConv::ID CallConv, bool isVarArg,
-                                     const SmallVectorImpl<ISD::InputArg> &Ins,
-                                     SDLoc dl, SelectionDAG &DAG,
-                                     SmallVectorImpl<SDValue> &InVals) const {
-
-  // Assign locations to each value returned by this call.
-  SmallVector<CCValAssign, 16> RVLocs;
-  CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(),
-                 getTargetMachine(), RVLocs, *DAG.getContext());
-
-  CCInfo.AnalyzeCallResult(Ins, RetCC_XCore);
-
-  // Copy all of the result registers out of their specified physreg.
-  for (unsigned i = 0; i != RVLocs.size(); ++i) {
-    Chain = DAG.getCopyFromReg(Chain, dl, RVLocs[i].getLocReg(),
-                                 RVLocs[i].getValVT(), InFlag).getValue(1);
-    InFlag = Chain.getValue(2);
-    InVals.push_back(Chain.getValue(0));
-  }
-
-  return Chain;
+  return LowerCallResult(Chain, InFlag, RVLocs, dl, DAG, InVals);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1275,6 +1304,7 @@ XCoreTargetLowering::LowerCCCArguments(SDValue Chain,
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo *MFI = MF.getFrameInfo();
   MachineRegisterInfo &RegInfo = MF.getRegInfo();
+  XCoreFunctionInfo *XFI = MF.getInfo<XCoreFunctionInfo>();
 
   // Assign locations to all of the incoming arguments.
   SmallVector<CCValAssign, 16> ArgLocs;
@@ -1286,6 +1316,9 @@ XCoreTargetLowering::LowerCCCArguments(SDValue Chain,
   unsigned StackSlotSize = XCoreFrameLowering::stackSlotSize();
 
   unsigned LRSaveSize = StackSlotSize;
+
+  if (!isVarArg)
+    XFI->setReturnStackOffset(CCInfo.getNextStackOffset() + LRSaveSize);
 
   // All getCopyFromReg ops must precede any getMemcpys to prevent the
   // scheduler clobbering a register before it has been copied.
@@ -1437,7 +1470,11 @@ CanLowerReturn(CallingConv::ID CallConv, MachineFunction &MF,
                LLVMContext &Context) const {
   SmallVector<CCValAssign, 16> RVLocs;
   CCState CCInfo(CallConv, isVarArg, MF, getTargetMachine(), RVLocs, Context);
-  return CCInfo.CheckReturn(Outs, RetCC_XCore);
+  if (!CCInfo.CheckReturn(Outs, RetCC_XCore))
+    return false;
+  if (CCInfo.getNextStackOffset() != 0 && isVarArg)
+    return false;
+  return true;
 }
 
 SDValue
@@ -1446,6 +1483,10 @@ XCoreTargetLowering::LowerReturn(SDValue Chain,
                                  const SmallVectorImpl<ISD::OutputArg> &Outs,
                                  const SmallVectorImpl<SDValue> &OutVals,
                                  SDLoc dl, SelectionDAG &DAG) const {
+
+  XCoreFunctionInfo *XFI =
+    DAG.getMachineFunction().getInfo<XCoreFunctionInfo>();
+  MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
 
   // CCValAssign - represent the assignment of
   // the return value to a location
@@ -1456,6 +1497,9 @@ XCoreTargetLowering::LowerReturn(SDValue Chain,
                  getTargetMachine(), RVLocs, *DAG.getContext());
 
   // Analyze return values.
+  if (!isVarArg)
+    CCInfo.AllocateStack(XFI->getReturnStackOffset(), 4);
+
   CCInfo.AnalyzeReturn(Outs, RetCC_XCore);
 
   SDValue Flag;
@@ -1464,13 +1508,43 @@ XCoreTargetLowering::LowerReturn(SDValue Chain,
   // Return on XCore is always a "retsp 0"
   RetOps.push_back(DAG.getConstant(0, MVT::i32));
 
-  // Copy the result values into the output registers.
-  for (unsigned i = 0; i != RVLocs.size(); ++i) {
+  SmallVector<SDValue, 4> MemOpChains;
+  // Handle return values that must be copied to memory.
+  for (unsigned i = 0, e = RVLocs.size(); i != e; ++i) {
     CCValAssign &VA = RVLocs[i];
-    assert(VA.isRegLoc() && "Can only return in registers!");
+    if (VA.isRegLoc())
+      continue;
+    assert(VA.isMemLoc());
+    if (isVarArg) {
+      report_fatal_error("Can't return value from vararg function in memory");
+    }
 
-    Chain = DAG.getCopyToReg(Chain, dl, VA.getLocReg(),
-                             OutVals[i], Flag);
+    int Offset = VA.getLocMemOffset();
+    unsigned ObjSize = VA.getLocVT().getSizeInBits() / 8;
+    // Create the frame index object for the memory location.
+    int FI = MFI->CreateFixedObject(ObjSize, Offset, false);
+
+    // Create a SelectionDAG node corresponding to a store
+    // to this memory location.
+    SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
+    MemOpChains.push_back(DAG.getStore(Chain, dl, OutVals[i], FIN,
+                          MachinePointerInfo::getFixedStack(FI), false, false,
+                          0));
+  }
+
+  // Transform all store nodes into one single node because
+  // all stores are independent of each other.
+  if (!MemOpChains.empty())
+    Chain = DAG.getNode(ISD::TokenFactor, dl, MVT::Other,
+                        &MemOpChains[0], MemOpChains.size());
+
+  // Now handle return values copied to registers.
+  for (unsigned i = 0, e = RVLocs.size(); i != e; ++i) {
+    CCValAssign &VA = RVLocs[i];
+    if (!VA.isRegLoc())
+      continue;
+    // Copy the result values into the output registers.
+    Chain = DAG.getCopyToReg(Chain, dl, VA.getLocReg(), OutVals[i], Flag);
 
     // guarantee that all emitted copies are
     // stuck together, avoiding something bad
@@ -1565,6 +1639,46 @@ SDValue XCoreTargetLowering::PerformDAGCombine(SDNode *N,
   SDLoc dl(N);
   switch (N->getOpcode()) {
   default: break;
+  case ISD::INTRINSIC_VOID:
+    switch (cast<ConstantSDNode>(N->getOperand(1))->getZExtValue()) {
+    case Intrinsic::xcore_outt:
+    case Intrinsic::xcore_outct:
+    case Intrinsic::xcore_chkct: {
+      SDValue OutVal = N->getOperand(3);
+      // These instructions ignore the high bits.
+      if (OutVal.hasOneUse()) {
+        unsigned BitWidth = OutVal.getValueSizeInBits();
+        APInt DemandedMask = APInt::getLowBitsSet(BitWidth, 8);
+        APInt KnownZero, KnownOne;
+        TargetLowering::TargetLoweringOpt TLO(DAG, !DCI.isBeforeLegalize(),
+                                              !DCI.isBeforeLegalizeOps());
+        const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+        if (TLO.ShrinkDemandedConstant(OutVal, DemandedMask) ||
+            TLI.SimplifyDemandedBits(OutVal, DemandedMask, KnownZero, KnownOne,
+                                     TLO))
+          DCI.CommitTargetLoweringOpt(TLO);
+      }
+      break;
+    }
+    case Intrinsic::xcore_setpt: {
+      SDValue Time = N->getOperand(3);
+      // This instruction ignores the high bits.
+      if (Time.hasOneUse()) {
+        unsigned BitWidth = Time.getValueSizeInBits();
+        APInt DemandedMask = APInt::getLowBitsSet(BitWidth, 16);
+        APInt KnownZero, KnownOne;
+        TargetLowering::TargetLoweringOpt TLO(DAG, !DCI.isBeforeLegalize(),
+                                              !DCI.isBeforeLegalizeOps());
+        const TargetLowering &TLI = DAG.getTargetLoweringInfo();
+        if (TLO.ShrinkDemandedConstant(Time, DemandedMask) ||
+            TLI.SimplifyDemandedBits(Time, DemandedMask, KnownZero, KnownOne,
+                                     TLO))
+          DCI.CommitTargetLoweringOpt(TLO);
+      }
+      break;
+    }
+    }
+    break;
   case XCoreISD::LADD: {
     SDValue N0 = N->getOperand(0);
     SDValue N1 = N->getOperand(1);
@@ -1767,6 +1881,34 @@ void XCoreTargetLowering::computeMaskedBitsForTargetNode(const SDValue Op,
       // Top bits of carry / borrow are clear.
       KnownZero = APInt::getHighBitsSet(KnownZero.getBitWidth(),
                                         KnownZero.getBitWidth() - 1);
+    }
+    break;
+  case ISD::INTRINSIC_W_CHAIN:
+    {
+      unsigned IntNo = cast<ConstantSDNode>(Op.getOperand(1))->getZExtValue();
+      switch (IntNo) {
+      case Intrinsic::xcore_getts:
+        // High bits are known to be zero.
+        KnownZero = APInt::getHighBitsSet(KnownZero.getBitWidth(),
+                                          KnownZero.getBitWidth() - 16);
+        break;
+      case Intrinsic::xcore_int:
+      case Intrinsic::xcore_inct:
+        // High bits are known to be zero.
+        KnownZero = APInt::getHighBitsSet(KnownZero.getBitWidth(),
+                                          KnownZero.getBitWidth() - 8);
+        break;
+      case Intrinsic::xcore_testct:
+        // Result is either 0 or 1.
+        KnownZero = APInt::getHighBitsSet(KnownZero.getBitWidth(),
+                                          KnownZero.getBitWidth() - 1);
+        break;
+      case Intrinsic::xcore_testwct:
+        // Result is in the range 0 - 4.
+        KnownZero = APInt::getHighBitsSet(KnownZero.getBitWidth(),
+                                          KnownZero.getBitWidth() - 3);
+        break;
+      }
     }
     break;
   }

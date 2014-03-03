@@ -20,6 +20,7 @@
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/TargetOptions.h"
+#include "clang/Basic/VirtualFileSystem.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
@@ -37,7 +38,6 @@
 #include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Atomic.h"
 #include "llvm/Support/CrashRecoveryContext.h"
-#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/Host.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/Mutex.h"
@@ -191,10 +191,7 @@ struct ASTUnit::ASTWriterData {
 };
 
 void ASTUnit::clearFileLevelDecls() {
-  for (FileDeclsTy::iterator
-         I = FileDecls.begin(), E = FileDecls.end(); I != E; ++I)
-    delete I->second;
-  FileDecls.clear();
+  llvm::DeleteContainerSeconds(FileDecls);
 }
 
 void ASTUnit::CleanTemporaryFiles() {
@@ -721,8 +718,6 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
   HeaderSearch &HeaderInfo = *AST->HeaderInfo.get();
   unsigned Counter;
 
-  OwningPtr<ASTReader> Reader;
-
   AST->PP = new Preprocessor(PPOpts,
                              AST->getDiagnostics(), AST->ASTFileLangOpts,
                              /*Target=*/0, AST->getSourceManager(), HeaderInfo, 
@@ -745,21 +740,17 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
   bool disableValid = false;
   if (::getenv("LIBCLANG_DISABLE_PCH_VALIDATION"))
     disableValid = true;
-  Reader.reset(new ASTReader(PP, Context,
+  AST->Reader = new ASTReader(PP, Context,
                              /*isysroot=*/"",
                              /*DisableValidation=*/disableValid,
-                             AllowPCHWithCompilerErrors));
-  
-  // Recover resources if we crash before exiting this method.
-  llvm::CrashRecoveryContextCleanupRegistrar<ASTReader>
-    ReaderCleanup(Reader.get());
+                             AllowPCHWithCompilerErrors);
 
-  Reader->setListener(new ASTInfoCollector(*AST->PP, Context,
+  AST->Reader->setListener(new ASTInfoCollector(*AST->PP, Context,
                                            AST->ASTFileLangOpts,
                                            AST->TargetOpts, AST->Target, 
                                            Counter));
 
-  switch (Reader->ReadAST(Filename, serialization::MK_MainFile,
+  switch (AST->Reader->ReadAST(Filename, serialization::MK_MainFile,
                           SourceLocation(), ASTReader::ARR_None)) {
   case ASTReader::Success:
     break;
@@ -774,21 +765,14 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
     return NULL;
   }
 
-  AST->OriginalSourceFile = Reader->getOriginalSourceFile();
+  AST->OriginalSourceFile = AST->Reader->getOriginalSourceFile();
 
   PP.setCounterValue(Counter);
 
   // Attach the AST reader to the AST context as an external AST
   // source, so that declarations will be deserialized from the
   // AST file as needed.
-  ASTReader *ReaderPtr = Reader.get();
-  OwningPtr<ExternalASTSource> Source(Reader.take());
-
-  // Unregister the cleanup for ASTReader.  It will get cleaned up
-  // by the ASTUnit cleanup.
-  ReaderCleanup.unregister();
-
-  Context.setExternalSource(Source);
+  Context.setExternalSource(AST->Reader);
 
   // Create an AST consumer, even though it isn't used.
   AST->Consumer.reset(new ASTConsumer);
@@ -796,8 +780,7 @@ ASTUnit *ASTUnit::LoadFromASTFile(const std::string &Filename,
   // Create a semantic analysis object and tell the AST reader about it.
   AST->TheSema.reset(new Sema(PP, Context, *AST->Consumer));
   AST->TheSema->Initialize();
-  ReaderPtr->InitializeSema(*AST->TheSema);
-  AST->Reader = ReaderPtr;
+  AST->Reader->InitializeSema(*AST->TheSema);
 
   // Tell the diagnostic client that we have started a source file.
   AST->getDiagnostics().getClient()->BeginSourceFile(Context.getLangOpts(),&PP);
@@ -1176,7 +1159,7 @@ bool ASTUnit::Parse(llvm::MemoryBuffer *OverrideMainBuffer) {
 
   if (OverrideMainBuffer) {
     std::string ModName = getPreambleFile(this);
-    TranslateStoredDiagnostics(Clang->getModuleManager(), ModName,
+    TranslateStoredDiagnostics(Clang->getModuleManager().getPtr(), ModName,
                                getSourceManager(), PreambleDiagnostics,
                                StoredDiagnostics);
   }
@@ -1421,7 +1404,7 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
              REnd = PreprocessorOpts.remapped_file_end();
            !AnyFileChanged && R != REnd;
            ++R) {
-        llvm::sys::fs::file_status Status;
+        vfs::Status Status;
         if (FileMgr->getNoncachedStatValue(R->second, Status)) {
           // If we can't stat the file we're remapping to, assume that something
           // horrible happened.
@@ -1457,7 +1440,7 @@ llvm::MemoryBuffer *ASTUnit::getMainBufferWithPrecompiledPreamble(
         }
         
         // The file was not remapped; check whether it has changed on disk.
-        llvm::sys::fs::file_status Status;
+        vfs::Status Status;
         if (FileMgr->getNoncachedStatValue(F->first(), Status)) {
           // If we can't stat the file, assume that something horrible happened.
           AnyFileChanged = true;

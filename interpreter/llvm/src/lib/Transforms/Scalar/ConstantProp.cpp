@@ -67,7 +67,8 @@ bool ConstantPropagation::runOnFunction(Function &F) {
       WorkList.insert(&*i);
   }
   bool Changed = false;
-  DataLayout *TD = getAnalysisIfAvailable<DataLayout>();
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  const DataLayout *DL = DLP ? &DLP->getDataLayout() : 0;
   TargetLibraryInfo *TLI = &getAnalysis<TargetLibraryInfo>();
 
   while (!WorkList.empty()) {
@@ -75,7 +76,7 @@ bool ConstantPropagation::runOnFunction(Function &F) {
     WorkList.erase(WorkList.begin());    // Get an element from the worklist...
 
     if (!I->use_empty())                 // Don't muck with dead instructions...
-      if (Constant *C = ConstantFoldInstruction(I, TD, TLI)) {
+      if (Constant *C = ConstantFoldInstruction(I, DL, TLI)) {
         // Add all of the users of this instruction to the worklist, they might
         // be constant propagatable now...
         for (Value::use_iterator UI = I->use_begin(), UE = I->use_end();

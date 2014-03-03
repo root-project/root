@@ -394,7 +394,7 @@ static void GenOpenCLArgMetadata(const FunctionDecl *FD, llvm::Function *Fn,
       if (ty->isImageType())
         AddrSpc =
           CGM.getContext().getTargetAddressSpace(LangAS::opencl_global);
-      
+
       addressQuals.push_back(Builder.getInt32(AddrSpc));
 
       // Get argument type name.
@@ -518,7 +518,7 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
 
   // Pass inline keyword to optimizer if it appears explicitly on any
   // declaration. Also, in the case of -fno-inline attach NoInline
-  // attribute to all function that are not marked AlwaysInline or ForceInline.
+  // attribute to all function that are not marked AlwaysInline.
   if (const FunctionDecl *FD = dyn_cast_or_null<FunctionDecl>(D)) {
     if (!CGM.getCodeGenOpts().NoInline) {
       for (FunctionDecl::redecl_iterator RI = FD->redecls_begin(),
@@ -527,8 +527,7 @@ void CodeGenFunction::StartFunction(GlobalDecl GD,
           Fn->addFnAttr(llvm::Attribute::InlineHint);
           break;
         }
-    } else if (!FD->hasAttr<AlwaysInlineAttr>() &&
-               !FD->hasAttr<ForceInlineAttr>())
+    } else if (!FD->hasAttr<AlwaysInlineAttr>())
       Fn->addFnAttr(llvm::Attribute::NoInline);
   }
 
@@ -686,6 +685,26 @@ void CodeGenFunction::EmitFunctionBody(FunctionArgList &Args,
     EmitCompoundStmtWithoutScope(*S);
   else
     EmitStmt(Body);
+}
+
+/// When instrumenting to collect profile data, the counts for some blocks
+/// such as switch cases need to not include the fall-through counts, so
+/// emit a branch around the instrumentation code. When not instrumenting,
+/// this just calls EmitBlock().
+void CodeGenFunction::EmitBlockWithFallThrough(llvm::BasicBlock *BB,
+                                               RegionCounter &Cnt) {
+  llvm::BasicBlock *SkipCountBB = 0;
+  if (HaveInsertPoint() && CGM.getCodeGenOpts().ProfileInstrGenerate) {
+    // When instrumenting for profiling, the fallthrough to certain
+    // statements needs to skip over the instrumentation code so that we
+    // get an accurate count.
+    SkipCountBB = createBasicBlock("skipcount");
+    EmitBranch(SkipCountBB);
+  }
+  EmitBlock(BB);
+  Cnt.beginRegion(Builder, /*AddIncomingFallThrough=*/true);
+  if (SkipCountBB)
+    EmitBlock(SkipCountBB);
 }
 
 /// Tries to mark the given function nounwind based on the
@@ -917,10 +936,11 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
   Cond = Cond->IgnoreParens();
 
   if (const BinaryOperator *CondBOp = dyn_cast<BinaryOperator>(Cond)) {
-    RegionCounter Cnt = getPGORegionCounter(CondBOp);
 
     // Handle X && Y in a condition.
     if (CondBOp->getOpcode() == BO_LAnd) {
+      RegionCounter Cnt = getPGORegionCounter(CondBOp);
+
       // If we have "1 && X", simplify the code.  "0 && X" would have constant
       // folded if the case was simple enough.
       bool ConstantBool = false;
@@ -957,13 +977,13 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
       eval.begin(*this);
       EmitBranchOnBoolExpr(CondBOp->getRHS(), TrueBlock, FalseBlock, TrueCount);
       eval.end(*this);
-      Cnt.adjustForControlFlow();
-      Cnt.applyAdjustmentsToRegion();
 
       return;
     }
 
     if (CondBOp->getOpcode() == BO_LOr) {
+      RegionCounter Cnt = getPGORegionCounter(CondBOp);
+
       // If we have "0 || X", simplify the code.  "1 || X" would have constant
       // folded if the case was simple enough.
       bool ConstantBool = false;
@@ -1003,8 +1023,6 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
       EmitBranchOnBoolExpr(CondBOp->getRHS(), TrueBlock, FalseBlock, RHSCount);
 
       eval.end(*this);
-      Cnt.adjustForControlFlow();
-      Cnt.applyAdjustmentsToRegion();
 
       return;
     }
@@ -1037,7 +1055,7 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
     // the conditional operator.
     uint64_t LHSScaledTrueCount = 0;
     if (TrueCount) {
-      double LHSRatio = Cnt.getCount() / (double) PGO.getCurrentRegionCount();
+      double LHSRatio = Cnt.getCount() / (double) Cnt.getParentCount();
       LHSScaledTrueCount = TrueCount * LHSRatio;
     }
 
@@ -1050,7 +1068,6 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
 
     cond.begin(*this);
     EmitBlock(RHSBlock);
-    Cnt.beginElseRegion();
     EmitBranchOnBoolExpr(CondOp->getRHS(), TrueBlock, FalseBlock,
                          TrueCount - LHSScaledTrueCount);
     cond.end(*this);
@@ -1070,7 +1087,7 @@ void CodeGenFunction::EmitBranchOnBoolExpr(const Expr *Cond,
 
   // Create branch weights based on the number of times we get here and the
   // number of times the condition should be true.
-  uint64_t CurrentCount = PGO.getCurrentRegionCountWithMin(TrueCount);
+  uint64_t CurrentCount = std::max(PGO.getCurrentRegionCount(), TrueCount);
   llvm::MDNode *Weights = PGO.createBranchWeights(TrueCount,
                                                   CurrentCount - TrueCount);
 

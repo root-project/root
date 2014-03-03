@@ -152,7 +152,8 @@
 /// LLVM_FINAL - Expands to 'final' if the compiler supports it.
 /// Use to mark classes or virtual methods as final.
 #if __has_feature(cxx_override_control) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
+    (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC_PREREQ(4, 7)) || \
+    LLVM_MSC_PREREQ(1700)
 #define LLVM_FINAL final
 #else
 #define LLVM_FINAL
@@ -161,7 +162,8 @@
 /// LLVM_OVERRIDE - Expands to 'override' if the compiler supports it.
 /// Use to mark virtual methods as overriding a base class method.
 #if __has_feature(cxx_override_control) || \
-    defined(__GXX_EXPERIMENTAL_CXX0X__) || LLVM_MSC_PREREQ(1700)
+    (defined(__GXX_EXPERIMENTAL_CXX0X__) && __GNUC_PREREQ(4, 7)) || \
+    LLVM_MSC_PREREQ(1700)
 #define LLVM_OVERRIDE override
 #else
 #define LLVM_OVERRIDE
@@ -347,19 +349,15 @@
 # define LLVM_FUNCTION_NAME __func__
 #endif
 
-#if defined(HAVE_SANITIZER_MSAN_INTERFACE_H)
-# include <sanitizer/msan_interface.h>
-#else
-# define __msan_allocated_memory(p, size)
-# define __msan_unpoison(p, size)
-#endif
-
 /// \macro LLVM_MEMORY_SANITIZER_BUILD
 /// \brief Whether LLVM itself is built with MemorySanitizer instrumentation.
 #if __has_feature(memory_sanitizer)
 # define LLVM_MEMORY_SANITIZER_BUILD 1
+# include <sanitizer/msan_interface.h>
 #else
 # define LLVM_MEMORY_SANITIZER_BUILD 0
+# define __msan_allocated_memory(p, size)
+# define __msan_unpoison(p, size)
 #endif
 
 /// \macro LLVM_ADDRESS_SANITIZER_BUILD

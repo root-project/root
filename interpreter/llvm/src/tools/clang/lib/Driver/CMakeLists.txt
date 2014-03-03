@@ -20,16 +20,11 @@ add_clang_library(clangDriver
   WindowsToolChain.cpp
   Tools.cpp
   Types.cpp
-  )
 
-add_dependencies(clangDriver
-  ClangAttrList
+  DEPENDS
   ClangCC1AsOptions
-  ClangDiagnosticCommon
-  ClangDiagnosticDriver
   ClangDriverOptions
-  )
 
-target_link_libraries(clangDriver
+  LINK_LIBS
   clangBasic
   )

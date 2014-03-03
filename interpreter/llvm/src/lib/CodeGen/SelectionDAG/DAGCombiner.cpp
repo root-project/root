@@ -3818,6 +3818,24 @@ SDValue DAGCombiner::visitSHL(SDNode *N) {
   if (VT.isVector()) {
     SDValue FoldedVOp = SimplifyVBinOp(N);
     if (FoldedVOp.getNode()) return FoldedVOp;
+
+    BuildVectorSDNode *N1CV = dyn_cast<BuildVectorSDNode>(N1);
+    // If setcc produces all-one true value then:
+    // (shl (and (setcc) N01CV) N1CV) -> (and (setcc) N01CV<<N1CV)
+    if (N1CV && N1CV->isConstant() &&
+        TLI.getBooleanContents(true) ==
+          TargetLowering::ZeroOrNegativeOneBooleanContent &&
+        N0.getOpcode() == ISD::AND) {
+      SDValue N00 = N0->getOperand(0);
+      SDValue N01 = N0->getOperand(1);
+      BuildVectorSDNode *N01CV = dyn_cast<BuildVectorSDNode>(N01);
+
+      if (N01CV && N01CV->isConstant() && N00.getOpcode() == ISD::SETCC) {
+        SDValue C = DAG.FoldConstantArithmetic(ISD::SHL, VT, N01CV, N1CV);
+        if (C.getNode())
+          return DAG.getNode(ISD::AND, SDLoc(N), VT, N00, C);
+      }
+    }
   }
 
   // fold (shl c1, c2) -> c1<<c2
@@ -5790,7 +5808,7 @@ SDValue DAGCombiner::visitTRUNCATE(SDNode *N) {
   // creates this pattern) and before operation legalization after which
   // we need to be more careful about the vector instructions that we generate.
   if (N0.getOpcode() == ISD::EXTRACT_VECTOR_ELT &&
-      LegalTypes && !LegalOperations && N0->hasOneUse()) {
+      LegalTypes && !LegalOperations && N0->hasOneUse() && VT != MVT::i1) {
 
     EVT VecTy = N0.getOperand(0).getValueType();
     EVT ExTy = N0.getValueType();
@@ -5948,8 +5966,7 @@ SDValue DAGCombiner::CombineConsecutiveLoads(SDNode *N, EVT VT) {
   LoadSDNode *LD1 = dyn_cast<LoadSDNode>(getBuildPairElt(N, 0));
   LoadSDNode *LD2 = dyn_cast<LoadSDNode>(getBuildPairElt(N, 1));
   if (!LD1 || !LD2 || !ISD::isNON_EXTLoad(LD1) || !LD1->hasOneUse() ||
-      LD1->getPointerInfo().getAddrSpace() !=
-         LD2->getPointerInfo().getAddrSpace())
+      LD1->getAddressSpace() != LD2->getAddressSpace())
     return SDValue();
   EVT LD1VT = LD1->getValueType(0);
 

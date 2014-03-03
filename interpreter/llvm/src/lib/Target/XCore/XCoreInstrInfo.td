@@ -68,6 +68,10 @@ def SDT_XCoreStwsp    : SDTypeProfile<0, 2, [SDTCisInt<1>]>;
 def XCoreStwsp        : SDNode<"XCoreISD::STWSP", SDT_XCoreStwsp,
                                [SDNPHasChain, SDNPMayStore]>;
 
+def SDT_XCoreLdwsp    : SDTypeProfile<1, 1, [SDTCisInt<1>]>;
+def XCoreLdwsp        : SDNode<"XCoreISD::LDWSP", SDT_XCoreLdwsp,
+                               [SDNPHasChain, SDNPMayLoad]>;
+
 // These are target-independent nodes, but have target-specific formats.
 def SDT_XCoreCallSeqStart : SDCallSeqStart<[ SDTCisVT<0, i32> ]>;
 def SDT_XCoreCallSeqEnd   : SDCallSeqEnd<[ SDTCisVT<0, i32>,
@@ -581,10 +585,12 @@ def STWSP_lru6 : _FLRU6<0b010101, (outs), (ins RRegs:$a, i32imm:$b),
 
 let mayLoad=1 in {
 def LDWSP_ru6 : _FRU6<0b010111, (outs RRegs:$a), (ins i32imm:$b),
-                      "ldw $a, sp[$b]", []>;
+                      "ldw $a, sp[$b]",
+                      [(set RRegs:$a, (XCoreLdwsp immU6:$b))]>;
 
 def LDWSP_lru6 : _FLRU6<0b010111, (outs RRegs:$a), (ins i32imm:$b),
-                        "ldw $a, sp[$b]", []>;
+                        "ldw $a, sp[$b]",
+                        [(set RRegs:$a, (XCoreLdwsp immU16:$b))]>;
 }
 
 let neverHasSideEffects = 1 in {
@@ -1013,7 +1019,8 @@ def SETEV_1r : _F1R<0b001111, (outs), (ins GRRegs:$a),
 
 def DGETREG_1r : _F1R<0b001110, (outs GRRegs:$a), (ins), "dgetreg $a", []>;
 
-def EDU_1r : _F1R<0b000000, (outs), (ins GRRegs:$a), "edu res[$a]", []>;
+def EDU_1r : _F1R<0b000000, (outs), (ins GRRegs:$a), "edu res[$a]",
+                  [(int_xcore_edu GRRegs:$a)]>;
 
 def EEU_1r : _F1R<0b000001, (outs), (ins GRRegs:$a),
                "eeu res[$a]",
@@ -1027,7 +1034,8 @@ def WAITET_1R : _F1R<0b000010, (outs), (ins GRRegs:$a), "waitet $a", []>;
 
 def TSTART_1R : _F1R<0b000110, (outs), (ins GRRegs:$a), "start t[$a]", []>;
 
-def CLRPT_1R : _F1R<0b100000, (outs), (ins GRRegs:$a), "clrpt res[$a]", []>;
+def CLRPT_1R : _F1R<0b100000, (outs), (ins GRRegs:$a), "clrpt res[$a]",
+                    [(int_xcore_clrpt GRRegs:$a)]>;
 
 // Zero operand short
 

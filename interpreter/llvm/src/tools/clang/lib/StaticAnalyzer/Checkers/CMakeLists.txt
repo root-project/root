@@ -74,19 +74,11 @@ add_clang_library(clangStaticAnalyzerCheckers
   UnreachableCodeChecker.cpp
   VLASizeChecker.cpp
   VirtualCallChecker.cpp
-  )
 
-add_dependencies(clangStaticAnalyzerCheckers
-  ClangAttrClasses
-  ClangAttrList
-  ClangCommentNodes
-  ClangDeclNodes
-  ClangDiagnosticCommon
-  ClangStmtNodes
+  DEPENDS
   ClangSACheckers
-  )
 
-target_link_libraries(clangStaticAnalyzerCheckers
+  LINK_LIBS
   clangAST
   clangAnalysis
   clangBasic

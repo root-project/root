@@ -3189,13 +3189,41 @@ DependenceAnalysis::tryDelinearize(const SCEV *SrcSCEV, const SCEV *DstSCEV,
     return false;
 
   SmallVector<const SCEV *, 4> SrcSubscripts, DstSubscripts, SrcSizes, DstSizes;
-  SrcAR->delinearize(*SE, SrcSubscripts, SrcSizes);
-  DstAR->delinearize(*SE, DstSubscripts, DstSizes);
+  const SCEV *RemainderS = SrcAR->delinearize(*SE, SrcSubscripts, SrcSizes);
+  const SCEV *RemainderD = DstAR->delinearize(*SE, DstSubscripts, DstSizes);
 
   int size = SrcSubscripts.size();
-  int dstSize = DstSubscripts.size();
-  if (size != dstSize || size < 2)
+  // Fail when there is only a subscript: that's a linearized access function.
+  if (size < 2)
     return false;
+
+  int dstSize = DstSubscripts.size();
+  // Fail when the number of subscripts in Src and Dst differ.
+  if (size != dstSize)
+    return false;
+
+  // Fail when the size of any of the subscripts in Src and Dst differs: the
+  // dependence analysis assumes that elements in the same array have same size.
+  // SCEV delinearization does not have a context based on which it would decide
+  // globally the size of subscripts that would best fit all the array accesses.
+  for (int i = 0; i < size; ++i)
+    if (SrcSizes[i] != DstSizes[i])
+      return false;
+
+  // When the difference in remainders is different than a constant it might be
+  // that the base address of the arrays is not the same.
+  const SCEV *DiffRemainders = SE->getMinusSCEV(RemainderS, RemainderD);
+  if (!isa<SCEVConstant>(DiffRemainders))
+    return false;
+
+  // Normalize the last dimension: integrate the size of the "scalar dimension"
+  // and the remainder of the delinearization.
+  DstSubscripts[size-1] = SE->getMulExpr(DstSubscripts[size-1],
+                                         DstSizes[size-1]);
+  SrcSubscripts[size-1] = SE->getMulExpr(SrcSubscripts[size-1],
+                                         SrcSizes[size-1]);
+  SrcSubscripts[size-1] = SE->getAddExpr(SrcSubscripts[size-1], RemainderS);
+  DstSubscripts[size-1] = SE->getAddExpr(DstSubscripts[size-1], RemainderD);
 
 #ifndef NDEBUG
   DEBUG(errs() << "\nSrcSubscripts: ");

@@ -141,7 +141,7 @@ protected:
     AliasAnalysis *AA;
     LoopInfo *LI;
     ScalarEvolution *SE;
-    DataLayout *DL;
+    const DataLayout *DL;
     TargetLibraryInfo *TLI;
     DominatorTree *DT;
 
@@ -1141,7 +1141,8 @@ bool LoopReroll::runOnLoop(Loop *L, LPPassManager &LPM) {
   LI = &getAnalysis<LoopInfo>();
   SE = &getAnalysis<ScalarEvolution>();
   TLI = &getAnalysis<TargetLibraryInfo>();
-  DL = getAnalysisIfAvailable<DataLayout>();
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  DL = DLP ? &DLP->getDataLayout() : 0;
   DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
 
   BasicBlock *Header = L->getHeader();

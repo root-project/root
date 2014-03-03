@@ -107,7 +107,7 @@ void LLVMDisposeModule(LLVMModuleRef M) {
 
 /*--.. Data layout .........................................................--*/
 const char * LLVMGetDataLayout(LLVMModuleRef M) {
-  return unwrap(M)->getDataLayout().c_str();
+  return unwrap(M)->getDataLayoutStr().c_str();
 }
 
 void LLVMSetDataLayout(LLVMModuleRef M, const char *Triple) {
@@ -130,7 +130,7 @@ void LLVMDumpModule(LLVMModuleRef M) {
 LLVMBool LLVMPrintModuleToFile(LLVMModuleRef M, const char *Filename,
                                char **ErrorMessage) {
   std::string error;
-  raw_fd_ostream dest(Filename, error);
+  raw_fd_ostream dest(Filename, error, sys::fs::F_Text);
   if (!error.empty()) {
     *ErrorMessage = strdup(error.c_str());
     return true;

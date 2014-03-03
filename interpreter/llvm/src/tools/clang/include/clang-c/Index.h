@@ -19,7 +19,9 @@
 #include <time.h>
 
 #include "clang-c/Platform.h"
+#include "clang-c/CXErrorCode.h"
 #include "clang-c/CXString.h"
+#include "clang-c/BuildSystem.h"
 
 /**
  * \brief The version constants for the libclang API.
@@ -30,7 +32,7 @@
  * compatible, thus CINDEX_VERSION_MAJOR is expected to remain stable.
  */
 #define CINDEX_VERSION_MAJOR 0
-#define CINDEX_VERSION_MINOR 23
+#define CINDEX_VERSION_MINOR 24
 
 #define CINDEX_VERSION_ENCODE(major, minor) ( \
       ((major) * 10000)                       \
@@ -71,43 +73,6 @@ extern "C" {
  *
  * @{
  */
-
-/**
- * \brief Error codes returned by libclang routines.
- *
- * Zero (\c CXError_Success) is the only error code indicating success.  Other
- * error codes, including not yet assigned non-zero values, indicate errors.
- */
-enum CXErrorCode {
-  /**
-   * \brief No error.
-   */
-  CXError_Success = 0,
-
-  /**
-   * \brief A generic error code, no further details are available.
-   *
-   * Errors of this kind can get their own specific error codes in future
-   * libclang versions.
-   */
-  CXError_Failure = 1,
-
-  /**
-   * \brief libclang crashed while performing the requested operation.
-   */
-  CXError_Crashed = 2,
-
-  /**
-   * \brief The function detected that the arguments violate the function
-   * contract.
-   */
-  CXError_InvalidArguments = 3,
-
-  /**
-   * \brief An AST deserialization error has occurred.
-   */
-  CXError_ASTReadError = 4
-};
 
 /**
  * \brief An "index" that consists of a set of translation units that would
@@ -2170,7 +2135,11 @@ enum CXCursorKind {
    */
   CXCursor_OMPParallelDirective          = 232,
 
-  CXCursor_LastStmt                      = CXCursor_OMPParallelDirective,
+  /** \brief OpenMP simd directive.
+   */
+  CXCursor_OMPSimdDirective              = 233,
+
+  CXCursor_LastStmt                      = CXCursor_OMPSimdDirective,
 
   /**
    * \brief Cursor that represents the translation unit itself.
@@ -3110,6 +3079,24 @@ enum CXRefQualifierKind {
   /** \brief An rvalue ref-qualifier was provided (\c &&). */
   CXRefQualifier_RValue
 };
+
+/**
+ * \brief Returns the number of template arguments for given class template
+ * specialization, or -1 if type \c T is not a class template specialization.
+ *
+ * Variadic argument packs count as only one argument, and can not be inspected
+ * further.
+ */
+CINDEX_LINKAGE int clang_Type_getNumTemplateArguments(CXType T);
+
+/**
+ * \brief Returns the type template argument of a template class specialization
+ * at given index.
+ *
+ * This function only returns template type arguments and does not handle
+ * template template arguments or variadic packs.
+ */
+CINDEX_LINKAGE CXType clang_Type_getTemplateArgumentAsType(CXType T, unsigned i);
 
 /**
  * \brief Retrieve the ref-qualifier kind of a function or method.

@@ -89,7 +89,7 @@ Sema::Sema(Preprocessor &pp, ASTContext &ctxt, ASTConsumer &consumer,
     NSDictionaryDecl(0), DictionaryWithObjectsMethod(0),
     GlobalNewDeleteDeclared(false),
     TUKind(TUKind),
-    NumSFINAEErrors(0), InFunctionDeclarator(0),
+    NumSFINAEErrors(0),
     AccessCheckingSFINAE(false), InNonInstantiationSFINAEContext(false),
     NonInstantiationEntries(0), ArgumentPackSubstitutionIndex(-1),
     CurrentInstantiationScope(0), DisableTypoCorrection(false),
@@ -208,10 +208,7 @@ void Sema::Initialize() {
 }
 
 Sema::~Sema() {
-  for (LateParsedTemplateMapT::iterator I = LateParsedTemplateMap.begin(),
-                                        E = LateParsedTemplateMap.end();
-       I != E; ++I)
-    delete I->second;
+  llvm::DeleteContainerSeconds(LateParsedTemplateMap);
   if (PackContext) FreePackedContext();
   if (VisContext) FreeVisContext();
   // Kill all the active scopes.

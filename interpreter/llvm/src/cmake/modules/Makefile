@@ -17,10 +17,6 @@ PROJ_cmake := $(DESTDIR)$(PROJ_prefix)/share/llvm/cmake
 
 OBJMODS := LLVMConfig.cmake LLVMConfigVersion.cmake LLVMExports.cmake
 
-# TODO: Teach LLVM-Config.cmake to work without explicit terminfo libs.
-TERMINFO_LIBS := tinfo terminfo curses ncurses ncursesw
-TERMINFO_LIBS := $(filter $(TERMINFO_LIBS),$(subst -l,,$(LIBS)))
-
 $(PROJ_OBJ_DIR)/LLVMConfig.cmake: LLVMConfig.cmake.in $(LLVMBuildCMakeFrag)
 	$(Echo) 'Generating LLVM CMake package config file'
 	$(Verb) ( \
@@ -30,7 +26,7 @@ $(PROJ_OBJ_DIR)/LLVMConfig.cmake: LLVMConfig.cmake.in $(LLVMBuildCMakeFrag)
 	  -e 's/@LLVM_VERSION_MINOR@/'"$(LLVM_VERSION_MINOR)"'/' \
 	  -e 's/@PACKAGE_VERSION@/'"$(LLVMVersion)"'/' \
 	  -e 's/@LLVM_COMMON_DEPENDS@//' \
-	  -e 's/"@llvm_libs@"/'"$(subst -l,,$(LLVMConfigLibs))"'/' \
+	  -e 's/@LLVM_AVAILABLE_LIBS@/'"$(subst -l,,$(LLVMConfigLibs))"'/' \
 	  -e 's/@LLVM_ALL_TARGETS@/'"$(ALL_TARGETS)"'/' \
 	  -e 's/@LLVM_TARGETS_TO_BUILD@/'"$(TARGETS_TO_BUILD)"'/' \
 	  -e 's/@LLVM_TARGETS_WITH_JIT@/'"$(TARGETS_WITH_JIT)"'/' \
@@ -40,11 +36,6 @@ $(PROJ_OBJ_DIR)/LLVMConfig.cmake: LLVMConfig.cmake.in $(LLVMBuildCMakeFrag)
 	  -e 's/@LLVM_ENABLE_ZLIB@/'"$(ENABLE_ZLIB)"'/' \
 	  -e 's/@LLVM_NATIVE_ARCH@/'"$(LLVM_NATIVE_ARCH)"'/' \
 	  -e 's/@LLVM_ENABLE_PIC@/'"$(ENABLE_PIC)"'/' \
-	  -e 's/@HAVE_TERMINFO@/'"$(HAVE_TERMINFO)"'/' \
-	  -e 's/@TERMINFO_LIBS@/'"$(TERMINFO_LIBS)"'/' \
-	  -e 's/@HAVE_LIBDL@/'"$(HAVE_DLOPEN)"'/' \
-	  -e 's/@HAVE_LIBPTHREAD@/'"$(HAVE_PTHREAD)"'/' \
-	  -e 's/@HAVE_LIBZ@/'"$(HAVE_LIBZ)"'/' \
 	  -e 's/@LLVM_ON_UNIX@/'"$(LLVM_ON_UNIX)"'/' \
 	  -e 's/@LLVM_ON_WIN32@/'"$(LLVM_ON_WIN32)"'/' \
 	  -e 's/@LLVM_CONFIG_INCLUDE_DIRS@/'"$(subst /,\/,$(PROJ_includedir))"'/' \
@@ -70,8 +61,9 @@ $(PROJ_OBJ_DIR)/LLVMExports.cmake: $(LLVMBuildCMakeExportsFrag)
 	    echo 'add_library('"$$lib"' STATIC IMPORTED)' && \
 	    echo 'set_property(TARGET '"$$lib"' PROPERTY IMPORTED_LOCATION "'"$(PROJ_libdir)/lib$$lib.a"'")' ; \
 	  done && \
-	  cat "$(LLVMBuildCMakeExportsFrag)" \
-	) > $@
+	  cat "$(LLVMBuildCMakeExportsFrag)" && \
+	  echo 'set_property(TARGET LLVMSupport APPEND PROPERTY IMPORTED_LINK_INTERFACE_LIBRARIES '"$(subst -l,,$(LIBS))"')' \
+	) | grep -v gtest > $@
 
 all-local:: $(addprefix $(PROJ_OBJ_DIR)/, $(OBJMODS))
 

@@ -47,6 +47,14 @@ Non-comprehensive list of changes in this release
   numbers. The old support for printing the debug line info directly was only
   used by ``llc`` and has been removed.
 
+* All inline assembly is parsed by the integrated assembler when it is enabled.
+  Previously this was only the case for object-file output. It is now the case
+  for assembly output as well. The integrated assembler can be disabled with
+  the ``-no-integrated-as`` option,
+
+* llvm-ar now handles IR files like regular object files. In particular, a
+  regular symbol table is created for symbols defined in IR files.
+
 .. NOTE
    For small 1-3 sentence descriptions, just add an entry at the end of
    this list. If your description won't fit comfortably in one bullet

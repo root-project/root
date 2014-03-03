@@ -58,7 +58,8 @@ N: James Grosbach
 E: grosbach@apple.com
 D: MC layer
 
-N: Howard Hinnant
+N: Marshall Clow
+E: mclow.lists@gmail.com
 D: libc++
 
 N: Justin Holewinski

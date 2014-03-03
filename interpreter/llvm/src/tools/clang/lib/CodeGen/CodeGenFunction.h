@@ -688,8 +688,8 @@ public:
       // act exactly like l-values but are formally required to be
       // r-values in C.
       return expr->isGLValue() ||
-             expr->getType()->isRecordType() ||
-             expr->getType()->isFunctionType();
+             expr->getType()->isFunctionType() ||
+             hasAggregateEvaluationKind(expr->getType());
     }
 
     static OpaqueValueMappingData bind(CodeGenFunction &CGF,
@@ -818,18 +818,13 @@ private:
   llvm::DenseMap<const LabelDecl*, JumpDest> LabelMap;
 
   // BreakContinueStack - This keeps track of where break and continue
-  // statements should jump to and the associated base counter for
-  // instrumentation.
+  // statements should jump to.
   struct BreakContinue {
-    BreakContinue(JumpDest Break, JumpDest Continue, RegionCounter *LoopCnt,
-                  bool CountBreak = true)
-      : BreakBlock(Break), ContinueBlock(Continue), LoopCnt(LoopCnt),
-        CountBreak(CountBreak) {}
+    BreakContinue(JumpDest Break, JumpDest Continue)
+      : BreakBlock(Break), ContinueBlock(Continue) {}
 
     JumpDest BreakBlock;
     JumpDest ContinueBlock;
-    RegionCounter *LoopCnt;
-    bool CountBreak;
   };
   SmallVector<BreakContinue, 8> BreakContinueStack;
 
@@ -1156,6 +1151,7 @@ public:
   void EmitDestructorBody(FunctionArgList &Args);
   void emitImplicitAssignmentOperatorBody(FunctionArgList &Args);
   void EmitFunctionBody(FunctionArgList &Args, const Stmt *Body);
+  void EmitBlockWithFallThrough(llvm::BasicBlock *BB, RegionCounter &Cnt);
 
   void EmitForwardingCallToLambda(const CXXMethodDecl *LambdaCallOperator,
                                   CallArgList &CallArgs);
@@ -2183,9 +2179,18 @@ public:
   llvm::Value *EmitAArch64CompareBuiltinExpr(llvm::Value *Op, llvm::Type *Ty);
   llvm::Value *EmitAArch64BuiltinExpr(unsigned BuiltinID, const CallExpr *E);
   llvm::Value *EmitARMBuiltinExpr(unsigned BuiltinID, const CallExpr *E);
-  llvm::Value *EmitCommonNeonBuiltinExpr(unsigned BuiltinID, const CallExpr *E,
+
+  llvm::Value *EmitCommonNeonBuiltinExpr(unsigned BuiltinID,
+                                         unsigned LLVMIntrinsic,
+                                         unsigned AltLLVMIntrinsic,
+                                         const char *NameHint,
+                                         unsigned Modifier,
+                                         const CallExpr *E,
                                          SmallVectorImpl<llvm::Value *> &Ops,
                                          llvm::Value *Align = 0);
+  llvm::Function *LookupNeonLLVMIntrinsic(unsigned IntrinsicID,
+                                          unsigned Modifier, llvm::Type *ArgTy,
+                                          const CallExpr *E);
   llvm::Value *EmitNeonCall(llvm::Function *F,
                             SmallVectorImpl<llvm::Value*> &O,
                             const char *name,

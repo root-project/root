@@ -385,6 +385,7 @@ void DeclPrinter::VisitEnumConstantDecl(EnumConstantDecl *D) {
 
 void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
   CXXConstructorDecl *CDecl = dyn_cast<CXXConstructorDecl>(D);
+  CXXConversionDecl *ConversionDecl = dyn_cast<CXXConversionDecl>(D);
   if (!Policy.SuppressSpecifiers) {
     switch (D->getStorageClass()) {
     case SC_None: break;
@@ -398,7 +399,9 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
     if (D->isInlineSpecified())  Out << "inline ";
     if (D->isVirtualAsWritten()) Out << "virtual ";
     if (D->isModulePrivate())    Out << "__module_private__ ";
-    if (CDecl && CDecl->isExplicitSpecified())
+    if (D->isConstexpr() && !D->isExplicitlyDefaulted()) Out << "constexpr ";
+    if ((CDecl && CDecl->isExplicitSpecified()) ||
+        (ConversionDecl && ConversionDecl->isExplicit()))
       Out << "explicit ";
   }
 
@@ -447,6 +450,17 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
         Proto += " volatile";
       if (FT->isRestrict())
         Proto += " restrict";
+
+      switch (FT->getRefQualifier()) {
+      case RQ_None:
+        break;
+      case RQ_LValue:
+        Proto += " &";
+        break;
+      case RQ_RValue:
+        Proto += " &&";
+        break;
+      }
     }
 
     if (FT && FT->hasDynamicExceptionSpec()) {
@@ -535,16 +549,18 @@ void DeclPrinter::VisitFunctionDecl(FunctionDecl *D) {
           }
         }
         Out << ")";
+        if (BMInitializer->isPackExpansion())
+          Out << "...";
       }
-      if (!Proto.empty())
-        Out << Proto;
-    } else {
+    } else if (!ConversionDecl && !isa<CXXDestructorDecl>(D)) {
       if (FT && FT->hasTrailingReturn()) {
         Out << "auto " << Proto << " -> ";
         Proto.clear();
       }
       AFT->getReturnType().print(Out, Policy, Proto);
+      Proto.clear();
     }
+    Out << Proto;
   } else {
     Ty.print(Out, Policy, Proto);
   }

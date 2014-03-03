@@ -118,9 +118,10 @@ static unsigned getXCoreSectionFlags(SectionKind K, bool IsCPRel) {
   return Flags;
 }
 
-const MCSection *XCoreTargetObjectFile::
-getExplicitSectionGlobal(const GlobalValue *GV, SectionKind Kind,
-                         Mangler &Mang, const TargetMachine &TM) const {
+const MCSection *
+XCoreTargetObjectFile::getExplicitSectionGlobal(const GlobalValue *GV,
+                                                SectionKind Kind, Mangler &Mang,
+                                                const TargetMachine &TM) const {
   StringRef SectionName = GV->getSection();
   // Infer section flags from the section name if we can.
   bool IsCPRel = SectionName.startswith(".cp.");
@@ -149,13 +150,13 @@ SelectSectionForGlobal(const GlobalValue *GV, SectionKind Kind, Mangler &Mang,
       TM.getDataLayout()->getTypeAllocSize(ObjType) < CodeModelLargeSize) {
     if (Kind.isReadOnly())              return UseCPRel? ReadOnlySection
                                                        : DataRelROSection;
-    if (Kind.isBSS())                   return BSSSection;
+    if (Kind.isBSS() || Kind.isCommon())return BSSSection;
     if (Kind.isDataRel())               return DataSection;
     if (Kind.isReadOnlyWithRel())       return DataRelROSection;
   } else {
     if (Kind.isReadOnly())              return UseCPRel? ReadOnlySectionLarge
                                                        : DataRelROSectionLarge;
-    if (Kind.isBSS())                   return BSSSectionLarge;
+    if (Kind.isBSS() || Kind.isCommon())return BSSSectionLarge;
     if (Kind.isDataRel())               return DataSectionLarge;
     if (Kind.isReadOnlyWithRel())       return DataRelROSectionLarge;
   }

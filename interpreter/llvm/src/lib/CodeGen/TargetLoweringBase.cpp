@@ -24,7 +24,9 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/Mangler.h"
 #include "llvm/MC/MCAsmInfo.h"
+#include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -661,11 +663,11 @@ static void InitCmpLibcallCCs(ISD::CondCode *CCs) {
 /// NOTE: The constructor takes ownership of TLOF.
 TargetLoweringBase::TargetLoweringBase(const TargetMachine &tm,
                                        const TargetLoweringObjectFile *tlof)
-  : TM(tm), TD(TM.getDataLayout()), TLOF(*tlof) {
+  : TM(tm), DL(TM.getDataLayout()), TLOF(*tlof) {
   initActions();
 
   // Perform these initializations only once.
-  IsLittleEndian = TD->isLittleEndian();
+  IsLittleEndian = DL->isLittleEndian();
   MaxStoresPerMemset = MaxStoresPerMemcpy = MaxStoresPerMemmove = 8;
   MaxStoresPerMemsetOptSize = MaxStoresPerMemcpyOptSize
     = MaxStoresPerMemmoveOptSize = 4;
@@ -802,7 +804,7 @@ MVT TargetLoweringBase::getPointerTy(uint32_t AS) const {
 }
 
 unsigned TargetLoweringBase::getPointerSizeInBits(uint32_t AS) const {
-  return TD->getPointerSizeInBits(AS);
+  return DL->getPointerSizeInBits(AS);
 }
 
 unsigned TargetLoweringBase::getPointerTypeSizeInBits(Type *Ty) const {
@@ -811,7 +813,7 @@ unsigned TargetLoweringBase::getPointerTypeSizeInBits(Type *Ty) const {
 }
 
 MVT TargetLoweringBase::getScalarShiftAmountTy(EVT LHSTy) const {
-  return MVT::getIntegerVT(8*TD->getPointerSize(0));
+  return MVT::getIntegerVT(8*DL->getPointerSize(0));
 }
 
 EVT TargetLoweringBase::getShiftAmountTy(EVT LHSTy) const {
@@ -1286,7 +1288,7 @@ void llvm::GetReturnInfo(Type* ReturnType, AttributeSet attr,
 /// function arguments in the caller parameter area.  This is the actual
 /// alignment, not its logarithm.
 unsigned TargetLoweringBase::getByValTypeAlignment(Type *Ty) const {
-  return TD->getABITypeAlignment(Ty);
+  return DL->getABITypeAlignment(Ty);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1420,6 +1422,8 @@ bool TargetLoweringBase::isLegalAddressingMode(const AddrMode &AM,
       return false;
     // Allow 2*r as r+r.
     break;
+  default: // Don't allow n * r
+    return false;
   }
 
   return true;

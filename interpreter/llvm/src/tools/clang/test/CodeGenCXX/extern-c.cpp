@@ -1,17 +1,20 @@
 // RUN: %clang_cc1 -triple %itanium_abi_triple -emit-llvm %s -o - | FileCheck %s
 namespace foo {
 
-// CHECK-NOT: @a = global i32
+// CHECK-NOT: @a = global
 extern "C" int a;
 
-// CHECK-NOT: @_ZN3foo1bE = global i32
+// CHECK-NOT: @_ZN3foo1bE = global
 extern int b;
 
-// CHECK: @_ZN3foo1cE = global i32
+// CHECK: @_ZN3foo1cE = global
 int c = 5;
 
 // CHECK-NOT: @_ZN3foo1dE
 extern "C" struct d;
+
+// CHECK-NOT: should_not_appear
+extern "C++" int should_not_appear;
 
 }
 

@@ -51,10 +51,17 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/TimeValue.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/PromoteMemToReg.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
+
+#if __cplusplus >= 201103L && !defined(NDEBUG)
+// We only use this for a debug check in C++11
+#include <random>
+#endif
+
 using namespace llvm;
 
 STATISTIC(NumAllocasAnalyzed, "Number of allocas analyzed for replacement");
@@ -72,6 +79,16 @@ STATISTIC(NumVectorized, "Number of vectorized aggregates");
 /// forming SSA values through the SSAUpdater infrastructure.
 static cl::opt<bool>
 ForceSSAUpdater("force-ssa-updater", cl::init(false), cl::Hidden);
+
+/// Hidden option to enable randomly shuffling the slices to help uncover
+/// instability in their order.
+static cl::opt<bool> SROARandomShuffleSlices("sroa-random-shuffle-slices",
+                                             cl::init(false), cl::Hidden);
+
+/// Hidden option to experiment with completely strict handling of inbounds
+/// GEPs.
+static cl::opt<bool> SROAStrictInbounds("sroa-strict-inbounds",
+                                        cl::init(false), cl::Hidden);
 
 namespace {
 /// \brief A custom IRBuilder inserter which prefixes all names if they are
@@ -339,7 +356,7 @@ private:
                  bool IsSplittable = false) {
     // Completely skip uses which have a zero size or start either before or
     // past the end of the allocation.
-    if (Size == 0 || Offset.isNegative() || Offset.uge(AllocSize)) {
+    if (Size == 0 || Offset.uge(AllocSize)) {
       DEBUG(dbgs() << "WARNING: Ignoring " << Size << " byte use @" << Offset
                    << " which has zero size or starts outside of the "
                    << AllocSize << " byte alloca:\n"
@@ -379,6 +396,43 @@ private:
   void visitGetElementPtrInst(GetElementPtrInst &GEPI) {
     if (GEPI.use_empty())
       return markAsDead(GEPI);
+
+    if (SROAStrictInbounds && GEPI.isInBounds()) {
+      // FIXME: This is a manually un-factored variant of the basic code inside
+      // of GEPs with checking of the inbounds invariant specified in the
+      // langref in a very strict sense. If we ever want to enable
+      // SROAStrictInbounds, this code should be factored cleanly into
+      // PtrUseVisitor, but it is easier to experiment with SROAStrictInbounds
+      // by writing out the code here where we have tho underlying allocation
+      // size readily available.
+      APInt GEPOffset = Offset;
+      for (gep_type_iterator GTI = gep_type_begin(GEPI),
+                             GTE = gep_type_end(GEPI);
+           GTI != GTE; ++GTI) {
+        ConstantInt *OpC = dyn_cast<ConstantInt>(GTI.getOperand());
+        if (!OpC)
+          break;
+
+        // Handle a struct index, which adds its field offset to the pointer.
+        if (StructType *STy = dyn_cast<StructType>(*GTI)) {
+          unsigned ElementIdx = OpC->getZExtValue();
+          const StructLayout *SL = DL.getStructLayout(STy);
+          GEPOffset +=
+              APInt(Offset.getBitWidth(), SL->getElementOffset(ElementIdx));
+        } else {
+          // For array or vector indices, scale the index by the size of the type.
+          APInt Index = OpC->getValue().sextOrTrunc(Offset.getBitWidth());
+          GEPOffset += Index * APInt(Offset.getBitWidth(),
+                                     DL.getTypeAllocSize(GTI.getIndexedType()));
+        }
+
+        // If this index has computed an intermediate pointer which is not
+        // inbounds, then the result of the GEP is a poison value and we can
+        // delete it and all uses.
+        if (GEPOffset.ugt(AllocSize))
+          return markAsDead(GEPI);
+      }
+    }
 
     return Base::visitGetElementPtrInst(GEPI);
   }
@@ -426,8 +480,7 @@ private:
     // risk of overflow.
     // FIXME: We should instead consider the pointer to have escaped if this
     // function is being instrumented for addressing bugs or race conditions.
-    if (Offset.isNegative() || Size > AllocSize ||
-        Offset.ugt(AllocSize - Size)) {
+    if (Size > AllocSize || Offset.ugt(AllocSize - Size)) {
       DEBUG(dbgs() << "WARNING: Ignoring " << Size << " byte store @" << Offset
                    << " which extends past the end of the " << AllocSize
                    << " byte alloca:\n"
@@ -446,7 +499,7 @@ private:
     assert(II.getRawDest() == *U && "Pointer use is not the destination?");
     ConstantInt *Length = dyn_cast<ConstantInt>(II.getLength());
     if ((Length && Length->getValue() == 0) ||
-        (IsOffsetKnown && !Offset.isNegative() && Offset.uge(AllocSize)))
+        (IsOffsetKnown && Offset.uge(AllocSize)))
       // Zero-length mem transfer intrinsics can be ignored entirely.
       return markAsDead(II);
 
@@ -478,7 +531,7 @@ private:
     // if already added to our partitions.
     // FIXME: Yet another place we really should bypass this when
     // instrumenting for ASan.
-    if (!Offset.isNegative() && Offset.uge(AllocSize)) {
+    if (Offset.uge(AllocSize)) {
       SmallDenseMap<Instruction *, unsigned>::iterator MTPI = MemTransferSliceMap.find(&II);
       if (MTPI != MemTransferSliceMap.end())
         S.Slices[MTPI->second].kill();
@@ -613,8 +666,7 @@ private:
     // themselves which should be replaced with undef.
     // FIXME: This should instead be escaped in the event we're instrumenting
     // for address sanitization.
-    if ((Offset.isNegative() && (-Offset).uge(PHISize)) ||
-        (!Offset.isNegative() && Offset.uge(AllocSize))) {
+    if (Offset.uge(AllocSize)) {
       S.DeadOperands.push_back(U);
       return;
     }
@@ -654,8 +706,7 @@ private:
     // themselves which should be replaced with undef.
     // FIXME: This should instead be escaped in the event we're instrumenting
     // for address sanitization.
-    if ((Offset.isNegative() && Offset.uge(SelectSize)) ||
-        (!Offset.isNegative() && Offset.uge(AllocSize))) {
+    if (Offset.uge(AllocSize)) {
       S.DeadOperands.push_back(U);
       return;
     }
@@ -689,6 +740,13 @@ AllocaSlices::AllocaSlices(const DataLayout &DL, AllocaInst &AI)
   Slices.erase(std::remove_if(Slices.begin(), Slices.end(),
                               std::mem_fun_ref(&Slice::isDead)),
                Slices.end());
+
+#if __cplusplus >= 201103L && !defined(NDEBUG)
+  if (SROARandomShuffleSlices) {
+    std::mt19937 MT(static_cast<unsigned>(sys::TimeValue::now().msec()));
+    std::shuffle(Slices.begin(), Slices.end(), MT);
+  }
+#endif
 
   // Sort the uses. This arranges for the offsets to be in ascending order,
   // and the sizes to be in descending order.
@@ -1204,7 +1262,7 @@ static void speculateSelectInstLoads(SelectInst &SI) {
 /// This will return the BasePtr if that is valid, or build a new GEP
 /// instruction using the IRBuilder if GEP-ing is needed.
 static Value *buildGEP(IRBuilderTy &IRB, Value *BasePtr,
-                       SmallVectorImpl<Value *> &Indices) {
+                       SmallVectorImpl<Value *> &Indices, Twine NamePrefix) {
   if (Indices.empty())
     return BasePtr;
 
@@ -1213,7 +1271,7 @@ static Value *buildGEP(IRBuilderTy &IRB, Value *BasePtr,
   if (Indices.size() == 1 && cast<ConstantInt>(Indices.back())->isZero())
     return BasePtr;
 
-  return IRB.CreateInBoundsGEP(BasePtr, Indices, "idx");
+  return IRB.CreateInBoundsGEP(BasePtr, Indices, NamePrefix + "sroa_idx");
 }
 
 /// \brief Get a natural GEP off of the BasePtr walking through Ty toward
@@ -1227,9 +1285,13 @@ static Value *buildGEP(IRBuilderTy &IRB, Value *BasePtr,
 /// indicated by Indices to have the correct offset.
 static Value *getNaturalGEPWithType(IRBuilderTy &IRB, const DataLayout &DL,
                                     Value *BasePtr, Type *Ty, Type *TargetTy,
-                                    SmallVectorImpl<Value *> &Indices) {
+                                    SmallVectorImpl<Value *> &Indices,
+                                    Twine NamePrefix) {
   if (Ty == TargetTy)
-    return buildGEP(IRB, BasePtr, Indices);
+    return buildGEP(IRB, BasePtr, Indices, NamePrefix);
+
+  // Pointer size to use for the indices.
+  unsigned PtrSize = DL.getPointerTypeSizeInBits(BasePtr->getType());
 
   // See if we can descend into a struct and locate a field with the correct
   // type.
@@ -1238,11 +1300,13 @@ static Value *getNaturalGEPWithType(IRBuilderTy &IRB, const DataLayout &DL,
   do {
     if (ElementTy->isPointerTy())
       break;
-    if (SequentialType *SeqTy = dyn_cast<SequentialType>(ElementTy)) {
-      ElementTy = SeqTy->getElementType();
-      // Note that we use the default address space as this index is over an
-      // array or a vector, not a pointer.
-      Indices.push_back(IRB.getInt(APInt(DL.getPointerSizeInBits(0), 0)));
+
+    if (ArrayType *ArrayTy = dyn_cast<ArrayType>(ElementTy)) {
+      ElementTy = ArrayTy->getElementType();
+      Indices.push_back(IRB.getIntN(PtrSize, 0));
+    } else if (VectorType *VectorTy = dyn_cast<VectorType>(ElementTy)) {
+      ElementTy = VectorTy->getElementType();
+      Indices.push_back(IRB.getInt32(0));
     } else if (StructType *STy = dyn_cast<StructType>(ElementTy)) {
       if (STy->element_begin() == STy->element_end())
         break; // Nothing left to descend into.
@@ -1256,7 +1320,7 @@ static Value *getNaturalGEPWithType(IRBuilderTy &IRB, const DataLayout &DL,
   if (ElementTy != TargetTy)
     Indices.erase(Indices.end() - NumLayers, Indices.end());
 
-  return buildGEP(IRB, BasePtr, Indices);
+  return buildGEP(IRB, BasePtr, Indices, NamePrefix);
 }
 
 /// \brief Recursively compute indices for a natural GEP.
@@ -1266,9 +1330,10 @@ static Value *getNaturalGEPWithType(IRBuilderTy &IRB, const DataLayout &DL,
 static Value *getNaturalGEPRecursively(IRBuilderTy &IRB, const DataLayout &DL,
                                        Value *Ptr, Type *Ty, APInt &Offset,
                                        Type *TargetTy,
-                                       SmallVectorImpl<Value *> &Indices) {
+                                       SmallVectorImpl<Value *> &Indices,
+                                       Twine NamePrefix) {
   if (Offset == 0)
-    return getNaturalGEPWithType(IRB, DL, Ptr, Ty, TargetTy, Indices);
+    return getNaturalGEPWithType(IRB, DL, Ptr, Ty, TargetTy, Indices, NamePrefix);
 
   // We can't recurse through pointer types.
   if (Ty->isPointerTy())
@@ -1288,7 +1353,7 @@ static Value *getNaturalGEPRecursively(IRBuilderTy &IRB, const DataLayout &DL,
     Offset -= NumSkippedElements * ElementSize;
     Indices.push_back(IRB.getInt(NumSkippedElements));
     return getNaturalGEPRecursively(IRB, DL, Ptr, VecTy->getElementType(),
-                                    Offset, TargetTy, Indices);
+                                    Offset, TargetTy, Indices, NamePrefix);
   }
 
   if (ArrayType *ArrTy = dyn_cast<ArrayType>(Ty)) {
@@ -1301,7 +1366,7 @@ static Value *getNaturalGEPRecursively(IRBuilderTy &IRB, const DataLayout &DL,
     Offset -= NumSkippedElements * ElementSize;
     Indices.push_back(IRB.getInt(NumSkippedElements));
     return getNaturalGEPRecursively(IRB, DL, Ptr, ElementTy, Offset, TargetTy,
-                                    Indices);
+                                    Indices, NamePrefix);
   }
 
   StructType *STy = dyn_cast<StructType>(Ty);
@@ -1320,7 +1385,7 @@ static Value *getNaturalGEPRecursively(IRBuilderTy &IRB, const DataLayout &DL,
 
   Indices.push_back(IRB.getInt32(Index));
   return getNaturalGEPRecursively(IRB, DL, Ptr, ElementTy, Offset, TargetTy,
-                                  Indices);
+                                  Indices, NamePrefix);
 }
 
 /// \brief Get a natural GEP from a base pointer to a particular offset and
@@ -1335,12 +1400,13 @@ static Value *getNaturalGEPRecursively(IRBuilderTy &IRB, const DataLayout &DL,
 /// If no natural GEP can be constructed, this function returns null.
 static Value *getNaturalGEPWithOffset(IRBuilderTy &IRB, const DataLayout &DL,
                                       Value *Ptr, APInt Offset, Type *TargetTy,
-                                      SmallVectorImpl<Value *> &Indices) {
+                                      SmallVectorImpl<Value *> &Indices,
+                                      Twine NamePrefix) {
   PointerType *Ty = cast<PointerType>(Ptr->getType());
 
   // Don't consider any GEPs through an i8* as natural unless the TargetTy is
   // an i8.
-  if (Ty == IRB.getInt8PtrTy() && TargetTy->isIntegerTy(8))
+  if (Ty == IRB.getInt8PtrTy(Ty->getAddressSpace()) && TargetTy->isIntegerTy(8))
     return 0;
 
   Type *ElementTy = Ty->getElementType();
@@ -1354,7 +1420,7 @@ static Value *getNaturalGEPWithOffset(IRBuilderTy &IRB, const DataLayout &DL,
   Offset -= NumSkippedElements * ElementSize;
   Indices.push_back(IRB.getInt(NumSkippedElements));
   return getNaturalGEPRecursively(IRB, DL, Ptr, ElementTy, Offset, TargetTy,
-                                  Indices);
+                                  Indices, NamePrefix);
 }
 
 /// \brief Compute an adjusted pointer from Ptr by Offset bytes where the
@@ -1372,8 +1438,9 @@ static Value *getNaturalGEPWithOffset(IRBuilderTy &IRB, const DataLayout &DL,
 /// properties. The algorithm tries to fold as many constant indices into
 /// a single GEP as possible, thus making each GEP more independent of the
 /// surrounding code.
-static Value *getAdjustedPtr(IRBuilderTy &IRB, const DataLayout &DL,
-                             Value *Ptr, APInt Offset, Type *PointerTy) {
+static Value *getAdjustedPtr(IRBuilderTy &IRB, const DataLayout &DL, Value *Ptr,
+                             APInt Offset, Type *PointerTy,
+                             Twine NamePrefix) {
   // Even though we don't look through PHI nodes, we could be called on an
   // instruction in an unreachable block, which may be on a cycle.
   SmallPtrSet<Value *, 4> Visited;
@@ -1407,7 +1474,7 @@ static Value *getAdjustedPtr(IRBuilderTy &IRB, const DataLayout &DL,
     // See if we can perform a natural GEP here.
     Indices.clear();
     if (Value *P = getNaturalGEPWithOffset(IRB, DL, Ptr, Offset, TargetTy,
-                                           Indices)) {
+                                           Indices, NamePrefix)) {
       if (P->getType() == PointerTy) {
         // Zap any offset pointer that we ended up computing in previous rounds.
         if (OffsetPtr && OffsetPtr->use_empty())
@@ -1441,20 +1508,21 @@ static Value *getAdjustedPtr(IRBuilderTy &IRB, const DataLayout &DL,
 
   if (!OffsetPtr) {
     if (!Int8Ptr) {
-      Int8Ptr = IRB.CreateBitCast(Ptr, IRB.getInt8PtrTy(),
-                                  "raw_cast");
+      Int8Ptr = IRB.CreateBitCast(
+          Ptr, IRB.getInt8PtrTy(PointerTy->getPointerAddressSpace()),
+          NamePrefix + "sroa_raw_cast");
       Int8PtrOffset = Offset;
     }
 
     OffsetPtr = Int8PtrOffset == 0 ? Int8Ptr :
       IRB.CreateInBoundsGEP(Int8Ptr, IRB.getInt(Int8PtrOffset),
-                            "raw_idx");
+                            NamePrefix + "sroa_raw_idx");
   }
   Ptr = OffsetPtr;
 
   // On the off chance we were targeting i8*, guard the bitcast here.
   if (Ptr->getType() != PointerTy)
-    Ptr = IRB.CreateBitCast(Ptr, PointerTy, "cast");
+    Ptr = IRB.CreateBitCast(Ptr, PointerTy, NamePrefix + "sroa_cast");
 
   return Ptr;
 }
@@ -1947,16 +2015,22 @@ class AllocaSliceRewriter : public InstVisitor<AllocaSliceRewriter, bool> {
   // integer type will be stored here for easy access during rewriting.
   IntegerType *IntTy;
 
-  // The offset of the slice currently being rewritten.
+  // The original offset of the slice currently being rewritten relative to
+  // the original alloca.
   uint64_t BeginOffset, EndOffset;
+  // The new offsets of the slice currently being rewritten relative to the
+  // original alloca.
+  uint64_t NewBeginOffset, NewEndOffset;
+
+  uint64_t SliceSize;
   bool IsSplittable;
   bool IsSplit;
   Use *OldUse;
   Instruction *OldPtr;
 
-  // Output members carrying state about the result of visiting and rewriting
-  // the slice of the alloca.
-  bool IsUsedByRewrittenSpeculatableInstructions;
+  // Track post-rewrite users which are PHI nodes and Selects.
+  SmallPtrSetImpl<PHINode *> &PHIUsers;
+  SmallPtrSetImpl<SelectInst *> &SelectUsers;
 
   // Utility IR builder, whose name prefix is setup for each visited use, and
   // the insertion point is set to point to the user.
@@ -1965,11 +2039,14 @@ class AllocaSliceRewriter : public InstVisitor<AllocaSliceRewriter, bool> {
 public:
   AllocaSliceRewriter(const DataLayout &DL, AllocaSlices &S, SROA &Pass,
                       AllocaInst &OldAI, AllocaInst &NewAI,
-                      uint64_t NewBeginOffset, uint64_t NewEndOffset,
-                      bool IsVectorPromotable = false,
-                      bool IsIntegerPromotable = false)
+                      uint64_t NewAllocaBeginOffset,
+                      uint64_t NewAllocaEndOffset, bool IsVectorPromotable,
+                      bool IsIntegerPromotable,
+                      SmallPtrSetImpl<PHINode *> &PHIUsers,
+                      SmallPtrSetImpl<SelectInst *> &SelectUsers)
       : DL(DL), S(S), Pass(Pass), OldAI(OldAI), NewAI(NewAI),
-        NewAllocaBeginOffset(NewBeginOffset), NewAllocaEndOffset(NewEndOffset),
+        NewAllocaBeginOffset(NewAllocaBeginOffset),
+        NewAllocaEndOffset(NewAllocaEndOffset),
         NewAllocaTy(NewAI.getAllocatedType()),
         VecTy(IsVectorPromotable ? cast<VectorType>(NewAllocaTy) : 0),
         ElementTy(VecTy ? VecTy->getElementType() : 0),
@@ -1980,7 +2057,7 @@ public:
                         DL.getTypeSizeInBits(NewAI.getAllocatedType()))
                   : 0),
         BeginOffset(), EndOffset(), IsSplittable(), IsSplit(), OldUse(),
-        OldPtr(), IsUsedByRewrittenSpeculatableInstructions(false),
+        OldPtr(), PHIUsers(PHIUsers), SelectUsers(SelectUsers),
         IRB(NewAI.getContext(), ConstantFolder()) {
     if (VecTy) {
       assert((DL.getTypeSizeInBits(ElementTy) % 8) == 0 &&
@@ -1999,6 +2076,14 @@ public:
     IsSplit =
         BeginOffset < NewAllocaBeginOffset || EndOffset > NewAllocaEndOffset;
 
+    // Compute the intersecting offset range.
+    assert(BeginOffset < NewAllocaEndOffset);
+    assert(EndOffset > NewAllocaBeginOffset);
+    NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
+    NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
+
+    SliceSize = NewEndOffset - NewBeginOffset;
+
     OldUse = I->getUse();
     OldPtr = cast<Instruction>(OldUse->get());
 
@@ -2013,20 +2098,6 @@ public:
     return CanSROA;
   }
 
-  /// \brief Query whether this slice is used by speculatable instructions after
-  /// rewriting.
-  ///
-  /// These instructions (PHIs and Selects currently) require the alloca slice
-  /// to run back through the rewriter. Thus, they are promotable, but not on
-  /// this iteration. This is distinct from a slice which is unpromotable for
-  /// some other reason, in which case we don't even want to perform the
-  /// speculation. This can be querried at any time and reflects whether (at
-  /// that point) a visit call has rewritten a speculatable instruction on the
-  /// current slice.
-  bool isUsedByRewrittenSpeculatableInstructions() const {
-    return IsUsedByRewrittenSpeculatableInstructions;
-  }
-
 private:
   // Make sure the other visit overloads are visible.
   using Base::visit;
@@ -2037,30 +2108,53 @@ private:
     llvm_unreachable("No rewrite rule for this instruction!");
   }
 
-  Value *getAdjustedAllocaPtr(IRBuilderTy &IRB, uint64_t Offset,
-                              Type *PointerTy) {
-    assert(Offset >= NewAllocaBeginOffset);
-    return getAdjustedPtr(IRB, DL, &NewAI, APInt(DL.getPointerSizeInBits(),
-                                                 Offset - NewAllocaBeginOffset),
-                          PointerTy);
+  Value *getNewAllocaSlicePtr(IRBuilderTy &IRB, Type *PointerTy) {
+    // Note that the offset computation can use BeginOffset or NewBeginOffset
+    // interchangeably for unsplit slices.
+    assert(IsSplit || BeginOffset == NewBeginOffset);
+    uint64_t Offset = NewBeginOffset - NewAllocaBeginOffset;
+
+#ifndef NDEBUG
+    StringRef OldName = OldPtr->getName();
+    // Skip through the last '.sroa.' component of the name.
+    size_t LastSROAPrefix = OldName.rfind(".sroa.");
+    if (LastSROAPrefix != StringRef::npos) {
+      OldName = OldName.substr(LastSROAPrefix + strlen(".sroa."));
+      // Look for an SROA slice index.
+      size_t IndexEnd = OldName.find_first_not_of("0123456789");
+      if (IndexEnd != StringRef::npos && OldName[IndexEnd] == '.') {
+        // Strip the index and look for the offset.
+        OldName = OldName.substr(IndexEnd + 1);
+        size_t OffsetEnd = OldName.find_first_not_of("0123456789");
+        if (OffsetEnd != StringRef::npos && OldName[OffsetEnd] == '.')
+          // Strip the offset.
+          OldName = OldName.substr(OffsetEnd + 1);
+      }
+    }
+    // Strip any SROA suffixes as well.
+    OldName = OldName.substr(0, OldName.find(".sroa_"));
+#endif
+
+    return getAdjustedPtr(IRB, DL, &NewAI,
+                          APInt(DL.getPointerSizeInBits(), Offset), PointerTy,
+#ifndef NDEBUG
+                          Twine(OldName) + "."
+#else
+                          Twine()
+#endif
+                          );
   }
 
-  /// \brief Compute suitable alignment to access an offset into the new alloca.
-  unsigned getOffsetAlign(uint64_t Offset) {
+  /// \brief Compute suitable alignment to access this slice of the *new* alloca.
+  ///
+  /// You can optionally pass a type to this routine and if that type's ABI
+  /// alignment is itself suitable, this will return zero.
+  unsigned getSliceAlign(Type *Ty = 0) {
     unsigned NewAIAlign = NewAI.getAlignment();
     if (!NewAIAlign)
       NewAIAlign = DL.getABITypeAlignment(NewAI.getAllocatedType());
-    return MinAlign(NewAIAlign, Offset);
-  }
-
-  /// \brief Compute suitable alignment to access a type at an offset of the
-  /// new alloca.
-  ///
-  /// \returns zero if the type's ABI alignment is a suitable alignment,
-  /// otherwise returns the maximal suitable alignment.
-  unsigned getOffsetTypeAlign(Type *Ty, uint64_t Offset) {
-    unsigned Align = getOffsetAlign(Offset);
-    return Align == DL.getABITypeAlignment(Ty) ? 0 : Align;
+    unsigned Align = MinAlign(NewAIAlign, NewBeginOffset - NewAllocaBeginOffset);
+    return (Ty && Align == DL.getABITypeAlignment(Ty)) ? 0 : Align;
   }
 
   unsigned getIndex(uint64_t Offset) {
@@ -2078,8 +2172,7 @@ private:
       Pass.DeadInsts.insert(I);
   }
 
-  Value *rewriteVectorizedLoadInst(uint64_t NewBeginOffset,
-                                   uint64_t NewEndOffset) {
+  Value *rewriteVectorizedLoadInst() {
     unsigned BeginIndex = getIndex(NewBeginOffset);
     unsigned EndIndex = getIndex(NewEndOffset);
     assert(EndIndex > BeginIndex && "Empty vector!");
@@ -2089,8 +2182,7 @@ private:
     return extractVector(IRB, V, BeginIndex, EndIndex, "vec");
   }
 
-  Value *rewriteIntegerLoad(LoadInst &LI, uint64_t NewBeginOffset,
-                            uint64_t NewEndOffset) {
+  Value *rewriteIntegerLoad(LoadInst &LI) {
     assert(IntTy && "We cannot insert an integer to the alloca");
     assert(!LI.isVolatile());
     Value *V = IRB.CreateAlignedLoad(&NewAI, NewAI.getAlignment(),
@@ -2109,32 +2201,23 @@ private:
     Value *OldOp = LI.getOperand(0);
     assert(OldOp == OldPtr);
 
-    // Compute the intersecting offset range.
-    assert(BeginOffset < NewAllocaEndOffset);
-    assert(EndOffset > NewAllocaBeginOffset);
-    uint64_t NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
-    uint64_t NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
-
-    uint64_t Size = NewEndOffset - NewBeginOffset;
-
-    Type *TargetTy = IsSplit ? Type::getIntNTy(LI.getContext(), Size * 8)
+    Type *TargetTy = IsSplit ? Type::getIntNTy(LI.getContext(), SliceSize * 8)
                              : LI.getType();
     bool IsPtrAdjusted = false;
     Value *V;
     if (VecTy) {
-      V = rewriteVectorizedLoadInst(NewBeginOffset, NewEndOffset);
+      V = rewriteVectorizedLoadInst();
     } else if (IntTy && LI.getType()->isIntegerTy()) {
-      V = rewriteIntegerLoad(LI, NewBeginOffset, NewEndOffset);
+      V = rewriteIntegerLoad(LI);
     } else if (NewBeginOffset == NewAllocaBeginOffset &&
                canConvertValue(DL, NewAllocaTy, LI.getType())) {
       V = IRB.CreateAlignedLoad(&NewAI, NewAI.getAlignment(),
-                                LI.isVolatile(), "load");
+                                LI.isVolatile(), LI.getName());
     } else {
       Type *LTy = TargetTy->getPointerTo();
-      V = IRB.CreateAlignedLoad(
-          getAdjustedAllocaPtr(IRB, NewBeginOffset, LTy),
-          getOffsetTypeAlign(TargetTy, NewBeginOffset - NewAllocaBeginOffset),
-          LI.isVolatile(), "load");
+      V = IRB.CreateAlignedLoad(getNewAllocaSlicePtr(IRB, LTy),
+                                getSliceAlign(TargetTy), LI.isVolatile(),
+                                LI.getName());
       IsPtrAdjusted = true;
     }
     V = convertValue(DL, IRB, V, TargetTy);
@@ -2143,7 +2226,7 @@ private:
       assert(!LI.isVolatile());
       assert(LI.getType()->isIntegerTy() &&
              "Only integer type loads and stores are split");
-      assert(Size < DL.getTypeStoreSize(LI.getType()) &&
+      assert(SliceSize < DL.getTypeStoreSize(LI.getType()) &&
              "Split load isn't smaller than original load");
       assert(LI.getType()->getIntegerBitWidth() ==
              DL.getTypeStoreSizeInBits(LI.getType()) &&
@@ -2171,9 +2254,7 @@ private:
     return !LI.isVolatile() && !IsPtrAdjusted;
   }
 
-  bool rewriteVectorizedStoreInst(Value *V, StoreInst &SI, Value *OldOp,
-                                  uint64_t NewBeginOffset,
-                                  uint64_t NewEndOffset) {
+  bool rewriteVectorizedStoreInst(Value *V, StoreInst &SI, Value *OldOp) {
     if (V->getType() != VecTy) {
       unsigned BeginIndex = getIndex(NewBeginOffset);
       unsigned EndIndex = getIndex(NewEndOffset);
@@ -2199,8 +2280,7 @@ private:
     return true;
   }
 
-  bool rewriteIntegerStore(Value *V, StoreInst &SI,
-                           uint64_t NewBeginOffset, uint64_t NewEndOffset) {
+  bool rewriteIntegerStore(Value *V, StoreInst &SI) {
     assert(IntTy && "We cannot extract an integer from the alloca");
     assert(!SI.isVolatile());
     if (DL.getTypeSizeInBits(V->getType()) != IntTy->getBitWidth()) {
@@ -2233,30 +2313,22 @@ private:
       if (AllocaInst *AI = dyn_cast<AllocaInst>(V->stripInBoundsOffsets()))
         Pass.PostPromotionWorklist.insert(AI);
 
-    // Compute the intersecting offset range.
-    assert(BeginOffset < NewAllocaEndOffset);
-    assert(EndOffset > NewAllocaBeginOffset);
-    uint64_t NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
-    uint64_t NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
-
-    uint64_t Size = NewEndOffset - NewBeginOffset;
-    if (Size < DL.getTypeStoreSize(V->getType())) {
+    if (SliceSize < DL.getTypeStoreSize(V->getType())) {
       assert(!SI.isVolatile());
       assert(V->getType()->isIntegerTy() &&
              "Only integer type loads and stores are split");
       assert(V->getType()->getIntegerBitWidth() ==
              DL.getTypeStoreSizeInBits(V->getType()) &&
              "Non-byte-multiple bit width");
-      IntegerType *NarrowTy = Type::getIntNTy(SI.getContext(), Size * 8);
+      IntegerType *NarrowTy = Type::getIntNTy(SI.getContext(), SliceSize * 8);
       V = extractInteger(DL, IRB, V, NarrowTy, NewBeginOffset,
                          "extract");
     }
 
     if (VecTy)
-      return rewriteVectorizedStoreInst(V, SI, OldOp, NewBeginOffset,
-                                        NewEndOffset);
+      return rewriteVectorizedStoreInst(V, SI, OldOp);
     if (IntTy && V->getType()->isIntegerTy())
-      return rewriteIntegerStore(V, SI, NewBeginOffset, NewEndOffset);
+      return rewriteIntegerStore(V, SI);
 
     StoreInst *NewSI;
     if (NewBeginOffset == NewAllocaBeginOffset &&
@@ -2266,12 +2338,9 @@ private:
       NewSI = IRB.CreateAlignedStore(V, &NewAI, NewAI.getAlignment(),
                                      SI.isVolatile());
     } else {
-      Value *NewPtr = getAdjustedAllocaPtr(IRB, NewBeginOffset,
-                                           V->getType()->getPointerTo());
-      NewSI = IRB.CreateAlignedStore(
-          V, NewPtr, getOffsetTypeAlign(
-                         V->getType(), NewBeginOffset - NewAllocaBeginOffset),
-          SI.isVolatile());
+      Value *NewPtr = getNewAllocaSlicePtr(IRB, V->getType()->getPointerTo());
+      NewSI = IRB.CreateAlignedStore(V, NewPtr, getSliceAlign(V->getType()),
+                                     SI.isVolatile());
     }
     (void)NewSI;
     Pass.DeadInsts.insert(&SI);
@@ -2323,11 +2392,10 @@ private:
     // pointer to the new alloca.
     if (!isa<Constant>(II.getLength())) {
       assert(!IsSplit);
-      assert(BeginOffset >= NewAllocaBeginOffset);
-      II.setDest(
-          getAdjustedAllocaPtr(IRB, BeginOffset, II.getRawDest()->getType()));
+      assert(NewBeginOffset == BeginOffset);
+      II.setDest(getNewAllocaSlicePtr(IRB, OldPtr->getType()));
       Type *CstTy = II.getAlignmentCst()->getType();
-      II.setAlignment(ConstantInt::get(CstTy, getOffsetAlign(BeginOffset)));
+      II.setAlignment(ConstantInt::get(CstTy, getSliceAlign()));
 
       deleteIfTriviallyDead(OldPtr);
       return false;
@@ -2338,13 +2406,6 @@ private:
 
     Type *AllocaTy = NewAI.getAllocatedType();
     Type *ScalarTy = AllocaTy->getScalarType();
-
-    // Compute the intersecting offset range.
-    assert(BeginOffset < NewAllocaEndOffset);
-    assert(EndOffset > NewAllocaBeginOffset);
-    uint64_t NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
-    uint64_t NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
-    uint64_t SliceOffset = NewBeginOffset - NewAllocaBeginOffset;
 
     // If this doesn't map cleanly onto the alloca type, and that type isn't
     // a single value type, just emit a memset.
@@ -2357,8 +2418,8 @@ private:
       Type *SizeTy = II.getLength()->getType();
       Constant *Size = ConstantInt::get(SizeTy, NewEndOffset - NewBeginOffset);
       CallInst *New = IRB.CreateMemSet(
-          getAdjustedAllocaPtr(IRB, NewBeginOffset, II.getRawDest()->getType()),
-          II.getValue(), Size, getOffsetAlign(SliceOffset), II.isVolatile());
+          getNewAllocaSlicePtr(IRB, OldPtr->getType()), II.getValue(), Size,
+          getSliceAlign(), II.isVolatile());
       (void)New;
       DEBUG(dbgs() << "          to: " << *New << "\n");
       return false;
@@ -2435,25 +2496,11 @@ private:
 
     DEBUG(dbgs() << "    original: " << II << "\n");
 
-    // Compute the intersecting offset range.
-    assert(BeginOffset < NewAllocaEndOffset);
-    assert(EndOffset > NewAllocaBeginOffset);
-    uint64_t NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
-    uint64_t NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
+    bool IsDest = &II.getRawDestUse() == OldUse;
+    assert((IsDest && II.getRawDest() == OldPtr) ||
+           (!IsDest && II.getRawSource() == OldPtr));
 
-    assert(II.getRawSource() == OldPtr || II.getRawDest() == OldPtr);
-    bool IsDest = II.getRawDest() == OldPtr;
-
-    // Compute the relative offset within the transfer.
-    unsigned IntPtrWidth = DL.getPointerSizeInBits();
-    APInt RelOffset(IntPtrWidth, NewBeginOffset - BeginOffset);
-
-    unsigned Align = II.getAlignment();
-    uint64_t SliceOffset = NewBeginOffset - NewAllocaBeginOffset;
-    if (Align > 1)
-      Align =
-          MinAlign(RelOffset.zextOrTrunc(64).getZExtValue(),
-                   MinAlign(II.getAlignment(), getOffsetAlign(SliceOffset)));
+    unsigned SliceAlign = getSliceAlign();
 
     // For unsplit intrinsics, we simply modify the source and destination
     // pointers in place. This isn't just an optimization, it is a matter of
@@ -2463,19 +2510,20 @@ private:
     // memcpy, and so simply updating the pointers is the necessary for us to
     // update both source and dest of a single call.
     if (!IsSplittable) {
-      Value *OldOp = IsDest ? II.getRawDest() : II.getRawSource();
+      Value *AdjustedPtr = getNewAllocaSlicePtr(IRB, OldPtr->getType());
       if (IsDest)
-        II.setDest(
-            getAdjustedAllocaPtr(IRB, BeginOffset, II.getRawDest()->getType()));
+        II.setDest(AdjustedPtr);
       else
-        II.setSource(getAdjustedAllocaPtr(IRB, BeginOffset,
-                                          II.getRawSource()->getType()));
+        II.setSource(AdjustedPtr);
 
-      Type *CstTy = II.getAlignmentCst()->getType();
-      II.setAlignment(ConstantInt::get(CstTy, Align));
+      if (II.getAlignment() > SliceAlign) {
+        Type *CstTy = II.getAlignmentCst()->getType();
+        II.setAlignment(
+            ConstantInt::get(CstTy, MinAlign(II.getAlignment(), SliceAlign)));
+      }
 
       DEBUG(dbgs() << "          to: " << II << "\n");
-      deleteIfTriviallyDead(OldOp);
+      deleteIfTriviallyDead(OldPtr);
       return false;
     }
     // For split transfer intrinsics we have an incredibly useful assurance:
@@ -2517,33 +2565,32 @@ private:
       Pass.Worklist.insert(AI);
     }
 
-    if (EmitMemCpy) {
-      Type *OtherPtrTy = IsDest ? II.getRawSource()->getType()
-                                : II.getRawDest()->getType();
+    Type *OtherPtrTy = OtherPtr->getType();
+    unsigned OtherAS = OtherPtrTy->getPointerAddressSpace();
 
+    // Compute the relative offset for the other pointer within the transfer.
+    unsigned IntPtrWidth = DL.getPointerSizeInBits(OtherAS);
+    APInt OtherOffset(IntPtrWidth, NewBeginOffset - BeginOffset);
+    unsigned OtherAlign = MinAlign(II.getAlignment() ? II.getAlignment() : 1,
+                                   OtherOffset.zextOrTrunc(64).getZExtValue());
+
+    if (EmitMemCpy) {
       // Compute the other pointer, folding as much as possible to produce
       // a single, simple GEP in most cases.
-      OtherPtr = getAdjustedPtr(IRB, DL, OtherPtr, RelOffset, OtherPtrTy);
+      OtherPtr = getAdjustedPtr(IRB, DL, OtherPtr, OtherOffset, OtherPtrTy,
+                                OtherPtr->getName() + ".");
 
-      Value *OurPtr = getAdjustedAllocaPtr(
-          IRB, NewBeginOffset,
-          IsDest ? II.getRawDest()->getType() : II.getRawSource()->getType());
+      Value *OurPtr = getNewAllocaSlicePtr(IRB, OldPtr->getType());
       Type *SizeTy = II.getLength()->getType();
       Constant *Size = ConstantInt::get(SizeTy, NewEndOffset - NewBeginOffset);
 
-      CallInst *New = IRB.CreateMemCpy(IsDest ? OurPtr : OtherPtr,
-                                       IsDest ? OtherPtr : OurPtr,
-                                       Size, Align, II.isVolatile());
+      CallInst *New = IRB.CreateMemCpy(
+          IsDest ? OurPtr : OtherPtr, IsDest ? OtherPtr : OurPtr, Size,
+          MinAlign(SliceAlign, OtherAlign), II.isVolatile());
       (void)New;
       DEBUG(dbgs() << "          to: " << *New << "\n");
       return false;
     }
-
-    // Note that we clamp the alignment to 1 here as a 0 alignment for a memcpy
-    // is equivalent to 1, but that isn't true if we end up rewriting this as
-    // a load or store.
-    if (!Align)
-      Align = 1;
 
     bool IsWholeAlloca = NewBeginOffset == NewAllocaBeginOffset &&
                          NewEndOffset == NewAllocaEndOffset;
@@ -2554,22 +2601,30 @@ private:
     IntegerType *SubIntTy
       = IntTy ? Type::getIntNTy(IntTy->getContext(), Size*8) : 0;
 
-    Type *OtherPtrTy = NewAI.getType();
+    // Reset the other pointer type to match the register type we're going to
+    // use, but using the address space of the original other pointer.
     if (VecTy && !IsWholeAlloca) {
       if (NumElements == 1)
         OtherPtrTy = VecTy->getElementType();
       else
         OtherPtrTy = VectorType::get(VecTy->getElementType(), NumElements);
 
-      OtherPtrTy = OtherPtrTy->getPointerTo();
+      OtherPtrTy = OtherPtrTy->getPointerTo(OtherAS);
     } else if (IntTy && !IsWholeAlloca) {
-      OtherPtrTy = SubIntTy->getPointerTo();
+      OtherPtrTy = SubIntTy->getPointerTo(OtherAS);
+    } else {
+      OtherPtrTy = NewAllocaTy->getPointerTo(OtherAS);
     }
 
-    Value *SrcPtr = getAdjustedPtr(IRB, DL, OtherPtr, RelOffset, OtherPtrTy);
+    Value *SrcPtr = getAdjustedPtr(IRB, DL, OtherPtr, OtherOffset, OtherPtrTy,
+                                   OtherPtr->getName() + ".");
+    unsigned SrcAlign = OtherAlign;
     Value *DstPtr = &NewAI;
-    if (!IsDest)
+    unsigned DstAlign = SliceAlign;
+    if (!IsDest) {
       std::swap(SrcPtr, DstPtr);
+      std::swap(SrcAlign, DstAlign);
+    }
 
     Value *Src;
     if (VecTy && !IsWholeAlloca && !IsDest) {
@@ -2583,7 +2638,7 @@ private:
       uint64_t Offset = NewBeginOffset - NewAllocaBeginOffset;
       Src = extractInteger(DL, IRB, Src, SubIntTy, Offset, "extract");
     } else {
-      Src = IRB.CreateAlignedLoad(SrcPtr, Align, II.isVolatile(),
+      Src = IRB.CreateAlignedLoad(SrcPtr, SrcAlign, II.isVolatile(),
                                   "copyload");
     }
 
@@ -2601,7 +2656,7 @@ private:
     }
 
     StoreInst *Store = cast<StoreInst>(
-      IRB.CreateAlignedStore(Src, DstPtr, Align, II.isVolatile()));
+        IRB.CreateAlignedStore(Src, DstPtr, DstAlign, II.isVolatile()));
     (void)Store;
     DEBUG(dbgs() << "          to: " << *Store << "\n");
     return !II.isVolatile();
@@ -2613,20 +2668,13 @@ private:
     DEBUG(dbgs() << "    original: " << II << "\n");
     assert(II.getArgOperand(1) == OldPtr);
 
-    // Compute the intersecting offset range.
-    assert(BeginOffset < NewAllocaEndOffset);
-    assert(EndOffset > NewAllocaBeginOffset);
-    uint64_t NewBeginOffset = std::max(BeginOffset, NewAllocaBeginOffset);
-    uint64_t NewEndOffset = std::min(EndOffset, NewAllocaEndOffset);
-
     // Record this instruction for deletion.
     Pass.DeadInsts.insert(&II);
 
     ConstantInt *Size
       = ConstantInt::get(cast<IntegerType>(II.getArgOperand(0)->getType()),
                          NewEndOffset - NewBeginOffset);
-    Value *Ptr =
-        getAdjustedAllocaPtr(IRB, NewBeginOffset, II.getArgOperand(1)->getType());
+    Value *Ptr = getNewAllocaSlicePtr(IRB, OldPtr->getType());
     Value *New;
     if (II.getIntrinsicID() == Intrinsic::lifetime_start)
       New = IRB.CreateLifetimeStart(Ptr, Size);
@@ -2647,28 +2695,22 @@ private:
     // as local as possible to the PHI. To do that, we re-use the location of
     // the old pointer, which necessarily must be in the right position to
     // dominate the PHI.
-    IRBuilderTy PtrBuilder(OldPtr);
-    PtrBuilder.SetNamePrefix(Twine(NewAI.getName()) + "." + Twine(BeginOffset) +
-                             ".");
+    IRBuilderTy PtrBuilder(IRB);
+    PtrBuilder.SetInsertPoint(OldPtr);
+    PtrBuilder.SetCurrentDebugLocation(OldPtr->getDebugLoc());
 
-    Value *NewPtr =
-        getAdjustedAllocaPtr(PtrBuilder, BeginOffset, OldPtr->getType());
+    Value *NewPtr = getNewAllocaSlicePtr(PtrBuilder, OldPtr->getType());
     // Replace the operands which were using the old pointer.
     std::replace(PN.op_begin(), PN.op_end(), cast<Value>(OldPtr), NewPtr);
 
     DEBUG(dbgs() << "          to: " << PN << "\n");
     deleteIfTriviallyDead(OldPtr);
 
-    // Check whether we can speculate this PHI node, and if so remember that
-    // fact and queue it up for another iteration after the speculation
-    // occurs.
-    if (isSafePHIToSpeculate(PN, &DL)) {
-      Pass.SpeculatablePHIs.insert(&PN);
-      IsUsedByRewrittenSpeculatableInstructions = true;
-      return true;
-    }
-
-    return false; // PHIs can't be promoted on their own.
+    // PHIs can't be promoted on their own, but often can be speculated. We
+    // check the speculation outside of the rewriter so that we see the
+    // fully-rewritten alloca.
+    PHIUsers.insert(&PN);
+    return true;
   }
 
   bool visitSelectInst(SelectInst &SI) {
@@ -2678,7 +2720,7 @@ private:
     assert(BeginOffset >= NewAllocaBeginOffset && "Selects are unsplittable");
     assert(EndOffset <= NewAllocaEndOffset && "Selects are unsplittable");
 
-    Value *NewPtr = getAdjustedAllocaPtr(IRB, BeginOffset, OldPtr->getType());
+    Value *NewPtr = getNewAllocaSlicePtr(IRB, OldPtr->getType());
     // Replace the operands which were using the old pointer.
     if (SI.getOperand(1) == OldPtr)
       SI.setOperand(1, NewPtr);
@@ -2688,16 +2730,11 @@ private:
     DEBUG(dbgs() << "          to: " << SI << "\n");
     deleteIfTriviallyDead(OldPtr);
 
-    // Check whether we can speculate this select instruction, and if so
-    // remember that fact and queue it up for another iteration after the
-    // speculation occurs.
-    if (isSafeSelectToSpeculate(SI, &DL)) {
-      Pass.SpeculatableSelects.insert(&SI);
-      IsUsedByRewrittenSpeculatableInstructions = true;
-      return true;
-    }
-
-    return false; // Selects can't be promoted on their own.
+    // Selects can't be promoted on their own, but often can be speculated. We
+    // check the speculation outside of the rewriter so that we see the
+    // fully-rewritten alloca.
+    SelectUsers.insert(&SI);
+    return true;
   }
 
 };
@@ -3133,17 +3170,17 @@ bool SROA::rewritePartition(AllocaInst &AI, AllocaSlices &S,
                << "[" << BeginOffset << "," << EndOffset << ") to: " << *NewAI
                << "\n");
 
-  // Track the high watermark on several worklists that are only relevant for
+  // Track the high watermark on the worklist as it is only relevant for
   // promoted allocas. We will reset it to this point if the alloca is not in
   // fact scheduled for promotion.
   unsigned PPWOldSize = PostPromotionWorklist.size();
-  unsigned SPOldSize = SpeculatablePHIs.size();
-  unsigned SSOldSize = SpeculatableSelects.size();
   unsigned NumUses = 0;
+  SmallPtrSet<PHINode *, 8> PHIUsers;
+  SmallPtrSet<SelectInst *, 8> SelectUsers;
 
   AllocaSliceRewriter Rewriter(*DL, S, *this, AI, *NewAI, BeginOffset,
                                EndOffset, IsVectorPromotable,
-                               IsIntegerPromotable);
+                               IsIntegerPromotable, PHIUsers, SelectUsers);
   bool Promotable = true;
   for (ArrayRef<AllocaSlices::iterator>::const_iterator SUI = SplitUses.begin(),
                                                         SUE = SplitUses.end();
@@ -3164,33 +3201,55 @@ bool SROA::rewritePartition(AllocaInst &AI, AllocaSlices &S,
   MaxUsesPerAllocaPartition =
       std::max<unsigned>(NumUses, MaxUsesPerAllocaPartition);
 
-  if (Promotable && !Rewriter.isUsedByRewrittenSpeculatableInstructions()) {
-    DEBUG(dbgs() << "  and queuing for promotion\n");
-    PromotableAllocas.push_back(NewAI);
-  } else if (NewAI != &AI ||
-             (Promotable &&
-              Rewriter.isUsedByRewrittenSpeculatableInstructions())) {
+  // Now that we've processed all the slices in the new partition, check if any
+  // PHIs or Selects would block promotion.
+  for (SmallPtrSetImpl<PHINode *>::iterator I = PHIUsers.begin(),
+                                            E = PHIUsers.end();
+       I != E; ++I)
+    if (!isSafePHIToSpeculate(**I, DL)) {
+      Promotable = false;
+      PHIUsers.clear();
+      SelectUsers.clear();
+      break;
+    }
+  for (SmallPtrSetImpl<SelectInst *>::iterator I = SelectUsers.begin(),
+                                               E = SelectUsers.end();
+       I != E; ++I)
+    if (!isSafeSelectToSpeculate(**I, DL)) {
+      Promotable = false;
+      PHIUsers.clear();
+      SelectUsers.clear();
+      break;
+    }
+
+  if (Promotable) {
+    if (PHIUsers.empty() && SelectUsers.empty()) {
+      // Promote the alloca.
+      PromotableAllocas.push_back(NewAI);
+    } else {
+      // If we have either PHIs or Selects to speculate, add them to those
+      // worklists and re-queue the new alloca so that we promote in on the
+      // next iteration.
+      for (SmallPtrSetImpl<PHINode *>::iterator I = PHIUsers.begin(),
+                                                E = PHIUsers.end();
+           I != E; ++I)
+        SpeculatablePHIs.insert(*I);
+      for (SmallPtrSetImpl<SelectInst *>::iterator I = SelectUsers.begin(),
+                                                   E = SelectUsers.end();
+           I != E; ++I)
+        SpeculatableSelects.insert(*I);
+      Worklist.insert(NewAI);
+    }
+  } else {
     // If we can't promote the alloca, iterate on it to check for new
     // refinements exposed by splitting the current alloca. Don't iterate on an
     // alloca which didn't actually change and didn't get promoted.
-    //
-    // Alternatively, if we could promote the alloca but have speculatable
-    // instructions then we will speculate them after finishing our processing
-    // of the original alloca. Mark the new one for re-visiting in the next
-    // iteration so the speculated operations can be rewritten.
-    //
-    // FIXME: We should actually track whether the rewriter changed anything.
-    Worklist.insert(NewAI);
-  }
+    if (NewAI != &AI)
+      Worklist.insert(NewAI);
 
-  // Drop any post-promotion work items if promotion didn't happen.
-  if (!Promotable) {
+    // Drop any post-promotion work items if promotion didn't happen.
     while (PostPromotionWorklist.size() > PPWOldSize)
       PostPromotionWorklist.pop_back();
-    while (SpeculatablePHIs.size() > SPOldSize)
-      SpeculatablePHIs.pop_back();
-    while (SpeculatableSelects.size() > SSOldSize)
-      SpeculatableSelects.pop_back();
   }
 
   return true;
@@ -3577,11 +3636,12 @@ bool SROA::runOnFunction(Function &F) {
 
   DEBUG(dbgs() << "SROA function: " << F.getName() << "\n");
   C = &F.getContext();
-  DL = getAnalysisIfAvailable<DataLayout>();
-  if (!DL) {
+  DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+  if (!DLP) {
     DEBUG(dbgs() << "  Skipping SROA -- no target data!\n");
     return false;
   }
+  DL = &DLP->getDataLayout();
   DominatorTreeWrapperPass *DTWP =
       getAnalysisIfAvailable<DominatorTreeWrapperPass>();
   DT = DTWP ? &DTWP->getDomTree() : 0;

@@ -90,6 +90,12 @@ inline uint64_t decodeULEB128(const uint8_t *p, unsigned *n = 0) {
   return Value;
 }
 
+/// Utility function to get the size of the ULEB128-encoded value.
+extern unsigned getULEB128Size(uint64_t Value);
+
+/// Utility function to get the size of the SLEB128-encoded value.
+extern unsigned getSLEB128Size(int64_t Value);
+
 }  // namespace llvm
 
 #endif  // LLVM_SYSTEM_LEB128_H

@@ -474,6 +474,7 @@ bool TokenLexer::Lex(Token &Tok) {
   } else {
     // If this is not the first token, we may still need to pass through
     // leading whitespace if we've expanded a macro.
+    if (AtStartOfLine) Tok.setFlag(Token::StartOfLine);
     if (HasLeadingSpace) Tok.setFlag(Token::LeadingSpace);
   }
   AtStartOfLine = false;
@@ -616,12 +617,11 @@ bool TokenLexer::PasteTokens(Token &Tok) {
           SourceLocation Loc =
             SM.createExpansionLoc(PasteOpLoc, ExpandLocStart, ExpandLocEnd, 2);
           // If we're in microsoft extensions mode, downgrade this from a hard
-          // error to a warning that defaults to an error.  This allows
+          // error to an extension that defaults to an error.  This allows
           // disabling it.
-          PP.Diag(Loc,
-                  PP.getLangOpts().MicrosoftExt ? diag::err_pp_bad_paste_ms 
-                                                   : diag::err_pp_bad_paste)
-            << Buffer.str();
+          PP.Diag(Loc, PP.getLangOpts().MicrosoftExt ? diag::ext_pp_bad_paste_ms
+                                                     : diag::err_pp_bad_paste)
+              << Buffer.str();
         }
 
         // An error has occurred so exit loop.

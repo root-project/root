@@ -454,12 +454,18 @@ void RAGreedy::enqueue(PQueue &CurQueue, LiveInterval *LI) {
     // everything else has been allocated.
     Prio = Size;
   } else {
-    if (ExtraRegInfo[Reg].Stage == RS_Assign && !LI->empty() &&
+    // Giant live ranges fall back to the global assignment heuristic, which
+    // prevents excessive spilling in pathological cases.
+    bool ReverseLocal = TRI->reverseLocalAssignment();
+    bool ForceGlobal = !ReverseLocal && TRI->mayOverrideLocalAssignment() &&
+      (Size / SlotIndex::InstrDist) > (2 * MRI->getRegClass(Reg)->getNumRegs());
+
+    if (ExtraRegInfo[Reg].Stage == RS_Assign && !ForceGlobal && !LI->empty() &&
         LIS->intervalIsInOneMBB(*LI)) {
       // Allocate original local ranges in linear instruction order. Since they
       // are singly defined, this produces optimal coloring in the absence of
       // global interference and other constraints.
-      if (!TRI->reverseLocalAssignment())
+      if (!ReverseLocal)
         Prio = LI->beginIndex().getInstrDistance(Indexes->getLastIndex());
       else {
         // Allocating bottom up may allow many short LRGs to be assigned first
@@ -601,7 +607,7 @@ bool RAGreedy::shouldEvict(LiveInterval &A, bool IsHint,
 }
 
 /// canEvictInterference - Return true if all interferences between VirtReg and
-/// PhysReg can be evicted.  When OnlyCheap is set, don't do anything
+/// PhysReg can be evicted.
 ///
 /// @param VirtReg Live range that is about to be assigned.
 /// @param PhysReg Desired register for assignment.
@@ -1916,7 +1922,7 @@ RAGreedy::mayRecolorAllInterferences(unsigned PhysReg, LiveInterval &VirtReg,
 /// R3 is available.
 /// Recoloring => vC = R1, vA = R2, vB = R3
 ///
-/// \p Order defines the prefered allocation order for \p VirtReg.
+/// \p Order defines the preferred allocation order for \p VirtReg.
 /// \p NewRegs will contain any new virtual register that have been created
 /// (split, spill) during the process and that must be assigned.
 /// \p FixedRegisters contains all the virtual registers that cannot be

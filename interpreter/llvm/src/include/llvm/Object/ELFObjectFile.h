@@ -180,8 +180,8 @@ public:
 
   const Elf_Sym *getSymbol(DataRefImpl Symb) const;
 
-  symbol_iterator symbol_begin() const LLVM_OVERRIDE;
-  symbol_iterator symbol_end() const LLVM_OVERRIDE;
+  basic_symbol_iterator symbol_begin_impl() const LLVM_OVERRIDE;
+  basic_symbol_iterator symbol_end_impl() const LLVM_OVERRIDE;
 
   symbol_iterator dynamic_symbol_begin() const;
   symbol_iterator dynamic_symbol_end() const;
@@ -824,13 +824,13 @@ ELFObjectFile<ELFT>::ELFObjectFile(MemoryBuffer *Object, error_code &ec,
       EF(Object, ec) {}
 
 template <class ELFT>
-symbol_iterator ELFObjectFile<ELFT>::symbol_begin() const {
-  return symbol_iterator(SymbolRef(toDRI(EF.begin_symbols()), this));
+basic_symbol_iterator ELFObjectFile<ELFT>::symbol_begin_impl() const {
+  return basic_symbol_iterator(SymbolRef(toDRI(EF.begin_symbols()), this));
 }
 
 template <class ELFT>
-symbol_iterator ELFObjectFile<ELFT>::symbol_end() const {
-  return symbol_iterator(SymbolRef(toDRI(EF.end_symbols()), this));
+basic_symbol_iterator ELFObjectFile<ELFT>::symbol_end_impl() const {
+  return basic_symbol_iterator(SymbolRef(toDRI(EF.end_symbols()), this));
 }
 
 template <class ELFT>
@@ -946,6 +946,8 @@ StringRef ELFObjectFile<ELFT>::getFileFormatName() const {
       return "ELF64-s390";
     case ELF::EM_SPARCV9:
       return "ELF64-sparc";
+    case ELF::EM_MIPS:
+      return "ELF64-mips";
     default:
       return "ELF64-unknown";
     }
@@ -1011,6 +1013,25 @@ static inline error_code getELFRelocationAddend(const RelocationRef R,
     return ELFObj->getRelocationAddend(DRI, Addend);
 
   llvm_unreachable("Object passed to getELFRelocationAddend() is not ELF");
+}
+
+static inline std::pair<symbol_iterator, symbol_iterator>
+getELFDynamicSymbolIterators(SymbolicFile *Obj) {
+  if (const ELF32LEObjectFile *ELF = dyn_cast<ELF32LEObjectFile>(Obj))
+    return std::make_pair(ELF->dynamic_symbol_begin(),
+                          ELF->dynamic_symbol_end());
+  if (const ELF64LEObjectFile *ELF = dyn_cast<ELF64LEObjectFile>(Obj))
+    return std::make_pair(ELF->dynamic_symbol_begin(),
+                          ELF->dynamic_symbol_end());
+  if (const ELF32BEObjectFile *ELF = dyn_cast<ELF32BEObjectFile>(Obj))
+    return std::make_pair(ELF->dynamic_symbol_begin(),
+                          ELF->dynamic_symbol_end());
+  if (const ELF64BEObjectFile *ELF = cast<ELF64BEObjectFile>(Obj))
+    return std::make_pair(ELF->dynamic_symbol_begin(),
+                          ELF->dynamic_symbol_end());
+
+  llvm_unreachable(
+      "Object passed to getELFDynamicSymbolIterators() is not ELF");
 }
 
 /// This is a generic interface for retrieving GNU symbol version

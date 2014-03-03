@@ -1,5 +1,19 @@
 cmake_minimum_required(VERSION 2.8.8)
 
+# FIXME: It may be removed when we use 2.8.12.
+if(CMAKE_VERSION VERSION_LESS 2.8.12)
+  # Invalidate a couple of keywords.
+  set(cmake_2_8_12_INTERFACE)
+  set(cmake_2_8_12_PRIVATE)
+else()
+  # Use ${cmake_2_8_12_KEYWORD} intead of KEYWORD in target_link_libraries().
+  set(cmake_2_8_12_INTERFACE INTERFACE)
+  set(cmake_2_8_12_PRIVATE PRIVATE)
+  if(POLICY CMP0022)
+    cmake_policy(SET CMP0022 NEW) # automatic when 2.8.12 is required
+  endif()
+endif()
+
 # If we are not building as a part of LLVM, build Clang as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
@@ -255,7 +269,7 @@ function(clang_tablegen)
   # executing the custom command depending on output-file. It is
   # possible to list more files to depend after DEPENDS.
 
-  cmake_parse_arguments(CTG "" "SOURCE;TARGET" "DEPENDS" ${ARGN})
+  cmake_parse_arguments(CTG "" "SOURCE;TARGET" "" ${ARGN})
 
   if( NOT CTG_SOURCE )
     message(FATAL_ERROR "SOURCE source-file required by clang_tablegen")
@@ -264,10 +278,10 @@ function(clang_tablegen)
   set( LLVM_TARGET_DEFINITIONS ${CTG_SOURCE} )
   tablegen(CLANG ${CTG_UNPARSED_ARGUMENTS})
 
-  list(GET CTG_UNPARSED_ARGUMENTS 0 output_file)
-  if( CTG_TARGET )
-    add_custom_target( ${CTG_TARGET} DEPENDS ${output_file} ${CTG_DEPENDS} )
+  if(CTG_TARGET)
+    add_public_tablegen_target(${CTG_TARGET})
     set_target_properties( ${CTG_TARGET} PROPERTIES FOLDER "Clang tablegenning")
+    set_property(GLOBAL APPEND PROPERTY CLANG_TABLEGEN_TARGETS ${CTG_TARGET})
   endif()
 endfunction(clang_tablegen)
 
@@ -312,7 +326,7 @@ macro(add_clang_library name)
   llvm_add_library(${name} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
 
   if(TARGET ${name})
-    target_link_libraries( ${name} ${LLVM_COMMON_LIBS} )
+    target_link_libraries(${name} ${cmake_2_8_12_INTERFACE} ${LLVM_COMMON_LIBS})
 
     if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY OR ${name} STREQUAL "libclang")
       install(TARGETS ${name}
@@ -405,6 +419,11 @@ mark_as_advanced(CLANG_EXECUTABLE_VERSION LIBCLANG_LIBRARY_VERSION)
 add_subdirectory(utils/TableGen)
 
 add_subdirectory(include)
+
+# All targets below may depend on all tablegen'd files.
+get_property(CLANG_TABLEGEN_TARGETS GLOBAL PROPERTY CLANG_TABLEGEN_TARGETS)
+list(APPEND LLVM_COMMON_DEPENDS ${CLANG_TABLEGEN_TARGETS})
+
 add_subdirectory(lib)
 add_subdirectory(tools)
 add_subdirectory(runtime)

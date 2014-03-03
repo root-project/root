@@ -344,7 +344,7 @@ public:
   typedef SmallPtrSet<Value *, 16> ValueSet;
   typedef SmallVector<StoreInst *, 8> StoreList;
 
-  BoUpSLP(Function *Func, ScalarEvolution *Se, DataLayout *Dl,
+  BoUpSLP(Function *Func, ScalarEvolution *Se, const DataLayout *Dl,
           TargetTransformInfo *Tti, AliasAnalysis *Aa, LoopInfo *Li,
           DominatorTree *Dt) :
     F(Func), SE(Se), DL(Dl), TTI(Tti), AA(Aa), LI(Li), DT(Dt),
@@ -533,7 +533,7 @@ private:
   // Analysis and block reference.
   Function *F;
   ScalarEvolution *SE;
-  DataLayout *DL;
+  const DataLayout *DL;
   TargetTransformInfo *TTI;
   AliasAnalysis *AA;
   LoopInfo *LI;
@@ -779,7 +779,8 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth) {
       // Check for terminator values (e.g. invoke).
       for (unsigned j = 0; j < VL.size(); ++j)
         for (unsigned i = 0, e = PH->getNumIncomingValues(); i < e; ++i) {
-          TerminatorInst *Term = dyn_cast<TerminatorInst>(cast<PHINode>(VL[j])->getIncomingValue(i));
+          TerminatorInst *Term = dyn_cast<TerminatorInst>(
+              cast<PHINode>(VL[j])->getIncomingValueForBlock(PH->getIncomingBlock(i)));
           if (Term) {
             DEBUG(dbgs() << "SLP: Need to swizzle PHINodes (TerminatorInst use).\n");
             newTreeEntry(VL, false);
@@ -794,7 +795,8 @@ void BoUpSLP::buildTree_rec(ArrayRef<Value *> VL, unsigned Depth) {
         ValueList Operands;
         // Prepare the operand vector.
         for (unsigned j = 0; j < VL.size(); ++j)
-          Operands.push_back(cast<PHINode>(VL[j])->getIncomingValue(i));
+          Operands.push_back(cast<PHINode>(VL[j])->getIncomingValueForBlock(
+              PH->getIncomingBlock(i)));
 
         buildTree_rec(Operands, Depth + 1);
       }
@@ -1099,11 +1101,15 @@ bool BoUpSLP::isFullyVectorizableTinyTree() {
   if (VectorizableTree.size() != 2)
     return false;
 
-  // Gathering cost would be too much for tiny trees.
-  if (VectorizableTree[0].NeedToGather || VectorizableTree[1].NeedToGather) 
-    return false; 
+  // Handle splat stores.
+  if (!VectorizableTree[0].NeedToGather && isSplat(VectorizableTree[1].Scalars))
+    return true;
 
-  return true; 
+  // Gathering cost would be too much for tiny trees.
+  if (VectorizableTree[0].NeedToGather || VectorizableTree[1].NeedToGather)
+    return false;
+
+  return true;
 }
 
 int BoUpSLP::getTreeCost() {
@@ -1778,7 +1784,7 @@ struct SLPVectorizer : public FunctionPass {
   }
 
   ScalarEvolution *SE;
-  DataLayout *DL;
+  const DataLayout *DL;
   TargetTransformInfo *TTI;
   AliasAnalysis *AA;
   LoopInfo *LI;
@@ -1789,7 +1795,8 @@ struct SLPVectorizer : public FunctionPass {
       return false;
 
     SE = &getAnalysis<ScalarEvolution>();
-    DL = getAnalysisIfAvailable<DataLayout>();
+    DataLayoutPass *DLP = getAnalysisIfAvailable<DataLayoutPass>();
+    DL = DLP ? &DLP->getDataLayout() : 0;
     TTI = &getAnalysis<TargetTransformInfo>();
     AA = &getAnalysis<AliasAnalysis>();
     LI = &getAnalysis<LoopInfo>();
@@ -1814,7 +1821,7 @@ struct SLPVectorizer : public FunctionPass {
 
     DEBUG(dbgs() << "SLP: Analyzing blocks in " << F.getName() << ".\n");
 
-    // Use the bollom up slp vectorizer to construct chains that start with
+    // Use the bottom up slp vectorizer to construct chains that start with
     // he store instructions.
     BoUpSLP R(&F, SE, DL, TTI, AA, LI, DT);
 
@@ -2228,7 +2235,7 @@ public:
 
   /// \brief Try to find a reduction tree.
   bool matchAssociativeReduction(PHINode *Phi, BinaryOperator *B,
-                                 DataLayout *DL) {
+                                 const DataLayout *DL) {
     assert((!Phi ||
             std::find(Phi->op_begin(), Phi->op_end(), B) != Phi->op_end()) &&
            "Thi phi needs to use the binary operator");

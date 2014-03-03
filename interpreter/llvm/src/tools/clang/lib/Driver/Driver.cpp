@@ -77,10 +77,7 @@ Driver::Driver(StringRef ClangExecutable,
 Driver::~Driver() {
   delete Opts;
 
-  for (llvm::StringMap<ToolChain *>::iterator I = ToolChains.begin(),
-                                              E = ToolChains.end();
-       I != E; ++I)
-    delete I->second;
+  llvm::DeleteContainerSeconds(ToolChains);
 }
 
 void Driver::ParseDriverMode(ArrayRef<const char *> Args) {
@@ -525,8 +522,7 @@ void Driver::generateCompilationDiagnostics(Compilation &C,
       std::string Err;
       std::string Script = StringRef(*it).rsplit('.').first;
       Script += ".sh";
-      llvm::raw_fd_ostream ScriptOS(
-          Script.c_str(), Err, llvm::sys::fs::F_Excl | llvm::sys::fs::F_Binary);
+      llvm::raw_fd_ostream ScriptOS(Script.c_str(), Err, llvm::sys::fs::F_Excl);
       if (!Err.empty()) {
         Diag(clang::diag::note_drv_command_failed_diag_msg)
           << "Error generating run script: " + Script + " " + Err;

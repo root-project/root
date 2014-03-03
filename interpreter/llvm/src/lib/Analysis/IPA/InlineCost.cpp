@@ -43,7 +43,7 @@ class CallAnalyzer : public InstVisitor<CallAnalyzer, bool> {
   friend class InstVisitor<CallAnalyzer, bool>;
 
   // DataLayout if available, or null.
-  const DataLayout *const TD;
+  const DataLayout *const DL;
 
   /// The TargetTransformInfo available for this compilation.
   const TargetTransformInfo &TTI;
@@ -142,9 +142,9 @@ class CallAnalyzer : public InstVisitor<CallAnalyzer, bool> {
   bool visitUnreachableInst(UnreachableInst &I);
 
 public:
-  CallAnalyzer(const DataLayout *TD, const TargetTransformInfo &TTI,
+  CallAnalyzer(const DataLayout *DL, const TargetTransformInfo &TTI,
                Function &Callee, int Threshold)
-      : TD(TD), TTI(TTI), F(Callee), Threshold(Threshold), Cost(0),
+      : DL(DL), TTI(TTI), F(Callee), Threshold(Threshold), Cost(0),
         IsCallerRecursive(false), IsRecursiveCall(false),
         ExposesReturnsTwice(false), HasDynamicAlloca(false),
         ContainsNoDuplicateCall(false), HasReturn(false), HasIndirectBr(false),
@@ -256,10 +256,10 @@ bool CallAnalyzer::isGEPOffsetConstant(GetElementPtrInst &GEP) {
 /// Returns false if unable to compute the offset for any reason. Respects any
 /// simplified values known during the analysis of this callsite.
 bool CallAnalyzer::accumulateGEPOffset(GEPOperator &GEP, APInt &Offset) {
-  if (!TD)
+  if (!DL)
     return false;
 
-  unsigned IntPtrWidth = TD->getPointerSizeInBits();
+  unsigned IntPtrWidth = DL->getPointerSizeInBits();
   assert(IntPtrWidth == Offset.getBitWidth());
 
   for (gep_type_iterator GTI = gep_type_begin(GEP), GTE = gep_type_end(GEP);
@@ -275,12 +275,12 @@ bool CallAnalyzer::accumulateGEPOffset(GEPOperator &GEP, APInt &Offset) {
     // Handle a struct index, which adds its field offset to the pointer.
     if (StructType *STy = dyn_cast<StructType>(*GTI)) {
       unsigned ElementIdx = OpC->getZExtValue();
-      const StructLayout *SL = TD->getStructLayout(STy);
+      const StructLayout *SL = DL->getStructLayout(STy);
       Offset += APInt(IntPtrWidth, SL->getElementOffset(ElementIdx));
       continue;
     }
 
-    APInt TypeSize(IntPtrWidth, TD->getTypeAllocSize(GTI.getIndexedType()));
+    APInt TypeSize(IntPtrWidth, DL->getTypeAllocSize(GTI.getIndexedType()));
     Offset += OpC->getValue().sextOrTrunc(IntPtrWidth) * TypeSize;
   }
   return true;
@@ -293,7 +293,7 @@ bool CallAnalyzer::visitAlloca(AllocaInst &I) {
   // Accumulate the allocated size.
   if (I.isStaticAlloca()) {
     Type *Ty = I.getAllocatedType();
-    AllocatedSize += (TD ? TD->getTypeAllocSize(Ty) :
+    AllocatedSize += (DL ? DL->getTypeAllocSize(Ty) :
                       Ty->getPrimitiveSizeInBits());
   }
 
@@ -330,7 +330,7 @@ bool CallAnalyzer::visitGetElementPtr(GetElementPtrInst &I) {
 
   // Try to fold GEPs of constant-offset call site argument pointers. This
   // requires target data and inbounds GEPs.
-  if (TD && I.isInBounds()) {
+  if (DL && I.isInBounds()) {
     // Check if we have a base + offset for the pointer.
     Value *Ptr = I.getPointerOperand();
     std::pair<Value *, APInt> BaseAndOffset = ConstantOffsetPtrs.lookup(Ptr);
@@ -399,6 +399,7 @@ bool CallAnalyzer::visitBitCast(BitCastInst &I) {
 }
 
 bool CallAnalyzer::visitPtrToInt(PtrToIntInst &I) {
+  const DataLayout *DL = I.getDataLayout();
   // Propagate constants through ptrtoint.
   Constant *COp = dyn_cast<Constant>(I.getOperand(0));
   if (!COp)
@@ -412,7 +413,7 @@ bool CallAnalyzer::visitPtrToInt(PtrToIntInst &I) {
   // Track base/offset pairs when converted to a plain integer provided the
   // integer is large enough to represent the pointer.
   unsigned IntegerSize = I.getType()->getScalarSizeInBits();
-  if (TD && IntegerSize >= TD->getPointerSizeInBits()) {
+  if (DL && IntegerSize >= DL->getPointerSizeInBits()) {
     std::pair<Value *, APInt> BaseAndOffset
       = ConstantOffsetPtrs.lookup(I.getOperand(0));
     if (BaseAndOffset.first)
@@ -435,6 +436,7 @@ bool CallAnalyzer::visitPtrToInt(PtrToIntInst &I) {
 }
 
 bool CallAnalyzer::visitIntToPtr(IntToPtrInst &I) {
+  const DataLayout *DL = I.getDataLayout();
   // Propagate constants through ptrtoint.
   Constant *COp = dyn_cast<Constant>(I.getOperand(0));
   if (!COp)
@@ -449,7 +451,7 @@ bool CallAnalyzer::visitIntToPtr(IntToPtrInst &I) {
   // modifications provided the integer is not too large.
   Value *Op = I.getOperand(0);
   unsigned IntegerSize = Op->getType()->getScalarSizeInBits();
-  if (TD && IntegerSize <= TD->getPointerSizeInBits()) {
+  if (DL && IntegerSize <= DL->getPointerSizeInBits()) {
     std::pair<Value *, APInt> BaseAndOffset = ConstantOffsetPtrs.lookup(Op);
     if (BaseAndOffset.first)
       ConstantOffsetPtrs[&I] = BaseAndOffset;
@@ -488,7 +490,7 @@ bool CallAnalyzer::visitUnaryInstruction(UnaryInstruction &I) {
     COp = SimplifiedValues.lookup(Operand);
   if (COp)
     if (Constant *C = ConstantFoldInstOperands(I.getOpcode(), I.getType(),
-                                               COp, TD)) {
+                                               COp, DL)) {
       SimplifiedValues[&I] = C;
       return true;
     }
@@ -602,7 +604,7 @@ bool CallAnalyzer::visitBinaryOperator(BinaryOperator &I) {
   if (!isa<Constant>(RHS))
     if (Constant *SimpleRHS = SimplifiedValues.lookup(RHS))
       RHS = SimpleRHS;
-  Value *SimpleV = SimplifyBinOp(I.getOpcode(), LHS, RHS, TD);
+  Value *SimpleV = SimplifyBinOp(I.getOpcode(), LHS, RHS, DL);
   if (Constant *C = dyn_cast_or_null<Constant>(SimpleV)) {
     SimplifiedValues[&I] = C;
     return true;
@@ -784,7 +786,7 @@ bool CallAnalyzer::visitCallSite(CallSite CS) {
   // during devirtualization and so we want to give it a hefty bonus for
   // inlining, but cap that bonus in the event that inlining wouldn't pan
   // out. Pretend to inline the function, with a custom threshold.
-  CallAnalyzer CA(TD, TTI, *F, InlineConstants::IndirectCallThreshold);
+  CallAnalyzer CA(DL, TTI, *F, InlineConstants::IndirectCallThreshold);
   if (CA.analyzeCall(CS)) {
     // We were able to inline the indirect call! Subtract the cost from the
     // bonus we want to apply, but don't go below zero.
@@ -931,10 +933,10 @@ bool CallAnalyzer::analyzeBlock(BasicBlock *BB) {
 /// returns 0 if V is not a pointer, and returns the constant '0' if there are
 /// no constant offsets applied.
 ConstantInt *CallAnalyzer::stripAndComputeInBoundsConstantOffsets(Value *&V) {
-  if (!TD || !V->getType()->isPointerTy())
+  if (!DL || !V->getType()->isPointerTy())
     return 0;
 
-  unsigned IntPtrWidth = TD->getPointerSizeInBits();
+  unsigned IntPtrWidth = DL->getPointerSizeInBits();
   APInt Offset = APInt::getNullValue(IntPtrWidth);
 
   // Even though we don't look through PHI nodes, we could be called on an
@@ -958,7 +960,7 @@ ConstantInt *CallAnalyzer::stripAndComputeInBoundsConstantOffsets(Value *&V) {
     assert(V->getType()->isPointerTy() && "Unexpected operand type!");
   } while (Visited.insert(V));
 
-  Type *IntPtrTy = TD->getIntPtrType(V->getContext());
+  Type *IntPtrTy = DL->getIntPtrType(V->getContext());
   return cast<ConstantInt>(ConstantInt::get(IntPtrTy, Offset));
 }
 
@@ -993,12 +995,12 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
   // Give out bonuses per argument, as the instructions setting them up will
   // be gone after inlining.
   for (unsigned I = 0, E = CS.arg_size(); I != E; ++I) {
-    if (TD && CS.isByValArgument(I)) {
+    if (DL && CS.isByValArgument(I)) {
       // We approximate the number of loads and stores needed by dividing the
       // size of the byval type by the target's pointer size.
       PointerType *PTy = cast<PointerType>(CS.getArgument(I)->getType());
-      unsigned TypeSize = TD->getTypeSizeInBits(PTy->getElementType());
-      unsigned PointerSize = TD->getPointerSizeInBits();
+      unsigned TypeSize = DL->getTypeSizeInBits(PTy->getElementType());
+      unsigned PointerSize = DL->getPointerSizeInBits();
       // Ceiling division.
       unsigned NumStores = (TypeSize + PointerSize - 1) / PointerSize;
 
@@ -1178,7 +1180,7 @@ bool CallAnalyzer::analyzeCall(CallSite CS) {
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 /// \brief Dump stats about this call's analysis.
 void CallAnalyzer::dump() {
-#define DEBUG_PRINT_STAT(x) llvm::dbgs() << "      " #x ": " << x << "\n"
+#define DEBUG_PRINT_STAT(x) dbgs() << "      " #x ": " << x << "\n"
   DEBUG_PRINT_STAT(NumConstantArgs);
   DEBUG_PRINT_STAT(NumConstantOffsetPtrArgs);
   DEBUG_PRINT_STAT(NumAllocaArgs);
@@ -1203,7 +1205,7 @@ INITIALIZE_PASS_END(InlineCostAnalysis, "inline-cost", "Inline Cost Analysis",
 
 char InlineCostAnalysis::ID = 0;
 
-InlineCostAnalysis::InlineCostAnalysis() : CallGraphSCCPass(ID), TD(0) {}
+InlineCostAnalysis::InlineCostAnalysis() : CallGraphSCCPass(ID) {}
 
 InlineCostAnalysis::~InlineCostAnalysis() {}
 
@@ -1214,7 +1216,6 @@ void InlineCostAnalysis::getAnalysisUsage(AnalysisUsage &AU) const {
 }
 
 bool InlineCostAnalysis::runOnSCC(CallGraphSCC &SCC) {
-  TD = getAnalysisIfAvailable<DataLayout>();
   TTI = &getAnalysis<TargetTransformInfo>();
   return false;
 }
@@ -1272,7 +1273,7 @@ InlineCost InlineCostAnalysis::getInlineCost(CallSite CS, Function *Callee,
   DEBUG(llvm::dbgs() << "      Analyzing call of " << Callee->getName()
         << "...\n");
 
-  CallAnalyzer CA(TD, *TTI, *Callee, Threshold);
+  CallAnalyzer CA(Callee->getDataLayout(), *TTI, *Callee, Threshold);
   bool ShouldInline = CA.analyzeCall(CS);
 
   DEBUG(CA.dump());

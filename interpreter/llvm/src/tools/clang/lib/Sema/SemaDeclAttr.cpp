@@ -367,7 +367,7 @@ static const RecordType *getRecordType(QualType QT) {
 static bool checkBaseClassIsLockableCallback(const CXXBaseSpecifier *Specifier,
                                              CXXBasePath &Path, void *Unused) {
   const RecordType *RT = Specifier->getType()->getAs<RecordType>();
-  return RT->getDecl()->hasAttr<LockableAttr>();
+  return RT->getDecl()->hasAttr<CapabilityAttr>();
 }
 
 
@@ -395,7 +395,7 @@ static void checkForLockableRecord(Sema &S, Decl *D, const AttributeList &Attr,
 
   // Check if the type is lockable.
   RecordDecl *RD = RT->getDecl();
-  if (RD->hasAttr<LockableAttr>())
+  if (RD->hasAttr<CapabilityAttr>())
     return;
 
   // Else check if any base classes are lockable.
@@ -548,7 +548,7 @@ static bool checkAcquireOrderAttrCommon(Sema &S, Decl *D,
   QualType QT = cast<ValueDecl>(D)->getType();
   if (!QT->isDependentType()) {
     const RecordType *RT = getRecordType(QT);
-    if (!RT || !RT->getDecl()->hasAttr<LockableAttr>()) {
+    if (!RT || !RT->getDecl()->hasAttr<CapabilityAttr>()) {
       S.Diag(Attr.getLoc(), diag::warn_thread_attribute_decl_not_lockable)
         << Attr.getName();
       return false;
@@ -696,46 +696,6 @@ static void handleExclusiveTrylockFunctionAttr(Sema &S, Decl *D,
                                           Attr.getArgAsExpr(0),
                                           Args.data(), Args.size(),
                                           Attr.getAttributeSpellingListIndex()));
-}
-
-static bool checkLocksRequiredCommon(Sema &S, Decl *D,
-                                     const AttributeList &Attr,
-                                     SmallVectorImpl<Expr *> &Args) {
-  if (!checkAttributeAtLeastNumArgs(S, Attr, 1))
-    return false;
-
-  // check that all arguments are lockable objects
-  checkAttrArgsAreLockableObjs(S, D, Attr, Args);
-  if (Args.empty())
-    return false;
-
-  return true;
-}
-
-static void handleExclusiveLocksRequiredAttr(Sema &S, Decl *D,
-                                             const AttributeList &Attr) {
-  SmallVector<Expr*, 1> Args;
-  if (!checkLocksRequiredCommon(S, D, Attr, Args))
-    return;
-
-  Expr **StartArg = &Args[0];
-  D->addAttr(::new (S.Context)
-             ExclusiveLocksRequiredAttr(Attr.getRange(), S.Context,
-                                        StartArg, Args.size(),
-                                        Attr.getAttributeSpellingListIndex()));
-}
-
-static void handleSharedLocksRequiredAttr(Sema &S, Decl *D,
-                                          const AttributeList &Attr) {
-  SmallVector<Expr*, 1> Args;
-  if (!checkLocksRequiredCommon(S, D, Attr, Args))
-    return;
-
-  Expr **StartArg = &Args[0];
-  D->addAttr(::new (S.Context)
-             SharedLocksRequiredAttr(Attr.getRange(), S.Context,
-                                     StartArg, Args.size(),
-                                     Attr.getAttributeSpellingListIndex()));
 }
 
 static void handleUnlockFunAttr(Sema &S, Decl *D,
@@ -1685,6 +1645,12 @@ static void handleAttrWithMessage(Sema &S, Decl *D,
 
 static void handleObjCSuppresProtocolAttr(Sema &S, Decl *D,
                                           const AttributeList &Attr) {
+  if (!cast<ObjCProtocolDecl>(D)->isThisDeclarationADefinition()) {
+    S.Diag(Attr.getLoc(), diag::err_objc_attr_protocol_requires_definition)
+      << Attr.getName() << Attr.getRange();
+    return;
+  }
+
   D->addAttr(::new (S.Context)
           ObjCExplicitProtocolImplAttr(Attr.getRange(), S.Context,
                                        Attr.getAttributeSpellingListIndex()));
@@ -3820,21 +3786,12 @@ static void handleX86ForceAlignArgPointerAttr(Sema &S, Decl *D,
 DLLImportAttr *Sema::mergeDLLImportAttr(Decl *D, SourceRange Range,
                                         unsigned AttrSpellingListIndex) {
   if (D->hasAttr<DLLExportAttr>()) {
-    Diag(Range.getBegin(), diag::warn_attribute_ignored) << "dllimport";
+    Diag(Range.getBegin(), diag::warn_attribute_ignored) << "'dllimport'";
     return NULL;
   }
 
   if (D->hasAttr<DLLImportAttr>())
     return NULL;
-
-  if (VarDecl *VD = dyn_cast<VarDecl>(D)) {
-    if (VD->hasDefinition()) {
-      // dllimport cannot be applied to definitions.
-      Diag(D->getLocation(), diag::warn_attribute_invalid_on_definition)
-        << "dllimport";
-      return NULL;
-    }
-  }
 
   return ::new (Context) DLLImportAttr(Range, Context, AttrSpellingListIndex);
 }
@@ -3868,7 +3825,7 @@ static void handleDLLImportAttr(Sema &S, Decl *D, const AttributeList &Attr) {
 DLLExportAttr *Sema::mergeDLLExportAttr(Decl *D, SourceRange Range,
                                         unsigned AttrSpellingListIndex) {
   if (DLLImportAttr *Import = D->getAttr<DLLImportAttr>()) {
-    Diag(Import->getLocation(), diag::warn_attribute_ignored) << "dllimport";
+    Diag(Import->getLocation(), diag::warn_attribute_ignored) << Import;
     D->dropAttr<DLLImportAttr>();
   }
 
@@ -3927,6 +3884,95 @@ Sema::mergeMSInheritanceAttr(Decl *D, SourceRange Range, bool BestCase,
 
   return ::new (Context)
       MSInheritanceAttr(Range, Context, BestCase, AttrSpellingListIndex);
+}
+
+static void handleCapabilityAttr(Sema &S, Decl *D, const AttributeList &Attr) {
+  // The capability attributes take a single string parameter for the name of
+  // the capability they represent. The lockable attribute does not take any
+  // parameters. However, semantically, both attributes represent the same
+  // concept, and so they use the same semantic attribute. Eventually, the
+  // lockable attribute will be removed.
+  StringRef N;
+  SourceLocation LiteralLoc;
+  if (Attr.getKind() == AttributeList::AT_Capability &&
+      !S.checkStringLiteralArgumentAttr(Attr, 0, N, &LiteralLoc))
+    return;
+
+  D->addAttr(::new (S.Context) CapabilityAttr(Attr.getRange(), S.Context, N,
+                                        Attr.getAttributeSpellingListIndex()));
+}
+
+static void handleAssertCapabilityAttr(Sema &S, Decl *D,
+                                       const AttributeList &Attr) {
+  D->addAttr(::new (S.Context) AssertCapabilityAttr(Attr.getRange(), S.Context,
+                                                    Attr.getArgAsExpr(0),
+                                        Attr.getAttributeSpellingListIndex()));
+}
+
+static void handleAcquireCapabilityAttr(Sema &S, Decl *D,
+                                        const AttributeList &Attr) {
+  SmallVector<Expr*, 1> Args;
+  if (!checkAttributeAtLeastNumArgs(S, Attr, 1))
+    return;
+
+  // Check that all arguments are lockable objects.
+  checkAttrArgsAreLockableObjs(S, D, Attr, Args);
+  if (Args.empty())
+    return;
+
+  D->addAttr(::new (S.Context) AcquireCapabilityAttr(Attr.getRange(),
+                                                     S.Context,
+                                                     Args.data(), Args.size(),
+                                        Attr.getAttributeSpellingListIndex()));
+}
+
+static void handleTryAcquireCapabilityAttr(Sema &S, Decl *D,
+                                           const AttributeList &Attr) {
+  SmallVector<Expr*, 2> Args;
+  if (!checkTryLockFunAttrCommon(S, D, Attr, Args))
+    return;
+
+  D->addAttr(::new (S.Context) TryAcquireCapabilityAttr(Attr.getRange(),
+                                                        S.Context,
+                                                        Attr.getArgAsExpr(0),
+                                                        Args.data(),
+                                                        Args.size(),
+                                        Attr.getAttributeSpellingListIndex()));
+}
+
+static void handleReleaseCapabilityAttr(Sema &S, Decl *D,
+                                        const AttributeList &Attr) {
+  SmallVector<Expr*, 1> Args;
+  if (!checkAttributeAtLeastNumArgs(S, Attr, 1))
+    return;
+
+  // Check that all arguments are lockable objects.
+  checkAttrArgsAreLockableObjs(S, D, Attr, Args);
+  if (Args.empty())
+    return;
+
+  D->addAttr(::new (S.Context) ReleaseCapabilityAttr(Attr.getRange(),
+                                                     S.Context,
+                                                     Args.data(), Args.size(),
+                                        Attr.getAttributeSpellingListIndex()));
+}
+
+static void handleRequiresCapabilityAttr(Sema &S, Decl *D,
+                                         const AttributeList &Attr) {
+  if (!checkAttributeAtLeastNumArgs(S, Attr, 1))
+    return;
+
+  // check that all arguments are lockable objects
+  SmallVector<Expr*, 1> Args;
+  checkAttrArgsAreLockableObjs(S, D, Attr, Args);
+  if (Args.empty())
+    return;
+
+  RequiresCapabilityAttr *RCA = ::new (S.Context)
+    RequiresCapabilityAttr(Attr.getRange(), S.Context, Args.data(),
+                           Args.size(), Attr.getAttributeSpellingListIndex());
+
+  D->addAttr(RCA);
 }
 
 /// Handles semantic checking for features that are common to all attributes,
@@ -4182,6 +4228,8 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     handleSimpleAttribute<PureAttr>(S, D, Attr); break;
   case AttributeList::AT_Cleanup:     handleCleanupAttr     (S, D, Attr); break;
   case AttributeList::AT_NoDebug:     handleNoDebugAttr     (S, D, Attr); break;
+  case AttributeList::AT_NoDuplicate:
+    handleSimpleAttribute<NoDuplicateAttr>(S, D, Attr); break;
   case AttributeList::AT_NoInline:
     handleSimpleAttribute<NoInlineAttr>(S, D, Attr); break;
   case AttributeList::AT_NoInstrumentFunction:  // Interacts with -pg.
@@ -4212,8 +4260,6 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     break;
   case AttributeList::AT_MSInheritance:
     handleMSInheritanceAttr(S, D, Attr); break;
-  case AttributeList::AT_ForceInline:
-    handleSimpleAttribute<ForceInlineAttr>(S, D, Attr); break;
   case AttributeList::AT_SelectAny:
     handleSimpleAttribute<SelectAnyAttr>(S, D, Attr); break;
 
@@ -4243,8 +4289,6 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_NoSanitizeMemory:
     handleSimpleAttribute<NoSanitizeMemoryAttr>(S, D, Attr);
     break;
-  case AttributeList::AT_Lockable:
-    handleSimpleAttribute<LockableAttr>(S, D, Attr); break;
   case AttributeList::AT_GuardedBy:
     handleGuardedByAttr(S, D, Attr);
     break;
@@ -4253,9 +4297,6 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
     break;
   case AttributeList::AT_ExclusiveLockFunction:
     handleExclusiveLockFunctionAttr(S, D, Attr);
-    break;
-  case AttributeList::AT_ExclusiveLocksRequired:
-    handleExclusiveLocksRequiredAttr(S, D, Attr);
     break;
   case AttributeList::AT_ExclusiveTrylockFunction:
     handleExclusiveTrylockFunctionAttr(S, D, Attr);
@@ -4269,9 +4310,6 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_SharedLockFunction:
     handleSharedLockFunctionAttr(S, D, Attr);
     break;
-  case AttributeList::AT_SharedLocksRequired:
-    handleSharedLocksRequiredAttr(S, D, Attr);
-    break;
   case AttributeList::AT_SharedTrylockFunction:
     handleSharedTrylockFunctionAttr(S, D, Attr);
     break;
@@ -4284,6 +4322,22 @@ static void ProcessDeclAttribute(Sema &S, Scope *scope, Decl *D,
   case AttributeList::AT_AcquiredAfter:
     handleAcquiredAfterAttr(S, D, Attr);
     break;
+
+  // Capability analysis attributes.
+  case AttributeList::AT_Capability:
+  case AttributeList::AT_Lockable:
+    handleCapabilityAttr(S, D, Attr); break;
+  case AttributeList::AT_RequiresCapability:
+    handleRequiresCapabilityAttr(S, D, Attr); break;
+
+  case AttributeList::AT_AssertCapability:
+    handleAssertCapabilityAttr(S, D, Attr); break;
+  case AttributeList::AT_AcquireCapability:
+    handleAcquireCapabilityAttr(S, D, Attr); break;
+  case AttributeList::AT_ReleaseCapability:
+    handleReleaseCapabilityAttr(S, D, Attr); break;
+  case AttributeList::AT_TryAcquireCapability:
+    handleTryAcquireCapabilityAttr(S, D, Attr); break;
 
   // Consumed analysis attributes.
   case AttributeList::AT_Consumable:

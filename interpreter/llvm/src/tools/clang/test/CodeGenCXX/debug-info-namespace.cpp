@@ -36,10 +36,14 @@ int func(bool b) {
   return i + X::B::i + Y::B::i;
 }
 
+namespace A {
+using B::i;
+}
+
 // This should work even if 'i' and 'func' were declarations & not definitions,
 // but it doesn't yet.
 
-// CHECK: [[CU:![0-9]*]] = {{.*}}[[MODULES:![0-9]*]], metadata !""} ; [ DW_TAG_compile_unit ]
+// CHECK: [[CU:![0-9]*]] = {{.*}}[[MODULES:![0-9]*]], metadata !"", i32 1} ; [ DW_TAG_compile_unit ]
 // CHECK: [[FILE:![0-9]*]] {{.*}}debug-info-namespace.cpp"
 // CHECK: [[FOO:![0-9]*]] {{.*}} ; [ DW_TAG_structure_type ] [foo] [line 5, size 0, align 0, offset 0] [decl] [from ]
 // CHECK: [[FOOCPP:![0-9]*]] = metadata !{metadata !"foo.cpp", {{.*}}
@@ -50,7 +54,7 @@ int func(bool b) {
 // CHECK: [[FUNC:![0-9]*]] {{.*}} ; [ DW_TAG_subprogram ] {{.*}} [def] [func]
 // CHECK: [[FILE2]]} ; [ DW_TAG_file_type ] [{{.*}}foo.cpp]
 // CHECK: [[I:![0-9]*]] = {{.*}}, metadata [[NS]], metadata !"i", {{.*}} ; [ DW_TAG_variable ] [i]
-// CHECK: [[MODULES]] = metadata !{metadata [[M1:![0-9]*]], metadata [[M2:![0-9]*]], metadata [[M3:![0-9]*]], metadata [[M4:![0-9]*]], metadata [[M5:![0-9]*]], metadata [[M6:![0-9]*]], metadata [[M7:![0-9]*]], metadata [[M8:![0-9]*]], metadata [[M9:![0-9]*]], metadata [[M10:![0-9]*]], metadata [[M11:![0-9]*]], metadata [[M12:![0-9]*]]}
+// CHECK: [[MODULES]] = metadata !{metadata [[M1:![0-9]*]], metadata [[M2:![0-9]*]], metadata [[M3:![0-9]*]], metadata [[M4:![0-9]*]], metadata [[M5:![0-9]*]], metadata [[M6:![0-9]*]], metadata [[M7:![0-9]*]], metadata [[M8:![0-9]*]], metadata [[M9:![0-9]*]], metadata [[M10:![0-9]*]], metadata [[M11:![0-9]*]], metadata [[M12:![0-9]*]], metadata [[M13:![0-9]*]]}
 // CHECK: [[M1]] = metadata !{i32 {{[0-9]*}}, metadata [[CTXT]], metadata [[NS]], i32 11} ; [ DW_TAG_imported_module ]
 // CHECK: [[M2]] = metadata !{i32 {{[0-9]*}}, metadata [[CU]], metadata [[CTXT]], i32 {{[0-9]*}}} ; [ DW_TAG_imported_module ]
 // CHECK: [[M3]] = metadata !{i32 {{[0-9]*}}, metadata [[CU]], metadata [[CTXT]], i32 15, metadata !"E"} ; [ DW_TAG_imported_module ]
@@ -66,8 +70,9 @@ int func(bool b) {
 // CHECK: [[BAZ]] = metadata !{i32 {{[0-9]*}}, metadata [[FOOCPP]], metadata [[NS]], {{.*}}, metadata !"_ZTSN1A1B3barE"} ; [ DW_TAG_typedef ] [baz] {{.*}} [from _ZTSN1A1B3barE]
 // CHECK: [[M11]] = metadata !{i32 {{[0-9]*}}, metadata [[FUNC]], metadata [[CTXT]], i32 {{[0-9]*}}, metadata !"X"} ; [ DW_TAG_imported_module ]
 // CHECK: [[M12]] = metadata !{i32 {{[0-9]*}}, metadata [[FUNC]], metadata [[M11]], i32 {{[0-9]*}}, metadata !"Y"} ; [ DW_TAG_imported_module ]
+// CHECK: [[M13]] = metadata !{i32 {{[0-9]*}}, metadata [[CTXT]], metadata [[I]], i32 {{[0-9]*}}} ; [ DW_TAG_imported_declaration ]
 
-// CHECK-GMLT: [[CU:![0-9]*]] = {{.*}}[[MODULES:![0-9]*]], metadata !""} ; [ DW_TAG_compile_unit ]
+// CHECK-GMLT: [[CU:![0-9]*]] = {{.*}}[[MODULES:![0-9]*]], metadata !"", i32 2} ; [ DW_TAG_compile_unit ]
 // CHECK-GMLT: [[MODULES]] = metadata !{}
 
 // CHECK-NOLIMIT: ; [ DW_TAG_structure_type ] [bar] [line 6, {{.*}}] [def] [from ]
@@ -75,3 +80,4 @@ int func(bool b) {
 // FIXME: It is confused on win32 to generate file entry when dosish filename is given.
 // REQUIRES: shell
 // REQUIRES: shell-preserves-root
+// REQUIRES: dw2

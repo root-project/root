@@ -632,10 +632,11 @@ void CodeGenModule::SetLLVMFunctionAttributesForDefinition(const Decl *D,
     // Naked implies noinline: we should not be inlining such functions.
     B.addAttribute(llvm::Attribute::Naked);
     B.addAttribute(llvm::Attribute::NoInline);
+  } else if (D->hasAttr<NoDuplicateAttr>()) {
+    B.addAttribute(llvm::Attribute::NoDuplicate);
   } else if (D->hasAttr<NoInlineAttr>()) {
     B.addAttribute(llvm::Attribute::NoInline);
-  } else if ((D->hasAttr<AlwaysInlineAttr>() ||
-              D->hasAttr<ForceInlineAttr>()) &&
+  } else if (D->hasAttr<AlwaysInlineAttr>() &&
              !F->getAttributes().hasAttribute(llvm::AttributeSet::FunctionIndex,
                                               llvm::Attribute::NoInline)) {
     // (noinline wins over always_inline, and we can't specify both in IR)
@@ -1244,8 +1245,7 @@ CodeGenModule::shouldEmitFunction(GlobalDecl GD) {
   if (getFunctionLinkage(GD) != llvm::Function::AvailableExternallyLinkage)
     return true;
   const FunctionDecl *F = cast<FunctionDecl>(GD.getDecl());
-  if (CodeGenOpts.OptimizationLevel == 0 &&
-      !F->hasAttr<AlwaysInlineAttr>() && !F->hasAttr<ForceInlineAttr>())
+  if (CodeGenOpts.OptimizationLevel == 0 && !F->hasAttr<AlwaysInlineAttr>())
     return false;
   // PR9614. Avoid cases where the source code is lying to us. An available
   // externally function should have an equivalent function somewhere else,
@@ -2890,7 +2890,6 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
     break;
     // No code generation needed.
   case Decl::UsingShadow:
-  case Decl::Using:
   case Decl::ClassTemplate:
   case Decl::VarTemplate:
   case Decl::VarTemplatePartialSpecialization:
@@ -2899,6 +2898,10 @@ void CodeGenModule::EmitTopLevelDecl(Decl *D) {
   case Decl::Block:
   case Decl::Empty:
     break;
+  case Decl::Using:          // using X; [C++]
+    if (CGDebugInfo *DI = getModuleDebugInfo())
+        DI->EmitUsingDecl(cast<UsingDecl>(*D));
+    return;
   case Decl::NamespaceAlias:
     if (CGDebugInfo *DI = getModuleDebugInfo())
         DI->EmitNamespaceAlias(cast<NamespaceAliasDecl>(*D));

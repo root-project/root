@@ -308,8 +308,8 @@ void Parser::ParseGNUAttributeArgs(IdentifierInfo *AttrName,
     PrototypeScope.reset(new ParseScope(this, Scope::FunctionPrototypeScope |
                                         Scope::FunctionDeclarationScope |
                                         Scope::DeclScope));
-    for (unsigned i = 0; i != FTI.NumArgs; ++i) {
-      ParmVarDecl *Param = cast<ParmVarDecl>(FTI.ArgInfo[i].Param);
+    for (unsigned i = 0; i != FTI.NumParams; ++i) {
+      ParmVarDecl *Param = cast<ParmVarDecl>(FTI.Params[i].Param);
       Actions.ActOnReenterCXXMethodParameter(getCurScope(), Param);
     }
   }
@@ -5069,7 +5069,6 @@ void Parser::ParseFunctionDeclarator(Declarator &D,
   ParsedAttributes FnAttrs(AttrFactory);
   TypeResult TrailingReturnType;
 
-  Actions.ActOnStartFunctionDeclarator();
   /* LocalEndLoc is the end location for the local FunctionTypeLoc.
      EndLoc is the end location for the function declarator.
      They differ for trailing return types. */
@@ -5198,8 +5197,6 @@ void Parser::ParseFunctionDeclarator(Declarator &D,
                                              StartLoc, LocalEndLoc, D,
                                              TrailingReturnType),
                 FnAttrs, EndLoc);
-
-  Actions.ActOnEndFunctionDeclarator();
 }
 
 /// isFunctionDeclaratorIdentifierList - This parameter list may have an

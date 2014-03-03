@@ -87,10 +87,6 @@ Here's the short story for getting up and running quickly with LLVM:
    * ``make check-all`` --- This run the regression tests to ensure everything
      is in working order.
 
-   * ``make update`` --- This command is used to update all the svn repositories
-     at once, rather then having to ``cd`` into the individual repositories and
-     running ``svn update``.
-
    * It is also possible to use CMake instead of the makefiles. With CMake it is
      possible to generate project files for several IDEs: Xcode, Eclipse CDT4,
      CodeBlocks, Qt-Creator (use the CodeBlocks generator), KDevelop3.
@@ -113,75 +109,32 @@ software you will need.
 Hardware
 --------
 
-LLVM is known to work on the following platforms:
+LLVM is known to work on the following host platforms:
 
-+-----------------+----------------------+-------------------------+
-|OS               |  Arch                | Compilers               |
-+=================+======================+=========================+
-|AuroraUX         | x86\ :sup:`1`        | GCC                     |
-+-----------------+----------------------+-------------------------+
-|Linux            | x86\ :sup:`1`        | GCC                     |
-+-----------------+----------------------+-------------------------+
-|Linux            | amd64                | GCC                     |
-+-----------------+----------------------+-------------------------+
-|Linux            | ARM\ :sup:`13`       | GCC                     |
-+-----------------+----------------------+-------------------------+
-|Solaris          | V9 (Ultrasparc)      | GCC                     |
-+-----------------+----------------------+-------------------------+
-|FreeBSD          | x86\ :sup:`1`        | GCC                     |
-+-----------------+----------------------+-------------------------+
-|FreeBSD          | amd64                | GCC                     |
-+-----------------+----------------------+-------------------------+
-|MacOS X\ :sup:`2`| PowerPC              | GCC                     |
-+-----------------+----------------------+-------------------------+
-|MacOS X\ :sup:`9`| x86                  | GCC                     |
-+-----------------+----------------------+-------------------------+
-|Cygwin/Win32     | x86\ :sup:`1, 8, 11` | GCC 3.4.X, binutils 2.20|
-+-----------------+----------------------+-------------------------+
-
-LLVM has partial support for the following platforms:
-
-+-------------------+----------------------+-------------------------------------------+
-|OS                 |  Arch                | Compilers                                 |
-+===================+======================+===========================================+
-| Windows           | x86\ :sup:`1`        | Visual Studio 2000 or higher\ :sup:`4,5`  |
-+-------------------+----------------------+-------------------------------------------+
-| AIX\ :sup:`3,4`   | PowerPC              | GCC                                       |
-+-------------------+----------------------+-------------------------------------------+
-| Linux\ :sup:`3,5` | PowerPC              | GCC                                       |
-+-------------------+----------------------+-------------------------------------------+
-| Linux\ :sup:`7`   | Alpha                | GCC                                       |
-+-------------------+----------------------+-------------------------------------------+
-| Linux\ :sup:`7`   | Itanium (IA-64)      | GCC                                       |
-+-------------------+----------------------+-------------------------------------------+
-| HP-UX\ :sup:`7`   | Itanium (IA-64)      | HP aCC                                    |
-+-------------------+----------------------+-------------------------------------------+
-| Windows x64       | x86-64               | mingw-w64's GCC-4.5.x\ :sup:`12`          |
-+-------------------+----------------------+-------------------------------------------+
+================== ===================== =============
+OS                 Arch                  Compilers               
+================== ===================== =============
+AuroraUX           x86\ :sup:`1`         GCC                     
+Linux              x86\ :sup:`1`         GCC, Clang              
+Linux              amd64                 GCC, Clang              
+Linux              ARM\ :sup:`4`         GCC, Clang              
+Linux              PowerPC               GCC, Clang              
+Solaris            V9 (Ultrasparc)       GCC                     
+FreeBSD            x86\ :sup:`1`         GCC, Clang              
+FreeBSD            amd64                 GCC, Clang              
+MacOS X\ :sup:`2`  PowerPC               GCC                     
+MacOS X            x86                   GCC, Clang              
+Cygwin/Win32       x86\ :sup:`1, 3`      GCC                     
+Windows            x86\ :sup:`1`         Visual Studio           
+Windows x64        x86-64                Visual Studio           
+================== ===================== =============
 
 .. note::
 
   #. Code generation supported for Pentium processors and up
   #. Code generation supported for 32-bit ABI only
-  #. No native code generation
-  #. Build is not complete: one or more tools do not link or function
-  #. The GCC-based C/C++ frontend does not build
-  #. The port is done using the MSYS shell.
-  #. Native code generation exists but is not complete.
-  #. Binutils 2.20 or later is required to build the assembler generated by LLVM properly.
-  #. Xcode 2.5 and gcc 4.0.1 (Apple Build 5370) will trip internal LLVM assert
-     messages when compiled for Release at optimization levels greater than 0
-     (i.e., ``-O1`` and higher).  Add ``OPTIMIZE_OPTION="-O0"`` to the build
-     command line if compiling for LLVM Release or bootstrapping the LLVM
-     toolchain.
-  #. For MSYS/MinGW on Windows, be sure to install the MSYS version of the perl
-     package, and be sure it appears in your path before any Windows-based
-     versions such as Strawberry Perl and ActivePerl, as these have
-     Windows-specifics that will cause the build to fail.
   #. To use LLVM modules on Win32-based system, you may configure LLVM
      with ``--enable-shared``.
-  #. To compile SPU backend, you need to add ``LDFLAGS=-Wl,--stack,16777216`` to
-     configure.
   #. MCJIT not working well pre-v7, old JIT engine not supported any more.
 
 Note that you will need about 1-3 GB of space for a full LLVM build in Debug
@@ -206,38 +159,24 @@ for the software package that LLVM depends on. The Version column provides
 "known to work" versions of the package. The Notes column describes how LLVM
 uses the package and provides other details.
 
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| Package                                                      | Version         | Notes                                       |
-+==============================================================+=================+=============================================+
-| `GNU Make <http://savannah.gnu.org/projects/make>`_          | 3.79, 3.79.1    | Makefile/build processor                    |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `GCC <http://gcc.gnu.org/>`_                                 | 3.4.2           | C/C++ compiler\ :sup:`1`                    |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `TeXinfo <http://www.gnu.org/software/texinfo/>`_            | 4.5             | For building the CFE                        |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `SVN <http://subversion.tigris.org/project_packages.html>`_  | >=1.3           | Subversion access to LLVM\ :sup:`2`         |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `python <http://www.python.org/>`_                           | >=2.5           | Automated test suite\ :sup:`3`              |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `GNU M4 <http://savannah.gnu.org/projects/m4>`_              | 1.4             | Macro processor for configuration\ :sup:`4` |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `GNU Autoconf <http://www.gnu.org/software/autoconf/>`_      | 2.60            | Configuration script builder\ :sup:`4`      |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `GNU Automake <http://www.gnu.org/software/automake/>`_      | 1.9.6           | aclocal macro generator\ :sup:`4`           |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `libtool <http://savannah.gnu.org/projects/libtool>`_        | 1.5.22          | Shared library manager\ :sup:`4`            |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
-| `zlib <http://zlib.net>`_                                    | >=1.2.3.4       | Compression library\ :sup:`5`               |
-+--------------------------------------------------------------+-----------------+---------------------------------------------+
+=========================================================== ============ ==========================================
+Package                                                     Version      Notes
+=========================================================== ============ ==========================================
+`GNU Make <http://savannah.gnu.org/projects/make>`_         3.79, 3.79.1 Makefile/build processor
+`GCC <http://gcc.gnu.org/>`_                                >=4.7.0      C/C++ compiler\ :sup:`1`
+`python <http://www.python.org/>`_                          >=2.5        Automated test suite\ :sup:`2`
+`GNU M4 <http://savannah.gnu.org/projects/m4>`_             1.4          Macro processor for configuration\ :sup:`3`
+`GNU Autoconf <http://www.gnu.org/software/autoconf/>`_     2.60         Configuration script builder\ :sup:`3`
+`GNU Automake <http://www.gnu.org/software/automake/>`_     1.9.6        aclocal macro generator\ :sup:`3`
+`libtool <http://savannah.gnu.org/projects/libtool>`_       1.5.22       Shared library manager\ :sup:`3`
+`zlib <http://zlib.net>`_                                   >=1.2.3.4    Compression library\ :sup:`4`
+=========================================================== ============ ==========================================
 
 .. note::
 
    #. Only the C and C++ languages are needed so there's no need to build the
       other languages for LLVM's purposes. See `below` for specific version
       info.
-   #. You only need Subversion if you intend to build from the latest LLVM
-      sources. If you're working from a release distribution, you don't need
-      Subversion.
    #. Only needed if you want to run the automated test suite in the
       ``llvm/test`` directory.
    #. If you want to make changes to the configure scripts, you will need GNU
@@ -277,92 +216,32 @@ Unix utilities. Specifically:
 .. _below:
 .. _check here:
 
-Broken versions of GCC and other tools
---------------------------------------
+Host C++ Toolchain, both Compiler and Standard Library
+------------------------------------------------------
 
 LLVM is very demanding of the host C++ compiler, and as such tends to expose
-bugs in the compiler.  In particular, several versions of GCC crash when trying
-to compile LLVM.  We routinely use GCC 4.2 (and higher) or Clang.  Other
-versions of GCC will probably work as well.  GCC versions listed here are known
-to not work.  If you are using one of these versions, please try to upgrade your
-GCC to something more recent.  If you run into a problem with a version of GCC
-not listed here, please `let us know <mailto:llvmdev@cs.uiuc.edu>`_.  Please use
-the "``gcc -v``" command to find out which version of GCC you are using.
+bugs in the compiler. We are also planning to follow improvements and
+developments in the C++ language and library reasonably closely. As such, we
+require a modern host C++ toolchain, both compiler and standard library, in
+order to build LLVM.
 
-**GCC versions prior to 3.0**: GCC 2.96.x and before had several problems in the
-STL that effectively prevent it from compiling LLVM.
+For the most popular host toolchains we check for specific minimum versions in
+our build systems:
 
-**GCC 3.2.2 and 3.2.3**: These versions of GCC fails to compile LLVM with a
-bogus template error.  This was fixed in later GCCs.
+* Clang 3.1
+* GCC 4.7
+* Visual Studio 2012
 
-**GCC 3.3.2**: This version of GCC suffered from a `serious bug
-<http://gcc.gnu.org/PR13392>`_ which causes it to crash in the
-"``convert_from_eh_region_ranges_1``" GCC function.
+Anything older than these toolchains *may* work, but will require forcing the
+build system with a special option and is not really a supported host platform.
+Also note that older versions of these compilers have often crashed or
+miscompiled LLVM.
 
-**Cygwin GCC 3.3.3**: The version of GCC 3.3.3 commonly shipped with Cygwin does
-not work.
+For less widely used host toolchains such as ICC or xlC, be aware that a very
+recent version may be required to support all of the C++ features used in LLVM.
 
-**SuSE GCC 3.3.3**: The version of GCC 3.3.3 shipped with SuSE 9.1 (and possibly
-others) does not compile LLVM correctly (it appears that exception handling is
-broken in some cases).  Please download the FSF 3.3.3 or upgrade to a newer
-version of GCC.
-
-**GCC 3.4.0 on linux/x86 (32-bit)**: GCC miscompiles portions of the code
-generator, causing an infinite loop in the llvm-gcc build when built with
-optimizations enabled (i.e. a release build).
-
-**GCC 3.4.2 on linux/x86 (32-bit)**: GCC miscompiles portions of the code
-generator at -O3, as with 3.4.0.  However gcc 3.4.2 (unlike 3.4.0) correctly
-compiles LLVM at -O2.  A work around is to build release LLVM builds with
-"``make ENABLE_OPTIMIZED=1 OPTIMIZE_OPTION=-O2 ...``"
-
-**GCC 3.4.x on X86-64/amd64**: GCC `miscompiles portions of LLVM
-<http://llvm.org/PR1056>`__.
-
-**GCC 3.4.4 (CodeSourcery ARM 2005q3-2)**: this compiler miscompiles LLVM when
-building with optimizations enabled.  It appears to work with "``make
-ENABLE_OPTIMIZED=1 OPTIMIZE_OPTION=-O1``" or build a debug build.
-
-**IA-64 GCC 4.0.0**: The IA-64 version of GCC 4.0.0 is known to miscompile LLVM.
-
-**Apple Xcode 2.3**: GCC crashes when compiling LLVM at -O3 (which is the
-default with ENABLE_OPTIMIZED=1.  To work around this, build with
-"``ENABLE_OPTIMIZED=1 OPTIMIZE_OPTION=-O2``".
-
-**GCC 4.1.1**: GCC fails to build LLVM with template concept check errors
-compiling some files.  At the time of this writing, GCC mainline (4.2) did not
-share the problem.
-
-**GCC 4.1.1 on X86-64/amd64**: GCC `miscompiles portions of LLVM
-<http://llvm.org/PR1063>`__ when compiling llvm itself into 64-bit code.  LLVM
-will appear to mostly work but will be buggy, e.g. failing portions of its
-testsuite.
-
-**GCC 4.1.2 on OpenSUSE**: Seg faults during libstdc++ build and on x86_64
-platforms compiling md5.c gets a mangled constant.
-
-**GCC 4.1.2 (20061115 (prerelease) (Debian 4.1.1-21)) on Debian**: Appears to
-miscompile parts of LLVM 2.4. One symptom is ValueSymbolTable complaining about
-symbols remaining in the table on destruction.
-
-**GCC 4.1.2 20071124 (Red Hat 4.1.2-42)**: Suffers from the same symptoms as the
-previous one. It appears to work with ENABLE_OPTIMIZED=0 (the default).
-
-**Cygwin GCC 4.3.2 20080827 (beta) 2**: Users `reported
-<http://llvm.org/PR4145>`_ various problems related with link errors when using
-this GCC version.
-
-**Debian GCC 4.3.2 on X86**: Crashes building some files in LLVM 2.6.
-
-**GCC 4.3.3 (Debian 4.3.3-10) on ARM**: Miscompiles parts of LLVM 2.6 when
-optimizations are turned on. The symptom is an infinite loop in
-``FoldingSetImpl::RemoveNode`` while running the code generator.
-
-**SUSE 11 GCC 4.3.4**: Miscompiles LLVM, causing crashes in ValueHandle logic.
-
-**GCC 4.3.5 and GCC 4.4.5 on ARM**: These can miscompile ``value >> 1`` even at
-``-O0``. A test failure in ``test/Assembler/alignstack.ll`` is one symptom of
-the problem.
+We track certain versions of software that are *known* to fail when used as
+part of the host toolchain. These even include linkers at times.
 
 **GCC 4.6.3 on ARM**: Miscompiles ``llvm-readobj`` at ``-O3``. A test failure
 in ``test/Object/readobj-shared-object.test`` is one symptom of the problem.

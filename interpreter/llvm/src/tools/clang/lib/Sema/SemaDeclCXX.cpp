@@ -380,16 +380,16 @@ void Sema::CheckExtraCXXDefaultArguments(Declarator &D) {
         MightBeFunction = false;
         continue;
       }
-      for (unsigned argIdx = 0, e = chunk.Fun.NumArgs; argIdx != e; ++argIdx) {
-        ParmVarDecl *Param =
-          cast<ParmVarDecl>(chunk.Fun.ArgInfo[argIdx].Param);
+      for (unsigned argIdx = 0, e = chunk.Fun.NumParams; argIdx != e;
+           ++argIdx) {
+        ParmVarDecl *Param = cast<ParmVarDecl>(chunk.Fun.Params[argIdx].Param);
         if (Param->hasUnparsedDefaultArg()) {
-          CachedTokens *Toks = chunk.Fun.ArgInfo[argIdx].DefaultArgTokens;
+          CachedTokens *Toks = chunk.Fun.Params[argIdx].DefaultArgTokens;
           Diag(Param->getLocation(), diag::err_param_default_argument_nonfunc)
             << SourceRange((*Toks)[1].getLocation(),
                            Toks->back().getLocation());
           delete Toks;
-          chunk.Fun.ArgInfo[argIdx].DefaultArgTokens = 0;
+          chunk.Fun.Params[argIdx].DefaultArgTokens = 0;
         } else if (Param->getDefaultArg()) {
           Diag(Param->getLocation(), diag::err_param_default_argument_nonfunc)
             << Param->getDefaultArg()->getSourceRange();
@@ -4479,15 +4479,6 @@ void Sema::CheckCompletedCXXClass(CXXRecordDecl *Record) {
         }
       }
     }
-
-    if (Record->hasUserDeclaredDestructor()) {
-      // The Microsoft ABI requires that we perform the destructor body
-      // checks (i.e. operator delete() lookup) in any translataion unit, as
-      // any translation unit may need to emit a deleting destructor.
-      if (Context.getTargetInfo().getCXXABI().isMicrosoft() &&
-          !Record->getDestructor()->isDeleted())
-        CheckDestructor(Record->getDestructor());
-    }
   }
 
   // C++11 [dcl.constexpr]p8: A constexpr specifier for a non-static member
@@ -4529,11 +4520,18 @@ void Sema::CheckCompletedCXXClass(CXXRecordDecl *Record) {
     }
   }
 
-  // Check to see if we're trying to lay out a struct using the ms_struct
-  // attribute that is dynamic.
-  if (Record->isMsStruct(Context) && Record->isDynamicClass()) {
-    Diag(Record->getLocation(), diag::warn_pragma_ms_struct_failed);
-    Record->dropAttr<MsStructAttr>();
+  // ms_struct is a request to use the same ABI rules as MSVC.  Check
+  // whether this class uses any C++ features that are implemented
+  // completely differently in MSVC, and if so, emit a diagnostic.
+  // That diagnostic defaults to an error, but we allow projects to
+  // map it down to a warning (or ignore it).  It's a fairly common
+  // practice among users of the ms_struct pragma to mass-annotate
+  // headers, sweeping up a bunch of types that the project doesn't
+  // really rely on MSVC-compatible layout for.  We must therefore
+  // support "ms_struct except for C++ stuff" as a secondary ABI.
+  if (Record->isMsStruct(Context) &&
+      (Record->isPolymorphic() || Record->getNumBases())) {
+    Diag(Record->getLocation(), diag::warn_cxx_ms_struct);
   }
 
   // Declare inheriting constructors. We do this eagerly here because:
@@ -6303,9 +6301,9 @@ bool Sema::CheckDestructor(CXXDestructorDecl *Destructor) {
 
 static inline bool
 FTIHasSingleVoidArgument(DeclaratorChunk::FunctionTypeInfo &FTI) {
-  return (FTI.NumArgs == 1 && !FTI.isVariadic && FTI.ArgInfo[0].Ident == 0 &&
-          FTI.ArgInfo[0].Param &&
-          cast<ParmVarDecl>(FTI.ArgInfo[0].Param)->getType()->isVoidType());
+  return (FTI.NumParams == 1 && !FTI.isVariadic && FTI.Params[0].Ident == 0 &&
+          FTI.Params[0].Param &&
+          cast<ParmVarDecl>(FTI.Params[0].Param)->getType()->isVoidType());
 }
 
 /// CheckDestructorDeclarator - Called by ActOnDeclarator to check
@@ -6386,11 +6384,11 @@ QualType Sema::CheckDestructorDeclarator(Declarator &D, QualType R,
   }
   
   // Make sure we don't have any parameters.
-  if (FTI.NumArgs > 0 && !FTIHasSingleVoidArgument(FTI)) {
+  if (FTI.NumParams > 0 && !FTIHasSingleVoidArgument(FTI)) {
     Diag(D.getIdentifierLoc(), diag::err_destructor_with_params);
 
     // Delete the parameters.
-    FTI.freeArgs();
+    FTI.freeParams();
     D.setInvalidType();
   }
 
@@ -6460,7 +6458,7 @@ void Sema::CheckConversionDeclarator(Declarator &D, QualType &R,
     Diag(D.getIdentifierLoc(), diag::err_conv_function_with_params);
 
     // Delete the parameters.
-    D.getFunctionTypeInfo().freeArgs();
+    D.getFunctionTypeInfo().freeParams();
     D.setInvalidType();
   } else if (Proto->isVariadic()) {
     Diag(D.getIdentifierLoc(), diag::err_conv_function_variadic);
@@ -11071,29 +11069,36 @@ FinishedParams:
 
 /// ActOnStartLinkageSpecification - Parsed the beginning of a C++
 /// linkage specification, including the language and (if present)
-/// the '{'. ExternLoc is the location of the 'extern', LangLoc is
-/// the location of the language string literal, which is provided
-/// by Lang/StrSize. LBraceLoc, if valid, provides the location of
+/// the '{'. ExternLoc is the location of the 'extern', Lang is the
+/// language string literal. LBraceLoc, if valid, provides the location of
 /// the '{' brace. Otherwise, this linkage specification does not
 /// have any braces.
 Decl *Sema::ActOnStartLinkageSpecification(Scope *S, SourceLocation ExternLoc,
-                                           SourceLocation LangLoc,
-                                           StringRef Lang,
+                                           Expr *LangStr,
                                            SourceLocation LBraceLoc) {
+  StringLiteral *Lit = cast<StringLiteral>(LangStr);
+  if (!Lit->isAscii()) {
+    Diag(LangStr->getExprLoc(), diag::err_language_linkage_spec_not_ascii)
+      << LangStr->getSourceRange();
+    return 0;
+  }
+
+  StringRef Lang = Lit->getString();
   LinkageSpecDecl::LanguageIDs Language;
-  if (Lang == "\"C\"")
+  if (Lang == "C")
     Language = LinkageSpecDecl::lang_c;
-  else if (Lang == "\"C++\"")
+  else if (Lang == "C++")
     Language = LinkageSpecDecl::lang_cxx;
   else {
-    Diag(LangLoc, diag::err_bad_language);
+    Diag(LangStr->getExprLoc(), diag::err_language_linkage_spec_unknown)
+      << LangStr->getSourceRange();
     return 0;
   }
 
   // FIXME: Add all the various semantics of linkage specifications
 
-  LinkageSpecDecl *D = LinkageSpecDecl::Create(Context, CurContext,
-                                               ExternLoc, LangLoc, Language,
+  LinkageSpecDecl *D = LinkageSpecDecl::Create(Context, CurContext, ExternLoc,
+                                               LangStr->getExprLoc(), Language,
                                                LBraceLoc.isValid());
   CurContext->addDecl(D);
   PushDeclContext(S, D);
@@ -11107,13 +11112,11 @@ Decl *Sema::ActOnStartLinkageSpecification(Scope *S, SourceLocation ExternLoc,
 Decl *Sema::ActOnFinishLinkageSpecification(Scope *S,
                                             Decl *LinkageSpec,
                                             SourceLocation RBraceLoc) {
-  if (LinkageSpec) {
-    if (RBraceLoc.isValid()) {
-      LinkageSpecDecl* LSDecl = cast<LinkageSpecDecl>(LinkageSpec);
-      LSDecl->setRBraceLoc(RBraceLoc);
-    }
-    PopDeclContext();
+  if (RBraceLoc.isValid()) {
+    LinkageSpecDecl* LSDecl = cast<LinkageSpecDecl>(LinkageSpec);
+    LSDecl->setRBraceLoc(RBraceLoc);
   }
+  PopDeclContext();
   return LinkageSpec;
 }
 
@@ -12340,6 +12343,18 @@ void Sema::MarkVTableUsed(SourceLocation Loc, CXXRecordDecl *Class,
       // Otherwise, we can early exit.
       return;
     }
+  } else {
+    // The Microsoft ABI requires that we perform the destructor body
+    // checks (i.e. operator delete() lookup) when the vtable is marked used, as
+    // the deleting destructor is emitted with the vtable, not with the
+    // destructor definition as in the Itanium ABI.
+    // If it has a definition, we do the check at that point instead.
+    if (Context.getTargetInfo().getCXXABI().isMicrosoft() &&
+        Class->hasUserDeclaredDestructor() &&
+        !Class->getDestructor()->isDefined() &&
+        !Class->getDestructor()->isDeleted()) {
+      CheckDestructor(Class->getDestructor());
+    }
   }
 
   // Local classes need to have their virtual members marked
@@ -12744,12 +12759,16 @@ bool Sema::checkThisInStaticMemberFunctionAttributes(CXXMethodDecl *Method) {
       Arg = LR->getArg();
     else if (LocksExcludedAttr *LE = dyn_cast<LocksExcludedAttr>(*A))
       Args = ArrayRef<Expr *>(LE->args_begin(), LE->args_size());
-    else if (ExclusiveLocksRequiredAttr *ELR 
-               = dyn_cast<ExclusiveLocksRequiredAttr>(*A))
-      Args = ArrayRef<Expr *>(ELR->args_begin(), ELR->args_size());
-    else if (SharedLocksRequiredAttr *SLR 
-               = dyn_cast<SharedLocksRequiredAttr>(*A))
-      Args = ArrayRef<Expr *>(SLR->args_begin(), SLR->args_size());
+    else if (RequiresCapabilityAttr *RC
+               = dyn_cast<RequiresCapabilityAttr>(*A))
+      Args = ArrayRef<Expr *>(RC->args_begin(), RC->args_size());
+    else if (AcquireCapabilityAttr *AC = dyn_cast<AcquireCapabilityAttr>(*A))
+      Args = ArrayRef<Expr *>(AC->args_begin(), AC->args_size());
+    else if (TryAcquireCapabilityAttr *AC
+             = dyn_cast<TryAcquireCapabilityAttr>(*A))
+             Args = ArrayRef<Expr *>(AC->args_begin(), AC->args_size());
+    else if (ReleaseCapabilityAttr *RC = dyn_cast<ReleaseCapabilityAttr>(*A))
+      Args = ArrayRef<Expr *>(RC->args_begin(), RC->args_size());
 
     if (Arg && !Finder.TraverseStmt(Arg))
       return true;

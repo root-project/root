@@ -42,8 +42,8 @@ template class llvm::SymbolTableListTraits<GlobalAlias, Module>;
 // Primitive Module methods.
 //
 
-Module::Module(StringRef MID, LLVMContext& C)
-  : Context(C), Materializer(NULL), ModuleID(MID) {
+Module::Module(StringRef MID, LLVMContext &C)
+    : Context(C), Materializer(NULL), ModuleID(MID), DL("") {
   ValSymTab = new ValueSymbolTable();
   NamedMDSymTab = new StringMap<NamedMDNode *>();
   Context.addModule(this);
@@ -336,6 +336,34 @@ void Module::addModuleFlag(MDNode *Node) {
          isa<MDString>(Node->getOperand(1)) &&
          "Invalid operand types for module flag!");
   getOrInsertModuleFlagsMetadata()->addOperand(Node);
+}
+
+void Module::setDataLayout(StringRef Desc) {
+  DL.reset(Desc);
+
+  if (Desc.empty()) {
+    DataLayoutStr = "";
+  } else {
+    DataLayoutStr = DL.getStringRepresentation();
+    // DataLayoutStr is now equivalent to Desc, but since the representation
+    // is not unique, they may not be identical.
+  }
+}
+
+void Module::setDataLayout(const DataLayout *Other) {
+  if (!Other) {
+    DataLayoutStr = "";
+    DL.reset("");
+  } else {
+    DL = *Other;
+    DataLayoutStr = DL.getStringRepresentation();
+  }
+}
+
+const DataLayout *Module::getDataLayout() const {
+  if (DataLayoutStr.empty())
+    return 0;
+  return &DL;
 }
 
 //===----------------------------------------------------------------------===//

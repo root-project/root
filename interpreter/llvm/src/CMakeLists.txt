@@ -1,6 +1,21 @@
 # See docs/CMake.html for instructions about how to build LLVM with CMake.
 
 cmake_minimum_required(VERSION 2.8.8)
+
+# FIXME: It may be removed when we use 2.8.12.
+if(CMAKE_VERSION VERSION_LESS 2.8.12)
+  # Invalidate a couple of keywords.
+  set(cmake_2_8_12_INTERFACE)
+  set(cmake_2_8_12_PRIVATE)
+else()
+  # Use ${cmake_2_8_12_KEYWORD} intead of KEYWORD in target_link_libraries().
+  set(cmake_2_8_12_INTERFACE INTERFACE)
+  set(cmake_2_8_12_PRIVATE PRIVATE)
+  if(POLICY CMP0022)
+    cmake_policy(SET CMP0022 NEW) # automatic when 2.8.12 is required
+  endif()
+endif()
+
 project(LLVM)
 
 # Add path for custom modules
@@ -272,6 +287,9 @@ option (LLVM_BUILD_DOCS "Build the llvm documentation." OFF)
 option (LLVM_INCLUDE_DOCS "Generate build targets for llvm documentation." ON)
 option (LLVM_ENABLE_DOXYGEN "Use doxygen to generate llvm documentation." OFF)
 
+option (LLVM_BUILD_EXTERNAL_COMPILER_RT
+  "Build compiler-rt as an external project." OFF)
+
 # All options referred to from HandleLLVMOptions have to be specified
 # BEFORE this include, otherwise options will not be correctly set on
 # first cmake run
@@ -423,9 +441,15 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LLVM_BINARY_DIR}/bin )
 set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LLVM_BINARY_DIR}/lib )
 set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LLVM_BINARY_DIR}/lib )
 
-if( NOT DEFINED CMAKE_INSTALL_RPATH )
-  set( CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
-endif( NOT DEFINED CMAKE_INSTALL_RPATH )
+set(CMAKE_BUILD_WITH_INSTALL_RPATH ON)
+if (APPLE)
+  set(CMAKE_INSTALL_NAME_DIR "@executable_path/../lib")
+  set(CMAKE_INSTALL_RPATH "@executable_path/../lib")
+else(UNIX)
+  if(NOT DEFINED CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  endif(NOT DEFINED CMAKE_INSTALL_RPATH)
+endif()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 

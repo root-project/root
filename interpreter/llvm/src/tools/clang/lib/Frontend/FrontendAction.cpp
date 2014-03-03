@@ -159,7 +159,6 @@ ASTConsumer* FrontendAction::CreateWrappedASTConsumer(CompilerInstance &CI,
   return new MultiplexConsumer(Consumers);
 }
 
-
 bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
                                      const FrontendInputFile &Input) {
   assert(!Instance && "Already processing a source file!");
@@ -210,6 +209,32 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
       goto failure;
 
     return true;
+  }
+
+  if (!CI.getHeaderSearchOpts().VFSOverlayFiles.empty()) {
+    IntrusiveRefCntPtr<vfs::OverlayFileSystem>
+        Overlay(new vfs::OverlayFileSystem(vfs::getRealFileSystem()));
+    // earlier vfs files are on the bottom
+    const std::vector<std::string> &Files =
+        CI.getHeaderSearchOpts().VFSOverlayFiles;
+    for (std::vector<std::string>::const_iterator I = Files.begin(),
+                                                  E = Files.end();
+         I != E; ++I) {
+      OwningPtr<llvm::MemoryBuffer> Buffer;
+      if (llvm::errc::success != llvm::MemoryBuffer::getFile(*I, Buffer)) {
+        CI.getDiagnostics().Report(diag::err_missing_vfs_overlay_file) << *I;
+        goto failure;
+      }
+
+      IntrusiveRefCntPtr<vfs::FileSystem> FS =
+          vfs::getVFSFromYAML(Buffer.take(), /*DiagHandler*/0);
+      if (!FS.getPtr()) {
+        CI.getDiagnostics().Report(diag::err_invalid_vfs_overlay) << *I;
+        goto failure;
+      }
+      Overlay->pushOverlay(FS);
+    }
+    CI.setVirtualFileSystem(Overlay);
   }
 
   // Set up the file and source managers, if needed.
@@ -291,12 +316,11 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
     
     if (!CI.getPreprocessorOpts().ChainedIncludes.empty()) {
       // Convert headers to PCH and chain them.
-      OwningPtr<ExternalASTSource> source;
-      source.reset(ChainedIncludesSource::create(CI));
+      IntrusiveRefCntPtr<ChainedIncludesSource> source;
+      source = ChainedIncludesSource::create(CI);
       if (!source)
         goto failure;
-      CI.setModuleManager(static_cast<ASTReader*>(
-         &static_cast<ChainedIncludesSource*>(source.get())->getFinalReader()));
+      CI.setModuleManager(static_cast<ASTReader*>(&source->getFinalReader()));
       CI.getASTContext().setExternalSource(source);
 
     } else if (!CI.getPreprocessorOpts().ImplicitPCHInclude.empty()) {
@@ -336,7 +360,7 @@ bool FrontendAction::BeginSourceFile(CompilerInstance &CI,
   // provides the layouts from that file.
   if (!CI.getFrontendOpts().OverrideRecordLayoutsFile.empty() && 
       CI.hasASTContext() && !CI.getASTContext().getExternalSource()) {
-    OwningPtr<ExternalASTSource> 
+    IntrusiveRefCntPtr<ExternalASTSource> 
       Override(new LayoutOverrideSource(
                      CI.getFrontendOpts().OverrideRecordLayoutsFile));
     CI.getASTContext().setExternalSource(Override);

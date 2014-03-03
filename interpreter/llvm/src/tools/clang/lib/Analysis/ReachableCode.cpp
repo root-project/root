@@ -49,7 +49,8 @@ public:
   
   const Stmt *findDeadCode(const CFGBlock *Block);
   
-  void reportDeadCode(const Stmt *S,
+  void reportDeadCode(const CFGBlock *B,
+                      const Stmt *S,
                       clang::reachable_code::Callback &CB);
 };
 }
@@ -153,7 +154,7 @@ unsigned DeadCodeScan::scanBackwards(const clang::CFGBlock *Start,
     }
 
     if (isDeadCodeRoot(Block)) {
-      reportDeadCode(S, CB);
+      reportDeadCode(Block, S, CB);
       count += clang::reachable_code::ScanReachableFromBlock(Block, Reachable);
     }
     else {
@@ -170,11 +171,11 @@ unsigned DeadCodeScan::scanBackwards(const clang::CFGBlock *Start,
     llvm::array_pod_sort(DeferredLocs.begin(), DeferredLocs.end(), SrcCmp);
     for (DeferredLocsTy::iterator I = DeferredLocs.begin(),
           E = DeferredLocs.end(); I != E; ++I) {
-      const CFGBlock *block = I->first;
-      if (Reachable[block->getBlockID()])
+      const CFGBlock *Block = I->first;
+      if (Reachable[Block->getBlockID()])
         continue;
-      reportDeadCode(I->second, CB);
-      count += clang::reachable_code::ScanReachableFromBlock(block, Reachable);
+      reportDeadCode(Block, I->second, CB);
+      count += clang::reachable_code::ScanReachableFromBlock(Block, Reachable);
     }
   }
     
@@ -246,8 +247,96 @@ static SourceLocation GetUnreachableLoc(const Stmt *S,
   return S->getLocStart();
 }
 
-void DeadCodeScan::reportDeadCode(const Stmt *S,
+static bool bodyEndsWithNoReturn(const CFGBlock *B) {
+  for (CFGBlock::const_reverse_iterator I = B->rbegin(), E = B->rend();
+       I != E; ++I) {
+    if (Optional<CFGStmt> CS = I->getAs<CFGStmt>()) {
+      if (const CallExpr *CE = dyn_cast<CallExpr>(CS->getStmt())) {
+        QualType CalleeType = CE->getCallee()->getType();
+        if (getFunctionExtInfo(*CalleeType).getNoReturn())
+          return true;
+      }
+      break;
+    }
+  }
+  return false;
+}
+
+static bool bodyEndsWithNoReturn(const CFGBlock::AdjacentBlock &AB) {
+  const CFGBlock *Pred = AB.getPossiblyUnreachableBlock();
+  assert(!AB.isReachable() && Pred);
+  return bodyEndsWithNoReturn(Pred);
+}
+
+static bool isBreakPrecededByNoReturn(const CFGBlock *B,
+                                      const Stmt *S) {
+  if (!isa<BreakStmt>(S) || B->pred_empty())
+    return false;
+
+  assert(B->empty());
+  assert(B->pred_size() == 1);
+  return bodyEndsWithNoReturn(*B->pred_begin());
+}
+
+static bool isEnumConstant(const Expr *Ex) {
+  const DeclRefExpr *DR = dyn_cast<DeclRefExpr>(Ex);
+  if (!DR)
+    return false;
+  return isa<EnumConstantDecl>(DR->getDecl());
+}
+
+static bool isTrivialExpression(const Expr *Ex) {
+  return isa<IntegerLiteral>(Ex) || isa<StringLiteral>(Ex) ||
+         isEnumConstant(Ex);
+}
+
+static bool isTrivialReturnPrecededByNoReturn(const CFGBlock *B,
+                                              const Stmt *S) {
+  if (B->pred_empty())
+    return false;
+
+  const Expr *Ex = dyn_cast<Expr>(S);
+  if (!Ex)
+    return false;
+
+  Ex = Ex->IgnoreParenCasts();
+
+  if (!isTrivialExpression(Ex))
+    return false;
+
+  // Look to see if the block ends with a 'return', and see if 'S'
+  // is a substatement.  The 'return' may not be the last element in
+  // the block because of destructors.
+  assert(!B->empty());
+  for (CFGBlock::const_reverse_iterator I = B->rbegin(), E = B->rend();
+       I != E; ++I) {
+    if (Optional<CFGStmt> CS = I->getAs<CFGStmt>()) {
+      if (const ReturnStmt *RS = dyn_cast<ReturnStmt>(CS->getStmt())) {
+        const Expr *RE = RS->getRetValue();
+        if (RE && RE->IgnoreParenCasts() == Ex)
+          break;
+      }
+      return false;
+    }
+  }
+
+  assert(B->pred_size() == 1);
+  return bodyEndsWithNoReturn(*B->pred_begin());
+}
+
+void DeadCodeScan::reportDeadCode(const CFGBlock *B,
+                                  const Stmt *S,
                                   clang::reachable_code::Callback &CB) {
+  // Suppress idiomatic cases of calling a noreturn function just
+  // before executing a 'break'.  If there is other code after the 'break'
+  // in the block then don't suppress the warning.
+  if (isBreakPrecededByNoReturn(B, S))
+    return;
+
+  // Suppress trivial 'return' statements that are dead.
+  if (isTrivialReturnPrecededByNoReturn(B, S))
+    return;
+
   SourceRange R1, R2;
   SourceLocation Loc = GetUnreachableLoc(S, R1, R2);
   CB.HandleUnreachable(Loc, R1, R2);
@@ -279,8 +368,32 @@ unsigned ScanReachableFromBlock(const CFGBlock *Start,
     
     // Look at the successors and mark then reachable.
     for (CFGBlock::const_succ_iterator I = item->succ_begin(), 
-         E = item->succ_end(); I != E; ++I)
-      if (const CFGBlock *B = *I) {
+         E = item->succ_end(); I != E; ++I) {
+      const CFGBlock *B = *I;
+      if (!B) {
+        //
+        // For switch statements, treat all cases as being reachable.
+        // There are many cases where a switch can contain values that
+        // are not in an enumeration but they are still reachable because
+        // other values are possible.
+        //
+        // Note that this is quite conservative.  If one saw:
+        //
+        //  switch (1) {
+        //    case 2: ...
+        //
+        // we should be able to say that 'case 2' is unreachable.  To do
+        // this we can either put more heuristics here, or possibly retain
+        // that information in the CFG itself.
+        //
+        if (const CFGBlock *UB = I->getPossiblyUnreachableBlock()) {
+          const Stmt *Label = UB->getLabel();
+          if (Label && isa<SwitchCase>(Label)) {
+            B = UB;
+          }
+        }
+      }
+      if (B) {
         unsigned blockID = B->getBlockID();
         if (!Reachable[blockID]) {
           Reachable.set(blockID);
@@ -288,6 +401,7 @@ unsigned ScanReachableFromBlock(const CFGBlock *Start,
           ++count;
         }
       }
+    }
   }
   return count;
 }

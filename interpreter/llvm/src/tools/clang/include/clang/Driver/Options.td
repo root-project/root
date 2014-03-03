@@ -771,6 +771,8 @@ def fshort_enums : Flag<["-"], "fshort-enums">, Group<f_Group>, Flags<[CC1Option
 def : Flag<["-"], "freorder-blocks">, Group<clang_ignored_f_Group>;
 def fshort_wchar : Flag<["-"], "fshort-wchar">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Force wchar_t to be a short unsigned int">;
+def fno_short_wchar : Flag<["-"], "fno-short-wchar">, Group<f_Group>, Flags<[CC1Option]>,
+  HelpText<"Force wchar_t to be an unsigned int">;
 def fshow_overloads_EQ : Joined<["-"], "fshow-overloads=">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Which overload candidates to show when overload resolution fails: "
            "best|all; defaults to all">;
@@ -947,7 +949,6 @@ def verify_pch : Flag<["-"], "verify-pch">, Group<Action_Group>, Flags<[CC1Optio
   HelpText<"Load and verify that a pre-compiled header file is not stale">;
 def init : Separate<["-"], "init">;
 def install__name : Separate<["-"], "install_name">;
-def integrated_as : Flag<["-"], "integrated-as">, Flags<[DriverOption]>;
 def iprefix : JoinedOrSeparate<["-"], "iprefix">, Group<clang_i_Group>, Flags<[CC1Option]>,
   HelpText<"Set the -iwithprefix/-iwithprefixbefore prefix">, MetaVarName<"<dir>">;
 def iquote : JoinedOrSeparate<["-"], "iquote">, Group<clang_i_Group>, Flags<[CC1Option]>,
@@ -965,6 +966,8 @@ def iwithsysroot : JoinedOrSeparate<["-"], "iwithsysroot">, Group<clang_i_Group>
   HelpText<"Add directory to SYSTEM include search path, "
            "absolute paths are relative to -isysroot">, MetaVarName<"<directory>">,
   Flags<[CC1Option]>;
+def ivfsoverlay : JoinedOrSeparate<["-"], "ivfsoverlay">, Group<clang_i_Group>, Flags<[CC1Option]>,
+  HelpText<"Overlay the virtual filesystem described by file over the real file system">;
 def i : Joined<["-"], "i">, Group<i_Group>;
 def keep__private__externs : Flag<["-"], "keep_private_externs">;
 def l : JoinedOrSeparate<["-"], "l">, Flags<[LinkerInput, RenderJoined]>;
@@ -1087,6 +1090,8 @@ def mpopcntd : Flag<["-"], "mpopcntd">, Group<m_ppc_Features_Group>;
 def mno_popcntd : Flag<["-"], "mno-popcntd">, Group<m_ppc_Features_Group>;
 def mqpx : Flag<["-"], "mqpx">, Group<m_ppc_Features_Group>;
 def mno_qpx : Flag<["-"], "mno-qpx">, Group<m_ppc_Features_Group>;
+def mcrbits : Flag<["-"], "mcrbits">, Group<m_ppc_Features_Group>;
+def mno_crbits : Flag<["-"], "mno-crbits">, Group<m_ppc_Features_Group>;
 
 def faltivec : Flag<["-"], "faltivec">, Group<f_Group>, Flags<[CC1Option]>,
   HelpText<"Enable AltiVec vector initializer syntax">;
@@ -1191,7 +1196,6 @@ def mwarn_nonportable_cfstrings : Flag<["-"], "mwarn-nonportable-cfstrings">, Gr
 def no_canonical_prefixes : Flag<["-"], "no-canonical-prefixes">, Flags<[HelpHidden]>,
   HelpText<"Use relative instead of canonical paths">;
 def no_cpp_precomp : Flag<["-"], "no-cpp-precomp">, Group<clang_ignored_f_Group>;
-def no_integrated_as : Flag<["-"], "no-integrated-as">, Flags<[DriverOption]>;
 def no_integrated_cpp : Flag<["-", "--"], "no-integrated-cpp">, Flags<[DriverOption]>;
 def no_pedantic : Flag<["-", "--"], "no-pedantic">, Group<pedantic_Group>;
 def no__dead__strip__inits__and__terms : Flag<["-"], "no_dead_strip_inits_and_terms">;
@@ -1311,7 +1315,7 @@ def undef : Flag<["-"], "undef">, Group<u_Group>, Flags<[CC1Option]>,
   HelpText<"undef all system defines">;
 def unexported__symbols__list : Separate<["-"], "unexported_symbols_list">;
 def u : JoinedOrSeparate<["-"], "u">, Group<u_Group>;
-def v : Flag<["-"], "v">, Flags<[CC1Option]>,
+def v : Flag<["-"], "v">, Flags<[CC1Option, CoreOption]>,
   HelpText<"Show commands to run and use verbose output">;
 def verify_debug_info : Flag<["--"], "verify-debug-info">, Flags<[DriverOption]>,
   HelpText<"Verify the binary representation of debug output">;
@@ -1326,6 +1330,15 @@ def x : JoinedOrSeparate<["-"], "x">, Flags<[DriverOption,CC1Option]>,
   HelpText<"Treat subsequent input files as having type <language>">,
   MetaVarName<"<language>">;
 def y : Joined<["-"], "y">;
+
+def fintegrated_as : Flag<["-"], "fintegrated-as">, Flags<[DriverOption]>,
+                     Group<f_Group>, HelpText<"Enable the integrated assembler">;
+def fno_integrated_as : Flag<["-"], "fno-integrated-as">,
+                        Flags<[CC1Option, DriverOption]>, Group<f_Group>,
+                        HelpText<"Disable the integrated assembler">;
+def : Flag<["-"], "integrated-as">, Alias<fintegrated_as>, Flags<[DriverOption]>;
+def : Flag<["-"], "no-integrated-as">, Alias<fno_integrated_as>,
+      Flags<[CC1Option, DriverOption]>;
 
 def working_directory : JoinedOrSeparate<["-"], "working-directory">, Flags<[CC1Option]>,
   HelpText<"Resolve file paths relative to the specified directory">;

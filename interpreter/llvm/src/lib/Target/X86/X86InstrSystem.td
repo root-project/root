@@ -61,8 +61,8 @@ def SYSENTER : I<0x34, RawFrm, (outs), (ins), "sysenter", [],
 
 def SYSEXIT   : I<0x35, RawFrm, (outs), (ins), "sysexit{l}", [],
                  IIC_SYS_ENTER_EXIT>, TB;
-def SYSEXIT64 :RI<0x35, RawFrm, (outs), (ins), "sysexit{q}", []>, TB,
-                Requires<[In64BitMode]>;
+def SYSEXIT64 :RI<0x35, RawFrm, (outs), (ins), "sysexit{q}", [],
+                 IIC_SYS_ENTER_EXIT>, TB, Requires<[In64BitMode]>;
 
 def IRET16 : I<0xcf, RawFrm, (outs), (ins), "iret{w}", [], IIC_IRET>, OpSize16;
 def IRET32 : I<0xcf, RawFrm, (outs), (ins), "iret{l|d}", [], IIC_IRET>,
@@ -116,12 +116,6 @@ let Uses = [EAX] in
 def OUT32ir : Ii8<0xE7, RawFrm, (outs), (ins i8imm:$port),
                   "out{l}\t{%eax, $port|$port, eax}", [], IIC_OUT_IR>, OpSize32;
 
-def IN8  : I<0x6C, RawFrmDst, (outs dstidx8:$dst), (ins),
-             "insb\t{%dx, $dst|$dst, dx}", [], IIC_INS>;
-def IN16 : I<0x6D, RawFrmDst, (outs dstidx16:$dst), (ins),
-             "insw\t{%dx, $dst|$dst, dx}", [], IIC_INS>,  OpSize16;
-def IN32 : I<0x6D, RawFrmDst, (outs dstidx32:$dst), (ins),
-             "ins{l|d}\t{%dx, $dst|$dst, dx}", [], IIC_INS>, OpSize32;
 } // SchedRW
 
 //===----------------------------------------------------------------------===//
@@ -302,9 +296,11 @@ def PUSHGS32 : I<0xa8, RawFrm, (outs), (ins),
                  "push{l}\t{%gs|gs}", [], IIC_PUSH_SR>, TB,
                OpSize32, Requires<[Not64BitMode]>;
 def PUSHFS64 : I<0xa0, RawFrm, (outs), (ins),
-                 "push{q}\t{%fs|fs}", [], IIC_PUSH_SR>, TB, Requires<[In64BitMode]>;
+                 "push{q}\t{%fs|fs}", [], IIC_PUSH_SR>, TB,
+               OpSize32, Requires<[In64BitMode]>;
 def PUSHGS64 : I<0xa8, RawFrm, (outs), (ins),
-                 "push{q}\t{%gs|gs}", [], IIC_PUSH_SR>, TB, Requires<[In64BitMode]>;
+                 "push{q}\t{%gs|gs}", [], IIC_PUSH_SR>, TB,
+               OpSize32, Requires<[In64BitMode]>;
 
 // No "pop cs" instruction.
 def POPSS16 : I<0x17, RawFrm, (outs), (ins),
@@ -334,16 +330,18 @@ def POPFS32 : I<0xa1, RawFrm, (outs), (ins),
                 "pop{l}\t{%fs|fs}", [], IIC_POP_SR>, TB,
               OpSize32, Requires<[Not64BitMode]>;
 def POPFS64 : I<0xa1, RawFrm, (outs), (ins),
-                "pop{q}\t{%fs|fs}", [], IIC_POP_SR>, TB, Requires<[In64BitMode]>;
-                
+                "pop{q}\t{%fs|fs}", [], IIC_POP_SR>, TB,
+              OpSize32, Requires<[In64BitMode]>;
+
 def POPGS16 : I<0xa9, RawFrm, (outs), (ins),
                 "pop{w}\t{%gs|gs}", [], IIC_POP_SR>, OpSize16, TB;
 def POPGS32 : I<0xa9, RawFrm, (outs), (ins),
                 "pop{l}\t{%gs|gs}", [], IIC_POP_SR>, TB,
               OpSize32, Requires<[Not64BitMode]>;
 def POPGS64 : I<0xa9, RawFrm, (outs), (ins),
-                "pop{q}\t{%gs|gs}", [], IIC_POP_SR>, TB, Requires<[In64BitMode]>;
-                 
+                "pop{q}\t{%gs|gs}", [], IIC_POP_SR>, TB,
+              OpSize32, Requires<[In64BitMode]>;
+
 
 def LDS16rm : I<0xc5, MRMSrcMem, (outs GR16:$dst), (ins opaque32mem:$src),
                 "lds{w}\t{$src, $dst|$dst, $src}", [], IIC_LXS>, OpSize16;
@@ -503,24 +501,24 @@ let Uses = [RDX, RAX] in {
 //===----------------------------------------------------------------------===//
 // VIA PadLock crypto instructions
 let Defs = [RAX, RDI], Uses = [RDX, RDI] in
-  def XSTORE : I<0xc0, RawFrm, (outs), (ins), "xstore", []>, A7;
+  def XSTORE : I<0xa7, MRM_C0, (outs), (ins), "xstore", []>, TB;
 
 def : InstAlias<"xstorerng", (XSTORE)>;
 
 let Defs = [RSI, RDI], Uses = [RBX, RDX, RSI, RDI] in {
-  def XCRYPTECB : I<0xc8, RawFrm, (outs), (ins), "xcryptecb", []>, A7;
-  def XCRYPTCBC : I<0xd0, RawFrm, (outs), (ins), "xcryptcbc", []>, A7;
-  def XCRYPTCTR : I<0xd8, RawFrm, (outs), (ins), "xcryptctr", []>, A7;
-  def XCRYPTCFB : I<0xe0, RawFrm, (outs), (ins), "xcryptcfb", []>, A7;
-  def XCRYPTOFB : I<0xe8, RawFrm, (outs), (ins), "xcryptofb", []>, A7;
+  def XCRYPTECB : I<0xa7, MRM_C8, (outs), (ins), "xcryptecb", []>, TB;
+  def XCRYPTCBC : I<0xa7, MRM_D0, (outs), (ins), "xcryptcbc", []>, TB;
+  def XCRYPTCTR : I<0xa7, MRM_D8, (outs), (ins), "xcryptctr", []>, TB;
+  def XCRYPTCFB : I<0xa7, MRM_E0, (outs), (ins), "xcryptcfb", []>, TB;
+  def XCRYPTOFB : I<0xa7, MRM_E8, (outs), (ins), "xcryptofb", []>, TB;
 }
 
 let Defs = [RAX, RSI, RDI], Uses = [RAX, RSI, RDI] in {
-  def XSHA1 : I<0xc8, RawFrm, (outs), (ins), "xsha1", []>, A6;
-  def XSHA256 : I<0xd0, RawFrm, (outs), (ins), "xsha256", []>, A6;
+  def XSHA1 : I<0xa6, MRM_C8, (outs), (ins), "xsha1", []>, TB;
+  def XSHA256 : I<0xa6, MRM_D0, (outs), (ins), "xsha256", []>, TB;
 }
 let Defs = [RAX, RDX, RSI], Uses = [RAX, RSI] in
-  def MONTMUL : I<0xc0, RawFrm, (outs), (ins), "montmul", []>, A6;
+  def MONTMUL : I<0xa6, MRM_C0, (outs), (ins), "montmul", []>, TB;
 
 //===----------------------------------------------------------------------===//
 // FS/GS Base Instructions

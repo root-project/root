@@ -27,10 +27,6 @@
 using namespace llvm;
 
 
-static cl::opt<bool>
-SuppressWarnings("suppress-warnings", cl::desc("Suppress all linking warnings"),
-                 cl::init(false));
-
 //===----------------------------------------------------------------------===//
 // TypeMap implementation.
 //===----------------------------------------------------------------------===//
@@ -408,15 +404,18 @@ namespace {
     
     // Vector of functions to lazily link in.
     std::vector<Function*> LazilyLinkFunctions;
+
+    bool SuppressWarnings;
     
   public:
     std::string ErrorMsg;
-    
-    ModuleLinker(Module *dstM, TypeSet &Set, Module *srcM, unsigned mode)
-      : DstM(dstM), SrcM(srcM), TypeMap(Set),
-        ValMaterializer(TypeMap, DstM, LazilyLinkFunctions),
-        Mode(mode) { }
-    
+
+    ModuleLinker(Module *dstM, TypeSet &Set, Module *srcM, unsigned mode,
+                 bool SuppressWarnings=false)
+        : DstM(dstM), SrcM(srcM), TypeMap(Set),
+          ValMaterializer(TypeMap, DstM, LazilyLinkFunctions), Mode(mode),
+          SuppressWarnings(SuppressWarnings) {}
+
     bool run();
     
   private:
@@ -1201,15 +1200,15 @@ bool ModuleLinker::run() {
 
   // Inherit the target data from the source module if the destination module
   // doesn't have one already.
-  if (DstM->getDataLayout().empty() && !SrcM->getDataLayout().empty())
+  if (!DstM->getDataLayout() && SrcM->getDataLayout())
     DstM->setDataLayout(SrcM->getDataLayout());
 
   // Copy the target triple from the source to dest if the dest's is empty.
   if (DstM->getTargetTriple().empty() && !SrcM->getTargetTriple().empty())
     DstM->setTargetTriple(SrcM->getTargetTriple());
 
-  if (!SrcM->getDataLayout().empty() && !DstM->getDataLayout().empty() &&
-      SrcM->getDataLayout() != DstM->getDataLayout()) {
+  if (SrcM->getDataLayout() && DstM->getDataLayout() &&
+      *SrcM->getDataLayout() != *DstM->getDataLayout()) {
     if (!SuppressWarnings) {
       errs() << "WARNING: Linking two modules of different data layouts!\n";
     }
@@ -1354,7 +1353,8 @@ bool ModuleLinker::run() {
   return false;
 }
 
-Linker::Linker(Module *M) : Composite(M) {
+Linker::Linker(Module *M, bool SuppressWarnings)
+    : Composite(M), SuppressWarnings(SuppressWarnings) {
   TypeFinder StructTypes;
   StructTypes.run(*M, true);
   IdentifiedStructTypes.insert(StructTypes.begin(), StructTypes.end());
@@ -1369,7 +1369,8 @@ void Linker::deleteModule() {
 }
 
 bool Linker::linkInModule(Module *Src, unsigned Mode, std::string *ErrorMsg) {
-  ModuleLinker TheLinker(Composite, IdentifiedStructTypes, Src, Mode);
+  ModuleLinker TheLinker(Composite, IdentifiedStructTypes, Src, Mode,
+                         SuppressWarnings);
   if (TheLinker.run()) {
     if (ErrorMsg)
       *ErrorMsg = TheLinker.ErrorMsg;

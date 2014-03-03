@@ -1,4 +1,6 @@
-// RUN: %clang_cc1 %s -fsyntax-only -verify -fblocks -Wunreachable-code -Wno-unused-value -Wno-covered-switch-default
+// RUN: %clang_cc1 %s -fsyntax-only -verify -fblocks -Wunreachable-code -Wno-unused-value -Wno-covered-switch-default -I %S/Inputs
+
+#include "warn-unreachable.h"
 
 int halt() __attribute__((noreturn));
 int live();
@@ -107,7 +109,7 @@ int test_enum_cases(enum Cases C) {
     case C3:
       return 1;
     default: {
-      int i = 0; // expected-warning{{will never be executed}}
+      int i = 0; // no-warning
       ++i;
       return i;
     }
@@ -141,3 +143,63 @@ void test_mul_and_zero(int x) {
   if (x * 0) calledFun(); // expected-warning {{will never be executed}}
   if (0 * x) calledFun(); // expected-warning {{will never be executed}}
 }
+
+void raze() __attribute__((noreturn));
+void warn_here();
+
+int test_break_preceded_by_noreturn(int i) {
+  switch (i) {
+    case 1:
+      raze();
+      break; // no-warning
+    case 2:
+      raze();
+      break; // no-warning
+      warn_here(); // expected-warning {{will never be executed}}
+    case 3:
+      return 1;
+      break; // expected-warning {{will never be executed}}
+    default:
+      break;
+  }
+  return i;
+}
+
+// Don't warn about unreachable 'default' cases, as that is covered
+// by -Wcovered-switch-default.
+typedef enum { Value1 = 1 } MyEnum;
+void unreachable_default(MyEnum e) {
+  switch (e) {
+  case Value1:
+    calledFun();
+    break;
+  case 2: // expected-warning {{case value not in enumerated type 'MyEnum'}}
+    calledFun();
+    break;
+  default:
+    calledFun(); // no-warning
+    break;
+  }
+}
+void unreachable_in_default(MyEnum e) {
+  switch (e) {
+  default:
+    raze();
+    calledFun(); // expected-warning {{will never be executed}}
+    break;
+  }
+}
+
+// Don't warn about trivial dead returns.
+int trivial_dead_return() {
+  raze();
+  // Use the '()' to test that we unwrap such stuff
+  // when looking for dead code.
+  return ((0)); // no-warning
+}
+
+MyEnum trival_dead_return_enum() {
+  raze();
+  return Value1; // no-warning
+}
+

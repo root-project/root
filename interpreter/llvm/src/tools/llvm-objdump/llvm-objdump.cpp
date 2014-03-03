@@ -192,7 +192,7 @@ static void emitDOTFile(const char *FileName, const MCFunction &f,
                         MCInstPrinter *IP) {
   // Start a new dot file.
   std::string Error;
-  raw_fd_ostream Out(FileName, Error);
+  raw_fd_ostream Out(FileName, Error, sys::fs::F_Text);
   if (!Error.empty()) {
     errs() << "llvm-objdump: warning: " << Error << '\n';
     return;
@@ -373,7 +373,7 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     }
     if (!YAMLCFG.empty()) {
       std::string Error;
-      raw_fd_ostream YAMLOut(YAMLCFG.c_str(), Error);
+      raw_fd_ostream YAMLOut(YAMLCFG.c_str(), Error, sys::fs::F_Text);
       if (!Error.empty()) {
         errs() << ToolName << ": warning: " << Error << '\n';
         return;
@@ -405,6 +405,10 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     if (error(I->getAddress(SectionAddr)))
       break;
 
+    uint64_t SectSize;
+    if (error(I->getSize(SectSize)))
+      break;
+
     // Make a list of all the symbols in this section.
     std::vector<std::pair<uint64_t, StringRef> > Symbols;
     for (symbol_iterator SI = Obj->symbol_begin(), SE = Obj->symbol_end();
@@ -417,6 +421,8 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
         if (Address == UnknownAddressOrSize)
           continue;
         Address -= SectionAddr;
+        if (Address >= SectSize)
+          continue;
 
         StringRef Name;
         if (error(SI->getName(Name)))
@@ -473,9 +479,6 @@ static void DisassembleObject(const ObjectFile *Obj, bool InlineRelocs) {
     StringRefMemoryObject memoryObject(Bytes, SectionAddr);
     uint64_t Size;
     uint64_t Index;
-    uint64_t SectSize;
-    if (error(I->getSize(SectSize)))
-      break;
 
     std::vector<RelocationRef>::const_iterator rel_cur = Rels.begin();
     std::vector<RelocationRef>::const_iterator rel_end = Rels.end();

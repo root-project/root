@@ -366,6 +366,7 @@ static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args, InputKind IK,
                    (Opts.OptimizationLevel > 1 && !Opts.OptimizeSize));
   Opts.RerollLoops = Args.hasArg(OPT_freroll_loops);
 
+  Opts.DisableIntegratedAS = Args.hasArg(OPT_fno_integrated_as);
   Opts.Autolink = !Args.hasArg(OPT_fno_autolink);
   Opts.SampleProfileFile = Args.getLastArgValue(OPT_fprofile_sample_use_EQ);
   Opts.ProfileInstrGenerate = Args.hasArg(OPT_fprofile_instr_generate);
@@ -1019,6 +1020,10 @@ static void ParseHeaderSearchArgs(HeaderSearchOptions &Opts, ArgList &Args) {
        I != E; ++I)
     Opts.AddSystemHeaderPrefix((*I)->getValue(),
                                (*I)->getOption().matches(OPT_isystem_prefix));
+
+  for (arg_iterator I = Args.filtered_begin(OPT_ivfsoverlay),
+       E = Args.filtered_end(); I != E; ++I)
+    Opts.AddVFSOverlayFile((*I)->getValue());
 }
 
 void CompilerInvocation::setLangDefaults(LangOptions &Opts, InputKind IK,
@@ -1332,7 +1337,7 @@ static void ParseLangArgs(LangOptions &Opts, ArgList &Args, InputKind IK,
   Opts.ModulesDeclUse = Args.hasArg(OPT_fmodules_decluse);
   Opts.CharIsSigned = Opts.OpenCL || !Args.hasArg(OPT_fno_signed_char);
   Opts.WChar = Opts.CPlusPlus && !Args.hasArg(OPT_fno_wchar);
-  Opts.ShortWChar = Args.hasArg(OPT_fshort_wchar);
+  Opts.ShortWChar = Args.hasFlag(OPT_fshort_wchar, OPT_fno_short_wchar, false);
   Opts.ShortEnums = Args.hasArg(OPT_fshort_enums);
   Opts.Freestanding = Args.hasArg(OPT_ffreestanding);
   Opts.NoBuiltin = Args.hasArg(OPT_fno_builtin) || Opts.Freestanding;

@@ -434,10 +434,16 @@ ExprResult Sema::DefaultFunctionArrayConversion(Expr *E) {
   QualType Ty = E->getType();
   assert(!Ty.isNull() && "DefaultFunctionArrayConversion - missing type");
 
-  if (Ty->isFunctionType())
+  if (Ty->isFunctionType()) {
+    // If we are here, we are not calling a function but taking
+    // its address (which is not allowed in OpenCL v1.0 s6.8.a.3).
+    if (getLangOpts().OpenCL) {
+      Diag(E->getExprLoc(), diag::err_opencl_taking_function_address);
+      return ExprError();
+    }
     E = ImpCastExprToType(E, Context.getPointerType(Ty),
                           CK_FunctionToPointerDecay).take();
-  else if (Ty->isArrayType()) {
+  } else if (Ty->isArrayType()) {
     // In C90 mode, arrays only promote to pointers if the array expression is
     // an lvalue.  The relevant legalese is C90 6.2.2.1p3: "an lvalue that has
     // type 'array of type' is converted to an expression that has type 'pointer
@@ -633,6 +639,24 @@ ExprResult Sema::DefaultFunctionArrayLvalueConversion(Expr *E) {
   return Res;
 }
 
+/// CallExprUnaryConversions - a special case of an unary conversion
+/// performed on a function designator of a call expression.
+ExprResult Sema::CallExprUnaryConversions(Expr *E) {
+  QualType Ty = E->getType();
+  ExprResult Res = E;
+  // Only do implicit cast for a function type, but not for a pointer
+  // to function type.
+  if (Ty->isFunctionType()) {
+    Res = ImpCastExprToType(E, Context.getPointerType(Ty),
+                            CK_FunctionToPointerDecay).take();
+    if (Res.isInvalid())
+      return ExprError();
+  }
+  Res = DefaultLvalueConversion(Res.take());
+  if (Res.isInvalid())
+    return ExprError();
+  return Owned(Res.take());
+}
 
 /// UsualUnaryConversions - Performs various conversions that are common to most
 /// operators (C99 6.3). The conversions of array and function types are
@@ -782,14 +806,20 @@ void Sema::checkVariadicArgument(const Expr *E, VariadicCallType CT) {
 
   // Complain about passing non-POD types through varargs.
   switch (VAK) {
-  case VAK_Valid:
-    break;
-
   case VAK_ValidInCXX11:
     DiagRuntimeBehavior(
         E->getLocStart(), 0,
         PDiag(diag::warn_cxx98_compat_pass_non_pod_arg_to_vararg)
-          << E->getType() << CT);
+          << Ty << CT);
+    // Fall through.
+  case VAK_Valid:
+    if (Ty->isRecordType()) {
+      // This is unlikely to be what the user intended. If the class has a
+      // 'c_str' member function, the user probably meant to call that.
+      DiagRuntimeBehavior(E->getLocStart(), 0,
+                          PDiag(diag::warn_pass_class_arg_to_vararg)
+                            << Ty << CT << hasCStrMethod(E) << ".c_str()");
+    }
     break;
 
   case VAK_Undefined:
@@ -4570,7 +4600,7 @@ Sema::BuildResolvedCallExpr(Expr *Fn, NamedDecl *NDecl,
     Result = ImpCastExprToType(Fn, Context.getPointerType(FDecl->getType()),
                                CK_BuiltinFnToFnPtr).take();
   } else {
-    Result = UsualUnaryConversions(Fn);
+    Result = CallExprUnaryConversions(Fn);
   }
   if (Result.isInvalid())
     return ExprError();
@@ -7843,10 +7873,22 @@ QualType Sema::CheckCompareOperands(ExprResult &LHS, ExprResult &RHS,
       return ResultTy;
   }
 
-  bool LHSIsNull = LHS.get()->isNullPointerConstant(Context,
-                                              Expr::NPC_ValueDependentIsNull);
-  bool RHSIsNull = RHS.get()->isNullPointerConstant(Context,
-                                              Expr::NPC_ValueDependentIsNull);
+  const Expr::NullPointerConstantKind LHSNullKind =
+      LHS.get()->isNullPointerConstant(Context, Expr::NPC_ValueDependentIsNull);
+  const Expr::NullPointerConstantKind RHSNullKind =
+      RHS.get()->isNullPointerConstant(Context, Expr::NPC_ValueDependentIsNull);
+  bool LHSIsNull = LHSNullKind != Expr::NPCK_NotNull;
+  bool RHSIsNull = RHSNullKind != Expr::NPCK_NotNull;
+
+  if (!IsRelational && LHSIsNull != RHSIsNull) {
+    bool IsEquality = Opc == BO_EQ;
+    if (RHSIsNull)
+      DiagnoseAlwaysNonNullPointer(LHS.get(), RHSNullKind, IsEquality,
+                                   RHS.get()->getSourceRange());
+    else
+      DiagnoseAlwaysNonNullPointer(RHS.get(), LHSNullKind, IsEquality,
+                                   LHS.get()->getSourceRange());
+  }
 
   // All of the following pointer-related warnings are GCC extensions, except
   // when handling null pointer constants. 
@@ -8807,6 +8849,12 @@ QualType Sema::CheckAddressOfOperand(ExprResult &OrigOp, SourceLocation OpLoc) {
 
   // Make sure to ignore parentheses in subsequent checks
   Expr *op = OrigOp.get()->IgnoreParens();
+
+  // OpenCL v1.0 s6.8.a.3: Pointers to functions are not allowed.
+  if (LangOpts.OpenCL && op->getType()->isFunctionType()) {
+    Diag(op->getExprLoc(), diag::err_opencl_taking_function_address);
+    return QualType();
+  }
 
   if (getLangOpts().C99) {
     // Implement C99-only parts of addressof rules.

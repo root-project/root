@@ -59,7 +59,7 @@ private:
   PassManager *getCodeGenPasses() const {
     if (!CodeGenPasses) {
       CodeGenPasses = new PassManager();
-      CodeGenPasses->add(new DataLayout(TheModule));
+      CodeGenPasses->add(new DataLayoutPass(TheModule));
       if (TM)
         TM->addAnalysisPasses(*CodeGenPasses);
     }
@@ -69,7 +69,7 @@ private:
   PassManager *getPerModulePasses() const {
     if (!PerModulePasses) {
       PerModulePasses = new PassManager();
-      PerModulePasses->add(new DataLayout(TheModule));
+      PerModulePasses->add(new DataLayoutPass(TheModule));
       if (TM)
         TM->addAnalysisPasses(*PerModulePasses);
     }
@@ -79,7 +79,7 @@ private:
   FunctionPassManager *getPerFunctionPasses() const {
     if (!PerFunctionPasses) {
       PerFunctionPasses = new FunctionPassManager(TheModule);
-      PerFunctionPasses->add(new DataLayout(TheModule));
+      PerFunctionPasses->add(new DataLayoutPass(TheModule));
       if (TM)
         TM->addAnalysisPasses(*PerFunctionPasses);
     }
@@ -437,6 +437,9 @@ TargetMachine *EmitAssemblyHelper::CreateTargetMachine(bool MustCreateTM) {
   }
 
   llvm::TargetOptions Options;
+
+  if (CodeGenOpts.DisableIntegratedAS)
+    Options.DisableIntegratedAS = true;
 
   // Set frame pointer elimination mode.
   if (!CodeGenOpts.DisableFPElim) {

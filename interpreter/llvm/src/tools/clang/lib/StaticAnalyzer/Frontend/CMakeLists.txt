@@ -8,19 +8,8 @@ add_clang_library(clangStaticAnalyzerFrontend
   AnalysisConsumer.cpp
   CheckerRegistration.cpp
   FrontendActions.cpp
-  )
 
-add_dependencies(clangStaticAnalyzerFrontend
-  ClangAttrClasses
-  ClangAttrList
-  ClangCommentNodes
-  ClangDeclNodes
-  ClangDiagnosticCommon
-  ClangDiagnosticFrontend
-  ClangStmtNodes
-  )
-
-target_link_libraries(clangStaticAnalyzerFrontend
+  LINK_LIBS
   clangAST
   clangAnalysis
   clangBasic

@@ -1061,6 +1061,8 @@ void X86_32ABIInfo::rewriteWithInAlloca(CGFunctionInfo &FI) const {
   if (Ret.isIndirect() && !Ret.getInReg()) {
     CanQualType PtrTy = getContext().getPointerType(FI.getReturnType());
     addFieldToArgStruct(FrameFields, StackOffset, Ret, PtrTy);
+    // On Windows, the hidden sret parameter is always returned in eax.
+    Ret.setInAllocaSRet(IsWin32StructABI);
   }
 
   // Skip the 'this' parameter in ecx.
@@ -5660,8 +5662,49 @@ class SparcV9TargetCodeGenInfo : public TargetCodeGenInfo {
 public:
   SparcV9TargetCodeGenInfo(CodeGenTypes &CGT)
     : TargetCodeGenInfo(new SparcV9ABIInfo(CGT)) {}
+
+  int getDwarfEHStackPointer(CodeGen::CodeGenModule &M) const {
+    return 14;
+  }
+
+  bool initDwarfEHRegSizeTable(CodeGen::CodeGenFunction &CGF,
+                               llvm::Value *Address) const;
 };
 } // end anonymous namespace
+
+bool
+SparcV9TargetCodeGenInfo::initDwarfEHRegSizeTable(CodeGen::CodeGenFunction &CGF,
+                                                llvm::Value *Address) const {
+  // This is calculated from the LLVM and GCC tables and verified
+  // against gcc output.  AFAIK all ABIs use the same encoding.
+
+  CodeGen::CGBuilderTy &Builder = CGF.Builder;
+
+  llvm::IntegerType *i8 = CGF.Int8Ty;
+  llvm::Value *Four8 = llvm::ConstantInt::get(i8, 4);
+  llvm::Value *Eight8 = llvm::ConstantInt::get(i8, 8);
+
+  // 0-31: the 8-byte general-purpose registers
+  AssignToArrayRange(Builder, Address, Eight8, 0, 31);
+
+  // 32-63: f0-31, the 4-byte floating-point registers
+  AssignToArrayRange(Builder, Address, Four8, 32, 63);
+
+  //   Y   = 64
+  //   PSR = 65
+  //   WIM = 66
+  //   TBR = 67
+  //   PC  = 68
+  //   NPC = 69
+  //   FSR = 70
+  //   CSR = 71
+  AssignToArrayRange(Builder, Address, Eight8, 64, 71);
+   
+  // 72-87: d0-15, the 8-byte floating-point registers
+  AssignToArrayRange(Builder, Address, Eight8, 72, 87);
+
+  return false;
+}
 
 
 //===----------------------------------------------------------------------===//
@@ -5755,6 +5798,7 @@ const TargetCodeGenInfo &CodeGenModule::getTargetCodeGenInfo() {
     return *(TheTargetCodeGenInfo = new MIPSTargetCodeGenInfo(Types, false));
 
   case llvm::Triple::aarch64:
+  case llvm::Triple::aarch64_be:
     return *(TheTargetCodeGenInfo = new AArch64TargetCodeGenInfo(Types));
 
   case llvm::Triple::arm:

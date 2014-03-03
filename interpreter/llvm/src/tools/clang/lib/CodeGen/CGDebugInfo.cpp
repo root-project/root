@@ -52,9 +52,9 @@ CGDebugInfo::~CGDebugInfo() {
          "Region stack mismatch, stack not empty!");
 }
 
-
-SaveAndRestoreLocation::SaveAndRestoreLocation(CodeGenFunction &CGF, CGBuilderTy &B)
-  : DI(CGF.getDebugInfo()), Builder(B) {
+SaveAndRestoreLocation::SaveAndRestoreLocation(CodeGenFunction &CGF,
+                                               CGBuilderTy &B)
+    : DI(CGF.getDebugInfo()), Builder(B) {
   if (DI) {
     SavedLoc = DI->getLocation();
     DI->CurLoc = SourceLocation();
@@ -382,10 +382,12 @@ void CGDebugInfo::CreateCompileUnit() {
 
   // Create new compile unit.
   // FIXME - Eliminate TheCU.
-  TheCU = DBuilder.createCompileUnit(LangTag, Filename, getCurrentDirname(),
-                                     Producer, LO.Optimize,
-                                     CGM.getCodeGenOpts().DwarfDebugFlags,
-                                     RuntimeVers, SplitDwarfFilename);
+  TheCU = DBuilder.createCompileUnit(
+      LangTag, Filename, getCurrentDirname(), Producer, LO.Optimize,
+      CGM.getCodeGenOpts().DwarfDebugFlags, RuntimeVers, SplitDwarfFilename,
+      DebugKind == CodeGenOptions::DebugLineTablesOnly
+          ? llvm::DIBuilder::LineTablesOnly
+          : llvm::DIBuilder::FullDebug);
 }
 
 /// CreateType - Get the Basic type from the cache or create a new
@@ -759,12 +761,14 @@ llvm::DIType CGDebugInfo::CreateType(const FunctionType *Ty,
   EltTys.push_back(getOrCreateType(Ty->getReturnType(), Unit));
 
   // Set up remainder of arguments if there is a prototype.
-  // FIXME: IF NOT, HOW IS THIS REPRESENTED?  llvm-gcc doesn't represent '...'!
+  // otherwise emit it as a variadic function.
   if (isa<FunctionNoProtoType>(Ty))
     EltTys.push_back(DBuilder.createUnspecifiedParameter());
   else if (const FunctionProtoType *FPT = dyn_cast<FunctionProtoType>(Ty)) {
     for (unsigned i = 0, e = FPT->getNumParams(); i != e; ++i)
       EltTys.push_back(getOrCreateType(FPT->getParamType(i), Unit));
+    if (FPT->isVariadic())
+      EltTys.push_back(DBuilder.createUnspecifiedParameter());
   }
 
   llvm::DIArray EltTypeArray = DBuilder.getOrCreateArray(EltTys);
@@ -1473,13 +1477,12 @@ llvm::DIType CGDebugInfo::CreateType(const RecordType *Ty) {
       (DebugKind <= CodeGenOptions::LimitedDebugInfo &&
        // Emit only a forward declaration unless the type is required.
        ((!RD->isCompleteDefinitionRequired() && CGM.getLangOpts().CPlusPlus) ||
-        // If the class is dynamic, only emit a declaration. A definition will be
-        // emitted whenever the vtable is emitted.
+        // If the class is dynamic, only emit a declaration. A definition will
+        // be emitted whenever the vtable is emitted.
         (CXXDecl && CXXDecl->hasDefinition() && CXXDecl->isDynamicClass())))) {
-    llvm::DIDescriptor FDContext =
-      getContextDescriptor(cast<Decl>(RD->getDeclContext()));
     if (!T)
-      T = getOrCreateRecordFwdDecl(Ty, FDContext);
+      T = getOrCreateRecordFwdDecl(
+          Ty, getContextDescriptor(cast<Decl>(RD->getDeclContext())));
     return T;
   }
 
@@ -2438,6 +2441,21 @@ llvm::DICompositeType CGDebugInfo::getOrCreateFunctionType(const Decl *D,
     llvm::DIArray EltTypeArray = DBuilder.getOrCreateArray(Elts);
     return DBuilder.createSubroutineType(F, EltTypeArray);
   }
+
+  // Handle variadic function types; they need an additional
+  // unspecified parameter.
+  if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D))
+    if (FD->isVariadic()) {
+      SmallVector<llvm::Value *, 16> EltTys;
+      EltTys.push_back(getOrCreateType(FD->getReturnType(), F));
+      if (const FunctionProtoType *FPT = dyn_cast<FunctionProtoType>(FnType))
+        for (unsigned i = 0, e = FPT->getNumParams(); i != e; ++i)
+          EltTys.push_back(getOrCreateType(FPT->getParamType(i), F));
+      EltTys.push_back(DBuilder.createUnspecifiedParameter());
+      llvm::DIArray EltTypeArray = DBuilder.getOrCreateArray(EltTys);
+      return DBuilder.createSubroutineType(F, EltTypeArray);
+    }
+
   return llvm::DICompositeType(getOrCreateType(FnType, F));
 }
 
