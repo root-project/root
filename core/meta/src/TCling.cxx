@@ -74,6 +74,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/TargetInfo.h"
+#include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
@@ -2868,7 +2869,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) cons
    // Return pointer to cling DeclId for a global variable that is a pointer
    // whose value is 'ptrvalue'.
 
-   llvm::Module* module = fInterpreter->getModule();
+   llvm::Module* module = fInterpreter->getCodeGenerator()->GetModule();
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
    llvm::Module::global_iterator iter = module->global_begin();

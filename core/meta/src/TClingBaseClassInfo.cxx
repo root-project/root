@@ -193,7 +193,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
    }
    string code;
    // Check whether the function was already generated.
-   if (!fInterp->getModule()->getNamedValue(wrapper_name)) {
+   if (!fInterp->getAddressOfGlobal(wrapper_name)) {
       // Get the class or namespace name.
       string fromDerivedClassName;
       clang::QualType QTDerived(fromDerivedClass->GetType(), 0);
