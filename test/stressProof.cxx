@@ -2143,22 +2143,24 @@ Int_t PT_Open(void *args, RunTimes &tt)
 
    // Temp dir for PROOF tutorials
    PutPoint();
-   TString tmpdir(gSystem->TempDirectory()), us;
 #if defined(R__MACOSX) 
    // Force '/tmp' under macosx, to avoid problems with lengths and symlinks
-   tmpdir = "/tmp";
+   TString tmpdir("/tmp"), uspid;
+#else
+   TString tmpdir(gSystem->TempDirectory()), uspid;
 #endif
    UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
-   if (!tmpdir.EndsWith(us.Data())) {
-      if (ug) {
-         us.Form("/%s", ug->fUser.Data());
-         tmpdir += us;
-         delete ug;
-      } else {
-         printf("\n >>> Test failure: could not get user info");
-         return -1;
-      }
+   if (!ug) {
+      printf("\n >>> Test failure: could not get user info");
+      return -1;      
    }
+   if (!tmpdir.EndsWith(ug->fUser.Data())) {
+      uspid.Form("/%s/%d", ug->fUser.Data(), gSystem->GetPid());
+      delete ug;
+   } else {
+      uspid.Form("/%d", gSystem->GetPid());
+   }
+   tmpdir += uspid;
 #if !defined(R__MACOSX) 
    gtutdir.Form("%s/.proof-tutorial", tmpdir.Data());
 #else

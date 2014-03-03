@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdexcept>
+#include <limits>
 #include <memory>
 #include <vector>
 
