@@ -96,6 +96,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fstream>
 #ifdef WIN32
 #include <io.h>
 #endif
