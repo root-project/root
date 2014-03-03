@@ -741,6 +741,9 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    //(which is result of bad GL context).
 
    if (fLocked) return;
+   
+   if(!gVirtualX->GetTextSize())
+      return;
 
    DrawTextHelper(x, y, text, mode);
 }
@@ -754,6 +757,9 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextM
    //(which is result of bad GL context).
 
    if (fLocked) return;
+   
+   if(!gVirtualX->GetTextSize())
+      return;
 
    DrawTextHelper(x, y, text, mode);
 }
