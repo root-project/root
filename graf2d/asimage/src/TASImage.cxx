@@ -81,6 +81,7 @@ End_Html */
 #include "TStyle.h"
 #include "TText.h"
 #include "RConfigure.h"
+#include "TVirtualPadPainter.h"
 
 #ifndef WIN32
 #ifndef R__HAS_COCOA
@@ -1237,7 +1238,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       gVirtualX->ChangeGC(gc, &gv);
    }
 
-   if (x11) { //use built-in optimized version
+   if (x11 && gPad->GetGLDevice() == -1) { //use built-in optimized version
       asimage2drawable(fgVisual, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
    } else {
       ASImage *img = 0;
@@ -1245,23 +1246,29 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       if (!bits) {
          img = tile_asimage(fgVisual, im, xsrc, ysrc, wsrc, hsrc,
                             0, ASA_ARGB32, 0, ASIMAGE_QUALITY_DEFAULT);
-         if (!img) return;
-         bits = (unsigned char *)img->alt.argb32;
+         if (img)
+            bits = (unsigned char *)img->alt.argb32;
+      }
+      
+      if (bits) {      
+         if (gPad->GetGLDevice() != -1) {
+            if (TVirtualPadPainter *painter = gPad->GetPainter())
+               painter->DrawPixels(bits, wsrc, hsrc, x, y);
+         } else {
+            Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
+            if (pic) {
+               TString option = opt;
+               option.ToLower();
+               if (!option.Contains("opaque")) {
+                  SETBIT(wsrc,31);
+                  SETBIT(hsrc,31);
+               }
+               gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
+               gVirtualX->DeletePixmap(pic);
+            }
+         }
       }
 
-      Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
-      if (pic) {
-         TString option = opt;
-         option.ToLower();
-         if (!option.Contains("opaque")) {
-            SETBIT(wsrc,31);
-            SETBIT(hsrc,31);
-         }
-         gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
-         gVirtualX->DeletePixmap(pic);
-      } else {
-         return;
-      }
       if (img) {
          destroy_asimage(&img);
       }
