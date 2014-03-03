@@ -1238,7 +1238,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       gVirtualX->ChangeGC(gc, &gv);
    }
 
-   if (x11 && gPad->GetGLDevice() == -1) { //use built-in optimized version
+   if (x11 && gPad && (gPad->GetGLDevice() == -1)) { //use built-in optimized version
       asimage2drawable(fgVisual, wid, im, (GC)gc, xsrc, ysrc, x, y, wsrc, hsrc, 1);
    } else {
       ASImage *img = 0;
@@ -1251,7 +1251,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
       }
       
       if (bits) {      
-         if (gPad->GetGLDevice() != -1) {
+         if (gPad && (gPad->GetGLDevice() != -1)) {
             if (TVirtualPadPainter *painter = gPad->GetPainter())
                painter->DrawPixels(bits, wsrc, hsrc, x, y);
          } else {
