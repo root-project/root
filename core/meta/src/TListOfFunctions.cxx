@@ -187,15 +187,6 @@ TObject *TListOfFunctions::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TListOfFunctions::FindObject(const TObject *obj) const
-{
-   // Specialize FindObject to do search for the
-   // a function or create it if its not already in the list
-
-   return FindObject(obj->GetName());
-}
-
-//______________________________________________________________________________
 TList* TListOfFunctions::GetListForObjectNonConst(const char* name)
 {
    // Return the set of overloads for this name, collecting all available ones.

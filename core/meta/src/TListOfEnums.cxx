@@ -188,15 +188,6 @@ TObject *TListOfEnums::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TListOfEnums::FindObject(const TObject *obj) const
-{
-   // Specialize FindObject to do search for the
-   // a enum or create it if its not already in the list
-
-   return FindObject(obj->GetName());
-}
-
-//______________________________________________________________________________
 TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
 {
    // Return (after creating it if necessary) the TEnum

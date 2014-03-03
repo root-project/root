@@ -194,15 +194,6 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
 }
 
 //______________________________________________________________________________
-TObject *TListOfDataMembers::FindObject(const TObject *obj) const
-{
-   // Specialize FindObject to do search for the
-   // a data member or create it if its not already in the list
-
-   return FindObject(obj->GetName());
-}
-
-//______________________________________________________________________________
 TDictionary *TListOfDataMembers::Get(DeclId_t id)
 {
    // Return (after creating it if necessary) the TDataMember
