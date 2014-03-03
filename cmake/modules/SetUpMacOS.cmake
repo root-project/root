@@ -24,13 +24,6 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
     set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
   endif()
 
-  if(c++11)
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -std=c++11)
-  endif()
-  if(libcxx)
-    set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -stdlib=libc++)
-  endif()
-
   if(${MACOSX_MINOR} GREATER 4)
     #TODO: check haveconfig and rpath -> set rpath true
     #TODO: check Thread, define link command
