@@ -30,10 +30,6 @@
 #include "Rtypes.h"
 #endif
 
-#ifndef ROOT_Rconfigure
-#include "RConfigure.h"
-#endif
-
 #include <cstdlib>
 #include <cmath>
 
@@ -112,11 +108,11 @@ inline Int_t TMath::Abs(Int_t d)
 { return ::abs(d); }
 
 inline Long_t TMath::Abs(Long_t d)
-{ return ::abs(d); }
+{ return ::labs(d); }
 
 inline Long64_t TMath::Abs(Long64_t d)
-#ifdef R__USE_CXX11
-{ return ::abs(d); }
+#if __cplusplus >= 201103 
+{ return ::llabs(d); }
 #else 
 { return (d >= 0) ? d : -d;  }
 #endif
