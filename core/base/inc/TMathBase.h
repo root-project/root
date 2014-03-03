@@ -30,6 +30,10 @@
 #include "Rtypes.h"
 #endif
 
+#ifndef ROOT_Rconfigure
+#include "RConfigure.h"
+#endif
+
 #include <cstdlib>
 #include <cmath>
 
@@ -111,7 +115,11 @@ inline Long_t TMath::Abs(Long_t d)
 { return ::abs(d); }
 
 inline Long64_t TMath::Abs(Long64_t d)
+#ifdef R__USE_CXX11
 { return ::abs(d); }
+#else 
+{ return (d >= 0) ? d : -d;  }
+#endif
 
 inline Float_t TMath::Abs(Float_t d)
 { return std::abs(d); }
