@@ -45,6 +45,12 @@ macro(vc_add_test _name)
          if(NOT CXX11_FLAG)
             break()
          endif()
+
+         #disable CXX11 tests on clang 3.2 (Xcode < 5)  which has a bug
+         if(Vc_COMPILER_IS_CLANG AND Vc_CLANG_VERSION VERSION_LESS "5.0")
+           break()
+         endif()
+
          set(SAVE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
          if(CMAKE_CXX_FLAGS MATCHES " -ansi ")
             string(REPLACE " -ansi " " " CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
