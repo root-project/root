@@ -69,7 +69,7 @@ public:
    
    //TASImage support (noop for a non-gl pad).
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                       Int_t dstX, Int_t dstY);
+                       Int_t dstX, Int_t dstY, Bool_t enableBlending);
    
 
    void     DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);

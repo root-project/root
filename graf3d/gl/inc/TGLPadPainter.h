@@ -97,7 +97,7 @@ public:
 
    //TASImage support.
    void     DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                       Int_t dstX, Int_t dstY);
+                       Int_t dstX, Int_t dstY, Bool_t enableBlending);
 
    void     InitPainter();
    void     InvalidateCS();

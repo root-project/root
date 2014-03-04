@@ -901,7 +901,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 
 //______________________________________________________________________________
 void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                               Int_t dstX, Int_t dstY)
+                               Int_t dstX, Int_t dstY, Bool_t enableBlending)
 {
    if (fLocked)
       return;
@@ -912,20 +912,11 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       return;
    }
    
-   bool ignoreAlpha = true;
-   
    if (std::numeric_limits<UInt_t>::digits >= 32) {
       //TASImage uses bit 31 as ...
       //alpha channel flag! FUUUUUUUUUUUUU .....   !!!
-      if (TESTBIT(width, 31)) {
-         ignoreAlpha = false;
-         CLRBIT(width, 31);
-      }
-      
-      if (TESTBIT(height, 31)) {
-         ignoreAlpha = false;
-         CLRBIT(height, 31);
-      }
+      CLRBIT(width, 31);
+      CLRBIT(height, 31);
    }
    
    if (!width) {
@@ -962,14 +953,14 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
          std::copy(srcLine, srcLine + 4 * width, dstLine);
       
-      if (!ignoreAlpha) {
+      if (enableBlending) {
          glEnable(GL_BLEND);
          glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
       }
       
       glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
       
-      if (!ignoreAlpha)
+      if (enableBlending)
          glDisable(GL_BLEND);
       
       //Restore raster pos.
