@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <stdexcept>
+#include <iostream>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -934,12 +935,14 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
    if (TPad *pad = dynamic_cast<TPad *>(gPad)) {
       //TASImage passes pixel coordinates in pad's pixmap coordinate space.
       //While glRasterPosX said to work with 'window' coordinates,
-      //this 'window' means only the coordinate system is top-left-corner based.
-      //X and Y itself must be in our own coordiantes system, as specified in SelectDrawable.
+      //that's a lie :) it does not :)
+      
       const Double_t rasterX = Double_t(dstX) / (pad->GetAbsWNDC() * pad->GetWw()) *
                                 (pad->GetX2() - pad->GetX1()) + pad->GetX1();
-      const Double_t rasterY = Double_t(dstY) / (pad->GetAbsHNDC() * pad->GetWh()) *
-                                (pad->GetY2() - pad->GetY1()) + pad->GetY1();
+
+      const Double_t yRange = pad->GetY2() - pad->GetY1();
+      const Double_t rasterY = yRange - Double_t(dstY + height) / (pad->GetAbsHNDC() * pad->GetWh()) * yRange) +
+                               pad->GetY1();
 
       GLdouble oldPos[4] = {};
       //Save the previous raster pos.
