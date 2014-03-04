@@ -361,7 +361,7 @@ Vc_CONSTEXPR StreamingAndUnalignedFlag operator&(StreamingAndAlignedFlag, Unalig
 Vc_CONSTEXPR StreamingAndAlignedFlag operator|(AlignedFlag, StreamingAndAlignedFlag) { return Streaming; }
 Vc_CONSTEXPR StreamingAndAlignedFlag operator|(StreamingAndAlignedFlag, AlignedFlag) { return Streaming; }
 Vc_CONSTEXPR StreamingAndAlignedFlag operator&(AlignedFlag, StreamingAndAlignedFlag) { return Streaming; }
-Vc_CONSTEXPR StreamingAndAlignedFlag operator&(Vc::StreamingAndAlignedFlag, Vc::AlignedFlag) { return Vc::Streaming; }
+Vc_CONSTEXPR StreamingAndAlignedFlag operator&(StreamingAndAlignedFlag, AlignedFlag) { return Streaming; }
 
 /**
  * \ingroup Utilities
