@@ -712,6 +712,23 @@ int TDataMember::IsSTLContainer()
 }
 
 //______________________________________________________________________________
+Bool_t TDataMember::IsValid()
+{
+  // Return true if this data member object is pointing to a currently
+   // loaded data member.  If a function is unloaded after the TDataMember
+   // is created, the TDataMember will be set to be invalid.
+   if (!fInfo) {
+      DeclId_t newId = gInterpreter->GetDataMember(0, fName);
+      if (newId) {
+         DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
+         Update(info);
+      }
+      return newId != 0;
+   }
+   return fInfo != 0;
+}
+
+//______________________________________________________________________________
 Long_t TDataMember::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.

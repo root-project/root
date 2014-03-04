@@ -41,7 +41,7 @@ public:
    UInt_t              GetTemplateNargs() const;
    UInt_t              GetTemplateMinReqArgs() const;
 
-   virtual Bool_t      IsValid() const;
+   virtual Bool_t      IsValid();
    Long_t              Property() const;
 
    virtual bool        Update(FuncTempInfo_t *info);

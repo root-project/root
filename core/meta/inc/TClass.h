@@ -371,6 +371,7 @@ public:
    void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
    void               ResetCaches();
    void               ResetClassInfo(Long_t tagnum);
+   void               ResetClassInfo();
    void               ResetInstanceCount() { fInstanceCount = fOnHeap = 0; }
    void               ResetMenuList();
    Int_t              Size() const;

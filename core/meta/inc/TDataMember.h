@@ -85,6 +85,7 @@ public:
    Bool_t         IsaPointer() const;
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
+   Bool_t         IsValid();
    Long_t         Property() const;
    virtual bool   Update(DataMemberInfo_t *info);
 

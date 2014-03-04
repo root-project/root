@@ -204,12 +204,20 @@ void *TFunction::InterfaceMethod() const
 }
 
 //______________________________________________________________________________
-Bool_t TFunction::IsValid() const
+Bool_t TFunction::IsValid()
 {
    // Return true if this function object is pointing to a currently
    // loaded function.  If a function is unloaded after the TFunction
    // is created, the TFunction will be set to be invalid.
-
+   if(!fInfo) {
+      // Only for global functions. For data member functions TMethod does it.
+      DeclId_t newId = gInterpreter->GetFunction(0, fName);
+      if (newId) {
+         MethodInfo_t *info = gInterpreter->MethodInfo_Factory(newId);
+         Update(info);
+      }
+      return newId != 0;
+   }
    return fInfo != 0;
 }
 

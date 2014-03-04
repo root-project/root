@@ -56,6 +56,7 @@ public:
    virtual TObject        *Clone(const char *newname="") const;
    TClass                 *GetClass() const { return fClass; }
    EMenuItemKind           IsMenuItem() const { return fMenuItem; }
+   virtual Bool_t          IsValid();
    virtual const char     *GetCommentString();
    virtual const char     *Getter() const { return fGetter; }
    virtual TMethodCall    *GetterMethod();

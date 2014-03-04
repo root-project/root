@@ -338,7 +338,6 @@ void TListOfEnums::Unload(TEnum *e)
    if (THashList::Remove(e)) {
       // We contains the object, let remove it from the other internal
       // list and move it to the list of unloaded objects.
-
       fIds->Remove((Long64_t)e->GetDeclId());
       fUnloaded->Add(e);
    }

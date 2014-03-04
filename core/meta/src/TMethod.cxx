@@ -270,6 +270,23 @@ TMethodCall *TMethod::GetterMethod()
 }
 
 //______________________________________________________________________________
+Bool_t TMethod::IsValid()
+{
+   // Return true if this function object is pointing to a currently
+   // loaded function.  If a function is unloaded after the TMethod
+   // is created, the TMethod will be set to be invalid.
+   if(!fInfo) {
+      DeclId_t newId = gInterpreter->GetFunction(fClass->GetClassInfo(), fName);
+      if (newId) {
+         MethodInfo_t *info = gInterpreter->MethodInfo_Factory(newId);
+         Update(info);
+      }
+      return newId != 0;
+   }
+   return fInfo != 0;
+}
+
+//______________________________________________________________________________
 TMethodCall *TMethod::SetterMethod()
 {
    // Return call environment for this method in case this is a
