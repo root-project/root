@@ -122,6 +122,10 @@ void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop)
 
   if (prop->refCount()==0) {
     _propList.Remove(prop) ;
+
+    std::map<std::string, RooSharedProperties *>::iterator it; 
+    it = _newPropList.find( std::string(prop->asString()) ); 
+    if (it != _newPropList.end() )  _newPropList.erase(it);
     
     // We own object if ref-counted list. If count drops to zero, delete object
     delete prop ;
