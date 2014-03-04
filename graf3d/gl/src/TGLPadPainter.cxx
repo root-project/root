@@ -15,6 +15,7 @@
 #include <vector>
 
 #include "TAttMarker.h"
+#include "TObjArray.h"
 #include "TVirtualX.h"
 #include "TError.h"
 #include "TImage.h"
@@ -623,7 +624,7 @@ void TGLPadPainter::DrawPolyMarker()
    //
    Float_t rgba[4] = {};
    Rgl::Pad::ExtractRGBA(gVirtualX->GetMarkerColor(), rgba);
-   glColor4fv(rgba);
+   glColor3fv(rgba);
 
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = gVirtualX->GetMarkerStyle();
@@ -741,8 +742,8 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode
    //(which is result of bad GL context).
 
    if (fLocked) return;
-   
-   if(!gVirtualX->GetTextSize())
+
+   if (!gVirtualX->GetTextSize())
       return;
 
    DrawTextHelper(x, y, text, mode);
@@ -758,7 +759,7 @@ void TGLPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextM
 
    if (fLocked) return;
    
-   if(!gVirtualX->GetTextSize())
+   if (!gVirtualX->GetTextSize())
       return;
 
    DrawTextHelper(x, y, text, mode);
@@ -900,7 +901,7 @@ void TGLPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type
 
 //______________________________________________________________________________
 void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UInt_t height,
-                               Int_t dstX, Int_t dstY)
+                               Int_t dstX, Int_t dstY, Bool_t enableAlphaBlending)
 {
    if (fLocked)
       return;
@@ -910,6 +911,8 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       Error("DrawPixels", "pixel data is null");
       return;
    }
+   
+   bool ignoreAlpha = true;
    
    if (std::numeric_limits<UInt_t>::digits >= 32) {
       //TASImage uses bit 31 as ...
@@ -952,7 +955,15 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       for (UInt_t i = 0; i < height; ++i, srcLine -= 4 * width, dstLine += 4 * width)
          std::copy(srcLine, srcLine + 4 * width, dstLine);
       
+      if (enableAlphaBlending) {
+         glEnable(GL_BLEND);
+         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      }
+      
       glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, &upsideDownImage[0]);
+      
+      if (enableAlphaBlending)
+         glDisable(GL_BLEND);
       
       //Restore raster pos.
       glRasterPos2d(oldPos[0], oldPos[1]);
