@@ -302,7 +302,7 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
    TGLUtil::InitializeIfNeeded();
    const Float_t scale = TGLUtil::GetScreenScalingFactor();
    
-   if (scale > 1) {
+   if (scale > 1.f) {
       px *= scale;
       py *= scale;
    }
