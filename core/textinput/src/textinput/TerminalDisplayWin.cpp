@@ -20,7 +20,8 @@
 
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
-    TerminalDisplay(false), fStartLine(0), fIsAttached(false) {
+    TerminalDisplay(false), fStartLine(0), fIsAttached(false),
+    fDefaultAttributes(0) {
     fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
     bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
     SetIsTTY(isConsole);
@@ -32,12 +33,17 @@ namespace textinput {
         FILE_ATTRIBUTE_NORMAL, NULL);
       ::GetConsoleMode(fOut, &fOldMode);
       fMyMode = fOldMode | ENABLE_PROCESSED_OUTPUT | ENABLE_WRAP_AT_EOL_OUTPUT;
+
+      CONSOLE_SCREEN_BUFFER_INFO csbi;
+      ::GetConsoleScreenBufferInfo(fOut, &csbi);
+      fDefaultAttributes = csbi.wAttributes;
     }
     HandleResizeEvent();
   }
 
   TerminalDisplayWin::~TerminalDisplayWin() {
     if (IsTTY()) {
+      ::SetConsoleTextAttribute(fOut, fDefaultAttributes);
       // We allocated CONOUT$:
       CloseHandle(fOut);
     }
@@ -64,7 +70,12 @@ namespace textinput {
     if (C.fR > 64) Attribs |= FOREGROUND_RED;
     if (C.fG > 64) Attribs |= FOREGROUND_GREEN;
     if (C.fB > 64) Attribs |= FOREGROUND_BLUE;
-    ::SetConsoleTextAttribute(fOut, Attribs);
+    // if CIdx is 0 (default) then use the original console text color
+    // (instead of the greyish one)
+    if (CIdx == 0)
+      ::SetConsoleTextAttribute(fOut, fDefaultAttributes);
+    else
+      ::SetConsoleTextAttribute(fOut, Attribs);
   }
 
   void

@@ -53,6 +53,7 @@ namespace textinput {
     HANDLE fOut; // output handle
     DWORD fOldMode; // console configuration before grabbing
     DWORD fMyMode; // console configuration when active
+    WORD fDefaultAttributes; // attributes to restore on destruction
   };
 }
 #endif // TEXTINPUT_TERMINALDISPLAYWIN_H
