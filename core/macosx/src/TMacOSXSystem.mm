@@ -507,11 +507,12 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    fNfd = 0;
 
    NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
-
-   if (event.type == NSApplicationDefined)
-      ProcessApplicationDefinedEvent(event);
-   else
-      [NSApp sendEvent : event];
+   if (event) {
+      if (event.type == NSApplicationDefined)
+         ProcessApplicationDefinedEvent(event);
+      else
+         [NSApp sendEvent : event];
+   }
 
    while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES])) {
       if (event.type == NSApplicationDefined)
