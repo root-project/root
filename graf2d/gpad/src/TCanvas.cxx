@@ -656,6 +656,7 @@ void TCanvas::Destructor()
 
    Close();
 
+   //If not yet.
    delete fPainter;
 }
 
@@ -758,8 +759,12 @@ void TCanvas::Close(Option_t *option)
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
 
-      if (fGLDevice != -1)
+      if (fGLDevice != -1) {
+         gGLManager->MakeCurrent(fGLDevice);
+         delete fPainter;
+         fPainter = 0;
          gGLManager->DeleteGLContext(fGLDevice);//?
+      }
 
       if (fCanvasImp) fCanvasImp->Close();
    }
