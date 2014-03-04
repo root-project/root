@@ -1250,20 +1250,19 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
             bits = (unsigned char *)img->alt.argb32;
       }
       
-      if (bits) {
-         TString option(opt);
-         option.ToLower();
-         if (!option.Contains("opaque")) {
-            SETBIT(wsrc,31);
-            SETBIT(hsrc,31);
-         }
-         
+      if (bits) {      
          if (gPad && gPad->GetGLDevice() != -1) {
             if (TVirtualPadPainter *painter = gPad->GetPainter())
                painter->DrawPixels(bits, wsrc, hsrc, x, y);
          } else {
             Pixmap_t pic = gVirtualX->CreatePixmapFromData(bits, wsrc, hsrc);
             if (pic) {
+               TString option = opt;
+               option.ToLower();
+               if (!option.Contains("opaque")) {
+                  SETBIT(wsrc,31);
+                  SETBIT(hsrc,31);
+               }
                gVirtualX->CopyArea(pic, wid, gc, 0, 0, wsrc, hsrc, x, y);
                gVirtualX->DeletePixmap(pic);
             }
