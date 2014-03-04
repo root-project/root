@@ -32,6 +32,7 @@
 #include "TGLIncludes.h"
 #include "TGLAdapter.h"
 #include "TGLOutput.h"
+#include "TGLUtil.h"
 #include "TGL5D.h"
 #include "gl2ps.h"
 
@@ -175,8 +176,6 @@ void TGLPlotPainter::Paint()
    if (gVirtualPS)
       PrintPlot();
 
-
-
    DrawPlot();
    //Restore material properties from stack.
    glPopAttrib();
@@ -197,7 +196,15 @@ void TGLPlotPainter::Paint()
       Bool_t old = gPad->TestBit(TGraph::kClipFrame);
       if (!old)
          gPad->SetBit(TGraph::kClipFrame);
-      const Int_t viewport[] = {fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight()};
+      
+      //Viewport on retina is bigger than real pixel coordinates in
+      //a pad, scale it back.
+      TGLUtil::InitializeIfNeeded();
+      Float_t scale = TGLUtil::GetScreenScalingFactor();
+      if (scale < 1.f)//Just ignore this.
+         scale = 1.f;
+      
+      const Int_t viewport[] = {fCamera->GetX() / scale, fCamera->GetY() / scale, fCamera->GetWidth() / scale, fCamera->GetHeight() / scale};
       Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
       if (fDrawPalette)
          DrawPaletteAxis();
@@ -273,6 +280,7 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
 
       glFinish();
       //fSelection.ReadColorBuffer(fCamera->GetWidth(), fCamera->GetHeight());
+      
       fSelection.ReadColorBuffer(fCamera->GetX(), fCamera->GetY(), fCamera->GetWidth(), fCamera->GetHeight());
       fSelectionPass   = kFALSE;
       fUpdateSelection = kFALSE;
@@ -286,10 +294,19 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
       glMatrixMode(GL_MODELVIEW);//2]
       glPopMatrix();
    }
-
-   //Convert from window top-bottom into gl bottom-top.
+   
    px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
    py -= Int_t(gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1()));
+
+   //Pixel coords can be affected by scaling factor on retina displays.
+   TGLUtil::InitializeIfNeeded();
+   const Float_t scale = TGLUtil::GetScreenScalingFactor();
+   
+   if (scale > 1) {
+      px *= scale;
+      py *= scale;
+   }
+
    //py = fCamera->GetHeight() - py;
    //Y is a number of a row, x - column.
    std::swap(px, py);
@@ -304,14 +321,6 @@ Bool_t TGLPlotPainter::PlotSelected(Int_t px, Int_t py)
    return fSelectedPart ? kTRUE : kFALSE;
 }
 
-/*
-//______________________________________________________________________________
-void TGLPlotPainter::SetGLContext(Int_t context)
-{
-   //One plot can be painted in several gl contexts.
-//   fGLContext = context;
-}
- */
 //______________________________________________________________________________
 void TGLPlotPainter::SetPadColor(const TColor *c)
 {
@@ -344,6 +353,9 @@ const TColor *TGLPlotPainter::GetPadColor()const
 void TGLPlotPainter::MoveSection(Int_t px, Int_t py)
 {
    //Create dynamic profile using selected plane
+
+   //Coordinates are expected to be fixed for retina!
+
    const TGLVertex3 *frame = fBackBox.Get3DBox();
    const Int_t frontPoint  = fBackBox.GetFrontPoint();
 

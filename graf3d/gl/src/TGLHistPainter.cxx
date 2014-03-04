@@ -34,6 +34,7 @@
 #include "TGLTF3Painter.h"
 #include "TGLParametric.h"
 #include "TGL5DPainter.h"
+#include "TGLUtil.h"
 
 ClassImp(TGLHistPainter)
 
@@ -263,10 +264,9 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
       //Adjust px and py - canvas can have several pads inside, so we need to convert
       //the from canvas' system into pad's.
       
-      /*py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
-      px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());*/
+      //Retina-related adjustments must be done inside!!!
       
-      py = gPad->GetWh() - py;//-= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
+      py = gPad->GetWh() - py;
 
       //One hist can be appended to several pads,
       //the current pad should have valid OpenGL context.
@@ -337,6 +337,14 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          //px and py ARE NOT coordinates.
          py -= Int_t((1 - gPad->GetHNDC() - gPad->GetYlowNDC()) * gPad->GetWh());
          px -= Int_t(gPad->GetXlowNDC() * gPad->GetWw());
+         
+         //We also have to take care of retina displays with a different viewports.
+         TGLUtil::InitializeIfNeeded();
+         const Float_t scale = TGLUtil::GetScreenScalingFactor();
+         if (scale > 1) {
+            px *= scale;
+            py *= scale;
+         }
       }
 
       switch (event) {
@@ -444,8 +452,16 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
    if (fPlotType == kGLDefaultPlot)
       return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
                                    : errMsg;
-   else
+   else {
+      TGLUtil::InitializeIfNeeded();
+      const Float_t scale = TGLUtil::GetScreenScalingFactor();
+      if (scale > 1.f) {
+         px *= scale;
+         py *= scale;
+      }
+
       return gGLManager->GetPlotInfo(fGLPainter.get(), px, py);
+   }
 }
 
 //______________________________________________________________________________
@@ -724,7 +740,18 @@ void TGLHistPainter::PadToViewport(Bool_t /*selectionPass*/)
    vp.Height() = Int_t(gPad->GetAbsHNDC() * gPad->GetWh());
    
    vp.X() = Int_t(gPad->XtoAbsPixel(gPad->GetX1()));
-   vp.Y() = gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1());
+   vp.Y() = Int_t((gPad->GetWh() - gPad->YtoAbsPixel(gPad->GetY1())));
+   
+   TGLUtil::InitializeIfNeeded();
+   const Float_t scale = TGLUtil::GetScreenScalingFactor();
+
+   if (scale > 1.f) {
+      vp.X() = Int_t(vp.X() * scale);
+      vp.Y() = Int_t(vp.Y() * scale);
+      
+      vp.Width() = Int_t(vp.Width() * scale);
+      vp.Height() = Int_t(vp.Height() * scale);
+   }
    
    fCamera.SetViewport(vp);
    if (fCamera.ViewportChanged() && fGLPainter.get())
