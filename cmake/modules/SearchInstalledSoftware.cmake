@@ -636,7 +636,6 @@ if(cling)
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMipo.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMVectorize.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMBitWriter.a
-                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMBitReader.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMTableGen.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86Disassembler.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMX86AsmParser.a
@@ -664,6 +663,7 @@ if(cling)
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMTarget.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMMC.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMObject.a
+                       ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMBitReader.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMCore.a
                        ${CMAKE_BINARY_DIR}/LLVM-install/lib/libLLVMSupport.a )
     file(READ ${LLVM_SOURCE_DIR}/configure _filestr)
