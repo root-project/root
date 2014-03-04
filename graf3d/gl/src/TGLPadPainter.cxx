@@ -912,8 +912,6 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       return;
    }
    
-   bool ignoreAlpha = true;
-   
    if (std::numeric_limits<UInt_t>::digits >= 32) {
       //TASImage uses bit 31 as ...
       //alpha channel flag! FUUUUUUUUUUUUU .....   !!!
