@@ -939,7 +939,7 @@ void TGLPadPainter::DrawPixels(const unsigned char *pixelData, UInt_t width, UIn
       const Double_t rasterX = Double_t(dstX) / (pad->GetAbsWNDC() * pad->GetWw()) *
                                 (pad->GetX2() - pad->GetX1()) + pad->GetX1();
       const Double_t yRange = pad->GetY2() - pad->GetY1();
-      const Double_t rasterY = yRange - Double_t(dstY + height) / (pad->GetAbsHNDC() * pad->GetWh()) * yRange) +
+      const Double_t rasterY = yRange - Double_t(dstY + height) / (pad->GetAbsHNDC() * pad->GetWh()) * yRange +
                                pad->GetY1();
 
       GLdouble oldPos[4] = {};
