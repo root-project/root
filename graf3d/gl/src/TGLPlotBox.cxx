@@ -251,8 +251,6 @@ Int_t TGLPlotBox::FindFrontPoint()const
                                { fRangeXU / 2., -fRangeYU / 2.},
                                { fRangeXU / 2.,  fRangeYU / 2.},
                                {-fRangeXU / 2.,  fRangeYU / 2.}};
-   //const Double_t uBox[][2] = {{-1., -1.}, {1., -1.}, {1., 1.}, {-1., 1.}};
-
 
    for (Int_t i = 0; i < 4; ++i) {
       gluProject(f3DBox[i].X(), f3DBox[i].Y(), zMin, mvMatrix, prMatrix, viewport,
@@ -264,6 +262,18 @@ Int_t TGLPlotBox::FindFrontPoint()const
                  &f2DBoxU[i].X(), &f2DBoxU[i].Y(), &f2DBoxU[i].Z());
       gluProject(uBox[i][0], uBox[i][1], 0.5, mvMatrix, prMatrix, viewport,
                  &f2DBoxU[i + 4].X(), &f2DBoxU[i + 4].Y(), &f2DBoxU[i + 4].Z());
+   }
+   
+   //2D bbox must be in a canvas space, this can be affected by scaling
+   //on retina displays.
+   TGLUtil::InitializeIfNeeded();
+   const Float_t scale = TGLUtil::GetScreenScalingFactor();
+   if (scale) {
+      for (Int_t i = 0; i < 8; ++i) {
+         //downscale:
+         f2DBoxU[i].X() /= scale;
+         f2DBoxU[i].Y() /= scale;
+      }
    }
 
    //return fFrontPoint = std::min_element(f2DBox, f2DBox + 4, Compare) - f2DBox;
@@ -293,8 +303,6 @@ const TGLVertex3 *TGLPlotBox::Get3DBox()const
 const TGLVertex3 *TGLPlotBox::Get2DBox()const
 {
    // Get 2D box.
-
-//   return f2DBox;
    return f2DBoxU;
 }
 

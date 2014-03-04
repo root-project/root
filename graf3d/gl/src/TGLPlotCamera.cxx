@@ -11,6 +11,7 @@
 #include "TGLPlotCamera.h"
 #include "TGLIncludes.h"
 #include "TVirtualGL.h"
+#include "TGLUtil.h"
 
 //______________________________________________________________________________
 //
@@ -88,6 +89,7 @@ void TGLPlotCamera::Pan(Int_t px, Int_t py)
 {
    //Pan camera.
    py = fViewport.Height() - py;
+
    //Extract gl matrices.
    Double_t mv[16] = {0.};
    glGetDoublev(GL_MODELVIEW_MATRIX, mv);
@@ -99,6 +101,7 @@ void TGLPlotCamera::Pan(Int_t px, Int_t py)
    gluUnProject(fMousePos.fX, fMousePos.fY, 1., mv, pr, vp, &start.X(), &start.Y(), &start.Z());
    gluUnProject(px, py, 1., mv, pr, vp, &end.X(), &end.Y(), &end.Z());
    fTruck += (start - end) /= 2.;
+   //
    fMousePos.fX = px;
    fMousePos.fY = py;
 }
