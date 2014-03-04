@@ -21,8 +21,11 @@
 namespace textinput {
   TerminalDisplayWin::TerminalDisplayWin():
     TerminalDisplay(false), fStartLine(0), fIsAttached(false) {
+    CONSOLE_SCREEN_BUFFER_INFO csbiInfo;
     fOut = ::GetStdHandle(STD_OUTPUT_HANDLE);
     bool isConsole = ::GetConsoleMode(fOut, &fOldMode) != 0;
+    ::GetConsoleScreenBufferInfo(fOut, &csbiInfo);
+    fAttributes = csbiInfo.wAttributes;
     SetIsTTY(isConsole);
     if (isConsole) {
       // Prevent redirection from stealing our console handle,
@@ -64,7 +67,12 @@ namespace textinput {
     if (C.fR > 64) Attribs |= FOREGROUND_RED;
     if (C.fG > 64) Attribs |= FOREGROUND_GREEN;
     if (C.fB > 64) Attribs |= FOREGROUND_BLUE;
-    ::SetConsoleTextAttribute(fOut, Attribs);
+    // if CIdx is 0 (default) then use the original console text color
+    // (instead of the greyish one)
+    if (CIdx == 0)
+      ::SetConsoleTextAttribute(fOut, fAttributes);
+    else
+      ::SetConsoleTextAttribute(fOut, Attribs);
   }
 
   void
@@ -172,6 +180,7 @@ namespace textinput {
       if (!::GetConsoleScreenBufferInfo(fOut, &Info)) {
         ShowError("attaching / getting console info");
       } else {
+        fAttributes = Info.wAttributes;
         fStartLine = Info.dwCursorPosition.Y;
         if (Info.dwCursorPosition.X) {
           // Whooa - where are we?! Newline and cross fingers:
@@ -190,6 +199,7 @@ namespace textinput {
       ShowError("detaching to console output");
     }
     TerminalDisplay::Detach();
+    SetConsoleTextAttribute(fOut, fAttributes);
     fIsAttached = false;
   }
 
