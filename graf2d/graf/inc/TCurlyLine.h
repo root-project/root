@@ -39,10 +39,6 @@ protected:
    static Bool_t   fgDefaultIsCurly;      //default curly type
 
 public:
-   // TCurlyLine status bits
-   enum {
-      kTooShort = BIT(11)
-   };
    TCurlyLine();
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
               Double_t wl = .02,
