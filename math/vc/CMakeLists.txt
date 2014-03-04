@@ -32,6 +32,12 @@ add_target_property(Vc COMPILE_FLAGS ${libvc_compile_flags})
 
 set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS Vc)
 
+if(Vc_COMPILER_IS_INTEL)
+   # per default icc is not IEEE compliant, but we need that for verification
+   set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fp-model source")
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fp-model source")
+endif()
+
 install(TARGETS Vc RUNTIME DESTINATION bin
                    LIBRARY DESTINATION lib
                    ARCHIVE DESTINATION lib
