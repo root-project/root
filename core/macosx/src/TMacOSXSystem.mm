@@ -112,10 +112,7 @@ public:
 
    void InitializeCocoa();
 
-   void AddFileHandler(TFileHandler *fh);
-   void RemoveFileHandler(TFileHandler *fh);
-
-   bool SetFileDescriptors();
+   bool SetFileDescriptors(const TSeqCollection *fileHandlers);
    void UnregisterFileDescriptor(CFFileDescriptorRef fd);
    void CloseFileDescriptors();
 
@@ -125,15 +122,7 @@ public:
    };
 
    //Before I had C++11 and auto, now I have ugly typedefs.
-   typedef std::map<int, unsigned> fd_map_type;
-   typedef fd_map_type::iterator fd_map_iterator;
-   typedef fd_map_type::const_iterator const_fd_map_iterator;
-   
-   fd_map_type fReadFds;
-   fd_map_type fWriteFds;
-   
-   static void RemoveFileDescriptor(fd_map_type &fdTable, int fd);
-   void SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType);
+   void SetFileDescriptor(int fd, DescriptorType fdType);
 
    std::set<CFFileDescriptorRef> fCFFileDescriptors;
 
@@ -212,50 +201,29 @@ void MacOSXSystem::InitializeCocoa()
 }
 
 //______________________________________________________________________________
-void MacOSXSystem::AddFileHandler(TFileHandler *fh)
-{
-   //Can throw std::bad_alloc. I'm not allocating any resources here.
-   assert(fh != 0 && "AddFileHandler, fh parameter is null");
-   
-   if (fh->HasReadInterest())
-      fReadFds[fh->GetFd()]++;
-   
-   //Can we have "duplex" fds?
-
-   if (fh->HasWriteInterest())
-      fWriteFds[fh->GetFd()]++;
-}
-
-//______________________________________________________________________________
-void MacOSXSystem::RemoveFileHandler(TFileHandler *fh)
-{
-   //Can not throw.
-
-   //ROOT has obvious bugs somewhere: the same fd can be removed MORE times,
-   //than it was added.
-
-   assert(fh != 0 && "RemoveFileHandler, fh parameter is null");
-
-   if (fh->HasReadInterest())
-      RemoveFileDescriptor(fReadFds, fh->GetFd());
-   
-   if (fh->HasWriteInterest())
-      RemoveFileDescriptor(fWriteFds, fh->GetFd());
-}
-
-//______________________________________________________________________________
-bool MacOSXSystem::SetFileDescriptors()
+bool MacOSXSystem::SetFileDescriptors(const TSeqCollection *fileHandlers)
 {
    //Allocates some resources and can throw.
    //So, make sure resources are freed correctly
    //in case of exception (std::bad_alloc) and
    //return false. Return true if everything is ok.
 
+   assert(fileHandlers != 0 && "SetFileDescriptors, parameter 'fileHandlers' is null");
+
    try {
-      if (fReadFds.size())
-         SetFileDescriptors(fReadFds, kDTRead);
-      if (fWriteFds.size())
-         SetFileDescriptors(fWriteFds, kDTWrite);
+      //This iteration is really stupid: add a null pointer into the middle of collection
+      //and it will stop in the middle! AddFileHandler has a check for this.
+
+      TIter next(fileHandlers);
+      while (TFileHandler * const handler = static_cast<TFileHandler *>(next())) {
+         assert(handler->GetFd() != -1 && "SetFileDescriptors, invalid file descriptor");
+         
+         if (handler->HasReadInterest())
+            SetFileDescriptor(handler->GetFd(), kDTRead);
+         
+         if (handler->HasWriteInterest())
+            SetFileDescriptor(handler->GetFd(), kDTWrite);
+      }
    } catch (const std::exception &) {
       CloseFileDescriptors();
       return false;
@@ -290,49 +258,31 @@ void MacOSXSystem::CloseFileDescriptors()
 }
 
 //______________________________________________________________________________
-void MacOSXSystem::RemoveFileDescriptor(fd_map_type &fdTable, int fd)
-{
-   fd_map_iterator fdIter = fdTable.find(fd);
-
-   if (fdIter != fdTable   .end()) {
-      assert(fdIter->second != 0 && "RemoveFD, 'dead' descriptor in a table");
-      if (!(fdIter->second - 1))
-         fdTable.erase(fdIter);
-      else
-         --fdIter->second;
-   } else {
-      //I had to comment warning, many thanks to ROOT for this bizarre thing.
-      //::Warning("RemoveFileDescriptor", "Descriptor %d was not found in a table", fd);
-   }
-}
-
-//______________________________________________________________________________
-void MacOSXSystem::SetFileDescriptors(const fd_map_type &fdTable, DescriptorType fdType)
+void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
 {
    //While CoreFoundation is not Cocoa, it still should not be used if we are not initializing Cocoa.
    assert(fCocoaInitialized == true && "SetFileDescriptors, Cocoa was not initialized");
+   //-1 can come from TSysEvtHandler's ctor.
+   assert(fd != -1 && "SetFileDescriptor, invalid file descriptor");
 
-   for (const_fd_map_iterator fdIter = fdTable.begin(), end = fdTable.end(); fdIter != end; ++fdIter) {
-      const bool read = fdType == kDTRead;
-      CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fdIter->first, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
+   const bool read = fdType == kDTRead;
+   CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
 
-      if (!fdref)
-         throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreate failed");
+   if (!fdref)
+      throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreate failed");
 
-      CFFileDescriptorEnableCallBacks(fdref, read ? kCFFileDescriptorReadCallBack : kCFFileDescriptorWriteCallBack);
-   
-      CFRunLoopSourceRef runLoopSource = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
+   CFFileDescriptorEnableCallBacks(fdref, read ? kCFFileDescriptorReadCallBack : kCFFileDescriptorWriteCallBack);
+   CFRunLoopSourceRef runLoopSource = CFFileDescriptorCreateRunLoopSource(kCFAllocatorDefault, fdref, 0);
       
-      if (!runLoopSource) {
-         CFRelease(fdref);
-         throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreateRunLoopSource failed");
-      }
-
-      CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, kCFRunLoopDefaultMode);
-      CFRelease(runLoopSource);
-
-      fCFFileDescriptors.insert(fdref);
+   if (!runLoopSource) {
+      CFRelease(fdref);
+      throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreateRunLoopSource failed");
    }
+
+   CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, kCFRunLoopDefaultMode);
+   CFRelease(runLoopSource);
+
+   fCFFileDescriptors.insert(fdref);
 }
 
 }//Detail
@@ -491,7 +441,7 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    
    assert(fCocoaInitialized == true && "WaitEvents, called while Cocoa was not initialized");
 
-   if (!fPimpl->SetFileDescriptors()) {
+   if (fFileHandler && !fPimpl->SetFileDescriptors(fFileHandler)) {
       //I consider this error as fatal.
       Fatal("WaitForAllEvents", "SetFileDesciptors failed");
    }
@@ -530,15 +480,21 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
 //______________________________________________________________________________
 void TMacOSXSystem::AddFileHandler(TFileHandler *fh)
 {
-   fPimpl->AddFileHandler(fh);
-   TUnixSystem::AddFileHandler(fh);
+   if (fh) {
+      if (fh->GetFd() == -1)//I do not need this crap!
+         Error("AddFileHandler", "invalid file descriptor");
+      else
+         TUnixSystem::AddFileHandler(fh);
+   }
 }
 
 //______________________________________________________________________________
 TFileHandler *TMacOSXSystem::RemoveFileHandler(TFileHandler *fh)
 {
-   fPimpl->RemoveFileHandler(fh);
-   return TUnixSystem::RemoveFileHandler(fh);
+   if (fh)
+      return TUnixSystem::RemoveFileHandler(fh);
+
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -552,17 +508,15 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    NSEvent *event = (NSEvent *)e;
    assert(event != nil && "ProcessApplicationDefinedEvent, event parameter is nil");
    assert(event.type == NSApplicationDefined && "ProcessApplicationDefinedEvent, event parameter has wrong type");
-   
-   Private::MacOSXSystem::fd_map_iterator fdIter = fPimpl->fReadFds.find(event.data1);
-   bool descriptorFound = false;
 
-   if (fdIter != fPimpl->fReadFds.end()) {
+   bool descriptorFound = false;
+   
+   if (fReadmask->IsSet(event.data1)) {
       fReadready->Set(event.data1);
       descriptorFound = true;
    }
-   
-   fdIter = fPimpl->fWriteFds.find(event.data1);
-   if (fdIter != fPimpl->fWriteFds.end()) {
+
+   if (fWritemask->IsSet(event.data1)) {
       fWriteready->Set(event.data1);
       descriptorFound = true;
    }
