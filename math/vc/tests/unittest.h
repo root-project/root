@@ -23,7 +23,7 @@
 #ifdef VC_ASSERT
 #error "include unittest.h before any Vc header"
 #endif
-static void unittest_assert(bool cond, const char *code, const char *file, int line);
+inline void unittest_assert(bool cond, const char *code, const char *file, int line);
 #define VC_ASSERT(cond) unittest_assert(cond, #cond, __FILE__, __LINE__);
 
 #include <Vc/Vc>
@@ -63,7 +63,7 @@ template<typename T> struct isEqualType<T, T>
     operator bool() const { return true; }
 };
 
-static inline void printPass()
+inline void printPass()
 {
     std::cout << AnsiColor::green << " PASS: " << AnsiColor::normal;
 }
@@ -148,7 +148,7 @@ void EXPECT_FAILURE()
     _unit_test_global.expect_failure = true;
 }
 
-static const char *_unittest_fail()
+inline const char *_unittest_fail()
 {
     if (_unit_test_global.expect_failure) {
         return "XFAIL: ";
@@ -185,7 +185,7 @@ void initTest(int argc, char **argv)
     }
 }
 
-template<typename T> static inline void setFuzzyness( T );
+template<typename T> inline void setFuzzyness( T );
 template<> inline void setFuzzyness<float>( float fuzz ) { _unit_test_global.float_fuzzyness = fuzz; }
 template<> inline void setFuzzyness<double>( double fuzz ) { _unit_test_global.double_fuzzyness = fuzz; }
 
@@ -236,7 +236,7 @@ void _UnitTest_Global_Object::runTestInt(testFunction fun, const char *name)
     }
 }
 
-template<typename T1, typename T2> static inline bool unittest_compareHelper( const T1 &a, const T2 &b ) { return a == b; }
+template<typename T1, typename T2> inline bool unittest_compareHelper( const T1 &a, const T2 &b ) { return a == b; }
 template<> inline bool unittest_compareHelper<Vc::int_v, Vc::int_v>( const Vc::int_v &a, const Vc::int_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::uint_v, Vc::uint_v>( const Vc::uint_v &a, const Vc::uint_v &b ) { return (a == b).isFull(); }
 template<> inline bool unittest_compareHelper<Vc::float_v, Vc::float_v>( const Vc::float_v &a, const Vc::float_v &b ) { return (a == b).isFull(); }
@@ -264,7 +264,7 @@ template<typename T> Vc::Vector<T> ulpDiffToReferenceWrapper(VC_ALIGNED_PARAMETE
     }
     return diff;
 }
-template<typename T> static inline bool unittest_fuzzyCompareHelper( const T &a, const T &b ) { return a == b; }
+template<typename T> inline bool unittest_fuzzyCompareHelper( const T &a, const T &b ) { return a == b; }
 template<> inline bool unittest_fuzzyCompareHelper<float>( const float &a, const float &b ) {
     return ulpDiffToReferenceWrapper(a, b) <= _unit_test_global.float_fuzzyness;
 }
@@ -526,7 +526,7 @@ class ADD_PASS
         template<typename T> ADD_PASS &operator<<(const T &x) { std::cout << x; return *this; }
 };
 
-static void unittest_assert(bool cond, const char *code, const char *file, int line)
+inline void unittest_assert(bool cond, const char *code, const char *file, int line)
 {
     if (!cond) {
         if (_unit_test_global.expect_assert_failure) {
@@ -555,7 +555,7 @@ static void unittest_assert(bool cond, const char *code, const char *file, int l
     } \
     _unit_test_global.expect_assert_failure = false
 
-template<typename Vec> static typename Vec::Mask allMasks(int i)
+template<typename Vec> inline typename Vec::Mask allMasks(int i)
 {
     typedef typename Vec::IndexType I;
     typedef typename Vec::Mask M;
