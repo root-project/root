@@ -204,7 +204,11 @@ void TGLPlotPainter::Paint()
       if (scale < 1.f)//Just ignore this.
          scale = 1.f;
       
-      const Int_t viewport[] = {fCamera->GetX() / scale, fCamera->GetY() / scale, fCamera->GetWidth() / scale, fCamera->GetHeight() / scale};
+      const Int_t viewport[] = {Int_t(fCamera->GetX() / scale),
+                                Int_t(fCamera->GetY() / scale),
+                                Int_t(fCamera->GetWidth() / scale),
+                                Int_t(fCamera->GetHeight() / scale)};
+
       Rgl::DrawAxes(fBackBox.GetFrontPoint(), viewport, fBackBox.Get2DBox(), fCoord, fXAxis, fYAxis, fZAxis);
       if (fDrawPalette)
          DrawPaletteAxis();
