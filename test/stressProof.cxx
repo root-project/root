@@ -1287,14 +1287,14 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          printf("******************************************************************\n");
          printf("Content of the main log file: %s\n", glogfile.Data());
          printf("******************************************************************\n");
-         ifstream glogfile_is( glogfile.Data() );
+         std::ifstream glogfile_is( glogfile.Data() );
          if (!glogfile_is) {
             printf("Cannot open %s", glogfile.Data());
          }
          else {
             while ( glogfile_is.good() ) {
                glogfile_is.getline(readbuf, readbuf_size);
-               cout << readbuf << endl;
+               std::cout << readbuf << std::endl;
             }
             glogfile_is.close();
          }
@@ -1302,14 +1302,14 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          printf("******************************************************************\n");
          printf("Content of the PROOF servers log files: %s\n", logfiles.Data());
          printf("******************************************************************\n");
-         ifstream logfiles_is( logfiles.Data() );
+         std::ifstream logfiles_is( logfiles.Data() );
          if (!logfiles_is) {
             printf("Cannot open %s", logfiles.Data());
          }
          else {
             while ( logfiles_is.good() ) {
                logfiles_is.getline(readbuf, readbuf_size);
-               cout << readbuf << endl;
+               std::cout << readbuf << std::endl;
             }
             logfiles_is.close();
          }

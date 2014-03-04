@@ -108,11 +108,6 @@ void TCurlyLine::Build()
       py2           = fY2;
       lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
    }
-   if(lengthPix <= wavelengthPix){
-      Warning("Build","CurlyLine is too short, length %g is < wavelength: %g ",lengthPix,wavelengthPix);
-      SetBit(kTooShort);
-      return;
-   }
    // construct the curly / wavy line in pixel coordinates at angle 0
    Double_t anglestep = 40;
    Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
