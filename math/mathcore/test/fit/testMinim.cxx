@@ -20,6 +20,7 @@
 #include "TMath.h"
 
 #include "RVersion.h"
+#include "RConfigure.h"
 
 //#define DEBUG
 
@@ -634,12 +635,13 @@ int testRosenBrock() {
    double xRB[2] = { -1.,1.2};
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit","");
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","");
+#ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugatePR");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","BFGS2");
    //iret |= testNewMinimizer(fRB,xRB,s0,"Genetic","");
-
+#endif
 
    return iret; 
 }
@@ -667,10 +669,11 @@ int testTrigoFletcher() {
 
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit2","");
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"Minuit","");
+#ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","ConjugatePR");
    iret |= testNewMinimizer(fTrigo,xTrigo,sTrigo,"GSLMultiMin","BFGS");
-
+#endif
 
    return iret; 
 }
