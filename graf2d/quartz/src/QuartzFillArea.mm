@@ -19,6 +19,7 @@
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "RStipples.h"
+#include "Rtypes.h"
 #include "TError.h"
 #include "TROOT.h"
 
@@ -49,7 +50,10 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
 {
    assert(ctx != 0 && "SetFillColor, ctx parameter is null");
 
-   const TColor * const color = gROOT->GetColor(colorIndex);
+   const TColor *color = gROOT->GetColor(colorIndex);
+   if (!color)
+      color = gROOT->GetColor(kWhite);
+
    if (!color)
       return kFALSE;
 
