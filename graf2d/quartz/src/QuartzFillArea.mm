@@ -19,10 +19,11 @@
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "RStipples.h"
-#include "Rtypes.h"
 #include "TError.h"
 #include "TROOT.h"
 
+//TODO: either use Color_t or use gVirtualX->GetLine/Fill/Color -
+//not both, it's a complete mess now!
 
 namespace ROOT {
 namespace Quartz {
@@ -51,9 +52,11 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
    assert(ctx != 0 && "SetFillColor, ctx parameter is null");
 
    const TColor *color = gROOT->GetColor(colorIndex);
+   
+   //TGX11 selected color 0 (which is white).
    if (!color)
       color = gROOT->GetColor(kWhite);
-
+   //???
    if (!color)
       return kFALSE;
 
@@ -96,6 +99,9 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
    assert(patternIndex != 0 && "SetFillPattern, patternIndex parameter is null");
 
    const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
+   if (!fillColor)
+      fillColor = gROOT->GetColor(kWhite);
+   
    if (!fillColor)
       return false;
 

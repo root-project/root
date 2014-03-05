@@ -144,12 +144,15 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
+   if (const TColorGradient * const extendedColor = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
       Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, kTRUE);//kTRUE == draw a shadow.
    } else {
       const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
+      
+      //Note! Pattern index (and its address) MUST live
+      //long enough to be valid at the point of Quartz::DrawBox call!
       unsigned patternIndex = 0;
       if (isHollow) {
          if (!Quartz::SetLineColor(ctx, GetLineColor())) {
