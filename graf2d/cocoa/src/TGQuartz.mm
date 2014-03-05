@@ -140,7 +140,10 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
+   const TColor *fillColor = gROOT->GetColor(GetFillColor());
+   if (!fillColor)
+      fillColor = gROOT->GetColor(0);
+
    if (!fillColor) {
       Error("DrawBox", "Fill color for index %d not found", GetFillColor());
       return;
