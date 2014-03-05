@@ -18,7 +18,6 @@
 #include "RStipples.h"
 #include "TObjArray.h"
 #include "TString.h"
-#include "Rtypes.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TROOT.h"
