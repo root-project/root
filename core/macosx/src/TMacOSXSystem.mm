@@ -405,9 +405,6 @@ bool TMacOSXSystem::CocoaInitialized() const
 //______________________________________________________________________________
 void TMacOSXSystem::InitializeCocoa()
 {
-   if (!fCocoaInitialized && !gROOT->IsBatch())
-      InitializeCocoa();
-
    if (fCocoaInitialized)
       return;
    
