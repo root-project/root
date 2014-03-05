@@ -21,6 +21,7 @@
 #include "CocoaUtils.h"
 #include "TVirtualX.h"
 #include "TError.h"
+#include "TROOT.h"
 
 //The special class to perform a selector to stop a -run: method.
 @interface RunStopper : NSObject
@@ -296,9 +297,9 @@ ClassImp(TMacOSXSystem)
 //______________________________________________________________________________
 TMacOSXSystem::TMacOSXSystem()
                   : fPimpl(new Private::MacOSXSystem),
-                    fCocoaInitialized(false)
+                    fCocoaInitialized(false),
+                    fFirstDispatch(true)
 {
-   InitializeCocoa();
 }
 
 //______________________________________________________________________________
@@ -311,6 +312,13 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
    //I'm not even sure, I need all this code :)
+
+   if (fFirstDispatch) {
+      if (!fCocoaInitialized && !gROOT->IsBatch())
+         InitializeCocoa();
+
+      fFirstDispatch = false;
+   }
    
    if (!fCocoaInitialized)//We are in a batch mode (or 'batch').
       return TUnixSystem::DispatchOneEvent(pendingOnly);
@@ -397,6 +405,9 @@ bool TMacOSXSystem::CocoaInitialized() const
 //______________________________________________________________________________
 void TMacOSXSystem::InitializeCocoa()
 {
+   if (!fCocoaInitialized && !gROOT->IsBatch())
+      InitializeCocoa();
+
    if (fCocoaInitialized)
       return;
    
