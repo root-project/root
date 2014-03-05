@@ -2525,17 +2525,17 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-	    R__LOCKGUARD(gInterpreterMutex);
-	    if ((inh->Property() & kIsVirtualBase) != 0)
-	       return -2;
+            R__LOCKGUARD(gInterpreterMutex);
+            if ((inh->Property() & kIsVirtualBase) != 0)
+               return -2;
             return inh->GetDelta();
          }
          off = c->GetBaseClassOffsetRecurse(cl);
          if (off == -2) return -2;
          if (off != -1) {
-	    R__LOCKGUARD(gInterpreterMutex);
-	    return off + inh->GetDelta();
-	 }
+            R__LOCKGUARD(gInterpreterMutex);
+            return off + inh->GetDelta();
+         }
       }
       lnk = lnk->Next();
    }
