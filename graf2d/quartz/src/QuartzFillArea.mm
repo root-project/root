@@ -49,7 +49,12 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
 {
    assert(ctx != 0 && "SetFillColor, ctx parameter is null");
 
-   const TColor * const color = gROOT->GetColor(colorIndex);
+   const TColor *color = gROOT->GetColor(colorIndex);
+   
+   //TGX11 selected color 0 (which is white).
+   if (!color)
+      color = gROOT->GetColor(kWhite);
+   //???
    if (!color)
       return kFALSE;
 

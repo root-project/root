@@ -140,17 +140,11 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseAA);
 
-   const TColor * const fillColor = gROOT->GetColor(GetFillColor());
-   if (!fillColor) {
-      Error("DrawBox", "Fill color for index %d not found", GetFillColor());
-      return;
-   }
-
    //Go to low-left-corner system.
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
+   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
       Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, kTRUE);//kTRUE == draw a shadow.
