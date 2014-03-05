@@ -1,0 +1,31 @@
+<!--
+From CMS
+  <class name="reco::SuperCluster" ClassVersion="11">
+   //[..]
+    <field name="rawEnergy_" iotype="Double32_t"/>
+    <field name="phiWidth_" iotype="Double32_t"/>
+    <field name="etaWidth_" iotype="Double32_t"/>
+  </class>
+  
+or
+
+  <class name="reco::Particle" ClassVersion="11">
+   <field name="vertex_" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+   //[..]
+  </class>
+  
+-->
+
+<lcgdict>
+   <class name="Container" />
+   <class name="SuperCluster">
+      <field name="energy" iotype="Double32_t" />      
+   </class>
+<!--   <class name="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+   <class name="ROOT::Math::Cartesian3D<Double32_t>"/>  -->
+   <class name="Particle">
+      <field name="vertex" iotype="ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<Double32_t>,ROOT::Math::DefaultCoordinateSystemTag>" />
+   </class>
+</lcgdict>
+
+      
