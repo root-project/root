@@ -63,7 +63,11 @@ private:
    const clang::ValueDecl *fSingleDecl; // The single member
 
    llvm::SmallVector<clang::DeclContext *, 2>   fContexts; // Set of DeclContext that we will iterate over.
-   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.
+
+   unsigned int                                 fContextIdx; // Index in fContexts of DeclContext we are iterating over.   
+   mutable std::string fIoType;
+   mutable std::string fIoName;
+   inline void CheckForIoTypeAndName () const;
 
 public:
    

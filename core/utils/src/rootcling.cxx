@@ -331,7 +331,8 @@ bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
 
 //______________________________________________________________________________
 void AnnotateFieldDecl(clang::FieldDecl& decl,
-                       const std::list<VariableSelectionRule>& fieldSelRules)
+                       const std::list<VariableSelectionRule>& fieldSelRules,
+                       bool isGenreflex)
 {
 
    // See if in the VariableSelectionRules there are attributes and names with
@@ -356,8 +357,24 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
          std::string userDefinedProperty;
          for(iter = attrMap.begin();iter!=attrMap.end();iter++){
             const std::string& name = iter->first;
-            if (name == "name") continue;
             const std::string& value = iter->second;
+            
+            if (name == "name") continue;
+            
+            /* This test is here since in ROOT5, when using genreflex, 
+             * for pods, iotype is ignored */
+            
+            if (name == "iotype" &&
+                decl.getType().isPODType(decl.getASTContext()) ){
+               if (genreflex::verbose)
+                  std::cout << "Backward compatibility notice: Not assigning new iotype \"" 
+                  << value << "\" to \"" << decl.getNameAsString() 
+                  << "\" as this is a pod and genreflex is being used to generate the dictionary.\n";
+               continue;      
+                }
+            
+            
+
             if ( (name == "transient" && value == "true") or
                  (name == "persistent" && value == "false")) // special case
                userDefinedProperty="comment"+ROOT::TMetaUtils::PropertyNameValSeparator+"!";
@@ -373,7 +390,8 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
 //______________________________________________________________________________
 void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
                   SelectionRules& selectionRules,
-                  cling::Interpreter& interpreter)
+                  cling::Interpreter& interpreter,
+                  bool isGenreflex)
 {
 
    // In order to store the meaningful for the IO comments we have to transform
@@ -463,7 +481,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
             // This check is here to avoid asserts in debug mode (LLVMDEV env variable set)
             if (FieldDecl* fieldDecl  = dyn_cast<FieldDecl>(*I)){
-               AnnotateFieldDecl(*fieldDecl,fieldSelRules);
+               AnnotateFieldDecl(*fieldDecl,fieldSelRules,isGenreflex);
             }
          } // End presence of XML selection file
       }
@@ -2875,7 +2893,7 @@ int GenerateFullDict(std::ostream& dictStream,
             // Very important: here we decide if we want to attach attributes to the decl.
             if (clang::CXXRecordDecl* CXXRD =
                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-               AnnotateDecl(*CXXRD,selectionRules,interp);
+               AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
                }
 
                const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
@@ -2965,7 +2983,7 @@ int GenerateFullDict(std::ostream& dictStream,
          // Very important: here we decide if we want to attach attributes to the decl.
          if (clang::CXXRecordDecl* CXXRD =
             llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-            AnnotateDecl(*CXXRD,selectionRules,interp);
+            AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
             }
       }
    }

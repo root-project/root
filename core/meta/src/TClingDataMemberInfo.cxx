@@ -47,7 +47,7 @@ using namespace clang;
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            TClingClassInfo *ci)
-: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0), fContextIdx(0U)
+: fInterp(interp), fClassInfo(0), fFirstTime(true), fTitle(""), fSingleDecl(0), fContextIdx(0U), fIoType(""), fIoName("")
 {
    if (!ci) {
       // We are meant to iterate over the global namespace (well at least CINT did).
@@ -71,14 +71,16 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
       // Move to first data member.
       InternalNext();
       fFirstTime = true;
-   }
+   }      
+
 }
 
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp, 
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
 : fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp)), fFirstTime(true),
-    fTitle(""), fSingleDecl(ValD), fContextIdx(0U) {
+    fTitle(""), fSingleDecl(ValD), fContextIdx(0U), fIoType(""), fIoName(""){
+
    using namespace llvm;
    assert((ci || isa<TranslationUnitDecl>(ValD->getDeclContext()) ||
           (ValD->getDeclContext()->isTransparentContext() && isa<TranslationUnitDecl>(ValD->getDeclContext()->getParent()) ) ||
@@ -86,7 +88,26 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
            isa<EnumConstantDecl>(ValD)) &&
-          "The decl should be either VarDecl or FieldDecl or EnumConstDecl");
+          "The decl should be either VarDecl or FieldDecl or EnumConstDecl");  
+   
+}
+
+void TClingDataMemberInfo::CheckForIoTypeAndName() const 
+{  
+   // Three cases:
+   // 1) 00: none to be checked
+   // 2) 01: type to be checked
+   // 3) 10: none to be checked
+   // 4) 11: both to be checked
+   unsigned int code = fIoType.empty() + (int(fIoName.empty()) << 1);
+   
+   if (code == 0) return;
+   
+   const Decl* decl = GetDecl();
+   
+   if (code == 3 || code == 2) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",fIoName);   
+   if (code == 3 || code == 1) ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"iotype",fIoType);
+   
 }
 
 TDictionary::DeclId_t TClingDataMemberInfo::GetDeclId() const
@@ -445,6 +466,7 @@ int TClingDataMemberInfo::TypeSize() const
    if (!IsValid()) {
       return -1;
    }
+      
    // Sanity check the current data member.
    clang::Decl::Kind dk = GetDecl()->getKind();
    if ((dk != clang::Decl::Field) && (dk != clang::Decl::Var) &&
@@ -468,6 +490,10 @@ const char *TClingDataMemberInfo::TypeName() const
    if (!IsValid()) {
       return 0;
    }
+   
+   CheckForIoTypeAndName();
+   if (!fIoType.empty()) return fIoType.c_str();
+   
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
@@ -494,6 +520,10 @@ const char *TClingDataMemberInfo::TypeTrueName(const ROOT::TMetaUtils::TNormaliz
    if (!IsValid()) {
       return 0;
    }
+
+   CheckForIoTypeAndName();
+   if (!fIoType.empty()) return fIoType.c_str();      
+      
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
@@ -522,9 +552,14 @@ const char *TClingDataMemberInfo::Name() const
    if (!IsValid()) {
       return 0;
    }
+
+   CheckForIoTypeAndName();
+   if (!fIoName.empty()) return fIoName.c_str();
+   
    // Note: This must be static because we return a pointer inside it!
    static std::string buf;
    buf.clear();
+
    if (const clang::NamedDecl *nd = llvm::dyn_cast<clang::NamedDecl>(GetDecl())) {
       clang::PrintingPolicy policy(GetDecl()->getASTContext().getPrintingPolicy());
       llvm::raw_string_ostream stream(buf);
@@ -544,11 +579,22 @@ const char *TClingDataMemberInfo::Title()
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
    //if (fTitle.size())
    //   return fTitle.c_str();
-   
+
+   bool titleFound=false;
    // Try to get the comment either from the annotation or the header file if present
-   if (AnnotateAttr *A = GetDecl()->getAttr<AnnotateAttr>())
-      fTitle = A->getAnnotation().str();
-   else if (!GetDecl()->isFromASTFile()) {
+   std::string attribute_s;
+   const Decl* decl = GetDecl();
+   for (Decl::attr_iterator attrIt = decl->attr_begin();
+        attrIt!=decl->attr_end() && !titleFound ;++attrIt){
+      ROOT::TMetaUtils::extractAttrString(*attrIt, attribute_s);
+      if (!attribute_s.empty() &&
+          attribute_s.find(ROOT::TMetaUtils::PropertyNameValSeparator) == std::string::npos){
+         fTitle = attribute_s;
+         titleFound=true;
+      }        
+   }
+
+   if (!titleFound && !GetDecl()->isFromASTFile()) {
       // Try to get the comment from the header file if present
       // but not for decls from AST file, where rootcling would have
       // created an annotation
