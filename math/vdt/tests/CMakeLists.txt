@@ -20,6 +20,7 @@ if( ModernClang)
    set(additional_compile_flags "-O3 --fast-math ${alwaysInlineClang}")
 endif()
 
-ROOT_EXECUTABLE(${testname} ${testname}.cxx LIBRARIES ${Libraries} ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags} )
- 
-ROOT_ADD_TEST(${testname} COMMAND ${testname} FAILREGEX "too") # for "too slow" and "too inaccurate" :)
+if(NOT WIN32)
+  ROOT_EXECUTABLE(${testname} ${testname}.cxx LIBRARIES ${Libraries} ADDITIONAL_COMPILE_FLAGS ${additional_compile_flags} )
+  ROOT_ADD_TEST(${testname} COMMAND ${testname} FAILREGEX "too") # for "too slow" and "too inaccurate" :)
+endif()
