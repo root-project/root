@@ -297,7 +297,8 @@ ClassImp(TMacOSXSystem)
 //______________________________________________________________________________
 TMacOSXSystem::TMacOSXSystem()
                   : fPimpl(new Private::MacOSXSystem),
-                    fCocoaInitialized(false)
+                    fCocoaInitialized(false),
+                    fFirstDispatch(true)
 {
 }
 
@@ -311,8 +312,13 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
    //I'm not even sure, I need all this code :)
-   if (!fCocoaInitialized && !gROOT->IsBatch())
-      InitializeCocoa();
+   
+   if (fFirstDispatch) {
+      if (!fCocoaInitialized && !gROOT->IsBatch())
+         InitializeCocoa();
+
+      fFirstDispatch = false;
+   }
    
    if (!fCocoaInitialized)//We are in a batch mode (or 'batch').
       return TUnixSystem::DispatchOneEvent(pendingOnly);
