@@ -18,6 +18,7 @@
 #include "RStipples.h"
 #include "TObjArray.h"
 #include "TString.h"
+#include "Rtypes.h"
 #include "TColor.h"
 #include "TStyle.h"
 #include "TROOT.h"
@@ -30,7 +31,11 @@ Bool_t SetLineColor(CGContextRef ctx, Color_t colorIndex)
 {
    assert(ctx != 0 && "SetLineColor, ctx parameter is null");
 
-   const TColor * const color = gROOT->GetColor(colorIndex);
+   const TColor *color = gROOT->GetColor(colorIndex);
+   //Do as TGX11 does.
+   if (!color)
+      color = gROOT->GetColor(kWhite);
+   
    if (!color)
       return kFALSE;
 

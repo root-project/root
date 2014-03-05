@@ -22,6 +22,8 @@
 #include "TError.h"
 #include "TROOT.h"
 
+//TODO: either use Color_t or use gVirtualX->GetLine/Fill/Color -
+//not both, it's a complete mess now!
 
 namespace ROOT {
 namespace Quartz {
@@ -97,6 +99,9 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
    assert(patternIndex != 0 && "SetFillPattern, patternIndex parameter is null");
 
    const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
+   if (!fillColor)
+      fillColor = gROOT->GetColor(kWhite);
+   
    if (!fillColor)
       return false;
 
