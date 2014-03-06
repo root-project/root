@@ -186,3 +186,8 @@ file `simple.pdf`.
     between `TLatex`, `TMathText` and `TTexDump`.
 -   Some operators like `#minus`, `#plus`, `#mp`, `#hbar` etc ... 
     ignored the color  defined by the operator `#color`. 
+
+### TPave
+
+-   Implement `SetX1()` etc ... for `TPav`e and inherited classes to make sure the 
+    NDC coordinates are also defined.
