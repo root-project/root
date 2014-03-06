@@ -49,7 +49,11 @@ if( WIN32 AND NOT CYGWIN AND NOT MSYS )
     endif( GSL_CBLAS_LIBRARY )
  
     set( GSL_LIBRARIES ${GSL_LIBRARY} ${GSL_CBLAS_LIBRARY} )
-    set( GSL_CFLAGS "-DGSL_DLL")
+    execute_process ( COMMAND lib /list ${GSL_LIBRARY} OUTPUT_VARIABLE content )
+    string( FIND ${content} ".dll" APOSITION )
+    if( NOT ("${APOSITION}" STREQUAL "-1") )
+      set( GSL_CFLAGS "-DGSL_DLL" )
+    endif()
   endif( GSL_INCLUDE_DIR )
  
   mark_as_advanced(
