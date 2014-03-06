@@ -141,8 +141,15 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
       xc = 0.5*(x0+x1);
       yc = 0.5*(y0+y1);
-      if (mode == kArc) fgArc = 0;
-      if (mode == kEllipse) fgEllipse = 0;
+
+      if (mode == kArc) {
+         gPad->GetCanvas()->Selected(gPad, fgArc, kButton1Down);
+         fgArc = 0;
+      }
+      if (mode == kEllipse) {
+         gPad->GetCanvas()->Selected(gPad, fgEllipse, kButton1Down);
+         fgEllipse = 0;
+      }
 
       gROOT->SetEditorMode();
       break;
@@ -251,10 +258,22 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       break;
 
    case kButton1Up:
-      if (mode == kLine) fgLine = 0;
-      if (mode == kArrow) fgArrow = 0;
-      if (mode == kCurlyLine) fgCLine = 0;
-      if (mode == kCurlyArc) fgCArc = 0;
+      if (mode == kLine) {
+         gPad->GetCanvas()->Selected(gPad, fgLine, kButton1Down);
+         fgLine = 0;
+      }
+      if (mode == kArrow) {
+         gPad->GetCanvas()->Selected(gPad, fgArrow, kButton1Down);
+         fgArrow = 0;
+      }
+      if (mode == kCurlyLine) {
+         gPad->GetCanvas()->Selected(gPad, fgCLine, kButton1Down);
+         fgCLine = 0;
+      }
+      if (mode == kCurlyArc) {
+         gPad->GetCanvas()->Selected(gPad, fgCArc, kButton1Down);
+         fgCArc = 0;
+      }
       gROOT->SetEditorMode();
       break;
    }
@@ -312,7 +331,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       pyl = TMath::Max(py1old, py2old);
       pyt = TMath::Min(py1old, py2old);
 
-      if(fgPadBBox) {
+      if (fgPadBBox) {
          fgPadBBox->SetX1(gPad->AbsPixeltoX(pxl));
          fgPadBBox->SetY1(gPad->AbsPixeltoY(pyl));
          fgPadBBox->SetX2(gPad->AbsPixeltoX(pxt));
@@ -543,11 +562,25 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       break;
 
    case kButton1Up:
-      if (mode == kPave)      fgPave = 0;
-      if (mode == kPaveText ) fgPaveText = 0;
-      if (mode == kPavesText) fgPavesText = 0;
-      if (mode == kDiamond)   fgDiamond = 0;
+            gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
+      if (mode == kPave) {
+         gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
+         fgPave = 0;
+      }
+      if (mode == kPaveText ) {
+         gPad->GetCanvas()->Selected(gPad, fgPaveText, kButton1Down);
+         fgPaveText = 0;
+      }
+      if (mode == kPavesText) {
+         gPad->GetCanvas()->Selected(gPad, fgPavesText, kButton1Down);
+         fgPavesText = 0;
+      }
+      if (mode == kDiamond)   {
+         gPad->GetCanvas()->Selected(gPad, fgDiamond, kButton1Down);
+         fgDiamond = 0;
+      }
       if (mode == kPaveLabel) {
+         gPad->GetCanvas()->Selected(gPad, fgPaveLabel, kButton1Down);
          ((TPad *)gPad)->StartEditing();
          gSystem->ProcessEvents();
          if (mode == kPaveLabel) {
@@ -607,6 +640,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                   fgPolyLine->GetPoint(0, xnew, ynew);
                   fgPolyLine->SetPoint(npoints, xnew, ynew);
                }
+               gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
                fgPolyLine = 0;
                npoints = 0;
                gPad->Modified();
@@ -627,6 +661,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             fgPolyLine->GetPoint(0, xnew, ynew);
             fgPolyLine->SetPoint(npoints, xnew, ynew);
          }
+         gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
          fgPolyLine = 0;
          npoints = 0;
          gPad->Modified();
@@ -683,6 +718,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
          gPad->Modified(kTRUE);
          gROOT->SetEditorMode();
          gPad->Update();
+         gPad->GetCanvas()->Selected(gPad, fgText, kButton1Down);
          fgText = 0;
       } else if (py == kKey_Backspace) {
          TString s(fgText->GetTitle());
@@ -719,6 +755,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kMarker) {
          TMarker *marker;
          marker = new TMarker(x,y,gStyle->GetMarkerStyle());
+         gPad->GetCanvas()->Selected(gPad, marker, kButton1Down);
          marker->Draw();
          gROOT->SetEditorMode();
          break;
