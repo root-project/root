@@ -656,7 +656,8 @@ public:
       Copy constructor for functor based on ROOT::Math::IMultiGradFunction
    */ 
    GradFunctor(const GradFunctor & rhs) : 
-      ImplBase()
+      ImplBase(), 
+      IGradientFunctionMultiDim()
    {
       if (rhs.fImpl.get() != 0) 
          fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy() ); 
@@ -782,7 +783,8 @@ public:
    */ 
    GradFunctor1D(const GradFunctor1D & rhs) : 
       // strange that this is required eventhough Impl is an abstract class
-      ImplBase()          
+      ImplBase(), 
+      IGradientFunctionOneDim()          
    {
       if (rhs.fImpl.get() != 0) 
          fImpl = std::auto_ptr<Impl>( rhs.fImpl->Copy()  ); 
