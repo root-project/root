@@ -336,7 +336,7 @@ void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
    if (!id) return;
 
    // protect against potential negative values
-   if (h >= (UInt_t)INT_MAX && h >= (UInt_t)INT_MAX)
+   if (w >= (UInt_t)INT_MAX || h >= (UInt_t)INT_MAX)
       return;
    XResizeWindow((Display*)fDisplay, (Window) id, w, h);
 }
