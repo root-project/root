@@ -1214,7 +1214,8 @@ void TGCocoa::ResizeWindow(Window_t wid, UInt_t w, UInt_t h)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "ResizeWindow, called for 'root' window");
-   
+
+   //We can have this unfortunately.   
    const UInt_t siMax = std::numeric_limits<Int_t>::max();
    if (w > siMax || h > siMax)
       return;
