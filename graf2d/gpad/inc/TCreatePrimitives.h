@@ -34,6 +34,7 @@
 #include "TPavesText.h"
 #include "TPaveLabel.h"
 #include "TDiamond.h"
+#include "TGraph.h"
 
 class TCreatePrimitives {
 

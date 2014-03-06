@@ -73,7 +73,6 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    //
 
    static Double_t x0, y0, x1, y1;
-   static Int_t px0, py0;
    Double_t xc,yc,r1,r2,xold,yold;
 
    switch (event) {
@@ -81,7 +80,6 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Down:
       x0 = gPad->AbsPixeltoX(px);
       y0 = gPad->AbsPixeltoY(py);
-      px0   = px; py0   = py;
       xold = gPad->AbsPixeltoX(px);
       yold = gPad->AbsPixeltoY(py);
       break;
@@ -377,8 +375,6 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 
    static Double_t x0, y0;
 
-   static Int_t pxold, pyold;
-   static Int_t px0, py0;
    Double_t xp0,xp1,yp0,yp1,xold,yold;
 
    if (mode == kPaveLabel)
@@ -421,14 +417,9 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Down:
       x0 = gPad->AbsPixeltoX(px);
       y0 = gPad->AbsPixeltoY(py);
-      px0   = px; py0   = py;
-      pxold = px; pyold = py;
       break;
 
    case kButton1Motion:
-      pxold = px;
-      pyold = py;
-
       xold = gPad->AbsPixeltoX(px);
       yold = gPad->AbsPixeltoY(py);
 
