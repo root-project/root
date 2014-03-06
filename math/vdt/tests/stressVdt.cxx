@@ -26,6 +26,7 @@ template <class T>
 uint64_t fp2uint (T /*x*/)
 {
    T::not_implemented; // "Static assert" in C++03
+   return 0;   
 }
 
 template <>
@@ -247,7 +248,7 @@ inline void compareFunctions(const std::string& label,
 }
 
 //
-void checkFunction(const std::string& label,float speedup, uint32_t maxdiffBit)
+void checkFunction(const std::string& label,float /*speedup*/, uint32_t maxdiffBit)
 {
 // Remove check on the speed as routinely this program is ran on virtual build nodes
 // and several factors may cause fluctuations in the result.
