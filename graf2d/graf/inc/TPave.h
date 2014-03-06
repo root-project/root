@@ -88,6 +88,10 @@ public:
    virtual void  SetX2NDC(Double_t x2) {fX2NDC=x2;}
    virtual void  SetY1NDC(Double_t y1) {fY1NDC=y1;}
    virtual void  SetY2NDC(Double_t y2) {fY2NDC=y2;}
+   virtual void  SetX1(Double_t x1);
+   virtual void  SetX2(Double_t x2);
+   virtual void  SetY1(Double_t y1);
+   virtual void  SetY2(Double_t y2);
 
    ClassDef(TPave,3)  //Pave. A box with shadowing
 };

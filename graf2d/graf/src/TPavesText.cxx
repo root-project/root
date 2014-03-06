@@ -51,12 +51,6 @@ TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t
    //  option = "L" Left frame
    //  option = "NDC" x1,y1,x2,y2 are given in NDC
    //  option = "ARC" corners are rounded
-   //
-   //  IMPORTANT NOTE:
-   //  Because TPave objects (and objects deriving from TPave) have their
-   //  master coordinate system in NDC, one cannot use the TBox functions
-   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
-   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fNpaves = npaves;
    SetBorderSize(1);
