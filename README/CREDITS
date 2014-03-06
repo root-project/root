@@ -128,6 +128,11 @@ N: Nicolas Brun
 E: nicolas@pcbrun.cern.ch
 D: classes TFormula, TText, TLatex
 
+N: Rene Brun
+E: Rene.Brun@cern.ch
+D: ROOT conception
+D: all parts of the system
+
 N: Ernst-Jan Buis
 E: buis@mail.cern.ch
 D: contour drawing options "AITOFF","MERCATOR","SINUSOIDAL","PARABOLIC"
@@ -558,6 +563,7 @@ D: pioneer on many fronts, installation, support
 N: Pere Mato
 E: Pere.Mato@cern.ch
 D: PyRoot package
+D: cmake build system
 
 N: Richard Maunder
 E: Richard.Maunder@cern.ch
@@ -588,8 +594,8 @@ N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
 D: Math libraries
 
-N: Miroslav Morhac (died on August 11 2011)
-E: fyzimiro@savba.sk
+N: Miroslav Morhac
+E: fyzimiro@savba.sk (died on August 11 2011)
 D: TSpectrum classes
 
 N: Dave Morrison
@@ -617,6 +623,7 @@ E: Axel.Naumann@cern.ch
 D: THtml improvements (namespace, header/footer)
 D: many suggestions for Trees
 D: CINT/Reflex integration
+D: cling co-author, cling integration
 
 N: Stanislav Nesterov
 E: Stanislav.Nesterov@cern.ch
@@ -719,6 +726,11 @@ D: contributed to TMultiDimFit::EvalError function
 N: Bartolomeu Rabacal
 E: brabacal@cern.ch
 D: Math libraries: GoFTest and TKDE classes 
+
+N: Fons Rademakers
+E: Fons.Rademakers@cern.ch
+D: ROOT conception
+D: all parts of the system
 
 N: Nathalie Rauschmayr
 E: Nathalie.Rauschmayr@cern.ch
