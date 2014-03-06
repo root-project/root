@@ -60,6 +60,28 @@
 //    a different process.                                                //
 // Use an array of TRef when one of the above restrictions is met.        //
 //                                                                        //
+// The number of TRef handled by a single process id is limited to        //
+// 16777215 (see TRef for more detail).   When the TProcessID is full     //
+// (has seen 16777215 objects), we switch to new one TProcessID           //
+// maximum 65535 including the TProcessIDs read from file).               //
+// However TRefArray can not switch to new TProcessID if they already     //
+// contain objects.                                                       //
+//                                                                        //
+// When the TProcessID has been switched due to overflow and an new       //
+// object is added to an existing, empty TRefArray, you will see:         //
+//
+// Warning in <TRefArray::AddAtAndExpand>: The ProcessID for the 0x5f83819e8 has been switched to ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef:4
+//
+// If the TRefArray was not empty, you will se:
+//
+// Error in <TRefArray::AddAtAndExpand>: The object at %p can not be registered in the process the TRefArray points to (pid = ProcessID4/6c89f37e-8259-11e2-9717-166ee183beef) because the ProcessID has too many objects and the TRefArray already contains other objects.
+//
+// When running out of TProcessIds, you will se:
+//
+// Warning in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) is almost reached (one left).  TRef will stop being functional when the limit is reached.
+//
+// Fatal in <TProcessID::AddProcessID>: Maximum number of TProcessID (65535) has been reached.  TRef are not longer functional.
+//                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
 #include "TRefArray.h"
