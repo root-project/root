@@ -73,12 +73,6 @@ TPaveText::TPaveText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_
    // The individual text items are entered via AddText
    // By default, text items inherits from the default pavetext AttText.
    // A title can be added later to this pavetext via TPaveText::SetLabel.
-   //
-   //  IMPORTANT NOTE:
-   //  Because TPave objects (and objects deriving from TPave) have their
-   //  master coordinate system in NDC, one cannot use the TBox functions
-   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
-   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLines   = new TList;
    fMargin  = 0.05;

@@ -72,12 +72,6 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    //  option = "L" Left frame
    //  option = "NDC" x1,y1,x2,y2 are given in NDC
    //  option = "ARC" corners are rounded
-   //
-   //  IMPORTANT NOTE:
-   //  Because TPave objects (and objects deriving from TPave) have their
-   //  master coordinate system in NDC, one cannot use the TBox functions
-   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
-   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fBorderSize   = bordersize;
    fOption       = option;
@@ -248,14 +242,10 @@ void TPave::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    TBox::ExecuteEvent(event, px, py);
 
    // In case pave coordinates have been modified, recompute NDC coordinates
-   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Double_t xp1  = gPad->GetX1();
-   Double_t yp1  = gPad->GetY1();
-   fX1NDC = (fX1-xp1)/dpx;
-   fY1NDC = (fY1-yp1)/dpy;
-   fX2NDC = (fX2-xp1)/dpx;
-   fY2NDC = (fY2-yp1)/dpy;
+   SetX1(fX1);
+   SetX2(fX2);
+   SetY1(fY1);
+   SetY2(fY2);
 
    // In case the bit NameIsAction is activated, execute the action
    // in name via the interpreter.
@@ -634,6 +624,54 @@ void TPave::SavePrimitive(ostream &out, Option_t * /*= ""*/)
    SaveFillAttributes(out,"pave",19,1001);
    SaveLineAttributes(out,"pave",1,1,1);
    out<<"   pave->Draw();"<<endl;
+}
+
+
+//______________________________________________________________________________
+void TPave::SetX1(Double_t x1)
+{
+   // Set the X1 value
+
+   fX1 = x1;
+   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+   Double_t xp1  = gPad->GetX1();
+   fX1NDC = (fX1-xp1)/dpx;
+}
+
+
+//______________________________________________________________________________
+void TPave::SetX2(Double_t x2)
+{
+   // Set the X2 value
+
+   fX2 = x2;
+   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
+   Double_t xp1  = gPad->GetX1();
+   fX2NDC = (fX2-xp1)/dpx;
+}
+
+
+//______________________________________________________________________________
+void TPave::SetY1(Double_t y1)
+{
+   // Set the Y1 value
+
+   fY1 = y1;
+   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+   Double_t yp1  = gPad->GetY1();
+   fY1NDC = (fY1-yp1)/dpy;
+}
+
+
+//______________________________________________________________________________
+void TPave::SetY2(Double_t y2)
+{
+   // Set the Y2 value
+
+   fY2 = y2;
+   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
+   Double_t yp1  = gPad->GetY1();
+   fY2NDC = (fY2-yp1)/dpy;
 }
 
 
