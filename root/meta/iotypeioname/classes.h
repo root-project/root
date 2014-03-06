@@ -1,11 +1,25 @@
 #ifndef CLASSES
 #define CLASSES
 
-#include "Math/GenVector/PositionVector3D.h"
 #include <vector>
 #include "TObject.h"
+#include "Math/GenVector/Cartesian3D.h"
 
-typedef ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag> Vertex;
+
+// template <class T>
+// class Vertex{
+// public:
+//    Vertex(T x, T y, T z):m_x(x),m_y(y),m_z(z){};
+//    T X(){return m_x;};
+//    T Y(){return m_y;};
+//    T Z(){return m_z;};
+// private:
+//    T m_x, m_y, m_z;   
+// };
+
+
+typedef ROOT::Math::Cartesian3D<Double32_t> Vertex32;
+typedef ROOT::Math::Cartesian3D<double> Vertex;
 
 class SuperCluster {
 public:   
@@ -19,7 +33,7 @@ public:
    Particle():vertex(.1,.2,.3){};
    const Vertex& GetVertex() const {return vertex;};
 private:
-   ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<double>,ROOT::Math::DefaultCoordinateSystemTag> vertex;
+   Vertex vertex;
 };
 
 

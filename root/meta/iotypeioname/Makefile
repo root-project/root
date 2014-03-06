@@ -1,4 +1,4 @@
-CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES)
+CLEAN_TARGETS += *.log dummy* *pcm *o *rflx.* $(ALL_LIBRARIES) *rootmap 
 TEST_TARGETS += execionameiotype
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
