@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 #include <process.h>
 #include <wchar.h>
 #include "gdk/gdkkeysyms.h"
@@ -4494,6 +4495,9 @@ void TGWin32::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 
    if (!id) return;
 
+   // protect against potential negative values
+   if (h >= (UInt_t)INT_MAX && h >= (UInt_t)INT_MAX)
+      return;
    gdk_window_resize((GdkWindow *) id, w, h);
 }
 
