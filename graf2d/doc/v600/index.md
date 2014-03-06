@@ -84,6 +84,7 @@ file `simple.pdf`.
     enter several text string. The input is not block in the `RequestString` event loop.
 -   `TPad::Print()` really works on `TCanvas` only. A protection has been added
     in case it is called on a pure `TPad`.
+-   The toolbar methods now work without XOR mode (useful for OpenGL()).
 
 ### TGaxis and TAxis
 
