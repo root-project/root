@@ -45,12 +45,6 @@ TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const
    // a PaveLabel is a Pave with a label centered in the Pave
    // The Pave is by default defined bith bordersize=5 and option ="br".
    // The text size is automatically computed as a function of the pave size.
-   //
-   //  IMPORTANT NOTE:
-   //  Because TPave objects (and objects deriving from TPave) have their
-   //  master coordinate system in NDC, one cannot use the TBox functions
-   //  SetX1,SetY1,SetX2,SetY2 to change the corner coordinates. One should use
-   //  instead SetX1NDC, SetY1NDC, SetX2NDC, SetY2NDC.
 
    fLabel  = label;
 }
