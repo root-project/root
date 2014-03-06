@@ -554,6 +554,7 @@ D: pioneer on many fronts, installation, support
 N: Pere Mato
 E: Pere.Mato@cern.ch
 D: PyRoot package
+D: cmake build system
 
 N: Richard Maunder
 E: Richard.Maunder@cern.ch
@@ -584,8 +585,8 @@ N: Lorenzo Moneta
 E: Lorenzo.Moneta@cern.ch
 D: Math libraries
 
-N: Miroslav Morhac (died on August 11 2011)
-E: fyzimiro@savba.sk
+N: Miroslav Morhac
+E: fyzimiro@savba.sk (died on August 11 2011)
 D: TSpectrum classes
 
 N: Dave Morrison
