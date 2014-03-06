@@ -27,7 +27,32 @@
 #include "Rtypes.h"
 #endif
 
+#include "TLatex.h"
+#include "TCurlyArc.h"
+#include "TArrow.h"
+#include "TArc.h"
+#include "TPavesText.h"
+#include "TPaveLabel.h"
+#include "TDiamond.h"
+
 class TCreatePrimitives {
+
+private:
+
+   static TLine *fgLine;
+   static TLatex *fgText;
+   static TCurlyLine *fgCLine;
+   static TArrow *fgArrow;
+   static TCurlyArc *fgCArc;
+   static TArc *fgArc;
+   static TEllipse *fgEllipse;
+   static TPave *fgPave;
+   static TPaveText *fgPaveText;
+   static TPavesText *fgPavesText;
+   static TDiamond *fgDiamond;
+   static TPaveLabel *fgPaveLabel;
+   static TGraph *fgPolyLine;
+   static TBox *fgPadBBox;
 
 public:
 
