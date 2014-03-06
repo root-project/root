@@ -27,6 +27,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <limits.h>
 #include <unistd.h>
 
 #include "TGX11.h"
@@ -323,6 +324,9 @@ void TGX11::ResizeWindow(Window_t id, UInt_t w, UInt_t h)
 
    if (!id) return;
 
+   // protect against potential negative values
+   if (w >= (UInt_t)INT_MAX || h >= (UInt_t)INT_MAX)
+      return;
    XResizeWindow(fDisplay, (Window) id, w, h);
 }
 

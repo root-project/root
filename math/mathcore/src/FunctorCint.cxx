@@ -46,6 +46,7 @@ public:
       fMethodCall2(0)
    {}
    FunctorCintHandler(const FunctorCintHandler<GradFunctor> & rhs) :
+      IBaseFunctionMultiDim(), // added to fix warning on gcc4.2
       ImplFunc(),
       fDim(rhs.fDim),
       fPtr(rhs.fPtr),
@@ -60,6 +61,7 @@ public:
       fMethodCall2(0)
    {}
    FunctorCintHandler(const FunctorCintHandler<GradFunctor1D> & rhs) :
+      IBaseFunctionOneDim(), // added to fix warning on gcc4.2
       ImplFunc(),
       fDim(1),
       fPtr(rhs.fPtr),
