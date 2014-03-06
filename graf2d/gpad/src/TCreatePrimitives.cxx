@@ -22,14 +22,7 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TGraph.h"
-#include "TArrow.h"
-#include "TPavesText.h"
-#include "TPaveLabel.h"
-#include "TCurlyArc.h"
-#include "TArc.h"
-#include "TLatex.h"
 #include "TMarker.h"
-#include "TDiamond.h"
 #include "TGroupButton.h"
 #include "TVirtualPad.h"
 #include "TCreatePrimitives.h"
@@ -37,6 +30,25 @@
 #include "TSystem.h"
 #include "TMath.h"
 #include "KeySymbols.h"
+
+
+
+#include <iostream>
+
+TLatex *TCreatePrimitives::fgText = 0;
+TCurlyLine *TCreatePrimitives::fgCLine = 0;
+TArrow *TCreatePrimitives::fgArrow = 0;
+TLine *TCreatePrimitives::fgLine = 0;
+TCurlyArc *TCreatePrimitives::fgCArc = 0;
+TArc *TCreatePrimitives::fgArc = 0;
+TEllipse *TCreatePrimitives::fgEllipse = 0;
+TPave *TCreatePrimitives::fgPave = 0;
+TPaveText *TCreatePrimitives::fgPaveText = 0;
+TPavesText *TCreatePrimitives::fgPavesText = 0;
+TDiamond *TCreatePrimitives::fgDiamond = 0;
+TPaveLabel *TCreatePrimitives::fgPaveLabel = 0;
+TGraph *TCreatePrimitives::fgPolyLine = 0;
+TBox *TCreatePrimitives::fgPadBBox = 0;
 
 //______________________________________________________________________________
 TCreatePrimitives::TCreatePrimitives()
@@ -51,7 +63,6 @@ TCreatePrimitives::~TCreatePrimitives()
    // TCreatePrimitives destructor
 }
 
-
 //______________________________________________________________________________
 void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
 {
@@ -62,30 +73,59 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
    //
 
    static Double_t x0, y0, x1, y1;
-
-   static Int_t pxold, pyold;
    static Int_t px0, py0;
-   static Int_t linedrawn;
-   Double_t xc,yc,r1,r2;
-   TEllipse *el = 0;
+   Double_t xc,yc,r1,r2,xold,yold;
 
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
       x0 = gPad->AbsPixeltoX(px);
       y0 = gPad->AbsPixeltoY(py);
       px0   = px; py0   = py;
-      pxold = px; pyold = py;
-      linedrawn = 0;
+      xold = gPad->AbsPixeltoX(px);
+      yold = gPad->AbsPixeltoY(py);
       break;
 
    case kButton1Motion:
-      if (linedrawn) gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
-      pxold = px;
-      pyold = py;
-      linedrawn = 1;
-      gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
+      xold = gPad->AbsPixeltoX(px);
+      yold = gPad->AbsPixeltoY(py);
+
+      if (gPad->GetLogx()) xold = TMath::Power(10,xold);
+      if (gPad->GetLogy()) yold = TMath::Power(10,yold);
+
+      xc = 0.5*(x0+xold);
+      yc = 0.5*(y0+yold);
+      if (mode == kArc) {
+         r1 = 0.5*TMath::Abs(xold-x0);
+         if(fgArc) {
+            fgArc->SetR1(r1);
+            fgArc->SetR2(r1);
+            fgArc->SetX1(xc);
+            fgArc->SetY1(yc);
+         }
+         else {
+            fgArc = new TArc(xc, yc, r1);
+            fgArc->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+      if (mode == kEllipse) {
+         r1 = 0.5*TMath::Abs(xold-x0);
+         r2 = 0.5*TMath::Abs(yold-y0);
+         if(fgEllipse) {
+            fgEllipse->SetR1(r1);
+            fgEllipse->SetR2(r2);
+            fgEllipse->SetX1(xc);
+            fgEllipse->SetY1(yc);
+         }
+         else {
+            fgEllipse = new TEllipse(xc, yc, r1, r2);
+            fgEllipse->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
       break;
 
    case kButton1Up:
@@ -101,20 +141,9 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
       xc = 0.5*(x0+x1);
       yc = 0.5*(y0+y1);
-      if (mode == kArc) {
-         r1 = 0.5*TMath::Abs(x1-x0);
-         el = new TArc(xc, yc, r1);
-      }
-      if (mode == kEllipse) {
-         r1 = 0.5*TMath::Abs(x1-x0);
-         r2 = 0.5*TMath::Abs(y1-y0);
-         el = new TEllipse(xc, yc, r1, r2);
-      }
-      TCanvas *canvas = gPad->GetCanvas();
-      if (canvas) canvas->FeedbackMode(kFALSE);
-      gPad->Modified(kTRUE);
-      if (el) el->Draw();
-      if (canvas) canvas->Selected((TPad*)gPad, el, event);
+      if (mode == kArc) fgArc = 0;
+      if (mode == kEllipse) fgEllipse = 0;
+
       gROOT->SetEditorMode();
       break;
    }
@@ -130,80 +159,102 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
    //  Release left button to terminate the arrow.
    //
 
-   static Double_t x0, y0, x1, y1;
+   static Double_t x0, y0;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
-   static Int_t linedrawn;
-   TLine *line;
-   TArrow *arrow;
-   TCurlyLine *cline;
    Double_t radius, phimin,phimax;
 
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
       x0 = gPad->AbsPixeltoX(px);
       y0 = gPad->AbsPixeltoY(py);
       px0   = px; py0   = py;
       pxold = px; pyold = py;
-      linedrawn = 0;
+      if (gPad->GetLogx()) {
+         px0 = TMath::Power(10,px0);
+         pxold = TMath::Power(10,pxold);
+      }
+      if (gPad->GetLogy()) {
+         py0 = TMath::Power(10,py0);
+         pyold = TMath::Power(10,pyold);
+      }
       break;
 
    case kButton1Motion:
-      if (linedrawn) gVirtualX->DrawLine(px0, py0, pxold, pyold);
       pxold = px;
       pyold = py;
-      linedrawn = 1;
-      gVirtualX->DrawLine(px0, py0, pxold, pyold);
-      break;
 
-   case kButton1Up:
-      if (px == px0 && py == py0) break;
-      x1 = gPad->AbsPixeltoX(px);
-      y1 = gPad->AbsPixeltoY(py);
-      gPad->Modified(kTRUE);
-      TCanvas *canvas = gPad->GetCanvas();
-      if (gPad->GetLogx()) {
-         x0 = TMath::Power(10,x0);
-         x1 = TMath::Power(10,x1);
-      }
-      if (gPad->GetLogy()) {
-         y0 = TMath::Power(10,y0);
-         y1 = TMath::Power(10,y1);
-      }
+      if (gPad->GetLogx()) pxold = TMath::Power(10,pxold);
+      if (gPad->GetLogy()) pyold = TMath::Power(10,pyold);
+
       if (mode == kLine) {
-         line = new TLine(x0,y0,x1,y1);
-         line->Draw();
-         if (canvas) canvas->Selected((TPad*)gPad, line, event);
+         if(fgLine){
+            fgLine->SetX2(gPad->AbsPixeltoX(pxold));
+            fgLine->SetY2(gPad->AbsPixeltoY(pyold));
+         }
+         else {
+            fgLine = new TLine(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold));
+            fgLine->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
+
       if (mode == kArrow) {
-         arrow = new TArrow(x0,y0,x1,y1
-                            , TArrow::GetDefaultArrowSize()
-                            , TArrow::GetDefaultOption());
-         arrow->Draw();
-         if (canvas) canvas->Selected((TPad*)gPad, arrow, event);
+         if(fgArrow){
+            fgArrow->SetX2(gPad->AbsPixeltoX(pxold));
+            fgArrow->SetY2(gPad->AbsPixeltoY(pyold));
+         }
+         else {
+            fgArrow = new TArrow(x0,y0,gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
+                                 , TArrow::GetDefaultArrowSize()
+                                 , TArrow::GetDefaultOption());
+            fgArrow->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
+
       if (mode == kCurlyLine) {
-         cline = new TCurlyLine(x0,y0,x1,y1
-                                , TCurlyLine::GetDefaultWaveLength()
-                                , TCurlyLine::GetDefaultAmplitude());
-         cline->Draw();
-         if (canvas) canvas->Selected((TPad*)gPad, cline, event);
+         if(fgCLine) fgCLine->SetEndPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
+         else  {
+            fgCLine = new TCurlyLine(gPad->AbsPixeltoX(px0),gPad->AbsPixeltoY(py0),gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
+                                     , TCurlyLine::GetDefaultWaveLength()
+                                     , TCurlyLine::GetDefaultAmplitude());
+            fgCLine->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
+
       if (mode == kCurlyArc) {
          //calculate radius in pixels and convert to users x
          radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))))
                  - gPad->PixeltoX(0);
-         phimin = 0;
-         phimax = 360;
-         cline = new TCurlyArc(x0,y0,radius,phimin,phimax
-                                , TCurlyArc::GetDefaultWaveLength()
-                                , TCurlyArc::GetDefaultAmplitude());
-         cline->Draw();
-         if (canvas) canvas->Selected((TPad*)gPad, cline, event);
+         if(fgCArc) {
+            fgCArc->SetStartPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
+            fgCArc->SetRadius(radius);
+         }
+         else {
+            phimin = 0;
+            phimax = 360;
+            fgCArc = new TCurlyArc(x0,y0,radius,phimin,phimax
+                                   , TCurlyArc::GetDefaultWaveLength()
+                                   , TCurlyArc::GetDefaultAmplitude());
+            fgCArc->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
+      break;
+
+   case kButton1Up:
+      if (mode == kLine) fgLine = 0;
+      if (mode == kArrow) fgArrow = 0;
+      if (mode == kCurlyLine) fgCLine = 0;
+      if (mode == kCurlyArc) fgCArc = 0;
       gROOT->SetEditorMode();
       break;
    }
@@ -223,7 +274,6 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 
    static Int_t px1old, py1old, px2old, py2old;
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
-   static Bool_t boxdrawn;
    static TPad *padsav;
    Double_t xlow, ylow, xup, yup;
    TPad * newpad;
@@ -243,17 +293,14 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
    case kButton1Down:
       padsav = (TPad*)gPad;
       gPad->cd();
-      gVirtualX->SetLineColor(-1);
       px1 = gPad->XtoAbsPixel(gPad->GetX1());
       py1 = gPad->YtoAbsPixel(gPad->GetY1());
       px2 = gPad->XtoAbsPixel(gPad->GetX2());
       py2 = gPad->YtoAbsPixel(gPad->GetY2());
       px1old = px; py1old = py;
-      boxdrawn = 0;
       break;
 
    case kButton1Motion:
-      if (boxdrawn) gVirtualX->DrawBox(pxl, pyl, pxt, pyt, TVirtualX::kHollow);
       px2old = px;
       px2old = TMath::Max(px2old, px1);
       px2old = TMath::Min(px2old, px2);
@@ -264,20 +311,29 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       pxt = TMath::Max(px1old, px2old);
       pyl = TMath::Max(py1old, py2old);
       pyt = TMath::Min(py1old, py2old);
-      boxdrawn = 1;
-      gVirtualX->DrawBox(pxl, pyl, pxt, pyt, TVirtualX::kHollow);
+
+      if(fgPadBBox) {
+         fgPadBBox->SetX1(gPad->AbsPixeltoX(pxl));
+         fgPadBBox->SetY1(gPad->AbsPixeltoY(pyl));
+         fgPadBBox->SetX2(gPad->AbsPixeltoX(pxt));
+         fgPadBBox->SetY2(gPad->AbsPixeltoY(pyt));
+      }
+      else {
+         fgPadBBox = new TBox(pxl, pyl, pxt, pyt);
+         fgPadBBox->Draw("l");
+      }
+      gPad->Modified(kTRUE);
+      gPad->Update();
       break;
 
    case kButton1Up:
-      gPad->Modified(kTRUE);
-      gPad->SetDoubleBuffer(1);   // Turn on double buffer mode
-      gVirtualX->SetDrawMode(TVirtualX::kCopy);       // set drawing mode back to normal (copy) mode
+      fgPadBBox->Delete();
+      fgPadBBox = 0;
       xlow = (Double_t(pxl) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
       ylow = (Double_t(py1) - Double_t(pyl))/(Double_t(py1) - Double_t(py2));
       xup  = (Double_t(pxt) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
       yup  = (Double_t(py1) - Double_t(pyt))/(Double_t(py1) - Double_t(py2));
       gROOT->SetEditorMode();
-      boxdrawn = 0;
       if (xup <= xlow || yup <= ylow) return;
       newpad = new TPad(Form("%s_%d",gPad->GetName(),n+1),"newpad",xlow, ylow, xup, yup);
       if (newpad->IsZombie()) break;
@@ -300,14 +356,11 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    //  Release left button at the opposite corner.
    //
 
-   static Double_t x0, y0, x1, y1;
+   static Double_t x0, y0;
 
    static Int_t pxold, pyold;
    static Int_t px0, py0;
-   static Int_t linedrawn;
-   Double_t temp;
-   Double_t xp0,xp1,yp0,yp1;
-   static TObject *pave = 0;
+   Double_t xp0,xp1,yp0,yp1,xold,yold;
 
    if (mode == kPaveLabel)
       ((TPad *)gPad)->EventPave();
@@ -317,29 +370,29 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kKeyPress:
       if (mode == kPaveLabel) {
          if ((py == kKey_Return) || (py == kKey_Enter)) {
-            TString s(pave->GetTitle());
+            TString s(fgPaveLabel->GetTitle());
             Int_t l = s.Length();
             s.Remove(l-1);
-            ((TPaveLabel*)pave)->SetLabel(s.Data());
+            fgPaveLabel->SetLabel(s.Data());
             gSystem->ProcessEvents();
             gPad->Modified(kTRUE);
             gROOT->SetEditorMode();
             gPad->Update();
-            pave = 0;
+            fgPaveLabel = 0;
          } else if (py == kKey_Backspace) {
-            TString s(pave->GetTitle());
+            TString s(fgPaveLabel->GetTitle());
             Int_t l = s.Length();
             if (l>1) {
                s.Replace(l-2, 2, "<");
-               ((TPaveLabel*)pave)->SetLabel(s.Data());
+               fgPaveLabel->SetLabel(s.Data());
                gPad->Modified(kTRUE);
                gPad->Update();
             }
          } else if (isprint(py)) {
-            TString s(pave->GetTitle());
+            TString s(fgPaveLabel->GetTitle());
             Int_t l = s.Length();
             s.Insert(l-1,(char)py);
-            ((TPaveLabel*)pave)->SetLabel(s.Data());
+            fgPaveLabel->SetLabel(s.Data());
             gPad->Modified(kTRUE);
             gPad->Update();
          }
@@ -347,60 +400,166 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       break;
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
       x0 = gPad->AbsPixeltoX(px);
       y0 = gPad->AbsPixeltoY(py);
       px0   = px; py0   = py;
       pxold = px; pyold = py;
-      linedrawn = 0;
       break;
 
    case kButton1Motion:
-      if (linedrawn) gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
       pxold = px;
       pyold = py;
-      linedrawn = 1;
-      gVirtualX->DrawBox(px0, py0, pxold, pyold, TVirtualX::kHollow);
+
+      xold = gPad->AbsPixeltoX(px);
+      yold = gPad->AbsPixeltoY(py);
+
+      xp0 = gPad->PadtoX(x0);
+      xp1 = gPad->PadtoX(xold);
+      yp0 = gPad->PadtoY(y0);
+      yp1 = gPad->PadtoY(yold);
+
+      if (mode == kPave) {
+         if(fgPave) {
+            if(xold < x0) {
+               fgPave->SetX1(xold);
+               fgPave->SetX2(x0);
+            }
+            else {
+               fgPave->SetX1(x0);
+               fgPave->SetX2(xold);
+            }
+            if(yold < y0) {
+               fgPave->SetY1(yold);
+               fgPave->SetY2(y0);
+            }
+            else {
+               fgPave->SetY1(y0);
+               fgPave->SetY2(yold);
+            }
+         }
+         else {
+            fgPave = new TPave(xp0,yp0,xp1,yp1);
+            fgPave->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+
+      if (mode == kPaveText ) {
+         if(fgPaveText){
+            if(xold < x0) {
+               fgPaveText->SetX1(xold);
+               fgPaveText->SetX2(x0);
+            }
+            else {
+               fgPaveText->SetX1(x0);
+               fgPaveText->SetX2(xold);
+            }
+            if(yold < y0) {
+               fgPaveText->SetY1(yold);
+               fgPaveText->SetY2(y0);
+            }
+            else {
+               fgPaveText->SetY1(y0);
+               fgPaveText->SetY2(yold);
+            }
+         }
+         else {
+            fgPaveText = new TPaveText(xp0,yp0,xp1,yp1);
+            fgPaveText->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+
+      if (mode == kPavesText) {
+         if(fgPavesText){
+            if(xold < x0) {
+               fgPavesText->SetX1(xold);
+               fgPavesText->SetX2(x0);
+            }
+            else {
+               fgPavesText->SetX1(x0);
+               fgPavesText->SetX2(xold);
+            }
+            if(yold < y0) {
+               fgPavesText->SetY1(yold);
+               fgPavesText->SetY2(y0);
+            }
+            else {
+               fgPavesText->SetY1(y0);
+               fgPavesText->SetY2(yold);
+            }
+         }
+         else {
+            fgPavesText = new TPavesText(xp0,yp0,xp1,yp1);
+            fgPavesText->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+
+      if (mode == kPaveLabel) {
+         if(fgPaveLabel){
+            if(xold < x0) {
+               fgPaveLabel->SetX1(xold);
+               fgPaveLabel->SetX2(x0);
+            }
+            else {
+               fgPaveLabel->SetX1(x0);
+               fgPaveLabel->SetX2(xold);
+            }
+            if(yold < y0) {
+               fgPaveLabel->SetY1(yold);
+               fgPaveLabel->SetY2(y0);
+            }
+            else {
+               fgPaveLabel->SetY1(y0);
+               fgPaveLabel->SetY2(yold);
+            }
+         }
+         else {
+            fgPaveLabel = new TPaveLabel(xp0,yp0,xp1,yp1,">");
+            fgPaveLabel->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+
+      if (mode == kDiamond) {
+         if(fgDiamond){
+            fgDiamond->SetX1(x0);
+            fgDiamond->SetY1(y0);
+            fgDiamond->SetX2(xold);
+            fgDiamond->SetY2(yold);
+         }
+         else {
+            fgDiamond = new TDiamond(x0,y0,xold,yold);
+            fgDiamond->Draw();
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
       break;
 
    case kButton1Up:
-      if (px == px0) px = px0+10;
-      if (py == py0) py = py0-10;
-      x1 = gPad->AbsPixeltoX(px);
-      y1 = gPad->AbsPixeltoY(py);
-
-      if (x1 < x0) {temp = x0; x0 = x1; x1 = temp;}
-      if (y1 < y0) {temp = y0; y0 = y1; y1 = temp;}
-      xp0 = gPad->PadtoX(x0);
-      xp1 = gPad->PadtoX(x1);
-      yp0 = gPad->PadtoY(y0);
-      yp1 = gPad->PadtoY(y1);
-      if (mode == kPave)      pave = new TPave(xp0,yp0,xp1,yp1);
-      if (mode == kPaveText ) pave = new TPaveText(xp0,yp0,xp1,yp1);
-      if (mode == kPavesText) pave = new TPavesText(xp0,yp0,xp1,yp1);
-      if (mode == kDiamond)   pave = new TDiamond(x0,y0,x1,y1);
+      if (mode == kPave)      fgPave = 0;
+      if (mode == kPaveText ) fgPaveText = 0;
+      if (mode == kPavesText) fgPavesText = 0;
+      if (mode == kDiamond)   fgDiamond = 0;
       if (mode == kPaveLabel) {
          ((TPad *)gPad)->StartEditing();
          gSystem->ProcessEvents();
          if (mode == kPaveLabel) {
-            pave = new TPaveLabel(xp0,yp0,xp1,yp1,"<");
-            pave->Draw();
             gPad->Modified(kTRUE);
             gPad->Update();
             break;
          }
       }
-      TCanvas *canvas = gPad->GetCanvas();
-      if (canvas) canvas->FeedbackMode(kFALSE);
-      gPad->Modified(kTRUE);
-      if (pave) pave->Draw();
-      if (canvas) canvas->Selected((TPad*)gPad, pave, event);
       gROOT->SetEditorMode();
-      gPad->Update();
       break;
    }
 }
-
 
 //______________________________________________________________________________
 void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
@@ -411,91 +570,96 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    //  Click left button at same place or double click to close the polyline
    //
 
-   static Int_t pxold, pyold, px1old, py1old;
+   static Int_t pxnew, pynew;
+   Double_t xnew, ynew, xold, yold;
    static Int_t npoints = 0;
-   static Int_t linedrawn = 0;
-   Int_t dp;
-   static TGraph *gr = 0;
-   TCanvas *canvas = gPad->GetCanvas();
+   Double_t dp;
 
    switch (event) {
 
-   case kButton1Double:
    case kButton1Down:
-      if (npoints == 0) {
-         gVirtualX->SetLineColor(-1);
-      } else {
-         if (canvas) canvas->FeedbackMode(kFALSE);
-         gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
+      if(npoints > 0) {
+         pxnew = px;
+         pynew = py;
       }
-      // stop collecting new points if new point is close ( < 5 pixels) of previous point
-      if (event == kButton1Double) {
-         px = px1old;
-         py = py1old;
+      else
+      {
+         pxnew = px;
+         pynew = py;
       }
-      dp = TMath::Abs(px-px1old) +TMath::Abs(py-py1old);
-      if (npoints && dp < 5) {
-         gPad->Modified(kTRUE);
-         if (mode == kCutG && gr) {
-            gr->Set(gr->GetN() + 1);
-            Double_t x0 = 0., y0 = 0.;
-            gr->GetPoint(0, x0, y0);
-            gr->SetPoint(npoints, x0, y0);
+      npoints++;
+      if(fgPolyLine) {
+         fgPolyLine->Set(fgPolyLine->GetN() +1);
+         fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+                gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+         // stop collecting new points if new point is close ( < 5 pixels) of previous point
+         if(npoints > 1) {
+            fgPolyLine->GetPoint(fgPolyLine->GetN()-3, xold, yold);
+            xnew = gPad->PadtoX(gPad->AbsPixeltoX(pxnew));
+            ynew = gPad->PadtoY(gPad->AbsPixeltoY(pynew));
+            dp = TMath::Abs(xnew-xold) +TMath::Abs(ynew-yold);
+            if (dp < 0.007) {
+               if(mode == kPolyLine) {
+                  fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+                                  gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+               }
+               else {
+                  fgPolyLine->GetPoint(0, xnew, ynew);
+                  fgPolyLine->SetPoint(npoints, xnew, ynew);
+               }
+               fgPolyLine = 0;
+               npoints = 0;
+               gPad->Modified();
+               gPad->Update();
+               gROOT->SetEditorMode();
+            }
          }
-         npoints = 0;
-         linedrawn = 0;
-         gr = 0;
-         gROOT->SetEditorMode();
-         break;
       }
-      if (npoints == 1 && gr == 0) {
-         if (mode == kPolyLine) {
-            gr = new TGraph(2);
-            gr->ResetBit(TGraph::kClipFrame);
+      break;
 
-         } else {
-            gr = (TGraph*)gROOT->ProcessLineFast(
-                 Form("new %s(\"CUTG\",%d",
-                      gROOT->GetCutClassName(),2));
+   case kButton1Double:
+      if(fgPolyLine) {
+         if(mode == kPolyLine) {
+            fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+                            gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          }
-         gr->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(px1old)),
-                         gPad->PadtoY(gPad->AbsPixeltoY(py1old)));
-         gr->SetPoint(1, gPad->PadtoX(gPad->AbsPixeltoX(px)),
-                         gPad->PadtoY(gPad->AbsPixeltoY(py)));
-         npoints = 2;
-         gr->Draw("L");
-         if (canvas) canvas->Selected((TPad*)gPad, gr, event);
-      } else if (npoints > 1) {
-         gr->Set(gr->GetN() + 1);
-         gr->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(px)),
-                         gPad->PadtoY(gPad->AbsPixeltoY(py)));
-         npoints ++;
+         else {
+            fgPolyLine->GetPoint(0, xnew, ynew);
+            fgPolyLine->SetPoint(npoints, xnew, ynew);
+         }
+         fgPolyLine = 0;
+         npoints = 0;
          gPad->Modified();
          gPad->Update();
-      } else {
-         npoints = 1;
+         gROOT->SetEditorMode();
       }
-      px1old = px; py1old = py;
-      pxold  = px; pyold  = py;
-      linedrawn = 0;
       break;
 
    case kMouseMotion:
-   case kButton1Motion:
-   case kButton1Up:
-      if (npoints < 1) return;
-      if (canvas) canvas->FeedbackMode(kTRUE);
-      if (linedrawn) {
-         gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
+      pxnew = px;
+      pynew = py;
+      if(fgPolyLine){
+         fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+                         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+         gPad->Modified();
+         gPad->Update();
       }
-      pxold = px;
-      pyold = py;
-      linedrawn = 1;
-      gVirtualX->DrawLine(px1old, py1old, pxold, pyold);
+      else {
+         if (mode == kPolyLine) {
+            fgPolyLine = new TGraph(1);
+            fgPolyLine->ResetBit(TGraph::kClipFrame);
+         } else {
+            fgPolyLine = (TGraph*)gROOT->ProcessLineFast(
+                 Form("new %s(\"CUTG\",%d",
+                      gROOT->GetCutClassName(),1));
+         }
+         fgPolyLine->SetPoint(0, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
+                         gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+         fgPolyLine->Draw("L");
+      }
       break;
    }
 }
-
 
 //______________________________________________________________________________
 void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
@@ -505,47 +669,46 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
    // Click left button to indicate the text position
    //
 
-   static TLatex *text = 0;
    static Double_t x, y;
 
    switch (event) {
 
    case kKeyPress:
       if ((py == kKey_Return) || (py == kKey_Enter)) {
-         TString s(text->GetTitle());
+         TString s(fgText->GetTitle());
          Int_t l = s.Length();
          s.Remove(l-1);
-         text->SetText(x,y,s.Data());
+         fgText->SetText(x,y,s.Data());
          gSystem->ProcessEvents();
          gPad->Modified(kTRUE);
          gROOT->SetEditorMode();
          gPad->Update();
-         text = 0;
+         fgText = 0;
       } else if (py == kKey_Backspace) {
-         TString s(text->GetTitle());
+         TString s(fgText->GetTitle());
          Int_t l = s.Length();
          if (l>1) {
             s.Replace(l-2, 2, "<");
-            text->SetText(x,y,s.Data());
+            fgText->SetText(x,y,s.Data());
             gPad->Modified(kTRUE);
             gPad->Update();
          }
       } else if (isprint(py)) {
-         TString s(text->GetTitle());
+         TString s(fgText->GetTitle());
          Int_t l = s.Length();
          s.Insert(l-1,(char)py);
-         text->SetText(x,y,s.Data());
+         fgText->SetText(x,y,s.Data());
          gPad->Modified(kTRUE);
          gPad->Update();
       }
       break;
 
    case kButton1Down:
-      if (text) {
-         TString s(text->GetTitle());
+     if (fgText) {
+         TString s(fgText->GetTitle());
          Int_t l = s.Length();
          s.Remove(l-1);
-         text->SetText(x,y,s.Data());
+         fgText->SetText(x,y,s.Data());
       }
 
       x = gPad->AbsPixeltoX(px);
@@ -564,11 +727,10 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
       ((TPad *)gPad)->StartEditing();
       gSystem->ProcessEvents();
 
-      text = new TLatex(x,y,"<");
-      text->Draw();
+      fgText = new TLatex(x,y,"<");
+      fgText->Draw();
       gPad->Modified(kTRUE);
       gPad->Update();
-
       break;
    }
 }
