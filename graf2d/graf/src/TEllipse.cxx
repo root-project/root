@@ -256,7 +256,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          pRx = gPad->XtoAbsPixel(fR1+fX1);
          r2 = (pBy-pTy)/2;
          r1 = (pRx-pLx)/2;
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
@@ -321,7 +321,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-      if(!opaque)
+      if (!opaque)
       {
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
          gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
@@ -386,7 +386,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (px1 < pLx+kMinSize) {px1 = sav1; r1 = sav2; px = pxold;}
       }
       if (pTop || pBot || pL || pR) {
-         if(!opaque) {
+         if (!opaque) {
             dphi = (fPhimax-fPhimin)*kPI/(180*np);
             ct   = TMath::Cos(kPI*fTheta/180);
             st   = TMath::Sin(kPI*fTheta/180);
@@ -424,7 +424,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
       }
       if (pINSIDE) {
-         if(!opaque){
+         if (!opaque){
             dpx  = px-pxold;  dpy = py-pyold;
             px1 += dpx; py1 += dpy;
             for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
@@ -437,7 +437,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gPad->Update();
          }
       }
-      if(!opaque){
+      if (!opaque){
          pTx = pBx = px1;
          pRx = px1+r1;
          pLx = px1-r1;
@@ -471,7 +471,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
 
-      if(!opaque) {
+      if (!opaque) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fBy = gPad->AbsPixeltoY(py1+r2);

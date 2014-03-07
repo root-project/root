@@ -90,7 +90,7 @@ void TCurlyArc::Build()
       rPix = fR1 / pixeltoX;
    }
    Double_t dang = fPhimax - fPhimin;
-   if(dang < 0) dang += 360;
+   if (dang < 0) dang += 360;
    Double_t length = TMath::Pi() * fR1 * dang/180;
    Double_t x1sav = fX1;
    Double_t y1sav = fY1;
@@ -132,12 +132,12 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
    Double_t cosa = (px - pxc)/dist;
    Double_t sina = (pyc - py)/dist;
    Double_t phi  = TMath::ATan2(sina,cosa);
-   if(phi < 0) phi += 2 * TMath::Pi();
+   if (phi < 0) phi += 2 * TMath::Pi();
    phi = phi * 180 / TMath::Pi();
-   if(fPhimax > fPhimin){
-      if(phi < fPhimin || phi > fPhimax) return 9999;
+   if (fPhimax > fPhimin){
+      if (phi < fPhimin || phi > fPhimax) return 9999;
    } else {
-      if(phi > fPhimin && phi < fPhimax) return 9999;
+      if (phi > fPhimin && phi < fPhimax) return 9999;
    }
    Int_t pxr = gPad->XtoPixel(fR1)- gPad->XtoPixel(0);
    Double_t distr = TMath::Abs(dist-pxr);
@@ -175,11 +175,11 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();
          dphi = (fPhimax-fPhimin) * pi / 180;
-         if(dphi<0) dphi += 2 * pi;
+         if (dphi<0) dphi += 2 * pi;
          dphi /= np;
          phi0 = fPhimin * pi / 180;
          for (i=0;i<=np;i++) {
@@ -213,7 +213,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       pTy = gPad->YtoAbsPixel(fY1) + r1;
       pBy = gPad->YtoAbsPixel(fY1) - r1;
 
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
          gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
          gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
@@ -274,7 +274,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
          gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
          gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
@@ -306,11 +306,11 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          r1 += (px - pxold);
       }
       if (pTop || pBot || pL || pR) {
-         if(!opaque) {
+         if (!opaque) {
             gVirtualX->SetLineColor(-1);
             TAttLine::Modify();
             dphi = (fPhimax-fPhimin) * pi / 180;
-            if(dphi<0) dphi += 2 * pi;
+            if (dphi<0) dphi += 2 * pi;
             dphi /= np;
             phi0 = fPhimin * pi / 180;
             Double_t ur1 = r1;
@@ -348,7 +348,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (pINSIDE) {
          dpx  = px-pxold;  dpy = py-pyold;
          px1 += dpx; py1 += dpy;
-         if(!opaque) {
+         if (!opaque) {
             for (i=0;i<=npe;i++) { x[i] += dpx; y[i] += dpy;}
             for (i=0;i<npe;i++) gVirtualX->DrawLine(x[i], y[i], x[i+1], y[i+1]);
          }
@@ -364,7 +364,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       pRy = pLy = py1;
       pTy = py1-r1;
       pBy = py1+r1;
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
          gVirtualX->DrawLine(pRx-4, py1+4, pRx-4, py1-4);
          gVirtualX->DrawLine(pRx-4, py1-4, pRx+4, py1-4);
@@ -387,7 +387,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if(!opaque) {
+      if (!opaque) {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          //rBy = gPad->AbsPixeltoY(py1+r1);

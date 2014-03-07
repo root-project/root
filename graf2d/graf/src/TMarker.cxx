@@ -186,7 +186,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
          TAttMarker::Modify();  //Change marker attributes only if necessary
       }
@@ -199,11 +199,11 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
       p.fX = pxold; p.fY = pyold;
-      if(!opaque) gVirtualX->DrawPolyMarker(1, &p);
+      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
       p.fX = px; p.fY = py;
-      if(!opaque) gVirtualX->DrawPolyMarker(1, &p);
+      if (!opaque) gVirtualX->DrawPolyMarker(1, &p);
       pxold = px;  pyold = py;
-      if(opaque) {
+      if (opaque) {
          if (TestBit(kMarkerNDC)) {
             dpx  = gPad->GetX2() - gPad->GetX1();
             dpy  = gPad->GetY2() - gPad->GetY1();
@@ -221,7 +221,7 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if(!opaque) {
+      if (!opaque) {
          if (TestBit(kMarkerNDC)) {
             dpx  = gPad->GetX2() - gPad->GetX1();
             dpy  = gPad->GetY2() - gPad->GetY1();
