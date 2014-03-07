@@ -25,6 +25,7 @@ endif
 include $(ROOTSYS)/etc/Makefile.arch
 endif
 
+USEVC=1
 #------------------------------------------------------------------------------
 
 # ifeq ($(PLATFORM),macosx) 
@@ -93,7 +94,7 @@ CXXFLAGS += -DNDIM2=$(NDIM2)
 endif
 
 
-LIBS =  -L$(ROOTSYS)/lib -lCore -lCling -lMathCore -lMatrix -lGenVector
+LIBS =  -L$(ROOTSYS)/lib -lCore -lCint -lMathCore -lMatrix -lGenVector
 
 MATRIXOPOBJ     = testOperations.$(ObjSuf)
 MATRIXOPSRC     = testOperations.$(SrcSuf)
