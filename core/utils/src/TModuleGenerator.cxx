@@ -301,7 +301,18 @@ std::ostream& TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) cons
 
    for (std::vector<std::string>::iterator headerNameIt = headerNames.begin();
         headerNameIt != headerNames.end(); ++headerNameIt){
-      out << "\"" << *headerNameIt << "\",\n";
+      // Skip these 2 files as they have a unique substring inside and make the 
+      // dictionary non reproducible. This prevents the correct functioning of 
+      // cached builds.
+      if (headerNameIt->find(fUmbrellaName) != std::string::npos ){
+         out << "// Umbrella file skipped for reproducibility\n";
+      }
+      else if (headerNameIt->find(fContentName) != std::string::npos){
+         out << "// Content file skipped for reproducibility\n";
+      }
+      else {
+         out << "\"" << *headerNameIt << "\",\n";
+      }
    }   
    
    out << "0" << std::endl;
