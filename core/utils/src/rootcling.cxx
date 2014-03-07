@@ -365,11 +365,13 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
              * for pods, iotype is ignored */
             
             if (name == "iotype" &&
-                decl.getType().isPODType(decl.getASTContext()) ){
-               if (genreflex::verbose)
-                  std::cout << "Backward compatibility notice: Not assigning new iotype \"" 
-                  << value << "\" to \"" << decl.getNameAsString() 
-                  << "\" as this is a pod and genreflex is being used to generate the dictionary.\n";
+                ( decl.getType()->isArrayType() ||  decl.getType()->isPointerType() ) ){
+               const char* msg="Data member \"%s\" is an array or a pointer. "
+                               "It is not possible to assign to it the iotype \"%s\". "
+                               "This transformation is possible only with data members "
+                               "which are not pointers or arrays.\n";
+               ROOT::TMetaUtils::Error("AnnotateFieldDecl",
+                                       msg, varName.c_str(), value.c_str() );
                continue;      
                 }
             
