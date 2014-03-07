@@ -18,6 +18,7 @@
 #include <string>
 
 namespace llvm {
+   class GlobalValue;
   class LLVMContext;
   class Module;
   class raw_ostream;
@@ -35,6 +36,7 @@ namespace clang {
     virtual llvm::Module* GetModule() = 0;
     virtual llvm::Module* ReleaseModule() = 0;
     virtual void print(llvm::raw_ostream& out) = 0;
+    virtual void forgetGlobal(llvm::GlobalValue* GV) = 0;
   };
 
   /// CreateLLVMCodeGen - Create a CodeGenerator instance.
