@@ -4481,7 +4481,7 @@ void TGCocoa::SetApplicationIcon()
    if (gEnv) {
       const char * const iconDirectoryPath = gEnv->GetValue("Gui.IconPath","$(ROOTSYS)/icons");//This one I do not own.
       if (iconDirectoryPath) {
-         const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "RootIcon.ico", kReadPermission));
+         const Util::ScopedArray<char> fileName(gSystem->Which(iconDirectoryPath, "Root6Icon.png", kReadPermission));
          if (fileName.Get()) {
             const Util::AutoreleasePool pool;
             //Aha, ASCII ;) do not install ROOT in ...
