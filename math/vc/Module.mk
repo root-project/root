@@ -34,7 +34,7 @@ escapeflag = $(subst ~,_,$(subst /,_,$(subst :,_,$(subst =,_,$(subst .,_,$(subst
 
 VCFLAGS0     := -DVC_COMPILE_LIB $(filter-out -x%,$(filter-out -m%,$(filter-out /arch:%,$(OPT) $(CXXFLAGS))))
 VCFLAGS      := $(VCFLAGS0) $(VCFLAGS)
-VCLIBVCOBJ   := const.cpp cpuid.cpp support.cpp \
+VCLIBVCOBJ   := const.cpp cpuid.cpp support.cpp  trigonometric.cpp \
 	 $(foreach flag,$(call escapeflag,$(SIMDCXXFLAGS)),trigonometric_$(flag).cpp)
 ifdef AVXCXXFLAG
 VCLIBVCOBJ   += avx_sorthelper.cpp
