@@ -2259,6 +2259,14 @@ if test $# -gt 0 ; then
    done
 fi
 
+# sanity check, prefix must be an absolute path
+if test ! "x$haveconfig" = "x" ; then
+   case $prefix in
+      /*) ;;
+      *)  echo "`basename $0`: --prefix argument must be an absolute path, not $prefix"; exit 1;;
+   esac
+fi
+
 ######################################################################
 #
 ### echo %%% Copy skeletons to temporary files
