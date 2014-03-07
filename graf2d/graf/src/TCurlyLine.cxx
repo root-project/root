@@ -121,7 +121,7 @@ void TCurlyLine::Build()
    Int_t nperiods = (Int_t)((lengthPix - lengthcycle) / len2pi);
    Double_t restlength = 0.5 * (lengthPix - nperiods * len2pi - lengthcycle);
    fNsteps = (Int_t)(anglestep * nperiods + anglestep / 2 + 4);
-   if(fNsteps < 1) fNsteps = 1;
+   if (fNsteps < 1) fNsteps = 1;
    SetPolyLine(fNsteps);
    Double_t *xv = GetX();
    Double_t *yv = GetY();
@@ -132,7 +132,7 @@ void TCurlyLine::Build()
    Int_t i;
    for(i = 2; i < fNsteps-1; i++){
    // distinguish between curly and wavy
-      if(fIsCurly) xv[i] = x0 + amplitudePix * TMath::Sin(phase);
+      if (fIsCurly) xv[i] = x0 + amplitudePix * TMath::Sin(phase);
       else         xv[i] = x0;
       yv[i]  = amplitudePix*TMath::Cos(phase);
       phase += phimaxle;
@@ -144,7 +144,7 @@ void TCurlyLine::Build()
 
    // rotate object and transform back to user coordinates
    Double_t angle = TMath::ATan2(py2-py1, px2-px1);
-   if(angle < 0) angle += 2*TMath::Pi();
+   if (angle < 0) angle += 2*TMath::Pi();
 
    Double_t cosang = TMath::Cos(angle);
    Double_t sinang = TMath::Sin(angle);
@@ -198,7 +198,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
-      if(!opaque) {
+      if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();  //Change line attributes only if necessary
       }
@@ -238,7 +238,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if (p1) {
-         if(!opaque) {
+         if (!opaque) {
             gVirtualX->DrawLine(px1old, py1old, px2, py2);
             gVirtualX->DrawLine(px, py, px2, py2);
          }
@@ -247,7 +247,7 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          py1old = py;
       }
       if (p2) {
-         if(!opaque) {
+         if (!opaque) {
             gVirtualX->DrawLine(px1, py1, px2old, py2old);
             gVirtualX->DrawLine(px1, py1, px, py);
          }
@@ -256,13 +256,13 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          py2old = py;
       }
       if (pL) {
-         if(!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
+         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          dx = px-pxold;  dy = py-pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         if(!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
+         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          pxold = px;
          pyold = py;
-         if(opaque) {
+         if (opaque) {
             this->SetStartPoint(gPad->AbsPixeltoX(px1),gPad->AbsPixeltoY(py1));
             this->SetEndPoint(gPad->AbsPixeltoX(px2), gPad->AbsPixeltoY(py2));
          }
