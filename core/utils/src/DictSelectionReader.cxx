@@ -186,7 +186,7 @@ void DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdD
             
       if (unsigned int attrCode = ExtractTemplateArgValue(*baseIt,"ClassAttributes") ){
          if (attrCode & ROOT::Meta::Selection::kNonSplittable)
-            csr.SetAttributeValue("kNonSplittable", "true");
+            csr.SetAttributeValue("nonSplittable", "true");
       }
       if ( unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt,"Keep") ){      
          std::string pattern = className.substr(0,className.find_first_of("<"));
