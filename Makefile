@@ -721,10 +721,10 @@ buildtools:
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
 		   rootcling \
 		) || exit 1;
+endif
 
 distclean::
-		@rm -rf $(BUILDTOOLSDIR)
-endif
+		@rm -rf buildtools
 
 postbin:        $(POSTBIN)
 
