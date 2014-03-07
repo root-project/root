@@ -776,10 +776,10 @@ buildtools:
 		   TARGETFLAGS=-DR__$(shell echo $(ARCH) | tr 'a-z' 'A-Z') \
 		   rootcint cint/cint/lib/posix/mktypes \
 		) || exit 1;
+endif
 
 distclean::
-		@rm -rf $(BUILDTOOLSDIR)
-endif
+		@rm -rf buildtools
 
 postbin:        $(POSTBIN)
 
