@@ -136,13 +136,17 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
 
+   Bool_t opaque  = gPad->OpaqueMoving();
+
    if (!gPad->IsEditable()) return;
 
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
+      if (!opaque) {
+         gVirtualX->SetLineColor(-1);
+         TAttLine::Modify();  //Change line attributes only if necessary
+      }
 
       // No break !!!
 
@@ -185,24 +189,44 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if (p1) {
-         gVirtualX->DrawLine(px1old, py1old, px2, py2);
-         gVirtualX->DrawLine(px, py, px2, py2);
+         if (!opaque) {
+            gVirtualX->DrawLine(px1old, py1old, px2, py2);
+            gVirtualX->DrawLine(px, py, px2, py2);
+         }
+         else {
+            this->SetX1(gPad->AbsPixeltoX(px));
+            this->SetY1(gPad->AbsPixeltoY(py));
+         }
          px1old = px;
          py1old = py;
       }
       if (p2) {
-         gVirtualX->DrawLine(px1, py1, px2old, py2old);
-         gVirtualX->DrawLine(px1, py1, px, py);
+         if (!opaque) {
+            gVirtualX->DrawLine(px1, py1, px2old, py2old);
+            gVirtualX->DrawLine(px1, py1, px, py);
+         }
+         else {
+            this->SetX2(gPad->AbsPixeltoX(px));
+            this->SetY2(gPad->AbsPixeltoY(py));
+         }
          px2old = px;
          py2old = py;
       }
       if (pL) {
-         gVirtualX->DrawLine(px1, py1, px2, py2);
+         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          dx = px-pxold;  dy = py-pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         gVirtualX->DrawLine(px1, py1, px2, py2);
+         if (!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          pxold = px;
          pyold = py;
+         if (opaque) {
+            this->SetX1(gPad->AbsPixeltoX(px1));
+            this->SetY1(gPad->AbsPixeltoY(py1));
+            this->SetX2(gPad->AbsPixeltoX(px2));
+            this->SetY2(gPad->AbsPixeltoY(py2));
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
       }
       break;
 
@@ -212,52 +236,53 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          gROOT->SetEscape(kFALSE);
          break;
       }
-
-      if (TestBit(kLineNDC)) {
-         dpx  = gPad->GetX2() - gPad->GetX1();
-         dpy  = gPad->GetY2() - gPad->GetY1();
-         xp1  = gPad->GetX1();
-         yp1  = gPad->GetY1();
-         if (p1) {
-            fX1 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
-            fY1 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+      if (!opaque) {
+         if (TestBit(kLineNDC)) {
+            dpx  = gPad->GetX2() - gPad->GetX1();
+            dpy  = gPad->GetY2() - gPad->GetY1();
+            xp1  = gPad->GetX1();
+            yp1  = gPad->GetY1();
+            if (p1) {
+               fX1 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
+               fY1 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+            }
+            if (p2) {
+               fX2 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
+               fY2 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+            }
+            if (pL) {
+               fX1 = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
+               fY1 = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
+               fX2 = (gPad->AbsPixeltoX(px2)-xp1)/dpx;
+               fY2 = (gPad->AbsPixeltoY(py2)-yp1)/dpy;
+            }
+         } else {
+            if (p1) {
+               fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+               fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+            }
+            if (p2) {
+               fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
+               fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
+            }
+            if (pL) {
+               fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px1));
+               fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py1));
+               fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px2));
+               fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
+            }
          }
-         if (p2) {
-            fX2 = (gPad->AbsPixeltoX(px)-xp1)/dpx;
-            fY2 = (gPad->AbsPixeltoY(py)-yp1)/dpy;
+         if (TestBit(kVertical)) {
+            if (p1) fX2 = fX1;
+            if (p2) fX1 = fX2;
          }
-         if (pL) {
-            fX1 = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
-            fY1 = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
-            fX2 = (gPad->AbsPixeltoX(px2)-xp1)/dpx;
-            fY2 = (gPad->AbsPixeltoY(py2)-yp1)/dpy;
+         if (TestBit(kHorizontal)) {
+            if (p1) fY2 = fY1;
+            if (p2) fY1 = fY2;
          }
-      } else {
-         if (p1) {
-            fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px));
-            fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py));
-         }
-         if (p2) {
-            fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px));
-            fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py));
-         }
-         if (pL) {
-            fX1 = gPad->PadtoX(gPad->AbsPixeltoX(px1));
-            fY1 = gPad->PadtoY(gPad->AbsPixeltoY(py1));
-            fX2 = gPad->PadtoX(gPad->AbsPixeltoX(px2));
-            fY2 = gPad->PadtoY(gPad->AbsPixeltoY(py2));
-         }
+         gPad->Modified(kTRUE);
+         gVirtualX->SetLineColor(-1);
       }
-      if (TestBit(kVertical)) {
-         if (p1) fX2 = fX1;
-         if (p2) fX1 = fX2;
-      }
-      if (TestBit(kHorizontal)) {
-         if (p1) fY2 = fY1;
-         if (p2) fY1 = fY2;
-      }
-      gPad->Modified(kTRUE);
-      gVirtualX->SetLineColor(-1);
       break;
 
    case kButton1Locate:

@@ -79,41 +79,44 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    TWbox::ExecuteEvent(event, px, py);
 
-   if (event != kButton1Up) return;
-   // update pad margins
-   Double_t xmin         = gPad->GetUxmin();
-   Double_t xmax         = gPad->GetUxmax();
-   Double_t ymin         = gPad->GetUymin();
-   Double_t ymax         = gPad->GetUymax();
-   Double_t dx           = xmax-xmin;
-   Double_t dy           = ymax-ymin;
-   Double_t leftMargin   = (fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
-   Double_t topMargin    = (gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1());
-   Double_t rightMargin  = (gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1());
-   Double_t bottomMargin = (fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
-   // margin may get very small negative values
-   if (leftMargin   < 0) leftMargin   = 0;
-   if (topMargin    < 0) topMargin    = 0;
-   if (rightMargin  < 0) rightMargin  = 0;
-   if (bottomMargin < 0) bottomMargin = 0;
-   gPad->SetLeftMargin(leftMargin);
-   gPad->SetRightMargin(rightMargin);
-   gPad->SetBottomMargin(bottomMargin);
-   gPad->SetTopMargin(topMargin);
-   Double_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
-   Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+   Bool_t opaque  = gPad->OpaqueMoving();
 
-   // Range() could change the size of the pad pixmap and therefore should
-   // be called before the other paint routines
-   gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
-   gPad->RangeAxis(xmin, ymin, xmax, ymax);
-   fX1 = xmin;
-   fY1 = ymin;
-   fX2 = xmax;
-   fY2 = ymax;
+   if ((event == kButton1Up) || ((opaque)&&(event == kButton1Motion))) {
+      // update pad margins
+      Double_t xmin         = gPad->GetUxmin();
+      Double_t xmax         = gPad->GetUxmax();
+      Double_t ymin         = gPad->GetUymin();
+      Double_t ymax         = gPad->GetUymax();
+      Double_t dx           = xmax-xmin;
+      Double_t dy           = ymax-ymin;
+      Double_t leftMargin   = (fX1-gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+      Double_t topMargin    = (gPad->GetY2()-fY2)/(gPad->GetY2()-gPad->GetY1());
+      Double_t rightMargin  = (gPad->GetX2()-fX2)/(gPad->GetX2()-gPad->GetX1());
+      Double_t bottomMargin = (fY1-gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+      // margin may get very small negative values
+      if (leftMargin   < 0) leftMargin   = 0;
+      if (topMargin    < 0) topMargin    = 0;
+      if (rightMargin  < 0) rightMargin  = 0;
+      if (bottomMargin < 0) bottomMargin = 0;
+      gPad->SetLeftMargin(leftMargin);
+      gPad->SetRightMargin(rightMargin);
+      gPad->SetBottomMargin(bottomMargin);
+      gPad->SetTopMargin(topMargin);
+      Double_t dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
+      Double_t dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+
+      // Range() could change the size of the pad pixmap and therefore should
+      // be called before the other paint routines
+      gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
+                         ymin - dyr*gPad->GetBottomMargin(),
+                         xmax + dxr*gPad->GetRightMargin(),
+                         ymax + dyr*gPad->GetTopMargin());
+      gPad->RangeAxis(xmin, ymin, xmax, ymax);
+      fX1 = xmin;
+      fY1 = ymin;
+      fX2 = xmax;
+      fY2 = ymax;
+   }
 }
 
 //______________________________________________________________________________
