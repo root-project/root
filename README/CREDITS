@@ -697,7 +697,8 @@ D: TMonaLisa monitoring plugin
 
 N: Danilo Piparo
 E: Danilo.Piparo@cern.ch
-D: contribution in RooStats
+D: contribution in RooStats and Math
+D: Dictionaries and integration with experiments' frameworks
 
 N: Filip Pizlo
 E: pizlo@purdue.edu
