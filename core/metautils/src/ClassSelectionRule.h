@@ -46,7 +46,7 @@ private:
 
 public:
 
-   ClassSelectionRule(ESelect sel):
+   ClassSelectionRule(ESelect sel=kYes):
    BaseSelectionRule(sel), fIsInheritable(false), fRequestStreamerInfo(false), fRequestNoStreamer(false), fRequestNoInputOperator(false), fRequestOnlyTClass(false), fRequestProtected(false), fRequestPrivate(false), fRequestedVersionNumber(-1) {}
    
    ClassSelectionRule(long index, cling::Interpreter &interp):

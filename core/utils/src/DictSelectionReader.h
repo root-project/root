@@ -14,8 +14,9 @@
 
 #include "clang/AST/RecursiveASTVisitor.h"
 
+#include <llvm/ADT/StringMap.h>
+
 #include <set>
-#include <map>
 #include <string>
 
 class SelectionRules;
@@ -176,8 +177,9 @@ private:
    SelectionRules& fSelectionRules; ///< The selection rules to be filled
    std::set<const clang::RecordDecl*> fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
    std::set<std::string> fSpecialNames; ///< The names of the classes used for the selction syntax
-   std::map<std::string,std::set<std::string> > fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
+   llvm::StringMap<std::set<std::string> > fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
    std::list<std::pair<std::string, unsigned int> >fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to hide pairs
+   llvm::StringMap<ClassSelectionRule> fClassNameSelectionRuleMap; /// < Map of the already built sel rules
    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST
 };
 

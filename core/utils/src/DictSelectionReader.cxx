@@ -25,6 +25,14 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
    if (!fTemplateInstanceNamePatternsArgsToKeep.empty() ||
        !fAutoSelectedClassFieldNames.empty())
       TraverseDecl(translUnitDecl);
+   
+   // Now push all the selection rules
+   for (llvm::StringMap<ClassSelectionRule>::iterator it=fClassNameSelectionRuleMap.begin();
+        it != fClassNameSelectionRuleMap.end(); ++it){
+      fSelectionRules.AddClassSelectionRule(it->second);
+      
+      }
+        
 }
 
 //______________________________________________________________________________
@@ -173,20 +181,14 @@ void DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdD
    //2) There are properties. Make a loop. make a switch:
    //  2a) Is splittable
 
-   std::string baseName;
    for( clang::CXXRecordDecl::base_class_const_iterator baseIt = cxxRcrdDecl.bases_begin();
        baseIt !=  cxxRcrdDecl.bases_end(); baseIt++){
-      
-      unsigned int attrCode = ExtractTemplateArgValue(*baseIt,"ClassAttributes");
-      if (attrCode == ROOT::Meta::Selection::kMemberNullProperty)
-         continue;
-
-      if (attrCode & ROOT::Meta::Selection::kNonSplittable)
-         csr.SetAttributeValue("nonSplittable", "true");               
-
-      
-      if ( unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt,"Keep") ){
-      
+            
+      if (unsigned int attrCode = ExtractTemplateArgValue(*baseIt,"ClassAttributes") ){
+         if (attrCode & ROOT::Meta::Selection::kNonSplittable)
+            csr.SetAttributeValue("kNonSplittable", "true");
+      }
+      if ( unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt,"Keep") ){      
          std::string pattern = className.substr(0,className.find_first_of("<"));
          // Fill the structure holding the template and the number of args to
          // skip
@@ -209,7 +211,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
    ROOT::TMetaUtils::GetQualifiedName(className,
                                       *recordDecl.getTypeForDecl(),
                                       recordDecl);
-   
+      
    // Strip ROOT::Meta::Selection
    className.replace(0,23,"");
    
@@ -218,7 +220,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
    
    if ( !fSelectedRecordDecls.insert(&recordDecl).second )
       return true;
-
+  
    ClassSelectionRule csr(BaseSelectionRule::kYes);
    csr.SetAttributeValue("name",className);
 
@@ -230,7 +232,8 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
    }
 
    // Finally add the selection rule
-   fSelectionRules.AddClassSelectionRule(csr);
+   fClassNameSelectionRuleMap[className]=csr;
+   //fSelectionRules.AddClassSelectionRule(csr);
 
 
    return true;
@@ -262,6 +265,7 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
    ROOT::TMetaUtils::GetQualifiedName(className,
                                       *recordDecl.getTypeForDecl(),
                                       recordDecl);
+
    // If the class is not among those which have fields the type of which are to
    // be autoselected
    if (0 != fAutoSelectedClassFieldNames.count(className)){
@@ -282,6 +286,8 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
          fSelectionRules.AddClassSelectionRule(aSelCsr);
       }
    }
+   
+   
 
    // If the class is a template instantiation and its name matches one of the
    // patterns
@@ -289,19 +295,16 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
    // We don't want anything different from templ specialisations
    if (!llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) return true;
 
-   unsigned int nArgsToSkip;
+   unsigned int nArgsToKeep;
    std::list<std::pair<std::string,unsigned int> >::iterator it = fTemplateInstanceNamePatternsArgsToKeep.begin();
    for (;it !=fTemplateInstanceNamePatternsArgsToKeep.end(); ++it){
       std::string& pattern = it->first;
-      nArgsToSkip = it->second;
+      nArgsToKeep = it->second;
       // Check if we have to add a selection rule for this class
-      if (className.find(pattern) == 0){
-         ClassSelectionRule csr(BaseSelectionRule::kYes);
-         csr.SetAttributeValue("name",className);
+      if (className.find(pattern) == 0){    
          std::ostringstream oss;
-         oss << nArgsToSkip;
-         csr.SetAttributeValue("KeepFirstTemplateArguments",oss.str());
-         fSelectionRules.AddClassSelectionRule(csr);
+         oss << nArgsToKeep;
+         fClassNameSelectionRuleMap[className].SetAttributeValue("KeepFirstTemplateArguments",oss.str());
       }
    }
    return true;
