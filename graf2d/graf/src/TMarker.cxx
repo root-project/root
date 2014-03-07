@@ -172,16 +172,18 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    TPoint p;
    static Int_t pxold, pyold;
+   Double_t dpx, dpy, xp1,yp1;
+   Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!gPad->IsEditable()) return;
 
    switch (event) {
 
-
    case kButton1Down:
-      gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
-      TAttMarker::Modify();  //Change marker attributes only if necessary
-
+      if(!opaque) {
+         gVirtualX->SetTextColor(-1);  // invalidate current text color (use xor mode)
+         TAttMarker::Modify();  //Change marker attributes only if necessary
+      }
       // No break !!!
 
    case kMouseMotion:
@@ -191,27 +193,43 @@ void TMarker::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
       p.fX = pxold; p.fY = pyold;
-      gVirtualX->DrawPolyMarker(1, &p);
+      if(!opaque) gVirtualX->DrawPolyMarker(1, &p);
       p.fX = px; p.fY = py;
-      gVirtualX->DrawPolyMarker(1, &p);
+      if(!opaque) gVirtualX->DrawPolyMarker(1, &p);
       pxold = px;  pyold = py;
+      if(opaque) {
+         if (TestBit(kMarkerNDC)) {
+            dpx  = gPad->GetX2() - gPad->GetX1();
+            dpy  = gPad->GetY2() - gPad->GetY1();
+            xp1  = gPad->GetX1();
+            yp1  = gPad->GetY1();
+            this->SetX((gPad->AbsPixeltoX(pxold)-xp1)/dpx);
+            this->SetY((gPad->AbsPixeltoY(pyold)-yp1)/dpy);
+         } else {
+            this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px)));
+            this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py)));
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
       break;
 
    case kButton1Up:
-      Double_t dpx, dpy, xp1,yp1;
-      if (TestBit(kMarkerNDC)) {
-         dpx  = gPad->GetX2() - gPad->GetX1();
-         dpy  = gPad->GetY2() - gPad->GetY1();
-         xp1  = gPad->GetX1();
-         yp1  = gPad->GetY1();
-         fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
-         fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
-      } else {
-         fX = gPad->PadtoX(gPad->AbsPixeltoX(px));
-         fY = gPad->PadtoY(gPad->AbsPixeltoY(py));
+      if(!opaque) {
+         if (TestBit(kMarkerNDC)) {
+            dpx  = gPad->GetX2() - gPad->GetX1();
+            dpy  = gPad->GetY2() - gPad->GetY1();
+            xp1  = gPad->GetX1();
+            yp1  = gPad->GetY1();
+            fX = (gPad->AbsPixeltoX(pxold)-xp1)/dpx;
+            fY = (gPad->AbsPixeltoY(pyold)-yp1)/dpy;
+         } else {
+            fX = gPad->PadtoX(gPad->AbsPixeltoX(px));
+            fY = gPad->PadtoY(gPad->AbsPixeltoY(py));
+         }
+         gPad->Modified(kTRUE);
+         gVirtualX->SetTextColor(-1);
       }
-      gPad->Modified(kTRUE);
-      gVirtualX->SetTextColor(-1);
       break;
    }
 }

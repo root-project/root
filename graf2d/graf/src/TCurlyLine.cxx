@@ -108,11 +108,6 @@ void TCurlyLine::Build()
       py2           = fY2;
       lengthPix = TMath::Sqrt((px2-px1)*(px2-px1) + (py1-py2)*(py1-py2));
    }
-   if(lengthPix <= wavelengthPix){
-      Warning("Build","CurlyLine is too short, length %g is < wavelength: %g ",lengthPix,wavelengthPix);
-      SetBit(kTooShort);
-      return;
-   }
    // construct the curly / wavy line in pixel coordinates at angle 0
    Double_t anglestep = 40;
    Double_t phimaxle  = TMath::Pi() * 2. / anglestep ;
@@ -198,12 +193,15 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Bool_t p1, p2, pL;
    Int_t dx, dy;
 
+   Bool_t opaque  = gPad->OpaqueMoving();
 
    switch (event) {
 
    case kButton1Down:
-      gVirtualX->SetLineColor(-1);
-      TAttLine::Modify();  //Change line attributes only if necessary
+      if(!opaque) {
+         gVirtualX->SetLineColor(-1);
+         TAttLine::Modify();  //Change line attributes only if necessary
+      }
 
       // No break !!!
 
@@ -240,24 +238,34 @@ void TCurlyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Motion:
 
       if (p1) {
-         gVirtualX->DrawLine(px1old, py1old, px2, py2);
-         gVirtualX->DrawLine(px, py, px2, py2);
+         if(!opaque) {
+            gVirtualX->DrawLine(px1old, py1old, px2, py2);
+            gVirtualX->DrawLine(px, py, px2, py2);
+         }
+         else this->SetStartPoint(gPad->AbsPixeltoX(px),gPad->AbsPixeltoY(py));
          px1old = px;
          py1old = py;
       }
       if (p2) {
-         gVirtualX->DrawLine(px1, py1, px2old, py2old);
-         gVirtualX->DrawLine(px1, py1, px, py);
+         if(!opaque) {
+            gVirtualX->DrawLine(px1, py1, px2old, py2old);
+            gVirtualX->DrawLine(px1, py1, px, py);
+         }
+         else this->SetEndPoint(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
          px2old = px;
          py2old = py;
       }
       if (pL) {
-         gVirtualX->DrawLine(px1, py1, px2, py2);
+         if(!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          dx = px-pxold;  dy = py-pyold;
          px1 += dx; py1 += dy; px2 += dx; py2 += dy;
-         gVirtualX->DrawLine(px1, py1, px2, py2);
+         if(!opaque) gVirtualX->DrawLine(px1, py1, px2, py2);
          pxold = px;
          pyold = py;
+         if(opaque) {
+            this->SetStartPoint(gPad->AbsPixeltoX(px1),gPad->AbsPixeltoY(py1));
+            this->SetEndPoint(gPad->AbsPixeltoX(px2), gPad->AbsPixeltoY(py2));
+         }
       }
       break;
 
