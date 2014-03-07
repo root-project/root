@@ -88,7 +88,7 @@ CRYPTLIBS     = -lcrypt
 # Fortran:
 ifeq ($(F77),ifort)
 F77           = ifort
-F77FLAGS      = -fPIC
+F77FLAGS      = -fPIC $(MICFLAGS)
 ifeq ($(findstring $(ICC_MAJOR),11 10 9),)
 F77LIBS      := -L$(shell which ifort | sed -e 's|bin/intel64/ifort|compiler/lib|') \
                 -lifcore
