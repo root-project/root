@@ -54,8 +54,8 @@ namespace clang {
 namespace cling {
    class Interpreter;
    class MetaProcessor;
-   class StoredValueRef;
    class Transaction;
+   class Value;
 }
 
 class TClingCallbacks;
@@ -106,7 +106,7 @@ private: // Data Members
    cling::Interpreter*   fInterpreter;   // The interpreter.
    cling::MetaProcessor* fMetaProcessor; // The metaprocessor.
 
-   std::vector<cling::StoredValueRef> *fTemporaries;    // Stack of temporaries
+   std::vector<cling::Value> *fTemporaries;    // Stack of temporaries
    ROOT::TMetaUtils::TNormalizedCtxt  *fNormalizedCtxt; // Which typedef to avoid stripping.
    ROOT::TMetaUtils::TClingLookupHelper *fLookupHelper; // lookup helper used by TClassEdit
 
@@ -283,7 +283,7 @@ public: // Public Interface
 
    TInterpreterValue *CreateTemporary();
    void               RegisterTemporary(const TInterpreterValue& value);
-   void               RegisterTemporary(const cling::StoredValueRef& value);
+   void               RegisterTemporary(const cling::Value& value);
    const ROOT::TMetaUtils::TNormalizedCtxt& GetNormalizedContext() const {return *fNormalizedCtxt;};
 
    // core/meta helper functions.

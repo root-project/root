@@ -13,59 +13,54 @@
 //                                                                            //
 // TClingValue                                                                //
 //                                                                            //
-// Bridge between cling::StoredValueRef and ROOT.                             //
+// Bridge between cling::Value and ROOT.                                      //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 #include "TClingValue.h"
 
-#include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Interpreter/Value.h"
+#include <cassert>
 
-static const cling::StoredValueRef& GetAsStoredValueRef(void* const& value) {
-   return reinterpret_cast<const cling::StoredValueRef&>(value);
-}
-
-static cling::StoredValueRef& GetAsStoredValueRef(void*& value) {
-   return reinterpret_cast<cling::StoredValueRef&>(value);
-}
-
-TClingValue::TClingValue() : fValue(0) {
+TClingValue::TClingValue() {
    // We default initialize to invalid value so that we could keep a "sane" state.
-   new (&fValue) cling::StoredValueRef();
+   assert(sizeof(fValue) >= sizeof(cling::Value)
+          && "sizeof(fValue) too small!");
+   new (&fValue) cling::Value();
 }
 
-TClingValue::TClingValue(const TClingValue& Other) : TInterpreterValue(), fValue(0) {
-   using namespace cling;
-   new (&fValue) StoredValueRef(GetAsStoredValueRef(Other.fValue));
+TClingValue::TClingValue(const TClingValue& Other) {
+   assert(sizeof(fValue) >= sizeof(cling::Value)
+          && "sizeof(fValue) too small!");
+   new (&fValue) cling::Value(Other.ToCV());
 }
 
 TClingValue::~TClingValue() {
-   GetAsStoredValueRef(fValue).~StoredValueRef();
+   ToCV().~Value();
 }
 
 TClingValue& TClingValue::operator=(TClingValue &Other) {
    using namespace cling;
-   StoredValueRef& That = reinterpret_cast<StoredValueRef&>(Other.fValue);
-   GetAsStoredValueRef(fValue) = (GetAsStoredValueRef(fValue).operator=(That));
+   ToCV() = Other.ToCV();
    return *this;
 }
 
 Bool_t TClingValue::IsValid() const {
-   return GetAsStoredValueRef(fValue).isValid();
+   return ToCV().isValid();
 }
 
 Double_t TClingValue::GetAsDouble() const {
-   return GetAsStoredValueRef(fValue).get().getAs<double>();
+   return ToCV().getDouble();
 }
 
 Long_t TClingValue::GetAsLong() const {
-   return GetAsStoredValueRef(fValue).get().getAs<long>();
+   return ToCV().getLL();
 }
 
- ULong_t TClingValue::GetAsUnsignedLong() const {
-   return GetAsStoredValueRef(fValue).get().getAs<unsigned long>();
+ULong_t TClingValue::GetAsUnsignedLong() const {
+   return ToCV().getULL();
 }
 
 void* TClingValue::GetAsPointer() const {
-   return GetAsStoredValueRef(fValue).get().getAs<void*>();
+   return ToCV().getPtr();
 }

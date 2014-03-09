@@ -90,7 +90,7 @@
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Interpreter/Value.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
@@ -765,7 +765,7 @@ TCling::TCling(const char *name, const char *title)
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
-   fTemporaries = new std::vector<cling::StoredValueRef>();
+   fTemporaries = new std::vector<cling::Value>();
 
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
@@ -1242,7 +1242,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    // not a complete statement.
    int indent = 0;
    // This will hold the resulting value of the evaluation the given line.
-   cling::StoredValueRef result;
+   cling::Value result;
    cling::Interpreter::CompilationResult compRes = cling::Interpreter::kSuccess;
    if (!strncmp(sLine.Data(), ".L", 2) || !strncmp(sLine.Data(), ".x", 2) ||
        !strncmp(sLine.Data(), ".X", 2)) {
@@ -1333,10 +1333,10 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (compRes == cling::Interpreter::kSuccess
        && result.isValid()
-       && !result.get().isVoid(fInterpreter->getCI()->getASTContext()))
+       && !result.isVoid(fInterpreter->getCI()->getASTContext()))
    {
       gROOT->SetLineHasBeenProcessed();
-      return result.get().simplisticCastAs<long>();
+      return result.simplisticCastAs<long>();
    }
    gROOT->SetLineHasBeenProcessed();
    return 0;
@@ -1607,7 +1607,7 @@ void TCling::ClearStack()
 {
    // Delete existing temporary values.
 
-   // No-op for cling due to StoredValueRef.
+   // No-op for cling due to cling::Value.
 }
 
 //______________________________________________________________________________
@@ -1927,7 +1927,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
    if (error) {
       *error = TInterpreter::kNoError;
    }
-   cling::StoredValueRef valRef;
+   cling::Value valRef;
    cling::Interpreter::CompilationResult cr = fInterpreter->evaluate(line, valRef);
    if (cr != cling::Interpreter::kSuccess) {
       // Failure in compilation.
@@ -1946,7 +1946,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       return 0L;
    }
 
-   if (valRef.get().isVoid(fInterpreter->getCI()->getASTContext())) {
+   if (valRef.isVoid(fInterpreter->getCI()->getASTContext())) {
       return 0;
    }
 
@@ -1956,7 +1956,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       gROOT->SetLineHasBeenProcessed();
    }
 #endif // R__WIN32
-   return valRef.get().simplisticCastAs<long>();
+   return valRef.simplisticCastAs<long>();
 }
 
 //______________________________________________________________________________
@@ -5004,7 +5004,7 @@ void TCling::SetRTLD_LAZY() const
 void TCling::SetTempLevel(int val) const
 {
    // Create / close a scope for temporaries. No-op for cling; use
-   // StoredValueRef instead.
+   // cling::Value instead.
 }
 
 //______________________________________________________________________________
@@ -5069,12 +5069,12 @@ TInterpreterValue *TCling::CreateTemporary()
 void TCling::RegisterTemporary(const TInterpreterValue& value)
 {
    using namespace cling;
-   const StoredValueRef& SVR = reinterpret_cast<const StoredValueRef&>(value.Get());
-   RegisterTemporary(SVR);
+   const Value* V = reinterpret_cast<const Value*>(value.GetValAddr());
+   RegisterTemporary(*V);
 }
 
 //______________________________________________________________________________
-void TCling::RegisterTemporary(const cling::StoredValueRef& value)
+void TCling::RegisterTemporary(const cling::Value& value)
 {
    // Register value as a temporary, extending its lifetime to that of the
    // interpreter. This is needed for TCling's compatibility interfaces

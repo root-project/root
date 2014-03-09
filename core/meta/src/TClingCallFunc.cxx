@@ -40,8 +40,8 @@
 #include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/StoredValueRef.h"
 #include "cling/Interpreter/Transaction.h"
+#include "cling/Interpreter/Value.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
@@ -99,16 +99,17 @@ indent(ostringstream& buf, int indent_level)
 }
 
 static
-cling::StoredValueRef
-EvaluateExpr(cling::Interpreter* interp, const Expr* E)
+void
+EvaluateExpr(cling::Interpreter* interp, const Expr* E, cling::Value& V)
 {
-   // Evaluate an Expr* and return its cling::StoredValueRef
+   // Evaluate an Expr* and return its cling::Value
    ASTContext& C = interp->getCI()->getASTContext();
    APSInt res;
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
-      GenericValue gv;
-      gv.IntVal = res;
-      return cling::StoredValueRef::bitwiseCopy(*interp, cling::Value(gv, C.IntTy));
+      // IntTy or maybe better E->getType()?
+      V = cling::Value(C.IntTy, 0);
+      V.getULL() = res.getZExtValue();
+      return;
    }
    // TODO: Build a wrapper around the expression to avoid decompilation and
    // compilation and other string operations.
@@ -122,104 +123,31 @@ EvaluateExpr(cling::Interpreter* interp, const Expr* E)
    E->printPretty(out, /*Helper=*/0, Policy, /*Indentation=*/0);
    out << ';'; // no value printing
    out.flush();
-   cling::StoredValueRef valref;
-   cling::Interpreter::CompilationResult cr = interp->evaluate(buf, valref);
-   if (cr != cling::Interpreter::kSuccess) {
-      return cling::StoredValueRef::invalidValue();
-   }
-   return valref;
-}
-
-namespace {
-template <typename T>
-T sv_to_long_long_u_or_not(const cling::StoredValueRef& svref)
-{
-   const cling::Value& valref = svref.get();
-   QualType QT = valref.getClangType();
-   if (QT.isNull()) {
-      Error("TClingCallFunc::sv_to_long_long", "Null Type!");
-      return 0;
-   }
-   GenericValue gv = valref.getGV();
-   if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT =
-         QT->getAs<MemberPointerType>();
-      if (MPT->isMemberDataPointer()) {
-         return (T) (ptrdiff_t) gv.PointerVal;
-      }
-      return (T) gv.PointerVal;
-   }
-   if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
-         QT->isReferenceType()) {
-      return (T) gv.PointerVal;
-   }
-   if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
-      if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
-         return (T) gv.IntVal.getSExtValue();
-      else
-         return (T) gv.IntVal.getZExtValue();
-   }
-   if (const BuiltinType* BT =
-            dyn_cast<BuiltinType>(&*QT)) {
-      if (BT->isSignedInteger()) {
-         return gv.IntVal.getSExtValue();
-      } else if (BT->isUnsignedInteger()) {
-         return (T) gv.IntVal.getZExtValue();
-      } else {
-         switch (BT->getKind()) {
-         case BuiltinType::Float:
-            return (T) gv.FloatVal;
-         case BuiltinType::Double:
-            return (T) gv.DoubleVal;
-         case BuiltinType::LongDouble:
-            // FIXME: Implement this!
-            break;
-         case BuiltinType::NullPtr:
-            // C++11 nullptr
-            return 0;
-         default: break;
-         }
-      }
-   }
-   Error("TClingCallFunc::sv_to_long_long", "Cannot handle this type!");
-   QT->dump();
-   return 0;
-}
-}
-
-static
-long long sv_to_long_long(const cling::StoredValueRef& svref) {
-   return sv_to_long_long_u_or_not<long long>(svref);
-}
-static
-unsigned long long sv_to_ulong_long(const cling::StoredValueRef& svref) {
-   return sv_to_long_long_u_or_not<unsigned long long>(svref);
+   // Evaluate() will set V to invalid if evaluation fails.
+   interp->evaluate(buf, V);
 }
 
 namespace {
 template <typename returnType>
-returnType sv_to(const cling::StoredValueRef& svref)
+returnType sv_to(const cling::Value& val)
 {
-   const cling::Value& valref = svref.get();
-   QualType QT = valref.getClangType();
-   GenericValue gv = valref.getGV();
+   QualType QT = val.getType();
    if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT =
-         QT->getAs<MemberPointerType>();
+      const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
-         return (returnType) *(ptrdiff_t*)gv.PointerVal;
+         return (returnType) (ptrdiff_t)val.getPtr();
       }
-      return (returnType) (long) gv.PointerVal;
+      return (returnType) (long) val.getPtr();
    }
    if (QT->isPointerType() || QT->isArrayType() || QT->isRecordType() ||
          QT->isReferenceType()) {
-      return (returnType) (long) gv.PointerVal;
+      return (returnType) (long) val.getPtr();
    }
    if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
-      // Note: We may need to worry about the underlying type
-      //       of the enum here.
-      (void) ET;
-      return (returnType) gv.IntVal.getSExtValue();
+      if (ET->getDecl()->getIntegerType()->hasSignedIntegerRepresentation())
+         return (returnType) val.getLL();
+      else
+         return (returnType) val.getULL();
    }
    if (const BuiltinType* BT =
             dyn_cast<BuiltinType>(&*QT)) {
@@ -231,234 +159,97 @@ returnType sv_to(const cling::StoredValueRef& svref)
       //  Do not reorder!
       //
       switch (BT->getKind()) {
-            //
-            //  Builtin Types
-            //
-         case BuiltinType::Void: {
-               // void
-            }
+         case BuiltinType::Void:
             break;
             //
             //  Unsigned Types
             //
-         case BuiltinType::Bool: {
-               // bool
-               return (returnType) gv.IntVal.getZExtValue();
-            }
+         case BuiltinType::Bool:
+         case BuiltinType::Char_U: // char on targets where it is unsigned
+         case BuiltinType::UChar:
+            return (returnType) val.getULL();
             break;
-         case BuiltinType::Char_U: {
-               // char on targets where it is unsigned
-               return (returnType) gv.IntVal.getZExtValue();
-            }
+
+         case BuiltinType::WChar_U:
+            // wchar_t on targets where it is unsigned
+            // The standard doesn't allow to specify signednedd of wchar_t
+            // thus this maps simply to wchar_t.
+            return (returnType) (wchar_t) val.getULL();
             break;
-         case BuiltinType::UChar: {
-               // unsigned char
-               return (returnType) gv.IntVal.getZExtValue();
-            }
+
+         case BuiltinType::Char16:
+         case BuiltinType::Char32:
+         case BuiltinType::UShort:
+         case BuiltinType::UInt:
+         case BuiltinType::ULong:
+         case BuiltinType::ULongLong:
+            return (returnType) val.getULL();
             break;
-         case BuiltinType::WChar_U: {
-               // wchar_t on targets where it is unsigned
-               // The standard doesn't allow to specify signednedd of wchar_t
-               // thus this maps simply to wchar_t.
-            return (returnType) (wchar_t) gv.IntVal.getZExtValue();
-            }
+
+         case BuiltinType::UInt128:
+            // __uint128_t
             break;
-         case BuiltinType::Char16: {
-               // char16_t
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::Char32: {
-               // char32_t
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UShort: {
-               // unsigned short
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt: {
-               // unsigned int
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULong: {
-               // unsigned long
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::ULongLong: {
-               // unsigned long long
-               return (returnType) gv.IntVal.getZExtValue();
-            }
-            break;
-         case BuiltinType::UInt128: {
-               // __uint128_t
-            }
-            break;
+
             //
             //  Signed Types
             //
-         case BuiltinType::Char_S: {
-               // char on targets where it is signed
-               return (returnType) gv.IntVal.getSExtValue();
-            }
+         case BuiltinType::Char_S: // char on targets where it is signed
+         case BuiltinType::SChar:
+            return (returnType) val.getLL();
             break;
-         case BuiltinType::SChar: {
-               // signed char
-               return (returnType) gv.IntVal.getSExtValue();
-            }
-            break;
-         case BuiltinType::WChar_S: {
+
+         case BuiltinType::WChar_S:
                // wchar_t on targets where it is signed
                // The standard doesn't allow to specify signednedd of wchar_t
                // thus this maps simply to wchar_t.
-            return (returnType) (wchar_t) gv.IntVal.getSExtValue();
-            }
+            return (returnType) (wchar_t) val.getLL();
             break;
-         case BuiltinType::Short: {
-               // short
-               return (returnType) gv.IntVal.getSExtValue();
-            }
+
+         case BuiltinType::Short:
+         case BuiltinType::Int:
+         case BuiltinType::Long:
+         case BuiltinType::LongLong:
+            return (returnType) val.getLL();
             break;
-         case BuiltinType::Int: {
-               // int
-               return (returnType) gv.IntVal.getSExtValue();
-            }
+
+         case BuiltinType::Int128:
             break;
-         case BuiltinType::Long: {
-               // long
-               return (returnType) gv.IntVal.getSExtValue();
-            }
+
+         case BuiltinType::Half:
+            // half in OpenCL, __fp16 in ARM NEON
             break;
-         case BuiltinType::LongLong: {
-               // long long
-               return (returnType) gv.IntVal.getSExtValue();
-            }
+
+         case BuiltinType::Float:
+            return (returnType) val.getFloat();
+         case BuiltinType::Double:
+            return (returnType) val.getDouble();
             break;
-         case BuiltinType::Int128: {
-               // __int128_t
-            }
+         case BuiltinType::LongDouble:
+            return (returnType) val.getLongDouble();
             break;
-         case BuiltinType::Half: {
-               // half in OpenCL, __fp16 in ARM NEON
-            }
+
+         case BuiltinType::NullPtr:
+            return (returnType) 0;
             break;
-         case BuiltinType::Float: {
-               // float
-               return (returnType) gv.FloatVal;
-            }
-            break;
-         case BuiltinType::Double: {
-               // double
-               return (returnType) gv.DoubleVal;
-            }
-            break;
-         case BuiltinType::LongDouble: {
-               // long double
-               // FIXME: Implement this!
-            }
-            break;
-            //
-            //  Language-Specific Types
-            //
-         case BuiltinType::NullPtr: {
-               // C++11 nullptr
-            }
-            break;
-         case BuiltinType::ObjCId: {
-               // Objective C 'id' type
-            }
-            break;
-         case BuiltinType::ObjCClass: {
-               // Objective C 'Class' type
-            }
-            break;
-         case BuiltinType::ObjCSel: {
-               // Objective C 'SEL' type
-            }
-            break;
-         case BuiltinType::OCLImage1d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage1dBuffer: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage2dArray: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLImage3d: {
-               // OpenCL image type
-            }
-            break;
-         case BuiltinType::OCLSampler: {
-               // OpenCL sampler_t
-            }
-            break;
-         case BuiltinType::OCLEvent: {
-               // OpenCL event_t
-            }
-            break;
-            //
-            //  Placeholder types.
-            //
-            //  These types are used during intermediate phases
-            //  of semantic analysis.  They are eventually resolved
-            //  to one of the preceeding types.
-            //
-         case BuiltinType::Dependent: {
-               // dependent on a template argument
-            }
-            break;
-         case BuiltinType::Overload: {
-               // an unresolved function overload set
-            }
-            break;
-         case BuiltinType::BoundMember: {
-               // a bound C++ non-static member function
-            }
-            break;
-         case BuiltinType::PseudoObject: {
-               // Object C @property or VS.NET __property
-            }
-            break;
-         case BuiltinType::UnknownAny: {
-               // represents an unknown type
-            }
-            break;
-         case BuiltinType::BuiltinFn: {
-               // a compiler builtin function
-            }
-            break;
-         case BuiltinType::ARCUnbridgedCast: {
-               // Objective C Automatic Reference Counting cast
-               // which would normally require __bridge, but which
-               // may be ok because of the context.
-            }
-            break;
-         default: {
-               // There should be no others.  This is here in case
-               // this changes in the future.
-            }
+
+         default:
             break;
       }
    }
    Error("TClingCallFunc::sv_to", "Invalid Type!");
    QT->dump();
-   return 0.0;
+   return 0;
 }
+
+static
+long long sv_to_long_long(const cling::Value& val) {
+   return sv_to<long long>(val);
+}
+static
+unsigned long long sv_to_ulong_long(const cling::Value& val) {
+   return sv_to<unsigned long long>(val);
+}
+
 } // unnamed namespace.
 
 void*
@@ -1688,7 +1479,7 @@ TClingCallFunc::exec(void* address, void* ret) const
    const FunctionDecl* FD = fMethod->GetMethodDecl();
 
    //
-   //  Convert the arguments from cling::StoredValueRef to their
+   //  Convert the arguments from cling::Value to their
    //  actual type and store them in a holder for passing to the
    //  wrapper function by pointer to value.
    //
@@ -1719,7 +1510,7 @@ TClingCallFunc::exec(void* address, void* ret) const
          Ty = PVD->getType();
       }
       else {
-         Ty = fArgVals[i].get().getClangType();
+         Ty = fArgVals[i].getType();
       }
       QualType QT = Ty.getCanonicalType();
       if (QT->isReferenceType()) {
@@ -1972,7 +1763,7 @@ TClingCallFunc::exec(void* address, void* ret) const
             case BuiltinType::NullPtr: {
                   // C++11 nullptr
                   ValHolder vh;
-                  vh.u.vp = (void*) fArgVals[i].get().getGV().PointerVal;
+                  vh.u.vp = fArgVals[i].getPtr();
                   vh_ary.push_back(vh);
                   vp_ary.push_back(&vh_ary.back());
                }
@@ -2133,8 +1924,24 @@ TClingCallFunc::exec(void* address, void* ret) const
    (*fWrapper)(address, (int)num_args, (void**)vp_ary.data(), ret);
 }
 
+template <typename T>
+void TClingCallFunc::execWithLL(void* address, clang::QualType QT,
+                                cling::Value* val) const {
+   T ret; // leave uninit for valgrind's sake!
+   exec(address, &ret);
+   val->getLL() = ret;
+}
+
+template <typename T>
+void TClingCallFunc::execWithULL(void* address, clang::QualType QT,
+                                 cling::Value* val) const {
+   T ret; // leave uninit for valgrind's sake!
+   exec(address, &ret);
+   val->getULL() = ret;
+}
+
 void
-TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* ret) const
+TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
 {
    if (!ret) {
       exec(address, 0);
@@ -2147,525 +1954,182 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::StoredValueRef* re
       const TypeDecl* TD = dyn_cast<TypeDecl>(CD->getDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
       QualType QT = Context.getLValueReferenceType(ClassTy);
-      GenericValue gv;
-      exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                cling::Value(gv, QT));
+      *ret = cling::Value(QT, fInterp);
+      // Store the new()'ed address in getPtr()
+      exec(address, &ret->getPtr());
       return;
    }
    QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
-      GenericValue gv;
-      exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                cling::Value(gv, QT));
+      *ret = cling::Value(QT, fInterp);
+      exec(address, &ret->getPtr());
       return;
    }
    else if (QT->isMemberPointerType()) {
-      const MemberPointerType* MPT =
-         QT->getAs<MemberPointerType>();
+      const MemberPointerType* MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
          // A member data pointer is a actually a struct with one
          // member of ptrdiff_t, the offset from the base of the object
          // storage to the storage for the designated data member.
-         GenericValue gv;
-         exec(address, &gv.PointerVal);
-         *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                   cling::Value(gv, QT));
+         // But that's not relevant: we use it as a non-builtin, allocated
+         // type.
+         *ret = cling::Value(QT, fInterp);
+         exec(address, ret->getPtr());
          return;
       }
       // We are a function member pointer.
-      GenericValue gv;
-      exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                cling::Value(gv, QT));
+      *ret = cling::Value(QT, fInterp);
+      exec(address, &ret->getPtr());
       return;
    }
    else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      GenericValue gv;
-      exec(address, &gv.PointerVal);
-      *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                cling::Value(gv, QT));
+      *ret = cling::Value(QT, fInterp);
+      exec(address, &ret->getPtr());
       return;
    }
    else if (QT->isRecordType()) {
-      *ret = cling::StoredValueRef::allocate(*fInterp, QT);
-      exec(address, ret->get().getAs<void*>());
+      *ret = cling::Value(QT, fInterp);
+      exec(address, ret->getPtr());
       return;
    }
-   else if (const EnumType* ET =
-               dyn_cast<EnumType>(&*QT)) {
+   else if (const EnumType* ET = dyn_cast<EnumType>(&*QT)) {
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
-      uint64_t numBits = Context.getTypeSize(QT);
-      int retVal = 0;
-      exec(address, &retVal);
-      GenericValue gv;
-      gv.IntVal = APInt(numBits, (uint64_t) retVal,
-                              true/*isSigned*/);
-      *ret =  cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                 cling::Value(gv, QT));
+      execWithLL<int>(address, QT, ret);
       return;
    }
-   else if (const BuiltinType* BT =
-         dyn_cast<BuiltinType>(&*QT)) {
-      uint64_t numBits = Context.getTypeSize(QT);
+   else if (const BuiltinType* BT = dyn_cast<BuiltinType>(&*QT)) {
+      *ret = cling::Value(QT, 0);
       switch (BT->getKind()) {
-            //
-            //  Builtin Types
-            //
-         case BuiltinType::Void: {
-               // void
-               exec(address, 0);
-               return;
-            }
+         case BuiltinType::Void:
+            exec(address, 0);
+            return;
             break;
+
             //
             //  Unsigned Types
             //
-         case BuiltinType::Bool: {
-               // bool
-               bool retVal = false;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Bool:
+            execWithULL<bool>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::Char_U: {
-               // char on targets where it is unsigned
-               char retVal = '\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Char_U: // char on targets where it is unsigned
+         case BuiltinType::UChar:
+            execWithULL<char>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::UChar: {
-               // unsigned char
-               unsigned char retVal = '\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::WChar_U:
+            // wchar_t on targets where it is unsigned.
+            // The standard doesn't allow to specify signednedd of wchar_t
+            // thus this maps simply to wchar_t.
+            execWithULL<wchar_t>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::WChar_U: {
-               // wchar_t on targets where it is unsigned.
-               // The standard doesn't allow to specify signednedd of wchar_t
-               // thus this maps simply to wchar_t.
-               wchar_t retVal = L'\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Char16:
+            Error("TClingCallFunc::exec_with_valref_return",
+                  "Invalid type 'char16_t'!");
+            return;
             break;
-         case BuiltinType::Char16: {
-               // char16_t
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'char16_t'!");
-               return;
-               //char16_t retVal = u'\0';
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                  false/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                         cling::Value(gv, QT));
-               //return;
-            }
+         case BuiltinType::Char32:
+            Error("TClingCallFunc::exec_with_valref_return",
+                  "Invalid type 'char32_t'!");
+            return;
             break;
-         case BuiltinType::Char32: {
-               // char32_t
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'char32_t'!");
-               return;
-               //char32_t retVal = U'\0';
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                  false/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                         cling::Value(gv, QT));
-               //return;
-            }
+         case BuiltinType::UShort:
+            execWithULL<unsigned short>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::UShort: {
-               // unsigned short
-               unsigned short retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::UInt:
+            execWithULL<unsigned int>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::UInt: {
-               // unsigned int
-               unsigned int retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::ULong:
+            execWithULL<unsigned long>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::ULong: {
-               // unsigned long
-               unsigned long retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
-            break;
-         case BuiltinType::ULongLong: {
-               // unsigned long long
-               unsigned long long retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, false/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::ULongLong:
+            execWithULL<unsigned long long>(address, QT, ret);
+            return;
             break;
          case BuiltinType::UInt128: {
-               // __uint128_t
                Error("TClingCallFunc::exec_with_valref_return",
                      "Invalid type '__uint128_t'!");
                return;
-               //__uint128_t retVal = 0;
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                  false/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                          cling::Value(gv, QT));
-               //return;
             }
             break;
+
             //
             //  Signed Types
             //
-            //
-            //  Signed Types
-            //
-         case BuiltinType::Char_S: {
-               // char on targets where it is signed
-               char retVal = '\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Char_S: // char on targets where it is signed
+         case BuiltinType::SChar:
+            execWithLL<signed char>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::SChar: {
-               // signed char
-               signed char retVal = '\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::WChar_S:
+            // wchar_t on targets where it is signed.
+            // The standard doesn't allow to specify signednedd of wchar_t
+            // thus this maps simply to wchar_t.
+            execWithLL<wchar_t>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::WChar_S: {
-               // wchar_t on targets where it is signed.
-               // The standard doesn't allow to specify signednedd of wchar_t
-               // thus this maps simply to wchar_t.
-               wchar_t retVal = L'\0';
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Short:
+            execWithLL<short>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::Short: {
-               // short
-               short retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Int:
+            execWithLL<int>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::Int: {
-               // int
-               int retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Long:
+            execWithLL<long>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::Long: {
-               // long
-               long retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+        case BuiltinType::LongLong:
+            execWithLL<long long>(address, QT, ret);
+            return;
             break;
-         case BuiltinType::LongLong: {
-               // long long
-               long long retVal = 0;
-               exec(address, &retVal);
-               GenericValue gv;
-               gv.IntVal = APInt(numBits, (uint64_t) retVal, true/*isSigned*/);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Int128:
+            Error("TClingCallFunc::exec_with_valref_return",
+                  "Invalid type '__int128_t'!");
+            return;
             break;
-         case BuiltinType::Int128: {
-               // __int128_t
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type '__int128_t'!");
-               return;
-               //__int128_t retVal = 0;
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                  true/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                         cling::Value(gv, QT));
-               //return;
-            }
+         case BuiltinType::Half:
+            // half in OpenCL, __fp16 in ARM NEON
+            Error("TClingCallFunc::exec_with_valref_return",
+                  "Invalid type 'Half'!");
+            return;
             break;
-         case BuiltinType::Half: {
-               // half in OpenCL, __fp16 in ARM NEON
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'Half'!");
-               return;
-               //half retVal = 0;
-               //__fp16 retVal = 0;
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                  true/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                         cling::Value(gv, QT));
-               //return;
-            }
+         case BuiltinType::Float:
+            exec(address, &ret->getFloat());
+            return;
             break;
-         case BuiltinType::Float: {
-               // float
-               GenericValue gv;
-               exec(address, &gv.FloatVal);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
+         case BuiltinType::Double:
+            exec(address, &ret->getDouble());
+            return;
             break;
-         case BuiltinType::Double: {
-               // double
-               GenericValue gv;
-               exec(address, &gv.DoubleVal);
-               *ret = cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT));
-               return;
-            }
-            break;
-         case BuiltinType::LongDouble: {
-               // long double
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'LongDouble'!");
-               return;
-               //long double retVal = 0.0L;
-               //exec(address, &retVal);
-               //GenericValue gv;
-               //gv.IntVal = APInt(numBits, (uint64_t) retVal,
-               //                        false/*isSigned*/);
-               //*ret = cling::StoredValueRef::bitwiseCopy(Context,
-               //                                         cling::Value(gv, QT));
-               //return;
-            }
+         case BuiltinType::LongDouble:
+            exec(address, &ret->getLongDouble());
+            return;
             break;
             //
             //  Language-Specific Types
             //
-         case BuiltinType::NullPtr: {
-               // C++11 nullptr
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'nullptr'!");
-               return;
-            }
+         case BuiltinType::NullPtr:
+            // C++11 nullptr
+            Error("TClingCallFunc::exec_with_valref_return",
+                  "Invalid type 'nullptr'!");
+            return;
             break;
-         case BuiltinType::ObjCId: {
-               // Objective C 'id' type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'ObjCId'!");
-               return;
-            }
-            break;
-         case BuiltinType::ObjCClass: {
-               // Objective C 'Class' type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'ObjCClass'!");
-               return;
-            }
-            break;
-         case BuiltinType::ObjCSel: {
-               // Objective C 'SEL' type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'ObjCSel'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage1d: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage1d'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage1dArray: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage1dArray'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage1dBuffer: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage1dBuffer'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage2d: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage2d'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage2dArray: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage2dArray'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLImage3d: {
-               // OpenCL image type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLImage3d'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLSampler: {
-               // OpenCL sampler_t
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLSampler'!");
-               return;
-            }
-            break;
-         case BuiltinType::OCLEvent: {
-               // OpenCL event_t
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'OCLEvent'!");
-               return;
-            }
-            break;
-            //
-            //  Placeholder types.
-            //
-            //  These types are used during intermediate phases
-            //  of semantic analysis.  They are eventually resolved
-            //  to one of the preceeding types.
-            //
-         case BuiltinType::Dependent: {
-               // dependent on a template argument
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'Dependent'!");
-               return;
-            }
-            break;
-         case BuiltinType::Overload: {
-               // an unresolved function overload set
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'Overload'!");
-               return;
-            }
-            break;
-         case BuiltinType::BoundMember: {
-               // a bound C++ non-static member function
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'BoundMember'!");
-               return;
-            }
-            break;
-         case BuiltinType::PseudoObject: {
-               // Object C @property or VS.NET __property
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'PseudoObject'!");
-               return;
-            }
-            break;
-         case BuiltinType::UnknownAny: {
-               // represents an unknown type
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'UnknownAny'!");
-               return;
-            }
-            break;
-         case BuiltinType::BuiltinFn: {
-               // a compiler builtin function
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'BuiltinFn'!");
-               return;
-            }
-            break;
-         case BuiltinType::ARCUnbridgedCast: {
-               // Objective C Automatic Reference Counting cast
-               // which would normally require __bridge, but which
-               // may be ok because of the context.
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type 'ARCUnbridgedCast'!");
-               return;
-            }
-            break;
-         default: {
-               // There should be no others.  This is here in case
-               // this changes in the future.
-               Error("TClingCallFunc::exec_with_valref_return",
-                     "Unrecognized builtin type!");
-               return;
-            }
+         default:
             break;
       }
    }
    Error("TClingCallFunc::exec_with_valref_return",
          "Unrecognized return type!");
+   QT->dump();
    return;
 }
 
@@ -2689,7 +2153,8 @@ TClingCallFunc::EvaluateArgList(const string& ArgList)
                                           : cling::LookupHelper::NoDiagnostics);
    for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
-      cling::StoredValueRef val = EvaluateExpr(fInterp, *I);
+      cling::Value val;
+      EvaluateExpr(fInterp, *I, val);
       if (!val.isValid()) {
          // Bad expression, all done.
          Error("TClingCallFunc::EvaluateArgList",
@@ -2715,70 +2180,47 @@ TClingCallFunc::Exec(void* address, TInterpreterValue* interpVal/*=0*/)
       exec(address, 0);
       return;
    }
-   cling::StoredValueRef valref;
-   exec_with_valref_return(address, &valref);
-   reinterpret_cast<cling::StoredValueRef&>(interpVal->Get()) = valref;
-   return;
+   cling::Value* val = reinterpret_cast<cling::Value*>(interpVal->GetValAddr());
+   exec_with_valref_return(address, val);
+}
+
+template <typename T>
+T TClingCallFunc::ExecT(void* address)
+{
+   IFacePtr();
+   if (!fWrapper) {
+      Error("TClingCallFunc::ExecT",
+            "Called with no wrapper, not implemented!");
+      return 0;
+   }
+   cling::Value ret;
+   exec_with_valref_return(address, &ret);
+   if (!ret.isValid()) {
+      // Sometimes we are called on a function returning void!
+      return 0;
+   }
+   const FunctionDecl* decl = fMethod->GetMethodDecl();
+   if (decl->getReturnType().getCanonicalType()->isRecordType())
+      ((TCling*)gCling)->RegisterTemporary(ret);
+   return sv_to<T>(ret);
 }
 
 Long_t
 TClingCallFunc::ExecInt(void* address)
 {
-   IFacePtr();
-   if (!fWrapper) {
-      Error("TClingCallFunc::ExecInt",
-            "Called with no wrapper, not implemented!");
-      return 0L;
-   }
-   cling::StoredValueRef ret;
-   exec_with_valref_return(address, &ret);
-   if (!ret.isValid()) {
-      // Sometimes we are called on a function returning void!
-      return 0L;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   if (decl->getReturnType().getCanonicalType()->isRecordType())
-      ((TCling*)gCling)->RegisterTemporary(ret);
-   return static_cast<Long_t>(sv_to_long_long(ret));
+   return ExecT<long>(address);
 }
 
 long long
 TClingCallFunc::ExecInt64(void* address)
 {
-   IFacePtr();
-   if (!fWrapper) {
-      Error("TClingCallFunc::ExecInt64",
-            "Called with no wrapper, not implemented!");
-      return 0LL;
-   }
-   cling::StoredValueRef ret;
-   exec_with_valref_return(address, &ret);
-   if (!ret.isValid()) {
-      // Sometimes we are called on a function returning void!
-      return 0LL;
-   }
-   const FunctionDecl* decl = fMethod->GetMethodDecl();
-   if (decl->getReturnType().getCanonicalType()->isRecordType())
-      ((TCling*)gCling)->RegisterTemporary(ret);
-   return sv_to_long_long(ret);
+   return ExecT<long long>(address);
 }
 
 double
 TClingCallFunc::ExecDouble(void* address)
 {
-   IFacePtr();
-   if (!fWrapper) {
-      Error("TClingCallFunc::ExecDouble",
-            "Called with no wrapper, not implemented!");
-      return 0.0;
-   }
-   cling::StoredValueRef ret;
-   exec_with_valref_return(address, &ret);
-   if (!ret.isValid()) {
-      // Sometimes we are called on a function returning void!
-      return 0.0;
-   }
-   return sv_to<double>(ret);
+   return ExecT<double>(address);
 }
 
 void
@@ -2792,7 +2234,6 @@ TClingCallFunc::ExecWithArgsAndReturn(void* address, const vector<void*>& args
       return;
    }
    exec_with_args_and_return(address, args, ret);
-   return;
 }
 
 void
@@ -2805,7 +2246,6 @@ TClingCallFunc::ExecWithReturn(void* address, void* ret/*= 0*/)
       return;
    }
    exec(address, ret);
-   return;
 }
 
 void*
@@ -2949,44 +2389,32 @@ void
 TClingCallFunc::SetArg(long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   GenericValue gv;
-   QualType QT = C.LongTy;
-   gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT)));
+   fArgVals.push_back(cling::Value(C.LongTy, 0));
+   fArgVals.back().getLL() = param;
 }
 
 void
 TClingCallFunc::SetArg(double param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   GenericValue gv;
-   QualType QT = C.DoubleTy;
-   gv.DoubleVal = param;
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT)));
+   fArgVals.push_back(cling::Value(C.DoubleTy, 0));
+   fArgVals.back().getDouble() = param;
 }
 
 void
 TClingCallFunc::SetArg(long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   GenericValue gv;
-   QualType QT = C.LongLongTy;
-   gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT)));
+   fArgVals.push_back(cling::Value(C.LongLongTy, 0));
+   fArgVals.back().getLL() = param;
 }
 
 void
 TClingCallFunc::SetArg(unsigned long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   GenericValue gv;
-   QualType QT = C.UnsignedLongLongTy;
-   gv.IntVal = APInt(C.getTypeSize(QT), param);
-   fArgVals.push_back(cling::StoredValueRef::bitwiseCopy(*fInterp,
-                                                         cling::Value(gv, QT)));
+   fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, 0));
+   fArgVals.back().getLL() = param;
 }
 
 void

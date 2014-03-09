@@ -31,17 +31,30 @@
 #include "TInterpreterValue.h"
 #endif
 
+namespace cling {
+   class Value;
+}
+
 class TClingValue : public TInterpreterValue {
 private:
-   void* fValue;
+   struct HasTheSameSizeAsClingValue {
+      long double fBiggestElementOfUnion;
+      void* fType;
+   } fValue;
+
+   cling::Value& ToCV() {
+      return reinterpret_cast<cling::Value&>(fValue); }
+   const cling::Value& ToCV() const {
+      return reinterpret_cast<const cling::Value&>(fValue); }
+
 public:
    TClingValue();
    TClingValue(const TClingValue& Other);
    TClingValue& operator=(TClingValue &Other);
    ~TClingValue();
 
-   void* const& Get() const { return fValue; }
-   void*& Get() { return fValue; }
+   const void* GetValAddr() const { return &fValue; }
+   void* GetValAddr() { return &fValue; }
 
    Bool_t   IsValid() const;
    Double_t GetAsDouble() const;

@@ -35,7 +35,6 @@
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/StoredValueRef.h"
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
