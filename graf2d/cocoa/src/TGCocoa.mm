@@ -85,9 +85,9 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
       return;
 
    if (flags & kCGDisplayDesktopShapeChangedFlag) {
-      TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(gCocoa != 0 && "DisplayReconfigurationCallback, gVirtualX"
-                            " is either null or has a wrong type");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 && "DisplayReconfigurationCallback, gVirtualX"
+                                                        " is either null or has a wrong type");
+      TGCocoa * const gCocoa = static_cast<TGCocoa *>(gVirtualX);
       gCocoa->ReconfigureDisplay();
    }
 }
