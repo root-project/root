@@ -44,7 +44,8 @@ public:
       kHISTOGRAM1D,
       kHISTOGRAM2D,
       kLISTOFGRAPHS,
-      kLISTOFPOLYMARKERS3D
+      kLISTOFPOLYMARKERS3D,
+      kHISTOGRAM3D
    };
 
    static Int_t   fgMaxDimension;      // = 4
