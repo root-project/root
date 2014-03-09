@@ -275,8 +275,11 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
 
    if (fDimension == 2) {
       Bool_t graph = kFALSE;
-      Int_t l = fOption.Length();
-      if (l == 0 || fOption.Contains("same")) graph = kTRUE;
+// GG 9Mar2014: fixing ROOT-5337; should understand why it was like this, but we move to TSelectorDraw
+//              and this will disappear
+//      Int_t l = fOption.Length();
+//      if (l == 0 || fOption.Contains("same")) graph = kTRUE;
+      if (fOption.Contains("same")) graph = kTRUE;
       if (fOption.Contains("p")     || fOption.Contains("*")    || fOption.Contains("l"))    graph = kTRUE;
       if (fOption.Contains("surf")  || fOption.Contains("lego") || fOption.Contains("cont")) graph = kFALSE;
       if (fOption.Contains("col")   || fOption.Contains("hist") || fOption.Contains("scat")) graph = kFALSE;
@@ -290,7 +293,10 @@ TTreeDrawArgsParser::EOutputType TTreeDrawArgsParser::DefineType()
       if (fOption.Contains("col"))
          return fOutputType = kLISTOFGRAPHS;
       else
-         return fOutputType = kPOLYMARKER3D;
+         return fOutputType = kHISTOGRAM3D;
+// GG 9Mar2014: fixing ROOT-5337; should understand why it was like this, but we move to TSelectorDraw
+//              and this will disappear
+//         return fOutputType = kPOLYMARKER3D;
    }
    if (fDimension == 1)
       return fOutputType = kHISTOGRAM1D;
@@ -324,6 +330,7 @@ TString TTreeDrawArgsParser::GetProofSelectorName() const
          return "TProofDrawListOfGraphs";
       case kHISTOGRAM1D:
       case kHISTOGRAM2D:
+      case kHISTOGRAM3D:
          return "TProofDrawHist";
       case kLISTOFPOLYMARKERS3D:
          return "TProofDrawListOfPolyMarkers3D";
