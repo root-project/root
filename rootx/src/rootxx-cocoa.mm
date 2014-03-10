@@ -348,8 +348,10 @@ enum CustomEventSource {//make it enum class when C++11 is here.
 - (void) exitEventLoop
 {
    //assert - we are on a main thread.
-   NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                 timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kWaitpidThread data2 : 0];
+   NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined
+                                 location : NSMakePoint(0, 0) modifierFlags : 0
+                                 timestamp : 0. windowNumber : 0 context : nil
+                                 subtype : 0 data1 : kWaitpidThread data2 : 0];
    [NSApp postEvent : timerEvent atStart : NO];
 }
 
@@ -482,12 +484,16 @@ void ROOTSplashscreenTimerCallback(CFRunLoopTimerRef timer, void *info)
 {
 #pragma unused(info)
    if (timer == signalTimer) {
-      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                    timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kSignalTimer data2 : 0];
+      NSEvent * const timerEvent = [NSEvent otherEventWithType :
+                                    NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
+                                    timestamp : 0. windowNumber : 0 context : nil
+                                    subtype : 0 data1 : kSignalTimer data2 : 0];
       [NSApp postEvent : timerEvent atStart : NO];
    } else {
-      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                                    timestamp : 0. windowNumber : 0 context : nil subtype : 0 data1 : kScrollTimer data2 : 0];
+      NSEvent * const timerEvent = [NSEvent otherEventWithType : NSApplicationDefined
+                                    location : NSMakePoint(0, 0) modifierFlags : 0
+                                    timestamp : 0. windowNumber : 0 context : nil
+                                    subtype : 0 data1 : kScrollTimer data2 : 0];
       [NSApp postEvent : timerEvent atStart : NO];
    }
 }
@@ -602,7 +608,9 @@ void RunEventLoop()
       using ROOT::MacOSX::Util::NSScopeGuard;
       const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
       
-      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
+      if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask
+          untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES])
+      {
          //Let's first check the type:
          if (event.type == NSApplicationDefined) {//One of our timers 'fired'.
             if (event.data1 == kSignalTimer) {
@@ -679,7 +687,9 @@ void RunEventLoopInBackground()
          using ROOT::MacOSX::Util::NSScopeGuard;
          const NSScopeGuard<NSAutoreleasePool> pool([[NSAutoreleasePool alloc] init]);
 
-         if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES]) {
+         if (NSEvent * const event = [NSApp nextEventMatchingMask : NSAnyEventMask
+             untilDate : [NSDate distantFuture] inMode : NSDefaultRunLoopMode dequeue : YES])
+         {
             if (event.type == NSApplicationDefined && event.data1 == kWaitpidThread) {
                [thread.Get() cancel];
                status = [thread.Get() getStatus];
@@ -800,7 +810,8 @@ bool CreateSplashscreen(bool about)
       return false;
    }
 
-   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get() text : textToScroll.Get() aboutMode : about]);
+   const NSScopeGuard<ROOTSplashScreenView> viewGuard([[ROOTSplashScreenView alloc] initWithImage : imageGuard.Get()
+                                                      text : textToScroll.Get() aboutMode : about]);
    if (!viewGuard.Get()) {
       //TODO: diagnostic.
       return false;
@@ -862,7 +873,8 @@ bool AddCaptionAttributes(NSMutableAttributedString *textToScroll, NSRange capti
    
    const NSScopeGuard<NSMutableDictionary> dict([[NSMutableDictionary alloc] init]);
    [dict.Get() setObject : font forKey : NSFontAttributeName];
-   NSColor * const captionColor = [NSColor colorWithDeviceRed : 176 / 255. green : 210 / 255. blue : 249 / 255. alpha : 1.];
+   NSColor * const captionColor = [NSColor colorWithDeviceRed : 176 / 255.
+                                   green : 210 / 255. blue : 249 / 255. alpha : 1.];
    [dict.Get() setObject : captionColor forKey : NSForegroundColorAttributeName];
 
    
@@ -897,7 +909,8 @@ bool AddMainTextBodyAttributes(NSMutableAttributedString *textToScroll, NSRange 
    const NSScopeGuard<NSMutableDictionary> dict([[NSMutableDictionary alloc] init]);
    [dict.Get() setObject : font forKey : NSFontAttributeName];
    //
-   NSColor * const textColor = [NSColor colorWithDeviceRed : 156 / 255. green : 190 / 255. blue : 229 / 255. alpha : 1.];
+   NSColor * const textColor = [NSColor colorWithDeviceRed : 156 / 255.
+                                green : 190 / 255. blue : 229 / 255. alpha : 1.];
    //
    [dict.Get() setObject : textColor forKey : NSForegroundColorAttributeName];
    
@@ -1010,7 +1023,8 @@ void AddContributorsInfo(NSMutableAttributedString *textToScroll)
       NSScopeGuard<NSAttributedString> newString;
       NSRange textRange(NSMakeRange(textToScroll.length, 0));
 
-      std::list<std::string>::const_iterator it = contributors.begin(), end = contributors.end(), begin = contributors.begin();
+      std::list<std::string>::const_iterator it = contributors.begin(),
+                                             end = contributors.end(), begin = contributors.begin();
       for (; it != end; ++it) {
          //Quite ugly :( NSString/NSAttributedString ARE ugly.
          NSString * const nsFromC = [NSString stringWithFormat : it != begin ? @", %s" : @"%s", it->c_str()];
@@ -1026,7 +1040,8 @@ void AddContributorsInfo(NSMutableAttributedString *textToScroll)
       
       textRange.location = textToScroll.length;
       newString.Reset([[NSAttributedString alloc] initWithString :
-                      @"\n\nOur sincere thanks and apologies to anyone who deserves credit but fails to appear in this list."]);
+                      @"\n\nOur sincere thanks and apologies to anyone who deserves"
+                       " credit but fails to appear in this list."]);
       textRange.length = newString.Get().length;
       
       [textToScroll appendAttributedString : newString.Get()];
@@ -1060,7 +1075,8 @@ void AddUserInfo(NSMutableAttributedString *textToScroll)
       
       using ROOT::MacOSX::Util::NSScopeGuard;
       NSRange textRange = NSMakeRange(textToScroll.length, 0);
-      NSString * const nsFromC = [NSString stringWithFormat : @"\n\nExtra special thanks go to %s, one of our favorite users.", name.c_str()];
+      NSString * const nsFromC = [NSString stringWithFormat : @"\n\nExtra special thanks"
+                                  " go to %s, one of our favorite users.", name.c_str()];
       const NSScopeGuard<NSAttributedString> newString([[NSAttributedString alloc] initWithString : nsFromC]);
 
       if (newString.Get()) {
