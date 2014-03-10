@@ -6,9 +6,8 @@
 //______________________________________________________________________________
 - (id) init
 {
-   if (self = [super init]) {
+   if (self = [super init])
       [NSApp setDelegate : self];
-   }
    
    return self;
 }
@@ -34,7 +33,7 @@
    //I have to save/restore this z-stack order here.
 
    //Popups were fixed using transient hint, noop now
-   (void) aNotification;
+#pragma unused(aNotification)
 }
 
 //______________________________________________________________________________
@@ -48,7 +47,7 @@
    //I have to save/restore this z-stack order here.
 
    //Popups were fixed using transient hint, noop now.
-   (void) aNotification;
+#pragma unused(aNotification)
 }
 
 //______________________________________________________________________________
@@ -60,7 +59,7 @@
 //______________________________________________________________________________
 - (NSApplicationTerminateReply) applicationShouldTerminate : (NSApplication *) sender
 {
-   (void) sender;
+#pragma unused(sender)
    [self performSelector : @selector(quitROOT) withObject : nil afterDelay : 0.1];
    return NSTerminateCancel;
 }
