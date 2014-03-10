@@ -3589,28 +3589,6 @@ const char* TCling::TypeName(const char* typeDesc)
 
 namespace {
    using namespace clang;
-   class TmpltParamAnnotator: public RecursiveASTVisitor<TmpltParamAnnotator> {
-   public:
-      bool VisitTemplateDecl(TemplateDecl* CTD) {
-         ASTContext& Ctx = CTD->getASTContext();
-         for (TemplateParameterList::iterator I = CTD->getTemplateParameters()->begin(),
-                 E = CTD->getTemplateParameters()->end(); I != E; ++I) {
-            if (TemplateTypeParmDecl *ITypeParm = dyn_cast<TemplateTypeParmDecl>(*I)) {
-               if (!ITypeParm->hasDefaultArgument()) continue;
-            } else if (NonTypeTemplateParmDecl *INonTypeParm
-               = dyn_cast<NonTypeTemplateParmDecl>(*I)) {
-               if (!INonTypeParm->hasDefaultArgument()) continue;
-            } else {
-               TemplateTemplateParmDecl* ITemplateParm
-                  = cast<TemplateTemplateParmDecl>(*I);
-               if (!ITemplateParm->hasDefaultArgument()) continue;
-            }
-            // This template parameter has a default argument; add an annotation.
-            (*I)->addAttr(new (Ctx) clang::AnnotateAttr(SourceRange(), Ctx, "rootmap", 0));
-         }
-         return false;
-      }
-   };
 
    class ExtVisibleStorageAdder: public RecursiveASTVisitor<ExtVisibleStorageAdder>{
       // This class is to be considered an helper for autoloading.
@@ -3641,7 +3619,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // Read and parse a rootmapfile in its new format, and return 0 in case of
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
-
    if (rootmapfile && *rootmapfile) {
 
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
@@ -3651,6 +3628,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
       std::ifstream file(rootmapfile);
       TString lib_name = "";
       std::string line;
+      unsigned int keyLen=0;
       while (getline(file, line, '\n')) {
          if ((line.substr(0, 8) == "Library.") || 
              (line.substr(0, 8) == "Declare.")) {
@@ -3667,7 +3645,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
             #endif
             #endif
-            
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (line.empty()) continue;
@@ -3675,23 +3652,19 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
                assert(cling::Interpreter::kSuccess == compRes &&
                       "A declaration in a rootmap could not be compiled");
-               if (compRes!=cling::Interpreter::kSuccess){
+               if (compRes!=cling::Interpreter::kSuccess || 0 == T){
                   Warning("ReadRootmapFile",
-                          "Problems declaring string '%s' were encountered.", line.c_str()) ;
+                          "Problems in %s declaring string '%s' were encountered.", rootmapfile, line.c_str()) ;
                   continue;
                }
-               // Annotate all template params with default args to come from
-               // a rootmap file, such that we avoid diagnostics about duplicate
-               // default arguments.
-               TmpltParamAnnotator TPA;
-               TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
 
                if (NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(T->getFirstDecl().getSingleDecl())) {
                   evsAdder.TraverseDecl(NSD);
                }
             }
          }
-         if (line[0] == '[') {
+         const char firstChar=line[0];
+         if (firstChar == '[') {
             // new section (library)
             std::string libs = line.substr(1, line.find(']')-1);
             while( libs[0] == ' ' ) libs.replace(0, 1, "");
@@ -3712,12 +3685,16 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                delete[] wlib;
             }
          }
-         else if (line.substr(0, 6) == "class ") {
-            std::string classname = line.substr(6, line.length()-6);
+         else if ( (firstChar == 'c' && (keyLen=6) ) || /* for "class "*/
+                   (firstChar == 'n' && (keyLen=10)) || /* for "namespace "*/
+                   (firstChar == 't' && (keyLen=8))    /* for "typedef "*/) {
+            std::string keyname = line.substr(keyLen, line.length()-keyLen);
             if (gDebug > 6)
-               Info("ReadRootmapFile", "class %s in %s", classname.c_str(), lib_name.Data());
-            if (!fMapfile->Lookup(classname.c_str()))
-               fMapfile->SetValue(classname.c_str(), lib_name.Data());
+               Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());
+            bool isThere = fMapfile->Lookup(keyname.c_str());
+            if (!isThere){
+               fMapfile->SetValue(keyname.c_str(), lib_name.Data());
+            }
          }
       }
       file.close();
@@ -3934,13 +3911,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          // convert "-" to " ", since class names may have
          // blanks and TEnv considers a blank a terminator
          cls.ReplaceAll("-", " ");
-         cling::Transaction* T = 0;
-         fInterpreter->declare(cls.Data(), &T);
-         // Annotate all template params with default args to come from
-         // a rootmap file, such that we avoid diagnostics about duplicate
-         // default arguments.
-         TmpltParamAnnotator TPA;
-         TPA.TraverseDecl(T->getFirstDecl().getSingleDecl());
+         fInterpreter->declare(cls.Data());
       }
    }
    return 0;

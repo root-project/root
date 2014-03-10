@@ -776,28 +776,29 @@ void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
 void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
 {
    // Parse the rootmap and add entries to the autoload map, using the new format
-   std::string classname;
+   std::string keyname;
    std::string libs;
    std::string line;
+   unsigned int keyLen=0;
    while (getline(file, line, '\n')) {
       if (line == "{ decls }") {
          while (getline(file, line, '\n')) {
             if (line[0] == '[') break;
          }
       }
-      if (line[0] == '[') {
+      const char firstChar = line[0];
+      if (firstChar == '[') {
          // new section
          libs = line.substr(1, line.find(']')-1);
          while( libs[0] == ' ' ) libs.replace(0, 1, "");
       }
-      else if (line.substr(0, 6) == "class ") {
-         classname = line.substr(6, line.length()-6);
-         CheckClassNameForRootMap(classname,autoloads);
-         autoloads[classname] = libs;
-      }
-      else if (line.substr(0, 10) == "namespace ") {
-         // No Action for the moment
-      }
+      else if ( (firstChar == 'c' && (keyLen=6) ) || /* for "class "*/
+                (firstChar == 'n' && (keyLen=10)) || /* for "namespace "*/
+                (firstChar == 't' && (keyLen=8))    /* for "typedef "*/){
+         keyname = line.substr(keyLen, line.length()-keyLen);
+         CheckClassNameForRootMap(keyname,autoloads);
+         autoloads[keyname] = libs;
+         }
    }
 
 }
@@ -2557,12 +2558,18 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       rootmapFile << "[" << rootmapLibName << "]\n";
 
       // Loop on selected classes and insert them in the rootmap
+      if (!classesNames.empty()){
+         rootmapFile << "# List of selected classes\n";
+      }      
       for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
          classNameIt!=classesNames.end();++classNameIt){
          rootmapFile << "class " << *classNameIt << std::endl;
       }
 
       // Same for namespaces
+      if (!nsNames.empty()){
+         rootmapFile << "# List of selected namespaces\n";
+      }
       for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
          nsNameIt!=nsNames.end();++nsNameIt){
          rootmapFile << "namespace " << *nsNameIt << std::endl;
@@ -2574,7 +2581,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       }
       for (std::vector<std::string>::const_iterator typedefNameIt=typedefNames.begin();
            typedefNameIt!=typedefNames.end();++typedefNameIt){
-         rootmapFile << "class " << *typedefNameIt << std::endl;
+         rootmapFile << "typedef " << *typedefNameIt << std::endl;
       }
       
    }
