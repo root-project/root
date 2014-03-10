@@ -730,13 +730,14 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
 
    Int_t i, d;
    Double_t xmin, xmax, ymin, ymax, dx, dy, dxr, dyr;
-   const Int_t kMaxDiff =  3;
+   const Int_t kMaxDiff =  10;//3;
    static Bool_t middle, badcase;
    static Int_t ipoint, pxp, pyp;
    static Int_t px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
+   Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!theGraph->IsEditable() || theGraph->InheritsFrom(TGraphPolar::Class())) {
       gPad->SetCursor(kHand);
@@ -771,10 +772,12 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
             badcase = kTRUE;
             continue;
          }
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         if (!opaque) {
+            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         }
          x[i] = pxp;
          y[i] = pyp;
          d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
@@ -824,64 +827,119 @@ void TGraphPainter::ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, 
       break;
 
    case kButton1Motion:
-      if (middle) {
-         for(i=0;i<theNpoints-1;i++) {
-            gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-            pxp = x[i]+dpx;
-            pyp = y[i]+dpy;
-            if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
-                pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
+      if (!opaque) {
+         if (middle) {
+            for(i=0;i<theNpoints-1;i++) {
+               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
+               pxp = x[i]+dpx;
+               pyp = y[i]+dpy;
+               if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
+                   pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
+               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+            }
+            pxp = x[theNpoints-1]+dpx;
+            pyp = y[theNpoints-1]+dpy;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         }
-         pxp = x[theNpoints-1]+dpx;
-         pyp = y[theNpoints-1]+dpy;
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         dpx += px - pxold;
-         dpy += py - pyold;
-         pxold = px;
-         pyold = py;
-         for(i=0;i<theNpoints-1;i++) {
-            gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-            pxp = x[i]+dpx;
-            pyp = y[i]+dpy;
-            if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
-                pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
+            dpx += px - pxold;
+            dpy += py - pyold;
+            pxold = px;
+            pyold = py;
+            for(i=0;i<theNpoints-1;i++) {
+               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
+               pxp = x[i]+dpx;
+               pyp = y[i]+dpy;
+               if (pxp < -kMaxPixel || pxp >= kMaxPixel ||
+                   pyp < -kMaxPixel || pyp >= kMaxPixel) continue;
+               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+            }
+            pxp = x[theNpoints-1]+dpx;
+            pyp = y[theNpoints-1]+dpy;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         } else {
+            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
+            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
+            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
+            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
+            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
+            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
+            pxold = px;
+            pxold = TMath::Max(pxold, px1);
+            pxold = TMath::Min(pxold, px2);
+            pyold = py;
+            pyold = TMath::Max(pyold, py2);
+            pyold = TMath::Min(pyold, py1);
+            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
+            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
+            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
+            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
+            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
+            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
          }
-         pxp = x[theNpoints-1]+dpx;
-         pyp = y[theNpoints-1]+dpy;
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
       } else {
-         if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-         if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-         gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-         gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-         gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-         gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
-         pxold = px;
-         pxold = TMath::Max(pxold, px1);
-         pxold = TMath::Min(pxold, px2);
-         pyold = py;
-         pyold = TMath::Max(pyold, py2);
-         pyold = TMath::Min(pyold, py1);
-         if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-         if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-         gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-         gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-         gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-         gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
+         xmin = gPad->GetUxmin();
+         xmax = gPad->GetUxmax();
+         ymin = gPad->GetUymin();
+         ymax = gPad->GetUymax();
+         dx   = xmax-xmin;
+         dy   = ymax-ymin;
+         dxr  = dx/(1 - gPad->GetLeftMargin() - gPad->GetRightMargin());
+         dyr  = dy/(1 - gPad->GetBottomMargin() - gPad->GetTopMargin());
+
+         if (theGraph->GetHistogram()) {
+            // Range() could change the size of the pad pixmap and therefore should
+            // be called before the other paint routines
+            gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
+                         ymin - dyr*gPad->GetBottomMargin(),
+                         xmax + dxr*gPad->GetRightMargin(),
+                         ymax + dyr*gPad->GetTopMargin());
+            gPad->RangeAxis(xmin, ymin, xmax, ymax);
+         }
+         if (middle) {
+            dpx += px - pxold;
+            dpy += py - pyold;
+            pxold = px;
+            pyold = py;
+            for(i=0;i<theNpoints;i++) {
+               if (badcase) continue;  //do not update if big zoom and points moved
+               if (x) theX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+               if (y) theY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+            }
+         } else {
+            pxold = px;
+            pxold = TMath::Max(pxold, px1);
+            pxold = TMath::Min(pxold, px2);
+            pyold = py;
+            pyold = TMath::Max(pyold, py2);
+            pyold = TMath::Min(pyold, py1);
+            theX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
+            theY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
+            if (theGraph->InheritsFrom("TCutG")) {
+               //make sure first and last point are the same
+               if (ipoint == 0) {
+                  theX[theNpoints-1] = theX[0];
+                  theY[theNpoints-1] = theY[0];
+               }
+               if (ipoint == theNpoints-1) {
+                  theX[0] = theX[theNpoints-1];
+                  theY[0] = theY[theNpoints-1];
+               }
+            }
+         }
+         badcase = kFALSE;
+         gPad->Modified(kTRUE);
+         //gPad->Update();
       }
       break;
 
@@ -1007,16 +1065,16 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
    opt.ToUpper();
    opt.ReplaceAll("SAME","");
 
-   if(opt.Contains("L")) optionLine = 1;  else optionLine = 0;
-   if(opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
-   if(opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
-   if(opt.Contains("*")) optionStar = 1;  else optionStar = 0;
-   if(opt.Contains("P")) optionMark = 1;  else optionMark = 0;
-   if(opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
-   if(opt.Contains("R")) optionR    = 1;  else optionR    = 0;
-   if(opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
-   if(opt.Contains("F")) optionFill = 1;  else optionFill = 0;
-   if(opt.Contains("2") || opt.Contains("3") ||
+   if (opt.Contains("L")) optionLine = 1;  else optionLine = 0;
+   if (opt.Contains("A")) optionAxis = 1;  else optionAxis = 0;
+   if (opt.Contains("C")) optionCurve= 1;  else optionCurve= 0;
+   if (opt.Contains("*")) optionStar = 1;  else optionStar = 0;
+   if (opt.Contains("P")) optionMark = 1;  else optionMark = 0;
+   if (opt.Contains("B")) optionBar  = 1;  else optionBar  = 0;
+   if (opt.Contains("R")) optionR    = 1;  else optionR    = 0;
+   if (opt.Contains("1")) optionOne  = 1;  else optionOne  = 0;
+   if (opt.Contains("F")) optionFill = 1;  else optionFill = 0;
+   if (opt.Contains("2") || opt.Contains("3") ||
       opt.Contains("4") || opt.Contains("5")) optionE = 1;  else optionE = 0;
    optionZ    = 0;
 
@@ -1495,22 +1553,22 @@ void TGraphPainter::PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_
    }
    TString opt = chopt;
    opt.ToUpper();
-   if(opt.Contains("H"))  optionHist = 1;  else optionHist = 0;
-   if(opt.Contains("F"))  optionFill = 1;  else optionFill = 0;
-   if(opt.Contains("C"))  optionCurve= 1;  else optionCurve= 0;
-   if(opt.Contains("*"))  optionStar = 1;  else optionStar = 0;
-   if(opt.Contains("R"))  optionRot  = 1;  else optionRot  = 0;
-   if(opt.Contains("1"))  optionOne  = 1;  else optionOne  = 0;
-   if(opt.Contains("B"))  optionBar  = 1;  else optionBar  = 0;
-   if(opt.Contains("N"))  optionBins = 1;  else optionBins = 0;
-   if(opt.Contains("L"))  optionLine = 1;  else optionLine = 0;
-   if(opt.Contains("P"))  optionMark = 1;  else optionMark = 0;
-   if(opt.Contains("A"))  optionAxis = 1;  else optionAxis = 0;
-   if(opt.Contains("][")) optionOff  = 1;  else optionOff  = 0;
-   if(opt.Contains("P0")) optionMark = 10;
+   if (opt.Contains("H"))  optionHist = 1;  else optionHist = 0;
+   if (opt.Contains("F"))  optionFill = 1;  else optionFill = 0;
+   if (opt.Contains("C"))  optionCurve= 1;  else optionCurve= 0;
+   if (opt.Contains("*"))  optionStar = 1;  else optionStar = 0;
+   if (opt.Contains("R"))  optionRot  = 1;  else optionRot  = 0;
+   if (opt.Contains("1"))  optionOne  = 1;  else optionOne  = 0;
+   if (opt.Contains("B"))  optionBar  = 1;  else optionBar  = 0;
+   if (opt.Contains("N"))  optionBins = 1;  else optionBins = 0;
+   if (opt.Contains("L"))  optionLine = 1;  else optionLine = 0;
+   if (opt.Contains("P"))  optionMark = 1;  else optionMark = 0;
+   if (opt.Contains("A"))  optionAxis = 1;  else optionAxis = 0;
+   if (opt.Contains("][")) optionOff  = 1;  else optionOff  = 0;
+   if (opt.Contains("P0")) optionMark = 10;
 
    Int_t optionFill2 = 0;
-   if(opt.Contains("F") && opt.Contains("2")) {
+   if (opt.Contains("F") && opt.Contains("2")) {
       optionFill = 0; optionFill2 = 1;
    }
 
@@ -2926,7 +2984,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    opt.ToUpper();
 
    Bool_t nolabel = kFALSE;
-   if(opt.Contains("N")){
+   if (opt.Contains("N")){
       nolabel = kTRUE;
       opt.ReplaceAll("N","");
    }
@@ -3454,7 +3512,7 @@ void TGraphPainter::PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double
    Int_t nf2 = nf;
    for (i=nf2; i>0; i--) {
       for (j=i-1; j>0; j--) {
-         if(xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
+         if (xt[i-1]==xt[i] || xt[j-1]==xt[j]) continue;
          c1  = (yt[i-1]-yt[i])/(xt[i-1]-xt[i]);
          b1  = yt[i]-c1*xt[i];
          c2  = (yt[j-1]-yt[j])/(xt[j-1]-xt[j]);
