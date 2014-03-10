@@ -18,7 +18,7 @@
 #include <string>
 
 namespace llvm {
-   class GlobalValue;
+  class GlobalValue;
   class LLVMContext;
   class Module;
   class raw_ostream;
