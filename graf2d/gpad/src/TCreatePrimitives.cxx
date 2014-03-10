@@ -95,7 +95,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       yc = 0.5*(y0+yold);
       if (mode == kArc) {
          r1 = 0.5*TMath::Abs(xold-x0);
-         if(fgArc) {
+         if (fgArc) {
             fgArc->SetR1(r1);
             fgArc->SetR2(r1);
             fgArc->SetX1(xc);
@@ -111,7 +111,7 @@ void TCreatePrimitives::Ellipse(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (mode == kEllipse) {
          r1 = 0.5*TMath::Abs(xold-x0);
          r2 = 0.5*TMath::Abs(yold-y0);
-         if(fgEllipse) {
+         if (fgEllipse) {
             fgEllipse->SetR1(r1);
             fgEllipse->SetR2(r2);
             fgEllipse->SetX1(xc);
@@ -195,7 +195,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       if (gPad->GetLogy()) pyold = TMath::Power(10,pyold);
 
       if (mode == kLine) {
-         if(fgLine){
+         if (fgLine){
             fgLine->SetX2(gPad->AbsPixeltoX(pxold));
             fgLine->SetY2(gPad->AbsPixeltoY(pyold));
          }
@@ -208,7 +208,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kArrow) {
-         if(fgArrow){
+         if (fgArrow){
             fgArrow->SetX2(gPad->AbsPixeltoX(pxold));
             fgArrow->SetY2(gPad->AbsPixeltoY(pyold));
          }
@@ -223,7 +223,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kCurlyLine) {
-         if(fgCLine) fgCLine->SetEndPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
+         if (fgCLine) fgCLine->SetEndPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
          else  {
             fgCLine = new TCurlyLine(gPad->AbsPixeltoX(px0),gPad->AbsPixeltoY(py0),gPad->AbsPixeltoX(pxold),gPad->AbsPixeltoY(pyold)
                                      , TCurlyLine::GetDefaultWaveLength()
@@ -238,7 +238,7 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
          //calculate radius in pixels and convert to users x
          radius = gPad->PixeltoX((Int_t)(TMath::Sqrt((Double_t)((px-px0)*(px-px0) + (py-py0)*(py-py0)))))
                  - gPad->PixeltoX(0);
-         if(fgCArc) {
+         if (fgCArc) {
             fgCArc->SetStartPoint(gPad->AbsPixeltoX(pxold), gPad->AbsPixeltoY(pyold));
             fgCArc->SetRadius(radius);
          }
@@ -374,7 +374,6 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
    //
 
    static Double_t x0, y0;
-
    Double_t xp0,xp1,yp0,yp1,xold,yold;
 
    if (mode == kPaveLabel)
@@ -429,8 +428,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       yp1 = gPad->PadtoY(yold);
 
       if (mode == kPave) {
-         if(fgPave) {
-            if(xold < x0) {
+         if (fgPave) {
+            if (xold < x0) {
                fgPave->SetX1(xold);
                fgPave->SetX2(x0);
             }
@@ -438,7 +437,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                fgPave->SetX1(x0);
                fgPave->SetX2(xold);
             }
-            if(yold < y0) {
+            if (yold < y0) {
                fgPave->SetY1(yold);
                fgPave->SetY2(y0);
             }
@@ -456,8 +455,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kPaveText ) {
-         if(fgPaveText){
-            if(xold < x0) {
+         if (fgPaveText){
+            if (xold < x0) {
                fgPaveText->SetX1(xold);
                fgPaveText->SetX2(x0);
             }
@@ -465,7 +464,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                fgPaveText->SetX1(x0);
                fgPaveText->SetX2(xold);
             }
-            if(yold < y0) {
+            if (yold < y0) {
                fgPaveText->SetY1(yold);
                fgPaveText->SetY2(y0);
             }
@@ -483,8 +482,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kPavesText) {
-         if(fgPavesText){
-            if(xold < x0) {
+         if (fgPavesText){
+            if (xold < x0) {
                fgPavesText->SetX1(xold);
                fgPavesText->SetX2(x0);
             }
@@ -492,7 +491,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                fgPavesText->SetX1(x0);
                fgPavesText->SetX2(xold);
             }
-            if(yold < y0) {
+            if (yold < y0) {
                fgPavesText->SetY1(yold);
                fgPavesText->SetY2(y0);
             }
@@ -510,8 +509,8 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kPaveLabel) {
-         if(fgPaveLabel){
-            if(xold < x0) {
+         if (fgPaveLabel){
+            if (xold < x0) {
                fgPaveLabel->SetX1(xold);
                fgPaveLabel->SetX2(x0);
             }
@@ -519,7 +518,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
                fgPaveLabel->SetX1(x0);
                fgPaveLabel->SetX2(xold);
             }
-            if(yold < y0) {
+            if (yold < y0) {
                fgPaveLabel->SetY1(yold);
                fgPaveLabel->SetY2(y0);
             }
@@ -537,7 +536,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       }
 
       if (mode == kDiamond) {
-         if(fgDiamond){
+         if (fgDiamond){
             fgDiamond->SetX1(x0);
             fgDiamond->SetY1(y0);
             fgDiamond->SetX2(xold);
@@ -602,7 +601,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    switch (event) {
 
    case kButton1Down:
-      if(npoints > 0) {
+      if (npoints > 0) {
          pxnew = px;
          pynew = py;
       }
@@ -612,20 +611,19 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
          pynew = py;
       }
       npoints++;
-      if(fgPolyLine) {
+      if (fgPolyLine) {
          fgPolyLine->Set(fgPolyLine->GetN() +1);
          fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
                 gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          // stop collecting new points if new point is close ( < 5 pixels) of previous point
-         if(npoints > 1) {
+         if (npoints > 1) {
             fgPolyLine->GetPoint(fgPolyLine->GetN()-3, xold, yold);
             xnew = gPad->PadtoX(gPad->AbsPixeltoX(pxnew));
             ynew = gPad->PadtoY(gPad->AbsPixeltoY(pynew));
             dp = TMath::Abs(xnew-xold) +TMath::Abs(ynew-yold);
             if (dp < 0.007) {
-               if(mode == kPolyLine) {
-                  fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                                  gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+               if (mode == kPolyLine) {
+                  fgPolyLine->Set(npoints-1);
                }
                else {
                   fgPolyLine->GetPoint(0, xnew, ynew);
@@ -643,10 +641,9 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
       break;
 
    case kButton1Double:
-      if(fgPolyLine) {
-         if(mode == kPolyLine) {
-            fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
-                            gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
+      if (fgPolyLine) {
+         if (mode == kPolyLine) {
+            fgPolyLine->Set(npoints);
          }
          else {
             fgPolyLine->GetPoint(0, xnew, ynew);
@@ -664,7 +661,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kMouseMotion:
       pxnew = px;
       pynew = py;
-      if(fgPolyLine){
+      if (fgPolyLine){
          fgPolyLine->SetPoint(npoints, gPad->PadtoX(gPad->AbsPixeltoX(pxnew)),
                          gPad->PadtoY(gPad->AbsPixeltoY(pynew)));
          gPad->Modified();
