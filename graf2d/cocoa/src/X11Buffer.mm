@@ -322,10 +322,12 @@ CommandBuffer::~CommandBuffer()
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1,
+                                Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));//if this throws, I do not care.
+      //if this throws, I do not care.
+      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -334,7 +336,8 @@ void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, 
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc,
+                                    const Segment_t *segments, Int_t nSegments)
 {
    assert(segments != 0 && "AddDrawSegments, segments parameter is null");
    assert(nSegments > 0 && "AddDrawSegments, nSegments <= 0");
@@ -384,7 +387,8 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *text, Int_t len)
+void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y,
+                                  const char *text, Int_t len)
 {
    try {
       if (len < 0)//Negative length can come from caller.
@@ -399,7 +403,8 @@ void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x,
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc,
+                                     Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
       Rectangle_t r = {};
@@ -416,7 +421,8 @@ void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc, Int_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc,
+                                     Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
       Rectangle_t r = {};
@@ -433,7 +439,8 @@ void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints)
+void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc,
+                                   const Point_t *polygon, Int_t nPoints)
 {
    assert(polygon != 0 && "AddFillPolygon, polygon parameter is null");
    assert(nPoints > 0 && "AddFillPolygon, nPoints <= 0");
@@ -592,7 +599,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 
    NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
    
-   assert([drawable isKindOfClass : [QuartzView class]] && "FlushXOROps, drawable must be of type QuartzView");
+   assert([drawable isKindOfClass : [QuartzView class]] &&
+          "FlushXOROps, drawable must be of type QuartzView");
    
    QuartzView *view = (QuartzView *)drawable;
    
@@ -611,7 +619,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
       if (view.fBackBuffer) {//back buffer has canvas' contents.
          //Very "special" window.
          const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
+         [view copy : view.fBackBuffer area : copyArea
+          withMask : nil clipOrigin : Point() toPoint : Point()];
       }
    
       //Now, do "XOR" drawings.
@@ -654,7 +663,9 @@ void CommandBuffer::RemoveOperationsForDrawable(Drawable_t drawable)
 void CommandBuffer::RemoveGraphicsOperationsForWindow(Window_t wid)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
-      if (fCommands[i] && fCommands[i]->HasOperand(wid) && fCommands[i]->IsGraphicsCommand()) {
+      if (fCommands[i] && fCommands[i]->HasOperand(wid) &&
+          fCommands[i]->IsGraphicsCommand())
+      {
          delete fCommands[i];
          fCommands[i] = 0;
       }
@@ -814,7 +825,8 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
       //Now, if we have any rectanges to substruct them from our view's frame,
       //we are building a set of rectangles, which represents visible part of view.
    
-      WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width, frame2.origin.y + frame2.size.height);
+      WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width,
+                      frame2.origin.y + frame2.size.height);
 
       BuildClipRegion(rect);
       
