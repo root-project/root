@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id: e854245ebf81bc25442c80bc8a0c2b51ebc4dcf1 $
+// @(#)root/graf:$Id$
 // Author: Nicolas Brun   12/12/94
 
 /*************************************************************************
@@ -237,6 +237,8 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t dpx,dpy,xp1,yp1;
    Int_t cBoxX[4], cBoxY[4], part;
    Double_t div = 0;
+   Bool_t opaque  = gPad->OpaqueMoving();
+
    if (!gPad->IsEditable()) return;
    switch (event) {
 
@@ -294,7 +296,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-      PaintControlBox(px1, py1, -theta);
+      if (!opaque) PaintControlBox(px1, py1, -theta);
       if (turn) {
          norm = TMath::Sqrt(Double_t((py-py1)*(py-py1)+(px-px1)*(px-px1)));
          if (norm>0) {
@@ -347,7 +349,14 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          dx = px - pxold;  px1 += dx;
          dy = py - pyold;  py1 += dy;
       }
-      PaintControlBox(px1, py1, -theta);
+      if (opaque) {
+         this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
+         this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
+         this->SetTextAngle(theta);
+         gPad->Modified(kTRUE);
+         gPad->Update();
+      }
+      if (!opaque) PaintControlBox(px1, py1, -theta);
       pxold = px;  pyold = py;
       break;
 
