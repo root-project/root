@@ -87,7 +87,8 @@ void DrawLine::Execute()const
 }
 
 //______________________________________________________________________________
-DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc,
+                           const Segment_t *segments, Int_t nSegments)
                  : Command(wid, gc) 
 {
    assert(segments != 0 && "DrawSegments, segments parameter is null");
@@ -122,7 +123,8 @@ void ClearArea::Execute()const
 }
 
 //______________________________________________________________________________
-CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint)
+CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc,
+                   const Rectangle_t &area, const Point &dstPoint)
                : Command(dst, gc),
                  fSrc(src),
                  fArea(area),
@@ -143,11 +145,13 @@ void CopyArea::Execute()const
           "Execute, gVirtualX is either null or not of TGCocoa type");
 
    TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
-   vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
+   vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth,
+                   fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
 }
 
 //______________________________________________________________________________
-DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text)
+DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point,
+                       const std::string &text)
                : Command(wid, gc),
                  fPoint(point),
                  fText(text)
@@ -165,7 +169,8 @@ void DrawString::Execute()const
 }
 
 //______________________________________________________________________________
-FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle)
+FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc,
+                             const Rectangle_t &rectangle)
                   : Command(wid, gc),
                     fRectangle(rectangle)
 {
@@ -178,11 +183,13 @@ void FillRectangle::Execute()const
           "Execute, gVirtualX is either null or not of TGCocoa type");
 
    TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
-   vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
+   vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY,
+                        fRectangle.fWidth, fRectangle.fHeight);
 }
 
 //______________________________________________________________________________
-FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints)
+FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc,
+                         const Point_t *points, Int_t nPoints)
                 : Command(wid, gc)
 {
    assert(points != 0 && "FillPolygon, points parameter is null");
@@ -201,7 +208,8 @@ void FillPolygon::Execute()const
 }
 
 //______________________________________________________________________________
-DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle)
+DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc,
+                             const Rectangle_t &rectangle)
                  : Command(wid, gc),
                    fRectangle(rectangle)
 {
@@ -214,7 +222,8 @@ void DrawRectangle::Execute()const
           "Execute, gVirtualX is either null or not of TGCocoa type");
 
    TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
-   vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
+   vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY,
+                        fRectangle.fWidth, fRectangle.fHeight);
 }
 
 //______________________________________________________________________________
@@ -370,7 +379,8 @@ void CommandBuffer::AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_
 
 //______________________________________________________________________________
 void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, 
-                                Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
+                                Int_t srcX, Int_t srcY, UInt_t width, UInt_t height,
+                                Int_t dstX, Int_t dstY)
 {
    try {
       Rectangle_t area = {};
@@ -378,7 +388,8 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
       area.fY = srcY;
       area.fWidth = (UShort_t)width;
       area.fHeight = (UShort_t)height;
-      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));//Can throw, nothing leaks.
+      //Can throw, nothing leaks.
+      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -562,7 +573,8 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             if (view.fBackBuffer) {
                //Very "special" window.
                const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
+               [view copy : view.fBackBuffer area : copyArea
+                 withMask : nil clipOrigin : Point() toPoint : Point()];
             }
             
             [view unlockFocus];
@@ -784,7 +796,8 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          if (!frame1.size.width || !frame1.size.height)
             continue;
 
-         frame1.origin = [sibling.fParentView convertPoint : frame1.origin toView : view.fParentView];
+         frame1.origin = [sibling.fParentView convertPoint : frame1.origin
+                          toView : view.fParentView];
 
          //Check if two rects intersect.
          if (RectsOverlap(frame2, frame1)) {
@@ -833,10 +846,12 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
       if (view.fParentView) {
          //To able to use this set of rectangles with CGContextClipToRects,
          //convert them (if needed) into view's own coordinate system.
-         for (rect_iterator recIt = fClippedRegion.begin(), eIt = fClippedRegion.end(); recIt != eIt; ++recIt) {
-            if (!recIt->size.width && !recIt->size.height) {//This is a special 'empty' rectangle, which means our
+         rect_iterator recIt = fClippedRegion.begin(), eIt = fClippedRegion.end();
+         for (; recIt != eIt; ++recIt) {
+            if (!recIt->size.width && !recIt->size.height) {
+               //This is a special 'empty' rectangle, which means our view is completely hidden.
                assert(fClippedRegion.size() == 1 && "ClipOverlaps, internal logic error");
-               break;                                       //view is completely hidden.
+               break;
             }
             recIt->origin = [view.fParentView convertPoint : recIt->origin toView : view];
          }
@@ -907,8 +922,10 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    fYBounds.clear();
 
    //[First, we "cut" the original rect into stripes.
-   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 && recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
+   rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end();
+   for (; recIt != endIt; ++recIt) {
+      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 &&
+          recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
          //this rect completely overlaps our view, not need to calculate anything at all.
          fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
          return;
@@ -941,7 +958,8 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    fGrid.assign(nXBands * nYBands, false);
 
    //Mark the overlapped parts.
-   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
+   recIt = fRectsToClip.begin(), endIt = fRectsToClip.end();
+   for (; recIt != endIt; ++recIt) {
       const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->fX1);
       const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
       
