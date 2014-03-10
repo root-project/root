@@ -1137,41 +1137,49 @@ TFileCollection *TDataSetManagerAliEn::GetDataSet(const char *uri, const char *)
     }
 
     // Just print the newFc (debug)
-    // newFc->Print("filter:SsCc");
+    if (gDebug >= 2) {
+      Info("GetDataSet", "Dataset information currently cached follows");
+      newFc->Print("filter:SsCc");
+    }
 
     // Now we prepare the final dataset, by appending proper information from
     // newFc to fc. Cache has been already saved (possibly with locality info)
 
     TIter itCache(newFc->GetList());
+    Int_t nDeleteUrls;
     while ((fi = dynamic_cast<TFileInfo *>(itCache.Next()))) {
 
-      // We no longer have unknowns. Instead we might have: redir, none. Let's
-      // eliminate them. For each entry we always have three URLs
+      // Keep only URLs requested by user: remove the rest. We are acting on
+      // the user's copy, not on the cached copy
 
       fi->ResetUrl();
 
       if (dataMode == kDataRemote) {
-        // Set everything as staged and remove first two URLs: only AliEn needed
+        // Assume remote file is always available
         fi->SetBit(TFileInfo::kStaged);
-        fi->RemoveUrlAt(0);
-        fi->RemoveUrlAt(0);
-      }
-      else if (dataMode == kDataCache) {
-        // Access from redirector, pretend that everything is staged
-        fi->SetBit(TFileInfo::kStaged);
-        fi->RemoveUrlAt(0);
-        if (fReadFromSE) {
-          // If reading from SE, it might happen that we have holes in the whereis
-          // response, resulting in an invalid redirector URL: in such a case we
-          // access directly from alien:// and we get rid of the invalid result
-          fi->RemoveUrl( kfNoopNoneUrl->GetUrl() );
+        // Only last URL should survive
+        nDeleteUrls = fi->GetNUrls() - 1;
+        for (Int_t i=0; i<nDeleteUrls; i++) {
+          fi->RemoveUrlAt(0);
         }
       }
-      else {  // dataMode == kLocal
-        // Remove dummy URLs, trust staged bit
-          fi->RemoveUrl( kfNoopNoneUrl->GetUrl() );
-          fi->RemoveUrl( kfNoopRedirUrl->GetUrl() );
+      else if (dataMode == kDataCache) {
+        // Access from redirector: pretend that everything is staged
+        fi->SetBit(TFileInfo::kStaged);
+        // Only two last URLs should survive
+        nDeleteUrls = fi->GetNUrls() - 2;
+        for (Int_t i=0; i<nDeleteUrls; i++) {
+          fi->RemoveUrlAt(0);
+        }
       }
+      // else {}  // dataMode == kLocal (trust all: also the staged bit)
+
+      // Now remove all dummy URLs
+      fi->RemoveUrl( kfNoopUnknownUrl->GetUrl() );
+      fi->RemoveUrl( kfNoopNoneUrl->GetUrl() );
+      fi->RemoveUrl( kfNoopRedirUrl->GetUrl() );
+
+      fi->ResetUrl();
 
       // Append to big file collection used for analysis
       TFileInfo *newFi = new TFileInfo(*fi);
