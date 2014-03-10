@@ -53,7 +53,7 @@ palette can be modified with a GUI, just select StartPaletteEditor() from the
 context menu.
 <p>
 Several examples showing how to use this class are available in the
-ROOT tutorials: <tt>$ROOTSYS/tutorials/image/</tt> 
+ROOT tutorials: <tt>$ROOTSYS/tutorials/image/</tt>
 End_Html */
 
 #include "TASImage.h"
@@ -1249,11 +1249,11 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
          if (img)
             bits = (unsigned char *)img->alt.argb32;
       }
-      
+
       if (bits) {
          TString option(opt);
          option.ToLower();
-      
+
          if (gPad && gPad->GetGLDevice() != -1) {
             if (TVirtualPadPainter *painter = gPad->GetPainter())
                painter->DrawPixels(bits, wsrc, hsrc, x, y, !option.Contains("opaque"));
@@ -1656,6 +1656,7 @@ Int_t TASImage::DistancetoPrimitive(Int_t px, Int_t py)
 void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    // Execute mouse events.
+   static TBox *ZoomBox;
 
    if (IsEditable()) {
       gPad->ExecuteEvent(event, px, py);
@@ -1664,8 +1665,8 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    gPad->SetCursor(kCross);
 
-   static Int_t stx, sty;
-   static Int_t oldx, oldy;
+   static Int_t px1old, py1old, px2old, py2old;
+   static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
 
    if (!IsValid()) return;
 
@@ -1688,29 +1689,50 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       switch (event) {
 
          case kButton1Down:
-            gVirtualX->SetLineColor(-1);
-
-            stx = oldx = px;
-            sty = oldy = py;
+            px1 = gPad->XtoAbsPixel(gPad->GetX1());
+            py1 = gPad->YtoAbsPixel(gPad->GetY1());
+            px2 = gPad->XtoAbsPixel(gPad->GetX2());
+            py2 = gPad->YtoAbsPixel(gPad->GetY2());
+            px1old = px; py1old = py;
             break;
 
          case kButton1Motion:
-            gVirtualX->DrawBox(oldx, oldy, stx, sty, TVirtualX::kHollow);
-            oldx = px;
-            oldy = py;
-            gVirtualX->DrawBox(oldx, oldy, stx, sty, TVirtualX::kHollow);
+            px2old = px;
+            px2old = TMath::Max(px2old, px1);
+            px2old = TMath::Min(px2old, px2);
+            py2old = py;
+            py2old = TMath::Max(py2old, py2);
+            py2old = TMath::Min(py2old, py1);
+            pxl = TMath::Min(px1old, px2old);
+            pxt = TMath::Max(px1old, px2old);
+            pyl = TMath::Max(py1old, py2old);
+            pyt = TMath::Min(py1old, py2old);
+
+            if (ZoomBox) {
+               ZoomBox->SetX1(gPad->AbsPixeltoX(pxl));
+               ZoomBox->SetY1(gPad->AbsPixeltoY(pyl));
+               ZoomBox->SetX2(gPad->AbsPixeltoX(pxt));
+               ZoomBox->SetY2(gPad->AbsPixeltoY(pyt));
+            }
+            else {
+               ZoomBox = new TBox(pxl, pyl, pxt, pyt);
+               ZoomBox->SetFillStyle(0);
+               ZoomBox->Draw("l*");
+            }
+            gPad->Modified(kTRUE);
+            gPad->Update();
             break;
 
          case kButton1Up:
             // do nothing if zoom area is too small
-            if ( TMath::Abs(stx - px) < 5 || TMath::Abs(sty - py) < 5)
+            if ( TMath::Abs(pxl - pxt) < 5 || TMath::Abs(pyl - pyt) < 5)
                return;
 
             Double_t xfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->width  / fZoomWidth  : 1;
             Double_t yfact = (fScaledImage) ? (Double_t)fScaledImage->fImage->height / fZoomHeight : 1;
 
-            Int_t imgX1 = stx - gPad->XtoAbsPixel(0);
-            Int_t imgY1 = sty - gPad->YtoAbsPixel(1);
+            Int_t imgX1 = px1old - gPad->XtoAbsPixel(0);
+            Int_t imgY1 = py1old - gPad->YtoAbsPixel(1);
             Int_t imgX2 = px  - gPad->XtoAbsPixel(0);
             Int_t imgY2 = py  - gPad->YtoAbsPixel(1);
 
@@ -1724,7 +1746,8 @@ void TASImage::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Zoom((imgX1 < imgX2) ? imgX1 : imgX2, (imgY1 < imgY2) ? imgY1 : imgY2,
                  TMath::Abs(imgX1 - imgX2) + 1, TMath::Abs(imgY1 - imgY2) + 1);
 
-            gVirtualX->SetLineColor(-1);
+            ZoomBox->Delete();
+            ZoomBox = 0;
             gPad->Modified(kTRUE);
             gPad->Update();
             break;
@@ -2266,7 +2289,7 @@ Pixmap_t TASImage::GetMask()
 
    ASImageDecoder *imdec = start_image_decoding(fgVisual, img, SCL_DO_ALPHA,
                                                 0, 0, ww, 0, 0);
-   if(!imdec) {
+   if (!imdec) {
       delete [] bits;
       return 0;
    }
