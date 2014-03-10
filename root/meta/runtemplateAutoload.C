@@ -2,8 +2,8 @@
 class TagClassWithoutDefinition;
 typedef TagClassWithoutDefinition Tag_t;
 void runtemplateAutoload() {
-   Template<float,0,Tag_t> inTmpltFloat_C;
-   Template<int,0,Tag_t> inTmpltInt0_C;
+   Template<float,0,Tag_t,float,0> inTmpltFloat_C;
+   Template<int,0,Tag_t,int,0> inTmpltInt0_C;
    Template<int,1,Tag_t,int,1> inTmpltInt1_C;
    //Template<short, 0, Tag_t, int, 1> inTmpltNoSpec_C;
    TClass* cl = TClass::GetClass("Template<short, 0, Tag_t, int, 1>", kTRUE /*load*/);

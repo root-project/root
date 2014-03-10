@@ -1,5 +1,5 @@
 { decls }
-template <typename T, int I, typename TAG, typename TDEF=T, int IDEF=I> class Template ;
+template <typename T, int I, typename TAG, typename TDEF, int IDEF> class Template ;
 namespace ANamespace { template <typename T, int I, typename TAG, typename TDEF, int IDEF> class Template ; } 
 
 [libCore.so]
