@@ -644,10 +644,8 @@ void WaitLogo()
       //
       switch (event.type) {
          case Expose:
-            if (event.xexpose.count == 0) {
-               ScrollCredits(ypos);
-               DrawVersion();
-            }
+            ScrollCredits(ypos);
+            DrawVersion();
             break;
          case ButtonPress:
             if (gAbout && event.xbutton.button == 3)
