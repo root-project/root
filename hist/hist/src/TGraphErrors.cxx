@@ -126,7 +126,7 @@ TGraphErrors::TGraphErrors(Int_t n, const Double_t *x, const Double_t *y, const 
 
 //______________________________________________________________________________
 TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vex, const TVectorF &vey)
-   : TGraph()
+   : TGraph(TMath::Min(vx.GetNrows(), vy.GetNrows()), vx.GetMatrixArray(), vy.GetMatrixArray() )
 {
    // constructor with four vectors of floats in input
    // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
@@ -134,16 +134,10 @@ TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVector
    // The number of points in the graph is the minimum of number of points
    // in vx and vy.
 
-   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
-   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   Int_t ivxlow  = vx.GetLwb();
-   Int_t ivylow  = vy.GetLwb();
    Int_t ivexlow = vex.GetLwb();
    Int_t iveylow = vey.GetLwb();
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i]   = vx(i + ivxlow);
-      fY[i]   = vy(i + ivylow);
       fEX[i]  = vex(i + ivexlow);
       fEY[i]  = vey(i + iveylow);
    }
@@ -152,7 +146,7 @@ TGraphErrors::TGraphErrors(const TVectorF &vx, const TVectorF &vy, const TVector
 
 //______________________________________________________________________________
 TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVectorD  &vex, const TVectorD  &vey)
-   : TGraph()
+   : TGraph(TMath::Min(vx.GetNrows(), vy.GetNrows()), vx.GetMatrixArray(), vy.GetMatrixArray() )
 {
    // constructor with four vectors of doubles in input
    // A grapherrors is built with the X coordinates taken from vx and Y coord from vy
@@ -160,16 +154,10 @@ TGraphErrors::TGraphErrors(const TVectorD  &vx, const TVectorD  &vy, const TVect
    // The number of points in the graph is the minimum of number of points
    // in vx and vy.
 
-   fNpoints = TMath::Min(vx.GetNrows(), vy.GetNrows());
-   if (!TGraph::CtorAllocate()) return;
    if (!CtorAllocate()) return;
-   Int_t ivxlow  = vx.GetLwb();
-   Int_t ivylow  = vy.GetLwb();
    Int_t ivexlow = vex.GetLwb();
    Int_t iveylow = vey.GetLwb();
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i]   = vx(i + ivxlow);
-      fY[i]   = vy(i + ivylow);
       fEX[i]  = vex(i + ivexlow);
       fEY[i]  = vey(i + iveylow);
    }
