@@ -34,9 +34,12 @@ enum ECalculatorType { kAsymptotic = 0, kFrequentist = 1, kHybrid = 2 };
 enum ETestStatType { kSimpleLR = 0, kRatioLR = 1, kProfileLR = 2, kProfileLROneSided = 3, 
    kProfileLROneSidedDiscovery = 4, kProfileLRSigned = 5, kMLE = 6, kNObs = 7 };
 static const char * const kECalculatorTypeString[] = { "Asymptotic", "Frequentist", "Hybrid" };
-static const char * const kETestStatTypeString[] = { "Simple Likelihood Ratio", "Ratio Of Profiled Likelihoods", 
-   "Profile Likelihood Ratio", "Profile Likelihood One-Sided", "Profile Likelihood One-Sided Discovery",
-   "Profile Likelihood Signed", "Max Likelihood Estimate", "Number Of Observed Events" };
+static const char * const kETestStatTypeString[] = { "Simple-Likelihood-Ratio", "Ratio-Of-Profiled-Likelihoods", 
+    "Profile-Likelihood-Ratio", "Profile-Likelihood-One-Sided", "Profile-Likelihood-One-Sided-Discovery",
+    "Profile-Likelihood-Signed", "Max-Likelihood-Estimate", "Number-Of-Observed-Events" };
+// static const char * const kETestStatTypeString[] = { "Simple Likelihood Ratio", "Ratio Of Profiled Likelihoods", 
+//    "Profile Likelihood Ratio", "Profile Likelihood One-Sided", "Profile Likelihood One-Sided Discovery",
+//    "Profile Likelihood Signed", "Max Likelihood Estimate", "Number Of Observed Events" };
 static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType calculatorType, RooAbsData &data, 
    const ModelConfig &nullModel, const ModelConfig &altModel, const UInt_t toysNull, const UInt_t toysAlt);
 static TestStatistic *buildTestStatistic(const ETestStatType testStatType, const ModelConfig &sbModel, const ModelConfig &bModel);
@@ -332,6 +335,10 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
 
+      const RooArgSet * initialVariables = model->GetPdf()->getVariables(); 
+      w->saveSnapshot("initialVariables",*initialVariables);
+      delete initialVariables; 
+
       // build likelihood interval with ProfileLikelihoodCalculator
       ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *model);
       plc->SetConfidenceLevel(fConfidenceLevel);
@@ -345,6 +352,11 @@ public:
          interval->UpperLimit(*w->var("sig")),
          TString::Format("tplc3_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel)
       );
+
+      if (_verb > 1) {
+         w->loadSnapshot("initialVariables");
+         w->writeToFile(TString::Format("stressRooStats_PoissonProductModel_%d_%d.root",fObsValueX, fObsValueY));
+      }
 
       // cleanup
       delete interval;
@@ -844,6 +856,10 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
 
+      const RooArgSet * initialVariables = model->GetPdf()->getVariables(); 
+      w->saveSnapshot("initialVariables",*initialVariables);
+      delete initialVariables; 
+
       // NOTE: Roo1DIntegrator is too slow and gives poor results
       RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 
@@ -967,6 +983,10 @@ public:
       w->var("x")->setVal(fObsValueX);
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
+
+      const RooArgSet * initialVariables = model->GetPdf()->getVariables(); 
+      w->saveSnapshot("initialVariables",*initialVariables);
+      delete initialVariables; 
 
       // NOTE: Roo1DIntegrator is too slow and gives poor results
       RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
@@ -1184,6 +1204,7 @@ public:
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
 
+
       // add observable values to data set and fix other parameters
       w->var("n_on")->setVal(fObsValueOn);
       w->var("n_off")->setVal(fObsValueOff);
@@ -1211,7 +1232,7 @@ public:
 
       } else { // Do hypothesis test with AsymptoticCalculator
 
-         AsymptoticCalculator::SetPrintLevel(0); // disable superfluous messaging
+         AsymptoticCalculator::SetPrintLevel(_verb); // disable superfluous messaging
          AsymptoticCalculator *atc = new AsymptoticCalculator(*w->data("data"), *sbModel, *bModel);
          atc->SetOneSidedDiscovery(kTRUE);
          regValue(atc->GetHypoTest()->Significance(), significanceString);
@@ -1281,6 +1302,8 @@ public:
       sbModel->SetSnapshot(*sbModel->GetParametersOfInterest()); // value set in model
       w->var("sig")->setVal(0);
       bModel->SetSnapshot(*bModel->GetParametersOfInterest());
+
+      AsymptoticCalculator::SetPrintLevel(_verb); // is static (don;t care if we don't use it)
 
       HypoTestCalculatorGeneric *calc = 
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50);
@@ -1456,6 +1479,10 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*sbModel->GetObservables());
 
+      const RooArgSet * initialVariables = sbModel->GetPdf()->getVariables(); 
+      w->saveSnapshot("initialVariables",*initialVariables);
+      delete initialVariables; 
+
       // set snapshots
       w->var("sig")->setVal(fObsValueX - w->var("bkg1")->getValV());
       sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
@@ -1463,13 +1490,21 @@ public:
       bModel->SetSnapshot(*bModel->GetParametersOfInterest());
 
       // build and configure HypoTestInverter
+      AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc = 
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 1);
       HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
-      hti->SetFixedScan(10, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
+      hti->SetVerbose(_verb); 
 
-      if(fCalculatorType == kAsymptotic) ((AsymptoticCalculator *)calc)->SetTwoSided();
+      int nscanPoints = 10; 
+      if(fCalculatorType == kAsymptotic) {
+         ((AsymptoticCalculator *)calc)->SetTwoSided();
+         ((AsymptoticCalculator *)calc)->SetPrintLevel(_verb); 
+         nscanPoints = 40;
+      }
+
+      hti->SetFixedScan(nscanPoints, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
 
       // ToyMCSampler configuration
       ToyMCSampler *tmcs = (ToyMCSampler *)hti->GetHypoTestCalculator()->GetTestStatSampler();
@@ -1519,6 +1554,13 @@ public:
             }
          }
       }
+
+      // in case of debug write the workspace in a file
+      if (_verb > 1) {
+         w->loadSnapshot("initialVariables");
+         w->writeToFile(TString::Format("stressRooStats_PoissonProductModel_%d_%d.root",fObsValueX, fObsValueY));
+      }
+
 
       // cleanup
       delete interval;
@@ -1606,19 +1648,31 @@ public:
       w->var("x")->setVal(fObsValueX);
       w->data("data")->add(*sbModel->GetObservables());
 
+      const RooArgSet * initialVariables = sbModel->GetPdf()->getVariables(); 
+      w->saveSnapshot("initialVariables",*initialVariables);
+      delete initialVariables; 
+
       // set snapshots
       sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());
       w->var("sig")->setVal(0);
       bModel->SetSnapshot(*bModel->GetParametersOfInterest());
 
       // calculate upper limit with HypoTestInverter
+      AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc = 
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 100);
       HypoTestInverter *hti = new HypoTestInverter(*calc, NULL, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
-      hti->SetFixedScan(10, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
+      hti->SetVerbose(_verb); 
 
-      if(fCalculatorType == kAsymptotic) ((AsymptoticCalculator *)calc)->SetOneSided(kTRUE);
+      int npoints = 10; 
+      if(fCalculatorType == kAsymptotic) { 
+         ((AsymptoticCalculator *)calc)->SetOneSided(kTRUE);
+         ((AsymptoticCalculator *)calc)->SetPrintLevel(_verb); 
+         npoints = 40;
+      }
+
+      hti->SetFixedScan(npoints, w->var("sig")->getMin(), w->var("sig")->getMax()); // significant speedup
 
       // needed because we have no extended pdf and the ToyMC Sampler evaluation returns an error
       ToyMCSampler *tmcs = (ToyMCSampler *)hti->GetHypoTestCalculator()->GetTestStatSampler();
@@ -1684,6 +1738,11 @@ public:
                                           fObsValueX, fConfidenceLevel));
             }
          }
+      }
+
+      if (_verb > 1) {
+         w->loadSnapshot("initialVariables");
+         w->writeToFile("stressRooStats_PoissonEfficiencyModel.root");
       }
 
       // cleanup
@@ -1828,6 +1887,9 @@ public:
 
          regValue(htr->Significance(), "thtc_significance_hybrid");
 
+         if (_verb > 1) 
+            w->writeToFile("stressRooStats_OnOffModel.root");
+
          delete htc;
          delete htr;
          delete w;
@@ -1847,7 +1909,6 @@ static HypoTestCalculatorGeneric * buildHypoTestCalculator(const ECalculatorType
    HypoTestCalculatorGeneric *calc = NULL;
 
    if(calculatorType == kAsymptotic) {
-      AsymptoticCalculator::SetPrintLevel(0); // TODO: set this by default
       AsymptoticCalculator *ac = new AsymptoticCalculator(data, altModel, nullModel);
       calc = ac;
    } else if(calculatorType == kFrequentist) {

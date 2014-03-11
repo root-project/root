@@ -794,13 +794,14 @@ double HypoTestInverterResult::FindInterpolatedLimit(double target, bool lowSear
       xmin = varmin;
    }
    double limit2 =  GetGraphX(graph, target, !lowSearch, xmin, xmax);
+   if (!lowSearch) fLowerLimit = limit2; 
+   else fUpperLimit = limit2;
+
    CalculateEstimatedError( target, !lowSearch, xmin, xmax);
 
 #ifdef DO_DEBUG
    std::cout << "other limit is " << limit2 << std::endl;
 #endif
-   if (!lowSearch) fLowerLimit = limit2; 
-   else fUpperLimit = limit2;
  
    return (lowSearch) ? fLowerLimit : fUpperLimit;
 
@@ -912,18 +913,31 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
                         << " only  points - return its error\n"; 
      return GetYError(0);
   }
+
+  // it does not make sense in case of asymptotic which do not have point errors 
+  if (!GetNullTestStatDist(0) ) return 0; 
  
+  TString type = (!lower) ? "upper" : "lower";
+
+#ifdef DO_DEBUG
+  std::cout << "calculate estimate error " << type << " between " << xmin << " and " << xmax << std::endl;
+  std::cout << "computed limit is " << ( (lower) ? fLowerLimit : fUpperLimit ) << std::endl;
+#endif
+
     // make a TGraph Errors with the sorted points
   std::vector<unsigned int> indx(fXValues.size());
   TMath::SortItr(fXValues.begin(), fXValues.end(), indx.begin(), false); 
   // make a graph with the sorted point
-  TGraphErrors graph(ArraySize());
+  TGraphErrors graph;
   int ip = 0;
   for (int i = 0; i < ArraySize(); ++i) {
      if ( (xmin < xmax) && ( GetXValue(indx[i]) >= xmin && GetXValue(indx[i]) <= xmax) ) {
-        graph.SetPoint(ip, GetXValue(indx[i]), GetYValue(indx[i] ) );
-        graph.SetPointError(ip, 0.,  GetYError(indx[i]) );
-        ip++;
+        // exclude points with zero or very small errors 
+        if (GetYError(indx[i] ) > 1.E-6) {  
+           graph.SetPoint(ip, GetXValue(indx[i]), GetYValue(indx[i] ) );
+           graph.SetPointError(ip, 0.,  GetYError(indx[i]) );
+           ip++;
+        }
      }
   }
 
@@ -936,16 +950,33 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
 
 
 
-  TF1 fct("fct", "exp([0] * x + [1] * x**2)", minX, maxX);
-  TString type = (!lower) ? "upper" : "lower";
+  TF1 fct("fct", "exp([0] * (x - [2] ) + [1] * (x-[2])**2)", minX, maxX);
+  double scale = maxX-minX; 
+  if (lower) { 
+     fct.SetParameters( 2./scale, 0.1/scale, graph.GetX()[0] ); 
+     fct.SetParLimits(0,0,100./scale); 
+     fct.SetParLimits(1,0, 10./scale); }
+  else  { 
+     fct.SetParameters( -2./scale, -0.1/scale ); 
+     fct.SetParLimits(0,-100./scale, 0); 
+     fct.SetParLimits(1,-100./scale, 0); }
+
+  if (graph.GetN() < 3) fct.FixParameter(1,0.);
 
   // find the point closest to the limit
   double limit = (!lower) ? fUpperLimit : fLowerLimit;
   if (TMath::IsNaN(limit)) return 0; // cannot do if limit not computed  
 
+
 #ifdef DO_DEBUG
-  std::cout << "fitting for limit " << type << "between " << minX << " , " << maxX << std::endl;
-  int fitstat = graph.Fit(&fct,"EX0");
+  TCanvas * c1 = new TCanvas(); 
+  std::cout << "fitting for limit " << type << "between " << minX << " , " << maxX << " points considered " << graph.GetN() <<  std::endl;
+  int fitstat = graph.Fit(&fct," EX0");
+  graph.SetMarkerStyle(20);
+  graph.Draw("AP");
+  graph.Print(); 
+  c1->SaveAs(TString::Format("graphFit_%s.pdf",type.Data()) );
+  delete c1; 
 #else
   int fitstat = graph.Fit(&fct,"Q EX0");
 #endif 
@@ -960,7 +991,8 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
      }
   }
   else { 
-     oocoutE(this,Eval) << "HypoTestInverter::CalculateEstimatedError - cannot estimate  the " << type << " limit error " << std::endl;
+     oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimatedError - cannot estimate  the " << type << " limit error " << std::endl;
+     theError = 0; 
   }
   if (lower) 
      fLowerLimitError = theError;
@@ -970,7 +1002,6 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
 #ifdef DO_DEBUG
   std::cout << "closes point to the limit is " << index << "  " << GetXValue(index) << " and has error " << GetYError(index) << std::endl;
 #endif
-
 
   return theError;
 }
