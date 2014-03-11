@@ -50,8 +50,6 @@ static bool         gAbout         = false;
 static bool         gHasShapeExt   = false;
 //
 static Pixel        gBackground    = Pixel();
-static Pixel        gForeground    = Pixel();
-
 
 static unsigned int gWidth         = 0;
 static unsigned int gHeight        = 0;
@@ -90,11 +88,6 @@ static const char *gRootDevelopers[] = {
    "Matevz Tadel",
    0
 };
-
-//static const char *gCintDevelopers[] = {
-//   "Masaharu Goto",
-//   0
-//};
 
 static const char *gRootDocumentation[] = {
    "Ilka Antcheva",
@@ -157,11 +150,11 @@ static bool CreateSplashscreenWindow()
    const int screen = DefaultScreen(gDisplay);
 
    gBackground = WhitePixel(gDisplay, screen);
-   gForeground = BlackPixel(gDisplay, screen);
+   Pixel foreground = BlackPixel(gDisplay, screen);
 
    gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
                                      -100, -100, 50, 50, 0,
-                                     gForeground, gBackground);
+                                     foreground, gBackground);
 
    return gLogoWindow;
 }
@@ -191,7 +184,6 @@ static void SetSplashscreenPosition()
 
    XMoveResizeWindow(gDisplay, gLogoWindow, x, y, gWidth, gHeight);
    XSync(gDisplay, False);// make sure move & resize is done before mapping
-
 }
 
 //__________________________________________________________________
@@ -202,7 +194,7 @@ static void SetBackgroundPixmapAndMask()
    assert(gLogoPixmap != 0 && "SetBackgroundPixmapAndMask, gLogoPixmap is None");
 
    unsigned long mask = CWBackPixmap | CWOverrideRedirect;
-   XSetWindowAttributes winAttr = {};
+   XSetWindowAttributes winAttr = XSetWindowAttributes();//I had {} but f...g g++ is so STUPID!
    winAttr.background_pixmap = gLogoPixmap;
    winAttr.override_redirect = True;
    XChangeWindowAttributes(gDisplay, gLogoWindow, mask, &winAttr);
@@ -238,19 +230,19 @@ static void SelectFontAndTextColor()
    if (gFont)
       XSetFont(gDisplay, gGC, gFont->fid);
    
-   XSetForeground(gDisplay, gGC, gForeground);
-   XSetBackground(gDisplay, gGC, gBackground);
+   XSetForeground(gDisplay, gGC, gBackground);
 }
 
 //__________________________________________________________________
-static bool LoadROOTLogoPixmap(const char *imageFileName, bool needMask)
+static bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 {
    //Splashscreen background image and (probably) a mask (if we want to use
    //shape combine - non-rect window).
 
-   assert(imageFileName != 0 && "LoadROOTLogoPixmap, parameter 'imageFileName' is null");
-   assert(gDisplay != 0 && "LoadROOTLogoPixmap, gDisplay is null");
-   assert(gLogoWindow != 0 && "LoadROOTLogoPixmap, gLogoWindow is None");//'None' instead of '0'?
+   assert(imageFileName != 0 && "LoadROOTSplashscreenPixmap, parameter 'imageFileName' is null");
+   //'None' instead of '0'?
+   assert(gDisplay != 0 && "LoadROOTSplashscreenPixmap, gDisplay is null");
+   assert(gLogoWindow != 0 && "LoadROOTSplashscreenPixmap, gLogoWindow is None");
 
    Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
    if (!screen)
@@ -259,10 +251,10 @@ static bool LoadROOTLogoPixmap(const char *imageFileName, bool needMask)
    //TODO: Check the result?
    const int depth = PlanesOfScreen(screen);
 
-   XWindowAttributes winAttr = {};
+   XWindowAttributes winAttr = XWindowAttributes();//DIE GCC!
    XGetWindowAttributes(gDisplay, gLogoWindow, &winAttr);
 
-   XpmAttributes xpmAttr = {};
+   XpmAttributes xpmAttr = XpmAttributes();//I have gcc!!!
    xpmAttr.valuemask    = XpmVisual | XpmColormap | XpmDepth;
    xpmAttr.visual       = winAttr.visual;
    xpmAttr.colormap     = winAttr.colormap;
@@ -289,14 +281,14 @@ static bool LoadROOTLogoPixmap(const char *imageFileName, bool needMask)
    
 #ifdef ROOTICONPATH
    assert(strlen(ROOTICONPATH) != 0 &&
-          "LoadROOTLogoPixmap, invalid 'ROOTICONPATH'");
+          "LoadROOTSplashscreenPixmap, invalid 'ROOTICONPATH'");
 
    path = ROOTICONPATH;
    path += "/";
    path += imageFileName;
 #else
    assert(strlen(getenv("ROOTSYS")) != 0 &&
-          "LoadROOTLogoPixmap, the $ROOTSYS string is too long");
+          "LoadROOTSplashscreenPixmap, the $ROOTSYS string is too long");
    path = getenv("ROOTSYS");
    path += "/icons/";
    path += imageFileName;
@@ -352,12 +344,12 @@ static bool GetRootLogoAndShapeMask()
    gShapeMask = 0;
    
    if (gHasShapeExt) {
-      if (!LoadROOTLogoPixmap("Root6SplashEXT.xpm", true)) {//true - mask is needed.
+      if (!LoadROOTSplashscreenPixmap("Root6SplashEXT.xpm", true)) {//true - mask is needed.
          gHasShapeExt = false;//We do not have a mask and can not call shape combine.
-         LoadROOTLogoPixmap("Root6Splash.xpm", false);
+         LoadROOTSplashscreenPixmap("Root6Splash.xpm", false);
       }
    } else
-      LoadROOTLogoPixmap("Root6Splash.xpm", false);
+      LoadROOTSplashscreenPixmap("Root6Splash.xpm", false);
 
    return gLogoPixmap;
 }
@@ -368,19 +360,18 @@ static bool GetRootLogoAndShapeMask()
 static void DrawVersion()
 {
    // Draw version string.
-   char version[80] = {};
 #ifndef ROOT_RELEASE
    assert(0 && "DrawVersion, 'ROOT_RELEASE' is not defined");
    return;
 #endif
 
-   assert(strlen(ROOT_RELEASE) < sizeof version - 1 &&
-          "DrawVersion, the string ROOT_RELEASE is too long");
-   
-/*   sprintf(version, "Version %s", ROOT_RELEASE);
+   std::string version("Version ");
+   version += ROOT_RELEASE;
 
-   XDrawString(gDisplay, gLogoWindow, gGC, 15, gHeight - 15, version,
-               strlen(version));*/
+   
+
+   XDrawString(gDisplay, gLogoWindow, gGC, gWidth - 90, gHeight - 15, version.data(),
+               version.length());
 }
 
 //Name DrawXXX is bad, actually this DrawXXX instead of drawing XXX can just
@@ -484,8 +475,6 @@ static int DrawCredits(bool draw, bool extended)
          y = DrawCreditItem("one of our favorite users.", 0, y, draw);
       }
    }
-   
-   XSetForeground(gDisplay, gGC, gForeground);
 
    return y;
 }
@@ -541,7 +530,6 @@ void ScrollCredits(int ypos)
    XSetClipMask(gDisplay, gGC, None);
 }
 
-
 //Aux. non-GUI function.
 
 //__________________________________________________________________
@@ -582,6 +570,7 @@ static void ReadContributors()
          cnt++;
       }
    }
+
    gContributors[cnt] = 0;
 
    fclose(f);
@@ -652,8 +641,10 @@ void WaitLogo()
    XFlush(gDisplay);
 
    while (!gDone) {
-      XEvent event = {};
+      XEvent event = XEvent();//And here g++ does not complain??
+      //Yeah, yeah, looking weird.
       while (XCheckMaskEvent(gDisplay, ButtonPressMask | ExposureMask, &event));
+      //
       switch (event.type) {
          case Expose:
             if (event.xexpose.count == 0) {
