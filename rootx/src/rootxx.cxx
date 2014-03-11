@@ -150,7 +150,7 @@ static bool CreateSplashscreenWindow()
    const int screen = DefaultScreen(gDisplay);
 
    gBackground = WhitePixel(gDisplay, screen);
-   Pixel foreground = BlackPixel(gDisplay, screen);
+   const Pixel foreground = BlackPixel(gDisplay, screen);
 
    gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
                                      -100, -100, 50, 50, 0,
@@ -172,8 +172,7 @@ static void SetSplashscreenPosition()
                 &gWidth, &gHeight, &borderWidth, &depth);
 
    //TODO: this is wrong with multi-head display setup!
-   Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
-   if (screen) {
+   if (Screen * const screen = XDefaultScreenOfDisplay(gDisplay)) {
       x = (WidthOfScreen(screen) - gWidth) / 2;
       y = (HeightOfScreen(screen) - gHeight) / 2;
    } else {
@@ -337,7 +336,6 @@ static bool GetRootLogoAndShapeMask()
 
    gHasShapeExt = false;
    int eventBase = 0, errorBase = 0;
-
    gHasShapeExt = XShapeQueryExtension(gDisplay, &eventBase, &errorBase);
    
    gLogoPixmap = 0;
@@ -613,8 +611,9 @@ void PopupLogo(bool about)
    if (gAbout)
       ReadContributors();
 
+   if (gGC)
+      CreateTextPixmap();
 
-   CreateTextPixmap();
    if (gCreditsPixmap)
       ScrollCredits(0);
 
