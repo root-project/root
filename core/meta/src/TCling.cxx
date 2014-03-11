@@ -100,6 +100,10 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 
+#ifdef R__USE_CXX11
+#include <unordered_map>
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <cassert>
@@ -3619,6 +3623,17 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // Read and parse a rootmapfile in its new format, and return 0 in case of
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
+   
+   #ifdef R__USE_CXX11
+   // For "class ", "namespace " and "typedef " respectively
+   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
+   #else
+   std::map<const char, unsigned int> keyLenMap;
+   keyLenMap['c']=6;
+   keyLenMap['n']=10;
+   keyLenMap['t']=8;
+   #endif   
+   
    if (rootmapfile && *rootmapfile) {
 
       ExtVisibleStorageAdder evsAdder(fNSFromRootmaps);
@@ -3685,9 +3700,12 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                delete[] wlib;
             }
          }
-         else if ( (firstChar == 'c' && (keyLen=6) ) || /* for "class "*/
-                   (firstChar == 'n' && (keyLen=10)) || /* for "namespace "*/
-                   (firstChar == 't' && (keyLen=8))    /* for "typedef "*/) {
+         else if ( 0 != keyLenMap.count(firstChar) ){
+            #ifdef R__USE_CXX11
+            unsigned int keyLen = keyLenMap.at(firstChar);
+            #else
+            unsigned int keyLen = keyLenMap[firstChar];
+            #endif
             std::string keyname = line.substr(keyLen, line.length()-keyLen);
             if (gDebug > 6)
                Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());

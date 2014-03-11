@@ -150,6 +150,9 @@ const char *rootClingHelp =
 "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
 "                                                                           \n";
 
+#include "RConfigure.h"
+#include "RConfig.h"
+
 #include <iostream>
 #include <iomanip>
 #include <memory>
@@ -164,6 +167,10 @@ const char *rootClingHelp =
 #include <windows.h>
 #include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
+#endif
+
+#ifdef R__USE_CXX11
+#include <unordered_map>
 #endif
 
 #include <errno.h>
@@ -192,9 +199,6 @@ const char *rootClingHelp =
 #include "llvm/Bitcode/BitstreamWriter.h"
 #include "llvm/Support/Path.h"
 
-
-#include "RConfigure.h"
-#include "RConfig.h"
 #include "Rtypes.h"
 #include "TModuleGenerator.h"
 #include "TClassEdit.h"
@@ -779,7 +783,15 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
    std::string keyname;
    std::string libs;
    std::string line;
-   unsigned int keyLen=0;
+#ifdef R__USE_CXX11
+   // For "class ", "namespace " and "typedef " respectively
+   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
+#else
+   std::map<char, unsigned int> keyLenMap;
+   keyLenMap['c']=6;
+   keyLenMap['n']=10;
+   keyLenMap['t']=8;
+#endif   
    while (getline(file, line, '\n')) {
       if (line == "{ decls }") {
          while (getline(file, line, '\n')) {
@@ -792,9 +804,12 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
          libs = line.substr(1, line.find(']')-1);
          while( libs[0] == ' ' ) libs.replace(0, 1, "");
       }
-      else if ( (firstChar == 'c' && (keyLen=6) ) || /* for "class "*/
-                (firstChar == 'n' && (keyLen=10)) || /* for "namespace "*/
-                (firstChar == 't' && (keyLen=8))    /* for "typedef "*/){
+      else if ( 0 != keyLenMap.count(firstChar) ){
+         #ifdef R__USE_CXX11
+         unsigned int keyLen = keyLenMap.at(firstChar);
+         #else
+         unsigned int keyLen = keyLenMap[firstChar];
+         #endif
          keyname = line.substr(keyLen, line.length()-keyLen);
          CheckClassNameForRootMap(keyname,autoloads);
          autoloads[keyname] = libs;
