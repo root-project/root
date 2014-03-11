@@ -412,7 +412,7 @@ static int DrawCreditItem(const char *creditItem, const char **members, int y, b
          }
          
          y += lineSpacing;
-         credit += "   ";
+         credit = "   ";
       }
       
       credit += members[i];
@@ -434,12 +434,13 @@ static int DrawCredits(bool draw, bool extended)
    // If extended is true draw or returns size for extended full
    // credits list.
 
-   if (!gFont)
+   if (!gFont || !gGC)
       return 150;  // size not important no text will be drawn anyway
+   
+   XSetForeground(gDisplay, gGC, gBackground);//Text is white!
 
    assert((draw == false || gCreditsPixmap != 0) &&
           "DrawCredits, parameter 'draw' is true, but destination pixmap is None");
-
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCredits, lineSpacing must be positive");
    
@@ -482,6 +483,8 @@ static int DrawCredits(bool draw, bool extended)
          y = DrawCreditItem("one of our favorite users.", 0, y, draw);
       }
    }
+   
+   XSetForeground(gDisplay, gGC, gForeground);   
 
    return y;
 }
@@ -511,16 +514,20 @@ static void CreateTextPixmap()
    
    assert(gHeight > 105 && "CreateTextPixmap, internal error - unexpected geometry");
    gCreditsRect.y = gHeight - 105;
-   
-   XSetForeground(gDisplay, gGC, gBackground);
-   XFillRectangle(gDisplay, gCreditsPixmap, gGC, 0, 0, gCreditsWidth, gCreditsHeight);
-   XSetForeground(gDisplay, gGC, gForeground);
 }
 
 
 //__________________________________________________________________
 void ScrollCredits(int ypos)
 {
+   assert(gDisplay != 0 && "ScrollCredits, gDisplay is None");
+
+   if (!gGC || !gLogoPixmap || !gCreditsPixmap)
+      return;
+
+   XCopyArea(gDisplay, gLogoPixmap, gCreditsPixmap, gGC, gCreditsRect.x, gCreditsRect.y,
+             gCreditsRect.width, gCreditsRect.height, 0, ypos);
+
    DrawCredits(true, true);
 
    XRectangle crect[1];
@@ -619,10 +626,9 @@ void PopupLogo(bool about)
 
    CreateTextPixmap();
    if (gCreditsPixmap)
-      DrawCredits(true, about);
+      ScrollCredits(0);
 
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
-
    XMapRaised(gDisplay, gLogoWindow);
    
    gettimeofday(&gPopupTime, 0);
