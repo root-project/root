@@ -48,10 +48,18 @@ static bool         gAbout         = false;
 //Non-rect window:
 static bool         gHasShapeExt   = false;
 //
+static Pixel        gBackground    = Pixel();
+static Pixel        gForeground    = Pixel();
+
+
 static unsigned int gWidth         = 0;
 static unsigned int gHeight        = 0;
 static int          gStayUp        = 4000;   // 4 seconds
-static XRectangle   gCreditsRect   = { 15, 155, 285, 130 }; // clip rect in logo
+
+//gCreditsRect: x and y to be set at runtime (depending on shape extension and
+//images).
+static XRectangle   gCreditsRect   = {0, 0, 455, 80}; // clip rect in logo
+
 static unsigned int gCreditsWidth  = gCreditsRect.width; // credits pixmap size
 static unsigned int gCreditsHeight = 0;
 
@@ -147,11 +155,12 @@ static bool CreateSplashscreenWindow()
    //TODO: check the screen???
    const int screen = DefaultScreen(gDisplay);
 
-   Pixel background = WhitePixel(gDisplay, screen);
-   Pixel foreground = BlackPixel(gDisplay, screen);
+   gBackground = WhitePixel(gDisplay, screen);
+   gForeground = BlackPixel(gDisplay, screen);
 
    gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
-                                     -100, -100, 50, 50, 0, foreground, background);
+                                     -100, -100, 50, 50, 0,
+                                     gForeground, gBackground);
 
    return gLogoWindow;
 }
@@ -228,8 +237,8 @@ static void SelectFontAndTextColor()
    if (gFont)
       XSetFont(gDisplay, gGC, gFont->fid);
    
-//   XSetForeground(gDisplay, gGC, fore);
-//   XSetBackground(gDisplay, gGC, back);
+   XSetForeground(gDisplay, gGC, gForeground);
+   XSetBackground(gDisplay, gGC, gBackground);
 }
 
 //__________________________________________________________________
@@ -381,13 +390,12 @@ static int DrawCreditItem(const char *creditItem, const char **members, int y, b
 {
    // Draw credit item.
    assert(creditItem != 0 && "DrawCreditItem, parameter 'creditItem' is null");
-   assert(members != 0 && "DrawCreditItem, parameter 'members' is null");
 
    assert(gFont != 0 && "DrawCreditItem, gFont is None");
    assert(gDisplay != 0 && "DrawCreditItem, gDisplay is None");
    
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
-   assert(lineSpacing > 0 && "DrawCreditItem, lineSpacing must be positive");   
+   assert(lineSpacing > 0 && "DrawCreditItem, lineSpacing must be positive");
    
    std::string credit(creditItem);
    
@@ -429,34 +437,29 @@ static int DrawCredits(bool draw, bool extended)
    if (!gFont)
       return 150;  // size not important no text will be drawn anyway
 
+   assert((draw == false || gCreditsPixmap != 0) &&
+          "DrawCredits, parameter 'draw' is true, but destination pixmap is None");
+
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCredits, lineSpacing must be positive");
    
    int y = lineSpacing;
-
    y = DrawCreditItem("Conception: ", gConception, y, draw);
-
-   y += 2*lineSpacing;
+   y += 2 * lineSpacing;
 
    y = DrawCreditItem("Lead Developers: ", gLeadDevelopers, y, draw);
-
-   y += 2*lineSpacing - 1;  // special layout tweak
+   y += 2 * lineSpacing - 1;  // special layout tweak ... WUT????
 
    y = DrawCreditItem("Core Engineering: ", gRootDevelopers, y, draw);
-
-   //y += 2*lineSpacing - 1;  // to just not cut the bottom of the "p"
-
-   //y = DrawCreditItem("CINT C/C++ Intepreter: ", gCintDevelopers, y, draw);
-
-   y += 2*lineSpacing;
+   y += 2 * lineSpacing;
 
    y = DrawCreditItem("Documentation: ", gRootDocumentation, y, draw);
 
    if (extended && gContributors) {
-      y += 2*lineSpacing;
+      y += 2 * lineSpacing;
       y = DrawCreditItem("Contributors: ", (const char **)gContributors, y, draw);
 
-      y += 2*lineSpacing;
+      y += 2 * lineSpacing;
       y = DrawCreditItem("Our sincere thanks and apologies to anyone who deserves", 0, y, draw);
       y += lineSpacing;
       y = DrawCreditItem("credit but fails to appear in this list.", 0, y, draw);
@@ -484,16 +487,50 @@ static int DrawCredits(bool draw, bool extended)
 }
 
 //__________________________________________________________________
+static void CreateTextPixmap()
+{
+   assert(gDisplay != 0 && "CreateTextPixmap, gDisplay is None");
+   assert(gLogoWindow != 0 && "CreateTextPixmap, gLogoWindow is None");
+   
+   if (!gGC)//Something is wrong and we don't need pixmap anymore.
+      return;
+
+   Window rootWindow = Window();
+   int x = 0, y = 0;
+   unsigned int borderWidth = 0, depth = 0;
+   unsigned int width = 0, height = 0;
+   XGetGeometry(gDisplay, gLogoWindow, &rootWindow, &x, &y, &width, &height, &borderWidth, &depth);
+
+   gCreditsHeight = DrawCredits(false, gAbout) + gCreditsRect.height + 50;
+   gCreditsPixmap = XCreatePixmap(gDisplay, gLogoWindow, gCreditsWidth, gCreditsHeight, depth);
+
+   if (gHasShapeExt)
+      gCreditsRect.x = 115;
+   else
+      gCreditsRect.x = 15;
+   
+   assert(gHeight > 105 && "CreateTextPixmap, internal error - unexpected geometry");
+   gCreditsRect.y = gHeight - 105;
+   
+   XSetForeground(gDisplay, gGC, gBackground);
+   XFillRectangle(gDisplay, gCreditsPixmap, gGC, 0, 0, gCreditsWidth, gCreditsHeight);
+   XSetForeground(gDisplay, gGC, gForeground);
+}
+
+
+//__________________________________________________________________
 void ScrollCredits(int ypos)
 {
- /*  XRectangle crect[1];
+   DrawCredits(true, true);
+
+   XRectangle crect[1];
    crect[0] = gCreditsRect;
    XSetClipRectangles(gDisplay, gGC, 0, 0, crect, 1, Unsorted);
 
    XCopyArea(gDisplay, gCreditsPixmap, gLogoWindow, gGC,
              0, ypos, gCreditsWidth, gCreditsHeight, gCreditsRect.x, gCreditsRect.y);
 
-   XSetClipMask(gDisplay, gGC, None);*/
+   XSetClipMask(gDisplay, gGC, None);
 }
 
 
@@ -570,23 +607,20 @@ void PopupLogo(bool about)
       return;
    }
 
+   gAbout = about;
+
    SetBackgroundPixmapAndMask();
    SetSplashscreenPosition();
    SelectFontAndTextColor();
 
-   gAbout = about;
-
-   if (about)
+   if (gAbout)
       ReadContributors();
 
-/*
-   gCreditsHeight = DrawCredits(false, about) + gCreditsRect.height + 50;
-   gCreditsPixmap = XCreatePixmap(gDisplay, gLogoWindow, gCreditsWidth, gCreditsHeight, depth);
-   XSetForeground(gDisplay, gGC, back);
-   XFillRectangle(gDisplay, gCreditsPixmap, gGC, 0, 0, gCreditsWidth, gCreditsHeight);
-   XSetForeground(gDisplay, gGC, fore);
-   DrawCredits(true, about);
-*/
+
+   CreateTextPixmap();
+   if (gCreditsPixmap)
+      DrawCredits(true, about);
+
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
 
    XMapRaised(gDisplay, gLogoWindow);
@@ -600,7 +634,8 @@ void WaitLogo()
    // Main event loop waiting till time arrives to pop down logo
    // or when forced by button press event.
 
-   if (!gDisplay) return;
+   if (!gDisplay || !gLogoWindow)
+      return;
 
    int ypos = 0;
    bool stopScroll = false;
