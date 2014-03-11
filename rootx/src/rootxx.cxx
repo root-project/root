@@ -364,9 +364,7 @@ static void DrawVersion()
 #endif
 
    std::string version("Version ");
-   version += ROOT_RELEASE;
-
-   
+   version += ROOT_RELEASE;   
 
    XDrawString(gDisplay, gLogoWindow, gGC, gWidth - 90, gHeight - 15, version.data(),
                version.length());
