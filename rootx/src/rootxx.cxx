@@ -1,5 +1,6 @@
 // @(#)root/rootx:$Id$
 // Author: Fons Rademakers   19/02/98
+// Re-written for ROOT 6 by Timur Pocheptsov 11/03/2014.
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -484,7 +485,7 @@ static int DrawCredits(bool draw, bool extended)
       }
    }
    
-   XSetForeground(gDisplay, gGC, gForeground);   
+   XSetForeground(gDisplay, gGC, gForeground);
 
    return y;
 }
@@ -651,24 +652,23 @@ void WaitLogo()
    XFlush(gDisplay);
 
    while (!gDone) {
-      XEvent event;
-      if (XCheckMaskEvent(gDisplay, ButtonPressMask | ExposureMask, &event)) {
-         switch (event.type) {
-            case Expose:
-               if (event.xexpose.count == 0) {
-                  ScrollCredits(ypos);
-                  DrawVersion();
-               }
-               break;
-            case ButtonPress:
-               if (gAbout && event.xbutton.button == 3)
-                  stopScroll = stopScroll ? false : true;
-               else
-                  gDone = true;
-               break;
-            default:
-               break;
-         }
+      XEvent event = {};
+      while (XCheckMaskEvent(gDisplay, ButtonPressMask | ExposureMask, &event));
+      switch (event.type) {
+         case Expose:
+            if (event.xexpose.count == 0) {
+               ScrollCredits(ypos);
+               DrawVersion();
+            }
+            break;
+         case ButtonPress:
+            if (gAbout && event.xbutton.button == 3)
+               stopScroll = stopScroll ? false : true;
+            else
+               gDone = true;
+            break;
+         default:
+            break;
       }
 
       Sleep(100);
