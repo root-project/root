@@ -361,6 +361,7 @@ Int_t PyROOT::TMethodHolder::GetPriority()
       // happens for builtin types (and namespaces, but those can never be an
       // argument), NOT for unknown classes as that concept no longer exists
          if ( aname == "void*" || aname == "void**" )
+         // TODO: figure out in general all void* converters
             priority -= 100;  // void*/void** shouldn't be too greedy
          else if ( aname == "float" )
             priority -= 30;   // double preferred over float (no float in python)
