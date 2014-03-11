@@ -44,7 +44,8 @@ TColorGradient::TColorGradient()
 */
 
 //______________________________________________________________________________
-TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints, const Double_t *points, const Color_t *indices)
+TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints,
+                               const Double_t *points, const Color_t *indices)
                    : fGradientDirection(dir)
 {
    //I have no way to validate parameters here, so it's up to user
@@ -58,7 +59,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_
 }
 
 //______________________________________________________________________________
-TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints, const Double_t *points, const Double_t *colors)
+TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints,
+                               const Double_t *points, const Double_t *colors)
                    : fGradientDirection(dir)
 {
    //I have no way to validate parameters here, so it's up to user
@@ -72,7 +74,8 @@ TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_
 }
 
 //______________________________________________________________________________
-void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points, const Color_t *colorIndices)
+void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points,
+                                const Color_t *colorIndices)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
    assert(points != 0 && "ResetColor, points parameter is null");
@@ -104,7 +107,8 @@ void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Do
 }
 
 //______________________________________________________________________________
-void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points, const Double_t *colors)
+void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points,
+                                const Double_t *colors)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
    assert(points != 0 && "ResetColor, points parameter is null");
