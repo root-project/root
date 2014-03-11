@@ -3643,7 +3643,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
       std::ifstream file(rootmapfile);
       TString lib_name = "";
       std::string line;
-      unsigned int keyLen=0;
       while (getline(file, line, '\n')) {
          if ((line.substr(0, 8) == "Library.") || 
              (line.substr(0, 8) == "Declare.")) {
