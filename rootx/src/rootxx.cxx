@@ -12,6 +12,8 @@
 
 #include "RConfigure.h"
 
+#include <assert.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -32,12 +34,18 @@
 static Display     *gDisplay       = 0;
 static Window       gLogoWindow    = 0;
 static Pixmap       gLogoPixmap    = 0;
+//Non-rect window:
+static Pixmap       gShapeMask     = 0;
+//
 static Pixmap       gCreditsPixmap = 0;
 static GC           gGC            = 0;
 static XFontStruct *gFont          = 0;
 static bool         gDone          = false;
 static bool         gMayPopdown    = false;
 static bool         gAbout         = false;
+//Non-rect window:
+static bool         gHasShapeExt   = false;
+//
 static unsigned int gWidth         = 0;
 static unsigned int gHeight        = 0;
 static int          gStayUp        = 4000;   // 4 seconds
@@ -125,6 +133,92 @@ static void Sleep(int milliSec)
    tv.tv_usec = (milliSec % 1000) * 1000;
 
    select(0, 0, 0, 0, &tv);
+}
+
+static bool ReadPixmaps(const char *imageFileName, bool needMask)
+{
+   //Splashscreen background image and (probably) a mask (if we want to use
+   //shape combine - non-rect window).
+
+   assert(imageFileName != 0 && "ReadPixmaps, parameter 'imageFileName' is null");
+   assert(gDisplay != 0 && "ReadPixmaps, gDisplay is null");
+   assert(gLogoWindow != 0 && "ReadPixmaps, gLogoWindow is None");//'None' instead of '0'?
+
+   Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
+   if (!screen)
+      return false;
+
+   //TODO: Check the result?
+   const int depth = PlanesOfScreen(screen);
+
+   XWindowAttributes winAttr = {};
+   XGetWindowAttributes(gDisplay, gLogoWindow, &winAttr);
+
+   XpmAttributes xpmAttr = {};
+   xpmAttr.valuemask    = XpmVisual | XpmColormap | XpmDepth;
+   xpmAttr.visual       = winAttr.visual;
+   xpmAttr.colormap     = winAttr.colormap;
+   xpmAttr.depth        = winAttr.depth;
+
+#ifdef XpmColorKey              // Not available in XPM 3.2 and earlier
+   xpmAttr.valuemask |= XpmColorKey;
+   if (depth > 4)
+      xpmAttr.color_key = XPM_COLOR;
+   else if (depth > 2)
+      xpmAttr.color_key = XPM_GRAY4;
+   else if (depth > 1)
+      xpmAttr.color_key = XPM_GRAY;
+   else if (depth == 1)
+      xpmAttr.color_key = XPM_MONO;
+   else
+      xpmAttr.valuemask &= ~XpmColorKey;
+#endif // defined(XpmColorKey)
+
+   const size_t fileNameLen = strlen(imageFileName);
+   if (!fileNameLen)//at least some check.
+      return false;
+   const size_t buffLen = 2048;
+   char file[buffLen] = {};
+
+#ifdef ROOTICONPATH
+   //-2 == '/' and '0' at the end.
+   assert(strlen(ROOTICONPATH) <= buffLen - 2 - fileNameLen &&
+          "ReadPixmaps, invalid ROOTICONPATH string (too long)");
+   snprintf(file, sizeof file, "%s/%s", ROOTICONPATH, imageFileName);
+#else
+   //-8 == '/icons/' and '0'.
+   assert(strlen(getenv("ROOTSYS")) <= buffLen - 8 - fileNameLen &&
+          "ReadPixmaps, invalid $ROOTSYS (the string is too long)");
+   snprintf(file, sizeof file, "%s/icons/%s", getenv("ROOTSYS"), imageFileName);
+#endif
+
+   Pixmap logo = None, mask = None;
+   const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, file, &logo,
+                                       gHasShapeExt ? &mask : 0, &xpmAttr);
+   XpmFreeAttributes(&xpmAttr);
+
+   if ((ret == XpmSuccess || ret == XpmColorError) && logo) {
+      if (needMask) {
+         if (mask) {
+            gLogoPixmap = logo;
+            gShapeMask = mask;
+            return true;
+         }
+      } else {
+         gLogoPixmap = logo;
+         return true;
+      }
+   }
+
+   printf("rootx xpm error: %s\n", XpmGetErrorString(ret));
+
+   if (logo)
+      XFreePixmap(gDisplay, logo);
+
+   if (mask)
+      XFreePixmap(gDisplay, mask);
+
+   return false;
 }
 
 static Pixmap GetRootLogo()
@@ -352,7 +446,26 @@ void PopupLogo(bool about)
    gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
                                      -100, -100, 50, 50, 0, fore, back);
 
-   gLogoPixmap = GetRootLogo();
+   //Let's check if shape combine is supported.
+
+   gHasShapeExt = false;
+   {
+   int eventBase = 0, errorBase = 0;
+   if (XShapeQueryExtension(gDisplay, &eventBase, &errorBase))
+      gHasShapeExt = true;
+   }
+   
+   gLogoPixmap = 0;
+   gShapeMask = 0;
+   
+   if (gHasShapeExt) {
+      if (!ReadPixmaps("Root6SplashEXT.xpm", true)) {//true - mask is needed.
+         gHasShapeExt = false;//We do not have a mask and can not call shape combine.
+         ReadPixmaps("Root6Splash.xpm", false);
+      }
+   } else
+      ReadPixmaps("Root6Splash.xpm", false);
+
    if (!gLogoPixmap) {
       XCloseDisplay(gDisplay);
       gDisplay = 0;
