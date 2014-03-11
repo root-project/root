@@ -536,7 +536,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (verbose > 0) 
       oocoutP((TObject*)0,Eval) << "\t ASIMOV data qmu_A = " << qmu_A << " condNLL = " << condNLL_A << " uncond " << fNLLAsimov << std::endl;
 
-   if (qmu_A < 0 || TMath::IsNaN(fNLLAsimov) ) {
+   if (qmu_A < -tol || TMath::IsNaN(fNLLAsimov) ) {
 
       if (qmu_A < 0) 
          oocoutW((TObject*)0,Minimization) << "AsymptoticCalculator:  Found a negative value of the qmu Asimov- retry to do the unconditional fit " 
@@ -565,7 +565,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       }
    }
 
-   if (qmu_A < 0) {       
+   if (qmu_A < - tol) {       
       oocoutE((TObject*)0,Minimization) << "AsymptoticCalculator:  qmu_A is still < 0  for mu = " 
                                         <<  muTest->getVal() << " return a dummy result "  
                                         << std::endl;         
@@ -1218,7 +1218,16 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
    
    if (verbose>0) {
       std::cout << "Generated Asimov data for observables "; (model.GetObservables() )->Print(); 
-      if (verbose>1) std::cout << "\t\t\ttime for generating : ";  tw.Print(); 
+      if (verbose > 1) { 
+         if (asimov->numEntries() == 1 ) {
+            std::cout << "--- Asimov data values \n";
+            asimov->get()->Print("v");
+         }
+         else { 
+            std::cout << "--- Asimov data numEntries = " << asimov->numEntries() << " sumOfEntries = " << asimov->sumEntries() << std::endl;
+         }
+         std::cout << "\ttime for generating : ";  tw.Print(); 
+      }
    }
 
 

@@ -84,7 +84,7 @@ int randomSeed = -1;                     // random seed (if = -1: use default va
 int nAsimovBins = 0;                     // number of bins in observables used for Asimov data sets (0 is the default and it is given by workspace, typically is 100)
 
 bool reuseAltToys = false;                // reuse same toys for alternate hypothesis (if set one gets more stable bands)
-
+double confidenceLevel = 0.95;            // confidence level value
 
 
 
@@ -888,7 +888,7 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
   
   
    HypoTestInverter calc(*hc);
-   calc.SetConfidenceLevel(0.95);
+   calc.SetConfidenceLevel(confidenceLevel);
   
   
    calc.UseCLs(useCLs);
