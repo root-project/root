@@ -373,35 +373,47 @@ static void DrawVersion()
                strlen(version));*/
 }
 
+//Name DrawXXX is bad, actually this DrawXXX instead of drawing XXX can just
+//calculate a height for XXX only, without actual drawing.
+
 //__________________________________________________________________
-static int DrawCreditItem(const char *creditItem, const char **members,
-                          int y, bool draw)
+static int DrawCreditItem(const char *creditItem, const char **members, int y, bool draw)
 {
    // Draw credit item.
    assert(creditItem != 0 && "DrawCreditItem, parameter 'creditItem' is null");
    assert(members != 0 && "DrawCreditItem, parameter 'members' is null");
 
    assert(gFont != 0 && "DrawCreditItem, gFont is None");
-   assert(gDisplay != 0 && "");
+   assert(gDisplay != 0 && "DrawCreditItem, gDisplay is None");
+   
+   const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
+   assert(lineSpacing > 0 && "DrawCreditItem, lineSpacing must be positive");   
+   
+   std::string credit(creditItem);
+   
+   for (unsigned i = 0; members && members[i]; ++i) {
+      if (i)
+         credit += ", ";
 
-   char credit[1024];
-   int i;
-   int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
-
-   strlcpy(credit, creditItem, sizeof(credit));
-   for (i = 0; members && members[i]; i++) {
-      if (i) strcat(credit, ", ");
-      if (XTextWidth(gFont, credit, strlen(credit)) +
-          XTextWidth(gFont, members[i], strlen(members[i])) > (int) gCreditsWidth) {
-         if (draw)
-            XDrawString(gDisplay, gCreditsPixmap, gGC, 0, y, credit, strlen(credit));
+      if (XTextWidth(gFont, credit.data(), credit.length()) +
+          XTextWidth(gFont, members[i], strlen(members[i])) > (int) gCreditsWidth)
+      {
+         if (draw) {
+            XDrawString(gDisplay, gCreditsPixmap, gGC, 0, y,
+                        credit.data(), credit.length());
+         }
+         
          y += lineSpacing;
-         strcpy(credit, "   ");
+         credit += "   ";
       }
-      strcat(credit, members[i]);
+      
+      credit += members[i];
    }
-   if (draw)
-      XDrawString(gDisplay, gCreditsPixmap, gGC, 0, y, credit, strlen(credit));
+
+   if (draw) {
+      XDrawString(gDisplay, gCreditsPixmap, gGC, 0, y,
+                  credit.data(), credit.length());
+   }
 
    return y;
 }
@@ -414,7 +426,8 @@ static int DrawCredits(bool draw, bool extended)
    // If extended is true draw or returns size for extended full
    // credits list.
 
-   if (!gFont) return 150;  // size not important no text will be drawn anyway
+   if (!gFont)
+      return 150;  // size not important no text will be drawn anyway
 
    const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
    assert(lineSpacing > 0 && "DrawCredits, lineSpacing must be positive");
