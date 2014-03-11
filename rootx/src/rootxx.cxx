@@ -18,10 +18,12 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <string>
 #include <pwd.h>
 #include <sys/types.h>
 #include <X11/Xlib.h>
 #include <X11/xpm.h>
+#include <X11/extensions/shape.h>
 
 #include "Rtypes.h"
 
@@ -92,8 +94,7 @@ static const char *gRootDocumentation[] = {
 
 static char **gContributors = 0;
 
-
-
+//__________________________________________________________________
 static bool StayUp(int milliSec)
 {
    // Returns false if milliSec milliseconds have passed since logo
@@ -122,6 +123,7 @@ static bool StayUp(int milliSec)
    return true;
 }
 
+//__________________________________________________________________
 static void Sleep(int milliSec)
 {
    // Sleep for specified amount of milli seconds.
@@ -135,14 +137,110 @@ static void Sleep(int milliSec)
    select(0, 0, 0, 0, &tv);
 }
 
-static bool ReadPixmaps(const char *imageFileName, bool needMask)
+//Aux. "Window management" part.
+
+//__________________________________________________________________
+static bool CreateSplashscreenWindow()
+{
+   assert(gDisplay != 0 && "CreateSplashscreenWindow, gDisplay is None");
+
+   //TODO: check the screen???
+   const int screen = DefaultScreen(gDisplay);
+
+   Pixel background = WhitePixel(gDisplay, screen);
+   Pixel foreground = BlackPixel(gDisplay, screen);
+
+   gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
+                                     -100, -100, 50, 50, 0, foreground, background);
+
+   return gLogoWindow;
+}
+
+//__________________________________________________________________
+static void SetSplashscreenPosition()
+{
+   assert(gDisplay != 0 && "SetSplashscreenPosition, gDisplay is None");
+   assert(gLogoWindow != 0 && "SetSplashscreenPosition, gLogoWindow is None");
+   
+   Window rootWindow = Window();
+   int x = 0, y = 0;
+   unsigned int borderWidth = 0, depth = 0;
+   XGetGeometry(gDisplay, gLogoPixmap, &rootWindow, &x, &y,
+                &gWidth, &gHeight, &borderWidth, &depth);
+
+   //TODO: this is wrong with multi-head display setup!
+   Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
+   if (screen) {
+      x = (WidthOfScreen(screen) - gWidth) / 2;
+      y = (HeightOfScreen(screen) - gHeight) / 2;
+   } else {
+      //Some stupid numbers.
+      x = 100;
+      y = 100;
+   }
+
+   XMoveResizeWindow(gDisplay, gLogoWindow, x, y, gWidth, gHeight);
+   XSync(gDisplay, False);// make sure move & resize is done before mapping
+
+}
+
+//__________________________________________________________________
+static void SetBackgroundPixmapAndMask()
+{
+   assert(gDisplay != 0 && "SetBackgroundPixmapAndMask, gDisplay is None");
+   assert(gLogoWindow != 0 && "SetBackgroundPixmapAndMask, gLogoWindow is None");
+   assert(gLogoPixmap != 0 && "SetBackgroundPixmapAndMask, gLogoPixmap is None");
+
+   unsigned long mask = CWBackPixmap | CWOverrideRedirect;
+   XSetWindowAttributes winAttr = {};
+   winAttr.background_pixmap = gLogoPixmap;
+   winAttr.override_redirect = True;
+   XChangeWindowAttributes(gDisplay, gLogoWindow, mask, &winAttr);
+   
+   if (gHasShapeExt) {
+      assert(gShapeMask != 0 && "SetBackgroundPixmapAndMask, gShapeMask is None");
+      XShapeCombineMask(gDisplay, gLogoWindow, ShapeBounding, 0, 0, gShapeMask, ShapeSet);
+   }
+}
+
+//__________________________________________________________________
+static void SelectFontAndTextColor()
+{
+   assert(gDisplay != 0 && "SelectFontAndTextColor, gDisplay is None");
+   assert(gLogoWindow != 0 && "SelectFontAndTextColor, gLogoWindow is None");
+
+   if (!(gGC = XCreateGC(gDisplay, gLogoWindow, 0, 0))) {
+      printf("rootx - XCreateGC failed\n");
+      return;
+   }
+
+   gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
+   if (!gFont) {
+      printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
+             "trying \"fixed\". Please fix your system so helvetica can be found, \n"
+             "this font typically is in the rpm (or pkg equivalent) package \n"
+             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");
+      gFont = XLoadQueryFont(gDisplay, "fixed");
+      if (!gFont)
+         printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
+   }
+
+   if (gFont)
+      XSetFont(gDisplay, gGC, gFont->fid);
+   
+//   XSetForeground(gDisplay, gGC, fore);
+//   XSetBackground(gDisplay, gGC, back);
+}
+
+//__________________________________________________________________
+static bool LoadROOTLogoPixmap(const char *imageFileName, bool needMask)
 {
    //Splashscreen background image and (probably) a mask (if we want to use
    //shape combine - non-rect window).
 
-   assert(imageFileName != 0 && "ReadPixmaps, parameter 'imageFileName' is null");
-   assert(gDisplay != 0 && "ReadPixmaps, gDisplay is null");
-   assert(gLogoWindow != 0 && "ReadPixmaps, gLogoWindow is None");//'None' instead of '0'?
+   assert(imageFileName != 0 && "LoadROOTLogoPixmap, parameter 'imageFileName' is null");
+   assert(gDisplay != 0 && "LoadROOTLogoPixmap, gDisplay is null");
+   assert(gLogoWindow != 0 && "LoadROOTLogoPixmap, gLogoWindow is None");//'None' instead of '0'?
 
    Screen * const screen = XDefaultScreenOfDisplay(gDisplay);
    if (!screen)
@@ -174,26 +272,28 @@ static bool ReadPixmaps(const char *imageFileName, bool needMask)
       xpmAttr.valuemask &= ~XpmColorKey;
 #endif // defined(XpmColorKey)
 
-   const size_t fileNameLen = strlen(imageFileName);
-   if (!fileNameLen)//at least some check.
+   if (!strlen(imageFileName) || !imageFileName[0])//at least some check.
       return false;
-   const size_t buffLen = 2048;
-   char file[buffLen] = {};
 
+   std::string path(100, ' ');
+   
 #ifdef ROOTICONPATH
-   //-2 == '/' and '0' at the end.
-   assert(strlen(ROOTICONPATH) <= buffLen - 2 - fileNameLen &&
-          "ReadPixmaps, invalid ROOTICONPATH string (too long)");
-   snprintf(file, sizeof file, "%s/%s", ROOTICONPATH, imageFileName);
+   assert(strlen(ROOTICONPATH) != 0 &&
+          "LoadROOTLogoPixmap, invalid 'ROOTICONPATH'");
+
+   path = ROOTICONPATH;
+   path += "/";
+   path += imageFileName;
 #else
-   //-8 == '/icons/' and '0'.
-   assert(strlen(getenv("ROOTSYS")) <= buffLen - 8 - fileNameLen &&
-          "ReadPixmaps, invalid $ROOTSYS (the string is too long)");
-   snprintf(file, sizeof file, "%s/icons/%s", getenv("ROOTSYS"), imageFileName);
+   assert(strlen(getenv("ROOTSYS")) != 0 &&
+          "LoadROOTLogoPixmap, the $ROOTSYS string is too long");
+   path = getenv("ROOTSYS");
+   path += "/icons/";
+   path += imageFileName;
 #endif
 
    Pixmap logo = None, mask = None;
-   const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, file, &logo,
+   const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, path.c_str(), &logo,
                                        gHasShapeExt ? &mask : 0, &xpmAttr);
    XpmFreeAttributes(&xpmAttr);
 
@@ -221,117 +321,68 @@ static bool ReadPixmaps(const char *imageFileName, bool needMask)
    return false;
 }
 
-static Pixmap GetRootLogo()
+//__________________________________________________________________
+static bool GetRootLogoAndShapeMask()
 {
-   // Get logo from xpm file.
+   //1. Test if X11 supports shape combine mask.
+   //2.a if no - go to 3.
+   //2.b If yes - try to read both background image
+   //    and the mask. If any of operations failed - go to 3.
+   //    If both succeeded - return true.
+   //3. Try to read image without transparency (mask not needed anymore).
+   
+   assert(gDisplay != 0 && "GetRootLogoAndShapeMask, gDisplay is None");
 
-   Pixmap logo = 0;
-   Screen *xscreen = XDefaultScreenOfDisplay(gDisplay);
-   if (!xscreen) return logo;
-   int depth = PlanesOfScreen(xscreen);
+   gHasShapeExt = false;
+   int eventBase = 0, errorBase = 0;
 
-   XWindowAttributes win_attr;
-   XGetWindowAttributes(gDisplay, gLogoWindow, &win_attr);
+   gHasShapeExt = XShapeQueryExtension(gDisplay, &eventBase, &errorBase);
+   
+   gLogoPixmap = 0;
+   gShapeMask = 0;
+   
+   if (gHasShapeExt) {
+      if (!LoadROOTLogoPixmap("Root6SplashEXT.xpm", true)) {//true - mask is needed.
+         gHasShapeExt = false;//We do not have a mask and can not call shape combine.
+         LoadROOTLogoPixmap("Root6Splash.xpm", false);
+      }
+   } else
+      LoadROOTLogoPixmap("Root6Splash.xpm", false);
 
-   XpmAttributes attr;
-   attr.valuemask    = XpmVisual | XpmColormap | XpmDepth;
-   attr.visual       = win_attr.visual;
-   attr.colormap     = win_attr.colormap;
-   attr.depth        = win_attr.depth;
-
-#ifdef XpmColorKey              // Not available in XPM 3.2 and earlier
-   attr.valuemask |= XpmColorKey;
-   if (depth > 4)
-      attr.color_key = XPM_COLOR;
-   else if (depth > 2)
-      attr.color_key = XPM_GRAY4;
-   else if (depth > 1)
-      attr.color_key = XPM_GRAY;
-   else if (depth == 1)
-      attr.color_key = XPM_MONO;
-   else
-      attr.valuemask &= ~XpmColorKey;
-
-#endif // defined(XpmColorKey)
-
-   char file[2048];
-#ifdef ROOTICONPATH
-   snprintf(file, sizeof(file), "%s/Splash.xpm", ROOTICONPATH);
-#else
-   snprintf(file, sizeof(file), "%s/icons/Splash.xpm", getenv("ROOTSYS"));
-#endif
-   int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow,
-                                 file, &logo, 0, &attr);
-   XpmFreeAttributes(&attr);
-
-   if (ret == XpmSuccess || ret == XpmColorError)
-      return logo;
-
-   printf("rootx xpm error: %s\n", XpmGetErrorString(ret));
-
-   if (logo) XFreePixmap(gDisplay, logo);
-   logo = 0;
-
-   return logo;
+   return gLogoPixmap;
 }
 
-static void ReadContributors()
-{
-   // Read the file $ROOTSYS/README/CREDITS for the names of the
-   // contributors.
+//Text-rendering and animation.
 
-   char buf[2048];
-#ifdef ROOTDOCDIR
-   snprintf(buf, sizeof(buf), "%s/CREDITS", ROOTDOCDIR);
-#else
-   snprintf(buf, sizeof(buf), "%s/README/CREDITS", getenv("ROOTSYS"));
-#endif
-
-   gContributors = 0;
-
-   FILE *f = fopen(buf, "r");
-   if (!f) return;
-
-   int cnt = 0;
-   while (fgets(buf, sizeof(buf), f)) {
-      if (!strncmp(buf, "N: ", 3)) {
-         cnt++;
-      }
-   }
-   gContributors = new char*[cnt+1];
-
-   cnt = 0;
-   rewind(f);
-   while (fgets(buf, sizeof(buf), f)) {
-      if (!strncmp(buf, "N: ", 3)) {
-         int len = strlen(buf);
-         buf[len-1] = 0;    // remove \n
-         len -= 3;          // remove "N: "
-         gContributors[cnt] = new char[len];
-         strncpy(gContributors[cnt], buf+3, len);
-         cnt++;
-      }
-   }
-   gContributors[cnt] = 0;
-
-   fclose(f);
-}
-
+//__________________________________________________________________
 static void DrawVersion()
 {
    // Draw version string.
+   char version[80] = {};
+#ifndef ROOT_RELEASE
+   assert(0 && "DrawVersion, 'ROOT_RELEASE' is not defined");
+   return;
+#endif
 
-   char version[80];
-   sprintf(version, "Version %s", ROOT_RELEASE);
+   assert(strlen(ROOT_RELEASE) < sizeof version - 1 &&
+          "DrawVersion, the string ROOT_RELEASE is too long");
+   
+/*   sprintf(version, "Version %s", ROOT_RELEASE);
 
    XDrawString(gDisplay, gLogoWindow, gGC, 15, gHeight - 15, version,
-               strlen(version));
+               strlen(version));*/
 }
 
+//__________________________________________________________________
 static int DrawCreditItem(const char *creditItem, const char **members,
                           int y, bool draw)
 {
    // Draw credit item.
+   assert(creditItem != 0 && "DrawCreditItem, parameter 'creditItem' is null");
+   assert(members != 0 && "DrawCreditItem, parameter 'members' is null");
+
+   assert(gFont != 0 && "DrawCreditItem, gFont is None");
+   assert(gDisplay != 0 && "");
 
    char credit[1024];
    int i;
@@ -355,6 +406,7 @@ static int DrawCreditItem(const char *creditItem, const char **members,
    return y;
 }
 
+//__________________________________________________________________
 static int DrawCredits(bool draw, bool extended)
 {
    // Draw credits. If draw is true draw credits,
@@ -364,7 +416,9 @@ static int DrawCredits(bool draw, bool extended)
 
    if (!gFont) return 150;  // size not important no text will be drawn anyway
 
-   int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
+   const int lineSpacing = gFont->max_bounds.ascent + gFont->max_bounds.descent;
+   assert(lineSpacing > 0 && "DrawCredits, lineSpacing must be positive");
+   
    int y = lineSpacing;
 
    y = DrawCreditItem("Conception: ", gConception, y, draw);
@@ -416,120 +470,118 @@ static int DrawCredits(bool draw, bool extended)
    return y;
 }
 
+//__________________________________________________________________
 void ScrollCredits(int ypos)
 {
-   XRectangle crect[1];
+ /*  XRectangle crect[1];
    crect[0] = gCreditsRect;
    XSetClipRectangles(gDisplay, gGC, 0, 0, crect, 1, Unsorted);
 
    XCopyArea(gDisplay, gCreditsPixmap, gLogoWindow, gGC,
              0, ypos, gCreditsWidth, gCreditsHeight, gCreditsRect.x, gCreditsRect.y);
 
-   XSetClipMask(gDisplay, gGC, None);
+   XSetClipMask(gDisplay, gGC, None);*/
 }
 
+
+//Aux. non-GUI function.
+
+//__________________________________________________________________
+static void ReadContributors()
+{
+   // Read the file $ROOTSYS/README/CREDITS for the names of the
+   // contributors.
+
+   char buf[2048];
+#ifdef ROOTDOCDIR
+   snprintf(buf, sizeof(buf), "%s/CREDITS", ROOTDOCDIR);
+#else
+   snprintf(buf, sizeof(buf), "%s/README/CREDITS", getenv("ROOTSYS"));
+#endif
+
+   gContributors = 0;
+
+   FILE *f = fopen(buf, "r");
+   if (!f) return;
+
+   int cnt = 0;
+   while (fgets(buf, sizeof(buf), f)) {
+      if (!strncmp(buf, "N: ", 3)) {
+         cnt++;
+      }
+   }
+   gContributors = new char*[cnt+1];
+
+   cnt = 0;
+   rewind(f);
+   while (fgets(buf, sizeof(buf), f)) {
+      if (!strncmp(buf, "N: ", 3)) {
+         int len = strlen(buf);
+         buf[len-1] = 0;    // remove \n
+         len -= 3;          // remove "N: "
+         gContributors[cnt] = new char[len];
+         strncpy(gContributors[cnt], buf+3, len);
+         cnt++;
+      }
+   }
+   gContributors[cnt] = 0;
+
+   fclose(f);
+}
+
+//__________________________________________________________________
 void PopupLogo(bool about)
 {
    // Popup logo, waiting till ROOT is ready to run.
 
+   //Initialize and check what we can do:
    gDisplay = XOpenDisplay("");
-   if (!gDisplay) return;
+   if (!gDisplay) {
+      printf("rootx - XOpenDisplay failed\n");
+      return;
+   }
+
+   //Create a window.
+   if (!CreateSplashscreenWindow()) {
+      printf("rootx - CreateSplashscreenWindow failed\n");
+      XCloseDisplay(gDisplay);
+      gDisplay = 0;
+      return;
+   }
+
+   if (!GetRootLogoAndShapeMask()) {
+      printf("rootx - failed to create a background pixmap\n");
+      XDestroyWindow(gDisplay, gLogoWindow);
+      XCloseDisplay(gDisplay);
+      gDisplay = 0;
+      return;
+   }
+
+   SetBackgroundPixmapAndMask();
+   SetSplashscreenPosition();
+   SelectFontAndTextColor();
 
    gAbout = about;
-
-   Pixel back, fore;
-   int screen = DefaultScreen(gDisplay);
-
-   back = WhitePixel(gDisplay, screen);
-   fore = BlackPixel(gDisplay, screen);
-
-   gLogoWindow = XCreateSimpleWindow(gDisplay, DefaultRootWindow(gDisplay),
-                                     -100, -100, 50, 50, 0, fore, back);
-
-   //Let's check if shape combine is supported.
-
-   gHasShapeExt = false;
-   {
-   int eventBase = 0, errorBase = 0;
-   if (XShapeQueryExtension(gDisplay, &eventBase, &errorBase))
-      gHasShapeExt = true;
-   }
-   
-   gLogoPixmap = 0;
-   gShapeMask = 0;
-   
-   if (gHasShapeExt) {
-      if (!ReadPixmaps("Root6SplashEXT.xpm", true)) {//true - mask is needed.
-         gHasShapeExt = false;//We do not have a mask and can not call shape combine.
-         ReadPixmaps("Root6Splash.xpm", false);
-      }
-   } else
-      ReadPixmaps("Root6Splash.xpm", false);
-
-   if (!gLogoPixmap) {
-      XCloseDisplay(gDisplay);
-      gDisplay = 0;
-      return;
-   }
-
-   Window root;
-   int x, y;
-   unsigned int bw, depth;
-   XGetGeometry(gDisplay, gLogoPixmap, &root, &x, &y, &gWidth, &gHeight,
-                &bw, &depth);
-
-   Screen *xscreen = XDefaultScreenOfDisplay(gDisplay);
-   if (!xscreen) {
-      XCloseDisplay(gDisplay);
-      gDisplay = 0;
-      return;
-   }
-   x = (WidthOfScreen(xscreen) - gWidth) / 2;
-   y = (HeightOfScreen(xscreen) - gHeight) / 2;
-
-   XMoveResizeWindow(gDisplay, gLogoWindow, x, y, gWidth, gHeight);
-   XSync(gDisplay, False);   // make sure move & resize is done before mapping
-
-   unsigned long valmask;
-   XSetWindowAttributes xswa;
-   valmask = CWBackPixmap | CWOverrideRedirect;
-   xswa.background_pixmap = gLogoPixmap;
-   xswa.override_redirect = True;
-   XChangeWindowAttributes(gDisplay, gLogoWindow, valmask, &xswa);
-
-   gGC = XCreateGC(gDisplay, gLogoWindow, 0, 0);
-   gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
-   if (!gFont) {
-      printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
-             "trying \"fixed\". Please fix your system so helvetica can be found, \n"
-             "this font typically is in the rpm (or pkg equivalent) package \n"
-             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");
-      gFont = XLoadQueryFont(gDisplay, "fixed");
-      if (!gFont)
-         printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
-   }
-   if (gFont)
-      XSetFont(gDisplay, gGC, gFont->fid);
-   XSetForeground(gDisplay, gGC, fore);
-   XSetBackground(gDisplay, gGC, back);
 
    if (about)
       ReadContributors();
 
+/*
    gCreditsHeight = DrawCredits(false, about) + gCreditsRect.height + 50;
    gCreditsPixmap = XCreatePixmap(gDisplay, gLogoWindow, gCreditsWidth, gCreditsHeight, depth);
    XSetForeground(gDisplay, gGC, back);
    XFillRectangle(gDisplay, gCreditsPixmap, gGC, 0, 0, gCreditsWidth, gCreditsHeight);
    XSetForeground(gDisplay, gGC, fore);
    DrawCredits(true, about);
-
+*/
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
 
    XMapRaised(gDisplay, gLogoWindow);
-
+   
    gettimeofday(&gPopupTime, 0);
 }
 
+//__________________________________________________________________
 void WaitLogo()
 {
    // Main event loop waiting till time arrives to pop down logo
@@ -589,6 +641,10 @@ void WaitLogo()
       XFreePixmap(gDisplay, gLogoPixmap);
       gLogoPixmap = 0;
    }
+   if (gShapeMask) {
+      XFreePixmap(gDisplay, gShapeMask);
+      gShapeMask = 0;
+   }
    if (gCreditsPixmap) {
       XFreePixmap(gDisplay, gCreditsPixmap);
       gCreditsPixmap = 0;
@@ -608,6 +664,7 @@ void WaitLogo()
    }
 }
 
+//__________________________________________________________________
 void PopdownLogo()
 {
    // ROOT is ready to run, may pop down the logo if stay up time expires.
@@ -615,6 +672,7 @@ void PopdownLogo()
    gMayPopdown = true;
 }
 
+//__________________________________________________________________
 void CloseDisplay()
 {
    // Close connection to X server (called by child).
