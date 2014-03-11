@@ -772,6 +772,9 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 
    RooArgSet obstmp(obs);
    double expectedEvents = pdf.expectedEvents(obstmp);
+   // if (debug)  { 
+   //    std::cout << "expected events = " << expectedEvents << std::endl;
+   // }
 
    if (debug) cout << "looping on observable " << v->GetName() << endl;
    for (int i = 0; i < v->getBins(); ++i) {
@@ -789,6 +792,8 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
          // this is now a new bin - compute the pdf in this bin 
          double totBinVolume = binVolume * v->getBinWidth(i);
          double fval = pdf.getVal(&obstmp)*totBinVolume;
+
+         //if (debug) std::cout << "pdf value in the bin " << fval << " bin volume = " << totBinVolume << "   " << fval*expectedEvents << std::endl;
          if (fval*expectedEvents <= 0)
          {
             if (fval*expectedEvents < 0)
@@ -832,6 +837,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
         RooGaussian * gaus = 0;
         if ((pois = dynamic_cast<RooPoisson *>(a)) != 0) {
             SetObsToExpected(*pois, obs);
+            pois->setNoRounding(true);  //needed since expecteed value is not an integer
         } else if ((gaus = dynamic_cast<RooGaussian *>(a)) != 0) {
             SetObsToExpected(*gaus, obs);
         } else {
@@ -923,6 +929,8 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
         r = SetObsToExpected(*prod, observables);
     } else if ((pois = dynamic_cast<RooPoisson *>(&pdf)) != 0) {
         r = SetObsToExpected(*pois, observables);
+        // we need in this case to set Poisson to real values
+        pois->setNoRounding(true);
     } else if ((gaus = dynamic_cast<RooGaussian *>(&pdf)) != 0) {
         r = SetObsToExpected(*gaus, observables);
     } else {
@@ -1275,9 +1283,14 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
          std::auto_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
          std::auto_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
-         if (cgobs->getSize() != 1) {
+         if (cgobs->getSize() > 1) {
             oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName() 
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
+            continue; 
+         }
+         else if (cgobs->getSize() == 0) { 
+            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName() 
+                                            << " has no global observables - skip it" << std::endl;
             continue; 
          }
          RooRealVar &rrv = dynamic_cast<RooRealVar &>(*cgobs->first());
@@ -1311,6 +1324,13 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term " 
                                             << cterm->GetName() << " of type " << className 
                                             << " is a non-supported type - result might be not correct " << std::endl;
+         }
+
+         // in cae of a Poisson constraint make sure the rounding is not set 
+         if (cClass == RooPoisson::Class() ) { 
+            RooPoisson * pois = dynamic_cast<RooPoisson*>(cterm); 
+            assert(pois); 
+            pois->setNoRounding(true); 
          }
 
          for (RooAbsArg *a2 = (RooAbsArg *) iter2->Next(); a2 != 0; a2 = (RooAbsArg *) iter2->Next()) {

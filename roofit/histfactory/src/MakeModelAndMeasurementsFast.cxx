@@ -496,11 +496,11 @@ void RooStats::HistFactory::FormatFrameForLikelihood(RooPlot* frame, std::string
 
     gStyle->SetCanvasBorderMode(0);
     gStyle->SetPadBorderMode(0);
-    gStyle->SetPadColor(0);
-    gStyle->SetCanvasColor(255);
-    gStyle->SetTitleFillColor(255);
-    gStyle->SetFrameFillColor(0);  
-    gStyle->SetStatColor(255);
+    // gStyle->SetPadColor(0);
+    // gStyle->SetCanvasColor(255);
+    // gStyle->SetTitleFillColor(255);
+    // gStyle->SetFrameFillColor(0);  
+    // gStyle->SetStatColor(255);
     
     RooAbsRealLValue* var = frame->getPlotVar();
     double xmin = var->getMin();
