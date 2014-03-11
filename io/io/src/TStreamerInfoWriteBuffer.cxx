@@ -859,6 +859,9 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const TVirtualArray &arr, Int_t 
                                            fMethod,fElem,fLength,fClass,fOffset,fNewType,
                                            fNdata,fType,fgElement,fComp);
 }
+#else
+
+template Int_t TStreamerInfo::WriteBufferAux<char**>(TBuffer &b, char ** const &arr, Int_t first,Int_t narr,Int_t eoffset,Int_t mode);
 
 #endif
 
