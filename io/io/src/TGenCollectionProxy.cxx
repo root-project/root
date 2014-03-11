@@ -390,6 +390,8 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
          fDtor   = fType->GetDestructor();
          fDelete = fType->GetDelete();
       } else {
+         R__LOCKGUARD2(gCINTMutex);
+
 #if defined(NOT_YET)
          // Because the TStreamerInfo of the contained classes
          // is stored only when tbere at least one element in
