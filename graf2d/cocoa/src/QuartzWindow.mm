@@ -1658,6 +1658,7 @@ void print_mask_info(ULong_t mask)
 @synthesize fOverrideRedirect;
 //SetWindowAttributes_t/WindowAttributes_t
 /////////////////////
+@synthesize fHasFocus;
 @synthesize fParentView;
 
 @synthesize fPassiveGrabButton;
@@ -2186,12 +2187,21 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) fHasFocus
 {
+   //With the latest update clang became a bit more stupid.
+   //Let's write a stupid useless cargo cult code
+   //to make IT SHUT THE F... UP.
+   (void)fHasFocus;
    return NO;
 }
 
 //______________________________________________________________________________
-- (void) setFHasFocus
+- (void) setFHasFocus : (BOOL) focus
 {
+#pragma unused(focus)
+   //With the latest update clang became a bit more stupid.
+   //Let's write a stupid useless cargo cult code
+   //to make IT SHUT THE F... UP.
+   (void)fHasFocus;
 }
 
 //______________________________________________________________________________
