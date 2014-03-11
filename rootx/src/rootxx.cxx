@@ -295,7 +295,7 @@ static bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 #endif
 
    Pixmap logo = None, mask = None;
-   const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, path.c_str(), &logo,
+   const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, (char *)path.c_str(), &logo,
                                        gHasShapeExt ? &mask : 0, &xpmAttr);
    XpmFreeAttributes(&xpmAttr);
 
