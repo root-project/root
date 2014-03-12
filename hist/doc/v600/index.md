@@ -226,6 +226,10 @@
      draw the histograms in the stack are transparents, then the plot behind
      will be visible.
    
+### TH2Poly
+
+-    Implement a simple version of "Scale".
+
 ### TF1
 
 -   Implement the possibility to save a `TF1` as C code indenpant from

@@ -1203,6 +1203,17 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 
 
 //______________________________________________________________________________
+void TH2Poly::Scale(Double_t c1, Option_t*)
+{
+   // Multiply this histogram by a constant c1.
+
+   for( int i = 0; i < this->GetNumberOfBins(); i++ ) {
+      this->SetBinContent(i+1, c1*this->GetBinContent(i+1));
+   }
+}
+
+
+//______________________________________________________________________________
 void TH2Poly::SetBinContent(Int_t bin, Double_t content)
 {
    // Sets the contents of the input bin to the input content
