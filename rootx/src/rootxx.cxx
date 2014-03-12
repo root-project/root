@@ -49,7 +49,9 @@ static bool         gAbout         = false;
 //Non-rect window:
 static bool         gHasShapeExt   = false;
 //
+static Colormap     gColormap      = Colormap();
 static Pixel        gBackground    = Pixel();
+static Pixel        gTextColor     = Pixel();
 
 static unsigned int gWidth         = 0;
 static unsigned int gHeight        = 0;
@@ -205,15 +207,66 @@ static void SetBackgroundPixmapAndMask()
 }
 
 //__________________________________________________________________
-static void SelectFontAndTextColor()
+static bool CreateGC()
 {
-   assert(gDisplay != 0 && "SelectFontAndTextColor, gDisplay is None");
-   assert(gLogoWindow != 0 && "SelectFontAndTextColor, gLogoWindow is None");
+   assert(gDisplay != 0 && "CreateGC, gDisplay is None");
+   assert(gLogoWindow != 0 && "CreateGC, gLogoWindow is None");
+   //Call it only once.
+   assert(gGC == 0 && "CreateGC, gGC exists already");
 
    if (!(gGC = XCreateGC(gDisplay, gLogoWindow, 0, 0))) {
       printf("rootx - XCreateGC failed\n");
-      return;
+      return false;
    }
+   
+   return gGC;
+}
+
+//__________________________________________________________________
+static bool CreateCustomColors()
+{
+   assert(gDisplay != 0 && "CreateCustomColors, gDisplay is None");
+   //Call it only once.
+   assert(gTextColor == 0 && "CreateCustomColors, gTextColor exists already");
+
+   const int screen = DefaultScreen(gDisplay);
+   //TODO: check the result?
+   gColormap = DefaultColormap(gDisplay, screen);
+   if (!gColormap) {
+      printf("CreateCustomColors, failed to aquire a default colormap");
+      return false;
+   }
+
+   //Blue-ish color for the main text body.
+   XColor textColor = XColor();
+   textColor.red    = 39976;
+   textColor.green  = 49151;
+   textColor.blue   = 58981;
+   textColor.flags  = DoRed | DoGreen | DoBlue;
+
+   if (XAllocColor(gDisplay, gColormap, &textColor))
+      gTextColor = textColor.pixel;
+   
+   return gTextColor;
+}
+
+//__________________________________________________________________
+static void FreeCustomColors()
+{
+   if (gTextColor) {
+      assert(gDisplay != 0 && "FreeCustomColors, gDisplay is None");
+      assert(gColormap != 0 && "FreeCustomColors, gColormap is None");
+      XFreeColors(gDisplay, gColormap, &gTextColor, 1, 0);
+      gTextColor = 0;
+      gColormap = 0;
+   }
+}
+
+//__________________________________________________________________
+static bool CreateFont()
+{
+   assert(gDisplay != 0 && "CreateFont, gDisplay is null");
+   assert(gFont == 0 && "CreateFont, gFont exists already");
 
    gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
    if (!gFont) {
@@ -225,11 +278,8 @@ static void SelectFontAndTextColor()
       if (!gFont)
          printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
    }
-
-   if (gFont)
-      XSetFont(gDisplay, gGC, gFont->fid);
    
-   XSetForeground(gDisplay, gGC, gBackground);
+   return gFont;
 }
 
 //__________________________________________________________________
@@ -294,6 +344,9 @@ static bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 #endif
 
    Pixmap logo = None, mask = None;
+   
+   //Bertrand! Many thanks for this simple but ... smart and not so obvious (??) idea
+   //with a mask :) Without you I'll have two separate xpms :)
    const int ret = XpmReadFileToPixmap(gDisplay, gLogoWindow, (char *)path.c_str(), &logo,
                                        gHasShapeExt ? &mask : 0, &xpmAttr);
    XpmFreeAttributes(&xpmAttr);
@@ -304,18 +357,19 @@ static bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
             gLogoPixmap = logo;
             gShapeMask = mask;
             return true;
-         }
+         } //We need a mask, but
+           //it's creation failed.
+           //It's an error.
       } else {
          gLogoPixmap = logo;
          return true;
       }
    }
 
-   printf("rootx xpm error: %s\n", XpmGetErrorString(ret));
+   printf("LoadROOTSplashscreenPixmap, failed to load a splashscreen image\n");
 
    if (logo)
       XFreePixmap(gDisplay, logo);
-
    if (mask)
       XFreePixmap(gDisplay, mask);
 
@@ -323,7 +377,7 @@ static bool LoadROOTSplashscreenPixmap(const char *imageFileName, bool needMask)
 }
 
 //__________________________________________________________________
-static bool GetRootLogoAndShapeMask()
+static bool GetSplashscreenImageAndShapeMask()
 {
    //1. Test if X11 supports shape combine mask.
    //2.a if no - go to 3.
@@ -332,18 +386,21 @@ static bool GetRootLogoAndShapeMask()
    //    If both succeeded - return true.
    //3. Try to read image without transparency (mask not needed anymore).
    
-   assert(gDisplay != 0 && "GetRootLogoAndShapeMask, gDisplay is None");
+   assert(gDisplay != 0 && "GetSplashscreenImageAndShapeMask, gDisplay is None");
+   assert(gLogoPixmap == 0 &&
+          "GetSplashscreenImageAndShapeMask, gLogoPixmap is initialized already");
+   assert(gShapeMask == 0 &&
+          "GetSplashscreenImageAndShapeMask, gShapeMask is initialized already");
 
-   gHasShapeExt = false;
    int eventBase = 0, errorBase = 0;
    gHasShapeExt = XShapeQueryExtension(gDisplay, &eventBase, &errorBase);
-   
-   gLogoPixmap = 0;
-   gShapeMask = 0;
-   
+
    if (gHasShapeExt) {
       if (!LoadROOTSplashscreenPixmap("Root6SplashEXT.xpm", true)) {//true - mask is needed.
-         gHasShapeExt = false;//We do not have a mask and can not call shape combine.
+         //We do not have a mask (or image not found)
+         //and we can not call shape combine.
+         gHasShapeExt = false;
+         //"fallback".
          LoadROOTSplashscreenPixmap("Root6Splash.xpm", false);
       }
    } else
@@ -362,6 +419,10 @@ static void DrawVersion()
    assert(0 && "DrawVersion, 'ROOT_RELEASE' is not defined");
    return;
 #endif
+
+   assert(gDisplay != 0 && "DrawVersion, gDisplay is None");
+   assert(gLogoWindow != 0 && "DrawVersion, gLogoWindow is None");
+   assert(gGC != 0 && "DrawVersion, gGC is None");
 
    std::string version("Version ");
    version += ROOT_RELEASE;   
@@ -424,8 +485,11 @@ static int DrawCredits(bool draw, bool extended)
 
    if (!gFont || !gGC)
       return 150;  // size not important no text will be drawn anyway
-   
-   XSetForeground(gDisplay, gGC, gBackground);//Text is white!
+
+   if (gTextColor)
+      XSetForeground(gDisplay, gGC, gTextColor);//Text is white!
+   else
+      XSetForeground(gDisplay, gGC, gBackground);//Text is white!
 
    assert((draw == false || gCreditsPixmap != 0) &&
           "DrawCredits, parameter 'draw' is true, but destination pixmap is None");
@@ -471,7 +535,10 @@ static int DrawCredits(bool draw, bool extended)
          y = DrawCreditItem("one of our favorite users.", 0, y, draw);
       }
    }
-
+   
+   if (gTextColor)
+      XSetForeground(gDisplay, gGC, gBackground);//Text is white!
+   
    return y;
 }
 
@@ -580,40 +647,73 @@ void PopupLogo(bool about)
    //Initialize and check what we can do:
    gDisplay = XOpenDisplay("");
    if (!gDisplay) {
-      printf("rootx - XOpenDisplay failed\n");
+      printf("PopupLogo, XOpenDisplay failed\n");
       return;
    }
 
    //Create a window.
    if (!CreateSplashscreenWindow()) {
-      printf("rootx - CreateSplashscreenWindow failed\n");
+      printf("PopupLogo, CreateSplashscreenWindow failed\n");
       XCloseDisplay(gDisplay);
       gDisplay = 0;
       return;
    }
 
-   if (!GetRootLogoAndShapeMask()) {
-      printf("rootx - failed to create a background pixmap\n");
+   if (!GetSplashscreenImageAndShapeMask()) {
+      //If we failed to load a background image,
+      //we have nothing to show at all.
+      printf("PopupLogo, failed to create a background pixmap\n");
       XDestroyWindow(gDisplay, gLogoWindow);
       XCloseDisplay(gDisplay);
+      gLogoWindow = 0;
       gDisplay = 0;
       return;
    }
 
    gAbout = about;
 
+   //Background and (probably) shape combine mask, if we can.
    SetBackgroundPixmapAndMask();
+   //Center splashscreen.
    SetSplashscreenPosition();
-   SelectFontAndTextColor();
+   
+   if (CreateFont()) {//Request a custom font
+      //Create a custom context
+      if (CreateGC()) {
+         //Docs say nothing about XSetFont's return values :(
+         XSetFont(gDisplay, gGC, gFont->fid);
+         CreateCustomColors();//Try to allocate special colors, result is not important here.
+      } else {
+         //GC creation failed, no need in a custom font anymore.
+         XFreeFont(gDisplay, gFont);
+         gFont = 0;
+      }
+   }
 
-   if (gAbout)
-      ReadContributors();
+   if (gFont) {
+      //We have both context and custom font,
+      //so we can render credits.
+      if (gAbout)
+         ReadContributors();
 
-   if (gGC)
       CreateTextPixmap();
 
-   if (gCreditsPixmap)
-      ScrollCredits(0);
+      if (gCreditsPixmap)
+         ScrollCredits(0);
+      else {
+         //Error while creating a pixmap, we
+         //do not need our context and font anymore.
+         XFreeFont(gDisplay, gFont);
+         gFont = 0;
+         //
+         FreeCustomColors();
+         //
+         XFreeGC(gDisplay, gGC);
+         gGC = 0;
+         //We still can show an empty splashscreen with
+         //our nice logo! ;) - so this error is not fatal.
+      }
+   }
 
    XSelectInput(gDisplay, gLogoWindow, ButtonPressMask | ExposureMask);
    XMapRaised(gDisplay, gLogoWindow);
@@ -640,21 +740,23 @@ void WaitLogo()
    while (!gDone) {
       XEvent event = XEvent();//And here g++ does not complain??
       //Yeah, yeah, looking weird.
-      while (XCheckMaskEvent(gDisplay, ButtonPressMask | ExposureMask, &event));
-      //
-      switch (event.type) {
-         case Expose:
-            ScrollCredits(ypos);
-            DrawVersion();
-            break;
-         case ButtonPress:
-            if (gAbout && event.xbutton.button == 3)
+      while (XCheckMaskEvent(gDisplay, ButtonPressMask | ExposureMask, &event)) {
+         if (event.type == ButtonPress) {
+            if (gAbout && event.xbutton.button == 3) {
                stopScroll = stopScroll ? false : true;
-            else
+            } else {
                gDone = true;
-            break;
-         default:
-            break;
+               break;
+            }
+         }
+      }
+      
+      if (gDone)//Early exit.
+         break;
+
+      if (event.type == Expose) {
+         ScrollCredits(ypos);
+         DrawVersion();
       }
 
       Sleep(100);
@@ -693,6 +795,10 @@ void WaitLogo()
       XFreeFont(gDisplay, gFont);
       gFont = 0;
    }
+
+   //If any.
+   FreeCustomColors();
+   
    if (gGC) {
       XFreeGC(gDisplay, gGC);
       gGC = 0;
