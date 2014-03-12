@@ -469,10 +469,10 @@ bool CreateFont()
 
    gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
    if (!gFont) {
-      printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
+      /*printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
              "trying \"fixed\". Please fix your system so helvetica can be found, \n"
              "this font typically is in the rpm (or pkg equivalent) package \n"
-             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");
+             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");*/
       gFont = XLoadQueryFont(gDisplay, "fixed");
       if (!gFont)
          printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
