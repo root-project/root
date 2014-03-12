@@ -181,11 +181,13 @@ void *TStorage::ReAlloc(void *ovp, size_t size)
    ::Obsolete("ReAlloc(void*,size_t)", "v5-34-00", "v6-02-00");
    ::Info("ReAlloc(void*,size_t)", "please use ReAlloc(void*,size_t,size_t)");
 
-   // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
+   {
+      // Needs to be protected by global mutex
+      R__LOCKGUARD(gGlobalMutex);
 
-   if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
-      return (*fgReAllocHook)(ovp, size);
+      if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+         return (*fgReAllocHook)(ovp, size);
+   }
 
    static const char *where = "TStorage::ReAlloc";
 
@@ -216,10 +218,12 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    // equal to oldsize. If not memory was overwritten.
 
    // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
+   {
+      R__LOCKGUARD(gGlobalMutex);
 
-   if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
-      return (*fgReAllocCHook)(ovp, size, oldsize);
+      if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+         return (*fgReAllocCHook)(ovp, size, oldsize);
+   }
 
    static const char *where = "TStorage::ReAlloc";
 
@@ -256,9 +260,6 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    // Reallocate (i.e. resize) array of chars. Size and oldsize are
    // in number of chars.
 
-   // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
-
    static const char *where = "TStorage::ReAllocChar";
 
    char *vp;
@@ -288,9 +289,6 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
 {
    // Reallocate (i.e. resize) array of integers. Size and oldsize are
    // number of integers (not number of bytes).
-
-   // Needs to be protected by global mutex
-   R__LOCKGUARD(gGlobalMutex);
 
    static const char *where = "TStorage::ReAllocInt";
 
