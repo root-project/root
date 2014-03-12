@@ -132,7 +132,7 @@ int main(int argc, char **argv)
    Double_t cptot = 0;
    
    //delete temp file used for the benchmark
-   gSystem->Unlink(Form("%s/bench.root",gSystem->TempDirectory()));
+   gSystem->Unlink("bench.root");
    
    vector<TBenchData> results;
    vector<TBenchData> references;

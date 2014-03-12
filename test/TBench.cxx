@@ -17,16 +17,16 @@ namespace std {
 }
 #endif
 #ifdef R__WIN32
-const char *demofile = "$TMP/bench.root";
+const char *demofile = "bench.root";
 #else
-const char *demofile = "/tmp/bench.root";
+const char *demofile = "bench.root";
 #endif
 const char* demofile_name(const char* tit)  {
    static std::string fn;
 #ifdef R__WIN32
-   fn = "$TMP/bench.";
+   fn = "bench.";
 #else
-   fn = "/tmp/bench.";
+   fn = "bench.";
 #endif
    fn += tit;
    fn += ".root";
