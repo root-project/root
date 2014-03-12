@@ -3161,6 +3161,7 @@ Bool_t TCling::HasDictionary(TClass* cl)
 
    // Get the Decl and Type for the class.
    TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   if (!cli) return false;
    const clang::Decl* D = cli->GetDecl();
    const clang::Type* T = cli->GetType();
 
@@ -3274,6 +3275,9 @@ void TCling::GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse 
 
    // Get the Decl and Type for the class.
    TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+   if (!cli){
+      return;
+   }
    const clang::Decl* D = cli->GetDecl();
    const clang::Type* T = cli->GetType();
 
