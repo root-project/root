@@ -630,6 +630,10 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       }
    }
 
+   // fix for negative qmu values due to numerical errors
+   if (qmu < 0 && qmu > -tol) qmu = 0; 
+   if (qmu_A < 0 && qmu_A > -tol) qmu_A = 0; 
+
    // asymptotic formula for pnull and from  paper Eur.Phys.J C 2011  71:1554
    // we have 4 different cases: 
    //          t(mu), t_tilde(mu) for the 2-sided 
