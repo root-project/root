@@ -119,6 +119,7 @@ public:
    Long64_t     Merge(TCollection *);
    void         Reset(Option_t *option);
    void         SavePrimitive(ostream& out, Option_t* option = "");
+   virtual void Scale(Double_t c1 = 1, Option_t* option = "");
    void         SetBinContent(Int_t bin, Double_t content);
    void         SetBinContent(Int_t, Int_t, Double_t){return;}           //MayNotUse
    void         SetBinContent(Int_t, Int_t, Int_t, Double_t){return;}    //MayNotUse
