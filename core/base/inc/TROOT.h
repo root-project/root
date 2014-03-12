@@ -56,6 +56,7 @@ class TROOT;
 class TListOfDataMembers;
 class TListOfEnums;
 class TListOfFunctions;
+class TListOfFunctionTemplates;
 class TFunctionTemplate;
 
 
@@ -112,7 +113,7 @@ protected:
    TVirtualPad     *fSelectPad;           //Currently selected pad
    TCollection     *fClasses;             //List of classes definition
    TCollection     *fTypes;               //List of data types definition
-   TCollection     *fFuncTemplate;        //List of global function templates
+   TListOfFunctionTemplates *fFuncTemplate; //List of global function templates
    TListOfDataMembers*fGlobals;             //List of global variables
    TListOfFunctions*fGlobalFunctions;     //List of global functions
    TSeqCollection  *fClosedObjects;       //List of closed objects from the list of files and sockets, so we can delete them if neededCl. 
@@ -223,6 +224,7 @@ public:
    TSeqCollection   *GetClipboard() const { return fClipboard; }
    TSeqCollection   *GetListOfDataSets() const { return fDataSets; }
    TCollection      *GetListOfEnums();
+   TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
    TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}

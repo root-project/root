@@ -63,6 +63,7 @@
 #pragma link C++ class std::vector<std::pair<Int_t, Int_t> >+;
 #pragma link C++ class TFileMergeInfo;
 #pragma link C++ class TListOfFunctions+;
+#pragma link C++ class TListOfFunctionTemplates+;
 #pragma link C++ class TListOfDataMembers;
 #pragma link C++ class TListOfEnums+;
 

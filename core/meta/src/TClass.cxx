@@ -77,6 +77,7 @@
 
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
+#include "TListOfFunctionTemplates.h"
 #include "TListOfEnums.h"
 #include "TViewPubDataMembers.h"
 #include "TViewPubFunctions.h"
@@ -3087,18 +3088,9 @@ TFunctionTemplate *TClass::GetFunctionTemplate(const char *name)
    if (!gInterpreter || !fClassInfo) return 0;
 
    // The following
-   if (!fFuncTemplate) fFuncTemplate = new TList();
+   if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(this);
 
-   TFunctionTemplate *result;
-   result = (TFunctionTemplate*)fFuncTemplate->FindObject(name);
-   if (!result) {
-      DeclId_t id = gInterpreter->GetFunctionTemplate(fClassInfo,name);
-      if (id) {
-         FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
-         result = new TFunctionTemplate(info,this);
-      }
-   }
-   return result;
+   return (TFunctionTemplate*)fFuncTemplate->FindObject(name);
 }
 
 //______________________________________________________________________________
@@ -3162,6 +3154,18 @@ TList *TClass::GetListOfDataMembers(Bool_t load /* = kTRUE */)
 
    } else if (load) fData->Load();
    return fData;
+}
+
+//______________________________________________________________________________
+TList *TClass::GetListOfFunctionTemplates(Bool_t load /* = kTRUE */)
+{
+   // Return list containing the TEnums of a class.
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(this);
+   if (load) fFuncTemplate->Load();
+   return fFuncTemplate;
 }
 
 //______________________________________________________________________________

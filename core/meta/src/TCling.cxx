@@ -63,6 +63,7 @@
 #include "TMetaUtils.h"
 #include "TVirtualCollectionProxy.h"
 #include "TListOfEnums.h"
+#include "TListOfFunctionTemplates.h"
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -2539,6 +2540,40 @@ void TCling::LoadEnums(TClass* cl) const
    }
 }
 
+//______________________________________________________________________________
+void TCling::LoadFunctionTemplates(TClass* cl) const
+{
+   // Create list of pointers to function templates for TClass cl.
+   R__LOCKGUARD2(gInterpreterMutex);
+
+   const Decl * D;
+   TListOfFunctionTemplates* funcTempList;
+   if (cl) {
+      D = ((TClingClassInfo*)cl->GetClassInfo())->GetDecl();
+      funcTempList = (TListOfFunctionTemplates*)cl->GetListOfFunctionTemplates(false);
+   }
+   else {
+      D = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
+      funcTempList = (TListOfFunctionTemplates*)gROOT->GetListOfFunctionTemplates();
+   }
+   // Iterate on the decl of the class and get the enums.
+   if (const clang::DeclContext* DC = dyn_cast<clang::DeclContext>(D)) {
+      cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
+      // Collect all contexts of the namespace.
+      llvm::SmallVector< DeclContext *, 4> allDeclContexts;
+      const_cast< clang::DeclContext *>(DC)->collectAllContexts(allDeclContexts);
+      for (llvm::SmallVector<DeclContext*, 4>::iterator declIter = allDeclContexts.begin(),
+           declEnd = allDeclContexts.end(); declIter != declEnd; ++declIter) {
+         // Iterate on all decls for each context.
+         for (clang::DeclContext::decl_iterator DI = (*declIter)->decls_begin(),
+              DE = (*declIter)->decls_end(); DI != DE; ++DI) {
+            if (const clang::FunctionTemplateDecl* FTD = dyn_cast<clang::FunctionTemplateDecl>(*DI)) {
+                  funcTempList->Get(FTD);
+            }
+         }
+      }
+   }
+}
 //______________________________________________________________________________
 void TCling::CreateListOfDataMembers(TClass* cl) const
 {

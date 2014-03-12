@@ -111,6 +111,7 @@
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
+#include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
 
 #include <string>
@@ -1225,18 +1226,9 @@ TFunctionTemplate *TROOT::GetFunctionTemplate(const char *name)
 {
    if (!gInterpreter) return 0;
 
-   if (!fFuncTemplate) fFuncTemplate = new TList();
+   if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(0);
 
-   TFunctionTemplate *result;
-   result = (TFunctionTemplate*)fFuncTemplate->FindObject(name);
-   if (!result) {
-      TInterpreter::DeclId_t id = gInterpreter->GetFunctionTemplate(0,name);
-      if (id) {
-         FuncTempInfo_t *info = gInterpreter->FuncTempInfo_Factory(id);
-         result = new TFunctionTemplate(info, 0);
-      }
-   }
-   return result;
+   return (TFunctionTemplate*)fFuncTemplate->FindObject(name);
 }
 
 //______________________________________________________________________________
@@ -1366,6 +1358,15 @@ TCollection *TROOT::GetListOfEnums()
       fEnums = new TListOfEnums(0);
    }
    return fEnums;
+}
+
+//______________________________________________________________________________
+TCollection *TROOT::GetListOfFunctionTemplates()
+{
+   if(!fFuncTemplate) {
+      fFuncTemplate = new TListOfFunctionTemplates(0);
+   }
+   return fFuncTemplate;
 }
 
 //______________________________________________________________________________

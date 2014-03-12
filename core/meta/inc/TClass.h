@@ -53,6 +53,7 @@ class TVirtualIsAProxy;
 class TVirtualRefProxy;
 class THashTable;
 class TListOfFunctions;
+class TListOfFunctionTemplates;
 class TListOfDataMembers;
 class TListOfEnums;
 class TViewPubFunctions;
@@ -116,7 +117,7 @@ private:
    TList             *fBase;            //linked list for base classes
    TListOfDataMembers*fData;            //linked list for data members
    TListOfEnums      *fEnums;           //linked list for the enums
-   TList             *fFuncTemplate;    //linked list for function templates [Not public until implemented as active list]
+   TListOfFunctionTemplates *fFuncTemplate; //linked list for function templates [Not public until implemented as active list]
    TListOfFunctions  *fMethod;          //linked list for methods
    TViewPubDataMembers*fAllPubData;      //all public data members (including from base classes)
    TViewPubFunctions *fAllPubMethod;    //all public methods (including from base classes)
@@ -298,6 +299,7 @@ public:
    }
    TList             *GetListOfDataMembers(Bool_t load = kTRUE);
    TList             *GetListOfEnums(Bool_t load = kTRUE);
+   TList             *GetListOfFunctionTemplates(Bool_t load = kTRUE);
    TList             *GetListOfBases();
    TList             *GetListOfMethods(Bool_t load = kTRUE);
    TCollection       *GetListOfMethodOverloads(const char* name) const;

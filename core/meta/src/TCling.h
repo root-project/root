@@ -227,6 +227,7 @@ public: // Public Interface
    DeclId_t GetFunctionWithValues(ClassInfo_t *cl, const char* method, const char* params, Bool_t objectIsConst = kFALSE);
    DeclId_t GetFunctionTemplate(ClassInfo_t *cl, const char *funcname);
    void     GetFunctionOverloads(ClassInfo_t *cl, const char *funcname, std::vector<DeclId_t>& res) const;
+   virtual void     LoadFunctionTemplates(TClass* cl) const;
 
    void    GetInterpreterTypeName(const char* name, std::string &output, Bool_t full = kFALSE);
    void    Execute(const char* function, const char* params, int* error = 0);
