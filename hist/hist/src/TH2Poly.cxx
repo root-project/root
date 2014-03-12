@@ -80,6 +80,7 @@ contains the input coordinates), especially if the histogram is to be filled
 many times.
 <p>
 The following very simple macro shows how to build and fill a <tt>TH2Poly</tt>:
+<pre>
 {
     TH2Poly *h2p = new TH2Poly();
 
