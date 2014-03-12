@@ -76,7 +76,6 @@ public:
 
 protected:
 
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
   Bool_t importWorkspaceHook(RooWorkspace& ws) ;
   Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
