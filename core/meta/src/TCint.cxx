@@ -1468,7 +1468,7 @@ Long_t TCint::ExecuteMacro(const char *filename, EErrorCode *error)
 {
    // Execute a CINT macro.
 
-   R__LOCKGUARD(gCINTMutex);
+   R__LOCKGUARD(fLockProcessLine ? gCINTMutex : 0);
 
    return TApplication::ExecuteFile(filename, (int*)error);
 }
