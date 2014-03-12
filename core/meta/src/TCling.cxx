@@ -3765,7 +3765,7 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
 Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
    // Execute a cling macro.
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
    fCurExecutingMacros.push_back(filename);
    Long_t result = TApplication::ExecuteFile(filename, (int*)error);
    fCurExecutingMacros.pop_back();
