@@ -555,7 +555,7 @@ AFile1.root:/
 ```
 
 Note that even if you open the file in "READ" mode, it still becomes the
-current directory. CINT also offers a shortcut for `gDirectory->pwd()`
+current directory. Cling also offers a shortcut for `gDirectory->pwd()`
 and `gDirectory->ls()`, you can type:
 
 ``` {.cpp}
@@ -640,7 +640,7 @@ histogram. All histograms and trees are created in the current directory
 histograms" includes objects of any class descending directly or
 indirectly from **`TH1`**. Hence, our **`TProfile`** `hprof` is created
 in the current directory `f.`There was another side effect when we
-called the `TH1::Draw` method. CINT printed this statement:
+called the `TH1::Draw` method. ROOT printed this statement:
 
 ``` {.cpp}
 <TCanvas::MakeDefCanvas>: created default TCanvas with name c1
@@ -965,7 +965,7 @@ We saw that multiple versions of an object with the same name could be
 in a ROOT file. In our example, we saved a modified histogram `hpx` to
 the file, which resulted in two `hpx's` uniquely identified by the cycle
 number: `hpx;1` and `hpx;2`. The question is how we can retrieve the
-right version of `hpx`. When opening the file and using `hpx`, CINT
+right version of `hpx`. When opening the file and using `hpx`, Cling
 retrieves the one with the highest cycle number. To read the `hpx;1`
 into memory, rather than the `hpx:2` we would get by default, we have to
 explicitly get it and assign it to a variable.
@@ -1148,7 +1148,7 @@ be decomposed into other types. Examples of simple data types are longs,
 shorts, floats, and chars. In contrast, a variable is of a *composite*
 data type if it can be decomposed. For example, classes, structures, and
 arrays are composite types. Simple types are also called primitive
-types, basic types, and CINT sometimes calls them fundamental types.
+types, basic types, and Cling sometimes calls them fundamental types.
 
 When we say, "writing an object to a file", we actually mean writing the
 current values of the data members. The most common way to do this is to
@@ -1175,7 +1175,7 @@ the object's constructor to set them properly.
 A `Streamer `usually calls other `Streamers`: the `Streamer `of its
 parents and data members. This architecture depends on all classes
 having `Streamers`, because eventually they will be called. To ensure
-that a class has a `Streamer`, `rootcint` automatically creates one in
+that a class has a `Streamer`, `rootcling` automatically creates one in
 the `ClassDef` macro that is defined in `$ROOTSYS/include/Rtypes.h`.
 `ClassDef` defines several methods for any class, and one of them is the
 `Streamer`. The automatically generated `Streamer `is complete and can
@@ -1205,12 +1205,12 @@ Float_t       *fClosestDistance;  //[fNvertex]
 ...
 ```
 
-The Event class is added to the CINT dictionary by the `rootcint`
-utility. This is the `rootcint` statement in the
+The Event class is added to the dictionary by the `rootcling`
+utility. This is the `rootcling` statement in the
 `$ROOTSYS/test/Makefile`:
 
 ``` {.cpp}
-@rootcint -f EventDict.cxx -c Event.h EventLinkDef.h
+@rootcling -f EventDict.cxx -c Event.h EventLinkDef.h
 ```
 
 The `EventDict.cxx` file contains the automatically generated
@@ -1327,7 +1327,7 @@ If the comment is absent or does not contain `min`, `max`,
 
 `If min` and `max` are present, they are saved as a 32 bits precision.
 `min` and `max` can be explicit values or be expressions of values known
-to CINT (e.g. "`pi"). `
+to Cling (e.g. "`pi"). `
 
 `If nbits` is present, the member is saved as `int` with '`nbit`'. For
 more details see the io tutorials `double32.C`.
@@ -1348,7 +1348,7 @@ EventHeader    fEvtHdr;       //|| do not split the header
 ### Streamers with Special Additions
 
 
-Most of the time you can let `rootcint` generate a `Streamer` for you.
+Most of the time you can let `rootcling` generate a `Streamer` for you.
 However if you want to write your own `Streamer `you can do so. For some
 classes, it may be necessary to execute some code before or after the
 read or write block in the automatic `Streamer`. For example after the
@@ -1360,16 +1360,16 @@ or need to handle the schema evolution on your own. In addition, the
 automatic `Streamer `does not support C-structures. It is best to
 convert the structure to a class definition.
 
-First, you need to tell `rootcint` not to build a `Streamer `for you.
-The input to the `rootcint` command (in the `makefile`) is a list of
+First, you need to tell `rootcling` not to build a `Streamer `for you.
+The input to the `rootcling` command (in the `makefile`) is a list of
 classes in a `LinkDef.h` file. For example, the list of classes for
 `Event` is listed in `$ROOTSYS/test/EventLinkDef.h`. The "`-`" at the
-end of the class name tells `rootcint` not to generate a `Streamer`. In
+end of the class name tells `rootcling` not to generate a `Streamer`. In
 the example, you can see the `Event` class is the only one for which
-`rootcint` is instructed not to generate a `Streamer`.
+`rootcling` is instructed not to generate a `Streamer`.
 
 ``` {.cpp}
-#ifdef __CINT__
+#ifdef __ROOTCLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -1383,7 +1383,7 @@ the example, you can see the `Event` class is the only one for which
 #pragma link C++ class EventHeader+;
 ```
 
-The "`+`" sign tells `rootcint` to use the new `Streamer `system
+The "`+`" sign tells `rootcling` to use the new `Streamer `system
 introduced in ROOT 3.0. The following is an example of a customized
 `Streamer `for `Event`. The `Streamer` takes a **`TBuffer`** as a
 parameter, and first checks to see if this is a case of reading or
@@ -1696,7 +1696,7 @@ automatically an action:
 
 -   Call to an interpreted function
 
--   Execution of a CINT script
+-   Execution of a Cling script
 
 #### How to Select This Option?
 
@@ -1731,7 +1731,7 @@ One can compute a pointer to an existing **`TExec`** with a name with:
    myExec->SetAction(actionCommand);
 ```
 
-The parameter `actionCommand` is a string containing a CINT instruction.
+The parameter `actionCommand` is a string containing a Cling instruction.
 Examples:
 
 ``` {.cpp}
@@ -1789,7 +1789,7 @@ object `h6` to **`TRef`**`::GetObject`.
 
 Note that if the definition of the `TRef fWebHistogram` had been changed
 the compiled or interpreted function `GetWebHistogram()` would have been
-called instead of the CINT script `GetWebHistogram.C.`
+called instead of the Cling script `GetWebHistogram.C.`
 
 ### Array of TRef
 
@@ -2058,10 +2058,10 @@ is no other option.
 #### The dictionaries
 
    The most convenient place to specify the conversion rules is a dictionary. One can
-do that either in CINT's LinkDef file or in the selection xml file being fed to genreflex.
+do that either in a LinkDef file or in the selection xml file being fed to genreflex.
 The syntax of the rules is the following:
 
-   - For CINT dictionaries:
+   - For dictionaries created from a LinkDef file:
    
 ``` {.cpp}
 #pragma read                                              \
@@ -2227,7 +2227,7 @@ if (R__v) < 2 {
 Our experience with manual schema evolution shows that it is easy to
 make and mismatches between `Streamer` writers and readers are frequent
 and increase as the number of classes increase. We recommend you use
-`rootcint` generated `Streamers` whenever you can, and profit from the
+`rootcling` generated `Streamers` whenever you can, and profit from the
 automatic schema evolution.
 
 ### Building Class Definitions with the StreamerInfo
@@ -2251,7 +2251,7 @@ is a fast simulation for the ATLAS experiment. The complete source for
 <ftp://root.cern.ch/root/atlfast.tar.gz>. Once we compile and run
 `ATLFast` we get a ROOT file called `atlfast.root`, containing the
 `ATLFast` objects. When we open the file, we get a warning that the file
-contains classes that are not in the CINT dictionary. This is correct
+contains classes that are not in the dictionary. This is correct
 since we did not load the class definitions.
 
 ``` {.cpp}
@@ -2280,7 +2280,7 @@ Int_t   m_Trigger  offset=  0 type= 3 Result of trigger...
 ```
 
 However, when we try to use a specific class we get a warning because
-the class is not in the CINT dictionary. We can create a class using
+the class is not in the dictionary. We can create a class using
 `gROOT->GetClass()` which makes a fake class from the `StreamerInfo`.
 
 ``` {.cpp}
@@ -2337,9 +2337,9 @@ with ATLF. The third parameter is an option with the following values:
 -   Generate a script called `MAKE` that builds the shared library
     containing the definition of all classes in the directory.
 
--   Generate a `LinkDef.h `files to use with `rootcint` in `MAKE`.
+-   Generate a `LinkDef.h `files to use with `rootcling` in `MAKE`.
 
--   Run `rootcint` to generate a `<dirname>ProjectDict.cxx` file.
+-   Run `rootcling` to generate a `<dirname>ProjectDict.cxx` file.
 
 -   Compile the \<`dirname>ProjectDict.cxx `with the current options in
     `compiledata.h`.
@@ -2455,7 +2455,7 @@ in the `LinkDef.h` file.
 
 **Case B**: You use the automatic `Streamer` in the dictionary file.
 
--   Move the old Streamer from the file generated by `rootcint` to your
+-   Move the old Streamer from the file generated by `rootcling` to your
     class implementation file, then modify the Streamer function as in
     Case A above.
 
@@ -2467,7 +2467,7 @@ in the `LinkDef.h` file.
 **Case C**: You use the automatic `Streamer` in the dictionary file and
 you already use the option "+" in the `LinkDef` file. If the old
 automatic `Streamer` does not contain any statement using the function
-`WriteArray`, you have nothing to do, except running `rootcint` again to
+`WriteArray`, you have nothing to do, except running `rootcling` again to
 regenerate the new form of the `Streamer` function, otherwise proceed
 like for case B.
 
@@ -2789,7 +2789,7 @@ applications.
 The XML format should be used only for small data volumes, typically
 histogram files, pictures, geometries, calibrations. The XML file is
 built in memory before being dumped to disk. Like for normal ROOT files,
-XML files use the same I/O mechanism exploiting the ROOT/CINT
+XML files use the same I/O mechanism exploiting the ROOT/Cling
 dictionary. Any class having a dictionary can be saved in XML format.
 This first implementation does not support subdirectories or trees.
 
