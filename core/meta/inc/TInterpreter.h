@@ -90,6 +90,7 @@ public:
    };
 
    typedef int (*AutoLoadCallBack_t)(const char*);
+   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
    TInterpreter() { }   // for Dictionary
    TInterpreter(const char *name, const char *title = "Generic Interpreter");
@@ -138,7 +139,8 @@ public:
                                    const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
-                                   void (* /*triggerFunc*/)()) = 0;
+                                   void (* /*triggerFunc*/)(),
+                                   const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;

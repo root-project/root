@@ -19,10 +19,13 @@
 #include "llvm/ADT/StringRef.h"
 
 #include <string>
+#include <atomic>
 #include <stdlib.h>
 
 namespace clang {
    class ASTContext;
+   class ClassTemplateDecl;
+   class ClassTemplateSpecializationDecl;
    class CompilerInstance;
    class CXXBaseSpecifier;
    class CXXRecordDecl;
@@ -35,6 +38,10 @@ namespace clang {
    class RecordDecl;
    class SourceLocation;
    class TagDecl;
+   class TemplateDecl;
+   class TemplateName;
+   class TemplateArgumentList;
+   class TemplateParameterList;
    class Type;
    class TypeDecl;
    class TypedefNameDecl;
@@ -66,8 +73,18 @@ class AnnotatedRecordDecl;
       
 // Constants, typedefs and Enums -----------------------------------------------
 
-// Convention used to separate name/value of properties in the ast annotations
-static const std::string PropertyNameValSeparator("@@@");
+// Convention for the ROOT relevant properties
+namespace propNames{
+   static const std::string separator("@@@");
+   static const std::string iotype("iotype");
+   static const std::string name("name");
+   static const std::string pattern("pattern");
+   static const std::string ioname("ioname");
+   static const std::string comment("comment");
+   static const std::string nArgsToKeep("nArgsToKeep");
+   static const std::string persistent("persistent");
+   static const std::string transient("transient");
+}
 
 extern int gErrorIgnoreLevel;
 
@@ -92,17 +109,42 @@ const int kMaxLen   =   1024;
 
 //______________________________________________________________________________
 class TNormalizedCtxt {
-   typedef llvm::SmallSet<const clang::Type*, 4> TypesCont_t;
-   typedef cling::utils::Transform::Config Config_t;
+   using TypesCont_t = llvm::SmallSet<const clang::Type*, 4>;
+   using Config_t = cling::utils::Transform::Config;
+   using TemplPtrIntMap_t = std::map<const clang::ClassTemplateDecl*, int>;
 private:
-   Config_t    fConfig;
-   TypesCont_t fTypeWithAlternative;
+   Config_t         fConfig;
+   TypesCont_t      fTypeWithAlternative;
+   static TemplPtrIntMap_t fTemplatePtrArgsToKeepMap;
+   static std::atomic_flag fCanAccessNargsToKeep;
+   class TNCSimpleScopedSpinLock{
+      // Maybe we can go for this solution
+      // 1) We make the map pointer atomic
+      // 2) For adding new element we allocate a new map, compare and exchange, delete old
+      // The assumption is that we have many reads and very few writes.
+      public:
+         TNCSimpleScopedSpinLock(){while (fCanAccessNargsToKeep.test_and_set(std::memory_order_acquire));}
+         ~TNCSimpleScopedSpinLock(){fCanAccessNargsToKeep.clear(std::memory_order_release);};
+   };
 public:
    TNormalizedCtxt(const cling::LookupHelper &lh);
 
    const Config_t    &GetConfig() const { return fConfig; }
    const TypesCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
    const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
+   void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i){
+      // This method is thread safe
+      TNCSimpleScopedSpinLock ssp;
+      fTemplatePtrArgsToKeepMap[templ]=i;     
+   }
+   int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
+      // This method is thread safe
+      TNCSimpleScopedSpinLock ssp;
+      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(templ);   
+      return (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;      
+   }   
+   const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
+   
 };
 
 //______________________________________________________________________________
@@ -268,10 +310,16 @@ bool ExtractAttrPropertyFromName(const clang::Decl& decl,
                                  std::string& propValue);
 
 //______________________________________________________________________________
+bool ExtractAttrIntPropertyFromName(const clang::Decl& decl,
+                                    const std::string& propName,
+                                    int& propValue);
+
+//______________________________________________________________________________
 // Add default template parameters.
 clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const cling::Interpreter &interpret,
-                                     const TNormalizedCtxt &normCtxt);
+                                     const TNormalizedCtxt &normCtxt,
+                                     const int nArgsToKeep=-1);
 
 //______________________________________________________________________________
 const char* DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum = 0, const char **errstr = 0);
@@ -502,6 +550,13 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const clang::ASTContext &);
 
 //______________________________________________________________________________
+void KeepNParams(clang::QualType& normalizedType,
+                 const clang::ASTContext& astCtxt,                                   
+                 const clang::TemplateArgumentList& tArgs,
+                 const clang::TemplateParameterList& tPars,
+                 int nArgsToKeep,
+                 const TNormalizedCtxt& normCtxt);
+//______________________________________________________________________________
 // Return the type name normalized for ROOT,
 // keeping only the ROOT opaque typedef (Double32_t, etc.) and
 // adding default template argument for all types except the STL collections
@@ -577,6 +632,15 @@ clang::QualType ReSubstTemplateArg(clang::QualType input, const clang::Type *ins
 //______________________________________________________________________________
 // Remove the last n template arguments from the name
 int RemoveTemplateArgsFromName(std::string& name, unsigned int);
+
+//______________________________________________________________________________
+clang::TemplateName ExtractTemplateNameFromQualType(const clang::QualType& qt);
+
+//______________________________________________________________________________
+clang::ClassTemplateSpecializationDecl* QualType2ClassTemplateSpecializationDecl(const clang::QualType& qt);
+
+//______________________________________________________________________________
+clang::ClassTemplateDecl* QualType2ClassTemplateDecl(const clang::QualType& qt);
 
 //______________________________________________________________________________
 // Extract the namespaces enclosing a DeclContext

@@ -182,8 +182,9 @@ public: // Public Interface
                           const char** headers,
                           const char** allHeaders,
                           const char** includePaths,
-                          const char* payloadCode,
-                          void (*triggerFunc)());
+                          const char* payloadCode,                          
+                          void (*triggerFunc)(),
+                          const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip);
    void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 

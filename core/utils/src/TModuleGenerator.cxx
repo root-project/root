@@ -354,7 +354,9 @@ std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
 }
 
 //______________________________________________________________________________
-void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHeaders) const
+void TModuleGenerator::WriteRegistrationSource(std::ostream& out, 
+                                               bool inlineHeaders, 
+                                               const std::string& fwdDeclnArgsToKeepString) const
 {  
 
    std::string payloadCode;
@@ -415,15 +417,17 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out, bool inlineHea
    WriteAllSeenHeadersArray(out) << 
       "    };\n"
       "    static const char* includePaths[] = {\n";
+                           
    WriteIncludePathArray(out) << 
       "    };\n"
       "    static const char* payloadCode = \n" << payloadCode << ";\n"
-      "    static bool sInitialized = false;\n"
-      "    if (!sInitialized) {\n"
+      "    static bool isInitialized = false;\n"
+      "    if (!isInitialized) {\n"
       "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
       "        headers, allHeaders, includePaths, payloadCode,\n"
-      "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl);\n"
-      "      sInitialized = true;\n"
+      "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << 
+      ");\n"
+      "      isInitialized = true;\n"
       "    }\n"
       "  }\n"
       "  static struct DictInit {\n"

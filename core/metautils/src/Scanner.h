@@ -67,7 +67,7 @@ public:
       
    RScanner (const SelectionRules &rules,
              const cling::Interpreter &interpret,
-             const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
+             ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
              unsigned int verbose = 0);
    
    // Configure the vistitor to also visit template instantiation.
@@ -163,7 +163,7 @@ private:
    static int fgAnonymousClassCounter;
    static int fgAnonymousEnumCounter;
    static int fgBadClassCounter;
-   const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
+   ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    const SelectionRules &fSelectionRules;
    std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
 

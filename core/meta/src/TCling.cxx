@@ -973,8 +973,9 @@ void TCling::RegisterModule(const char* modulename,
                             const char** headers,
                             const char** allHeaders,
                             const char** includePaths,
-                            const char* payloadCode,
-                            void (*triggerFunc)())
+                            const char* payloadCode,                            
+                            void (*triggerFunc)(),
+                            const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip)
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
@@ -1008,6 +1009,28 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
+   // Put the template decls and the number of arguments to skip in the TNormalizedCtxt
+   for (auto& fwdDeclArgToSkipPair : fwdDeclsArgToSkip){
+      cling::Transaction* T = 0;
+      const std::string& fwdDecl = fwdDeclArgToSkipPair.first;
+      const int nArgsToSkip = fwdDeclArgToSkipPair.second;
+      cling::Interpreter::CompilationResult compRes = 
+                                    fInterpreter->declare(fwdDecl.c_str(), &T);
+      assert(cling::Interpreter::kSuccess == compRes &&
+            "A fwd declaration could not be compiled");
+      if (compRes!=cling::Interpreter::kSuccess){
+         Warning("TCling::RegisterModule",
+               "Problems in declaring string '%s' were encountered.", 
+               fwdDecl.c_str()) ;
+         continue;         
+      }
+      if (const ClassTemplateDecl* TD = 
+            dyn_cast<ClassTemplateDecl>(T->getFirstDecl().getSingleDecl())) {
+         fNormalizedCtxt->AddTemplAndNargsToKeep(TD->getCanonicalDecl(),
+                                                   nArgsToSkip);
+      }
+   }
+   
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.

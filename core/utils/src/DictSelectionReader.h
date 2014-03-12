@@ -21,11 +21,12 @@
 
 class SelectionRules;
 class ClassSelectionRule;
-namespace clang {
-   class ASTContext;
+namespace clang
+{
+class ASTContext;
 //    class DeclContext;
-   class NamespaceDecl;
-   class CXXRecordDecl;
+class NamespaceDecl;
+class CXXRecordDecl;
 }
 
 /**
@@ -49,7 +50,8 @@ namespace clang {
  * By default, the Name of the selection class is then
  * @c ROOT::Meta::Selection::C.  If you have such a class, it will be found
  * automatically.  If @c C is in a namespace, @c NS::C, then
- * the selection class should be in the same namespace: @c ROOT::Selection::NS::C.
+ * the selection class should be in the same namespace: @c
+ROOT::Selection::NS::C.
  * Examples:
  *
 
@@ -63,12 +65,12 @@ namespace clang {
  *    1. If a class declaration is present in the selection namespace, a class
  * with the same name is selected outside the selection namespace.
  *    2. If a template class declaration and a template instantiation is present
- * in the selection namespace, a template instance witgh the same name is
+ * in the selection namespace, all the instances of the template are
  * selected outside the namespace.
  * For example:
  * @code
  * [...]
- * class classVanilla{};                            
+ * class classVanilla{};
  * template <class A> class classTemplateVanilla {};
  * classTemplateVanilla<char> t0;
  * namespace ROOT{
@@ -86,7 +88,7 @@ namespace clang {
  *
  * A brief description of the properties that can be assigned to classes
  * with the @c ROOT::Meta::Selectio::ClassAttributes class.
- *    1. @c kNonSplittable : Makes the class non splittable  
+ *    1. @c kNonSplittable : Makes the class non splittable
  * The class properties can be assigned via a traits mechanism. For example:
  * @code
  * [...]
@@ -113,6 +115,62 @@ namespace clang {
  *    }
  * }
  * @endcode
+ *
+ * 
+ * The @c ROOT::Meta::Selection syntax allows to alter the number of template 
+ * parameters of a certain template class within the ROOT type system, TClass.
+ * Technically it allows to alter the way in which the "normalized name" (in 
+ * other words, the "ROOT name") of the class is created. The key is the usage 
+ * of the @c KeepFirstTemplateArguments traits class.
+ * It is possible to select the maximum number of template arguments considered
+ * if not different from the default. A concrete example can be more clear than 
+ * a long explaination in this case:
+ * @code
+ * [...]
+ * template <class T, class U=int, int V=3> class A{...};
+ * template <class T, class Alloc= myAllocator<T> > class myVector{...};
+ * A<char> a1;
+ * A<char,float> a2;
+ * myVector<float> v1;
+ * myVector<A<char>> v2;
+ * 
+ * namespace ROOT{
+ *    namespace Meta {
+ *       namespace Selection{
+ *          template <class T, class U=int, int V=3> class A
+ *            :KeepFirstTemplateArguments<1>{};           
+ *  
+ *          A<double> ;  
+ *          template <class T, class Alloc= myAllocator<T> > class myVector
+ *            :KeepFirstTemplateArguments<1>{};
+ *
+ *          myVector<double> vd;   
+ *       }
+ *    }
+ * }
+ * @endcode
+ * 
+ * Consistently with what described above, all the instances of @c A and 
+ * @c myvector will be selected. In addition, only the first template parameter 
+ * will be kept.
+ * In absence of any @c KeepFirstTemplateArguments trait, the normalization 
+ * would be:
+ * @c A<char>           &rarr @c A<char,float,3>
+ * @c A<char,float>     &rarr @c A<char,int,3>
+ * @c myVector<float>   &rarr @c myVector<A<char,int,3>,myAllocator<A<char,int,3>>>
+ * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
+ * 
+ * Now, deciding to keep just one argument (@c KeepFirstTemplateArguments<1>):
+ * @c A<char>           &rarr @c A<char,float>
+ * @c A<char,float>     &rarr @c A<char>
+ * @c myVector<float>   &rarr @c myVector<A<char>,myAllocator<A<char>>>
+ * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
+ * 
+ * And deciding to keep two arguments (@c KeepFirstTemplateArguments<2>):
+ * @c A<char>           &rarr @c A<char,float>
+ * @c A<char,float>     &rarr @c A<char,int>
+ * @c myVector<float>   &rarr @c myVector<A<char,int>,myAllocator<A<char,int>>>
+ * @c myVector<A<char>> &rarr @c myVector<float,myAllocator<float>>
  * 
  * A brief description of the properties that can be assigned to data members
  * with the @c ROOT::Meta::Selection MemberAttributes class:
@@ -139,47 +197,66 @@ namespace clang {
  *          class classTestAutoselect{
  *             MemberAttributes<kAutoSelected> autoselected;
  *          };
-    
+
     class classTransientMember{
        MemberAttributes<kTransient> transientMember;
        };
- * 
+ *
  * @endcode
  * would lead to the creation of selection rules for @c classTransientMember
  * specifying that @c transientMember is transient, @c classTestAutoselect and
  * @c classAutoselected.
  *
- * 
+ *
  **/
-class DictSelectionReader: public clang::RecursiveASTVisitor<DictSelectionReader>
+class DictSelectionReader
+    : public clang::RecursiveASTVisitor<DictSelectionReader>
 {
-public:
-
-   /// Take the selection rules as input (for consistency w/ other selector interfaces)
-   DictSelectionReader(SelectionRules&, const clang::ASTContext &);
+ public:
+   /// Take the selection rules as input (for consistency w/ other selector
+   /// interfaces)
+   DictSelectionReader(SelectionRules&, const clang::ASTContext&);
 
    /// Visit the entities that needs to be selected
-   bool VisitRecordDecl(clang::RecordDecl*);   
+   bool VisitRecordDecl(clang::RecordDecl*);
 
-   bool  shouldVisitTemplateInstantiations () const {return true;}
-   
-private:
+   bool shouldVisitTemplateInstantiations() const { return true; }
 
-   inline bool InSelectionNamespace(const clang::RecordDecl&, const std::string& str=""); ///< Check if in the ROOT::Selection namespace
-   inline bool FirstPass(const clang::RecordDecl&); ///< First pass on the AST
-   inline bool SecondPass(const clang::RecordDecl&); ///< Second pass on the AST, using the information of the first one
-   inline void ManageFields(const clang::RecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class fields
-   inline void ManageBaseClasses(const clang::CXXRecordDecl&, const std::string&, ClassSelectionRule&); ///< Take care of the class bases
-   template<class T>
-   inline unsigned int ExtractTemplateArgValue(const T& ,const std::string&); ///< Extract the value of the template parameter
-   inline const clang::TemplateArgumentList* GetTmplArgList(const clang::CXXRecordDecl& ); ///< Get the template arguments list if any
-   
+ private:
+   inline bool
+   InSelectionNamespace(const clang::RecordDecl&,
+                        const std::string& str =
+                            ""); ///< Check if in the ROOT::Selection namespace
+   inline bool FirstPass(const clang::RecordDecl&);  ///< First pass on the AST
+   inline bool SecondPass(const clang::RecordDecl&); ///< Second pass on the
+                                                     ///AST, using the
+                                                     ///information of the first
+                                                     ///one
+   inline void
+   ManageFields(const clang::RecordDecl&, const std::string&,
+                ClassSelectionRule&); ///< Take care of the class fields
+   inline void
+   ManageBaseClasses(const clang::CXXRecordDecl&, const std::string&,
+                     ClassSelectionRule&); ///< Take care of the class bases
+   template <class T>
+   inline unsigned int ExtractTemplateArgValue(
+       const T&,
+       const std::string&); ///< Extract the value of the template parameter
+   inline const clang::TemplateArgumentList* GetTmplArgList(
+       const clang::CXXRecordDecl&); ///< Get the template arguments list if any
+
    SelectionRules& fSelectionRules; ///< The selection rules to be filled
-   std::set<const clang::RecordDecl*> fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
-   std::set<std::string> fSpecialNames; ///< The names of the classes used for the selction syntax
-   llvm::StringMap<std::set<std::string> > fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
-   std::list<std::pair<std::string, unsigned int> >fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to hide pairs
-   llvm::StringMap<ClassSelectionRule> fClassNameSelectionRuleMap; /// < Map of the already built sel rules
+   std::set<const clang::RecordDecl*>
+   fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
+   std::set<std::string>
+   fSpecialNames; ///< The names of the classes used for the selction syntax
+   llvm::StringMap<std::set<std::string> >
+   fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
+   std::list<std::pair<std::string, unsigned int> >
+   fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to
+                                            ///hide pairs
+   llvm::StringMap<ClassSelectionRule>
+   fClassNameSelectionRuleMap; /// < Map of the already built sel rules
    bool fIsFirstPass; ///< Keep trance of the number of passes through the AST
 };
 

@@ -82,7 +82,7 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
-RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
+RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
   fVerboseLevel(verbose),
   fSourceManager(0),
   fInterpreter(interpret),
@@ -770,8 +770,19 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
 
       if(rcrdDeclAlreadySelected){
+         
+         // Here we decorate the norm context
+         std::string nArgsToKeep("");
+         if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
+            if (const ClassTemplateSpecializationDecl* ctsd =
+            llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(recordDecl))            
+               if(const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate())
+                  fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
+                                                  std::atoi(nArgsToKeep.c_str()));
+         }
+         
          std::string name_value("");
-         if (selected->GetAttributeValue("name", name_value)) {
+         if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::name, name_value)) {
             ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
                                                             selected->GetRequestedType(),
                                                             recordDecl,
@@ -826,21 +837,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          fSelectedTypedefNames.push_back(typedefNameDecl->getQualifiedNameAsString());
       }     
 
-      // Tho show what will happen. Probably we have to go through the
-      // TNormalizedCtxt.
-      std::string  templateArgsToHide_str("");
-
-      if (selected->GetAttributeValue("KeepFirstTemplateArguments", templateArgsToHide_str)){
-         unsigned int templateArgsToKeep = atoi(templateArgsToHide_str.c_str());
-         std::string normName( fSelectedClasses.back().GetNormalizedName() );
-         ROOT::TMetaUtils::RemoveTemplateArgsFromName(normName,templateArgsToKeep);
-         std::cout << " ( PREVIEW: The normalized name is " << fSelectedClasses.back().GetNormalizedName() <<
-         ". If the first " << templateArgsToKeep << " template argument"
-         << (templateArgsToKeep==1 ? "" : "s")
-         << " only would been kept it would be " << normName << ")";
-      }
-
-      }      
+   }      
 
 
    

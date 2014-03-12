@@ -338,7 +338,7 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
                        const std::list<VariableSelectionRule>& fieldSelRules,
                        bool isGenreflex)
 {
-
+   using namespace ROOT::TMetaUtils;
    // See if in the VariableSelectionRules there are attributes and names with
    // which we can annotate.
    // We may look for a smarter algorithm.
@@ -353,7 +353,7 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
    std::string varName;
    for(std::list<VariableSelectionRule>::const_iterator it = fieldSelRules.begin();
        it != fieldSelRules.end(); ++it){
-      if ( ! it->GetAttributeValue("name",varName)) continue;
+      if ( ! it->GetAttributeValue(propNames::name,varName)) continue;
       if (declName == varName){ // we have the rule!
          // Let's extract the attributes
          BaseSelectionRule::AttributesMap_t attrMap( it->GetAttributes() );
@@ -363,12 +363,12 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
             const std::string& name = iter->first;
             const std::string& value = iter->second;
             
-            if (name == "name") continue;
+            if (name == propNames::name) continue;
             
             /* This test is here since in ROOT5, when using genreflex, 
              * for pods, iotype is ignored */
             
-            if (name == "iotype" &&
+            if (name == propNames::iotype &&
                 ( decl.getType()->isArrayType() ||  decl.getType()->isPointerType() ) ){
                const char* msg="Data member \"%s\" is an array or a pointer. "
                                "It is not possible to assign to it the iotype \"%s\". "
@@ -381,11 +381,11 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
             
             
 
-            if ( (name == "transient" && value == "true") or
-                 (name == "persistent" && value == "false")) // special case
-               userDefinedProperty="comment"+ROOT::TMetaUtils::PropertyNameValSeparator+"!";
+            if ( (name == propNames::transient && value == "true") or
+                 (name == propNames::persistent && value == "false")) // special case
+               userDefinedProperty="comment"+propNames::separator+"!";
             else
-               userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
+               userDefinedProperty=name+propNames::separator+value;
             ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
             decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
          }
@@ -433,9 +433,9 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       std::string userDefinedProperty;
       for(iter = attrMap.begin();iter!=attrMap.end();iter++){
          const std::string& name = iter->first;
-         if (name == "name") continue;
+         if (name == ROOT::TMetaUtils::propNames::name) continue;
          const std::string& value = iter->second;
-         userDefinedProperty=name+ROOT::TMetaUtils::PropertyNameValSeparator+value;
+         userDefinedProperty=name+ROOT::TMetaUtils::propNames::separator+value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
          CXXRD.addAttr(new (C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
       }
@@ -2160,7 +2160,8 @@ static bool InjectModuleUtilHeader(const char* argv0,
 //______________________________________________________________________________
 static int GenerateModule(TModuleGenerator& modGen,
                           clang::CompilerInstance* CI,
-                          const std::string &currentDirectory,
+                          const std::string& currentDirectory,
+                          const std::string& fwdDeclnArgsToKeepString,
                           std::ostream& dictStream,
                           bool inlineInputHeader)
 {
@@ -2171,13 +2172,10 @@ static int GenerateModule(TModuleGenerator& modGen,
    // If not, full blown procedure is followed and the the pcm module is created
    // Returns != 0 on error.
 
-   if (inlineInputHeader){
-      modGen.WriteRegistrationSource(dictStream,true);
-      return 0;
-   }
 
+   modGen.WriteRegistrationSource(dictStream,inlineInputHeader, fwdDeclnArgsToKeepString);
 
-   modGen.WriteRegistrationSource(dictStream);
+   if (inlineInputHeader) return 0;
 
    if (!modGen.IsPCH()) {
       clang::HeaderSearch& HS = CI->getPreprocessor().getHeaderSearchInfo();
@@ -2753,7 +2751,7 @@ int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
 int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
                               cling::Interpreter& interpreter,
                               std::string& definitionStr,
-                              const clang::RecordDecl* definition)
+                              const clang::RecordDecl* definition = NULL)
 {
 
    // Operate on the template declaration in order to get its forward declaration
@@ -3225,6 +3223,28 @@ void CheckForMinusW(const char* arg,
 }
 
 //______________________________________________________________________________
+std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
+                                 cling::Interpreter& interp)
+{
+   std::string fwdDecl;
+   std::string initStr("{");   
+   auto& fwdDeclnArgsToSkipColl = normCtxt.GetTemplNargsToKeepMap();
+   for (auto& strigNargsToKeepPair : fwdDeclnArgsToSkipColl){
+      ExtractTemplateDefinition(*strigNargsToKeepPair.first,
+                                interp,
+                                fwdDecl);
+      initStr+="{\""+
+               fwdDecl+";\", "
+               +std::to_string(strigNargsToKeepPair.second)
+               +"},";
+   }
+   if (!fwdDeclnArgsToSkipColl.empty())
+      initStr.pop_back();
+   initStr+="}";      
+   return initStr;
+}   
+
+//______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
               bool isDeep=false,
@@ -3661,8 +3681,10 @@ int RootCling(int argc,
    string incCurDir = "-I";
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
-
-   TModuleGenerator modGen(interp.getCI(), sharedLibraryPathName.c_str());
+      
+   TModuleGenerator modGen(interp.getCI(), 
+                           sharedLibraryPathName.c_str());
+   
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
    
    // Add the diagnostic pragmas distilled from the -Wno-xyz
@@ -3931,12 +3953,18 @@ int RootCling(int argc,
    }
 
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
-
    
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
-   if (!ignoreExistingDict)
-      GenerateModule(modGen, CI, currentDirectory, dictStream, inlineInputHeader);
+   if (!ignoreExistingDict){
+      std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
+      GenerateModule(modGen, 
+                     CI, 
+                     currentDirectory, 
+                     fwdDeclnArgsToKeepString, 
+                     dictStream, 
+                     inlineInputHeader);
+   }
 
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";

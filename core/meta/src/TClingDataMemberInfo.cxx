@@ -587,7 +587,7 @@ const char *TClingDataMemberInfo::Title()
    for (Decl::attr_iterator attrIt = decl->attr_begin();
         attrIt!=decl->attr_end() && !titleFound ;++attrIt){      
       if (0 == ROOT::TMetaUtils::extractAttrString(*attrIt, attribute_s) &&
-          attribute_s.find(ROOT::TMetaUtils::PropertyNameValSeparator) == std::string::npos){
+          attribute_s.find(ROOT::TMetaUtils::propNames::separator) == std::string::npos){
          fTitle = attribute_s;
          titleFound=true;
       }        

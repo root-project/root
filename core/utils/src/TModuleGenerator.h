@@ -22,6 +22,7 @@
 #include <sstream>
 #include <fstream>
 #include <string>
+#include <map>
 #include <vector>
 
 namespace clang {
@@ -57,7 +58,9 @@ public:
 
    const std::vector<std::string>& GetHeaders() const { return fHeaders; }
 
-   void WriteRegistrationSource(std::ostream& out, bool inlineHeader=false) const;
+   void WriteRegistrationSource(std::ostream& out, 
+                                bool inlineHeader,
+                                const std::string& fwdDeclnArgsToKeepString) const;
    void WriteContentHeader(std::ostream& out) const;
    void WriteUmbrellaHeader(std::ostream& out) const;
 

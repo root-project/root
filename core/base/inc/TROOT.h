@@ -59,9 +59,9 @@ class TListOfFunctions;
 class TListOfFunctionTemplates;
 class TFunctionTemplate;
 
-
-
 R__EXTERN TVirtualMutex *gROOTMutex;
+
+typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
 namespace ROOT {
    class TROOTAllocator;
@@ -270,7 +270,8 @@ public:
                                     const char** allHeaders,
                                     const char** includePaths,
                                     const char* payLoadCode,
-                                    void (*triggerFunc)() );
+                                    void (*triggerFunc)(),
+                                    const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
