@@ -29,19 +29,23 @@
 
 @implementation RunStopper
 
-//We attach this delegate only once, when trying to initialize NSApplication (by calling its -run method).
+//We attach this delegate only once, when trying to initialize
+//NSApplication (by calling its -run method).
 //______________________________________________________________________________
 - (void) stopRun
 {
    [NSApp stop : nil];
    //This is not enough to stop, from docs:
-   //This method notifies the application that you want to exit the current run loop as soon as it finishes processing the current NSEvent object.
-   //This method does not forcibly exit the current run loop. Instead it sets a flag that the application checks only after it finishes dispatching an actual event object.
+   //This method notifies the application that you want to exit the current run loop
+   //as soon as it finishes processing the current NSEvent object.
+   //This method does not forcibly exit the current run loop. Instead it sets a flag
+   //that the application checks only after it finishes dispatching an actual event object.
 
 
    //I'm sending a fake event, to stop.
-   NSEvent* stopEvent = [NSEvent otherEventWithType: NSApplicationDefined location: NSMakePoint(0,0) modifierFlags: 0 timestamp: 0.0
-                                 windowNumber: 0 context: nil subtype: 0 data1: 0 data2: 0];
+   NSEvent* stopEvent = [NSEvent otherEventWithType : NSApplicationDefined
+                         location : NSMakePoint(0., 0.) modifierFlags : 0 timestamp : 0.
+                                 windowNumber : 0 context : nil subtype: 0 data1 : 0 data2 : 0];
    [NSApp postEvent : stopEvent atStart : true];
 }
 
@@ -72,7 +76,13 @@ private:
 public:
    TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
    TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
-   TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));} return *this; }
+   TFdSet &operator=(const TFdSet &rhs)
+   {
+      if (this != &rhs) {
+         memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));
+      }
+      return *this;
+   }
    void   Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
    void   Set(Int_t n)
    {
@@ -150,8 +160,10 @@ void TMacOSXSystem_ReadCallback(CFFileDescriptorRef fdref, CFOptionFlags /*callB
    CFFileDescriptorInvalidate(fdref);
    CFRelease(fdref);
 
-   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                       timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : nativeFD data2 : 0];
+   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined
+                       location : NSMakePoint(0, 0) modifierFlags : 0
+                       timestamp: 0. windowNumber : 0 context : nil
+                       subtype : 0 data1 : nativeFD data2 : 0];
    [NSApp postEvent : fdEvent atStart : NO];
 }
 
@@ -168,8 +180,10 @@ void TMacOSXSystem_WriteCallback(CFFileDescriptorRef fdref, CFOptionFlags /*call
    CFFileDescriptorInvalidate(fdref);
    CFRelease(fdref);
 
-   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined location : NSMakePoint(0, 0) modifierFlags : 0
-                       timestamp: 0. windowNumber : 0 context : nil subtype : 0 data1 : nativeFD data2 : 0];
+   NSEvent *fdEvent = [NSEvent otherEventWithType : NSApplicationDefined
+                       location : NSMakePoint(0, 0) modifierFlags : 0
+                       timestamp: 0. windowNumber : 0 context : nil
+                       subtype : 0 data1 : nativeFD data2 : 0];
    [NSApp postEvent : fdEvent atStart : NO];
 }
 
@@ -250,7 +264,9 @@ void MacOSXSystem::CloseFileDescriptors()
    //While Core Foundation is not Cocoa, it still should not be used if we are not initializing Cocoa.
    assert(fCocoaInitialized == true && "CloseFileDescriptors, Cocoa was not initialized");
 
-   for (std::set<CFFileDescriptorRef>::iterator fdIter = fCFFileDescriptors.begin(), end = fCFFileDescriptors.end(); fdIter != end; ++fdIter) {
+   std::set<CFFileDescriptorRef>::iterator fdIter = fCFFileDescriptors.begin(), end = fCFFileDescriptors.end();
+
+   for (; fdIter != end; ++fdIter) {
       CFFileDescriptorInvalidate(*fdIter);
       CFRelease(*fdIter);
    }   
@@ -267,7 +283,8 @@ void MacOSXSystem::SetFileDescriptor(int fd, DescriptorType fdType)
    assert(fd != -1 && "SetFileDescriptor, invalid file descriptor");
 
    const bool read = fdType == kDTRead;
-   CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd, false, read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
+   CFFileDescriptorRef fdref = CFFileDescriptorCreate(kCFAllocatorDefault, fd, false,
+                               read ? TMacOSXSystem_ReadCallback : TMacOSXSystem_WriteCallback, 0);
 
    if (!fdref)
       throw std::runtime_error("MacOSXSystem::SetFileDescriptors: CFFileDescriptorCreate failed");
@@ -312,7 +329,7 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
 {
    //Here I try to emulate TUnixSystem's behavior, which is quite twisted.
    //I'm not even sure, I need all this code :)
-
+   
    if (fFirstDispatch) {
       if (!fCocoaInitialized && !gROOT->IsBatch())
          InitializeCocoa();
@@ -423,7 +440,8 @@ void TMacOSXSystem::InitializeCocoa()
   
    const ROOT::MacOSX::Util::NSScopeGuard<RunStopper> stopper([[RunStopper alloc] init]);
 
-   [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];//Delay? What it should be?
+   //Delay? What it should be?
+   [stopper.Get() performSelector : @selector(stopRun) withObject : nil afterDelay : 0.05];
    [NSApp run];
    
    fCocoaInitialized = true;
@@ -435,7 +453,8 @@ bool TMacOSXSystem::ProcessPendingEvents()
    assert(fCocoaInitialized == true && "ProcessPendingEvents, called while Cocoa was not initialized");
 
    bool processed = false;
-   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
+   while (NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask
+                            untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]) {
       [NSApp sendEvent : event];
       processed = true;
    }
@@ -464,7 +483,8 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
    fWriteready->Zero();
    fNfd = 0;
 
-   NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
+   NSEvent *event = [NSApp nextEventMatchingMask : NSAnyEventMask
+                     untilDate : untilDate inMode : NSDefaultRunLoopMode dequeue : YES];
    if (event) {
       if (event.type == NSApplicationDefined)
          ProcessApplicationDefinedEvent(event);
@@ -472,7 +492,9 @@ void TMacOSXSystem::WaitEvents(Long_t nextto)
          [NSApp sendEvent : event];
    }
 
-   while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES])) {
+   while ((event = [NSApp nextEventMatchingMask : NSAnyEventMask
+          untilDate : nil inMode : NSDefaultRunLoopMode dequeue : YES]))
+   {
       if (event.type == NSApplicationDefined)
          ProcessApplicationDefinedEvent(event);
       else
@@ -511,11 +533,14 @@ void TMacOSXSystem::ProcessApplicationDefinedEvent(void *e)
    //Right now I have app. defined events only
    //for file descriptors. This can change in a future.
    
-   assert(fCocoaInitialized == true && "ProcessApplicationDefinedEvent, called while Cocoa was not initialized");
+   assert(fCocoaInitialized == true &&
+          "ProcessApplicationDefinedEvent, called while Cocoa was not initialized");
    
    NSEvent *event = (NSEvent *)e;
-   assert(event != nil && "ProcessApplicationDefinedEvent, event parameter is nil");
-   assert(event.type == NSApplicationDefined && "ProcessApplicationDefinedEvent, event parameter has wrong type");
+   assert(event != nil &&
+          "ProcessApplicationDefinedEvent, event parameter is nil");
+   assert(event.type == NSApplicationDefined &&
+          "ProcessApplicationDefinedEvent, event parameter has wrong type");
 
    bool descriptorFound = false;
    
