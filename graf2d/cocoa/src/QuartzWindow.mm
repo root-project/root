@@ -103,8 +103,10 @@ void GetRootWindowAttributes(WindowAttributes_t *attr)
    
    *attr = WindowAttributes_t();
 
-   TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(gCocoa != 0 && "GetRootWindowAttributes, gVirtualX is either null or has a wrong type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) &&
+          "GetRootWindowAttributes, gVirtualX is either null or has a wrong type");
+
+   TGCocoa * const gCocoa = static_cast<TGCocoa *>(gVirtualX);
    
    const Rectangle &frame = gCocoa->GetDisplayGeometry();
    
@@ -163,9 +165,10 @@ int GlobalYCocoaToROOT(CGFloat yCocoa)
    //With Cocoa, some screens can have negative coordinates - to the left ro down to the primary
    //screen (whatever it means). With X11 (XQuartz) though it's always 0,0.
 
-   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(gCocoa != 0 && "GlobalYCocoaToROOT, gVirtualX is either nul or has a wrong type");
-   const Rectangle frame = gCocoa->GetDisplayGeometry();
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "GlobalYCocoaToROOT, gVirtualX is either nul or has a wrong type");
+   
+   const Rectangle frame = ((TGCocoa *)gVirtualX)->GetDisplayGeometry();
    
    return int(frame.fHeight - (yCocoa - frame.fY));
 }
@@ -173,10 +176,9 @@ int GlobalYCocoaToROOT(CGFloat yCocoa)
 //______________________________________________________________________________
 int GlobalXCocoaToROOT(CGFloat xCocoa)
 {
-   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(gCocoa != 0 && "GlobalXCocoaToROOT, gVirtualX is either nul or has a wrong type");
-   const Rectangle frame = gCocoa->GetDisplayGeometry();
-   
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "GlobalXCocoaToROOT, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = ((TGCocoa *)gVirtualX)->GetDisplayGeometry();
    //With X11 coordinate space always starts from 0, 0
    return int(xCocoa - frame.fX);
 }
@@ -184,9 +186,9 @@ int GlobalXCocoaToROOT(CGFloat xCocoa)
 //______________________________________________________________________________
 int GlobalYROOTToCocoa(CGFloat yROOT)
 {
-   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(gCocoa != 0 && "GlobalYROOTToCocoa, gVirtualX is either nul or has a wrong type");
-   const Rectangle frame = gCocoa->GetDisplayGeometry();
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "GlobalYROOTToCocoa, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = ((TGCocoa *)gVirtualX)->GetDisplayGeometry();
    
    return int(frame.fY + (frame.fHeight - yROOT));
 }
@@ -194,10 +196,9 @@ int GlobalYROOTToCocoa(CGFloat yROOT)
 //______________________________________________________________________________
 int GlobalXROOTToCocoa(CGFloat xROOT)
 {
-   TGCocoa * gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(gCocoa != 0 && "GlobalXROOTToCocoa, gVirtualX is either nul or has a wrong type");
-   const Rectangle frame = gCocoa->GetDisplayGeometry();
-   
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "GlobalXROOTToCocoa, gVirtualX is either nul or has a wrong type");
+   const Rectangle frame = ((TGCocoa *)gVirtualX)->GetDisplayGeometry();
    //With X11 coordinate space always starts from 0, 0
    return int(frame.fX + xROOT);
 }
@@ -206,7 +207,7 @@ int GlobalXROOTToCocoa(CGFloat xROOT)
 int LocalYCocoaToROOT(NSView<X11Window> *parentView, CGFloat yCocoa)
 {
    assert(parentView != nil && "LocalYCocoaToROOT, parent view is nil");
-   
+
    return int(parentView.frame.size.height - yCocoa);
 }
 
@@ -1432,13 +1433,14 @@ void print_mask_info(ULong_t mask)
       if (viewPoint.y <= 0 && windowPoint.y >= 0)
          generateFakeRelease = true;
 
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "-sendEvent:, gVirtualX is either null or not of TGCocoa type");
-      
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+             "-sendEvent:, gVirtualX is either null or not of TGCocoa type");
+
+      TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       if (vx->GetEventTranslator()->HasPointerGrab() && generateFakeRelease) {
-         vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent,
-                                                              theEvent.type == NSLeftMouseDown ?
-                                                              kButton1 : kButton3);
+          vx->GetEventTranslator()->GenerateButtonReleaseEvent(fContentView, theEvent,
+                                                               theEvent.type == NSLeftMouseDown ?
+                                                               kButton1 : kButton3);
          //Yes, ignore this event completely (this means, you are not able to immediately start
          //resizing a window, if some popup is open. Actually, this is more or less
          //the same as with XQuartz and X11 version.
@@ -1474,10 +1476,9 @@ void print_mask_info(ULong_t mask)
    closeEvent.fHandle = TGCocoa::fgDeleteWindowAtom;
    closeEvent.fUser[0] = TGCocoa::fgDeleteWindowAtom;
    //Place it into the queue.
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-windowShouldClose:, gVirtualX is either null or has a type different from TGCocoa");
-   vx->SendEvent(fContentView.fID, &closeEvent);
+   ((TGCocoa *)gVirtualX)->SendEvent(fContentView.fID, &closeEvent);
 
    //Do not let AppKit to close a window,
    //ROOT will do.
@@ -1494,8 +1495,9 @@ void print_mask_info(ULong_t mask)
    if (!fContentView.fOverrideRedirect) {
       fHasFocus = YES;
       //
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "-windowDidBecomeKey:, gVirtualX is null or not of TGCocoa type");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+             "-windowDidBecomeKey:, gVirtualX is null or not of TGCocoa type");
+      TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       vx->GetEventTranslator()->GenerateFocusChangeEvent(self.fContentView);
    }
 }
@@ -1656,6 +1658,7 @@ void print_mask_info(ULong_t mask)
 @synthesize fOverrideRedirect;
 //SetWindowAttributes_t/WindowAttributes_t
 /////////////////////
+@synthesize fHasFocus;
 @synthesize fParentView;
 
 @synthesize fPassiveGrabButton;
@@ -2184,12 +2187,21 @@ void print_mask_info(ULong_t mask)
 //______________________________________________________________________________
 - (BOOL) fHasFocus
 {
+   //With the latest update clang became a bit more stupid.
+   //Let's write a stupid useless cargo cult code
+   //to make IT SHUT THE F... UP.
+   (void)fHasFocus;
    return NO;
 }
 
 //______________________________________________________________________________
-- (void) setFHasFocus
+- (void) setFHasFocus : (BOOL) focus
 {
+#pragma unused(focus)
+   //With the latest update clang became a bit more stupid.
+   //Let's write a stupid useless cargo cult code
+   //to make IT SHUT THE F... UP.
+   (void)fHasFocus;
 }
 
 //______________________________________________________________________________
@@ -2424,9 +2436,9 @@ void print_mask_info(ULong_t mask)
 {
    if (self.fMapState == kIsViewable || fIsOverlapped == YES) {
       if (fEventMask & kStructureNotifyMask) {
-         TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-         assert(vx &&
+         assert(dynamic_cast<TGCocoa *>(gVirtualX) &&
                 "-configureNotifyTree, gVirtualX is either null or has type different from TGCocoa");
+         TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
          vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
       }
 
@@ -2587,8 +2599,9 @@ void print_mask_info(ULong_t mask)
    [super setFrameSize : newSize];
    
    if ((fEventMask & kStructureNotifyMask) && (self.fMapState == kIsViewable || fIsOverlapped == YES)) {
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+             "setFrameSize:, gVirtualX is either null or has a type, different from TGCocoa");
+      TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       vx->GetEventTranslator()->GenerateConfigureNotifyEvent(self, self.frame);
    }
 
@@ -2601,10 +2614,10 @@ void print_mask_info(ULong_t mask)
 - (void) mouseDown : (NSEvent *) theEvent
 {
    assert(fID != 0 && "-mouseDown:, fID is 0");
-   
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-mouseDown:, gVirtualX is either null or has a type, different from TGCocoa");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton1);
 }
 
@@ -2613,10 +2626,11 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-scrollWheel:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-scrollWheel:, gVirtualX is either null or has a type, different from TGCocoa");
 
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    const CGFloat deltaY = [theEvent deltaY];
    if (deltaY < 0) {
       vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton5);
@@ -2656,9 +2670,9 @@ void print_mask_info(ULong_t mask)
    [self printViewInformation];
 #endif
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-rightMouseDown:, gVirtualX is either null or has type different from TGCocoa");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton3);
 }
 
@@ -2672,9 +2686,9 @@ void print_mask_info(ULong_t mask)
    if ([theEvent buttonNumber] == 2) {//this '2' will correspond to '4' in pressedMouseButtons.
       //I do not care about mouse buttons after left/right/wheel - ROOT does not have
       //any code for this.
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 &&
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
              "-otherMouseDown:, gVirtualX is either null or has type different from TGCocoa");
+      TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       vx->GetEventTranslator()->GenerateButtonPressEvent(self, theEvent, kButton2);
    }
 }
@@ -2684,8 +2698,9 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-mouseUp:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx && "-mouseUp:, gVirtualX is either null or has type different from TGCocoa");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) &&
+          "-mouseUp:, gVirtualX is either null or has type different from TGCocoa");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton1);
 }
 
@@ -2695,9 +2710,10 @@ void print_mask_info(ULong_t mask)
 
    assert(fID != 0 && "-rightMouseUp:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-rightMouseUp:, gVirtualX is either null or has type different from TGCocoa");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton3);
 }
 
@@ -2707,9 +2723,9 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "-otherMouseUp:, fID is 0");
    
    //Here I assume it's always kButton2.
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 &&
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
           "-otherMouseUp:, gVirtualX is either null or has type different from TGCocoa");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateButtonReleaseEvent(self, theEvent, kButton2);
 }
 
@@ -2717,10 +2733,10 @@ void print_mask_info(ULong_t mask)
 - (void) mouseEntered : (NSEvent *) theEvent
 {
    assert(fID != 0 && "-mouseEntered:, fID is 0");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-mouseEntered:, gVirtualX is null or not of TGCocoa type");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-mouseEntered:, gVirtualX is null or not of TGCocoa type");
-
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateCrossingEvent(theEvent);
 }
 
@@ -2729,9 +2745,10 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-mouseExited:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-mouseExited:, gVirtualX is null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-mouseExited:, gVirtualX is null or not of TGCocoa type");
 
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateCrossingEvent(theEvent);
 }
 
@@ -2743,9 +2760,10 @@ void print_mask_info(ULong_t mask)
    if (fParentView)//Suppress events in all views, except the top-level one.
       return;      //TODO: check, that it does not create additional problems.
 
-   TGCocoa *vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-mouseMoved:, gVirtualX is null or not of TGCocoa type");
-   
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-mouseMoved:, gVirtualX is null or not of TGCocoa type");
+
+   TGCocoa *vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
 }
 
@@ -2765,9 +2783,10 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-rightMouseDragged:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-rightMouseDragged:, gVirtualX is null or not of TGCocoa type");
-   
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-rightMouseDragged:, gVirtualX is null or not of TGCocoa type");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
 }
 
@@ -2777,8 +2796,9 @@ void print_mask_info(ULong_t mask)
    assert(fID != 0 && "-otherMouseDragged:, fID is 0");
 
    if ([theEvent buttonNumber] == 2) {
-      TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(vx != 0 && "-otherMouseDragged:, gVirtualX is null or not of TGCocoa type");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+             "-otherMouseDragged:, gVirtualX is null or not of TGCocoa type");
+      TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
       vx->GetEventTranslator()->GeneratePointerMotionEvent(theEvent);
    }
 }
@@ -2788,13 +2808,14 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-keyDown:, fID is 0");
   
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-keyDown:, gVirtualX is null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-keyDown:, gVirtualX is null or not of TGCocoa type");
    
    NSView<X11Window> *eventView = self;
    if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
       eventView = pointerView;
 
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->GetEventTranslator()->GenerateKeyPressEvent(eventView, theEvent);
 }
 
@@ -2803,9 +2824,10 @@ void print_mask_info(ULong_t mask)
 {
    assert(fID != 0 && "-keyUp:, fID is 0");
 
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "-keyUp:, gVirtualX is null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "-keyUp:, gVirtualX is null or not of TGCocoa type");
 
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    NSView<X11Window> *eventView = self;
    if (NSView<X11Window> *pointerView = X11::FindViewUnderPointer())
       eventView = pointerView;

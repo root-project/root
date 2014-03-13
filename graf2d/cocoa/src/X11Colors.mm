@@ -59,7 +59,8 @@ bool GetHex(const TString &rgb, Ssiz_t first, Ssiz_t len, unsigned &component)
    for (; first < last; ++first) {
       unsigned val = 0;
       if (!HexCharToInt(rgb[first], val)) {
-         ::Error("ROOT::MacOSX::X11::GetGex", "Bad symbol in color component, hex digit expected, got %c", rgb[first]);
+         ::Error("ROOT::MacOSX::X11::GetGex",
+                  "Bad symbol in color component, hex digit expected, got %c", rgb[first]);
          return false;
       } else
          component = (component << 4) | val;
@@ -90,7 +91,8 @@ bool ColorParser::ParseRGBTriplet(const TString &rgb, ColorStruct_t &color)const
    const Ssiz_t len = rgb.Length();
    if (len < 4 || len > 13 || (len - 1) % 3) {
       //Bad format.
-      ::Error("ROOT::MacOSX::X11::ParseRGBTriplet", "Bad color name or rgb triplet %s", rgb.Data());
+      ::Error("ROOT::MacOSX::X11::ParseRGBTriplet",
+              "Bad color name or rgb triplet %s", rgb.Data());
       return false;
    }
 
@@ -99,7 +101,8 @@ bool ColorParser::ParseRGBTriplet(const TString &rgb, ColorStruct_t &color)const
 
    const Ssiz_t compLen = (len - 1) / 3;
    unsigned r = 0, g = 0, b = 0;
-   if (GetHex(rgb, 1, compLen, r) && GetHex(rgb, 1 + compLen, compLen, g) && GetHex(rgb, 1 + compLen * 2, compLen, b))
+   if (GetHex(rgb, 1, compLen, r) && GetHex(rgb, 1 + compLen, compLen, g) &&
+       GetHex(rgb, 1 + compLen * 2, compLen, b))
    {
       //Problem with bitPad: ROOT/X11's "pixel" uses 0xXX for component
       //(after all, pixel is 4 bytes in most cases),
@@ -132,7 +135,8 @@ bool ColorParser::LookupColorByName(const TString &colorName, ColorStruct_t &col
 
       return true;
    } else {
-      ::Error("ROOT::MacOSX::X11::ColorParser::LookupColorByName", "Could not find color with name %s", colorName.Data());
+      ::Error("ROOT::MacOSX::X11::ColorParser::LookupColorByName",
+              "Could not find color with name %s", colorName.Data());
       return false;
    }
 }

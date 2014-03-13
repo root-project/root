@@ -42,7 +42,8 @@ void ROOT_QuartzImage_ReleaseBytePointer(void *, const void *)
 }
 
 //______________________________________________________________________________
-std::size_t ROOT_QuartzImage_GetBytesAtPosition(void* info, void* buffer, off_t position, std::size_t count)
+std::size_t ROOT_QuartzImage_GetBytesAtPosition(void *info, void *buffer, off_t position,
+                                                std::size_t count)
 {
     std::copy((char *)info + position, (char *)info + position + count, (char*)buffer);
     return count;
@@ -118,13 +119,16 @@ namespace Quartz = ROOT::Quartz;
    
    Util::ScopedArray<unsigned char> arrayGuard(memory);
 
+   //TODO: device RGB? should it be generic?
    const Util::CFScopeGuard<CGColorSpaceRef> colorSpace(CGColorSpaceCreateDeviceRGB());//[1]
    if (!colorSpace.Get()) {
       NSLog(@"QuartzPixmap: -resizeW:H:, CGColorSpaceCreateDeviceRGB failed");
       return NO;
    }
 
-   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, scaledW, scaledH, 8, scaledW * 4, colorSpace.Get(), kCGImageAlphaPremultipliedLast, NULL, 0));
+   Util::CFScopeGuard<CGContextRef> ctx(CGBitmapContextCreateWithData(memory, scaledW, scaledH, 8,
+                                                                      scaledW * 4, colorSpace.Get(),
+                                                                      kCGImageAlphaPremultipliedLast, NULL, 0));
    if (!ctx.Get()) {
       NSLog(@"QuartzPixmap: -resizeW:H:, CGBitmapContextCreateWithData failed");
       return NO;
@@ -186,7 +190,8 @@ namespace Quartz = ROOT::Quartz;
    const unsigned scaledH = fHeight * fScaleFactor;
    
    
-   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData, scaledW * scaledH * 4, &providerCallbacks));
+   const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fData,
+                                                        scaledW * scaledH * 4, &providerCallbacks));
    if (!provider.Get()) {
       NSLog(@"QuartzPixmap: -pixmapToImage, CGDataProviderCreateDirect failed");
       return 0;
@@ -201,7 +206,10 @@ namespace Quartz = ROOT::Quartz;
       
    //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
    //all values hardcoded for TGCocoa.
-   CGImageRef image = CGImageCreate(cropArea.fWidth * fScaleFactor, cropArea.fHeight * fScaleFactor, 8, 32, fWidth * 4 * fScaleFactor, colorSpace.Get(), kCGImageAlphaPremultipliedLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+   CGImageRef image = CGImageCreate(cropArea.fWidth * fScaleFactor, cropArea.fHeight * fScaleFactor,
+                                    8, 32, fWidth * 4 * fScaleFactor, colorSpace.Get(),
+                                    kCGImageAlphaPremultipliedLast, provider.Get(), 0,
+                                    false, kCGRenderingIntentDefault);
 
    return image;
 }
@@ -243,7 +251,8 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copyImage : (QuartzImage *) srcImage area : (X11::Rectangle) area
+          withMask : (QuartzImage *) mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    using namespace ROOT::MacOSX::X11;
 
@@ -252,7 +261,8 @@ namespace Quartz = ROOT::Quartz;
    assert(srcImage.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint:, srcImage.fImage is nil");
 
    if (!AdjustCropArea(srcImage, area)) {
-      NSLog(@"QuartzPixmap: -copyImage:srcImage:area:withMask:clipOrigin:toPoint, srcRect and copyRect do not intersect");
+      NSLog(@"QuartzPixmap: -copyImage:srcImage:area:withMask:clipOrigin"
+             ":toPoint, srcRect and copyRect do not intersect");
       return;
    }
    
@@ -274,12 +284,14 @@ namespace Quartz = ROOT::Quartz;
    if (mask) {
       assert(mask.fImage != nil && "copyImage:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
       assert(CGImageIsMask(mask.fImage) && "copyImage:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
-      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
+      //TODO: fix the possible overflow? (though, who can have such images???)
+      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(fContext, clipRect, mask.fImage);
    }
 
-   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
+   //TODO: fix the possible overflow? (though, who can have such images???)
+   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, subImage);
 
@@ -288,14 +300,17 @@ namespace Quartz = ROOT::Quartz;
 }
 
 //______________________________________________________________________________
-- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
+- (void) copyPixmap : (QuartzPixmap *) srcPixmap area : (X11::Rectangle) area
+           withMask : (QuartzImage *)mask clipOrigin : (X11::Point) clipXY toPoint : (X11::Point) dstPoint
 {
    using namespace ROOT::MacOSX::X11;
 
-   assert(srcPixmap != nil && "copyPixmap:area:withMask:clipOrigin:toPoint, srcPixmap parameter is nil");
+   assert(srcPixmap != nil &&
+          "copyPixmap:area:withMask:clipOrigin:toPoint, srcPixmap parameter is nil");
 
    if (!AdjustCropArea(srcPixmap, area)) {
-      NSLog(@"QuartzPixmap: -copyPixmap:area:withMask:clipOrigin:toPoint, srcRect and copyRect do not intersect");
+      NSLog(@"QuartzPixmap: -copyPixmap:area:withMask:clipOrigin:"
+             "toPoint, srcRect and copyRect do not intersect");
       return;
    }
    
@@ -306,22 +321,28 @@ namespace Quartz = ROOT::Quartz;
    const Quartz::CGStateGuard stateGuard(fContext);
    
    if (mask) {
-      assert(mask.fImage != nil && "copyPixmap:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
-      assert(CGImageIsMask(mask.fImage) && "copyPixmap:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
-      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
+      assert(mask.fImage != nil &&
+             "copyPixmap:area:withMask:clipOrigin:toPoint, mask is not nil, but mask.fImage is nil");
+      assert(CGImageIsMask(mask.fImage) &&
+             "copyPixmap:area:withMask:clipOrigin:toPoint, mask.fImage is not a mask");
+      //TODO: fix the possible overflow? (though, who can have such images???)
+      clipXY.fY = LocalYROOTToCocoa(self, clipXY.fY + mask.fHeight);
       const CGRect clipRect = CGRectMake(clipXY.fX, clipXY.fY, mask.fWidth, mask.fHeight);
       CGContextClipToMask(fContext, clipRect, mask.fImage);
    }
    
-   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);//TODO: fix the possible overflow? (though, who can have such images???)
+   //TODO: fix the possible overflow? (though, who can have such images???)
+   dstPoint.fY = LocalYROOTToCocoa(self, dstPoint.fY + area.fHeight);
    const CGRect imageRect = CGRectMake(dstPoint.fX, dstPoint.fY, area.fWidth, area.fHeight);
    CGContextDrawImage(fContext, imageRect, image.Get());
 }
 
 //______________________________________________________________________________
-- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area withMask : (QuartzImage *)mask clipOrigin : (X11::Point) origin toPoint : (X11::Point) dstPoint
+- (void) copy : (NSObject<X11Drawable> *) src area : (X11::Rectangle) area
+     withMask : (QuartzImage *)mask clipOrigin : (X11::Point) origin toPoint : (X11::Point) dstPoint
 {
-   assert(area.fWidth && area.fHeight && "copy:area:widthMask:clipOrigin:toPoint, empty area to copy");
+   assert(area.fWidth && area.fHeight &&
+          "copy:area:widthMask:clipOrigin:toPoint, empty area to copy");
 
    if ([src isKindOfClass : [QuartzImage class]]) {
       [self copyImage : (QuartzImage *)src area : area withMask : mask clipOrigin : origin toPoint : dstPoint];
@@ -361,7 +382,8 @@ namespace Quartz = ROOT::Quartz;
          return buffer;//empty buffer.
       }
       
-      [scaledPixmap.Get() copy : self area : X11::Rectangle(0, 0, fWidth, fHeight) withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
+      [scaledPixmap.Get() copy : self area : X11::Rectangle(0, 0, fWidth, fHeight)
+                      withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
    }
 
    unsigned char *dstPixel = buffer;
@@ -493,7 +515,8 @@ namespace Quartz = ROOT::Quartz;
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
 
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height * 4, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef>
+         provider(CGDataProviderCreateDirect(dataCopy, width * height * 4, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initWithW:H:data: CGDataProviderCreateDirect failed");
          return nil;
@@ -508,7 +531,9 @@ namespace Quartz = ROOT::Quartz;
 
       //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
       //all values hardcoded for TGCocoa::CreatePixmapFromData.
-      fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+      fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(),
+                             kCGImageAlphaLast, provider.Get(), 0, false,
+                             kCGRenderingIntentDefault);
       
       if (!fImage) {
          NSLog(@"QuartzImage: -initWithW:H:data: CGImageCreate failed");
@@ -553,13 +578,15 @@ namespace Quartz = ROOT::Quartz;
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
                                                                
                                                                
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy,
+                                                           width * height, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask: CGDataProviderCreateDirect failed");
          return nil;
       }
 
-      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
+      //0 -> decode, false -> shouldInterpolate.
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);
       if (!fImage) {
          NSLog(@"QuartzImage: -initMaskWithW:H:bitmapMask:, CGImageMaskCreate failed");
          return nil;
@@ -599,13 +626,15 @@ namespace Quartz = ROOT::Quartz;
                                                                ROOT_QuartzImage_ReleaseBytePointer, 
                                                                ROOT_QuartzImage_GetBytesAtPosition, 0};
                                                                
-      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData, width * height, &providerCallbacks));
+      const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(fImageData,
+                                                           width * height, &providerCallbacks));
       if (!provider.Get()) {
          NSLog(@"QuartzImage: -initMaskWithW:H: CGDataProviderCreateDirect failed");
          return nil;
       }
 
-      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
+      //0 -> decode, false -> shouldInterpolate.
+      fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);
       if (!fImage) {
          NSLog(@"QuartzImage: -initMaskWithW:H:, CGImageMaskCreate failed");
          return nil;
@@ -681,13 +710,15 @@ namespace Quartz = ROOT::Quartz;
       if (bpp == 1) {
          fIsStippleMask = YES;
 
-         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height, &providerCallbacks));
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy,
+                                                              width * height, &providerCallbacks));
          if (!provider.Get()) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
             return nil;
          }
 
-         fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);//null -> decode, false -> shouldInterpolate.
+         //0 -> decode, false -> shouldInterpolate.
+         fImage = CGImageMaskCreate(width, height, 8, 8, width, provider.Get(), 0, false);
          if (!fImage) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGImageMaskCreate failed");
             return nil;
@@ -695,7 +726,8 @@ namespace Quartz = ROOT::Quartz;
       } else {
          fIsStippleMask = NO;
       
-         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy, width * height * 4, &providerCallbacks));
+         const Util::CFScopeGuard<CGDataProviderRef> provider(CGDataProviderCreateDirect(dataCopy,
+                                                              width * height * 4, &providerCallbacks));
          if (!provider.Get()) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGDataProviderCreateDirect failed");
             return nil;
@@ -709,13 +741,14 @@ namespace Quartz = ROOT::Quartz;
 
          //8 bits per component, 32 bits per pixel, 4 bytes per pixel, kCGImageAlphaLast:
          //all values hardcoded for TGCocoa::CreatePixmapFromData.
-         fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast, provider.Get(), 0, false, kCGRenderingIntentDefault);
+         fImage = CGImageCreate(width, height, 8, 32, width * 4, colorSpace.Get(), kCGImageAlphaLast,
+                                provider.Get(), 0, false, kCGRenderingIntentDefault);
          if (!fImage) {
             NSLog(@"QuartzImage: -initFromImageFlipped:, CGImageCreate failed");
             return nil;
          }
       }
-      
+
       selfGuard.Release();
       arrayGuard.Release();
 
@@ -923,7 +956,8 @@ bool FindOverlap(const range_type &range1, const range_type &range2, range_type 
    }
 
    if (left.first < 0)
-      return right.first < 0 ? FindOverlapSameSigns(left, right, intersection) : FindOverlapDifferentSigns(left, right, intersection);
+      return right.first < 0 ? FindOverlapSameSigns(left, right, intersection) :
+                               FindOverlapDifferentSigns(left, right, intersection);
 
    return FindOverlapSameSigns(left, right, intersection);
 }
@@ -935,11 +969,13 @@ bool AdjustCropArea(const Rectangle &srcRect, Rectangle &cropArea)
 {
    //Find rects intersection.
    range_type xIntersection;
-   if (!FindOverlap(range_type(srcRect.fX, srcRect.fWidth), range_type(cropArea.fX, cropArea.fWidth), xIntersection))
+   if (!FindOverlap(range_type(srcRect.fX, srcRect.fWidth),
+                    range_type(cropArea.fX, cropArea.fWidth), xIntersection))
       return false;
    
    range_type yIntersection;
-   if (!FindOverlap(range_type(srcRect.fY, srcRect.fHeight), range_type(cropArea.fY, cropArea.fHeight), yIntersection))
+   if (!FindOverlap(range_type(srcRect.fY, srcRect.fHeight),
+                    range_type(cropArea.fY, cropArea.fHeight), yIntersection))
       return false;
    
    cropArea.fX = xIntersection.first;
@@ -967,7 +1003,8 @@ bool AdjustCropArea(QuartzImage *srcImage, NSRect &cropArea)
    assert(srcImage.fImage != 0 && "AdjustCropArea, srcImage.fImage is null");
    
    const Rectangle srcRect(0, 0, srcImage.fWidth, srcImage.fHeight);
-   Rectangle dstRect(int(cropArea.origin.x), int(cropArea.origin.y), unsigned(cropArea.size.width), unsigned(cropArea.size.height));
+   Rectangle dstRect(int(cropArea.origin.x), int(cropArea.origin.y),
+                     unsigned(cropArea.size.width), unsigned(cropArea.size.height));
    
    if (AdjustCropArea(srcRect, dstRect)) {
       cropArea.origin.x = dstRect.fX;
@@ -1007,7 +1044,9 @@ bool TestBitmapBit(const unsigned char *bitmap, unsigned w, unsigned i, unsigned
 }
 
 //______________________________________________________________________________
-void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height, ULong_t foregroundPixel, ULong_t backgroundPixel, unsigned depth, unsigned char *imageData)
+void FillPixmapBuffer(const unsigned char *bitmap, unsigned width, unsigned height,
+                      ULong_t foregroundPixel, ULong_t backgroundPixel, unsigned depth,
+                      unsigned char *imageData)
 {
    assert(bitmap != 0 && "FillPixmapBuffer, bitmap parameter is null");
    assert(width != 0 && "FillPixmapBuffer, width parameter is 0");

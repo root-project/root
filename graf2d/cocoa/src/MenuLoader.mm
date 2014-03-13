@@ -10,7 +10,6 @@ namespace MacOSX {
 namespace Details {
 
 //Fill ROOT's menu (standard Apple's menu at the top of desktop).
-//This is a very preliminary version, to be updated/modified.
 
 void PopulateApplicationMenu(NSMenu *submenu);
 void PopulateWindowMenu(NSMenu *submenu);
@@ -59,39 +58,28 @@ void PopulateApplicationMenu(NSMenu *aMenu)
 
 	NSString * const applicationName = @"root";
 	
-	NSMenuItem *menuItem = [aMenu addItemWithTitle:[NSString stringWithFormat : @"%@ %@", NSLocalizedString(@"About", nil), applicationName]
+	NSMenuItem *menuItem = [aMenu addItemWithTitle : [NSString stringWithFormat : @"%@ %@",
+                                          NSLocalizedString(@"About", nil), applicationName]
                            action : @selector(orderFrontStandardAboutPanel:) keyEquivalent : @""];
 	[menuItem setTarget : NSApp];
 	[aMenu addItem : [NSMenuItem separatorItem]];
-	/*
-	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Preferences...", nil) action : nil keyEquivalent : @","];
-	[aMenu addItem : [NSMenuItem separatorItem]];
-	
-	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Services", nil) action : nil keyEquivalent : @""];
-
-
-
-
-	NSMenu * servicesMenu = [[NSMenu alloc] initWithTitle:@"Services"];
-	[aMenu setSubmenu:servicesMenu forItem:menuItem];
-	[NSApp setServicesMenu:servicesMenu];
-	
-	[aMenu addItem:[NSMenuItem separatorItem]];
-	*/
    
-	menuItem = [aMenu addItemWithTitle:[NSString stringWithFormat:@"%@ %@", NSLocalizedString(@"Hide", nil), applicationName] action : @selector(hide:) keyEquivalent : @"h"];
+	menuItem = [aMenu addItemWithTitle : [NSString stringWithFormat : @"%@ %@",
+               NSLocalizedString(@"Hide", nil), applicationName] action : @selector(hide:) keyEquivalent : @"h"];
 	[menuItem setTarget : NSApp];
 	
-	menuItem = [aMenu addItemWithTitle:NSLocalizedString(@"Hide Others", nil) action : @selector(hideOtherApplications:) keyEquivalent : @"h"];
+	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Hide Others", nil)
+               action : @selector(hideOtherApplications:) keyEquivalent : @"h"];
 	[menuItem setKeyEquivalentModifierMask : NSCommandKeyMask | NSAlternateKeyMask];
 	[menuItem setTarget : NSApp];
 	
-	menuItem = [aMenu addItemWithTitle:NSLocalizedString(@"Show All", nil) action : @selector(unhideAllApplications:) keyEquivalent : @""];
+	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Show All", nil)
+               action : @selector(unhideAllApplications:) keyEquivalent : @""];
 	[menuItem setTarget : NSApp];
 	
 	[aMenu addItem : [NSMenuItem separatorItem]];
-   //TODO: ROOTApplicationDelegate should implement the corresponding method to quit ROOT appropriately.
-	menuItem = [aMenu addItemWithTitle:[NSString stringWithFormat:@"%@ %@", NSLocalizedString(@"Quit", nil), applicationName] action : @selector(terminate:) keyEquivalent : @"q"];
+	menuItem = [aMenu addItemWithTitle : [NSString stringWithFormat : @"%@ %@",
+               NSLocalizedString(@"Quit", nil), applicationName] action : @selector(terminate:) keyEquivalent : @"q"];
 	[menuItem setTarget : NSApp];
 }
 
@@ -100,16 +88,20 @@ void PopulateWindowMenu(NSMenu *aMenu)
 {
    assert(aMenu != nil && "PopulateWindowMenu, aMenu parameter is nil");
 
-	NSMenuItem *menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Minimize", nil) action : @selector(performMinimize:) keyEquivalent : @"m"];
-	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Zoom", nil) action : @selector(performZoom:) keyEquivalent : @""];
+	NSMenuItem *menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Minimize", nil)
+                           action : @selector(performMinimize:) keyEquivalent : @"m"];
+	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Zoom", nil)
+               action : @selector(performZoom:) keyEquivalent : @""];
 	[aMenu addItem : [NSMenuItem separatorItem]];
-	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Bring All to Front", nil) action : @selector(arrangeInFront:) keyEquivalent : @""];
+	menuItem = [aMenu addItemWithTitle : NSLocalizedString(@"Bring All to Front", nil)
+               action : @selector(arrangeInFront:) keyEquivalent : @""];
 }
 
 //______________________________________________________________________________
 void PopulateHelpMenu(NSMenu *aMenu)
 {
-   NSMenuItem * const menuItem = [aMenu addItemWithTitle : [NSString stringWithFormat:@"%@ %@", @"root", NSLocalizedString(@"Help", nil)] action : @selector(showHelp:) keyEquivalent : @"?"];
+   NSMenuItem * const menuItem = [aMenu addItemWithTitle : [NSString stringWithFormat : @"%@ %@", @"root",
+                                  NSLocalizedString(@"Help", nil)] action : @selector(showHelp:) keyEquivalent : @"?"];
 	[menuItem setTarget : NSApp];
 }
 

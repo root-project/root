@@ -80,13 +80,15 @@ DrawLine::DrawLine(Drawable_t wid, const GCValues_t &gc, const Point &p1, const 
 //______________________________________________________________________________
 void DrawLine::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->DrawLineAux(fID, fGC, fP1.fX, fP1.fY, fP2.fX, fP2.fY);
 }
 
 //______________________________________________________________________________
-DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc,
+                           const Segment_t *segments, Int_t nSegments)
                  : Command(wid, gc) 
 {
    assert(segments != 0 && "DrawSegments, segments parameter is null");
@@ -98,8 +100,9 @@ DrawSegments::DrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t
 //______________________________________________________________________________
 void DrawSegments::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->DrawSegmentsAux(fID, fGC, &fSegments[0], (Int_t)fSegments.size());
 }
 
@@ -113,13 +116,15 @@ ClearArea::ClearArea(Window_t wid, const Rectangle_t &area)
 //______________________________________________________________________________
 void ClearArea::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->ClearAreaAux(fID, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight);   
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
+   vx->ClearAreaAux(fID, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight);
 }
 
 //______________________________________________________________________________
-CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, const Rectangle_t &area, const Point &dstPoint)
+CopyArea::CopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc,
+                   const Rectangle_t &area, const Point &dstPoint)
                : Command(dst, gc),
                  fSrc(src),
                  fArea(area),
@@ -136,13 +141,17 @@ bool CopyArea::HasOperand(Drawable_t drawable)const
 //______________________________________________________________________________
 void CopyArea::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth, fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
+   vx->CopyAreaAux(fSrc, fID, fGC, fArea.fX, fArea.fY, fArea.fWidth,
+                   fArea.fHeight, fDstPoint.fX, fDstPoint.fY);
 }
 
 //______________________________________________________________________________
-DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point, const std::string &text)
+DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point,
+                       const std::string &text)
                : Command(wid, gc),
                  fPoint(point),
                  fText(text)
@@ -152,13 +161,16 @@ DrawString::DrawString(Drawable_t wid, const GCValues_t &gc, const Point &point,
 //______________________________________________________________________________
 void DrawString::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
    vx->DrawStringAux(fID, fGC, fPoint.fX, fPoint.fY, fText.c_str(), fText.length());
 }
 
 //______________________________________________________________________________
-FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle)
+FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc,
+                             const Rectangle_t &rectangle)
                   : Command(wid, gc),
                     fRectangle(rectangle)
 {
@@ -167,13 +179,17 @@ FillRectangle::FillRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void FillRectangle::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
+   vx->FillRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY,
+                        fRectangle.fWidth, fRectangle.fHeight);
 }
 
 //______________________________________________________________________________
-FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *points, Int_t nPoints)
+FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc,
+                         const Point_t *points, Int_t nPoints)
                 : Command(wid, gc)
 {
    assert(points != 0 && "FillPolygon, points parameter is null");
@@ -185,13 +201,15 @@ FillPolygon::FillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *po
 //______________________________________________________________________________   
 void FillPolygon::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->FillPolygonAux(fID, fGC, &fPolygon[0], (Int_t)fPolygon.size());
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   ((TGCocoa *)gVirtualX)->FillPolygonAux(fID, fGC, &fPolygon[0], (Int_t)fPolygon.size());
 }
 
 //______________________________________________________________________________
-DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectangle_t &rectangle)
+DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc,
+                             const Rectangle_t &rectangle)
                  : Command(wid, gc),
                    fRectangle(rectangle)
 {
@@ -200,9 +218,12 @@ DrawRectangle::DrawRectangle(Drawable_t wid, const GCValues_t &gc, const Rectang
 //______________________________________________________________________________
 void DrawRectangle::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY, fRectangle.fWidth, fRectangle.fHeight);
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   TGCocoa * const vx = static_cast<TGCocoa *>(gVirtualX);
+   vx->DrawRectangleAux(fID, fGC, fRectangle.fX, fRectangle.fY,
+                        fRectangle.fWidth, fRectangle.fHeight);
 }
 
 //______________________________________________________________________________
@@ -219,7 +240,8 @@ void UpdateWindow::Execute()const
    assert(fView.fContext != 0 && "Execute, view.fContext is null");
 
    if (QuartzPixmap *pixmap = fView.fBackBuffer)
-      [fView copy : pixmap area : Rectangle(0, 0, pixmap.fWidth, pixmap.fHeight) withMask : nil clipOrigin : Point() toPoint : Point()];
+      [fView copy : pixmap area : Rectangle(0, 0, pixmap.fWidth, pixmap.fHeight)
+         withMask : nil clipOrigin : Point() toPoint : Point()];
 }
 
 //______________________________________________________________________________
@@ -231,9 +253,10 @@ DeletePixmap::DeletePixmap(Pixmap_t pixmap)
 //______________________________________________________________________________
 void DeletePixmap::Execute()const
 {
-   TGCocoa * const vx = dynamic_cast<TGCocoa *>(gVirtualX);
-   assert(vx != 0 && "Execute, gVirtualX is either null or not of TGCocoa type");
-   vx->DeletePixmapAux(fID);
+   assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 &&
+          "Execute, gVirtualX is either null or not of TGCocoa type");
+
+   ((TGCocoa *)gVirtualX)->DeletePixmapAux(fID);
 }
 
 //______________________________________________________________________________
@@ -308,10 +331,12 @@ CommandBuffer::~CommandBuffer()
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
+void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1,
+                                Int_t y1, Int_t x2, Int_t y2)
 {
    try {
-      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));//if this throws, I do not care.
+      //if this throws, I do not care.
+      std::auto_ptr<DrawLine> cmd(new DrawLine(wid, gc, Point(x1, y1), Point(x2, y2)));
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -320,7 +345,8 @@ void CommandBuffer::AddDrawLine(Drawable_t wid, const GCValues_t &gc, Int_t x1, 
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc, const Segment_t *segments, Int_t nSegments)
+void CommandBuffer::AddDrawSegments(Drawable_t wid, const GCValues_t &gc,
+                                    const Segment_t *segments, Int_t nSegments)
 {
    assert(segments != 0 && "AddDrawSegments, segments parameter is null");
    assert(nSegments > 0 && "AddDrawSegments, nSegments <= 0");
@@ -353,7 +379,8 @@ void CommandBuffer::AddClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_
 
 //______________________________________________________________________________
 void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t &gc, 
-                                Int_t srcX, Int_t srcY, UInt_t width, UInt_t height, Int_t dstX, Int_t dstY)
+                                Int_t srcX, Int_t srcY, UInt_t width, UInt_t height,
+                                Int_t dstX, Int_t dstY)
 {
    try {
       Rectangle_t area = {};
@@ -361,7 +388,8 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
       area.fY = srcY;
       area.fWidth = (UShort_t)width;
       area.fHeight = (UShort_t)height;
-      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));//Can throw, nothing leaks.
+      //Can throw, nothing leaks.
+      std::auto_ptr<CopyArea> cmd(new CopyArea(src, dst, gc, area, Point(dstX, dstY)));
       fCommands.push_back(cmd.get());//this can throw.
       cmd.release();
    } catch (const std::exception &) {
@@ -370,7 +398,8 @@ void CommandBuffer::AddCopyArea(Drawable_t src, Drawable_t dst, const GCValues_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *text, Int_t len)
+void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y,
+                                  const char *text, Int_t len)
 {
    try {
       if (len < 0)//Negative length can come from caller.
@@ -385,7 +414,8 @@ void CommandBuffer::AddDrawString(Drawable_t wid, const GCValues_t &gc, Int_t x,
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc,
+                                     Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
       Rectangle_t r = {};
@@ -402,7 +432,8 @@ void CommandBuffer::AddFillRectangle(Drawable_t wid, const GCValues_t &gc, Int_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, UInt_t w, UInt_t h)
+void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc,
+                                     Int_t x, Int_t y, UInt_t w, UInt_t h)
 {
    try {
       Rectangle_t r = {};
@@ -419,7 +450,8 @@ void CommandBuffer::AddDrawRectangle(Drawable_t wid, const GCValues_t &gc, Int_t
 }
 
 //______________________________________________________________________________
-void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc, const Point_t *polygon, Int_t nPoints)
+void CommandBuffer::AddFillPolygon(Drawable_t wid, const GCValues_t &gc,
+                                   const Point_t *polygon, Int_t nPoints)
 {
    assert(polygon != 0 && "AddFillPolygon, polygon parameter is null");
    assert(nPoints > 0 && "AddFillPolygon, nPoints <= 0");
@@ -541,7 +573,8 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
             if (view.fBackBuffer) {
                //Very "special" window.
                const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-               [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
+               [view copy : view.fBackBuffer area : copyArea
+                 withMask : nil clipOrigin : Point() toPoint : Point()];
             }
             
             [view unlockFocus];
@@ -578,7 +611,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 
    NSObject<X11Drawable> *drawable = impl->GetDrawable(fXorOps[0]->fID);
    
-   assert([drawable isKindOfClass : [QuartzView class]] && "FlushXOROps, drawable must be of type QuartzView");
+   assert([drawable isKindOfClass : [QuartzView class]] &&
+          "FlushXOROps, drawable must be of type QuartzView");
    
    QuartzView *view = (QuartzView *)drawable;
    
@@ -597,7 +631,8 @@ void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
       if (view.fBackBuffer) {//back buffer has canvas' contents.
          //Very "special" window.
          const Rectangle copyArea(0, 0, view.fBackBuffer.fWidth, view.fBackBuffer.fHeight);
-         [view copy : view.fBackBuffer area : copyArea withMask : nil clipOrigin : Point() toPoint : Point()];
+         [view copy : view.fBackBuffer area : copyArea
+          withMask : nil clipOrigin : Point() toPoint : Point()];
       }
    
       //Now, do "XOR" drawings.
@@ -640,7 +675,9 @@ void CommandBuffer::RemoveOperationsForDrawable(Drawable_t drawable)
 void CommandBuffer::RemoveGraphicsOperationsForWindow(Window_t wid)
 {
    for (size_type i = 0; i < fCommands.size(); ++i) {
-      if (fCommands[i] && fCommands[i]->HasOperand(wid) && fCommands[i]->IsGraphicsCommand()) {
+      if (fCommands[i] && fCommands[i]->HasOperand(wid) &&
+          fCommands[i]->IsGraphicsCommand())
+      {
          delete fCommands[i];
          fCommands[i] = 0;
       }
@@ -759,7 +796,8 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
          if (!frame1.size.width || !frame1.size.height)
             continue;
 
-         frame1.origin = [sibling.fParentView convertPoint : frame1.origin toView : view.fParentView];
+         frame1.origin = [sibling.fParentView convertPoint : frame1.origin
+                          toView : view.fParentView];
 
          //Check if two rects intersect.
          if (RectsOverlap(frame2, frame1)) {
@@ -800,17 +838,20 @@ void CommandBuffer::ClipOverlaps(QuartzView *view)
       //Now, if we have any rectanges to substruct them from our view's frame,
       //we are building a set of rectangles, which represents visible part of view.
    
-      WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width, frame2.origin.y + frame2.size.height);
+      WidgetRect rect(frame2.origin.x, frame2.origin.y, frame2.origin.x + frame2.size.width,
+                      frame2.origin.y + frame2.size.height);
 
       BuildClipRegion(rect);
       
       if (view.fParentView) {
          //To able to use this set of rectangles with CGContextClipToRects,
          //convert them (if needed) into view's own coordinate system.
-         for (rect_iterator recIt = fClippedRegion.begin(), eIt = fClippedRegion.end(); recIt != eIt; ++recIt) {
-            if (!recIt->size.width && !recIt->size.height) {//This is a special 'empty' rectangle, which means our
+         rect_iterator recIt = fClippedRegion.begin(), eIt = fClippedRegion.end();
+         for (; recIt != eIt; ++recIt) {
+            if (!recIt->size.width && !recIt->size.height) {
+               //This is a special 'empty' rectangle, which means our view is completely hidden.
                assert(fClippedRegion.size() == 1 && "ClipOverlaps, internal logic error");
-               break;                                       //view is completely hidden.
+               break;
             }
             recIt->origin = [view.fParentView convertPoint : recIt->origin toView : view];
          }
@@ -881,8 +922,10 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    fYBounds.clear();
 
    //[First, we "cut" the original rect into stripes.
-   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
-      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 && recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
+   rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end();
+   for (; recIt != endIt; ++recIt) {
+      if (recIt->fX1 <= rect.fX1 && recIt->fX2 >= rect.fX2 &&
+          recIt->fY1 <= rect.fY1 && recIt->fY2 >= rect.fY2) {
          //this rect completely overlaps our view, not need to calculate anything at all.
          fClippedRegion.push_back(CGRectMake(0., 0., 0., 0.));
          return;
@@ -915,7 +958,8 @@ void CommandBuffer::BuildClipRegion(const WidgetRect &rect)
    fGrid.assign(nXBands * nYBands, false);
 
    //Mark the overlapped parts.
-   for (rect_const_iterator recIt = fRectsToClip.begin(), endIt = fRectsToClip.end(); recIt != endIt; ++recIt) {
+   recIt = fRectsToClip.begin(), endIt = fRectsToClip.end();
+   for (; recIt != endIt; ++recIt) {
       const int_iterator left = BinarySearchLeft(fXBounds.begin(), xBoundsEnd, recIt->fX1);
       const size_type firstXBand = left == xBoundsEnd ? 0 : left - fXBounds.begin() + 1;
       

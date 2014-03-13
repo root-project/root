@@ -98,14 +98,14 @@ private:
    void GenerateButtonReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    void GenerateButtonReleaseEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent, EMouseButton btn);
    
-   void GenerateKeyPressEventNoGrab(NSEvent *theEvent);
-   void GenerateKeyReleaseEventNoGrab(NSEvent *theEvent);
+   void GenerateKeyPressEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
+   void GenerateKeyReleaseEventNoGrab(NSView<X11Window> *eventView, NSEvent *theEvent);
    
-   void GenerateKeyEventActiveGrab(NSEvent *theEvent);//Both press/release events.
+   void GenerateKeyEventActiveGrab(NSView<X11Window> *eventView, NSEvent *theEvent);//Both press/release events.
    void GenerateKeyEventForView(NSView<X11Window> *view, NSEvent *theEvent);//Both press/release events.
 
    void FindButtonGrab(NSView<X11Window> *fromView, NSEvent *theEvent, EMouseButton btn);
-   void FindKeyGrabView(NSView<X11Window> *fromView, NSEvent *theEvent);
+   void FindKeyGrabView(NSView<X11Window> *eventView, NSEvent *theEvent);
 
    NSView<X11Window> *fViewUnderPointer;
    

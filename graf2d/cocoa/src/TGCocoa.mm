@@ -85,9 +85,9 @@ void DisplayReconfigurationCallback(CGDirectDisplayID /*display*/, CGDisplayChan
       return;
 
    if (flags & kCGDisplayDesktopShapeChangedFlag) {
-      TGCocoa * const gCocoa = dynamic_cast<TGCocoa *>(gVirtualX);
-      assert(gCocoa != 0 && "DisplayReconfigurationCallback, gVirtualX"
-                            " is either null or has a wrong type");
+      assert(dynamic_cast<TGCocoa *>(gVirtualX) != 0 && "DisplayReconfigurationCallback, gVirtualX"
+                                                        " is either null or has a wrong type");
+      TGCocoa * const gCocoa = static_cast<TGCocoa *>(gVirtualX);
       gCocoa->ReconfigureDisplay();
    }
 }
@@ -1214,8 +1214,8 @@ void TGCocoa::ResizeWindow(Window_t wid, UInt_t w, UInt_t h)
       return;
 
    assert(!fPimpl->IsRootWindow(wid) && "ResizeWindow, called for 'root' window");
-
-   //We can have this unfortunately.   
+   
+   //We can have this unfortunately.
    const UInt_t siMax = std::numeric_limits<Int_t>::max();
    if (w > siMax || h > siMax)
       return;
