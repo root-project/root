@@ -11,6 +11,10 @@
 #include "TObject.h"
 #include "TBufferFile.h"      // for pickling
 
+// CLING WORKAROUND -- #ROOT-6124
+#include "TInterpreter.h"
+// -- CLING WORKAROUND
+
 // Standard
 #include <algorithm>
 
@@ -25,7 +29,13 @@ void PyROOT::op_dealloc_nofree( ObjectProxy* pyobj ) {
 // Destroy the held C++ object, if owned; does not deallocate the proxy.
    if ( pyobj->fObject && ( pyobj->fFlags & ObjectProxy::kIsOwner ) ) {
       if ( ! (pyobj->fFlags & ObjectProxy::kIsValue) )
-         pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+      // ORIGINAL CODE
+      // pyobj->ObjectIsA()->Destructor( pyobj->fObject );
+      // CLING WORKAROUND -- #ROOT-6124
+      {
+         gInterpreter->ClassInfo_Delete( pyobj->ObjectIsA()->GetClassInfo(), pyobj->fObject );
+      }
+      // -- CLING WORKAROUND
       else
          delete (TInterpreterValue*)pyobj->fObject;
    } else if ( pyobj->fFlags & ObjectProxy::kIsValue )
