@@ -37,6 +37,8 @@ protected:
    TGLineWidthComboBox     *fGlobalLineWidth;
    TGHSlider               *fDotsSpacing;
    TGNumberEntryField      *fDotsSpacingField;
+   TGHSlider               *fAlpha;
+   TGNumberEntryField      *fAlphaField;
    TGButtonGroup           *fLineTypeBgroup;
    TGRadioButton           *fLineTypePoly;
    TGRadioButton           *fLineTypeCurves;
@@ -91,6 +93,8 @@ public:
    virtual void            DoDeleteVar();
    virtual void            DoDotsSpacing();
    virtual void            DoDotsSpacingField();
+   virtual void            DoAlpha();
+   virtual void            DoAlphaField();
    virtual void            DoFirstEntry();
    virtual void            DoGlobalLineColor(Pixel_t);
    virtual void            DoGlobalLineWidth(Int_t);
@@ -103,6 +107,7 @@ public:
    virtual void            DoEntriesToDraw();
    virtual void            DoLineType();
    virtual void            DoLiveDotsSpacing(Int_t a);
+   virtual void            DoLiveAlpha(Int_t a);
    virtual void            DoLiveEntriesToDraw();
    virtual void            DoLiveWeightCut(Int_t n);
    virtual void            DoNentries();
