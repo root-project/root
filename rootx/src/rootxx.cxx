@@ -680,7 +680,7 @@ void ScrollCredits(int ypos)
    XCopyArea(gDisplay, gLogoPixmap, gCreditsPixmap, gGC, gCreditsRect.x, gCreditsRect.y,
              gCreditsRect.width, gCreditsRect.height, 0, ypos);
 
-   DrawCredits(true, true);
+   DrawCredits(true, gAbout);
 
    XRectangle crect[1];
    crect[0] = gCreditsRect;
