@@ -245,6 +245,7 @@ public:
    TVirtualPadPainter *GetCanvasPainter();
    
    static TCanvas   *MakeDefCanvas();
+   static Bool_t     SupportAlpha();
 
    ClassDef(TCanvas,7)  //Graphics canvas
 };

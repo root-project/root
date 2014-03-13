@@ -2100,6 +2100,18 @@ void TCanvas::ToggleToolTips()
    if (fCanvasImp) fCanvasImp->ShowToolTips(showToolTips);
 }
 
+
+//______________________________________________________________________________
+Bool_t TCanvas::SupportAlpha()
+{
+   // Static function returning "true" if transparency is supported.
+
+   if ((gVirtualX->InheritsFrom("TGQuartz")) || 
+       (gPad->GetGLDevice() != -1)) return kTRUE;
+   else                             return kFALSE;
+}
+
+
 //______________________________________________________________________________
 void TCanvas::Update()
 {
