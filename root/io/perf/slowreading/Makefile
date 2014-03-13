@@ -97,5 +97,12 @@ slowreading.log: readDST.00.log readDST.01.log readDST.02.log \
                  readDST.20.log readDST.21.log readDST.22.log
 	$(CMDECHO) cat $^ > slowreading.log
 
+
+ifeq ($(ROOTTEST_DEDICATED_NODE),)
+slowreading:
+
+else
 slowreading: slowreading.log
 	$(TestDiff)
+endif
+

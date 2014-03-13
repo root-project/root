@@ -255,3 +255,20 @@ will contain:
 
   --- FAILING TEST: make -C subdirectory_path test
   There is at least one failing test which does not create a summary file in the directory subdirectory.
+
+==============================================================================
+Performance testing:
+
+Additional tests checking the performance of ROOT can be run by setting the
+variable ROOTTEST_DEDICATED_NODE
+
+When using the target 'perftrack':
+
+   make perftrack
+
+The duration of each time is calculated and accumulated into ROOT files (pt_*.root,
+where the star is replace by a string encoding of the test name), gif files 
+showing the evolution of the performance of each test over time and html index files
+showing the graphs whether there is any anomalous performance.
+
+
