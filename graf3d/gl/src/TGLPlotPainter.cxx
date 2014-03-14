@@ -2150,13 +2150,22 @@ void DrawPalette(const TGLPlotCamera * camera, const TGLLevelPalette & palette,
 //______________________________________________________________________________
 void DrawPaletteAxis(const TGLPlotCamera * camera, const Range_t & minMax, Bool_t logZ)
 {
-   const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * camera->GetWidth()));
-   const Double_t yMin = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.1
-                                           + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                           * gPad->GetWh() + camera->GetY()));
-   const Double_t yMax = gPad->AbsPixeltoY(Int_t(camera->GetHeight() - camera->GetHeight() * 0.9
-                                           + (1 - gPad->GetHNDC() - gPad->GetYlowNDC())
-                                           * gPad->GetWh() + camera->GetY()));
+   UInt_t pixelW = camera->GetWidth();
+   UInt_t pixelH = camera->GetHeight();
+
+   TGLUtil::InitializeIfNeeded();
+   const Float_t scale = TGLUtil::GetScreenScalingFactor();
+   if (scale > 1.) {
+      pixelW = UInt_t(pixelW / scale);
+      pixelH = UInt_t(pixelH / scale);
+   }
+
+   const Double_t x = gPad->AbsPixeltoX(Int_t(gPad->GetXlowNDC() * gPad->GetWw() + rr * pixelW));
+   const Double_t yMin = gPad->AbsPixeltoY(Int_t(gPad->GetWh() - (pixelH * 0.1
+                                           + gPad->GetYlowNDC() * gPad->GetWh())));
+   const Double_t yMax = gPad->AbsPixeltoY(Int_t(gPad->GetWh() - (pixelH * 0.9
+                                           + gPad->GetYlowNDC() * gPad->GetWh())));
+
    Double_t zMin = minMax.first;
    Double_t zMax = minMax.second;
 
