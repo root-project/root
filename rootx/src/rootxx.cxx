@@ -31,6 +31,8 @@
 
 #include "Rtypes.h"
 
+#include "rootcoreteam.h"
+
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
@@ -90,18 +92,6 @@ const char *gLeadDevelopers[] = {
    "Rene Brun",
    "Philippe Canal",
    "Fons Rademakers",
-   0
-};
-
-const char *gRootDevelopers[] = {
-   "Bertrand Bellenot",
-   "Olivier Couet",
-   "Gerardo Ganis",
-   "Andrei Gheata",
-   "Lorenzo Moneta",
-   "Axel Naumann",
-   "Paul Russo",
-   "Matevz Tadel",
    0
 };
 
@@ -488,13 +478,9 @@ bool CreateFont()
 
    gFont = XLoadQueryFont(gDisplay, "-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1");
    if (!gFont) {
-      /*printf("Couldn't find font \"-adobe-helvetica-medium-r-*-*-10-*-*-*-*-*-iso8859-1\",\n"
-             "trying \"fixed\". Please fix your system so helvetica can be found, \n"
-             "this font typically is in the rpm (or pkg equivalent) package \n"
-             "XFree86-[75,100]dpi-fonts or fonts-xorg-[75,100]dpi.\n");*/
       gFont = XLoadQueryFont(gDisplay, "fixed");
       if (!gFont)
-         printf("Also couln't find font \"fixed\", your system is terminally misconfigured.\n");
+         printf("Font creation failed\n");
    }
    
    return gFont;
@@ -778,10 +764,10 @@ int DrawCredits(bool draw, bool extended)
    y = DrawCreditItem("Conception: ", gConception, y, draw);
    y += 2 * lineSpacing;
 
-   y = DrawCreditItem("Lead Developers: ", gLeadDevelopers, y, draw);
-   y += 2 * lineSpacing - 1;  // special layout tweak ... WUT????
+//   y = DrawCreditItem("Lead Developers: ", gLeadDevelopers, y, draw);
+//   y += 2 * lineSpacing - 1;  // special layout tweak ... WUT????
 
-   y = DrawCreditItem("Core Engineering: ", gRootDevelopers, y, draw);
+   y = DrawCreditItem("Core Engineering: ", ROOT::ROOTX::gROOTCoreTeam, y, draw);
    y += 2 * lineSpacing;
 
    y = DrawCreditItem("Documentation: ", gRootDocumentation, y, draw);
