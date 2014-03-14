@@ -293,17 +293,19 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 
 
 //______________________________________________________________________________
-void TTreePerfStats::FileUnzipEvent(TFile * /* file */, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
+void TTreePerfStats::UnzipEvent(TTree * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
 {
-   // Record TTree file unzip event.
+   // Record TTree unzip event.
    // start is the TimeStamp before unzip
    // pos is where in the file the compressed buffer came from
    // complen is the length of the compressed buffer
    // objlen is the length of the de-compressed buffer
    
-   Double_t tnow = TTimeStamp();
-   Double_t dtime = tnow-start;
-   fUnzipTime += dtime;
+   if (tree == this->fTree){
+      Double_t tnow = TTimeStamp();
+      Double_t dtime = tnow-start;
+      fUnzipTime += dtime;
+   }
 }
 
 //______________________________________________________________________________
