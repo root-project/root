@@ -152,6 +152,13 @@ set(davixlibdir ${DAVIX_LIBRARY_DIR})
 set(davixlib ${DAVIX_LIBRARY})
 set(davixincdir ${DAVIX_INCLUDE_DIR})
 
+set(buildnetxng ${value${netxng}})
+if(netxng)
+  set(useoldnetx no)
+else()
+  set(useoldnetx yes)
+endif()
+
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
 set(dcaplib ${DCAP_LIBRARY})

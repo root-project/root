@@ -579,6 +579,8 @@ if(xrootd)
       message(STATUS "                  Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD  internally'")
       message(STATUS "                  For the time being switching OFF 'xrootd' option")
       set(xrootd OFF CACHE BOOL "" FORCE)
+    else()
+      set(xrootd_versionnum ${xrdversnum})  # variable used internally
     endif()
   endif()
 endif()
@@ -591,6 +593,10 @@ if(builtin_xrootd)
     URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
   )
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
@@ -598,6 +604,11 @@ if(builtin_xrootd)
                        ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   set(xrootd ON CACHE BOOL "" FORCE)
+endif()
+if(xrootd AND xrootd_versionnum VERSION_GREATER 300030005)
+  set(netxng ON)
+else()
+  set(netxng OFF)
 endif()
 
 #---Check for gfal-------------------------------------------------------------------
