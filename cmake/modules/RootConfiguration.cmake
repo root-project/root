@@ -358,6 +358,7 @@ set(hasxft ${has${xft}})
 set(hascling ${has${cling}})
 set(haslzmacompression ${has${lzma}})
 set(hascocoa ${has${cocoa}})
+set(hasvc ${has${vc}})
 set(usec++11 ${has${c++11}})
 set(uselibc++ ${has${libcxx}})
 

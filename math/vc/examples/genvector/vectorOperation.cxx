@@ -103,7 +103,9 @@ const int N = VLISTSIZE;
 const int NLOOP = 5000000;
 //const int NLOOP = 1;
 
-
+const int NOP = NLOOP*VLISTSIZE;
+const double TSCALE = 1.E9/double(NOP);
+ 
 template<class Vector>
 class TestVector {
 public:
@@ -121,7 +123,12 @@ public:
    void Divide();
    void Divide2();
 
-   void MathFunction();
+   void MathFunction_sin(); 
+   void MathFunction_exp(); 
+   void MathFunction_log(); 
+   void MathFunction_atan(); 
+   void MathFunction_atan2(); 
+
    void Boost();
 
    void Read(); 
@@ -136,7 +143,7 @@ private:
    std::vector<Vector> vlist2;
    std::vector<Double_type> scale;
    std::vector <std::vector <double > >  vcoords;
-   double fTime[10]; // timing results
+   double fTime[50]; // timing results
    int  fTest;
 };
 
@@ -322,7 +329,7 @@ void TestVector<Vector>::Add()
 
    std::cout << "Time for  v3 = v1 + v2 :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -346,7 +353,7 @@ void TestVector<Vector>::Add2()
 
    std::cout << "Time for  v2 += v1     :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -365,7 +372,7 @@ void TestVector<Vector>::Sub()
 
    std::cout << "Time for  v3 = v1 - v2 :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -385,7 +392,7 @@ void TestVector<Vector>::Sub2()
 
    std::cout << "Time for  v2 -= v1     :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 
@@ -405,7 +412,7 @@ void TestVector<Vector>::Scale()
 
    std::cout << "Time for  v2 = A * v1 :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -426,7 +433,7 @@ void TestVector<Vector>::Scale2()
 
    std::cout << "Time for  v *= a     :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -445,7 +452,7 @@ void TestVector<Vector>::Divide()
 
    std::cout << "Time for  v2 = v1 / a :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 template<class Vector>
@@ -466,7 +473,7 @@ void TestVector<Vector>::Divide2()
 
    std::cout << "Time for  v /= a      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 #ifdef CASE1
@@ -558,7 +565,7 @@ void TestVector<Vector>::Operations()
 
    std::cout << "Time for  Operation      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 #else
@@ -664,7 +671,7 @@ void TestVector<Vector>::Operations()
 
    std::cout << "Time for  Operation      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 #endif
 
@@ -689,37 +696,114 @@ void TestVector<Vector>::Boost()
 
    std::cout << "Time for  Boost      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 
-#ifndef USE_VDT
+
 template<class Vector>
-void TestVector<Vector>::MathFunction()
+void TestVector<Vector>::MathFunction_exp()
+{
+   // test math function
+   TStopwatch w;
+   Vector v1;
+   w.Start();
+   Double_type s(0.0);
+   for (int l = 0; l<NLOOP/10; ++l) {
+      for (int i = 0; i< N; ++i) {         
+         v1 = vlist[i]; 
+         s += std::exp( v1.X() - v1.Y() );
+      }
+   }
+
+   std::cout << "Time for Exp Function      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
+   PrintResult(s);
+   fTime[fTest++] = w.CpuTime()*TSCALE*10;
+}
+
+
+
+template<class Vector>
+void TestVector<Vector>::MathFunction_log()
 {
    // test several operations
    TStopwatch w;
    Vector v1;
    w.Start();
    Double_type s(0.0);
-   for (int l = 0; l<NLOOP; ++l) {
+   for (int l = 0; l<NLOOP/10; ++l) {
       for (int i = 0; i< N; ++i) {         
-         v1 = vlist[i]; ///scale[i];
-         //s += sin(std::abs(v1.X())/std::abs(v1.X()+v1.Y() ) );
-         //s += std::atan(v1.Y()/v1.X() );
-         //s += std::sin(v1.X()/v1.Pt()) ;
-         //s += std::atan( v1.Y()/v1.X() );
-         s += std::sin( v1.X() );
-         //      s += std::atan2( v1.Y(),v1.X() );
+         v1 = vlist[i]; 
+         s += std::log( std::abs(v1.X() ) );
       }
    }
 
-   std::cout << "Time for MathFUnction      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
+   std::cout << "Time for Log Function      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE*10;
 }
 
-#else // use VDT
+template<class Vector>
+void TestVector<Vector>::MathFunction_sin()
+{
+   // test math function
+   TStopwatch w;
+   Vector v1;
+   w.Start();
+   Double_type s(0.0);
+   for (int l = 0; l<NLOOP/100; ++l) {
+      for (int i = 0; i< N; ++i) {         
+         v1 = vlist[i]; 
+         s += std::sin( v1.X() );
+      }
+   }
+
+   std::cout << "Time for Sin Function      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
+   PrintResult(s);
+   fTime[fTest++] = w.CpuTime()*TSCALE*100;
+}
+
+template<class Vector>
+void TestVector<Vector>::MathFunction_atan()
+{
+   // test several operations
+   TStopwatch w;
+   Vector v1;
+   w.Start();
+   Double_type s(0.0);
+   for (int l = 0; l<NLOOP/100; ++l) {
+      for (int i = 0; i< N; ++i) {         
+         v1 = vlist[i]; ///scale[i];
+         s += std::atan( v1.Y()/v1.X() );
+      }
+   }
+
+   std::cout << "Time for Atan Function      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
+   PrintResult(s);
+   fTime[fTest++] = w.CpuTime()*TSCALE*100;
+}
+
+template<class Vector>
+void TestVector<Vector>::MathFunction_atan2()
+{
+   // test several operations
+   TStopwatch w;
+   Vector v1;
+   w.Start();
+   Double_type s(0.0);
+   for (int l = 0; l<NLOOP/100; ++l) {
+      for (int i = 0; i< N; ++i) {         
+         v1 = vlist[i]; ///scale[i];
+         s += std::atan2( v1.Y(),v1.X() );
+      }
+   }
+
+   std::cout << "Time for Atan2 Function      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
+   PrintResult(s);
+   fTime[fTest++] = w.CpuTime()*TSCALE*100;
+}
+
+#ifdef HAS_VDT // use VDT
 template<class Vector>
 void TestVector<Vector>::MathFunction()
 {
@@ -746,7 +830,7 @@ void TestVector<Vector>::MathFunction()
 
    std::cout << "Time for MathFUnction(VDT)      :\t" << w.RealTime() << "\t" << w.CpuTime() << std::endl;
    PrintResult(s);
-   fTime[fTest++] = w.CpuTime();
+   fTime[fTest++] = w.CpuTime()*TSCALE;
 }
 
 #endif
@@ -762,9 +846,16 @@ void TestVector<Vector>::PrintSummary()
              << " v2 = a*v1 "
              << " v1 *= a   "
              << " v2 = v1/a "
-             << " v1 /= a   " << std::endl;
+             << " v1 /= a   " 
+             << " log       "
+             << " exp       " 
+             << " sin       " 
+             << " atan      "
+             << " atan2     "
+             << std::endl;
 
-   for (int i = 0; i < fTest; ++i) {
+   // start from 3 
+   for (int i = 3; i < fTest; ++i) {
       std::cout << std::setw(8) << fTime[i] << "   ";
    }
    std::cout << std::endl << std::endl;
@@ -780,11 +871,11 @@ int main() {
    std::cout << "testing using standard double's. Looping on " << N << " vectors" << std::endl;
 #endif
 
-   t.Operations();
 
    t.Read();
 
-   
+   t.Operations();
+   t.Boost();
 
 
 #ifndef USE_POINT
@@ -800,12 +891,17 @@ int main() {
    t.Divide2();
 #endif
 
-   t.MathFunction();
-   t.Boost();
+
+   t.MathFunction_log();
+   t.MathFunction_exp();
+   t.MathFunction_sin();
+   t.MathFunction_atan();
+   t.MathFunction_atan2();
+
 
 
 
 
    // summurize test
-   //t.PrintSummary();
+   t.PrintSummary();
 }

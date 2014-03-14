@@ -18,8 +18,9 @@ include $(ROOTSYS)/config/Makefile.config
 # endif
 AVXCXXFLAG     := -mavx
 SIMDCXXFLAGS   := -mavx -msse4.2 -msse4.1 -msse4a -mssse3 -msse3 -msse2
-VCFLAGS        := -fabi-version=0  -Wno-unused-function
+#VCFLAGS        := -fabi-version=0  -Wno-unused-function
 
+USEVC=1
 CXXFLAGS+=  $(VCFLAGS) 
 
 ifeq ($(NOAVX),)
@@ -61,7 +62,7 @@ CXXFLAGS += -g -DDEBUG
 endif
 
 
-LIBS =  -L$(ROOTSYS)/lib -lCore -lCling -lMathCore -lMatrix -lGenVector
+LIBS =  -L$(ROOTSYS)/lib -lCore -lCint -lMathCore -lMatrix -lGenVector
 
 VECTOROPOBJ     = vectorOperation.$(ObjSuf)
 VECTOROPSRC     = vectorOperation.$(SrcSuf)
