@@ -308,9 +308,9 @@ void TParallelCoordEditor::MakeVariablesTab()
 
    fHistShowBoxes = new TGCheckButton(fVarTab,"Show box histograms");
    fVarTab->AddFrame(fHistShowBoxes);
-   
+
    fVarTab->AddFrame(new TGLabel(fVarTab,"Bar histograms style:"));
-   
+
    TGCompositeFrame *f13 = new TGCompositeFrame(fVarTab, 80, 20, kHorizontalFrame);
    fHistColorSelect = new TGColorSelect(f13, 0, kHistColorSelect);
    f13->AddFrame(fHistColorSelect, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
@@ -377,7 +377,7 @@ void TParallelCoordEditor::CleanUpSelections()
 void TParallelCoordEditor::CleanUpVariables()
 {
    // Clean up the variables combo box.
-   
+
    TList *list = fParallel->GetVarList();
    fVariables->RemoveAll();
    Bool_t enable = list->GetSize() > 0;
@@ -508,12 +508,12 @@ void TParallelCoordEditor::DoAddSelection()
    // Slot to add a selection.
 
    TString title = fAddSelectionField->GetText();
-   if(title == "") title = "Selection";
+   if (title == "") title = "Selection";
    TString titlebis = title;
    Bool_t found = kTRUE;
    Int_t i=1;
    while (found){
-      if(fSelectionSelect->FindEntry(titlebis)) {
+      if (fSelectionSelect->FindEntry(titlebis)) {
          titlebis = title;
          titlebis.Append(Form("(%d)",i));
       }
@@ -547,7 +547,7 @@ void TParallelCoordEditor::DoApplySelect()
 
    //FIXME I forgot to update the slider over the entries
    //      (nentries and firstentry might have changed after applying the selection)
-   
+
    if (fAvoidSignal) return;
 
    fParallel->ApplySelectionToTree();
@@ -591,7 +591,7 @@ void TParallelCoordEditor::DoDeleteVar()
 
    TParallelCoordVar* var = fParallel->RemoveVariable(((TGTextLBEntry*)fVariables->GetSelectedEntry())->GetTitle());
    CleanUpVariables();
-   if(var) Update();
+   if (var) Update();
 }
 
 
@@ -627,9 +627,10 @@ void TParallelCoordEditor::DoAlphaField()
 
    if (fAvoidSignal) return;
 
-   TColor *color = gROOT->GetColor(fParallel->GetLineColor());
-   color->SetAlpha((Float_t)fAlphaField->GetNumber());
-   fAlpha->SetPosition((Int_t)fAlphaField->GetNumber()*1000);
+   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
+      color->SetAlpha((Float_t)fAlphaField->GetNumber());
+      fAlpha->SetPosition((Int_t)fAlphaField->GetNumber()*1000);
+   }
    Update();
 }
 
@@ -640,9 +641,10 @@ void TParallelCoordEditor::DoAlpha()
 
    if (fAvoidSignal) return;
 
-   TColor *color = gROOT->GetColor(fParallel->GetLineColor());
-   color->SetAlpha((Float_t)fAlpha->GetPosition()/1000);
-   fAlphaField->SetNumber((Float_t)fAlpha->GetPosition()/1000);
+   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
+      color->SetAlpha((Float_t)fAlpha->GetPosition()/1000);
+      fAlphaField->SetNumber((Float_t)fAlpha->GetPosition()/1000);
+   }
    Update();
 }
 
@@ -683,11 +685,12 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
 
    if (fAvoidSignal) return;
 
-   TColor *color = gROOT->GetColor(fParallel->GetLineColor());
-   color->SetAlpha(1);
-   color = gROOT->GetColor(TColor::GetColor(a));
-   color->SetAlpha((Float_t)fAlphaField->GetNumber());
-   fParallel->SetLineColor(color->GetNumber());
+   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
+      color->SetAlpha(1);
+      color = gROOT->GetColor(TColor::GetColor(a));
+      color->SetAlpha((Float_t)fAlphaField->GetNumber());
+      fParallel->SetLineColor(color->GetNumber());
+   }
    Update();
 }
 
@@ -739,7 +742,7 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
    // Slot to set the histograms color.
 
    if (fAvoidSignal) return;
-   
+
    Color_t col = TColor::GetColor(p);
    TIter next(fParallel->GetVarList());
    TParallelCoordVar *var = NULL;
@@ -768,7 +771,7 @@ void TParallelCoordEditor::DoHistPatternSelect(Style_t sty)
    // Slot to set the histograms fill style.
 
    if (fAvoidSignal) return;
-   
+
    TIter next(fParallel->GetVarList());
    TParallelCoordVar *var = NULL;
    while ((var = (TParallelCoordVar*)next())) var->SetFillStyle(sty);
@@ -795,7 +798,7 @@ void TParallelCoordEditor::DoLineType()
 
    if (fAvoidSignal) return;
 
-   if(fLineTypePoly->GetState() == kButtonDown) fParallel->SetCurveDisplay(kFALSE);
+   if (fLineTypePoly->GetState() == kButtonDown) fParallel->SetCurveDisplay(kFALSE);
    else fParallel->SetCurveDisplay(kTRUE);
    Update();
 }
@@ -809,7 +812,7 @@ void TParallelCoordEditor::DoLiveDotsSpacing(Int_t a)
    if (fAvoidSignal) return;
    fDotsSpacingField->SetNumber(a);
    fParallel->SetDotsSpacing(a);
-   if(!fDelay) Update();
+   if (!fDelay) Update();
 }
 
 
@@ -820,9 +823,8 @@ void TParallelCoordEditor::DoLiveAlpha(Int_t a)
 
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
-   
-   TColor *color = gROOT->GetColor(fParallel->GetLineColor());
-   color->SetAlpha((Float_t)a/1000);
+
+   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) color->SetAlpha((Float_t)a/1000);
    if (!fDelay) Update();
 }
 
@@ -1006,17 +1008,18 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    fDotsSpacing->SetPosition(fParallel->GetDotsSpacing());
 
    fDotsSpacingField->SetNumber(fParallel->GetDotsSpacing());
-   
-   TColor *color = gROOT->GetColor(fParallel->GetLineColor());   
-   fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
-   fAlphaField->SetNumber(color->GetAlpha());
+
+   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
+      fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
+      fAlphaField->SetNumber(color->GetAlpha());
+   }
 
    Bool_t cur = fParallel->GetCurveDisplay();
    if (cur) fLineTypeBgroup->SetButton(kLineTypeCurves,kTRUE);
    else     fLineTypeBgroup->SetButton(kLineTypePoly,kTRUE);
 
-   if(fInit) fHideAllRanges->SetOn(kFALSE);
-   
+   if (fInit) fHideAllRanges->SetOn(kFALSE);
+
    CleanUpSelections();
    CleanUpVariables();
 
@@ -1031,10 +1034,10 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    fWeightCut->SetRange(0,(Int_t)(fParallel->GetNentries()/10)); // Maybe search here for better boundaries.
    fWeightCut->SetPosition(fParallel->GetWeightCut());
    fWeightCutField->SetNumber(fParallel->GetWeightCut());
-   
+
    fHistColorSelect->SetColor(TColor::Number2Pixel(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillColor()), kFALSE);
    fHistPatternSelect->SetPattern(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillStyle(),kFALSE);
-   
+
    if (fInit) ConnectSignals2Slots();
 
    fAvoidSignal = kFALSE;
