@@ -126,9 +126,15 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, XMLNodePointer_t keynode) :
 TKeyXML::~TKeyXML()
 {
    // TKeyXML destructor
-   TXMLEngine* xml = XMLEngine();
-   if (fKeyNode && xml)
-      xml->FreeNode(fKeyNode);
+   if (fKeyNode) {
+      TXMLEngine* xml = XMLEngine();
+      if (xml) {
+         xml->FreeNode(fKeyNode);
+      } else {
+         TXMLEngine xml_;
+         xml_.FreeNode(fKeyNode);
+      }
+   }
 }
 
 //______________________________________________________________________________
