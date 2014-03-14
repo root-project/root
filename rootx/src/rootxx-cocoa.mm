@@ -31,6 +31,8 @@
 #include "CocoaUtils.h"
 #include "RVersion.h"
 
+#include "rootcoreteam.h"
+
 //
 //'root' with Cocoa is a quite special application. In principle, it's a background process,
 //but it can create a GUI (in our case it's a simple splash-screen - a window with a ROOT's logo
@@ -57,11 +59,14 @@ extern int gChildpid;
 namespace {
 
 NSString * const gConception = @"Rene Brun, Fons Rademakers\n\n";
+
+/*
 NSString * const gLeadDevelopers = @"Rene Brun, Philippe Canal, Fons Rademakers\n\n";
 //Ok, and poor little me.
 NSString * const gRootDevelopers = @"Bertrand Bellenot, Olivier Couet, Gerardo Ganis, "
                                     "Andrei Gheata, Lorenzo Moneta, Axel Naumann, "
                                     "Paul Russo, Matevz Tadel, Timur Pocheptsov\n\n";
+*/
 NSString * const gRootDocumentation = @"Ilka Antcheva\n\n";
 
 bool showAboutInfo = false;
@@ -977,7 +982,7 @@ bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
    if (!AddSectionBody(textToScroll, gConception))
       //TODO: diagnostic.
       return false;
-
+/*
    if (!AddSectionTitle(textToScroll, @"Lead developers:  "))
       //TODO: diagnostic.
       return false;
@@ -985,14 +990,15 @@ bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
    if (!AddSectionBody(textToScroll, gLeadDevelopers))
       //TODO: diagnostic.
       return false;
-   
+  */
    if (!AddSectionTitle(textToScroll, @"Core Engineering:  "))
       //TODO: diagnostic.
       return false;
    
-   if (!AddSectionBody(textToScroll, gRootDevelopers))
+//   if (!AddSectionBody(textToScroll, gRootDevelopers))
+   if (!AddSectionBody(textToScroll, [NSString stringWithFormat : @"%s", ROOT::ROOTX::gROOTCoreTeam]))
       return false;
-   
+
    if (!AddSectionTitle(textToScroll, @"Documentation:  "))
       //TODO: diagnostic.
       return false;
