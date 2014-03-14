@@ -3,7 +3,7 @@
 # @author Lukasz Janyst <ljanyst@cern.ch>
 ############################################################################
 
-include_directories(${XROOTD_INCLUDE_DIR})
+include_directories(${XROOTD_INCLUDE_DIRS})
 add_definitions(${XROOTD_CFLAGS})
 
 ROOT_GENERATE_DICTIONARY(G__NetxNG *.h MODULE NetxNG LINKDEF LinkDef.h)

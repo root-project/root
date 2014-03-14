@@ -35,3 +35,7 @@ endif()
 if(davix)
    add_subdirectory(davix)
 endif()
+
+if(netxng)
+   add_subdirectory(netxng)
+endif()
