@@ -581,7 +581,7 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       }
       len = fObjlen+fKeylen;
       if (R__unlikely(gPerfStats)) {
-         gPerfStats->FileUnzipEvent(file,pos,start,nintot,fObjlen);
+         gPerfStats->UnzipEvent(fBranch->GetTree(),pos,start,nintot,fObjlen);
       }
    } else {
       // Nothing is compressed - copy over wholesale.

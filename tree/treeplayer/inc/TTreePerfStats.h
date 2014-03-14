@@ -98,7 +98,7 @@ public:
    virtual void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) {}
    virtual void     FileOpenEvent(TFile *, const char *, Double_t) {}
    virtual void     FileReadEvent(TFile *file, Int_t len, Double_t start);
-   virtual void     FileUnzipEvent(TFile *file, Long64_t pos, Double_t start, Int_t complen, Int_t objlen);
+   virtual void     UnzipEvent(TTree *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen);
    virtual void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) {}
 
    virtual void     SaveAs(const char *filename="",Option_t *option="") const;
