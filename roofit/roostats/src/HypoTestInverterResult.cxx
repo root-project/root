@@ -929,9 +929,10 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
   TMath::SortItr(fXValues.begin(), fXValues.end(), indx.begin(), false); 
   // make a graph with the sorted point
   TGraphErrors graph;
-  int ip = 0;
+  int ip = 0, np = 0;
   for (int i = 0; i < ArraySize(); ++i) {
      if ( (xmin < xmax) && ( GetXValue(indx[i]) >= xmin && GetXValue(indx[i]) <= xmax) ) {
+        np++;
         // exclude points with zero or very small errors 
         if (GetYError(indx[i] ) > 1.E-6) {  
            graph.SetPoint(ip, GetXValue(indx[i]), GetYValue(indx[i] ) );
@@ -939,6 +940,10 @@ Double_t HypoTestInverterResult::CalculateEstimatedError(double target, bool low
            ip++;
         }
      }
+  }
+  if (graph.GetN() < 2) {
+     if (np >= 2) oocoutW(this,Eval) << "HypoTestInverterResult::CalculateEstimatedError - no valid points - cannot estimate  the " << type << " limit error " << std::endl;
+     return 0; 
   }
 
   double minX = xmin;
