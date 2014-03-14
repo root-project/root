@@ -588,6 +588,8 @@ if(builtin_xrootd)
   set(xrootd_version 3.3.6)
   set(xrootd_versionnum 300030006)
   message(STATUS "Downloading and building XROOTD version ${xrootd_version}") 
+  string(REPLACE "-Wall " "" __cxxflags "${CMAKE_CXX_FLAGS}")                        # Otherwise it produces tones of warnings
+  string(REPLACE "-W " "" __cxxflags "${__cxxflags} -Wno-deprecated-declarations -Wno-duplicate-decl-specifier")
   ExternalProject_Add(
     XROOTD
     URL http://xrootd.org/download/v${xrootd_version}/xrootd-${xrootd_version}.tar.gz
@@ -596,12 +598,13 @@ if(builtin_xrootd)
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+               -DCMAKE_CXX_FLAGS=${__cxxflags}
   )
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
   set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
                        ${CMAKE_BINARY_DIR}/lib/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX})
+                       ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/lib/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
