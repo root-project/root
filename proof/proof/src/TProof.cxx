@@ -7202,7 +7202,7 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
    Int_t nwrks = (nodes < 0 || nodes > wlst->GetSize()) ? wlst->GetSize() : nodes;
    int cnt = 0;
    fEndMaster = TestBit(TProof::kIsMaster) ? kTRUE : kFALSE;
-   while (nwrks--) {
+   while (cnt < nwrks) {
       // Random choice, if requested
       if (random) {
          Int_t iwrk = (Int_t) (gRandom->Rndm() * wlst->GetSize());
@@ -7229,7 +7229,8 @@ Int_t TProof::GoParallel(Int_t nodes, Bool_t attach, Bool_t random)
          fEndMaster = kFALSE;
          TMessage mess(kPROOF_PARALLEL);
          if (!attach) {
-            mess << nwrks-cnt;
+            Int_t nn = (nodes < 0) ? -1 : nodes-cnt;
+            mess << nn;
          } else {
             // To get the number of slaves
             mess.SetWhat(kPROOF_LOGFILE);
