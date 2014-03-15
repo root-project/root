@@ -34,7 +34,9 @@
 // *  ******************************************************************   * //
 // *  *  Starting  P R O O F - S T R E S S suite                       *   * //
 // *  ******************************************************************   * //
-// *  *  Log file: /tmp/ProofStress_XrcwBe                                 * //
+// *  * Temp dir for this run: /tmp/ganis/stressProof-31556                * //
+// *  ******************************************************************   * //
+// *  * Main log file: /tmp/ganis/stressProof-31556/main.log               * //
 // *  ******************************************************************   * //
 // *   Test  1 : Open a session ................................... OK *   * //
 // *   Test  2 : Get session logs ................................. OK *   * //
@@ -914,16 +916,41 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          }
       }
    }
-   if (usedeflog && !dryrun) {
-      glogfile = "ProofStress_";
-      if (!(flog = gSystem->TempFileName(glogfile, gSystem->TempDirectory()))) {
-         printf(" >>> Cannot create a temporary log file on %s - exit\n", gSystem->TempDirectory());
+
+   // Temp dir for this stress run
+#if defined(R__MACOSX) 
+   // Force '/tmp' under macosx, to avoid problems with lengths and symlinks
+   TString tmpdir("/tmp"), uspid;
+#else
+   TString tmpdir(gSystem->TempDirectory()), uspid;
+#endif
+   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
+   if (!ug) {
+      printf("\n >>> Test failure: could not get user info");
+      return -1;      
+   }
+   if (!tmpdir.EndsWith(ug->fUser.Data())) {
+      uspid.Form("/%s/stressProof-%d", ug->fUser.Data(), gSystem->GetPid());
+      delete ug;
+   } else {
+      uspid.Form("/stressProof-%d", gSystem->GetPid());
+   }
+   gtutdir.Form("%s%s", tmpdir.Data(), uspid.Data());
+   if (gSystem->AccessPathName(gtutdir)) {
+      if (gSystem->mkdir(gtutdir, kTRUE) != 0) {
+         printf("\n >>> Failure: could not assert/create the temporary directory"
+                " for the tutorial (%s)", gtutdir.Data());
          return 1;
       }
-      fclose(flog);
+   }
+   printf("*  Temp dir for this run: %s \n", gtutdir.Data());
+   printf("******************************************************************\n");
+
+   if (usedeflog && !dryrun) {
+      glogfile.Form("%s/main.log", gtutdir.Data());
    }
    if (gverbose > 0) {
-      printf("*  Log file: %s\n", glogfile.Data());
+      printf("*  Main log file: %s\n", glogfile.Data());
       if (cleanlog)
          printf("*  (NB: file will be removed if test is successful)              *\n");
       printf("******************************************************************\n");
@@ -1276,7 +1303,8 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
          printf("+++ Warning: could not attach to manager to get the session logs\n");
       }         
       printf("******************************************************************\n");
-      printf(" Main log file kept at %s (Proof logs in %s)\n", glogfile.Data(), logfiles.Data());
+      printf(" Main log file kept at %s\n", glogfile.Data());
+      printf(" (Proof logs in %s)\n", logfiles.Data());
       if (catlog) {
 
          // Display all logfiles directly on this terminal. Useful for getting
@@ -2186,39 +2214,6 @@ Int_t PT_Open(void *args, RunTimes &tt)
    if (!PToa) {
       printf("\n >>> Test failure: invalid arguments: %p\n", args);
       return -1;
-   }
-
-   // Temp dir for PROOF tutorials
-   PutPoint();
-#if defined(R__MACOSX) 
-   // Force '/tmp' under macosx, to avoid problems with lengths and symlinks
-   TString tmpdir("/tmp"), uspid;
-#else
-   TString tmpdir(gSystem->TempDirectory()), uspid;
-#endif
-   UserGroup_t *ug = gSystem->GetUserInfo(gSystem->GetUid());
-   if (!ug) {
-      printf("\n >>> Test failure: could not get user info");
-      return -1;      
-   }
-   if (!tmpdir.EndsWith(ug->fUser.Data())) {
-      uspid.Form("/%s/%d", ug->fUser.Data(), gSystem->GetPid());
-      delete ug;
-   } else {
-      uspid.Form("/%d", gSystem->GetPid());
-   }
-   tmpdir += uspid;
-#if !defined(R__MACOSX) 
-   gtutdir.Form("%s/.proof-tutorial", tmpdir.Data());
-#else
-   gtutdir.Form("%s/.proof", tmpdir.Data());
-#endif
-   if (gSystem->AccessPathName(gtutdir)) {
-      if (gSystem->mkdir(gtutdir, kTRUE) != 0) {
-         printf("\n >>> Test failure: could not assert/create the temporary directory"
-                " for the tutorial (%s)", gtutdir.Data());
-         return -1;
-      }
    }
 
    // String to initialize the dataset manager
