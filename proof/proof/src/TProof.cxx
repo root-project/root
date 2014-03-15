@@ -8306,7 +8306,7 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
 
          // We need to change the name of the function to avoid problems when we load more packages
          TString setup, setupfn;
-         setup.Form("SETUP_%x", TString(pack).Hash());
+         setup.Form("SETUP_%d_%x", gSystem->GetPid(), TString(pack).Hash());
          setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
          TMacro setupmc("PROOF-INF/SETUP.C");
          TObjString *setupline = setupmc.GetLineWith("SETUP(");
