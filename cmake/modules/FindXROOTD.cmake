@@ -83,7 +83,7 @@ if(XROOTD_FOUND)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdNetUtil_LIBRARY})
     endif ()
   else()
-    foreach(l XrdMain XrdUtils XrdClient)
+    foreach(l XrdMain XrdUtils XrdClient XrdCl)
       find_library(XROOTD_${l}_LIBRARY
          NAMES ${l}
          HINTS ${searchpath}

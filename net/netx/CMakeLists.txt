@@ -16,3 +16,6 @@ ROOT_LINKER_LIBRARY(Netx *.cxx G__Netx.cxx LIBRARIES ${XROOTD_LIBRARIES} DEPENDE
 
 ROOT_INSTALL_HEADERS()
 
+if(builtin_xrootd)
+  add_dependencies(Netx XROOTD)
+endif()
