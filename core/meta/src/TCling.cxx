@@ -2842,8 +2842,20 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
    R__LOCKGUARD2(gInterpreterMutex);
    DeclId_t d;
    TClingClassInfo *cl = (TClingClassInfo*)opaque_cl;
+   
    if (cl) {
       d = cl->GetDataMember(name);
+      // We check if the decl of the data member has an annotation which indicates
+      // an ioname.
+      // In case this is true, if the name requested is not the ioname, we 
+      // return 0, as if the member did not exist. In some sense we override 
+      // the information in the TClassInfo instance, isolating the typesystem in 
+      // TClass from the one in the AST.
+      if (ValueDecl* decl = (ValueDecl*) d){
+         std::string ioName;
+         bool hasIoName = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",ioName);
+         if (hasIoName && ioName != name) return 0;
+      }
    }
    else {
       TClingClassInfo gcl(fInterpreter);
