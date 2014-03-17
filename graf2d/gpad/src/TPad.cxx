@@ -3188,7 +3188,6 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             //ignore this style option when this is the canvas itself
             if (this == fMother) {
                //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
-               //TOTAL MESS.
                const Style_t oldFillStyle = GetPainter()->GetFillStyle();
                if (gVirtualX->InheritsFrom("TGCocoa"))
                   GetPainter()->SetFillStyle(1000);
