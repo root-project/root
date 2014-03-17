@@ -1596,7 +1596,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       if (memType->isPointerType()) {
          fieldName = "*";
       }
-      fieldName += iField->getName();
+      
+      // Check if this field has a custom ioname, if not, just use the one of the decl
+      std::string ioname(iField->getName());      
+      ROOT::TMetaUtils::ExtractAttrPropertyFromName(**iField,"ioname",ioname);
+      fieldName += ioname;
       fieldName += arraySize;
 
       // get member offset
@@ -1617,9 +1621,14 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
             // nested objects get an extra call to InspectMember
             // R__insp.InspectMember("FileStat_t", (void*)&fFileStat, "fFileStat.", false);
             std::string sFieldRecName;
-            ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, clang::QualType(memNonPtrType,0), *fInterpreter, *fNormalizedCtxt);
+            if (!ROOT::TMetaUtils::ExtractAttrPropertyFromName(*fieldRecDecl,"iotype",sFieldRecName)){            
+               ROOT::TMetaUtils::GetNormalizedName(sFieldRecName, 
+                                                   clang::QualType(memNonPtrType,0), 
+                                                   *fInterpreter, 
+                                                   *fNormalizedCtxt);
+            }
 
-            TDataMember* mbr = cl->GetDataMember(iField->getName().data());
+            TDataMember* mbr = cl->GetDataMember(ioname.c_str());
             // if we can not find the member (which should not really happen),
             // let's consider it transient.
             Bool_t transient = isTransient || !mbr || !mbr->IsPersistent();
