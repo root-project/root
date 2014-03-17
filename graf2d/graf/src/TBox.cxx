@@ -239,7 +239,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    if (TestBit(kCannotMove)) return;
    
-   const Int_t kMaxDiff = 5;
+   const Int_t kMaxDiff = 7;
    const Int_t kMinSize = 20;
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
