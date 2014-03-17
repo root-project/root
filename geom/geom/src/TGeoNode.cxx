@@ -228,11 +228,15 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    TGeoIterator next(fVolume);
    TGeoNode *node;
    TString path;
+   TObjArray *overlaps = geom->GetListOfOverlaps();
+   Int_t novlps;     
+   TString msg;
    while ((node=next())) {
       next.GetPath(path);
       icheck++;
       if (!node->GetVolume()->IsSelected()) {
-         geom->GetGeomPainter()->OpProgress(node->GetVolume()->GetName(),icheck,ncheck,timer,kFALSE);
+         msg = TString::Format("found %d overlaps", overlaps->GetEntriesFast());
+         geom->GetGeomPainter()->OpProgress(node->GetVolume()->GetName(),icheck,ncheck,timer,kFALSE, msg);
          node->GetVolume()->SelectVolume(kFALSE);
          node->GetVolume()->CheckOverlaps(ovlp,option);
       }   
@@ -240,8 +244,7 @@ void TGeoNode::CheckOverlaps(Double_t ovlp, Option_t *option)
    fVolume->SelectVolume(kTRUE);
    geom->SetCheckingOverlaps(kFALSE);
    geom->SortOverlaps();
-   TObjArray *overlaps = geom->GetListOfOverlaps();
-   Int_t novlps = overlaps->GetEntriesFast();     
+   novlps = overlaps->GetEntriesFast();     
    TNamed *obj;
    for (i=0; i<novlps; i++) {
       obj = (TNamed*)overlaps->At(i);
@@ -298,19 +301,20 @@ Bool_t TGeoNode::IsOnScreen() const
 void TGeoNode::InspectNode() const
 {
 // Inspect this node.
-   Info("InspectNode","Inspecting node %s", GetName());
-   if (IsOverlapping()) Info("InspectNode","node is MANY");
+   printf("== Inspecting node %s ", GetName());
+   if (fMother) printf("mother volume %s. ", fMother->GetName());
+   if (IsOverlapping()) printf("(Node is MANY)\n");
+   else printf("\n");
    if (fOverlaps && fMother) {
-      Info("InspectNode","possibly overlaping with :");
+      printf("   possibly overlaping with : ");
       for (Int_t i=0; i<fNovlp; i++)
-         Info("InspectNode","   node %s", fMother->GetNode(fOverlaps[i])->GetName());
+         printf(" %s ", fMother->GetNode(fOverlaps[i])->GetName());
+      printf("\n");
    }
-   Info("InspectNode","Transformation matrix:\n");
+   printf("Transformation matrix:\n");
    TGeoMatrix *matrix = GetMatrix();
-   if (matrix) matrix->Print();
-   if (fMother)
-      Info("InspectNode","Mother volume %s\n", fMother->GetName());
-   fVolume->InspectShape();
+   if (GetMatrix()) matrix->Print();
+   fVolume->Print();
 }
 
 //_____________________________________________________________________________
@@ -768,6 +772,7 @@ TGeoNode *TGeoNodeMatrix::MakeCopyNode() const
    // Copy extensions
    node->SetUserExtension(fUserExtension);
    node->SetFWExtension(fFWExtension);
+   node->SetCloned();
    return node;
 }
 

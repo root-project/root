@@ -689,10 +689,42 @@ TGeoNode *TGeoNavigator::FindNextBoundary(Double_t stepmax, const char *path, Bo
       TGeoVolume *tvol=fCurrentNode->GetVolume();
       fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
       fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
-      if (tvol->Contains(&point[0])) {
+      if (idebug>4) {
+         printf("=== To path: %s\n", path);
+         printf("=== local to %s: (%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
+                tvol->GetName(), point[0],point[1],point[2],dir[0],dir[1],dir[2]);
+      }          
+      if (tvol->Contains(point)) {
+         if (idebug>4) printf("=== volume %s contains point\n", tvol->GetName());
          fStep=tvol->GetShape()->DistFromInside(&point[0], &dir[0], iact, fStep, &safe);
       } else {
          fStep=tvol->GetShape()->DistFromOutside(&point[0], &dir[0], iact, fStep, &safe);
+         if (idebug>4) {
+            printf("=== volume %s does not contain point\n", tvol->GetName());
+            printf("=== distance to path: %g\n", fStep);
+            tvol->InspectShape();
+            if (fStep<1.E20) {
+               Double_t newpt[3];
+               newpt[0] = point[0] + fStep*dir[0];
+               newpt[1] = point[1] + fStep*dir[1];
+               newpt[2] = point[2] + fStep*dir[2];
+               printf("=== Propagated point: (%19.16f, %19.16f, %19.16f)", newpt[0],newpt[1],newpt[2]);
+            }   
+            while (fLevel) {
+               CdUp();
+               tvol = fCurrentNode->GetVolume();
+               fGlobalMatrix->MasterToLocal(fPoint, &point[0]);
+               fGlobalMatrix->MasterToLocalVect(fDirection, &dir[0]);
+               printf("=== local to %s: (%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
+                      tvol->GetName(), point[0],point[1],point[2],dir[0],dir[1],dir[2]);               
+               if (tvol->Contains(point)) {
+                  printf("=== volume %s contains point\n", tvol->GetName());
+               } else {
+                  printf("=== volume %s does not contain point\n", tvol->GetName());
+                  snext = tvol->GetShape()->DistFromOutside(&point[0], &dir[0], iact, 1.E30, &safe);
+               }
+            }   
+         }   
       }
       PopPath();
       return fNextNode;

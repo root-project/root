@@ -160,6 +160,8 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
       Error("Align", "Cannot align division nodes: %s\n",node->GetName());
       return kFALSE;
    }
+   // Refresh the node since other Align calls may have altered the stored nodes
+   Refresh();
    TGeoNode *nnode = 0;
    TGeoVolume *vm = GetVolume(0);
    TGeoVolume *vd = 0;
@@ -180,30 +182,36 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
       for (i=0; i<fLevel; i++) {
          // Get daughter node and its id inside vm
          node = GetNode(i+1);
-         // Clone daughter volume and node
-         vd = node->GetVolume()->CloneVolume();
-         if (!vd) {
-            delete [] id;
-            Fatal("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
-            return kFALSE;
-         }
-         nnode = node->MakeCopyNode();
-         if (!nnode) {
-            delete [] id;
-            Fatal("Align", "Cannot make copy node for %s", node->GetName());
-            return kFALSE;
+         // Clone daughter volume and node if not done yet
+         if (node->IsCloned()) {
+            vd = node->GetVolume();
+            nnode = node;
+         } else {
+            vd = node->GetVolume()->CloneVolume();
+            if (!vd) {
+               delete [] id;
+               Fatal("Align", "Cannot clone volume %s", node->GetVolume()->GetName());
+               return kFALSE;
+            }
+            nnode = node->MakeCopyNode();
+            if (!nnode) {
+               delete [] id;
+               Fatal("Align", "Cannot make copy node for %s", node->GetName());
+               return kFALSE;
+            }   
+            // Correct pointers to mother and volume
+            nnode->SetVolume(vd);
+            nnode->SetMotherVolume(vm);
+            // Decouple old node from mother volume and connect new one
+            if (vm->TestBit(TGeoVolume::kVolumeImportNodes)) {
+               gGeoManager->GetListOfGShapes()->Add(nnode);
+            }   
+            vm->GetNodes()->RemoveAt(id[i]);
+            vm->GetNodes()->AddAt(nnode,id[i]);
+            fNodes->RemoveAt(i+1);
+            fNodes->AddAt(nnode,i+1);
+     //       node->GetVolume()->Release();
          }   
-         // Correct pointers to mother and volume
-         nnode->SetVolume(vd);
-         nnode->SetMotherVolume(vm);
-         // Decouple old node from mother volume and connect new one
-         if (vm->TestBit(TGeoVolume::kVolumeImportNodes)) {
-            gGeoManager->GetListOfGShapes()->Add(nnode);
-         }   
-         vm->GetNodes()->RemoveAt(id[i]);
-         vm->GetNodes()->AddAt(nnode,id[i]);
-         fNodes->RemoveAt(i+1);
-         fNodes->AddAt(nnode,i+1);
          // Consider new cloned volume as mother and continue
          vm = vd;
       }

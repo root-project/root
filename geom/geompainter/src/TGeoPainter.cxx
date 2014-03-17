@@ -782,7 +782,8 @@ void TGeoPainter::DrawVolume(TGeoVolume *vol, Option_t *option)
       view->SetAutoRange(kTRUE);
       if (has_pad) gPad->Update();
    }
-   Paint("range"); 
+   if (!opt.Contains("same")) Paint("range");
+   else Paint(opt);
    view->SetAutoRange(kFALSE);    
    // If we are drawing into the pad, then the view needs to be
    // set to perspective
@@ -935,7 +936,7 @@ void TGeoPainter::DrawPanel()
 }
 
 //______________________________________________________________________________
-void TGeoPainter::DrawPath(const char *path)
+void TGeoPainter::DrawPath(const char *path, Option_t *option)
 {
 // Draw all volumes for a given path.
    fVisOption=kGeoVisBranch;
@@ -943,7 +944,7 @@ void TGeoPainter::DrawPath(const char *path)
    fIsPaintingShape = kFALSE;
    fTopVolume = fGeoManager->GetTopVolume();
    fTopVolume->SetVisRaytrace(kFALSE);
-   DrawVolume(fTopVolume,"");   
+   DrawVolume(fTopVolume,option);   
 }
 
 //______________________________________________________________________________
@@ -1264,7 +1265,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
    if (top->IsVisBranch()) {
       fGeoManager->PushPath();
       fGeoManager->cd(fVisBranch.Data());
-      while (fGeoManager->GetLevel()) {
+//      while (fGeoManager->GetLevel()) {
          vol = fGeoManager->GetCurrentVolume();
          if (!fVisLock) {
             fVisVolumes->Add(vol);
@@ -1284,7 +1285,7 @@ void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* glo
          PaintShape(*(vol->GetShape()),option);
          vol->SetTransparency(transparency);
          fGeoManager->CdUp();
-      }
+//      }
       fVisLock = kTRUE;   
       fGeoManager->PopPath();
       fGeoManager->SetMatrixReflection(kFALSE);
@@ -1522,10 +1523,10 @@ void TGeoPainter::PrintOverlaps() const
 }   
 
 //______________________________________________________________________________
-void TGeoPainter::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last, Bool_t refresh)
+void TGeoPainter::OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch, Bool_t last, Bool_t refresh, const char *msg)
 {
 // Text progress bar.
-   fChecker->OpProgress(opname,current,size,watch,last,refresh);
+   fChecker->OpProgress(opname,current,size,watch,last,refresh, msg);
 }   
    
 //______________________________________________________________________________

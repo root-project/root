@@ -65,10 +65,11 @@ protected:
 
 public:
    enum {
-      kGeoNodeMatrix = BIT(10),
-      kGeoNodeOffset = BIT(11),
-      kGeoNodeVC     = BIT(12),
-      kGeoNodeOverlap = BIT(13)
+      kGeoNodeMatrix = BIT(14),
+      kGeoNodeOffset = BIT(15),
+      kGeoNodeVC     = BIT(16),
+      kGeoNodeOverlap = BIT(17),
+      kGeoNodeCloned = BIT(18)
    };
 
    // constructors
@@ -106,6 +107,7 @@ public:
    virtual char     *GetObjectInfo(Int_t px, Int_t py) const;
    virtual Int_t     GetOptimalVoxels() const {return 0;}
    void              InspectNode() const; // *MENU*
+   Bool_t            IsCloned() const {return TObject::TestBit(kGeoNodeCloned);}
    virtual Bool_t    IsFolder() const {return (GetNdaughters()?kTRUE:kFALSE);}
    Bool_t            IsOffset() const {return TObject::TestBit(kGeoNodeOffset);}
    Bool_t            IsOnScreen() const; // *MENU*
@@ -121,6 +123,7 @@ public:
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
    void              SetVolume(TGeoVolume *volume)       {fVolume = volume;}
    void              SetNumber(Int_t number)             {fNumber=number;}
+   void              SetCloned(Bool_t flag=kTRUE)        {TObject::SetBit(kGeoNodeCloned, flag);}
    void              SetOverlapping(Bool_t flag=kTRUE)   {TObject::SetBit(kGeoNodeOverlap, flag);}
    void              SetVirtual()                        {TObject::SetBit(kGeoNodeVC, kTRUE);}
    void              SetVisibility(Bool_t vis=kTRUE); // *MENU*
