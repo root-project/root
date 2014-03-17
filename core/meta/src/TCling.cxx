@@ -2851,7 +2851,7 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
       // return 0, as if the member did not exist. In some sense we override 
       // the information in the TClassInfo instance, isolating the typesystem in 
       // TClass from the one in the AST.
-      if (ValueDecl* decl = (ValueDecl*) d){
+      if (const ValueDecl* decl = (const ValueDecl*) d){
          std::string ioName;
          bool hasIoName = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",ioName);
          if (hasIoName && ioName != name) return 0;
