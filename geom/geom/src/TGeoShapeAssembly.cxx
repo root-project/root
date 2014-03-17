@@ -236,13 +236,26 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
 {
 // compute distance from outside point to surface of the hyperboloid.
 //   fVolume->SetNextNodeIndex(-1);
+#ifdef TGEO_DEBUG
+   static int indent=0;
+   indent++;
+   TString sindent = "";
+   for (Int_t k=0; k<indent; k++) sindent += "  ";
+#endif   
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
+#ifdef TGEO_DEBUG
+      indent--;
+#endif
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (step<=*safe)) return TGeoShape::Big();
+#ifdef TGEO_DEBUG
+      indent++;
+#endif
    }
    // find distance to assembly
+   Int_t idebug = TGeoManager::GetVerboseLevel();
    Double_t snext = 0.0;
    Double_t dist;
    Double_t stepmax = step;
@@ -250,15 +263,32 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    Int_t i;
    Bool_t found = kFALSE;
    memcpy(pt,point,3*sizeof(Double_t));
+#ifdef TGEO_DEBUG
+   if (idebug>4) printf("%s[%d] assembly %s checking distance to %d daughters...\n", sindent.Data(), indent, fVolume->GetName(), fVolume->GetNdaughters());
+#endif
+
    if (!TGeoBBox::Contains(point)) {
       snext = TGeoBBox::DistFromOutside(point, dir, 3, stepmax);
+      // Approach bounding box to minimize errors
+      snext = TMath::Min(0.01*snext, 1.E-6);
+#ifdef TGEO_DEBUG
+      if (idebug>4 && snext > stepmax) printf("%s[%d] %s: bbox not crossed\n",sindent.Data(), indent, fVolume->GetName());
+      indent--;
+#endif
       if (snext > stepmax) return TGeoShape::Big();
-      for (i=0; i<3; i++) pt[i] += (snext+TGeoShape::Tolerance())*dir[i];
-      if (Contains(pt)) {
-         fVolume->SetNextNodeIndex(fVolume->GetCurrentNodeIndex());
-         return snext;
-      }   
-      snext += TGeoShape::Tolerance();
+#ifdef TGEO_DEBUG
+      indent++;
+#endif
+      for (i=0; i<3; i++) pt[i] += snext*dir[i];
+//      if (Contains(pt)) {
+#ifdef TGEO_DEBUG
+//         if (idebug>4) printf("%s[%d] Propagation to BBox of %s entered the component %s at %f\n", sindent.Data(), indent, fVolume->GetName(), fVolume->GetNode(fVolume->GetCurrentNodeIndex())->GetName(), snext);
+//         indent--;
+#endif
+//         fVolume->SetNextNodeIndex(fVolume->GetCurrentNodeIndex());
+//         return snext;
+//      }   
+//      snext += TGeoShape::Tolerance();
       stepmax -= snext;
    }
    // Point represented by pt is now inside the bounding box - find distance to components   
@@ -272,8 +302,20 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
          if (voxels && voxels->IsSafeVoxel(pt, i, stepmax)) continue;
          node->MasterToLocal(pt, lpoint);
          node->MasterToLocalVect(dir, ldir);
+#ifdef TGEO_DEBUG
+         if (idebug>4) printf("%s[%d] distance to %s ...\n", sindent.Data(), indent, node->GetName());
+#endif
          dist = node->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, stepmax);
          if (dist<stepmax) {
+#ifdef TGEO_DEBUG
+            if (idebug>4) {
+               printf("%s[%d] %s -> from local=(%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
+                      sindent.Data(), indent, fVolume->GetName(), lpoint[0],lpoint[1],lpoint[2],ldir[0],ldir[1],ldir[2]);
+               printf("%s[%d] -> (l)to: %s shape %s snext=%g\n", sindent.Data(), indent, node->GetName(),
+                      node->GetVolume()->GetShape()->ClassName(), dist);        
+            }
+#endif
+            
             stepmax = dist;
             fVolume->SetNextNodeIndex(i);
             found = kTRUE;
@@ -281,8 +323,16 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
       }
       if (found) {
          snext += stepmax;
+#ifdef TGEO_DEBUG
+         if (idebug>4) printf("%s[%d] %s: found %s at %f\n", sindent.Data(), indent, fVolume->GetName(), fVolume->GetNode(fVolume->GetNextNodeIndex())->GetName(), snext);
+         indent--;
+#endif
          return snext;
       }
+#ifdef TGEO_DEBUG
+      if (idebug>4) printf("%s[%d] %s: no daughter crossed\n", sindent.Data(), indent, fVolume->GetName());
+      indent--;
+#endif
       return TGeoShape::Big();   
    }
    // current volume is voxelized, first get current voxel
@@ -297,8 +347,19 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
          node = fVolume->GetNode(vlist[i]);
          node->MasterToLocal(pt, lpoint);
          node->MasterToLocalVect(dir, ldir);
+#ifdef TGEO_DEBUG
+         if (idebug>4) printf("%s[%d] distance to %s ...\n", sindent.Data(), indent, node->GetName());
+#endif
          dist = node->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, stepmax);
          if (dist<stepmax) {
+#ifdef TGEO_DEBUG
+            if (idebug>4) {
+               printf("%s[%d] %s -> from local=(%19.16f, %19.16f, %19.16f, %19.16f, %19.16f, %19.16f)\n",
+                      sindent.Data(), indent, fVolume->GetName(), lpoint[0],lpoint[1],lpoint[2], ldir[0],ldir[1],ldir[2]);
+               printf("%s[%d] -> to: %s shape %s snext=%g\n", sindent.Data(), indent, node->GetName(),
+                      node->GetVolume()->GetShape()->ClassName(), dist);        
+            }           
+#endif
             stepmax = dist;
             fVolume->SetNextNodeIndex(vlist[i]);
             found = kTRUE;
@@ -308,8 +369,16 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    nav->GetCache()->ReleaseInfo();
    if (found) {
       snext += stepmax;
+#ifdef TGEO_DEBUG
+      if (idebug>4) printf("%s[%d] %s: found %s at %f\n", sindent.Data(), indent, fVolume->GetName(), fVolume->GetNode(fVolume->GetNextNodeIndex())->GetName(), snext);
+      indent--;
+#endif
       return snext;
    }
+#ifdef TGEO_DEBUG
+   if (idebug>4) printf("%s[%d] %s: no daughter crossed\n", sindent.Data(), indent, fVolume->GetName());
+   indent--;
+#endif
    return TGeoShape::Big();      
 }
    

@@ -928,6 +928,10 @@ void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 void TGeoManager::SetMaxThreads(Int_t nthreads)
 {
 // Set maximum number of threads for navigation.
+   if (!fClosed) {
+      Error("SetMaxThreads", "Cannot set maximum number of threads before closing the geometry");
+      return;
+   }   
    if (fMaxThreads) {
       ClearThreadsMap();
       ClearThreadData();
@@ -1645,11 +1649,21 @@ void TGeoManager::CountLevels()
       return;
    }
    TGeoIterator next(fTopVolume);
+   Bool_t fixrefs = fIsGeomReading && (fMasterVolume->GetRefCount()==1);
+   if (fMasterVolume->GetRefCount()>1) fMasterVolume->Release();
+   if (fgVerboseLevel>1 && fixrefs) Info("CountLevels", "Fixing volume reference counts");
    TGeoNode *node;
    Int_t maxlevel = 1;
    Int_t maxnodes = fTopVolume->GetNdaughters();
    Int_t maxvertices = 1;
    while ((node=next())) {
+      if (fixrefs) {
+         node->GetVolume()->Grab();
+         for (Int_t ibit=10; ibit<14; ibit++) {
+            node->SetBit(BIT(ibit+4), node->TestBit(BIT(ibit)));
+//            node->ResetBit(BIT(ibit)); // cannot overwrite old crap for reproducibility
+         }   
+      }   
       if (node->GetVolume()->GetVoxels()) {
          if (node->GetNdaughters()>maxnodes) maxnodes = node->GetNdaughters();
       }   
@@ -1771,12 +1785,12 @@ void TGeoManager::DrawTracks(Option_t *option)
 }
 
 //_____________________________________________________________________________
-void TGeoManager::DrawPath(const char *path)
+void TGeoManager::DrawPath(const char *path, Option_t *option)
 {
 // Draw current path
    if (!fTopVolume) return;
    fTopVolume->SetVisBranch();
-   GetGeomPainter()->DrawPath(path);
+   GetGeomPainter()->DrawPath(path, option);
 }
 //_____________________________________________________________________________
 void TGeoManager::RandomPoints(const TGeoVolume *vol, Int_t npoints, Option_t *option)
@@ -3218,6 +3232,7 @@ void TGeoManager::SetTopVolume(TGeoVolume *vol)
       delete topn;
    } else {
       fMasterVolume = vol;
+      fMasterVolume->Grab();
       fUniqueVolumes->AddAtAndExpand(vol,0);
       if (fgVerboseLevel>0) Info("SetTopVolume","Top volume is %s. Master volume is %s", fTopVolume->GetName(),
            fMasterVolume->GetName());
@@ -3382,8 +3397,10 @@ void TGeoManager::CheckGeometry(Option_t * /*option*/)
    TGeoMedium *dummy = TGeoVolume::DummyMedium();
    while ((vol = (TGeoVolume*)nextv())) {
       if (vol->IsAssembly()) vol->GetShape()->ComputeBBox();
-      if (vol->GetMedium() == dummy)
+      else if (vol->GetMedium() == dummy) {
          Warning("CheckGeometry", "Volume \"%s\" has no medium: assigned dummy medium and material", vol->GetName());
+         vol->SetMedium(dummy);
+      }   
    }
 }
 

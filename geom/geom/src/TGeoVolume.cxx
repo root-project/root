@@ -407,6 +407,7 @@ TGeoVolume::TGeoVolume()
    fOption   = "";
    fNumber   = 0;
    fNtotal   = 0;
+   fRefCount = 0;
    fUserExtension = 0;
    fFWExtension = 0;
    TObject::ResetBit(kVolumeImportNodes);
@@ -437,6 +438,7 @@ TGeoVolume::TGeoVolume(const char *name, const TGeoShape *shape, const TGeoMediu
    fOption   = "";
    fNumber   = 0;
    fNtotal   = 0;
+   fRefCount = 0;
    fUserExtension = 0;
    fFWExtension = 0;
    if (fGeoManager) fNumber = fGeoManager->AddVolume(this);
@@ -460,6 +462,7 @@ TGeoVolume::TGeoVolume(const TGeoVolume& gv) :
   fOption(gv.fOption),
   fNumber(gv.fNumber),
   fNtotal(gv.fNtotal),
+  fRefCount(0),
   fUserExtension(gv.fUserExtension->Grab()),
   fFWExtension(gv.fFWExtension->Grab())
 { 
@@ -485,6 +488,7 @@ TGeoVolume& TGeoVolume::operator=(const TGeoVolume& gv)
       fField=gv.fField;
       fOption=gv.fOption;
       fNumber=gv.fNumber;
+      fRefCount = 0;
       fNtotal=gv.fNtotal;
       fUserExtension=gv.fUserExtension->Grab();
       fFWExtension=gv.fFWExtension->Grab();
@@ -902,7 +906,7 @@ void TGeoVolume::cd(Int_t inode) const
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
+void TGeoVolume::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t * /*option*/)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
@@ -935,10 +939,12 @@ void TGeoVolume::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, 
 //      Warning("AddNode", "Volume %s : added node %s with same name", GetName(), name.Data());
    node->SetName(name);
    node->SetNumber(copy_no);
+   fRefCount++;
+   vol->Grab();
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
+void TGeoVolume::AddNodeOffset(TGeoVolume *vol, Int_t copy_no, Double_t offset, Option_t * /*option*/)
 {
 // Add a division node to the list of nodes. The method is called by
 // TGeoVolume::Divide() for creating the division nodes.
@@ -958,10 +964,11 @@ void TGeoVolume::AddNodeOffset(const TGeoVolume *vol, Int_t copy_no, Double_t of
    TString name = TString::Format("%s_%d", vol->GetName(), copy_no+1);
    node->SetName(name);
    node->SetNumber(copy_no+1);
+   vol->Grab();
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add a TGeoNode to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
@@ -1001,6 +1008,7 @@ void TGeoVolume::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
    node->SetVirtual();
+   vol->Grab();
 }
 
 //_____________________________________________________________________________
@@ -1151,6 +1159,15 @@ Bool_t TGeoVolume::OptimizeVoxels()
    TVirtualGeoPainter *painter = fGeoManager->GetGeomPainter();
    return painter->TestVoxels(this);   
 }
+
+//_____________________________________________________________________________
+void TGeoVolume::Print(Option_t *option) const
+{
+// Print volume info
+   printf("== Volume: %s type %s positioned %d times\n", GetName(), ClassName(), fRefCount);
+   InspectShape();
+   InspectMaterial();
+}   
 
 //_____________________________________________________________________________
 void TGeoVolume::Paint(Option_t *option)
@@ -2375,7 +2392,7 @@ void TGeoVolumeMulti::AddVolume(TGeoVolume *vol)
    
 
 //_____________________________________________________________________________
-void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeMulti::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add a new node to the list of nodes. This is the usual method for adding
 // daughters inside the container volume.
@@ -2394,7 +2411,7 @@ void TGeoVolumeMulti::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *
 }
 
 //_____________________________________________________________________________
-void TGeoVolumeMulti::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeMulti::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add a new node to the list of nodes, This node is possibly overlapping with other
 // daughters of the volume or extruding the volume.
@@ -2718,7 +2735,7 @@ TGeoVolumeAssembly::~TGeoVolumeAssembly()
 }   
 
 //_____________________________________________________________________________
-void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeAssembly::AddNode(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add a component to the assembly. 
    TGeoVolume::AddNode(vol,copy_no,mat,option);
@@ -2726,7 +2743,7 @@ void TGeoVolumeAssembly::AddNode(const TGeoVolume *vol, Int_t copy_no, TGeoMatri
 }   
 
 //_____________________________________________________________________________
-void TGeoVolumeAssembly::AddNodeOverlap(const TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
+void TGeoVolumeAssembly::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat, Option_t *option)
 {
 // Add an overlapping node - not allowed for assemblies.
    Warning("AddNodeOverlap", "Declaring assembly %s as possibly overlapping inside %s not allowed. Using AddNode instead !",vol->GetName(),GetName());
