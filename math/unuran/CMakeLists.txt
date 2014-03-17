@@ -41,6 +41,12 @@ else()
                      WORKING_DIRECTORY ${UNR_UNTARDIR})
 endif()
 
+#---We need to disable some warnings-------------------------------------------------------------------
+string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+if(${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  add_definitions(-Wno-parentheses-equality)
+endif()
+
 ROOT_USE_PACKAGE(hist/hist)
 
 include_directories(BEFORE ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)
