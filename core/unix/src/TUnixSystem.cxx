@@ -276,7 +276,8 @@ extern "C" {
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
-   !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
+   !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
+   !defined(__arm64__)
 #include <fenv.h>
 #include <signal.h>
 #include <ucontext.h>
@@ -298,7 +299,7 @@ enum {
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
-    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
 #include <fenv.h>
 #endif
 // End FPE handling includes
@@ -942,12 +943,14 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
-    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
    fenv_t oldenv;
    fegetenv(&oldenv);
    fesetenv(&oldenv);
 #if defined(__arm__)
    Int_t oldmask = ~oldenv.__fpscr;
+#elif defined(__arm64__)
+   Int_t oldmask = ~oldenv.__fpcr;
 #else
    Int_t oldmask = ~oldenv.__control;
 #endif
@@ -960,7 +963,8 @@ Int_t TUnixSystem::GetFPEMask()
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
-    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
+    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
+    !defined(__arm64__)
    Long64_t oldmask;
    fegetenvd(oldmask);
 
@@ -1030,7 +1034,7 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && \
-    (defined(__i386__) || defined(__x86_64__) || defined(__arm__))
+    (defined(__i386__) || defined(__x86_64__) || defined(__arm__) || defined(__arm64__))
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_INVALID;
    if (mask & kDivByZero)   newm |= FE_DIVBYZERO;
@@ -1042,6 +1046,8 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
    fegetenv(&cur);
 #if defined(__arm__)
    cur.__fpscr &= ~newm;
+#elif defined(__arm64__)
+   cur.__fpcr &= ~newm;
 #else
    cur.__control &= ~newm;
 #endif
@@ -1049,7 +1055,8 @@ Int_t TUnixSystem::SetFPEMask(Int_t mask)
 #endif
 
 #if defined(R__MACOSX) && !defined(__SSE2__) && !defined(__xlC__) && \
-    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__)
+    !defined(__i386__) && !defined(__x86_64__) && !defined(__arm__) && \
+    !defined(__arm64__)
    Int_t newm = 0;
    if (mask & kInvalid  )   newm |= FE_ENABLE_INVALID;
    if (mask & kDivByZero)   newm |= FE_ENABLE_DIVBYZERO;

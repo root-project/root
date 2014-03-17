@@ -10,6 +10,7 @@ hpuxgcc              for HP-UX 10.20 with gcc
 hpuxia64acc          for HP-UX 11i v1.5 (IA-64) with HP aCC
 hurddeb              for Debian GNU/Hurd with gcc
 ios                  for Apple iOS on armv7 device
+ios64                for Apple iOS 64-bit on armv8 device
 iossim               for Apple iOS on i386 simulator
 linux                for i386 Linux with gcc >= 3
 linuxicc             for i386 Linux with Intel's icc

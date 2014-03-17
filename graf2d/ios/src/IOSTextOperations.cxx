@@ -89,9 +89,10 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, Color_t /*color*/
       throw std::runtime_error("CTLineGuard: color space");
 
 
-   Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   GraphicUtils::GetColorForIndex(gVirtualX->GetTextColor(), rgba[0], rgba[1], rgba[2]);
-
+   CGFloat rgba[] = {0.f, 0.f, 0.f, 1.f};
+   Float_t r = 0.f, g = 0.f, b = 0.f;
+   GraphicUtils::GetColorForIndex(gVirtualX->GetTextColor(), r, g, b);
+   rgba[0] = r; rgba[1] = g; rgba[2] = b;
    Util::RefGuardGeneric<CGColorRef, CGColorRelease> textColor(CGColorCreate(rgbColorSpace.Get(), rgba));
    //Not clear from docs, if textColor.Get() can be 0.
    
@@ -111,9 +112,10 @@ CTLineGuard::CTLineGuard(const char *textLine, CTFontRef font, const std::vector
       throw std::runtime_error("CTLineGuard: color space");
 
 
-   Float_t rgba[] = {0.f, 0.f, 0.f, 1.f};
-   GraphicUtils::GetColorForIndex(gVirtualX->GetTextColor(), rgba[0], rgba[1], rgba[2]);
-
+   CGFloat rgba[] = {0.f, 0.f, 0.f, 1.f};
+   Float_t r = 0.f, g = 0.f, b = 0.f;
+   GraphicUtils::GetColorForIndex(gVirtualX->GetTextColor(), r, g, b);
+   rgba[0] = r; rgba[1] = g; rgba[2] = b;
    Util::RefGuardGeneric<CGColorRef, CGColorRelease> textColor(CGColorCreate(rgbColorSpace.Get(), rgba));
    const unsigned length = std::strlen(textLine);
    std::vector<UniChar> convertedLine(length);

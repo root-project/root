@@ -1918,7 +1918,7 @@ ios*)
       ios7=yes
    fi
    xcodepath=`/usr/bin/xcode-select -print-path`
-   if test "x$arch" = "xios"; then
+   if test "x$arch" = "xios" || test "x$arch" = "xios64"; then
       iossdk=$xcodepath/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS$iosvers.sdk
    else
       iossdk=$xcodepath/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator$iosvers.sdk
@@ -1937,6 +1937,7 @@ ios*)
    enable_reflex="no"
    enable_genvector="no"
    enable_tmva="no"
+   enable_vdt="no"
    ;;
 win32)
    logmsg "Will use by default builtin versions of libraries on Win32"
