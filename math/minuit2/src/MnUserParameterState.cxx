@@ -311,8 +311,10 @@ void MnUserParameterState::SetLimits(unsigned int e, double low, double up) {
       unsigned int i = IntOfExt(e);
       if(low < fIntParameters[i] && fIntParameters[i] < up)
          fIntParameters[i] = Ext2int(e, fIntParameters[i]);
-      else
-         fIntParameters[i] = Ext2int(e, 0.5*(low+up));
+      else if (low >=  fIntParameters[i] ) 
+         fIntParameters[i] = Ext2int(e, low + 0.1 * Parameter(e).Error() );
+      else 
+         fIntParameters[i] = Ext2int(e, up - 0.1 * Parameter(e).Error() );
    }
 }
 
@@ -326,7 +328,7 @@ void MnUserParameterState::SetUpperLimit(unsigned int e, double up) {
       if(fIntParameters[i] < up)
          fIntParameters[i] = Ext2int(e, fIntParameters[i]);
       else
-         fIntParameters[i] = Ext2int(e, up - 0.5*fabs(up + 1.));
+         fIntParameters[i] = Ext2int(e, up -  0.1 * Parameter(e).Error() );
    }
 }
 
@@ -340,7 +342,7 @@ void MnUserParameterState::SetLowerLimit(unsigned int e, double low) {
       if(low < fIntParameters[i])
          fIntParameters[i] = Ext2int(e, fIntParameters[i]);
       else
-         fIntParameters[i] = Ext2int(e, low + 0.5*fabs(low + 1.));
+         fIntParameters[i] = Ext2int(e, low + 0.1 * Parameter(e).Error() );
    }
 }
 
