@@ -27,16 +27,3 @@ testNewFileDiff: newDiffFile.success
 
 newDiffFile.success: newDiffFile.log
 	$(SuccessTestDiff) && touch $@
-
-
-
-# loadernotapp$(ExeSuf): loadernotapp.cxx
-# 	$(CMDECHO)$(CXX)  $^ $(CFLAGS) $(CXXFLAGS) $(CLDFLAGS) $(ROOTLIBS) $(OutPutOpt)$@
-# 
-# loadernotapp.log: loadernotapp$(ExeSuf)
-# 	$(CMDECHO) ./loadernotapp$(ExeSuf) > loadernotapp.log
-# 
-# testloadernotapp: loadernotapp.success
-# 
-# loadernotapp.success: loadernotapp.log
-# 	$(SuccessTestDiff) && touch $@

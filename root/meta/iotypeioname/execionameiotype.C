@@ -31,6 +31,10 @@ void inspectDicts(){
  if (dm) std::cout << "Particle::vertex2 type is " << dm->GetTypeName() << std::endl; 
 }
 
+void checkTBufferSize(){
+   // no op, still implementing
+}
+
 void dumpOnFile(){
        
    TXMLFile ofile("newFile.xml","RECREATE");
@@ -46,6 +50,9 @@ void execionameiotype(){
 
  // Some gymnastic with dictionaries
  inspectDicts();
+ 
+ // Now check that we use Double32_t for real
+ checkTBufferSize();
  
  // Now read from file
  readFromFile();
