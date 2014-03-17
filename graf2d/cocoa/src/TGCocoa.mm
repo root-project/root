@@ -629,7 +629,7 @@ void TGCocoa::ClearWindow()
       //obtain real pad's color and check for its transparency.
       CGContextRef pixmapCtx = drawable.fContext;
       assert(pixmapCtx != 0 && "ClearWindow, pixmap's context is null");
-      const Quartz::CGStateGuard ctxGuard(pixmapCtx);
+      //const Quartz::CGStateGuard ctxGuard(pixmapCtx);
       //CGContextSetRGBFillColor(pixmapCtx, 1., 1., 1., 1.);
       //CGContextFillRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
       //Now we really clear!
