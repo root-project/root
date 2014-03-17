@@ -587,11 +587,18 @@ if(builtin_xrootd)
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${__cxxflags}
   )
+  # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
+  set(_LIBDIR_DEFAULT "lib")
+  if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
+    if("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+      set(_LIBDIR_DEFAULT "lib64")
+    endif()
+  endif()
   set(XROOTD_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include/xrootd ${CMAKE_BINARY_DIR}/include/xrootd/private)
-  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/lib/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/lib/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${CMAKE_BINARY_DIR}/lib/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
+  set(XROOTD_LIBRARIES ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdMain${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
+                       ${CMAKE_BINARY_DIR}/${_LIBDIR_DEFAULT}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrootd_versionnum}")
   set(xrootd ON CACHE BOOL "" FORCE)
 endif()
