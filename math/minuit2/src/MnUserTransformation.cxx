@@ -159,7 +159,7 @@ MnUserCovariance MnUserTransformation::Int2extCovariance(const MnAlgebraicVector
 }
 
 double MnUserTransformation::Ext2int(unsigned int i, double val) const {
-   // return the external value for parameter i with value val
+   // return the internal value for parameter i with external value val
    
    if(fParameters[i].HasLimits()) {
       if(fParameters[i].HasUpperLimit() && fParameters[i].HasLowerLimit())
