@@ -537,10 +537,22 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
 
       if (mode == kDiamond) {
          if (fgDiamond){
-            fgDiamond->SetX1(x0);
-            fgDiamond->SetY1(y0);
-            fgDiamond->SetX2(xold);
-            fgDiamond->SetY2(yold);
+            if (xold < x0) {
+               fgDiamond->SetX1(xold);
+               fgDiamond->SetX2(x0);
+            }
+            else {
+               fgDiamond->SetX1(x0);
+               fgDiamond->SetX2(xold);
+            }
+            if (yold < y0) {
+               fgDiamond->SetY1(yold);
+               fgDiamond->SetY2(y0);
+            }
+            else {
+               fgDiamond->SetY1(y0);
+               fgDiamond->SetY2(yold);
+            }
          }
          else {
             fgDiamond = new TDiamond(x0,y0,xold,yold);
