@@ -1615,12 +1615,7 @@ void TROOT::InitInterpreter()
 
    char *libcling = gSystem->DynamicPathName("libCling");
 
-   gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL
-#ifdef RTLD_DEEPBIND
-// See e.g. http://software.intel.com/en-us/articles/ensuring-shared-library-uses-intel-math-functions
-                            |RTLD_DEEPBIND
-#endif
-                            );
+   gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
    delete [] libcling;
    if (!gInterpreterLib) {
       TString err = dlerror();
