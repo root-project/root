@@ -20,7 +20,7 @@ exampleTrimmed: execionameiotype.log
 	$(CMDECHO) cat example.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" >$@.xml 2>&1
 
 newDiffFile.log: newFileTrimmed exampleTrimmed
-	$(CMDECHO) diff newFileTrimmed.xml exampleTrimmed.xml >$@ ; :
+	$(CMDECHO) diff newFileTrimmed.xml exampleTrimmed.xml >$@ ; true
 	
 
 testNewFileDiff: newDiffFile.success
