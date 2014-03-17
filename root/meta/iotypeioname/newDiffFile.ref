@@ -1,0 +1,6 @@
+28,29c28,29
+<     <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="158258328">
+<       <TStreamerBasicType name="energy2" v="2" type="9" typename="Double32_t" size="8"/>
+---
+>     <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="2016884484">
+>       <TStreamerBasicType name="energy2" v="2" type="8" typename="double" size="8"/>

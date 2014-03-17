@@ -21,10 +21,11 @@
 typedef ROOT::Math::Cartesian3D<Double32_t> Vertex32;
 typedef ROOT::Math::Cartesian3D<double> Vertex;
 
-class SuperCluster {
+class SuperCluster{
 public:   
-   SuperCluster():energy(123){};
+   SuperCluster():energy(-1){};
    double GetEnergy() const {return energy;};
+   void SetEnergy(double en) {energy=en;};
 private:
    double energy;
 };
@@ -42,6 +43,7 @@ public:
    Container(){};
    const SuperCluster& GetSc() const {return m_sc;};
    const Particle& GetParticle() const {return m_part;};
+   void SetScEnergy(double energy) {m_sc.SetEnergy(energy);}
 private:
    SuperCluster m_sc;
    Particle m_part;

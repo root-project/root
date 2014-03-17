@@ -1,6 +1,6 @@
 
 Processing execionameiotype.C...
-SuperCluster::energy2 type is double
+SuperCluster::energy2 type is Double32_t
 Particle::vertex type is ROOT::Math::Cartesian3D<Double32_t>
 Supercluster energy: 123
 Particle vertex position: 0.1 0.2 0.3
