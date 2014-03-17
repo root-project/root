@@ -68,7 +68,7 @@ dlllflags = $(lflags) -entry:_DllMainCRTStartup$(DLLENTRY) -dll
 !endif
 CC            = $(cc)
 CXX           = $(cc)
-CXXFLAGS      = -nologo -EHsc- -GR -DWIN32 -W3 -D_WIN32 -D_WINDOWS \
+CXXFLAGS      = -nologo -EHs -GR -DWIN32 -W3 -D_WIN32 -D_WINDOWS \
                 -I$(ROOTSYS)/include -wd4244 \
                 -FIw32pragma.h
 LD            = $(link)

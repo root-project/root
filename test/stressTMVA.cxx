@@ -164,6 +164,10 @@ namespace UnitTesting
 #include "TMath.h"
 #include <typeinfo>
 
+#ifdef WIN32
+#pragma warning(disable: 4290)
+#endif
+
 using namespace std;
 using namespace UnitTesting;
 
