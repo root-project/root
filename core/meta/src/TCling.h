@@ -124,6 +124,7 @@ private: // Data Members
    std::set<TClass*> fModTClasses;
    std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
+   ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
    
@@ -162,6 +163,7 @@ public: // Public Interface
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
    Bool_t  HasDictionary(TClass* cl);
    void    GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse);
+   unsigned long long GetInterpreterStateMarker() const { return fTransactionCount;}
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
    Bool_t  IsLoaded(const char* filename) const;
@@ -471,6 +473,8 @@ public: // Public Interface
    std::set<TClass*>& GetModTClasses() { return fModTClasses; }
 
    void HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*>& modifiedClasses);
+   void UpdateListsOnCommitted(const cling::Transaction &T, cling::Interpreter* interp);
+   void UpdateListsOnUnloaded(const cling::Transaction &T);
 
 private: // Private Utility Functions
    TCling();
@@ -491,6 +495,8 @@ private: // Private Utility Functions
    bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile);
+   void HandleNewTransaction(const cling::Transaction &T);
+
 };
 
 #endif

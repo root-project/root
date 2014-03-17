@@ -399,150 +399,13 @@ extern "C"
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
                                     cling::Interpreter* interp) {
 
-   std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
-
-   bool isTUTransaction = false;
-   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
-      clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
-      if (clang::TranslationUnitDecl* TU
-          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
-         // The is the first transaction, we have to expose to meta
-         // what's already in the AST.
-         isTUTransaction = true;
-
-         // FIXME: don't load the world. Really, don't. Maybe
-         // instead smarten TROOT::GetListOfWhateveros() which
-         // currently is a THashList but could be a
-         // TInterpreterLookupCollection, one that reimplements
-         // TCollection::FindObject(name) and performs a lookup
-         // if not found in its T(Hash)List.
-         cling::Interpreter::PushTransactionRAII RAII(interp);
-         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
-                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
-            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
-      }
-   }
-
-   std::set<const void*> TransactionDeclSet;
-   if (!isTUTransaction && T.decls_end() - T.decls_begin()) {
-      const clang::Decl* WrapperFD = T.getWrapperFD();
-      for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-          I != E; ++I) {
-         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
-            continue;
-
-         for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
-                 DE = I->m_DGR.end(); DI != DE; ++DI) {
-            if (*DI == WrapperFD)
-               continue;
-            TransactionDeclSet.insert(*DI);
-            ((TCling*)gCling)->HandleNewDecl(*DI, false, modifiedTClasses);
-         }
-      }
-   }
-
-   // The above might trigger more decls to be deserialized.
-   // Thus the iteration over the deserialized decls must be last.
-   for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(),
-           E = T.deserialized_decls_end(); I != E; ++I) {
-      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
-              DE = I->m_DGR.end(); DI != DE; ++DI)
-         if (TransactionDeclSet.find(*DI) == TransactionDeclSet.end()) {
-            //FIXME: HandleNewDecl should take DeclGroupRef
-            ((TCling*)gCling)->HandleNewDecl(*DI, /*isDeserialized*/true,
-                                             modifiedTClasses);
-         }
-   }
-
-
-   // When fully building the reflection info in TClass, a deserialization
-   // could be triggered, which may result in request for building the
-   // reflection info for the same TClass. This in turn will clear the caches
-   // for the TClass in-flight and cause null ptr derefs.
-   // FIXME: This is a quick fix, solving most of the issues. The actual
-   // question is: Shouldn't TClass provide a lock mechanism on update or lock
-   // itself until the update is done.
-   //
-   std::vector<TClass*> modifiedTClassesDiff(modifiedTClasses.size());
-   std::vector<TClass*>::iterator it;
-   it = set_difference(modifiedTClasses.begin(), modifiedTClasses.end(),
-                       ((TCling*)gCling)->GetModTClasses().begin(),
-                       ((TCling*)gCling)->GetModTClasses().end(),
-                       modifiedTClassesDiff.begin());
-   modifiedTClassesDiff.resize(it - modifiedTClassesDiff.begin());
-
-   // Lock the TClass for updates
-   ((TCling*)gCling)->GetModTClasses().insert(modifiedTClassesDiff.begin(),
-                                              modifiedTClassesDiff.end());
-   for (std::vector<TClass*>::const_iterator I = modifiedTClassesDiff.begin(),
-           E = modifiedTClassesDiff.end(); I != E; ++I) {
-      // Make sure the TClass has not been deleted.
-      if (!gROOT->GetListOfClasses()->FindObject(*I)) {
-         continue;
-      }
-      // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(interp);
-      // Unlock the TClass for updates
-      ((TCling*)gCling)->GetModTClasses().erase(*I);
-
-   }
+   ((TCling*)gCling)->UpdateListsOnCommitted(T, interp);
 }
 
 extern "C"
 void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
-   TGlobal *global = 0;
-   TFunction *function = 0;
-   TEnum* e = 0;
-   TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
-   TListOfFunctions* functions = (TListOfFunctions*)gROOT->GetListOfGlobalFunctions();
-   TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
-   for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
-       I != E; ++I)
-      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
-              DE = I->m_DGR.end(); DI != DE; ++DI) {
-         if (isa<VarDecl>(*DI) || isa<EnumConstantDecl>(*DI)) {
-            clang::ValueDecl* VD = dyn_cast<ValueDecl>(*DI);
-            global = (TGlobal*)globals->FindObject(VD->getNameAsString().c_str());
-            if (global && global->IsValid()) {
-               // Unload the global by setting the DataMemberInfo_t to 0
-               globals->Unload(global);
-               global->Update(0);
-            }
-         } else if (isa<RecordDecl>(*DI) || isa<NamespaceDecl>(*DI)) {
-            const clang::NamedDecl* ND = dyn_cast<NamedDecl>(*DI);
-            if (ND) {
-               std::string buf = ND->getNameAsString();
-               const char* name = buf.c_str();
-               TClass* cl = TClass::GetClass(name);
-               if (cl) {
-                  cl->ResetClassInfo();
-               }
-            }
-         } else if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(*DI)) {
-            function = gROOT->GetGlobalFunction(FD->getNameAsString().c_str());
-            if (function && function->IsValid()) {
-               functions->Unload(function);
-               function->Update(0);
-            }
-         } else if (const EnumDecl* ED = dyn_cast<EnumDecl>(*DI)) {
-            e = (TEnum*)enums->FindObject(ED->getNameAsString().c_str());
-            if (e && e->IsValid()) {
-               TIter iEnumConst(e->GetConstants());
-               while (TEnumConstant* enumConst = (TEnumConstant*)iEnumConst()) {
-                  // Since the enum is already created and valid that ensures us that
-                  // we have the enum constants created as well.
-                  enumConst = (TEnumConstant*)globals->FindObject(enumConst->GetName());
-                  if (enumConst && enumConst->IsValid()) {
-                     globals->Unload(enumConst);
-                     enumConst->Update(0);
-                  }
-               }
-               enums->Unload(e);
-               e->Update(0);
-            }
-         }
-      }
 
+   ((TCling*)gCling)->UpdateListsOnUnloaded(T);
 }
 
 extern "C"
@@ -878,7 +741,8 @@ namespace{
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0)
+   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0),
+   fTransactionCount(0)
 {
    // Initialize the cling interpreter interface.
 
@@ -2070,6 +1934,19 @@ void TCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
    Warning("SetGetline","Cling should support the equivalent of SetGetlineFunc(getlineFunc, histaddFunc)");
 #endif
 #endif
+}
+
+//______________________________________________________________________________
+void TCling::HandleNewTransaction(const cling::Transaction &T)
+{
+   // Helper function to increase the internal Cling count of transactions
+   // that change the AST.
+   if ((std::distance(T.decls_begin(), T.decls_end()) != 1)
+      || T.deserialized_decls_begin() != T.deserialized_decls_end()
+      || T.macros_begin() != T.macros_end()
+      || ((!T.getFirstDecl().isNull()) && ((*T.getFirstDecl().begin()) != T.getWrapperFD()))) {
+      fTransactionCount++;
+   }
 }
 
 //______________________________________________________________________________
@@ -4487,6 +4364,162 @@ void TCling::UpdateAllCanvases()
       canvas->Update();
    }
 }
+
+//______________________________________________________________________________
+void TCling::UpdateListsOnCommitted(const cling::Transaction &T,
+                                    cling::Interpreter* interp) {
+
+   std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
+
+   HandleNewTransaction(T);
+
+   bool isTUTransaction = false;
+   if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
+      clang::Decl* FirstDecl = *(T.decls_begin()->m_DGR.begin());
+      if (clang::TranslationUnitDecl* TU
+          = dyn_cast<clang::TranslationUnitDecl>(FirstDecl)) {
+         // The is the first transaction, we have to expose to meta
+         // what's already in the AST.
+         isTUTransaction = true;
+
+         // FIXME: don't load the world. Really, don't. Maybe
+         // instead smarten TROOT::GetListOfWhateveros() which
+         // currently is a THashList but could be a
+         // TInterpreterLookupCollection, one that reimplements
+         // TCollection::FindObject(name) and performs a lookup
+         // if not found in its T(Hash)List.
+         cling::Interpreter::PushTransactionRAII RAII(interp);
+         for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
+                 TUE = TU->decls_end(); TUI != TUE; ++TUI)
+            ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
+      }
+   }
+
+   std::set<const void*> TransactionDeclSet;
+   if (!isTUTransaction && T.decls_end() - T.decls_begin()) {
+      const clang::Decl* WrapperFD = T.getWrapperFD();
+      for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+          I != E; ++I) {
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
+            continue;
+
+         for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
+                 DE = I->m_DGR.end(); DI != DE; ++DI) {
+            if (*DI == WrapperFD)
+               continue;
+            TransactionDeclSet.insert(*DI);
+            ((TCling*)gCling)->HandleNewDecl(*DI, false, modifiedTClasses);
+         }
+      }
+   }
+
+   // The above might trigger more decls to be deserialized.
+   // Thus the iteration over the deserialized decls must be last.
+   for (cling::Transaction::const_iterator I = T.deserialized_decls_begin(),
+           E = T.deserialized_decls_end(); I != E; ++I) {
+      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
+              DE = I->m_DGR.end(); DI != DE; ++DI)
+         if (TransactionDeclSet.find(*DI) == TransactionDeclSet.end()) {
+            //FIXME: HandleNewDecl should take DeclGroupRef
+            ((TCling*)gCling)->HandleNewDecl(*DI, /*isDeserialized*/true,
+                                             modifiedTClasses);
+         }
+   }
+
+
+   // When fully building the reflection info in TClass, a deserialization
+   // could be triggered, which may result in request for building the
+   // reflection info for the same TClass. This in turn will clear the caches
+   // for the TClass in-flight and cause null ptr derefs.
+   // FIXME: This is a quick fix, solving most of the issues. The actual
+   // question is: Shouldn't TClass provide a lock mechanism on update or lock
+   // itself until the update is done.
+   //
+   std::vector<TClass*> modifiedTClassesDiff(modifiedTClasses.size());
+   std::vector<TClass*>::iterator it;
+   it = set_difference(modifiedTClasses.begin(), modifiedTClasses.end(),
+                       ((TCling*)gCling)->GetModTClasses().begin(),
+                       ((TCling*)gCling)->GetModTClasses().end(),
+                       modifiedTClassesDiff.begin());
+   modifiedTClassesDiff.resize(it - modifiedTClassesDiff.begin());
+
+   // Lock the TClass for updates
+   ((TCling*)gCling)->GetModTClasses().insert(modifiedTClassesDiff.begin(),
+                                              modifiedTClassesDiff.end());
+   for (std::vector<TClass*>::const_iterator I = modifiedTClassesDiff.begin(),
+           E = modifiedTClassesDiff.end(); I != E; ++I) {
+      // Make sure the TClass has not been deleted.
+      if (!gROOT->GetListOfClasses()->FindObject(*I)) {
+         continue;
+      }
+      // Could trigger deserialization of decls.
+      cling::Interpreter::PushTransactionRAII RAII(interp);
+      // Unlock the TClass for updates
+      ((TCling*)gCling)->GetModTClasses().erase(*I);
+
+   }
+}
+
+//______________________________________________________________________________
+void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
+{
+   HandleNewTransaction(T);
+
+   // Unload the objects from the lists and update the objects' state.
+   TGlobal *global = 0;
+   TFunction *function = 0;
+   TEnum* e = 0;
+   TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
+   TListOfFunctions* functions = (TListOfFunctions*)gROOT->GetListOfGlobalFunctions();
+   TListOfEnums* enums = (TListOfEnums*)gROOT->GetListOfEnums();
+   for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
+       I != E; ++I)
+      for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
+              DE = I->m_DGR.end(); DI != DE; ++DI) {
+         if (isa<VarDecl>(*DI) || isa<EnumConstantDecl>(*DI)) {
+            clang::ValueDecl* VD = dyn_cast<ValueDecl>(*DI);
+            global = (TGlobal*)globals->FindObject(VD->getNameAsString().c_str());
+            if (global && global->IsValid()) {
+               // Unload the global by setting the DataMemberInfo_t to 0
+               globals->Unload(global);
+               global->Update(0);
+            }
+         } else if (isa<RecordDecl>(*DI) || isa<NamespaceDecl>(*DI)) {
+            const clang::NamedDecl* ND = dyn_cast<NamedDecl>(*DI);
+            if (ND) {
+               std::string buf = ND->getNameAsString();
+               const char* name = buf.c_str();
+               TClass* cl = TClass::GetClass(name);
+               if (cl) {
+                  cl->ResetClassInfo();
+               }
+            }
+         } else if (const FunctionDecl* FD = dyn_cast<FunctionDecl>(*DI)) {
+            function = gROOT->GetGlobalFunction(FD->getNameAsString().c_str());
+            if (function && function->IsValid()) {
+               functions->Unload(function);
+               function->Update(0);
+            }
+         } else if (const EnumDecl* ED = dyn_cast<EnumDecl>(*DI)) {
+            e = (TEnum*)enums->FindObject(ED->getNameAsString().c_str());
+            if (e && e->IsValid()) {
+               TIter iEnumConst(e->GetConstants());
+               while (TEnumConstant* enumConst = (TEnumConstant*)iEnumConst()) {
+                  // Since the enum is already created and valid that ensures us that
+                  // we have the enum constants created as well.
+                  enumConst = (TEnumConstant*)globals->FindObject(enumConst->GetName());
+                  if (enumConst) {
+                     globals->Unload(enumConst);
+                     enumConst->Update(0);
+                  }
+               }
+               enums->Unload(e);
+               e->Update(0);
+            }
+         }
+      }
+}
+
 
 //______________________________________________________________________________
 const char* TCling::GetSharedLibs()

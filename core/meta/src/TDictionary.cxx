@@ -43,7 +43,9 @@
 #include "TClassEdit.h"
 #include "TDataType.h"
 #include "TDictAttributeMap.h"
+#include "TInterpreter.h"
 #include "TROOT.h"
+
 
 ClassImp(TDictionary)
 
@@ -91,4 +93,16 @@ TDictionary* TDictionary::GetDictionary(const type_info &typeinfo)
    if (ret) return ret;
 
    return TClass::GetClass(typeinfo, true);
+}
+
+Bool_t TDictionary::InterpreterStateHasChanged()
+{
+   // Return true if there were any transactions that could have changed the
+   // state of the object.
+   ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
+   if (currentTransaction == fUpdatingTransactionCount) {
+      return false;
+   }
+   fUpdatingTransactionCount = currentTransaction;
+   return true;
 }

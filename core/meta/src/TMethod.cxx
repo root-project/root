@@ -275,7 +275,9 @@ Bool_t TMethod::IsValid()
    // Return true if this function object is pointing to a currently
    // loaded function.  If a function is unloaded after the TMethod
    // is created, the TMethod will be set to be invalid.
-   if(!fInfo) {
+
+   // Register the transaction when checking the validity of the object.
+   if (!fInfo && InterpreterStateHasChanged()) {
       DeclId_t newId = gInterpreter->GetFunction(fClass->GetClassInfo(), fName);
       if (newId) {
          MethodInfo_t *info = gInterpreter->MethodInfo_Factory(newId);

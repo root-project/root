@@ -129,7 +129,8 @@ Bool_t TGlobal::IsValid()
    // loaded global.  If a global is unloaded after the TGlobal
    // is created, the TGlobal will be set to be invalid.
 
-   if (!fInfo) {
+   // Register the transaction when checking the validity of the object.
+   if (!fInfo && InterpreterStateHasChanged()) {
       DeclId_t newId = gInterpreter->GetDataMember(0, fName);
       if (newId) {
          DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);

@@ -163,10 +163,14 @@ class TDictionary : public TNamed {
 
 private:
    TDictAttributeMap *fAttributeMap;    //pointer to a class attribute map
+   ULong64_t fUpdatingTransactionCount; //the Cling ID of the transaction that last updated the object
+
+protected:
+   Bool_t              InterpreterStateHasChanged();
 
 public:
-   TDictionary(): fAttributeMap(0) { }
-   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0) { }
+   TDictionary(): fAttributeMap(0), fUpdatingTransactionCount(0) { }
+   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0), fUpdatingTransactionCount(0) { }
    TDictionary(const TDictionary& dict);
    virtual ~TDictionary();
 

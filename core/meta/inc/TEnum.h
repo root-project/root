@@ -38,9 +38,7 @@
 class TClass;
 class TEnumConstant;
 
-class TEnum : public TNamed {
-
-typedef TDictionary::DeclId_t DeclId_t;
+class TEnum : public TDictionary {
 
 private:
    THashList fConstantList;     //list of constants the enum type
@@ -61,6 +59,7 @@ public:
    }
    DeclId_t              GetDeclId() const { return (DeclId_t)fInfo; }
    Bool_t                IsValid();
+   Long_t                Property() const;
    void                  Update(DeclId_t id);
 
    ClassDef(TEnum,2)  //Enum type class
