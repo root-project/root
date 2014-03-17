@@ -28,8 +28,8 @@ ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
 ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h LINKDEF EventLinkDef.h)
 ROOT_LINKER_LIBRARY(Event Event.cxx EventDict.cxx LIBRARIES Hist MathCore)
 
-ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
-ROOT_ADD_TEST(test-event COMMAND eventexe)
+ROOT_EXECUTABLE(testevent MainEvent.cxx LIBRARIES Event RIO Tree Hist Net)
+ROOT_ADD_TEST(test-event COMMAND testevent)
 
 #---hsimple------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hsimple hsimple.cxx LIBRARIES RIO Tree Hist)
@@ -179,11 +179,13 @@ ROOT_ADD_TEST(test-stressiterators COMMAND stressIterators FAILREGEX "FAILED")
 ROOT_EXECUTABLE(stressInterpreter stressInterpreter.cxx LIBRARIES Core)
 if(WIN32)
   set(cleantmpfiles POSTCMD cmd /c del AutoDict_*)
+  set(cfgdir /${CMAKE_BUILD_TYPE})
 endif()
 ROOT_ADD_TEST(test-stressinterpreter COMMAND stressInterpreter
               PRECMD ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/stressInterpreter.cxx 
                                               $<TARGET_FILE_DIR:stressInterpreter>/stressInterpreter.cxx
               ${cleantmpfiles}
+              ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin${cfgdir}#$ENV{PATH}
               FAILREGEX "FAILED|Error")
 
 #--stressHepix-------------------------------------------------------------------------------
