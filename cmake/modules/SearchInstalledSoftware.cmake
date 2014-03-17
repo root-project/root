@@ -93,12 +93,17 @@ if(builtin_lzma)
     set(LZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else() 
+    if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+      set(LZMA_CFLAGS "-Wno-format-nonliteral")
+    elseif( CMAKE_CCC_COMPILER_ID STREQUAL Intel)
+      set(LZMA_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128")
+    endif()
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz 
       URL_MD5 858405e79590e9b05634c399497f4ba7
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared
+      CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --with-pic --disable-shared CFLAGS=${LZMA_CFLAGS}
       BUILD_IN_SOURCE 1)
     set(LZMA_LIBRARIES -L${CMAKE_BINARY_DIR}/lib -llzma)
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
