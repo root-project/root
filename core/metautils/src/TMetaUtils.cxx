@@ -1508,6 +1508,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // Check if this is a field and if it has any attribute
       if (dMember && !dMember->hasAttrs()) continue;
 
+      bool blockNeedsToBeClosed=true;
+      bool wasIoNameFound=false;
       // Now loop on its attributes
       for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
               attrIt!=internalDeclIt->attr_end();++attrIt){
@@ -1518,27 +1520,48 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          // Split in name value
          if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) continue;
 
+         std::cout << dMember->getNameAsString() << " - attrName: " << attrName << std::endl;
+         
+         bool isIoName =  attrName == "ioname";
+         bool isIoType =  attrName == "iotype";
+         bool isComment =  attrName == "comment";
+         bool isRelevant = isIoName || isIoType || isComment;
+         
          // Check if this is a "comment", "ioname" or "iotype"
-         if (attrName != "comment" &&
-             attrName != "ioname" &&
-             attrName != "iotype") continue;
+         if (! isRelevant) continue;
 
          // If this is not a comment, we must add the key-value pair
-         if (attrName != "comment")
+         if (!isComment)
             attrValue = attrName + ROOT::TMetaUtils::PropertyNameValSeparator + attrValue;
 
          if (!infrastructureGenerated){
-            finalString << "   if (gInterpreter){\n"
+            finalString << "   if (true || gInterpreter){\n"
                         << "      ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
                         << "      DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
                         << "      while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
             infrastructureGenerated=true;
          }
 
-         const std::string memberName(dMember->getName());
-         finalString << "          if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI)))\n"
-                     << "          gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
+         if ( ! (isIoType && wasIoNameFound ) ){
+            const std::string memberName(dMember->getName());         
+            finalString << "          if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI))){\n";
+         }
+         finalString << "             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";                           
+         
+         if ( isComment || isIoType ){
+            finalString << "          }\n";         
+            blockNeedsToBeClosed = false;
+         } else {
+            wasIoNameFound=true;
+         }
+         
+         
+         
       } // end loop on annotations of the decl
+      
+      if (blockNeedsToBeClosed && wasIoNameFound){
+         finalString << "          }\n";      
+      }
 
    } // end loop on class internal decls
 
