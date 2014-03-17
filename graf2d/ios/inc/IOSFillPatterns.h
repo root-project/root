@@ -36,11 +36,11 @@ enum {
    kPredefinedFillPatterns = 18
 };
 
-//Pattern generator function type. Parameter of type float *
+//Pattern generator function type. Parameter of type CGFloat *
 //is an rgb tuple. Attention! rgb pointer should be valid while
 //you are using pattern - it will be passed into pattern drawing callback
 //funciton.
-typedef CGPatternRef (*PatternGenerator_t)(float *);
+typedef CGPatternRef (*PatternGenerator_t)(CGFloat *);
 //Array of pointers to functions, generating patterns.
 extern PatternGenerator_t gPatternGenerators[kPredefinedFillPatterns];
 

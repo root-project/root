@@ -20,6 +20,8 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <CoreGraphics/CGPattern.h>
+
 namespace ROOT {
 namespace iOS {
 namespace GraphicUtils {
@@ -31,7 +33,7 @@ enum {
 */
 
 extern const unsigned linePatternLengths[10];
-extern const float dashLinePatterns[10][8];
+extern const CGFloat dashLinePatterns[10][8];
 
 }
 }

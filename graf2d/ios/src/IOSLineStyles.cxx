@@ -19,7 +19,7 @@ const unsigned linePatternLengths[] = {1, 2, 2, 4, 4, 8, 2, 6, 2, 4};
 
 //Line pattern specyfies length of painted and unpainted fragments, for example,
 //{2.f, 2.f} draw 2 pixels, skip to pixels (and repeat).
-const float dashLinePatterns[10][8] = {
+const CGFloat dashLinePatterns[10][8] = {
                                        {1},                                     //Style 1:  1 element, solid line
                                        {3.f, 3.f},                              //Style 2:  2 elements (paint one, skip the second).
                                        {1.f, 2.f},                              //Style 3:  2 elements.
