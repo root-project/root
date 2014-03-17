@@ -361,7 +361,7 @@ namespace {
          dynpath = newpath;
 
       } else if (dynpath == "") {
-         TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
+         TString rdynpath = gEnv ? gEnv->GetValue("Root.DynamicPath", (char*)0) : "";
          rdynpath.ReplaceAll("; ", ";");  // in case DynamicPath was extended
          if (rdynpath == "") {
 #ifdef ROOTBINDIR
@@ -1023,11 +1023,20 @@ fGUIThreadHandle(0), fGUIThreadId(0)
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
    if (hModCore) {
       ::GetModuleFileName(hModCore, buf, MAX_MODULE_NAME32 + 1);
-      char* pLibName = strstr(buf, "libCore.dll");
+      char *pLibName = strstr(buf, "libCore.dll");
       if (pLibName) {
          --pLibName; // skip trailing \\ or /
          while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
          *pLibName = 0; // replace trailing \\ or / with 0
+         TString check_path = buf;
+         check_path += "\\etc";
+         // look for $ROOTSYS (it should contain the "etc" subdirectory)
+         while (buf[0] && GetFileAttributes(check_path.Data()) == INVALID_FILE_ATTRIBUTES) {
+            while (--pLibName >= buf && *pLibName != '\\' && *pLibName != '/');
+            *pLibName = 0;
+            check_path = buf;
+            check_path += "\\etc";
+         }
          if (buf[0])
             Setenv("ROOTSYS", buf);
       }
@@ -1142,6 +1151,17 @@ Bool_t TWinNTSystem::Init()
    gGlobalEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
    fGUIThreadHandle = ::CreateThread( NULL, 0, &GUIThreadMessageProcessingLoop, 0, 0, &fGUIThreadId );
 
+   char *buf = new char[MAX_MODULE_NAME32 + 1];
+   HMODULE hModCore = ::GetModuleHandle("libCore.dll");
+   if (hModCore) {
+      ::GetModuleFileName(hModCore, buf, MAX_MODULE_NAME32 + 1);
+      char *pLibName = strstr(buf, "libCore.dll");
+      --pLibName; // remove trailing \\ or /
+      *pLibName = 0;
+      // add the directory containing libCore.dll in the dynamic search path
+      if (buf[0]) AddDynamicPath(buf);
+   }
+   delete [] buf;
    SetConsoleWindowName();
    fGroupsInitDone = kFALSE;
    fFirstFile = kTRUE;
