@@ -671,7 +671,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    if (useQTilde ) { 
       if (fOneSided) { 
          // for bounded one-sided (q_mu_tilde: equations 64,65)
-         if ( qmu > qmu_A) { 
+         if ( qmu > qmu_A && (qmu_A > 0 || qmu > tol) ) { // to avoid case 0/0
             if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using qmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
             palt = ROOT::Math::normal_cdf_c( (qmu - qmu_A)/(2 * sqrtqmu_A), 1.);
@@ -680,7 +680,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       else {  
          // for 2 sided bounded test statistic  (N.B there is no one sided discovery qtilde)
          // t_mu_tilde: equations 43,44 in asymptotic paper
-         if ( qmu >  qmu_A) { 
+         if ( qmu >  qmu_A  && (qmu_A > 0 || qmu > tol)  ) { 
             if (verbose > 2) oocoutI((TObject*)0,Eval) << "Using tmu_tilde (qmu is greater than qmu_A)" << endl;
             pnull = ROOT::Math::normal_cdf_c(sqrtqmu,1.) + 
                     ROOT::Math::normal_cdf_c( (qmu + qmu_A)/(2 * sqrtqmu_A), 1.);
@@ -1146,9 +1146,13 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
       int minimPrintLevel = ROOT::Math::MinimizerOptions::DefaultPrintLevel();
       if (verbose>0) { 
          std::cout << "MakeAsimov: doing a conditional fit for finding best nuisance values " << std::endl;
+         minimPrintLevel = verbose;
          if (verbose>1) {
             std::cout << "POI values:\n"; poi.Print("v");
-            minimPrintLevel = verbose;
+            if (verbose > 2) { 
+               std::cout << "Nuis param values:\n"; 
+               constrainParams.Print("v");
+            }
          }
       }         
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
