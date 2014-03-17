@@ -2910,6 +2910,13 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
    if(color >= 0) {
       TAttLine::Modify();  //Change line attributes only if necessary
       TAttFill::Modify();  //Change fill area attributes only if necessary
+
+      //With Cocoa we have a transparency. But we also have
+      //pixmaps, and if you just paint a new content over the old one
+      //with alpha < 1., you'll be able to see the old content.
+      if (gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
+         GetPainter()->ClearDrawable();
+      
       PaintBox(fX1,fY1,fX2,fY2);
    }
    if (color < 0) color = -color;
@@ -3147,7 +3154,6 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
    //
    // if option[0] = 's' the box is forced to be paint with style=0
    // if option[0] = 'l' the box contour is drawn
-
    if (!gPad->IsBatch()) {
       Int_t style0 = GetPainter()->GetFillStyle();
       Int_t style  = style0;
@@ -3180,9 +3186,16 @@ void TPad::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t
             // From 4000 to 4100 the window is 100% transparent to 100% opaque
 
             //ignore this style option when this is the canvas itself
-            if (this == fMother)
+            if (this == fMother) {
+               //It's clear, that virtual X checks a style (4000) and will render a hollow rect!
+               //TOTAL MESS.
+               const Style_t oldFillStyle = GetPainter()->GetFillStyle();
+               if (gVirtualX->InheritsFrom("TGCocoa"))
+                  GetPainter()->SetFillStyle(1000);
                GetPainter()->DrawBox(x1, y1, x2, y2, TVirtualPadPainter::kFilled);
-            else {
+               if (gVirtualX->InheritsFrom("TGCocoa"))
+                  GetPainter()->SetFillStyle(oldFillStyle);
+            } else {
                //draw background by blitting all bottom pads
                int px, py;
                XYtoAbsPixel(fX1, fY2, px, py);
