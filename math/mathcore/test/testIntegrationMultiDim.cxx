@@ -30,8 +30,6 @@
 #include "TLegend.h"
 #include "TH1.h"
 
-const int n = 3; //default dimensionality
-
 bool showGraphics = true;
 
 Double_t Sum( const double* x, const double *p)

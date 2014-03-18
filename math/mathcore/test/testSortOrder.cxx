@@ -8,12 +8,9 @@
 
 using namespace std;
 
-const int npass = 100000;
 const int maxint = 20;
 const int minsize = 20;
 const int maxsize = 500;
-const int increment = 10;
-const int arraysize = (maxsize-minsize)/10 + 1;
 
 #ifndef ROOT_TMath
 
