@@ -293,7 +293,7 @@ void TTreePerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 
 
 //______________________________________________________________________________
-void TTreePerfStats::UnzipEvent(TTree * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
+void TTreePerfStats::UnzipEvent(TObject * tree, Long64_t /* pos */, Double_t start, Int_t /* complen */, Int_t /* objlen */)
 {
    // Record TTree unzip event.
    // start is the TimeStamp before unzip

@@ -28,7 +28,6 @@
 
 
 class TFile;
-class TTree;
 
 
 class TVirtualPerfStats : public TObject {
@@ -62,7 +61,7 @@ public:
 
    virtual void FileReadEvent(TFile *file, Int_t len, Double_t start) = 0;
 
-   virtual void UnzipEvent(TTree *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen) = 0;
+   virtual void UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen) = 0;
 
    virtual void RateEvent(Double_t proctime, Double_t deltatime,
                           Long64_t eventsprocessed, Long64_t bytesRead) = 0;
