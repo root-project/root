@@ -19,6 +19,7 @@ newFileTrimmed: execionameiotype.log
 exampleTrimmed: execionameiotype.log
 	$(CMDECHO) cat example.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" >$@.xml 2>&1
 
+# Here we use true since diff returns 1 if the files are different. Here we expect them to be different!
 newDiffFile.log: newFileTrimmed exampleTrimmed
 	$(CMDECHO) diff newFileTrimmed.xml exampleTrimmed.xml >$@ ; true
 	
