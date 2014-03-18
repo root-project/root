@@ -1161,7 +1161,7 @@ Bool_t TGeoVolume::OptimizeVoxels()
 }
 
 //_____________________________________________________________________________
-void TGeoVolume::Print(Option_t *option) const
+void TGeoVolume::Print(Option_t *) const
 {
 // Print volume info
    printf("== Volume: %s type %s positioned %d times\n", GetName(), ClassName(), fRefCount);
