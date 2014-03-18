@@ -241,6 +241,7 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
    indent++;
    TString sindent = "";
    for (Int_t k=0; k<indent; k++) sindent += "  ";
+   Int_t idebug = TGeoManager::GetVerboseLevel();
 #endif   
    if (!fBBoxOK) ((TGeoShapeAssembly*)this)->ComputeBBox();
    if (iact<3 && safe) {
@@ -255,7 +256,6 @@ Double_t TGeoShapeAssembly::DistFromOutside(const Double_t *point, const Double_
 #endif
    }
    // find distance to assembly
-   Int_t idebug = TGeoManager::GetVerboseLevel();
    Double_t snext = 0.0;
    Double_t dist;
    Double_t stepmax = step;
