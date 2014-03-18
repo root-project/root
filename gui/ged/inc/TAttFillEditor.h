@@ -24,10 +24,12 @@
 #include "TGedFrame.h"
 #endif
 
+#include "TGSlider.h"
+
 class TGColorSelect;
 class TGedPatternSelect;
 class TAttFill;
-
+class TGNumberEntryField;
 
 class TAttFillEditor : public TGedFrame {
 
@@ -35,6 +37,8 @@ protected:
    TAttFill            *fAttFill;          // fill attribute object
    TGColorSelect       *fColorSelect;      // fill color widget
    TGedPatternSelect   *fPatternSelect;    // fill pattern widget
+   TGHSlider           *fAlpha;            // fill opacity
+   TGNumberEntryField  *fAlphaField;
 
    virtual void ConnectSignals2Slots();
  
@@ -48,7 +52,11 @@ public:
    virtual void   SetModel(TObject* obj);
    virtual void   DoFillColor(Pixel_t color);
    virtual void   DoFillPattern(Style_t color);
-           
+   virtual void   DoAlpha();
+   virtual void   DoAlphaField();
+   virtual void   DoLiveAlpha(Int_t a);
+   virtual void   GetCurAlpha();
+
    ClassDef(TAttFillEditor,0)  //GUI for editing fill attributes
 };
 

@@ -29,13 +29,20 @@
 #include "TGComboBox.h"
 #include "TColor.h"
 #include "TGraph.h"
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TROOT.h"
 
 ClassImp(TAttLineEditor)
 
 enum ELineWid {
    kCOLOR,
    kLINE_WIDTH,
-   kLINE_STYLE
+   kLINE_STYLE,
+   kALPHA,
+   kALPHAFIELD
 };
 
 
@@ -67,6 +74,25 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    fWidthCombo->Resize(91, 20);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fWidthCombo->Associate(this);
+
+   TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
+   AddFrame(AlphaLabel,
+            new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   TGHorizontalFrame *f2a = new TGHorizontalFrame(this);
+   fAlpha = new TGHSlider(f2a,100,kSlider2|kScaleNo,kALPHA);
+   fAlpha->SetRange(0,1000);
+   f2a->AddFrame(fAlpha,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   fAlphaField = new TGNumberEntryField(f2a, kALPHAFIELD, 0,
+                                        TGNumberFormat::kNESReal,
+                                        TGNumberFormat::kNEANonNegative);
+   fAlphaField->Resize(40,20);
+   if (!gPad->GetCanvas()->SupportAlpha()) {
+      fAlpha->SetEnabled(kFALSE);
+      AlphaLabel->Disable(kTRUE);
+      fAlphaField->SetEnabled(kFALSE);
+   }
+   f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
 //______________________________________________________________________________
@@ -82,7 +108,11 @@ void TAttLineEditor::ConnectSignals2Slots()
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
    fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)"); 
-   fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)"); 
+   fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)");
+   fAlpha->Connect("Released()","TAttLineEditor", this, "DoAlpha()");
+   fAlpha->Connect("PositionChanged(Int_t)","TAttLineEditor", this, "DoLiveAlpha(Int_t)");
+   fAlphaField->Connect("ReturnPressed()","TAttLineEditor", this, "DoAlphaField()");
+   fAlpha->Connect("Pressed()","TAttLineEditor", this, "GetCurAlpha()");
 
    fInit = kFALSE;
 }
@@ -113,6 +143,11 @@ void TAttLineEditor::SetModel(TObject* obj)
    if (fInit) ConnectSignals2Slots();
 
    fAvoidSignal = kFALSE;
+
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
+      fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+      fAlphaField->SetNumber(color->GetAlpha());
+   } 
 }
 
 //______________________________________________________________________________
@@ -153,5 +188,60 @@ void TAttLineEditor::DoLineWidth(Int_t width)
    } else {
       fAttLine->SetLineWidth(width);
    }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttLineEditor::DoAlphaField()
+{
+   // Slot to set the alpha value from the entry field.
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
+      color->SetAlpha((Float_t)fAlphaField->GetNumber());
+      fAlpha->SetPosition((Int_t)fAlphaField->GetNumber()*1000);
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttLineEditor::DoAlpha()
+{
+   // Slot to set the alpha value
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
+      color->SetAlpha((Float_t)fAlpha->GetPosition()/1000);
+      fAlphaField->SetNumber((Float_t)fAlpha->GetPosition()/1000);
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttLineEditor::DoLiveAlpha(Int_t a)
+{
+   // Slot to set alpha value online.
+
+   if (fAvoidSignal) return;
+   fAlphaField->SetNumber((Float_t)a/1000);
+
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) color->SetAlpha((Float_t)a/1000);
+   Update();
+}
+
+//_______________________________________________________________________________
+void TAttLineEditor::GetCurAlpha()
+{
+   // Slot to update alpha value on click on Slider
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
+      fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+      fAlphaField->SetNumber(color->GetAlpha());
+   }
+
    Update();
 }
