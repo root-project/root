@@ -4,3 +4,4 @@
 #if @CLANG_HAS_VERSION_PATCHLEVEL@
 #define CLANG_VERSION_PATCHLEVEL @CLANG_VERSION_PATCHLEVEL@
 #endif
+#define CLANG_VENDOR "cling (http://cern.ch/cling) "
