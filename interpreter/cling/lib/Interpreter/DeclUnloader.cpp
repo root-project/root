@@ -493,12 +493,12 @@ namespace cling {
   }
 
   DeclUnloader::~DeclUnloader() {
-    SourceManager& SM = m_Sema->getSourceManager();
-    for (FileIDs::iterator I = m_FilesToUncache.begin(),
-           E = m_FilesToUncache.end(); I != E; ++I) {
-      // We need to reset the cache
-      SM.invalidateCache(*I);
-    }
+    // SourceManager& SM = m_Sema->getSourceManager();
+    // for (FileIDs::iterator I = m_FilesToUncache.begin(),
+    //        E = m_FilesToUncache.end(); I != E; ++I) {
+    //   // We need to reset the cache
+    //   SM.invalidateCache(*I);
+    // }
   }
 
   void DeclUnloader::CollectFilesToUncache(SourceLocation Loc) {
