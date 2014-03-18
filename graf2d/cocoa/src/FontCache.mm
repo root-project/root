@@ -105,18 +105,43 @@ CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 //______________________________________________________________________________
 bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
-   assert(fontDescriptor != 0 && "GetFamilyName, fontDescriptor parameter is null");
+   //If success, this function returns a null-terminated string in a vector.
+   assert(fontDescriptor != 0 && "GetFamilyName, parameter 'fontDescriptor' is null");
 
    name.clear();
 
    Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontFamilyNameAttribute));
-   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
-   name.resize(cfLen + 1);//+ 1 for '\0'.
-   if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
-      return true;
+   if (const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get())) {
+      name.resize(cfLen + 1);//+ 1 for '\0'.
+      if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
+         return true;
+   }
 
    return false;
 }
+
+#ifdef MAC_OS_X_VERSION_10_9
+
+//______________________________________________________________________________
+bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
+{
+   //If success, this function returns a null-terminated string in a vector.
+   assert(fontDescriptor != 0 && "GetPostscriptName, parameter 'fontDescriptor' is null");
+    
+   name.clear();
+    
+   Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontNameAttribute));
+   
+   if (const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get())) {
+      name.resize(cfLen + 1);//+ 1 for '\0'.
+      if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
+         return true;
+   }
+
+   return false;
+}
+
+#endif
 
 //______________________________________________________________________________
 void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
@@ -295,6 +320,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    }
    
    std::vector<char> xlfdData;
+   //familyName is actually a null-terminated string.
    std::vector<char> familyName;
    X11::XLFDName newXLFD;
    std::string xlfdString;
@@ -331,6 +357,19 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
          if (!newXLFD.fPixelSize)
             newXLFD.fPixelSize = xlfd.fPixelSize;
       }
+
+#ifdef MAC_OS_X_VERSION_10_9
+      //To avoid a warning from Core Text, save a mapping from a name seen by ROOT (family)
+      //to a right postscript name (required by Core Text).
+   
+      //It's a null-terminated string:
+      std::vector<char> postscriptName;
+      if (GetPostscriptName(font, postscriptName)) {
+         if (fXLFDtoPostscriptNames.find(&familyName[0]) == fXLFDtoPostscriptNames.end())
+            fXLFDtoPostscriptNames[&familyName[0]] = &postscriptName[0];
+      }
+#endif
+
 
       //Ok, now lets create XLFD name, and place into list.
       CreateXLFDString(newXLFD, xlfdString);
