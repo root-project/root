@@ -401,9 +401,7 @@ freebsd* | openbsd* | linux*)
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
-      if test "x$f" = "xcxx11" ; then
-         auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
-      fi
+      auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -426,9 +424,7 @@ macosx*)
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
-      if test "x$f" = "xcxx11" ; then
-         auxcflags="-std=c++11 $auxcflags"
-      fi
+      auxcflags="-std=c++11 $auxcflags"
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
