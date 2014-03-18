@@ -9,8 +9,6 @@
 using namespace std;
 
 const int maxint = 20;
-const int minsize = 20;
-const int maxsize = 500;
 
 #ifndef ROOT_TMath
 
