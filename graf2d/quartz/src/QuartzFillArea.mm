@@ -378,17 +378,17 @@ void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &
    if (mode == TColorGradient::kObjectBoundingMode) {
       //With Quartz we always work with something similar to 'kPadMode',
       //so convert start and end into this space.
-      CGPoint topLeft = {}, bottomRight = {};
-      Quartz::FindBoundingBox(n, polygon, topLeft, bottomRight);
+      CGPoint bottomLeft = {}, topRight = {};
+      Quartz::FindBoundingBox(n, polygon, bottomLeft, topRight);
       
-      const CGFloat w = bottomRight.x - topLeft.x;
-      const CGFloat h = bottomRight.y - topLeft.y;
+      const CGFloat w = topRight.x - bottomLeft.x;
+      const CGFloat h = topRight.y - bottomLeft.y;
+
+      start.x = w * start.x + bottomLeft.x;
+      end.x = w * end.x + bottomLeft.x;
       
-      start.x = (w * start.x + topLeft.x);
-      end.x = (w * end.x + topLeft.x);
-      
-      start.y = (h * start.y + topLeft.y);
-      end.y = (h * end.y + topLeft.y);
+      start.y = h * start.y + bottomLeft.y;
+      end.y = h * end.y + bottomLeft.y;
    } else {
       start.x *= sizeOfDrawable.width;
       start.y *= sizeOfDrawable.height;
