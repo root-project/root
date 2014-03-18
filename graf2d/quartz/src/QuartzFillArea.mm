@@ -369,13 +369,10 @@ void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &
    //TODO: that's stupid, but ... radial can iherit linear to make things easier :)
    if (const TLinearGradient * const lGrad = dynamic_cast<const TLinearGradient *>(extendedColor)) {
       start = CGPointMake(lGrad->GetStartPoint().fX, lGrad->GetStartPoint().fY);
-      end.x = lGrad->GetEndPoint().fX;
-      end.y = lGrad->GetEndPoint().fY;
+      end = CGPointMake(lGrad->GetEndPoint().fX, lGrad->GetEndPoint().fY);
    } else if (const TRadialGradient * const rGrad = dynamic_cast<const TRadialGradient *>(extendedColor)) {
-      start.x = rGrad->GetStartPoint().fX;
-      start.y = rGrad->GetStartPoint().fY;
-      end.x = rGrad->GetEndPoint().fX;
-      end.y = rGrad->GetEndPoint().fY;
+      start = CGPointMake(rGrad->GetStartPoint().fX, rGrad->GetStartPoint().fY);
+      end = CGPointMake(rGrad->GetEndPoint().fX, rGrad->GetEndPoint().fY);
    }
    
    if (mode == TColorGradient::kObjectBoundingMode) {
