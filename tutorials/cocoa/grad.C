@@ -35,6 +35,8 @@ void grad()
       return;
    }
    
+   typedef TColorGradient::GradientPoint point_type;
+   
    //3. Create custom colors.
    const Int_t frameGradient = colorIndices[2];//this gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
@@ -46,27 +48,33 @@ void grad()
       const Color_t gradientIndices[4] = {colorIndices[0], colorIndices[1], colorIndices[1], colorIndices[0]};
 
       //Gradient for a pad's frame.
-      new TColorGradient(frameGradient, TColorGradient::kGDHorizontal, 4, locations, gradientIndices);
+      TLinearGradient * const gradFill1 = new TLinearGradient(frameGradient, 4, locations, gradientIndices);
+      //Horizontal:
+      gradFill1->SetStartEnd(point_type(0., 0.), point_type(1., 0.));
    }
 
    const Int_t padGradient = colorIndices[3];
    //Fill color for a pad:
    {
       const Double_t locations[] = {0., 1.};
-      const Color_t gradientIndices[4] = {38, 30};//We create a gradient from system colors.
+      const Color_t gradientIndices[4] = {30, 38};//We create a gradient from system colors.
       
       //Gradient for a pad.
-      new TColorGradient(padGradient, TColorGradient::kGDVertical, 2, locations, gradientIndices);
+      TLinearGradient * const gradFill2 = new TLinearGradient(padGradient, 2, locations, gradientIndices);
+      //Vertical:
+      gradFill2->SetStartEnd(point_type(0., 0.), point_type(0., 1));
    }
    
    const Int_t histGradient = colorIndices[4];
    //Fill color for a histogram:
    {
-      const Color_t gradientIndices[3] = {kRed, kOrange, kYellow};
-      const Double_t lengths[3] = {0., 0.5, 1.};
+      const Color_t gradientIndices[3] = {kYellow, kOrange, kRed};
+      const Double_t locations[3] = {0., 0.5, 1.};
       
       //Gradient for a histogram.
-      new TColorGradient(histGradient, TColorGradient::kGDVertical, 3, lengths, gradientIndices);
+      TLinearGradient * const gradFill3 = new TLinearGradient(histGradient, 3, locations, gradientIndices);
+      //Vertical:
+      gradFill3->SetStartEnd(point_type(0., 0.), point_type(0., 1.));
    }
 
    cnv->SetFillColor(padGradient);
