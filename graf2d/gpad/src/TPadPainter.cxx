@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <algorithm>
 #include <cassert>
 #include <memory>
 #include <vector>
