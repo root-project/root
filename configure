@@ -37,6 +37,7 @@ deprecated_options="         \
    enable_editline           \
    enable_cintex             \
    enable_reflex             \
+   enable_cxx11              \
 "
 
 options="                    \
@@ -55,7 +56,6 @@ options="                    \
    enable_builtin_zlib       \
    enable_builtin_lzma       \
    enable_builtin_llvm       \
-   enable_cxx11              \
    enable_libcxx             \
    enable_castor             \
    enable_chirp              \
@@ -145,7 +145,7 @@ for c in $options $deprecated_options; do
 done
 for c in $options ; do eval ${c}_explicit="" ; done
 
-enable_cxx11=no
+enable_cxx11=yes
 enable_libcxx=no
 enable_cocoa=
 enable_afs=no
@@ -1621,8 +1621,7 @@ enable/disable options, prefix with either --enable- or --disable-
   builtin-pcre       Build included libpcre, or use system libpcre
   builtin-zlib       Build included libz, or use system libz
   builtin-lzma       Build included liblzma, or use system liblzma
-  cxx11              Build using C++11 compatible mode, requires gcc > 4.7.x or clang
-  libcxx             Build using libc++, required by clang cxx11 option (MacOS X only, for the time being)
+  libcxx             Build using libc++, required by clang option (MacOS X only, for the time being)
   castor             CASTOR support, requires libshift from CASTOR >= 1.5.2
   chirp              Chirp filesystem support, requires cctools >= 3.2.2
   cocoa              Use native Cocoa/Quartz graphics backend (MacOS X only)
@@ -1882,8 +1881,6 @@ linuxx8664k1om*)
    logmsg "Will not check 64bit libraries"
    checklinux64="no"
    checklib64="no"
-   enable_cintex="no"
-   enable_reflex="no"
    enable_genvector="no"
    enable_tmva="no"
    ;;
@@ -6968,6 +6965,12 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  lib/libsetDict.rootmap lib/libvalarrayDict.rootmap lib/libvectorDict.rootmap \
  include/TListOfTypes.h lib/*_RootCling.rootmap bin/rlibmap
 
+# if previous build was in non-c++11 mode, run "make maintainer-clean" first
+run_maintainer_clean="no"
+if `grep '#undef R__USE_CXX11' $CONFIGUREOUT > /dev/null  2>&1` ; then
+   run_maintainer_clean="yes"
+fi
+
 ######################################################################
 #
 ### echo %%% Fleshin out paths
@@ -7449,7 +7452,7 @@ rm -f RConfigure.tmp
 # only update $CONFIGUREOUT when different
 if test -f $CONFIGUREOUT; then
    diff RConfigure-out.tmp $CONFIGUREOUT > /dev/null; status=$?;
-   if [ "$status" -ne "0" ]; then
+   if [ "$status" -ne "0" ] && [ "x$run_maintainer_clean" = "xno" ]; then
       mv -f RConfigure-out.tmp $CONFIGUREOUT
    else
       rm -f RConfigure-out.tmp
@@ -7810,6 +7813,12 @@ if test "x$issue_explicitlink_warning" = "xyes"; then
     result "*** If lib/*.so's exist created without explicit linking,"
     result "*** please remove them first using: rm -f lib/*.so."
     result ""
+fi
+if [ "x$run_maintainer_clean" = "xyes" ]; then
+   result "*** Cleaning up previous non-C++11 build products, using:"
+   result "*** $gnumake maintainer-clean;$0 `cat config.status 2>/dev/null`"
+   $gnumake maintainer-clean
+   $0 `cat config.status 2>/dev/null`
 fi
 
 exit 0
