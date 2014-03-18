@@ -8130,7 +8130,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
    // Return lower error associated to bin number bin.
    //
    //    The error will depend on the statistic option used will return
-   //     the binContent - lower interval value
+   //     the binContent - upper interval value
 
    if (fBinStatErrOpt == kNormal || fSumw2.fN) return GetBinError(bin);
    if (bin < 0) bin = 0;
@@ -8143,7 +8143,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
    Double_t c = RetrieveBinContent(bin);
    Int_t n = int(c);
    if (n < 0) {
-      Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
+      Warning("GetBinErrorUp","Histogram has negative bin content-force usage to normal errors");
       ((TH1*)this)->fBinStatErrOpt = kNormal;
       return GetBinError(bin);
    }
