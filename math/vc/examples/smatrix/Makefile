@@ -56,8 +56,8 @@ CXXFLAGS+= -finline-functions -ftree-vectorize -funswitch-loops -fgcse-after-rel
 LDFLAGS+= -finline-functions -ftree-vectorize -funswitch-loops -fgcse-after-reload -fipa-cp-clone -fpredictive-commoning  -ftree-loop-distribute-patterns
 endif
 ifneq ($(FASTM),)
-CXXFLAGS+= -O3 --fast-math -ftree-vectorize -Ofast
-LDFLAGS+=  -O3 --fast-math -ftree-vectorize -Ofast
+CXXFLAGS+= -O3 -ffast-math -ftree-vectorize -Ofast
+LDFLAGS+=  -O3 -ffast-math -ftree-vectorize -Ofast
 endif
 #
 ifneq ($(USEVC),)

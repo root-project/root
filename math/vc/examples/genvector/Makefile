@@ -34,8 +34,8 @@ ifneq ($(AUTOVEC),)
 CXXFLAGS+= -ftree-vectorize
 endif
 ifneq ($(FASTM),)
-CXXFLAGS+= -O3 --fast-math -ftree-vectorize -Ofast
-LDFLAGS+=  -O3 --fast-math -ftree-vectorize -Ofast
+CXXFLAGS+= -O3 -ffast-math -ftree-vectorize -Ofast
+LDFLAGS+=  -O3 -ffast-math -ftree-vectorize -Ofast
 endif
 #CXXFLAGS+= -ftree-vectorizer-verbose=2
 
