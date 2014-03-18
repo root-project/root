@@ -105,7 +105,8 @@ CTFontCollectionRef CreateFontCollection(const X11::XLFDName &/*xlfd*/)
 //______________________________________________________________________________
 bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
-   assert(fontDescriptor != 0 && "GetFamilyName, fontDescriptor parameter is null");
+   //If success, this function returns a null-terminated string in a vector.
+   assert(fontDescriptor != 0 && "GetFamilyName, parameter 'fontDescriptor' is null");
 
    name.clear();
 
@@ -114,6 +115,26 @@ bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
    name.resize(cfLen + 1);//+ 1 for '\0'.
    if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
       return true;
+
+   return false;
+}
+
+//______________________________________________________________________________
+bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
+{
+   //If success, this function returns a null-terminated string in a vector.
+   assert(fontDescriptor != 0 && "GetPostscriptName, parameter 'fontDescriptor' is null");
+    
+   name.clear();
+    
+   Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontNameAttribute));
+   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
+   
+   if (cfLen) {
+      name.resize(cfLen + 1);//+ 1 for '\0'.
+      if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
+         return true;
+   }
 
    return false;
 }
@@ -221,6 +242,7 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
    using Util::CFScopeGuard;
    using Util::CFStrongReference;
 
+//TODO: must be something like >= 10.9!
 #ifdef MAC_OS_X_VERSION_10_9
    PSNameMap_t::const_iterator nameIt = fXLFDtoPostscriptNames.find(xlfd.fFamilyName);
    const std::string &psName = nameIt == fXLFDtoPostscriptNames.end() ? xlfd.fFamilyName : nameIt->second;
@@ -331,6 +353,20 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
          if (!newXLFD.fPixelSize)
             newXLFD.fPixelSize = xlfd.fPixelSize;
       }
+
+//TODO: must be something like >= 10.9!
+#ifdef MAC_OS_X_VERSION_10_9
+      //To avoid a warning from Core Text, save a mapping from a name seen by ROOT (family)
+      //to a right postscript name (required by Core Text).
+      {
+         std::vector<char> postscriptName;//It's a null-terminated string.
+         if (GetPostscriptName(font, postscriptName)) {
+            if (fXLFDtoPostscriptNames.find(&familyName[0]) == fXLFDtoPostscriptNames.end())
+               fXLFDtoPostscriptNames[&familyName[0]] = &postscriptName[0];
+         }
+      }
+#endif
+
 
       //Ok, now lets create XLFD name, and place into list.
       CreateXLFDString(newXLFD, xlfdString);
