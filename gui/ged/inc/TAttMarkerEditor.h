@@ -24,10 +24,13 @@
 #include "TGedFrame.h"
 #endif
 
+#include "TGSlider.h"
+
 class TGNumberEntry;
 class TGColorSelect;
 class TGedMarkerSelect;
 class TAttMarker;
+class TGNumberEntryField;
 
 class TAttMarkerEditor : public TGedFrame {
 
@@ -37,6 +40,8 @@ protected:
    TGColorSelect       *fColorSelect;     // marker color
    TGedMarkerSelect    *fMarkerType;      // marker type
    Bool_t              fSizeForText;      // true if "text" draw option uses marker size
+   TGHSlider           *fAlpha;           // fill opacity
+   TGNumberEntryField  *fAlphaField;
    
    virtual void        ConnectSignals2Slots();
 
@@ -51,6 +56,10 @@ public:
    virtual void     DoMarkerColor(Pixel_t color);
    virtual void     DoMarkerSize();
    virtual void     DoMarkerStyle(Style_t style);
+   virtual void     DoAlpha();
+   virtual void     DoAlphaField();
+   virtual void     DoLiveAlpha(Int_t a);
+   virtual void     GetCurAlpha();
 
    ClassDef(TAttMarkerEditor,0)  // GUI for editing marker attributes
 };

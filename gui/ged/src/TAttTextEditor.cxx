@@ -31,6 +31,11 @@
 #include "TColor.h"
 #include "TPaveLabel.h"
 #include "TVirtualPad.h"
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TROOT.h"
 
 ClassImp(TAttTextEditor)
 
@@ -38,7 +43,9 @@ enum ETextWid {
    kCOLOR,
    kFONT_SIZE,
    kFONT_STYLE,
-   kFONT_ALIGN
+   kFONT_ALIGN,
+   kALPHA,
+   kALPHAFIELD
 };
 
 //______________________________________________________________________________
@@ -68,12 +75,43 @@ TAttTextEditor::TAttTextEditor(const TGWindow *p, Int_t width,
    fAlignCombo = BuildTextAlignComboBox(this, kFONT_ALIGN);
    fAlignCombo->Resize(137, 20);
    AddFrame(fAlignCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
+
+   TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
+   AddFrame(AlphaLabel,
+            new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   TGHorizontalFrame *f2a = new TGHorizontalFrame(this);
+   fAlpha = new TGHSlider(f2a,100,kSlider2|kScaleNo,kALPHA);
+   fAlpha->SetRange(0,1000);
+   f2a->AddFrame(fAlpha,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   fAlphaField = new TGNumberEntryField(f2a, kALPHAFIELD, 0,
+                                        TGNumberFormat::kNESReal,
+                                        TGNumberFormat::kNEANonNegative);
+   fAlphaField->Resize(40,20);
+   if (!gPad->GetCanvas()->SupportAlpha()) {
+      fAlpha->SetEnabled(kFALSE);
+      AlphaLabel->Disable(kTRUE);
+      fAlphaField->SetEnabled(kFALSE);
+   }
+   f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
 //______________________________________________________________________________
 TAttTextEditor::~TAttTextEditor()
 {
    // Destructor of text editor.
+}
+
+//______________________________________________________________________________
+void TAttTextEditor::ConnectSignals2Slots()
+{
+   // Connect signals to slots.
+
+   fAlpha->Connect("Released()","TAttTextEditor", this, "DoAlpha()");
+   fAlpha->Connect("PositionChanged(Int_t)","TAttTextEditor", this, "DoLiveAlpha(Int_t)");
+   fAlphaField->Connect("ReturnPressed()","TAttTextEditor", this, "DoAlphaField()");
+   fAlpha->Connect("Pressed()","TAttTextEditor", this, "GetCurAlpha()");
+   fInit = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -110,7 +148,13 @@ void TAttTextEditor::SetModel(TObject* obj)
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
 
+   if (fInit) ConnectSignals2Slots();
    fAvoidSignal = kFALSE;
+
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
+      fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
+      fAlphaField->SetNumber(color->GetAlpha());
+   }  
 }
 
 //______________________________________________________________________________
@@ -194,4 +238,59 @@ TGComboBox* TAttTextEditor::BuildTextAlignComboBox(TGFrame* parent, Int_t id)
    c->AddEntry("33 Top, Right",  33);
 
    return c;
+}
+
+//______________________________________________________________________________
+void TAttTextEditor::DoAlphaField()
+{
+   // Slot to set the alpha value from the entry field.
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
+      color->SetAlpha((Float_t)fAlphaField->GetNumber());
+      fAlpha->SetPosition((Int_t)(fAlphaField->GetNumber()*1000));
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttTextEditor::DoAlpha()
+{
+   // Slot to set the alpha value
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
+      color->SetAlpha((Float_t)fAlpha->GetPosition()/1000);
+      fAlphaField->SetNumber((Float_t)fAlpha->GetPosition()/1000);
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttTextEditor::DoLiveAlpha(Int_t a)
+{
+   // Slot to set alpha value online.
+
+   if (fAvoidSignal) return;
+   fAlphaField->SetNumber((Float_t)a/1000);
+
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) color->SetAlpha((Float_t)a/1000);
+   Update();
+}
+
+//_______________________________________________________________________________
+void TAttTextEditor::GetCurAlpha()
+{
+   // Slot to update alpha value on click on Slider
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
+      fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+      fAlphaField->SetNumber(color->GetAlpha());
+   }
+
+   Update();
 }

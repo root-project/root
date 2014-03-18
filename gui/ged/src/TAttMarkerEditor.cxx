@@ -29,13 +29,20 @@
 #include "TGColorSelect.h"
 #include "TGNumberEntry.h"
 #include "TColor.h"
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TROOT.h"
 
 ClassImp(TAttMarkerEditor)
 
 enum EMarkerWid {
    kCOLOR,
    kMARKER,
-   kMARKER_SIZE
+   kMARKER_SIZE,
+   kALPHA,
+   kALPHAFIELD
 };
 
 //______________________________________________________________________________
@@ -67,6 +74,25 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
    f2->AddFrame(fMarkerSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fMarkerSize->Associate(this);
    AddFrame(f2, new TGLayoutHints(kLHintsTop, 1, 1, 0, 0));
+
+   TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
+   AddFrame(AlphaLabel,
+            new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   TGHorizontalFrame *f2a = new TGHorizontalFrame(this);
+   fAlpha = new TGHSlider(f2a,100,kSlider2|kScaleNo,kALPHA);
+   fAlpha->SetRange(0,1000);
+   f2a->AddFrame(fAlpha,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   fAlphaField = new TGNumberEntryField(f2a, kALPHAFIELD, 0,
+                                        TGNumberFormat::kNESReal,
+                                        TGNumberFormat::kNEANonNegative);
+   fAlphaField->Resize(40,20);
+   if (!gPad->GetCanvas()->SupportAlpha()) {
+      fAlpha->SetEnabled(kFALSE);
+      AlphaLabel->Disable(kTRUE);
+      fAlphaField->SetEnabled(kFALSE);
+   }
+   f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
 
 //______________________________________________________________________________
@@ -84,6 +110,10 @@ void TAttMarkerEditor::ConnectSignals2Slots()
    fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
    fMarkerSize->Connect("ValueSet(Long_t)", "TAttMarkerEditor", this, "DoMarkerSize()");
    (fMarkerSize->GetNumberEntry())->Connect("ReturnPressed()", "TAttMarkerEditor", this, "DoMarkerSize()");
+   fAlpha->Connect("Released()","TAttMarkerEditor", this, "DoAlpha()");
+   fAlpha->Connect("PositionChanged(Int_t)","TAttMarkerEditor", this, "DoLiveAlpha(Int_t)");
+   fAlphaField->Connect("ReturnPressed()","TAttMarkerEditor", this, "DoAlphaField()");
+   fAlpha->Connect("Pressed()","TAttMarkerEditor", this, "GetCurAlpha()");
    fInit = kFALSE;
 }
 
@@ -120,6 +150,11 @@ void TAttMarkerEditor::SetModel(TObject* obj)
 
    if (fInit) ConnectSignals2Slots();
    fAvoidSignal = kFALSE;
+
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
+      fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+      fAlphaField->SetNumber(color->GetAlpha());
+   }  
 }
 
 
@@ -163,5 +198,60 @@ void TAttMarkerEditor::DoMarkerSize()
       fMarkerSize->SetState(kTRUE);
    Float_t size = fMarkerSize->GetNumber();
    fAttMarker->SetMarkerSize(size);
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttMarkerEditor::DoAlphaField()
+{
+   // Slot to set the alpha value from the entry field.
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
+      color->SetAlpha((Float_t)fAlphaField->GetNumber());
+      fAlpha->SetPosition((Int_t)fAlphaField->GetNumber()*1000);
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttMarkerEditor::DoAlpha()
+{
+   // Slot to set the alpha value
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
+      color->SetAlpha((Float_t)fAlpha->GetPosition()/1000);
+      fAlphaField->SetNumber((Float_t)fAlpha->GetPosition()/1000);
+   }
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttMarkerEditor::DoLiveAlpha(Int_t a)
+{
+   // Slot to set alpha value online.
+
+   if (fAvoidSignal) return;
+   fAlphaField->SetNumber((Float_t)a/1000);
+
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) color->SetAlpha((Float_t)a/1000);
+   Update();
+}
+
+//_______________________________________________________________________________
+void TAttMarkerEditor::GetCurAlpha()
+{
+   // Slot to update alpha value on click on Slider
+
+   if (fAvoidSignal) return;
+
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
+      fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+      fAlphaField->SetNumber(color->GetAlpha());
+   }
+
    Update();
 }
