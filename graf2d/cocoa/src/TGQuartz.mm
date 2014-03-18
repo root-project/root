@@ -152,7 +152,7 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       Quartz::CalculateGradientPoints(extendedColor, CGSizeMake(drawable.fWidth, drawable.fHeight),
                                       x1, y1, x2, y2, startPoint, endPoint);
       //It can be either linear gradient or radial.
-      
+      NSLog(@"start %g %g end %g %g", startPoint.x, startPoint.y, endPoint.x, endPoint.y);
       //kTRUE == draw a shadow.
       Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, startPoint, endPoint, kTRUE);
    } else {

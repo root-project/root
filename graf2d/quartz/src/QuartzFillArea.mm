@@ -385,10 +385,10 @@ void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &
       const CGFloat h = bottomRight.y - topLeft.y;
       
       start.x = (w * start.x + topLeft.x);
-      end.x *= (w * end.x + topLeft.x);
+      end.x = (w * end.x + topLeft.x);
       
       start.y = (h * start.y + topLeft.y);
-      end.y *= (h * end.y + topLeft.y);
+      end.y = (h * end.y + topLeft.y);
    } else {
       start.x *= sizeOfDrawable.width;
       start.y *= sizeOfDrawable.height;
