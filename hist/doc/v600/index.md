@@ -185,6 +185,7 @@
        h->FillRandom("gaus"); 
        h->Draw("same"); 
     ```
+-   Make sure histograms having quotes in title are properly saved in .C files.
 
 ### TGraph
 
