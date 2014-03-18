@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <cassert>
+#include <memory>
 #include <vector>
 
 #include "TPad.h"
@@ -17,6 +18,7 @@
 #include "TPadPainter.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include "TROOT.h"
 #include "TMath.h"
 
 // Local scratch buffer for screen points, faster than allocating buffer on heap
@@ -771,6 +773,40 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
 {
    // Save the image displayed in the canvas pointed by "pad" into a 
    // binary file.
+   if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
+      pad->GetCanvas() && ((TVirtualPad *)pad->GetCanvas())->GetPixmapID()) {
+
+      //UGLYUGLY!!! FIXFIX! TESTTEST!
+      TVirtualPad * const canvas = (TVirtualPad *)pad->GetCanvas();
+      const UInt_t w = canvas->GetWw();
+      const UInt_t h = canvas->GetWh();
+      
+      //TODO: Use unique_ptr!
+      const unsigned char * const pixelData =
+                                  gVirtualX->GetColorBits(canvas->GetPixmapID(), 0, 0, w, h);
+
+      if (pixelData) {
+         std::auto_ptr<TImage> image(TImage::Create());
+         if (image.get()) {
+            image->DrawRectangle(0, 0, w, h);
+            if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
+               //Ohhh.
+               std::copy(pixelData, pixelData + 4 * w * h, argb);
+               unsigned *pos = (unsigned *)argb, *end = pos + w * h;
+               while (pos != end) {
+                  unsigned char * pixel = (unsigned char *)pos;
+                  std::swap(pixel[0], pixel[2]);
+                  ++pos;
+               }
+               image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+               delete [] pixelData;
+               return;
+            }
+         }
+         
+         delete [] pixelData;
+      }
+   }
 
    if (type == TImage::kGif) {
       gVirtualX->WriteGIF((char*)fileName);

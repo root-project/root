@@ -4376,7 +4376,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t wid = 0;
    if (!GetCanvas()) return;
-   if (!gROOT->IsBatch() && image && GetCanvas()->UseGL()) {
+   if (!gROOT->IsBatch() && image && (GetCanvas()->UseGL() || gVirtualX->InheritsFrom("TGCocoa"))) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
