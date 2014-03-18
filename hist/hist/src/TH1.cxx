@@ -6741,6 +6741,7 @@ void TH1::SavePrimitive(ostream &out, Option_t *option /*= ""*/)
 
    TString t(GetTitle());
    t.ReplaceAll("\\","\\\\");
+   t.ReplaceAll("\"","\\\"");
    out << hname << " = new " << ClassName() << "(" << quote
       << hname << quote << "," << quote<< t.Data() << quote
       << "," << GetXaxis()->GetNbins();
