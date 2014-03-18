@@ -567,7 +567,7 @@ void TPerfStats::FileReadEvent(TFile *file, Int_t len, Double_t start)
 }
 
 //______________________________________________________________________________
-void TPerfStats::UnzipEvent(TTree * /* tree */, Long64_t /* pos */,
+void TPerfStats::UnzipEvent(TObject * /* tree */, Long64_t /* pos */,
                             Double_t /* start */, Int_t /* complen */,
                             Int_t /* objlen */)
 {
