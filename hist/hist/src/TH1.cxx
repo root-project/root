@@ -8127,7 +8127,7 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
 //______________________________________________________________________________
 Double_t TH1::GetBinErrorUp(Int_t bin) const
 {
-   // Return lower error associated to bin number bin.
+   // Return upper error associated to bin number bin.
    //
    //    The error will depend on the statistic option used will return
    //     the binContent - upper interval value
