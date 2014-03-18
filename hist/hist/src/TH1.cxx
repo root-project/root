@@ -8289,7 +8289,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
    //             ==================================================
    //
    //    The error will depend on the statistic option used will return
-   //     the binContent - lower interval value
+   //     the binContent - upper interval value
    //
    //
    //   -*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -8305,7 +8305,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
    Double_t c = GetBinContent(bin);
    Int_t n = int(c);
    if (n < 0) {
-      Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
+      Warning("GetBinErrorUp","Histogram has negative bin content-force usage to normal errors");
       ((TH1*)this)->fBinStatErrOpt = kNormal;
       return GetBinError(bin);
    }
