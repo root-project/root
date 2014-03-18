@@ -111,10 +111,11 @@ bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
    name.clear();
 
    Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontFamilyNameAttribute));
-   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
-   name.resize(cfLen + 1);//+ 1 for '\0'.
-   if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
-      return true;
+   if (const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get())) {
+      name.resize(cfLen + 1);//+ 1 for '\0'.
+      if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
+         return true;
+   }
 
    return false;
 }
@@ -128,9 +129,8 @@ bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &na
    name.clear();
     
    Util::CFScopeGuard<CFStringRef> cfFamilyName((CFStringRef)CTFontDescriptorCopyAttribute(fontDescriptor, kCTFontNameAttribute));
-   const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get());
    
-   if (cfLen) {
+   if (const CFIndex cfLen = CFStringGetLength(cfFamilyName.Get())) {
       name.resize(cfLen + 1);//+ 1 for '\0'.
       if (CFStringGetCString(cfFamilyName.Get(), &name[0], name.size(), kCFStringEncodingMacRoman))
          return true;
@@ -242,7 +242,6 @@ FontStruct_t FontCache::LoadFont(const X11::XLFDName &xlfd)
    using Util::CFScopeGuard;
    using Util::CFStrongReference;
 
-//TODO: must be something like >= 10.9!
 #ifdef MAC_OS_X_VERSION_10_9
    PSNameMap_t::const_iterator nameIt = fXLFDtoPostscriptNames.find(xlfd.fFamilyName);
    const std::string &psName = nameIt == fXLFDtoPostscriptNames.end() ? xlfd.fFamilyName : nameIt->second;
@@ -317,6 +316,7 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
    }
    
    std::vector<char> xlfdData;
+   //familyName is actually a null-terminated string.
    std::vector<char> familyName;
    X11::XLFDName newXLFD;
    std::string xlfdString;
@@ -354,16 +354,15 @@ char **FontCache::ListFonts(const X11::XLFDName &xlfd, int maxNames, int &count)
             newXLFD.fPixelSize = xlfd.fPixelSize;
       }
 
-//TODO: must be something like >= 10.9!
 #ifdef MAC_OS_X_VERSION_10_9
       //To avoid a warning from Core Text, save a mapping from a name seen by ROOT (family)
       //to a right postscript name (required by Core Text).
-      {
-         std::vector<char> postscriptName;//It's a null-terminated string.
-         if (GetPostscriptName(font, postscriptName)) {
-            if (fXLFDtoPostscriptNames.find(&familyName[0]) == fXLFDtoPostscriptNames.end())
-               fXLFDtoPostscriptNames[&familyName[0]] = &postscriptName[0];
-         }
+   
+      //It's a null-terminated string:
+      std::vector<char> postscriptName;
+      if (GetPostscriptName(font, postscriptName)) {
+         if (fXLFDtoPostscriptNames.find(&familyName[0]) == fXLFDtoPostscriptNames.end())
+            fXLFDtoPostscriptNames[&familyName[0]] = &postscriptName[0];
       }
 #endif
 
