@@ -1,7 +1,6 @@
 aixgcc               for AIX >= 5.x with gcc >= 4.8
 freebsd7             for FreeBSD 7.x with gcc >= 4.8
 linux                for i386 Linux with gcc >= 4.8
-linuxicc             for i386 Linux with Intel's icc >= 13
 linuxarm             for ARM Linux with gcc >= 4.8
 linuxppcgcc          for PPC Linux with gcc >= 4.8
 linuxppc64gcc        for PPC 64 Linux with gcc >= 4.8

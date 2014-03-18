@@ -20,16 +20,9 @@ MICFLAGS      = -mmic
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) -O2 -m64 -no-vec -no-fma -Wall -DWARNINGMSG
-CFLAGS        = -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict
-CINTCXXFLAGS  = -fPIC $(MICFLAGS) $(EXTRA_CXXFLAGS) \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
-CINTCFLAGS    = -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict \
-                -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
-                -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO \
-                -DG__STD_EXCEPTION -DG__64BIT
+CXXFLAGS      = -std=c++11 -fPIC -wd1476 $(MICFLAGS) $(EXTRA_CXXFLAGS) \
+                -m64 -no-vec -no-fma -Wall -DWARNINGMSG
+CFLAGS        = -m64 -fPIC $(MICFLAGS) $(EXTRA_CFLAGS) -restrict
 
 # Linker:
 LD            = icpc
@@ -52,16 +45,12 @@ endif
 ifeq ($(ICC_MAJOR),9)
 CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572
-CINTCFLAGS   += -wd1572
 ICC_GE_9      = $(ICC_MAJOR)
 endif
 
 ifeq ($(ICC_MAJOR),10)
 CXXFLAGS     += -wd1572
 CFLAGS       += -wd1572
-CINTCXXFLAGS += -wd1572
-CINTCFLAGS   += -wd1572
 ICC_GE_9      = $(ICC_MAJOR)
 ifneq ($(ICC_MINOR),0)
 ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)
@@ -71,8 +60,6 @@ endif
 ifeq ($(findstring $(ICC_MAJOR),10 9),)
 CXXFLAGS     += -m64 -wd1572 -wd279
 CFLAGS       += -m64 -wd1572 -wd279
-CINTCXXFLAGS += -m64 -wd1572 -wd279
-CINTCFLAGS   += -m64 -wd1572 -wd279
 LDFLAGS      += -m64
 ICC_GE_9      = $(ICC_MAJOR)
 ICC_GE_101    = $(ICC_MAJOR)$(ICC_MINOR)

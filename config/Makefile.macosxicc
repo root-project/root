@@ -22,7 +22,7 @@ FINK_DIR     := $(shell which fink 2>&1 | sed -ne "s/\/bin\/fink//p")
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS)
+CXXFLAGS      = -std=c++11 -fPIC -wd1476 $(EXTRA_CXXFLAGS)
 CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
 
 # Compiler version:

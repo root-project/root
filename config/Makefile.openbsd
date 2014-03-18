@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 #
-# Makefile of ROOT for OpenBSD >= 3.7
+# Makefile of ROOT for OpenBSD >= 5.x
 
 PLATFORM      = obsd
 
@@ -17,7 +17,7 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
+CXXFLAGS      = -std=c++11 -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CXXFLAGS)
 CFLAGS        = -pipe -W -Wall -fPIC -I/usr/X11R6/include \
                 -I/usr/local/include $(EXTRA_CFLAGS)

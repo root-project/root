@@ -13,14 +13,11 @@ else
 OPT           = $(OPTFLAGS)
 NOOPT         = -O0
 endif
-ifeq ($(CXX11),yes)
-CXX11FLAGS    = -std=c++11
-endif
 
 # Compiler:
 CXX           = icc
 CC            = icc
-CXXFLAGS      = -fPIC -wd1476 $(EXTRA_CXXFLAGS) $(CXX11FLAGS)
+CXXFLAGS      = -fPIC -std=c++11 -wd1476 $(EXTRA_CXXFLAGS)
 CFLAGS        = -fPIC $(EXTRA_CFLAGS) -restrict
 
 # Linker:
