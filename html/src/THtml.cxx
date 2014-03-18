@@ -1584,6 +1584,8 @@ void THtml::CreateListOfClasses(const char* filter)
 
       // This is a hack for until after Cint and Reflex are one.
       if (strstr(cname, "__gnu_cxx::")) continue;
+      // Work around ROOT-6016
+      if (!strcmp(cname, "timespec")) continue;
 
       // get class & filename - use TROOT::GetClass, as we also
       // want those classes without decl file name!
