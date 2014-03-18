@@ -108,7 +108,7 @@ void testIteratorFunctions()
       cout << ", " << sa[ index[i] ];
    cout << "}" << endl;
 
-   sort(&sa[0], &sa[n]);
+   sort(&sa[0], &sa[0]+n);
    is = BinarySearch(n, &sa[0], (T) 57);
    cout << "BinarySearch(n, a, 57) = " << is << "\n" << endl;
 }
