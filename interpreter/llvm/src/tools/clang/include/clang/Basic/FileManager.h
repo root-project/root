@@ -28,6 +28,7 @@
 // FIXME: Enhance libsystem to support inode and other fields in stat.
 #include <sys/types.h>
 #include <map>
+#include <set>
 
 #ifdef _MSC_VER
 typedef unsigned short mode_t;
@@ -152,6 +153,8 @@ class FileManager : public RefCountedBase<FileManager> {
   ///
   /// \see SeenDirEntries
   llvm::StringMap<FileEntry*, llvm::BumpPtrAllocator> SeenFileEntries;
+
+  std::set<const FileEntry*> FileEntriesToReread;
 
   /// \brief The canonical names of directories.
   llvm::DenseMap<const DirectoryEntry *, llvm::StringRef> CanonicalDirNames;

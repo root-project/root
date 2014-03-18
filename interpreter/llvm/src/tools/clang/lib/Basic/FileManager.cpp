@@ -224,8 +224,18 @@ const FileEntry *FileManager::getFile(StringRef Filename, bool openFile,
   llvm::StringMapEntry<FileEntry *> &NamedFileEnt =
     SeenFileEntries.GetOrCreateValue(Filename);
 
+  bool needsRereading = false;
+  if (NamedFileEnt.getValue()) {
+     std::set<const FileEntry*>::const_iterator found
+        = FileEntriesToReread.find(NamedFileEnt.getValue());
+     if (found != FileEntriesToReread.end()) {
+        needsRereading = true;
+        FileEntriesToReread.erase(found);
+     }
+  }
+
   // See if there is already an entry in the map.
-  if (NamedFileEnt.getValue())
+  if (NamedFileEnt.getValue() && !needsRereading)
     return NamedFileEnt.getValue() == NON_EXISTENT_FILE
                  ? 0 : NamedFileEnt.getValue();
 
@@ -468,13 +478,7 @@ bool FileManager::getNoncachedStatValue(StringRef Path,
 
 void FileManager::invalidateCache(const FileEntry *Entry) {
   assert(Entry && "Cannot invalidate a NULL FileEntry");
-
-  SeenFileEntries.erase(Entry->getName());
-
-  // FileEntry invalidation should not block future optimizations in the file
-  // caches. Possible alternatives are cache truncation (invalidate last N) or
-  // invalidation of the whole cache.
-  UniqueRealFiles.erase(Entry->getUniqueID());
+  FileEntriesToReread.insert(Entry);
 }
 
 
