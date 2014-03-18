@@ -34,19 +34,16 @@
 
 ClassImp(TColorGradient)
 
-/*
 //______________________________________________________________________________
 TColorGradient::TColorGradient()
-                  : fGradientDirection(kGDVertical)
+                   : fCoordinateMode(kObjectBoundingMode)
 {
-   //Default ctors, which does nothing and should not be used (it's for io only?).
 }
-*/
 
 //______________________________________________________________________________
-TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints,
-                               const Double_t *points, const Color_t *indices)
-                   : fGradientDirection(dir)
+TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_t *points,
+                               const Color_t *indices, ECoordinateMode mode)
+                   : fCoordinateMode(mode)
 {
    //I have no way to validate parameters here, so it's up to user
    //to pass correct arguments.
@@ -54,14 +51,14 @@ TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_
    assert(points != 0 && "TColorGradient, points parameter is null");
    assert(indices != 0 && "TColorGradient, indices parameter is null");
 
-   ResetColor(dir, nPoints, points, indices);
+   ResetColor(nPoints, points, indices);
    RegisterColor(colorIndex);
 }
 
 //______________________________________________________________________________
-TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_t nPoints,
-                               const Double_t *points, const Double_t *colors)
-                   : fGradientDirection(dir)
+TColorGradient::TColorGradient(Color_t colorIndex, UInt_t nPoints, const Double_t *points,
+                               const Double_t *colors, ECoordinateMode mode)
+                  : fCoordinateMode(mode)
 {
    //I have no way to validate parameters here, so it's up to user
    //to pass correct arguments.
@@ -69,19 +66,17 @@ TColorGradient::TColorGradient(Color_t colorIndex, EGradientDirection dir, UInt_
    assert(points != 0 && "TColorGradient, points parameter is null");
    assert(colors != 0 && "TColorGradient, colors parameter is null");
 
-   ResetColor(dir, nPoints, points, colors);
+   ResetColor(nPoints, points, colors);
    RegisterColor(colorIndex);
 }
 
 //______________________________________________________________________________
-void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points,
-                                const Color_t *colorIndices)
+void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points, const Color_t *colorIndices)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
    assert(points != 0 && "ResetColor, points parameter is null");
    assert(colorIndices != 0 && "ResetColor, colorIndices parameter is null");
 
-   fGradientDirection = dir;
    fColorPositions.assign(points, points + nPoints);
    fColors.resize(nPoints * 4);//4 == rgba.
    
@@ -107,23 +102,27 @@ void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Do
 }
 
 //______________________________________________________________________________
-void TColorGradient::ResetColor(EGradientDirection dir, UInt_t nPoints, const Double_t *points,
+void TColorGradient::ResetColor(UInt_t nPoints, const Double_t *points,
                                 const Double_t *colors)
 {
    assert(nPoints != 0 && "ResetColor, number of points is 0");
    assert(points != 0 && "ResetColor, points parameter is null");
    assert(colors != 0 && "ResetColor, colors parameter is null");
 
-   fGradientDirection = dir;
    fColorPositions.assign(points, points + nPoints);
    fColors.assign(colors, colors + nPoints * 4);
 }
 
 //______________________________________________________________________________
-TColorGradient::EGradientDirection TColorGradient::GetGradientDirection()const
+void TColorGradient::SetCoordinateMode(ECoordinateMode mode)
 {
-   //
-   return fGradientDirection;
+   fCoordinateMode = mode;
+}
+
+//______________________________________________________________________________
+TColorGradient::ECoordinateMode TColorGradient::GetCoordinateMode()const
+{
+   return fCoordinateMode;
 }
 
 //______________________________________________________________________________
@@ -166,4 +165,100 @@ void TColorGradient::RegisterColor(Color_t colorIndex)
          return;
       }
    }
+}
+
+ClassImp(TLinearGradient)
+
+//______________________________________________________________________________
+TLinearGradient::TLinearGradient()
+{
+}
+
+//______________________________________________________________________________
+TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
+                                 const Color_t *colorIndices, ECoordinateMode mode)
+                   : TColorGradient(newColor, nPoints, points, colorIndices, mode)
+{
+}
+
+//______________________________________________________________________________
+TLinearGradient::TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
+                                 const Double_t *colors, ECoordinateMode mode)
+                   : TColorGradient(newColor, nPoints, points, colors, mode)
+{
+}
+
+//______________________________________________________________________________
+void TLinearGradient::SetStartEnd(const GradientPoint &p1, const GradientPoint &p2)
+{
+   fStart = p1;
+   fEnd = p2;
+}
+
+//______________________________________________________________________________
+const TColorGradient::GradientPoint &TLinearGradient::GetStartPoint()const
+{
+   return fStart;
+}
+
+//______________________________________________________________________________
+const TColorGradient::GradientPoint &TLinearGradient::GetEndPoint()const
+{
+   return fEnd;
+}
+
+ClassImp(TRadialGradient)
+
+//______________________________________________________________________________
+TRadialGradient::TRadialGradient()
+{
+}
+
+//______________________________________________________________________________
+TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
+                                 const Color_t *colorIndices, ECoordinateMode mode)
+                   : TColorGradient(newColor, nPoints, points, colorIndices, mode),
+                     fR1(0.), fR2(0.)
+{
+}
+
+//______________________________________________________________________________
+TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
+                                 const Double_t *colors, ECoordinateMode mode)
+                   : TColorGradient(newColor, nPoints, points, colors, mode),
+                     fR1(0.), fR2(0.)
+{
+}
+
+//______________________________________________________________________________
+void TRadialGradient::SetStartEndR1R2(const GradientPoint &p1, Double_t r1, const GradientPoint &p2, Double_t r2)
+{
+   fStart = p1;
+   fR1 = r1;
+   fEnd = p2;
+   fR2 = r2;
+}
+
+//______________________________________________________________________________
+const TColorGradient::GradientPoint &TRadialGradient::GetStartPoint()const
+{
+   return fStart;
+}
+
+//______________________________________________________________________________
+Double_t TRadialGradient::GetR1()const
+{
+   return fR1;
+}
+
+//______________________________________________________________________________
+const TColorGradient::GradientPoint &TRadialGradient::GetEndPoint()const
+{
+   return fEnd;
+}
+
+//______________________________________________________________________________
+Double_t TRadialGradient::GetR2()const
+{
+   return fR2;
 }
