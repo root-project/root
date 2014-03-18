@@ -41,9 +41,6 @@ using namespace std;
 
 ClassImp(RooDstD0BG) 
 
-static const char rcsid[] =
-"$Id$";
-
 
 //_____________________________________________________________________________
 RooDstD0BG::RooDstD0BG(const char *name, const char *title,

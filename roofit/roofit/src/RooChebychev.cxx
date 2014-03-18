@@ -83,11 +83,11 @@ RooChebychev::RooChebychev(const RooChebychev& other, const char* name) :
 {
 }
 
-inline static double p0(double ,double a) { return a; }
+//inline static double p0(double ,double a) { return a; }
 inline static double p1(double t,double a,double b) { return a*t+b; }
 inline static double p2(double t,double a,double b,double c) { return p1(t,p1(t,a,b),c); }
 inline static double p3(double t,double a,double b,double c,double d) { return p2(t,p1(t,a,b),c,d); }
-inline static double p4(double t,double a,double b,double c,double d,double e) { return p3(t,p1(t,a,b),c,d,e); }
+//inline static double p4(double t,double a,double b,double c,double d,double e) { return p3(t,p1(t,a,b),c,d,e); }
 
 
 //_____________________________________________________________________________

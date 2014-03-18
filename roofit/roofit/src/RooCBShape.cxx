@@ -53,9 +53,6 @@ Double_t RooCBShape::ApproxErf(Double_t arg) const
 }
 
 
-static const char rcsid[] =
-"$Id$";
-
 
 //_____________________________________________________________________________
 RooCBShape::RooCBShape(const char *name, const char *title,
