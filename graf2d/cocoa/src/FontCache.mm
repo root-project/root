@@ -120,6 +120,8 @@ bool GetFamilyName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
    return false;
 }
 
+#ifdef MAC_OS_X_VERSION_10_9
+
 //______________________________________________________________________________
 bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &name)
 {
@@ -138,6 +140,8 @@ bool GetPostscriptName(CTFontDescriptorRef fontDescriptor, std::vector<char> &na
 
    return false;
 }
+
+#endif
 
 //______________________________________________________________________________
 void GetWeightAndSlant(CTFontDescriptorRef fontDescriptor, X11::XLFDName &newXLFD)
