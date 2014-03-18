@@ -146,26 +146,6 @@ fi
 ### machine dependent settings ###
 
 case $arch in
-hpux)
-   #HP-UX with CC
-   auxcflags="+a1 +Z"
-   auxlibs="-lm -ldld"
-   ;;
-hpuxacc | hpuxia64acc)
-   # HP-UX 10.x with aCC
-   auxcflags=
-   auxlibs="-lm -ldld"
-   ;;
-hpuxgcc)
-   # HP-UX 10.x with g++
-   auxcflags=
-   auxlibs="-lm -ldld"
-   ;;
-hurddeb)
-   # Debian GNU/Hurd
-   auxcflags=
-   auxlibs="-lnsl -lm -ldl -rdynamic"
-   ;;
 aix5)
    # IBM AIX
    auxcflags="-qnoro -qnoroconst -qmaxmem=-1 -qrtti=all"
@@ -176,132 +156,101 @@ aix5)
    ;;
 aixgcc)
    # IBM AIX with g++
-   auxcflags="-fsigned-char"
+   auxcflags="-std=c++11 -fsigned-char"
    auxlibs=
    #forcelibs=$rootulibs
    #forceglibs=$rootuglibs
    #forceevelibs=$rootuevelibs
    ;;
-solaris)
-   # Solaris
-   auxcflags=
-   auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl -lsunmath"
-   ;;
 solarisgcc)
    # Solaris g++ 2.8.x
-   auxcflags=
+   auxcflags="-std=c++11"
    auxlibs="-L/usr/ccs/lib -lm -lsocket -lgen -ldl"
    ;;
 solarisCC5)
    # Solaris CC 5.0
    if [ `uname -p` = "i386" ]; then
-      auxcflags="-library=stlport4"
+      auxcflags="-std=c++11 -library=stlport4"
       auxldflags="-library=stlport4"
    else
-      auxcflags=
+      auxcflags="-std=c++11"
       auxldflags=
    fi
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
 solaris64CC5)
    # Solaris CC 5.0 x86-64
-   auxcflags="-m64 -library=stlport4"
+   auxcflags="-std=c++11 -m64 -library=stlport4"
    auxldflags="-m64 -library=stlport4"
    auxlibs="-lm -ldl -lnsl -lsocket"
    ;;
-linuxrh42 | linuxrh51)
-   # Linux with gcc 2.7.2.x
-   auxcflags=
-   auxlibs="-lg++ -lm -ldl -rdynamic"
-   ;;
 linux)
    # Linux with gcc >= 3.x
-   auxcflags="-m32 -msse -mfpmath=sse "
+   auxcflags="-std=c++11 -Wno-deprecated-declarations -m32 -msse -mfpmath=sse "
    auxldflags="-m32 -msse -mfpmath=sse "
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxhppa)
-   # Linux on hppa with the GCC compiler
-   auxcflags=
-   auxldflags=
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxicc)
    # Linux with the Intel icc compiler
-   auxcflags=
+   auxcflags="-std=c++11"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxppcgcc)
    # PPC Linux with gcc
-   auxcflags="-fsigned-char -I/usr/X11/include"
+   auxcflags="-std=c++11 -Wno-deprecated-declarations -fsigned-char -I/usr/X11/include"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxppc64gcc)
    # PPC64 (64 bit mode) Linux with gcc 3.x
-   auxcflags="-m64 -fsigned-char"
+   auxcflags="-std=c++11 -Wno-deprecated-declarations -m64 -fsigned-char"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
-linuxia64gcc)
-   # Itanium Linux with gcc 2.x/3.x
-   auxcflags=
-   auxlibs="-lm -ldl -rdynamic"
-   ;;
-linuxia64ecc)
-   # Itanium Linux with Intel ecc compiler
-   auxcflags=
-   auxlibs="-lm -ldl"
-   ;;
 linuxx8664gcc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with gcc 3.x
-   auxcflags="-m64"
+   auxcflags="-std=c++11 -Wno-deprecated-declarations -m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxx8664icc)
    # AMD Opteron and Intel EM64T (64 bit mode) Linux with Intel icc
-   auxcflags=
+   auxcflags="-std=c++11"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxx8664k1omicc)
    # Intel Many Integrated Cores Architecture (Knights Corner) Linux with Intel icc
-   auxcflags="-mmic -I/usr/include"
+   auxcflags="-std=c++11 -mmic -I/usr/include"
    auxlibs="-limf -lm -ldl"
    ;;
 linuxx32gcc)
    # x32 ABI (64 bit mode with 32 bit pointers) Linux with gcc > 4.7
-   auxcflags="-mx32"
+   auxcflags="-std=c++11 -Wno-deprecated-declarations -mx32"
    auxldflags="-mx32"
    auxlibs="-lm -ldl -rdynamic"
    ;;
 linuxarm)
    # ARM Linux with gcc
-   auxcflags="-fsigned-char"
+   auxcflags="-std=c++11 -fsigned-char"
    auxlibs="-lm -ldl -rdynamic"
-   ;;
-mklinux)
-   # MkLinux with libc5
-   auxcflags="-fsigned-char -I/usr/X11/include -I/usr/include/g++"
-   auxlibs="-lg++ -lm -ldl -rdynamic"
    ;;
 freebsd)
    # FreeBSD with libc5
-   auxcflags=
+   auxcflags="-std=c++11 -Wno-deprecated-declarations"
    auxlibs="-lm -lg++"
    ;;
 freebsd4)
    # FreeBSD 4 with glibc
-   auxcflags=
+   auxcflags="-std=c++11 -Wno-deprecated-declarations"
    auxlibs="-lm -lstdc++"
    ;;
 freebsd5|freebsd7)
    # FreeBSD 5/7 with glibc
-   auxcflags=
+   auxcflags="-std=c++11 -Wno-deprecated-declarations"
    auxlibs="-lm -lstdc++"
    ;;
 openbsd)
    # OpenBSD with libc
-   auxcflags=
+   auxcflags="-std=c++11 -Wno-deprecated-declarations"
    auxlibs="-lm -lstdc++"
    ;;
 macosx)
@@ -320,7 +269,7 @@ macosx)
       forceglibs=$rootuglibs
       forceevelibs=$rootuevelibs
    else
-      auxcflags="-m32"
+      auxcflags="-std=c++11 -m32"
       auxldflags="-m32"
       auxlibs="-lm -ldl"
    fi
@@ -332,7 +281,7 @@ macosxicc)
    if [ $macosx_minor -le 4 ]; then
       rootlibs="$rootlibs -lfreetype"
    fi
-   auxcflags=
+   auxcflags="-std=c++11"
    auxlibs="-lm -ldl"
    ;;
 macosx64)
@@ -342,12 +291,12 @@ macosx64)
    if [ $macosx_minor -le 4 ]; then
       rootlibs="$rootlibs -lfreetype"
    fi
-   auxcflags="-m64"
+   auxcflags="-std=c++11 -m64"
    auxldflags="-m64"
    auxlibs="-lm -ldl"
    ;;
 ios*)
-   auxcflags="-m32"
+   auxcflags="-std=c++11 -m32"
    auxldflags="-m32"
    auxlibs="-lm -ldl"
    ;;
@@ -401,7 +350,6 @@ freebsd* | openbsd* | linux*)
       if test "x$f" = "xrpath" ; then
          auxlibs="-Wl,-rpath,$libdir $auxlibs"
       fi
-      auxcflags="-std=c++11 -Wno-deprecated-declarations $auxcflags"
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
@@ -424,7 +372,6 @@ macosx*)
             auxlibs="-Wl,-rpath,$libdir $auxlibs"
          fi
       fi
-      auxcflags="-std=c++11 $auxcflags"
       if test "x$f" = "xlibcxx" ; then
          auxcflags="-stdlib=libc++ $auxcflags"
          auxlibs="-stdlib=libc++ $auxlibs"
