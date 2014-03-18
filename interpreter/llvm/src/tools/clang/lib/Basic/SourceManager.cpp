@@ -133,14 +133,6 @@ const llvm::MemoryBuffer *ContentCache::getBuffer(DiagnosticsEngine &Diag,
     return Buffer.getPointer();
   }
 
-  // If there is no information about the size and the modification time,
-  // this means that we are in cling-like context and we should sync the 
-  // FileEntry and the invalidated cache.
-  if (!ContentsEntry->getSize() && !ContentsEntry->getModificationTime()) {
-     FileManager::modifyFileEntry(const_cast<FileEntry*>(ContentsEntry), 
-                                  getRawBuffer()->getBufferSize(), time(0));
-  }
-  
   // Check that the file's size is the same as in the file entry (which may
   // have come from a stat cache).
   if (getRawBuffer()->getBufferSize() != (size_t)ContentsEntry->getSize()) {
@@ -431,6 +423,14 @@ void SourceManager::clearIDTables() {
   NextLocalOffset = 0;
   CurrentLoadedOffset = MaxLoadedOffset;
   createExpansionLoc(SourceLocation(),SourceLocation(),SourceLocation(), 1);
+}
+
+void SourceManager::invalidateCache(const FileEntry* Entry) {
+  if (ContentCache *&E = FileInfos[Entry]) {
+    E->replaceBuffer(0, /*free*/ true);
+    E = 0;
+  }
+  getFileManager().invalidateCache(Entry);
 }
 
 /// getOrCreateContentCache - Create or return a cached ContentCache for the
