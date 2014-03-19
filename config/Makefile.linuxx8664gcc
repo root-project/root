@@ -37,6 +37,9 @@ CINTCFLAGS    = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__STD_EXCEPTION -DG__64BIT
 COMPILER      = gnu
 
+CXXFLAGS += -g -Werror -Wall -Wshadow
+NOOPT += -pedantic -Wno-long-long
+
 # Linker:
 LD            = g++
 LDFLAGS       = -m64 $(OPT) $(EXTRA_LDFLAGS) -Wl,--no-undefined -Wl,--as-needed
