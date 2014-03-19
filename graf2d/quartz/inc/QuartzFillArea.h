@@ -45,14 +45,11 @@ Bool_t SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex);
 
 //TODO: fix this crap - x1x2 x3 etc. - CGRect!
 void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool hollow);
-//
-void DrawBoxGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                     const CGRect &box, Bool_t drawShadow);
-
 void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t drawShadow);
+
 //
-void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                          Int_t nPoints, const TPoint *xy, Bool_t drawShadow);
+void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                                 Int_t nPoints, const TPoint *xy, Bool_t drawShadow);
 
 }
 }
