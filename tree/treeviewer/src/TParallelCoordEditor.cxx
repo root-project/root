@@ -119,38 +119,37 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    f1->AddFrame(fGlobalLineWidth, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsTop));
 
-   AddFrame(new TGLabel(this,"Dots spacing"),
-            new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-
-   TGHorizontalFrame *f2 = new TGHorizontalFrame(this);
-   fDotsSpacing = new TGHSlider(f2,100,kSlider1|kScaleBoth,kDotsSpacing);
-   fDotsSpacing->SetRange(0,60);
-   f2->AddFrame(fDotsSpacing,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   fDotsSpacingField = new TGNumberEntryField(f2, kDotsSpacingField, 0,
-                                              TGNumberFormat::kNESInteger,
-                                              TGNumberFormat::kNEANonNegative);
-   fDotsSpacingField->Resize(40,20);
-   f2->AddFrame(fDotsSpacingField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-
-   TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
-   AddFrame(AlphaLabel,
-            new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   TGHorizontalFrame *f2a = new TGHorizontalFrame(this);
-   fAlpha = new TGHSlider(f2a,100,kSlider1|kScaleBoth,kAlpha);
-   fAlpha->SetRange(0,1000);
-   f2a->AddFrame(fAlpha,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   fAlphaField = new TGNumberEntryField(f2a, kAlphaField, 0,
-                                        TGNumberFormat::kNESReal,
-                                        TGNumberFormat::kNEANonNegative);
-   fAlphaField->Resize(40,20);
    if (!gPad->GetCanvas()->SupportAlpha()) {
-      fAlpha->SetEnabled(kFALSE);
-      AlphaLabel->Disable(kTRUE);
-      fAlphaField->SetEnabled(kFALSE);
+
+      AddFrame(new TGLabel(this,"Dots spacing"),
+               new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      
+      TGHorizontalFrame *f2 = new TGHorizontalFrame(this);
+      fDotsSpacing = new TGHSlider(f2,100,kSlider2|kScaleNo,kDotsSpacing);
+      fDotsSpacing->SetRange(0,60);
+      f2->AddFrame(fDotsSpacing,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fDotsSpacingField = new TGNumberEntryField(f2, kDotsSpacingField, 0,
+                                                 TGNumberFormat::kNESInteger,
+                                                 TGNumberFormat::kNEANonNegative);
+      fDotsSpacingField->Resize(40,20);
+      f2->AddFrame(fDotsSpacingField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
    }
-   f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
-   AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   else {
+      TGLabel *AlphaLabel = new TGLabel(this,"Opacity");
+      AddFrame(AlphaLabel,
+               new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      TGHorizontalFrame *f2a = new TGHorizontalFrame(this);
+      fAlpha = new TGHSlider(f2a,100,kSlider2|kScaleNo,kAlpha);
+      fAlpha->SetRange(0,1000);
+      f2a->AddFrame(fAlpha,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      fAlphaField = new TGNumberEntryField(f2a, kAlphaField, 0,
+                                           TGNumberFormat::kNESReal,
+                                           TGNumberFormat::kNEANonNegative);
+      fAlphaField->Resize(40,20);
+      f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+      AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
+   }
 
    fLineTypeBgroup = new TGButtonGroup(this,2,1,0,0, "Line type");
    fLineTypeBgroup->SetRadioButtonExclusive(kTRUE);
@@ -215,7 +214,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    fDelayDrawing = new TGCheckButton(this,"Delay Drawing", kDelayDrawing);
    AddFrame(fDelayDrawing);
 
-   fEntriesToDraw = new TGDoubleHSlider(this,140,kDoubleScaleBoth,kEntriesToDraw);
+   fEntriesToDraw = new TGDoubleHSlider(this,140,kDoubleScaleNo,kEntriesToDraw);
    AddFrame(fEntriesToDraw);
 
    TGHorizontalFrame *f6 = new TGHorizontalFrame(this);
@@ -240,7 +239,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    AddFrame(new TGLabel(this,"Weight cut:"));
 
    TGHorizontalFrame *f8 = new TGHorizontalFrame(this);
-   fWeightCut = new TGHSlider(f8,100,kSlider1|kScaleBoth,kDotsSpacing);
+   fWeightCut = new TGHSlider(f8,100,kSlider2|kScaleNo,kDotsSpacing);
    fWeightCutField = new TGNumberEntryField(f8,kDotsSpacingField, 0,
                                             TGNumberFormat::kNESInteger,
                                             TGNumberFormat::kNEANonNegative);
@@ -412,18 +411,22 @@ void TParallelCoordEditor::ConnectSignals2Slots()
                              this, "DoGlobalLineColor(Pixel_t)");
    fGlobalLineWidth->Connect("Selected(Int_t)","TParallelCoordEditor",
                              this, "DoGlobalLineWidth(Int_t)");
-   fDotsSpacing->Connect("Released()","TParallelCoordEditor",
-                        this, "DoDotsSpacing()");
-   fDotsSpacing->Connect("PositionChanged(Int_t)","TParallelCoordEditor",
-                        this, "DoLiveDotsSpacing(Int_t)");
-   fDotsSpacingField->Connect("ReturnPressed()","TParallelCoordEditor",
-                              this, "DoDotsSpacingField()");
-   fAlpha->Connect("Released()","TParallelCoordEditor",
-                        this, "DoAlpha()");
-   fAlpha->Connect("PositionChanged(Int_t)","TParallelCoordEditor",
-                        this, "DoLiveAlpha(Int_t)");
-   fAlphaField->Connect("ReturnPressed()","TParallelCoordEditor",
-                        this, "DoAlphaField()");
+   if (!gPad->GetCanvas()->SupportAlpha()) {
+      fDotsSpacing->Connect("Released()","TParallelCoordEditor",
+                           this, "DoDotsSpacing()");
+      fDotsSpacing->Connect("PositionChanged(Int_t)","TParallelCoordEditor",
+                           this, "DoLiveDotsSpacing(Int_t)");
+      fDotsSpacingField->Connect("ReturnPressed()","TParallelCoordEditor",
+                                 this, "DoDotsSpacingField()");
+   }
+   else {
+      fAlpha->Connect("Released()","TParallelCoordEditor",
+                           this, "DoAlpha()");
+      fAlpha->Connect("PositionChanged(Int_t)","TParallelCoordEditor",
+                           this, "DoLiveAlpha(Int_t)");
+      fAlphaField->Connect("ReturnPressed()","TParallelCoordEditor",
+                           this, "DoAlphaField()");
+   }
    fLineTypeBgroup->Connect("Clicked(Int_t)", "TParallelCoordEditor",
                             this, "DoLineType()");
    fSelectionSelect->Connect("Selected(const char*)","TParallelCoordEditor",
@@ -1005,13 +1008,15 @@ void TParallelCoordEditor::SetModel(TObject* obj)
 
    fPaintEntries->SetOn(fParallel->TestBit(TParallelCoord::kPaintEntries));
 
-   fDotsSpacing->SetPosition(fParallel->GetDotsSpacing());
-
-   fDotsSpacingField->SetNumber(fParallel->GetDotsSpacing());
-
-   if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
-      fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
-      fAlphaField->SetNumber(color->GetAlpha());
+   if (!gPad->GetCanvas()->SupportAlpha()) {
+      fDotsSpacing->SetPosition(fParallel->GetDotsSpacing());
+      fDotsSpacingField->SetNumber(fParallel->GetDotsSpacing());
+   }
+   else {
+      if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
+         fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
+         fAlphaField->SetNumber(color->GetAlpha());
+      }
    }
 
    Bool_t cur = fParallel->GetCurveDisplay();
