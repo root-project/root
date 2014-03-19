@@ -70,8 +70,12 @@ elif [ "x`echo $SOFLAGS | grep -- '-soname,$'`" != "x" ]; then
     #    SOFLAGS=`echo $SOFLAGS | sed  -e 's/-soname,/ /' -e 's/ -Wl, / /' `
 fi
 
-# Remove -Iinclude since it is 'location' depedent
+# Remove -Iinclude since it is 'location' dependent
 CXXFLAGS=`echo $CXXFLAGS | sed 's/-Iinclude //' `
+
+# Remove the flags turning warnings into errors or extending
+# the number of warnings.
+CXXFLAGS=`echo $CXXFLAGS | sed -e 's/-Werror //g' -e 's/-Wall //g' -e 's/-Wshadow //g'  `
 
 # Determine the compiler version
 BXX="`basename $CXX`"
