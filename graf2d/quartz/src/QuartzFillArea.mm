@@ -409,7 +409,7 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
    if (!CalculateGradientParameters(extendedColor, sizeOfDrawable, nPoints, xy, params))
       return;
 
-   if (dynamic_cast<const TRadialGradient *>(extendedColor) && params.fStartRadius && params.fEndRadius) {
+   if (dynamic_cast<const TRadialGradient *>(extendedColor) && (params.fStartRadius || params.fEndRadius)) {
       CGContextDrawRadialGradient(ctx, gradient.Get(), params.fStartPoint, params.fStartRadius,
                                   params.fEndPoint, params.fEndRadius,
                                   kCGGradientDrawsAfterEndLocation |
