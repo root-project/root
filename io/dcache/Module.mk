@@ -71,4 +71,4 @@ distclean-$(MODNAME): clean-$(MODNAME)
 distclean::     distclean-$(MODNAME)
 
 ##### extra rules ######
-$(DCACHEO) $(DCACHEDO): CXXFLAGS += $(DCAPINCDIR:%=-I%)
+$(DCACHEO) $(DCACHEDO): CXXFLAGS := $(filter-out -Wall,$(CXXFLAGS)) $(DCAPINCDIR:%=-I%)
