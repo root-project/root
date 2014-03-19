@@ -71,7 +71,6 @@ ROOT_GENERATE_DICTIONARY(base/G__Core
                          ${Winnt_dict_headers}
                          ${MetaUtils_dict_headers}
                          ${Meta_dict_headers}
-                         ${TextInput_dict_headers}
                          MODULE Core
                          OPTIONS ${dict_opts}
                          LINKDEF base/inc/LinkDef.h)

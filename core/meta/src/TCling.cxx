@@ -900,6 +900,11 @@ TCling::TCling(const char *name, const char *title)
 
    // clingArgsStorage.push_back("-Xclang");
    // clingArgsStorage.push_back("-fmodules");
+  
+#ifdef ROOTINCDIR
+   clingArgsStorage.push_back("-I");
+   clingArgsStorage.push_back(ROOTINCDIR);
+#endif // ROOTINCDIR
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
