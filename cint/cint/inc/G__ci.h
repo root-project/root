@@ -1573,7 +1573,7 @@ typedef struct {
 
 #endif
 
-// cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X)
+/* cross-compiling for iOS and iOS simulator (assumes host is Intel Mac OS X) */
 #if defined(R__IOSSIM) || defined(R__IOS)
 #undef __i386__
 #undef __arm__
