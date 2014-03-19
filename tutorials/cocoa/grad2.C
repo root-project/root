@@ -1,10 +1,3 @@
-#include <iostream>
-
-#include "TColorGradient.h"
-#include "TVirtualX.h"
-#include "TCanvas.h"
-#include "TH1F.h"
-
 typedef TColorGradient::Point point_type;
 
 void grad2()

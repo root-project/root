@@ -2,6 +2,8 @@
 //a histogram or pad.
 //It works ONLY on MacOS X with cocoa graphical back-end.
 
+typedef TColorGradient::Point point_type;
+
 //______________________________________________________________________
 void create_pad_frame_gradient()
 {
@@ -11,7 +13,11 @@ void create_pad_frame_gradient()
    new TColor(1002, 0.25, 0.25, 0.25, "special pad color1", 0.55);
    new TColor(1003, 1., 1., 1., "special pad color2", 0.05);
    Color_t colorIndices[4] = {1002, 1003, 1003, 1002};
-   new TColorGradient(1004, TColorGradient::kGDHorizontal, 4, locations, colorIndices);
+   TLinearGradient *grad = new TLinearGradient(1004, 4, locations, colorIndices);
+   const point_type start(0., 0.);
+   const point_type end(1., 0.);
+   grad->SetStartEnd(start, end);
+   
 }
 
 //______________________________________________________________________
@@ -19,8 +25,12 @@ void create_pad_gradient()
 {
    //We create two-steps gradient from ROOT's standard colors (38 and 30).
    const Double_t locations[] = {0., 1.};
-   Color_t colorIndices[4] = {38, 30};
-   new TColorGradient(1005, TColorGradient::kGDVertical, 2, locations, colorIndices);
+   Color_t colorIndices[4] = {30, 38};
+   TLinearGradient *grad = new TLinearGradient(1005, 2, locations, colorIndices);
+   const point_type start(0., 0.);
+   const point_type end(0., 1.);
+   grad->SetStartEnd(start, end);
+   
 }
 
 //______________________________________________________________________
@@ -41,9 +51,12 @@ void grad()
    cnv->SetFrameFillColor(1004);
 
    //Gradient to fill a histogramm
-   const Color_t colorIndices[3] = {kRed, kOrange, kYellow};
+   const Color_t colorIndices[3] = {kYellow, kOrange, kRed};
    const Double_t lengths[3] = {0., 0.5, 1.};
-   new TColorGradient(1006, TColorGradient::kGDVertical, 3, lengths, colorIndices);
+   TLinearGradient *grad = new TLinearGradient(1006, 3, lengths, colorIndices);
+   const point_type start(0., 0.);
+   const point_type end(0., 1.);
+   grad->SetStartEnd(start, end);
    
    TH1F * hist = new TH1F("a", "b", 20, -3., 3.);
    hist->SetFillColor(1006);
