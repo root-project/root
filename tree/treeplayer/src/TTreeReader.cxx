@@ -16,19 +16,19 @@
 #include "TTreeReaderValue.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-//                                                                            //
-// TTreeReader                                                                //
-//                                                                            //
-// Connects TTreeReaderValue to a TTree.                                   //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
-//                                                                            //
+/*BEGIN_HTML
+ TTreeReader is a simple, robust and fast interface to read values from a TTree,
+ TChain or TNtuple. It uses TTreeReaderValue&lt;T&gt; and
+ TTreeReaderArray&lt;T&gt; to access the data. Example code can be found in
+ tutorial/tree/hsimpleReader.C and tutorial/tree/h1analysisTreeReader.h.
+ Roottest contains an
+ <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
+ showing the full power.
+ Usually it is as simple as this:
+ END_HTML
+BEGIN_MACRO(source)
+../../../tutorials/tree/hsimpleReader.C
+END_MACRO */
 ////////////////////////////////////////////////////////////////////////////////
 
 ClassImp(TTreeReader)
