@@ -988,19 +988,20 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    // Create Streamer code for an STL container. Returns 1 if data member
    // was an STL container and if Streamer code has been created, 0 otherwise.
 
-   int stltype = abs(ROOT::TMetaUtils::IsSTLContainer(m));
+   ROOT::ESTLType stltype = ROOT::TMetaUtils::IsSTLContainer(m);
    std::string mTypename;
    ROOT::TMetaUtils::GetQualifiedName(mTypename, m.getType(), m);
 
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(ROOT::TMetaUtils::GetUnderlyingRecordDecl(m.getType()));
 
-   if (stltype!=0) {
-      //        fprintf(stderr,"Add %s (%d) which is also %s\n",
-      //                m.Type()->Name(), stltype, m.Type()->TrueName() );
-      clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()),0);
-      RStl::Instance().GenerateTClassFor(utype,interp,normCtxt);
+   if (stltype == ROOT::kNotSTL) {
+      return 0;
    }
-   if (stltype<=0) return 0;
+   //        fprintf(stderr,"Add %s (%d) which is also %s\n",
+   //                m.Type()->Name(), stltype, m.Type()->TrueName() );
+   clang::QualType utype(ROOT::TMetaUtils::GetUnderlyingType(m.getType()),0);
+   RStl::Instance().GenerateTClassFor(utype,interp,normCtxt);
+
    if (clxx->getTemplateSpecializationKind() == clang::TSK_Undeclared) return 0;
 
    const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (clxx);
