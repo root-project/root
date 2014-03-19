@@ -282,6 +282,11 @@ if test ! -e config.status ; then
 else
     ./configure `cat config.status` > configure.log 2>&1
 fi
+result=$?
+if test $result != 0; then 
+   mainstatus=$failure
+   error_handling $result "ROOT's configure failed!  See log file at $ROOTSYS/configure.log"
+fi
 
 $MAKE $ROOT_MAKEFLAGS  > gmake.log  2>&1 
 result=$?
