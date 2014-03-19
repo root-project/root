@@ -274,7 +274,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          }
       }
    }
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && !defined (__CYGWIN__)
    else {
       if ( (mode & kDropStlDefault) && (narg >= 3)) {
          unsigned int offset = (0==strncmp("const ",fElements[0].c_str(),6)) ? 6 : 0;
