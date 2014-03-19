@@ -17,7 +17,7 @@ endif
 # Compiler:
 CXX           = g++
 CC            = gcc
-CXXFLAGS      = -pipe -Wshadow -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
+CXXFLAGS      = -std=gnu++11 -pipe -Wshadow -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
                 -I/usr/X11R6/include
 CFLAGS        = -pipe -Wshadow -Wall $(EXTRA_CFLAGS) -I/usr/X11R6/include
 COMPILER      = gnu
