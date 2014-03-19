@@ -593,7 +593,7 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
    const Int_t kBASEMARKER = 8;
    Float_t sbase = msize*kBASEMARKER;
    Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = CMtoSVG(s2x * fXsize);
+   msize = this->UtoSVG(s2x) - this->UtoSVG(0);
 
    Double_t m  = msize;
    Double_t m2 = m/2;
@@ -827,7 +827,7 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
    const Int_t kBASEMARKER = 8;
    Float_t sbase = msize*kBASEMARKER;
    Float_t s2x = sbase / Float_t(gPad->GetWw() * gPad->GetAbsWNDC());
-   msize = CMtoSVG(s2x * fXsize);
+   msize = this->UtoSVG(s2x) - this->UtoSVG(0);
 
    Double_t m  = msize;
    Double_t m2 = m/2;
