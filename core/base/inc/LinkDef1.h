@@ -156,6 +156,9 @@
 #pragma link C++ class TCanvasImp;
 #pragma link C++ class TColor+;
 #pragma link C++ class TColorGradient+;
+#pragma link C++ class TLinearGradient+;
+#pragma link C++ class TRadialGradient+;
+#pragma link C++ class TColorGradient::Point+;
 #pragma link C++ class TContextMenu+;
 #pragma link C++ class TContextMenuImp+;
 #pragma link C++ class TControlBarImp+;

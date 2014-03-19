@@ -65,7 +65,8 @@ namespace Util = ROOT::MacOSX::Util;
 namespace {
 
 //______________________________________________________________________________
-void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoint> &dst, NSObject<X11Drawable> *drawable)
+void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoint> &dst,
+                              NSObject<X11Drawable> *drawable)
 {
    assert(nPoints != 0 && "ConvertPointsROOTToCocoa, nPoints parameter is 0");
    assert(xy != 0 && "ConvertPointsROOTToCocoa, xy parameter is null");
@@ -144,10 +145,11 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
+   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
-      Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, kTRUE);//kTRUE == draw a shadow.
+      Quartz::DrawBoxGradient(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
+                              CGRectMake(x1, y1, x2 - x1, y2 - y1), kTRUE); //kTRUE == draw a shadow.
    } else {
       const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
       
@@ -181,12 +183,16 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
    // xy        : array of points
 
    //End of comment.
+   if (n < 3)
+      return;
 
    //Do some checks first.
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawFillArea");
+   NSObject<X11Drawable> * const drawable =
+               (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawFillArea");
+
    if (!drawable)
       return;
 
@@ -205,8 +211,9 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
       return;
    }
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
-      Quartz::DrawFillAreaGradient(ctx, n, &fConvertedPoints[0], extendedColor, kTRUE);//kTRUE == draw a shadow.
+   if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
+      Quartz::DrawFillAreaGradient(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
+                                   n, &fConvertedPoints[0], kTRUE);//kTRUE == also draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
@@ -220,7 +227,8 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/, Int_t /*nx*/, Int_t /*ny*/, Int_t */*ic*/)
+void TGQuartz::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
+                             Int_t /*nx*/, Int_t /*ny*/, Int_t */*ic*/)
 {
    //Noop.
 }
@@ -241,7 +249,8 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
    //Do some checks first:
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() && "DrawLine, bad drawable is selected");
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawLine");
+   NSObject<X11Drawable> * const drawable =
+                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawLine");
    if (!drawable)
       return;
 
@@ -258,7 +267,8 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    Quartz::SetLineStyle(ctx, GetLineStyle());
    Quartz::SetLineWidth(ctx, GetLineWidth());
 
-   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2, X11::LocalYROOTToCocoa(drawable, y2));
+   Quartz::DrawLine(ctx, x1, X11::LocalYROOTToCocoa(drawable, y1), x2,
+                    X11::LocalYROOTToCocoa(drawable, y2));
 }
 
 
@@ -275,7 +285,8 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyLine");
+   NSObject<X11Drawable> * const drawable =
+                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyLine");
    if (!drawable)
       return;
 
@@ -312,7 +323,8 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
 
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyMarker");
+   NSObject<X11Drawable> * const drawable =
+                        (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawPolyMarker");
    if (!drawable)
       return;
       
@@ -337,7 +349,8 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, const char *text, ETextMode /*mode*/)
+void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
+                        const char *text, ETextMode /*mode*/)
 {
    if (fDirectDraw)//To avoid warnings from Quartz - no context at the moment!
       return;
@@ -348,7 +361,8 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/, co
    if (!GetTextSize())//Do not draw anything, or CoreText will create some small (but not of size 0 font).
       return;
    
-   NSObject<X11Drawable> * const drawable = (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
+   NSObject<X11Drawable> * const drawable =
+                     (NSObject<X11Drawable> *)GetSelectedDrawableChecked("DrawText");
    if (!drawable)
       return;
 
@@ -571,7 +585,8 @@ void TGQuartz::SetTextFont(Font_t fontNumber)
 //______________________________________________________________________________
 Int_t TGQuartz::SetTextFont(char *fontName, ETextSetMode /*mode*/)
 {
-   //This function is never used in gPad (in normal text rendering, so I'm not setting anything for CoreText).
+   //This function is never used in gPad (in normal text rendering,
+   //so I'm not setting anything for CoreText).
    if (!TTF::IsInitialized()) {
       Error("SetTextFont", "TTF is not initialized");
       return 0;
