@@ -37,7 +37,7 @@ CINTCFLAGS    = -pipe -m64 -Wall -W -fPIC $(EXTRA_CFLAGS) \
                 -DG__STD_EXCEPTION -DG__64BIT
 COMPILER      = gnu
 
-CXXFLAGS += -Werror -Wall -Wshadow
+CXXFLAGS += -Werror 
 NOOPT += -pedantic -Wno-long-long
 
 # Linker:
