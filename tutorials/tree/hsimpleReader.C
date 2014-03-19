@@ -3,7 +3,7 @@
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
 
-void TreeReaderSimple() {
+void hsimpleReader() {
    TH1F *myHist = new TH1F("h1","ntuple",100,-4,4);
 
    TFile *myFile = TFile::Open("hsimple.root");
