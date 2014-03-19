@@ -36,6 +36,7 @@
 #include "TGClient.h"
 #include "TSystem.h"
 #include "TGCocoa.h"
+#include "RConfigure.h"
 
 namespace ROOT {
 namespace MacOSX {
@@ -2894,7 +2895,11 @@ void print_mask_info(ULong_t mask)
    }
    
    if (pngFileName) {
+#ifdef ROOTICONPATH
+      const char * const path = gSystem->Which(ROOTICONPATH, pngFileName, kReadPermission);
+#else
       const char * const path = gSystem->Which("$ROOTSYS/icons", pngFileName, kReadPermission);
+#endif
       const Util::ScopedArray<const char> arrayGuard(path);
 
       if (!path || path[0] == 0) {
