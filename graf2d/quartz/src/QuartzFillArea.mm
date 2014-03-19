@@ -128,29 +128,6 @@ GradientParameters CalculateGradientParameters(const TColorGradient *extendedCol
    return GradientParameters(start, end);
 }
 
-//______________________________________________________________________________
-GradientParameters CalculateGradientParameters(const TColorGradient *extendedColor,
-                                               const CGSize &sizeOfDrawable,
-                                               const CGRect &box)
-{
-   //Just an aux. function for DrawBoxGradient.
-   assert(extendedColor != 0 &&
-          "CalculateGradientParameters, parameter 'extendedColor' is null");
-
-   TPoint polygon[4];
-   polygon[0].fX = box.origin.x;
-   polygon[0].fY = box.origin.y;
-   polygon[1].fX = box.origin.x + box.size.width;
-   polygon[1].fY = box.origin.y;
-   polygon[2].fX = box.origin.x + box.size.width;
-   polygon[2].fY = box.origin.y + box.size.height;
-   polygon[3].fX = box.origin.x;
-   polygon[3].fY = box.origin.y + box.size.height;
-   
-   return CalculateGradientParameters(extendedColor, sizeOfDrawable, 4, polygon);
-}
-
-
 }//Unnamed namespace.
 
 //______________________________________________________________________________
@@ -293,58 +270,6 @@ void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool holl
 }
 
 //______________________________________________________________________________
-void DrawBoxGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                     const CGRect &box, Bool_t drawShadow)
-{
-   assert(ctx != 0 && "DrawBoxGradient, ctx parameter is null");
-   assert(extendedColor != 0 && "DrawBoxGradient, extendedColor parameter is null");
-   assert(extendedColor->GetNumberOfSteps() != 0 && "DrawBoxGradient, no colors in extendedColor");
-
-   //TODO: must be a generic colorspace!!!
-   const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
-   if (!baseSpace.Get()) {
-      ::Error("DrawBoxGradient", "CGColorSpaceCreateDeviceRGB failed");
-      return;
-   }
-   
-   Util::CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
-                                              extendedColor->GetColors(),
-                                              extendedColor->GetColorPositions(),
-                                              extendedColor->GetNumberOfSteps()));
-
-   if (!gradient.Get()) {
-      ::Error("DrawBoxGradient", "CGGradientCreateWithColorComponents failed");
-      return;
-   }
-
-   if (drawShadow) {
-      //To have shadow and gradient at the same time,
-      //I first have to fill polygon, and after that
-      //draw gradient (since gradient fills the whole area
-      //with clip path and generates no shadow).
-      CGContextSetRGBFillColor(ctx, 1., 1., 1., 0.25);
-      CGContextSetShadow(ctx, shadowOffset, shadowBlur);
-      CGContextFillRect(ctx, box);
-   }
-   
-   CGContextBeginPath(ctx);
-   CGContextAddRect(ctx, box);
-   CGContextClosePath(ctx);
-   CGContextClip(ctx);
-
-   const GradientParameters &params = CalculateGradientParameters(extendedColor, sizeOfDrawable, box);
-
-   if (dynamic_cast<const TRadialGradient *>(extendedColor)) {
-
-   } else {
-      CGContextDrawLinearGradient(ctx, gradient.Get(),
-                                  params.fStartPoint, params.fEndPoint,
-                                  kCGGradientDrawsAfterEndLocation |
-                                  kCGGradientDrawsBeforeStartLocation);
-   }
-}
-
-//______________________________________________________________________________
 void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 {
    // Draw a filled area through all points.
@@ -381,19 +306,20 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 }
 
 //______________________________________________________________________________
-void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                          Int_t nPoints, const TPoint *xy, Bool_t drawShadow)
+void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                                 Int_t nPoints, const TPoint *xy, Bool_t drawShadow)
 {
    using ROOT::MacOSX::Util::CFScopeGuard;
 
-   assert(ctx != nullptr && "DrawFillAreaGradient, ctx parameter is null");
-   assert(nPoints != 0 && "DrawFillAreaGradient, nPoints parameter is 0");
-   assert(xy != nullptr && "DrawFillAreaGradient, xy parameter is null");
-   assert(extendedColor != nullptr && "DrawFillAreaGradient, extendedColor parameter is null");
+   assert(ctx != nullptr && "DrawPolygonWithGradientFill, ctx parameter is null");
+   assert(nPoints != 0 && "DrawPolygonWithGradientFill, nPoints parameter is 0");
+   assert(xy != nullptr && "DrawPolygonWithGradientFill, xy parameter is null");
+   assert(extendedColor != nullptr &&
+          "DrawPolygonWithGradientFill, extendedColor parameter is null");
 
    const CFScopeGuard<CGMutablePathRef> path(CGPathCreateMutable());
    if (!path.Get()) {
-      ::Error("DrawFillAreaGradient", "CGPathCreateMutable failed");
+      ::Error("DrawPolygonWithGradientFill", "CGPathCreateMutable failed");
       return;
    }
    
@@ -401,7 +327,7 @@ void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor,
    //TODO: must be a generic RGB color space???
    const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
    if (!baseSpace.Get()) {
-      ::Error("DrawFillAreaGradient", "CGColorSpaceCreateDeviceRGB failed");
+      ::Error("DrawPolygonWithGradientFill", "CGColorSpaceCreateDeviceRGB failed");
       return;
    }
    
@@ -411,7 +337,7 @@ void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor,
                                               extendedColor->GetNumberOfSteps()));
 
    if (!gradient.Get()) {
-      ::Error("DrawFillAreaGradient", "CGGradientCreateWithColorComponents failed");
+      ::Error("DrawPolygonWithGradientFill", "CGGradientCreateWithColorComponents failed");
       return;
    }
    
