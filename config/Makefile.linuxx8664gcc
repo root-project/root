@@ -26,7 +26,7 @@ CXXFLAGS      = -pipe -m64 -Wshadow -Wall -W -Woverloaded-virtual \
 CFLAGS        = -pipe -m64 -Wshadow -Wall -W -fPIC $(EXTRA_CFLAGS)
 COMPILER      = gnu
 
-CXXFLAGS += -g -Werror -Wall -Wshadow
+CXXFLAGS += -Werror -Wall -Wshadow
 NOOPT += -pedantic -Wno-long-long
 
 # Linker:
