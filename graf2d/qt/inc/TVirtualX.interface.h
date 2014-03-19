@@ -27,7 +27,7 @@ public:
 
    //TVirtualX has these two methods with wchar_t
    using TVirtualX::DrawText;
-   using TVirtualX::GetTextExtent;;
+   using TVirtualX::GetTextExtent;
    
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
