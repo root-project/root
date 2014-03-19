@@ -2914,7 +2914,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       //With Cocoa we have a transparency. But we also have
       //pixmaps, and if you just paint a new content over the old one
       //with alpha < 1., you'll be able to see the old content.
-      if (gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
+      if (!gROOT->IsBatch() && gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
          GetPainter()->ClearDrawable();
       
       PaintBox(fX1,fY1,fX2,fY2);
