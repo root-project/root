@@ -1120,7 +1120,9 @@ void TParallelCoord::SetCurrentSelection(TParallelCoordSelect* sel)
 void TParallelCoord::SetDotsSpacing(Int_t s)
 {
    // Set dots spacing. Modify the line style 11.
+   // If the canvas support transparency dot spacing is ignored.
 
+   if (gPad->GetCanvas()->SupportAlpha()) return;
    if (s == fDotsSpacing) return;
    fDotsSpacing = s;
    gStyle->SetLineStyleString(11,Form("%d %d",4,s*8));
