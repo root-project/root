@@ -2183,26 +2183,27 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--//' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test "${prev}:${prev_expl}" = "yes:"; then
-            echo "INFO: $1: already enabled by default."
-        fi
         if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
             echo "WARNING: option $1 is deprecated and ignored"'!'
+        else
+            if test "${prev}:${prev_expl}" = "yes:"; then
+                echo "INFO: $1: already enabled by default."
+            fi
+            if test "x${prev_expl}" = "xno"; then
+                echo "WARNING: conflicting --disable / $1, $1 wins"
+            fi
+            eval ${f}=yes
+            eval ${f}_explicit=yes
         fi
-        if test "x${prev_expl}" = "xno"; then
-            echo "WARNING: conflicting --disable / $1, $1 wins"
-        fi
-        eval ${f}=yes
-        eval ${f}_explicit=yes
         for c in $options ; do
            if test "x$c" = "x$f" ; then
               f=""
-        fi
+           fi
         done
         for c in $deprecated_options ; do
            if test "x$c" = "x$f" ; then
               f=""
-        fi
+           fi
         done
         if test "x$f" != "x" ; then
            echo "Invalid option '$1'. Try $0 --help" ; exit 1 ;
@@ -2212,15 +2213,24 @@ if test $# -gt 0 ; then
         f=`echo $1 | sed -e 's/--disable/enable/' -e 's/-/_/g' -e 's/++11/xx11/'`
         eval prev='$'`echo ${f}`
         eval prev_expl='$'`echo ${f}_explicit`
-        if test "${prev}:${prev_expl}" = "xno:"; then
-            echo "INFO: $1: already disabled by default."
+        if test ! "x`echo ${deprecated_options} | grep ${f}`" = "x"; then
+            echo "WARNING: option $1 is deprecated and ignored"'!'
+        else
+            if test "${prev}:${prev_expl}" = "xno:"; then
+                echo "INFO: $1: already disabled by default."
+            fi
+            if test "x${prev_expl}" = "xyes"; then
+                echo "WARNING: conflicting --enable / $1, $1 wins"
+            fi
+            eval ${f}=no
+            eval ${f}_explicit=no
         fi
-        if test "x${prev_expl}" = "xyes"; then
-            echo "WARNING: conflicting --enable / $1, $1 wins"
-        fi
-        eval ${f}=no
-        eval ${f}_explicit=no
         for c in $options ; do
+           if test "x$c" = "x$f" ; then
+              f=""
+           fi
+        done
+        for c in $deprecated_options ; do
            if test "x$c" = "x$f" ; then
               f=""
            fi
