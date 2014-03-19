@@ -35,6 +35,122 @@ namespace {
 const CGSize shadowOffset = CGSizeMake(10., 10.);
 const CGFloat shadowBlur = 5.;
 
+
+//ROOT has TColorGradient, TLinearGradient and TRadialGradient -
+//they all specify parameters in NDC. But for rendering with
+//Quartz I need more specific parameters, I calculate them here.
+
+struct GradientParameters {
+   //
+   CGPoint fStartPoint;
+   CGPoint fEndPoint;
+
+   //Only for radial gradient fill:
+   CGFloat fRStart;
+   CGFloat fREnd;
+   
+   //Something else:...
+   
+   GradientParameters()
+      : fRStart(0.), fREnd(0.)
+   {
+   }
+   
+   GradientParameters(const CGPoint &start, const CGPoint &end)
+      : fStartPoint(start), fEndPoint(end), fRStart(0.), fREnd(0.)
+   {
+   }
+};
+
+//______________________________________________________________________________
+CGRect FindBoundingBox(Int_t nPoints, const TPoint *xy)
+{
+   //When calculating gradient parameters for TColorGradient::kObjectBoundingMode
+   //we need a bounding rect for a polygon.
+   assert(nPoints > 2 && "FindBoundingBox, invalid number of points in a polygon");
+   assert(xy != 0 && "FindBoundingBox, parameter 'xy' is null");
+   
+   CGPoint bottomLeft = {};
+   bottomLeft.x = xy[0].fX;
+   bottomLeft.y = xy[0].fY;
+   
+   CGPoint topRight = bottomLeft;
+   
+   for (Int_t i = 1; i < nPoints; ++i) {
+      bottomLeft.x = std::min(bottomLeft.x, CGFloat(xy[i].fX));
+      bottomLeft.y = std::min(bottomLeft.y, CGFloat(xy[i].fY));
+      //
+      topRight.x = std::max(topRight.x, CGFloat(xy[i].fX));
+      topRight.y = std::max(topRight.y, CGFloat(xy[i].fY));
+   }
+   
+   return CGRectMake(bottomLeft.x, bottomLeft.y,
+                     topRight.x - bottomLeft.x,
+                     topRight.y - bottomLeft.y);
+}
+
+//______________________________________________________________________________
+GradientParameters CalculateGradientParameters(const TColorGradient *extendedColor,
+                                               const CGSize &sizeOfDrawable,
+                                               Int_t n, const TPoint *polygon)
+{
+   assert(extendedColor != 0 &&
+          "CalculateGradientParameters, parameter 'extendedColor' is null");
+   assert(dynamic_cast<const TLinearGradient *>(extendedColor) != 0 &&
+          "CalculateGradientParameters, unknown gradient type");
+   
+   assert(n > 2 && "CalculateGradientPoints, parameter 'n' is not a valid number of points");
+   assert(polygon != 0 && "CalculateGradientPoints, parameter 'polygon' is null");
+   
+   //TODO: check-check-check-chek - it's just a test and can be wrong!!!
+   const TLinearGradient * const grad = static_cast<const TLinearGradient *>(extendedColor);
+   const TColorGradient::ECoordinateMode mode = grad->GetCoordinateMode();
+   CGPoint start = CGPointMake(grad->GetStart().fX, grad->GetStart().fY);
+   CGPoint end = CGPointMake(grad->GetEnd().fX, grad->GetEnd().fY);
+   
+   if (mode == TColorGradient::kObjectBoundingMode) {
+      //With Quartz we always work with something similar to 'kPadMode',
+      //so convert start and end into this space.
+      const CGRect &bbox = FindBoundingBox(n, polygon);
+      start.x = bbox.size.width * start.x + bbox.origin.x;
+      end.x = bbox.size.width * end.x + bbox.origin.x;
+
+      start.y = bbox.size.height * start.y + bbox.origin.y;
+      end.y = bbox.size.height * end.y + bbox.origin.y;
+   } else {
+      start.x *= sizeOfDrawable.width;
+      start.y *= sizeOfDrawable.height;
+      end.x *= sizeOfDrawable.width;
+      end.y *= sizeOfDrawable.height;
+   }
+   
+   //TODO: calculate radiuses for a radial gradient fill also!
+   return GradientParameters(start, end);
+}
+
+//______________________________________________________________________________
+GradientParameters CalculateGradientParameters(const TColorGradient *extendedColor,
+                                               const CGSize &sizeOfDrawable,
+                                               const CGRect &box)
+{
+   //Just an aux. function for DrawBoxGradient.
+   assert(extendedColor != 0 &&
+          "CalculateGradientParameters, parameter 'extendedColor' is null");
+
+   TPoint polygon[4];
+   polygon[0].fX = box.origin.x;
+   polygon[0].fY = box.origin.y;
+   polygon[1].fX = box.origin.x + box.size.width;
+   polygon[1].fY = box.origin.y;
+   polygon[2].fX = box.origin.x + box.size.width;
+   polygon[2].fY = box.origin.y + box.size.height;
+   polygon[3].fX = box.origin.x;
+   polygon[3].fY = box.origin.y + box.size.height;
+   
+   return CalculateGradientParameters(extendedColor, sizeOfDrawable, 4, polygon);
+}
+
+
 }//Unnamed namespace.
 
 //______________________________________________________________________________
@@ -97,6 +213,7 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
       return false;
 
    CGFloat rgba[] = {fillColor->GetRed(), fillColor->GetGreen(), fillColor->GetBlue(), fillColor->GetAlpha()};
+
 
    const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
    if (!baseSpace.Get())
@@ -176,14 +293,30 @@ void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool holl
 }
 
 //______________________________________________________________________________
-void DrawBoxGradient(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2,
-                     const TColorGradient *extendedColor, const CGPoint &startPoint,
-                     const CGPoint &endPoint, Bool_t drawShadow)
+void DrawBoxGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                     const CGRect &box, Bool_t drawShadow)
 {
-   assert(ctx != nullptr && "DrawBoxGradient, ctx parameter is null");
-   assert(extendedColor != nullptr && "DrawBoxGradient, extendedColor parameter is null");
+   assert(ctx != 0 && "DrawBoxGradient, ctx parameter is null");
+   assert(extendedColor != 0 && "DrawBoxGradient, extendedColor parameter is null");
    assert(extendedColor->GetNumberOfSteps() != 0 && "DrawBoxGradient, no colors in extendedColor");
    
+   //TODO: must be a generic colorspace!!!
+   const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
+   if (!baseSpace.Get()) {
+      ::Error("DrawBoxGradient", "CGColorSpaceCreateDeviceRGB failed");
+      return;
+   }
+   
+   Util::CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
+                                              extendedColor->GetColors(),
+                                              extendedColor->GetColorPositions(),
+                                              extendedColor->GetNumberOfSteps()));
+
+   if (!gradient.Get()) {
+      ::Error("DrawBoxGradient", "CGGradientCreateWithColorComponents failed");
+      return;
+   }
+
    if (drawShadow) {
       //To have shadow and gradient at the same time,
       //I first have to fill polygon, and after that
@@ -191,42 +324,24 @@ void DrawBoxGradient(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2,
       //with clip path and generates no shadow).
       CGContextSetRGBFillColor(ctx, 1., 1., 1., 0.25);
       CGContextSetShadow(ctx, shadowOffset, shadowBlur);
-      CGContextFillRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
+      CGContextFillRect(ctx, box);
    }
    
    CGContextBeginPath(ctx);
-   CGContextAddRect(ctx, CGRectMake(x1, y1, x2 - x1, y2 - y1));
+   CGContextAddRect(ctx, box);
    CGContextClosePath(ctx);
    CGContextClip(ctx);
-   
-   //Create a gradient.
-   //TODO: must be a generic colorspace!!!
-   const Util::CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
-   if (!baseSpace.Get()) {
-      ::Error("DrawBoxGradient", "CGColorSpaceCreateDeviceRGB failed");
-      return;
-   }
+
+   const GradientParameters &params = CalculateGradientParameters(extendedColor, sizeOfDrawable, box);
 
    if (dynamic_cast<const TRadialGradient *>(extendedColor)) {
-   
-   } else if (dynamic_cast<const TLinearGradient *>(extendedColor)) {
-      const Util::CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
-                                                       extendedColor->GetColors(),
-                                                       extendedColor->GetColorPositions(),
-                                                       extendedColor->GetNumberOfSteps()));
-      if (!gradient.Get()) {
-         ::Error("DrawBoxGradient", "CGGradientCreateWithColorComponents failed");
-         return;
-      }
 
-      CGContextDrawLinearGradient(ctx, gradient.Get(), startPoint, endPoint,
+   } else {
+      CGContextDrawLinearGradient(ctx, gradient.Get(),
+                                  params.fStartPoint, params.fEndPoint,
                                   kCGGradientDrawsAfterEndLocation |
                                   kCGGradientDrawsBeforeStartLocation);
-   } else {
-      //TODO: to be implemented.
-      assert(0 && "DrawBoxGradient, not implemented for this type of color gradient");
    }
-
 }
 
 //______________________________________________________________________________
@@ -266,9 +381,8 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
 }
 
 //______________________________________________________________________________
-void DrawFillAreaGradient(CGContextRef ctx, Int_t nPoints, const TPoint *xy,
-                          const TColorGradient *extendedColor, const CGPoint &startPoint,
-                          const CGPoint &endPoint, Bool_t drawShadow)
+void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                          Int_t nPoints, const TPoint *xy, Bool_t drawShadow)
 {
    using ROOT::MacOSX::Util::CFScopeGuard;
 
@@ -282,6 +396,25 @@ void DrawFillAreaGradient(CGContextRef ctx, Int_t nPoints, const TPoint *xy,
       ::Error("DrawFillAreaGradient", "CGPathCreateMutable failed");
       return;
    }
+   
+   //Create a gradient.
+   //TODO: must be a generic RGB color space???
+   const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
+   if (!baseSpace.Get()) {
+      ::Error("DrawFillAreaGradient", "CGColorSpaceCreateDeviceRGB failed");
+      return;
+   }
+   
+   const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
+                                              extendedColor->GetColors(),
+                                              extendedColor->GetColorPositions(),
+                                              extendedColor->GetNumberOfSteps()));
+
+   if (!gradient.Get()) {
+      ::Error("DrawFillAreaGradient", "CGGradientCreateWithColorComponents failed");
+      return;
+   }
+   
 
    CGPathMoveToPoint(path.Get(), nullptr, xy[0].fX, xy[0].fY);
    for (Int_t i = 1; i < nPoints; ++i)
@@ -305,117 +438,19 @@ void DrawFillAreaGradient(CGContextRef ctx, Int_t nPoints, const TPoint *xy,
    CGContextAddPath(ctx, path.Get());
    CGContextClip(ctx);
 
-   //Create a gradient.
-   //TODO: must be a generic RGB color space???
-   const CFScopeGuard<CGColorSpaceRef> baseSpace(CGColorSpaceCreateDeviceRGB());
-   if (!baseSpace.Get()) {
-      ::Error("DrawFillAreaGradient", "CGColorSpaceCreateDeviceRGB failed");
-      return;
-   }
+
+   const GradientParameters &params = CalculateGradientParameters(extendedColor, sizeOfDrawable,
+                                                                  nPoints, xy);
    
-   if (dynamic_cast<const TLinearGradient *>(extendedColor)) {
-      const CFScopeGuard<CGGradientRef> gradient(CGGradientCreateWithColorComponents(baseSpace.Get(),
-                                                 extendedColor->GetColors(),
-                                                 extendedColor->GetColorPositions(),
-                                                 extendedColor->GetNumberOfSteps()));
-      if (!gradient.Get()) {
-         ::Error("DrawFillAreaGradient", "CGGradientCreateWithColorComponents failed");
-         return;
-      }
+   if (dynamic_cast<const TRadialGradient *>(extendedColor)) {
       
-      CGContextDrawLinearGradient(ctx, gradient.Get(), startPoint, endPoint,
+   } else {
+      CGContextDrawLinearGradient(ctx, gradient.Get(),
+                                  params.fStartPoint, params.fEndPoint,
                                   kCGGradientDrawsAfterEndLocation |
                                   kCGGradientDrawsBeforeStartLocation);
-   } else {
-      //TODO: to be implemented.
-      assert(0 && "DrawFillAreadGradient, not implemented for this type of a gradient fill");
    }
 }
-
-#pragma mark - Some aux. functions.
-
-//______________________________________________________________________________
-void FindBoundingBox(Int_t nPoints, const TPoint *xy, CGPoint &topLeft, CGPoint &bottomRight)
-{
-   assert(nPoints > 2 && "FindBoundingBox, invalid number of points in a polygon");
-   assert(xy != 0 && "FindBoundingBox, parameter 'xy' is null");
-   
-   topLeft.x = xy[0].fX;
-   topLeft.y = xy[0].fY;
-   
-   bottomRight = topLeft;
-   
-   for (Int_t i = 1; i < nPoints; ++i) {
-      topLeft.x = std::min(topLeft.x, CGFloat(xy[i].fX));
-      topLeft.y = std::min(topLeft.y, CGFloat(xy[i].fY));
-      //
-      bottomRight.x = std::max(bottomRight.x, CGFloat(xy[i].fX));
-      bottomRight.y = std::max(bottomRight.y, CGFloat(xy[i].fY));
-   }
-}
-
-//______________________________________________________________________________
-void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                             Int_t n, const TPoint *polygon, CGPoint &start, CGPoint &end)
-{
-   assert(extendedColor != 0 && "CalculateGradientPoints, parameter 'extendedColor' is null");
-   assert(n > 2 && "CalculateGradientPoints, parameter 'n' is not a valid number of points");
-   assert(polygon != 0 && "CalculateGradientPoints, parameter 'polygon' is null");
-   
-   //TODO: check-check-check-chek - it's just a test and can be wrong!!!
-   
-   const TColorGradient::ECoordinateMode mode = extendedColor->GetCoordinateMode();
-
-   //TODO: that's stupid, but ... radial can iherit linear to make things easier :)
-   if (const TLinearGradient * const lGrad = dynamic_cast<const TLinearGradient *>(extendedColor)) {
-      start = CGPointMake(lGrad->GetStartPoint().fX, lGrad->GetStartPoint().fY);
-      end = CGPointMake(lGrad->GetEndPoint().fX, lGrad->GetEndPoint().fY);
-   } else if (const TRadialGradient * const rGrad = dynamic_cast<const TRadialGradient *>(extendedColor)) {
-      start = CGPointMake(rGrad->GetStartPoint().fX, rGrad->GetStartPoint().fY);
-      end = CGPointMake(rGrad->GetEndPoint().fX, rGrad->GetEndPoint().fY);
-   }
-   
-   if (mode == TColorGradient::kObjectBoundingMode) {
-      //With Quartz we always work with something similar to 'kPadMode',
-      //so convert start and end into this space.
-      CGPoint bottomLeft = {}, topRight = {};
-      Quartz::FindBoundingBox(n, polygon, bottomLeft, topRight);
-      
-      const CGFloat w = topRight.x - bottomLeft.x;
-      const CGFloat h = topRight.y - bottomLeft.y;
-
-      start.x = w * start.x + bottomLeft.x;
-      end.x = w * end.x + bottomLeft.x;
-      
-      start.y = h * start.y + bottomLeft.y;
-      end.y = h * end.y + bottomLeft.y;
-   } else {
-      start.x *= sizeOfDrawable.width;
-      start.y *= sizeOfDrawable.height;
-      end.x *= sizeOfDrawable.width;
-      end.y *= sizeOfDrawable.height;
-   }
-}
-
-//______________________________________________________________________________
-void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                             Int_t x1, Int_t y1, Int_t x2, Int_t y2, CGPoint &start, CGPoint &end)
-{
-   assert(extendedColor != 0 && "CalculateGradientPoints, parameter 'extendedColor' is null");
-
-   TPoint polygon[4];
-   polygon[0].fX = x1;
-   polygon[0].fY = y1;
-   polygon[1].fX = x2;
-   polygon[1].fY = y1;
-   polygon[2].fX = x2;
-   polygon[2].fY = y2;
-   polygon[3].fX = x1;
-   polygon[3].fY = y2;
-   
-   CalculateGradientPoints(extendedColor, sizeOfDrawable, 4, polygon, start, end);
-}
-
 
 }//namespace Quartz
 }//namespace ROOT

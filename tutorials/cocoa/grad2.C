@@ -46,9 +46,9 @@ void grad2()
    const Color_t idx1[] = {customRed, kOrange};
    TLinearGradient * const gradFill1 = new TLinearGradient(grad1, 2, locations, idx1);
    
-   typedef TColorGradient::GradientPoint point_type;
+   typedef TColorGradient::Point Point;
    //Starting and ending points for a gradient fill (it's a vertical gradient):
-   gradFill1->SetStartEnd(point_type(0., 0.), point_type(0., 1));
+   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1));
 
    //   c) Custom semi-transparent green.
    new TColor(customGreen, 0., 1., 0., "green", 0.5);
@@ -58,7 +58,7 @@ void grad2()
    
    TLinearGradient * const gradFill2 = new TLinearGradient(grad2, 2, locations, idx2);
    //Vertical gradient fill.
-   gradFill2->SetStartEnd(point_type(0., 0), point_type(0., 1.));
+   gradFill2->SetStartEnd(Point(0., 0), Point(0., 1.));
 
    TH1F * hist = new TH1F("a2", "b2", 10, -2., 3.);
    TH1F * hist2 = new TH1F("c3", "d3", 10, -3., 3.);

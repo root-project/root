@@ -35,7 +35,7 @@ void grad()
       return;
    }
    
-   typedef TColorGradient::GradientPoint point_type;
+   typedef TColorGradient::Point Point;
    
    //3. Create custom colors.
    const Int_t frameGradient = colorIndices[2];//this gradient is a mixture of colorIndices[0] and colorIndices[1]
@@ -50,7 +50,7 @@ void grad()
       //Gradient for a pad's frame.
       TLinearGradient * const gradFill1 = new TLinearGradient(frameGradient, 4, locations, gradientIndices);
       //Horizontal:
-      gradFill1->SetStartEnd(point_type(0., 0.), point_type(1., 0.));
+      gradFill1->SetStartEnd(Point(0., 0.), Point(1., 0.));
    }
 
    const Int_t padGradient = colorIndices[3];
@@ -62,7 +62,7 @@ void grad()
       //Gradient for a pad.
       TLinearGradient * const gradFill2 = new TLinearGradient(padGradient, 2, locations, gradientIndices);
       //Vertical:
-      gradFill2->SetStartEnd(point_type(0., 0.), point_type(0., 1));
+      gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1));
    }
    
    const Int_t histGradient = colorIndices[4];
@@ -74,7 +74,7 @@ void grad()
       //Gradient for a histogram.
       TLinearGradient * const gradFill3 = new TLinearGradient(histGradient, 3, locations, gradientIndices);
       //Vertical:
-      gradFill3->SetStartEnd(point_type(0., 0.), point_type(0., 1.));
+      gradFill3->SetStartEnd(Point(0., 0.), Point(0., 1.));
    }
 
    cnv->SetFillColor(padGradient);

@@ -50,16 +50,16 @@ public:
       kObjectBoundingMode //NDC in an object's bounding rect (this rect is 0,0 - 1, 1).
    };
    
-   struct GradientPoint {
+   struct Point {
       Double_t fX;
       Double_t fY;
       
-      GradientPoint()
+      Point()
          : fX(0.), fY(0.)
       {
       }
       
-      GradientPoint(Double_t x, Double_t y)
+      Point(Double_t x, Double_t y)
          : fX(x), fY(y)
       {
       }
@@ -110,21 +110,22 @@ public:
                    const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
    
    //points are always in NDC (and also affected by fCoordinateMode).
-   void SetStartEnd(const GradientPoint &p1, const GradientPoint &p2);
-   const GradientPoint &GetStartPoint()const;
-   const GradientPoint &GetEndPoint()const;
+   void SetStartEnd(const Point &p1, const Point &p2);
+   const Point &GetStart()const;
+   const Point &GetEnd()const;
 
 private:
-   GradientPoint fStart;
-   GradientPoint fEnd;
+   Point fStart;
+   Point fEnd;
    
    ClassDef(TLinearGradient, 1)//Linear gradient fill.
 };
 
-//TODO: it's actually quite stupid and unnatural to inherit
-//radial from linear, but ... would be quite convenient.
+//Well, it's quite strange that radial inherits linear,
+//but ... it's very similar (has a start and end) + radiuses at the start and end
+//- at least this is how we specify it.
 
-class TRadialGradient : public TColorGradient {
+class TRadialGradient : public TLinearGradient {
 public:
    TRadialGradient();
    TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
@@ -132,18 +133,14 @@ public:
    TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                    const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
    
-   void SetStartEndR1R2(const GradientPoint &p1, Double_t r1,
-                        const GradientPoint &p2, Double_t r2);
+   void SetStartEndR1R2(const Point &p1, Double_t r1,
+                        const Point &p2, Double_t r2);
 
-   const GradientPoint &GetStartPoint()const;
    Double_t GetR1()const;
-   const GradientPoint &GetEndPoint()const;
    Double_t GetR2()const;
 
 private:
-   GradientPoint fStart;
    Double_t fR1;
-   GradientPoint fEnd;
    Double_t fR2;
    
    ClassDef(TRadialGradient, 1)//Radial gradient fill.

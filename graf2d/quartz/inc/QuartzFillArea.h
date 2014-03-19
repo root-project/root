@@ -43,21 +43,16 @@ namespace Quartz {
 Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex);
 Bool_t SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex);
 
+//TODO: fix this crap - x1x2 x3 etc. - CGRect!
 void DrawBox(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2, bool hollow);
-void DrawBoxGradient(CGContextRef ctx, Int_t x1, Int_t y1, Int_t x2, Int_t y2,
-                     const TColorGradient *extendedColor, const CGPoint &startPoint,
-                     const CGPoint &endPoint, Bool_t drawShadow);
+//
+void DrawBoxGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                     const CGRect &box, Bool_t drawShadow);
 
-void DrawFillArea(CGContextRef ctx, Int_t n, TPoint * xy, Bool_t drawShadow);
-void DrawFillAreaGradient(CGContextRef ctx, Int_t nPoints, const TPoint *xy,
-                          const TColorGradient *extendedColor, const CGPoint &startPoint,
-                          const CGPoint &endPoint, Bool_t drawShadow);
-
-
-void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                             Int_t n, const TPoint *polygon, CGPoint &start, CGPoint &end);
-void CalculateGradientPoints(const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
-                             Int_t x1, Int_t y1, Int_t x2, Int_t y2, CGPoint &start, CGPoint &end);
+void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t drawShadow);
+//
+void DrawFillAreaGradient(CGContextRef ctx, const TColorGradient *extendedColor, const CGSize &sizeOfDrawable,
+                          Int_t nPoints, const TPoint *xy, Bool_t drawShadow);
 
 }
 }

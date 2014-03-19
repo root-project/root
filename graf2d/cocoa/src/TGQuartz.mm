@@ -145,15 +145,11 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
    y1 = Int_t(X11::LocalYROOTToCocoa(drawable, y1));
    y2 = Int_t(X11::LocalYROOTToCocoa(drawable, y2));
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
+   if (const TColorGradient * const gradient = dynamic_cast<TColorGradient *>(gROOT->GetColor(GetFillColor()))) {
       //Draw a box with a gradient fill and a shadow.
       //Ignore all fill styles and EBoxMode, use a gradient fill.
-      CGPoint startPoint = {}, endPoint = {};
-      Quartz::CalculateGradientPoints(extendedColor, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                      x1, y1, x2, y2, startPoint, endPoint);
-      //It can be either linear gradient or radial.
-      //kTRUE == draw a shadow.
-      Quartz::DrawBoxGradient(ctx, x1, y1, x2, y2, extendedColor, startPoint, endPoint, kTRUE);
+      Quartz::DrawBoxGradient(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
+                              CGRectMake(x1, y1, x2 - x1, y2 - y1), kTRUE); //kTRUE == draw a shadow.
    } else {
       const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
       
@@ -215,16 +211,9 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
       return;
    }
 
-   if (const TColorGradient * const extendedColor = dynamic_cast<const TColorGradient *>(fillColor)) {
-      //Either linear or a radial gradient.
-      CGPoint startPoint = {}, endPoint = {};
-
-      Quartz::CalculateGradientPoints(extendedColor, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                      n, &fConvertedPoints[0], startPoint, endPoint);
-      
-      //The last argument - kTRUE == also draw a shadow.
-      Quartz::DrawFillAreaGradient(ctx, n, &fConvertedPoints[0], extendedColor,
-                                   startPoint, endPoint, kTRUE);
+   if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
+      Quartz::DrawFillAreaGradient(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
+                                   n, &fConvertedPoints[0], kTRUE);//kTRUE == also draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
