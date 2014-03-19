@@ -1980,6 +1980,9 @@ if test "x$platform" = "xmacosx" ; then
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 6 ]; then
       macosx106=yes
    fi
+   if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 7 ]; then
+      macosx107=yes
+   fi
    if [ `sw_vers | sed -n 's/ProductVersion://p' | cut -d . -f 2` -ge 8 ]; then
       macosx108=yes
    fi
@@ -2636,7 +2639,7 @@ fi
 if test ! "x$platform" = "xmacosx"; then
     enable_cocoa="no"
 fi
-if test "x$macosx108" = "xyes" && test "x$enable_cocoa" = "x"; then
+if test "x$macosx107" = "xyes" && test "x$enable_cocoa" = "x"; then
    enable_cocoa="yes"
 fi
 if test "x$enable_cocoa" = "x"; then
