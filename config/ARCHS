@@ -12,5 +12,5 @@ macosx               for MacOS X >= 10.8 with clang
 macosxicc            for MacOS X >= 10.8 with Intel icc >= 13 (Intel only)
 macosx64             for MacOS X >= 10.8 with gcc >= 4.8 64 bit mode
 openbsd              for OpenBSD >= 5.x with gcc >= 4.8
-win32gcc             for Win32 with cygwin/gcc
-win64gcc             for Win64 with cygwin/gcc
+win32gcc             for Win32 with cygwin/gcc with gcc >= 4.8
+win64gcc             for Win64 with cygwin/gcc with gcc >= 4.8
