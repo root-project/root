@@ -271,4 +271,21 @@ namespace RooStats {
       return myTree;
    }
 
+
+   // useful function to print in one line the content of a set with their values 
+   void PrintListContent(const RooArgList & l, std::ostream & os ) { 
+      bool first = true;
+      os << "( "; 
+      for (int i = 0; i< l.getSize(); ++i) { 
+         if (first) {
+            first=kFALSE ;
+         } else {
+            os << ", " ;
+         }
+         l[i].printName(os); 
+         os << " = "; 
+         l[i].printValue(os); 
+      }
+      os << ")\n"; 
+   }
 }

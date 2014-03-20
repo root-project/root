@@ -83,6 +83,11 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 	 if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
 	 fNll->setData(data,kFALSE) ;
        }
+       // print data in case of number counting (simple data sets) 
+       if (fPrintLevel > 1 && data.numEntries() == 1) { 
+          std::cout << "Data set used is:  ";
+          RooStats::PrintListContent(*data.get(0), std::cout); 
+       }
 
 
        // make sure we set the variables attached to this nll
@@ -112,6 +117,7 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        if (type != 2) {
           // minimize and count eval errors
           fNll->clearEvalErrorLog();
+          if (fPrintLevel>1) std::cout << "Do unconditional fit" << std::endl;
 	  RooFitResult* result = GetMinNLL();
           if (result) {
              uncondML = result->minNll();
@@ -152,6 +158,8 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        }
 
        if (doConditionalFit) {  
+
+          if (fPrintLevel>1) std::cout << "Do conditional fit " << std::endl;
 
 
           //       cout <<" reestablish snapshot"<<endl;
@@ -204,8 +212,12 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
        else if (type == 2) pll = condML;
        else {
          pll = condML-uncondML;
+
          if (fSigned) {
-           if (pll<0.0) pll = 0.0;   // bad fit
+            if (pll<0.0) {
+               if (fPrintLevel > 0) std::cout << "pll is negative - setting it to zero " << std::endl;
+               pll = 0.0;   // bad fit
+            }
            if (fLimitType==oneSidedDiscovery ? (fit_favored_mu < initial_mu_value)
                                              : (fit_favored_mu > initial_mu_value))
              pll = -pll;

@@ -37,6 +37,8 @@ The class can scan the CLs+b values or alternativly CLs (if the method HypoTestI
 #include <cmath>
 
 #include "TF1.h"
+#include "TFile.h"
+#include "TH1.h"
 #include "TLine.h"
 #include "TCanvas.h"
 #include "TGraphErrors.h"
@@ -1020,6 +1022,8 @@ SamplingDistribution * HypoTestInverter::GetUpperLimitDistribution(bool rebuild,
    // for obtained the observed limit and no extra toys will be generated
    // if rebuild a new set of B toys will be done and the procedure will be repeted
    // for each toy
+   // The nuisance parameter value used for rebuild is the current one in the model
+   // so it is user responsability to set to the desired value (nomi
    if (!rebuild) {
       if (!fResults) { 
          oocoutE((TObject*)0,InputArguments) << "HypoTestInverter::GetUpperLimitDistribution(false) - result not existing\n";
@@ -1040,11 +1044,14 @@ void HypoTestInverter::SetData(RooAbsData & data) {
    if (fCalculator0) fCalculator0->SetData(data);
 }
 
-SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int nToys, TList * clsDist, TList * clsbDist, TList * clbDist) { 
+SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int nToys, TList * clsDist, TList * clsbDist, TList * clbDist, const char *outputfile) { 
    // rebuild the sampling distributions by 
    // generating some toys and find for each of theam a new upper limit
    // Return the upper limit distribution and optionally also the pValue distributions for Cls, Clsb and Clbxs
    // as a TList for each scanned point
+   // The method uses the present parameter value. It is user responsability to give the current parameters to rebuild the distributions
+   // It returns a upper or lower limit distribution depending on the isUpper flag, however it computes also the lower limit distribution and it is saved in the 
+   // output file as an histogram  
 
    if (!fScannedVariable || !fCalculator0) return 0;
    // get first background snapshot
@@ -1110,14 +1117,65 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    oocoutI((TObject*)0,InputArguments) << "HypoTestInverter - rebuilding  the p value distributions by generating ntoys = "
                                        << nToys << std::endl;
 
+   
+   oocoutI((TObject*)0,InputArguments) << "Rebuilding using parameter of interest point:  ";
+   RooStats::PrintListContent(paramPoint, oocoutI((TObject*)0,InputArguments) );
+   if (sbModel->GetNuisanceParameters() ) { 
+      oocoutI((TObject*)0,InputArguments) << "And using nuisance parameters: ";
+      RooStats::PrintListContent(*sbModel->GetNuisanceParameters(), oocoutI((TObject*)0,InputArguments) );
+   }
+   // save all parameters to restore them later 
+   assert(bModel->GetPdf() );
+   assert(bModel->GetObservables() );
+   RooArgSet * allParams = bModel->GetPdf()->getParameters( *bModel->GetObservables() );
+   RooArgSet saveParams; 
+   allParams->snapshot(saveParams);
+      
+   TFile * fileOut = TFile::Open(outputfile,"RECREATE"); 
+   if (!fileOut) { 
+      oocoutE((TObject*)0,InputArguments) << "HypoTestInverter - RebuildDistributions - Error opening file " << outputfile 
+                                          << " - the resulting limits will not be stored" << std::endl; 
+   }
+   // create  temporary histograms to store the limit result 
+   TH1D * hL = new TH1D("lowerLimitDist","Rebuilt lower limit distribution",100,1.,0.); 
+   TH1D * hU = new TH1D("upperLimitDist","Rebuilt upper limit distribution",100,1.,0.); 
+   hL->SetBuffer(2*nToys); 
+   hU->SetBuffer(2*nToys); 
+   std::vector<TH1*> hCLb;
+   std::vector<TH1*> hCLsb;
+   std::vector<TH1*> hCLs;
+   if (storePValues) { 
+      for (int i = 0; i < nPoints; ++i) { 
+         hCLb.push_back(new TH1D(TString::Format("CLbDist_bin%d",i),"CLb distribution",100,1.,0.)); 
+         hCLs.push_back(new TH1D(TString::Format("ClsDist_bin%d",i),"CLs distribution",100,1.,0.)); 
+         hCLsb.push_back(new TH1D(TString::Format("CLsbDist_bin%d",i),"CLs+b distribution",100,1.,0.)); 
+      }
+   }
 
 
+   // loop now on the toys 
    for (int itoy = 0; itoy < nToys; ++itoy) { 
 
       oocoutP((TObject*)0,Eval) << "HypoTestInverter - RebuildDistributions - running toy # " << itoy << " / " 
                                        << nToys << std::endl;      
 
+
+      // reset parameters to initial values to be sure in case they are not reset
+      if (itoy> 0) *allParams = saveParams;
+      
+      // need to set th epdf to clear the cache in ToyMCSampler
+      // pdf we must use is background pdf 
+      toymcSampler->SetPdf(*bModel->GetPdf() );
+
+
       RooAbsData * bkgdata = toymcSampler->GenerateToyData(paramPoint);
+
+      // for debugging in case of number counting models
+      if (bkgdata->numEntries() ==1) { 
+         oocoutP((TObject*)0,Generation) << "Generate observables are : ";
+         RooArgList  genObs(*bkgdata->get(0)); 
+         RooStats::PrintListContent(genObs, oocoutP((TObject*)0,Generation) );
+      }
 
       // by copying I will have the same min/max as previous ones
       HypoTestInverter inverter = *this; 
@@ -1129,6 +1187,17 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
 
       double value = (isUpper) ? r->UpperLimit() : r->LowerLimit();
       limit_values.push_back( value );
+      hU->Fill(r->UpperLimit() );
+      hL->Fill(r->LowerLimit() );
+
+
+      std::cout << "The computed upper limit for toy #" << itoy << " is " << value << std::endl;
+
+      // write every 10 toys 
+      if (itoy%10 == 0 || itoy == nToys-1) { 
+         hU->Write("",TObject::kOverwrite);
+         hL->Write("",TObject::kOverwrite);
+      }
 
       if (!storePValues) continue;
 
@@ -1146,12 +1215,24 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
             CLs_values[ipoint].push_back( hr->CLs() );
             CLsb_values[ipoint].push_back( hr->CLsplusb() );
             CLb_values[ipoint].push_back( hr->CLb() );
+            hCLs[ipoint]->Fill(  hr->CLs() );
+            hCLb[ipoint]->Fill(  hr->CLb() );
+            hCLsb[ipoint]->Fill(  hr->CLsplusb() );
          }
          else { 
             oocoutW((TObject*)0,InputArguments) << "HypoTestInverter: missing result for point: x = " 
                                                 << fResults->GetXValue(ipoint) <<  std::endl;            
          }
       }
+      // write every 10 toys 
+      if (itoy%10 == 0 || itoy == nToys-1) { 
+         for (int ipoint = 0; ipoint < nPoints; ++ipoint) {
+            hCLs[ipoint]->Write("",TObject::kOverwrite);
+            hCLb[ipoint]->Write("",TObject::kOverwrite);
+            hCLsb[ipoint]->Write("",TObject::kOverwrite);
+         }
+      }
+
 
       delete r; 
       delete bkgdata;
@@ -1180,6 +1261,21 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
          }
       }
    }
+
+   if (fileOut) { 
+      fileOut->Close(); 
+   }
+   else { 
+      // delete all the histograms 
+      delete hL; 
+      delete hU;
+      for (int i = 0; i < nPoints && storePValues; ++i) {
+         delete hCLs[i]; 
+         delete hCLb[i]; 
+         delete hCLsb[i]; 
+      }
+   }
+
    const char * disName = (isUpper) ? "upperLimit_dist" : "lowerLimit_dist";
    return new SamplingDistribution(disName, disName, limit_values);
 }
