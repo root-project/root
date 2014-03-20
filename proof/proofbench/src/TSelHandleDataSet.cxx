@@ -196,17 +196,21 @@ Bool_t TSelHandleDataSet::Process(Long64_t entry)
       // Release the file cache
       if (type == TFile::kLocal) {
          ReleaseCache(lfname);
+      } else if (type == TFile::kFile) {
+         ReleaseCache(url.GetFile());
       } else {
          Error("Process",
-               "attempt to call ReleaseCache for a non-local file: '%s'", lfname.Data());
+               "attempt to call ReleaseCache for a non-local file: '%s'", url.GetUrl());
       }
    } else if (fType->GetType() == TPBHandleDSType::kCheckCache) {
       // Check the file cache
       if (type == TFile::kLocal) {
          CheckCache(lfname);
+      } else if (type == TFile::kFile) {
+         CheckCache(url.GetFile());
       } else {
          Error("Process",
-               "attempt to call CheckCache for a non-local file: '%s'", lfname.Data());
+               "attempt to call CheckCache for a non-local file: '%s'", url.GetUrl());
       }
    } else if (fType->GetType() == TPBHandleDSType::kRemoveFiles) {
       // Remove the file
