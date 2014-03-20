@@ -1378,7 +1378,9 @@ void TSelectorDraw::TakeAction()
    //__________________________3D scatter plot_______________________
    else if (fAction ==  3) {
       TH3 *h3 = (TH3*)fObject;
-      for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
+      if (!h3->TestBit(kCanDelete)) {
+         for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
+      }
    } else if (fAction == 13) {
       TPolyMarker3D *pm3d = new TPolyMarker3D(fNfill);
       pm3d->SetMarkerStyle(fTree->GetMarkerStyle());
@@ -1389,7 +1391,9 @@ void TSelectorDraw::TakeAction()
       }
       pm3d->Draw();
       TH3 *h3 = (TH3*)fObject;
-      for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
+      if (!h3->TestBit(kCanDelete)) {
+         for (i = 0; i < fNfill; i++) h3->Fill(fVal[2][i], fVal[1][i], fVal[0][i], fW[i]);
+      }
    }
    //__________________________3D scatter plot (3rd variable = col)__
    else if (fAction == 33) {
