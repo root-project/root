@@ -305,6 +305,16 @@ void TThread::Init()
    gGlobalMutex = new TMutex(kTRUE);
    gCling->SetAlloclockfunc(CINT_alloc_lock);
    gCling->SetAllocunlockfunc(CINT_alloc_unlock);
+
+   //To avoid deadlocks, gCintMutex and gROOTMutex need
+   // to point at the same instance
+   {
+     R__LOCKGUARD(gGlobalMutex);
+     if (!gInterpreterMutex) {
+       gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
+     }
+     gROOTMutex = gCINTMutex;
+   }
 }
 
 //______________________________________________________________________________
