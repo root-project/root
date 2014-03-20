@@ -18,6 +18,10 @@ add_custom_command(TARGET rootcling POST_BUILD
                    COMMAND ln -f ../../bin/rootcling ../../bin/rootcint
                    COMMAND ln -f ../../bin/rootcling ../../bin/genreflex)
 
+install(PROGRAMS  ${CMAKE_BINARY_DIR}/bin/rootcint 
+                  ${CMAKE_BINARY_DIR}/bin/genreflex
+                  DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+
 add_custom_command(OUTPUT rootcling_tmp.cxx
                    COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx
                    DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
