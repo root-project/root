@@ -1841,7 +1841,7 @@ Int_t TProofLite::CleanupSandbox()
 {
    // Remove old sessions dirs keep at most 'Proof.MaxOldSessions' (default 10)
 
-   Int_t maxold = gEnv->GetValue("Proof.MaxOldSessions", 10);
+   Int_t maxold = gEnv->GetValue("Proof.MaxOldSessions", 1);
 
    if (maxold < 0) return 0;
 
