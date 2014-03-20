@@ -129,7 +129,7 @@ int krb5_net_read(krb5_context /*context*/, int fd, register char *buf, register
 int krb5_net_write(krb5_context /*context*/, int fd, register const char *buf, int len)
 {
    int cc;
-   register int wrlen = len;
+   int wrlen = len;
    do {
       cc = SOCKET_WRITE((SOCKET)fd, buf, wrlen);
       if (cc < 0) {
