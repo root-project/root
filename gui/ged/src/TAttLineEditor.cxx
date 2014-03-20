@@ -86,7 +86,7 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
                                         TGNumberFormat::kNESReal,
                                         TGNumberFormat::kNEANonNegative);
    fAlphaField->Resize(40,20);
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
       fAlpha->SetEnabled(kFALSE);
       AlphaLabel->Disable(kTRUE);
       fAlphaField->SetEnabled(kFALSE);
