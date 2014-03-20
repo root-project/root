@@ -18,6 +18,10 @@
 #endif
 
 #include "RooRandom.h"
+#include "TRandom2.h"
+#include "TMath.h"
+
+#include "TEnv.h"
 
 
 
@@ -34,21 +38,40 @@ namespace RooStats {
 Bool_t ToyMCStudy::initialize(void) {
    coutP(Generation) << "initialize" << endl;
 
-   //coutI(InputArguments) << "SetSeed(0)" << endl;
-   //RooRandom::randomGenerator()->SetSeed(0);
-   coutI(InputArguments) << "Seed is: " << RooRandom::randomGenerator()->GetSeed() << endl;
-
    if(!fToyMCSampler) {
       coutE(InputArguments) << "Need an instance of ToyMCSampler to run." << endl;
+      return kFALSE;
    }else{
       coutI(InputArguments) << "Using given ToyMCSampler." << endl;
    }
 
+
+   TString  worknumber = gEnv->GetValue("ProofServ.Ordinal","undef");
+   int iworker = -1; 
+   if (worknumber != "undef") { 
+      iworker = int( worknumber.Atof()*10 + 0.1); 
+
+      // generate a seed using 
+      std::cout << "Current global seed is " << fRandomSeed << std::endl;
+      TRandom2 r(fRandomSeed );
+      // get a seed using the iworker-value
+      unsigned int seed = r.Integer(TMath::Limits<unsigned int>::Max() ); 
+      for (int i = 0; i< iworker; ++i) 
+         seed = r.Integer(TMath::Limits<unsigned int>::Max() );
+
+      // initialize worker using seed from ToyMCSampler 
+      RooRandom::randomGenerator()->SetSeed(seed);
+   }
+
+   coutI(InputArguments) << "Worker " << iworker << " seed is: " << RooRandom::randomGenerator()->GetSeed() << endl;
+  
    return kFALSE;
 }
 
 // _____________________________________________________________________________
 Bool_t ToyMCStudy::execute(void) {
+
+   coutP(Generation) << "ToyMCStudy::execute - run with seed " <<   RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) << std::endl;
    RooDataSet* sd = fToyMCSampler->GetSamplingDistributionsSingleWorker(fParamPoint);
    ToyMCPayload *sdw = new ToyMCPayload(sd);
    storeDetailedOutput(*sdw);
@@ -58,7 +81,7 @@ Bool_t ToyMCStudy::execute(void) {
 
 // _____________________________________________________________________________
 Bool_t ToyMCStudy::finalize(void) {
-   coutP(Generation) << "finalize" << endl;
+   coutP(Generation) << "ToyMCStudy::finalize" << endl;
 
    if(fToyMCSampler) delete fToyMCSampler;
    fToyMCSampler = NULL;
@@ -68,16 +91,17 @@ Bool_t ToyMCStudy::finalize(void) {
 
 
 RooDataSet* ToyMCStudy::merge() {
-   coutP(Generation) << "merge" << endl;
+
    RooDataSet* samplingOutput = NULL;
 
    if(!detailedData()) {
-      coutE(Generation) << "No detailed output present." << endl;
+      coutE(Generation) << "ToyMCStudy::merge No detailed output present." << endl;
       return NULL;
    }
 
    RooLinkedListIter iter = detailedData()->iterator();
    TObject *o = NULL;
+   int i = 0;
    while((o = iter.Next())) {
       ToyMCPayload *oneWorker = dynamic_cast< ToyMCPayload* >(o);
       if(!oneWorker) {
@@ -86,10 +110,14 @@ RooDataSet* ToyMCStudy::merge() {
       }
       
       if( !samplingOutput ) samplingOutput = new RooDataSet(*oneWorker->GetSamplingDistributions());
+
       else samplingOutput->append( *oneWorker->GetSamplingDistributions() );
 
+      i++;
       //delete oneWorker;
    }
+   coutP(Generation) << "Merged data from nworkers # " << i << "- merged data size is " << samplingOutput->numEntries() << std::endl;
+
 
    return samplingOutput;
 }

@@ -30,6 +30,7 @@
 #include "RooStudyManager.h"
 #include "RooStats/ToyMCStudy.h"
 #include "RooStats/DetailedOutputAggregator.h"
+#include "RooStats/RooStatsUtils.h"
 #include "RooSimultaneous.h"
 #include "RooCategory.h"
 
@@ -324,6 +325,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributions(RooArgSet& paramPointIn)
    ToyMCStudy* toymcstudy = new ToyMCStudy ;
    toymcstudy->SetToyMCSampler(*this);
    toymcstudy->SetParamPoint(paramPointIn);
+   toymcstudy->SetRandomSeed(RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) );
 
    // temporary workspace for proof to avoid messing with TRef
    RooWorkspace w(fProofConfig->GetWorkspace());
@@ -626,6 +628,12 @@ RooAbsData* ToyMCSampler::Generate(RooAbsPdf &pdf, RooArgSet &observables, const
 	}
       }
    }
+
+   // in case of number counting print observables
+   // if (data->numEntries() == 1) { 
+   //    std::cout << "generate observables : ";
+   //    RooStats::PrintListContent(*data->get(0), std::cout); 
+   // }
    
    return data;
 }

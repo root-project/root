@@ -123,6 +123,9 @@ namespace RooStats {
    // Create a TTree with the given name and description. All RooRealVars in the RooDataSet are represented as branches that contain values of type Double_t.
    TTree* GetAsTTree(TString name, TString desc, const RooDataSet& data);
 
+   // useful function to print in one line the content of a set with their values 
+   void PrintListContent(const RooArgList & l, std::ostream & os = std::cout);
+
 }
 
 

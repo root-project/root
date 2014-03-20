@@ -71,11 +71,15 @@ bool noSystematics = false;              // force all systematics to be off (i.e
                                          // to their nominal values)
 double nToysRatio = 2;                   // ratio Ntoys S+b/ntoysB
 double maxPOI = -1;                      // max value used of POI (in case of auto scan) 
-bool useProof = false;                    // use Proof Light when using toys (for freq or hybrid)
-int nworkers = 4;                        // number of worker for Proof
+bool useProof = false;                   // use Proof Lite when using toys (for freq or hybrid)
+int nworkers = 0;                        // number of worker for ProofLite (default use all available cores) 
 bool rebuild = false;                    // re-do extra toys for computing expected limits and rebuild test stat
                                          // distributions (N.B this requires much more CPU (factor is equivalent to nToyToRebuild)
 int nToyToRebuild = 100;                 // number of toys used to rebuild 
+int rebuildParamValues=0;                // = 0   do a profile of all the parameters on the B (alt snapshot) before performing a rebuild operation (default)
+                                         // = 1   use initial workspace parameters with B snapshot values 
+                                         // = 2   use all initial workspace parameters with B 
+                                         // Otherwise the rebuild will be performed using 
 int initialFit = -1;                     // do a first  fit to the model (-1 : default, 0 skip fit, 1 do always fit) 
 int randomSeed = -1;                     // random seed (if = -1: use default value, if = 0 always random )
                                          // NOTE: Proof uses automatically a random seed
@@ -140,6 +144,7 @@ namespace RooStats {
       bool mReuseAltToys; 
       int     mNWorkers;
       int     mNToyToRebuild;
+      int     mRebuildParamValues; 
       int     mPrintLevel;
       int     mInitialFit; 
       int     mRandomSeed; 
@@ -163,6 +168,7 @@ RooStats::HypoTestInvTool::HypoTestInvTool() : mPlotHypoTestResult(true),
                                                mReuseAltToys(false),
                                                mNWorkers(4),
                                                mNToyToRebuild(100),
+                                               mRebuildParamValues(0),
                                                mPrintLevel(0),
                                                mInitialFit(-1),
                                                mRandomSeed(-1),
@@ -208,6 +214,7 @@ RooStats::HypoTestInvTool::SetParameter(const char * name, int value){
 
    if (s_name.find("NWorkers") != std::string::npos) mNWorkers = value;
    if (s_name.find("NToyToRebuild") != std::string::npos) mNToyToRebuild = value;
+   if (s_name.find("RebuildParamValues") != std::string::npos) mRebuildParamValues = value;
    if (s_name.find("PrintLevel") != std::string::npos) mPrintLevel = value;
    if (s_name.find("InitialFit") != std::string::npos) mInitialFit = value;
    if (s_name.find("RandomSeed") != std::string::npos) mRandomSeed = value;
@@ -367,6 +374,7 @@ StandardHypoTestInvDemo(const char * infile = 0,
    calc.SetParameter("Rebuild", rebuild);
    calc.SetParameter("ReuseAltToys", reuseAltToys);
    calc.SetParameter("NToyToRebuild", nToyToRebuild);
+   calc.SetParameter("RebuildParamValues", rebuildParamValues);
    calc.SetParameter("MassValue", massValue.c_str());
    calc.SetParameter("MinimizerType", minimizerType.c_str());
    calc.SetParameter("PrintLevel", printLevel);
@@ -470,8 +478,14 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
          mResultFileName += name;
       }
 
+      // get (if existing) rebuilt UL distribution
+      TFile * fileULDist = TFile::Open("RULDist.root"); 
+      TObject * ulDist = (fileULDist) ? fileULDist->Get("RULDist") : 0;  
+
       TFile * fileOut = new TFile(mResultFileName,"RECREATE");
       r->Write();
+      if (ulDist) ulDist->Write(); 
+
       fileOut->Close();                                                                     
    }   
   
@@ -639,7 +653,11 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       }
    }
 
-
+   // save all initial parameters of the model including the global observables 
+   RooArgSet initialParameters; 
+   RooArgSet * allParams = sbModel->GetPdf()->getParameters(*data); 
+   allParams->snapshot(initialParameters);
+   delete allParams; 
   
    // run first a data fit 
   
@@ -916,8 +934,51 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
    HypoTestInverterResult * r = calc.GetInterval();
    std::cout << "Time to perform limit scan \n";
    tw.Print();
-  
+
    if (mRebuild) {
+
+      std::cout << "\n***************************************************************\n";
+      std::cout << "Rebuild the upper limit distribution by re-generating new set of pseudo-experiment and re-compute for each of them a new upper limit\n\n";
+
+         
+      allParams = sbModel->GetPdf()->getParameters(*data); 
+
+      // define on which value of nuisance parameters to do the rebuild
+      // default is best fit value for bmodel snapshot 
+
+
+
+      if (mRebuildParamValues != 0) { 
+         // set all parameters to their initial workspace values 
+         *allParams = initialParameters; 
+      }
+      if (mRebuildParamValues == 0 || mRebuildParamValues == 1 ) { 
+          RooArgSet constrainParams;
+          if (sbModel->GetNuisanceParameters() ) constrainParams.add(*sbModel->GetNuisanceParameters());
+          RooStats::RemoveConstantParameters(&constrainParams);
+          
+          const RooArgSet * poiModel = sbModel->GetParametersOfInterest(); 
+          bModel->LoadSnapshot(); 
+
+          // do a profile using the B model snapshot
+          if (mRebuildParamValues == 0 ) { 
+
+             RooStats::SetAllConstant(*poiModel,true);
+
+             sbModel->GetPdf()->fitTo(*data,InitialHesse(false), Hesse(false),
+                                   Minimizer(minimizerType.c_str(),"Migrad"), Strategy(0), PrintLevel(mPrintLevel), Constrain(constrainParams) );
+
+
+             std::cout << "rebuild using fitted parameter value for B-model snapshot" << std::endl;
+             constrainParams.Print("v");
+          
+             RooStats::SetAllConstant(*poiModel,false);
+          }
+      }
+      std::cout << "StandardHypoTestInvDemo: Initial parameters used for rebuilding: ";
+      RooStats::PrintListContent(*allParams, std::cout); 
+      delete allParams; 
+
       calc.SetCloseProof(1);
       tw.Start();
       SamplingDistribution * limDist = calc.GetUpperLimitDistribution(true,mNToyToRebuild);
@@ -925,9 +986,27 @@ RooStats::HypoTestInvTool::RunInverter(RooWorkspace * w,
       tw.Print();
     
       if (limDist) { 
-         std::cout << "expected up limit " << limDist->InverseCDF(0.5) << " +/- " 
-                   << limDist->InverseCDF(0.16) << "  " 
-                   << limDist->InverseCDF(0.84) << "\n"; 
+         std::cout << "Expected limits after rebuild distribution " << std::endl;
+         std::cout << "expected upper limit  (median of limit distribution) " << limDist->InverseCDF(0.5) << std::endl; 
+         std::cout << "expected -1 sig limit (0.16% quantile of limit dist) " << limDist->InverseCDF(ROOT::Math::normal_cdf(-1)) << std::endl; 
+         std::cout << "expected +1 sig limit (0.84% quantile of limit dist) " << limDist->InverseCDF(ROOT::Math::normal_cdf(1)) << std::endl; 
+         std::cout << "expected -2 sig limit (.025% quantile of limit dist) " << limDist->InverseCDF(ROOT::Math::normal_cdf(-2)) << std::endl; 
+         std::cout << "expected +2 sig limit (.975% quantile of limit dist) " << limDist->InverseCDF(ROOT::Math::normal_cdf(2)) << std::endl; 
+
+         // Plot the upper limit distribution
+         SamplingDistPlot limPlot( (mNToyToRebuild < 200) ? 50 : 100); 
+         limPlot.AddSamplingDistribution(limDist); 
+         limPlot.GetTH1F()->SetStats(true); // display statistics
+         limPlot.SetLineColor(kBlue); 
+         new TCanvas("limPlot","Upper Limit Distribution");
+         limPlot.Draw(); 
+                  
+         /// save result in a file 
+         limDist->SetName("RULDist"); 
+         TFile * fileOut = new TFile("RULDist.root","RECREATE");
+         limDist->Write();
+         fileOut->Close();                                                                     
+
       
          //update r to a new updated result object containing the rebuilt expected p-values distributions
          // (it will not recompute the expected limit)

@@ -122,7 +122,7 @@ public:
 
    // function to rebuild the distributions
    SamplingDistribution * RebuildDistributions(bool isUpper=true, int nToys = 100, 
-                                               TList * clsDist = 0, TList *clsbDist= 0, TList * clbDist = 0);
+                                               TList * clsDist = 0, TList *clsbDist= 0, TList * clbDist = 0, const char *  outputfile = "HypoTestInverterRebuiltDist.root");
 
    // get the test statistic
    TestStatistic * GetTestStatistic() const;

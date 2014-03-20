@@ -49,6 +49,7 @@ class ToyMCStudy: public RooAbsStudy {
       // need to have constructor without arguments for proof
       ToyMCStudy(const char *name = "ToyMCStudy", const char *title = "ToyMCStudy") :
          RooAbsStudy(name, title),
+         fRandomSeed(0),
          fToyMCSampler(NULL)
       {
          // In this case, this is the normal output. The SamplingDistribution
@@ -70,13 +71,16 @@ class ToyMCStudy: public RooAbsStudy {
       void SetToyMCSampler(ToyMCSampler& t) { fToyMCSampler = &t; }
       void SetParamPoint(const RooArgSet& paramPoint) { fParamPoint.add(paramPoint); }
 
+      void SetRandomSeed(unsigned int seed) { fRandomSeed = seed; } 
+
    protected:
 
+      unsigned int fRandomSeed; 
       ToyMCSampler *fToyMCSampler;
       RooArgSet fParamPoint;
 
    protected:
-   ClassDef(ToyMCStudy,1); // toy MC study for parallel processing
+   ClassDef(ToyMCStudy,2); // toy MC study for parallel processing
    
 };
 
