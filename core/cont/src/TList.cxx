@@ -69,6 +69,7 @@
 #include "TList.h"
 #include "TClass.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -360,8 +361,15 @@ void TList::Clear(Option_t *option)
    // list (of Primitives of the canvas) that was connecting it 
    // (indirectly) to the list of cleanups.
    // So let's temporarily add the current list and remove it later.
-   bool needRegister = fFirst && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
-   if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+   bool needRegister = fFirst && TROOT::Initialized();
+   if(needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+   }
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
    while (fFirst) {
       TObjLink *tlk = fFirst;
       fFirst = fFirst->Next();
@@ -376,7 +384,10 @@ void TList::Clear(Option_t *option)
       }
       delete tlk;
    }
-   if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   if (needRegister) {
+      R__LOCKGUARD2(gROOTMutex);
+      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+   }
    fFirst = fLast = fCache = 0;
    fSize  = 0;
    Changed();
@@ -405,8 +416,15 @@ void TList::Delete(Option_t *option)
       // list (of Primitives of the canvas) that was connecting it 
       // (indirectly) to the list of cleanups.
       // So let's temporarily add the current list and remove it later.
-      bool needRegister = fFirst && TROOT::Initialized() && !gROOT->GetListOfCleanups()->FindObject(this);
-      if (needRegister) gROOT->GetListOfCleanups()->Add(this);
+      bool needRegister = fFirst && TROOT::Initialized();
+      if(needRegister) {
+         R__LOCKGUARD2(gROOTMutex);
+	 needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
+      }
+      if (needRegister) {
+         R__LOCKGUARD2(gROOTMutex);
+	 gROOT->GetListOfCleanups()->Add(this);
+      }
       while (fFirst) {
          TObjLink *tlk = fFirst;
          fFirst = fFirst->Next();
@@ -419,7 +437,12 @@ void TList::Delete(Option_t *option)
 
          delete tlk;
       }
-      if (needRegister) ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+
+      if (needRegister) {
+	 R__LOCKGUARD2(gROOTMutex);
+	 ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
+      }
+
       fFirst = fLast = fCache = 0;
       fSize  = 0;
 

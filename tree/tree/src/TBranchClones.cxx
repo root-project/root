@@ -31,7 +31,7 @@
 
 #include <cstring>
 
-R__EXTERN TTree* gTree;
+R__EXTERN thread_local TTree* gTree;
 
 ClassImp(TBranchClones)
 

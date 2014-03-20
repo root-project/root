@@ -278,16 +278,12 @@ void TMap::PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse)
    printf("Key:   ");
    entry->Print();
    TROOT::IndentLevel();
-   if (TStorage::IsOnHeap(val)) {
-      printf("Value: ");
-      TCollection* coll = dynamic_cast<TCollection*>(val);
-      if (coll) {
-         coll->Print(option, recurse);
-      } else {
-         val->Print(option);
-      }
+   printf("Value: ");
+   TCollection* coll = dynamic_cast<TCollection*>(val);
+   if (coll) {
+     coll->Print(option, recurse);
    } else {
-      printf("Value: 0x%lx\n", (ULong_t) val);
+     val->Print(option);
    }
 }
 

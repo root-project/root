@@ -35,6 +35,8 @@
 #include "TStreamerElement.h"
 #include "TSchemaRuleSet.h"
 #include "TStreamerInfoActions.h"
+#include "TInterpreter.h"
+#include "TVirtualMutex.h"
 #include "TArrayC.h"
 
 #if (defined(__linux) || defined(__APPLE__)) && defined(__i386__) && \
@@ -67,6 +69,18 @@ static inline ULong_t Void_Hash(const void *ptr)
    // Return hash value for this object.
 
    return TString::Hash(&ptr, sizeof(void*));
+}
+
+//______________________________________________________________________________
+static inline bool Class_Has_StreamerInfo(const TClass* cl) 
+{
+   // Thread-safe check on StreamerInfos of a TClass
+
+   // NOTE: we do not need a R__LOCKGUARD2 since we know the
+   //   mutex is available since the TClass constructor will make
+   //   it
+   R__LOCKGUARD(gCINTMutex);
+   return cl->GetStreamerInfos()->GetLast()>1;
 }
 
 //______________________________________________________________________________
@@ -2744,7 +2758,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
-             cl->GetStreamerInfos()->GetLast()>1 ) {
+             Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
@@ -2848,7 +2862,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
-            cl->GetStreamerInfos()->GetLast()>1 ) {
+	     Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
@@ -2959,7 +2973,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
          // We could have a file created using a Foreign class before
          // the introduction of the CheckSum.  We need to check
          if ((!cl->IsLoaded() || cl->IsForeign()) &&
-            cl->GetStreamerInfos()->GetLast()>1 ) {
+	     Class_Has_StreamerInfo(cl) ) {
 
             const TList *list = ((TFile*)fParent)->GetStreamerInfoCache();
             const TStreamerInfo *local = list ? (TStreamerInfo*)list->FindObject(cl->GetName()) : 0;
@@ -3609,14 +3623,20 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    //   count    is the number of bytes for this object in the buffer
    //
 
-   TObjArray *infos = cl->GetStreamerInfos();
-   Int_t ninfos = infos->GetSize();
-   if (version < -1 || version >= ninfos) {
-      Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-            cl->GetName(), version, Length() );
-      CheckByteCount(start, count, cl);
-      return 0;
+   TObjArray* infos;
+   Int_t ninfos;
+   {
+      R__LOCKGUARD(gCINTMutex);
+      infos = cl->GetStreamerInfos();
+      ninfos = infos->GetSize();
    }
+   if (version < -1 || version >= ninfos) {
+     Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+	   cl->GetName(), version, Length() );
+     CheckByteCount(start, count, cl);
+     return 0;
+   }
+   
    //---------------------------------------------------------------------------
    // The ondisk class has been specified so get foreign streamer info
    //---------------------------------------------------------------------------
@@ -3636,6 +3656,8 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    //---------------------------------------------------------------------------
    else {
       // The StreamerInfo should exist at this point.
+
+      R__LOCKGUARD(gCINTMutex);
       sinfo = (TStreamerInfo*)infos->At(version);
       if (sinfo == 0) {
          // Unless the data is coming via a socket connection from with schema evolution
@@ -3722,6 +3744,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // Get local streamer info
    //---------------------------------------------------------------------------
    else {
+      R__LOCKGUARD(gCINTMutex);
       // The StreamerInfo should exist at this point.
       TObjArray *infos = cl->GetStreamerInfos();
       Int_t infocapacity = infos->Capacity();
@@ -3795,12 +3818,17 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    //build the StreamerInfo if first time for the class
    TStreamerInfo *sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
    if (sinfo == 0) {
-      const_cast<TClass*>(cl)->BuildRealData(pointer);
-      sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
-      const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
-      cl->GetStreamerInfos()->AddAtAndExpand(sinfo,cl->GetClassVersion());
-      if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
-      sinfo->Build();
+      //Have to be sure between the check and the taking of the lock if the current streamer has changed
+      R__LOCKGUARD(gCINTMutex);
+      sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
+      if(sinfo == 0) {
+	 const_cast<TClass*>(cl)->BuildRealData(pointer);
+	 sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
+	 const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
+	 cl->GetStreamerInfos()->AddAtAndExpand(sinfo,cl->GetClassVersion());
+	 if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
+	 sinfo->Build();
+      }
    } else if (!sinfo->IsCompiled()) {
       const_cast<TClass*>(cl)->BuildRealData(pointer);
       sinfo->BuildOld();

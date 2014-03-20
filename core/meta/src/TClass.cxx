@@ -92,14 +92,21 @@ namespace {
    };
 }
 
+#if __cplusplus > 199711L
+std::atomic<Int_t> TClass::fgClassCount;
+thread_local TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
+#else
 Int_t TClass::fgClassCount;
-TClass::ENewType TClass::fgCallingNew = kRealNew;
+TClass::ENewType TClass::fgCallingNew = TClass::kRealNew;
+#endif
 
 struct ObjRepoValue {
    ObjRepoValue(const TClass *what, Version_t version) : fClass(what),fVersion(version) {}
    const TClass *fClass;
    Version_t     fVersion;
 };
+
+static TVirtualMutex* gOVRMutex = 0;
 typedef std::multimap<void*, ObjRepoValue> RepoCont_t;
 static RepoCont_t gObjectVersionRepository;
 
@@ -113,8 +120,10 @@ static void RegisterAddressInRepository(const char * /*where*/, void *location, 
 //    } else {
 //       Warning(where, "Registering address %p again of class '%s' version %d", location, what->GetName(), version);
 //    }
-   gObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
-
+   {
+      R__LOCKGUARD2(gOVRMutex);
+      gObjectVersionRepository.insert(RepoCont_t::value_type(location, RepoCont_t::mapped_type(what,version)));
+   }
 #if 0
    // This code could be used to prevent an address to be registered twice.
    std::pair<RepoCont_t::iterator, Bool_t> tmp = gObjectVersionRepository.insert(RepoCont_t::value_type>(location, RepoCont_t::mapped_type(what,version)));
@@ -133,6 +142,7 @@ static void UnregisterAddressInRepository(const char * /*where*/, void *location
 {
    // Remove an address from the repository of address/object.
 
+   R__LOCKGUARD2(gOVRMutex);
    RepoCont_t::iterator cur = gObjectVersionRepository.find(location);
    for (; cur != gObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
@@ -154,6 +164,7 @@ static void MoveAddressInRepository(const char * /*where*/, void *oldadd, void *
    // Move not only the object itself but also any base classes or sub-objects.
    size_t objsize = what->Size();
    long delta = (char*)newadd - (char*)oldadd;
+   R__LOCKGUARD2(gOVRMutex);
    RepoCont_t::iterator cur = gObjectVersionRepository.find(oldadd);
    for (; cur != gObjectVersionRepository.end();) {
       RepoCont_t::iterator tmp = cur++;
@@ -264,6 +275,8 @@ void TClass::AddClass(TClass *cl)
    // static: Add a class to the list and map of classes.
 
    if (!cl) return;
+
+   R__LOCKGUARD2(gCINTMutex);
    gROOT->GetListOfClasses()->Add(cl);
    if (cl->GetTypeInfo()) {
       GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
@@ -277,6 +290,8 @@ void TClass::RemoveClass(TClass *oldcl)
    // static: Remove a class from the list and map of classes
 
    if (!oldcl) return;
+
+   R__LOCKGUARD2(gCINTMutex);
    gROOT->GetListOfClasses()->Remove(oldcl);
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
@@ -1116,7 +1131,7 @@ void TClass::Init(const char *name, Version_t cversion,
 TClass::TClass(const TClass& cl) :
   TDictionary(cl),
   fStreamerInfo(cl.fStreamerInfo),
-  fConversionStreamerInfo(cl.fConversionStreamerInfo),
+  fConversionStreamerInfo(0),
   fRealData(cl.fRealData),
   fBase(cl.fBase),
   fData(cl.fData),
@@ -1155,15 +1170,15 @@ TClass::TClass(const TClass& cl) :
   fSizeof(cl.fSizeof),
   fCanSplit(cl.fCanSplit),
   fProperty(cl.fProperty),
-  fVersionUsed(cl.fVersionUsed),
+  fVersionUsed(),
   fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
   fOffsetStreamer(cl.fOffsetStreamer),
   fStreamerType(cl.fStreamerType),
-  fCurrentInfo(cl.fCurrentInfo),
+  fCurrentInfo(0),
   fRefStart(cl.fRefStart),
   fRefProxy(cl.fRefProxy),
   fSchemaRules(cl.fSchemaRules),
-  fStreamerImpl(cl.fStreamerImpl)
+  fStreamerImpl(0)
 {
    //copy constructor
    
@@ -1274,11 +1289,15 @@ TClass::~TClass()
    delete fSchemaRules;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
-      std::map<std::string, TObjArray*>::iterator end = fConversionStreamerInfo->end();
-      for( it = fConversionStreamerInfo->begin(); it != end; ++it ) {
+      std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
+      for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
          delete it->second;
       }
+#if __cplusplus > 199711L
+      delete fConversionStreamerInfo.load();
+#else
       delete fConversionStreamerInfo;
+#endif
    }
 }
 
@@ -2035,6 +2054,9 @@ TObject *TClass::Clone(const char *new_name) const
       Error("Clone","The name of the class must be changed when cloning a TClass object.");
       return 0;
    }
+
+   // Need to lock access to TROOT::GetListOfClasses so the cloning happens atomically
+   R__LOCKGUARD2(gCINTMutex);
    // Temporarily remove the original from the list of classes.
    TClass::RemoveClass(const_cast<TClass*>(this));
  
@@ -2343,13 +2365,17 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
       c = inh->GetClassPointer(kTRUE); // kFALSE);
       if (c) {
          if (cl == c) {
-            if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
-               return -2;
+	    R__LOCKGUARD(gCINTMutex);
+	    if ((inh->Property() & G__BIT_ISVIRTUALBASE) != 0)
+	       return -2;
             return inh->GetDelta();
          }
          off = c->GetBaseClassOffsetRecurse(cl);
          if (off == -2) return -2;
-         if (off != -1) return off + inh->GetDelta();
+         if (off != -1) {
+	    R__LOCKGUARD(gCINTMutex);
+	    return off + inh->GetDelta();
+	 }
       }
       lnk = lnk->Next();
    }
@@ -2677,6 +2703,9 @@ TClass *TClass::GetClass(const type_info& typeinfo, Bool_t load, Bool_t /* silen
 {
    // Return pointer to class with name.
 
+   //protect access to TROOT::GetListOfClasses
+   R__LOCKGUARD2(gCINTMutex);
+
    if (!gROOT->GetListOfClasses())    return 0;
 
 //printf("TClass::GetClass called, typeinfo.name=%s\n",typeinfo.name());
@@ -2987,7 +3016,10 @@ TList *TClass::GetListOfBases()
       if (!gInterpreter)
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
-      gInterpreter->CreateListOfBaseClasses(this);
+      R__LOCKGUARD(gCINTMutex);
+      if(!fBase) {
+ 	 gInterpreter->CreateListOfBaseClasses(this);
+      }
    }
    return fBase;
 }
@@ -3278,8 +3310,8 @@ void TClass::ls(Option_t *options) const
 
       if (fConversionStreamerInfo) {
          std::map<std::string, TObjArray*>::iterator it;
-         std::map<std::string, TObjArray*>::iterator end = fConversionStreamerInfo->end();
-         for( it = fConversionStreamerInfo->begin(); it != end; ++it ) {
+         std::map<std::string, TObjArray*>::iterator end = (*fConversionStreamerInfo).end();
+         for( it = (*fConversionStreamerInfo).begin(); it != end; ++it ) {
             it->second->ls(options);
          }
       }
@@ -3914,8 +3946,9 @@ void *TClass::New(ENewType defConstructor) const
       // FIXME: Partial Answer: Is this because we may never actually deregister them???
 
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
-
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
          Error("New", "Cannot construct class '%s' version %d, no streamer info available!", GetName(), fClassVersion);
@@ -3928,7 +3961,9 @@ void *TClass::New(ENewType defConstructor) const
 
       // FIXME: Mistake?  See note above at the GetObjectStat() call.
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -3997,7 +4032,9 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4011,7 +4048,9 @@ void *TClass::New(void *arena, ENewType defConstructor) const
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -4081,7 +4120,9 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4095,7 +4136,9 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       // Register the object for special handling in the destructor.
       if (p) {
@@ -4164,7 +4207,9 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       // Do not register any TObject's that we create
       // as a result of creating this object.
       Bool_t statsave = GetObjectStat();
-      SetObjectStat(kFALSE);
+      if(statsave) {
+	SetObjectStat(kFALSE);
+      }
 
       TVirtualStreamerInfo* sinfo = GetStreamerInfo();
       if (!sinfo) {
@@ -4178,7 +4223,9 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
 
       // ???BUG???
       // Allow TObject's to be registered again.
-      SetObjectStat(statsave);
+      if(statsave) {
+	SetObjectStat(statsave);
+      }
 
       if (fStreamerType & kEmulated) {
          // We always register emulated objects, we need to always
@@ -4222,8 +4269,10 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // or it will be interpreted, otherwise we fail
       // because there is no destructor code at all.
       if (dtorOnly) {
+	 R__LOCKGUARD2(gCINTMutex);
          gCint->ClassInfo_Destruct(fClassInfo,p);
       } else {
+	 R__LOCKGUARD2(gCINTMutex);
          gCint->ClassInfo_Delete(fClassInfo,p);
       }
    } else if (!fClassInfo && fCollectionProxy) {
@@ -4242,20 +4291,24 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
 
       // Was this object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-      if (iter == gObjectVersionRepository.end()) {
-         // No, it wasn't, skip special version handling.
-         //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
-         inRepo = kFALSE;
-      } else {
-         //objVer = iter->second;
-         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-            Version_t ver = iter->second.fVersion;
-            knownVersions.insert(ver);
-            if (ver == fClassVersion && this == iter->second.fClass) {
-               verFound = kTRUE;
-            }
-         }
+      R__LOCKGUARD2(gOVRMutex);
+
+      {
+	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+	 if (iter == gObjectVersionRepository.end()) {
+	    // No, it wasn't, skip special version handling.
+	    //Error("Destructor2", "Attempt to delete unregistered object of class '%s' at address %p!", GetName(), p);
+	    inRepo = kFALSE;
+	 } else {
+	    //objVer = iter->second;
+	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+	       Version_t ver = iter->second.fVersion;
+	       knownVersions.insert(ver);
+	        if (ver == fClassVersion && this == iter->second.fClass) {
+		   verFound = kTRUE;
+		}
+	    }
+	 }
       }
 
       if (!inRepo || verFound) {
@@ -4353,19 +4406,22 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
       // Was this array object allocated through TClass?
       std::multiset<Version_t> knownVersions;
-      RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
-      if (iter == gObjectVersionRepository.end()) {
-         // No, it wasn't, we cannot know what to do.
-         //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
-         inRepo = kFALSE;
-      } else {
-         for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
-            Version_t ver = iter->second.fVersion;
-            knownVersions.insert(ver);
-            if (ver == fClassVersion && this == iter->second.fClass ) {
-               verFound = kTRUE;
-            }
-         }
+      {
+	 R__LOCKGUARD2(gOVRMutex);
+	 RepoCont_t::iterator iter = gObjectVersionRepository.find(p);
+	 if (iter == gObjectVersionRepository.end()) {
+	    // No, it wasn't, we cannot know what to do.
+	    //Error("DeleteArray", "Attempt to delete unregistered array object, element type '%s', at address %p!", GetName(), p);
+	   inRepo = kFALSE;
+	 } else {
+	    for (; (iter != gObjectVersionRepository.end()) && (iter->first == p); ++iter) {
+	       Version_t ver = iter->second.fVersion;
+	       knownVersions.insert(ver);
+	       if (ver == fClassVersion && this == iter->second.fClass ) {
+		  verFound = kTRUE;
+	       }
+	    }
+	 }
       }
 
       if (!inRepo || verFound) {
@@ -4452,6 +4508,18 @@ void TClass::SetClassVersion(Version_t version)
    
    fClassVersion = version; 
    fCurrentInfo = 0; 
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo* TClass::DetermineCurrentStreamerInfo()
+{
+   // Determine and set pointer to current TVirtualStreamerInfo
+
+   R__LOCKGUARD2(gCINTMutex);
+   if(!fCurrentInfo) {
+     fCurrentInfo=(TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
+   }
+   return fCurrentInfo;
 }
 
 //______________________________________________________________________________
@@ -4613,6 +4681,8 @@ void TClass::PostLoadCheck()
    }
    else if (IsLoaded() && fClassInfo && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
    {
+      R__LOCKGUARD(gCINTMutex);
+
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
       // loaded from a file) is consistent with the definition in the library we just loaded.
@@ -5369,6 +5439,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
+   R__LOCKGUARD(gCINTMutex);
    Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;++i) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -5386,7 +5457,7 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 TVirtualStreamerInfo *TClass::FindStreamerInfo(TObjArray* arr, UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
-
+   R__LOCKGUARD(gCINTMutex);
    Int_t ninfos = arr->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;i++) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
@@ -5432,10 +5503,11 @@ TVirtualStreamerInfo *TClass::GetConversionStreamerInfo( const TClass* cl, Int_t
    TObjArray* arr = 0;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
+      R__LOCKGUARD(gCINTMutex);
 
-      it = fConversionStreamerInfo->find( cl->GetName() );
+      it = (*fConversionStreamerInfo).find( cl->GetName() );
 
-      if( it != fConversionStreamerInfo->end() ) {
+      if( it != (*fConversionStreamerInfo).end() ) {
          arr = it->second;
       }
 
@@ -5527,10 +5599,11 @@ TVirtualStreamerInfo *TClass::FindConversionStreamerInfo( const TClass* cl, UInt
    TVirtualStreamerInfo* info = 0;
    if (fConversionStreamerInfo) {
       std::map<std::string, TObjArray*>::iterator it;
+      R__LOCKGUARD(gCINTMutex);
+    
+      it = (*fConversionStreamerInfo).find( cl->GetName() );
       
-      it = fConversionStreamerInfo->find( cl->GetName() );
-      
-      if( it != fConversionStreamerInfo->end() ) {
+      if( it != (*fConversionStreamerInfo).end() ) {
          arr = it->second;
       }
       if (arr) {
