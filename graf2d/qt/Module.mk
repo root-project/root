@@ -52,7 +52,7 @@ GQTCXXFLAGS   :=  $(QT4CPPFLAGS) $(QT3CPPFLAGS) $(QT3QT4CPPFLAGS)
 ifeq ($(ARCH),win32)
 GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/win32-msvc2005
 else
-GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/default 
+GQTCXXFLAGS   += -I$(QTDIR)/mkspecs/default
 endif
 
 GQTCXXFLAGS   +=  -I. $(QTINCDIR:%=-I%)
@@ -128,6 +128,12 @@ ifeq ($(subst $(GCC_MINOR),,0 1),0 1)
 $(GQTO): CXXFLAGS += -Wno-strict-overflow
 endif
 endif
+ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
+# Building with clang or GCC
+$(GQTO)   : CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
+$(GQTDO)  : CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
+$(GQTMOCO): CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
+endif
 
 $(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
 	$(MAKEDIR)
@@ -136,6 +142,7 @@ ifeq (,$(QT4))
 else
 	$(QTMOCEXE) $(GQTCXXFLAGS) $< -o $@
 endif
+
 
 ##### cintdlls ######
 
