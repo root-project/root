@@ -84,6 +84,4 @@ void grad()
    hist->SetFillColor(histGradient);
    hist->FillRandom("gaus", 100000);
    hist->Draw();
-
-   cnv->Update();
 }

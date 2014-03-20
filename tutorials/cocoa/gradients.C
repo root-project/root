@@ -107,7 +107,4 @@ void gradients()
    //
    pie->SetRadius(0.4);
    pie->Draw("rsc");
-   
-   c->Modified();
-   c->Update();
 }
