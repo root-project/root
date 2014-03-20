@@ -95,7 +95,7 @@ Bool_t TInterruptHandler::Notify()
 
    Break("TInterruptHandler::Notify", "keyboard interrupt");
    Getlinem(kInit, "Root > ");
-   if (gException->fBuf)
+   if (gException)
       Throw(GetSignal());
 
    return kTRUE;
