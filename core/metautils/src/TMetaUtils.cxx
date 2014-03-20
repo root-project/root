@@ -2961,6 +2961,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
    static const char invalidFilename[] = "invalid";
    if (!headerLoc.isValid()) return invalidFilename;
 
+   HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
+
    SourceManager& sourceManager = decl->getASTContext().getSourceManager();
    headerLoc = getFinalSpellingLoc(sourceManager, headerLoc);
    FileID headerFID = sourceManager.getFileID(headerLoc);
@@ -2968,17 +2970,28 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
       = getFinalSpellingLoc(sourceManager,
                             sourceManager.getIncludeLoc(headerFID));
 
-
+   const FileEntry *headerFE = sourceManager.getFileEntryForID(headerFID);
    while (includeLoc.isValid() && sourceManager.isInSystemHeader(includeLoc)) {
+      const DirectoryLookup *foundDir = 0;
+      std::string hFileName = headerFE->getName();
+      llvm::StringRef basename(hFileName.substr(hFileName.find_last_of('/')+1,
+                               std::string::npos));
+      // use HeaderSearch on the basename, to make sure it takes a header from
+      // the include path (e.g. not from /usr/include/bits/)
+      const FileEntry *FEhdr = HdrSearch.LookupFile(basename, SourceLocation(),
+                                   true /*isAngled*/, 0/*FromDir*/, foundDir,
+                                   ArrayRef<const FileEntry*>(),
+                                   0/*Searchpath*/, 0/*RelPath*/,
+                                   0/*SuggModule*/);
+      if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
+      headerFE = sourceManager.getFileEntryForID(headerFID);
       includeLoc = getFinalSpellingLoc(sourceManager,
                                        sourceManager.getIncludeLoc(headerFID));
    }
 
-   const FileEntry* headerFE = sourceManager.getFileEntryForID(headerFID);
    if (!headerFE) return invalidFilename;
    llvm::StringRef headerFileName = headerFE->getName();
-   HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
 
    // Now headerFID references the last valid system header or the original
    // user file.
