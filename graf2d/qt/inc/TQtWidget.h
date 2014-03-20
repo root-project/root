@@ -170,7 +170,7 @@ protected:
    void AdjustBufferSize();
 
    bool PaintingActive () const;
-   void SetIgnoreLeaveEnter(int ignore=1);
+   void SetIgnoreLeaveEnter(int ignoreLE = 1);
 
 
    virtual void enterEvent       ( QEvent *      );
@@ -315,6 +315,6 @@ inline void   TQtWidget::EnableSignalEvents  (UInt_t f){ SetBit  (f); }
 inline void   TQtWidget::DisableSignalEvents (UInt_t f){ ResetBit(f); }
 inline Bool_t TQtWidget::IsSignalEventEnabled(UInt_t f) const { return TestBit (f); }
 inline void   TQtWidget::EmitSignal(UInt_t f)  {if (IsSignalEventEnabled(f)) EmitTestedSignal();}
-inline void   TQtWidget::SetIgnoreLeaveEnter(int ignore) { fIgnoreLeaveEnter = ignore; }
+inline void   TQtWidget::SetIgnoreLeaveEnter(int ignoreLE) { fIgnoreLeaveEnter = ignoreLE; }
 
 #endif
