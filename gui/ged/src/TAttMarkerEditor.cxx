@@ -86,7 +86,7 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
                                         TGNumberFormat::kNESReal,
                                         TGNumberFormat::kNEANonNegative);
    fAlphaField->Resize(40,20);
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
       fAlpha->SetEnabled(kFALSE);
       AlphaLabel->Disable(kTRUE);
       fAlphaField->SetEnabled(kFALSE);
@@ -252,6 +252,5 @@ void TAttMarkerEditor::GetCurAlpha()
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
    }
-
    Update();
 }

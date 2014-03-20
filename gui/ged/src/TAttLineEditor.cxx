@@ -71,7 +71,7 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    fStyleCombo->Associate(this);
 
    fWidthCombo = new TGLineWidthComboBox(f2, kLINE_WIDTH);
-   fWidthCombo->Resize(91, 20);
+   fWidthCombo->Resize(90, 20);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fWidthCombo->Associate(this);
 
@@ -86,7 +86,7 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
                                         TGNumberFormat::kNESReal,
                                         TGNumberFormat::kNEANonNegative);
    fAlphaField->Resize(40,20);
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
       fAlpha->SetEnabled(kFALSE);
       AlphaLabel->Disable(kTRUE);
       fAlphaField->SetEnabled(kFALSE);
@@ -242,6 +242,5 @@ void TAttLineEditor::GetCurAlpha()
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
    }
-
    Update();
 }

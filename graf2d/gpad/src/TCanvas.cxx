@@ -2113,10 +2113,10 @@ void TCanvas::ToggleToolTips()
 Bool_t TCanvas::SupportAlpha()
 {
    // Static function returning "true" if transparency is supported.
-
-   if ((gVirtualX->InheritsFrom("TGQuartz")) || 
-       (gPad->GetGLDevice() != -1)) return kTRUE;
-   else                             return kFALSE;
+   //gPad must exist (otherwise this call has no sense), and
+   //either it's a gl-pad or we are on OS X with --enable-cocoa.
+   return gPad && (gVirtualX->InheritsFrom("TGQuartz") ||
+                   gPad->GetGLDevice() != -1);
 }
 
 

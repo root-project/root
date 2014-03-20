@@ -119,7 +119,7 @@ TParallelCoordEditor::TParallelCoordEditor(const TGWindow* /*p*/,
    f1->AddFrame(fGlobalLineWidth, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsTop));
 
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
 
       AddFrame(new TGLabel(this,"Dots spacing"),
                new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
@@ -411,7 +411,7 @@ void TParallelCoordEditor::ConnectSignals2Slots()
                              this, "DoGlobalLineColor(Pixel_t)");
    fGlobalLineWidth->Connect("Selected(Int_t)","TParallelCoordEditor",
                              this, "DoGlobalLineWidth(Int_t)");
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
       fDotsSpacing->Connect("Released()","TParallelCoordEditor",
                            this, "DoDotsSpacing()");
       fDotsSpacing->Connect("PositionChanged(Int_t)","TParallelCoordEditor",
@@ -1008,7 +1008,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
 
    fPaintEntries->SetOn(fParallel->TestBit(TParallelCoord::kPaintEntries));
 
-   if (!gPad->GetCanvas()->SupportAlpha()) {
+   if (!TCanvas::SupportAlpha()) {
       fDotsSpacing->SetPosition(fParallel->GetDotsSpacing());
       fDotsSpacingField->SetNumber(fParallel->GetDotsSpacing());
    }
