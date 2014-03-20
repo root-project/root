@@ -28,7 +28,7 @@ void parallelcoordtrans() {
    Double_t s3x, s3y, s3z;
    r = new TRandom();;
 
-   TCanvas *c1 = new TCanvas("c1", "c1",0,0,900,1000);
+   TCanvas *c1 = new TCanvas("parallel coords", "parrallel_coords",0,0,900,1000);
    c1->Divide(1,2);
 
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {

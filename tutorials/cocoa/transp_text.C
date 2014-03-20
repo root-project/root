@@ -4,7 +4,7 @@
 
 void transp_text()
 {
-   TCanvas *c1 = new TCanvas("c1","transparent text demo", 10, 10, 900, 500);
+   TCanvas *c1 = new TCanvas("transparent text","transparent text demo", 10, 10, 900, 500);
 
    //After we created a canvas, gVirtualX in principle should be initialized
    //and we can check its type:
@@ -34,11 +34,11 @@ void transp_text()
    TPaveText *pt = new TPaveText(0.3,0.3,0.98,0.98,"brNDC");
    
    //Create special transparent colors for both pavetext fill color and text color.
-   new TColor(1001, 0.8, 0.8, 0.8, "transparent_gray", 0.85);
-   pt->SetFillColor(1001);
-   //Add new color with index 1002.
-   new TColor(1002, 0., 0., 0., "transparent_black", 0.5);
-   pt->SetTextColor(1002);
+   new TColor(1041, 0.8, 0.8, 0.8, "transparent_gray", 0.85);
+   pt->SetFillColor(1041);
+   //Add new color with index 1042.
+   new TColor(1042, 0., 0., 0., "transparent_black", 0.5);
+   pt->SetTextColor(1042);
    pt->SetTextSize(0.5);
    pt->SetTextAlign(12);
    

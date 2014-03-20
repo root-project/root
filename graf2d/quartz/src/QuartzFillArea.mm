@@ -150,13 +150,13 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
          const CGFloat scale = bbox.size.width < bbox.size.height ?
                                bbox.size.height : bbox.size.width;
          
-         startRadius *= scale;
-         endRadius *= scale;
+         startRadius *= scale * 0.5;
+         endRadius *= scale * 0.5;
       } else {
          const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
                                sizeOfDrawable.height : sizeOfDrawable.width;
-         startRadius *= scale;
-         endRadius *= scale;
+         startRadius *= scale * 0.5;
+         endRadius *= scale * 0.5;
       }
       
       params.fStartRadius = startRadius;
