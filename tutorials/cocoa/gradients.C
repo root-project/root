@@ -8,13 +8,11 @@
 
 
 //Includes for ACLiC:
-#include <iostream>
-#include <cassert>
-#include <vector>
 
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"
+#include "TText.h"
 #include "TPie.h"
 
 //Cocoa aux. functions.
