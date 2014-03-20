@@ -320,7 +320,11 @@ ifeq ($(ENABLE_LIBCPP),1)
 endif
 
 ifeq ($(ENABLE_CXX11),1)
-  CXX.Flags += -std=c++11
+  ifeq ($(HOST_OS),Cygwin)
+    CXX.Flags += -std=gnu++11
+  else
+    CXX.Flags += -std=c++11
+  endif
 endif
 
 ifeq ($(ENABLE_WERROR),1)
