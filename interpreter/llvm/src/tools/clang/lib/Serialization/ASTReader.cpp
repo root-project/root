@@ -2305,31 +2305,27 @@ ASTReader::ReadControlBlock(ModuleFile &F,
       const HeaderSearchOptions &HSOpts =
           PP.getHeaderSearchInfo().getHeaderSearchOpts();
 
+      bool Validate = !DisableValidation &&
+         (ValidateSystemInputs || !HSOpts.ModulesValidateOncePerBuildSession ||
+          F.InputFilesValidationTimestamp <= HSOpts.BuildSessionTimestamp);
+      bool Complain = Validate && (ClientLoadCapabilities & ARR_OutOfDate) == 0;
       // All user input files reside at the index range [0, Record[1]), and
       // system input files reside at [Record[1], Record[0]).
       // Record is the one from INPUT_FILE_OFFSETS.
       unsigned NumInputs = Record[0];
       unsigned NumUserInputs = Record[1];
+      unsigned NComplain = NumUserInputs;
+      if (ValidateSystemInputs ||
+          (HSOpts.ModulesValidateOncePerBuildSession && F.Kind == MK_Module))
+         NComplain = NumInputs;
 
-      if (!DisableValidation &&
-          (ValidateSystemInputs || !HSOpts.ModulesValidateOncePerBuildSession ||
-           F.InputFilesValidationTimestamp <= HSOpts.BuildSessionTimestamp)) {
-        bool Complain = (ClientLoadCapabilities & ARR_OutOfDate) == 0;
+      if (!Complain)
+         NComplain = 0;
 
-        // If we are reading a module, we will create a verification timestamp,
-        // so we verify all input files.  Otherwise, verify only user input
-        // files.
-
-        unsigned N = NumUserInputs;
-        if (ValidateSystemInputs ||
-            (HSOpts.ModulesValidateOncePerBuildSession && F.Kind == MK_Module))
-          N = NumInputs;
-
-        for (unsigned I = 0; I < N; ++I) {
-          InputFile IF = getInputFile(F, I+1, Complain);
-          if (!IF.getFile() || IF.isOutOfDate())
-            return OutOfDate;
-        }
+      for (unsigned I = 0; I < NumInputs; ++I) {
+        InputFile IF = getInputFile(F, I+1, I < NComplain);
+        if (Validate && (!IF.getFile() || IF.isOutOfDate()))
+          return OutOfDate;
       }
 
       if (Listener)
