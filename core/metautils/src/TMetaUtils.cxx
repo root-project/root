@@ -2537,8 +2537,7 @@ void ROOT::TMetaUtils::Fatal(const char *location, const char *va_(fmt), ...)
 //______________________________________________________________________________
 clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceType,
                                                        const cling::Interpreter &interpreter,
-                                                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
-                                                       const int nArgsToKeep)
+                                                       const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
 {
    // Add any unspecified template parameters to the class template instance,
    // mentioned anywhere in the type.
@@ -2550,10 +2549,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    // Whether it is or not depend on the I/O on whether the default template argument might change or not
    // and whether they (should) affect the on disk layout (for STL containers, we do know they do not).
 
-   return instanceType;
-   
    const clang::ASTContext& Ctx = interpreter.getCI()->getASTContext();
-      
+
    // In case of name* we need to strip the pointer first, add the default and attach
    // the pointer once again.
    if (llvm::isa<clang::PointerType>(instanceType.getTypePtr())) {
@@ -2594,7 +2591,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
    }
 
    // In case of template specializations iterate over the arguments and
-   // add unspecified default parameters.
+   // add unspecified default parameter.
 
    const clang::TemplateSpecializationType* TST
       = llvm::dyn_cast<const clang::TemplateSpecializationType>(instanceType.getTypePtr());
@@ -2612,25 +2609,19 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       // Converted seems to be the same as our 'desArgs'
 
       unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
-      
+
       bool mightHaveChanged = false;
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
       unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
-      if (nArgsToKeep >= 0){
-         maxAddArg=nArgsToKeep;
-      }
       for(clang::TemplateSpecializationType::iterator
              I = TST->begin(), E = TST->end();
           Idecl != Edecl;
           I!=E ? ++I : 0, ++Idecl, ++Param) {
 
          if (I != E) {
-            if (Idecl >= maxAddArg) continue;
-            std::cout << "First branch\n";
 
             if (I->getKind() == clang::TemplateArgument::Template) {
-               std::cout << "Template argument is a template\n";
                clang::TemplateName templateName = I->getAsTemplate();
                clang::TemplateDecl* templateDecl = templateName.getAsTemplateDecl();
                if (templateDecl) {
@@ -2651,7 +2642,6 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             }
 
             if (I->getKind() != clang::TemplateArgument::Type) {
-               std::cout << "Template argument is not a type (for example an int)\n";
                desArgs.push_back(*I);
                continue;
             }
@@ -2661,20 +2651,16 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             // Check if the type needs more desugaring and recurse.
             if (llvm::isa<clang::TemplateSpecializationType>(SubTy)
                 || llvm::isa<clang::ElaboratedType>(SubTy) ) {
-               std::cout << "Template argument is template specialisation or an elaborated type\n";
                mightHaveChanged = true;
                desArgs.push_back(clang::TemplateArgument(AddDefaultParameters(SubTy,
                                                                               interpreter,
                                                                               normCtxt)));
             } else {
-               std::cout << "Template argument is a qualtype else.\n";
                desArgs.push_back(*I);
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
          } else if (Idecl < maxAddArg) {
 
-            std::cout << "---> Idecl is " << Idecl << " while maxAddArg is " << maxAddArg << std::endl;
-            
             mightHaveChanged = true;
 
             const clang::TemplateArgument& templateArg
@@ -2694,7 +2680,8 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interpreter));
                clang::sema::HackForDefaultTemplateArg raii;
                bool HasDefaultArgs;
-               clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(Template,
+               clang::TemplateArgumentLoc ArgType = S.SubstDefaultTemplateArgumentIfAvailable(
+                                                                                              Template,
                                                                                               TemplateLoc,
                                                                                               RAngleLoc,
                                                                                               TTP,
@@ -2714,7 +2701,6 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                clang::QualType BetterSubTy = ArgType.getArgument().getAsType();
                SubTy = cling::utils::Transform::GetPartiallyDesugaredType(Ctx,BetterSubTy,normCtxt.GetConfig(),/*fullyQualified=*/ true);
             }
-            //FIXME HERE RECALCULATE
             SubTy = AddDefaultParameters(SubTy,interpreter,normCtxt);
             desArgs.push_back(clang::TemplateArgument(SubTy));
          } else {
@@ -3223,7 +3209,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
 
    if (tPars.size() != tArgs.size())
       return; // candidate for the "unlikely" macro
-
+            
    // Loop over the template parameters and arguments recursively.
    // We go down the two lanes: the one of template parameters (decls) and the
    // one of template arguments (QualTypes) in parallel. The former are a
@@ -3287,36 +3273,17 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
          // Now, if it did not have any default, it's gone.
          // Shortcuts
          QualType tParQualType = tPar.getDefaultArgument();
-
-         // Check for template specialisations
-         bool isRecordType = llvm::isa<RecordType>(tArgQualType.getTypePtr());
-         const TemplateSpecializationType* tsType =
-             llvm::dyn_cast<TemplateSpecializationType>(
-                 tParQualType.getTypePtr());
-         bool comingFromSameTemplate = false;
-         if (isRecordType && tsType) {
-            // Argument domain
-            const TemplateDecl* templateDeclFromArg =
-                QualType2ClassTemplateDecl(tArgQualType);
-
-            // Parameter domain
-            const TemplateName tName = tsType->getTemplateName();
-            const TemplateDecl* templateDeclFromParam =
-                tName.getAsTemplateDecl();
-
-            comingFromSameTemplate =
-                templateDeclFromArg == templateDeclFromParam;
-         }
-
-         const bool isDefaultValue = tArgQualType == tParQualType;
-         if (isDefaultValue) {
+         
+         bool isDefaultValue = tParQualType.getTypePtr() == tArgQualType.getTypePtr();
+         
+         if (isDefaultValue && !shouldKeepArg) {
             paramHasDefaultValue = true;
             break;
          }
 
          // If still different but not instances of the same template, keep the
          // arg
-         if ((!comingFromSameTemplate && !isDefaultValue) || shouldKeepArg) {
+         if (!isDefaultValue || shouldKeepArg) {
             argsToKeep.push_back(typeTArg);
             continue;
          }
@@ -3341,7 +3308,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
 
          const bool isDefaultValue = value == defaultValueAPSInt;
 
-         if (isDefaultValue) {
+         if (isDefaultValue && !shouldKeepArg) {
             paramHasDefaultValue = true;
             break;
          }
@@ -3400,6 +3367,9 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);   
    
+   // Readd missing default template parameters 
+   normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
+
    // Get the number of arguments to keep in case they are not default.   
    if(const clang::ClassTemplateSpecializationDecl* ctsd = 
                         QualType2ClassTemplateSpecializationDecl(type)){
@@ -3419,12 +3389,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
             }
          }
       }
-   }
-
-   // Readd missing default template parameters   CLAIM: THIS IS DONE ALREADY BY cling::utils::Transform::GetPartiallyDesugaredType!
-   //normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt, nArgsToKeep);
-
-
+   }   
    
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword

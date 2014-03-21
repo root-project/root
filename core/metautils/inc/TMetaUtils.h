@@ -318,8 +318,7 @@ bool ExtractAttrIntPropertyFromName(const clang::Decl& decl,
 // Add default template parameters.
 clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const cling::Interpreter &interpret,
-                                     const TNormalizedCtxt &normCtxt,
-                                     const int nArgsToKeep=-1);
+                                     const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
 const char* DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum = 0, const char **errstr = 0);
