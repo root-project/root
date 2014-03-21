@@ -373,7 +373,11 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
          int ugrpok = 0, pgrpok = 0;
          // Check UNIX groups info
          int ngrps = 10, neg, ig = 0;
-         uid_t grps[10];
+#if defined(__APPLE__)
+         int grps[10];
+#else
+         gid_t grps[10];
+#endif
          XrdOucString g;
          if ((neg = getgrouplist(usr, ui.fGid, grps, &ngrps)) < 0) neg = 10;
          if (neg > 0) {
