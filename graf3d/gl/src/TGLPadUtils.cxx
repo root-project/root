@@ -102,6 +102,9 @@ PolygonStippleSet::PolygonStippleSet()
 //______________________________________________________________________________
 UInt_t PolygonStippleSet::SwapBits(UInt_t b)
 {
+#ifdef WIN32
+   b = ~b & 0xff;
+#endif
    b &= k16Bits;
 
    const UInt_t low = fgBitSwap[b & kLow4] << 4;
