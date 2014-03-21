@@ -213,7 +213,7 @@ namespace {
                          const char** includePaths,
                          const char* payloadCode,
                          void (*triggerFunc)(),
-                         const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip): 
+                         const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip): 
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
@@ -228,8 +228,8 @@ namespace {
       const char** fAllHeaders; // 0-terminated array of all seen header files
       const char** fIncludePaths; // 0-terminated array of header files
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
-      const FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of 
-                                                               // pairs of template fwd decls and number of 
+      const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of 
+                                                                      // pairs of template fwd decls and number of 
    };   
    
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {

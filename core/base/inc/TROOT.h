@@ -61,8 +61,6 @@ class TFunctionTemplate;
 
 R__EXTERN TVirtualMutex *gROOTMutex;
 
-typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
-
 namespace ROOT {
    class TROOTAllocator;
    TROOT *GetROOT2();
@@ -157,6 +155,9 @@ protected:
    TListOfFunctions*GetGlobalFunctions();
 
 public:
+   
+   typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;   
+   
                      TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
@@ -308,7 +309,7 @@ public:
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
-
+   
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
 
