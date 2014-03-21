@@ -275,6 +275,7 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
    static Int_t dpx, dpy;
    static Int_t *x=0, *y=0;
+   Bool_t opaque  = gPad->OpaqueMoving();
 
    if (!gPad->IsEditable()) return;
 
@@ -298,10 +299,12 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       for (i=0;i<np;i++) {
          pxp = gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
          pyp = gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         if (!opaque) {
+            gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+            gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+            gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+            gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         }
          x[i] = pxp;
          y[i] = pyp;
          d   = TMath::Abs(pxp-px) + TMath::Abs(pyp-py);
@@ -351,60 +354,94 @@ void TPolyLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Motion:
-      if (middle) {
-         for(i=0;i<np-1;i++) {
-            gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-            pxp = x[i]+dpx;
-            pyp = y[i]+dpy;
+      if (!opaque) {
+         if (middle) {
+            for(i=0;i<np-1;i++) {
+               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
+               pxp = x[i]+dpx;
+               pyp = y[i]+dpy;
+               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+            }
+            pxp = x[np-1]+dpx;
+            pyp = y[np-1]+dpy;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         }
-         pxp = x[np-1]+dpx;
-         pyp = y[np-1]+dpy;
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
-         dpx += px - pxold;
-         dpy += py - pyold;
-         pxold = px;
-         pyold = py;
-         for(i=0;i<np-1;i++) {
-            gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
-            pxp = x[i]+dpx;
-            pyp = y[i]+dpy;
+            dpx += px - pxold;
+            dpy += py - pyold;
+            pxold = px;
+            pyold = py;
+            for(i=0;i<np-1;i++) {
+               gVirtualX->DrawLine(x[i]+dpx, y[i]+dpy, x[i+1]+dpx, y[i+1]+dpy);
+               pxp = x[i]+dpx;
+               pyp = y[i]+dpy;
+               gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
+               gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
+               gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
+               gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+            }
+            pxp = x[np-1]+dpx;
+            pyp = y[np-1]+dpy;
             gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
             gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
             gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
             gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
+         } else {
+            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
+            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
+            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
+            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
+            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
+            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
+            pxold = px;
+            pxold = TMath::Max(pxold, px1);
+            pxold = TMath::Min(pxold, px2);
+            pyold = py;
+            pyold = TMath::Max(pyold, py2);
+            pyold = TMath::Min(pyold, py1);
+            if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
+            if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
+            gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
+            gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
+            gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
+            gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
          }
-         pxp = x[np-1]+dpx;
-         pyp = y[np-1]+dpy;
-         gVirtualX->DrawLine(pxp-4, pyp-4, pxp+4,  pyp-4);
-         gVirtualX->DrawLine(pxp+4, pyp-4, pxp+4,  pyp+4);
-         gVirtualX->DrawLine(pxp+4, pyp+4, pxp-4,  pyp+4);
-         gVirtualX->DrawLine(pxp-4, pyp+4, pxp-4,  pyp-4);
       } else {
-         if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-         if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-         gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-         gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-         gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-         gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
-         pxold = px;
-         pxold = TMath::Max(pxold, px1);
-         pxold = TMath::Min(pxold, px2);
-         pyold = py;
-         pyold = TMath::Max(pyold, py2);
-         pyold = TMath::Min(pyold, py1);
-         if (px1old) gVirtualX->DrawLine(px1old, py1old, pxold,  pyold);
-         if (px2old) gVirtualX->DrawLine(pxold,  pyold,  px2old, py2old);
-         gVirtualX->DrawLine(pxold-4, pyold-4, pxold+4,  pyold-4);
-         gVirtualX->DrawLine(pxold+4, pyold-4, pxold+4,  pyold+4);
-         gVirtualX->DrawLine(pxold+4, pyold+4, pxold-4,  pyold+4);
-         gVirtualX->DrawLine(pxold-4, pyold+4, pxold-4,  pyold-4);
+         if (middle) {
+            for(i=0;i<np-1;i++) {
+               pxp = x[i]+dpx;
+               pyp = y[i]+dpy;
+            }
+            pxp = x[np-1]+dpx;
+            pyp = y[np-1]+dpy;
+            dpx += px - pxold;
+            dpy += py - pyold;
+            pxold = px;
+            pyold = py;
+         } else {
+            pxold = px;
+            pxold = TMath::Max(pxold, px1);
+            pxold = TMath::Min(pxold, px2);
+            pyold = py;
+            pyold = TMath::Max(pyold, py2);
+            pyold = TMath::Min(pyold, py1);
+         }
+         if (x && y) {
+            if (middle) {
+               for(i=0;i<np;i++) {
+                  fX[i] = gPad->PadtoX(gPad->AbsPixeltoX(x[i]+dpx));
+                  fY[i] = gPad->PadtoY(gPad->AbsPixeltoY(y[i]+dpy));
+               }
+            } else {
+               fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(pxold));
+               fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(pyold));
+            }
+         }
+         gPad->Modified(kTRUE);
       }
       break;
 
