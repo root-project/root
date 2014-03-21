@@ -343,6 +343,8 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       // least of the two groups (UNIX or PROOF) are explicitly denied.
       // The result of the group check is superseeded by any explicit speicification in the
       // allowedusers, either positive or negative.
+      // UNIX group includes secondary groups; this allows to enable/disable only members of a
+      // specific subgroup
       //
       // Examples:
       //   Consider user 'katy' with UNIX group 'alfa' and PROOF group 'student',
@@ -364,25 +366,32 @@ int XrdProofdManager::CheckUser(const char *usr, const char *grp,
       //         (the allowedgroups directive is in this case ignored for users 'katy' and 'jack').
 
       bool grpok = 1;
-      // Check unix group
+      // Check unix groups (secondaries included)
       if (fAllowedGroups.Num() > 0) {
          // Reset the flag
          grpok = 0;
          int ugrpok = 0, pgrpok = 0;
-         // Check UNIX group info
-         XrdProofGI gi;
-         if (XrdProofdAux::GetGroupInfo(ui.fGid, gi) == 0) {
-            int *st = fAllowedGroups.Find(gi.fGroup.c_str());
-            if (st) {
-               if (*st == 1) {
-                  ugrpok = 1;
-               } else {
-                  e = "Controlled access (UNIX group): user '";
-                  e += usr;
-                  e = "', UNIX group '";
-                  e += gi.fGroup;
-                  e += "' denied to connect";
-                  ugrpok = -1;
+         // Check UNIX groups info
+         int ngrps = 10, neg, ig = 0;
+         uid_t grps[10];
+         XrdOucString g;
+         if ((neg = getgrouplist(usr, ui.fGid, grps, &ngrps)) < 0) neg = 10;
+         if (neg > 0) {
+            for (ig = 0; ig < neg; ig++) {
+               g.form("%d", (int) grps[ig]);
+               int *st = fAllowedGroups.Find(g.c_str());
+               if (st) {
+                  if (*st == 1) {
+                     ugrpok = 1;
+                  } else {
+                     e = "Controlled access (UNIX group): user '";
+                     e += usr;
+                     e = "', UNIX group '";
+                     e += g;
+                     e += "' denied to connect";
+                     ugrpok = -1;
+                     break;
+                  }
                }
             }
          }
@@ -594,10 +603,16 @@ static int FillKeyValues(const char *k, int *d, void *s)
 
    if (ls) {
       XrdOucString &ss = (*d == 1) ? ls->allowed : ls->denied;
-      // If not empty add a separation ','
-      if (ss.length() > 0) ss += ",";
       // Add the key
-      if (k) ss += k;
+      if (k) {
+         XrdOucString sk;
+         sk += k;
+         if (!sk.isdigit()) {
+            // If not empty add a separation ','
+            if (ss.length() > 0) ss += ",";
+            ss += sk;
+         }
+      }
    } else {
       // Not enough info: stop
       return 1;
@@ -1512,7 +1527,7 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
    // Input list (comma separated) of UNIX groups allowed to connect
    XrdOucString s = val;
    int from = 0;
-   XrdOucString grp;
+   XrdOucString grp, gid;
    XrdProofGI gi;
    while ((from = s.tokenize(grp, from, ',')) != STR_NPOS) {
       int st = 1;
@@ -1520,8 +1535,13 @@ int XrdProofdManager::DoDirectiveAllowedGroups(char *val, XrdOucStream *cfg, boo
          st = 0;
          grp.erasefromstart(1);
       }
-      // Add it to the list (no check for the group file: we support also
-      // PROOF groups)
+      // Unix or Proof group ?
+      if (XrdProofdAux::GetGroupInfo(grp.c_str(), gi) == 0) {
+         // Unix: add name and id
+         gid.form("%d", (int) gi.fGid);
+         fAllowedGroups.Add(gid.c_str(), new int(st));
+      }
+      // Add it to the list
       fAllowedGroups.Add(grp.c_str(), new int(st));
    }
 
