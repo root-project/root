@@ -67,20 +67,20 @@ static void gdk_win32_drawable_destroy(GdkDrawable * drawable);
                                 gint x,
                                 gint y,
                                 const gchar * text, gint text_length);
-static void gdk_win32_draw_text_wc(GdkDrawable * drawable,
-                                   GdkFont * font,
-                                   GdkGC * gc,
-                                   gint x,
-                                   gint y,
-                                   const GdkWChar * text,
-                                   gint text_length);
-static void gdk_win32_draw_drawable(GdkDrawable * drawable,
+ static void gdk_win32_draw_text_wc(GdkDrawable * drawable,
+                                    GdkFont * font,
                                     GdkGC * gc,
-                                    GdkPixmap * src,
-                                    gint xsrc,
-                                    gint ysrc,
-                                    gint xdest,
-                                    gint ydest, gint width, gint height);
+                                    gint x,
+                                    gint y,
+                                    const GdkWChar * text,
+                                    gint text_length);
+ static void gdk_win32_draw_drawable(GdkDrawable * drawable,
+                                     GdkGC * gc,
+                                     GdkPixmap * src,
+                                     gint xsrc,
+                                     gint ysrc,
+                                     gint xdest,
+                                     gint ydest, gint width, gint height);
  void gdk_win32_draw_points(GdkDrawable * drawable,
                                   GdkGC * gc,
                                   GdkPoint * points, gint npoints);
@@ -166,7 +166,63 @@ static void gdk_win32_drawable_destroy(GdkDrawable * drawable)
    g_assert_not_reached();
 }
 
- void
+void RenderRgn(HDC hDC, HRGN hrgn, HBRUSH hbrFill)
+{
+   RECT rectRgn, rcRect;
+   HDC hMemDC;
+   HBITMAP hBitmap, hOldMemBitmap;
+
+   // Blit source into bitmap, AND'ing with pattern to get the 'transparent' area
+   SetBkMode(hDC, TRANSPARENT);
+
+   // Get bounding area for region
+   GetRgnBox(hrgn, &rectRgn);
+
+   // Area must align to 8x8 pattern
+   if (rectRgn.left % 8 != 0)
+      rectRgn.left -= rectRgn.left % 8;
+   if (rectRgn.top % 8 != 0)
+      rectRgn.top -= rectRgn.top % 8;
+   if (rectRgn.right % 8 != 0)
+      rectRgn.right += rectRgn.right % 8;
+   if (rectRgn.bottom % 8 != 0)
+      rectRgn.bottom += rectRgn.bottom % 8;
+
+   // Create bitmap for pattern
+   hMemDC = CreateCompatibleDC(hDC);
+   hBitmap = CreateCompatibleBitmap(hDC, rectRgn.right - rectRgn.left,
+                                    rectRgn.bottom - rectRgn.top);
+   hOldMemBitmap = (HBITMAP)SelectObject(hMemDC, hBitmap);
+
+   // Blit source into bitmap, AND'ing with pattern to get the 'transparent' area
+   rcRect.left = 0;
+   rcRect.top = 0;
+   rcRect.right = rectRgn.right - rectRgn.left;
+   rcRect.bottom = rectRgn.bottom - rectRgn.top;
+   FillRect(hMemDC, &rcRect, hbrFill);
+   BitBlt(hMemDC, 0, 0, rectRgn.right - rectRgn.left, rectRgn.bottom - rectRgn.top,
+          hDC, rectRgn.left, rectRgn.top, SRCAND); // AND
+   //TransparentBlt(hMemDC,  0, 0, rectRgn.right - rectRgn.left,
+   //               rectRgn.bottom - rectRgn.top, hDC, rectRgn.left,
+   //               rectRgn.top, rectRgn.right - rectRgn.left,
+   //               rectRgn.bottom - rectRgn.top, RGB(255,255,255));
+
+   // Render region using opaque brush
+   FillRgn(hDC, hrgn, hbrFill);
+
+   // Blit 'transparent' area over top of the opaque brush
+   //BitBlt(hDC, rectRgn.left, rectRgn.top, rectRgn.right - rectRgn.left,
+   //       rectRgn.bottom - rectRgn.top, hMemDC, 0, 0, SRCPAINT); // OR
+   TransparentBlt(hDC, rectRgn.left, rectRgn.top, rectRgn.right - rectRgn.left,
+          rectRgn.bottom - rectRgn.top, hMemDC, 0, 0, rectRgn.right - rectRgn.left,
+          rectRgn.bottom - rectRgn.top, RGB(0,0,0));
+   // Clean-up
+   SelectObject(hMemDC, hOldMemBitmap);
+   DeleteObject(hBitmap);
+   DeleteDC(hMemDC);
+}
+
+void
 gdk_win32_draw_rectangle(GdkDrawable * drawable,
                          GdkGC * gc,
                          gint filled,
@@ -223,98 +279,13 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
       if (ok && !FillPath(hdc))
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
    }
-#if 0
    else if (gc_data->fill_style == GDK_STIPPLED) {
-      HDC memdc = CreateCompatibleDC(hdc);
-      HBITMAP hbm = CreateCompatibleBitmap(hdc, width, height);
-      HBRUSH hbr = CreateSolidBrush(gc_data->
-                                    stipple =
-                                    CreatePatternBrush(GDK_DRAWABLE_XID
-                                                       (gc_data->stipple));
-                                    SetBrushOrgEx(hdc,
-                                                  gc_data->ts_x_origin,
-                                                  gc_data->ts_y_origin);
-                                    oldpen_or_brush =
-                                    Select SelectObject(memdc, hbm);
-                                    rect.left = rect.top = 0;
-                                    rect.right = width;
-                                    rect.bottom = height;
-                                    FillRect(memdc, &rect, hbr);
-                                    if (!BeginPath(hdc))
-                                    WIN32_GDI_FAILED("BeginPath"), ok =
-                                    FALSE;
-                                    /* Win9x doesn't support Rectangle calls in a path,
-                                     * thus use Polyline.
-                                     */
-                                    pts[0].x = x;
-                                    pts[0].y = y;
-                                    pts[1].x = x + width + 1;
-                                    pts[1].y = y;
-                                    pts[2].x = x + width + 1;
-                                    pts[2].y = y + height + 1;
-                                    pts[3].x = x;
-                                    pts[3].y = y + height + 1; if (ok)
-                                    MoveToEx(hdc, x, y, NULL);
-                                    if (ok && !Polyline(hdc, pts, 4))
-                                    WIN32_GDI_FAILED("Polyline"), ok =
-                                    FALSE; if (ok && !CloseFigure(hdc))
-                                    WIN32_GDI_FAILED("CloseFigure"), ok =
-                                    FALSE; if (ok && !EndPath(hdc))
-                                    WIN32_GDI_FAILED("EndPath"), ok =
-                                    FALSE; if (ok && !filled)
-                                    if (!WidenPath(hdc))
-                                    WIN32_GDI_FAILED("WidenPath"), ok =
-                                    FALSE; if (ok && !FillPath(hdc))
-                                    WIN32_GDI_FAILED("FillPath"), ok =
-                                    FALSE;}
-#else                           // bb add
-   else if (gc_data->fill_style == GDK_STIPPLED) {
-      RECT rect;
+      HRGN hrgn;
       HBRUSH hbr = CreatePatternBrush(GDK_DRAWABLE_XID(gc_data->stipple));
-      SetBkMode(hdc, TRANSPARENT);
-      SetROP2(hdc, R2_MASKPEN);
-//        SetROP2(hdc,R2_MERGEPEN);
-      oldpen_or_brush = SelectObject(hdc, hbr);
-      rect.left = rect.top = 0;
-      rect.right = width;
-      rect.bottom = height;
-      if (!BeginPath(hdc))
-         WIN32_GDI_FAILED("BeginPath"), ok = FALSE;
-      // Win9x doesn't support Rectangle calls in a path,
-      // thus use Polyline.
-
-      pts[0].x = x;
-      pts[0].y = y;
-      pts[1].x = x + width + 1;
-      pts[1].y = y;
-      pts[2].x = x + width + 1;
-      pts[2].y = y + height + 1;
-      pts[3].x = x;
-      pts[3].y = y + height + 1;
-
-      if (ok)
-         MoveToEx(hdc, x, y, NULL);
-
-      if (ok && !Polyline(hdc, pts, 4))
-         WIN32_GDI_FAILED("Polyline"), ok = FALSE;
-
-      if (ok && !CloseFigure(hdc))
-         WIN32_GDI_FAILED("CloseFigure"), ok = FALSE;
-
-      if (ok && !EndPath(hdc))
-         WIN32_GDI_FAILED("EndPath"), ok = FALSE;
-
-      if (ok && !filled)
-         if (!WidenPath(hdc))
-            WIN32_GDI_FAILED("WidenPath"), ok = FALSE;
-
-      if (ok && !FillPath(hdc))
-         WIN32_GDI_FAILED("FillPath"), ok = FALSE;
-      SelectObject(hdc, oldpen_or_brush);
+      hrgn = CreateRectRgn(x, y, x + width + 1, y + height + 1);
+      RenderRgn(hdc, hrgn, hbr);
       DeleteObject(hbr);
    }
-// end bb add
-#endif
    else {
       if (filled)
          oldpen_or_brush = SelectObject(hdc, GetStockObject(NULL_PEN));
@@ -331,7 +302,7 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
                    GDK_GC_FOREGROUND | GDK_GC_BACKGROUND);
 }
 
- void
+void
 gdk_win32_draw_arc(GdkDrawable * drawable,
                    GdkGC * gc,
                    gint filled,
@@ -407,7 +378,7 @@ gdk_win32_draw_arc(GdkDrawable * drawable,
    }
 }
 
- void
+void
 gdk_win32_draw_polygon(GdkDrawable * drawable,
                        GdkGC * gc,
                        gint filled, GdkPoint * points, gint npoints)
@@ -462,35 +433,10 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
    }
    else if (gc_data->fill_style == GDK_STIPPLED) {
+      HRGN hrgn;
       HBRUSH hbr = CreatePatternBrush(GDK_DRAWABLE_XID(gc_data->stipple));
-      SetBkMode(hdc, TRANSPARENT);
-      SetROP2(hdc, R2_MASKPEN);
-      oldpen_or_brush = SelectObject(hdc, hbr);
-
-      if (!BeginPath(hdc))
-         WIN32_GDI_FAILED("BeginPath"), ok = FALSE;
-
-      MoveToEx(hdc, points[0].x, points[0].y, NULL);
-
-      if (pts[0].x == pts[npoints - 1].x && pts[0].y == pts[npoints - 1].y)
-         npoints--;
-
-      if (ok && !Polyline(hdc, pts, npoints))
-         WIN32_GDI_FAILED("Polyline"), ok = FALSE;
-
-      if (ok && !CloseFigure(hdc))
-         WIN32_GDI_FAILED("CloseFigure"), ok = FALSE;
-
-      if (ok && !EndPath(hdc))
-         WIN32_GDI_FAILED("EndPath"), ok = FALSE;
-
-      if (ok && !filled)
-         if (!WidenPath(hdc))
-            WIN32_GDI_FAILED("WidenPath"), ok = FALSE;
-
-      if (ok && !FillPath(hdc))
-         WIN32_GDI_FAILED("FillPath"), ok = FALSE;
-      SelectObject(hdc, oldpen_or_brush);
+      hrgn = CreatePolygonRgn(pts, npoints, WINDING);
+      RenderRgn(hdc, hrgn, hbr);
       DeleteObject(hbr);
    } else {
       if (points[0].x != points[npoints - 1].x
@@ -542,7 +488,7 @@ gdk_draw_text_handler(GdkWin32SingleFont * singlefont,
    SelectObject(argp->hdc, oldfont);
 }
 
- void
+void
 gdk_win32_draw_text(GdkDrawable * drawable,
                     GdkFont * font,
                     GdkGC * gc,
@@ -806,7 +752,7 @@ gdk_win32_draw_drawable(GdkDrawable * drawable,
    gdk_gc_postdraw(drawable, gc_private, 0);
 }
 
- void
+void
 gdk_win32_draw_points(GdkDrawable * drawable,
                       GdkGC * gc, GdkPoint * points, gint npoints)
 {
@@ -832,7 +778,7 @@ gdk_win32_draw_points(GdkDrawable * drawable,
    gdk_gc_postdraw(drawable, gc_private, 0);
 }
 
- void
+void
 gdk_win32_draw_segments(GdkDrawable * drawable,
                         GdkGC * gc, GdkSegment * segs, gint nsegs)
 {
@@ -889,7 +835,7 @@ gdk_win32_draw_segments(GdkDrawable * drawable,
                    GDK_GC_FOREGROUND | GDK_GC_BACKGROUND);
 }
 
- void
+void
 gdk_win32_draw_lines(GdkDrawable * drawable,
                      GdkGC * gc, GdkPoint * points, gint npoints)
 {
