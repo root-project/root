@@ -58,14 +58,28 @@ namespace testNs {
   typename U=int,
   typename X=classVanilla > class classRemoveTemplateArgs{};
 }
-// testNs::classRemoveTemplateArgs<float*> t2;
-// testNs::classRemoveTemplateArgs<int*> t3;
-// testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> > t4;
+testNs::classRemoveTemplateArgs<float*> t2;
+testNs::classRemoveTemplateArgs<int*> t3;
+testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> > t4;
 
 template<typename T, typename U, typename V, typename Z=int> class A{};
 template<typename T, typename U=int> class B{};
 
 A<B<double,double>,int,float > testNested;
+
+template <class T,class U=int, int V=3>
+class C{};
+
+template <class T> 
+class myAllocator{};
+
+template <class T, class Alloc = myAllocator<T> > 
+class myVector{};
+
+C<char> a1;
+C<char,float> a2;
+myVector<float> v1;
+myVector<C<char>> v2;
 
 // The selection namespace
 namespace ROOT{
@@ -75,7 +89,7 @@ namespace ROOT{
          class classVanilla{};
 
          template <typename A> class classTemplateVanilla{};
-         classTemplateVanilla<char> t0;
+         classTemplateVanilla<bool> t0;
 
          template <typename A> class classTemplateElaborate:
             ClassAttributes <kNonSplittable>{
@@ -97,13 +111,29 @@ namespace ROOT{
 
          template < typename T, typename U=int, typename X=classVanilla >
             class classRemoveTemplateArgs : KeepFirstTemplateArguments<2> {};
+         classRemoveTemplateArgs<char> a;
 
-         template<typename T, typename U, typename V, typename Z=int> class A: KeepFirstTemplateArguments<3> {};
+         template<typename T, typename U, typename V, typename Z=int> class A: KeepFirstTemplateArguments<2> {};
+         A<bool,bool,bool> Ab;
          template<typename T, typename U=int> class B: KeepFirstTemplateArguments<1> {};
-            
+         B<bool> Bb;
+         
+         
+         template <class T, class U=int, int V=3> class C
+          :KeepFirstTemplateArguments<1>            {};           
+   
+         C<double> bbb;  
+   
+   
+         template <class T, class Alloc= myAllocator<T> > class myVector
+           :KeepFirstTemplateArguments<1>{};
+
+         myVector<double> vd;
+         
          namespace testNs{
             template < typename T, typename U=int, typename X=classVanilla >
                class classRemoveTemplateArgs : KeepFirstTemplateArguments<1> {};
+               classRemoveTemplateArgs<double> a;
          }
 
       }
