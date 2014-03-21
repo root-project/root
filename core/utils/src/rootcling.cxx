@@ -169,10 +169,6 @@ const char *rootClingHelp =
 #include <process.h>
 #endif
 
-#ifdef R__USE_CXX11
-#include <unordered_map>
-#endif
-
 #include <errno.h>
 #include <string>
 #include <list>
@@ -181,6 +177,7 @@ const char *rootClingHelp =
 #include <map>
 #include <fstream>
 #include <sys/stat.h>
+#include <unordered_map>
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -783,15 +780,10 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
    std::string keyname;
    std::string libs;
    std::string line;
-#ifdef R__USE_CXX11
+
    // For "class ", "namespace " and "typedef " respectively
    const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
-#else
-   std::map<char, unsigned int> keyLenMap;
-   keyLenMap['c']=6;
-   keyLenMap['n']=10;
-   keyLenMap['t']=8;
-#endif   
+  
    while (getline(file, line, '\n')) {
       if (line == "{ decls }") {
          while (getline(file, line, '\n')) {
@@ -805,11 +797,7 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
          while( libs[0] == ' ' ) libs.replace(0, 1, "");
       }
       else if ( 0 != keyLenMap.count(firstChar) ){
-         #ifdef R__USE_CXX11
          unsigned int keyLen = keyLenMap.at(firstChar);
-         #else
-         unsigned int keyLen = keyLenMap[firstChar];
-         #endif
          keyname = line.substr(keyLen, line.length()-keyLen);
          CheckClassNameForRootMap(keyname,autoloads);
          autoloads[keyname] = libs;

@@ -103,10 +103,6 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
 
-#ifdef R__USE_CXX11
-#include <unordered_map>
-#endif
-
 #include <algorithm>
 #include <iostream>
 #include <cassert>
@@ -117,6 +113,7 @@
 #include <fstream>
 #include <string>
 #include <typeinfo>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -3629,15 +3626,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
    
-   #ifdef R__USE_CXX11
    // For "class ", "namespace " and "typedef " respectively
    const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
-   #else
-   std::map<const char, unsigned int> keyLenMap;
-   keyLenMap['c']=6;
-   keyLenMap['n']=10;
-   keyLenMap['t']=8;
-   #endif   
    
    if (rootmapfile && *rootmapfile) {
 
@@ -3657,13 +3647,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
          if (line.substr(0, 9) == "{ decls }") {                        
             // forward declarations
 
-            // this is also a scope where diagnostics are off for mac os 10.9
-            // FIXME remove when c++11 is enabled by default
-            #ifdef R__MACOSX
-            #if defined(MAC_OS_X_VERSION_10_9)
-            clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
-            #endif
-            #endif
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (line.empty()) continue;
@@ -3705,11 +3688,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             }
          }
          else if ( 0 != keyLenMap.count(firstChar) ){
-            #ifdef R__USE_CXX11
             unsigned int keyLen = keyLenMap.at(firstChar);
-            #else
-            unsigned int keyLen = keyLenMap[firstChar];
-            #endif
             std::string keyname = line.substr(keyLen, line.length()-keyLen);
             if (gDebug > 6)
                Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());
