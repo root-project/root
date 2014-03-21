@@ -385,7 +385,6 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
 {
    GdkGCPrivate *gc_private = (GdkGCPrivate *) gc;
    GdkGCWin32Data *gc_data = GDK_GC_WIN32DATA(gc_private);
-   HGDIOBJ oldpen_or_brush;
    HDC hdc;
    POINT *pts;
    gboolean ok = TRUE;
