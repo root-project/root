@@ -65,10 +65,12 @@ testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> > t4;
 template<typename T, typename U, typename V, typename Z=int> class A{};
 template<typename T, typename U=int> class B{};
 
-A<B<double,double>,int,float > testNested;
+B<float> binstance;
 
-template <class T,class U=int, int V=3>
-class C{};
+A<B<double,double>,int,float > testNested;
+A<B<double,int>,int,float > testNested2;
+
+template <class T,class U=int, int V=3> class C{};
 
 template <class T> 
 class myAllocator{};
@@ -81,11 +83,23 @@ C<char,float> a2;
 myVector<float> v1;
 myVector<C<char>> v2;
 
+template<typename T> class Coordinate{};
+
+template <typename T, typename C = Coordinate<T> >
+class Location {
+   T fWhere;
+   C fCoordinate;
+};
+Location<double> loc;
+
 // The selection namespace
 namespace ROOT{
    namespace Meta {
       namespace Selection{
 
+         template <typename T, typename C = Coordinate<T> > class Location {};
+         Location<bool> loc;         
+         
          class classVanilla{};
 
          template <typename A> class classTemplateVanilla{};
@@ -129,12 +143,12 @@ namespace ROOT{
            :KeepFirstTemplateArguments<1>{};
 
          myVector<double> vd;
-         
-         namespace testNs{
-            template < typename T, typename U=int, typename X=classVanilla >
-               class classRemoveTemplateArgs : KeepFirstTemplateArguments<1> {};
-               classRemoveTemplateArgs<double> a;
-         }
+//          
+//          namespace testNs{
+//             template < typename T, typename U=int, typename X=classVanilla >
+//                class classRemoveTemplateArgs : KeepFirstTemplateArguments<1> {};
+//                classRemoveTemplateArgs<double> a;
+//          }
 
       }
    }

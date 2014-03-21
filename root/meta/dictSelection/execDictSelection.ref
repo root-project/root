@@ -53,30 +53,6 @@ Class category: foreign.
  o Members (0):
 --- End Class classAutoselectedFromTemplateElaborate2
 
---- Class testNs::classRemoveTemplateArgs<float*>
-Class category: foreign.
- * Version: 1 --> Class available to the interpreter but not Selected!
- o Members (0):
---- End Class testNs::classRemoveTemplateArgs<float*>
-
---- Class testNs::classRemoveTemplateArgs<int*>
-Class category: foreign.
- * Version: 1 --> Class available to the interpreter but not Selected!
- o Members (0):
---- End Class testNs::classRemoveTemplateArgs<int*>
-
---- Class testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >
-Class category: foreign.
- * Version: 1 --> Class available to the interpreter but not Selected!
- o Members (0):
---- End Class testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >
-
---- Class testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >
-Class category: foreign.
- * Version: 1 --> Class available to the interpreter but not Selected!
- o Members (0):
---- End Class testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >
-
 --- Class A<B<double,double>,int,float >
 Class category: foreign.
  * Version: -1
@@ -94,18 +70,6 @@ Class category: foreign.
  * Version: -1
  o Members (0):
 --- End Class C<char>
-
---- Class myVector<C<char>,myAllocator<C<char>>>
-Class category: foreign.
- * Version: -1
- o Members (0):
---- End Class myVector<C<char>,myAllocator<C<char>>>
-
---- Class myVector<float,myAllocator<float>>
-Class category: foreign.
- * Version: -1
- o Members (0):
---- End Class myVector<float,myAllocator<float>>
 
 --- Class classTemplateElaborate<char>
 Class category: foreign.
