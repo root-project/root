@@ -3138,16 +3138,12 @@ std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
 }
 
 //______________________________________________________________________________
-clang::ClassTemplateSpecializationDecl*
-ROOT::TMetaUtils::QualType2ClassTemplateSpecializationDecl(
-    const clang::QualType& qt)
+clang::ClassTemplateSpecializationDecl* ROOT::TMetaUtils::QualType2ClassTemplateSpecializationDecl(const clang::QualType& qt)
 {
    using namespace clang;
    const Type* theType = qt.getTypePtr();
    if (const RecordType* rType = llvm::dyn_cast<RecordType>(theType)) {
-      if (ClassTemplateSpecializationDecl* tsd =
-              llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(
-                  rType->getDecl())) {
+      if (ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(rType->getDecl())) {
          return tsd;
       }
    }
@@ -3155,21 +3151,18 @@ ROOT::TMetaUtils::QualType2ClassTemplateSpecializationDecl(
 }
 
 //______________________________________________________________________________
-clang::ClassTemplateDecl*
-ROOT::TMetaUtils::QualType2ClassTemplateDecl(const clang::QualType& qt)
+clang::ClassTemplateDecl* ROOT::TMetaUtils::QualType2ClassTemplateDecl(const clang::QualType& qt)
 {
    using namespace clang;
 
-   if (ClassTemplateSpecializationDecl* ctsd =
-           QualType2ClassTemplateSpecializationDecl(qt)) {
+   if (ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(qt)) {
       if (ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()) return ctd;
    }
    return nullptr;
 }
 
 //______________________________________________________________________________
-clang::TemplateName
-ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clang::QualType& qt)
+clang::TemplateName ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clang::QualType& qt)
 {
    // These manipulations are necessary because a template specialisation type
    // does not inherit from a record type (there is an asymmetry between
@@ -3182,8 +3175,7 @@ ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clang::QualType& qt)
 
    const Type* theType = qt.getTypePtr();
 
-   if (const TemplateSpecializationType* tst =
-           llvm::dyn_cast_or_null<const TemplateSpecializationType>(theType)) {
+   if (const TemplateSpecializationType* tst = llvm::dyn_cast_or_null<const TemplateSpecializationType>(theType)) {
       theTemplateName = tst->getTemplateName();
    } // We step into the decl dimension
    else if (ClassTemplateDecl* ctd = QualType2ClassTemplateDecl(qt)) {
@@ -3204,13 +3196,11 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
    using namespace clang;
 
    // We extract the template name from the type
-   TemplateName theTemplateName =
-       ExtractTemplateNameFromQualType(normalizedType);
+   TemplateName theTemplateName = ExtractTemplateNameFromQualType(normalizedType);
    if (theTemplateName.isNull()) return;
 
-   if (tPars.size() != tArgs.size())
-      return; // candidate for the "unlikely" macro
-            
+   if (tPars.size() != tArgs.size()) return; // candidate for the "unlikely" macro
+
    // Loop over the template parameters and arguments recursively.
    // We go down the two lanes: the one of template parameters (decls) and the
    // one of template arguments (QualTypes) in parallel. The former are a
@@ -3224,9 +3214,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
    for (int index = 0; !paramHasDefaultValue && index != nArgs; ++index) {
 
       const NamedDecl* tParPtr = tPars.getParam(index);
-      if (!tParPtr)
-         Error("ROOT::TMetaUtils::KeepNParams",
-               "The parameter number %s is null.\n", index);
+      if (!tParPtr) Error("ROOT::TMetaUtils::KeepNParams", "The parameter number %s is null.\n", index);
 
       const TemplateArgument& tArg = tArgs.get(index);
 
@@ -3242,25 +3230,16 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
          QualType tArgQualType = typeTArg.getAsType();
 
          // Recurse if the tArgQualType is a TemplateSpecializationType
-         if (const ClassTemplateSpecializationDecl* ctsd =
-                 QualType2ClassTemplateSpecializationDecl(tArgQualType)) {
+         if (const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(tArgQualType)) {
             if (const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()) {
-               const int nArgsToKeepInternal =
-                   normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
-               if (TemplateParameterList* tParsPtr =
-                       ctd->getTemplateParameters()) {
-                  KeepNParams(tArgQualType,
-                              astCtxt,
-                              ctsd->getTemplateArgs(),
-                              *tParsPtr,
-                              nArgsToKeepInternal,
-                              normCtxt);
+               const int nArgsToKeepInternal = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
+               if (TemplateParameterList* tParsPtr = ctd->getTemplateParameters()) {
+                  KeepNParams(tArgQualType, astCtxt, ctsd->getTemplateArgs(), *tParsPtr, nArgsToKeepInternal, normCtxt);
                   typeTArg = TemplateArgument(tArgQualType);
                }
             }
          }
-         const TemplateTypeParmDecl* ttpdPtr =
-             llvm::dyn_cast<TemplateTypeParmDecl>(tParPtr);
+         const TemplateTypeParmDecl* ttpdPtr = llvm::dyn_cast<TemplateTypeParmDecl>(tParPtr);
          if (!ttpdPtr) return;
          const TemplateTypeParmDecl& tPar = *ttpdPtr;
          bool hasDefault = tPar.hasDefaultArgument();
@@ -3274,9 +3253,9 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
          // Now, if it did not have any default, it's gone.
          // Shortcuts
          QualType tParQualType = tPar.getDefaultArgument();
-         
+
          bool isDefaultValue = tParQualType.getTypePtr() == tArgQualType.getTypePtr();
-         
+
          if (isDefaultValue && !shouldKeepArg) {
             paramHasDefaultValue = true;
             break;
@@ -3293,8 +3272,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
       }
       //------------------------------------------------------------------------
       case TemplateArgument::Integral: {
-         const NonTypeTemplateParmDecl* nttpdPtr =
-             llvm::dyn_cast<NonTypeTemplateParmDecl>(tParPtr);
+         const NonTypeTemplateParmDecl* nttpdPtr = llvm::dyn_cast<NonTypeTemplateParmDecl>(tParPtr);
          if (!nttpdPtr) return;
          const NonTypeTemplateParmDecl& tPar = *nttpdPtr;
 
@@ -3302,8 +3280,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
 
          // 64 bits wide and non unsigned
          llvm::APSInt defaultValueAPSInt(64, false);
-         if (Expr* defArgExpr = tPar.getDefaultArgument())
-            defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
+         if (Expr* defArgExpr = tPar.getDefaultArgument()) defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
 
          const int value = tArg.getAsIntegral().getLimitedValue();
 
@@ -3328,7 +3305,7 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
       }
       //------------------------------------------------------------------------
       default: {
-         Error("ROOT::TMetaUtils::KeepNParams",
+         Error("ROOT::TMetaUtils::KeepNParams", 
                "Could not treat template argument suppression for class %s.\n");
          if (index <= nArgsToKeep) argsToKeep.push_back(tArg);
          break;
@@ -3339,13 +3316,13 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
 
    // now, let's remanipulate our Qualtype
    Qualifiers qualifiers = normalizedType.getLocalQualifiers();
-   normalizedType = astCtxt.getTemplateSpecializationType(
-       theTemplateName,
-       argsToKeep.data(),
-       argsToKeep.size(),
-       normalizedType.getTypePtr()->getCanonicalTypeInternal());
+   normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName, 
+                                                          argsToKeep.data(), 
+                                                          argsToKeep.size(), 
+                                                          normalizedType.getTypePtr()->getCanonicalTypeInternal());
    normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
 }
+
 
 
 //______________________________________________________________________________
