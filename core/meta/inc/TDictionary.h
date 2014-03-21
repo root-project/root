@@ -166,7 +166,7 @@ private:
    ULong64_t fUpdatingTransactionCount; //the Cling ID of the transaction that last updated the object
 
 protected:
-   Bool_t              InterpreterStateHasChanged();
+   Bool_t              UpdateInterpreterStateMarker();
 
 public:
    TDictionary(): fAttributeMap(0), fUpdatingTransactionCount(0) { }

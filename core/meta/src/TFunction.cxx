@@ -211,7 +211,7 @@ Bool_t TFunction::IsValid()
    // is created, the TFunction will be set to be invalid.
 
    // Register the transaction when checking the validity of the object.
-   if (!fInfo && InterpreterStateHasChanged()) {
+   if (!fInfo && UpdateInterpreterStateMarker()) {
       // Only for global functions. For data member functions TMethod does it.
       DeclId_t newId = gInterpreter->GetFunction(0, fName);
       if (newId) {

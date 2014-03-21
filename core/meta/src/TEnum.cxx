@@ -59,7 +59,7 @@ Bool_t TEnum::IsValid()
    // is created, the TEnum will be set to be invalid.
 
    // Register the transaction when checking the validity of the object.
-   if (!fInfo && InterpreterStateHasChanged()) {
+   if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
       if (newId) {
          Update(newId);
@@ -74,8 +74,7 @@ Long_t TEnum::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
 
-   Long_t property = 0L;
-   return property |= kIsEnum;
+   return kIsEnum;
 }
 
 //______________________________________________________________________________

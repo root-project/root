@@ -95,7 +95,7 @@ TDictionary* TDictionary::GetDictionary(const type_info &typeinfo)
    return TClass::GetClass(typeinfo, true);
 }
 
-Bool_t TDictionary::InterpreterStateHasChanged()
+Bool_t TDictionary::UpdateInterpreterStateMarker()
 {
    // Return true if there were any transactions that could have changed the
    // state of the object.

@@ -396,7 +396,7 @@ extern "C"
 void TCling__UpdateListsOnCommitted(const cling::Transaction &T,
                                     cling::Interpreter* interp) {
 
-   ((TCling*)gCling)->UpdateListsOnCommitted(T, interp);
+   ((TCling*)gCling)->UpdateListsOnCommitted(T);
 }
 
 extern "C"
@@ -1957,16 +1957,21 @@ void TCling::SetGetline(const char * (*getlineFunc)(const char* prompt),
 }
 
 //______________________________________________________________________________
-void TCling::HandleNewTransaction(const cling::Transaction &T)
+Bool_t TCling::HandleNewTransaction(const cling::Transaction &T)
 {
    // Helper function to increase the internal Cling count of transactions
    // that change the AST.
+
+   R__LOCKGUARD(gInterpreterMutex);
+
    if ((std::distance(T.decls_begin(), T.decls_end()) != 1)
       || T.deserialized_decls_begin() != T.deserialized_decls_end()
       || T.macros_begin() != T.macros_end()
       || ((!T.getFirstDecl().isNull()) && ((*T.getFirstDecl().begin()) != T.getWrapperFD()))) {
       fTransactionCount++;
+      return true;
    }
+   return false;
 }
 
 //______________________________________________________________________________
@@ -4368,12 +4373,12 @@ void TCling::UpdateAllCanvases()
 }
 
 //______________________________________________________________________________
-void TCling::UpdateListsOnCommitted(const cling::Transaction &T,
-                                    cling::Interpreter* interp) {
+void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
 
    std::set<TClass*> modifiedTClasses; // TClasses that require update after this transaction
 
-   HandleNewTransaction(T);
+   // If the transaction does not contain anything we can return earlier.
+   if (!HandleNewTransaction(T)) return;
 
    bool isTUTransaction = false;
    if (T.decls_end()-T.decls_begin() == 1 && !T.hasNestedTransactions()) {
@@ -4390,7 +4395,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T,
          // TInterpreterLookupCollection, one that reimplements
          // TCollection::FindObject(name) and performs a lookup
          // if not found in its T(Hash)List.
-         cling::Interpreter::PushTransactionRAII RAII(interp);
+         cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
          for (clang::DeclContext::decl_iterator TUI = TU->decls_begin(),
                  TUE = TU->decls_end(); TUI != TUE; ++TUI)
             ((TCling*)gCling)->HandleNewDecl(*TUI, (*TUI)->isFromASTFile(),modifiedTClasses);
@@ -4455,7 +4460,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T,
          continue;
       }
       // Could trigger deserialization of decls.
-      cling::Interpreter::PushTransactionRAII RAII(interp);
+      cling::Interpreter::PushTransactionRAII RAII(fInterpreter);
       // Unlock the TClass for updates
       ((TCling*)gCling)->GetModTClasses().erase(*I);
 
