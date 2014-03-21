@@ -37,6 +37,7 @@
 #include <map>
 #include <string>
 #include <set>
+#include <vector>
 
 class TBaseClass;
 class TBrowser;
@@ -72,8 +73,10 @@ namespace ROOT {
 
 namespace ROOT {
    class TMapTypeToTClass;
+   class TMapDeclIdToTClass;
 }
 typedef ROOT::TMapTypeToTClass IdMap_t;
+typedef ROOT::TMapDeclIdToTClass DeclIdMap_t;
 
 class TClass : public TDictionary {
 
@@ -195,6 +198,7 @@ private:
    void StreamerDefault(void *object, TBuffer &b, const TClass *onfile_class) const;
 
    static IdMap_t    *GetIdMap();       //Map from typeid to TClass pointer
+   static DeclIdMap_t *GetDeclIdMap();  //Map from DeclId_t to TClass pointer
    static ENewType    fgCallingNew;     //Intent of why/how TClass::New() is called
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
@@ -402,11 +406,14 @@ public:
 
    // Function to retrieve the TClass object and dictionary function
    static void           AddClass(TClass *cl);
+   static void           AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl);
    static void           RemoveClass(TClass *cl);
+   static void           RemoveClassDeclId(TDictionary::DeclId_t id);
    static TClass        *GetClassOrAlias(const char *name);
    static TClass        *GetClass(const char *name, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(const type_info &typeinfo, Bool_t load = kTRUE, Bool_t silent = kFALSE);
    static TClass        *GetClass(ClassInfo_t *info, Bool_t load = kTRUE, Bool_t silent = kFALSE);
+   static Bool_t         GetClass(DeclId_t id, std::vector<TClass*> &classes);
    static VoidFuncPtr_t  GetDict (const char *cname);
    static VoidFuncPtr_t  GetDict (const type_info &info);
 

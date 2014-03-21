@@ -720,7 +720,7 @@ Bool_t TDataMember::IsValid()
 
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
-      DeclId_t newId = gInterpreter->GetDataMember(0, fName);
+      DeclId_t newId = gInterpreter->GetDataMember(fClass->GetClassInfo(), fName);
       if (newId) {
          DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
          Update(info);

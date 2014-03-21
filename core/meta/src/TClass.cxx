@@ -74,6 +74,7 @@
 #include <typeinfo>
 #include <cmath>
 #include <assert.h>
+#include <vector>
 
 #include "TListOfDataMembers.h"
 #include "TListOfFunctions.h"
@@ -253,6 +254,41 @@ namespace ROOT {
       }
 #endif
    };
+
+   class TMapDeclIdToTClass {
+   // Wrapper class for the multimap of DeclId_t and TClass.
+   public:
+      typedef multimap<TDictionary::DeclId_t, TClass*>   DeclIdMap_t;
+      typedef DeclIdMap_t::key_type                      key_type;
+      typedef DeclIdMap_t::mapped_type                   mapped_type;
+      typedef DeclIdMap_t::const_iterator                const_iterator;
+      typedef std::pair <const_iterator, const_iterator> equal_range;
+      typedef DeclIdMap_t::size_type                     size_type;
+
+   private:
+      DeclIdMap_t fMap;
+
+   public:
+      void Add(const key_type &key, mapped_type obj)
+      {
+         // Add the <key,obj> pair to the map.
+         std::pair<const key_type, mapped_type> pair = make_pair(key, obj);
+         fMap.insert(pair);
+      }
+      size_type CountElementsWithKey(const key_type &key)
+      {
+         return fMap.count(key);
+      }
+      equal_range Find(const key_type &key) const
+      {
+         // Find the type corresponding to the key.
+         return fMap.equal_range(key);
+      }
+      void Remove(const key_type &key) {
+         // Remove the type corresponding to the key.
+         fMap.erase(key);
+      }
+   };
 }
 
 IdMap_t *TClass::GetIdMap() {
@@ -266,6 +302,17 @@ IdMap_t *TClass::GetIdMap() {
 #endif
 }
 
+DeclIdMap_t *TClass::GetDeclIdMap() {
+
+#ifdef R__COMPLETE_MEM_TERMINATION
+   static DeclIdMap_t gDeclIdMapObject;
+   return &gIdMap;
+#else
+   static DeclIdMap_t *gDeclIdMap = new DeclIdMap_t;
+   return gDeclIdMap;
+#endif
+}
+
 //______________________________________________________________________________
 void TClass::AddClass(TClass *cl)
 {
@@ -276,6 +323,18 @@ void TClass::AddClass(TClass *cl)
    if (cl->GetTypeInfo()) {
       GetIdMap()->Add(cl->GetTypeInfo()->name(),cl);
    }
+   if (cl->fClassInfo) {
+      GetDeclIdMap()->Add((void*)(cl->fClassInfo), cl);
+   }
+}
+
+//______________________________________________________________________________
+void TClass::AddClassToDeclIdMap(TDictionary::DeclId_t id, TClass* cl)
+{
+   // static: Add a TClass* to the map of classes.
+
+   if (!cl || !id) return;
+   GetDeclIdMap()->Add(id, cl);
 }
 
 //______________________________________________________________________________
@@ -288,6 +347,16 @@ void TClass::RemoveClass(TClass *oldcl)
    if (oldcl->GetTypeInfo()) {
       GetIdMap()->Remove(oldcl->GetTypeInfo()->name());
    }
+   if (oldcl->fClassInfo) {
+      //GetDeclIdMap()->Remove((void*)(oldcl->fClassInfo));
+   }
+}
+
+//______________________________________________________________________________
+void TClass::RemoveClassDeclId(TDictionary::DeclId_t id)
+{
+   if (!id) return;
+   GetDeclIdMap()->Remove(id);
 }
 
 //______________________________________________________________________________
@@ -2863,6 +2932,22 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
       delete ncl;
       return 0;
    }
+}
+
+//______________________________________________________________________________
+Bool_t TClass::GetClass(DeclId_t id, std::vector<TClass*> &classes)
+{
+
+   if (!gROOT->GetListOfClasses())    return 0;
+
+   DeclIdMap_t* map = GetDeclIdMap();
+   // Get all the TClass pointer that have the same DeclId.
+   DeclIdMap_t::equal_range iter = map->Find(id);
+   if (iter.first == iter.second) return false;
+   std::vector<TClass*>::iterator vectIt = classes.begin();
+   for (DeclIdMap_t::const_iterator it = iter.first; it != iter.second; ++it)
+      vectIt = classes.insert(vectIt, it->second);
+   return true;
 }
 
 //______________________________________________________________________________
