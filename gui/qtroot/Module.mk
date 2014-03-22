@@ -74,3 +74,7 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS := $(filter-out -Wshadow,$(CXXFLAGS))
 $(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS += $(GQTCXXFLAGS)
+ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
+# Building with clang or GCC
+$(sort $(QTROOTO)) $(QTROOTDO): CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
+endif
