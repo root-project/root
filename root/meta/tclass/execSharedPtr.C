@@ -9,7 +9,7 @@ int execSharedPtr()
 #if __cplusplus >= 201103L
    string output;
    gInterpreter->GetInterpreterTypeName("std::__shared_ptr<int>",output,kTRUE);
-   if ( output != "__shared_ptr<int>" ) {
+   if ( output.length() && output != "__shared_ptr<int>" ) {
       Error("GetInterpreterTypeName","Instead of __shared_ptr<int>, we got %s.",output.c_str());
       //return 1;
    }
@@ -32,6 +32,7 @@ int execSharedPtr()
    call.Execute();
    
    c = TClass::GetClass("__shared_ptr<int>");
+   if (!c) c = TClass::GetClass("std::shared_ptr<int>");
    if (c) {
       m = c->GetListOfAllPublicMethods()->FindObject("operator=");
       if (!m) {
