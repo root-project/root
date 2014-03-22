@@ -114,11 +114,14 @@ int execTypedefList() {
    res = check("KeySym_t","unsigned long"); if (res) return res;
    res = check("TBuffer::CacheList_t","vector<TVirtualArray*>"); if (res) return res;
    res = check_missing("TBuffer::CacheList_notAtype"); if (res) return res;
-   res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res; 
+
+   // The iterator typedef is now desugared.
+   // res = check("vector<myNamespace::MyClass*>::const_iterator","vector<myNamespace::MyClass*>::const_iterator"); if (res) return res; 
 
    res = check_target("std::map<std::string, int>::key_type","string"); if (res) return res;
    res = check_target("std::map<std::string, int>::value_type","pair<const string,int>"); if (res) return res;
-   res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
+   // The iterator typedef is now desugared.
+   // res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
    res = check_file("typelist.v5.txt",350); if (res) return res;
    res = check_file("typelist.v6.txt",1530); if (res) return res;
