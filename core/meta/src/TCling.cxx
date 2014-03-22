@@ -1459,10 +1459,16 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
    // Printf("Inspecting class %s\n", clname);
 
    const clang::ASTContext& astContext = fInterpreter->getCI()->getASTContext();
-   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
-   // Diags will complain about private classes:
-   const clang::Decl *scopeDecl
-      = lh.findScope(clname, cling::LookupHelper::NoDiagnostics);
+   const clang::Decl *scopeDecl = 0;
+
+   if (cl->GetClassInfo()) {
+      TClingClassInfo * clingCI = (TClingClassInfo *)cl->GetClassInfo();
+      scopeDecl = clingCI->GetDecl();
+   } else {
+      const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+      // Diags will complain about private classes:
+      scopeDecl = lh.findScope(clname, cling::LookupHelper::NoDiagnostics);
+   }
    if (!scopeDecl) {
       Error("InspectMembers", "Cannot find Decl for class %s", clname);
       return;
