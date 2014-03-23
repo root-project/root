@@ -1075,10 +1075,10 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
    Double_t xMin = x[0], xMax = xMin;
    Double_t yMin = y[0], yMax = yMin;
    for (Int_t i = 1; i < n; ++i) {
-      xMin = std::min(xMin, x[i]);
-      xMax = std::max(xMax, x[i]);
-      yMin = std::min(yMin, y[i]);
-      yMax = std::max(yMax, y[i]);
+      xMin = TMath::Min(xMin, x[i]);
+      xMax = TMath::Max(xMax, x[i]);
+      yMin = TMath::Min(yMin, y[i]);
+      yMax = TMath::Max(yMax, y[i]);
    }
    
    //For the gradient fill we switch into the
