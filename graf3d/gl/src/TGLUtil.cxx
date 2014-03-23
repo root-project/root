@@ -3102,7 +3102,6 @@ void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
    glEnd();
 }
 
-
 //______________________________________________________________________________
 void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax)
