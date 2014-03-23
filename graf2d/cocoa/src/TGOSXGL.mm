@@ -55,6 +55,7 @@ Int_t TGOSXGLManager::InitGLWindow(Window_t parentID)
    //find something better!
    
    format.push_back(component_type(Rgl::kDoubleBuffer, 1));//1 means nothing, kDoubleBuffer is enough :)
+   format.push_back(component_type(Rgl::kStencil, 8));
    format.push_back(component_type(Rgl::kDepth, 32));
 
    if (gEnv) {
