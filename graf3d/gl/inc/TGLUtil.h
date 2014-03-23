@@ -1220,6 +1220,9 @@ void DrawTransparentBox(Double_t xMin, Double_t xMax, Double_t yMin, Double_t yM
 void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
                           Double_t yMax, Double_t zMin, Double_t zMax,
                           Double_t tMin, Double_t tMax, Int_t front);
+   
+void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
+                             const Double_t *rgba1, const Double_t *rgba2);
 
 #ifndef __CINT__
 void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
