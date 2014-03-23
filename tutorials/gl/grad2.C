@@ -8,7 +8,7 @@
 #include "TColor.h"
 #include "TH1F.h"
 
-//Aux. functions for tutorials/cocoa.
+//Aux. functions for tutorials/gl.
 #include "customcolorgl.h"
 
 void grad2()
@@ -32,9 +32,8 @@ void grad2()
    //2. Check that we are ROOT with Cocoa back-end enabled.
    TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
    //After canvas was created, gVirtualX should be non-null.
-   if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
+   if (!cnv->UseGL()) {
       ::Error("grad2", "This macro requires OpenGL");
-      //Unfortunately, we can not remove the colors we added :(
       delete cnv;
       return;
    }

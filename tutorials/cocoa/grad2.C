@@ -32,7 +32,6 @@ void grad2()
    //After canvas was created, gVirtualX should be non-null.
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       Error("grad2", "This macro works only on OS X with --enable-cocoa");
-      //Unfortunately, we can not remove the colors we added :(
       delete cnv;
       return;
    }
