@@ -538,7 +538,12 @@ namespace {
       PyObject* separator = PyROOT_PyUnicode_FromString( "\n  " );
 
    // if this point is reached, none of the overloads succeeded: notify user
+      PyObject* exc_type = NULL;
       for ( std::vector< PyError_t >::iterator e = errors.begin(); e != errors.end(); ++e ) {
+         if ( e->fType != PyExc_NotImplementedError ) {
+            if ( ! exc_type ) exc_type = e->fType;
+            else if ( exc_type != e->fType ) exc_type = PyExc_TypeError;
+         }
          PyROOT_PyUnicode_Append( &value, separator );
          PyROOT_PyUnicode_Append( &value, e->fValue );
       }
@@ -547,7 +552,7 @@ namespace {
       std::for_each( errors.begin(), errors.end(), PyError_t::Clear );
 
    // report failure
-      PyErr_SetObject( PyExc_TypeError, value );
+      PyErr_SetObject( exc_type ? exc_type : PyExc_TypeError, value );
       Py_DECREF( value );
       return 0;
    }
