@@ -2838,6 +2838,8 @@ TInterpreter::DeclId_t TCling::GetDeclId( const llvm::GlobalValue *gv ) const
 
    if (!strncmp(scopename.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       scopename.erase(0, sizeof("typeinfo for ")-1);
+   } if (!strncmp(scopename.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
+      scopename.erase(0, sizeof("vtable for ")-1);
    } else {
       // See if it is a function
       std::string::size_type pos = scopename.rfind('(');
@@ -4235,6 +4237,8 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
 
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
+   } else if (!strncmp(name.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
+      name.erase(0, sizeof("vtable for ")-1);
    } else {
       // Remove the function arguments.
       std::string::size_type pos = name.rfind('(');
