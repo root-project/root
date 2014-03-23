@@ -120,6 +120,7 @@ const Int_t dblBuff[] =
       GLX_DOUBLEBUFFER,
       GLX_RGBA,
       GLX_DEPTH_SIZE, 16,
+      GLX_STENCIL_SIZE, 8,
       GLX_RED_SIZE, 1,
       GLX_GREEN_SIZE, 1,
       GLX_BLUE_SIZE, 1,
