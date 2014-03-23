@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <algorithm>
+#include <cassert>
 #include <string>
 #include <map>
 
@@ -3081,6 +3082,23 @@ void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
    glVertex3dv(box[verts[2]]);
    glTexCoord1d(tex[verts[3]]);
    glVertex3dv(box[verts[3]]);
+   glEnd();
+}
+
+//______________________________________________________________________________
+void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
+                             const Double_t *rgba1, const Double_t *rgba2)
+{
+   assert(rgba1 != 0 && "DrawBoxWithGradientFill, parameter 'rgba1' is null");
+   assert(rgba2 != 0 && "DrawBoxWithGradientFill, parameter 'rgba2' is null");
+
+   glBegin(GL_POLYGON);
+   glColor4dv(rgba1);
+   glVertex2d(x1, y1);
+   glVertex2d(x2, y1);
+   glColor4dv(rgba2);
+   glVertex2d(x2, y2);
+   glVertex2d(x1, y2);
    glEnd();
 }
 
