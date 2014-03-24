@@ -216,6 +216,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t pxold, pyold;
    static Int_t sig,impair;
    static Double_t sdx, sdy;
+   static Double_t oldX1, oldY1, oldR1, oldR2;
 
    Bool_t opaque  = gPad->OpaqueMoving();
 
@@ -224,6 +225,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    switch (event) {
 
    case kButton1Down:
+         oldX1 = fX1;
+         oldY1 = fY1;
+         oldR1 = fR1;
+         oldR2 = fR2;
          dphi = (fPhimax-fPhimin)*kPI/(180*np);
          ct   = TMath::Cos(kPI*fTheta/180);
          st   = TMath::Sin(kPI*fTheta/180);
@@ -467,7 +472,15 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Up:
       if (gROOT->IsEscaped()) {
-         gROOT->SetEscape(kFALSE);
+        gROOT->SetEscape(kFALSE);
+        if (opaque) {
+            this->SetX1(oldX1);
+            this->SetY1(oldY1);
+            this->SetR1(oldR1);
+            this->SetR2(oldR2);
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
          break;
       }
 
@@ -570,25 +583,25 @@ void TEllipse::Print(Option_t *) const
 
 
 //______________________________________________________________________________
-void TEllipse::SavePrimitive(ostream &out, Option_t * /*= ""*/)
+void TEllipse::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    // Save primitive as a C++ statement(s) on output stream out
 
-   out<<"   "<<endl;
+   out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TEllipse::Class())) {
       out<<"   ";
    } else {
       out<<"   TEllipse *";
    }
    out<<"ellipse = new TEllipse("<<fX1<<","<<fY1<<","<<fR1<<","<<fR2
-      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<endl;
+      <<","<<fPhimin<<","<<fPhimax<<","<<fTheta<<");"<<std::endl;
 
    SaveFillAttributes(out,"ellipse",0,1001);
    SaveLineAttributes(out,"ellipse",1,1,1);
 
-   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<endl;
+   if (GetNoEdges()) out<<"   ellipse->SetNoEdges();"<<std::endl;
 
-   out<<"   ellipse->Draw();"<<endl;
+   out<<"   ellipse->Draw();"<<std::endl;
 }
 
 
