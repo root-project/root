@@ -30,7 +30,7 @@ void transparentpad()
    //2. Create a TCanvas.
    TCanvas * const c1 = new TCanvas("transparent pad","transparent pad demo", 10, 10, 900, 500);
    //We can check gVirtualX (its type):
-   if (c1->UseGL()) {
+   if (!c1->UseGL()) {
       ::Warning("transparentpad", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
                                   "To have transparency in a canvas graphics, you need OpenGL rendering enabled");
    }

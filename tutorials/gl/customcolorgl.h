@@ -16,8 +16,11 @@
 namespace ROOT {
 namespace GLTutorials {
 
+//Type T is some integer type - either Int_t or a Color_t as you wish.
+
 //___________________________________________________________
-inline Int_t FindFreeCustomColorIndex(Int_t start = 1000)
+template <typename T>
+inline T FindFreeCustomColorIndex(T start = 1000)
 {
    if (!gROOT) {
       //AH??? WHAT??? Should never happen! :)
@@ -27,7 +30,7 @@ inline Int_t FindFreeCustomColorIndex(Int_t start = 1000)
    //Some (probably stupid) assumption about the TColor -
    //I'm trying to find some 'free' index in the range [1000, 10000).
    //Int_t(1000) - well, to make some exotic platform happy (if Int_t != int).
-   for (Int_t i = std::max(start, Int_t(1000)); i < 10000; ++i)
+   for (Int_t i = std::max(start, T(1000)); i < 10000; ++i)
       if (!gROOT->GetColor(i))
          return i;
 
@@ -38,12 +41,12 @@ inline Int_t FindFreeCustomColorIndex(Int_t start = 1000)
 
 //
 //___________________________________________________________
-template <unsigned N>
-inline unsigned FindFreeCustomColorIndices(Int_t (&indices)[N])
+template <typename T, unsigned N>
+inline unsigned FindFreeCustomColorIndices(T (&indices)[N])
 {
    //All or none.
-   Int_t tmp[N] = {};
-   tmp[0] = FindFreeCustomColorIndex();
+   T tmp[N] = {};
+   tmp[0] = FindFreeCustomColorIndex<T>();
    if (tmp[0] == -1)//Not found.
       return 0;
 

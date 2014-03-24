@@ -22,7 +22,7 @@ void grad()
    //We can use hard-coded indices like 1001, 1002, 1003, ... but
    //I prefer to find free indices in the ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t colorIndices[5] = {};
+   Color_t colorIndices[5] = {};
    if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 5) {
       ::Error("grad", "failed to create new custom colors");
       return;
@@ -51,7 +51,7 @@ void grad()
    //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
    //kObjectBoundingMode is the default one.
    
-   const Int_t frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
+   const Color_t frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
    {
       new TColor(colorIndices[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
@@ -68,7 +68,7 @@ void grad()
    }
 
    //This gradient is a mixture of two standard colors.
-   const Int_t padGradient = colorIndices[3];
+   const Color_t padGradient = colorIndices[3];
    //Fill color for a pad:
    {
       const Double_t locations[] = {0., 1.};
@@ -81,7 +81,7 @@ void grad()
    }
    
    //Another gradient built from three standard colors.
-   const Int_t histGradient = colorIndices[4];
+   const Color_t histGradient = colorIndices[4];
    //Fill color for a histogram:
    {
       const Color_t gradientIndices[3] = {kYellow, kOrange, kRed};
