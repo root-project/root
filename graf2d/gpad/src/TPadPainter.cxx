@@ -830,11 +830,10 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
    if (type == TImage::kGif) {
       gVirtualX->WriteGIF((char*)fileName);
    } else {
-      TImage *img = TImage::Create();
-      if (img) {
+      const std::unique_ptr<TImage> img(TImage::Create());
+      if (img.get()) {
          img->FromPad(pad);
          img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-         delete img;
       }
    }
 }
