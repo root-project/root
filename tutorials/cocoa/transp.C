@@ -20,14 +20,14 @@ void transp()
    //We can use hard-coded indices like 1001, 1002, 1003, ... but
    //I prefer to find free indices in a ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t indices[2] = {};
+   Color_t indices[2] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 2) {
       Error("transp", "failed to create new custom colors");
       return;
    }
    
    //2. Now that we have indices, create our custom colors.
-   const Int_t redIndex = indices[0], greeIndex = indices[1];
+   const Color_t redIndex = indices[0], greeIndex = indices[1];
    
    new TColor(redIndex, 1., 0., 0., "red", 0.85);
    new TColor(greeIndex, 0., 1., 0., "green", 0.5);

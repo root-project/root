@@ -18,7 +18,7 @@ void transparentpad()
    //we can use hard-coded indices like 1001, 1002, 1003 ... but
    //I prefer to find free indices in a ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t indices[3] = {};
+   Color_t indices[3] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 3) {
       ::Error("transparentpad", "failed to create new custom colors");
       return;

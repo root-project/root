@@ -17,15 +17,15 @@ void grad2()
    //We can use hard-coded indices like 1001, 1002, 1003 ... but
    //I prefer to find free indices in the ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t freeIndices[4] = {};
+   Color_t freeIndices[4] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(freeIndices) != 4) {
       Error("grad2", "can not allocate new custom colors");
       return;
    }
 
    //'Aliases' (instead of freeIndices[someIndex])
-   const Int_t customRed = freeIndices[0], grad1 = freeIndices[1];
-   const Int_t customGreen = freeIndices[2], grad2 = freeIndices[3];
+   const Color_t customRed = freeIndices[0], grad1 = freeIndices[1];
+   const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
 
    //2. Check that we are ROOT with Cocoa back-end enabled.
    TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);

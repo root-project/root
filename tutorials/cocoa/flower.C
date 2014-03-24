@@ -53,7 +53,7 @@ void create_flower(vector_type &xs, vector_type &ys, size_type nPoints, Double_t
 void flower()
 {
    //0. Indices for custom colors.
-   Int_t indices[3] = {};
+   Color_t indices[3] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 3) {
       Error("flower", "failed to create custom colors");
       return;

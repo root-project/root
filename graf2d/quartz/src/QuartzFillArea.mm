@@ -198,10 +198,9 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
    assert(polygon != nullptr &&
           "CalculateGradientParameters, parameter 'polygon' is null");
    
-   if (const TLinearGradient * const gl = dynamic_cast<const TLinearGradient *>(extendedColor)) {
-      if (!CalculateGradientStartEnd(gl, sizeOfDrawable, n, polygon, params))
-         return false;
-   } else if (const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor)) {
+   if (const TLinearGradient * const gl = dynamic_cast<const TLinearGradient *>(extendedColor))
+      return CalculateGradientStartEnd(gl, sizeOfDrawable, n, polygon, params);
+   else if (const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor)) {
       if (CalculateGradientStartEnd(gr, sizeOfDrawable, n, polygon, params))
          return CalculateGradientRadiuses(gr, sizeOfDrawable, n, polygon, params);
       return false;

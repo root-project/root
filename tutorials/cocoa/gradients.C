@@ -26,16 +26,16 @@ void gradients()
    //2. A linear gradient for TCanvas
    //3. A fully transparent fill color for a nested pad.
 
-   Int_t colorIndices[3] = {};
+   Color_t colorIndices[3] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(colorIndices) != 3) {
       ::Error("grad", "failed to create new custom colors");
       return;
    }
 
    //Better names:
-   const Int_t &radialFill = colorIndices[0];
-   const Int_t &linearFill = colorIndices[1];
-   const Int_t &transparentFill = colorIndices[2];
+   const Color_t &radialFill = colorIndices[0];
+   const Color_t &linearFill = colorIndices[1];
+   const Color_t &transparentFill = colorIndices[2];
    
    //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);

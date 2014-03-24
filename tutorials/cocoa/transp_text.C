@@ -29,14 +29,14 @@ void transp_text()
    //we can use hard-coded indices like 1001, 1002, 1003 ... but
    //I prefer to find free indices in a ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t indices[2] = {};
+   Color_t indices[2] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 2) {
       Error("transp_text", "failed to create new custom colors");
       return;
    }
 
    //3. Create special transparent colors for both pavetext fill color and text color.
-   const Int_t grayColorIndex = indices[0], blackColorIndex = indices[1];
+   const Color_t grayColorIndex = indices[0], blackColorIndex = indices[1];
    new TColor(grayColorIndex, 0.8, 0.8, 0.8, "transparent_gray", 0.85);
    new TColor(blackColorIndex, 0., 0., 0., "transparent_black", 0.5);
 
