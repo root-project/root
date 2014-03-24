@@ -128,12 +128,20 @@ ifeq ($(subst $(GCC_MINOR),,0 1),0 1)
 $(GQTO): CXXFLAGS += -Wno-strict-overflow
 endif
 endif
-ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
-# Building with clang or GCC
+ifneq ($(GCC_MAJOR),)
+# Building with  GCC
 $(GQTO)   : CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
 $(GQTDO)  : CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
 $(GQTMOCO): CXXFLAGS += -Wno-deprecated-register -Wno-uninitialized
 endif
+
+ifneq ($(CLANG_MAJOR),)
+# Building with clang
+$(GQTO)   : CXXFLAGS += -Wno-deprecated -Wno-uninitialized
+$(GQTDO)  : CXXFLAGS += -Wno-deprecated -Wno-uninitialized
+$(GQTMOCO): CXXFLAGS += -Wno-deprecated -Wno-uninitialized
+endif
+
 
 $(GQTMOC) : $(call stripsrc,$(GQTDIRS)/moc_%.cxx): $(GQTDIRI)/%.h
 	$(MAKEDIR)

@@ -34,9 +34,13 @@ QTGSIDEP      := $(QTGSIO:.o=.d) $(QTGSIDO:.o=.d) $(QTGSIMOCO:.o=.d)
 
 QTGSICXXFLAGS := -DQT3_SUPPORT -DQT_DLL -DQT_THREAD_SUPPORT -I. $(QTINCDIR:%=-I%)
 
-ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
-# Building with clang or GCC
+ifneq ($(GCC_MAJOR),)
+# Building with  GCC
 QTGSICXXFLAGS   += -Wno-deprecated-register -Wno-uninitialized
+endif
+ifneq ($(CLANG_MAJOR),)
+# Building with clang 
+QTGSICXXFLAGS   += -Wno-deprecated -Wno-uninitialized
 endif
 
 
