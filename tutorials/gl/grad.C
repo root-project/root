@@ -43,12 +43,13 @@ void grad()
    typedef TColorGradient::Point Point;
    
    //3. Create custom colors:
-   //Linear gradient is defined by: 1) colors (to interpolate between them), 2) coordinates for these colors along
-   //the gradient axis [0., 1.] (must be sorted!)
-   //Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]), and this rect is either:
-   //bounding rect of your polygon/object to fill (gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
-   //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)). kObjectBoundingMode is the
-   //default one.
+   //Linear gradient is defined by: 1) colors (to interpolate between them),
+   //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
+   //3) Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]),
+   //and this rect is either: bounding rect of your polygon/object to fill
+   //(gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
+   //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
+   //kObjectBoundingMode is the default one.
    
    const Int_t frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
