@@ -1,6 +1,8 @@
-//This macro shows how to create and use linear gradients to fill
+//This macro demonstrates how to create and use linear gradients to fill
 //a histogram or a pad.
-//Requires OpenGL.
+//To use this macro you need OpenGL enabled in pad:
+//either set OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc;
+//or call gStyle->SetCanvasPreferGL(kTRUE); before canvas created.
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
@@ -20,15 +22,16 @@ void grad()
    //We can use hard-coded indices like 1001, 1002, 1003, ... but
    //I prefer to find free indices in the ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t colorIndices[5] = {};
-   if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 5) {
-      Error("grad", "failed to create new custom colors");
+   Int_t colorIndices[3] = {};
+   if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 3) {
+      ::Error("grad", "failed to create new custom colors");
       return;
    }
 
+   //Make sure we enabled OpenGL support in a canvas.
    gStyle->SetCanvasPreferGL(kTRUE);
 
-   //2. Test if we have a right GUI back-end.
+   //2. Test if canvas supports OpenGL:
    TCanvas * const cnv = new TCanvas("gradient demo 1", "gradient demo 1", 100, 100, 600, 600);
    //After canvas was created, gVirtualX should be non-null.
    if (!cnv->UseGL()) {
@@ -36,16 +39,24 @@ void grad()
       delete cnv;
       return;
    }
-   
+
    typedef TColorGradient::Point Point;
    
-   //3. Create custom colors.
-   const Int_t frameGradient = colorIndices[2];//this gradient is a mixture of colorIndices[0] and colorIndices[1]
+   //3. Create custom colors:
+   //Linear gradient is defined by: 1) colors (to interpolate between them), 2) coordinates for these colors along
+   //the gradient axis [0., 1.] (must be sorted!)
+   //Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]), and this rect is either:
+   //bounding rect of your polygon/object to fill (gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
+   //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)). kObjectBoundingMode is the
+   //default one.
+   
+   const Int_t frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
    {
       new TColor(colorIndices[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
       new TColor(colorIndices[1], 1., 1., 1., "special pad color2", 0.05);
 
+      //dark-white-white-dark:
       const Double_t locations[] = {0., 0.2, 0.8, 1.};
       const Color_t gradientIndices[4] = {colorIndices[0], colorIndices[1], colorIndices[1], colorIndices[0]};
 
@@ -55,6 +66,7 @@ void grad()
       gradFill1->SetStartEnd(Point(0., 0.), Point(1., 0.));
    }
 
+   //This gradient is a mixture of two standard colors.
    const Int_t padGradient = colorIndices[3];
    //Fill color for a pad:
    {
@@ -67,6 +79,7 @@ void grad()
       gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1));
    }
    
+   //Another gradient built from three standard colors.
    const Int_t histGradient = colorIndices[4];
    //Fill color for a histogram:
    {
