@@ -404,8 +404,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t
       return;
    }
    
-   assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
+   //assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
    
    DrawFillAreaAux(gPad, nPoints, xs, ys);
 }
@@ -420,8 +420,8 @@ void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *
       return;
    }
    
-   assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
+   //assert(xs != nullptr && "DrawFillArea, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawFillArea, parameter 'ys' is null");
    
    DrawFillAreaAux(gPad, nPoints, xs, ys);
 }
@@ -434,8 +434,8 @@ void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
       return;
    }
 
-   assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
+   //assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
 
    DrawPolyLineAux(gPad, n, xs, ys);
 }
@@ -450,8 +450,8 @@ void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
       return;
    }
    
-   assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
+   //assert(xs != nullptr && "DrawPolyLine, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawPolyLine, parameter 'ys' is null");
    
    DrawPolyLineAux(gPad, n, xs, ys);
 }
@@ -466,8 +466,8 @@ void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
       return;
    }
 
-   assert(u != nullptr && "DrawPolyLineNDC, parameter 'u' is null");
-   assert(v != nullptr && "DrawPolyLineNDC, parameter 'v' is null");
+   //assert(u != nullptr && "DrawPolyLineNDC, parameter 'u' is null");
+   //assert(v != nullptr && "DrawPolyLineNDC, parameter 'v' is null");
 
    std::vector<TPoint> xy(n);
 
@@ -547,8 +547,8 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
 {
    // Save the image displayed in the canvas pointed by "pad" into a 
    // binary file.
-   assert(pad != nullptr && "SaveImage, parameter 'pad' is null");
-   assert(fileName != nullptr && "SaveImage, parameter 'fileName' is null");
+   //assert(pad != nullptr && "SaveImage, parameter 'pad' is null");
+   //assert(fileName != nullptr && "SaveImage, parameter 'fileName' is null");
    
    if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
       pad->GetCanvas() && pad->GetCanvas()->GetCanvasID() != -1) {
@@ -848,10 +848,10 @@ void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoint
 template<class T>
 void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
 {
-   assert(pad != nullptr && "DrawFillAreaAux, parameter 'pad' is null");
-   assert(nPoints > 2 && "DrawFillAreaAux, invalid number of points");
-   assert(xs != nullptr && "DrawFillAreaAux, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawFillAreaAux, parameter 'ys' is null");
+   //assert(pad != nullptr && "DrawFillAreaAux, parameter 'pad' is null");
+   //assert(nPoints > 2 && "DrawFillAreaAux, invalid number of points");
+   //assert(xs != nullptr && "DrawFillAreaAux, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawFillAreaAux, parameter 'ys' is null");
    
    std::vector<TPoint> xy;
    
@@ -881,10 +881,10 @@ void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
 template<typename T>
 void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
 {
-   assert(pad != nullptr && "DrawPolyLineAux, parameter 'pad' is null");
-   assert(nPoints > 1 && "DrawPolyLineAux, invalid number of points");
-   assert(xs != nullptr && "DrawPolyLineAux, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawPolyLineAux, parameter 'ys' is null");
+   //assert(pad != nullptr && "DrawPolyLineAux, parameter 'pad' is null");
+   //assert(nPoints > 1 && "DrawPolyLineAux, invalid number of points");
+   //assert(xs != nullptr && "DrawPolyLineAux, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawPolyLineAux, parameter 'ys' is null");
    
    std::vector<TPoint> xy;
 
@@ -910,10 +910,10 @@ void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *y
 template<class T>
 void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
 {
-   assert(pad != nullptr && "DrawPolyMarkerAux, parameter 'pad' is null");
-   assert(nPoints != 0 && "DrawPolyMarkerAux, invalid number of points");
-   assert(xs != nullptr && "DrawPolyMarkerAux, parameter 'xs' is null");
-   assert(ys != nullptr && "DrawPolyMarkerAux, parameter 'ys' is null");
+   //assert(pad != nullptr && "DrawPolyMarkerAux, parameter 'pad' is null");
+   //assert(nPoints != 0 && "DrawPolyMarkerAux, invalid number of points");
+   //assert(xs != nullptr && "DrawPolyMarkerAux, parameter 'xs' is null");
+   //assert(ys != nullptr && "DrawPolyMarkerAux, parameter 'ys' is null");
 
    std::vector<TPoint> xy(nPoints);
 
