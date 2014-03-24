@@ -641,9 +641,11 @@ void TGLPadPainter::DrawPolyMarker()
    //
    glMatrixMode(GL_MODELVIEW);
    //
+   const TGLEnableGuard blendGuard(GL_BLEND);
+   
    Float_t rgba[4] = {};
    Rgl::Pad::ExtractRGBA(gVirtualX->GetMarkerColor(), rgba);
-   glEnable( GL_BLEND );
+
    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
    glColor4fv(rgba);
 
@@ -708,8 +710,6 @@ void TGLPadPainter::DrawPolyMarker()
    case kOpenStar:
       fMarker.DrawOpenStar(n, xy);
    }
-
-   glDisable( GL_BLEND );
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
