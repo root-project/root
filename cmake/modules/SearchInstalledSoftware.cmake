@@ -297,7 +297,7 @@ endif()
 #---Check for Qt installation-------------------------------------------------------
 if(qt OR qtgsi)
   message(STATUS "Looking for Qt4")
-  find_package(Qt4 COMPONENTS QtCore QtGui)
+  find_package(Qt4 4.8 COMPONENTS QtCore QtGui)
   if(NOT QT4_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "Qt4 package not found and qt/qtgsi component required")
