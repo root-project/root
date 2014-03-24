@@ -643,7 +643,9 @@ void TGLPadPainter::DrawPolyMarker()
    //
    Float_t rgba[4] = {};
    Rgl::Pad::ExtractRGBA(gVirtualX->GetMarkerColor(), rgba);
-   glColor3fv(rgba);
+   glEnable( GL_BLEND );
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   glColor4fv(rgba);
 
    const TPoint *xy = &fPoly[0];
    const Style_t markerStyle = gVirtualX->GetMarkerStyle();
@@ -706,6 +708,8 @@ void TGLPadPainter::DrawPolyMarker()
    case kOpenStar:
       fMarker.DrawOpenStar(n, xy);
    }
+
+   glDisable( GL_BLEND );
 
    RestoreProjectionMatrix();
    glMatrixMode(GL_MODELVIEW);
@@ -1231,3 +1235,4 @@ void ConvertMarkerPoints(Int_t n, const ValueType *x, const ValueType *y, std::v
 }
 
 }
+
