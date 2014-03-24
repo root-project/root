@@ -1654,8 +1654,8 @@ enable/disable options, prefix with either --enable- or --disable-
   pythia6            Pythia6 EG support, requires libPythia6
   pythia8            Pythia8 EG support, requires libPythia8 >= 8180
   python             Python ROOT bindings, requires python >= 2.5
-  qt                 Qt graphics backend, requires libqt >= 4.x
-  qtgsi              GSI's Qt integration, requires libqt >= 3
+  qt                 Qt graphics backend, requires libqt >= 4.8
+  qtgsi              GSI's Qt integration, requires libqt >= 4.8
   rfio               RFIO support, requires libshift from CASTOR >= 1.5.2
   roofit             Build the libRooFit advanced fitting package
   rpath              Set run-time library load path on executables
@@ -3579,7 +3579,7 @@ if test ! "x$enable_qt" = "xno" || \
                 qtincdir="$qtincdir $i"
             fi
         done
-        qtverneed="4.3.0"
+        qtverneed="4.8.0"
         qttoonew="5.0.0"
         qttestdir=$qtmainincdir/../src/corelib/global
         if test ! -d $qttestdir ; then
