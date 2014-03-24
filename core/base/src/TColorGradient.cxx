@@ -217,31 +217,42 @@ TRadialGradient::TRadialGradient()
 //______________________________________________________________________________
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Color_t *colorIndices, ECoordinateMode mode)
-                   : TLinearGradient(newColor, nPoints, points, colorIndices, mode),
-                     fR1(0.), fR2(0.)
+                   : TColorGradient(newColor, nPoints, points, colorIndices, mode)
 {
 }
 
 //______________________________________________________________________________
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Double_t *colors, ECoordinateMode mode)
-                   : TLinearGradient(newColor, nPoints, points, colors, mode),
-                     fR1(0.), fR2(0.)
+                   : TColorGradient(newColor, nPoints, points, colors, mode)
 {
 }
 
 //______________________________________________________________________________
 void TRadialGradient::SetStartEndR1R2(const Point &p1, Double_t r1, const Point &p2, Double_t r2)
 {
-   SetStartEnd(p1, p2);
+   fStart = p1;
    fR1 = r1;
+   fEnd = p2;
    fR2 = r2;
+}
+
+//______________________________________________________________________________
+const TColorGradient::Point &TRadialGradient::GetStart()const
+{
+   return fStart;
 }
 
 //______________________________________________________________________________
 Double_t TRadialGradient::GetR1()const
 {
    return fR1;
+}
+
+//______________________________________________________________________________
+const TColorGradient::Point &TRadialGradient::GetEnd()const
+{
+   return fEnd;
 }
 
 //______________________________________________________________________________

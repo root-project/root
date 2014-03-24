@@ -76,7 +76,7 @@ CGRect FindBoundingBox(Int_t nPoints, const TPoint *xy)
    //When calculating gradient parameters for TColorGradient::kObjectBoundingMode
    //we need a bounding rect for a polygon.
    assert(nPoints > 2 && "FindBoundingBox, invalid number of points in a polygon");
-   assert(xy != 0 && "FindBoundingBox, parameter 'xy' is null");
+   assert(xy != nullptr && "FindBoundingBox, parameter 'xy' is null");
    
    CGPoint bottomLeft = {};
    bottomLeft.x = xy[0].fX;
@@ -98,22 +98,21 @@ CGRect FindBoundingBox(Int_t nPoints, const TPoint *xy)
 }
 
 //______________________________________________________________________________
-bool CalculateGradientParameters(const TColorGradient *extendedColor,
-                                 const CGSize &sizeOfDrawable,
-                                 Int_t n, const TPoint *polygon,
-                                 GradientParameters &params)
+template<class GradientType>
+bool CalculateGradientStartEnd(const GradientType *grad,
+                               const CGSize &sizeOfDrawable,
+                               Int_t n, const TPoint *polygon,
+                               GradientParameters &params)
 {
-   assert(extendedColor != 0 &&
-          "CalculateGradientParameters, parameter 'extendedColor' is null");
-   assert(dynamic_cast<const TLinearGradient *>(extendedColor) != 0 &&
-          "CalculateGradientParameters, unknown gradient type");
+   assert(grad != nullptr &&
+          "CalculateGradientStartEnd, parameter 'grad' is null");
    assert(sizeOfDrawable.width > 0. && sizeOfDrawable.height > 0. &&
-          "CalculateGradientParameters, invalid destination drawable size");
-   assert(n > 2 && "CalculateGradientPoints, parameter 'n' is not a valid number of points");
-   assert(polygon != 0 && "CalculateGradientPoints, parameter 'polygon' is null");
+          "CalculateGradientStartEnd, invalid destination drawable size");
+   assert(n > 2 &&
+          "CalculateGradientStartEnd, parameter 'n' is not a valid number of points");
+   assert(polygon != nullptr &&
+          "CalculateGradientStartEnd, parameter 'polygon' is null");
    
-   //TODO: check-check-check-chek - it's just a test and can be wrong!!!
-   const TLinearGradient * const grad = static_cast<const TLinearGradient *>(extendedColor);
    const TColorGradient::ECoordinateMode mode = grad->GetCoordinateMode();
 
    CGPoint start = CGPointMake(grad->GetStart().fX, grad->GetStart().fY);
@@ -142,28 +141,75 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
    params.fStartPoint = start;
    params.fEndPoint = end;
    
-   if (const TRadialGradient * const radial = dynamic_cast<const TRadialGradient *>(extendedColor)) {
-      CGFloat startRadius = radial->GetR1();
-      CGFloat endRadius = radial->GetR2();
-
-      if (mode == TColorGradient::kObjectBoundingMode) {
-         const CGFloat scale = bbox.size.width < bbox.size.height ?
-                               bbox.size.height : bbox.size.width;
-         
-         startRadius *= scale * 0.5;
-         endRadius *= scale * 0.5;
-      } else {
-         const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
-                               sizeOfDrawable.height : sizeOfDrawable.width;
-         startRadius *= scale * 0.5;
-         endRadius *= scale * 0.5;
-      }
-      
-      params.fStartRadius = startRadius;
-      params.fEndRadius = endRadius;
-   }
-
    return true;
+}
+
+//______________________________________________________________________________
+bool CalculateGradientRadiuses(const TRadialGradient *grad,
+                               const CGSize &sizeOfDrawable,
+                               Int_t n, const TPoint *polygon,
+                               GradientParameters &params)
+{
+   assert(grad != nullptr && "CalculateGradientRadiuses, parameter 'grad' is null");
+   assert(sizeOfDrawable.width > 0. && sizeOfDrawable.height > 0. &&
+          "CalculateGradientRadiuses, invalid destination drawable size");
+   assert(n > 2 && "CalculateGradientRadiuses, parameter 'n' is not a valid number of points");
+   assert(polygon != nullptr &&
+          "CalculateGradientRadiuses, parameter 'polygon' is null");
+
+
+   const CGRect &bbox = FindBoundingBox(n, polygon);
+   if (!bbox.size.width || !bbox.size.height)
+      return false;//Invalid polygon actually.
+
+   CGFloat startRadius = grad->GetR1();
+   CGFloat endRadius = grad->GetR2();
+
+   if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
+      const CGFloat scale = bbox.size.width < bbox.size.height ?
+                            bbox.size.height : bbox.size.width;
+      
+      startRadius *= scale * 0.5;
+      endRadius *= scale * 0.5;
+   } else {
+      const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
+                            sizeOfDrawable.height : sizeOfDrawable.width;
+      startRadius *= scale * 0.5;
+      endRadius *= scale * 0.5;
+   }
+   
+   params.fStartRadius = startRadius;
+   params.fEndRadius = endRadius;
+   
+   return true;
+}
+
+//______________________________________________________________________________
+bool CalculateGradientParameters(const TColorGradient *extendedColor,
+                                 const CGSize &sizeOfDrawable,
+                                 Int_t n, const TPoint *polygon,
+                                 GradientParameters &params)
+{
+   assert(extendedColor != nullptr &&
+          "CalculateGradientParameters, parameter 'extendedColor' is null");
+   assert(sizeOfDrawable.width > 0. && sizeOfDrawable.height > 0. &&
+          "CalculateGradientParameters, invalid destination drawable size");
+   assert(n > 2 && "CalculateGradientParameters, parameter 'n' is not a valid number of points");
+   assert(polygon != nullptr &&
+          "CalculateGradientParameters, parameter 'polygon' is null");
+   
+   if (const TLinearGradient * const gl = dynamic_cast<const TLinearGradient *>(extendedColor)) {
+      if (!CalculateGradientStartEnd(gl, sizeOfDrawable, n, polygon, params))
+         return false;
+   } else if (const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor)) {
+      if (CalculateGradientStartEnd(gr, sizeOfDrawable, n, polygon, params))
+         return CalculateGradientRadiuses(gr, sizeOfDrawable, n, polygon, params);
+      return false;
+   }
+   
+   assert(0 && "CalculateGradientParamters, unknown gradient type");
+
+   return false;
 }
 
 }//Unnamed namespace.
@@ -171,7 +217,7 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
 //______________________________________________________________________________
 Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
 {
-   assert(ctx != 0 && "SetFillColor, ctx parameter is null");
+   assert(ctx != nullptr && "SetFillColor, ctx parameter is null");
 
    const TColor *color = gROOT->GetColor(colorIndex);
    
@@ -194,8 +240,8 @@ Bool_t SetFillColor(CGContextRef ctx, Color_t colorIndex)
 //______________________________________________________________________________
 void DrawPattern(void *data, CGContextRef ctx)
 {
-   assert(data != 0 && "DrawPattern, data parameter is null");
-   assert(ctx != 0 && "DrawPattern, ctx parameter is null");
+   assert(data != nullptr && "DrawPattern, data parameter is null");
+   assert(ctx != nullptr && "DrawPattern, ctx parameter is null");
 
    //Draw a stencil pattern from gStipples
    const unsigned stencilIndex = *static_cast<unsigned *>(data);
@@ -217,8 +263,8 @@ void DrawPattern(void *data, CGContextRef ctx)
 //______________________________________________________________________________
 bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 {
-   assert(ctx != 0 && "SetFillPattern, ctx parameter is null");
-   assert(patternIndex != 0 && "SetFillPattern, patternIndex parameter is null");
+   assert(ctx != nullptr && "SetFillPattern, ctx parameter is null");
+   assert(patternIndex != nullptr && "SetFillPattern, patternIndex parameter is null");
 
    const TColor *fillColor = gROOT->GetColor(gVirtualX->GetFillColor());
    if (!fillColor)
@@ -258,7 +304,7 @@ bool SetFillPattern(CGContextRef ctx, const unsigned *patternIndex)
 //______________________________________________________________________________
 bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
 {
-   assert(ctx != 0 && "SetFillAreaParameters, ctx parameter is null");
+   assert(ctx != nullptr && "SetFillAreaParameters, ctx parameter is null");
    
    const unsigned fillStyle = gVirtualX->GetFillStyle() / 1000;
    
@@ -275,7 +321,7 @@ bool SetFillAreaParameters(CGContextRef ctx, unsigned *patternIndex)
          return false;
       }
    } else {
-      assert(patternIndex != 0 && "SetFillAreaParameters, pattern index in null");
+      assert(patternIndex != nullptr && "SetFillAreaParameters, pattern index in null");
 
       *patternIndex = gVirtualX->GetFillStyle() % 1000;
       //ROOT has 26 fixed patterns.
@@ -314,8 +360,8 @@ void DrawFillArea(CGContextRef ctx, Int_t n, TPoint *xy, Bool_t shadow)
    // n         : number of points
    // xy        : list of points
 
-   assert(ctx != 0 && "DrawFillArea, ctx parameter is null");
-   assert(xy != 0 && "DrawFillArea, xy parameter is null");
+   assert(ctx != nullptr && "DrawFillArea, ctx parameter is null");
+   assert(xy != nullptr && "DrawFillArea, xy parameter is null");
                   
    CGContextBeginPath(ctx);
       
