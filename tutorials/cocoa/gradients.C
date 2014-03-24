@@ -1,5 +1,6 @@
 //Author: Timur Pocheptsov, 19/03/2014
-//This macro requires OS X and ROOT compiled with --enable-cocoa to run.
+//This macro requires OS X and ROOT
+//compiled with --enable-cocoa to run.
 
 //Features:
 //1. Radial and linear gradients
@@ -36,27 +37,36 @@ void gradients()
    const Int_t &linearFill = colorIndices[1];
    const Int_t &transparentFill = colorIndices[2];
    
-   //Create a canvas to check if we support gradients:
+   //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      ::Error("gradients", "This macro requires OS X and ROOT build with --enable-cocoa");
+      ::Error("gradients", "This macro requires OS X and ROOT built with --enable-cocoa");
       delete c;
       return;
    }
-   
+
    c->cd();
 
-   //Colour positions in the gradient colours (here I place colours at the
-   //ends of 0-1 axis for simplicity):
+   //Linear gradient is defined by: 1) colors (to interpolate between them),
+   //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
+   //3) Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]),
+   //and this rect is either: bounding rect of your polygon/object to fill
+   //(gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
+   //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
+   //kObjectBoundingMode is the default one.
+
+
+   //Colour positions in the gradient's palette (here I place colors at the
+   //ends of 0-1):
    const Double_t locations[] = {0., 1.};
    
    //Linear gradient fill (with an axis angle == 45):
    const Double_t rgbaData1[] = {0.2, 0.2, 0.2, 1.,/*gray*/
                                  0.8, 1., 0.9, 1.  /*pale green*/};
-   TLinearGradient * const gradientFill2 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
+   TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
    //45 degrees:
-   gradientFill2->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
+   gradientFill1->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
    //Set as a background color in the canvas:
    c->SetFillColor(linearFill);
 
@@ -83,13 +93,21 @@ void gradients()
                                  /*transparent red at the end:*/1., 0.2, 0., 0.8};
 
 
-   TRadialGradient * const gradientFill1 = new TRadialGradient(radialFill, 2,
+   //
+   //With Quartz/Cocoa we support the "extended" radial gradient:
+   //you can specify two centers and two radiuses - the start and
+   //the end of your radial gradient (+ colors/positions as with a linear
+   //gradient).
+   //
+
+   TRadialGradient * const gradientFill2 = new TRadialGradient(radialFill, 2,
                                                                locations, rgbaData2);
    //Parameters for a gradient fill:
    //the gradient is 'pad-related' - we calculate everything in a pad's
    //space and consider it as a NDC (so pad's rect is (0,0), (1,1)).
-   gradientFill1->SetCoordinateMode(TColorGradient::kPadMode);
-   gradientFill1->SetStartEndR1R2(TColorGradient::Point(0.5, 0.5), 0.2,
+   gradientFill2->SetCoordinateMode(TColorGradient::kPadMode);
+   //Centers for both circles are the same point.
+   gradientFill2->SetStartEndR1R2(TColorGradient::Point(0.5, 0.5), 0.2,
                                   TColorGradient::Point(0.5, 0.5), 0.6);
 
 

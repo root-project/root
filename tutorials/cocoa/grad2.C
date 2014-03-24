@@ -13,7 +13,7 @@
 
 void grad2()
 {
-   //1. 'Allocate' free indices for our custom colors.
+   //1. 'Allocate' four indices for our custom colors.
    //We can use hard-coded indices like 1001, 1002, 1003 ... but
    //I prefer to find free indices in the ROOT's color table
    //to avoid possible conflicts with other tutorials.
@@ -36,11 +36,19 @@ void grad2()
       return;
    }
 
-   //3. Now that we 'allocated' all indices and checked back-end's type, let's create our custom colors colors:
+   //3. Custom colors:
    //   a) Custom semi-transparent red.
    new TColor(customRed, 1., 0., 0., "red", 0.5);
 
+
    //   b) Gradient (from our semi-transparent red to ROOT's kOrange).
+   //      Linear gradient is defined by: 1) colors (to interpolate between them),
+   //      2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
+   //      3) Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]),
+   //         and this rect is either: bounding rect of your polygon/object to fill
+   //         (gradient->SetCoordinateMode(TColorGradient::kObjectBoundingMode))
+   //         or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
+   //         kObjectBoundingMode is the default one.
    const Double_t locations[] = {0., 1.};
    const Color_t idx1[] = {customRed, kOrange};
    TLinearGradient * const gradFill1 = new TLinearGradient(grad1, 2, locations, idx1);
