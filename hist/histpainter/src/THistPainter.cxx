@@ -3205,20 +3205,20 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Motion:
 
-   if (gROOT->GetEditHistograms()) {
-      if (!opaque) {
-         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the old box
-         py2 += py - pyold;
-         gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the new box
-         pyold = py;
-      } else {
-         py2 += py - pyold;
-         pyold = py;
-         binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-         fH->SetBinContent(bin,binval);
-         gPad->Modified(kTRUE);
+      if (gROOT->GetEditHistograms()) {
+         if (!opaque) {
+            gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the old box
+            py2 += py - pyold;
+            gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the new box
+            pyold = py;
+         } else {
+            py2 += py - pyold;
+            pyold = py;
+            binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
+            fH->SetBinContent(bin,binval);
+            gPad->Modified(kTRUE);
+         }
       }
-   }
 
       break;
 
