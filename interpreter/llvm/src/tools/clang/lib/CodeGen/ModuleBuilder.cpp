@@ -134,6 +134,14 @@ namespace clang {
       }
 
       //CtorList GlobalDtors;
+      out << " GlobalDtors (std::vector<std::pair<llvm::Constant*, int> > @ ";
+      out << &Builder->GlobalDtors << "\n";
+      for(auto I = Builder->GlobalDtors.begin(),
+            E = Builder->GlobalDtors.end(); I != E; ++I) {
+        out << (*I).first << " : " << (*I).second;
+        out << "\n";
+      }
+
       //llvm::DenseMap<GlobalDecl, StringRef> MangledDeclNames;
       //std::vector<llvm::Constant*> Annotations;
       //llvm::StringMap<llvm::Constant*> AnnotationStrings;
