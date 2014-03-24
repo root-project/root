@@ -97,6 +97,9 @@ struct KeySymPair {
 void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySym)
 {
    assert(buf != 0 && "MapUnicharToKeySym, parameter 'buf' is null");
+   
+   //TODO: something really weird :)
+   //read how XLookupString actually works? ;)
 
    static const KeySymPair<unichar, EKeySym> keyMap[] = {
         {NSEnterCharacter, kKey_Enter},
@@ -165,7 +168,7 @@ void MapUnicharToKeySym(unichar key, char *buf, Int_t /*len*/, UInt_t &rootKeySy
    const KeySymPair<unichar, EKeySym> *iter = std::lower_bound(keyMap, keyMap + nEntries, valueToFind);
    
    if (iter != keyMap + nEntries && iter->fFirst == key) {
-      buf[0] = 0;
+      buf[0] = key <= 0x7e ? key : 0;
       rootKeySym = iter->fSecond;
    } else {
       buf[0] = key;//????
