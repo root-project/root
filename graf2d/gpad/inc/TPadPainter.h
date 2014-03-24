@@ -98,8 +98,11 @@ public:
    void     SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) const;
 
 private:
-   TPadPainter(const TPadPainter &rhs);
-   TPadPainter & operator = (const TPadPainter &rhs);
+   //Let's make this clear:
+   TPadPainter(const TPadPainter &rhs) = delete;
+   TPadPainter(TPadPainter && rhs) = delete;
+   TPadPainter & operator = (const TPadPainter &rhs) = delete;
+   TPadPainter & operator = (TPadPainter && rhs) = delete;
    
    ClassDef(TPadPainter, 0) //Abstract interface for painting in TPad
 };
