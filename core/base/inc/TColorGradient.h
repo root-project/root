@@ -102,7 +102,7 @@ private:
 
 class TLinearGradient : public TColorGradient {
 public:
-   //With C++11 we'll use delegating constructors!!!
+   //With C++11 we'll use inherited constructors!!!
    TLinearGradient();
    TLinearGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                    const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
@@ -121,11 +121,7 @@ private:
    ClassDef(TLinearGradient, 1)//Linear gradient fill.
 };
 
-//Well, it's quite strange that radial inherits linear,
-//but ... it's very similar (has a start and end) + radiuses at the start and end
-//- at least this is how we specify it.
-
-class TRadialGradient : public TLinearGradient {
+class TRadialGradient : public TColorGradient {
 public:
    TRadialGradient();
    TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
@@ -136,11 +132,15 @@ public:
    void SetStartEndR1R2(const Point &p1, Double_t r1,
                         const Point &p2, Double_t r2);
 
+   const Point &GetStart()const;
    Double_t GetR1()const;
+   const Point &GetEnd()const;
    Double_t GetR2()const;
 
 private:
+   Point fStart;
    Double_t fR1;
+   Point fEnd;
    Double_t fR2;
    
    ClassDef(TRadialGradient, 1)//Radial gradient fill.
