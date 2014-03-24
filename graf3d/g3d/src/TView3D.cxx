@@ -790,11 +790,13 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
-         psideg = GetPsi();
-         SetView(oldlongitude, oldlatitude, psideg, irep);
-         gPad->SetPhi(-90-oldlongitude);
-         gPad->SetTheta(90-oldlatitude);
-         gPad->Modified(kTRUE);
+         if (opaque) {
+            psideg = GetPsi();
+            SetView(oldlongitude, oldlatitude, psideg, irep);
+            gPad->SetPhi(-90-oldlongitude);
+            gPad->SetTheta(90-oldlatitude);
+            gPad->Modified(kTRUE);
+         }
          break;
       }
 
