@@ -18,12 +18,12 @@
 //______________________________________________________________________
 void grad()
 {
-   //1. Try to 'allocate' free indices for our custom colors.
+   //1. Try to 'allocate' five indices for our custom colors.
    //We can use hard-coded indices like 1001, 1002, 1003, ... but
    //I prefer to find free indices in the ROOT's color table
    //to avoid possible conflicts with other tutorials.
-   Int_t colorIndices[3] = {};
-   if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 3) {
+   Int_t colorIndices[5] = {};
+   if (ROOT::GLTutorials::FindFreeCustomColorIndices(colorIndices) != 5) {
       ::Error("grad", "failed to create new custom colors");
       return;
    }
