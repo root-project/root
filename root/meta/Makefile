@@ -9,7 +9,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log dt_reference.root Event.new.*.root \
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += SignalSlots missingInfo nospace namespace autoload mytest drawing testloadernotapp templateAutoload templateAutoloadInclude GetMissingDictionaries TEnum MemberComments InterpreterValue
+TEST_TARGETS += SignalSlots missingInfo nospace namespace autoload mytest drawing testloadernotapp templateAutoload templateAutoloadInclude GetMissingDictionaries TEnum MemberComments InterpreterValue InterpClassDef
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -138,4 +138,7 @@ SignalSlots: SignalSlots.log
 	$(TestDiff)
 
 InterpreterValue: InterpreterValue.log
+	$(TestDiff)
+
+InterpClassDef: InterpClassDef.log
 	$(TestDiff)
