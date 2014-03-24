@@ -761,11 +761,17 @@ TCling::TCling(const char *name, const char *title)
 
    // clingArgsStorage.push_back("-Xclang");
    // clingArgsStorage.push_back("-fmodules");
-  
-#ifdef ROOTINCDIR
-   clingArgsStorage.push_back("-I");
-   clingArgsStorage.push_back(ROOTINCDIR);
+
+   TString include;
+   // Add the root include directory to list searched by default
+#ifndef ROOTINCDIR
+   include = gSystem->Getenv("ROOTSYS");
+   include.Append("/include");
+#else // ROOTINCDIR
+   include = ROOTINCDIR;
 #endif // ROOTINCDIR
+   clingArgsStorage.push_back("-I");
+   clingArgsStorage.push_back(include);
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
@@ -829,14 +835,6 @@ TCling::TCling(const char *name, const char *title)
    optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
    // Initialize for ROOT:
-   TString include;
-   // Add the root include directory to list searched by default
-#ifndef ROOTINCDIR
-   include = gSystem->Getenv("ROOTSYS");
-   include.Append("/include");
-#else // ROOTINCDIR
-   include = ROOTINCDIR;
-#endif // ROOTINCDIR
    TCling::AddIncludePath(include);
 
    fInterpreter->enableDynamicLookup();
