@@ -57,24 +57,95 @@ namespace clang {
     void print(llvm::raw_ostream& out) {
       out << "\n\nCodeGen:\n";
       //llvm::SmallPtrSet<llvm::GlobalValue*, 10> WeakRefReferences;
+      out << " WeakRefReferences (llvm::SmallPtrSet<llvm::GlobalValue*, 10>) @";
+      out << " " << &Builder->WeakRefReferences << "\n";
+      for(auto I = Builder->WeakRefReferences.begin(),
+            E = Builder->WeakRefReferences.end(); I != E; ++I) {
+        (*I)->print(out);
+        out << "\n";
+      }
+
       //llvm::StringMap<GlobalDecl> DeferredDecls;
+      out << " DeferredDecls (llvm::StringMap<GlobalDecl>) @ ";
+      out << &Builder->DeferredDecls << "\n";
+      for(auto I = Builder->DeferredDecls.begin(),
+            E = Builder->DeferredDecls.end(); I != E; ++I) {
+        out << I->getKey().str().c_str();
+        I->getValue().getDecl()->print(out);
+        out << "\n";
+      }
+
       //std::vector<DeferredGlobal> DeferredDeclsToEmit;
+      out << " DeferredDeclsToEmit (std::vector<DeferredGlobal>) @ ";
+      out << &Builder->DeferredDeclsToEmit << "\n";
+      for(auto I = Builder->DeferredDeclsToEmit.begin(),
+            E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
+        I->GD.getDecl()->print(out);
+        I->GV->print(out);
+        out << "\n";
+      }
+
       //std::vector<GlobalDecl> Aliases;
+      out << " Aliases (std::vector<GlobalDecl>) @ ";
+      out << &Builder->Aliases << "\n";
+      for(auto I = Builder->Aliases.begin(),
+            E = Builder->Aliases.end(); I != E; ++I) {
+        I->getDecl()->print(out);
+        out << "\n";
+      }
+      //typedef llvm::StringMap<llvm::TrackingVH<llvm::Constant> >
+      // ReplacementsTy;
       //ReplacementsTy Replacements;
+      out << " Replacements (llvm::StringMap<llvm::TrackingVH<llvm::Constant> >";
+      out << " @" << &Builder->Replacements << "\n";
+      for(auto I = Builder->Replacements.begin(),
+            E = Builder->Replacements.end(); I != E; ++I) {
+        out << I->getKey().str().c_str();
+        (*I->getValue()).print(out);
+        out << "\n";
+      }
+
       //std::vector<const CXXRecordDecl*> DeferredVTables;
+      out << " DeferredVTables (std::vector<const CXXRecordDecl*> @ ";
+      out << &Builder->DeferredVTables << "\n";
+      for(auto I = Builder->DeferredVTables.begin(),
+            E = Builder->DeferredVTables.end(); I != E; ++I) {
+        (*I)->print(out);
+        out << "\n";
+      }
+
       //std::vector<llvm::WeakVH> LLVMUsed;
+      out << " LLVMUsed (std::vector<llvm::WeakVH> > @ ";
+      out << &Builder->LLVMUsed << "\n";
+      for(auto I = Builder->LLVMUsed.begin(),
+            E = Builder->LLVMUsed.end(); I != E; ++I) {
+        (*I)->print(out);
+        out << "\n";
+      }
+
+      // typedef std::vector<std::pair<llvm::Constant*, int> > CtorList;
       //CtorList GlobalCtors;
+      out << " GlobalCtors (std::vector<std::pair<llvm::Constant*, int> > @ ";
+      out << &Builder->GlobalCtors << "\n";
+      for(auto I = Builder->GlobalCtors.begin(),
+            E = Builder->GlobalCtors.end(); I != E; ++I) {
+        out << (*I).first << " : " << (*I).second;
+        out << "\n";
+      }
+
       //CtorList GlobalDtors;
       //llvm::DenseMap<GlobalDecl, StringRef> MangledDeclNames;
       //std::vector<llvm::Constant*> Annotations;
       //llvm::StringMap<llvm::Constant*> AnnotationStrings;
       //llvm::StringMap<llvm::Constant*> CFConstantStringMap;
       //llvm::StringMap<llvm::GlobalVariable*> ConstantStringMap;
-      out << " ConstantStringMap @ " << &Builder->ConstantStringMap << "\n";
-      for(llvm::StringMap<llvm::GlobalVariable*>::const_iterator I
-            = Builder->ConstantStringMap.begin(),
+      out << " ConstantStringMap (llvm::StringMap<llvm::GlobalVariable*>) @ ";
+      out << &Builder->ConstantStringMap << "\n";
+      for(auto I = Builder->ConstantStringMap.begin(),
             E = Builder->ConstantStringMap.end(); I != E; ++I) {
-        out << I->getKey().str().c_str() << " : " << I->getValue() << "\n";
+        out << I->getKey().str().c_str();
+        I->getValue()->print(out);
+        out << "\n";
       }
       //llvm::DenseMap<const Decl*, llvm::Constant *> StaticLocalDeclMap;
       //llvm::DenseMap<const Decl*, llvm::GlobalVariable*> StaticLocalDeclGuardMap;
