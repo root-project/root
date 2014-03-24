@@ -165,6 +165,12 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 
    if (fAvoidSignal) return;
    fAttMarker->SetMarkerColor(TColor::GetColor(color));
+
+   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+      fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
+      fAlphaField->SetNumber(tcolor->GetAlpha());
+   }
+
    Update();
 }
 

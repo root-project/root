@@ -71,7 +71,7 @@ TAttLineEditor::TAttLineEditor(const TGWindow *p, Int_t width,
    fStyleCombo->Associate(this);
 
    fWidthCombo = new TGLineWidthComboBox(f2, kLINE_WIDTH);
-   fWidthCombo->Resize(91, 20);
+   fWidthCombo->Resize(90, 20);
    f2->AddFrame(fWidthCombo, new TGLayoutHints(kLHintsLeft, 3, 1, 1, 1));
    fWidthCombo->Associate(this);
 
@@ -157,6 +157,12 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
 
    if (fAvoidSignal) return;
    fAttLine->SetLineColor(TColor::GetColor(color));
+
+   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+      fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
+      fAlphaField->SetNumber(tcolor->GetAlpha());
+   }
+   
    Update();
 }
 
@@ -242,6 +248,5 @@ void TAttLineEditor::GetCurAlpha()
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
    }
-
    Update();
 }

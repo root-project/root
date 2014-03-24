@@ -61,6 +61,7 @@ public:
    virtual void     DoAlphaField();
    virtual void     DoLiveAlpha(Int_t a);
    virtual void     GetCurAlpha();
+   virtual void     DoTextColor(Pixel_t color);
 
    ClassDef(TAttTextEditor,0)  //GUI for editing text attributes
 };
