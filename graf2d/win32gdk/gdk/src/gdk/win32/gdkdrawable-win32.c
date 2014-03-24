@@ -283,11 +283,11 @@ gdk_win32_draw_rectangle(GdkDrawable * drawable,
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
    }
    else if (gc_data->fill_style == GDK_STIPPLED) {
-      HRGN hrgn;
       HBRUSH hbr = CreatePatternBrush(GDK_DRAWABLE_XID(gc_data->stipple));
-      hrgn = CreateRectRgn(x, y, x + width + 1, y + height + 1);
+      HRGN hrgn = CreateRectRgn(x, y, x + width + 1, y + height + 1);
       RenderRgn(hdc, hrgn, hbr);
       DeleteObject(hbr);
+      DeleteObject(hrgn);
    }
    else {
       if (filled)
@@ -435,11 +435,11 @@ gdk_win32_draw_polygon(GdkDrawable * drawable,
          WIN32_GDI_FAILED("FillPath"), ok = FALSE;
    }
    else if (gc_data->fill_style == GDK_STIPPLED) {
-      HRGN hrgn;
       HBRUSH hbr = CreatePatternBrush(GDK_DRAWABLE_XID(gc_data->stipple));
-      hrgn = CreatePolygonRgn(pts, npoints, WINDING);
+      HRGN hrgn = CreatePolygonRgn(pts, npoints, WINDING);
       RenderRgn(hdc, hrgn, hbr);
       DeleteObject(hbr);
+      DeleteObject(hrgn);
    } else {
       if (points[0].x != points[npoints - 1].x
           || points[0].y != points[npoints - 1].y) {
