@@ -178,15 +178,18 @@ void RenderRgn(HDC hDC, HRGN hrgn, HBRUSH hbrFill)
    // Get bounding area for region
    GetRgnBox(hrgn, &rectRgn);
 
-   // Area must align to 8x8 pattern
-   if (rectRgn.left % 8 != 0)
-      rectRgn.left -= rectRgn.left % 8;
-   if (rectRgn.top % 8 != 0)
-      rectRgn.top -= rectRgn.top % 8;
-   if (rectRgn.right % 8 != 0)
-      rectRgn.right += rectRgn.right % 8;
-   if (rectRgn.bottom % 8 != 0)
-      rectRgn.bottom += rectRgn.bottom % 8;
+   if ((rectRgn.right - rectRgn.left > 16) &&
+       (rectRgn.bottom - rectRgn.top > 16)) {
+      // Area must align to 8x8 pattern
+      if (rectRgn.left % 8 != 0)
+         rectRgn.left -= rectRgn.left % 8;
+      if (rectRgn.top % 8 != 0)
+         rectRgn.top -= rectRgn.top % 8;
+      if (rectRgn.right % 8 != 0)
+         rectRgn.right += rectRgn.right % 8;
+      if (rectRgn.bottom % 8 != 0)
+         rectRgn.bottom += rectRgn.bottom % 8;
+   }
 
    // Create bitmap for pattern
    hMemDC = CreateCompatibleDC(hDC);
