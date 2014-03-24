@@ -111,6 +111,7 @@ void TAttTextEditor::ConnectSignals2Slots()
    fAlpha->Connect("PositionChanged(Int_t)","TAttTextEditor", this, "DoLiveAlpha(Int_t)");
    fAlphaField->Connect("ReturnPressed()","TAttTextEditor", this, "DoAlphaField()");
    fAlpha->Connect("Pressed()","TAttTextEditor", this, "GetCurAlpha()");
+   fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttTextEditor", this, "DoTextColor(Pixel_t)");
    fInit = kFALSE;
 }
 
@@ -155,6 +156,22 @@ void TAttTextEditor::SetModel(TObject* obj)
       fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
       fAlphaField->SetNumber(color->GetAlpha());
    }  
+}
+
+//______________________________________________________________________________
+void TAttTextEditor::DoTextColor(Pixel_t color)
+{
+   // Slot connected to the marker color.
+
+   if (fAvoidSignal) return;
+   fAttText->SetTextColor(TColor::GetColor(color));
+
+   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+      fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
+      fAlphaField->SetNumber(tcolor->GetAlpha());
+   }
+
+   Update();
 }
 
 //______________________________________________________________________________

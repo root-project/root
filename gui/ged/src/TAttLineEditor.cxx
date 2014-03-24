@@ -157,6 +157,12 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
 
    if (fAvoidSignal) return;
    fAttLine->SetLineColor(TColor::GetColor(color));
+
+   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+      fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
+      fAlphaField->SetNumber(tcolor->GetAlpha());
+   }
+   
    Update();
 }
 

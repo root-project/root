@@ -709,6 +709,7 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
    Double_t dlatitude, dlongitude, x, y;
    Int_t irep = 0;
    Double_t psideg;
+   Bool_t opaque  = gPad->OpaqueMoving();
 
    // All coordinates transformation are from absolute to relative
    if (!gPad->IsEditable()) return;
@@ -757,7 +758,7 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       // draw the surrounding frame for the current mouse position
       // first: Erase old frame
       fChanged = kTRUE;
-      if (framewasdrawn) fOutline->Paint();
+      if (framewasdrawn && !opaque) fOutline->Paint();
       framewasdrawn = 1;
       x = gPad->PixeltoX(px);
       y = gPad->PixeltoY(py);
@@ -774,13 +775,28 @@ void TView3D::ExecuteRotateView(Int_t event, Int_t px, Int_t py)
       newlongitude = oldlongitude - dlongitude;
       psideg       = GetPsi();
       ResetView(newlongitude, newlatitude, psideg, irep);
-      fOutline->Paint();
+      if (!opaque) {
+         fOutline->Paint();
+      } else {
+         psideg = GetPsi();
+         SetView(newlongitude, newlatitude, psideg, irep);
+         gPad->SetPhi(-90-newlongitude);
+         gPad->SetTheta(90-newlatitude);
+         gPad->Modified(kTRUE);
+      }
 
       break;
    }
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque) {
+            psideg = GetPsi();
+            SetView(oldlongitude, oldlatitude, psideg, irep);
+            gPad->SetPhi(-90-oldlongitude);
+            gPad->SetTheta(90-oldlatitude);
+            gPad->Modified(kTRUE);
+         }
          break;
       }
 

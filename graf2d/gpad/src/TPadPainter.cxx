@@ -9,239 +9,55 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <algorithm>
 #include <cassert>
+#include <limits>
+#include <memory>
 #include <vector>
 
-#include "TPad.h"
-#include "TPoint.h"
 #include "TPadPainter.h"
 #include "TVirtualX.h"
+#include "TCanvas.h"
+#include "TPoint.h"
+#include "TError.h"
 #include "TImage.h"
+#include "TROOT.h"
 #include "TMath.h"
-
-// Local scratch buffer for screen points, faster than allocating buffer on heap
-const Int_t kPXY = 1002;
-static TPoint gPXY[kPXY];
-
+#include "TPad.h"
 
 namespace {
 
-//All asserts were commented, since ROOT's build system does not use -DNDEBUG for gpad module (with --build=release).
+//All asserts were commented, since ROOT's build system does not
+//use -DNDEBUG for gpad module (with --build=release).
 
 typedef std::vector<TPoint>::size_type size_type;
 
-//______________________________________________________________________________
 template<typename T>
-void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
-{
-   //I'm using 'pad' pointer to get rid of this damned gPad.
-   //Unfortunately, TPadPainter itself still has to use it.
-   //But at least this code does not have to be fixed.
+void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys,
+                   std::vector<TPoint> &dst);
+inline
+void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin,
+                  SCoord_t yMax, SCoord_t yLast);
 
-   if (!nPoints)
-      return;
-
-   //assert(pad != 0 && "ConvertPoints, parameter 'pad' is null");
-   //assert(x != 0 && "ConvertPoints, parameter 'x' is null");
-   //assert(y != 0 && "ConvertPoints, parameter 'y' is null");
-
-   dst.resize(nPoints);
+inline
+size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin,
+                              SCoord_t xMax, SCoord_t xLast, size_type first);
    
-   for (unsigned i = 0; i < nPoints; ++i) {
-      dst[i].fX = pad->XtoPixel(x[i]);
-      dst[i].fY = pad->YtoPixel(y[i]);
-   }
-}
-
-//______________________________________________________________________________
-inline void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin, SCoord_t yMax, SCoord_t yLast)
-{
-   //assert(points.size() != 0 && "MergePointsX, parameter 'points' is an empty vector, should contain at least 1 point already");
-   //assert(nMerged > 1 && "MergePointsX, nothing to merge");
-   
-   const SCoord_t firstPointX = points.back().fX;
-   const SCoord_t firstPointY = points.back().fY;
-   
-   if (nMerged == 2) {
-      points.push_back(TPoint(firstPointX, yLast));//We have not merge anything.
-   } else if (nMerged == 3) {
-      yMin == firstPointY ? points.push_back(TPoint(firstPointX, yMax)) : points.push_back(TPoint(firstPointX, yMin));
-      points.push_back(TPoint(firstPointX, yLast));
-   } else {
-      points.push_back(TPoint(firstPointX, yMin));
-      points.push_back(TPoint(firstPointX, yMax));
-      points.push_back(TPoint(firstPointX, yLast));
-   }
-}
-
-//______________________________________________________________________________
-inline size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin, SCoord_t xMax, SCoord_t xLast, size_type first)
-{
-   //assert(nMerged > 1 && "MergePointsInplaceY, nothing to merge");
-   //assert(first < dst.size() && "MergePointsInplaceY, parameter 'first' is out of range");
-   //assert(dst.size() - first >= nMerged && "MergePointsInplaceY, invalid index 'first + nMerged'");
-   
-   //Indices below are _valid_ - see asserts above.
-   
-   const TPoint &firstPoint = dst[first];//This point is never updated.
-   
-   if (nMerged == 2) {
-      dst[first + 1].fX = xLast;
-      dst[first + 1].fY = firstPoint.fY;
-   } else if (nMerged == 3) {
-      dst[first + 1].fX = xMin == firstPoint.fX ? xMax : xMin;
-      dst[first + 1].fY = firstPoint.fY;
-      dst[first + 2].fX = xLast;
-      dst[first + 2].fY = firstPoint.fY;
-   } else {
-      dst[first + 1].fX = xMin;
-      dst[first + 1].fY = firstPoint.fY;
-      dst[first + 2].fX = xMax;
-      dst[first + 2].fY = firstPoint.fY;
-      dst[first + 3].fX = xLast;
-      dst[first + 3].fY = firstPoint.fY;
-      nMerged = 4;//Adjust the shift.
-   }
-   
-   return nMerged;
-}
-
-//______________________________________________________________________________
 template<typename T>
-void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
-{
-   //I'm using 'pad' pointer to get rid of this damned gPad.
-   //Unfortunately, TPadPainter itself still has to use it.
-   //But at least this code does not have to be fixed.
-
-   //assert(pad != 0 && "ConvertPointsAndMergePassX, parameter 'pad' is null");
-   //assert(x != 0 && "ConvertPointsAndMergePassX, parameter 'x' is null");
-   //assert(y != 0 && "ConvertPointsAndMergePassX, parameter 'y' is null");
-
-   //The "first" pass along X axis.
-   TPoint currentPoint;
-   SCoord_t yMin = 0, yMax = 0, yLast = 0;
-   unsigned nMerged = 0;
+void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
+                                std::vector<TPoint> &dst);
    
-   //The first pass along X.
-   for (unsigned i = 0; i < nPoints;) {
-      currentPoint.fX = SCoord_t(pad->XtoPixel(x[i]));
-      currentPoint.fY = SCoord_t(pad->YtoPixel(y[i]));
-      
-      yMin = currentPoint.fY;
-      yMax = yMin;
+void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst);
 
-      dst.push_back(currentPoint);
-      bool merged = false;
-      nMerged = 1;
-      
-      for (unsigned j = i + 1; j < nPoints; ++j) {
-         const SCoord_t newX = pad->XtoPixel(x[j]);
+template<class T>
+void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys);
 
-         if (newX == currentPoint.fX) {
-            yLast = pad->YtoPixel(y[j]);
-            yMin = TMath::Min(yMin, yLast);
-            yMax = TMath::Max(yMax, yLast);//We continue.
-            ++nMerged;
-         } else {
-            if (nMerged > 1)
-               MergePointsX(dst, nMerged, yMin, yMax, yLast);
-            merged = true;
-            break;
-         }
-      }
-      
-      if (!merged && nMerged > 1)
-         MergePointsX(dst, nMerged, yMin, yMax, yLast);
-      
-      i += nMerged;
-   }
-}
-
-//______________________________________________________________________________
-void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
-{
-   //assert(dst.size() != 0 && "ConvertPointsAndMergeInplacePassY, nothing to merge");
-
-   //This pass is a bit more complicated, since we have
-   //to 'compact' in-place.
-
-   size_type i = 0;
-   for (size_type j = 1, nPoints = dst.size(); i < nPoints;) {
-      //i is always less than j, so i is always valid here.
-      const TPoint &currentPoint = dst[i];
-      
-      SCoord_t xMin = currentPoint.fX;
-      SCoord_t xMax = xMin;
-      SCoord_t xLast = 0;
-      
-      bool merged = false;
-      size_type nMerged = 1;
-      
-      for (; j < nPoints; ++j) {
-         const TPoint &nextPoint = dst[j];
-         
-         if (nextPoint.fY == currentPoint.fY) {
-            xLast = nextPoint.fX;
-            xMin = TMath::Min(xMin, xLast);
-            xMax = TMath::Max(xMax, xLast);
-            ++nMerged;//and we continue ...
-         } else {
-            if (nMerged > 1)
-               nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
-            merged = true;
-            break;
-         }
-      }
-      
-      if (!merged && nMerged > 1)
-         nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
-      
-      i += nMerged;
-      
-      if (j < nPoints) {
-         dst[i] = dst[j];
-         ++j;
-      } else
-        break;
-   }
-
-   dst.resize(i);
-}
-
-//______________________________________________________________________________
 template<typename T>
-void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoints, const T *x, const T *y, std::vector<TPoint> &dst)
-{
-   //This is a quite simple algorithm, using the fact, that after conversion many subsequent vertices
-   //can have the same 'x' or 'y' coordinate and this part of a polygon will look like a line
-   //on the screen.
-   //Please NOTE: even if there are some problems (like invalid polygons), the algorithm can be
-   //fixed (I'm not sure at the moment if it's important) and remembering the order of yMin/yMax or xMin/xMax (see
-   //aux. functions above) - this should help if there any problems.
+void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys);
 
-   //I'm using 'pad' pointer to get rid of this damned gPad.
-   //Unfortunately, TPadPainter itself still has to use it.
-   //But at least this code does not have to be fixed.
+template<class T>
+void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys);
 
-   if (!nPoints)
-      return;
-
-   //assert(pad != 0 && "ConvertPointsAndMerge, parameter 'pad' is null");
-   //assert(threshold != 0 && "ConvertPointsAndMerge, parameter 'threshold' must be > 0");
-   //assert(x != 0 && "ConvertPointsAndMerge, parameter 'x' is null");
-   //assert(y != 0 && "ConvertPointsAndMerge, parameter 'y' is null");
-
-   dst.clear();
-   dst.reserve(threshold);
-
-   ConvertPointsAndMergePassX(pad, nPoints, x, y, dst);
-   
-   if (dst.size() < threshold)
-      return;
-
-   ConvertPointsAndMergeInplacePassY(dst);
-}
 
 }
 
@@ -251,7 +67,7 @@ ClassImp(TPadPainter)
 //______________________________________________________________________________
 TPadPainter::TPadPainter()
 {
-   //Empty ctor. Here only because of explicit copy ctor.
+   //Empty ctor. We need it only because of explicit copy ctor.
 }
 
 /*
@@ -527,21 +343,21 @@ void TPadPainter::SelectDrawable(Int_t device)
 
 //______________________________________________________________________________
 void TPadPainter::DrawPixels(const unsigned char * /*pixelData*/, UInt_t /*width*/, UInt_t /*height*/,
-                             Int_t /*dstX*/, Int_t /*dstY*/, Bool_t /*enableBlending*/)
+                             Int_t /*dstX*/, Int_t /*dstY*/, Bool_t /*enableAlphaBlending*/)
 {
    //Noop, for non-gl pad TASImage calls gVirtualX->CopyArea.
 }
+
 
 //______________________________________________________________________________
 void TPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
    // Paint a simple line.
 
-   Int_t px1 = gPad->XtoPixel(x1);
-   Int_t px2 = gPad->XtoPixel(x2);
-   Int_t py1 = gPad->YtoPixel(y1);
-   Int_t py2 = gPad->YtoPixel(y2);
-
+   const Int_t px1 = gPad->XtoPixel(x1);
+   const Int_t px2 = gPad->XtoPixel(x2);
+   const Int_t py1 = gPad->YtoPixel(y1);
+   const Int_t py2 = gPad->YtoPixel(y2);
    gVirtualX->DrawLine(px1, py1, px2, py2);
 }
 
@@ -551,10 +367,10 @@ void TPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2
 {
    // Paint a simple line in normalized coordinates.
 
-   Int_t px1 = gPad->UtoPixel(u1);
-   Int_t py1 = gPad->VtoPixel(v1);
-   Int_t px2 = gPad->UtoPixel(u2);
-   Int_t py2 = gPad->VtoPixel(v2);
+   const Int_t px1 = gPad->UtoPixel(u1);
+   const Int_t py1 = gPad->VtoPixel(v1);
+   const Int_t px2 = gPad->UtoPixel(u2);
+   const Int_t py2 = gPad->VtoPixel(v2);
    gVirtualX->DrawLine(px1, py1, px2, py2);
 }
 
@@ -569,172 +385,134 @@ void TPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, EB
    Int_t py1 = gPad->YtoPixel(y1);
    Int_t py2 = gPad->YtoPixel(y2);
 
-   // Box width must be at least one pixel
-   if (TMath::Abs(px2-px1) < 1) px2 = px1+1;
-   if (TMath::Abs(py1-py2) < 1) py1 = py2+1;
+   // Box width must be at least one pixel (WTF is this code???)
+   if (TMath::Abs(px2 - px1) < 1)
+      px2 = px1 + 1;
+   if (TMath::Abs(py1 - py2) < 1)
+      py1 = py2 + 1;
 
-   gVirtualX->DrawBox(px1,py1,px2,py2,(TVirtualX::EBoxMode)mode);
+   gVirtualX->DrawBox(px1, py1, px2, py2, (TVirtualX::EBoxMode)mode);
+}
+
+//______________________________________________________________________________
+void TPadPainter::DrawFillArea(Int_t nPoints, const Double_t *xs, const Double_t *ys)
+{
+   //Paint filled area.
+   if (nPoints < 3) {
+      ::Error("TPadPainter::DrawFillArea", "invalid number of points %d", nPoints);
+      return;
+   }
+   
+   //assert(xs != 0 && "DrawFillArea, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawFillArea, parameter 'ys' is null");
+   
+   DrawFillAreaAux(gPad, nPoints, xs, ys);
 }
 
 
 //______________________________________________________________________________
-void TPadPainter::DrawFillArea(Int_t n, const Double_t *x, const Double_t *y)
+void TPadPainter::DrawFillArea(Int_t nPoints, const Float_t *xs, const Float_t *ys)
 {
-   // Paint filled area.
-   if (n < 3)
+   //Paint filled area.
+   if (nPoints < 3) {
+      ::Error("TPadPainter::DrawFillArea", "invalid number of points %d", nPoints);
       return;
+   }
    
-   std::vector<TPoint> xy;
+   //assert(xs != 0 && "DrawFillArea, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawFillArea, parameter 'ys' is null");
    
-   const Int_t threshold = unsigned(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
-                                    gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
+   DrawFillAreaAux(gPad, nPoints, xs, ys);
+}
 
-   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
+//______________________________________________________________________________
+void TPadPainter::DrawPolyLine(Int_t n, const Double_t *xs, const Double_t *ys)
+{
+   if (n < 2) {
+      ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
+   }
 
-   if (n < threshold)
-      ConvertPoints(gPad, n, x, y, xy);
-   else
-      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
+   //assert(xs != 0 && "DrawPolyLine, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawPolyLine, parameter 'ys' is null");
 
-   if (!gVirtualX->GetFillStyle())//We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
-      xy.push_back(xy.front());
-   
-   if (xy.size() > 2)
-      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
-
+   DrawPolyLineAux(gPad, n, xs, ys);
 }
 
 
 //______________________________________________________________________________
-void TPadPainter::DrawFillArea(Int_t n, const Float_t *x, const Float_t *y)
+void TPadPainter::DrawPolyLine(Int_t n, const Float_t *xs, const Float_t *ys)
 {
-   // Paint filled area.
-   if (n < 3)
+   //Paint polyline.
+   if (n < 2) {
+      ::Error("TPadPainter::DrawPolyLine", "invalid number of points");
       return;
+   }
    
-   std::vector<TPoint> xy;
-
-   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
-                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
-
-   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
-      return;
-
-   if (n < threshold)
-      ConvertPoints(gPad, n, x, y, xy);
-   else
-      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
-
-   if (!gVirtualX->GetFillStyle())//We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
-      xy.push_back(xy.front());
+   //assert(xs != 0 && "DrawPolyLine, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawPolyLine, parameter 'ys' is null");
    
-   if (xy.size() > 2)
-      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
-}
-
-
-//______________________________________________________________________________
-void TPadPainter::DrawPolyLine(Int_t n, const Double_t *x, const Double_t *y)
-{
-   // Paint polyline.
-   std::vector<TPoint> xy;
-
-   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
-                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
-
-   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
-      return;
-
-   if (n < threshold)
-      ConvertPoints(gPad, n, x, y, xy);
-   else
-      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
-
-   if (xy.size() > 1)
-      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
-}
-
-
-//______________________________________________________________________________
-void TPadPainter::DrawPolyLine(Int_t n, const Float_t *x, const Float_t *y)
-{
-   // Paint polyline.
-   std::vector<TPoint> xy;
-
-   const Int_t threshold = Int_t(TMath::Min(gPad->GetWw() * gPad->GetAbsWNDC(),
-                                            gPad->GetWh() * gPad->GetAbsHNDC())) * 2;
-
-   if (threshold <= 0)//Ooops, pad is invisible or something really bad and stupid happened.
-      return;
-
-   if (n < threshold)
-      ConvertPoints(gPad, n, x, y, xy);
-   else
-      ConvertPointsAndMerge(gPad, threshold, n, x, y, xy);
-
-   if (xy.size() > 1)
-      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
+   DrawPolyLineAux(gPad, n, xs, ys);
 }
 
 
 //______________________________________________________________________________
 void TPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *v)
 {
-   // Paint polyline in normalized coordinates.
-
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->UtoPixel(u[i]);
-      pxy[i].fY = gPad->VtoPixel(v[i]);
+   //Paint polyline in normalized coordinates.
+   if (n < 2) {
+      ::Error("TPadPainter::DrawPolyLineNDC", "invalid number of points %d", n);
+      return;
    }
-   gVirtualX->DrawPolyLine(n,pxy);
-   if (n >= kPXY) delete [] pxy;
+
+   //assert(u != 0 && "DrawPolyLineNDC, parameter 'u' is null");
+   //assert(v != 0 && "DrawPolyLineNDC, parameter 'v' is null");
+
+   std::vector<TPoint> xy(n);
+
+   for (Int_t i = 0; i < n; ++i) {
+      xy[i].fX = (SCoord_t)gPad->UtoPixel(u[i]);
+      xy[i].fY = (SCoord_t)gPad->VtoPixel(v[i]);
+   }
+
+   gVirtualX->DrawPolyLine(n, &xy[0]);
 }
 
 
 //______________________________________________________________________________
 void TPadPainter::DrawPolyMarker(Int_t n, const Double_t *x, const Double_t *y)
 {
-   // Paint polymarker.
-
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
+   //Paint polymarker.
+   if (n < 1) {
+      ::Error("TPadPainter::DrawPolyMarker", "invalid number of points %d", n);
+      return;
    }
-   gVirtualX->DrawPolyMarker(n,pxy);
-   if (n >= kPXY)   delete [] pxy;
+   
+   DrawPolyMarkerAux(gPad, n, x, y);
 }
 
 
 //______________________________________________________________________________
 void TPadPainter::DrawPolyMarker(Int_t n, const Float_t *x, const Float_t *y)
 {
-   // Paint polymarker.
-
-   TPoint *pxy = &gPXY[0];
-   if (n >= kPXY) pxy = new TPoint[n+1]; if (!pxy) return;
-   for (Int_t i=0; i<n; i++) {
-      pxy[i].fX = gPad->XtoPixel(x[i]);
-      pxy[i].fY = gPad->YtoPixel(y[i]);
+   //Paint polymarker.   
+   if (n < 1) {
+      ::Error("TPadPainter::DrawPolyMarker", "invalid number of points %d", n);
+      return;
    }
-   gVirtualX->DrawPolyMarker(n,pxy);
-   if (n >= kPXY)   delete [] pxy;
+   
+   DrawPolyMarkerAux(gPad, n, x, y);
 }
 
 
 //______________________________________________________________________________
 void TPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode mode)
 {
-   // Paint text.
-
-   Int_t px = gPad->XtoPixel(x);
-   Int_t py = gPad->YtoPixel(y);
-   Double_t angle = GetTextAngle();
-   Double_t mgn = GetTextMagnitude();
+   //Paint text.
+   const Int_t px = gPad->XtoPixel(x);
+   const Int_t py = gPad->YtoPixel(y);
+   const Double_t angle = GetTextAngle();
+   const Double_t mgn = GetTextMagnitude();
    gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
@@ -742,12 +520,11 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const char *text, ETextMode m
 //______________________________________________________________________________
 void TPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMode mode)
 {
-   // Paint text.
-
-   Int_t px = gPad->XtoPixel(x);
-   Int_t py = gPad->YtoPixel(y);
-   Double_t angle = GetTextAngle();
-   Double_t mgn = GetTextMagnitude();
+   //That's a special version working with wchar_t and required by TMathText (who uses utf-8(?))
+   const Int_t px = gPad->XtoPixel(x);
+   const Int_t py = gPad->YtoPixel(y);
+   const Double_t angle = GetTextAngle();
+   const Double_t mgn = GetTextMagnitude();
    gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
@@ -756,11 +533,10 @@ void TPadPainter::DrawText(Double_t x, Double_t y, const wchar_t *text, ETextMod
 void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const char *text, ETextMode mode)
 {
    // Paint text in normalized coordinates.
-
-   Int_t px = gPad->UtoPixel(u);
-   Int_t py = gPad->VtoPixel(v);
-   Double_t angle = GetTextAngle();
-   Double_t mgn = GetTextMagnitude();
+   const Int_t px = gPad->UtoPixel(u);
+   const Int_t py = gPad->VtoPixel(v);
+   const Double_t angle = GetTextAngle();
+   const Double_t mgn = GetTextMagnitude();
    gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
 }
 
@@ -770,15 +546,55 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
 {
    // Save the image displayed in the canvas pointed by "pad" into a 
    // binary file.
-
+   //assert(pad != 0 && "SaveImage, parameter 'pad' is null");
+   //assert(fileName != 0 && "SaveImage, parameter 'fileName' is null");
+   
+   // Save the image displayed in the canvas pointed by "pad" into a
+   // binary file.
+   if (gVirtualX->InheritsFrom("TGCocoa") && !gROOT->IsBatch() &&
+      pad->GetCanvas() && pad->GetCanvas()->GetCanvasID() != -1) {
+      //
+      TCanvas * const canvas = pad->GetCanvas();
+      //Copy pixmaps etc.
+      canvas->Flush();
+      //
+      const UInt_t w = canvas->GetWw();
+      const UInt_t h = canvas->GetWh();
+      //
+      const unsigned char * const pixelData =
+                                  gVirtualX->GetColorBits(canvas->GetCanvasID(), 0, 0, w, h);
+      //
+      if (pixelData) {
+         const std::auto_ptr<TImage> image(TImage::Create());
+         if (image.get()) {
+            image->DrawRectangle(0, 0, w, h);
+            if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
+               //Ohhh.
+               std::copy(pixelData, pixelData + 4 * w * h, argb);
+               unsigned *pos = (unsigned *)argb, *end = pos + w * h;
+               while (pos != end) {
+                  unsigned char * pixel = (unsigned char *)pos;
+                  std::swap(pixel[0], pixel[2]);
+                  ++pos;
+               }
+               image->WriteImage(fileName, (TImage::EImageFileTypes)type);
+               //
+               delete [] pixelData;
+               return;
+            }
+         }
+         //
+         delete [] pixelData;
+      }
+   }
+ 
    if (type == TImage::kGif) {
       gVirtualX->WriteGIF((char*)fileName);
    } else {
-      TImage *img = TImage::Create();
-      if (img) {
+      const std::auto_ptr<TImage> img(TImage::Create());
+      if (img.get()) {
          img->FromPad(pad);
          img->WriteImage(fileName, (TImage::EImageFileTypes)type);
-         delete img;
       }
    }
 }
@@ -789,9 +605,316 @@ void TPadPainter::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, EText
 {
    // Paint text in normalized coordinates.
 
-   Int_t px = gPad->UtoPixel(u);
-   Int_t py = gPad->VtoPixel(v);
-   Double_t angle = GetTextAngle();
-   Double_t mgn = GetTextMagnitude();
+   const Int_t px = gPad->UtoPixel(u);
+   const Int_t py = gPad->VtoPixel(v);
+   const Double_t angle = GetTextAngle();
+   const Double_t mgn = GetTextMagnitude();
    gVirtualX->DrawText(px, py, angle, mgn, text, (TVirtualX::ETextMode)mode);
+}
+
+//Aux. private functions.
+namespace {
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPoints(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
+                   std::vector<TPoint> &dst)
+{
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   if (!nPoints)
+      return;
+
+   //assert(pad != 0 && "ConvertPoints, parameter 'pad' is null");
+   //assert(x != 0 && "ConvertPoints, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPoints, parameter 'y' is null");
+
+   dst.resize(nPoints);
+   
+   for (unsigned i = 0; i < nPoints; ++i) {
+      dst[i].fX = (SCoord_t)pad->XtoPixel(x[i]);
+      dst[i].fY = (SCoord_t)pad->YtoPixel(y[i]);
+   }
+}
+
+//______________________________________________________________________________
+inline void MergePointsX(std::vector<TPoint> &points, unsigned nMerged, SCoord_t yMin,
+                         SCoord_t yMax, SCoord_t yLast)
+{
+   //assert(points.size() != 0 &&
+   //         "MergePointsX, parameter 'points' is an empty vector, should contain at least 1 point already");
+   //assert(nMerged > 1 && "MergePointsX, nothing to merge");
+   
+   const SCoord_t firstPointX = points.back().fX;
+   const SCoord_t firstPointY = points.back().fY;
+   
+   if (nMerged == 2) {
+      points.push_back(TPoint(firstPointX, yLast));//We have not merge anything.
+   } else if (nMerged == 3) {
+      yMin == firstPointY ? points.push_back(TPoint(firstPointX, yMax)) :
+                            points.push_back(TPoint(firstPointX, yMin));
+      points.push_back(TPoint(firstPointX, yLast));
+   } else {
+      points.push_back(TPoint(firstPointX, yMin));
+      points.push_back(TPoint(firstPointX, yMax));
+      points.push_back(TPoint(firstPointX, yLast));
+   }
+}
+
+//______________________________________________________________________________
+inline size_type MergePointsInplaceY(std::vector<TPoint> &dst, size_type nMerged, SCoord_t xMin,
+                                     SCoord_t xMax, SCoord_t xLast, size_type first)
+{
+   //assert(nMerged > 1 && "MergePointsInplaceY, nothing to merge");
+   //assert(first < dst.size() && "MergePointsInplaceY, parameter 'first' is out of range");
+   //assert(dst.size() - first >= nMerged && "MergePointsInplaceY, invalid index 'first + nMerged'");
+   
+   //Indices below are _valid_ - see asserts above.
+   
+   const TPoint &firstPoint = dst[first];//This point is never updated.
+   
+   if (nMerged == 2) {
+      dst[first + 1].fX = xLast;
+      dst[first + 1].fY = firstPoint.fY;
+   } else if (nMerged == 3) {
+      dst[first + 1].fX = xMin == firstPoint.fX ? xMax : xMin;
+      dst[first + 1].fY = firstPoint.fY;
+      dst[first + 2].fX = xLast;
+      dst[first + 2].fY = firstPoint.fY;
+   } else {
+      dst[first + 1].fX = xMin;
+      dst[first + 1].fY = firstPoint.fY;
+      dst[first + 2].fX = xMax;
+      dst[first + 2].fY = firstPoint.fY;
+      dst[first + 3].fX = xLast;
+      dst[first + 3].fY = firstPoint.fY;
+      nMerged = 4;//Adjust the shift.
+   }
+   
+   return nMerged;
+}
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPointsAndMergePassX(TVirtualPad *pad, unsigned nPoints, const T *x, const T *y,
+                                std::vector<TPoint> &dst)
+{
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   //assert(pad != 0 && "ConvertPointsAndMergePassX, parameter 'pad' is null");
+   //assert(x != 0 && "ConvertPointsAndMergePassX, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPointsAndMergePassX, parameter 'y' is null");
+
+   //The "first" pass along X axis.
+   TPoint currentPoint;
+   SCoord_t yMin = 0, yMax = 0, yLast = 0;
+   unsigned nMerged = 0;
+   
+   //The first pass along X.
+   for (unsigned i = 0; i < nPoints;) {
+      currentPoint.fX = (SCoord_t)pad->XtoPixel(x[i]);
+      currentPoint.fY = (SCoord_t)pad->YtoPixel(y[i]);
+      
+      yMin = currentPoint.fY;
+      yMax = yMin;
+
+      dst.push_back(currentPoint);
+      bool merged = false;
+      nMerged = 1;
+      
+      for (unsigned j = i + 1; j < nPoints; ++j) {
+         const SCoord_t newX = pad->XtoPixel(x[j]);
+
+         if (newX == currentPoint.fX) {
+            yLast = pad->YtoPixel(y[j]);
+            yMin = TMath::Min(yMin, yLast);
+            yMax = TMath::Max(yMax, yLast);//We continue.
+            ++nMerged;
+         } else {
+            if (nMerged > 1)
+               MergePointsX(dst, nMerged, yMin, yMax, yLast);
+            merged = true;
+            break;
+         }
+      }
+      
+      if (!merged && nMerged > 1)
+         MergePointsX(dst, nMerged, yMin, yMax, yLast);
+      
+      i += nMerged;
+   }
+}
+
+//______________________________________________________________________________
+void ConvertPointsAndMergeInplacePassY(std::vector<TPoint> &dst)
+{
+   //assert(dst.size() != 0 && "ConvertPointsAndMergeInplacePassY, nothing to merge");
+
+   //This pass is a bit more complicated, since we have
+   //to 'compact' in-place.
+
+   size_type i = 0;
+   for (size_type j = 1, nPoints = dst.size(); i < nPoints;) {
+      //i is always less than j, so i is always valid here.
+      const TPoint &currentPoint = dst[i];
+      
+      SCoord_t xMin = currentPoint.fX;
+      SCoord_t xMax = xMin;
+      SCoord_t xLast = 0;
+      
+      bool merged = false;
+      size_type nMerged = 1;
+      
+      for (; j < nPoints; ++j) {
+         const TPoint &nextPoint = dst[j];
+         
+         if (nextPoint.fY == currentPoint.fY) {
+            xLast = nextPoint.fX;
+            xMin = TMath::Min(xMin, xLast);
+            xMax = TMath::Max(xMax, xLast);
+            ++nMerged;//and we continue ...
+         } else {
+            if (nMerged > 1)
+               nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
+            merged = true;
+            break;
+         }
+      }
+      
+      if (!merged && nMerged > 1)
+         nMerged = MergePointsInplaceY(dst, nMerged, xMin, xMax, xLast, i);
+      
+      i += nMerged;
+      
+      if (j < nPoints) {
+         dst[i] = dst[j];
+         ++j;
+      } else
+        break;
+   }
+
+   dst.resize(i);
+}
+
+//______________________________________________________________________________
+template<typename T>
+void ConvertPointsAndMerge(TVirtualPad *pad, unsigned threshold, unsigned nPoints, const T *x,
+                           const T *y, std::vector<TPoint> &dst)
+{
+   //This is a quite simple algorithm, using the fact, that after conversion many subsequent vertices
+   //can have the same 'x' or 'y' coordinate and this part of a polygon will look like a line
+   //on the screen.
+   //Please NOTE: even if there are some problems (like invalid polygons), the algorithm can be
+   //fixed (I'm not sure at the moment if it's important) and remembering the order
+   //of yMin/yMax or xMin/xMax (see aux. functions above) -
+   //this should help if there's any problems.
+
+   //I'm using 'pad' pointer to get rid of this damned gPad.
+   //Unfortunately, TPadPainter itself still has to use it.
+   //But at least this code does not have to be fixed.
+
+   if (!nPoints)
+      return;
+
+   //assert(pad != 0 && "ConvertPointsAndMerge, parameter 'pad' is null");
+   //assert(threshold != 0 && "ConvertPointsAndMerge, parameter 'threshold' must be > 0");
+   //assert(x != 0 && "ConvertPointsAndMerge, parameter 'x' is null");
+   //assert(y != 0 && "ConvertPointsAndMerge, parameter 'y' is null");
+
+   dst.clear();
+   dst.reserve(threshold);
+
+   ConvertPointsAndMergePassX(pad, nPoints, x, y, dst);
+   
+   if (dst.size() < threshold)
+      return;
+
+   ConvertPointsAndMergeInplacePassY(dst);
+}
+
+//______________________________________________________________________________
+template<class T>
+void DrawFillAreaAux(TVirtualPad *pad, Int_t nPoints, const T *xs, const T *ys)
+{
+   //assert(pad != 0 && "DrawFillAreaAux, parameter 'pad' is null");
+   //assert(nPoints > 2 && "DrawFillAreaAux, invalid number of points");
+   //assert(xs != 0 && "DrawFillAreaAux, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawFillAreaAux, parameter 'ys' is null");
+   
+   std::vector<TPoint> xy;
+   
+   const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
+                                 pad->GetWh() * pad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0) {
+      //Ooops, pad is invisible or something really bad and stupid happened.
+      ::Error("DrawFillAreaAux", "invalid pad's geometry");
+      return;
+   }
+
+   if (nPoints < threshold)
+      ConvertPoints(gPad, nPoints, xs, ys, xy);
+   else
+      ConvertPointsAndMerge(gPad, threshold, nPoints, xs, ys, xy);
+
+   //We close the 'polygon' and it'll be rendered as a polyline by gVirtualX.
+   if (!gVirtualX->GetFillStyle())
+      xy.push_back(xy.front());
+   
+   if (xy.size() > 2)
+      gVirtualX->DrawFillArea(xy.size(), &xy[0]);
+}
+
+//______________________________________________________________________________
+template<typename T>
+void DrawPolyLineAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
+{
+   //assert(pad != 0 && "DrawPolyLineAux, parameter 'pad' is null");
+   //assert(nPoints > 1 && "DrawPolyLineAux, invalid number of points");
+   //assert(xs != 0 && "DrawPolyLineAux, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawPolyLineAux, parameter 'ys' is null");
+   
+   std::vector<TPoint> xy;
+
+   const Int_t threshold = Int_t(TMath::Min(pad->GetWw() * pad->GetAbsWNDC(),
+                                            pad->GetWh() * pad->GetAbsHNDC())) * 2;
+
+   if (threshold <= 0) {//Ooops, pad is invisible or something really bad and stupid happened.
+      ::Error("DrawPolyLineAux", "invalid pad's geometry");
+      return;
+   }
+
+   if (nPoints < (unsigned)threshold)
+      ConvertPoints(pad, nPoints, xs, ys, xy);
+   else
+      ConvertPointsAndMerge(pad, threshold, nPoints, xs, ys, xy);
+
+   if (xy.size() > 1)
+      gVirtualX->DrawPolyLine(xy.size(), &xy[0]);
+   
+}
+
+//______________________________________________________________________________
+template<class T>
+void DrawPolyMarkerAux(TVirtualPad *pad, unsigned nPoints, const T *xs, const T *ys)
+{
+   //assert(pad != 0 && "DrawPolyMarkerAux, parameter 'pad' is null");
+   //assert(nPoints != 0 && "DrawPolyMarkerAux, invalid number of points");
+   //assert(xs != 0 && "DrawPolyMarkerAux, parameter 'xs' is null");
+   //assert(ys != 0 && "DrawPolyMarkerAux, parameter 'ys' is null");
+
+   std::vector<TPoint> xy(nPoints);
+
+   for (unsigned i = 0; i < nPoints; ++i) {
+      xy[i].fX = (SCoord_t)pad->XtoPixel(xs[i]);
+      xy[i].fY = (SCoord_t)pad->YtoPixel(ys[i]);
+   }
+
+   gVirtualX->DrawPolyMarker(nPoints, &xy[0]);
+}
+
 }
