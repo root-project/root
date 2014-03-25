@@ -41,6 +41,7 @@
 #ifndef ROOT_TGWidget
 #include "TGWidget.h"
 #endif
+#include "TColor.h"
 
 
 class TGTextEntry;
@@ -169,14 +170,15 @@ protected:
    Pixel_t         fInitColor;      // initially set color
    Int_t          *fRetc;           // return code (kMBOk, kMBCancel)
    Pixel_t        *fRetColor;       // return color
+   TColor         *fRetTColor;      // return TColor, needed for changed alpha
 
    TGColorPalette *fPalette;        // color palette
    TGColorPalette *fCpalette;       // color palette
    TGColorPick    *fColors;         // color pick widget
    TGFrame        *fSample;         // color sample frame
    TGFrame        *fSampleOld;      // color sample frame
-   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte; // RGB/HLS text entries
-   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb; // RGB/HLS associated buffers
+   TGTextEntry    *fRte, *fGte, *fBte, *fHte, *fLte, *fSte, *fAle; // RGB/HLS text entries
+   TGTextBuffer   *fRtb, *fGtb, *fBtb, *fHtb, *fLtb, *fStb, *fAlb; // RGB/HLS associated buffers
    Bool_t          fWaitFor;         // call WaitFor method in constructor
    
    TGTab               *fTab;        //tab widget holding the color selectors
@@ -187,6 +189,7 @@ protected:
    
    void           UpdateRGBentries(Pixel_t *c);
    void           UpdateHLSentries(Pixel_t *c);
+   void           UpdateAlpha(Pixel_t *c);
    virtual void   CloseWindow();
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
@@ -199,6 +202,7 @@ public:
    TGColorPalette *GetCustomPalette() const { return fCpalette; }
 
    virtual void ColorSelected(Pixel_t); //*SIGNAL*
+   virtual void AlphaColorSelected(ULong_t); //*SIGNAL*
            void DoPreview();
    virtual void SetCurrentColor(Pixel_t col);
            void SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *selected);

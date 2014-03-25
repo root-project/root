@@ -61,7 +61,7 @@
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
 #include "TROOT.h"
-
+#include "TMath.h"
 
 ClassImp(TGColorPalette)
 ClassImp(TGColorPick)
@@ -90,7 +90,8 @@ enum EColorDialog {
    kCDLG_STE,
    kCDLG_RTE,
    kCDLG_GTE,
-   kCDLG_BTE
+   kCDLG_BTE,
+   kCDLG_ALE
 };
 
 enum EColorPick {
@@ -1054,6 +1055,7 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
 
    fRetc = retc;
    fRetColor = color;
+   if((fRetTColor = gROOT->GetColor(TColor::GetColor(*color)))) {};
    fWaitFor = wait;
    fInitColor = *fRetColor;
 
@@ -1084,6 +1086,13 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    cf1->AddFrame(new TGLabel(cf1, new TGHotString("Blue:")));
    cf1->AddFrame(fBte = new TGTextEntry(cf1, fBtb = new TGTextBuffer(5), kCDLG_BTE),0);
    fBte->Resize(50, fBte->GetDefaultHeight());
+   cf1->AddFrame(new TGLabel(cf1, new TGHotString("Opacity:")),0);
+   cf1->AddFrame(fAle = new TGTextEntry(cf1, fAlb = new TGTextBuffer(5), kCDLG_ALE),0);
+   fAle->Resize(50, fAle->GetDefaultHeight());
+
+   if (!TCanvas::SupportAlpha()) {
+      fAle->SetEnabled(kFALSE);
+   }
 
    TGCompositeFrame *cf2 = new TGCompositeFrame(cf, 10, 10);
    cf2->SetCleanup();
@@ -1105,10 +1114,12 @@ TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
    fRte->Associate(this);
    fGte->Associate(this);
    fBte->Associate(this);
+   fAle->Associate(this);
 
    if (color) {
       UpdateRGBentries(color);
       UpdateHLSentries(color);
+      UpdateAlpha(color);
       fCurrentColor = *color;
    } else {
       gClient->GetColorByName("red", fCurrentColor);
@@ -1313,6 +1324,7 @@ void TGColorDialog::SetCurrentColor(Pixel_t col)
       return;
    }
    fInitColor = *fRetColor = col;
+   if((fRetTColor = gROOT->GetColor(TColor::GetColor(col)))) {};
    fCurrentColor = col;
    fColors->SetColor(col);
    fSample->SetBackgroundColor(col);
@@ -1328,6 +1340,14 @@ void TGColorDialog::ColorSelected(Pixel_t color)
 }
 
 //________________________________________________________________________________
+void TGColorDialog::AlphaColorSelected(ULong_t color)
+{
+   // Emit signal about selected alpha and color.
+
+   Emit("AlphaColorSelected(ULong_t)", color);
+}
+
+//________________________________________________________________________________
 void TGColorDialog::CloseWindow()
 {
    // Called when window is closed via window manager.
@@ -1338,13 +1358,34 @@ void TGColorDialog::CloseWindow()
 
    if (*fRetc != kMBOk) {
       ColorSelected(fInitColor);
+      ULong_t ptr;
+      if((ptr = (ULong_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
    } else {
       ColorSelected(*fRetColor);
+      AlphaColorSelected((ULong_t)fRetTColor);
    }
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
    UnmapWindow();
 }
+
+//________________________________________________________________________________
+void TGColorDialog::UpdateAlpha(ULong_t *c)
+{
+   // Upadate Opacity text entry with alpha value of color c.
+
+   Char_t tmp[20];
+   Double_t alpha;
+
+   if (TColor *color = gROOT->GetColor(TColor::GetColor(*c))) {
+      alpha = color->GetAlpha();    
+      snprintf(tmp, 20, "%.1f", alpha);
+      fAlb->Clear();
+      fAlb->AddText(0,tmp);
+      gClient->NeedRedraw(fAle);
+   }
+}
+
 
 //________________________________________________________________________________
 void TGColorDialog::UpdateRGBentries(ULong_t *c)
@@ -1424,6 +1465,8 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      *fRetColor = TColor::RGB2Pixel(atoi(fRtb->GetString()),
                                                     atoi(fGtb->GetString()),
                                                     atoi(fBtb->GetString()));
+                     if ((fRetTColor = gROOT->GetColor(TColor::GetColor(*fRetColor)))) {};
+                     fRetTColor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
                      CloseWindow();
                      break;
                   case kCDLG_CANCEL:
@@ -1451,6 +1494,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      fColors->SetColor(color);
                      UpdateRGBentries(&color);
                      UpdateHLSentries(&color);
+                     UpdateAlpha(&color);
                      break;
 
                   case kCDLG_CPALETTE:
@@ -1462,6 +1506,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      fColors->SetColor(color);
                      UpdateRGBentries(&color);
                      UpdateHLSentries(&color);
+                     UpdateAlpha(&color);
                      break;
 
                   case kCDLG_COLORPICK:
@@ -1472,6 +1517,7 @@ Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
                      fCurrentColor = color;
                      UpdateRGBentries(&color);
                      UpdateHLSentries(&color);
+                     UpdateAlpha(&color);
                      break;
 
                }
@@ -1538,6 +1584,7 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
       if (event == kButton1Down) {
          UpdateRGBentries(&pcolor);
          UpdateHLSentries(&pcolor);
+         UpdateAlpha(&pcolor);
          fSample->SetBackgroundColor(pcolor);
          fColorInfo->SetText(Form("New: %s",color->GetName()));
          gClient->NeedRedraw(fSample);
@@ -1554,12 +1601,19 @@ void TGColorDialog::DoPreview()
 {
    // Slot method called when Preview button is clicked.
 
+   TColor *tcolor;
+   if ((tcolor = gROOT->GetColor(TColor::GetColor(fSample->GetBackground())))) {
+      tcolor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
+   }
+
    if (fClient->IsEditable()) {
       ColorSelected(fSample->GetBackground());
+      AlphaColorSelected((ULong_t)tcolor);
       return;
    }
    TGColorPopup *p = (TGColorPopup *)GetMain();
-   if (p && p->InheritsFrom("TGColorPopup"))
-      p->PreviewColor(fSample->GetBackground());
+   if (p && p->InheritsFrom("TGColorPopup")) {
+      if (tcolor) p->PreviewAlphaColor((ULong_t)tcolor);
+      else p->PreviewColor(fSample->GetBackground());
+   }
 }
-

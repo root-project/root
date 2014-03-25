@@ -51,6 +51,7 @@ public:
 
    virtual void   SetModel(TObject* obj);
    virtual void   DoFillColor(Pixel_t color);
+   virtual void   DoFillAlphaColor(ULong_t p);
    virtual void   DoFillPattern(Style_t color);
    virtual void   DoAlpha();
    virtual void   DoAlphaField();

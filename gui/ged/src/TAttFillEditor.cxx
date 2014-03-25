@@ -97,6 +97,7 @@ void TAttFillEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttFillEditor", this, "DoFillColor(Pixel_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttFillEditor", this, "DoFillAlphaColor(ULong_t)");
    fPatternSelect->Connect("PatternSelected(Style_t)", "TAttFillEditor", this, "DoFillPattern(Style_t)");
    fAlpha->Connect("Released()","TAttFillEditor", this, "DoAlpha()");
    fAlpha->Connect("PositionChanged(Int_t)","TAttFillEditor", this, "DoLiveAlpha(Int_t)");
@@ -130,6 +131,21 @@ void TAttFillEditor::SetModel(TObject* obj)
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
    }   
+}
+
+//______________________________________________________________________________
+void TAttFillEditor::DoFillAlphaColor(ULong_t p)
+{
+   // Slot connected to the fill area color with alpha.
+
+   TColor *color = (TColor *)p;
+
+   if (fAvoidSignal) return;
+   fAttFill->SetFillColor(color->GetNumber());
+   fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+   fAlphaField->SetNumber(color->GetAlpha());
+
+   Update();
 }
 
 //______________________________________________________________________________

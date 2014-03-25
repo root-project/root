@@ -121,6 +121,7 @@ public:
    void    PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void    EndPopup();
    void    PreviewColor(Pixel_t color);
+   void    PreviewAlphaColor(ULong_t color);
 
    ClassDef(TGColorPopup,0)  // Color selector popup
 };
@@ -152,6 +153,7 @@ public:
    virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
    void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
+   void    SetAlphaColor(ULong_t color, Bool_t emit = kTRUE);
    Pixel_t GetColor() const { return fColor; }
    void    Enable(Bool_t on = kTRUE);  //*TOGGLE* *GETTER=IsEnabled
    void    Disable();
@@ -162,10 +164,12 @@ public:
    void SetEnabled(Bool_t e = kTRUE) {TGButton::SetEnabled(e); }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(43, 21); }
-   virtual void SavePrimitive(ostream &out, Option_t * = "");
+   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
+   virtual void AlphaColorSelected(ULong_t colptr = 0)
+            { Emit("AlphaColorSelected(ULong_t)", colptr); }  //*SIGNAL*
 
    ClassDef(TGColorSelect,0)  // Color selection checkbutton
 };
