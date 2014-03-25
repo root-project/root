@@ -187,6 +187,8 @@ TLegend::TLegend(): TPave(), TAttText(12,0,1,gStyle->GetLegendFont(),0)
 
    fPrimitives = 0;
    SetDefaults();
+   SetBorderSize(gStyle->GetLegendBorderSize());
+   SetFillColor(gStyle->GetLegendFillColor());
 }
 
 
@@ -219,6 +221,7 @@ TLegend::TLegend( Double_t x1, Double_t y1,Double_t x2, Double_t y2,
    }
    SetDefaults();
    SetBorderSize(gStyle->GetLegendBorderSize());
+   SetFillColor(gStyle->GetLegendFillColor());
 }
 
 
