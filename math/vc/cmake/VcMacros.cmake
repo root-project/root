@@ -376,10 +376,9 @@ macro(vc_set_preferred_compiler_flags)
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-local-type-template-args")
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unnamed-type-template-args")
 
-      # disable this warning appearing from version 3.4 (5.1) 
-      vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unused-function")
-
-      AddCompilerFlag(-stdlib=libc++)
+      if(NOT DEFINED Vc_INSIDE_ROOT)  # ROOT has to set this up
+         AddCompilerFlag(-stdlib=libc++)
+      endif()
    endif()
 
    if(NOT Vc_COMPILER_IS_MSVC)

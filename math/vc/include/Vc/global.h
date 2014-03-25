@@ -62,6 +62,8 @@
 //     ::max_align_t was introduced with GCC 4.7. std::max_align_t took a bit longer.
 #      define VC_HAVE_MAX_ALIGN_T 1
 #    endif
+#  elif defined(VC_ICC)
+#      define VC_HAVE_MAX_ALIGN_T 1
 #  elif !defined(VC_CLANG)
 //   Clang doesn't provide max_align_t at all
 #    define VC_HAVE_STD_MAX_ALIGN_T 1

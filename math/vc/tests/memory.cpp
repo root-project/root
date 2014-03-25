@@ -284,6 +284,22 @@ template<typename V> void testCCtor()
     }
 }
 
+template<typename V> void testCopyAssignment()
+{
+    Memory<V, 99> m1;
+    m1.setZero();
+
+    Memory<V, 99> m2(m1);
+    for (size_t i = 0; i < m2.entriesCount(); ++i) {
+        COMPARE(m2[i], 0);
+        m2[i] += 1;
+    }
+    m1 = m2;
+    for (size_t i = 0; i < m2.entriesCount(); ++i) {
+        COMPARE(m1[i], 1);
+    }
+}
+
 int main()
 {
     testAllTypes(testEntries);
@@ -293,6 +309,7 @@ int main()
     testAllTypes(testVectorReorganization);
     testAllTypes(memoryOperators);
     testAllTypes(testCCtor);
+    testAllTypes(testCopyAssignment);
 
     return 0;
 }

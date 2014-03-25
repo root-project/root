@@ -17,12 +17,12 @@
 
 }}}*/
 
-#ifndef VC_COMMON_CONST_H
-#define VC_COMMON_CONST_H
+#ifndef VC_TESTS_CONST_H_
+#define VC_TESTS_CONST_H_
 
 #include <Vc/common/macros.h>
 
-namespace ROOT { 
+namespace ROOT {
 namespace Vc
 {
     template<typename T> struct Math;
@@ -63,4 +63,4 @@ namespace Vc
 
 #include <Vc/common/undomacros.h>
 
-#endif // VC_COMMON_CONST_H
+#endif  // VC_TESTS_CONST_H_

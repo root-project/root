@@ -25,6 +25,8 @@
 #include <vector>
 #include "unittest.h"
 
+#include "Vc/common/macros.h"
+
 template<typename Vec> size_t alignmentMask()
 {
     if (Vec::Size == 1) {
@@ -55,6 +57,13 @@ template<typename V> void stdVectorAlignment()
 
     std::vector<V> v3(v);
     std::vector<SomeStruct<V>, Vc::Allocator<SomeStruct<V> > > v4(v2);
+
+    typedef typename V::EntryType T;
+    for (int i = 1; i < 100; ++i) {
+        std::vector<T, Vc::Allocator<T> > v5(i);
+        const size_t expectedAlignment = Vc_ALIGNOF(V);
+        COMPARE((&v5[0] - static_cast<const T *>(0)) * sizeof(T) & (expectedAlignment - 1), 0);
+    }
 }
 
 int main(int argc, char **argv)
