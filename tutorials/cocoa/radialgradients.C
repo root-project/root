@@ -1,5 +1,5 @@
 //This tutorial demonstrates how to use radial gradients,
-//custom colors, transparency, transparent pads.
+//custom colors, transparency.
 //Requires ROOT built for OS X with --enable-cocoa.
 
 #include <iostream>
@@ -90,6 +90,7 @@ void radialgradients()
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("radialgradients",
               "this demo requires OS X and ROOT built with --enable-cocoa");
+      delete cnv;
       return;
    }
 
