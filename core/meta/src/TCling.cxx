@@ -3644,7 +3644,6 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
       TString lib_name = "";
       std::string line;
       while (getline(file, line, '\n')) {
-         if (fSeenForwdDecl.find(line) != fSeenForwdDecl.end()) continue;
          if ((line.substr(0, 8) == "Library.") || 
              (line.substr(0, 8) == "Declare.")) {
             file.close();
@@ -3656,6 +3655,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (line.empty()) continue;
+               if (fSeenRootmapEntry.find(line) != fSeenRootmapEntry.end()) continue;
                cling::Transaction* T = 0;
                cling::Interpreter::CompilationResult compRes= fInterpreter->declare(line.c_str(), &T);
                assert(cling::Interpreter::kSuccess == compRes &&
@@ -3698,14 +3698,21 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
             std::string keyname = line.substr(keyLen, line.length()-keyLen);
             if (gDebug > 6)
                Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());
-            bool isThere = fMapfile->Lookup(keyname.c_str());
+            TEnvRec* isThere = fMapfile->Lookup(keyname.c_str());
             if (isThere){
-               Warning("ReadRootmapFile", "class %s is already in %s", keyname.c_str(), lib_name.Data());
+               if (firstChar == 'n') {
+                  if (gDebug > 3)
+                     Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
+                          keyname.c_str(), lib_name.Data(), isThere->GetValue());
+               } else if (!TClassEdit::IsSTLCont(keyname.c_str())) {
+                  Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
+                          keyname.c_str(), lib_name.Data(), isThere->GetValue());
+               }
             } else {
                fMapfile->SetValue(keyname.c_str(), lib_name.Data());
             }
          }
-         fSeenForwdDecl.insert(line);
+         fSeenRootmapEntry.insert(line);
       }
       file.close();
    }
