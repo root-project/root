@@ -107,6 +107,7 @@ void TAttMarkerEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttMarkerEditor", this, "DoMarkerAlphaColor(ULong_t)");
    fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
    fMarkerSize->Connect("ValueSet(Long_t)", "TAttMarkerEditor", this, "DoMarkerSize()");
    (fMarkerSize->GetNumberEntry())->Connect("ReturnPressed()", "TAttMarkerEditor", this, "DoMarkerSize()");
@@ -170,6 +171,21 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }
+
+   Update();
+}
+
+//______________________________________________________________________________
+void TAttMarkerEditor::DoMarkerAlphaColor(ULong_t p)
+{
+   // Slot connected to the color with alpha.
+
+   TColor *color = (TColor *)p;
+
+   if (fAvoidSignal) return;
+   fAttMarker->SetMarkerColor(color->GetNumber());
+   fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+   fAlphaField->SetNumber(color->GetAlpha());
 
    Update();
 }
