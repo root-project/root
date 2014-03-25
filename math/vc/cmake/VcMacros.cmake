@@ -367,7 +367,7 @@ macro(vc_set_preferred_compiler_flags)
       # for now I don't know of any arguments I want to pass. -march and stuff is tried by OptimizeForArchitecture...
       if(Vc_CLANG_VERSION VERSION_EQUAL "3.0")
          UserWarning("Clang 3.0 has serious issues to compile Vc code and will most likely crash when trying to do so.\nPlease update to a recent clang version.")
-      elseif(Vc_CLANG_VERSION VERSION_LESS "3.3")
+      elseif(Vc_CLANG_VERSION VERSION_EQUAL "3.2" AND NOT APPLE)
          # the LLVM assembler gets FMAs wrong (bug 15040)
          vc_add_compiler_flag(Vc_DEFINITIONS "-no-integrated-as")
       endif()
@@ -375,13 +375,8 @@ macro(vc_set_preferred_compiler_flags)
       # disable these warnings because clang shows them for function overloads that were discarded via SFINAE
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-local-type-template-args")
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unnamed-type-template-args")
-      # disable this warning appearing from version 3.4 (5.1) 
-      vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unused-function")
-      
 
-
-#not needed in ROOT 
-#      AddCompilerFlag(-stdlib=libc++)
+      AddCompilerFlag(-stdlib=libc++)
    endif()
 
    if(NOT Vc_COMPILER_IS_MSVC)

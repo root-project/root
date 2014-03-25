@@ -188,13 +188,17 @@ template<typename Vec> void testMulSub()
 template<typename Vec> void testDiv()
 {
     typedef typename Vec::EntryType T;
+    // If this test fails for ICC see here:
+    // http://software.intel.com/en-us/forums/topic/488995
+
     const T stepsize = std::max(T(1), T(std::numeric_limits<T>::max() / 1024));
     for (T divisor = 1; divisor < 5; ++divisor) {
         for (T scalar = std::numeric_limits<T>::min(); scalar < std::numeric_limits<T>::max() - stepsize + 1; scalar += stepsize) {
             Vec vector(scalar);
             Vec reference(scalar / divisor);
 
-            COMPARE(vector / divisor, reference) << '\n' << vector << " / " << divisor;
+            COMPARE(vector / divisor, reference) << '\n' << vector << " / " << divisor
+                << ", reference: " << scalar << " / " << divisor << " = " << scalar / divisor;
             vector /= divisor;
             COMPARE(vector, reference);
         }

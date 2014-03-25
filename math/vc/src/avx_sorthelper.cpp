@@ -123,9 +123,11 @@ template<> m256i SortHelper<int>::sort(VTArg _hgfedcba)
     m128i b = Reg::shuffle<Y0, Y1, X0, X1>(y, x); // b3 <= b2 <= b1 <= b0
     m128i a = _mm_unpackhi_epi64(x, y);           // a3 >= a2 >= a1 >= a0
 
-    if (VC_IS_UNLIKELY(_mm_extract_epi32(x, 2) >= _mm_extract_epi32(y, 1))) {
+    // _mm_extract_epi32 from clang < 3.4 returns an unsigned int - the static_cast is free for
+    // conforming compilers, but fixes broken ones
+    if (VC_IS_UNLIKELY(static_cast<int>(_mm_extract_epi32(x, 2)) >= static_cast<int>(_mm_extract_epi32(y, 1)))) {
         return concat(Reg::permute<X0, X1, X2, X3>(b), a);
-    } else if (VC_IS_UNLIKELY(_mm_extract_epi32(x, 0) >= _mm_extract_epi32(y, 3))) {
+    } else if (VC_IS_UNLIKELY(static_cast<int>(_mm_extract_epi32(x, 0)) >= static_cast<int>(_mm_extract_epi32(y, 3)))) {
         return concat(a, Reg::permute<X0, X1, X2, X3>(b));
     }
 
