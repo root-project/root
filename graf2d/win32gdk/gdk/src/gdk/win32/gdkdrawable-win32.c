@@ -180,15 +180,15 @@ void RenderRgn(HDC hDC, HRGN hrgn, HBRUSH hbrFill)
 
    if ((rectRgn.right - rectRgn.left > 16) &&
        (rectRgn.bottom - rectRgn.top > 16)) {
-      // Area must align to 8x8 pattern
-      if (rectRgn.left % 8 != 0)
-         rectRgn.left -= rectRgn.left % 8;
-      if (rectRgn.top % 8 != 0)
-         rectRgn.top -= rectRgn.top % 8;
-      if (rectRgn.right % 8 != 0)
-         rectRgn.right += rectRgn.right % 8;
-      if (rectRgn.bottom % 8 != 0)
-         rectRgn.bottom += rectRgn.bottom % 8;
+      // Area must align to 16x16 pattern
+      if (rectRgn.left % 16 != 0)
+         rectRgn.left -= rectRgn.left % 16;
+      if (rectRgn.top % 16 != 0)
+         rectRgn.top -= rectRgn.top % 16;
+      if (rectRgn.right % 16 != 0)
+         rectRgn.right += rectRgn.right % 16;
+      if (rectRgn.bottom % 16 != 0)
+         rectRgn.bottom += rectRgn.bottom % 16;
    }
 
    // Create bitmap for pattern
