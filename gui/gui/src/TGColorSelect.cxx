@@ -359,6 +359,18 @@ void TGColorPopup::PreviewColor(Pixel_t color)
 }
 
 //________________________________________________________________________________
+void TGColorPopup::PreviewAlphaColor(ULong_t color)
+{
+   // Emit a signal to see preview.
+   
+   if (fClient->IsEditable()) return;
+
+   TColor *tcolor = (TColor *)color;
+   fCurrentColor = tcolor->GetPixel();
+   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULong_t)tcolor);  
+}
+
+//________________________________________________________________________________
 TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
@@ -399,12 +411,20 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
          switch (GET_SUBMSG(msg)) {
-            case kCOL_SELCHANGED:
+            case kCOL_SELCHANGED: 
                {
-                  SetColor(parm2);
-                  parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id 
-                  SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
-                              parm1, parm2);
+                  if (parm1 == 0) {
+                     SetAlphaColor((ULong_t)parm2);
+                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id 
+                     SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
+                                 parm1, parm2);
+                  }
+                  else {
+                     SetColor(parm2);
+                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id 
+                     SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
+                                 parm1, parm2);
+                  }
                }
                break;
 
@@ -612,6 +632,16 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
    if (emit)
       ColorSelected(fColor);   // emit a signal
 }
+
+//________________________________________________________________________________
+void TGColorSelect::SetAlphaColor(ULong_t color, Bool_t emit)
+{
+   // Set color.
+   if (emit) {
+      AlphaColorSelected(color); //emit opacity signal
+   }
+}
+
 
 //______________________________________________________________________________
 void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
