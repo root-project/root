@@ -1638,7 +1638,7 @@ enable/disable options, prefix with either --enable- or --disable-
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
-  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)
+  mathmore           Build the new libMathMore extended math library, requires GSL (vers. >= 1.10)
   memstat            A memory statistics utility, helps to detect memory leaks
   minuit2            Build the new libMinuit2 minimizer library
   monalisa           Monalisa monitoring support, requires libapmoncpp
@@ -6207,11 +6207,11 @@ if test ! "x$enable_mathmore" = "xno"; then
         ${finkdir:+$finkdir/include} \
         /usr/local/include /usr/include /opt/gsl/include
 
-    # check for gsl version >= 1.8
+    # check for gsl version >= 1.10
     if test ! "x$found_dir" = "x"; then
-        message "Checking for GSL version >= 1.8"
-        gsl_version=`grep "define GSL" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\..*[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
-        if test $gsl_version -lt 1008; then
+        message "Checking for GSL version >= 1.10"
+        gsl_version=`grep "define GSL_VERSION" $found_dir/gsl/gsl_version.h | sed 's/^.*"\([0-9]\..*[0-9]\)"/\1/' |  awk 'BEGIN { FS="." } { printf "%d", $1 * 1000 + $2 }'`
+        if test $gsl_version -lt 1010; then
             gslskip="skip"
             result "no"
             enable_mathmore="no"
