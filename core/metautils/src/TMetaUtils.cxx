@@ -3229,15 +3229,16 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
          QualType tArgQualType = typeTArg.getAsType();
 
          // Recurse if the tArgQualType is a TemplateSpecializationType
-         if (const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(tArgQualType)) {
-            if (const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()) {
-               const int nArgsToKeepInternal = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
-               if (TemplateParameterList* tParsPtr = ctd->getTemplateParameters()) {
-                  KeepNParams(tArgQualType, astCtxt, ctsd->getTemplateArgs(), *tParsPtr, nArgsToKeepInternal, normCtxt);
-                  typeTArg = TemplateArgument(tArgQualType);
-               }
+         const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(tArgQualType);
+         const ClassTemplateDecl* ctd = ctsd ? ctsd->getSpecializedTemplate() : nullptr;
+         if (ctd){
+            const int nArgsToKeepInternal = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
+            if (TemplateParameterList* tParsPtr = ctd->getTemplateParameters()) {
+               KeepNParams(tArgQualType, astCtxt, ctsd->getTemplateArgs(), *tParsPtr, nArgsToKeepInternal, normCtxt);
+               typeTArg = TemplateArgument(tArgQualType);
             }
          }
+         
          const TemplateTypeParmDecl* ttpdPtr = llvm::dyn_cast<TemplateTypeParmDecl>(tParPtr);
          if (!ttpdPtr) return;
          const TemplateTypeParmDecl& tPar = *ttpdPtr;
@@ -3254,6 +3255,48 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
          QualType tParQualType = tPar.getDefaultArgument();
 
          bool isDefaultValue = tParQualType.getTypePtr() == tArgQualType.getTypePtr();
+         
+         // Check if the parameter is a template and verify if it's the same in the template
+         if (!isDefaultValue && ctsd && ctd){
+            isDefaultValue=true;
+            // Now we need to check for every template parameter of the specialisation (ctsd) AND
+            // of the template (ctd)
+            // the index, if any, of the other preceeding template args it corresponds to
+            // We say they differ if any of these indices is different.
+            
+            // Loop on the template arguments/parameters of ctd and ctsd
+            TemplateParameterList* thisTemplateParams = ctd->getTemplateParameters();
+            const TemplateArgumentList& thisTemplateSpecArgs = ctsd->getTemplateArgs();
+            
+            const int thisNArgs = thisTemplateParams->size();
+            for (int thisIndex=0;thisIndex<thisNArgs;++thisIndex){
+               // Loop on the previous, external arguments/parameters
+               NamedDecl* thisPar = thisTemplateParams->getParam(thisIndex);
+               const TemplateArgument& thisArg = thisTemplateSpecArgs.get(thisIndex);
+               for (int externalIndex=0;externalIndex<index;++externalIndex){            
+                  int identicalParamPos=-1;
+                  const NamedDecl* externalPar = tPars.getParam(externalIndex);
+                  if (thisPar->getName() == externalPar->getName()){
+                     identicalParamPos=externalIndex;
+                  }
+                  
+                  int identicalArgPos=-1;
+                  const TemplateArgument& externalArg = tArgs.get(externalIndex);
+                  if (thisArg.getAsDecl() == externalArg.getAsDecl() ||
+                      thisArg.getAsExpr() == externalArg.getAsExpr() ||
+                      thisArg.getAsIntegral() == externalArg.getAsIntegral() ||
+                      thisArg.getAsType() == externalArg.getAsType()){
+                     identicalArgPos=externalIndex;
+                  }                  
+                  
+                  // if index different, they are different. 
+                  if (identicalArgPos!=identicalParamPos){
+                     isDefaultValue=false;
+                     break;
+                  }                  
+               } // end loop on external params/args
+            } // end loop on params/args of this template/templatespecialisation            
+         }
 
          if (isDefaultValue && !shouldKeepArg) {
             paramHasDefaultValue = true;
@@ -3357,6 +3400,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
          if(clang::TemplateParameterList* tParsPtr = 
                                                   ctd->getTemplateParameters()){
             if (nArgsToKeep >= 0) {
+               std::cout << "Diving into " << ctsd->getNameAsString() << std::endl;
                KeepNParams(normalizedType, 
                            ctxt,
                            ctsd->getTemplateArgs(),
