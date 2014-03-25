@@ -112,6 +112,7 @@ void TAttTextEditor::ConnectSignals2Slots()
    fAlphaField->Connect("ReturnPressed()","TAttTextEditor", this, "DoAlphaField()");
    fAlpha->Connect("Pressed()","TAttTextEditor", this, "GetCurAlpha()");
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttTextEditor", this, "DoTextColor(Pixel_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttTextEditor", this, "DoTextAlphaColor(ULong_t)");
    fInit = kFALSE;
 }
 
@@ -175,6 +176,21 @@ void TAttTextEditor::DoTextColor(Pixel_t color)
 }
 
 //______________________________________________________________________________
+void TAttTextEditor::DoTextAlphaColor(ULong_t p)
+{
+   // Slot connected to the color with alpha.
+
+   TColor *color = (TColor *)p;
+
+   if (fAvoidSignal) return;
+   fAttText->SetTextColor(color->GetNumber());
+   fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+   fAlphaField->SetNumber(color->GetAlpha());
+   
+   Update();
+}
+
+//______________________________________________________________________________
 Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
 {
    // Process message.
@@ -184,7 +200,7 @@ Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
    Bool_t b = kFALSE;
 
    if (GET_MSG(msg) == kC_COLORSEL && GET_SUBMSG(msg) == kCOL_SELCHANGED) {
-      fAttText->SetTextColor(TColor::GetColor(parm2));
+      if (parm1 != 0) fAttText->SetTextColor(TColor::GetColor(parm2));
       b = kTRUE;
       // SendMessage(fMsgWindow, msg, parm1, parm2);
    }

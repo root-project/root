@@ -54,6 +54,7 @@ public:
 
    virtual void     SetModel(TObject* obj);
    virtual void     DoMarkerColor(Pixel_t color);
+   virtual void     DoMarkerAlphaColor(ULong_t p);
    virtual void     DoMarkerSize();
    virtual void     DoMarkerStyle(Style_t style);
    virtual void     DoAlpha();

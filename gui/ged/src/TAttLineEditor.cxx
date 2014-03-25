@@ -107,6 +107,7 @@ void TAttLineEditor::ConnectSignals2Slots()
    // Connect signals to slots.
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttLineEditor", this, "DoLineAlphaColor(ULong_t)");
    fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)"); 
    fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)");
    fAlpha->Connect("Released()","TAttLineEditor", this, "DoAlpha()");
@@ -166,6 +167,21 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
    Update();
 }
 
+
+//______________________________________________________________________________
+void TAttLineEditor::DoLineAlphaColor(ULong_t p)
+{
+   // Slot connected to the color with alpha.
+
+   TColor *color = (TColor *)p;
+
+   if (fAvoidSignal) return;
+   fAttLine->SetLineColor(color->GetNumber());
+   fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
+   fAlphaField->SetNumber(color->GetAlpha());
+
+   Update();
+}
 
 //______________________________________________________________________________
 void TAttLineEditor::DoLineStyle(Int_t style)

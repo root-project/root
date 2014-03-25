@@ -57,6 +57,7 @@ public:
 
    virtual void     SetModel(TObject* obj);
    virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual void     DoTextAlphaColor(ULong_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();
    virtual void     DoLiveAlpha(Int_t a);
