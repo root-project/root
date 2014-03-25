@@ -74,7 +74,7 @@ distclean::     distclean-$(MODNAME)
 ##### extra rules ######
 $(X11TTFO) $(X11TTFDO): $(FREETYPEDEP)
 ifeq ($(PLATFORM),macosx)
-$(X11TTFO) $(X11TTFDO): CXXFLAGS += -I/usr/X11R6/include $(FREETYPEINC)
+$(X11TTFO) $(X11TTFDO): CXXFLAGS += $(X11INCDIR:%=-I%) $(FREETYPEINC)
 else
 ifeq ($(PLATFORM),aix5)
 $(X11TTFO) $(X11TTFDO): CXXFLAGS += -I$(X11DIRI) $(FREETYPEINC)
