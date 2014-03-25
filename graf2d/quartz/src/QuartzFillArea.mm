@@ -49,6 +49,10 @@ struct GradientParameters {
    CGFloat fStartRadius;
    CGFloat fEndRadius;
    
+   //For the 'simple' radial gradient we use
+   //only fStartPoint (it's a center actually)
+   //and fStartRadius.
+   
    //Something else:...
    
    GradientParameters()
@@ -153,6 +157,8 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
    assert(grad != 0 && "CalculateGradientRadiuses, parameter 'grad' is null");
    assert(sizeOfDrawable.width > 0. && sizeOfDrawable.height > 0. &&
           "CalculateGradientRadiuses, invalid destination drawable size");
+   assert(grad->GetGradientType() == TRadialGradient::kExtended &&
+          "CalculateGradientRadiuses, extended radial gradient expected");
    assert(n > 2 && "CalculateGradientRadiuses, parameter 'n' is not a valid number of points");
    assert(polygon != 0 &&
           "CalculateGradientRadiuses, parameter 'polygon' is null");
@@ -169,18 +175,64 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
       const CGFloat scale = bbox.size.width < bbox.size.height ?
                             bbox.size.height : bbox.size.width;
       
-      startRadius *= scale * 0.5;
-      endRadius *= scale * 0.5;
+      startRadius *= scale;
+      endRadius *= scale;
    } else {
       const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
                             sizeOfDrawable.height : sizeOfDrawable.width;
-      startRadius *= scale * 0.5;
-      endRadius *= scale * 0.5;
+      startRadius *= scale;
+      endRadius *= scale;
    }
    
    params.fStartRadius = startRadius;
    params.fEndRadius = endRadius;
    
+   return true;
+}
+
+//______________________________________________________________________________
+bool CalculateSimpleRadialGradientParameters(const TRadialGradient *grad,
+                                             const CGSize &sizeOfDrawable,
+                                             Int_t n, const TPoint *polygon,
+                                             GradientParameters &params)
+{
+   assert(grad != 0 &&
+          "CalculateSimpleRadialGradientParameters, parameter 'grad' is null");
+   assert(grad->GetGradientType() == TRadialGradient::kSimple &&
+          "CalculateSimpleRadialGradientParameters, invalid gradient type");
+   assert(sizeOfDrawable.width > 0. && sizeOfDrawable.height > 0. &&
+          "CCalculateSimpleRadialGradientParameters, invalid destination drawable size");
+   assert(n > 2 &&
+          "CalculateSimpleRadialGradientParameters, parameter 'n' is not a valid number of points");
+   assert(polygon != 0 &&
+          "CalculateSimpleRadialGradientParameters, parameter 'polygon' is null");
+
+
+   const CGRect &bbox = FindBoundingBox(n, polygon);
+   if (!bbox.size.width || !bbox.size.height)
+      return false;//Invalid polygon actually.
+
+
+   CGFloat radius = grad->GetRadius();
+   CGPoint center = CGPointMake(grad->GetCenter().fX, grad->GetCenter().fY);
+
+   if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
+      const CGFloat scale = bbox.size.width < bbox.size.height ?
+                            bbox.size.height : bbox.size.width;
+      radius *= scale;
+      center.x = bbox.size.width * center.x + bbox.origin.x;
+      center.y = bbox.size.height * center.y + bbox.origin.y;
+   } else {
+      const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
+                            sizeOfDrawable.height : sizeOfDrawable.width;
+      radius *= scale;
+      center.x *= sizeOfDrawable.width;
+      center.y *= sizeOfDrawable.height;
+   }
+   
+   params.fStartPoint = center;
+   params.fStartRadius = radius;
+
    return true;
 }
 
@@ -201,9 +253,13 @@ bool CalculateGradientParameters(const TColorGradient *extendedColor,
    if (const TLinearGradient * const gl = dynamic_cast<const TLinearGradient *>(extendedColor))
       return CalculateGradientStartEnd(gl, sizeOfDrawable, n, polygon, params);
    else if (const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor)) {
-      if (CalculateGradientStartEnd(gr, sizeOfDrawable, n, polygon, params))
-         return CalculateGradientRadiuses(gr, sizeOfDrawable, n, polygon, params);
-      return false;
+      if (gr->GetGradientType() == TRadialGradient::kSimple) {
+         return CalculateSimpleRadialGradientParameters(gr, sizeOfDrawable, n, polygon, params);
+      } else {
+         if (CalculateGradientStartEnd(gr, sizeOfDrawable, n, polygon, params))
+            return CalculateGradientRadiuses(gr, sizeOfDrawable, n, polygon, params);
+         return false;
+      }
    }
    
    assert(0 && "CalculateGradientParamters, unknown gradient type");
@@ -454,11 +510,19 @@ void DrawPolygonWithGradientFill(CGContextRef ctx, const TColorGradient *extende
    if (!CalculateGradientParameters(extendedColor, sizeOfDrawable, nPoints, xy, params))
       return;
 
-   if (dynamic_cast<const TRadialGradient *>(extendedColor) && (params.fStartRadius || params.fEndRadius)) {
-      CGContextDrawRadialGradient(ctx, gradient.Get(), params.fStartPoint, params.fStartRadius,
-                                  params.fEndPoint, params.fEndRadius,
-                                  kCGGradientDrawsAfterEndLocation |
-                                  kCGGradientDrawsBeforeStartLocation);
+   const TRadialGradient * const gr = dynamic_cast<const TRadialGradient *>(extendedColor);
+   if (gr && (params.fStartRadius || params.fEndRadius)) {
+      if (gr->GetGradientType() == TRadialGradient::kSimple) {
+         CGContextDrawRadialGradient(ctx, gradient.Get(), params.fStartPoint, 0.,
+                                     params.fStartPoint, params.fStartRadius,
+                                     kCGGradientDrawsAfterEndLocation |
+                                     kCGGradientDrawsBeforeStartLocation);
+      } else {
+         CGContextDrawRadialGradient(ctx, gradient.Get(), params.fStartPoint, params.fStartRadius,
+                                     params.fEndPoint, params.fEndRadius,
+                                     kCGGradientDrawsAfterEndLocation |
+                                     kCGGradientDrawsBeforeStartLocation);
+      }
    } else {
       CGContextDrawLinearGradient(ctx, gradient.Get(),
                                   params.fStartPoint, params.fEndPoint,
