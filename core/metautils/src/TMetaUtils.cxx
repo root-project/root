@@ -1529,10 +1529,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    bool infrastructureGenerated=false;
    for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
           internalDeclIt != decl->decls_end(); ++internalDeclIt){
-
+      
       clang::FieldDecl* dMember = clang::dyn_cast<clang::FieldDecl>(*internalDeclIt);
       // Check if this is a field and if it has any attribute
-      if (dMember && !dMember->hasAttrs()) continue;
+      if (!dMember || (dMember && !dMember->hasAttrs())) continue;
 
       bool blockNeedsToBeClosed=true;
       bool wasIoNameFound=false;
