@@ -345,12 +345,22 @@ Double_t RooNLLVar::evaluatePartition(Int_t firstEvent, Int_t lastEvent, Int_t s
 		
 	// Adjust calculation of extended term with W^2 weighting: adjust poisson such that 
 	// estimate of Nexpected stays at the same value, but has a different variance, rescale
-        // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2]
+        // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2] which is 
+        // the effective weight of the Poisson term. 
 	// i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] / sum[w^2] )
+        // weighted by the effective weight  sum[w^2]/ sum[w] in the likelihood. 
+        // Since here we compute the likelihood with the weight square we need to multiply by the 
+        // square of the effective weight 
+        // expectedW = expected * sum[w] / sum[w^2]   : effective expected entries
+        // observedW =  sum[w]  * sum[w] / sum[w^2]   : effective observed entries
+        // The extended term for the likelihood weighted by the square of the weight will be then: 
+        //  (sum[w^2]/ sum[w] )^2 * expectedW -  (sum[w^2]/ sum[w] )^2 * observedW * log (expectedW)  and this is  
+        //  using the previous expressions for expectedW and observedW
+        //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
+        //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
 
-	Double_t observedW2 = ( _dataClone->sumEntries() * _dataClone->sumEntries() ) / sumW2 ;
-	Double_t expectedW2 = expected * _dataClone->sumEntries() / sumW2 ;
-	Double_t extra= expectedW2 - observedW2*log(expectedW2);	
+	Double_t expectedW2 = expected * sumW2 / _dataClone->sumEntries() ;
+	Double_t extra= expectedW2 - sumW2*log(expected );	
 
 	// Double_t y = pdfClone->extendedTerm(sumW2, _dataClone->get()) - carry;
 	    
