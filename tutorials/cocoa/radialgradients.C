@@ -2,11 +2,15 @@
 //custom colors, transparency.
 //Requires ROOT built for OS X with --enable-cocoa.
 
-#include <iostream>
+
+//Includes for ACLiC:
 #include <cassert>
 #include <cstdlib>
 
+#include "TColorGradient.h"
+#include "TVirtualPad.h"
 #include "TVirtualX.h"
+#include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 #include "Rtypes.h"
