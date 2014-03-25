@@ -2138,6 +2138,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    static Int_t px1old, py1old, px2old, py2old;
    Int_t bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
+   Bool_t opaque  = gPad->OpaqueMoving();
+   static TBox *zoombox;
 
    // The CONT4 option, used to paint TH2, is a special case; it uses a 3D
    // drawing technique to paint a 2D plot.
@@ -2151,7 +2153,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 
    switch (event) {
 
-   case kButton1Down:
+   case kButton1Down:      
       axisNumber = 1;
       if (!strcmp(axis->GetName(),"xaxis")) {
          axisNumber = 1;
@@ -2186,16 +2188,34 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             px2old = XtoAbsPixel(GetX2());
             py2old = py1old;
          }
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (!opaque) {
+            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         } else {
+            if (axisNumber == 1) {
+               zoombox = new TBox(PixeltoX(px1old), GetUymin(),
+                                  PixeltoX(px2old), GetUymax());
+            } else if (axisNumber == 2) {
+               zoombox = new TBox(GetUxmin(), PixeltoY(py1old-VtoPixel(0)), 
+                                  GetUxmax(), PixeltoY(py2old-VtoPixel(0)));
+            }          
+            Int_t ci = TColor::GetColor("#7d7dff");
+            TColor *zoomcolor = gROOT->GetColor(ci);
+            if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
+            else                          zoomcolor->SetAlpha(0.13);      
+            zoombox->SetFillColor(ci);
+            zoombox->Draw();
+            gPad->Modified();
+            gPad->Update();
+         }
       }
-      gVirtualX->SetLineColor(-1);
+      if (!opaque) gVirtualX->SetLineColor(-1);
       // No break !!!
 
    case kButton1Motion:
       if (view) {
          view->GetDistancetoAxis(axisNumber, px, py, ratio2);
       } else {
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (!opaque) gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          if (axisNumber == 1) {
             ratio2 = (AbsPixeltoX(px) - GetUxmin())/(GetUxmax() - GetUxmin());
             px2old = XtoAbsPixel(GetUxmin()+ratio2*(GetUxmax() - GetUxmin()));
@@ -2203,7 +2223,23 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             ratio2 = (AbsPixeltoY(py) - GetUymin())/(GetUymax() - GetUymin());
             py2old = YtoAbsPixel(GetUymin()+ratio2*(GetUymax() - GetUymin()));
          }
-         gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         if (!opaque) {
+            gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
+         } else {
+            if (axisNumber == 1) {
+               zoombox->SetX1(PixeltoX(px1old));
+               zoombox->SetY1(GetUymin());
+               zoombox->SetX2(PixeltoX(px2old));
+               zoombox->SetY2(GetUymax());
+            } else if (axisNumber == 2) {
+               zoombox->SetX1(GetUxmin());
+               zoombox->SetY1(PixeltoY(py1old-VtoPixel(0)));
+               zoombox->SetX2(GetUxmax());
+               zoombox->SetY2(PixeltoY(py2old-VtoPixel(0)));
+            }          
+            gPad->Modified();
+            gPad->Update();
+         }
       }
    break;
 
@@ -2365,7 +2401,11 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             Modified(kTRUE);
          }
       }
-      gVirtualX->SetLineColor(-1);
+      if (!opaque) {
+         gVirtualX->SetLineColor(-1);
+      } else {
+         zoombox->Delete();
+      }
       break;
    }
 }
