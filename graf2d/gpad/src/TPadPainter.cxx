@@ -570,12 +570,23 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
             image->DrawRectangle(0, 0, w, h);
             if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
                //Ohhh.
-               std::copy(pixelData, pixelData + 4 * w * h, argb);
-               unsigned *pos = (unsigned *)argb, *end = pos + w * h;
-               while (pos != end) {
-                  unsigned char * pixel = (unsigned char *)pos;
-                  std::swap(pixel[0], pixel[2]);
-                  ++pos;
+               if (sizeof(UInt_t) == 4) {
+                  //I know for sure the data returned from TGCocoa::GetColorBits,
+                  //it's 4 * w * h bytes with what TASImage considers to be argb.
+                  std::copy(pixelData, pixelData + 4 * w * h, argb);
+               } else {
+                  //A bit paranoid, don't you think so?
+                  //Will Quartz/TASImage work at all on such a fancy platform? ;)
+                  const unsigned shift = std::numeric_limits<unsigned char>::digits;
+                  //
+                  unsigned *dstPixel = (unsigned *)argb, *end = dstPixel + w * h;
+                  const unsigned char *srcPixel = pixelData;
+                  for (;dstPixel != end; ++dstPixel, srcPixel += 4) {
+                     //Looks fishy but should work, trust me :)
+                     *dstPixel = srcPixel[0] & (srcPixel[1] << shift) &
+                                               (srcPixel[2] << 2 * shift) &
+                                               (srcPixel[3] << 3 * shift);
+                  }
                }
                image->WriteImage(fileName, (TImage::EImageFileTypes)type);
                //

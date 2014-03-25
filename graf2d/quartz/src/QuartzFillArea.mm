@@ -52,7 +52,7 @@ struct GradientParameters {
    //Something else:...
    
    GradientParameters()
-      : fStartRadius(0.), fEndRadius(0.)
+      : fStartPoint(), fEndPoint(), fStartRadius(0.), fEndRadius(0.)
    {
    }
    
