@@ -241,7 +241,8 @@ gdk_win32_gc_values_to_win32values(GdkGCValues * values,
       data->stipple = values->stipple;
       if (data->stipple != NULL) {
          gdk_drawable_get_size(data->stipple, &sw, &sh);
-
+#if 0 // not valid anymore, it was not possible to create brushes (stipples)
+      // larger than 8x8 on Windows 95...
          if (sw != 8 || sh != 8) {
             /* It seems that it *must* be 8x8, at least on my machine. 
              * Thus, tile an 8x8 bitmap with the stipple in case it is
@@ -266,6 +267,7 @@ gdk_win32_gc_values_to_win32values(GdkGCValues * values,
             data->stipple = bm;
             gdk_gc_unref(gc);
          } else
+#endif
             gdk_drawable_ref(data->stipple);
          data->values_mask |= GDK_GC_STIPPLE;
          GDK_NOTE(MISC, (g_print("%sstipple=%#x", s,
