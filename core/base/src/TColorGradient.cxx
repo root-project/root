@@ -218,7 +218,7 @@ TRadialGradient::TRadialGradient()
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Color_t *colorIndices, ECoordinateMode mode)
                    : TColorGradient(newColor, nPoints, points, colorIndices, mode),
-                     fR1(0.), fR2(0.)
+                     fR1(0.), fR2(0.), fType(kSimple)
 {
 }
 
@@ -226,8 +226,14 @@ TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_
 TRadialGradient::TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                                  const Double_t *colors, ECoordinateMode mode)
                    : TColorGradient(newColor, nPoints, points, colors, mode),
-                     fR1(0.), fR2(0.)
+                     fR1(0.), fR2(0.), fType(kSimple)
 {
+}
+
+//______________________________________________________________________________
+TRadialGradient::EGradientType TRadialGradient::GetGradientType()const
+{
+   return fType;
 }
 
 //______________________________________________________________________________
@@ -237,6 +243,8 @@ void TRadialGradient::SetStartEndR1R2(const Point &p1, Double_t r1, const Point 
    fR1 = r1;
    fEnd = p2;
    fR2 = r2;
+   
+   fType = kExtended;
 }
 
 //______________________________________________________________________________
@@ -261,4 +269,23 @@ const TColorGradient::Point &TRadialGradient::GetEnd()const
 Double_t TRadialGradient::GetR2()const
 {
    return fR2;
+}
+
+//______________________________________________________________________________
+void TRadialGradient::SetRadialGradient(const Point &center, Double_t radius)
+{
+   fStart = center;
+   fR1 = radius;
+}
+
+//______________________________________________________________________________
+const TColorGradient::Point &TRadialGradient::GetCenter()const
+{
+   return fStart;
+}
+
+//______________________________________________________________________________
+Double_t TRadialGradient::GetRadius()const
+{
+   return fR1;
 }

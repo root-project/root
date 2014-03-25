@@ -121,27 +121,50 @@ private:
    ClassDef(TLinearGradient, 1)//Linear gradient fill.
 };
 
+//
+//Radial gradient. Can be either "simple": you specify a center
+//and radius in NDC coordinates (see comments about linear gradient
+//and coordinate modes above), or "extended": you have two centers
+//(start,end) and two radiuses (R1, R2) and interpolation between them;
+//still start/end and radiuses are in NDC.
+//
+
+
 class TRadialGradient : public TColorGradient {
 public:
+   enum EGradientType {
+      kSimple,
+      kExtended
+   };
+
    TRadialGradient();
    TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                    const Color_t *colorIndices, ECoordinateMode mode = kObjectBoundingMode);
    TRadialGradient(Color_t newColor, UInt_t nPoints, const Double_t *points,
                    const Double_t *colors, ECoordinateMode mode = kObjectBoundingMode);
    
+   EGradientType GetGradientType()const;
+   //Extended gradient.
    void SetStartEndR1R2(const Point &p1, Double_t r1,
                         const Point &p2, Double_t r2);
-
    const Point &GetStart()const;
    Double_t GetR1()const;
    const Point &GetEnd()const;
    Double_t GetR2()const;
+
+   //Simple radial gradient: the same as extended with
+   //start == end, r1 = 0, r2 = radius.
+   void SetRadialGradient(const Point &center, Double_t radius);
+   const Point &GetCenter()const;
+   Double_t GetRadius()const;
 
 private:
    Point fStart;
    Double_t fR1;
    Point fEnd;
    Double_t fR2;
+
+   EGradientType fType;
    
    ClassDef(TRadialGradient, 1)//Radial gradient fill.
 };
