@@ -169,13 +169,13 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
       const CGFloat scale = bbox.size.width < bbox.size.height ?
                             bbox.size.height : bbox.size.width;
       
-      startRadius *= scale * 0.5;
-      endRadius *= scale * 0.5;
+      startRadius *= scale;
+      endRadius *= scale;
    } else {
       const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
                             sizeOfDrawable.height : sizeOfDrawable.width;
-      startRadius *= scale * 0.5;
-      endRadius *= scale * 0.5;
+      startRadius *= scale;
+      endRadius *= scale;
    }
    
    params.fStartRadius = startRadius;

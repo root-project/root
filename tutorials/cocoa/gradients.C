@@ -107,8 +107,8 @@ void gradients()
    //space and consider it as a NDC (so pad's rect is (0,0), (1,1)).
    gradientFill2->SetCoordinateMode(TColorGradient::kPadMode);
    //Centers for both circles are the same point.
-   gradientFill2->SetStartEndR1R2(TColorGradient::Point(0.5, 0.5), 0.2,
-                                  TColorGradient::Point(0.5, 0.5), 0.6);
+   gradientFill2->SetStartEndR1R2(TColorGradient::Point(0.5, 0.5), 0.1,
+                                  TColorGradient::Point(0.5, 0.5), 0.4);
 
 
    const UInt_t nSlices = 5;
