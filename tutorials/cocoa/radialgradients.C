@@ -67,7 +67,6 @@ Color_t CreateRandomGradientFill()
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
 
    Color_t idx[1] = {};
-   //I do not check the result here, too lazy:
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(idx) != 1)
       return -1;
 
