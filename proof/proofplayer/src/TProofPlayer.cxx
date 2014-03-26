@@ -1472,6 +1472,11 @@ Long64_t TProofPlayer::Process(TDSet *dset, const char *selector_file,
             }
          }
       }
+
+      // Add Selector status in the output list so it can be returned to the client as done
+      // by Tree::Process (see ROOT-748). The status from the various workers will be added.
+      fOutput->Add(new TParameter<Long64_t>("PROOF_SelectorStatus", (Long64_t) fSelector->GetStatus()));
+
       if (gProofServ && !gProofServ->IsParallel()) {  // put all the canvases onto the output list
          TIter nxc(gROOT->GetListOfCanvases());
          while (TObject *c = nxc())
