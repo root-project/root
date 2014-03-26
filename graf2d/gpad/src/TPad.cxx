@@ -2404,7 +2404,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
       } else {
-         zoombox->Delete();
+         if (zoombox) {
+            zoombox->Delete();
+            zoombox = 0;
+         }
       }
       break;
    }
