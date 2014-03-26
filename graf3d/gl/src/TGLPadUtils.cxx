@@ -11,6 +11,7 @@
 
 #include "Riostream.h"
 #include <stdexcept>
+#include <cassert>
 
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
@@ -677,6 +678,45 @@ void ExtractRGBA(Color_t colorIndex, Float_t *rgba)
       rgba[3] = color->GetAlpha();
    }
 }
+
+//______________________________________________________________________________
+template<class ValueType>
+BoundingRect<ValueType> FindBoundingRect(Int_t nPoints, const ValueType *xs, const ValueType *ys)
+{
+   assert(nPoints > 0 && "FindBoundingRect, invalind number of points");
+   assert(xs != nullptr && "FindBoundingRect, parameter 'xs' is null");
+   assert(ys != nullptr && "FindBoundingRect, parameter 'ys' is null");
+   
+   ValueType xMin = xs[0], xMax = xMin;
+   ValueType yMin = ys[0], yMax = yMin;
+   
+   for (Int_t i = 1; i < nPoints; ++i) {
+      xMin = TMath::Min(xMin, xs[i]);
+      xMax = TMath::Max(xMax, xs[i]);
+
+      yMin = TMath::Min(yMin, ys[i]);
+      yMax = TMath::Max(yMax, ys[i]);
+   }
+   
+   BoundingRect<ValueType> box = {};
+   box.fXMin = xMin;
+   box.fXMax = xMax;
+   box.fWidth = xMax - xMin;
+   
+   box.fYMin = yMin;
+   box.fYMax = yMax;
+   box.fHeight = yMax - yMin;
+   
+   return box;
+}
+
+template BoundingRect<Double_t> FindBoundingRect(Int_t nPoints, const Double_t *xs, const Double_t *ys);
+template BoundingRect<Float_t> FindBoundingRect(Int_t nPoints, const Float_t *xs, const Float_t *ys);
+template BoundingRect<Long_t> FindBoundingRect(Int_t nPoints, const Long_t *xs, const Long_t *ys);
+template BoundingRect<Int_t> FindBoundingRect(Int_t nPoints, const Int_t *xs, const Int_t *ys);
+template BoundingRect<SCoord_t> FindBoundingRect(Int_t nPoints, const SCoord_t *xs, const SCoord_t *ys);
+
+
 
 namespace {
 

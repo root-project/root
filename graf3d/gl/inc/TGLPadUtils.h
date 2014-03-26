@@ -218,6 +218,25 @@ private:
    mutable Double_t fMaxPointSize;
 };
 
+//We have a lot of Rect_t/Point_t/TGLRect/TGLBoundingBox blah-blah-blah.
+//What we do not have is a rectangle with floating point types.
+
+template<class ValueType>
+struct BoundingRect {
+   ValueType fXMin = ValueType();
+   ValueType fYMin = ValueType();
+   ValueType fWidth = ValueType();
+   ValueType fHeight = ValueType();
+   //Sometimes it's more convenient:
+   ValueType fXMax = ValueType();
+   ValueType fYMax = ValueType();
+};
+
+//It's explicitly instantiated for signed integer/fp types (in *.cxx).
+template<class ValueType>
+BoundingRect<ValueType> FindBoundingRect(Int_t nPoints, const ValueType *xs, const ValueType *ys);
+
+
 }//namespace Pad
 }//namespace Rgl
 
