@@ -11,8 +11,6 @@
 #include <cstdlib>
 
 #include "TColorGradient.h"
-#include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
