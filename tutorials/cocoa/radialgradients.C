@@ -58,8 +58,9 @@ const unsigned nBasicColors = sizeof basicColors / sizeof basicColors[0];
 //______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
-   const Double_t *fromRGBA = basicColors[(std::rand() % (nBasicColors / 2))];
-   const Double_t *toRGBA = basicColors[nBasicColors / 2 + (std::rand() % (nBasicColors / 2))];
+   const Double_t * const fromRGBA = basicColors[(std::rand() % (nBasicColors / 2))];
+   //With odd number of colors the last one is never selected :)
+   const Double_t * const toRGBA = basicColors[nBasicColors / 2 + (std::rand() % (nBasicColors / 2))];
 
    const Double_t locations[] = {0., 1.};
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
@@ -67,7 +68,9 @@ Color_t CreateRandomGradientFill()
 
    Color_t idx[1] = {};
    //I do not check the result here, too lazy:
-   ROOT::CocoaTutorials::FindFreeCustomColorIndices(idx);
+   if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(idx) != 1)
+      return -1;
+
    TRadialGradient * const grad = new TRadialGradient(idx[0], 2, locations, rgbas);
    grad->SetRadialGradient(TColorGradient::Point(0.5, 0.5), 0.5);
 
@@ -75,14 +78,22 @@ Color_t CreateRandomGradientFill()
 }
 
 //______________________________________________________________________
-void add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
+bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
 {
    assert(gPad != nullptr && "add_ellipse, no pad to add ellipse");
 
+   const Color_t newColor = CreateRandomGradientFill();
+   if (newColor == -1) {
+      ::Error("add_ellipse", "failed to find a new color index for a gradient fill");
+      return false;
+   }
+
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
    
-   newEllipse->SetFillColor(CreateRandomGradientFill());
+   newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
+   
+   return true;
 }
 
 }
@@ -98,8 +109,10 @@ void radialgradients()
       return;
    }
 
-   for (unsigned i = 0; i < 100; ++i)
-      add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm());
+   for (unsigned i = 0; i < 100; ++i) {
+      if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
+         break;
+   }
    
    cnv->Modified();
    cnv->Update();
