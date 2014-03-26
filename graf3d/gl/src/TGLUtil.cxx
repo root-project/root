@@ -3103,6 +3103,34 @@ void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
 }
 
 //______________________________________________________________________________
+void DrawQuadStripWithRadialGradientFill(unsigned nPoints, const Double_t *inner, const Double_t *innerRGBA,
+                                         const Double_t *outer, const Double_t *outerRGBA)
+{
+   //TODO: is it possible to use GLdouble to avoid problems with Double_t/GLdouble if they
+   //are not the same type?
+
+   assert(nPoints != 0 &&
+          "DrawQuadStripWithRadialGradientFill, invalid number of points");
+   assert(inner != 0 &&
+          "DrawQuadStripWithRadialGradientFill, parameter 'inner' is null");
+   assert(innerRGBA != 0 &&
+          "DrawQuadStripWithRadialGradientFill, parameter 'innerRGBA' is null");
+   assert(outer != 0 &&
+          "DrawQuadStripWithRadialGradientFill, parameter 'outer' is null");
+   assert(outerRGBA != 0 &&
+          "DrawQuadStripWithRadialGradientFill, parameter 'outerRGBA' is null");
+
+   glBegin(GL_QUAD_STRIP);
+   for (UInt_t j = 0; j < nPoints; ++j) {
+      glColor4dv(innerRGBA);
+      glVertex2dv(inner + j * 2);
+      glColor4dv(outerRGBA);
+      glVertex2dv(outer + j * 2);
+   }
+   glEnd();
+}
+
+//______________________________________________________________________________
 void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax)
 {
