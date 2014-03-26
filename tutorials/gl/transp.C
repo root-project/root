@@ -1,11 +1,11 @@
 //This demo shows how to use transparency.
 
 //Includes for ACLiC (cling does not need them).
-#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "Rtypes.h"
 #include "TColor.h"
 #include "TError.h"
+#include "TStyle.h"
 #include "TH1F.h"
 
 //Aux. functions for tutorials/gl.
@@ -19,7 +19,7 @@ void transp()
    //to avoid possible conflicts with other tutorials.
    Int_t indices[2] = {};
    if (ROOT::GLTutorials::FindFreeCustomColorIndices(indices) != 2) {
-      Error("transp", "failed to create new custom colors");
+      ::Error("transp", "failed to create new custom colors");
       return;
    }
    
