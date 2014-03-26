@@ -1076,14 +1076,8 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
    //stencil test.
    
    //Find a bounding rect.
-   Double_t xMin = x[0], xMax = xMin;
-   Double_t yMin = y[0], yMax = yMin;
-   for (Int_t i = 1; i < n; ++i) {
-      xMin = TMath::Min(xMin, x[i]);
-      xMax = TMath::Max(xMax, x[i]);
-      yMin = TMath::Min(yMin, y[i]);
-      yMax = TMath::Max(yMax, y[i]);
-   }
+   const Rgl::Pad::BoundingRect<Double_t> &bbox = Rgl::Pad::FindBoundingRect(n, x, y);
+   //TODO: check the bbox??
    
    //For the gradient fill we switch into the
    //pixel coordinates.
@@ -1116,12 +1110,10 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
       end.fX   = end.fX * w;
       end.fY   = end.fY * h;
    } else {
-      const Double_t w = xMax - xMin;
-      const Double_t h = yMax - yMin;
-      start.fX = start.fX * w + xMin;
-      start.fY = start.fY * h + yMin;
-      end.fX   = end.fX * w   + xMin;
-      end.fY   = end.fY * h   + yMin;
+      start.fX = start.fX * bbox.fWidth + bbox.fXMin;
+      start.fY = start.fY * bbox.fHeight + bbox.fYMin;
+      end.fX   = end.fX * bbox.fWidth + bbox.fXMin;
+      end.fY   = end.fY * bbox.fHeight + bbox.fYMin;
    }
 
    //TODO: with a radial fill we'll have to extract the code
@@ -1132,10 +1124,10 @@ void TGLPadPainter::DrawGradient(const TLinearGradient *grad, Int_t n,
    start.fY = pixelH - gPad->YtoPixel(start.fY);
    end.fX = gPad->XtoPixel(end.fX);
    end.fY = pixelH - gPad->YtoPixel(end.fY);
-   xMin = gPad->XtoPixel(xMin);
-   xMax = gPad->XtoPixel(xMax);
-   yMin = pixelH - gPad->YtoPixel(yMin);
-   yMax = pixelH - gPad->YtoPixel(yMax);
+   const Double_t xMin = gPad->XtoPixel(bbox.fXMin);
+   const Double_t xMax = gPad->XtoPixel(bbox.fXMax);
+   const Double_t yMin = pixelH - gPad->YtoPixel(bbox.fYMin);
+   const Double_t yMax = pixelH - gPad->YtoPixel(bbox.fYMax);
    //
    
    //TODO: check all calculations!
