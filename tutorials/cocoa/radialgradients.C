@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 25/03/2014.
 //This tutorial demonstrates how to use radial gradients,
 //custom colors, transparency.
 //Requires ROOT built for OS X with --enable-cocoa.
@@ -108,10 +109,9 @@ void radialgradients()
       return;
    }
 
-   for (unsigned i = 0; i < 100; ++i) {
+   for (unsigned i = 0; i < 100; ++i)
       if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
          break;
-   }
    
    cnv->Modified();
    cnv->Update();
