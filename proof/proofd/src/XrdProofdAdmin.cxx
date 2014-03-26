@@ -421,16 +421,25 @@ int XrdProofdAdmin::SetROOTVersion(XrdProofdProtocol *p)
       TRACEP(p, DBG, "default changed to "<<c->ROOT()->Tag()<<
                    " for {client, group} = {"<<usr<<", "<<grp<<"} ("<<c<<")");
       // Forward down the tree, if not leaf
+      int brc = 0;
       if (fMgr->SrvType() != kXPD_Worker) {
          XrdOucString buf("u:");
          buf += c->UI().fUser;
          buf += " ";
          buf += tag;
          int type = ntohl(p->Request()->proof.int1);
-         fMgr->NetMgr()->Broadcast(type, buf.c_str(), p->Client()->User(), response);
+         brc = fMgr->NetMgr()->Broadcast(type, buf.c_str(), p->Client()->User(), response);
       }
-      // Acknowledge user
-      response->Send();
+      if (brc == 0) {
+         // Acknowledge user
+         response->Send();
+      } else {
+         // Notify something wrong
+         tag.insert("tag '", 0);
+         tag += "' not found in the list of available ROOT versions on some worker nodes";
+         TRACEP(p, XERR, tag.c_str());
+         response->Send(kXR_InvalidRequest, tag.c_str());
+      }
    } else {
       tag.insert("tag '", 0);
       tag += "' not found in the list of available ROOT versions";

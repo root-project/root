@@ -82,7 +82,7 @@ public:
    TObjString *ReadBuffer(const char *file, const char *pattern);
    Int_t       Reset(Bool_t hard = kFALSE, const char *usr = 0);
    Int_t       SendMsgToUsers(const char *msg, const char *usr = 0);
-   void        SetROOTVersion(const char *tag);
+   Int_t       SetROOTVersion(const char *tag);
    void        ShowWorkers();
 
    // Remote file system actions

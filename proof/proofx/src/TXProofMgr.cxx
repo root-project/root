@@ -745,21 +745,21 @@ void TXProofMgr::ShowROOTVersions()
 }
 
 //______________________________________________________________________________
-void TXProofMgr::SetROOTVersion(const char *tag)
+Int_t TXProofMgr::SetROOTVersion(const char *tag)
 {
    // Set the default ROOT version to be used
 
    // Nothing to do if not in contact with proofserv
    if (!IsValid()) {
       Warning("SetROOTVersion","invalid TXProofMgr - do nothing");
-      return;
+      return -1;
    }
 
    // Send the request
    fSocket->SendCoordinator(kROOTVersion, tag);
 
    // We are done
-   return;
+   return (fSocket->GetOpenError() != kXR_noErrorYet) ? -1 : 0;
 }
 
 //______________________________________________________________________________

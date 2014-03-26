@@ -93,7 +93,7 @@ XrdProofConn::XrdProofConn(const char *url, char m, int psid, char capver,
                            XrdClientAbsUnsolMsgHandler *uh, const char *logbuf)
    : fMode(m), fConnected(0), fLogConnID(-1), fStreamid(0), fRemoteProtocol(-1),
      fServerProto(-1), fServerType(kSTNone), fSessionID(psid), fPort(-1),
-     fLastErr(kXR_Unsupported), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
+     fLastErr(kXR_noErrorYet), fCapVer(capver), fLoginBuffer(logbuf), fMutex(0),
      fConnectInterruptMtx(0), fConnectInterrupt(0), fPhyConn(0), 
      fOpenSockFD(-1), fUnsolMsgHandler(uh), fSender(0), fSenderArg(0)
 {
@@ -1367,7 +1367,7 @@ XrdSecProtocol *XrdProofConn::Authenticate(char *plist, int plsiz)
 
       // If we are done
       if (protocol) {
-         fLastErr = kXR_Unsupported;
+         fLastErr = kXR_noErrorYet;
          fLastErrMsg = "";
          break;
       }
