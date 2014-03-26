@@ -103,7 +103,9 @@
 #undef VC_OFFSETOF
 
 #if VC_GCC && !__OPTIMIZE__
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic pop
+#endif
 #endif
 
 #endif // VC_COMMON_UNDOMACROS_H

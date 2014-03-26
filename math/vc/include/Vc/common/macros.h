@@ -25,7 +25,9 @@
 
 #if VC_GCC && !__OPTIMIZE__
 // GCC uses lots of old-style-casts in macros that disguise as intrinsics
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic push
+#endif
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
