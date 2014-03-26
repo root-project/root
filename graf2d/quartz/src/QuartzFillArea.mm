@@ -216,15 +216,11 @@ bool CalculateSimpleRadialGradientParameters(const TRadialGradient *grad,
    CGPoint center = CGPointMake(grad->GetCenter().fX, grad->GetCenter().fY);
 
    if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
-      const CGFloat scale = bbox.size.width < bbox.size.height ?
-                            bbox.size.height : bbox.size.width;
-      radius *= scale;
+      radius *= std::max(bbox.size.width, bbox.size.height);
       center.x = bbox.size.width * center.x + bbox.origin.x;
       center.y = bbox.size.height * center.y + bbox.origin.y;
    } else {
-      const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
-                            sizeOfDrawable.height : sizeOfDrawable.width;
-      radius *= scale;
+      radius *= std::max(sizeOfDrawable.width, sizeOfDrawable.height);
       center.x *= sizeOfDrawable.width;
       center.y *= sizeOfDrawable.height;
    }
