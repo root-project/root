@@ -1056,10 +1056,157 @@ void TGLPadPainter::DrawPolygonWithGradient(Int_t n, const Double_t *x, const Do
 }
 
 //______________________________________________________________________________
-void TGLPadPainter::DrawGradient(const TRadialGradient * /*gradient*/, Int_t /*n*/,
-                                 const Double_t * /*x*/, const Double_t * /*y*/)
+void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
+                                 const Double_t *xs, const Double_t *ys)
 {
-   ::Warning("TGLPadPainter::DrawGradient", "radial gradient not implemented");
+   assert(grad != 0 && "DrawGradient, parameter 'grad' is null");
+   assert(nPoints > 2 && "DrawGradient, invalid number of points");
+   assert(xs != 0 && "DrawGradient, parameter 'xs' is null");
+   assert(ys != 0 && "DrawGradient, parameter 'ys' is null");
+
+   if (grad->GetGradientType() != TRadialGradient::kSimple) {
+      ::Warning("TGLPadPainter::DrawGradient",
+                "extended radial gradient is not supported");//yet?
+      return;
+   }
+
+   //TODO: check the polygon's bbox!
+   const Rgl::Pad::BoundingRect<Double_t> &bbox = Rgl::Pad::FindBoundingRect(nPoints, xs, ys);
+   TColorGradient::Point center = grad->GetCenter();
+   Double_t radius = grad->GetRadius();
+   //Adjust the center and radius depending on coordinate mode.
+   if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
+      radius *= TMath::Max(bbox.fWidth, bbox.fHeight);
+      center.fX = bbox.fWidth * center.fX + bbox.fXMin;
+      center.fY = bbox.fHeight * center.fY + bbox.fYMin;
+   } else {
+      const Double_t w = gPad->GetX2() - gPad->GetX1();
+      const Double_t h = gPad->GetY2() - gPad->GetY1();
+      
+      radius *= TMath::Max(w, h);
+      center.fX *= w;
+      center.fY *= h;
+   }
+   
+   //Get the longest distance from the center to the bounding box vertices
+   //(this will be the maximum possible radius):
+   Double_t maxR = 0.;
+   {
+   const Double_t maxDistX = TMath::Max(TMath::Abs(center.fX - bbox.fXMin),
+                                        TMath::Abs(center.fX - bbox.fXMax));
+   const Double_t maxDistY = TMath::Max(TMath::Abs(center.fY - bbox.fYMin),
+                                        TMath::Abs(center.fY - bbox.fYMax));
+   maxR = TMath::Sqrt(maxDistX * maxDistX + maxDistY * maxDistY);
+   }
+
+   //If gradient 'stops inside the polygon', we use
+   //the solid fill for the arae outside of radial gradient:
+   const Bool_t solidFillAfter = maxR > radius;
+   //We emulate a radial gradient using triangles and linear gradient:
+   //TODO: Can be something smarter? (btw even 100 seems to be enough)
+   const UInt_t nSlices = 500;
+
+   const UInt_t nColors = (UInt_t)grad->GetNumberOfSteps();
+   //+1 - the strip from the last color's position to radius,
+   //and (probably) + 1 for solidFillAfter.
+   const UInt_t nCircles = nColors + 1 + solidFillAfter;
+   
+   //TODO: can locations be outside of [0., 1.] ???
+   //at the moment I assume the answer is NO, NEVER.
+   const Double_t * const locations = grad->GetColorPositions();
+   //* 2 below == x,y
+   std::vector<Double_t> circles(nSlices * nCircles * 2);
+   const Double_t angle = TMath::TwoPi() / nSlices;
+
+   //"Main" circles (for colors at locations[i]).
+   for (UInt_t i = 0; i < nColors; ++i) {
+      Double_t * const circle = &circles[i * nSlices * 2];
+      //TODO: either check locations here or somewhere else.
+      const Double_t r = radius * locations[i];
+      for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
+         circle[j] = center.fX + r * TMath::Cos(angle * j);
+         circle[j + 1] = center.fY + r * TMath::Sin(angle * j);
+      }
+      //The "closing" vertices:
+      circle[(nSlices - 1) * 2] = circle[0];
+      circle[(nSlices - 1) * 2 + 1] = circle[1];
+   }
+   
+   {
+   //The strip between lastPos and radius:
+   Double_t * const circle = &circles[nColors * nSlices * 2];
+   for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
+      circle[j] = center.fX + radius * TMath::Cos(angle * j);
+      circle[j + 1] = center.fY + radius * TMath::Sin(angle * j);
+   }
+
+   circle[(nSlices - 1) * 2] = circle[0];
+   circle[(nSlices - 1) * 2 + 1] = circle[1];
+   }
+
+   if (solidFillAfter) {
+      //The strip after the radius:
+      Double_t  * const circle = &circles[(nCircles - 1) * nSlices * 2];
+      for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
+         circle[j] = center.fX + maxR * TMath::Cos(angle * j);
+         circle[j + 1] = center.fY + maxR * TMath::Sin(angle * j);
+      }
+
+      circle[(nSlices - 1) * 2] = circle[0];
+      circle[(nSlices - 1) * 2 + 1] = circle[1];
+   }
+   
+   //Now we draw:
+   //1) triangle fan in the center (from center to the locations[1],
+   //   with a solid fill).
+   //2) quad strips for colors.
+   //3) additional quad strip from the lastLocation to the radius
+   //4) additiona quad strip (if any) from the radius to maxR.
+
+   //RGBA values:
+   const Double_t * const rgba = grad->GetColors();
+   
+   const TGLEnableGuard alphaGuard(GL_BLEND);
+   //TODO?
+   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+   
+   //Probably a degenerated case. Maybe not.
+   glBegin(GL_TRIANGLE_FAN);
+   glColor4dv(rgba);
+   glVertex2d(center.fX, center.fY);
+
+   for (UInt_t i = 0, e = nSlices * 2; i < e; i += 2)
+      glVertex2dv(&circles[i]);
+   
+   glEnd();
+   
+   for (UInt_t i = 0; i < nColors - 1; ++i) {
+      const Double_t * const inner = &circles[i * nSlices * 2];
+      const Double_t * const innerRGBA = rgba + i * 4;
+      const Double_t * const outerRGBA = rgba + (i + 1) * 4;
+      const GLdouble * const outer = &circles[(i + 1) * nSlices * 2];
+   
+      Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, innerRGBA, outer, outerRGBA);
+   }
+   
+   //Probably degenerated strip.
+   {
+   glBegin(GL_QUAD_STRIP);
+   const Double_t * const inner = &circles[nSlices * (nColors - 1) * 2];
+   const Double_t * const solidRGBA = rgba + (nColors - 1) * 4;
+   const Double_t * const outer = &circles[nSlices * nColors * 2];
+   
+   Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, solidRGBA, outer, solidRGBA);
+   }
+   
+   if (solidFillAfter) {
+      glBegin(GL_QUAD_STRIP);
+      const Double_t * const inner = &circles[nSlices * nColors * 2];
+      const Double_t * const solidRGBA = rgba + (nColors - 1) * 4;
+      const Double_t * const outer = &circles[nSlices * (nColors + 1) * 2];
+
+      Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, solidRGBA, outer, solidRGBA);
+   }
 }
 
 //______________________________________________________________________________
