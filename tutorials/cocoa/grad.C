@@ -3,7 +3,7 @@
 //a histogram or pad.
 //It works ONLY on MacOS X with cocoa graphical back-end.
 
-//Include for ACLiC:
+//Includes for ACLiC:
 #include "TColorGradient.h"
 #include "TVirtualX.h"
 #include "TCanvas.h"
@@ -60,17 +60,22 @@ Color_t create_pad_gradient()
 void grad()
 {
    const Color_t frameColor = create_pad_frame_gradient();
-   if (frameColor == -1)
+   if (frameColor == -1) {
+      ::Error("grad", "failed to allocate a custom color");
       return;
+   }
    
    const Color_t padColor = create_pad_gradient();
-   if (padColor == -1)
+   if (padColor == -1) {
+      ::Error("grad", "failed to allocate a custom color");
       return;//:( no way to cleanup palette now.
-
+   }
 
    const Color_t histFill = FindFreeCustomColorIndex(padColor + 1);//Start lookup from the next.
-   if (histFill == -1)
+   if (histFill == -1) {
+      ::Error("grad", "failed to allocate a custom color");
       return;
+   }
    
    TCanvas * const cnv = new TCanvas("gradient test", "gradient test", 100, 100, 600, 600);
    //After canvas was created, gVirtualX should be non-null.

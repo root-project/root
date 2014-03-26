@@ -1,27 +1,50 @@
+//Author: Timur Pocheptsov, 19/03/2014
+
+//Includes for ACLiC.
+#include "TVirtualX.h"
+#include "TCanvas.h"
+#include "Rtypes.h"
+#include "TStyle.h"
+#include "TColor.h"
+#include "TError.h"
+#include "TH1F.h"
+
+//Aux. functions.
+#include "customcolors.h"
+
 void transp()
 {
    //This demo shows, how to use transparency with gl-pad.
+   //To enable OpenGL you can either call gStyle->SetCanvasPreferGL(kTRUE)
+   //or set OpenGL.CanvasPreferGL to 1 in a $ROOTSYS/etc/system.rootrc.
 
-   //Unfortunately, these transparent colors can
-   //not be saved with a histogram object in a file,
-   //since ROOT just save color indices and our transparent
-   //colors were created/added "on the fly".
+   Color_t idx[2] = {};
+   if (FindFreeCustomColorIndices(2, idx) != 2) {
+      ::Error("transp", "failed to allocate custom colors");
+      return;
+   }
 
    gStyle->SetCanvasPreferGL(kTRUE);
-   TCanvas * cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+
+   TCanvas * const cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
+   if (!cnv->UseGL()) {
+      ::Error("transp", "this macro requires OpenGL");
+      delete cnv;
+      return;
+   }
    
-   TH1F * hist = new TH1F("a", "b", 10, -2., 3.);
-   TH1F * hist2 = new TH1F("c", "d", 10, -3., 3.);
+   TH1F * const hist = new TH1F("a", "b", 10, -2., 3.);
+   TH1F * const hist2 = new TH1F("c", "d", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
    //Add new color with index 1001.
-   new TColor(1001, 1., 0., 0., "red", 0.85);
-   hist->SetFillColor(1001);
+   new TColor(idx[0], 1., 0., 0., "red", 0.85);
+   hist->SetFillColor(idx[0]);
    
    //Add new color with index 1002.
-   new TColor(1002, 0., 1., 0., "green", 0.5);
-   hist2->SetFillColor(1002);
+   new TColor(idx[1], 0., 1., 0., "green", 0.5);
+   hist2->SetFillColor(idx[1]);
    
    cnv->cd();
    hist2->Draw();

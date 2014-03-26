@@ -13,11 +13,14 @@
 //Includes for ACLiC:
 #include "TColorGradient.h"
 #include "TCanvas.h"
+#include "TStyle.h"
 #include "TError.h"
 #include "TROOT.h"
 #include "TText.h"
 #include "TPie.h"
 
+//Aux. functions:
+#include "customcolors.h"
 
 void gradients()
 {
@@ -27,12 +30,25 @@ void gradients()
    //3. A fully transparent fill color for a nested pad.
 
    //I have to hardcode them, but can also look for free indices in the ROOT's color palette.
-   const Color_t radialFill = 1300;
-   const Color_t linearFill = 1301;
-   const Color_t transparentFill = 1302;
+   const Color_t radialFill = FindFreeCustomColorIndex(1000);//Start a lookup from 1000.
+   if (radialFill == -1) {
+      ::Error("gradients", "failed to allocate custom color");
+      return;
+   }
+   
+   const Color_t linearFill = FindFreeCustomColorIndex(radialFill + 1);
+   if (linearFill == -1) {
+      ::Error("gradients", "failed to allocate custom color");
+      return;
+   }
+   
+   const Color_t transparentFill = FindFreeCustomColorIndex(linearFill + 1);
+   if (transparentFill == -1) {
+      ::Error("gradients", "failed to allocate custom color");
+      return;
+   }
    
    gStyle->SetCanvasPreferGL(kTRUE);
-   
 
    TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
@@ -68,13 +84,13 @@ void gradients()
 
    //Draw a text in the canvas (the object above the text will be
    //semi-transparent):
-   TText * t = new TText(0.05, 0.7, "Can you see the text?");
+   TText * const t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
    
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
-   TPad * pad = new TPad("p", "p", 0., 0., 1., 1.);
+   TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
    
    //TPad itself is fully transparent:
    new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
@@ -105,7 +121,7 @@ void gradients()
    Int_t colors[nSlices] = {radialFill, radialFill, radialFill,
                             radialFill, radialFill};
 
-   TPie *pie = new TPie("pie", "TPie:", nSlices, values, colors);
+   TPie * const pie = new TPie("pie", "TPie:", nSlices, values, colors);
    //One slice is slightly shifted:
    pie->SetEntryRadiusOffset(2, 0.05);
    //Move labels to the center (to fit the pad's space):

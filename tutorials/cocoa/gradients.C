@@ -74,13 +74,13 @@ void gradients()
 
    //Draw a text in the canvas (the object above the text will be
    //semi-transparent):
-   TText * t = new TText(0.05, 0.7, "Can you see the text?");
+   TText * const t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
    
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
-   TPad * pad = new TPad("p", "p", 0., 0., 1., 1.);
+   TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
    
    //TPad itself is fully transparent:
    new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
@@ -119,7 +119,7 @@ void gradients()
    Int_t colors[nSlices] = {radialFill, radialFill, radialFill,
                             radialFill, radialFill};
 
-   TPie *pie = new TPie("pie", "TPie:", nSlices, values, colors);
+   TPie * const pie = new TPie("pie", "TPie:", nSlices, values, colors);
    //One slice is slightly shifted:
    pie->SetEntryRadiusOffset(2, 0.05);
    //Move labels to the center (to fit the pad's space):

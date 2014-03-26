@@ -8,6 +8,7 @@
 
 //Includes for ACLiC:
 #include "TColorGradient.h"
+#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TError.h"
 #include "TH1F.h"

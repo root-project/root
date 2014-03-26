@@ -4,6 +4,18 @@
 // appear.
 //Authors: Olivier Couet (original macro), adapted for gl-pad by Timur Pocheptsov.
 
+//Includes for ACLiC:
+#include "TParallelCoordVar.h"
+#include "TParallelCoord.h"
+#include "TNtuple.h"
+#include "TCanvas.h"
+#include "TRandom.h"
+#include "TStyle.h"
+#include "TColor.h"
+#include "Rtypes.h"
+#include "TError.h"
+#include "TList.h"
+#include "TROOT.h"
 
 Double_t r1,r2,r3,r4,r5,r6,r7,r8,r9;
 Double_t dr = 3.5;
@@ -30,7 +42,14 @@ void parallelcoordtrans() {
    
    gStyle->SetCanvasPreferGL(kTRUE);
 
-   TCanvas *c1 = new TCanvas("c1", "c1",0,0,900,1000);
+   TCanvas *c1 = new TCanvas("gl parallel coords", "gl parallel coords",0,0,900,1000);
+   if (!c1->UseGL()) {
+      ::Error("parallelcoordtrans", "this macro requires OpenGL");
+      delete r;
+      delete c1;
+      return;
+   }
+
    c1->Divide(1,2);
 
    TNtuple *nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w:a:b:c");

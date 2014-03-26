@@ -10,15 +10,15 @@
 #include <cstdlib>
 
 #include "TColorGradient.h"
-#include "TVirtualPad.h"
-#include "TVirtualX.h"
 #include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
 #include "Rtypes.h"
 #include "TError.h"
 #include "TStyle.h"
-#include "TROOT.h"
+
+//Aux. functions.
+#include "customcolors.h"
 
 namespace {
 
@@ -57,16 +57,6 @@ const Double_t basicColors[][4] =
 const unsigned nBasicColors = sizeof (basicColors) / sizeof (basicColors[0]);
 
 //______________________________________________________________________
-Color_t FindNextFreeColorIndex()
-{
-   for (Color_t i = 1000; i < (Color_t)10000; ++i)
-      if (!gROOT->GetColor(i))
-         return i;
-
-   return -1;
-}
-
-//______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
    const Double_t * const fromRGBA = basicColors[(std::rand() % (nBasicColors / 2))];
@@ -77,7 +67,8 @@ Color_t CreateRandomGradientFill()
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
 
-   Color_t idx = FindNextFreeColorIndex();
+   //Not const, otherwise CINT does not call a function ....
+   Color_t idx = FindFreeCustomColorIndex(1000);//Start a lookup from 1000.
    if (idx == -1)
       return -1;
 
@@ -91,6 +82,7 @@ Color_t CreateRandomGradientFill()
 //______________________________________________________________________
 bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
 {
+   //Not const, CINT ... does not call a function.
    Color_t newColor = CreateRandomGradientFill();
    if (newColor == -1) {
       ::Error("add_ellipse", "failed to find a new color index for a gradient fill");
@@ -114,10 +106,12 @@ void radialgradients()
    
    TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 800, 800);
    if (!cnv->UseGL()) {
-      ::Error("radialgradients", "this demo OpenGL");
+      ::Error("radialgradients", "this demo requires OpenGL");
       delete cnv;
       return;
    }
+   
+   gRandom->SetSeed(4357);//:)
 
    for (unsigned i = 0; i < 100; ++i) {
       if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
