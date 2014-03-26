@@ -89,12 +89,6 @@ void gradients()
                                  /*transparent red at the end:*/1., 0.2, 0., 0.6};
 
 
-   //
-   //With Quartz/Cocoa we support the "extended" radial gradient:
-   //you can specify two centers and two radiuses - the start and
-   //the end of your radial gradient (+ colors/positions as with a linear
-   //gradient).
-   //
 
    TRadialGradient * const gradientFill2 = new TRadialGradient(radialFill, 2,
                                                                locations, rgbaData2);
@@ -102,7 +96,7 @@ void gradients()
    //the gradient is 'pad-related' - we calculate everything in a pad's
    //space and consider it as a NDC (so pad's rect is (0,0), (1,1)).
    gradientFill2->SetCoordinateMode(TColorGradient::kPadMode);
-   //Centers for both circles are the same point.
+   //Simple radial gradient - center and radius:
    gradientFill2->SetRadialGradient(TColorGradient::Point(0.5, 0.5), 0.4);
 
    const UInt_t nSlices = 5;

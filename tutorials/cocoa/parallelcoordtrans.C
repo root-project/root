@@ -4,6 +4,19 @@
 // appear.
 //Authors: Olivier Couet (original macro), adapted for TGCocoa by Timur Pocheptsov.
 
+//Includes for ACLiC:
+#include "TParallelCoordVar.h"
+#include "TParallelCoord.h"
+#include "TVirtualX.h"
+#include "TNtuple.h"
+#include "TCanvas.h"
+#include "TRandom.h"
+#include "TColor.h"
+#include "Rtypes.h"
+#include "TError.h"
+#include "TList.h"
+#include "TROOT.h"
+
 
 Double_t r1,r2,r3,r4,r5,r6,r7,r8,r9;
 Double_t dr = 3.5;
@@ -32,7 +45,8 @@ void parallelcoordtrans() {
    c1->Divide(1,2);
 
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      std::cout<<"This macro works only on MacOS X with --enable-cocoa\n";
+      ::Error("parallelcoordtrans",
+              "This macro works only on MacOS X with --enable-cocoa");
       delete c1;
       delete r;
       return;

@@ -16,6 +16,8 @@
 #include "TText.h"
 #include "TPie.h"
 
+//Aux. functions.
+#include "customcolors.h"
 
 void gradients()
 {
@@ -25,9 +27,17 @@ void gradients()
    //3. A fully transparent fill color for a nested pad.
 
    //I have to hardcode them, but can also look for free indices in the ROOT's color palette.
-   const Color_t radialFill = 1300;
-   const Color_t linearFill = 1301;
-   const Color_t transparentFill = 1302;
+   const Color_t radialFill = FindFreeCustomColorIndex(1000);//let's start the search from 1000.
+   if (radialFill == -1)
+      return;
+   
+   const Color_t linearFill = FindFreeCustomColorIndex(radialFill + 1);//Start from the next.
+   if (linearFill == -1)
+      return;
+   
+   const Color_t transparentFill = FindFreeCustomColorIndex(linearFill + 1);//Start from the next.
+   if (transparentFill == -1)
+      return;
    
    //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);

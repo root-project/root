@@ -5,7 +5,6 @@
 
 
 //Includes for ACLiC:
-#include <iostream>
 #include <cstdlib>
 
 #include "TColorGradient.h"
@@ -17,6 +16,9 @@
 #include "Rtypes.h"
 #include "TError.h"
 #include "TROOT.h"
+
+//Aux. functions.
+#include "customcolors.h"
 
 namespace {
 
@@ -55,18 +57,6 @@ const Double_t basicColors[][4] =
 const unsigned nBasicColors = sizeof(basicColors) / sizeof(basicColors[0]);
 
 //______________________________________________________________________
-Color_t FindNextFreeColorIndex()
-{
-   //Something really stupid and simple.
-   for (Color_t i = 1000; i < (Color_t)10000; ++i) {
-      if (!gROOT->GetColor(i))
-         return i;
-   }
-   
-   return -1;
-}
-
-//______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
    const Double_t * const fromRGBA = basicColors[(rand() % (nBasicColors / 2))];
@@ -77,7 +67,7 @@ Color_t CreateRandomGradientFill()
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
 
-   Color_t idx = FindNextFreeColorIndex();
+   Color_t idx = FindFreeCustomColorIndex(1000);//We start search from 1000.
    if (idx == -1)
       return idx;
 
@@ -121,6 +111,7 @@ void radialgradients()
       return;
    }
 
+   gRandom->SetSeed(4357);//:)
 
    for (unsigned i = 0; i < 100; ++i)
       if (!add_ellipse(gRandom->Rndm(), gRandom->Rndm(), 0.5 * gRandom->Rndm()))
