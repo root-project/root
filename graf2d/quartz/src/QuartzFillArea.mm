@@ -172,14 +172,13 @@ bool CalculateGradientRadiuses(const TRadialGradient *grad,
    CGFloat endRadius = grad->GetR2();
 
    if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
-      const CGFloat scale = bbox.size.width < bbox.size.height ?
-                            bbox.size.height : bbox.size.width;
+      const CGFloat scale = std::max(bbox.size.width, bbox.size.height);
       
       startRadius *= scale;
       endRadius *= scale;
    } else {
-      const CGFloat scale = sizeOfDrawable.width < sizeOfDrawable.height ?
-                            sizeOfDrawable.height : sizeOfDrawable.width;
+      const CGFloat scale = std::max(sizeOfDrawable.width, sizeOfDrawable.height);
+
       startRadius *= scale;
       endRadius *= scale;
    }
