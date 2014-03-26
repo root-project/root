@@ -112,7 +112,7 @@ void radialgradients()
 {
    gStyle->SetCanvasPreferGL(kTRUE);
    
-   TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 1200, 1200);
+   TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 800, 800);
    if (!cnv->UseGL()) {
       ::Error("radialgradients", "this demo OpenGL");
       delete cnv;
