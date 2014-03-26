@@ -5305,6 +5305,13 @@ Long64_t TProof::Process(TDSet *dset, const char *selector, Option_t *option,
    // Finalise output file settings (opt is ignored in here)
    if (HandleOutputOptions(opt, outfile, 1) != 0) return -1;
 
+   // Retrieve status from the output list
+   if (rv >= 0) {
+      TParameter<Long64_t> *sst =
+        (TParameter<Long64_t> *) fOutputList.FindObject("PROOF_SelectorStatus");
+      if (sst) rv = sst->GetVal();
+   }
+
    if (fSync) {
       // reactivate the default application interrupt handler
       if (sh)
@@ -5627,6 +5634,7 @@ Long64_t TProof::Process(const char *dsetname, const char *selector,
    } else {
       delete dset;
    }
+
    return retval;
 }
 

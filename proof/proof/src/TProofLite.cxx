@@ -40,6 +40,7 @@
 #include "TPluginManager.h"
 #include "TDataSetManager.h"
 #include "TDataSetManagerFile.h"
+#include "TParameter.h"
 #include "TPRegexp.h"
 #include "TProofQueryResult.h"
 #include "TProofServ.h"
@@ -1407,6 +1408,14 @@ Long64_t TProofLite::Process(TDSet *dset, const char *selector, Option_t *option
    }
    // Finalise output file settings (opt is ignored in here)
    if (HandleOutputOptions(opt, outfile, 1) != 0) return -1;
+
+   // Retrieve status from the output list
+   if (rv >= 0) {
+      TParameter<Long64_t> *sst =
+        (TParameter<Long64_t> *) fOutputList.FindObject("PROOF_SelectorStatus");
+      if (sst) rv = sst->GetVal();
+   }
+
 
    // Done
    return rv;
