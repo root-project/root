@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 17/03/2014.
 //This macro demonstrates semi-transparent pads.
 //Requires OS X and ROOT configured with --enable-cocoa.
 

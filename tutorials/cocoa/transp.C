@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 25/09/2012
 //This demo shows how to use transparency.
 //On MacOS X you can see the transparency in a canvas,
 //you can save canvas contents as pdf/png

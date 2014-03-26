@@ -1,5 +1,5 @@
 //This macro is based on labels1.C by Rene Brun.
-//Updated by Timur Pocheptsov to use transparent text.
+//Updated by Timur Pocheptsov to use transparent text (12/10/2012).
 //Requires OS X and ROOT configured with --enable-cocoa.
 
 

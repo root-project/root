@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 25/09/2012.
 //Gradient fill with transparency and "SAME" option.
 //Requires OS X and ROOT configured with --enable-cocoa.
 

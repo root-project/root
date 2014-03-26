@@ -1,7 +1,7 @@
 //Author: Timur Pocheptsov, 4/02/2014
 
-//Another demo to show transparency with TMultiGraph
-//(and the really interesting curve/equation). + point compression in
+//A demo to show transparency with TMultiGraph
+//(and a really interesting curve/equation). + point compression in
 //TPadPainter :))
 //You can see all three flowers ONLY with Cococa (transparency).
 

@@ -3,7 +3,7 @@
 // the second time with transparency. On the second plot, several clusters
 // appear.
 
-//Authors: Olivier Couet (original macro), adapted for TGCocoa by Timur Pocheptsov.
+//Authors: Olivier Couet (original macro), adapted for TGCocoa by Timur Pocheptsov (26/09/2012).
 
 
 //All these includes are (only) to make the macro

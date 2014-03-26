@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 25/09/2012 (?)
 //This macro shows how to create and use linear gradients to fill
 //a histogram or a pad.
 //Requires OS X and ROOT configured with --enable-cocoa.
