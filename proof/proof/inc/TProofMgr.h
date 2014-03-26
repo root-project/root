@@ -113,7 +113,7 @@ public:
    virtual Int_t       SendMsgToUsers(const char *, const char * = 0);
    virtual void        SetAlias(const char *alias="") { TNamed::SetTitle(alias); }
    virtual void        SetMssUrl(const char *mss) { fMssUrl = mss; }
-   virtual void        SetROOTVersion(const char *) { }
+   virtual Int_t       SetROOTVersion(const char *) { return 0; }
    virtual void        ShowROOTVersions() { }
    virtual void        ShutdownSession(Int_t id) { DetachSession(id,"S"); }
    virtual void        ShutdownSession(TProof *p) { DetachSession(p,"S"); }
