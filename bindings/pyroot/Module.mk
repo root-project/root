@@ -128,3 +128,9 @@ ifneq ($(CLANG_MAJOR)$(GCC_MAJOR),)
 # Building with clang or GCC
 $(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-error=format
 endif
+
+#ifneq ($(CLANG_MAJOR),)
+# Building with clang 
+$(PYROOTO) $(PYTHON64O) $(PYROOTDO): CXXFLAGS += -Wno-ignored-attributes
+#endif
+
