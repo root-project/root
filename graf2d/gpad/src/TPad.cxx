@@ -2262,6 +2262,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque && zoombox) {
+            zoombox->Delete();
+            zoombox = 0;
+         }
          break;
       }
 
