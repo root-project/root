@@ -197,8 +197,6 @@ template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplemen
 }
 template<> template<typename _T> void Trigonometric<Vc::Internal::TrigonometricImplementation>::sincos(const Vector<_T> &_x, Vector<_T> *_sin, Vector<_T> *_cos) {
     typedef Vector<_T> V;
-    typedef Const<_T> C;
-    typedef typename V::EntryType T;
     typedef typename V::Mask M;
     typedef typename signed_integer<V>::type IV;
 
@@ -245,7 +243,6 @@ template<> template<> void Trigonometric<Vc::Internal::TrigonometricImplementati
 template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::TrigonometricImplementation>::asin (const Vector<_T> &_x) {
     typedef Const<_T> C;
     typedef Vector<_T> V;
-    typedef typename V::EntryType T;
     typedef typename V::Mask M;
 
     const M &negative = _x < V::Zero();
@@ -274,7 +271,6 @@ template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::Trigonom
 template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplementation>::asin (const double_v &_x) {
     typedef Const<double> C;
     typedef double_v V;
-    typedef V::EntryType T;
     typedef V::Mask M;
 
     const M negative = _x < V::Zero();
@@ -310,7 +306,6 @@ template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplemen
 template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::TrigonometricImplementation>::atan (const Vector<_T> &_x) {
     typedef Const<_T> C;
     typedef Vector<_T> V;
-    typedef typename V::EntryType T;
     typedef typename V::Mask M;
     V x = abs(_x);
     const M &gt_tan_3pi_8 = x > C::atanThrsHi();
@@ -333,7 +328,6 @@ template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::Trigonom
 template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplementation>::atan (const double_v &_x) {
     typedef Const<double> C;
     typedef double_v V;
-    typedef V::EntryType T;
     typedef V::Mask M;
 
     M sign = _x < V::Zero();
@@ -364,7 +358,6 @@ template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplemen
 template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::TrigonometricImplementation>::atan2(const Vector<_T> &y, const Vector<_T> &x) {
     typedef Const<_T> C;
     typedef Vector<_T> V;
-    typedef typename V::EntryType T;
     typedef typename V::Mask M;
 
     const M xZero = x == V::Zero();
@@ -406,7 +399,6 @@ template<> template<typename _T> Vector<_T> Trigonometric<Vc::Internal::Trigonom
 template<> template<> double_v Trigonometric<Vc::Internal::TrigonometricImplementation>::atan2 (const double_v &y, const double_v &x) {
     typedef Const<double> C;
     typedef double_v V;
-    typedef V::EntryType T;
     typedef V::Mask M;
 
     const M xZero = x == V::Zero();

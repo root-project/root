@@ -62,7 +62,7 @@ template<typename V> void stdVectorAlignment()
     for (int i = 1; i < 100; ++i) {
         std::vector<T, Vc::Allocator<T> > v5(i);
         const size_t expectedAlignment = Vc_ALIGNOF(V);
-        COMPARE((&v5[0] - static_cast<const T *>(0)) * sizeof(T) & (expectedAlignment - 1), 0);
+        COMPARE((&v5[0] - static_cast<const T *>(0)) * sizeof(T) & (expectedAlignment - 1), 0u);
     }
 }
 

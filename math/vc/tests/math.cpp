@@ -270,7 +270,7 @@ template<typename V> void testLog2()/*{{{*/
 #else
     setFuzzyness<float>(1);
 #endif
-#if (defined(VC_MSVC) || defined(__APPLE__) ) && defined(VC_IMPL_Scalar) 
+#if defined(VC_MSVC) && defined(VC_IMPL_Scalar)
     setFuzzyness<double>(2);
 #else
     setFuzzyness<double>(1);
@@ -455,16 +455,11 @@ template<typename V> void testAtan()/*{{{*/
         const V inf = T(INF.value);
 
         VERIFY(Vc::isnan(Vc::atan(nan)));
-#if defined(__APPLE__)
-        FUZZY_COMPARE(Vc::atan(+inf), +Pi_2);
-        FUZZY_COMPARE(Vc::atan(-inf), -Pi_2);
-#else
         COMPARE(Vc::atan(+inf), +Pi_2);
 #ifdef VC_MSVC
 #pragma warning(suppress: 4756) // overflow in constant arithmetic
 #endif
         COMPARE(Vc::atan(-inf), -Pi_2);
-#endif
     }
 
     Array<Reference<T> > reference = referenceData<T, Atan>();
@@ -492,14 +487,8 @@ template<typename V> void testAtan2()/*{{{*/
         const V inf = T(INF.value);
 
         // If y is +0 (-0) and x is less than 0, +pi (-pi) is returned.
-#if defined(__APPLE__)
-        // these fails on apple arch for float types 
-        FUZZY_COMPARE(Vc::atan2(V(T(+0.)), V(T(-3.))), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-0.)), V(T(-3.))), -Pi);
-#else 
         COMPARE(Vc::atan2(V(T(+0.)), V(T(-3.))), +Pi);
         COMPARE(Vc::atan2(V(T(-0.)), V(T(-3.))), -Pi);
-#endif
         // If y is +0 (-0) and x is greater than 0, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+0.)), V(T(+3.))), V(T(+0.)));
         VERIFY(!Vc::atan2(V(T(+0.)), V(T(+3.))).isNegative());
@@ -516,28 +505,16 @@ template<typename V> void testAtan2()/*{{{*/
         VERIFY(Vc::isnan(Vc::atan2(V(T(3.)), nan)));
         VERIFY(Vc::isnan(Vc::atan2(nan, nan)));
         // If y is +0 (-0) and x is -0, +pi (-pi) is returned.
-#if defined(__APPLE__)
-        // these fails on apple arch for float types 
-        FUZZY_COMPARE(Vc::atan2(V(T(+0.)), V(T(-0.))), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-0.)), V(T(-0.))), -Pi);
-#else 
         COMPARE(Vc::atan2(V(T(+0.)), V(T(-0.))), +Pi);
         COMPARE(Vc::atan2(V(T(-0.)), V(T(-0.))), -Pi);
-#endif
         // If y is +0 (-0) and x is +0, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+0.)), V(T(+0.))), V(T(+0.)));
         COMPARE(Vc::atan2(V(T(-0.)), V(T(+0.))), V(T(-0.)));
         VERIFY(!Vc::atan2(V(T(+0.)), V(T(+0.))).isNegative());
         VERIFY( Vc::atan2(V(T(-0.)), V(T(+0.))).isNegative());
         // If y is a finite value greater (less) than 0, and x is negative infinity, +pi (-pi) is returned.
-
-#if defined(__APPLE__)
-        FUZZY_COMPARE(Vc::atan2(V(T(+1.)), -inf), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-1.)), -inf), -Pi);
-#else
         COMPARE(Vc::atan2(V(T(+1.)), -inf), +Pi);
         COMPARE(Vc::atan2(V(T(-1.)), -inf), -Pi);
-#endif
         // If y is a finite value greater (less) than 0, and x is positive infinity, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+3.)), +inf), V(T(+0.)));
         VERIFY(!Vc::atan2(V(T(+3.)), +inf).isNegative());

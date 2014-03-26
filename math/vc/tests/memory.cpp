@@ -97,7 +97,6 @@ template<typename V, unsigned int Size> struct TestEntries2D { static void test(
 
 template<typename V, unsigned int Size> struct TestVectors { static void test()
 {
-    typedef typename V::EntryType T;
     const V startX(V::IndexType::IndexesFromZero() + Size);
     Memory<V, Size> m;
     const Memory<V, Size> &m2 = m;
@@ -126,7 +125,6 @@ template<typename V, unsigned int Size> struct TestVectors { static void test()
 
 template<typename V, unsigned int Size> struct TestVectors2D { static void test()
 {
-    typedef typename V::EntryType T;
     const V startX(V::IndexType::IndexesFromZero() + Size);
     Memory<V, Size, Size> m;
     const Memory<V, Size, Size> &m2 = m;
@@ -158,7 +156,6 @@ template<typename V, unsigned int Size> struct TestVectors2D { static void test(
 
 template<typename V, unsigned int Size> struct TestVectorReorganization { static void test()
 {
-    typedef typename V::EntryType T;
     typename V::Memory init;
     for (unsigned int i = 0; i < V::Size; ++i) {
         init[i] = i;

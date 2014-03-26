@@ -23,11 +23,10 @@
 #include <new>
 #include <cstddef>
 #include <cstdlib>
+#include "global.h"
 #ifdef VC_CXX11
 #include <utility>
 #endif
-
-#include "global.h"
 #include "common/macros.h"
 
 namespace ROOT {
