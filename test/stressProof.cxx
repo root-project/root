@@ -251,7 +251,7 @@ int main(int argc,const char *argv[])
       printf("                 in case of error.\n");
       printf("   -k,-keeplog   keep all logfiles, including the ones from the PROOF nodes (in one single file)\n");
       printf("                 The paths are printed on the screen.\n");
-      printf("   -catlog       prints all the logfiles (also the ones from PROOF nodes) on stdout; useful for");
+      printf("   -catlog       prints all the logfiles (also the ones from PROOF nodes) on stdout; useful for\n");
       printf("                 presenting a single aggregated output for automatic tests. If specified in\n");
       printf("                 conjunction with -cleanlog it will only print the logfiles in case of errors\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
