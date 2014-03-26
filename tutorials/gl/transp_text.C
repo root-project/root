@@ -6,7 +6,6 @@
 //OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc.
 
 //Includes for ACLiC (cling does not need them).
-#include "TVirtualX.h"
 #include "TPaveText.h"
 #include "TCanvas.h"
 #include "TRandom.h"
