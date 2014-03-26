@@ -2734,6 +2734,7 @@ def ClassDefImplementation(selclasses, self) :
            and "ImplFileName" in listOfMembers :
 
       clname = '::' + attrs['fullname']
+      scopename = attrs['fullname']
 
       haveClassDef = 1
       extraval = '!RAW!' + str(derivesFromTObject)
@@ -2761,6 +2762,7 @@ def ClassDefImplementation(selclasses, self) :
             break
           if specclname:
             specclname = enclattrs['name'] + '::' + specclname
+            scopename = enclattrs['name'] + '::' + scopename
           else:
             #this is the first time through so we want the class name
             specclname = enclattrs['name']
@@ -2768,7 +2770,7 @@ def ClassDefImplementation(selclasses, self) :
       else :
         specclname = clname
 
-      returnValue += template + 'atomic_TClass_ptr ' + specclname + '::fgIsA(0);\n'
+      returnValue += template + 'atomic_TClass_ptr ' + scopename + '::fgIsA(0);\n'
       returnValue += template + 'TClass* ' + specclname + '::Class() {\n'
       returnValue += '   if (!fgIsA) {\n'
       returnValue += '      R__LOCKGUARD2(gCINTMutex);'
