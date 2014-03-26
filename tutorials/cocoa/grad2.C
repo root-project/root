@@ -4,6 +4,7 @@
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
+#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TError.h"
 #include "TColor.h"
