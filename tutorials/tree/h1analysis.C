@@ -287,6 +287,9 @@ Bool_t h1analysis::Process(Long64_t entry)
    hdmd->Fill(dm_d);
    h2->Fill(dm_d,rpd0_t/0.029979*1.8646/ptd0_d);
 
+   // Count the number of selected events
+   fStatus++;
+
    return kTRUE;
 }
 
