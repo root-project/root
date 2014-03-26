@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 25/03/2014.
 //This tutorial demonstrates how to use radial gradients,
 //custom colors, transparency.
 //Requires OpenGL: either set OpenGL.CanvasPreferGL to 1
@@ -104,9 +105,11 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
 //______________________________________________________________________
 void radialgradients()
 {
+   gRandom->SetSeed(4357);//;)
+
    gStyle->SetCanvasPreferGL(kTRUE);
    
-   TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 1200, 1200);
+   TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 800, 800);
    if (!cnv->UseGL()) {
       ::Error("radialgradients", "this demo OpenGL");
       delete cnv;

@@ -1,3 +1,5 @@
+//Author: Timur Pocheptsov, 14/1/2014.
+
 #ifndef CUSTOMCOLOR_INCLUDED
 #define CUSTOMCOLOR_INCLUDED
 

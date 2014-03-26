@@ -13,6 +13,7 @@
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"
+#include "TStyle.h"
 #include "TText.h"
 #include "TPie.h"
 
@@ -37,8 +38,10 @@ void gradients()
    const Color_t &linearFill = colorIndices[1];
    const Color_t &transparentFill = colorIndices[2];
    
+   gStyle->SetCanvasPreferGL(kTRUE);
+   
    //Create a canvas to check if we have a right back-end which supports gradients:
-   TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);
+   TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
    if (!c->UseGL()) {
       ::Error("gradients", "This macro requires OpenGL");

@@ -1,5 +1,9 @@
+//Author: Timur Pocheptsov, 19/03/2014.
 //This macro is based on labels1.C by Rene Brun.
 //Updated by Timur Pocheptsov to use transparent text.
+//The macro requires OpenGL - either enable by
+//gStyle->SetCanvasPreferGL(kTRUE); or by setting
+//OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc.
 
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"
@@ -40,7 +44,10 @@ void transp_text()
 
    //4. Create a TCanvas.
    gStyle->SetCanvasPreferGL(kTRUE);
+
    TCanvas * const c1 = new TCanvas("transparent text","transparent text demo", 10, 10, 900, 500);
+   if (!c1->UseGL())
+      ::Warning("transp_text", "to use this macro you need OpenGL");
 
    const Int_t nx = 20;
    const char *people[nx] = {"Jean","Pierre","Marie","Odile",

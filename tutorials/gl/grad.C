@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 19/03/2014.
 //This macro demonstrates how to create and use linear gradients to fill
 //a histogram or a pad.
 //To use this macro you need OpenGL enabled in pad:

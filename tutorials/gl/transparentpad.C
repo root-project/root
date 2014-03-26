@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 19/03/2014.
 //This macro demonstrates semi-transparent pads.
 //Requires OpenGL.
 

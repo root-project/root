@@ -101,6 +101,8 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
 //______________________________________________________________________
 void radialgradients()
 {
+   gRandom->SetSeed(4357);//;)
+
    TCanvas * const cnv = new TCanvas("radial gradients", "radial gradients", 800, 800);
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
       ::Error("radialgradients",

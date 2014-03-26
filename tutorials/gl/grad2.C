@@ -1,3 +1,4 @@
+//Author: Timur Pocheptsov, 19/03/2014.
 //Gradient fill with transparency and the "SAME" option.
 //To use this macro you need OpenGL enabled in pad:
 //either set OpenGL.CanvasPreferGL to 1 in $ROOTSYS/etc/system.rootrc;
@@ -8,6 +9,7 @@
 #include "TCanvas.h"
 #include "TError.h"
 #include "TColor.h"
+#include "TStyle.h"
 #include "TH1F.h"
 
 //Aux. functions for tutorials/gl.

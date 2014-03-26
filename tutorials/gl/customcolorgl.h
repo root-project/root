@@ -1,3 +1,5 @@
+//Author: Timur Pocheptsov, 02/03/2014.
+
 #ifndef CUSTOMCOLORGL_INCLUDED
 #define CUSTOMCOLORGL_INCLUDED
 
