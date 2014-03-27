@@ -1288,15 +1288,15 @@ Begin_Html
 
 
 A Candle plot (also known as a "box-and whisker plot" or simply "box plot")
-is a convenient way to describe graphically a data distribution (D) with 
+is a convenient way to describe graphically a data distribution (D) with
 only the five numbers. It was invented in 1977 by John Tukey.
 <p>
 With the option CANDLEX five numbers are:
 <ol>
 <li> The minimum value of the distribution D (bottom dashed line).
-<li> The lower quartile (Q1): 25% of the data points in D are less than 
-     Q1 (bottom of the box).    
-<li> The median (M): 50% of the data points in D are less than M 
+<li> The lower quartile (Q1): 25% of the data points in D are less than
+     Q1 (bottom of the box).
+<li> The median (M): 50% of the data points in D are less than M
      (thick line segment inside the box).
 <li> The upper quartile (Q3): 75% of the data points in D are less
      than Q3 (top of the box).
@@ -3145,6 +3145,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    End_html */
 
    static Int_t bin, px1, py1, px2, py2, pyold;
+   Int_t bin1, bin2;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
    Bool_t opaque  = gPad->OpaqueMoving();
 
@@ -3161,6 +3162,9 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       view->ExecuteRotateView(event, px, py);
       return;
    }
+
+   TAxis *xaxis = fH->GetXaxis();
+   TAxis *yaxis = fH->GetYaxis();
 
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
@@ -3219,6 +3223,32 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             gPad->Modified(kTRUE);
          }
       }
+
+      break;
+
+   case kWheelUp:
+
+      bin1 = xaxis->GetFirst()+1;
+      bin2 = xaxis->GetLast()-1;
+      if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+      bin1 = yaxis->GetFirst()+1;
+      bin2 = yaxis->GetLast()-1;
+      if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      gPad->Modified();
+      gPad->Update();
+
+      break;
+
+   case kWheelDown:
+
+      bin1 = xaxis->GetFirst()-1;
+      bin2 = xaxis->GetLast()+1;
+      if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+      bin1 = yaxis->GetFirst()-1;
+      bin2 = yaxis->GetLast()+1;
+      if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      gPad->Modified();
+      gPad->Update();
 
       break;
 
@@ -3522,7 +3552,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Pie = 1;
       strncpy(l,"   ",3);
    }
-   
+
    l = strstr(chopt,"CANDLE");
    if (l) {
       Hoption.Scat = 0;
@@ -4708,19 +4738,19 @@ void THistPainter::PaintCandlePlot(Option_t *)
    /* Begin_html
    <a href="#HP14">Control function to draw a 2D histogram as a candle (box) plot.</a>
    End_html */
-      
+
    Double_t x,y,w;
    Double_t m1 = 0.055, m2 = 0.25;
    Double_t xpm[1], ypm[1];
-   
+
    TH1D *hp;
    TH2D *h2 = (TH2D*)fH;
-   
+
    Double_t *quantiles = new Double_t[5];
    quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
    Double_t *prob = new Double_t[5];
    prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
-   
+
    Style_t fillsav   = h2->GetFillStyle();
    Style_t colsav    = h2->GetFillColor();
    Style_t linesav   = h2->GetLineStyle();
@@ -4733,7 +4763,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
    h2->TAttLine::Modify();
    h2->TAttFill::Modify();
    h2->TAttMarker::Modify();
-   
+
    // Candle plot along X
    if (Hoption.Candle == 1) {
       for (Int_t i=Hparam.xfirst; i<=Hparam.xlast; i++) {
@@ -4743,7 +4773,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
             ypm[0] = hp->GetMean();
-      
+
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
             gPad->PaintBox(x+m1*w,  quantiles[1], x+(1-m1)*w, quantiles[3]);
@@ -4759,7 +4789,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
             h2->TAttLine::Modify();
             gPad->PaintLine(x+w/2., quantiles[3], x+w/2., quantiles[4]);
             gPad->PaintLine(x+w/2., quantiles[0], x+w/2., quantiles[1]);
-      
+
             xpm[0] = x+w/2;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
@@ -4773,7 +4803,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
          if (hp->GetEntries() !=0) {
             hp->GetQuantiles(5, quantiles, prob);
             xpm[0] = hp->GetMean();
-      
+
             h2->SetLineStyle(1);
             h2->TAttLine::Modify();
             gPad->PaintBox(quantiles[1],  y+m1*w, quantiles[3], y+(1-m1)*w);
@@ -4789,7 +4819,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
             h2->TAttLine::Modify();
             gPad->PaintLine(quantiles[3], y+w/2., quantiles[4], y+w/2.);
             gPad->PaintLine(quantiles[0], y+w/2., quantiles[1], y+w/2.);
-      
+
             ypm[0] = y+w/2;
             gPad->PaintPolyMarker(1,xpm,ypm);
          }
@@ -4808,7 +4838,7 @@ void THistPainter::PaintCandlePlot(Option_t *)
    delete [] prob;
    delete [] quantiles;
 }
-   
+
 
 //______________________________________________________________________________
 void THistPainter::PaintColorLevels(Option_t *)
