@@ -266,13 +266,22 @@ namespace ROOT{
 //______________________________________________________________________________
 void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, 
                                              unsigned int i){
+      if (!templ){
+         Error("ATNormalizedCtxt::AddTemplAndNargsToKeep",
+               "Tring to specify a number of template arguments to keep for a null pointer. Exiting without assigning any value.\n");
+         return;
+      }
+      
       if(fTemplatePtrArgsToKeepMap.count(templ)==1 &&
          fTemplatePtrArgsToKeepMap[templ]!=(int)i){
+         const std::string templateName (templ->getNameAsString());
+         const std::string i_str (std::to_string(i));
+         const std::string previousArgsToKeep(std::to_string(fTemplatePtrArgsToKeepMap[templ]));
          Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
-               "Tring to specify for template %s %s arguments to keep, while before this number was %s",
+               "Tring to specify for template %s %s arguments to keep, while before this number was %s\n",
                templ->getNameAsString().c_str(), 
-               i, 
-               fTemplatePtrArgsToKeepMap[templ]);
+               i_str.c_str(), 
+               previousArgsToKeep.c_str());
       }
       
       fTemplatePtrArgsToKeepMap[templ]=i;
@@ -1560,8 +1569,6 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          // Split in name value
          if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) continue;
-
-         std::cout << dMember->getNameAsString() << " - attrName: " << attrName << std::endl;
          
          bool isIoName =  attrName == propNames::ioname;
          bool isIoType =  attrName == propNames::iotype;
@@ -3335,15 +3342,23 @@ static void KeepNParams(clang::QualType& normalizedType,
 {
    using namespace ROOT::TMetaUtils;
    using namespace clang;
-         
+
+   // If this type has no template specialisation behind, we cannot do anything
    const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(vanillaType);
    const ClassTemplateDecl* ctd = ctsd ? ctsd->getSpecializedTemplate() : nullptr;   
    if (!ctd) return;      
-  
-   const ASTContext& astCtxt = ctsd->getASTContext();
+        
+   // Even if this is a template, if we don't keep any argument, return
+   const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
+   if (nArgsToKeep<0) return;   
    
-   // Treat the Scope.
-   clang::NestedNameSpecifier* prefix = 0;
+   // Important in case of early return: we must restore the original qualtype
+   QualType originalNormalizedType = normalizedType;   
+   
+   const ASTContext& astCtxt = ctsd->getASTContext();   
+   
+   // Treat the Scope (factorise the code out to reuse it in AddDefaultParameters)
+   clang::NestedNameSpecifier* prefix = nullptr;
    clang::Qualifiers prefix_qualifiers = normalizedType.getLocalQualifiers();
    const clang::ElaboratedType* etype
       = llvm::dyn_cast<clang::ElaboratedType>(normalizedType.getTypePtr());
@@ -3352,26 +3367,25 @@ static void KeepNParams(clang::QualType& normalizedType,
       prefix = AddDefaultParametersNNS(astCtxt, etype->getQualifier(), interp, normCtxt);
       normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
    }   
-   
-   const TemplateSpecializationType* normalizedTst = 
-            llvm::dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr());
-   if (!normalizedTst) return;   
-  
-   
-   const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
-   if (nArgsToKeep<0) return;   
-      
-   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();
-   
+            
+   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();   
    const TemplateParameterList& tPars = *tParsPtr;
    const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
    
    // We extract the template name from the type
    TemplateName theTemplateName = ExtractTemplateNameFromQualType(normalizedType);
-   if (theTemplateName.isNull()) return;
+   if (theTemplateName.isNull()) {
+      normalizedType=originalNormalizedType;
+      return;   
+   }
 
-   if (tPars.size() != tArgs.size()) return; // candidate for the "unlikely" macro
-
+   const TemplateSpecializationType* normalizedTst = 
+            llvm::dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr());
+   if (!normalizedTst) {
+      normalizedType=originalNormalizedType;
+      return;   
+   }   
+   
    // Loop over the template parameters and arguments recursively.
    // We go down the two lanes: the one of template parameters (decls) and the
    // one of template arguments (QualTypes) in parallel. The former are a
