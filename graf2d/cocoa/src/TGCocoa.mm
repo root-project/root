@@ -3165,9 +3165,8 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
       winX = winPoint.x;
       winY = winPoint.y;
    } else {
-      //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
-      winX = 0;
-      winY = 0;
+      winX = screenPoint.x;
+      winY = screenPoint.y;
    }
 
    //Find child window in these coordinates (?).
@@ -4118,13 +4117,32 @@ void TGCocoa::Sync(Int_t /*mode*/)
 }
 
 //______________________________________________________________________________
-void TGCocoa::Warp(Int_t /*ix*/, Int_t /*iy*/, Window_t /*id*/)
+void TGCocoa::Warp(Int_t ix, Int_t iy, Window_t winID)
 {
    // Sets the pointer position.
    // ix - new X coordinate of pointer
    // iy - new Y coordinate of pointer
    // Coordinates are relative to the origin of the window id
    // or to the origin of the current window if id == 0.
+   
+   if (!winID)
+      return;
+
+   NSPoint newCursorPosition = {};
+   newCursorPosition.x = ix;
+   newCursorPosition.y = iy;
+
+   if (fPimpl->GetRootWindowID() == winID) {
+      //Suddenly .... top-left - based!
+      newCursorPosition.x = X11::GlobalXROOTToCocoa(newCursorPosition.x);
+   } else {
+      assert(fPimpl->GetDrawable(winID).fIsPixmap == NO &&
+             "Warp, drawable is not a window");
+      newCursorPosition = X11::TranslateToScreen(fPimpl->GetWindow(winID).fContentView,
+                                                 newCursorPosition);
+   }
+
+   CGWarpMouseCursorPosition(newCursorPosition);
 }
 
 //______________________________________________________________________________
