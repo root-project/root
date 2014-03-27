@@ -57,6 +57,10 @@ const unsigned nBasicColors = sizeof basicColors / sizeof basicColors[0];
 //______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
+   Color_t idx[1] = {};
+   if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(idx) != 1)
+      return -1;
+
    const Double_t * const fromRGBA = basicColors[(std::rand() % (nBasicColors / 2))];
    //With odd number of colors the last one is never selected :)
    const Double_t * const toRGBA = basicColors[nBasicColors / 2 + (std::rand() % (nBasicColors / 2))];
@@ -64,10 +68,6 @@ Color_t CreateRandomGradientFill()
    const Double_t locations[] = {0., 1.};
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
-
-   Color_t idx[1] = {};
-   if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(idx) != 1)
-      return -1;
 
    TRadialGradient * const grad = new TRadialGradient(idx[0], 2, locations, rgbas);
    grad->SetRadialGradient(TColorGradient::Point(0.5, 0.5), 0.5);
