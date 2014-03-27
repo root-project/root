@@ -7,9 +7,9 @@
 
 //Includes for ACLiC (cling does not need them).
 #include "TColorGradient.h"
-#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TColor.h"
+#include "TStyle.h"
 #include "TError.h"
 #include "TH1F.h"
 
@@ -34,7 +34,6 @@ void grad()
 
    //2. Test if canvas supports OpenGL:
    TCanvas * const cnv = new TCanvas("gradient demo 1", "gradient demo 1", 100, 100, 600, 600);
-   //After canvas was created, gVirtualX should be non-null.
    if (!cnv->UseGL()) {
       ::Error("grad", "This macro requires OpenGL");
       delete cnv;
@@ -52,7 +51,7 @@ void grad()
    //or bounding rect of a pad (gradient->SetCoordinateMode(TColorGradient::kPadMode)).
    //kObjectBoundingMode is the default one.
    
-   const Color_t frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
+   const Color_t &frameGradient = colorIndices[2];//This gradient is a mixture of colorIndices[0] and colorIndices[1]
    //Fill color for a pad frame:
    {
       new TColor(colorIndices[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
@@ -69,7 +68,7 @@ void grad()
    }
 
    //This gradient is a mixture of two standard colors.
-   const Color_t padGradient = colorIndices[3];
+   const Color_t &padGradient = colorIndices[3];
    //Fill color for a pad:
    {
       const Double_t locations[] = {0., 1.};
@@ -78,11 +77,11 @@ void grad()
       //Gradient for a pad.
       TLinearGradient * const gradFill2 = new TLinearGradient(padGradient, 2, locations, gradientIndices);
       //Vertical:
-      gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1));
+      gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1.));
    }
    
    //Another gradient built from three standard colors.
-   const Color_t histGradient = colorIndices[4];
+   const Color_t &histGradient = colorIndices[4];
    //Fill color for a histogram:
    {
       const Color_t gradientIndices[3] = {kYellow, kOrange, kRed};
