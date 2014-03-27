@@ -13,9 +13,7 @@ template <unsigned int I> class KeepFirstTemplateArguments{};
 ///\brief Describes the attributes of a class
 enum EClassAttributes {
       ///\brief Indicates absence of properties
-      kClassNullProperty   = 0,
-      ///\brief The class cannot be split
-      kNonSplittable       = 2};
+      kClassNullProperty   = 0};
 
 ///\brief Used to specify attributes of classes in the "DictSelection" syntax                        
 template <unsigned int classAttributes = kClassNullProperty> class ClassAttributes{};
@@ -28,7 +26,9 @@ enum EClassMemberAttributes {
       ///\brief The data member is transient
       kTransient          = 2,
       ///\brief Select the type of the member
-      kAutoSelected       = 4};
+      kAutoSelected       = 4,
+      ///\brief The class cannot be split
+      kNonSplittable      = 8};
 
 ///\brief Used to specify attributes of data members in the "DictSelection" syntax
 template <unsigned int memberAttributes = kMemberNullProperty > class MemberAttributes{};
