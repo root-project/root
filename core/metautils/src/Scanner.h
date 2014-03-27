@@ -166,7 +166,7 @@ private:
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    const SelectionRules &fSelectionRules;
    std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
-
+   bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
 
 
 };

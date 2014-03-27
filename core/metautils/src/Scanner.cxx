@@ -88,7 +88,8 @@ RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &inter
   fInterpreter(interpret),
   fRecordDeclCallback(0),
   fNormCtxt(normCtxt),
-  fSelectionRules(rules)  
+  fSelectionRules(rules),
+  fFirstPass(true)
 {
    // Regular constructor setting up the scanner to search for entities
    // matching the 'rules'.
@@ -769,17 +770,24 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // We need this check since the same class can be selected through its name or typedef
       bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
 
-      if(rcrdDeclAlreadySelected){
+      // One pass is needed to fill the map of template ptrs - # args to keep.
+      // The second one for the actual selection.
+      if(rcrdDeclAlreadySelected && fFirstPass){
          
          // Here we decorate the norm context
          std::string nArgsToKeep("");
          if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
             if (const ClassTemplateSpecializationDecl* ctsd =
             llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(recordDecl))            
-               if(const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate())
+               if(const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
                   fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
                                                   std::atoi(nArgsToKeep.c_str()));
+                  
+               }
          }
+      }
+      
+      if(rcrdDeclAlreadySelected && !fFirstPass){
          
          std::string name_value("");
          if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::name, name_value)) {
@@ -1173,6 +1181,10 @@ void RScanner::Scan(const clang::ASTContext &C)
       if (fVerboseLevel > 3) std::cout<<"\nDEBUG - unused sel rules"<<std::endl;
    }
 #endif
+   
+   fFirstPass=false;
+   fselectedRecordDecls.clear();
+   TraverseDecl(C.getTranslationUnitDecl());
    
    // And finally resort the results according to the rule ordering.
    std::sort(fSelectedClasses.begin(),fSelectedClasses.end());
