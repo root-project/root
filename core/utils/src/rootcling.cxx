@@ -380,7 +380,7 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
 
             if ( (name == propNames::transient && value == "true") or
                  (name == propNames::persistent && value == "false")) // special case
-               userDefinedProperty="comment"+propNames::separator+"!";
+               userDefinedProperty=propNames::comment+propNames::separator+"!";
             else
                userDefinedProperty=name+propNames::separator+value;
             ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
@@ -3745,9 +3745,10 @@ int RootCling(int argc,
    }
    
    // Exclude string not to re-generatre the dictionary
-   std::vector<std::string> namesForExclusion;
+   std::vector<std::pair<std::string,std::string>> namesForExclusion;
    if (!ROOTBUILDVAL){
-      namesForExclusion.push_back("std::string");
+      namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name,"std::string"));
+      namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern,"ROOT::Meta::Selection*"));
    }
    
    SelectionRules selectionRules(interp,namesForExclusion);
