@@ -14,7 +14,6 @@
 //Aux. functions for tutorials/cocoa.
 #include "customcolor.h"
 
-//______________________________________________________________________
 void grad()
 {
    //1. Try to 'allocate' five indices for our custom colors.

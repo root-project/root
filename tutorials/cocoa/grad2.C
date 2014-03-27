@@ -21,7 +21,7 @@ void grad2()
    //to avoid possible conflicts with other tutorials.
    Color_t freeIndices[4] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(freeIndices) != 4) {
-      Error("grad2", "can not allocate new custom colors");
+      ::Error("grad2", "can not allocate new custom colors");
       return;
    }
 
@@ -33,7 +33,7 @@ void grad2()
    TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
    //After canvas was created, gVirtualX should be non-null.
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      Error("grad2", "This macro works only on OS X with --enable-cocoa");
+      ::Error("grad2", "This macro works only on OS X with --enable-cocoa");
       delete cnv;
       return;
    }
@@ -57,7 +57,7 @@ void grad2()
    
    typedef TColorGradient::Point Point;
    //Starting and ending points for a gradient fill (it's a vertical gradient):
-   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1));
+   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1.));
 
    //   c) Custom semi-transparent green.
    new TColor(customGreen, 0., 1., 0., "green", 0.5);
@@ -69,8 +69,8 @@ void grad2()
    //Vertical gradient fill.
    gradFill2->SetStartEnd(Point(0., 0), Point(0., 1.));
 
-   TH1F * hist = new TH1F("a2", "b2", 10, -2., 3.);
-   TH1F * hist2 = new TH1F("c3", "d3", 10, -3., 3.);
+   TH1F * const hist = new TH1F("a2", "b2", 10, -2., 3.);
+   TH1F * const hist2 = new TH1F("c3", "d3", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
