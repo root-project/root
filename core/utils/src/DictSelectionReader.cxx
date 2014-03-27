@@ -148,17 +148,23 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
 
       if (attrCode == ROOT::Meta::Selection::kMemberNullProperty) continue;
 
+      if (attrCode & ROOT::Meta::Selection::kNonSplittable){
+         VariableSelectionRule vsr(BaseSelectionRule::kYes);
+         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment,"||");
+         csr.AddFieldSelectionRule(vsr);         
+      }        
+      
       if (attrCode & ROOT::Meta::Selection::kTransient) {
          VariableSelectionRule vsr(BaseSelectionRule::kYes);
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
                                fieldsIt->getNameAsString());
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::transient, "true");
          csr.AddFieldSelectionRule(vsr);
-      }
+      }                  
 
       if (attrCode & ROOT::Meta::Selection::kAutoSelected)
          fAutoSelectedClassFieldNames[className].insert(
-             fieldsIt->getNameAsString());
+             fieldsIt->getNameAsString()); 
 
    } // end loop on fields
 }
@@ -191,11 +197,6 @@ DictSelectionReader::ManageBaseClasses(const clang::CXXRecordDecl& cxxRcrdDecl,
         baseIt != cxxRcrdDecl.bases_end();
         baseIt++) {
 
-      if (unsigned int attrCode =
-              ExtractTemplateArgValue(*baseIt, "ClassAttributes")) {
-         if (attrCode & ROOT::Meta::Selection::kNonSplittable)
-            csr.SetAttributeValue("nonSplittable", "true");
-      }
       if (unsigned int nArgsToKeep = ExtractTemplateArgValue(*baseIt, "Keep")) {
          std::string pattern =
              className.substr(0, className.find_first_of("<"));
