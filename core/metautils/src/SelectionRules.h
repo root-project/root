@@ -42,17 +42,16 @@ public:
    };
    
    SelectionRules(cling::Interpreter &interp,
-                  const std::vector<std::string>& namesForExclusion):
+                  const std::vector<std::pair<std::string,std::string>>& namesForExclusion):
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
       fHasFileNameRule(false),
       fRulesCounter(0),
       fInterp(interp) {
          long counter=1;
-         for (std::vector<std::string>::const_iterator nameIt=namesForExclusion.begin();
-              nameIt!=namesForExclusion.end();++nameIt){
+         for (auto& attrValPair : namesForExclusion){
             ClassSelectionRule csr(counter++, fInterp);
-            csr.SetAttributeValue("name", *nameIt);
+            csr.SetAttributeValue(attrValPair.first, attrValPair.second);
             csr.SetSelected(BaseSelectionRule::kNo);
             AddClassSelectionRule(csr);
             }
