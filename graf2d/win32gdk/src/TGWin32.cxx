@@ -2250,9 +2250,13 @@ void TGWin32::QueryPointer(int &ix, int &iy)
    // iy       : Y coordinate of pointer
    // (both coordinates are relative to the origin of the root window)
 
-   GdkModifierType mask;
-   GdkWindow *retw = gdk_window_get_pointer((GdkWindow *) gCws->window,
-                                             &ix, &iy, &mask);
+   //GdkModifierType mask;
+   //GdkWindow *retw = gdk_window_get_pointer((GdkWindow *) gCws->window,
+   //                                          &ix, &iy, &mask);
+   POINT cpt;
+   GetCursorPos(&cpt);
+   ix = cpt.x;
+   iy = cpt.y;
 }
 
 //______________________________________________________________________________
