@@ -5,7 +5,6 @@
 #include "TPaveText.h"
 #include "TCanvas.h"
 #include "TRandom.h"
-#include "Rtypes.h"
 #include "TError.h"
 #include "TStyle.h"
 #include "TColor.h"
@@ -34,6 +33,9 @@ void transp_text()
       delete c1;
       return;
    }
+   
+   c1->SetGrid();
+   c1->SetBottomMargin(0.15);
 
    const Int_t nx = 20;
    const char *people[nx] = {"Jean","Pierre","Marie","Odile",
@@ -41,21 +43,16 @@ void transp_text()
                              "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
                              "Philippe","Suzanne","Jeff","Valery"};
    
-   c1->SetGrid();
-   c1->SetBottomMargin(0.15);
-
    TH1F * const h = new TH1F("h", "test", nx, 0, nx);
    h->SetFillColor(38);
    
-   for (Int_t i = 0; i < 5000; ++i) {
+   for (Int_t i = 0; i < 5000; ++i)
       h->Fill(gRandom->Gaus(0.5 * nx, 0.2 * nx));
-   }
-   
+
    h->SetStats(0);
    
-   for (Int_t i = 1; i <= nx; ++i) {
+   for (Int_t i = 1; i <= nx; ++i)
       h->GetXaxis()->SetBinLabel(i,people[i-1]);
-   }
    
    h->Draw();
    
