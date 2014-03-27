@@ -19,7 +19,7 @@
 #include "llvm/ADT/StringRef.h"
 
 #include <string>
-#include <atomic>
+//#include <atomic>
 #include <stdlib.h>
 
 namespace clang {
@@ -40,6 +40,7 @@ namespace clang {
    class TagDecl;
    class TemplateDecl;
    class TemplateName;
+   class TemplateArgument;
    class TemplateArgumentList;
    class TemplateParameterList;
    class Type;
@@ -116,30 +117,14 @@ private:
    Config_t         fConfig;
    TypesCont_t      fTypeWithAlternative;
    static TemplPtrIntMap_t fTemplatePtrArgsToKeepMap;
-//    static std::atomic_flag fCanAccessNargsToKeep;
-//    class TNCSimpleScopedSpinLock{
-//       // Maybe we can go for this solution
-//       // 1) We make the map pointer atomic
-//       // 2) For adding new element we allocate a new map, compare and exchange, delete old
-//       // The assumption is that we have many reads and very few writes.
-//       public:
-//          TNCSimpleScopedSpinLock(){while (fCanAccessNargsToKeep.test_and_set(std::memory_order_acquire));}
-//          ~TNCSimpleScopedSpinLock(){fCanAccessNargsToKeep.clear(std::memory_order_release);};
-//    };
 public:
    TNormalizedCtxt(const cling::LookupHelper &lh);
 
    const Config_t    &GetConfig() const { return fConfig; }
    const TypesCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
    const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
-   void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i){
-      // This method is thread safe if the line below is uncommented
-//       TNCSimpleScopedSpinLock ssp;
-      fTemplatePtrArgsToKeepMap[templ]=i;     
-   }
+   void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
    int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
-      // This method is thread safe if the line below is uncommented
-//       TNCSimpleScopedSpinLock ssp;
       auto thePairPtr = fTemplatePtrArgsToKeepMap.find(templ);   
       return (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;      
    }   
@@ -548,13 +533,6 @@ void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, c
 // including template arguments, appended to name, without using the interpreter
 void GetFullyQualifiedTypeName(std::string &name, const clang::QualType &type, const clang::ASTContext &);
 
-//______________________________________________________________________________
-void KeepNParams(clang::QualType& normalizedType,
-                 const clang::ASTContext& astCtxt,                                   
-                 const clang::TemplateArgumentList& tArgs,
-                 const clang::TemplateParameterList& tPars,
-                 int nArgsToKeep,
-                 const TNormalizedCtxt& normCtxt);
 //______________________________________________________________________________
 // Return the type name normalized for ROOT,
 // keeping only the ROOT opaque typedef (Double32_t, etc.) and

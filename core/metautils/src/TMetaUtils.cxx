@@ -264,6 +264,21 @@ namespace ROOT{
    namespace TMetaUtils{
 
 //______________________________________________________________________________
+void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, 
+                                             unsigned int i){
+      if(fTemplatePtrArgsToKeepMap.count(templ)==1 &&
+         fTemplatePtrArgsToKeepMap[templ]!=(int)i){
+         Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
+               "Tring to specify for template %s %s arguments to keep, while before this number was %s",
+               templ->getNameAsString().c_str(), 
+               i, 
+               fTemplatePtrArgsToKeepMap[templ]);
+      }
+      
+      fTemplatePtrArgsToKeepMap[templ]=i;
+   }      
+      
+//______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
                                          bool rStreamerInfo,
@@ -2661,7 +2676,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
          } else if (Idecl < maxAddArg) {
-
+//YYYYYYYYYYYYYYy
             mightHaveChanged = true;
 
             const clang::TemplateArgument& templateArg
@@ -3185,15 +3200,172 @@ clang::TemplateName ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clan
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
-                                   const clang::ASTContext& astCtxt,
-                                   const clang::TemplateArgumentList& tArgs,
-                                   const clang::TemplateParameterList& tPars,
-                                   int nArgsToKeep,
-                                   const TNormalizedCtxt& normCtxt)
+static bool areEqualTypes(const clang::TemplateArgument& tArg, 
+                   llvm::SmallVectorImpl<clang::TemplateArgument>& preceedingTArgs,
+                   const clang::NamedDecl& tPar, 
+                   const cling::Interpreter& interp,
+                   const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
+{
+   using namespace ROOT::TMetaUtils;
+   using namespace clang;
+   
+   // Check if this is a type for security
+   TemplateTypeParmDecl* ttpdPtr = const_cast<TemplateTypeParmDecl*>(llvm::dyn_cast<TemplateTypeParmDecl>(&tPar));
+   if (!ttpdPtr) return false;   
+   if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
+   
+   // Try the fast solution      
+   const QualType tParQualType = ttpdPtr->getDefaultArgument();
+   const QualType tArgQualType = tArg.getAsType();
+      
+   // Now the equality tests for non template specialisations.
+   
+   // The easy cases: 
+   // template <class T=double> class A; or
+   // template <class T=A<float>> class B;   
+   if (tParQualType.getTypePtr() == tArgQualType.getTypePtr()) return true;  
+   
+   // Here the difficulty comes. We have to check if the argument is equal to its
+   // default. We can do that bootstrapping an argument which has the default value
+   // based on the preceeding arguments.
+   // Basically we ask sema to give us the value of the argument given the template 
+   // of behind the parameter and the all the arguments.
+   // So:
+   
+   // Take the template out of the parameter
+
+   const TemplateSpecializationType* tst = 
+            llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());   
+   
+   if(!tst) // nothing more to be tried. They are different indeed.
+      return false;
+               
+   ClassTemplateSpecializationDecl* TSTdecl
+      = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(tArgQualType->getAsCXXRecordDecl());
+      
+   TemplateDecl *Template = tst->getTemplateName().getAsTemplateDecl();   
+   
+   // Take the template location
+   SourceLocation TemplateLoc = Template->getSourceRange ().getBegin();
+   
+   // Get the position of the "<" (LA) of the specializaion
+   SourceLocation LAngleLoc = TSTdecl->getSourceRange().getBegin();
+   
+   
+   // Enclose in a scope for the RAII
+   bool isEqual=false;
+   TemplateArgument newArg = tArg;
+   {  
+      clang::Sema& S = interp.getCI()->getSema();
+      cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
+      clang::sema::HackForDefaultTemplateArg raii; // Hic sunt leones
+      bool HasDefaultArgs;
+      TemplateArgumentLoc defTArgLoc = S.SubstDefaultTemplateArgumentIfAvailable(Template,
+                                                                                 TemplateLoc,
+                                                                                 LAngleLoc,
+                                                                                 ttpdPtr,
+                                                                                 preceedingTArgs,
+                                                                                 HasDefaultArgs);
+      // The substition can fail, in which case there would have been compilation
+      // error printed on the screen.
+      newArg = defTArgLoc.getArgument();
+      if (newArg.isNull() ||
+          newArg.getKind() != clang::TemplateArgument::Type) {
+         ROOT::TMetaUtils::Error("areEqualTypes",
+                                 "Template parameter substitution failed!");
+      }
+      
+      ClassTemplateSpecializationDecl* nTSTdecl
+      = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(newArg.getAsType()->getAsCXXRecordDecl());
+         std::cout << "nSTdecl is " << nTSTdecl << std::endl;
+      
+      isEqual =  nTSTdecl->getMostRecentDecl() == TSTdecl->getMostRecentDecl() ||
+                 tParQualType.getTypePtr() == newArg.getAsType().getTypePtr();
+   }
+
+      
+   return isEqual;;
+}
+
+
+//______________________________________________________________________________
+static bool areEqualValues(const clang::TemplateArgument& tArg, 
+                    const clang::NamedDecl& tPar)
+{
+   std::cout << "Are equal values?\n";
+   using namespace clang;
+   const NonTypeTemplateParmDecl* nttpdPtr = llvm::dyn_cast<NonTypeTemplateParmDecl>(&tPar);
+   if (!nttpdPtr) return false;
+   const NonTypeTemplateParmDecl& nttpd = *nttpdPtr;
+
+   if (!nttpd.hasDefaultArgument())
+      return false;
+   
+   // 64 bits wide and signed (non unsigned, that is why "false")
+   llvm::APSInt defaultValueAPSInt(64, false);
+   if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
+      const ASTContext& astCtxt = nttpdPtr->getASTContext();
+      defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
+   }
+
+   const int value = tArg.getAsIntegral().getLimitedValue();
+
+   std::cout << (value == defaultValueAPSInt ? "yes!":"no")  << std::endl;
+   return  value == defaultValueAPSInt;   
+   }
+
+//______________________________________________________________________________
+static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
 {
    using namespace clang;
+   if (!nDecl) return false;
+   if (const TemplateTypeParmDecl* ttpd = llvm::dyn_cast<TemplateTypeParmDecl>(nDecl))
+      return ttpd->hasDefaultArgument();
+   if (const NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<NonTypeTemplateParmDecl>(nDecl))
+      return nttpd->hasDefaultArgument();
+   return false;
+   
+}
 
+//______________________________________________________________________________
+static void KeepNParams(clang::QualType& normalizedType,
+                        const clang::QualType& vanillaType,                                   
+                        const cling::Interpreter& interp,
+                        const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
+{
+   using namespace ROOT::TMetaUtils;
+   using namespace clang;
+         
+   const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(vanillaType);
+   const ClassTemplateDecl* ctd = ctsd ? ctsd->getSpecializedTemplate() : nullptr;   
+   if (!ctd) return;      
+  
+   const ASTContext& astCtxt = ctsd->getASTContext();
+   
+   // Treat the Scope.
+   clang::NestedNameSpecifier* prefix = 0;
+   clang::Qualifiers prefix_qualifiers = normalizedType.getLocalQualifiers();
+   const clang::ElaboratedType* etype
+      = llvm::dyn_cast<clang::ElaboratedType>(normalizedType.getTypePtr());
+   if (etype) {
+      // We have to also handle the prefix.
+      prefix = AddDefaultParametersNNS(astCtxt, etype->getQualifier(), interp, normCtxt);
+      normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
+   }   
+   
+   const TemplateSpecializationType* normalizedTst = 
+            llvm::dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr());
+   if (!normalizedTst) return;   
+  
+   
+   const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
+   if (nArgsToKeep<0) return;   
+      
+   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();
+   
+   const TemplateParameterList& tPars = *tParsPtr;
+   const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
+   
    // We extract the template name from the type
    TemplateName theTemplateName = ExtractTemplateNameFromQualType(normalizedType);
    if (theTemplateName.isNull()) return;
@@ -3208,151 +3380,59 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
    llvm::SmallVector<TemplateArgument, 4> argsToKeep;
 
    const int nArgs = tPars.size();
+   
    // becomes true when a parameter has a value equal to its default
-   bool paramHasDefaultValue = false;
-   for (int index = 0; !paramHasDefaultValue && index != nArgs; ++index) {
-
+   for (int index = 0; index != nArgs; ++index) {
       const NamedDecl* tParPtr = tPars.getParam(index);
-      if (!tParPtr) Error("ROOT::TMetaUtils::KeepNParams", "The parameter number %s is null.\n", index);
+      if (!tParPtr) Error("ROOT::TMetaUtils::KeepNParams", "The parameter number %s is null.\n", index);      
 
       const TemplateArgument& tArg = tArgs.get(index);
+      TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
 
-      // We cannot "continue" here. Indeed the argument could be a template
-      // and we may be forced to recurse.
       bool shouldKeepArg = index < nArgsToKeep;
-
-      switch (tArg.getKind()) {
-      //------------------------------------------------------------------------
-      case TemplateArgument::Type: {
-
-         TemplateArgument typeTArg(tArg);
-         QualType tArgQualType = typeTArg.getAsType();
-
-         // Recurse if the tArgQualType is a TemplateSpecializationType
-         const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(tArgQualType);
-         const ClassTemplateDecl* ctd = ctsd ? ctsd->getSpecializedTemplate() : nullptr;
-         if (ctd){
-            const int nArgsToKeepInternal = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
-            if (TemplateParameterList* tParsPtr = ctd->getTemplateParameters()) {
-               KeepNParams(tArgQualType, astCtxt, ctsd->getTemplateArgs(), *tParsPtr, nArgsToKeepInternal, normCtxt);
-               typeTArg = TemplateArgument(tArgQualType);
-            }
-         }
-         
-         const TemplateTypeParmDecl* ttpdPtr = llvm::dyn_cast<TemplateTypeParmDecl>(tParPtr);
-         if (!ttpdPtr) return;
-         const TemplateTypeParmDecl& tPar = *ttpdPtr;
-         bool hasDefault = tPar.hasDefaultArgument();
-
-         // If it does not have a default or should be kept, we just keep it.
-         if (!hasDefault) {
-            argsToKeep.push_back(typeTArg);
-            continue;
-         }
-
-         // Now, if it did not have any default, it's gone.
-         // Shortcuts
-         QualType tParQualType = tPar.getDefaultArgument();
-
-         bool isDefaultValue = tParQualType.getTypePtr() == tArgQualType.getTypePtr();
-         
-         // Check if the parameter is a template and verify if it's the same in the template
-         if (!isDefaultValue && ctsd && ctd){
-            isDefaultValue=true;
-            // Now we need to check for every template parameter of the specialisation (ctsd) AND
-            // of the template (ctd)
-            // the index, if any, of the other preceeding template args it corresponds to
-            // We say they differ if any of these indices is different.
-            
-            // Loop on the template arguments/parameters of ctd and ctsd
-            TemplateParameterList* thisTemplateParams = ctd->getTemplateParameters();
-            const TemplateArgumentList& thisTemplateSpecArgs = ctsd->getTemplateArgs();
-            
-            const int thisNArgs = thisTemplateParams->size();
-            for (int thisIndex=0;thisIndex<thisNArgs;++thisIndex){
-               // Loop on the previous, external arguments/parameters
-               NamedDecl* thisPar = thisTemplateParams->getParam(thisIndex);
-               const TemplateArgument& thisArg = thisTemplateSpecArgs.get(thisIndex);
-               for (int externalIndex=0;externalIndex<index;++externalIndex){            
-                  int identicalParamPos=-1;
-                  const NamedDecl* externalPar = tPars.getParam(externalIndex);
-                  if (thisPar->getName() == externalPar->getName()){
-                     identicalParamPos=externalIndex;
-                  }
                   
-                  int identicalArgPos=-1;
-                  const TemplateArgument& externalArg = tArgs.get(externalIndex);
-                  if (thisArg.getAsDecl() == externalArg.getAsDecl() ||
-                      thisArg.getAsExpr() == externalArg.getAsExpr() ||
-                      thisArg.getAsIntegral() == externalArg.getAsIntegral() ||
-                      thisArg.getAsType() == externalArg.getAsType()){
-                     identicalArgPos=externalIndex;
-                  }                  
-                  
-                  // if index different, they are different. 
-                  if (identicalArgPos!=identicalParamPos){
-                     isDefaultValue=false;
-                     break;
-                  }                  
-               } // end loop on external params/args
-            } // end loop on params/args of this template/templatespecialisation            
-         }
 
-         if (isDefaultValue && !shouldKeepArg) {
-            paramHasDefaultValue = true;
-            break;
-         }
-
-         // If still different but not instances of the same template, keep the
-         // arg
-         if (!isDefaultValue || shouldKeepArg) {
-            argsToKeep.push_back(typeTArg);
-            continue;
-         }
-
+      // If this is a type, 
+      // we need first of all to recurse: this argument may need to be manipulated
+      if (tArg.getKind() == clang::TemplateArgument::Type){
+         QualType thisNormQualType = NormTArg.getAsType();
+         QualType thisArgQualType = tArg.getAsType();
+         KeepNParams(thisNormQualType,
+                     thisArgQualType,
+                     interp,
+                     normCtxt);
+         NormTArg = TemplateArgument(thisNormQualType);
+      }
+      
+      // Nothing to do here: either this parameter has no default, or we have to keep it.
+      // FIXME: Temporary measure to get Atlas started with this.
+      // We put a hard cut on the number of template arguments to keep, w/o checking if 
+      // they are non default. This makes this feature UNUSABLE for cases like std::vector,
+      // where 2 different entities would have the same name if an allocator different from 
+      // the default one is by chance used.
+      if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
+         argsToKeep.push_back(NormTArg);
+         continue;
+      } else { // Here we should not break but rather check if the value is the default one.
          break;
+      }      
+      
+      // Now, we keep it only if it not is equal to its default, expressed in the arg     
+      // Some gymnastic is needed to decide how to check for equality according to the 
+      // flavour of Type: templateType or Integer
+      bool equal=false;
+      auto argKind = tArg.getKind();   
+      if (argKind == clang::TemplateArgument::Type){
+         // we need all the info
+         equal = areEqualTypes(tArg, argsToKeep, *tParPtr, interp, normCtxt);
+      } else if (argKind == clang::TemplateArgument::Integral){
+         equal = areEqualValues(tArg, *tParPtr);
       }
-      //------------------------------------------------------------------------
-      case TemplateArgument::Integral: {
-         const NonTypeTemplateParmDecl* nttpdPtr = llvm::dyn_cast<NonTypeTemplateParmDecl>(tParPtr);
-         if (!nttpdPtr) return;
-         const NonTypeTemplateParmDecl& tPar = *nttpdPtr;
+      //FIXME: Re-Activate this block when the restriction mentioned above is lifted.
+      //if (!equal){
+      //   argsToKeep.push_back(NormTArg);
+      //}
 
-         if (!tPar.hasDefaultArgument()) argsToKeep.push_back(tArg);
-
-         // 64 bits wide and non unsigned
-         llvm::APSInt defaultValueAPSInt(64, false);
-         if (Expr* defArgExpr = tPar.getDefaultArgument()) defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
-
-         const int value = tArg.getAsIntegral().getLimitedValue();
-
-         const bool isDefaultValue = value == defaultValueAPSInt;
-
-         if (isDefaultValue && !shouldKeepArg) {
-            paramHasDefaultValue = true;
-            break;
-         }
-
-         if (!isDefaultValue || shouldKeepArg) argsToKeep.push_back(tArg);
-
-         break;
-      }
-      //------------------------------------------------------------------------
-      case TemplateArgument::Template: {
-         // Hic sunt leones
-         Error("ROOT::TMetaUtils::KeepNParams",
-               "This is a template template argument. It's treatment is "
-               "not implemented yet.\n");
-         if (index <= nArgsToKeep) argsToKeep.push_back(tArg);
-      }
-      //------------------------------------------------------------------------
-      default: {
-         Error("ROOT::TMetaUtils::KeepNParams", 
-               "Could not treat template argument suppression for class %s.\n");
-         if (index <= nArgsToKeep) argsToKeep.push_back(tArg);
-         break;
-      }
-      } // end of the switch
 
    } // of loop over parameters and arguments
 
@@ -3362,10 +3442,14 @@ void ROOT::TMetaUtils::KeepNParams(clang::QualType& normalizedType,
                                                           argsToKeep.data(), 
                                                           argsToKeep.size(), 
                                                           normalizedType.getTypePtr()->getCanonicalTypeInternal());
-   normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
+   normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);  
+
+    if (prefix) {
+      normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
+      normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
+   }  
+   
 }
-
-
 
 //______________________________________________________________________________
 void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::QualType &type, const cling::Interpreter &interpreter, const TNormalizedCtxt &normCtxt)
@@ -3391,26 +3475,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
 
    // Get the number of arguments to keep in case they are not default.   
-   if(const clang::ClassTemplateSpecializationDecl* ctsd = 
-                        QualType2ClassTemplateSpecializationDecl(type)){
-      if(const clang::ClassTemplateDecl* ctd = 
-                                             ctsd->getSpecializedTemplate()){
-         const int nArgsToKeep = 
-                              normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
-         if(clang::TemplateParameterList* tParsPtr = 
-                                                  ctd->getTemplateParameters()){
-            if (nArgsToKeep >= 0) {
-               std::cout << "Diving into " << ctsd->getNameAsString() << std::endl;
-               KeepNParams(normalizedType, 
-                           ctxt,
-                           ctsd->getTemplateArgs(),
-                           *tParsPtr,
-                           nArgsToKeep,
-                           normCtxt);
-            }
-         }
-      }
-   }   
+   KeepNParams(normalizedType,type,interpreter,normCtxt);
    
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
