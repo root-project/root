@@ -290,31 +290,33 @@ Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
 
       // handle arrow keys
       if (keysym > 0x1011 && keysym < 0x1016) {
-         Int_t ix, iy;
+         Window_t dum1, dum2, wid;
+         UInt_t mask = 0;
+         Int_t mx, my;
          EEventType etype = kNoEvent;
-         Handle_t wid = gClient->GetDefaultRoot()->GetId();
-         gVirtualX->QueryPointer(ix, iy);
+         wid = gVirtualX->GetDefaultRootWindow();
+         gVirtualX->QueryPointer(wid, dum1, dum2, mx, my, mx, my, mask);
          switch (keysym) {
             case 0x1012: // left
                etype = kKeyArrowLeft;
-               gVirtualX->Warp(--ix, iy, wid);
+               gVirtualX->Warp(--mx, my, wid);
                break;
             case 0x1013: // up
                etype = kKeyArrowLeft;
-               gVirtualX->Warp(ix, --iy, wid);
+               gVirtualX->Warp(mx, --my, wid);
                break;
             case 0x1014: // right
                etype = kKeyArrowLeft;
-               gVirtualX->Warp(++ix, iy, wid);
+               gVirtualX->Warp(++mx, my, wid);
                break;
             case 0x1015: // down
                etype = kKeyArrowLeft;
-               gVirtualX->Warp(ix, ++iy, wid);
+               gVirtualX->Warp(mx, ++my, wid);
                break;
             default:
                break;
          }
-         fCanvas->HandleInput(etype, ix, iy);
+         fCanvas->HandleInput(etype, mx, my);
       }
       else {
          fCanvas->HandleInput(kKeyPress, str[0], keysym);
