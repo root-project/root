@@ -105,7 +105,6 @@ public:
    Int_t     ThreadStart();
 
    Bool_t    SetCache(const char*);
-   Bool_t    CheckCachePath(const char*);
    Bool_t    CheckBlockInCache(char*&, TFPBlock*);
    char     *GetBlockFromCache(const char*, Int_t);
    void      SaveBlockInCache(TFPBlock*);
