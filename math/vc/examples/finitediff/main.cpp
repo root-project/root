@@ -35,7 +35,7 @@
 #include <iomanip>
 #include <cmath>
 #include "../tsc.h"
-#include <common/macros.h>
+#include <Vc/common/macros.h>
 
 #define USE_SCALAR_SINCOS
 

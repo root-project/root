@@ -180,9 +180,15 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
             template<typename Parent, typename RM>
             Vc_ALWAYS_INLINE Memory &operator=(const MemoryBase<V, Parent, 2, RM> &rhs) {
                 assert(vectorsCount() == rhs.vectorsCount());
-                std::memcpy(m_mem, rhs.m_mem, vectorsCount() * sizeof(V));
+                Internal::copyVectors(*this, rhs);
                 return *this;
             }
+
+            Vc_ALWAYS_INLINE Memory &operator=(const Memory &rhs) {
+                Internal::copyVectors(*this, rhs);
+                return *this;
+            }
+
             /**
              * Initialize all data with the given vector.
              *
@@ -325,13 +331,37 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
              */
             _VC_CONSTEXPR size_t vectorsCount() const { return VectorsCount; }
 
-            template<typename Parent, typename RM>
-            Vc_ALWAYS_INLINE Memory<V> &operator=(const MemoryBase<V, Parent, 1, RM> &rhs) {
+#ifdef VC_CXX11
+            Vc_ALWAYS_INLINE Memory() = default;
+#else
+            Vc_ALWAYS_INLINE Memory() {}
+#endif
+
+            inline Memory(const Memory &rhs)
+            {
+                Internal::copyVectors(*this, rhs);
+            }
+
+            template <size_t S> inline Memory(const Memory<V, S> &rhs)
+            {
                 assert(vectorsCount() == rhs.vectorsCount());
-                std::memcpy(m_mem, rhs.m_mem, entriesCount() * sizeof(EntryType));
+                Internal::copyVectors(*this, rhs);
+            }
+
+            inline Memory &operator=(const Memory &rhs)
+            {
+                Internal::copyVectors(*this, rhs);
                 return *this;
             }
-            Vc_ALWAYS_INLINE Memory<V> &operator=(const EntryType *rhs) {
+
+            template <size_t S> inline Memory &operator=(const Memory<V, S> &rhs)
+            {
+                assert(vectorsCount() == rhs.vectorsCount());
+                Internal::copyVectors(*this, rhs);
+                return *this;
+            }
+
+            Vc_ALWAYS_INLINE Memory &operator=(const EntryType *rhs) {
                 std::memcpy(m_mem, rhs, entriesCount() * sizeof(EntryType));
                 return *this;
             }
@@ -438,7 +468,7 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
             m_vectorsCount(rhs.vectorsCount()),
             m_mem(Vc::malloc<EntryType, Vc::AlignOnVector>(m_vectorsCount * V::Size))
         {
-            std::memcpy(m_mem, rhs.m_mem, entriesCount() * sizeof(EntryType));
+            Internal::copyVectors(*this, rhs);
         }
 
         /**
@@ -448,12 +478,12 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
          *
          * \param rhs The Memory object to copy from.
          */
-        Vc_ALWAYS_INLINE Memory(const Memory<V, 0u> &rhs)
+        Vc_ALWAYS_INLINE Memory(const Memory &rhs)
             : m_entriesCount(rhs.entriesCount()),
             m_vectorsCount(rhs.vectorsCount()),
             m_mem(Vc::malloc<EntryType, Vc::AlignOnVector>(m_vectorsCount * V::Size))
         {
-            std::memcpy(m_mem, rhs.m_mem, entriesCount() * sizeof(EntryType));
+            Internal::copyVectors(*this, rhs);
         }
 
         /**
@@ -495,9 +525,15 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
          * \note this function requires the vectorsCount() of both Memory objects to be equal.
          */
         template<typename Parent, typename RM>
-        Vc_ALWAYS_INLINE Memory<V> &operator=(const MemoryBase<V, Parent, 1, RM> &rhs) {
+        Vc_ALWAYS_INLINE Memory &operator=(const MemoryBase<V, Parent, 1, RM> &rhs) {
             assert(vectorsCount() == rhs.vectorsCount());
-            std::memcpy(m_mem, rhs.m_mem, entriesCount() * sizeof(EntryType));
+            Internal::copyVectors(*this, rhs);
+            return *this;
+        }
+
+        Vc_ALWAYS_INLINE Memory &operator=(const Memory &rhs) {
+            assert(vectorsCount() == rhs.vectorsCount());
+            Internal::copyVectors(*this, rhs);
             return *this;
         }
 
@@ -510,7 +546,7 @@ template<typename V, size_t Size1, size_t Size2> class Memory : public VectorAli
          *
          * \note this function requires that there are entriesCount() many values accessible from \p rhs.
          */
-        Vc_ALWAYS_INLINE Memory<V> &operator=(const EntryType *rhs) {
+        Vc_ALWAYS_INLINE Memory &operator=(const EntryType *rhs) {
             std::memcpy(m_mem, rhs, entriesCount() * sizeof(EntryType));
             return *this;
         }

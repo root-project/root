@@ -210,9 +210,9 @@ namespace AVX
     static Vc_INTRINSIC m256i Vc_CONST _mm256_setmin_epi32() { return _mm256_castps_si256(_mm256_broadcast_ss(reinterpret_cast<const float *>(&c_general::signMaskFloat[1]))); }
 
 #ifdef VC_REQUIRES_MACRO_FOR_IMMEDIATE_ARGUMENT
-#define _mm_extract_epu8 _mm_extract_epi8
-#define _mm_extract_epu16 _mm_extract_epi16
-#define _mm_extract_epu32 _mm_extract_epi32
+#define _mm_extract_epu8 (x, i) (static_cast<unsigned char> (_mm_extract_epi8 ((x), (i))))
+#define _mm_extract_epu16(x, i) (static_cast<unsigned short>(_mm_extract_epi16((x), (i))))
+#define _mm_extract_epu32(x, i) (static_cast<unsigned int>  (_mm_extract_epi32((x), (i))))
 #else
     static Vc_INTRINSIC unsigned char Vc_CONST _mm_extract_epu8(param128i x, const int i) { return _mm_extract_epi8(x, i); }
     static Vc_INTRINSIC unsigned short Vc_CONST _mm_extract_epu16(param128i x, const int i) { return _mm_extract_epi16(x, i); }

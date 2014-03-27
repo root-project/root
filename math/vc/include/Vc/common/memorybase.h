@@ -566,6 +566,35 @@ template<typename V, typename Parent, int Dimension, typename RowMemory> class M
         }
 };
 
+namespace Internal
+{
+template <typename V,
+          typename ParentL,
+          typename ParentR,
+          int Dimension,
+          typename RowMemoryL,
+          typename RowMemoryR>
+inline void copyVectors(MemoryBase<V, ParentL, Dimension, RowMemoryL> &dst,
+                        const MemoryBase<V, ParentR, Dimension, RowMemoryR> &src)
+{
+    const size_t vectorsCount = dst.vectorsCount();
+    size_t i = 3;
+    for (; i < vectorsCount; i += 4) {
+        const V tmp3 = src.vector(i - 3);
+        const V tmp2 = src.vector(i - 2);
+        const V tmp1 = src.vector(i - 1);
+        const V tmp0 = src.vector(i - 0);
+        dst.vector(i - 3) = tmp3;
+        dst.vector(i - 2) = tmp2;
+        dst.vector(i - 1) = tmp1;
+        dst.vector(i - 0) = tmp0;
+    }
+    for (i -= 3; i < vectorsCount; ++i) {
+        dst.vector(i) = src.vector(i);
+    }
+}
+} // namespace Internal
+
 } // namespace Vc
 } // namespace ROOT
 

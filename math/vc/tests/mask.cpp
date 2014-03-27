@@ -193,10 +193,6 @@ template<typename Vec> void testZero()
 
 template<typename Vec> void testCount()
 {
-    typedef typename Vec::EntryType T;
-    typedef typename Vec::IndexType I;
-    typedef typename Vec::Mask M;
-
     for_all_masks(Vec, m) {
         int count = 0;
         for (int i = 0; i < Vec::Size; ++i) {
@@ -210,7 +206,6 @@ template<typename Vec> void testCount()
 
 template<typename Vec> void testFirstOne()
 {
-    typedef typename Vec::EntryType T;
     typedef typename Vec::IndexType I;
     typedef typename Vec::Mask M;
 

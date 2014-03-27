@@ -42,39 +42,31 @@ include("${_currentDir}/CheckCXXCompilerFlag.cmake")
 macro(AddCompilerFlag _flag)
    string(REGEX REPLACE "[-.+/:= ]" "_" _flag_esc "${_flag}")
 
-   if("${_flag}" STREQUAL "-mfma")
-      # Compiling with FMA3 support may fail only at the assembler level.
-      # In that case we need to have such an instruction in the test code
-      set(_code "#include <immintrin.h>
-      __m128 foo(__m128 x) { return _mm_fmadd_ps(x, x, x); }
-      int main() { return 0; }")
-      check_c_compiler_flag("${_flag}" check_c_compiler_flag_${_flag_esc} "${_code}")
-      check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc} "${_code}")
-   elseif("${_flag}" STREQUAL "-stdlib=libc++")
-      # Compiling with libc++ not only requires a compiler that understands it, but also
-      # the libc++ headers itself
-      set(_code "#include <iostream>
-      int main() { return 0; }")
-      check_c_compiler_flag("${_flag}" check_c_compiler_flag_${_flag_esc} "${_code}")
-      check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc} "${_code}")
-   else()
-      check_c_compiler_flag("${_flag}" check_c_compiler_flag_${_flag_esc})
-      check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc})
-   endif()
-
    set(_c_flags "CMAKE_C_FLAGS")
    set(_cxx_flags "CMAKE_CXX_FLAGS")
+   set(_c_result tmp)
+   set(_cxx_result tmp)
    if(${ARGC} EQUAL 2)
-      set(${ARGV1} "${check_cxx_compiler_flag_${_flag_esc}}")
+      message(WARNING "Deprecated use of the AddCompilerFlag macro.")
+      unset(_c_result)
+      set(_cxx_result ${ARGV1})
    elseif(${ARGC} GREATER 2)
       set(state 0)
       unset(_c_flags)
       unset(_cxx_flags)
+      unset(_c_result)
+      unset(_cxx_result)
       foreach(_arg ${ARGN})
          if(_arg STREQUAL "C_FLAGS")
             set(state 1)
+            if(NOT DEFINED _c_result)
+               set(_c_result tmp)
+            endif()
          elseif(_arg STREQUAL "CXX_FLAGS")
             set(state 2)
+            if(NOT DEFINED _cxx_result)
+               set(_cxx_result tmp)
+            endif()
          elseif(_arg STREQUAL "C_RESULT")
             set(state 3)
          elseif(_arg STREQUAL "CXX_RESULT")
@@ -84,13 +76,37 @@ macro(AddCompilerFlag _flag)
          elseif(state EQUAL 2)
             set(_cxx_flags "${_arg}")
          elseif(state EQUAL 3)
-            set(${_arg} ${check_c_compiler_flag_${_flag_esc}})
+            set(_c_result "${_arg}")
          elseif(state EQUAL 4)
-            set(${_arg} ${check_cxx_compiler_flag_${_flag_esc}})
+            set(_cxx_result "${_arg}")
          else()
             message(FATAL_ERROR "Syntax error for AddCompilerFlag")
          endif()
       endforeach()
+   endif()
+
+   if("${_flag}" STREQUAL "-mfma")
+      # Compiling with FMA3 support may fail only at the assembler level.
+      # In that case we need to have such an instruction in the test code
+      set(_code "#include <immintrin.h>
+      __m128 foo(__m128 x) { return _mm_fmadd_ps(x, x, x); }
+      int main() { return 0; }")
+   elseif("${_flag}" STREQUAL "-stdlib=libc++")
+      # Compiling with libc++ not only requires a compiler that understands it, but also
+      # the libc++ headers itself
+      set(_code "#include <iostream>
+      int main() { return 0; }")
+   else()
+      set(_code "int main() { return 0; }")
+   endif()
+
+   if(DEFINED _c_result)
+      check_c_compiler_flag("${_flag}" check_c_compiler_flag_${_flag_esc} "${_code}")
+      set(${_c_result} ${check_c_compiler_flag_${_flag_esc}})
+   endif()
+   if(DEFINED _cxx_result)
+      check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc} "${_code}")
+      set(${_cxx_result} ${check_cxx_compiler_flag_${_flag_esc}})
    endif()
 
    if(check_c_compiler_flag_${_flag_esc} AND DEFINED _c_flags)

@@ -27,7 +27,7 @@
 #include "../tsc.h"
 
 #include <Vc/vector.h>
-#include <common/macros.h>
+#include <Vc/common/macros.h>
 
 using Vc::float_v;
 using Vc::float_m;
@@ -171,9 +171,9 @@ template<> void Mandel<VcImpl>::mandelMe(QImage &image, float x0,
         uint_m toStore;
         for (uint_v x = uint_v::IndexesFromZero(); !(toStore = x < width).isEmpty();
                 x += float_v::Size) {
-            const float_v c_real = x0 + static_cast<float_v>(x) * scale;
+            const float_v c_real = x0 + x * scale;
             Z z(c_real, c_imag);
-            float_v n = float_v::Zero();
+            float_v n = 0.f;
             float_m inside = z.norm() < S;
             while (!(inside && n < maxIt).isEmpty()) {
                 z = P(z, c_real, c_imag);

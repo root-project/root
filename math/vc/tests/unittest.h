@@ -390,7 +390,7 @@ class _UnitTest_Compare
             return *this;
         }
 
-        Vc_ALWAYS_INLINE ~_UnitTest_Compare()  throw(_UnitTest_Failure)
+        Vc_ALWAYS_INLINE ~_UnitTest_Compare() throw(_UnitTest_Failure)
         {
             if (VC_IS_UNLIKELY(m_failed)) {
                 printLast();

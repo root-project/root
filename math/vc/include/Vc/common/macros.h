@@ -25,9 +25,7 @@
 
 #if VC_GCC && !__OPTIMIZE__
 // GCC uses lots of old-style-casts in macros that disguise as intrinsics
-#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)
 #pragma GCC diagnostic push
-#endif
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 #endif
 
@@ -42,13 +40,6 @@
 # define STRUCT_ALIGN2(n) ALIGN(n)
 # define ALIGNED_TYPEDEF(n, _type_, _newType_) typedef _type_ _newType_ ALIGN(n)
 #endif
-
-#define FREE_STORE_OPERATORS_ALIGNED(alignment) \
-        inline void *operator new(size_t size) { return _mm_malloc(size, alignment); } \
-        inline void *operator new(size_t, void *p) { return p; } \
-        inline void *operator new[](size_t size) { return _mm_malloc(size, alignment); } \
-        inline void operator delete(void *ptr, size_t) { _mm_free(ptr); } \
-        inline void operator delete[](void *ptr, size_t) { _mm_free(ptr); }
 
 #ifdef VC_CXX11
 #define Vc_ALIGNOF(_TYPE_) alignof(_TYPE_)
@@ -168,6 +159,15 @@
 # define _VC_NOEXCEPT throw()
 #endif
 
+#define FREE_STORE_OPERATORS_ALIGNED(alignment) \
+        Vc_ALWAYS_INLINE void *operator new(size_t size) { return _mm_malloc(size, alignment); } \
+        Vc_ALWAYS_INLINE void *operator new(size_t, void *p) { return p; } \
+        Vc_ALWAYS_INLINE void *operator new[](size_t size) { return _mm_malloc(size, alignment); } \
+        Vc_ALWAYS_INLINE void *operator new[](size_t , void *p) { return p; } \
+        Vc_ALWAYS_INLINE void operator delete(void *ptr, size_t) { _mm_free(ptr); } \
+        Vc_ALWAYS_INLINE void operator delete(void *, void *) {} \
+        Vc_ALWAYS_INLINE void operator delete[](void *ptr, size_t) { _mm_free(ptr); } \
+        Vc_ALWAYS_INLINE void operator delete[](void *, void *) {}
 
 #ifdef VC_GCC
 # define VC_WARN_INLINE

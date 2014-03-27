@@ -418,6 +418,4 @@ int main()
 
     testAllTypes(testDeinterleaveGather);
     testAllTypes(testInterleavingScatter);
-
-    return 0;
 }

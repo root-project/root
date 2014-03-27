@@ -23,4 +23,6 @@
 # define VECTOR_NAMESPACE Vc::AVX
 #elif defined(VC_IMPL_SSE)
 # define VECTOR_NAMESPACE Vc::SSE
+#else
+# error "No known Vc implementation was selected. This should not happen. The logic in Vc/global.h failed."
 #endif

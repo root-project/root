@@ -208,7 +208,6 @@ macro(vc_set_preferred_compiler_flags)
          AddCompilerFlag("-Wpointer-arith")
          AddCompilerFlag("-Wcast-align")
          AddCompilerFlag("-Wreturn-type")
-         AddCompilerFlag("-Wno-unused-function")
          AddCompilerFlag("-ansi")
          AddCompilerFlag("-pedantic")
          AddCompilerFlag("-Wno-long-long")
@@ -229,8 +228,8 @@ macro(vc_set_preferred_compiler_flags)
       #                                              GCC                                               #
       ##################################################################################################
       if(_add_warning_flags)
-         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function -pedantic -Wno-long-long -Wshadow")
-         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -Wno-unused-function -pedantic -Wno-long-long -Wshadow")
+         set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -W -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -pedantic -Wno-long-long -Wshadow")
+         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -W -Wall -Wswitch -Wformat -Wchar-subscripts -Wparentheses -Wmultichar -Wtrigraphs -Wpointer-arith -Wcast-align -Wreturn-type -pedantic -Wno-long-long -Wshadow")
          if(NOT WIN32)
             # the -ansi flag makes MinGW unusable, so maybe it's better to omit it
             set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -ansi")
@@ -242,11 +241,6 @@ macro(vc_set_preferred_compiler_flags)
          if(Vc_GCC_VERSION VERSION_GREATER "4.5.2" AND Vc_GCC_VERSION VERSION_LESS "4.6.4")
             # GCC gives bogus "array subscript is above array bounds" warnings in math.cpp
             AddCompilerFlag("-Wno-array-bounds")
-         endif()
-         if(Vc_GCC_VERSION VERSION_GREATER "4.7.99")
-            # GCC 4.8 warns about stuff we don't care about
-            # Some older GCC versions have problems to note that they don't support the flag
-            AddCompilerFlag("-Wno-unused-local-typedefs")
          endif()
       endif()
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wabi")
@@ -367,7 +361,7 @@ macro(vc_set_preferred_compiler_flags)
       # for now I don't know of any arguments I want to pass. -march and stuff is tried by OptimizeForArchitecture...
       if(Vc_CLANG_VERSION VERSION_EQUAL "3.0")
          UserWarning("Clang 3.0 has serious issues to compile Vc code and will most likely crash when trying to do so.\nPlease update to a recent clang version.")
-      elseif(Vc_CLANG_VERSION VERSION_LESS "3.3")
+      elseif(Vc_CLANG_VERSION VERSION_EQUAL "3.2" AND NOT APPLE)
          # the LLVM assembler gets FMAs wrong (bug 15040)
          vc_add_compiler_flag(Vc_DEFINITIONS "-no-integrated-as")
       endif()
@@ -375,13 +369,10 @@ macro(vc_set_preferred_compiler_flags)
       # disable these warnings because clang shows them for function overloads that were discarded via SFINAE
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-local-type-template-args")
       vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unnamed-type-template-args")
-      # disable this warning appearing from version 3.4 (5.1) 
-      vc_add_compiler_flag(Vc_DEFINITIONS "-Wno-unused-function")
-      
 
-
-#not needed in ROOT 
-#      AddCompilerFlag(-stdlib=libc++)
+      if(NOT DEFINED Vc_INSIDE_ROOT)  # ROOT has to set this up
+         AddCompilerFlag(-stdlib=libc++)
+      endif()
    endif()
 
    if(NOT Vc_COMPILER_IS_MSVC)

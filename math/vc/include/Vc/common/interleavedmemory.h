@@ -28,6 +28,15 @@ namespace Vc
 namespace Common
 {
 
+namespace Internal
+{
+template<typename A, typename B> struct CopyConst { typedef B Type; };
+template<typename A, typename B> struct CopyConst<const A, B> { typedef const B Type; };
+
+template<typename S, typename X, typename R> struct EnableInterleaves { typedef R Type; };
+template<typename S, typename X, typename R> struct EnableInterleaves<const S, X, R>;
+}  // namespace Internal
+
 /**
  * \internal
  */
@@ -73,8 +82,8 @@ template<size_t StructSize, typename V> struct InterleavedMemoryReadAccess : pub
     typedef typename Base::Ta Ta;
     typedef typename Base::I I;
 
-    Vc_ALWAYS_INLINE InterleavedMemoryReadAccess(Ta *data, typename I::AsArg indexes)
-        : Base(indexes * I(StructSize), data)
+    Vc_ALWAYS_INLINE InterleavedMemoryReadAccess(const Ta *data, typename I::AsArg indexes)
+        : Base(indexes * I(StructSize), const_cast<Ta *>(data)) // this needs to be refactored to properly keep the constness
     {
     }
 };
@@ -151,7 +160,7 @@ template<typename S, typename V> class InterleavedMemoryWrapper
     typedef typename I::AsArg IndexType;
     typedef InterleavedMemoryAccess<sizeof(S) / sizeof(T), V> Access;
     typedef InterleavedMemoryReadAccess<sizeof(S) / sizeof(T), V> ReadAccess;
-    typedef T Ta Vc_MAY_ALIAS;
+    typedef typename Internal::CopyConst<S, T>::Type Ta Vc_MAY_ALIAS;
     Ta *const m_data;
 
     VC_STATIC_ASSERT((sizeof(S) / sizeof(T)) * sizeof(T) == sizeof(S), InterleavedMemoryAccess_does_not_support_packed_structs);
@@ -219,7 +228,13 @@ Result in (x, y, z): ({x5 x0 x1 x7}, {y5 y0 y1 y7}, {z5 z0 z1 z7})
      * \warning If \p indexes contains non-unique entries on scatter, the result is undefined. If
      * \c NDEBUG is not defined the implementation will assert that the \p indexes entries are unique.
      */
+#ifdef DOXYGEN
     Vc_ALWAYS_INLINE Access operator[](IndexType indexes)
+#else
+    // need to SFINAE disable this for objects that wrap constant data
+    template <typename U>
+    Vc_ALWAYS_INLINE typename Internal::EnableInterleaves<S, U, Access>::Type operator[](U indexes)
+#endif
     {
         return Access(m_data, indexes);
     }

@@ -97,7 +97,6 @@ template<typename V, unsigned int Size> struct TestEntries2D { static void test(
 
 template<typename V, unsigned int Size> struct TestVectors { static void test()
 {
-    typedef typename V::EntryType T;
     const V startX(V::IndexType::IndexesFromZero() + Size);
     Memory<V, Size> m;
     const Memory<V, Size> &m2 = m;
@@ -126,7 +125,6 @@ template<typename V, unsigned int Size> struct TestVectors { static void test()
 
 template<typename V, unsigned int Size> struct TestVectors2D { static void test()
 {
-    typedef typename V::EntryType T;
     const V startX(V::IndexType::IndexesFromZero() + Size);
     Memory<V, Size, Size> m;
     const Memory<V, Size, Size> &m2 = m;
@@ -158,7 +156,6 @@ template<typename V, unsigned int Size> struct TestVectors2D { static void test(
 
 template<typename V, unsigned int Size> struct TestVectorReorganization { static void test()
 {
-    typedef typename V::EntryType T;
     typename V::Memory init;
     for (unsigned int i = 0; i < V::Size; ++i) {
         init[i] = i;
@@ -284,6 +281,24 @@ template<typename V> void testCCtor()
     }
 }
 
+template<typename V> void testCopyAssignment()
+{
+    typedef typename V::EntryType T;
+
+    Memory<V, 99> m1;
+    m1.setZero();
+
+    Memory<V, 99> m2(m1);
+    for (size_t i = 0; i < m2.entriesCount(); ++i) {
+        COMPARE(m2[i], T(0));
+        m2[i] += 1;
+    }
+    m1 = m2;
+    for (size_t i = 0; i < m2.entriesCount(); ++i) {
+        COMPARE(m1[i], T(1));
+    }
+}
+
 int main()
 {
     testAllTypes(testEntries);
@@ -293,6 +308,7 @@ int main()
     testAllTypes(testVectorReorganization);
     testAllTypes(memoryOperators);
     testAllTypes(testCCtor);
+    testAllTypes(testCopyAssignment);
 
     return 0;
 }
