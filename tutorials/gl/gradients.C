@@ -9,7 +9,6 @@
 
 
 //Includes for ACLiC:
-
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"
@@ -40,7 +39,6 @@ void gradients()
    
    gStyle->SetCanvasPreferGL(kTRUE);
    
-   //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
    if (!c->UseGL()) {
@@ -48,8 +46,6 @@ void gradients()
       delete c;
       return;
    }
-
-   c->cd();
 
    //Linear gradient is defined by: 1) colors (to interpolate between them),
    //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
@@ -69,19 +65,19 @@ void gradients()
                                  0.8, 1., 0.9, 1.  /*pale green*/};
    TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
    //45 degrees:
-   gradientFill1->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
+   gradientFill1->SetStartEnd(TColorGradient::Point(0., 0.), TColorGradient::Point(1., 1.));
    //Set as a background color in the canvas:
    c->SetFillColor(linearFill);
 
    //Draw a text in the canvas (the object above the text will be
    //semi-transparent):
-   TText * t = new TText(0.05, 0.7, "Can you see the text?");
+   TText * const t = new TText(0.05, 0.7, "Can you see the text?");
    t->Draw();
    
    //We create a nested pad on top to render a TPie in,
    //this way we still have a text (below) + TPie with
    //a fancy colour on top.
-   TPad * pad = new TPad("p", "p", 0., 0., 1., 1.);
+   TPad * const pad = new TPad("p", "p", 0., 0., 1., 1.);
    
    //TPad itself is fully transparent:
    new TColor(transparentFill, 1., 1., 1., "transparent_fill_color", 0.);
@@ -112,7 +108,7 @@ void gradients()
    Int_t colors[nSlices] = {radialFill, radialFill, radialFill,
                             radialFill, radialFill};
 
-   TPie *pie = new TPie("pie", "TPie:", nSlices, values, colors);
+   TPie * const pie = new TPie("pie", "TPie:", nSlices, values, colors);
    //One slice is slightly shifted:
    pie->SetEntryRadiusOffset(2, 0.05);
    //Move labels to the center (to fit the pad's space):

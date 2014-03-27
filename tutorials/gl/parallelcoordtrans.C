@@ -12,12 +12,11 @@
 
 #include "TParallelCoordVar.h"
 #include "TParallelCoord.h"
-#include "TVirtualX.h"
 #include "TNtuple.h"
 #include "TCanvas.h"
 #include "TRandom.h"
 #include "TColor.h"
-#include "Rtypes.h"
+#include "TStyle.h"
 #include "TError.h"
 #include "TList.h"
 #include "TROOT.h"

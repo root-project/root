@@ -23,16 +23,16 @@ void grad2()
    //to avoid possible conflicts with other tutorials.
    Color_t freeIndices[4] = {};
    if (ROOT::GLTutorials::FindFreeCustomColorIndices(freeIndices) != 4) {
-      Error("grad2", "can not allocate new custom colors");
+      ::Error("grad2", "can not allocate new custom colors");
       return;
    }
    
-   //Make sure canvas supports OpenGL.
-   gStyle->SetCanvasPreferGL(kTRUE);
-
    //'Aliases' (instead of freeIndices[someIndex])
    const Color_t customRed = freeIndices[0], grad1 = freeIndices[1];
    const Color_t customGreen = freeIndices[2], grad2 = freeIndices[3];
+
+   //Make sure canvas supports OpenGL.
+   gStyle->SetCanvasPreferGL(kTRUE);
 
    //2. Check that we have a canvas with an OpenGL support.
    TCanvas * const cnv = new TCanvas("gradiend demo 2", "gradient demo 2", 100, 100, 800, 600);
@@ -63,7 +63,7 @@ void grad2()
    
    typedef TColorGradient::Point Point;
    //Starting and ending points for a gradient fill (it's a vertical gradient):
-   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1));
+   gradFill1->SetStartEnd(Point(0., 0.), Point(0., 1.));
 
    //   c) Custom semi-transparent green.
    new TColor(customGreen, 0., 1., 0., "green", 0.5);
@@ -73,10 +73,10 @@ void grad2()
    
    TLinearGradient * const gradFill2 = new TLinearGradient(grad2, 2, locations, idx2);
    //Vertical gradient fill.
-   gradFill2->SetStartEnd(Point(0., 0), Point(0., 1.));
+   gradFill2->SetStartEnd(Point(0., 0.), Point(0., 1.));
 
-   TH1F * hist = new TH1F("a2", "b2", 10, -2., 3.);
-   TH1F * hist2 = new TH1F("c3", "d3", 10, -3., 3.);
+   TH1F * const hist = new TH1F("a2", "b2", 10, -2., 3.);
+   TH1F * const hist2 = new TH1F("c3", "d3", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
