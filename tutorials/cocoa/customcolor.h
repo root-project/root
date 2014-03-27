@@ -28,7 +28,7 @@ inline Color_t FindFreeCustomColorIndex(Color_t start = 1000)
    }
    //Some (probably stupid) assumption about the TColor -
    //I'm trying to find some 'free' index in the range [1000, 10000).
-   for (Color_t i = std::max(start, Color_t(1000)), e = Color_t(10000); i < e; ++i)
+   for (Color_t i = std::max(start, Color_t(1000)), e = 10000; i < e; ++i)
       if (!gROOT->GetColor(i))
          return i;
 

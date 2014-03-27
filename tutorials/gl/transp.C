@@ -2,7 +2,6 @@
 
 //Includes for ACLiC (cling does not need them).
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TStyle.h"
@@ -32,8 +31,8 @@ void transp()
    gStyle->SetCanvasPreferGL(kTRUE);
    TCanvas * const cnv = new TCanvas("trasnparency", "transparency demo", 600, 400);
 
-   TH1F * hist = new TH1F("a5", "b5", 10, -2., 3.);
-   TH1F * hist2 = new TH1F("c6", "d6", 10, -3., 3.);
+   TH1F * const hist = new TH1F("a5", "b5", 10, -2., 3.);
+   TH1F * const hist2 = new TH1F("c6", "d6", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
