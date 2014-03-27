@@ -95,7 +95,7 @@ bool DiagnosticsEngine::popMappings(SourceLocation Loc) {
   return true;
 }
 
-void DiagnosticsEngine::Reset() {
+void DiagnosticsEngine::Reset(bool soft /*=false*/) {
   ErrorOccurred = false;
   UncompilableErrorOccurred = false;
   FatalErrorOccurred = false;
@@ -111,15 +111,18 @@ void DiagnosticsEngine::Reset() {
   LastDiagLevel = DiagnosticIDs::Ignored;
   DelayedDiagID = 0;
 
-  // Clear state related to #pragma diagnostic.
-  DiagStates.clear();
-  DiagStatePoints.clear();
-  DiagStateOnPushStack.clear();
+  if (!soft) {
+    // Clear state related to #pragma diagnostic.
+    DiagStates.clear();
+    DiagStatePoints.clear();
+    DiagStateOnPushStack.clear();
 
-  // Create a DiagState and DiagStatePoint representing diagnostic changes
-  // through command-line.
-  DiagStates.push_back(DiagState());
-  DiagStatePoints.push_back(DiagStatePoint(&DiagStates.back(), FullSourceLoc()));
+    // Create a DiagState and DiagStatePoint representing diagnostic changes
+    // through command-line.
+    DiagStates.push_back(DiagState());
+    DiagStatePoints.push_back(DiagStatePoint(&DiagStates.back(),
+                                             FullSourceLoc()));
+  }
 }
 
 void DiagnosticsEngine::SetDelayedDiagnostic(unsigned DiagID, StringRef Arg1,
