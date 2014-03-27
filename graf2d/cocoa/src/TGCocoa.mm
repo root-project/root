@@ -3166,8 +3166,12 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
       winY = winPoint.y;
    } else {
       //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
-      winX = 0;
-      winY = 0;
+      //Many thanks for this. Next time, I think, we'll have somebody calling QueryPointer(... x, x, x, x ...)
+      //Expecting this x to be reasonable.
+      if (&winX != &rootX)
+         winX = 0;
+      if (&winY != &winY)
+         winY = 0;
    }
 
    //Find child window in these coordinates (?).
@@ -4136,6 +4140,7 @@ void TGCocoa::Warp(Int_t ix, Int_t iy, Window_t winID)
    if (fPimpl->GetRootWindowID() == winID) {
       //Suddenly .... top-left - based!
       newCursorPosition.x = X11::GlobalXROOTToCocoa(newCursorPosition.x);
+
    } else {
       assert(fPimpl->GetDrawable(winID).fIsPixmap == NO &&
              "Warp, drawable is not a window");
