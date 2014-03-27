@@ -7,7 +7,6 @@
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TH1F.h"
@@ -23,7 +22,7 @@ void transp()
    //to avoid possible conflicts with other tutorials.
    Color_t indices[2] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 2) {
-      Error("transp", "failed to create new custom colors");
+      ::Error("transp", "failed to create new custom colors");
       return;
    }
    
@@ -42,8 +41,8 @@ void transp()
                         "To have transparency in a canvas graphics, you need MacOSX version with cocoa enabled");
    }
 
-   TH1F * hist = new TH1F("a5", "b5", 10, -2., 3.);
-   TH1F * hist2 = new TH1F("c6", "d6", 10, -3., 3.);
+   TH1F * const hist = new TH1F("a5", "b5", 10, -2., 3.);
+   TH1F * const hist2 = new TH1F("c6", "d6", 10, -3., 3.);
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 

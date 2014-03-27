@@ -8,7 +8,6 @@
 #include "TPaveText.h"
 #include "TCanvas.h"
 #include "TRandom.h"
-#include "Rtypes.h"
 #include "TError.h"
 #include "TColor.h"
 #include "TH1F.h"
@@ -18,44 +17,37 @@
 
 void transp_text()
 {
-   //1. Some sanity check.
-   if (!gRandom) {
-      Error("transp_text", "gRandom is null");
-      return;
-   }
-
-
-   //2. Try to 'allocate' free indices for our custom colors -
+   //1. Try to 'allocate' free indices for our custom colors -
    //we can use hard-coded indices like 1001, 1002, 1003 ... but
    //I prefer to find free indices in a ROOT's color table
    //to avoid possible conflicts with other tutorials.
    Color_t indices[2] = {};
    if (ROOT::CocoaTutorials::FindFreeCustomColorIndices(indices) != 2) {
-      Error("transp_text", "failed to create new custom colors");
+      ::Error("transp_text", "failed to create new custom colors");
       return;
    }
 
-   //3. Create special transparent colors for both pavetext fill color and text color.
+   //2. Create special transparent colors for both pavetext fill color and text color.
    const Color_t grayColorIndex = indices[0], blackColorIndex = indices[1];
    new TColor(grayColorIndex, 0.8, 0.8, 0.8, "transparent_gray", 0.85);
    new TColor(blackColorIndex, 0., 0., 0., "transparent_black", 0.5);
 
-   //4. Create a TCanvas first to force gVirtualX initialization.
+   //3. Create a TCanvas first to force gVirtualX initialization.
    TCanvas * const c1 = new TCanvas("transparent text","transparent text demo", 10, 10, 900, 500);
    //We can check gVirtualX (its type):
    if (gVirtualX && !gVirtualX->InheritsFrom("TGCocoa")) {
-      Warning("transt_text", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
-                             "To have transparency in a canvas graphics, you need OS X version with cocoa enabled");
+      ::Warning("transt_text", "You can see the transparency ONLY in a pdf or png output (\"File\"->\"Save As\" ->...)\n"
+                               "To have transparency in a canvas graphics, you need OS X version with cocoa enabled");
    }
+
+   c1->SetGrid();
+   c1->SetBottomMargin(0.15);
 
    const Int_t nx = 20;
    const char *people[nx] = {"Jean","Pierre","Marie","Odile",
       "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
       "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
       "Philippe","Suzanne","Jeff","Valery"};
-
-   c1->SetGrid();
-   c1->SetBottomMargin(0.15);
 
    TH1F * const h = new TH1F("h4", "test", nx, 0, nx);
 
