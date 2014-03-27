@@ -1756,7 +1756,7 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
       if (keysym > 0x1011 && keysym < 0x1016) {
          Window_t dum1, dum2, wid;
          UInt_t mask = 0;
-         Int_t mx, my;
+         Int_t mx, my, tx, ty;
          EEventType etype = kNoEvent;
          wid = gVirtualX->GetDefaultRootWindow();
          gVirtualX->QueryPointer(wid, dum1, dum2, mx, my, mx, my, mask);
@@ -1780,7 +1780,10 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
             default:
                break;
          }
-         fCanvas->HandleInput(etype, mx, my);
+         gVirtualX->TranslateCoordinates(gClient->GetDefaultRoot()->GetId(),
+                                         fCanvasContainer->GetId(),
+                                         mx, my, tx, ty, dum1);
+         fCanvas->HandleInput(etype, tx, ty);
       }
       else {
          fCanvas->HandleInput(kKeyPress, str[0], keysym);
