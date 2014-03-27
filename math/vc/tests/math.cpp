@@ -66,8 +66,8 @@ template<> inline const char *filename<float , Atan  >() { return "reference-ata
 template<> inline const char *filename<double, Atan  >() { return "reference-atan-dp.dat"; }
 template<> inline const char *filename<float , Asin  >() { return "reference-asin-sp.dat"; }
 template<> inline const char *filename<double, Asin  >() { return "reference-asin-dp.dat"; }
-template<> inline const char *filename<float , Acos  >() { return "reference-acos-sp.dat"; }
-template<> inline const char *filename<double, Acos  >() { return "reference-acos-dp.dat"; }
+// template<> inline const char *filename<float , Acos  >() { return "reference-acos-sp.dat"; }
+// template<> inline const char *filename<double, Acos  >() { return "reference-acos-dp.dat"; }
 template<> inline const char *filename<float , Log   >() { return "reference-ln-sp.dat"; }
 template<> inline const char *filename<double, Log   >() { return "reference-ln-dp.dat"; }
 template<> inline const char *filename<float , Log2  >() { return "reference-log2-sp.dat"; }
@@ -270,7 +270,7 @@ template<typename V> void testLog2()/*{{{*/
 #else
     setFuzzyness<float>(1);
 #endif
-#if (defined(VC_MSVC) || defined(__APPLE__) ) && defined(VC_IMPL_Scalar) 
+#if (defined(VC_MSVC) || defined(__APPLE__)) && defined(VC_IMPL_Scalar)
     setFuzzyness<double>(2);
 #else
     setFuzzyness<double>(1);
@@ -443,6 +443,12 @@ const union {
     float value;
 } INF = { 0x7f800000 };
 
+#if defined(__APPLE__) && defined(VC_IMPL_Scalar)
+#define ATAN_COMPARE FUZZY_COMPARE
+#else
+#define ATAN_COMPARE COMPARE
+#endif
+
 template<typename V> void testAtan()/*{{{*/
 {
     typedef typename V::EntryType T;
@@ -455,16 +461,11 @@ template<typename V> void testAtan()/*{{{*/
         const V inf = T(INF.value);
 
         VERIFY(Vc::isnan(Vc::atan(nan)));
-#if defined(__APPLE__) && defined(VC_IMPL_Scalar) 
-        FUZZY_COMPARE(Vc::atan(+inf), +Pi_2);
-        FUZZY_COMPARE(Vc::atan(-inf), -Pi_2);
-#else
-        COMPARE(Vc::atan(+inf), +Pi_2);
+        ATAN_COMPARE(Vc::atan(+inf), +Pi_2);
 #ifdef VC_MSVC
 #pragma warning(suppress: 4756) // overflow in constant arithmetic
 #endif
-        COMPARE(Vc::atan(-inf), -Pi_2);
-#endif
+        ATAN_COMPARE(Vc::atan(-inf), -Pi_2);
     }
 
     Array<Reference<T> > reference = referenceData<T, Atan>();
@@ -492,14 +493,8 @@ template<typename V> void testAtan2()/*{{{*/
         const V inf = T(INF.value);
 
         // If y is +0 (-0) and x is less than 0, +pi (-pi) is returned.
-#if defined(__APPLE__) && defined(VC_IMPL_Scalar) 
-        // these fails on apple arch for float types 
-        FUZZY_COMPARE(Vc::atan2(V(T(+0.)), V(T(-3.))), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-0.)), V(T(-3.))), -Pi);
-#else 
-        COMPARE(Vc::atan2(V(T(+0.)), V(T(-3.))), +Pi);
-        COMPARE(Vc::atan2(V(T(-0.)), V(T(-3.))), -Pi);
-#endif
+        ATAN_COMPARE(Vc::atan2(V(T(+0.)), V(T(-3.))), +Pi);
+        ATAN_COMPARE(Vc::atan2(V(T(-0.)), V(T(-3.))), -Pi);
         // If y is +0 (-0) and x is greater than 0, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+0.)), V(T(+3.))), V(T(+0.)));
         VERIFY(!Vc::atan2(V(T(+0.)), V(T(+3.))).isNegative());
@@ -516,28 +511,16 @@ template<typename V> void testAtan2()/*{{{*/
         VERIFY(Vc::isnan(Vc::atan2(V(T(3.)), nan)));
         VERIFY(Vc::isnan(Vc::atan2(nan, nan)));
         // If y is +0 (-0) and x is -0, +pi (-pi) is returned.
-#if defined(__APPLE__) && defined(VC_IMPL_Scalar) 
-        // these fails on apple arch for float types 
-        FUZZY_COMPARE(Vc::atan2(V(T(+0.)), V(T(-0.))), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-0.)), V(T(-0.))), -Pi);
-#else 
-        COMPARE(Vc::atan2(V(T(+0.)), V(T(-0.))), +Pi);
-        COMPARE(Vc::atan2(V(T(-0.)), V(T(-0.))), -Pi);
-#endif
+        ATAN_COMPARE(Vc::atan2(V(T(+0.)), V(T(-0.))), +Pi);
+        ATAN_COMPARE(Vc::atan2(V(T(-0.)), V(T(-0.))), -Pi);
         // If y is +0 (-0) and x is +0, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+0.)), V(T(+0.))), V(T(+0.)));
         COMPARE(Vc::atan2(V(T(-0.)), V(T(+0.))), V(T(-0.)));
         VERIFY(!Vc::atan2(V(T(+0.)), V(T(+0.))).isNegative());
         VERIFY( Vc::atan2(V(T(-0.)), V(T(+0.))).isNegative());
         // If y is a finite value greater (less) than 0, and x is negative infinity, +pi (-pi) is returned.
-
-#if defined(__APPLE__) && defined(VC_IMPL_Scalar) 
-        FUZZY_COMPARE(Vc::atan2(V(T(+1.)), -inf), +Pi);
-        FUZZY_COMPARE(Vc::atan2(V(T(-1.)), -inf), -Pi);
-#else
-        COMPARE(Vc::atan2(V(T(+1.)), -inf), +Pi);
-        COMPARE(Vc::atan2(V(T(-1.)), -inf), -Pi);
-#endif
+        ATAN_COMPARE(Vc::atan2(V(T(+1.)), -inf), +Pi);
+        ATAN_COMPARE(Vc::atan2(V(T(-1.)), -inf), -Pi);
         // If y is a finite value greater (less) than 0, and x is positive infinity, +0 (-0) is returned.
         COMPARE(Vc::atan2(V(T(+3.)), +inf), V(T(+0.)));
         VERIFY(!Vc::atan2(V(T(+3.)), +inf).isNegative());
