@@ -20,11 +20,11 @@ Color_t create_pad_frame_gradient()
 {
    //We create a gradient with 4 steps - from dark (and semi-transparent)
    //gray to almost transparent (95%) white and to white and to dark gray again.
-   const Double_t locations[] = {0., 0.2, 0.8, 1.};
-   
    Color_t idx[3] = {};
    if (FindFreeCustomColorIndices(3, idx) != 3)
       return -1;
+
+   const Double_t locations[] = {0., 0.2, 0.8, 1.};
 
    new TColor(idx[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
    new TColor(idx[1], 1., 1., 1., "special pad color2", 0.05);
@@ -41,12 +41,12 @@ Color_t create_pad_frame_gradient()
 Color_t create_pad_gradient()
 {
    //We create two-steps gradient from ROOT's standard colors (38 and 30).
-   const Double_t locations[] = {0., 1.};
-   const Color_t colorIndices[2] = {30, 38};
-   
    const Color_t idx = FindFreeCustomColorIndex(1000);//Start lookup from 1000.
    if (idx == -1)
       return -1;
+
+   const Double_t locations[] = {0., 1.};
+   const Color_t colorIndices[2] = {30, 38};
    
    TLinearGradient * const grad = new TLinearGradient(idx, 2, locations, colorIndices);
    const point_type start(0., 0.);

@@ -19,7 +19,7 @@ inline Color_t FindFreeCustomColorIndex(Color_t start)
 {
    //Some (probably stupid) assumption about the TColor -
    //I'm trying to find some 'free' index in the range [1000, 10000).
-   for (Color_t i = start; i < 10000; ++i)
+   for (Color_t i = start; i < (Color_t)10000; ++i)
       if (!gROOT->GetColor(i))
          return i;
 
@@ -42,8 +42,8 @@ inline unsigned FindFreeCustomColorIndices(unsigned nColors, Color_t *indices)
    if (indices[0] == -1)//Not found.
       return 0;
 
-   unsigned nFound = 0;
-   for (nFound = 1; nFound < nColors; ++nFound) {
+   unsigned nFound = 1;
+   for (; nFound < nColors; ++nFound) {
       indices[nFound] = FindFreeCustomColorIndex(indices[nFound - 1] + 1);//the next free color index.
       if (indices[nFound] == -1)
          break;

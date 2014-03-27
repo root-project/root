@@ -7,9 +7,7 @@
 //2. Transparent/semitransparent colours.
 //3. Shadows.
 
-
 //Includes for ACLiC:
-
 #include "TColorGradient.h"
 #include "TCanvas.h"
 #include "TError.h"
@@ -28,16 +26,22 @@ void gradients()
 
    //I have to hardcode them, but can also look for free indices in the ROOT's color palette.
    const Color_t radialFill = FindFreeCustomColorIndex(1000);//let's start the search from 1000.
-   if (radialFill == -1)
+   if (radialFill == -1) {
+      ::Error("gradients", "failed to create a custom color");
       return;
+   }
    
    const Color_t linearFill = FindFreeCustomColorIndex(radialFill + 1);//Start from the next.
-   if (linearFill == -1)
+   if (linearFill == -1) {
+      ::Error("gradients", "failed to create a custom color");
       return;
+   }
    
    const Color_t transparentFill = FindFreeCustomColorIndex(linearFill + 1);//Start from the next.
-   if (transparentFill == -1)
+   if (transparentFill == -1) {
+      ::Error("gradients", "failed to create a custom color");
       return;
+   }
    
    //Create a canvas to check if we have a right back-end which supports gradients:
    TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);
@@ -47,8 +51,6 @@ void gradients()
       delete c;
       return;
    }
-
-   c->cd();
 
    //Linear gradient is defined by: 1) colors (to interpolate between them),
    //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
@@ -68,7 +70,7 @@ void gradients()
                                  0.8, 1., 0.9, 1.  /*pale green*/};
    TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
    //45 degrees:
-   gradientFill1->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
+   gradientFill1->SetStartEnd(TColorGradient::Point(0., 0.), TColorGradient::Point(1., 1.));
    //Set as a background color in the canvas:
    c->SetFillColor(linearFill);
 
@@ -89,11 +91,9 @@ void gradients()
    pad->Draw();
    pad->cd();
 
-
    //Radial gradient fill for a TPie object:
    const Double_t rgbaData2[] = {/*opaque orange at the start:*/1., 0.8, 0., 1.,
                                  /*transparent red at the end:*/1., 0.2, 0., 0.8};
-
 
    //
    //With Quartz/Cocoa we support the "extended" radial gradient:

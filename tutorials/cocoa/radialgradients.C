@@ -8,14 +8,12 @@
 #include <cstdlib>
 
 #include "TColorGradient.h"
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TError.h"
-#include "TROOT.h"
+
 
 //Aux. functions.
 #include "customcolors.h"
@@ -59,6 +57,10 @@ const unsigned nBasicColors = sizeof(basicColors) / sizeof(basicColors[0]);
 //______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
+   Color_t idx = FindFreeCustomColorIndex(1000);//We start search from 1000.
+   if (idx == -1)
+      return idx;
+
    const Double_t * const fromRGBA = basicColors[(rand() % (nBasicColors / 2))];
    //With odd number of colors the last one is never selected :)
    const Double_t * const toRGBA = basicColors[nBasicColors / 2 + (rand() % (nBasicColors / 2))];
@@ -66,10 +68,6 @@ Color_t CreateRandomGradientFill()
    const Double_t locations[] = {0., 1.};
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
-
-   Color_t idx = FindFreeCustomColorIndex(1000);//We start search from 1000.
-   if (idx == -1)
-      return idx;
 
    TRadialGradient * const grad = new TRadialGradient(idx, 2, locations, rgbas);
    grad->SetRadialGradient(TColorGradient::Point(0.5, 0.5), 0.5);
@@ -80,9 +78,8 @@ Color_t CreateRandomGradientFill()
 //______________________________________________________________________
 bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
 {
-   //Nice bug, if I declare newColor as const, CINT does not call
-   //CreateRandomGradientFill. If you want CINT to work, do not
-   //use C, do not use C++, use ... I do not know what :(
+   //"Nice" bug, if I declare newColor as const, CINT does not call
+   //CreateRandomGradientFill.
    Color_t newColor = CreateRandomGradientFill();
    if (newColor == -1) {
       ::Error("add_ellipse", "failed to find a new color index for a gradient fill");
@@ -90,7 +87,6 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
    }
 
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
-   
    newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
    

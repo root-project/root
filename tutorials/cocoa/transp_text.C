@@ -6,7 +6,7 @@
 #include "TPaveText.h"
 #include "TCanvas.h"
 #include "TRandom.h"
-#include "Rtypes.h"
+
 #include "TError.h"
 #include "TColor.h"
 #include "TH1F.h"
@@ -29,15 +29,15 @@ void transp_text()
       ::Warning("transp_text",
                 "This macro requires ROOT built for OS X with --enable-cocoa");
    }
+   
+   c1->SetGrid();
+   c1->SetBottomMargin(0.15);
 
    const Int_t nx = 20;
    const char *people[nx] = {"Jean","Pierre","Marie","Odile",
                              "Sebastien","Fons","Rene","Nicolas","Xavier","Greg",
                              "Bjarne","Anton","Otto","Eddy","Peter","Pasha",
                              "Philippe","Suzanne","Jeff","Valery"};
-
-   c1->SetGrid();
-   c1->SetBottomMargin(0.15);
 
    TH1F * const h = new TH1F("h","test", nx, 0., nx);
    h->SetFillColor(38);
@@ -47,9 +47,8 @@ void transp_text()
 
    h->SetStats(0);
    
-   for (Int_t i = 1; i <= nx; ++i) {
+   for (Int_t i = 1; i <= nx; ++i)
       h->GetXaxis()->SetBinLabel(i, people[i - 1]);
-   }
 
    h->Draw();
    

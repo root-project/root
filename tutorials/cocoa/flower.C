@@ -19,6 +19,7 @@
 #include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TGraph.h"
+#include "TError.h"
 #include "TColor.h"
 #include "TMath.h"
 
@@ -37,8 +38,10 @@ void create_flower(vector_type &xs, vector_type &ys, size_type nPoints, Double_t
    xs.resize(nPoints + 1);
    ys.resize(nPoints + 1);
    
+   const Double_t angle = 21. * TMath::Pi() / nPoints;
+   
    for (size_type i = 0; i <= nPoints; ++i) {
-      const Double_t u = i * 21. * TMath::Pi() / nPoints;
+      const Double_t u = i * angle;
       const Double_t p4 = TMath::Sin(17 * u / 3);
       const Double_t p8 = TMath::Sin(2 * TMath::Cos(3 * u) - 28 * u);
       const Double_t rr = r * (1 + TMath::Sin(11 * u / 5)) - 4 * p4 * p4 * p4 * p4 * p8 * p8 * p8 * p8 * p8 * p8 * p8 * p8;
@@ -55,7 +58,7 @@ void flower()
    //0. Indices for custom colors.
    Color_t indices[3] = {};
    if (FindFreeCustomColorIndices(3, indices) != 3) {
-      Error("flower", "failed to create custom colors");
+      ::Error("flower", "failed to create custom colors");
       return;
    }
    
@@ -88,7 +91,6 @@ void flower()
 
    create_flower(xs, ys, 100000, 10);
    TGraph * const gr3 = new TGraph(Int_t(xs.size()), &xs[0], &ys[0]);
-
 
    //If you want to see the difference, change 0.2 to 1 in the next call:
    new TColor(indices[2], 1., 0., 0.4, "custom_magenta", 0.2);

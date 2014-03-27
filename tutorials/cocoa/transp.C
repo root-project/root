@@ -7,7 +7,6 @@
 //Includes for ACLiC.
 #include "TVirtualX.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TColor.h"
 #include "TError.h"
 #include "TH1F.h"
