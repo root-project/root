@@ -9,12 +9,10 @@
 #include <cstdlib>
 
 #include "TColorGradient.h"
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TError.h"
 
 //Cocoa aux. functions.
@@ -89,7 +87,6 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
    }
 
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
-   
    newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
    

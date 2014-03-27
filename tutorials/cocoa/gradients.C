@@ -9,8 +9,8 @@
 
 
 //Includes for ACLiC:
-
 #include "TColorGradient.h"
+#include "TVirtualX.h"
 #include "TCanvas.h"
 #include "TError.h"
 #include "TText.h"
@@ -46,8 +46,6 @@ void gradients()
       return;
    }
 
-   c->cd();
-
    //Linear gradient is defined by: 1) colors (to interpolate between them),
    //2) coordinates for these colors along the gradient axis [0., 1.] (must be sorted!).
    //3) Start and end points for a gradient, you specify them in some NDC rect ([0,0 - 1,1]),
@@ -60,13 +58,12 @@ void gradients()
    //Colour positions in the gradient's palette (here I place colors at the
    //ends of 0-1):
    const Double_t locations[] = {0., 1.};
-   
    //Linear gradient fill (with an axis angle == 45):
    const Double_t rgbaData1[] = {0.2, 0.2, 0.2, 1.,/*gray*/
                                  0.8, 1., 0.9, 1.  /*pale green*/};
    TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
    //45 degrees:
-   gradientFill1->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
+   gradientFill1->SetStartEnd(TColorGradient::Point(0., 0.), TColorGradient::Point(1., 1.));
    //Set as a background color in the canvas:
    c->SetFillColor(linearFill);
 
@@ -87,11 +84,9 @@ void gradients()
    pad->Draw();
    pad->cd();
 
-
    //Radial gradient fill for a TPie object:
    const Double_t rgbaData2[] = {/*opaque orange at the start:*/1., 0.8, 0., 1.,
                                  /*transparent red at the end:*/1., 0.2, 0., 0.8};
-
 
    //
    //With Quartz/Cocoa we support the "extended" radial gradient:
@@ -109,7 +104,6 @@ void gradients()
    //Centers for both circles are the same point.
    gradientFill2->SetStartEndR1R2(TColorGradient::Point(0.5, 0.5), 0.1,
                                   TColorGradient::Point(0.5, 0.5), 0.4);
-
 
    const UInt_t nSlices = 5;
    //Values for a TPie (non-const, that's how TPie's ctor is declared):
