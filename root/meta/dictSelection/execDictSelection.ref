@@ -53,27 +53,50 @@ Class category: foreign.
  o Members (0):
 --- End Class classAutoselectedFromTemplateElaborate2
 
---- Class A<B<double,double>,int,float >
+--- Class testNs::classRemoveTemplateArgs2<float*>
 Class category: foreign.
  * Version: -1
  o Members (0):
---- End Class A<B<double,double>,int,float >
+--- End Class testNs::classRemoveTemplateArgs2<float*>
 
---- Class C<char,float>
+--- Class testNs::classRemoveTemplateArgs2<int*>
 Class category: foreign.
  * Version: -1
  o Members (0):
---- End Class C<char,float>
+--- End Class testNs::classRemoveTemplateArgs2<int*>
+
+--- Class testNs::classRemoveTemplateArgs2<classVanilla,int >
+Class category: foreign.
+ * Version: 1 --> Class available to the interpreter but not Selected!
+ o Members (0):
+--- End Class testNs::classRemoveTemplateArgs2<classVanilla,int >
+
+--- Class A<B<double>,int,float >
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class A<B<double>,int,float >
 
 --- Class C<char>
 Class category: foreign.
  * Version: -1
  o Members (0):
 --- End Class C<char>
+ 
+--- Class myVector<C<char>>>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<C<char>>>
+
+--- Class myVector<float>
+Class category: foreign.
+ * Version: -1
+ o Members (0):
+--- End Class myVector<float>
 
 --- Class classTemplateElaborate<char>
 Class category: foreign.
-  - nonSplittable: true
  * Version: -1
  o Members (3):
   * classAutoselectedFromTemplateElaborate1 autoselectedMember

@@ -22,20 +22,17 @@ int execDictSelection()
    printClassInfo("classAutoselectedFromTemplateElaborate1",Nullproperties,false);
    printClassInfo("classAutoselectedFromTemplateElaborate2",Nullproperties,false);
 // Namespaces not properly treated yet
-//    printClassInfo("testNs::classRemoveTemplateArgs<float*>",Nullproperties,false);
-//    printClassInfo("testNs::classRemoveTemplateArgs<int*>",Nullproperties,false);
-//    printClassInfo("testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >",Nullproperties,false);
-//    printClassInfo("testNs::classRemoveTemplateArgs<classRemoveTemplateArgs<classAutoselected> >",Nullproperties,false);
-   printClassInfo("A<B<double,double>,int,float >",Nullproperties,false);
-   printClassInfo("C<char,float>",Nullproperties,false);
+   printClassInfo("testNs::classRemoveTemplateArgs2<float*>",Nullproperties,false);
+   printClassInfo("testNs::classRemoveTemplateArgs2<int*>",Nullproperties,false);
+   printClassInfo("testNs::classRemoveTemplateArgs2<classVanilla,int >",Nullproperties,false);
+   printClassInfo("A<B<double>,int,float >",Nullproperties,false);
+//    printClassInfo("C<char,float>",Nullproperties,false); disabled since the system cannot handle default args
    printClassInfo("C<char>",Nullproperties,false);
 
-// Canot treat template arguments which are template specialisations whith arguments which are 
-// other template parameters, like template <class T, class Alloc= myAllocator<T> > class myVector;
-//    printClassInfo("myVector<C<char>>>",Nullproperties,false);
-//    printClassInfo("myVector<float,>",Nullproperties,false);   
-   
-   properties.push_back("nonSplittable");
+
+   printClassInfo("myVector<C<char>>>",Nullproperties,false);
+   printClassInfo("myVector<float>",Nullproperties,false);   
+
    printClassInfo("classTemplateElaborate<char>",properties,false);
    
    
