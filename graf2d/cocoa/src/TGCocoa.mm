@@ -3165,13 +3165,8 @@ void TGCocoa::QueryPointer(Window_t winID, Window_t &rootWinID, Window_t &childW
       winX = winPoint.x;
       winY = winPoint.y;
    } else {
-      //Warning("QueryPointer", "Window %d parameter is a root window", (int)winID);
-      //Many thanks for this. Next time, I think, we'll have somebody calling QueryPointer(... x, x, x, x ...)
-      //Expecting this x to be reasonable.
-      if (&winX != &rootX)
-         winX = 0;
-      if (&winY != &winY)
-         winY = 0;
+      winX = screenPoint.x;
+      winY = screenPoint.y;
    }
 
    //Find child window in these coordinates (?).
