@@ -2683,7 +2683,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
             }
             // Converted.push_back(TemplateArgument(ArgTypeForTemplate));
          } else if (Idecl < maxAddArg) {
-//YYYYYYYYYYYYYYy
+
             mightHaveChanged = true;
 
             const clang::TemplateArgument& templateArg
@@ -3291,7 +3291,7 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    }
 
       
-   return isEqual;;
+   return isEqual;
 }
 
 
@@ -3442,10 +3442,9 @@ static void KeepNParams(clang::QualType& normalizedType,
       } else if (argKind == clang::TemplateArgument::Integral){
          equal = areEqualValues(tArg, *tParPtr);
       }
-      //FIXME: Re-Activate this block when the restriction mentioned above is lifted.
-      //if (!equal){
-      //   argsToKeep.push_back(NormTArg);
-      //}
+      if (!equal){
+         argsToKeep.push_back(NormTArg);
+      }
 
 
    } // of loop over parameters and arguments
