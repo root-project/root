@@ -1749,10 +1749,40 @@ Bool_t TRootCanvas::HandleContainerKey(Event_t *event)
          gPad->Modified();
          return kTRUE;
       }
-
       if (str[0] == 3)   // ctrl-c sets the interrupt flag
          gROOT->SetInterrupt();
-      fCanvas->HandleInput(kKeyPress, str[0], keysym);
+
+      // handle arrow keys
+      if (keysym > 0x1011 && keysym < 0x1016) {
+         Int_t ix, iy;
+         EEventType etype = kNoEvent;
+         Handle_t wid = gClient->GetDefaultRoot()->GetId();
+         gVirtualX->QueryPointer(ix, iy);
+         switch (keysym) {
+            case 0x1012: // left
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(--ix, iy, wid);
+               break;
+            case 0x1013: // up
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(ix, --iy, wid);
+               break;
+            case 0x1014: // right
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(++ix, iy, wid);
+               break;
+            case 0x1015: // down
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(ix, ++iy, wid);
+               break;
+            default:
+               break;
+         }
+         fCanvas->HandleInput(etype, ix, iy);
+      }
+      else {
+         fCanvas->HandleInput(kKeyPress, str[0], keysym);
+      }
    } else if (event->fType == kKeyRelease)
       fButton = 0;
 

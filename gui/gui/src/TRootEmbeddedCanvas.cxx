@@ -277,9 +277,48 @@ Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
       UInt_t keysym;
       char str[2];
       gVirtualX->LookupString(event, str, sizeof(str), keysym);
+
+      if (str[0] == kESC){   // ESC sets the escape flag
+         gROOT->SetEscape();
+         fCanvas->HandleInput(kButton1Up, 0, 0);
+         fCanvas->HandleInput(kMouseMotion, 0, 0);
+         gPad->Modified();
+         return kTRUE;
+      }
       if (str[0] == 3)   // ctrl-c sets the interrupt flag
          gROOT->SetInterrupt();
-      fCanvas->HandleInput(kKeyPress, str[0], keysym);
+
+      // handle arrow keys
+      if (keysym > 0x1011 && keysym < 0x1016) {
+         Int_t ix, iy;
+         EEventType etype = kNoEvent;
+         Handle_t wid = gClient->GetDefaultRoot()->GetId();
+         gVirtualX->QueryPointer(ix, iy);
+         switch (keysym) {
+            case 0x1012: // left
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(--ix, iy, wid);
+               break;
+            case 0x1013: // up
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(ix, --iy, wid);
+               break;
+            case 0x1014: // right
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(++ix, iy, wid);
+               break;
+            case 0x1015: // down
+               etype = kKeyArrowLeft;
+               gVirtualX->Warp(ix, ++iy, wid);
+               break;
+            default:
+               break;
+         }
+         fCanvas->HandleInput(etype, ix, iy);
+      }
+      else {
+         fCanvas->HandleInput(kKeyPress, str[0], keysym);
+      }
    } else if (event->fType == kKeyRelease)
       fButton = 0;
 
