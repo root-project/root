@@ -29,7 +29,6 @@ void grad2()
    gStyle->SetCanvasPreferGL(kTRUE);
    
    TCanvas * const cnv = new TCanvas("gradient test 2", "gradient_test2", 100, 100, 800, 600);
-   //After canvas was created, gVirtualX should be non-null.
    if (!cnv->UseGL()) {
       ::Error("grad2", "This macro requires OpenGL");
       delete cnv;
@@ -41,15 +40,14 @@ void grad2()
    hist->FillRandom("landau", 100000);
    hist2->FillRandom("gaus", 100000);
 
-   const Double_t locations[] = {0., 1.};
    new TColor(customIdx[0], 1., 0., 0., "red", 0.5);
-   
+
+   const Double_t locations[] = {0., 1.};
    const Color_t idx1[] = {customIdx[0], kOrange};
    //Gradient from ROOT's kOrange and my own semi-transparent red color.
-   TLinearGradient *grad1 = new TLinearGradient(customIdx[1], 2, locations, idx1);
+   TLinearGradient * const grad1 = new TLinearGradient(customIdx[1], 2, locations, idx1);
    const point_type start(0., 0.);
    const point_type end(0., 1.);
-   
    grad1->SetStartEnd(start, end);
    
    hist->SetFillColor(customIdx[1]);
@@ -57,7 +55,7 @@ void grad2()
    new TColor(customIdx[2], 0., 1., 0., "green", 0.5);
    const Color_t idx2[] = {customIdx[2], kBlue};
    //Gradient from ROOT's kBlue and my own semi-transparent green color.
-   TLinearGradient *grad2 = new TLinearGradient(customIdx[3], 2, locations, idx2);
+   TLinearGradient * const grad2 = new TLinearGradient(customIdx[3], 2, locations, idx2);
    grad2->SetStartEnd(start, end);
    hist2->SetFillColor(customIdx[3]);
    

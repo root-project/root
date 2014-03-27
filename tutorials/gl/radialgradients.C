@@ -13,7 +13,6 @@
 #include "TEllipse.h"
 #include "TRandom.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TError.h"
 #include "TStyle.h"
 
@@ -59,6 +58,11 @@ const unsigned nBasicColors = sizeof (basicColors) / sizeof (basicColors[0]);
 //______________________________________________________________________
 Color_t CreateRandomGradientFill()
 {
+   //Not const, otherwise CINT does not call a function ....
+   Color_t idx = FindFreeCustomColorIndex(1000);//Start a lookup from 1000.
+   if (idx == -1)
+      return -1;
+
    const Double_t * const fromRGBA = basicColors[(std::rand() % (nBasicColors / 2))];
    //With odd number of colors the last one is never selected :)
    const Double_t * const toRGBA = basicColors[nBasicColors / 2 + (std::rand() % (nBasicColors / 2))];
@@ -66,11 +70,6 @@ Color_t CreateRandomGradientFill()
    const Double_t locations[] = {0., 1.};
    const Double_t rgbas[] = {fromRGBA[0], fromRGBA[1], fromRGBA[2], fromRGBA[3],
                              toRGBA[0], toRGBA[1], toRGBA[2], toRGBA[3]};
-
-   //Not const, otherwise CINT does not call a function ....
-   Color_t idx = FindFreeCustomColorIndex(1000);//Start a lookup from 1000.
-   if (idx == -1)
-      return -1;
 
    TRadialGradient * const grad = new TRadialGradient(idx, 2, locations, rgbas);
    //
@@ -90,7 +89,6 @@ bool add_ellipse(const Double_t xC, const Double_t yC, const Double_t r)
    }
 
    TEllipse * const newEllipse = new TEllipse(xC, yC, r, r);
-   
    newEllipse->SetFillColor(newColor);
    newEllipse->Draw();
    

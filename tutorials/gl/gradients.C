@@ -15,7 +15,6 @@
 #include "TCanvas.h"
 #include "TStyle.h"
 #include "TError.h"
-#include "TROOT.h"
 #include "TText.h"
 #include "TPie.h"
 
@@ -50,7 +49,7 @@ void gradients()
    
    gStyle->SetCanvasPreferGL(kTRUE);
 
-   TCanvas *c = new TCanvas("cpie","Gradient colours demo", 700, 700);
+   TCanvas * const c = new TCanvas("cpie","Gradient colours demo", 700, 700);
    //Before we allocated any new colour or created any object:
    if (!c->UseGL()) {
       ::Error("gradients", "This macro requires OpenGL");
@@ -72,13 +71,12 @@ void gradients()
    //Colour positions in the gradient's palette (here I place colors at the
    //ends of 0-1):
    const Double_t locations[] = {0., 1.};
-   
    //Linear gradient fill (with an axis angle == 45):
    const Double_t rgbaData1[] = {0.2, 0.2, 0.2, 1.,/*gray*/
                                  0.8, 1., 0.9, 1.  /*pale green*/};
    TLinearGradient * const gradientFill1 = new TLinearGradient(linearFill, 2, locations, rgbaData1);
    //45 degrees:
-   gradientFill1->SetStartEnd(TColorGradient::Point(0, 0), TColorGradient::Point(1, 1));
+   gradientFill1->SetStartEnd(TColorGradient::Point(0., 0.), TColorGradient::Point(1., 1.));
    //Set as a background color in the canvas:
    c->SetFillColor(linearFill);
 
@@ -103,8 +101,6 @@ void gradients()
    //Radial gradient fill for a TPie object:
    const Double_t rgbaData2[] = {/*opaque orange at the start:*/1., 0.8, 0., 1.,
                                  /*transparent red at the end:*/1., 0.2, 0., 0.6};
-
-
 
    TRadialGradient * const gradientFill2 = new TRadialGradient(radialFill, 2,
                                                                locations, rgbaData2);

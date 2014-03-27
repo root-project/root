@@ -21,11 +21,11 @@ Color_t create_pad_frame_gradient()
 {
    //We create a gradient with 4 steps - from dark (and semi-transparent)
    //gray to almost transparent (95%) white and to white and to dark gray again.
-   const Double_t locations[] = {0., 0.2, 0.8, 1.};
-
    Color_t idx[3] = {};
    if (FindFreeCustomColorIndices(3, idx) != 3)
       return -1;
+
+   const Double_t locations[] = {0., 0.2, 0.8, 1.};
    
    new TColor(idx[0], 0.25, 0.25, 0.25, "special pad color1", 0.55);
    new TColor(idx[1], 1., 1., 1., "special pad color2", 0.05);
@@ -42,12 +42,12 @@ Color_t create_pad_frame_gradient()
 Color_t create_pad_gradient()
 {
    //We create two-steps gradient from ROOT's standard colors (38 and 30).
-   const Double_t locations[] = {0., 1.};
-   const Color_t colorIndices[2] = {30, 38};
-   
    const Color_t idx = FindFreeCustomColorIndex(1000);//Start lookup from 1000.
    if (idx == -1)
       return -1;
+
+   const Double_t locations[] = {0., 1.};
+   const Color_t colorIndices[2] = {30, 38};
    
    TLinearGradient * const grad = new TLinearGradient(idx, 2, locations, colorIndices);
    const point_type start(0., 0.);
@@ -81,9 +81,8 @@ void grad()
    gStyle->SetCanvasPreferGL(kTRUE);
 
    TCanvas * const cnv = new TCanvas("gradient test", "gradient test", 100, 100, 600, 600);
-   //After canvas was created, gVirtualX should be non-null.
    if (!cnv->UseGL()) {
-      Error("grad", "This macro requires OpenGL");
+      ::Error("grad", "This macro requires OpenGL");
       delete cnv;
       return;
    }
@@ -95,9 +94,7 @@ void grad()
    const Color_t colorIndices[3] = {kYellow, kOrange, kRed};
    const Double_t lengths[3] = {0., 0.5, 1.};
    TLinearGradient * const grad = new TLinearGradient(histFill, 3, lengths, colorIndices);
-   const point_type start(0., 0.);
-   const point_type end(0., 1.);
-   grad->SetStartEnd(start, end);
+   grad->SetStartEnd(point_type(0., 0.), point_type(0., 1.));
    
    TH1F * const hist = new TH1F("h11", "h11", 20, -3., 3.);
    hist->SetFillColor(histFill);

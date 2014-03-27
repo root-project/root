@@ -1,9 +1,7 @@
 //Author: Timur Pocheptsov, 19/03/2014
 
 //Includes for ACLiC.
-#include "TVirtualX.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TStyle.h"
 #include "TColor.h"
 #include "TError.h"
