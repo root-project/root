@@ -1183,7 +1183,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
       // mouse enters canvas
       if (!fDoubleBuffer) FeedbackMode(kTRUE);
       break;
-
+      
    case kMouseLeave:
       // mouse leaves canvas
       {
@@ -1220,6 +1220,10 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
 
       break;
 
+   case kKeyArrowLeft:
+   case kKeyArrowRight:
+   case kKeyArrowUp:
+   case kKeyArrowDown:
    case kButton1Motion:
    case kButton1ShiftMotion: //8 == kButton1Motion + shift modifier
       if (fSelected) {
