@@ -5,7 +5,6 @@
 //Includes for ACLiC (cling does not need them).
 #include "TVirtualX.h"
 #include "TCanvas.h"
-#include "Rtypes.h"
 #include "TError.h"
 #include "TColor.h"
 #include "TH1F.h"
