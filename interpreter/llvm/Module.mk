@@ -144,9 +144,6 @@ $(LLVMDEPO): $(LLVMDEPS)
 			LLVMCXX="aCC"; \
 			LLVM_CFLAGS="+DD64 -Ae"; \
 		fi; \
-		if [ $(CXX11) = "yes" ]; then \
-			LLVMCXX11="--enable-cxx11"; \
-		fi; \
 		if [ $(LIBCXX) = "yes" ]; then \
 			LLVMLIBCXX="--enable-libcpp"; \
 		fi; \
@@ -169,7 +166,6 @@ $(LLVMDEPO): $(LLVMDEPS)
 		--disable-clang-rewriter --disable-clang-static-analyzer \
 		--disable-clang-arcmt \
 		--disable-compiler-version-checks \
-		$$LLVMCXX11 \
 		$$LLVMLIBCXX \
 		$(LLVMOPTFLAGS) \
 		--enable-targets=host \
