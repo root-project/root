@@ -1110,7 +1110,11 @@ void print_mask_info(ULong_t mask)
    //The more I know Cocoa, the less I like it.
    //Window behavior between spaces is a total mess.
    //Set the window to join all spaces.
+#ifdef MAC_OS_X_VERSION_10_9
+   [self setCollectionBehavior : NSWindowCollectionBehaviorMoveToActiveSpace];
+#else
    [self setCollectionBehavior : NSWindowCollectionBehaviorCanJoinAllSpaces];
+#endif
    //now bring it to the front, it will appear on the active space.
    [super makeKeyAndOrderFront : self];
    //then reset the collection behavior to default, so the window
