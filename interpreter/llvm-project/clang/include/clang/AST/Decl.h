@@ -50,6 +50,8 @@
 #include <string>
 #include <utility>
 
+namespace cling { class DeclUnloader; }
+
 namespace clang {
 
 class ASTContext;

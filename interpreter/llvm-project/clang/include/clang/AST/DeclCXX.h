@@ -266,6 +266,7 @@ class CXXRecordDecl : public RecordDecl {
   friend class DeclContext;
   friend class LambdaExpr;
   friend class ODRDiagsEmitter;
+  friend class ::cling::DeclUnloader;
 
   friend void FunctionDecl::setIsPureVirtual(bool);
   friend void TagDecl::startDefinition();
