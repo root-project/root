@@ -124,10 +124,7 @@ public:
    const TypesCont_t &GetTypeToSkip() const { return fConfig.m_toSkip; }
    const TypesCont_t &GetTypeWithAlternative() const { return fTypeWithAlternative; }
    void AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, unsigned int i);
-   int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
-      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(templ);   
-      return (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;      
-   }   
+   int GetNargsToKeep(const clang::ClassTemplateDecl* templ) const;
    const TemplPtrIntMap_t GetTemplNargsToKeepMap() const { return fTemplatePtrArgsToKeepMap; }
    
 };
@@ -614,14 +611,19 @@ int RemoveTemplateArgsFromName(std::string& name, unsigned int);
 clang::TemplateName ExtractTemplateNameFromQualType(const clang::QualType& qt);
 
 //______________________________________________________________________________
-clang::ClassTemplateSpecializationDecl* QualType2ClassTemplateSpecializationDecl(const clang::QualType& qt);
+bool QualType2Template(const clang::QualType& qt,
+                       clang::ClassTemplateDecl*& ctd,
+                       clang::ClassTemplateSpecializationDecl*& ctsd);
 
 //______________________________________________________________________________
 clang::ClassTemplateDecl* QualType2ClassTemplateDecl(const clang::QualType& qt);
 
 //______________________________________________________________________________
 // Extract the namespaces enclosing a DeclContext
-void ExtractEnclosingNameSpaces(const clang::DeclContext&,
+void ExtractCtxtEnclosingNameSpaces(const clang::DeclContext&,
+                                    std::list<std::pair<std::string,bool> >&);
+//______________________________________________________________________________
+void ExtractEnclosingNameSpaces(const clang::Decl&,
                                 std::list<std::pair<std::string,bool> >&);
 
 //______________________________________________________________________________

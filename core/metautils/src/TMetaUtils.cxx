@@ -266,27 +266,40 @@ namespace ROOT{
 //______________________________________________________________________________
 void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, 
                                              unsigned int i){
-      if (!templ){
-         Error("ATNormalizedCtxt::AddTemplAndNargsToKeep",
-               "Tring to specify a number of template arguments to keep for a null pointer. Exiting without assigning any value.\n");
-         return;
-      }
+   // Add to the internal map the pointer of a template as key and the number of 
+   // template arguments to keep as value.
       
-      if(fTemplatePtrArgsToKeepMap.count(templ)==1 &&
-         fTemplatePtrArgsToKeepMap[templ]!=(int)i){
-         const std::string templateName (templ->getNameAsString());
-         const std::string i_str (std::to_string(i));
-         const std::string previousArgsToKeep(std::to_string(fTemplatePtrArgsToKeepMap[templ]));
-         Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
-               "Tring to specify for template %s %s arguments to keep, while before this number was %s\n",
-               templ->getNameAsString().c_str(), 
-               i_str.c_str(), 
-               previousArgsToKeep.c_str());
-      }
-      
-      fTemplatePtrArgsToKeepMap[templ]=i;
-   }      
-      
+   if (!templ){
+      Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
+            "Tring to specify a number of template arguments to keep for a null pointer. Exiting without assigning any value.\n");
+      return;
+   }
+   
+   const clang::ClassTemplateDecl* canTempl = templ->getCanonicalDecl();
+   
+   if(fTemplatePtrArgsToKeepMap.count(canTempl)==1 &&
+      fTemplatePtrArgsToKeepMap[canTempl]!=(int)i){
+      const std::string templateName (canTempl->getNameAsString());
+      const std::string i_str (std::to_string(i));
+      const std::string previousArgsToKeep(std::to_string(fTemplatePtrArgsToKeepMap[canTempl]));
+      Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
+            "Tring to specify for template %s %s arguments to keep, while before this number was %s\n",
+            canTempl->getNameAsString().c_str(), 
+            i_str.c_str(), 
+            previousArgsToKeep.c_str());
+   }  
+   
+   fTemplatePtrArgsToKeepMap[canTempl]=i;
+}      
+//______________________________________________________________________________
+int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
+   // Get from the map the number of arguments to keep.
+   // It uses the canonical decl of the template as key. 
+   // If not present, returns -1.   
+      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(templ->getCanonicalDecl() );   
+      return (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;      
+   } 
+   
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
@@ -3159,27 +3172,44 @@ std::string ROOT::TMetaUtils::GetLLVMResourceDir(bool rootbuild)
 }
 
 //______________________________________________________________________________
-clang::ClassTemplateSpecializationDecl* ROOT::TMetaUtils::QualType2ClassTemplateSpecializationDecl(const clang::QualType& qt)
+bool ROOT::TMetaUtils::QualType2Template(const clang::QualType& qt,
+                                         clang::ClassTemplateDecl*& ctd,
+                                         clang::ClassTemplateSpecializationDecl*& ctsd)
 {
+   // Get the template specialisation decl and template decl behind the qualtype
+   // Returns true if successfully found, false otherwise
+   
    using namespace clang;
    const Type* theType = qt.getTypePtr();
    if (const RecordType* rType = llvm::dyn_cast<RecordType>(theType)) {
-      if (ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(rType->getDecl())) {
-         return tsd;
+      ctsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(rType->getDecl());
+      if (ctsd) {
+         ctd = ctsd->getSpecializedTemplate();
+         return true;
       }
    }
-   return nullptr;
+   
+   ctsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(qt->getAsCXXRecordDecl());
+   if(ctsd){
+      ctd = ctsd->getSpecializedTemplate();
+      return true;
+   }
+   
+   ctd=nullptr;
+   ctsd=nullptr;
+   return false;
 }
 
 //______________________________________________________________________________
 clang::ClassTemplateDecl* ROOT::TMetaUtils::QualType2ClassTemplateDecl(const clang::QualType& qt)
 {
+   // Extract from a qualtype the class template if this makes sense.
+   // Retuns the ClassTemplateDecl or nullptr otherwise.
    using namespace clang;
-
-   if (ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(qt)) {
-      if (ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()) return ctd;
-   }
-   return nullptr;
+   ClassTemplateSpecializationDecl* ctsd;
+   ClassTemplateDecl* ctd;
+   QualType2Template(qt,ctd,ctsd);
+   return ctd;
 }
 
 //______________________________________________________________________________
@@ -3344,12 +3374,12 @@ static void KeepNParams(clang::QualType& normalizedType,
    using namespace clang;
 
    // If this type has no template specialisation behind, we cannot do anything
-   const ClassTemplateSpecializationDecl* ctsd = QualType2ClassTemplateSpecializationDecl(vanillaType);
-   const ClassTemplateDecl* ctd = ctsd ? ctsd->getSpecializedTemplate() : nullptr;   
-   if (!ctd) return;      
-        
+   ClassTemplateSpecializationDecl* ctsd;
+   ClassTemplateDecl* ctd;
+   if (! QualType2Template(vanillaType, ctd,  ctsd)) return ;
+   
    // Even if this is a template, if we don't keep any argument, return
-   const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd->getCanonicalDecl());
+   const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd);
    if (nArgsToKeep<0) return;   
    
    // Important in case of early return: we must restore the original qualtype
@@ -3404,19 +3434,6 @@ static void KeepNParams(clang::QualType& normalizedType,
       TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
 
       bool shouldKeepArg = index < nArgsToKeep;
-                  
-
-      // If this is a type, 
-      // we need first of all to recurse: this argument may need to be manipulated
-      if (tArg.getKind() == clang::TemplateArgument::Type){
-         QualType thisNormQualType = NormTArg.getAsType();
-         QualType thisArgQualType = tArg.getAsType();
-         KeepNParams(thisNormQualType,
-                     thisArgQualType,
-                     interp,
-                     normCtxt);
-         NormTArg = TemplateArgument(thisNormQualType);
-      }
       
       // Nothing to do here: either this parameter has no default, or we have to keep it.
       // FIXME: Temporary measure to get Atlas started with this.
@@ -3425,6 +3442,17 @@ static void KeepNParams(clang::QualType& normalizedType,
       // where 2 different entities would have the same name if an allocator different from 
       // the default one is by chance used.
       if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
+         // If this is a type, 
+         // we need first of all to recurse: this argument may need to be manipulated
+         if (tArg.getKind() == clang::TemplateArgument::Type){
+            QualType thisNormQualType = NormTArg.getAsType();
+            QualType thisArgQualType = tArg.getAsType();
+            KeepNParams(thisNormQualType,
+                        thisArgQualType,
+                        interp,
+                        normCtxt);
+            NormTArg = TemplateArgument(thisNormQualType);
+         }         
          argsToKeep.push_back(NormTArg);
          continue;
       } else { // Here we should not break but rather check if the value is the default one.
@@ -4115,14 +4143,36 @@ const clang::TagDecl* ROOT::TMetaUtils::GetAnnotatedRedeclarable(const clang::Ta
 }
 
 //______________________________________________________________________________
-void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::DeclContext& definition,
+void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::Decl& decl,
                                                   std::list<std::pair<std::string,bool> >& enclosingNamespaces)
 {
+   // Extract the immediately outer namespace and then launch the recursion
+   
+   const clang::DeclContext* enclosingNamespaceDeclCtxt = decl.getDeclContext();
+   if (!enclosingNamespaceDeclCtxt) return;
+   
+   const clang::NamespaceDecl* enclosingNamespace =
+             clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
+   if (!enclosingNamespace) return;
+   
+   enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
+                                                enclosingNamespace->isInline()));
+   
+   ExtractCtxtEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
+   
+}
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& ctxt,
+                                                      std::list<std::pair<std::string,bool> >& enclosingNamespaces)
+{
    // Extract enclosing namespaces recusrively
-   const clang::DeclContext* enclosingNamespaceDeclCtxt = definition.getParent ();
+   const clang::DeclContext* enclosingNamespaceDeclCtxt = ctxt.getParent ();
    
    // If no parent is found, nothing more to be done
-   if (!enclosingNamespaceDeclCtxt) return;
+   if (!enclosingNamespaceDeclCtxt) {
+      return;      
+   }
    
    // Check if the parent is a namespace (it could be a class for example)
    // if not, nothing to be done here
