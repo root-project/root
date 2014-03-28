@@ -893,7 +893,7 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    // Initialize the interpreter, once TROOT::fInterpreter is set.
-   fClingCallbacks->Initialize(fInterpreter->getCI()->getASTContext());
+   fClingCallbacks->Initialize();
 }
 
 //______________________________________________________________________________

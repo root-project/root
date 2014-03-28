@@ -47,7 +47,7 @@ public:
 
    ~TClingCallbacks();
 
-   void Initialize(clang::ASTContext& Ctx);
+   void Initialize();
 
    void SetAutoloadingEnabled(bool val = true) { fIsAutoloading = val; }
    bool IsAutoloadingEnabled() { return fIsAutoloading; }

@@ -455,7 +455,7 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
          CO.Debug = 0;
          CO.CodeGeneration = 1;
 
-         cling::Transaction T(CO, VD->getASTContext());
+         cling::Transaction T(CO, SemaR);
          T.append(VD);
          T.setState(cling::Transaction::kCompleted);
 
@@ -601,12 +601,13 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    return false;
 }
 
-void TClingCallbacks::Initialize(ASTContext& Ctx) {
+void TClingCallbacks::Initialize() {
    // Replay existing decls from the AST.
    if (fFirstRun) {
       // Before setting up the callbacks register what cling have seen during init.
-      cling::Transaction TPrev((cling::CompilationOptions(), Ctx));
-      TPrev.append(Ctx.getTranslationUnitDecl());
+      Sema& SemaR = m_Interpreter->getSema();
+      cling::Transaction TPrev((cling::CompilationOptions(), SemaR));
+      TPrev.append(SemaR.getASTContext().getTranslationUnitDecl());
       TCling__UpdateListsOnCommitted(TPrev, m_Interpreter);
 
       fFirstRun = false;
@@ -617,7 +618,7 @@ void TClingCallbacks::Initialize(ASTContext& Ctx) {
 //
 void TClingCallbacks::TransactionCommitted(const Transaction &T) {
    if (fFirstRun && T.empty())
-      Initialize(const_cast<clang::ASTContext&>(T.getASTContext()));
+      Initialize();
 
    TCling__UpdateListsOnCommitted(T, m_Interpreter);
 }

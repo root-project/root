@@ -1205,6 +1205,8 @@ public:
   /// \brief Print a Macro to an ostream used for ClangInternalState
   /// Same as dump, but without orinting source location.
   void printMacros(raw_ostream &OS) const;
+  void printMacro(const IdentifierInfo* II, const MacroDirective *MD,
+                  llvm::raw_ostream &OS) const;
 
   /// \brief Given a location that specifies the start of a
   /// token, return a new location that specifies a character within the token.

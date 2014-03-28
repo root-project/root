@@ -229,34 +229,39 @@ void Preprocessor::DumpMacro(const MacroInfo &MI) const {
 
 void Preprocessor::printMacros(raw_ostream &OS) const {
   for (macro_iterator I = macro_begin(), E = macro_end(); I != E; ++I) {
-    OS << "<MD: " << I->second << ">";
-    OS << I->first->getName() << " ";
-    OS << "(Tokens:)";
-    MacroInfo* MI = I->second->getMacroInfo();
-    for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
-      const Token &Tok = MI->getReplacementToken(i);
-      OS << tok::getTokenName(Tok.getKind()) << " '"
-         << getSpelling(Tok) << "'";
-      OS << "\t";
-      if (Tok.isAtStartOfLine())
-        OS << " [StartOfLine]";
-      if (Tok.hasLeadingSpace())
-        OS << " [LeadingSpace]";
-      if (Tok.isExpandDisabled())
-        OS << " [ExpandDisabled]";
-      if (Tok.needsCleaning()) {
-        const char *Start = SourceMgr.getCharacterData(Tok.getLocation());
-        OS << " [UnClean='" << StringRef(Start, Tok.getLength())
-           << "']";
-      }
-      //Do not print location it uses the SourceManager dump to llvm::errs.
-      OS << "\tLoc=<";
-      Tok.getLocation().print(OS, SourceMgr);
-      OS << ">";
-      OS << "  ";
-    }
-    OS << "\n";
+    Preprocessor::printMacro(I->first, I->second, OS);
   }
+}
+
+void Preprocessor::printMacro(const IdentifierInfo* II,const MacroDirective *MD,
+                              llvm::raw_ostream &OS) const {
+  OS << "<MD: " << MD << ">";
+  OS << II->getName() << " ";
+  OS << "(Tokens:)";
+  const MacroInfo* MI = MD->getMacroInfo();
+  for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
+    const Token &Tok = MI->getReplacementToken(i);
+    OS << tok::getTokenName(Tok.getKind()) << " '"
+       << getSpelling(Tok) << "'";
+    OS << "\t";
+    if (Tok.isAtStartOfLine())
+      OS << " [StartOfLine]";
+    if (Tok.hasLeadingSpace())
+      OS << " [LeadingSpace]";
+    if (Tok.isExpandDisabled())
+      OS << " [ExpandDisabled]";
+    if (Tok.needsCleaning()) {
+      const char *Start = SourceMgr.getCharacterData(Tok.getLocation());
+      OS << " [UnClean='" << StringRef(Start, Tok.getLength())
+         << "']";
+    }
+    //Do not print location it uses the SourceManager dump to llvm::errs.
+    OS << "\tLoc=<";
+    Tok.getLocation().print(OS, SourceMgr);
+    OS << ">";
+    OS << "  ";
+  }
+  OS << "\n";
 }
 
 void Preprocessor::PrintStats() {
