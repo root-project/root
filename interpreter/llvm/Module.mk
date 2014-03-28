@@ -159,7 +159,7 @@ $(LLVMDEPO): $(LLVMDEPS)
 		echo "*** Configuring LLVM in $(dir $@) ..."; \
 		mkdir -p $(dir $@) && \
 		cd $(dir $@)  && \
-		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure \
+		GNUMAKE=$(MAKE) $(LLVMDIRS)/configure --enable-cxx11 \
 		$$LLVM_HOST \
 		$$LLVM_TARGET \
 		$$LLVM_BUILD \
