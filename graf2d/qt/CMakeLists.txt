@@ -10,6 +10,11 @@ set(headers TGQt.h TQtTimer.h TQtApplication.h TQtBrush.h
             TQMimeTypes.h TQtClientFilter.h TQtClientWidget.h TQtWidget.h
             TQtMarker.h TQtTimer.h TQtRootSlot.h TQtPadFont.h)
 
+if(CMAKE_COMPILER_IS_GNUCXX)
+  add_definitions(-Wno-deprecated-register -Wno-uninitialized)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+  add_definitions(-Wno-deprecated -Wno-uninitialized)
+endif()
 
 QT4_WRAP_CPP(mocfiles inc/TQtWidget.h inc/TQtEmitter.h inc/TQtClientFilter.h
                       inc/TQtClientGuard.h inc/TQtClientWidget.h inc/TQtTimer.h

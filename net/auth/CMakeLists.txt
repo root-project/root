@@ -19,6 +19,10 @@ list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/DaemonUtils.cxx
                          ${CMAKE_CURRENT_SOURCE_DIR}/src/AFSAuth.cxx
                          ${CMAKE_CURRENT_SOURCE_DIR}/src/TAFS.cxx)
 
+if(MACOSX_SSK_DEPRECATED)
+  add_definitions(-Wno-deprecated-declarations)
+endif()
+
 #---static library needed for rootd and proofd --------------------------------------------
 add_library(rsa STATIC ${CMAKE_CURRENT_SOURCE_DIR}/src/rsaaux.cxx
                        ${CMAKE_CURRENT_SOURCE_DIR}/src/rsalib.cxx
