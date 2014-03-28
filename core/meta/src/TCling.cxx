@@ -3721,14 +3721,20 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                Info("ReadRootmapFile", "class %s in %s", keyname.c_str(), lib_name.Data());
             TEnvRec* isThere = fMapfile->Lookup(keyname.c_str());
             if (isThere){
-               if (firstChar == 'n') {
+               if(lib_name != isThere->GetValue()){ // the same key for two different libs
+                  if (firstChar == 'n') {
+                     if (gDebug > 3)
+                        Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
+                           keyname.c_str(), lib_name.Data(), isThere->GetValue());
+                  } else if (!TClassEdit::IsSTLCont(keyname.c_str())) {
+                     Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
+                           keyname.c_str(), lib_name.Data(), isThere->GetValue());
+                  }
+               } else { // the same key for the same lib
                   if (gDebug > 3)
-                     Info("ReadRootmapFile", "namespace %s found in %s is already in %s",
-                          keyname.c_str(), lib_name.Data(), isThere->GetValue());
-               } else if (!TClassEdit::IsSTLCont(keyname.c_str())) {
-                  Warning("ReadRootmapFile", "%s %s found in %s is already in %s", line.substr(0, keyLen).c_str(),
-                          keyname.c_str(), lib_name.Data(), isThere->GetValue());
+                        Info("ReadRootmapFile","Key %s was already defined for %s", keyname.c_str(), lib_name.Data());
                }
+               
             } else {
                fMapfile->SetValue(keyname.c_str(), lib_name.Data());
             }
