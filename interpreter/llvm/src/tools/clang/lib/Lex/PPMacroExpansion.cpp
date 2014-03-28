@@ -57,6 +57,7 @@ void Preprocessor::appendMacroDirective(IdentifierInfo *II, MacroDirective *MD){
 
 void Preprocessor::removeMacro(IdentifierInfo *II, MacroDirective *MD) {
   assert(II && MD);
+  II->setHasMacroDefinition(false);
   Macros.erase(II);
   if (MacroDirective* prevMD = MD->getPrevious()) {
     // Avoid assertion in appendMacroDirective.
