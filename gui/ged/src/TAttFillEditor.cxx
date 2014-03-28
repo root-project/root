@@ -81,8 +81,7 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
       AlphaLabel->Disable(kTRUE);
       fAlphaField->SetEnabled(kFALSE);
    }
-   
-   fAlphaField->SetEnabled(kFALSE);
+
    f2a->AddFrame(fAlphaField,new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
    AddFrame(f2a, new TGLayoutHints(kLHintsLeft | kLHintsCenterY));
 }
