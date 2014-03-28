@@ -5,48 +5,48 @@
 #if !defined(ClingWorkAroundScriptClassDef)
    // First in interpreted mode.
    gROOT->ProcessLine(".L sel01.C");
-#ifdef ClingWorkAroundMissingDynamicScope
+# ifdef ClingWorkAroundMissingDynamicScope
    TSelector *isel = (TSelector*)TClass::GetClass("sel01")->New();
-#else
+# else
    sel01 isel;
-#endif
+# endif
    TFile *f = TFile::Open("Event1.root");
    TTree *tree; f->GetObject("T1",tree);
-   
-#ifdef ClingWorkAroundMissingDynamicScope
+
+# ifdef ClingWorkAroundMissingDynamicScope
    tree->Process(isel);
-#else
+# else
    tree->Process(&isel);
-#endif
-      
-#ifdef ClingWorkAroundMissingImplicitAuto
+# endif
+
+# ifdef ClingWorkAroundMissingImplicitAuto
    TChain *
-#endif
+# endif
    c = new TChain("T1");
    c->Add("Event1.root");
-#ifdef ClingWorkAroundMissingDynamicScope
+# ifdef ClingWorkAroundMissingDynamicScope
    c->Process(isel);
-#else
+# else
    c->Process(&isel);
-#endif   
+# endif
 
 #endif // !defined(ClingWorkAroundScriptClassDef)
-      
+
 #if defined(ClingWorkAroundScriptClassDef) || !defined(ClingWorkAroundMissingUnloading)
    gROOT->ProcessLine(".L sel01.C+");
-#ifdef ClingWorkAroundMissingDynamicScope
+# ifdef ClingWorkAroundMissingDynamicScope
    TSelector *csel = (TSelector*)TClass::GetClass("sel01")->New();
-#else
+# else
    sel01 csel;
-#endif
+# endif
 
-#ifdef ClingWorkAroundScriptClassDef
+# ifdef ClingWorkAroundScriptClassDef
    TFile *f; TTree *tree;
-#endif
+# endif
    f = TFile::Open("Event1.root");
    f->GetObject("T1",tree);
 
-#if defined(ClingWorkAroundScriptClassDef)
+# if defined(ClingWorkAroundScriptClassDef)
       // Get the work around printing to happen *after* the opening
       // of the file so that there are after the Warning messages.
       fprintf(stderr,"Running Interpreted Process 0\n");
@@ -71,25 +71,25 @@
       fprintf(stderr,"Running Interpreted Process 9\n");
       fprintf(stderr,"Info in <ACLiC>: script has already been loaded in interpreted mode\n");
       fprintf(stderr,"Info in <ACLiC>: unloading sel01.C and compiling it\n");
-#endif
-      
-#ifdef ClingWorkAroundMissingDynamicScope
+# endif
+
+# ifdef ClingWorkAroundMissingDynamicScope
       tree->Process(csel);
-#else
+# else
       tree->Process(&csel);
-#endif
-      
-#if defined(ClingWorkAroundScriptClassDef)
+# endif
+
+# if defined(ClingWorkAroundScriptClassDef)
    TChain *
-#endif
+# endif
    c = new TChain("T1");
    c->Add("Event1.root");
-#ifdef ClingWorkAroundMissingDynamicScope
+# ifdef ClingWorkAroundMissingDynamicScope
    c->Process(csel);
-#else
+# else
    c->Process(&csel);
-#endif
-      
+# endif
+
 #else // defined(ClingWorkAroundScriptClassDef) || !defined(ClingWorkAroundMissingUnloading)
       fprintf(stderr,"Running Compiled Process 0\n");
       fprintf(stderr,"Running Compiled Process 1\n");
@@ -111,8 +111,7 @@
       fprintf(stderr,"Running Compiled Process 7\n");
       fprintf(stderr,"Running Compiled Process 8\n");
       fprintf(stderr,"Running Compiled Process 9\n");
-      
+
 #endif // defined(ClingWorkAroundScriptClassDef) || !defined(ClingWorkAroundMissingUnloading)
-      
+
 }
-   
