@@ -2677,17 +2677,19 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
 }
 
 //______________________________________________________________________________
-void EncloseInNamespaces(const clang::RecordDecl& rDecl,
+void EncloseInNamespaces(const clang::Decl& decl,
                          std::string& definitionStr)
 {
    // Take the namespaces which enclose the decl and put them around the
    // definition string.
    // For example, if the definition string is "myClass" which is enclosed by
    // the namespaces ns1 and ns2, one would get:
-   // namespace ns2{ namespace ns1 { class myClass; } }   
+   // namespace ns2{ namespace ns1 { class myClass; } }         
+   
+   // Before everyting
    
    std::list<std::pair<std::string,bool> > enclosingNamespaces;
-   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(rDecl,enclosingNamespaces);
+   ROOT::TMetaUtils::ExtractEnclosingNameSpaces(decl,enclosingNamespaces);
    // Check if we have enclosing namespaces
    // FIXME: this should be active also for classes
    for (std::list<std::pair<std::string, bool> >::const_iterator enclosingNamespaceIt = enclosingNamespaces.begin();
@@ -3212,17 +3214,20 @@ void CheckForMinusW(const char* arg,
 
 //______________________________________________________________________________
 std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
-                                 cling::Interpreter& interp)
+                                        cling::Interpreter& interp)
 {
    std::string fwdDecl;
    std::string initStr("{");   
    auto& fwdDeclnArgsToSkipColl = normCtxt.GetTemplNargsToKeepMap();
    for (auto& strigNargsToKeepPair : fwdDeclnArgsToSkipColl){
-      ExtractTemplateDefinition(*strigNargsToKeepPair.first,
+      auto& clTemplDecl = *strigNargsToKeepPair.first;
+      ExtractTemplateDefinition(clTemplDecl,
                                 interp,
                                 fwdDecl);
+      fwdDecl+=" ;";
+      EncloseInNamespaces(clTemplDecl,fwdDecl); 
       initStr+="{\""+
-               fwdDecl+";\", "
+               fwdDecl+"\", "
                +std::to_string(strigNargsToKeepPair.second)
                +"},";
    }
@@ -3946,7 +3951,7 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    if (!ignoreExistingDict){
-      std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
+      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
       GenerateModule(modGen, 
                      CI, 
                      currentDirectory, 
