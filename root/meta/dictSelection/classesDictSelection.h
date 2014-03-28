@@ -44,23 +44,29 @@ private:
 
 classTemplateElaborate<char> classTemplateElaborate1;
 
-
-// Template class used to test suppression of template arguments
-template < typename T,
-           typename U=int,
-           typename X=classVanilla > class classRemoveTemplateArgs{};
-classRemoveTemplateArgs<float> t1;
-           
 // Template class used to test suppression of template arguments, but in a
 // namespace
 namespace testNs {
   template < typename T,
   typename U=int,
   typename X=classVanilla > class classRemoveTemplateArgs2{};
+  class D{};
 }
+
+// Template class used to test suppression of template arguments
+template < typename T,
+           typename U=int,
+           typename X=classVanilla > class classRemoveTemplateArgs{};
+classRemoveTemplateArgs<float,bool> t1;
+classRemoveTemplateArgs<testNs::D> t7;
+
+
 testNs::classRemoveTemplateArgs2<float*> t2;
 testNs::classRemoveTemplateArgs2<int*> t3;
 testNs::classRemoveTemplateArgs2<classRemoveTemplateArgs<classAutoselected> > t4;
+testNs::classRemoveTemplateArgs2<classVanilla> t5;
+testNs::classRemoveTemplateArgs2<testNs::D> t6;
+
 
 template<typename T, typename U, typename V, typename Z=int> class A{};
 template<typename T, typename U=int> class B{};
@@ -80,8 +86,15 @@ class myVector{};
 
 C<char> a1;
 // C<char,float> a2; removed as the machinery cannot yet check for default template args
+C<C<char>,C<char,C<C<char,int>,int>,3>> complexc;
+C<C<C<C<C<char>,C<char,C<C<char,int>,int>,3>>>,C<char,C<C<char,int>,int>,3>>,C<char,C<C<char,int>,int>,3>> complexc2;
+
 myVector<float> v1;
 myVector<C<char>> v2;
+myVector<myVector<myVector<myVector<float>>>> nested;
+
+class D{};
+myVector<D> o;
 
 template<typename T> class Coordinate{};
 
