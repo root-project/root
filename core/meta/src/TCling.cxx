@@ -498,6 +498,26 @@ static string TCling__Demangle(const char *mangled_name, int *err)
    return demangled;
 }
 
+//______________________________________________________________________________
+static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
+{
+   // Find a template decl within N nested namespaces, 0<=N<inf
+   // Assumes 1 and only 1 template present and 1 and only 1 entity contained 
+   // by the namespace. Example: ns1::ns2::..::nsN::myTemplate
+   // Returns nullptr in case of error
+   using namespace clang;
+   if (NamespaceDecl* nsd = llvm::dyn_cast<NamespaceDecl>(decl)){
+      return FindTemplateInNamespace(*nsd->decls_begin());
+   }
+   
+   if (ClassTemplateDecl* ctd = llvm::dyn_cast<ClassTemplateDecl>(decl)){
+      return ctd;
+   }
+   
+   return nullptr; // something went wrong.
+}
+
+//______________________________________________________________________________
 void* llvmLazyFunctionCreator(const std::string& mangled_name)
 {
    // Autoload a library provided the mangled name of a missing symbol.
@@ -1019,11 +1039,12 @@ void TCling::RegisterModule(const char* modulename,
                fwdDecl.c_str()) ;
          continue;         
       }
-      if (const ClassTemplateDecl* TD = 
-            dyn_cast<ClassTemplateDecl>(T->getFirstDecl().getSingleDecl())) {
-         fNormalizedCtxt->AddTemplAndNargsToKeep(TD->getCanonicalDecl(),
-                                                   nArgsToSkip);
+       
+      // Drill through namespaces recursively until the template is found
+      if(ClassTemplateDecl* TD = FindTemplateInNamespace(T->getFirstDecl().getSingleDecl())){
+         fNormalizedCtxt->AddTemplAndNargsToKeep(TD, nArgsToSkip);
       }
+      
    }
    
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
