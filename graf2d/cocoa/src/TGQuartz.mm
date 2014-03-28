@@ -155,7 +155,7 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       polygon[3].fX = x1, polygon[3].fY = y2;
       
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          4, polygon, kTRUE); //kTRUE == draw a shadow.
+                                          4, polygon, kFALSE); //kFALSE == don't draw a shadow.
    } else {
       const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
       
@@ -219,7 +219,7 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
 
    if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          n, &fConvertedPoints[0], kTRUE);//kTRUE == also draw a shadow.
+                                          n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {

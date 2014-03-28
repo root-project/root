@@ -140,7 +140,7 @@ void TAttMarkerEditor::SetModel(TObject* obj)
       fMarkerSize->SetState(kFALSE);
    } else {
       Float_t s = fAttMarker->GetMarkerSize();
-      fMarkerSize->SetState(kTRUE);
+      fMarkerSize->SetState(kFALSE);
       fMarkerSize->SetNumber(s);
    }
    fMarkerType->SetMarkerStyle(marker);
@@ -200,7 +200,7 @@ void TAttMarkerEditor::DoMarkerStyle(Style_t marker)
       fMarkerSize->SetNumber(1.);
       fMarkerSize->SetState(kFALSE);
    } else
-      fMarkerSize->SetState(kTRUE);
+      fMarkerSize->SetState(kFALSE);
 
    fAttMarker->SetMarkerStyle(marker);
    Update();
@@ -217,7 +217,7 @@ void TAttMarkerEditor::DoMarkerSize()
       fMarkerSize->SetNumber(1.);
       fMarkerSize->SetState(kFALSE);
    } else
-      fMarkerSize->SetState(kTRUE);
+      fMarkerSize->SetState(kFALSE);
    Float_t size = fMarkerSize->GetNumber();
    fAttMarker->SetMarkerSize(size);
    Update();
