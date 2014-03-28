@@ -18,7 +18,10 @@
    Int_t ncols,Eye,Run,Event;
    Int_t nlines = 0;
    
-   
+#ifdef ClingWorkAroundProxyConfusion
+  gInterpreter->GenerateDictionary("map<int,double>","map");
+#endif
+ 
    //*************************************//
    TChain *chain1 = new TChain("recData");
    chain1->Add("data/S_1*.root");

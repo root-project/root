@@ -13,6 +13,7 @@ CALLROOTEXE = root.exe
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
+CALLROOTEXE += -e "\#define ClingWorkAroundProxyConfusion"
 # Major features/issues
 CALLROOTEXE += -e "\#define ClingWorkAroundMissingDynamicScope"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingAutoLoadingForNamespaces"
@@ -104,7 +105,8 @@ ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jir
 # ClingReinstateTemplateRootIOCtor = yes       # Allow templated constructor to be used as I/O constructor
 #ClingWorkAroundTypeinfoToTypename = yes        # See https://sft.its.cern.ch/jira/browse/ROOT-186
 ClingWorkAroundTClassUpdateDouble32 = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-5857
-ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862 
+ClingWorkAroundStripDefaultArg = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-5862
+ClingWorkAroundProxyConfusion = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-6000
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration
