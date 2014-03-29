@@ -525,6 +525,10 @@ class ModuleFacade( types.ModuleType ):
          _root.gROOT.ProcessLine( 'TPython::Exec( "" );' )
          sys.modules[ '__main__' ].__builtins__ = __builtins__
 
+    # special case for cout (backwards compatibility)
+      if hasattr( std, '__1' ):
+         self.__dict__[ 'cout' ] = getattr( std, '__1' ).cout
+
     # custom logon file (must be after creation of ROOT globals)
       if hasargv and not '-n' in sys.argv:
          rootlogon = os.path.expanduser( '~/.rootlogon.py' )
