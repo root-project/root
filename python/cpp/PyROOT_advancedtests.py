@@ -242,7 +242,12 @@ class Cpp02TemplateLookup( MyTestCase ):
     # implicitly forced instantiation
       self.assertEqual( m.GetSizeOL( MyDoubleVector_t() ), m.GetVectorOfDoubleSize() )
       self.assertEqual( len(dir(MyTemplatedMethodClass)), nd + 2 )
-      mname = 'GetSizeOL<std::vector<double, std::allocator<double> > >'
+      for key in MyTemplatedMethodClass.__dict__.keys():
+       # the actual method name is implementation dependent (due to the
+       # default vars, and vector could live in a versioned namespace),
+       # so find it explicitly:
+         if key[0:9] == 'GetSizeOL' and 'vector<double' in key:
+            mname = key
       self.assert_( mname in dir(MyTemplatedMethodClass) )
       gzoi_id = id( MyTemplatedMethodClass.__dict__[ mname ] )
 
