@@ -377,11 +377,19 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 // in addition, __gnu_cxx is searched pro-actively (as there's AFAICS no way to unearth
 // using information).
    static TClassRef gnucxx( "__gnu_cxx" );
+// Same for clang on Mac. TODO: find proper pre-processor magic to only use those specific
+// namespaces that are actually around; although to be sure, this isn't expensive.
+   static TClassRef std__1( "std::__1" );
 
    PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
       TFunction* func = FindAndAddOperator( lcname, rcname, op, gnucxx.GetClass() );
       if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "__gnu_cxx" ), func );
+   }
+
+   if ( ! pyfunc && std__1.GetClass() ) {
+      TFunction* func = FindAndAddOperator( lcname, rcname, op, std__1.GetClass() );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "std::__1" ), func );
    }
 
    if ( ! pyfunc ) {
