@@ -296,8 +296,10 @@ int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const
    // Get from the map the number of arguments to keep.
    // It uses the canonical decl of the template as key. 
    // If not present, returns -1.   
-      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(templ->getCanonicalDecl() );   
-      return (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;      
+      const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
+      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);   
+      int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
+      return nArgsToKeep;
    } 
    
 //______________________________________________________________________________
@@ -472,10 +474,6 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // Strip the std::
          if (strncmp(result.c_str(), "std::", 5) == 0) {
             result = result.substr(5);
-         }
-         if (result.length() > 2 && result.compare(result.length()-2,2," &")==0) {
-            result[result.length()-2] = '&';
-            result.erase(result.length()-1);
          }
          return true;
       }
@@ -3182,9 +3180,19 @@ bool ROOT::TMetaUtils::QualType2Template(const clang::QualType& qt,
 {
    // Get the template specialisation decl and template decl behind the qualtype
    // Returns true if successfully found, false otherwise
-   
+
    using namespace clang;
    const Type* theType = qt.getTypePtr();
+   if (!theType){
+      ctd=nullptr;
+      ctsd=nullptr;
+      return false;
+   }
+
+   if (theType->isPointerType()) {
+      return QualType2Template(theType->getPointeeType(), ctd, ctsd);
+   }
+
    if (const RecordType* rType = llvm::dyn_cast<RecordType>(theType)) {
       ctsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(rType->getDecl());
       if (ctsd) {
@@ -3192,13 +3200,18 @@ bool ROOT::TMetaUtils::QualType2Template(const clang::QualType& qt,
          return true;
       }
    }
-   
+
+   if (const SubstTemplateTypeParmType* sttpType = llvm::dyn_cast<SubstTemplateTypeParmType>(theType)){
+      return QualType2Template(sttpType->getReplacementType(), ctd, ctsd);
+   }
+
+
    ctsd = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(qt->getAsCXXRecordDecl());
    if(ctsd){
       ctd = ctsd->getSpecializedTemplate();
       return true;
    }
-   
+
    ctd=nullptr;
    ctsd=nullptr;
    return false;
@@ -3358,6 +3371,9 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 //______________________________________________________________________________
 static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
 {
+   // Check if this NamedDecl is a template parameter with a default argument.
+   // This is a single interface to treat both integral and type parameters.
+   // Returns true if this is the case, false otherwise
    using namespace clang;
    if (!nDecl) return false;
    if (const TemplateTypeParmDecl* ttpd = llvm::dyn_cast<TemplateTypeParmDecl>(nDecl))
@@ -3374,23 +3390,59 @@ static void KeepNParams(clang::QualType& normalizedType,
                         const cling::Interpreter& interp,
                         const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
 {
+   // This function allows to manipulate the number of arguments in the type
+   // of a template specialisation.
+   
    using namespace ROOT::TMetaUtils;
    using namespace clang;
 
-   // If this type has no template specialisation behind, we cannot do anything
+   // If this type has no template specialisation behind, we don't need to do 
+   // anything
    ClassTemplateSpecializationDecl* ctsd;
    ClassTemplateDecl* ctd;
    if (! QualType2Template(vanillaType, ctd,  ctsd)) return ;
    
    // Even if this is a template, if we don't keep any argument, return
    const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd);
-   if (nArgsToKeep<0) return;   
    
    // Important in case of early return: we must restore the original qualtype
    QualType originalNormalizedType = normalizedType;   
-   
-   const ASTContext& astCtxt = ctsd->getASTContext();   
-   
+
+   const ASTContext& astCtxt = ctsd->getASTContext();
+
+
+   // In case of name* we need to strip the pointer first, add the default and attach
+   // the pointer once again.
+   if (llvm::isa<clang::PointerType>(normalizedType.getTypePtr())) {
+      // Get the qualifiers.
+      clang::Qualifiers quals = normalizedType.getQualifiers();
+      auto valNormalizedType = normalizedType->getPointeeType();
+      KeepNParams(valNormalizedType,vanillaType, interp, normCtxt);
+      normalizedType = astCtxt.getPointerType(valNormalizedType);
+      // Add back the qualifiers.
+      normalizedType = astCtxt.getQualifiedType(normalizedType, quals);
+      return;
+   }
+
+   // In case of Int_t& we need to strip the pointer first, desugar and attach
+   // the pointer once again.
+   if (llvm::isa<clang::ReferenceType>(normalizedType.getTypePtr())) {
+      // Get the qualifiers.
+      bool isLValueRefTy = llvm::isa<clang::LValueReferenceType>(normalizedType.getTypePtr());
+      clang::Qualifiers quals = normalizedType.getQualifiers();
+      auto valNormType = normalizedType->getPointeeType();
+      KeepNParams(valNormType, vanillaType, interp, normCtxt);
+
+      // Add the r- or l- value reference type back to the desugared one
+      if (isLValueRefTy)
+        normalizedType = astCtxt.getLValueReferenceType(valNormType);
+      else
+        normalizedType = astCtxt.getRValueReferenceType(valNormType);
+      // Add back the qualifiers.
+      normalizedType = astCtxt.getQualifiedType(normalizedType, quals);
+      return;
+   }
+
    // Treat the Scope (factorise the code out to reuse it in AddDefaultParameters)
    clang::NestedNameSpecifier* prefix = nullptr;
    clang::Qualifiers prefix_qualifiers = normalizedType.getLocalQualifiers();
@@ -3400,26 +3452,26 @@ static void KeepNParams(clang::QualType& normalizedType,
       // We have to also handle the prefix.
       prefix = AddDefaultParametersNNS(astCtxt, etype->getQualifier(), interp, normCtxt);
       normalizedType = clang::QualType(etype->getNamedType().getTypePtr(),0);
-   }   
-            
-   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();   
+      }
+
+   TemplateParameterList* tParsPtr = ctd->getTemplateParameters();
    const TemplateParameterList& tPars = *tParsPtr;
    const TemplateArgumentList& tArgs = ctsd->getTemplateArgs();
-   
+
    // We extract the template name from the type
    TemplateName theTemplateName = ExtractTemplateNameFromQualType(normalizedType);
    if (theTemplateName.isNull()) {
       normalizedType=originalNormalizedType;
-      return;   
+      return;
    }
 
    const TemplateSpecializationType* normalizedTst = 
             llvm::dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr());
    if (!normalizedTst) {
       normalizedType=originalNormalizedType;
-      return;   
-   }   
-   
+      return;
+   }
+
    // Loop over the template parameters and arguments recursively.
    // We go down the two lanes: the one of template parameters (decls) and the
    // one of template arguments (QualTypes) in parallel. The former are a
@@ -3427,26 +3479,34 @@ static void KeepNParams(clang::QualType& normalizedType,
    // The latter are a property of the instance itself.
    llvm::SmallVector<TemplateArgument, 4> argsToKeep;
 
-   const int nArgs = tPars.size();
-   
+   const int nArgs = tArgs.size();
+   const int nNormArgs = normalizedTst->getNumArgs();
+
    // becomes true when a parameter has a value equal to its default
    for (int index = 0; index != nArgs; ++index) {
       const NamedDecl* tParPtr = tPars.getParam(index);
-      if (!tParPtr) Error("ROOT::TMetaUtils::KeepNParams", "The parameter number %s is null.\n", index);      
+      if (!tParPtr) Error("KeepNParams",
+                          "The parameter number %s is null.\n",
+                          index);
 
       const TemplateArgument& tArg = tArgs.get(index);
+      // Stop if the normalized TemplateSpecializationType has less arguments than
+      // the one index is pointing at.
+      // We piggy back on the AddDefaultParameters routine basically.
+      if (index == nNormArgs) break;
+
       TemplateArgument NormTArg(normalizedTst->getArgs()[index]);
 
-      bool shouldKeepArg = index < nArgsToKeep;
-      
+      bool shouldKeepArg = nArgsToKeep < 0 || index < nArgsToKeep;
+
       // Nothing to do here: either this parameter has no default, or we have to keep it.
       // FIXME: Temporary measure to get Atlas started with this.
-      // We put a hard cut on the number of template arguments to keep, w/o checking if 
+      // We put a hard cut on the number of template arguments to keep, w/o checking if
       // they are non default. This makes this feature UNUSABLE for cases like std::vector,
-      // where 2 different entities would have the same name if an allocator different from 
+      // where 2 different entities would have the same name if an allocator different from
       // the default one is by chance used.
       if (!isTypeWithDefault(tParPtr) || shouldKeepArg){
-         // If this is a type, 
+         // If this is a type,
          // we need first of all to recurse: this argument may need to be manipulated
          if (tArg.getKind() == clang::TemplateArgument::Type){
             QualType thisNormQualType = NormTArg.getAsType();
@@ -3456,18 +3516,18 @@ static void KeepNParams(clang::QualType& normalizedType,
                         interp,
                         normCtxt);
             NormTArg = TemplateArgument(thisNormQualType);
-         }         
+         }
          argsToKeep.push_back(NormTArg);
          continue;
       } else { // Here we should not break but rather check if the value is the default one.
          break;
-      }      
-      
-      // Now, we keep it only if it not is equal to its default, expressed in the arg     
-      // Some gymnastic is needed to decide how to check for equality according to the 
+      }
+
+      // Now, we keep it only if it not is equal to its default, expressed in the arg
+      // Some gymnastic is needed to decide how to check for equality according to the
       // flavour of Type: templateType or Integer
       bool equal=false;
-      auto argKind = tArg.getKind();   
+      auto argKind = tArg.getKind();
       if (argKind == clang::TemplateArgument::Type){
          // we need all the info
          equal = areEqualTypes(tArg, argsToKeep, *tParPtr, interp, normCtxt);
@@ -3483,17 +3543,17 @@ static void KeepNParams(clang::QualType& normalizedType,
 
    // now, let's remanipulate our Qualtype
    Qualifiers qualifiers = normalizedType.getLocalQualifiers();
-   normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName, 
-                                                          argsToKeep.data(), 
-                                                          argsToKeep.size(), 
+   normalizedType = astCtxt.getTemplateSpecializationType(theTemplateName,
+                                                          argsToKeep.data(),
+                                                          argsToKeep.size(),
                                                           normalizedType.getTypePtr()->getCanonicalTypeInternal());
-   normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);  
+   normalizedType = astCtxt.getQualifiedType(normalizedType, qualifiers);
 
     if (prefix) {
       normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
-   }  
-   
+   }
+
 }
 
 //______________________________________________________________________________
@@ -3543,9 +3603,6 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
    }
-   
-//    if (norm_name.find("myVector") != std::string::npos || norm_name.find("A") != std::string::npos)
-//       std::cout << norm_name << std::endl;
  
 }
 
