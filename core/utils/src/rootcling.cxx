@@ -178,6 +178,7 @@ const char *rootClingHelp =
 #include <fstream>
 #include <sys/stat.h>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
@@ -2789,7 +2790,7 @@ bool AppendIfNotThere(const T& el, std::list<T>& el_list)
 }
 
 //______________________________________________________________________________
-void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
+int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
                                            std::list<std::string>& classesList,
                                            std::list<std::string>& classesListForRootmap,
                                            std::list<std::string>& fwdDeclarationsList,
@@ -2798,7 +2799,12 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
 
    // Loop on selected classes. If they don't have the attribute "rootmap"
    // set to "false", store them in the list of classes for the rootmap
+   // Returns 0 in case of success and 1 in case of issues.
 
+   // An unordered_set to keep track of the existing classes.
+   // We want to avoid duplicates there as they may hint to a serious corruption
+   std::unordered_set<std::string> classesSet;
+   
    std::string attrName,attrValue;
    bool isClassSelected;
    // Loop on selected classes and put them in a list
@@ -2806,6 +2812,14 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
       isClassSelected = true;
       const char* normalizedName=selClassesIter->GetNormalizedName();
+      if (!classesSet.insert(normalizedName).second){
+         std::cerr << "FATAL: A class with normalized name " << normalizedName 
+                   << " was already selected. This means that two different instances of"
+                   << " clang::RecordDecl had the same name, which is not possible."
+                   << " This can be a hint of a serious problem in the class selection."
+                   << " In addition, the generated dictionary would not even compile.\n";
+         return 1;
+      }         
       classesList.push_back(normalizedName);
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
@@ -2837,6 +2851,7 @@ void ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       }
    }
    classesListForRootmap.sort();
+   return 0;
 }
 
 //_____________________________________________________________________________
@@ -3994,13 +4009,15 @@ int RootCling(int argc,
    std::list<std::string> classesDefsList;
    std::list<std::string> nsNames;
 
-   if (rootMapNeeded || capaNeeded){
-      ExtractSelectedClassesAndTemplateDefs(scan,
-                                            classesNames,
-                                            classesNamesForRootmap,
-                                            classesDefsList,
-                                            interp);
-   }
+   retCode = ExtractSelectedClassesAndTemplateDefs(scan,
+                                                   classesNames,
+                                                   classesNamesForRootmap,
+                                                   classesDefsList,
+                                                   interp);   
+   if (0!=retCode) return retCode;
+      
+   
+
    if (rootMapNeeded){
       ExtractSelectedNamespaces(scan,nsNames);
    }
