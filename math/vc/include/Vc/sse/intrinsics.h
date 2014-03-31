@@ -127,8 +127,14 @@ namespace SSE
 extern "C" {
 #include <pmmintrin.h>
 }
-#elif defined _PMMINTRIN_H_INCLUDED
+#elif defined _PMMINTRIN_H_INCLUDED || defined _INCLUDED_PMM
 #error "SSE3 was disabled but something includes <pmmintrin.h>. Please fix your code."
+#else
+// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+// enabled.
+#define _INCLUDED_PMM 1
 #endif
 // SSSE3
 #ifdef VC_IMPL_SSSE3
@@ -154,9 +160,14 @@ namespace SSE
 } // namespace SSE
 } // namespace Vc
 } // namespace ROOT
-#elif defined _TMMINTRIN_H_INCLUDED
+#elif defined _TMMINTRIN_H_INCLUDED || defined _TMMINTRIN_H
 #error "SSSE3 was disabled but something includes <tmmintrin.h>. Please fix your code."
 #else
+// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+// enabled.
+#define _TMMINTRIN_H 1
 namespace ROOT {
 namespace Vc
 {
@@ -237,8 +248,14 @@ extern "C" {
 #include <smmintrin.h>
 }
 #else
-#ifdef _SMMINTRIN_H_INCLUDED
+#if defined _SMMINTRIN_H_INCLUDED || defined _INCLUDED_SMM
 #error "SSE4.1 was disabled but something includes <smmintrin.h>. Please fix your code."
+#else
+// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+// enabled.
+#define _INCLUDED_SMM 1
 #endif
 namespace ROOT {
 namespace Vc
@@ -457,8 +474,14 @@ namespace SSE
 extern "C" {
 #include <nmmintrin.h>
 }
-#elif defined _NMMINTRIN_H_INCLUDED
+#elif defined _NMMINTRIN_H_INCLUDED || defined _INCLUDED_NMM
 #error "SSE4.2 was disabled but something includes <nmmintrin.h>. Please fix your code."
+#else
+// Sorry. I'm shivering in disgusting while writing this code. But what else can I do against
+// compilers that include headers for SIMD intrinsics that are disabled via the command line?
+// Specifically: ICC happily includes further SIMD intrinsics headers via <random> when C++11 is
+// enabled.
+#define _INCLUDED_NMM 1
 #endif
 
 namespace ROOT {

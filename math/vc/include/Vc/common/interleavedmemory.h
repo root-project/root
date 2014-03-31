@@ -233,20 +233,24 @@ Result in (x, y, z): ({x5 x0 x1 x7}, {y5 y0 y1 y7}, {z5 z0 z1 z7})
 #else
     // need to SFINAE disable this for objects that wrap constant data
     template <typename U>
-    Vc_ALWAYS_INLINE typename Internal::EnableInterleaves<S, U, Access>::Type operator[](U indexes)
+    Vc_ALWAYS_INLINE typename Internal::EnableInterleaves<S, U, Access>::Type operator[](
+        VC_ALIGNED_PARAMETER(U) indexes)
 #endif
     {
         return Access(m_data, indexes);
     }
 
     /// const overload (gathers only) of the above function
-    Vc_ALWAYS_INLINE ReadAccess operator[](IndexType indexes) const
+    Vc_ALWAYS_INLINE ReadAccess operator[](VC_ALIGNED_PARAMETER(IndexType) indexes) const
     {
         return ReadAccess(m_data, indexes);
     }
 
     /// alias of the above function
-    Vc_ALWAYS_INLINE ReadAccess gather(IndexType indexes) const { return operator[](indexes); }
+    Vc_ALWAYS_INLINE ReadAccess gather(VC_ALIGNED_PARAMETER(IndexType) indexes) const
+    {
+        return operator[](indexes);
+    }
 
     //Vc_ALWAYS_INLINE Access scatter(I indexes, VArg v0, VArg v1);
 };
