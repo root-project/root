@@ -302,15 +302,15 @@ Bool_t TRootEmbeddedCanvas::HandleContainerKey(Event_t *event)
                gVirtualX->Warp(--mx, my, wid);
                break;
             case 0x1013: // up
-               etype = kKeyArrowLeft;
+               etype = kKeyArrowUp;
                gVirtualX->Warp(mx, --my, wid);
                break;
             case 0x1014: // right
-               etype = kKeyArrowLeft;
+               etype = kKeyArrowRight;
                gVirtualX->Warp(++mx, my, wid);
                break;
             case 0x1015: // down
-               etype = kKeyArrowLeft;
+               etype = kKeyArrowDown;
                gVirtualX->Warp(mx, ++my, wid);
                break;
             default:
