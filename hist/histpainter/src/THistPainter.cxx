@@ -3163,8 +3163,9 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       return;
    }
 
-   TAxis *xaxis = fH->GetXaxis();
-   TAxis *yaxis = fH->GetYaxis();
+   TAxis *xaxis    = fH->GetXaxis();
+   TAxis *yaxis    = fH->GetYaxis();
+   Int_t dimension = fH->GetDimension();
 
    Double_t factor = 1;
    if (fH->GetNormFactor() != 0) {
@@ -3175,7 +3176,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
 
-      gVirtualX->SetLineColor(-1);
+      if (!opaque) gVirtualX->SetLineColor(-1);
       fH->TAttLine::Modify();
 
       // No break !!!
@@ -3184,43 +3185,47 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (fShowProjection) {ShowProjection3(px,py); break;}
 
-      if (Hoption.Bar) {
-         baroffset = fH->GetBarOffset();
-         barwidth  = fH->GetBarWidth();
-      } else {
-         baroffset = 0;
-         barwidth  = 1;
+      if (dimension ==1) {
+         if (Hoption.Bar) {
+            baroffset = fH->GetBarOffset();
+            barwidth  = fH->GetBarWidth();
+         } else {
+            baroffset = 0;
+            barwidth  = 1;
+         }
+         x        = gPad->AbsPixeltoX(px);
+         bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
+         binwidth = fXaxis->GetBinWidth(bin);
+         xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
+         xup      = gPad->XtoPad(xlow + barwidth*binwidth);
+         ylow     = gPad->GetUymin();
+         px1      = gPad->XtoAbsPixel(xlow);
+         px2      = gPad->XtoAbsPixel(xup);
+         py1      = gPad->YtoAbsPixel(ylow);
+         py2      = py;
+         pyold    = py;
+         if (gROOT->GetEditHistograms()) gPad->SetCursor(kArrowVer);
+         else                            gPad->SetCursor(kPointer);
       }
-      x        = gPad->AbsPixeltoX(px);
-      bin      = fXaxis->FindFixBin(gPad->PadtoX(x));
-      binwidth = fXaxis->GetBinWidth(bin);
-      xlow     = gPad->XtoPad(fXaxis->GetBinLowEdge(bin) + baroffset*binwidth);
-      xup      = gPad->XtoPad(xlow + barwidth*binwidth);
-      ylow     = gPad->GetUymin();
-      px1      = gPad->XtoAbsPixel(xlow);
-      px2      = gPad->XtoAbsPixel(xup);
-      py1      = gPad->YtoAbsPixel(ylow);
-      py2      = py;
-      pyold    = py;
-      if (gROOT->GetEditHistograms()) gPad->SetCursor(kArrowVer);
-      else                            gPad->SetCursor(kPointer);
-
+      
       break;
 
    case kButton1Motion:
-
-      if (gROOT->GetEditHistograms()) {
-         if (!opaque) {
-            gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the old box
-            py2 += py - pyold;
-            gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  //    Draw the new box
-            pyold = py;
-         } else {
-            py2 += py - pyold;
-            pyold = py;
-            binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-            fH->SetBinContent(bin,binval);
-            gPad->Modified(kTRUE);
+      
+      if (dimension ==1) {
+         if (gROOT->GetEditHistograms()) {
+            if (!opaque) {
+               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the old box
+               py2 += py - pyold;
+               gVirtualX->DrawBox(px1, py1, px2, py2,TVirtualX::kHollow);  // Draw the new box
+               pyold = py;
+            } else {
+               py2 += py - pyold;
+               pyold = py;
+               binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
+               fH->SetBinContent(bin,binval);
+               gPad->Modified(kTRUE);
+            }
          }
       }
 
@@ -3228,12 +3233,14 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kWheelUp:
 
-      bin1 = xaxis->GetFirst()+1;
-      bin2 = xaxis->GetLast()-1;
-      if (bin2>bin1) xaxis->SetRange(bin1,bin2);
-      bin1 = yaxis->GetFirst()+1;
-      bin2 = yaxis->GetLast()-1;
-      if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      if (dimension ==2) {
+         bin1 = xaxis->GetFirst()+1;
+         bin2 = xaxis->GetLast()-1;
+         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+         bin1 = yaxis->GetFirst()+1;
+         bin2 = yaxis->GetLast()-1;
+         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      }
       gPad->Modified();
       gPad->Update();
 
@@ -3241,30 +3248,33 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kWheelDown:
 
-      bin1 = xaxis->GetFirst()-1;
-      bin2 = xaxis->GetLast()+1;
-      if (bin2>bin1) xaxis->SetRange(bin1,bin2);
-      bin1 = yaxis->GetFirst()-1;
-      bin2 = yaxis->GetLast()+1;
-      if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      if (dimension == 2) {
+         bin1 = xaxis->GetFirst()-1;
+         bin2 = xaxis->GetLast()+1;
+         if (bin2>bin1) xaxis->SetRange(bin1,bin2);
+         bin1 = yaxis->GetFirst()-1;
+         bin2 = yaxis->GetLast()+1;
+         if (bin2>bin1) yaxis->SetRange(bin1,bin2);
+      }
       gPad->Modified();
       gPad->Update();
 
       break;
 
    case kButton1Up:
+      if (dimension ==1) {
+         if (gROOT->GetEditHistograms()) {
+            binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
+            fH->SetBinContent(bin,binval);
+            PaintInit();   // recalculate Hparam structure and recalculate range
+         }
 
-      if (gROOT->GetEditHistograms()) {
-         binval = gPad->PadtoY(gPad->AbsPixeltoY(py2))/factor;
-         fH->SetBinContent(bin,binval);
-         PaintInit();   // recalculate Hparam structure and recalculate range
+         // might resize pad pixmap so should be called before any paint routine
+         RecalculateRange();
       }
-
-      // might resize pad pixmap so should be called before any paint routine
-      RecalculateRange();
-
+      
       gPad->Modified(kTRUE);
-      gVirtualX->SetLineColor(-1);
+      if (opaque) gVirtualX->SetLineColor(-1);
 
       break;
 
@@ -3285,7 +3295,6 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    }
 }
-
 
 //______________________________________________________________________________
 TList *THistPainter::GetContourList(Double_t contour) const
