@@ -23,13 +23,14 @@
 #include <cassert>
 
 TClingValue::TClingValue() {
-   // We default initialize to invalid value so that we could keep a "sane" state.
+   // We default initialize to invalid value to keep a "sane" state.
    assert(sizeof(fValue) >= sizeof(cling::Value)
           && "sizeof(fValue) too small!");
    new (&fValue) cling::Value();
 }
 
-TClingValue::TClingValue(const TClingValue& Other) {
+TClingValue::TClingValue(const TClingValue& Other):
+   TInterpreterValue() {
    assert(sizeof(fValue) >= sizeof(cling::Value)
           && "sizeof(fValue) too small!");
    new (&fValue) cling::Value(Other.ToCV());
