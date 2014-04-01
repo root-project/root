@@ -1440,6 +1440,30 @@ int test24() {
 
 }
 
+int test25() { 
+   // add test of vector * matrix multiplication with aliasing
+   // bug #6157
+   ROOT::Math::SMatrix<double, 3, 3, ROOT::Math::MatRepSym<double,3> > m;
+   m(0,0) = 10;
+   m(0,1) = 7;
+   m(0,2) = 5;
+   m(1,1) = 9;
+   m(1,2) = 6;
+   m(2,2) = 8;
+
+   ROOT::Math::SVector<double, 3> v1(1, 2, 3), v2;
+
+   v2 = m * v1;
+   v1 = m * v1;
+
+   int iret = 0; 
+   iret |= compare(v1 == v2, true);
+
+   return iret; 
+
+}
+
+
 #define TEST(N)                                                                 \
   itest = N;                                                                    \
   if (test##N() == 0) std::cerr << " Test " << itest << "  OK " << std::endl; \
@@ -1477,6 +1501,7 @@ int testSMatrix() {
   TEST(22);
   TEST(23);
   TEST(24);
+  TEST(25);
 
   return iret;
 }

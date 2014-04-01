@@ -104,6 +104,9 @@ struct meta_row_dot<0> {
 template <class Matrix, class Vector, unsigned int D2>
 class VectorMatrixRowOp {
 public:
+
+  typedef typename Vector::value_type T; 
+
   ///
   VectorMatrixRowOp(const Matrix& lhs, const Vector& rhs) :
     lhs_(lhs), rhs_(rhs) {}
@@ -115,6 +118,13 @@ public:
   inline typename Matrix::value_type apply(unsigned int i) const {
     return meta_row_dot<D2-1>::f(lhs_, rhs_, i*D2);
   }
+
+   // check if passed pointer is in use  
+   // check only the vector since this is a vector expression
+  inline bool IsInUse (const T * p) const { 
+    return rhs_.IsInUse(p);
+  }
+
 
 protected:
   const Matrix& lhs_;
@@ -159,6 +169,8 @@ struct meta_col_dot<0> {
 template <class Vector, class Matrix, unsigned int D1>
 class VectorMatrixColOp {
 public:
+
+  typedef typename Vector::value_type T; 
   ///
   VectorMatrixColOp(const Vector& lhs, const Matrix& rhs) :
     lhs_(lhs), rhs_(rhs) {}
@@ -170,6 +182,13 @@ public:
   inline typename Matrix::value_type apply(unsigned int i) const {
     return meta_col_dot<D1-1>::f(rhs_, lhs_, i);
   }
+
+   // check if passed pointer is in use  
+   // check only the vector since this is a vector expression   
+   inline bool IsInUse (const T * p) const { 
+    return lhs_.IsInUse(p);
+  }
+
 
 protected:
   const Vector&    lhs_;
