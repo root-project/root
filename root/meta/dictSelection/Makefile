@@ -7,7 +7,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog *rflx*
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += execDictSelection execAtlasTest
+TEST_TARGETS += execDictSelection execAtlasTest execAtlasTest2
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME:=$(shell expr $(CURDIR) : '\(.*/roottest/\)')
@@ -26,3 +26,4 @@ endif
 
 execDictSelection.log: libclassesDictSelection_dictrflx.$(DllSuf)
 execAtlasTest.log: libAtlasTest_dictrflx.$(DllSuf)
+execAtlasTest2.log: libAtlasTest2_dictrflx.$(DllSuf)
