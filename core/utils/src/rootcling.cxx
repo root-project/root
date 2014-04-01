@@ -2811,8 +2811,8 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
    for (RScanner::ClassColl_t::const_iterator selClassesIter = scan.fSelectedClasses.begin();
         selClassesIter!= scan.fSelectedClasses.end(); selClassesIter++){
       isClassSelected = true;
-      const char* normalizedName=selClassesIter->GetNormalizedName();
-      if (!classesSet.insert(normalizedName).second){
+      std::string normalizedName(selClassesIter->GetNormalizedName());
+      if (normalizedName.size()!=0 && !classesSet.insert(normalizedName).second){
          std::cerr << "FATAL: A class with normalized name " << normalizedName 
                    << " was already selected. This means that two different instances of"
                    << " clang::RecordDecl had the same name, which is not possible."
