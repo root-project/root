@@ -244,6 +244,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    static Int_t px1, px2, py1, py2, pxl, pyl, pxt, pyt, pxold, pyold;
    static Int_t px1p, px2p, py1p, py2p, pxlp, pylp, pxtp, pytp;
+   static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
    Int_t  wx, wy;
    TVirtualPad  *parent = gPad;
@@ -265,8 +266,13 @@ again:
       px1 = -1; //used by kButton1Up
       break;
 
+   case kArrowKeyPress:
    case kButton1Down:
 
+      oldX1 = fX1;
+      oldY1 = fY1;
+      oldX2 = fX2;
+      oldY2 = fY2;
       gVirtualX->SetLineColor(-1);
       TAttLine::Modify();  //Change line attributes only if necessary
       if (GetFillColor())
@@ -384,6 +390,7 @@ again:
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       wx = wy = 0;
@@ -480,6 +487,14 @@ again:
    case kButton1Up:
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque) {
+            this->SetX1(oldX1);
+            this->SetY1(oldY1);
+            this->SetX2(oldX2);
+            this->SetY2(oldY2);
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
          break;
       }
 
