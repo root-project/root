@@ -242,6 +242,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (!gPad->IsEditable()) return;
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
       // No break !!!
 
@@ -295,6 +296,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque) PaintControlBox(px1, py1, -theta);
       if (turn) {
