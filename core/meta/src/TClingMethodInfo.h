@@ -79,7 +79,7 @@ public:
    TDictionary::DeclId_t                        GetDeclId() const;
    void                                         CreateSignature(TString &signature) const;
    void                                         Init(const clang::FunctionDecl *);
-   void                                        *InterfaceMethod() const;
+   void                                        *InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    bool                                         IsValid() const;
    int                                          NArg() const;
    int                                          NDefaultArg() const;

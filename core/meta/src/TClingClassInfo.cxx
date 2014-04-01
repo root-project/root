@@ -194,7 +194,7 @@ long TClingClassInfo::ClassProperty() const
    return property;
 }
 
-void TClingClassInfo::Delete(void *arena) const
+void TClingClassInfo::Delete(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke operator delete on a pointer to an object
    // of this class type.
@@ -207,11 +207,11 @@ void TClingClassInfo::Delete(void *arena) const
             FullyQualifiedName(fDecl).c_str());
       return;
    }
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/true);
 }
 
-void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
+void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke operator delete[] on a pointer to an array object
    // of this class type.
@@ -227,18 +227,18 @@ void TClingClassInfo::DeleteArray(void *arena, bool dtorOnly) const
       Error("DeleteArray", "Placement delete of an array is unsupported!\n");
       return;
    }
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    cf.ExecDestructor(this, arena, /*nary=*/1, /*withFree=*/true);
 }
 
-void TClingClassInfo::Destruct(void *arena) const
+void TClingClassInfo::Destruct(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke placement operator delete on a pointer to an array object
    // of this class type.
    if (!IsLoaded()) {
       return;
    }
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    cf.ExecDestructor(this, arena, /*nary=*/0, /*withFree=*/false);
 }
 
@@ -917,7 +917,7 @@ int TClingClassInfo::Next()
    return InternalNext();
 }
    
-void *TClingClassInfo::New() const
+void *TClingClassInfo::New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an object of this class type.
@@ -943,7 +943,7 @@ void *TClingClassInfo::New() const
       return 0;
    }
    void* obj = 0;
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    obj = cf.ExecDefaultConstructor(this, /*address=*/0, /*nary=*/0);
    if (!obj) {
       Error("TClingClassInfo::New()", "Call of default constructor "
@@ -954,7 +954,7 @@ void *TClingClassInfo::New() const
    return obj;
 }
 
-void *TClingClassInfo::New(int n) const
+void *TClingClassInfo::New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke a new expression to use the class constructor
    // that takes no arguments to create an array object
@@ -982,7 +982,7 @@ void *TClingClassInfo::New(int n) const
       return 0;
    }
    void* obj = 0;
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    obj = cf.ExecDefaultConstructor(this, /*address=*/0,
                                    /*nary=*/(unsigned long)n);
    if (!obj) {
@@ -994,7 +994,7 @@ void *TClingClassInfo::New(int n) const
    return obj;
 }
 
-void *TClingClassInfo::New(int n, void *arena) const
+void *TClingClassInfo::New(int n, void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke a placement new expression to use the class
    // constructor that takes no arguments to create an
@@ -1023,14 +1023,14 @@ void *TClingClassInfo::New(int n, void *arena) const
       return 0;
    }
    void* obj = 0;
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, /*address=*/arena,
                                    /*nary=*/(unsigned long)n);
    return obj;
 }
 
-void *TClingClassInfo::New(void *arena) const
+void *TClingClassInfo::New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    // Invoke a placement new expression to use the class
    // constructor that takes no arguments to create an
@@ -1058,7 +1058,7 @@ void *TClingClassInfo::New(void *arena) const
       return 0;
    }
    void* obj = 0;
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    // Note: This will always return arena.
    obj = cf.ExecDefaultConstructor(this, /*address=*/arena, /*nary=*/0);
    return obj;

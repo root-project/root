@@ -61,6 +61,8 @@ private:
 
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
+   /// ROOT normalized context for that interpreter
+   const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
    TClingMethodInfo* fMethod;
    /// Pointer to compiled wrapper, we do *not* own.
@@ -119,31 +121,20 @@ public:
       delete fMethod;
    }
 
-   explicit TClingCallFunc(cling::Interpreter *interp)
-      : fInterp(interp), fWrapper(0), fIgnoreExtraArgs(false)
+   explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
+      : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false)
    {
       fMethod = new TClingMethodInfo(interp);
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
+      : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
         fIgnoreExtraArgs(rhs.fIgnoreExtraArgs)
    {
       fMethod = new TClingMethodInfo(*rhs.fMethod);
    }
 
-   TClingCallFunc &operator=(const TClingCallFunc &rhs)
-   {
-      if (this != &rhs) {
-         fInterp = rhs.fInterp;
-         delete fMethod;
-         fMethod = new TClingMethodInfo(*rhs.fMethod);
-         fWrapper = rhs.fWrapper;
-         fArgVals = rhs.fArgVals;
-         fIgnoreExtraArgs = rhs.fIgnoreExtraArgs;
-      }
-      return *this;
-   }
+   TClingCallFunc &operator=(const TClingCallFunc &rhs) = delete;
 
    void* ExecDefaultConstructor(const TClingClassInfo* info, void* address = 0,
                                 unsigned long nary = 0UL);

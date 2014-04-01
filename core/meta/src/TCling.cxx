@@ -2954,7 +2954,7 @@ TString TCling::GetMangledName(TClass* cl, const char* method,
    // params (params is a string of actual arguments, not formal ones). If the
    // class is 0 the global function list will be searched.
    R__LOCKGUARD2(gInterpreterMutex);
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    if (cl) {
       Long_t offset;
       func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
@@ -2998,7 +2998,7 @@ void* TCling::GetInterfaceMethod(TClass* cl, const char* method,
    // parameters params (params is a string of actual arguments, not formal
    // ones). If the class is 0 the global function list will be searched.
    R__LOCKGUARD2(gInterpreterMutex);
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    if (cl) {
       Long_t offset;
       func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst,
@@ -3079,12 +3079,12 @@ void* TCling::GetInterfaceMethodWithPrototype(TClass* cl, const char* method,
    if (cl) {
       Long_t offset;
       f = ((TClingClassInfo*)cl->GetClassInfo())->
-         GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod();
+         GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    else {
       Long_t offset;
       TClingClassInfo gcl(fInterpreter);
-      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod();
+      f = gcl.GetMethod(method, proto, objectIsConst, &offset, mode).InterfaceMethod(*fNormalizedCtxt);
    }
    return f;
 }
@@ -3353,7 +3353,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
    }
    TClingClassInfo cl(fInterpreter);
    Long_t offset = 0L;
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    func.SetFunc(&cl, function, params, &offset);
    func.Exec(0);
 }
@@ -3381,7 +3381,7 @@ void TCling::Execute(TObject* obj, TClass* cl, const char* method,
    // hence gInterpreter->Execute will improperly correct the offset.
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
    Long_t offset = 0L;
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    func.SetFunc((TClingClassInfo*)cl->GetClassInfo(), method, params, objectIsConst, &offset);
    void* address = (void*)((Long_t)addr + offset);
    func.Exec(address);
@@ -3480,7 +3480,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    // 'obj' is unlikely to be the start of the object (as described by IsA()),
    // hence gInterpreter->Execute will improperly correct the offset.
    void* addr = cl->DynamicCast(TObject::Class(), obj, kFALSE);
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo *minfo = (TClingMethodInfo*)method->fInfo;
    func.Init(minfo);
    func.SetArgs(listpar);
@@ -3503,7 +3503,7 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
       return;
    }
    R__LOCKGUARD2(gInterpreterMutex);
-   TClingCallFunc func(fInterpreter);
+   TClingCallFunc func(fInterpreter,*fNormalizedCtxt);
    TClingMethodInfo* minfo = (TClingMethodInfo*) method->fInfo;
    func.Init(minfo);
    func.ExecWithArgsAndReturn(address, args, ret);
@@ -5226,7 +5226,7 @@ Double_t TCling::CallFunc_ExecDouble(CallFunc_t* func, void* address) const
 //______________________________________________________________________________
 CallFunc_t* TCling::CallFunc_Factory() const
 {
-   return (CallFunc_t*) new TClingCallFunc(fInterpreter);
+   return (CallFunc_t*) new TClingCallFunc(fInterpreter,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
@@ -5435,21 +5435,21 @@ void TCling::ClassInfo_Delete(ClassInfo_t* cinfo) const
 void TCling::ClassInfo_Delete(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   TClinginfo->Delete(arena);
+   TClinginfo->Delete(arena,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 void TCling::ClassInfo_DeleteArray(ClassInfo_t* cinfo, void* arena, bool dtorOnly) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   TClinginfo->DeleteArray(arena, dtorOnly);
+   TClinginfo->DeleteArray(arena, dtorOnly,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 void TCling::ClassInfo_Destruct(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   TClinginfo->Destruct(arena);
+   TClinginfo->Destruct(arena,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
@@ -5557,28 +5557,28 @@ int TCling::ClassInfo_Next(ClassInfo_t* cinfo) const
 void* TCling::ClassInfo_New(ClassInfo_t* cinfo) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->New();
+   return TClinginfo->New(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 void* TCling::ClassInfo_New(ClassInfo_t* cinfo, int n) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->New(n);
+   return TClinginfo->New(n,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 void* TCling::ClassInfo_New(ClassInfo_t* cinfo, int n, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->New(n, arena);
+   return TClinginfo->New(n, arena,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
 void* TCling::ClassInfo_New(ClassInfo_t* cinfo, void* arena) const
 {
    TClingClassInfo* TClinginfo = (TClingClassInfo*) cinfo;
-   return TClinginfo->New(arena);
+   return TClinginfo->New(arena,*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________
@@ -6143,7 +6143,7 @@ MethodInfo_t* TCling::MethodInfo_FactoryCopy(MethodInfo_t* minfo) const
 void* TCling::MethodInfo_InterfaceMethod(MethodInfo_t* minfo) const
 {
    TClingMethodInfo* info = (TClingMethodInfo*) minfo;
-   return info->InterfaceMethod();
+   return info->InterfaceMethod(*fNormalizedCtxt);
 }
 
 //______________________________________________________________________________

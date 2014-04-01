@@ -195,12 +195,12 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fSingleDecl = decl;
 }
 
-void *TClingMethodInfo::InterfaceMethod() const
+void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
 {
    if (!IsValid()) {
       return 0;
    }
-   TClingCallFunc cf(fInterp);
+   TClingCallFunc cf(fInterp,normCtxt);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
 }

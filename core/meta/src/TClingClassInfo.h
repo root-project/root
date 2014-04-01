@@ -82,9 +82,9 @@ public:
    void                 AddBaseOffsetFunction(const clang::Decl* decl, OffsetPtrFunc_t func) { fOffsetCache[decl] = std::make_pair(0L, func); }
    void                 AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offset);
    long                 ClassProperty() const;
-   void                 Delete(void *arena) const;
-   void                 DeleteArray(void *arena, bool dtorOnly) const;
-   void                 Destruct(void *arena) const;
+   void                 Delete(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                 DeleteArray(void *arena, bool dtorOnly, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                 Destruct(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    const clang::ValueDecl *GetDataMember(const char *name) const;
    const clang::Decl      *GetDecl() const { return fDecl; } // Underlying representation without Double32_t
    TDictionary::DeclId_t   GetDeclId() const { return (const clang::Decl*)(fDecl->getCanonicalDecl()); }
@@ -125,10 +125,10 @@ public:
    bool                 IsValidMethod(const char *method, const char *proto, Bool_t objectIsConst, long *offset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    int                  InternalNext();
    int                  Next();
-   void                *New() const;
-   void                *New(int n) const;
-   void                *New(int n, void *arena) const;
-   void                *New(void *arena) const;
+   void                *New(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                *New(int n, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                *New(int n, void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
+   void                *New(void *arena, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const;
    long                 Property() const;
    int                  RootFlag() const;
    int                  Size() const;
