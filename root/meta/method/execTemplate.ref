@@ -15,8 +15,11 @@ As expected, can not find getB<int>.
 Found getB<int, float> while searching for getB.
 OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
  OBJ: TMethod	getA<int>	 : 0
+      int UserClass::getA<int>()
  OBJ: TMethod	setA<int>	 : 0
+      void UserClass::setA<int>(int)
  OBJ: TMethod	getB<int, float>	 : 0
+      int UserClass::getB<int, float>()
 
 Looking at UserSpace.
 OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
@@ -33,8 +36,11 @@ As expected, can not find getB<int>.
 Found getB<int, float> while searching for getB.
 OBJ: TListOfFunctions	TListOfFunctions	List of TFunctions for a class : 0
  OBJ: TMethod	getA<int>	 : 0
+      int UserSpace::getA<int>()
  OBJ: TMethod	setA<int>	 : 0
+      void UserSpace::setA<int>(int)
  OBJ: TMethod	getB<int, float>	 : 0
+      int UserSpace::getB<int, float>()
 
 Looking for function template in UserClass.
 As expected, can not find setB without an instantiation.
