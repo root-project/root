@@ -4053,11 +4053,18 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
       const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
       const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
-      unsigned int spec_params = 0;
+      unsigned int index = substType->getReplacedParameter()->getIndex();
       if (decl) {
+
          if (decl->getKind() == clang::Decl::ClassTemplatePartialSpecialization) {
             const clang::ClassTemplatePartialSpecializationDecl *spec = llvm::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(decl);
-            spec_params = spec->getTemplateParameters()->size();
+
+            for (unsigned arg = 0; arg < spec->getTemplateArgs().size() && arg <= index; ++arg) {
+               if (!spec->getTemplateArgs().get(arg).isDependent())
+               {
+                 ++index;
+               }
+            }
             replacedCtxt = spec->getSpecializedTemplate();
          } else {
             replacedCtxt = decl->getDescribedClassTemplate();
@@ -4065,14 +4072,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       } else {
          replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt);
       }
-      unsigned int index = substType->getReplacedParameter()->getIndex();
-      unsigned nargs = TSTdecl->getSpecializedTemplate()->getTemplateParameters()->size();
-      if (spec_params && spec_params < nargs) {
-         // Only a subset of the template parameter have been specific because of the
-         // partial template specialization, hence we need to shift the index to
-         // match the correct original argument.
-         index = index + (nargs - spec_params);
-      }
+
       if (replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl()
           || /* the following is likely just redundant */
           substType->getReplacedParameter()->getDecl()
