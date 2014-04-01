@@ -224,6 +224,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
          oldX1 = fX1;
          oldY1 = fY1;
@@ -325,6 +326,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque)
       {
