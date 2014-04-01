@@ -132,6 +132,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
+   static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t p1, p2, pL;
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
@@ -144,6 +145,10 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kArrowKeyPress:
    case kButton1Down:
+      oldX1 = fX1;
+      oldY1 = fY1;
+      oldX2 = fX2;
+      oldY2 = fY2;
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();  //Change line attributes only if necessary
@@ -236,6 +241,14 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque) {
+            this->SetX1(oldX1);
+            this->SetY1(oldY1);
+            this->SetX2(oldX2);
+            this->SetY2(oldY2);
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
          break;
       }
       if (!opaque) {
