@@ -181,12 +181,10 @@ bool runtbits() {
    bb = a[2] & b[3];
    cout << bb << endl;
 
-#ifndef __CINT__
    bitset<16> bs;
    bs[2] = 1;
    //bs[12]= 1;
    cout << bs << endl;
-#endif
    testEqual();
    testFirstAndLast();
    return 0;
