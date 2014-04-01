@@ -57,9 +57,12 @@ public:
    DeclId_t            GetDeclId() const;
    void               *InterfaceMethod() const;
    virtual Bool_t      IsValid();
+   virtual void        Print(Option_t *option="") const;
    Long_t              Property() const;
    Long_t              ExtraProperty() const;
    virtual bool        Update(MethodInfo_t *info);
+
+   virtual void        ls(Option_t *option="") const;
 
    ClassDef(TFunction,0)  //Dictionary for global function
 };

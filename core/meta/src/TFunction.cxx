@@ -24,6 +24,7 @@
 #include "TInterpreter.h"
 #include "Strlen.h"
 
+#include <iostream>
 
 ClassImp(TFunction)
 
@@ -241,6 +242,24 @@ const char *TFunction::GetPrototype() const
       return gCling->MethodInfo_GetPrototype(fInfo);
    else
       return 0;
+}
+
+//______________________________________________________________________________
+void TFunction::ls(Option_t *options /* ="" */) const
+{
+   // List TFunction name and title.
+
+   TDictionary::ls(options);
+   TROOT::IndentLevel();
+   std::cout << "     " << GetPrototype() << '\n';
+}
+
+//______________________________________________________________________________
+void TFunction::Print(Option_t *options /* ="" */) const
+{
+   // Print TFunction name and title.
+
+   TDictionary::Print(options);
 }
 
 //______________________________________________________________________________
