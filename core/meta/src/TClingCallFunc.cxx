@@ -101,17 +101,6 @@ indent(ostringstream& buf, int indent_level)
    }
 }
 
-static void R__DropDefaultArg(std::string &name)
-{
-   TClassEdit::EModType mode;
-   mode = (TClassEdit::EModType)(TClassEdit::kKeepOuterConst|TClassEdit::kDropAllDefault);
-
-   std::string oldname;
-   oldname.swap(name); // must not use name which is ref'ed by arglist.
-   TClassEdit::TSplitType arglist(oldname.c_str(), mode);
-   arglist.ShortType(name, mode);
-}
-
 static
 cling::StoredValueRef
 EvaluateExpr(cling::Interpreter* interp, const Expr* E)
@@ -501,10 +490,7 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       // Note: We treat object of class type as if it were a reference
       //       type because we hold it by pointer.
       isReference = true;
-      QT.getAsStringInternal(type_name, Policy);
-      // And drop the default arguments if any (at least until the clang
-      // type printer properly handle template paratemeter that are enumerator).
-      R__DropDefaultArg(type_name);
+      ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
    }
    while (1) {
@@ -566,12 +552,9 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
          QT = cast<ReferenceType>(QT)->getPointeeType();
          continue;
       }
-      QT.getAsStringInternal(type_name, Policy);
+      ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       break;
    }
-   // And drop the default arguments if any (at least until the clang
-   // type printer properly handle template paratemeter that are enumerator).
-   R__DropDefaultArg(type_name);
 }
 
 void
@@ -921,10 +904,7 @@ TClingCallFunc::make_wrapper()
             dyn_cast<TypeDecl>(FD->getDeclContext())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(class_name, QT, *fInterp);
-      // And drop the default arguments if any (at least until the clang
-      // type printer properly handle template paratemeter that are enumerator).
-      R__DropDefaultArg(class_name);
+      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
    }
    else if (const NamedDecl* ND =
                dyn_cast<NamedDecl>(FD->getDeclContext())) {
@@ -1404,11 +1384,7 @@ TClingCallFunc::make_ctor_wrapper(const TClingClassInfo* info)
    if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      //ROOT::TMetaUtils::GetFullyQualifiedTypeName(class_name, QT, *fInterp);
-      QT.getAsStringInternal(class_name, Policy);
-      // And drop the default arguments if any (at least until the clang
-      // type printer properly handle template paratemeter that are enumerator).
-      R__DropDefaultArg(class_name);
+      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
    }
    else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
@@ -1559,11 +1535,7 @@ TClingCallFunc::make_dtor_wrapper(const TClingClassInfo* info)
    if (const TypeDecl* TD = dyn_cast<TypeDecl>(info->GetDecl())) {
       // This is a class, struct, or union member.
       QualType QT(TD->getTypeForDecl(), 0);
-      //ROOT::TMetaUtils::GetFullyQualifiedTypeName(class_name, QT, *fInterp);
-      QT.getAsStringInternal(class_name, Policy);
-      // And drop the default arguments if any (at least until the clang
-      // type printer properly handle template paratemeter that are enumerator).
-      R__DropDefaultArg(class_name);
+      ROOT::TMetaUtils::GetNormalizedName(class_name, QT, *fInterp, fNormCtxt);
    }
    else if (const NamedDecl* ND = dyn_cast<NamedDecl>(info->GetDecl())) {
       // This is a namespace member.
