@@ -13,6 +13,7 @@ summary:
           res=`grep FAILING $(SUMMARY).*.summary  | wc -l` ; \
 	  echo "At least $$res tests have failed:" ; \
 	  grep -h FAILING $(SUMMARY).*.summary; \
+          exit $$res; \
 	fi
 
 # The previous line contains just ';' in order to disable the implicit 
