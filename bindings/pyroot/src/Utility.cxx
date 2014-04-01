@@ -33,6 +33,7 @@
 #include <string.h>
 #include <algorithm>
 #include <list>
+#include <mutex>
 #include <sstream>
 #include <utility>
 
@@ -122,6 +123,16 @@ namespace {
 #endif
       }
    } initOperatorMapping_;
+
+   std::once_flag sOperatorTemplateFlag;
+   void InitOperatorTemplate() {
+      gROOT->ProcessLine(
+         "namespace _pyroot_internal { template<class C1, class C2>"
+         " bool is_equal(const C1& c1, const C2& c2){ return (bool)(c1 == c2); } }" );
+      gROOT->ProcessLine(
+         "namespace _pyroot_internal { template<class C1, class C2>"
+         " bool is_not_equal(const C1& c1, const C2& c2){ return (bool)(c1 != c2); } }" );
+   }
 
    inline void RemoveConst( std::string& cleanName ) {
       std::string::size_type spos = std::string::npos;
@@ -377,9 +388,16 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
 // in addition, __gnu_cxx is searched pro-actively (as there's AFAICS no way to unearth
 // using information).
    static TClassRef gnucxx( "__gnu_cxx" );
+
 // Same for clang on Mac. TODO: find proper pre-processor magic to only use those specific
 // namespaces that are actually around; although to be sure, this isn't expensive.
    static TClassRef std__1( "std::__1" );
+
+// One more, mostly for Mac, but again not sure whether this is not a general issue. Some
+// operators are declared as friends only in classes, so then they're not found in the
+// global namespace. That's why there's this little helper.
+   std::call_once( sOperatorTemplateFlag, InitOperatorTemplate );
+   static TClassRef _pr_int( "_pyroot_internal" );
 
    PyCallable* pyfunc = 0;
    if ( gnucxx.GetClass() ) {
@@ -395,6 +413,21 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    if ( ! pyfunc ) {
       TFunction* func = FindAndAddOperator( lcname, rcname, op );
       if ( func ) pyfunc = new TFunctionHolder( func );
+   }
+
+   if ( ! pyfunc && _pr_int.GetClass() &&
+         lcname.find( "iterator" ) != std::string::npos &&
+         rcname.find( "iterator" ) != std::string::npos ) {
+   // TODO: gets called too often; make sure it's purely lazy calls only; also try to
+   // find a better notion for which classes (other than iterators) this is supposed to
+   // work; right now it fails for cases where None is passed
+      std::stringstream fname;
+      if ( strncmp( op, "==", 2 ) == 0 ) { fname << "is_equal<"; }
+      else if ( strncmp( op, "!=", 2 ) == 0 ) { fname << "is_not_equal<"; }
+      else { fname << "not_implemented<"; }
+      fname  << lcname << ", " << rcname << ">";
+      TFunction* func = _pr_int->GetMethodAny( fname.str().c_str() );
+      if ( func ) pyfunc = new TFunctionHolder( TScopeAdapter::ByName( "_pyroot_internal" ), func );
    }
 
    if ( pyfunc ) {  // found a matching overload; add to class
