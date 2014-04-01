@@ -395,7 +395,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
-                                            const llvm::SmallVector<clang::QualType, 4> &proto,
+                                            const llvm::SmallVectorImpl<clang::QualType> &proto,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
                                             InheritanceMode imode /*= WithInheritance*/) const
 {
@@ -403,7 +403,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 }
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
-                                            const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst,
+                                            const llvm::SmallVectorImpl<clang::QualType> &proto, bool objectIsConst,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
                                             InheritanceMode imode /*= WithInheritance*/) const
 {

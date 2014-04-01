@@ -175,7 +175,7 @@ public:
    virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
-   virtual void     ExecuteWithArgsAndReturn(TMethod *method, void* address, const std::vector<void*>& args = std::vector<void*>(), void* ret= 0) const = 0;
+   virtual void     ExecuteWithArgsAndReturn(TMethod *method, void* address, const void* args[] = 0, int /*nargs*/ = 0, void* ret= 0) const = 0;
    virtual Long_t   ExecuteMacro(const char *filename, EErrorCode *error = 0) = 0;
    virtual Bool_t   IsErrorMessagesEnabled() const = 0;
    virtual Bool_t   SetErrorMessages(Bool_t enable = kTRUE) = 0;
@@ -245,7 +245,7 @@ public:
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */) const {;}
    virtual void   CallFunc_Exec(CallFunc_t * /* func */, void * /* address */, TInterpreterValue& /* val */) const {;}
    virtual void   CallFunc_ExecWithReturn(CallFunc_t * /* func */, void * /* address */, void * /* ret */) const {;}
-   virtual void   CallFunc_ExecWithArgsAndReturn(CallFunc_t * /* func */, void * /* address */, const std::vector<void*>& /* args */ = std::vector<void*>(), void * /* ret */ = 0) const {}
+   virtual void   CallFunc_ExecWithArgsAndReturn(CallFunc_t * /* func */, void * /* address */, const void* /* args */ [] = 0, int /*nargs*/ = 0, void * /* ret */ = 0) const {}
    virtual Long_t    CallFunc_ExecInt(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Long64_t  CallFunc_ExecInt64(CallFunc_t * /* func */, void * /* address */) const {return 0;}
    virtual Double_t  CallFunc_ExecDouble(CallFunc_t * /* func */, void * /* address */) const {return 0;}

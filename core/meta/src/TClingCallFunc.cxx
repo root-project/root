@@ -74,7 +74,6 @@
 #include <map>
 #include <string>
 #include <sstream>
-#include <vector>
 
 using namespace ROOT;
 using namespace llvm;
@@ -1477,8 +1476,8 @@ public:
 void
 TClingCallFunc::exec(void* address, void* ret) const
 {
-   vector<ValHolder> vh_ary;
-   vector<void*> vp_ary;
+   SmallVector<ValHolder, 8> vh_ary;
+   SmallVector<void*, 8> vp_ary;
    const FunctionDecl* FD = fMethod->GetMethodDecl();
 
    //
@@ -2138,24 +2137,13 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
 }
 
 void
-TClingCallFunc::exec_with_args_and_return(void* address,
-                                          const vector<void*>& args,
-                                          void* ret) const
-{
-   //const FunctionDecl* FD = fMethod->GetMethodDecl();
-   //unsigned num_params = FD->getNumParams();
-   unsigned num_args = args.size();
-   (*fWrapper)(address, (int)num_args, const_cast<void**>(args.data()), ret);
-}
-
-void
 TClingCallFunc::EvaluateArgList(const string& ArgList)
 {
    SmallVector<Expr*, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs,
                                           gDebug > 5 ? cling::LookupHelper::WithDiagnostics
                                           : cling::LookupHelper::NoDiagnostics);
-   for (SmallVector<Expr*, 4>::const_iterator I = exprs.begin(),
+   for (SmallVectorImpl<Expr*>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
       cling::Value val;
       EvaluateExpr(fInterp, *I, val);
@@ -2228,8 +2216,8 @@ TClingCallFunc::ExecDouble(void* address)
 }
 
 void
-TClingCallFunc::ExecWithArgsAndReturn(void* address, const vector<void*>& args
-                                      /*= vector<void*>()*/, void* ret/*= 0*/)
+TClingCallFunc::ExecWithArgsAndReturn(void* address, const void* args[] /*= 0*/,
+                                      int nargs /*= 0*/, void* ret/*= 0*/)
 {
    IFacePtr();
    if (!fWrapper) {
@@ -2237,7 +2225,7 @@ TClingCallFunc::ExecWithArgsAndReturn(void* address, const vector<void*>& args
             "Called with no wrapper, not implemented!");
       return;
    }
-   exec_with_args_and_return(address, args, ret);
+   (*fWrapper)(address, nargs, const_cast<void**>(args), ret);
 }
 
 void
@@ -2521,7 +2509,7 @@ TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
 
 void
 TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const llvm::SmallVector<clang::QualType, 4>& proto, long* poffset,
+             const llvm::SmallVectorImpl<clang::QualType>& proto, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
 {
    SetFuncProto(info, method, proto, false, poffset, mode);
@@ -2529,7 +2517,7 @@ TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
 
 void
 TClingCallFunc::SetFuncProto(const TClingClassInfo* info, const char* method,
-             const llvm::SmallVector<clang::QualType, 4>& proto,
+             const llvm::SmallVectorImpl<clang::QualType>& proto,
              bool objectIsConst, long* poffset,
              EFunctionMatchMode mode/*=kConversionMatch*/)
 {
