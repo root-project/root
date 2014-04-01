@@ -30,14 +30,15 @@
 
 
 class TInterpreterValue {
-public:
-   TInterpreterValue() { }
+private:
    TInterpreterValue(const TInterpreterValue &);   // not implemented
    TInterpreterValue& operator=(TInterpreterValue &);  // not implemented
+public:
+   TInterpreterValue() { }
    virtual ~TInterpreterValue() { }
 
-   virtual void* const& Get() const = 0;
-   virtual void*& Get() = 0;
+   virtual const void* GetValAddr() const = 0;
+   virtual void* GetValAddr() = 0;
 
    virtual Bool_t   IsValid() const = 0;
    virtual Double_t GetAsDouble() const = 0;

@@ -102,10 +102,10 @@ public:
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
-   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVector<clang::QualType, 4> &proto,
+   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
-   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVector<clang::QualType, 4> &proto, bool objectIsConst,
+   TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
                                   InheritanceMode imode = WithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;

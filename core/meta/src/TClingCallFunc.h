@@ -32,10 +32,9 @@
 #include "TClingClassInfo.h"
 #include "TInterpreter.h"
 
-#include "llvm/ExecutionEngine/GenericValue.h"
-#include "cling/Interpreter/StoredValueRef.h"
+#include "cling/Interpreter/Value.h"
 
-#include <vector>
+#include <llvm/ADT/SmallVector.h>
 
 namespace clang {
 class Expr;
@@ -45,7 +44,6 @@ class CXXMethodDecl;
 
 namespace cling {
 class Interpreter;
-class Value;
 }
 
 class TClingClassInfo;
@@ -68,7 +66,7 @@ private:
    /// Pointer to compiled wrapper, we do *not* own.
    tcling_callfunc_Wrapper_t fWrapper;
    /// Stored function arguments, we own.
-   mutable std::vector<cling::StoredValueRef> fArgVals;
+   mutable llvm::SmallVector<cling::Value, 8> fArgVals;
    /// If true, do not limit number of function arguments to declared number.
    bool fIgnoreExtraArgs;
 
@@ -106,14 +104,23 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
+   // Implemented in source file.
+   template <typename T>
+   void execWithLL(void* address, clang::QualType QT,
+                   cling::Value* val) const;
+   // Implemented in source file.
+   template <typename T>
+   void execWithULL(void* address, clang::QualType QT,
+                    cling::Value* val) const;
    void exec(void* address, void* ret) const;
    void exec_with_valref_return(void* address,
-                                cling::StoredValueRef* ret) const;
-   void exec_with_args_and_return(void* address,
-                                  const std::vector<void*>& args,
-                                  void* ret) const;
-
+                                cling::Value* ret) const;
    void EvaluateArgList(const std::string& ArgList);
+
+   // Implemented in source file.
+   template <typename T>
+   T ExecT(void* address);
+
 
 public:
 
@@ -142,7 +149,8 @@ public:
                        unsigned long nary = 0UL, bool withFree = true);
    void ExecWithReturn(void* address, void* ret = 0);
    void ExecWithArgsAndReturn(void* address,
-                              const std::vector<void*>& args = std::vector<void*>(),
+                              const void* args[] = 0,
+                              int nargs = 0,
                               void* ret = 0);
    void Exec(void* address, TInterpreterValue* interpVal = 0);
    long ExecInt(void* address);
@@ -153,7 +161,7 @@ public:
    void Init();
    void Init(const clang::FunctionDecl *);
    void Init(TClingMethodInfo*);
-   void Invoke(cling::StoredValueRef* result = 0) const;
+   void Invoke(cling::Value* result = 0) const;
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
@@ -177,11 +185,11 @@ public:
                      const char* proto, bool objectIsConst, long* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const llvm::SmallVector<clang::QualType, 4>& proto,
+                     const llvm::SmallVectorImpl<clang::QualType>& proto,
                      long* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const llvm::SmallVector<clang::QualType, 4>& proto,
+                     const llvm::SmallVectorImpl<clang::QualType>& proto,
                      bool objectIsConst, long* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 };
