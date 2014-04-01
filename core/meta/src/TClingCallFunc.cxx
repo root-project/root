@@ -160,6 +160,8 @@ returnType sv_to(const cling::Value& val)
       //
       switch (BT->getKind()) {
          case BuiltinType::Void:
+            // CINT used to expect a result of 0.
+            return (returnType) 0;
             break;
             //
             //  Unsigned Types
@@ -221,6 +223,7 @@ returnType sv_to(const cling::Value& val)
 
          case BuiltinType::Float:
             return (returnType) val.getFloat();
+            break;
          case BuiltinType::Double:
             return (returnType) val.getDouble();
             break;
@@ -1961,7 +1964,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
    }
    QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
-      *ret = cling::Value(QT, fInterp);
+      *ret = cling::Value(QT, 0);
       exec(address, &ret->getPtr());
       return;
    }
@@ -1984,7 +1987,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
    }
    else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      *ret = cling::Value(QT, fInterp);
+      *ret = cling::Value(QT, 0);
       exec(address, &ret->getPtr());
       return;
    }
@@ -1997,6 +2000,7 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
+      *ret = cling::Value(QT, 0);
       execWithLL<int>(address, QT, ret);
       return;
    }
@@ -2414,7 +2418,7 @@ TClingCallFunc::SetArg(unsigned long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
    fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, 0));
-   fArgVals.back().getLL() = param;
+   fArgVals.back().getULL() = param;
 }
 
 void
