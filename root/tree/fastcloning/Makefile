@@ -118,7 +118,7 @@ merge.log: merged/$(REFFILE) $(MERGEFILES) copiedEvent$(ExeSuf) dt_RunDrawTest_C
 testWithDiff: testWithDiff.log testWithDiff.ref
 	$(TestDiff)
 
-ifneq ($(ClingWorkAroundJITandInline),)
+ifneq ($(ClingWorkAroundMissingDynamicScope),)
 single:
 
 merge:
