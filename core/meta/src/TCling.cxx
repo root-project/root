@@ -3725,6 +3725,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
                }
                delete[] wlib;
             }
+            delete tokens;
          }
          else if ( 0 != keyLenMap.count(firstChar) ){
             unsigned int keyLen = keyLenMap.at(firstChar);
