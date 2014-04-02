@@ -143,6 +143,7 @@ again:
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
 
       gVirtualX->SetLineColor(-1);
@@ -238,6 +239,7 @@ again:
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       wx = wy = 0;
