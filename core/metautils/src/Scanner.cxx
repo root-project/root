@@ -818,10 +818,15 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
                                                             fNormCtxt);
             fSelectedClasses.push_back(annRecDecl);
          }
-         
+
          if (fVerboseLevel > 0) {
             std::string qual_name;
             GetDeclQualName(recordDecl,qual_name);
+            std::string normName;
+            TMetaUtils::GetNormalizedName(normName,
+                                          recordDecl->getASTContext().getTypeDeclType(recordDecl),
+                                          fInterpreter,
+                                          fNormCtxt);
             std::string typedef_qual_name;
             std::string typedefMsg;
             if (typedefNameDecl){
@@ -832,8 +837,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          std::cout <<"Selected class "
          << typedefMsg
          << "-> "
-         << qual_name;
-         std::cout << "\n";
+         << qual_name
+         << " for ROOT: "
+         << normName
+         << "\n";
          }
          
       }
