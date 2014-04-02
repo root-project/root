@@ -1136,7 +1136,7 @@ void DeclContext::removeDecl(Decl *D) {
     if (!Map) return;
 
     StoredDeclsMap::iterator Pos = Map->find(ND->getDeclName());
-    //assert(Pos != Map->end() && "no lookup entry for decl");
+    assert(Pos != Map->end() && "no lookup entry for decl");
     if (Pos != Map->end()) {
     StoredDeclsList::DeclsTy* Vec = Pos->second.getAsVector();
     if ((Vec && std::find(Vec->begin(), Vec->end(), ND) != Vec->end())
