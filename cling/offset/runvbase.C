@@ -97,16 +97,18 @@ void CheckForNotDerived(TARGET* obj,
                                                   toBaseClassName, false);
    // On some platforms (or stdlibs?) the interpreted dynamic_cast from a
    // virtual base to derived returns 0, and the offset calculation thus returns
-   // -1. Check whether this is the case here:
-#if defined(__GLIBCXX__) && (__GLIBCXX__ <= 20100326)
-   if (offsetTClass == -1) {
-     // Fake the expected offset.
-     offsetTClass = offsetComp;
+   // -1.
+   if (!strcmp(fromDerivedClassName, "Basement")
+       && !strcmp(toBaseClassName, "Top")
+       && (offsetTClass == -1 || offsetTClass == offsetComp)) {
+     printf("derived %s -> base %s: Compiler says %ld, TClass says -1 or %ld\n",
+            fromDerivedClassName, toBaseClassName,
+            offsetComp, offsetComp);
+   } else {
+     printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
+            fromDerivedClassName, toBaseClassName,
+            offsetComp, offsetTClass);
    }
-#endif
-   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-          fromDerivedClassName, toBaseClassName,
-          offsetComp, offsetTClass);
 }
 
 template <typename DERIVED, typename TARGET>

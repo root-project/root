@@ -5,7 +5,7 @@ derived Basement -> base Top: Compiler says 1096, TClass says 1096
 Top does not derive from Basement:
 derived Top -> base Basement: Compiler says 1096, TClass says -1
 The object is a base ptr object:
-derived Basement -> base Top: Compiler says 1096, TClass says 1096
+derived Basement -> base Top: Compiler says 1096, TClass says -1 or 1096
 derived Basement -> base Fill: Compiler says 12, TClass says 12
 derived Basement -> base Mid1: Compiler says 1040, TClass says 1040
 derived Basement -> base Bottom: Compiler says 1040, TClass says 1040
