@@ -1705,6 +1705,7 @@ again:
          ResetToolTip(fTip);
       break;
 
+   case kArrowKeyPress:
    case kButton1Down:
 
       GetPainter()->SetLineColor(-1);
@@ -1824,6 +1825,7 @@ again:
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       if (TestBit(kCannotMove)) break;
