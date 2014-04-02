@@ -89,9 +89,9 @@ local void R__flush_outbuf OF((unsigned w, unsigned size));
 /* ===========================================================================
  * Local data used by the "bit string" routines.
  */
-local FILE *zfile; /* output zip file */
+local __thread FILE *zfile; /* output zip file */
 
-local unsigned short bi_buf;
+local __thread unsigned short bi_buf;
 /* Output buffer. bits are inserted starting at the bottom (least significant
  * bits).
  */
@@ -101,25 +101,25 @@ local unsigned short bi_buf;
  * more than 16 bits on some systems.)
  */
 
-local int bi_valid;
+local __thread int bi_valid;
 /* Number of valid bits in bi_buf.  All bits above the last valid bit
  * are always zero.
  */
 
-local char *in_buf, *out_buf;
+local __thread char *in_buf, *out_buf;
 /* Current input and output buffers. in_buf is used only for in-memory
  * compression.
  */
 
-local unsigned in_offset, out_offset;
+local __thread unsigned in_offset, out_offset;
 /* Current offset in input and output buffers. in_offset is used only for
  * in-memory compression. On 16 bit machiens, the buffer is limited to 64K.
  */
 
-local unsigned in_size, out_size;
+local __thread unsigned in_size, out_size;
 /* Size of current input and output buffers */
 
-int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
+__thread int (*R__read_buf) OF((char *buf, unsigned size)) = R__mem_read;
 /* Current input function. Set to R__mem_read for in-memory compression */
 
 #ifdef DEBUG
@@ -411,7 +411,7 @@ local int R__mem_read(char *b, unsigned bsize)
  *                                                                     *
  ***********************************************************************/
 #define HDRSIZE 9
-static  int error_flag;
+static  __thread int error_flag;
 
 void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, int compressionAlgorithm)
      /* int cxlevel;                      compression level */
@@ -496,6 +496,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   } else {
 
     z_stream stream;
+    //Don't use the globals but want name similar to help see similarities in code
+    unsigned l_in_size, l_out_size;
     *irep = 0;
 
     error_flag   = 0;
@@ -538,15 +540,15 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
     tgt[1] = 'L';
     tgt[2] = (char) method;
 
-    in_size   = (unsigned) (*srcsize);
-    out_size  = stream.total_out;             /* compressed size */
-    tgt[3] = (char)(out_size & 0xff);
-    tgt[4] = (char)((out_size >> 8) & 0xff);
-    tgt[5] = (char)((out_size >> 16) & 0xff);
+    l_in_size   = (unsigned) (*srcsize);
+    l_out_size  = stream.total_out;             /* compressed size */
+    tgt[3] = (char)(l_out_size & 0xff);
+    tgt[4] = (char)((l_out_size >> 8) & 0xff);
+    tgt[5] = (char)((l_out_size >> 16) & 0xff);
 
-    tgt[6] = (char)(in_size & 0xff);         /* decompressed size */
-    tgt[7] = (char)((in_size >> 8) & 0xff);
-    tgt[8] = (char)((in_size >> 16) & 0xff);
+    tgt[6] = (char)(l_in_size & 0xff);         /* decompressed size */
+    tgt[7] = (char)((l_in_size >> 8) & 0xff);
+    tgt[8] = (char)((l_in_size >> 16) & 0xff);
 
     *irep = stream.total_out + HDRSIZE;
     return;

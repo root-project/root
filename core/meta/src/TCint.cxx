@@ -2470,6 +2470,7 @@ Long_t TCint::GetExecByteCode() const
 Long_t TCint::Getgvp() const
 {
    // Interface to CINT function
+   R__LOCKGUARD(gCINTMutex);
 
    return (Long_t)G__getgvp();
 }

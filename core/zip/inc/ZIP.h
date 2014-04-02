@@ -110,7 +110,7 @@ unsigned R__bi_reverse OF((unsigned value, int length));
 void     R__bi_windup  OF((void));
 void     R__copy_block OF((char far *buf, unsigned len, int header));
 int      R__seekable   OF((void));
-extern   int (*R__read_buf) OF((char *buf, unsigned size));
+extern   __thread int (*R__read_buf) OF((char *buf, unsigned size));
 ulg      R__memcompress OF((char *tgt, ulg tgtsize, char *src, ulg srcsize));
 void     R__error      OF((char *h));
 
