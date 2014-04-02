@@ -160,6 +160,7 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
    if (fElements[narg-1].empty() == false &&
        (fElements[narg-1][0]=='*'
         || fElements[narg-1][0]=='&'
+        || fElements[narg-1][0]=='['
         || 0 == fElements[narg-1].compare(0,6,"const*")
         || 0 == fElements[narg-1].compare(0,6,"const&")
         )
@@ -776,9 +777,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
          }
          hasconst = true;
       }
-      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' ) {
-         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t') {
-            if ( (*(starloc-1))=='t' ) {
+      if ( hasconst || (*starloc)=='*' || (*starloc)=='&' || (*starloc)==']' ) {
+         bool isArray = ( (*starloc)==']' );
+         while( (*(starloc-1))=='*' || (*(starloc-1))=='&' || (*(starloc-1))=='t' || isArray) {
+            if (isArray) {
+               starloc--;
+               isArray = ! ( (*starloc)=='[' );
+            } else if ( (*(starloc-1))=='t' ) {
                if ( (starloc-1-t) > 5 && 0 == strncmp((starloc-5),"const",5)
                    && ( (*(starloc-6)) == ' ' || (*(starloc-6)) == '*' || (*(starloc-6)) == '&') ) {
                   // we have a const.
