@@ -12,7 +12,10 @@
 
 // inversion algorithms for matrices
 // taken  from CLHEP (L. Moneta May 2006)
-
+#if defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
+#endif
 namespace ROOT { 
 
   namespace Math { 
@@ -681,5 +684,7 @@ int Inverter<idim,n>::DfinvMatrix(MatRepStd<T,idim,n> & rhs,unsigned int * ir) {
 
   }  // end namespace Math
 }    // end namespace ROOT
-
+#if defined(__GNUC__) && (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 6)
+#pragma GCC diagnostic pop
+#endif
 #endif  

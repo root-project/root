@@ -386,14 +386,14 @@ check_libcompat() {
 
     case $arch in
     macosx)
-        logmsg " lipo -info $chklibcompat | grep ' i386'"
-        if lipo -info $chklibcompat | grep ' i386' > /dev/null 2>& 1 ; then
+        logmsg " otool -fhv $chklibcompat | grep -i ' i386'"
+        if otool -fhv $chklibcompat | grep -i ' i386' > /dev/null 2>& 1 ; then
             ret=1
         fi
         ;;
     macosx64)
-        logmsg " lipo -info $chklibcompat | grep ' x86_64'"
-        if lipo -info $chklibcompat | grep ' x86_64' > /dev/null 2>& 1 ; then
+        logmsg " otool -fhv $chklibcompat | grep -i ' x86_64'"
+        if otool -fhv $chklibcompat | grep -i ' x86_64' > /dev/null 2>& 1 ; then
             ret=1
         fi
         ;;
@@ -2898,7 +2898,7 @@ result "$enable_builtin_pcre"
 #
 if test "x$enable_builtin_zlib" = "xno" ; then
     check_header "zlib.h" "" \
-        $ZLIB ${ZLIB:+$ZLIB/include} \
+        $ZLIB_ROOT/include $ZLIB ${ZLIB:+$ZLIB/include} \
         ${finkdir:+$finkdir/include} \
         /usr/local/include /usr/include/zlib /usr/local/include/zlib \
         /opt/zlib/include /usr/include
@@ -2910,7 +2910,7 @@ if test "x$enable_builtin_zlib" = "xno" ; then
     fi
 
     check_library "libz" "$enable_shared" "" \
-        $ZLIB ${ZLIB:+$ZLIB/lib} \
+        $ZLIB_ROOT/lib $ZLIB ${ZLIB:+$ZLIB/lib} \
         /usr/local/zlib/lib /usr/local/lib \
         /usr/lib/zlib /usr/local/lib/zlib /usr/zlib/lib /usr/lib \
         /usr/zlib /usr/local/zlib /opt/zlib /opt/zlib/lib
@@ -4445,12 +4445,12 @@ if test ! "x$enable_asimage" = "xno" ; then
     # for a system library, then see if we have various headers needed.
     if test "x$enable_builtin_afterimage" = "xyes" && test ! "x$enable_cocoa" = "xyes"; then
        check_header "jpeglib.h" "" \
-          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+          $LIBJPG_ROOT/include $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${finkdir:+$finkdir/include} \
           /usr/local/include /usr/include /opt/include
        asjpegincdir=$found_dir
        check_header "png.h" "" \
-          $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+          $LIBPNG_ROOT/include $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
           ${ASPNG:+$ASPNG/include} \
           ${finkdir:+$finkdir/include} \
           /usr/local/include /usr/X11/include /usr/include \
@@ -4458,7 +4458,7 @@ if test ! "x$enable_asimage" = "xno" ; then
        aspngincdir=$found_dir
        if test ! "x$enable_astiff" = "xno" ; then
            check_header "tiffio.h" "" \
-               $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
+               $LIBTIFF_ROOT/include $ASIMAGE ${ASIMAGE:+$ASIMAGE/include} \
                ${finkdir:+$finkdir/include} \
                /usr/local/include /usr/include /opt/include
            astiffincdir=$found_dir
@@ -4474,11 +4474,14 @@ if test ! "x$enable_asimage" = "xno" ; then
        # add libpng which needs libz
        if test ! "x$enable_astiff" = "xno" ; then
            aslibs="libjpeg libtiff libz libpng"
+           extra_libtiff_path=$LIBTIFF_ROOT/lib
        else
            aslibs="libjpeg libz libpng"
+           extra_libtiff_path=
        fi
        for k in $aslibs ; do
            check_library $k "$enable_shared" "" \
+               $extra_libtiff_path $LIBJPG_ROOT/lib $LIBPNG_ROOT/lib $ZLIB_ROOT/lib \
                $ASIMAGE ${ASIMAGE:+$ASIMAGE/lib} ${ASPNG:+$ASPNG/lib} \
                ${finkdir:+$finkdir/lib} \
                /usr/local/lib /usr/X11/lib /usr/lib /opt/lib

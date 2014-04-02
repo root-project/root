@@ -25,6 +25,8 @@
 #include <iostream>
 
 #include "TROOT.h"
+#include "TInterpreter.h" //gCINTMutex
+#include "TVirtualMutex.h"
 
 using namespace ROOT::Reflex;
 using namespace ROOT::Cintex;
@@ -187,6 +189,7 @@ namespace ROOT {
       }
 
       void Callback::operator () ( const Type& t ) {
+         R__LOCKGUARD2(gCINTMutex);
          ArtificialSourceFile asf;
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( t.IsClass() || t.IsStruct() ) {
@@ -205,6 +208,7 @@ namespace ROOT {
       }
   
       void Callback::operator () ( const Member& m ) {
+         R__LOCKGUARD2(gCINTMutex);
          ArtificialSourceFile asf;
          int autoload = G__set_class_autoloading(0); // To avoid recursive loads
          if ( m.IsFunctionMember() ) {
