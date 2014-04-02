@@ -127,6 +127,10 @@ if [ "x`root-config --arch | grep -v win32gcc | grep -i win32`" != "x" ]; then
   ROOTSYS="`cygpath -w $ROOTSYS`"
 fi
 
+if [ "x`root-config --arch | grep -v win64gcc | grep -i win64`" != "x" ]; then
+  ROOTSYS="`cygpath -w $ROOTSYS`"
+fi
+
 unset old_rootsys
 unset thisroot
 

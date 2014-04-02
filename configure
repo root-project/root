@@ -1229,6 +1229,11 @@ check_comp() {
                 altldtmp="$altld"
                 altld="$altldorg"
             fi
+            if test "x$arch" = "xwin64gcc" ; then
+                altldorg="g++"
+                altldtmp="$altld"
+                altld="$altldorg"
+            fi
         fi
         altld1=`echo "$altld" | awk '{print $1}'`
         if `$cwhich $altld1 > /dev/null 2>&1` ; then
@@ -2777,7 +2782,7 @@ linux|fbsd)
     ;;
 esac
 case $arch in
-win32gcc)
+win32gcc | win64gcc)
     # if it was not set it was turned on in the above "linux" case
     if test "x$enable_thread" = "xyes"; then
         threadflag=
@@ -3300,6 +3305,9 @@ if test ! "x$enable_pgsql" = "xno"; then
         enable_pgsql="no"
     else
         if test "x$arch" = xwin32gcc; then
+            pgsqllib="$pgsqllib -lssl -lldap -lcrypto -lintl"
+        fi
+        if test "x$arch" = xwin64gcc; then
             pgsqllib="$pgsqllib -lssl -lldap -lcrypto -lintl"
         fi
     fi
@@ -4765,7 +4773,7 @@ if test ! "x$enable_xml" = "xno" ; then
           enable_xml="no"
        else
           case $arch in
-             win32gcc)  xmllib="$xmllib -liconv"              ;;
+             win32gcc | win64gcc)  xmllib="$xmllib -liconv"   ;;
           esac
           case $platform in
              linux)     xmllib="$xmllib -lpthread"            ;;
