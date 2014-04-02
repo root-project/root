@@ -174,6 +174,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
@@ -273,6 +274,7 @@ void TCurlyArc::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque) {
          gVirtualX->DrawLine(pRx+4, py1+4, pRx-4, py1+4);
