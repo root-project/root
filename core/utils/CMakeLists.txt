@@ -56,7 +56,6 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/InvocationOptions.h
               Interpreter/RuntimeException.h
               Interpreter/RuntimeUniverse.h
-              Interpreter/StoredValueRef.h
               Interpreter/Value.h
               Interpreter/ValuePrinter.h
               Interpreter/ValuePrinterInfo.h )

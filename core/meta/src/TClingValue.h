@@ -17,7 +17,7 @@
 //  way to extend the temporaries lifetime and gives the user to control it.  //
 //                                                                            //
 //  The class is used to hide the implementation details of                   //
-//  cling::StoredValueRef.                                                    //
+//  cling::Value.                                                             //
 //                                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
