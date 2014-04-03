@@ -107,6 +107,7 @@ options="                    \
    enable_unuran             \
    enable_vc                 \
    enable_vdt                \
+   enable_werror             \
    enable_winrtdebug         \
    enable_x11                \
    enable_xft                \
@@ -167,6 +168,7 @@ enable_table=no
 enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_vc=no
+enable_werror=no
 enable_winrtdebug=
 enable_builtin_freetype=no
 enable_builtin_ftgl=no
@@ -1671,6 +1673,7 @@ enable/disable options, prefix with either --enable- or --disable-
   tmva               Build TMVA multi variate analysis library
   unuran             UNURAN - package for generating non-uniform random numbers
   vc                 Vc adds a few new types for portable and intuitive SIMD programming
+  werror             Turn on -Werror on most systems to force warnings to be errors
   winrtdebug         Link against the Windows debug runtime library
   x11                X11 support
   xml                XML parser interface
@@ -7403,6 +7406,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
+    -e "s|@werror@|$enable_werror|"             \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
