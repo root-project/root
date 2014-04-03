@@ -369,5 +369,11 @@ Bool_t PadStub::HasViewer3D() const
    return kFALSE;
 }
 
+//______________________________________________________________________________
+TVirtualPadPainter *PadStub::GetPainter()
+{
+   return 0;
+}
+
 }
 }
