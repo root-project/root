@@ -58,11 +58,11 @@
       assert(patternIndex < ROOT::iOS::GraphicUtils::kPredefinedFillPatterns &&
              "drawRect:, patternIndex is out of bounds");
    
-      float rgb[] = {0.f, 0.f, 0.f};
+      CGFloat rgb[] = {0.f, 0.f, 0.f};
       CGPatternRef pattern = ROOT::iOS::GraphicUtils::gPatternGenerators[patternIndex](rgb);
    
       CGColorSpaceRef colorSpace = CGColorSpaceCreatePattern(0);
-      const float alpha = 1.f;
+      const CGFloat alpha = 1.f;
    
       CGContextSetFillColorSpace(ctx, colorSpace);
       CGContextSetFillPattern(ctx, pattern, &alpha);
