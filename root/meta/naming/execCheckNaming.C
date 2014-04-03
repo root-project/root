@@ -21,7 +21,17 @@ void checkShortType(const std::string& name)
 int execCheckNaming(){
   using namespace std::placeholders;
 
-  // TClassEdit
+  // The role of ResolveTypedef is to remove typedef and should be given
+  // an almost normalized name.  The main purpose of this test is to
+  // insure that nothing is removed and no stray space is added. 
+  // However, (at least for now), it is allowed to remove some spaces
+  // but does not have to remove them (this is the job of ShortType
+  // or the name normalization routine). 
+  const std::vector<const char*> tceTypedefNames={"const std::string&",
+                                           "A<B>[2]",
+                                           "X<A<B>[2]>"};
+
+
   const std::vector<const char*> tceNames={"const std::string&",
                                            "const std::string &",
                                            "const std::string    &",
@@ -29,7 +39,7 @@ int execCheckNaming(){
                                            "X<A<B>[2]>"};  
 
   std::cout << "Check TClassEdit::ResolveTypedef\n";
-  for (auto& name : tceNames)
+  for (auto& name : tceTypedefNames)
      checkTypedef(name);
      
   std::cout << "Check TClassEdit::ShortType\n";
