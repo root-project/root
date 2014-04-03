@@ -61,6 +61,11 @@ CINTCFLAGS    = -m64 -pipe -W -Wall -fsigned-char -fno-common \
                 -DG__STD_EXCEPTION $(TARGETFLAGS)
 COMPILER      = gnu
 
+ifeq ($(WERROR),yes)
+CXXFLAGS     += -Werror
+NOOPT        += -pedantic -Wno-long-long
+endif
+
 # Linker:
 ifeq ($(subst $(APPLE_CLANG),,12),12)
 LD            = clang++
