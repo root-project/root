@@ -2558,7 +2558,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
 
    // Add the "section"
    if (!nsNames.empty() || !classesNames.empty() || !typedefNames.empty()){
-      rootmapFile << "[" << rootmapLibName << "]\n";
+      rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
       if (!classesNames.empty()){
@@ -3428,7 +3428,7 @@ int RootCling(int argc,
 
    std::vector<std::string> baseModules;
    std::string sharedLibraryPathName;
-   std::string rootmapLibName;
+   std::vector<std::string> rootmapLibNames;
    std::string rootmapFileName;
    std::string capaFileName;
 
@@ -3456,7 +3456,8 @@ int RootCling(int argc,
 
          if (strcmp("-rml", argv[ic]) == 0 && (ic+1) < argc) {
             // name of the lib for the rootmap
-            rootmapLibName = argv[ic+1];
+            std::cout << "Pushing back " << argv[ic+1] <<std::endl;
+            rootmapLibNames.push_back(argv[ic+1]);
             ic+=2;
             continue;
          }
@@ -4001,6 +4002,11 @@ int RootCling(int argc,
 
 
    // Create rootmap and capabilities files
+   std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(), 
+                                                rootmapLibNames.end(),
+                                                std::string(), 
+                                                [](std::string a, std::string b){return a+" "+b;});
+      
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
    bool capaNeeded=!capaFileName.empty();
 
@@ -4028,13 +4034,14 @@ int RootCling(int argc,
       AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
 
-      ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name %s\n",
+      ROOT::TMetaUtils::Info(0,"Rootmap file name %s and lib name(s) \"%s\"\n",
                              rootmapLibName.c_str(),
                              rootmapFileName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
       if (useNewRmfFormat){
+         
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesDefsList,
