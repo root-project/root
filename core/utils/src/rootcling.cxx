@@ -4006,7 +4006,7 @@ int RootCling(int argc,
    std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(), 
                                                 rootmapLibNames.end(),
                                                 std::string(), 
-                                                [](std::string a, std::string b){return a+" "+b;});
+                                                [](const std::string& a, const std::string& b){return a+" "+b;});
       
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
    bool capaNeeded=!capaFileName.empty();
