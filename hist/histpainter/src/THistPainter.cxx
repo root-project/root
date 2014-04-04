@@ -3892,8 +3892,12 @@ void THistPainter::Paint(Option_t *option)
    }
 
    if (Hoption.Pie) {
-      if (!fPie) fPie = new TPie(fH);
-      fPie->Paint(option);
+      if (fH->GetDimension() == 1) {
+         if (!fPie) fPie = new TPie(fH);
+         fPie->Paint(option);
+      } else {
+         Error("Paint", "Option PIE is for 1D histograms only");
+      }
       return;
    } else {
       if (fPie) delete fPie;
