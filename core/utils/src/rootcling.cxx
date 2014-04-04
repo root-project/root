@@ -3457,7 +3457,6 @@ int RootCling(int argc,
 
          if (strcmp("-rml", argv[ic]) == 0 && (ic+1) < argc) {
             // name of the lib for the rootmap
-            std::cout << "Pushing back " << argv[ic+1] <<std::endl;
             rootmapLibNames.push_back(argv[ic+1]);
             ic+=2;
             continue;
