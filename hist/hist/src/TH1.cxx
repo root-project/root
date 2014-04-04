@@ -5111,13 +5111,13 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
 }
 
 //______________________________________________________________________________
-static Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
+static inline Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
 {
    return TMath::Abs(a - b) < epsilon;
 }
 
 //______________________________________________________________________________
-static Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
+static inline Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
 {
    return AlmostEqual(a - TMath::Floor(a), 0, epsilon) ||
       AlmostEqual(a - TMath::Floor(a), 1, epsilon);
@@ -5138,17 +5138,19 @@ Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
 
 static inline bool IsEquidistantBinning(const TAxis& axis)
 {
-  // not able to check if there is only one axis entry
-  bool isEquidistant = true;
-  const Double_t firstBinWidth = axis.GetBinWidth(1);
-  for (int i = 1; i < axis.GetNbins(); ++i) {
-    const Double_t binWidth = axis.GetBinWidth(i);
-    const bool match = TMath::AreEqualAbs(firstBinWidth, binWidth, DBL_MIN);
-    isEquidistant &= match;
-    if (!match)
-      break;
-  }
-  return isEquidistant;
+   // check if axis bin are equals
+   if (!axis.GetXbins()->fN) return true;  //  
+   // not able to check if there is only one axis entry
+   bool isEquidistant = true;
+   const Double_t firstBinWidth = axis.GetBinWidth(1);
+   for (int i = 1; i < axis.GetNbins(); ++i) {
+      const Double_t binWidth = axis.GetBinWidth(i);
+      const bool match = TMath::AreEqualRel(firstBinWidth, binWidth, TMath::Limits<Double_t>::Epsilon());
+      isEquidistant &= match;
+      if (!match)
+         break;
+   }
+   return isEquidistant;
 }
 
 //______________________________________________________________________________
@@ -5159,7 +5161,7 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    if (SameLimitsAndNBins(destAxis, anAxis))
       return kTRUE;
 
-   if ((destAxis.GetXbins()->fN || anAxis.GetXbins()->fN) && (!IsEquidistantBinning(destAxis) || !IsEquidistantBinning(anAxis)))
+   if (!IsEquidistantBinning(destAxis) || !IsEquidistantBinning(anAxis))
       return kFALSE;       // not equidistant user binning not supported
 
    Double_t width1 = destAxis.GetBinWidth(0);
@@ -5272,6 +5274,8 @@ Long64_t TH1::Merge(TCollection *li)
    TH1 * h = this;
 
    do  {
+      // do not skip anymore empty histograms 
+      // since are used to set the limits 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -5281,7 +5285,7 @@ Long64_t TH1::Merge(TCollection *li)
          // this is done in case the first histograms are empty and
          // the histogram have different limits
          if (firstHistWithLimits ) {
-            // set axis limits in the case the first histogram did not have limits
+            // set axis limits in the case the first histogram did not have limits 
             if (h != this && !SameLimitsAndNBins( fXaxis, *h->GetXaxis()) ) {
               if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
               else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
@@ -5421,14 +5425,19 @@ Long64_t TH1::Merge(TCollection *li)
    // reset, otherwise setting the under/overflow will rebin and make a mess
    if (!allHaveLabels) ResetBit(kCanRebin);
    while (TH1* hist=(TH1*)next()) {
-      // process only if the histogram has limits; otherwise it was processed before
+      // process only if the histogram has limits; otherwise it was processed before      
       // in the case of an existing buffer (see if statement just before)
+
+      // skip empty histograms 
+      Int_t histEntries = hist->GetEntries(); 
+      if (hist->fTsumw == 0 && histEntries == 0) continue;
+
       if (allHaveLabels || (hist->GetXaxis()->GetXmin() < hist->GetXaxis()->GetXmax()) ) {
          // import statistics
          hist->GetStats(stats);
          for (Int_t i=0;i<kNstat;i++)
             totstats[i] += stats[i];
-         nentries += hist->GetEntries();
+         nentries += histEntries;
 
 
          Int_t nx = hist->GetXaxis()->GetNbins();

@@ -1615,13 +1615,18 @@ Long64_t TH2::Merge(TCollection *list)
    ResetBit(kCanRebin); // reset, otherwise setting the under/overflow will rebin
 
    while ((h=(TH2*)next())) {
+
+      // skip empty histograms 
+      Int_t histEntries = h->GetEntries(); 
+      if (h->fTsumw == 0 && histEntries == 0) continue;
+
       // process only if the histogram has limits; otherwise it was processed before
       if (h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax()) {
          // import statistics
          h->GetStats(stats);
          for (Int_t i = 0; i < kNstat; i++)
             totstats[i] += stats[i];
-         nentries += h->GetEntries();
+         nentries += histEntries;
 
          nx = h->GetXaxis()->GetNbins();
          ny = h->GetYaxis()->GetNbins();
