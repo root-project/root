@@ -20,10 +20,14 @@ private:
 // instances which is a data member of classTestAutoselect
 class classAutoselected{};
 
+// The complementary of the above one
+class classAutoExcluded{};
+
 // Class used to test autoselection of classes
 class classTestAutoselect{
 private:
    classAutoselected autoselected;
+   classAutoExcluded noautoselected;
 };
 
 // Class used to test the specification of attributes via traits
@@ -120,6 +124,8 @@ namespace ROOT{
          template <typename A> class classTemplateVanilla{};
          classTemplateVanilla<bool> t0;
 
+         class classAutoExcluded{};
+
          template <typename A> class classTemplateElaborate:
             ClassAttributes <kNonSplittable>{
                MemberAttributes<kAutoSelected> autoselectedMember;
@@ -130,6 +136,7 @@ namespace ROOT{
 
          class classTestAutoselect{
             MemberAttributes<kAutoSelected> autoselected;
+            MemberAttributes<kNoAutoSelected> noautoselected;
          };
 
          class classTransientMember{

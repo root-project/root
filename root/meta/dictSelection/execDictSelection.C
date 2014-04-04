@@ -19,6 +19,7 @@ int execDictSelection()
       "classTransientMember",
       "classTestAutoselect",
       "classAutoselected",
+      "classAutoExcluded",
       "classWithAttributes",
       "classAutoselectedFromTemplateElaborate1",
       "classAutoselectedFromTemplateElaborate2",

@@ -25,8 +25,9 @@ Class category: foreign.
 --- Class classTestAutoselect
 Class category: foreign.
  * Version: -1
- o Members (1):
+ o Members (2):
   * classAutoselected autoselected
+  * classAutoExcluded noautoselected
 --- End Class classTestAutoselect
 
 --- Class classAutoselected
@@ -34,6 +35,12 @@ Class category: foreign.
  * Version: -1
  o Members (0):
 --- End Class classAutoselected
+
+--- Class classAutoExcluded
+Class category: foreign.
+ * Version: 1 --> Class available to the interpreter but not Selected!
+ o Members (0):
+--- End Class classAutoExcluded
 
 --- Class classWithAttributes
 Class category: foreign.
@@ -204,6 +211,7 @@ classTemplateVanilla<char> --> classTemplateVanilla<char>
 classTransientMember --> classTransientMember
 classTestAutoselect --> classTestAutoselect
 classAutoselected --> classAutoselected
+classAutoExcluded --> classAutoExcluded
 classWithAttributes --> classWithAttributes
 classAutoselectedFromTemplateElaborate1 --> classAutoselectedFromTemplateElaborate1
 classAutoselectedFromTemplateElaborate2 --> classAutoselectedFromTemplateElaborate2
