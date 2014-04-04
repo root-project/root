@@ -1072,23 +1072,23 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    const auto &bbox = Rgl::Pad::FindBoundingRect(nPoints, xs, ys);
    //
    auto center = grad->GetCenter();
-   Double_t radius = grad->GetRadius();
+   auto radius = grad->GetRadius();
    //Adjust the center and radius depending on coordinate mode.
    if (grad->GetCoordinateMode() == TColorGradient::kObjectBoundingMode) {
       radius *= TMath::Max(bbox.fWidth, bbox.fHeight);
       center.fX = bbox.fWidth * center.fX + bbox.fXMin;
       center.fY = bbox.fHeight * center.fY + bbox.fYMin;
    } else {
-      const Double_t w = gPad->GetX2() - gPad->GetX1();
-      const Double_t h = gPad->GetY2() - gPad->GetY1();
+      const auto w = gPad->GetX2() - gPad->GetX1();
+      const auto h = gPad->GetY2() - gPad->GetY1();
       
       radius *= TMath::Max(w, h);
       center.fX *= w;
       center.fY *= h;
    }
    //Now for the gradient fill we switch into pixel coordinates:
-   const Double_t pixelW = gPad->GetAbsWNDC() * gPad->GetWw();
-   const Double_t pixelH = gPad->GetAbsHNDC() * gPad->GetWh();
+   const auto pixelW = gPad->GetAbsWNDC() * gPad->GetWw();
+   const auto pixelH = gPad->GetAbsHNDC() * gPad->GetWh();
    //
    SaveProjectionMatrix();
    SaveModelviewMatrix();
@@ -1132,13 +1132,13 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    //TODO: can locations be outside of [0., 1.] ???
    //at the moment I assume the answer is NO, NEVER.
    const auto locations = grad->GetColorPositions();
-   //* 2 below == x,y
-   std::vector<GLdouble> circles(nSlices * nCircles * 2);
+   // * 2 below == x,y
+   std::vector<Double_t> circles(nSlices * nCircles * 2);
    const Double_t angle = TMath::TwoPi() / nSlices;
 
    //"Main" circles (for colors at locations[i]).
    for (UInt_t i = 0; i < nColors; ++i) {
-      GLdouble * const circle = &circles[i * nSlices * 2];
+      const auto circle = &circles[i * nSlices * 2];
       //TODO: either check locations here or somewhere else.
       const auto r = radius * locations[i];
       for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
@@ -1152,7 +1152,7 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    
    {
    //The strip between lastPos and radius:
-   GLdouble * const circle = &circles[nColors * nSlices * 2];
+   const auto circle = &circles[nColors * nSlices * 2];
    for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
       circle[j] = center.fX + radius * TMath::Cos(angle * j);
       circle[j + 1] = center.fY + radius * TMath::Sin(angle * j);
@@ -1164,7 +1164,7 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
 
    if (solidFillAfter) {
       //The strip after the radius:
-      GLdouble * const circle = &circles[(nCircles - 1) * nSlices * 2];
+      const auto circle = &circles[(nCircles - 1) * nSlices * 2];
       for (UInt_t j = 0, e = nSlices * 2 - 2; j < e; j += 2) {
          circle[j] = center.fX + maxR * TMath::Cos(angle * j);
          circle[j + 1] = center.fY + maxR * TMath::Sin(angle * j);
@@ -1198,11 +1198,12 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    
    glEnd();
    
+   //No auto for circles, explicit types to have const Double_t * const, not Duble_t * const.
    for (UInt_t i = 0; i < nColors - 1; ++i) {
-      const GLdouble * const inner = &circles[i * nSlices * 2];
+      const Double_t * const inner = &circles[i * nSlices * 2];
       const auto innerRGBA = rgba + i * 4;
       const auto outerRGBA = rgba + (i + 1) * 4;
-      const GLdouble * const outer = &circles[(i + 1) * nSlices * 2];
+      const Double_t * const outer = &circles[(i + 1) * nSlices * 2];
    
       Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, innerRGBA, outer, outerRGBA);
    }
@@ -1210,18 +1211,18 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
    //Probably degenerated strip.
    {
    glBegin(GL_QUAD_STRIP);
-   const GLdouble * const inner = &circles[nSlices * (nColors - 1) * 2];
+   const Double_t * const inner = &circles[nSlices * (nColors - 1) * 2];
    const auto solidRGBA = rgba + (nColors - 1) * 4;
-   const GLdouble * const outer = &circles[nSlices * nColors * 2];
+   const Double_t * const outer = &circles[nSlices * nColors * 2];
    
    Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, solidRGBA, outer, solidRGBA);
    }
    
    if (solidFillAfter) {
       glBegin(GL_QUAD_STRIP);
-      const GLdouble * const inner = &circles[nSlices * nColors * 2];
+      const Double_t * const inner = &circles[nSlices * nColors * 2];
       const auto solidRGBA = rgba + (nColors - 1) * 4;
-      const GLdouble * const outer = &circles[nSlices * (nColors + 1) * 2];
+      const Double_t * const outer = &circles[nSlices * (nColors + 1) * 2];
 
       Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, solidRGBA, outer, solidRGBA);
    }

@@ -179,6 +179,7 @@ const char *rootClingHelp =
 #include <sys/stat.h>
 #include <unordered_map>
 #include <unordered_set>
+#include <numeric>
 
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/LookupHelper.h"
