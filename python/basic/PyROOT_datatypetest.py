@@ -1,7 +1,7 @@
 # File: roottest/python/basic/PyROOT_datatypetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 05/11/05
-# Last: 02/20/14
+# Last: 04/04/14
 
 """Data type conversion unit tests for PyROOT package."""
 
@@ -197,8 +197,7 @@ class TestClassDATATYPES:
         # float types through functions
         c.set_float(0.123);   assert round(c.get_float()   - 0.123,  5) == 0
         c.set_double(0.456);  assert round(c.get_double()  - 0.456, 11) == 0
-        if not FIXCLING:
-            c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 24) == 0
+        c.set_ldouble(0.789); assert round(c.get_ldouble() - 0.789, 24) == 0
 
         # float types through data members
         c.m_float = 0.123;       assert round(c.get_float()   - 0.123,  5) == 0
@@ -207,10 +206,9 @@ class TestClassDATATYPES:
         c.m_double = 0.678;      assert round(c.get_double()  - 0.678, 11) == 0
         c.set_double(0.890);     assert round(c.m_double      - 0.890, 11) == 0
         c.set_double_cr(0.012);  assert round(c.m_double      - 0.012, 11) == 0
-        if not FIXCLING:
-            c.m_ldouble = 0.345;     assert round(c.get_ldouble() - 0.345, 24) == 0
-            c.set_ldouble(0.678);    assert round(c.m_ldouble     - 0.678, 24) == 0
-            c.set_ldouble_cr(0.902); assert round(c.m_ldouble     - 0.902, 24) == 0
+        c.m_ldouble = 0.345;     assert round(c.get_ldouble() - 0.345, 24) == 0
+        c.set_ldouble(0.678);    assert round(c.m_ldouble     - 0.678, 24) == 0
+        c.set_ldouble_cr(0.902); assert round(c.m_ldouble     - 0.902, 24) == 0
 
         # enum types
         c.m_enum = CppyyTestData.kSomething; assert c.get_enum() == c.kSomething
