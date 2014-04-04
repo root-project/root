@@ -1754,9 +1754,10 @@ TClingCallFunc::exec(void* address, void* ret) const
                break;
             case BuiltinType::LongDouble: {
                   // long double
-                  Error("TClingCallFunc::exec(void*)",
-                        "Invalid type 'LongDouble'!");
-                  return;
+                  ValHolder vh;
+                  vh.u.ldbl = sv_to<long double>(fArgVals[i]);
+                  vh_ary.push_back(vh);
+                  vp_ary.push_back(&vh_ary.back());
                }
                break;
                //
