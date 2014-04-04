@@ -252,6 +252,8 @@ class DictSelectionReader
    fSpecialNames; ///< The names of the classes used for the selction syntax
    llvm::StringMap<std::set<std::string> >
    fAutoSelectedClassFieldNames; ///< Collect the autoselected classes
+   llvm::StringMap<std::set<std::string> >
+   fNoAutoSelectedClassFieldNames; ///< Collect the autoexcluded classes
    std::list<std::pair<std::string, unsigned int> >
    fTemplateInstanceNamePatternsArgsToKeep; ///< List of pattern-# of args to
                                             ///hide pairs

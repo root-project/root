@@ -15,9 +15,8 @@ enum EClassAttributes {
       ///\brief Indicates absence of properties
       kClassNullProperty   = 0};
 
-///\brief Used to specify attributes of classes in the "DictSelection" syntax                        
+///\brief Used to specify attributes of classes in the "DictSelection" syntax
 template <unsigned int classAttributes = kClassNullProperty> class ClassAttributes{};
-                              
 
 ///\brief Describes attributes of a data member
 enum EClassMemberAttributes {
@@ -27,15 +26,17 @@ enum EClassMemberAttributes {
       kTransient          = 2,
       ///\brief Select the type of the member
       kAutoSelected       = 4,
+      ///\brief Exclude the type of the member
+      kNoAutoSelected     = 8,
       ///\brief The class cannot be split
-      kNonSplittable      = 8};
+      kNonSplittable      = 16};
 
 ///\brief Used to specify attributes of data members in the "DictSelection" syntax
 template <unsigned int memberAttributes = kMemberNullProperty > class MemberAttributes{};
 
       }
-   }   
+   }
 }
 
-#endif 
+#endif
 

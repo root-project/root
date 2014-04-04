@@ -23,7 +23,8 @@ DictSelectionReader::DictSelectionReader(SelectionRules& selectionRules,
    // Now re-inspect the AST to find autoselected classes (double-tap)
    fIsFirstPass = false;
    if (!fTemplateInstanceNamePatternsArgsToKeep.empty() ||
-       !fAutoSelectedClassFieldNames.empty())
+       !fAutoSelectedClassFieldNames.empty() ||
+       !fNoAutoSelectedClassFieldNames.empty())
       TraverseDecl(translUnitDecl);
 
    // Now push all the selection rules
@@ -164,6 +165,9 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
 
       if (attrCode & ROOT::Meta::Selection::kAutoSelected)
          fAutoSelectedClassFieldNames[className].insert(
+             fieldsIt->getNameAsString());
+      else if (attrCode & ROOT::Meta::Selection::kNoAutoSelected)
+         fNoAutoSelectedClassFieldNames[className].insert(
              fieldsIt->getNameAsString()); 
 
    } // end loop on fields
@@ -281,10 +285,11 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
        className, *recordDecl.getTypeForDecl(), recordDecl);
 
    // If the class is not among those which have fields the type of which are to
-   // be autoselected
-   if (0 != fAutoSelectedClassFieldNames.count(className)) {
+   // be autoselected or excluded
+   if (0 != fAutoSelectedClassFieldNames.count(className) ||
+       0 != fNoAutoSelectedClassFieldNames.count(className)) {
       // Iterate on fields. If the name of the field is among the ones the types
-      // of which should be autoselected, add a class selection rule
+      // of which should be (no)autoselected, add a class selection rule
       std::string typeName;
       clang::ASTContext& C = recordDecl.getASTContext();
       for (clang::RecordDecl::field_iterator filedsIt =
@@ -292,9 +297,11 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
            filedsIt != recordDecl.field_end();
            ++filedsIt) {
          const std::string fieldName(filedsIt->getNameAsString());
-         if (0 == fAutoSelectedClassFieldNames[className].count(fieldName))
+         bool excluded = 1 == fNoAutoSelectedClassFieldNames[className].count(fieldName);
+         bool selected = 1 == fAutoSelectedClassFieldNames[className].count(fieldName);
+         if (!selected && !excluded)
             continue;
-         ClassSelectionRule aSelCsr(BaseSelectionRule::kYes);
+         ClassSelectionRule aSelCsr(excluded? BaseSelectionRule::kNo : BaseSelectionRule::kYes);
          ROOT::TMetaUtils::GetFullyQualifiedTypeName(
              typeName, filedsIt->getType(), C);
          aSelCsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, typeName);
