@@ -1070,6 +1070,7 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
 
    //TODO: check the polygon's bbox!
    const auto &bbox = Rgl::Pad::FindBoundingRect(nPoints, xs, ys);
+   //
    auto center = grad->GetCenter();
    Double_t radius = grad->GetRadius();
    //Adjust the center and radius depending on coordinate mode.
@@ -1085,15 +1086,34 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
       center.fX *= w;
       center.fY *= h;
    }
-   
-   //Get the longest distance from the center to the bounding box vertices
-   //(this will be the maximum possible radius):
+   //Now for the gradient fill we switch into pixel coordinates:
+   const Double_t pixelW = gPad->GetAbsWNDC() * gPad->GetWw();
+   const Double_t pixelH = gPad->GetAbsHNDC() * gPad->GetWh();
+   //
+   SaveProjectionMatrix();
+   SaveModelviewMatrix();
+   //A new ortho projection:
+   glMatrixMode(GL_PROJECTION);
+   glLoadIdentity();
+   //
+   glOrtho(0., pixelW, 0., pixelH, -10., 10.);
+   //
+   radius *= TMath::Max(pixelH, pixelW);
+   center.fX = gPad->XtoPixel(center.fX);
+   center.fY = pixelH - gPad->YtoPixel(center.fY);
+
    Double_t maxR = 0.;
    {
-   const Double_t maxDistX = TMath::Max(TMath::Abs(center.fX - bbox.fXMin),
-                                        TMath::Abs(center.fX - bbox.fXMax));
-   const Double_t maxDistY = TMath::Max(TMath::Abs(center.fY - bbox.fYMin),
-                                        TMath::Abs(center.fY - bbox.fYMax));
+   const Double_t xMin = gPad->XtoPixel(bbox.fXMin);
+   const Double_t xMax = gPad->XtoPixel(bbox.fXMax);
+   const Double_t yMin = pixelH - gPad->YtoPixel(bbox.fYMin);
+   const Double_t yMax = pixelH - gPad->YtoPixel(bbox.fYMax);
+   //Get the longest distance from the center to the bounding box vertices
+   //(this will be the maximum possible radius):
+   const Double_t maxDistX = TMath::Max(TMath::Abs(center.fX - xMin),
+                                        TMath::Abs(center.fX - xMax));
+   const Double_t maxDistY = TMath::Max(TMath::Abs(center.fY - yMin),
+                                        TMath::Abs(center.fY - yMax));
    maxR = TMath::Sqrt(maxDistX * maxDistX + maxDistY * maxDistY);
    }
 
@@ -1205,6 +1225,9 @@ void TGLPadPainter::DrawGradient(const TRadialGradient *grad, Int_t nPoints,
 
       Rgl::DrawQuadStripWithRadialGradientFill(nSlices, inner, solidRGBA, outer, solidRGBA);
    }
+
+   RestoreProjectionMatrix();
+   RestoreModelviewMatrix();
 }
 
 //______________________________________________________________________________
