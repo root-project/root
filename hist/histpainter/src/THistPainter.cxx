@@ -3300,8 +3300,10 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
             Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
             Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
-            xaxis->SetRangeUser(x1, x2);
-            yaxis->SetRangeUser(y1, y2);
+            if (x1<x2 && y1<y2) {
+               xaxis->SetRangeUser(x1, x2);
+               yaxis->SetRangeUser(y1, y2);
+            }
             zoombox->Delete();
             zoombox = 0;
          }
