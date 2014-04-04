@@ -32,6 +32,7 @@
 #include "TMatrixFBase.h"
 #include "TVectorD.h"
 #include "TVectorF.h"
+#include "TCanvas.h"
 #include "TPad.h"
 #include "TPaveStats.h"
 #include "TFrame.h"
@@ -3145,6 +3146,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    End_html */
 
    static Int_t bin, px1, py1, px2, py2, pyold;
+   static TBox *zoombox;
+
    Int_t bin1, bin2;
    Double_t xlow, xup, ylow, binval, x, baroffset, barwidth, binwidth;
    Bool_t opaque  = gPad->OpaqueMoving();
@@ -3179,12 +3182,25 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (!opaque) gVirtualX->SetLineColor(-1);
       fH->TAttLine::Modify();
 
+      if (opaque && dimension ==2) {
+         zoombox = new TBox(gPad->PixeltoX(px), gPad->PixeltoY(py-gPad->VtoPixel(0)),
+                            gPad->PixeltoX(px), gPad->PixeltoY(py-gPad->VtoPixel(0)));
+         Int_t ci = TColor::GetColor("#7d7dff");
+         TColor *zoomcolor = gROOT->GetColor(ci);
+         if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
+         else                          zoomcolor->SetAlpha(0.13);
+         zoombox->SetFillColor(ci);
+         zoombox->Draw();
+         gPad->Modified();
+         gPad->Update();
+      }
       // No break !!!
 
    case kMouseMotion:
 
       if (fShowProjection) {ShowProjection3(px,py); break;}
 
+      gPad->SetCursor(kPointer);
       if (dimension ==1) {
          if (Hoption.Bar) {
             baroffset = fH->GetBarOffset();
@@ -3205,13 +3221,12 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          py2      = py;
          pyold    = py;
          if (gROOT->GetEditHistograms()) gPad->SetCursor(kArrowVer);
-         else                            gPad->SetCursor(kPointer);
       }
-      
+
       break;
 
    case kButton1Motion:
-      
+
       if (dimension ==1) {
          if (gROOT->GetEditHistograms()) {
             if (!opaque) {
@@ -3227,6 +3242,13 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
                gPad->Modified(kTRUE);
             }
          }
+      }
+
+      if (opaque && dimension ==2) {
+         zoombox->SetX2(gPad->PixeltoX(px));
+         zoombox->SetY2(gPad->PixeltoY(py-gPad->VtoPixel(0)));
+         gPad->Modified();
+         gPad->Update();
       }
 
       break;
@@ -3272,7 +3294,18 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          // might resize pad pixmap so should be called before any paint routine
          RecalculateRange();
       }
-      
+      if (opaque && dimension ==2) {
+         if (zoombox) {
+            Double_t x1 = TMath::Min(zoombox->GetX1(), zoombox->GetX2());
+            Double_t x2 = TMath::Max(zoombox->GetX1(), zoombox->GetX2());
+            Double_t y1 = TMath::Min(zoombox->GetY1(), zoombox->GetY2());
+            Double_t y2 = TMath::Max(zoombox->GetY1(), zoombox->GetY2());
+            xaxis->SetRangeUser(x1, x2);
+            yaxis->SetRangeUser(y1, y2);
+            zoombox->Delete();
+            zoombox = 0;
+         }
+      }
       gPad->Modified(kTRUE);
       if (opaque) gVirtualX->SetLineColor(-1);
 
