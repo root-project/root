@@ -24,9 +24,6 @@ class Cpp1Cpp11StandardClassesTestCase( MyTestCase ):
    def test01SharedPtr( self ):
       """Test usage and access of std::shared_ptr<>"""
 
-      if not USECPP11:
-         return
-
     # proper memory accounting
       self.assertEqual( MyCounterClass.counter, 0 )
 
@@ -48,9 +45,6 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
    def test01StaticEnum( self ):
       """Test usage and access of a const static enum defined in header"""
 
-      if not USECPP11:
-         return
-
       # TODO: this will fail
       # self.assert_( hasattr( PyTest, '_Lock_policy' ) )
       if not FIXCLING:
@@ -59,10 +53,6 @@ class Cpp2Cpp11LanguageConstructsTestCase( MyTestCase ):
 
    def test02NULLPtrPassing( self ):
       """Allow the programmer to pass NULL in certain cases"""
-
-
-      # note that this test is not protected with USECPP11, as nullptr is
-      # defined explicitly in the ROOT module, not taken from C++
 
       self.assertNotEqual( nullptr, 0 )
       self.assertRaises( TypeError, TGraphErrors, 0, 0, 0 )

@@ -1,9 +1,9 @@
 # File: roottest/python/common.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 09/24/10
-# Last: 02/20/14
+# Last: 04/04/14
 
-__all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING', 'USECPP11' ]
+__all__ = [ 'pylong', 'maxvalue', 'MyTestCase', 'run_pytest', 'FIXCLING' ]
 
 import os, sys, unittest
 
@@ -36,13 +36,6 @@ else:
 FIXCLING = '--fixcling' in sys.argv
 if 'FIXCLING' in os.environ:
    FIXCLING = os.environ['FIXCLING'] == 'yes'
-
-def usecpp():
-   import commands
-   (stat, result) = commands.getstatusoutput( 'root-config --has-cxx11 --has-c++11' )
-   return not stat and 'yes' in result
-USECPP11 = usecpp()
-del usecpp
 
 
 def run_pytest(test_file=None):
