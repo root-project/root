@@ -1664,7 +1664,7 @@ Long64_t TH3::Merge(TCollection *list)
    while ( (h=(TH3*)next()) ) {
 
       // skip empty histograms
-      Int_t histEntries = h->GetEntries(); 
+      Double_t histEntries = h->GetEntries();
       if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
 
       // process only if the histogram has limits; otherwise it was processed before

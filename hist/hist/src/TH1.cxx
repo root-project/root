@@ -5429,7 +5429,7 @@ Long64_t TH1::Merge(TCollection *li)
       // in the case of an existing buffer (see if statement just before)
 
       // skip empty histograms 
-      Int_t histEntries = hist->GetEntries(); 
+      Double_t histEntries = hist->GetEntries();
       if (hist->fTsumw == 0 && histEntries == 0) continue;
 
       if (allHaveLabels || (hist->GetXaxis()->GetXmin() < hist->GetXaxis()->GetXmax()) ) {
