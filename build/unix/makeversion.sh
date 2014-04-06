@@ -30,6 +30,6 @@ make -s -t; make -s -t; make -s -t
 touch core/base/src/TROOT.cxx
 touch core/base/inc/TVersionCheck.h
 touch rootx/src/rootxx.cxx
-make
+make -j `bin/root-config --ncpu`
 
 echo "root-config --version reports: `bin/root-config --prefix=. --version`"
