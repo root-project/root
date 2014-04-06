@@ -7,13 +7,23 @@
 
 ROOTEXE=bin/root.exe
 SCRIPT=build/version.cxx
+CORETEAM=build/unix/git_coreteam.py
 
 $ROOTEXE -q -b -l $SCRIPT
+
+python $CORETEAM
+if [ "$?" -eq "0" ] ; then
+   mv rootcoreteam.h rootx/src/rootcoreteam.h
+fi
 
 if test "x`uname | grep -i cygwin`" != "x"; then
     echo 'Need to run "dos2unix base/inc/RVersion.h"'
     dos2unix core/base/inc/RVersion.h
+    echo 'Need to run "dos2unix "rootx/src/rootcoreteam.h"'
+    dos2unix rootx/src/rootcoreteam.h
 fi
+
+# put coreteam.h in place
 
 echo "Update also doc/vXXX/index.html to `cat build/version_number`."
 echo ""
@@ -30,6 +40,6 @@ make -s -t; make -s -t; make -s -t
 touch core/base/src/TROOT.cxx
 touch core/base/inc/TVersionCheck.h
 touch rootx/src/rootxx.cxx
-make
+make -j `bin/root-config --ncpu`
 
 echo "root-config --version reports: `bin/root-config --prefix=. --version`"
