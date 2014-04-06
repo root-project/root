@@ -23,8 +23,6 @@ if test "x`uname | grep -i cygwin`" != "x"; then
     dos2unix rootx/src/rootcoreteam.h
 fi
 
-# put coreteam.h in place
-
 echo "Update also doc/vXXX/index.html to `cat build/version_number`."
 echo ""
 echo "New version is `cat build/version_number`. Updating dependencies..."
