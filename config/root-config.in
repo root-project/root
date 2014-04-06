@@ -532,7 +532,7 @@ Usage: root-config [--prefix[=DIR]] [--exec-prefix[=DIR]] [--version]\
  [--glibs] [--evelibs] [--bindir] [--libdir] [--incdir] [--etcdir]\
  [--noauxcflags] [--noauxlibs] [--noldflags] [--has-<feature>] [--arch]\
  [--platform] [--dicttype] [--config] [--features] [--svn-revision]\
- [--python-version] [--cc] [--cxx] [--f77] [--ld ] [--help]"
+ [--python-version] [--ncpu] [--cc] [--cxx] [--f77] [--ld ] [--help]"
 
 if test $# -eq 0; then
    echo "${usage}" 1>&2
@@ -834,6 +834,29 @@ while test $# -gt 0; do
       ### output all supported features
       out="$out$features"  # no space, features starts with space
       ;;
+    --ncpu)
+      ### number of available cores
+      ncpu=1
+      case $arch in
+      freebsd* | openbsd* | linux*)
+         ncpu=$(awk '/^processor/ {++n} END {print n}' /proc/cpuinfo)
+         ;;
+      macosx*)
+         ncpu=$(sysctl -n hw.ncpu)
+         ;;
+      aix*)
+         ncpu=$(prtconf | grep 'Number Of Processors' | awk '{ print $4 }')
+         ;;
+      solaris*)
+         ncpu=$(kstat cpu_info | grep core_id | awk '{ print $2}' | uniq | wc -l)
+         ;;
+      win32)
+         ;;
+      *)
+         ;;
+      esac
+      out="$out $ncpu"
+      ;;
     --dicttype)
       ### output the dictionary type
       out="$out $dicttype"
@@ -884,6 +907,7 @@ while test $# -gt 0; do
       echo "  --version             Print the ROOT version"
       echo "  --svn-revision        Print the ROOT SVN revision number"
       echo "  --python-version      Print the Python version used by ROOT"
+      echo "  --npcu                Print number of available (hyperthreaded) cores"
       echo "  --cc                  Print alternative C compiler specified when ROOT was built"
       echo "  --cxx                 Print alternative C++ compiler specified when ROOT was built"
       echo "  --f77                 Print alternative Fortran compiler specified when ROOT was built"
