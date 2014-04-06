@@ -88,18 +88,6 @@ const char *gConception[] = {
    0
 };
 
-const char *gLeadDevelopers[] = {
-   "Rene Brun",
-   "Philippe Canal",
-   "Fons Rademakers",
-   0
-};
-
-const char *gRootDocumentation[] = {
-   "Ilka Antcheva",
-   0
-};
-
 char **gContributors = 0;
 
 
@@ -764,13 +752,7 @@ int DrawCredits(bool draw, bool extended)
    y = DrawCreditItem("Conception: ", gConception, y, draw);
    y += 2 * lineSpacing;
 
-//   y = DrawCreditItem("Lead Developers: ", gLeadDevelopers, y, draw);
-//   y += 2 * lineSpacing - 1;  // special layout tweak ... WUT????
-
    y = DrawCreditItem("Core Engineering: ", ROOT::ROOTX::gROOTCoreTeam, y, draw);
-   y += 2 * lineSpacing;
-
-   y = DrawCreditItem("Documentation: ", gRootDocumentation, y, draw);
 
    if (extended && gContributors) {
       y += 2 * lineSpacing;

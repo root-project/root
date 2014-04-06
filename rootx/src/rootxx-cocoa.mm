@@ -60,15 +60,6 @@ namespace {
 
 NSString * const gConception = @"Rene Brun, Fons Rademakers\n\n";
 
-/*
-NSString * const gLeadDevelopers = @"Rene Brun, Philippe Canal, Fons Rademakers\n\n";
-//Ok, and poor little me.
-NSString * const gRootDevelopers = @"Bertrand Bellenot, Olivier Couet, Gerardo Ganis, "
-                                    "Andrei Gheata, Lorenzo Moneta, Axel Naumann, "
-                                    "Paul Russo, Matevz Tadel, Timur Pocheptsov\n\n";
-*/
-NSString * const gRootDocumentation = @"Ilka Antcheva\n\n";
-
 bool showAboutInfo = false;
 
 }
@@ -1004,14 +995,6 @@ bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
       return false;
    }
    
-   if (!AddSectionTitle(textToScroll, @"Documentation:  "))
-      //TODO: diagnostic.
-      return false;
-   
-   if (!AddSectionBody(textToScroll, gRootDocumentation))
-      //TODO: diagnostic.
-      return false;
-
    return true;
 }
 
