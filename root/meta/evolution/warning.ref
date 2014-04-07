@@ -56,7 +56,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
 
 Processing checkWarn.C(3)...
 
-StreamerInfo for class: Tdata, version=1, checksum=0x9b8d6395
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
@@ -200,7 +200,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
 
 Processing checkWarn.C(15)...
 
-StreamerInfo for class: Tdata, version=1, checksum=0x9b8d6395
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
@@ -240,7 +240,7 @@ StreamerInfo for class: Tdata, version=1, checksum=0x589374f7
 
 Processing checkWarn.C(17)...
 
-StreamerInfo for class: Tdata, version=1, checksum=0x9b8d6395
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 Warning in <TStreamerInfo::BuildCheck>: 
@@ -257,11 +257,11 @@ the in-memory layout version 1:
 vs
    double mydouble_two; //
 
-StreamerInfo for class: Tdata, version=1, checksum=0x9b8d6395
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 
-StreamerInfo for class: Tdata, version=1, checksum=0x9b8d6395
+StreamerInfo for class: Tdata, version=1, checksum=0x30d1fe9d
   double         mydouble_two    offset= n/a type= 8                     
    i= 0, mydouble_two    type=  8, offset= n/a, len=1, method=0
 
