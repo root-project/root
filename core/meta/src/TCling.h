@@ -501,7 +501,7 @@ private: // Private Utility Functions
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
-   bool UpdateClassInstance(TClass* cl, const clang::DeclContext* DC);
+   void UnloadClassMembers(TClass* cl, const clang::DeclContext* DC);
 
 };
 

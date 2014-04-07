@@ -4537,7 +4537,7 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
 }
 
 //______________________________________________________________________________
-bool TCling::UpdateClassInstance(TClass* cl, const clang::DeclContext* DC) {
+void TCling::UnloadClassMembers(TClass* cl, const clang::DeclContext* DC) {
 
    // Helper function to go through the members of a class or namespace and unload them.
 
@@ -4656,7 +4656,7 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
             if (TClass::GetClass(RD, vectTClass)) {
                for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
                     CI != CE; ++CI) {
-                  UpdateClassInstance((*CI), RD);
+                  UnloadClassMembers((*CI), RD);
                   (*CI)->ResetClassInfo();
                }
             }
@@ -4666,7 +4666,7 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
             if (TClass::GetClass(ND->getCanonicalDecl(), vectTClass)) {
                for (std::vector<TClass*>::iterator CI = vectTClass.begin(), CE = vectTClass.end();
                     CI != CE; ++CI) {
-                  UpdateClassInstance((*CI), ND);
+                  UnloadClassMembers((*CI), ND);
                   if (ND->isOriginalNamespace()) {
                      (*CI)->ResetClassInfo();
                   }
