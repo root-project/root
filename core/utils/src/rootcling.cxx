@@ -216,7 +216,7 @@ const char *rootClingHelp =
 #include "OptionParser.h"
 
 #ifndef ROOT_STAGE1_BUILD
-#include "core/meta/src/TCling.h"
+#include "rootclingTCling.h"
 #endif
 
 #ifdef WIN32
@@ -3725,9 +3725,17 @@ int RootCling(int argc,
          pcmArgs.push_back(clingArgs[parg]);
    }
 
+   std::string resourceDir;
+
+#ifdef R__LLVMRESOURCEDIR
+   resourceDir = R__LLVMRESOURCEDIR;
+#else
+   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
+#endif
+
 #ifndef ROOT_STAGE1_BUILD
    // (clingArgsC.size(), &clingArgsC[0], resourceDir.c_str())
-   cling::Interpreter& interp = *((TCling*)gCling)->getInterpreter();
+   cling::Interpreter& interp = *TCling__GetInterpreter();
 #else
    // cling-only arguments
    std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT);
@@ -3747,13 +3755,6 @@ int RootCling(int argc,
       clingArgsC.push_back(clingArgs[iclingArgs].c_str());
    }
 
-   std::string resourceDir;
-
-#ifdef R__LLVMRESOURCEDIR
-   resourceDir = R__LLVMRESOURCEDIR;
-#else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
-#endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
 #endif // ROOT_STAGE1_BUILD
