@@ -808,8 +808,11 @@ TCling::TCling(const char *name, const char *title)
    // rootcling also uses TCling for generating the dictionary ROOT files.
    // It needs to run in syntax-only mode, i.e. without execution. Detect
    // rootcling by looking for a rootcling-only symbol:
-   if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym"))
+   if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+      clingArgsStorage.push_back("-D__ROOTCLING__");
       clingArgsStorage.push_back("-fsyntax-only");
+      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+   }
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
