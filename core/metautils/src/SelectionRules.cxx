@@ -26,6 +26,7 @@
 #include "clang/Basic/SourceManager.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclCXX.h"
+#include "clang/AST/DeclTemplate.h"
 
 #include "cling/Interpreter/Interpreter.h"
 
@@ -763,48 +764,65 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    std::string name_value;
    std::string pattern_value;
    
-   for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin();
-       it != fClassSelectionRules.end(); ++it) {
-
-      BaseSelectionRule::EMatchType match = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", IsLinkdefFile());
-
+   bool earlyReturn=false;
+   const ClassSelectionRule* retval = nullptr;
+   std::string nArgsToKeep("");
+   for(auto& rule : fClassSelectionRules) {
+      BaseSelectionRule::EMatchType match = rule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", IsLinkdefFile());      
       if (match != BaseSelectionRule::kNoMatch) {
+         // Check if the template must have its arguments manipulated                             
+         if (rule.GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
+            if (const clang::ClassTemplateSpecializationDecl* ctsd =
+            llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))            
+               if(const clang::ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
+                  fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
+                                                   std::atoi(nArgsToKeep.c_str()));  
+               }
+         }
+         
+         if (earlyReturn) continue;
+         
          // If we have a match.
-         selector = &(*it);
-         if (it->GetSelected() == BaseSelectionRule::kYes) {
+         selector = &(rule);         
+         if (rule.GetSelected() == BaseSelectionRule::kYes) {
+
             if (IsLinkdefFile()){
                // rootcint prefers explicit rules over pattern rules
                if (match == BaseSelectionRule::kName) {
-                  explicit_selector = &(*it);
+                  explicit_selector = &(rule);
                } else if (match == BaseSelectionRule::kPattern) {
                   // NOTE: weird ...
-                  if (it->GetAttributeValue("pattern", pattern_value) &&
-                        pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(*it);
+                  if (rule.GetAttributeValue("pattern", pattern_value) &&
+                        pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(rule);
                }
             }
-         } else if (it->GetSelected() == BaseSelectionRule::kNo) {
+         } else if (rule.GetSelected() == BaseSelectionRule::kNo) {
+
             if (!IsLinkdefFile()) {
                // in genreflex - we could explicitly select classes from other source files
                if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
                else {
-                  return selector; // explicit No returned
+                  retval = selector;
+                  earlyReturn=true; // explicit No returned
                }
             }
             if (match == BaseSelectionRule::kPattern) {
                //this is for the Linkdef selection
-               if (it->GetAttributeValue("pattern", pattern_value) &&
+               if (rule.GetAttributeValue("pattern", pattern_value) &&
                      (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                else
-                  return 0;
+                  earlyReturn=true;
             }
             else
-               return 0;
+               earlyReturn=true;
          }
-         else if (it->GetSelected() == BaseSelectionRule::kDontCare && !(it->HasMethodSelectionRules()) && !(it->HasFieldSelectionRules())) {
-            return 0;
+         else if (rule.GetSelected() == BaseSelectionRule::kDontCare && !(rule.HasMethodSelectionRules()) && !(rule.HasFieldSelectionRules())) {
+            earlyReturn=true;
          }
       }
    } // Loop over the rules.
+   
+   if (earlyReturn) return retval;
    
    if (IsLinkdefFile()) {
       // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes

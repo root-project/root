@@ -734,7 +734,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    const ClassSelectionRule *selected = typedefNameDecl ? selectedFromTypedef : selectedFromRecDecl;
 
    if (! selected) return true; // early exit. Nothing more to be done.
-
+   
    // Selected through typedef but excluded with concrete classname 
    bool excludedFromRecDecl = false;
    if ( selectedFromRecDecl )
@@ -769,23 +769,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // Insert in the selected classes if not already there
       // We need this check since the same class can be selected through its name or typedef
       bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
-
-      // One pass is needed to fill the map of template ptrs - # args to keep.
-      // The second one for the actual selection.
-      if(rcrdDeclAlreadySelected && fFirstPass){
-         
-         // Here we decorate the norm context
-         std::string nArgsToKeep("");
-         if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
-            if (const ClassTemplateSpecializationDecl* ctsd =
-            llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(recordDecl))            
-               if(const ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
-                  fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
-                                                  std::atoi(nArgsToKeep.c_str()));
-                  
-               }
-         }
-      }
       
       if(rcrdDeclAlreadySelected && !fFirstPass){
          

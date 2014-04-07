@@ -3772,7 +3772,7 @@ int RootCling(int argc,
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern,"ROOT::Meta::Selection*"));
    }
    
-   SelectionRules selectionRules(interp,namesForExclusion);
+   SelectionRules selectionRules(interp,normCtxt,namesForExclusion);
    
    std::string extraIncludes;
 

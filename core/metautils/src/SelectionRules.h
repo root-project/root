@@ -32,6 +32,12 @@ namespace cling {
    class Interpreter;
 }
 
+namespace ROOT{
+   namespace TMetaUtils {
+      class TNormalizedCtxt;
+   }
+}
+
 class SelectionRules {
    
 public:
@@ -42,11 +48,13 @@ public:
    };
    
    SelectionRules(cling::Interpreter &interp,
+                  ROOT::TMetaUtils::TNormalizedCtxt& normCtxt,
                   const std::vector<std::pair<std::string,std::string>>& namesForExclusion):
       fSelectionFileType(kNumSelectionFileTypes),
       fIsDeep(false),
       fHasFileNameRule(false),
       fRulesCounter(0),
+      fNormCtxt(normCtxt),
       fInterp(interp) {
          long counter=1;
          for (auto& attrValPair : namesForExclusion){
@@ -153,6 +161,7 @@ private:
    bool fHasFileNameRule; // if we have a file name rule, this should be set to true
    long int fRulesCounter;
    
+   ROOT::TMetaUtils::TNormalizedCtxt& fNormCtxt;
    cling::Interpreter &fInterp;
    
 };
