@@ -211,6 +211,10 @@ const char *rootClingHelp =
 
 #include "OptionParser.h"
 
+#ifndef ROOTBUILD
+#include "core/meta/src/TCling.h"
+#endif
+
 #ifdef WIN32
  const std::string gPathSeparator ("\\");
  const std::string gLibraryExtension (".dll");
@@ -3712,6 +3716,10 @@ int RootCling(int argc,
          pcmArgs.push_back(clingArgs[parg]);
    }
 
+#ifdef ROOTBUILD
+   // (clingArgsC.size(), &clingArgsC[0], resourceDir.c_str())
+   cling::Interpreter& interp = *((TCling*)gCling)->getInterpreter();
+#else
    // cling-only arguments
    std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
    clingArgs.push_back(interpInclude);
@@ -3739,7 +3747,8 @@ int RootCling(int argc,
 #endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
-   
+#endif // ROOTBUILD
+
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
