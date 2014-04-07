@@ -2130,10 +2130,13 @@ namespace {
    // 2 distinct TStreamerInfos
    class TMemberInfo {
    public:
+      TClass  *fParent;
       TString fName;
       TString fClassName;
       TString fComment;
       Int_t   fDataType;
+
+      TMemberInfo(TClass *parent) : fParent(parent) {};
 
       void SetDataType(Int_t datatype) {
          fDataType = datatype;
@@ -2143,7 +2146,7 @@ namespace {
          fName = name;
       }
       void SetClassName(const char *name) {
-         fClassName = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd );
+         fClassName = TClassEdit::ResolveTypedef(TClassEdit::ShortType( name, TClassEdit::kDropStlDefault | TClassEdit::kDropStd ).c_str(),kTRUE);
       }
       void SetComment(const char *title) {
          const char *left = strstr(title,"[");
@@ -2196,11 +2199,18 @@ namespace {
             } else if ( (fClassName == "unsigned long" && (other.fClassName == "unsigned long long" || other.fClassName == "ULong64_t"))
                        || ( (fClassName == "unsigned long long" || fClassName == "ULong64_t") && other.fClassName == "unsigned long") ) {
                // This is okay both have the same on file format.
-            } else if (TClassEdit::IsSTLCont(fName)) {
-               TString name = TClassEdit::ShortType( fName, TClassEdit::kDropStlDefault );
-               TString othername = TClassEdit::ShortType( other.fName, TClassEdit::kDropStlDefault );
+            } else if (TClassEdit::IsSTLCont(fClassName)) {
+               TString name = TClassEdit::ShortType( fClassName, TClassEdit::kDropStlDefault );
+               TString othername = TClassEdit::ShortType( other.fClassName, TClassEdit::kDropStlDefault );
                if (name != othername) {
-                  return kTRUE;
+                  TClass *cl = TClass::GetClass(name);
+                  TClass *otherCl = TClass::GetClass(othername);
+                  if (!CollectionMatch(cl,otherCl)) {
+                     TClass *oldFixedClass = FixCollectionV5(fParent,cl,otherCl);
+                     if (!oldFixedClass || !CollectionMatch(oldFixedClass,otherCl)) {
+                        return kTRUE;
+                     }
+                  }
                }
             } else {
                return kTRUE;
@@ -2404,8 +2414,8 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
    next.Reset();
    infonext.Reset();
 
-   TMemberInfo local;
-   TMemberInfo other;
+   TMemberInfo local(GetClass());
+   TMemberInfo other(cl ? cl : info->GetClass());
    UInt_t idx = 0;
    while(!done) {
       local.Clear();
