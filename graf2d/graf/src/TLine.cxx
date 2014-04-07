@@ -231,9 +231,11 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             this->SetY1(gPad->AbsPixeltoY(py1));
             this->SetX2(gPad->AbsPixeltoX(px2));
             this->SetY2(gPad->AbsPixeltoY(py2));
-            gPad->Modified(kTRUE);
-            gPad->Update();
          }
+      }
+      if (opaque) {
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
       break;
 
@@ -296,7 +298,8 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (p2) fY1 = fY2;
          }
          gPad->Modified(kTRUE);
-         gVirtualX->SetLineColor(-1);
+         gPad->Update();
+         if (!opaque) gVirtualX->SetLineColor(-1);
       }
       break;
 
