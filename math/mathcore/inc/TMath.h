@@ -788,20 +788,24 @@ Double_t TMath::RMS(Iterator first, Iterator last)
    // Note that this function returns the sigma(standard deviation) and
    // not the root mean square of the array.
 
+   // Use the two pass algorithm, which is slower (! a factor of 2) but much more 
+   // precise.  Since we have a vector the 2 pass algorithm is still faster than the 
+   // Welford algorithm. (See also ROOT-5545)
+
    Double_t n = 0;
 
-   Double_t tot = 0, tot2 =0, adouble;
+   Double_t tot = 0;
+   Double_t mean = TMath::Mean(first,last);
    while ( first != last ) {
-      adouble=Double_t(*first);
-      tot += adouble; tot2 += adouble*adouble;
+      Double_t x = Double_t(*first);
+      tot += (x - mean)*(x - mean); 
       ++first;
       ++n;
    }
-   Double_t n1 = 1./n;
-   Double_t mean = tot*n1;
-   Double_t rms = TMath::Sqrt(TMath::Abs(tot2*n1 -mean*mean));
+   Double_t rms = (n > 1) ? TMath::Sqrt(tot/(n-1)) : 0.0;
    return rms;
 }
+
 
 template <typename T>
 Double_t TMath::RMS(Long64_t n, const T *a)
