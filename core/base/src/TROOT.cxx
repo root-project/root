@@ -1632,8 +1632,11 @@ void TROOT::InitInterpreter()
             "This will cause problems; please hide them or dlopen() them "
             "after the call to TROOT::InitInterpreter()!");
    }
-
+#ifdef ROOTLIBDIR
+   char *libcling = gSystem->DynamicPathName(ROOTLIBDIR "/libCling");
+#else
    char *libcling = gSystem->DynamicPathName("libCling");
+#endif
 
    gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
    delete [] libcling;
