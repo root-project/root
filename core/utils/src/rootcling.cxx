@@ -215,7 +215,7 @@ const char *rootClingHelp =
 
 #include "OptionParser.h"
 
-#ifndef ROOTBUILD
+#ifndef ROOT_STAGE1_BUILD
 #include "core/meta/src/TCling.h"
 #endif
 
@@ -237,11 +237,10 @@ const char *rootClingHelp =
 #else
 #include <unistd.h>
 #endif
-
-#ifdef ROOTBUILD
-# define ROOTBUILDVAL true
+#ifdef ROOT_STAGE1_BUILD
+const bool buildingROOT = true;
 #else
-# define ROOTBUILDVAL false
+bool buildingROOT = false;
 #endif
 
 #ifdef R__EXTERN_LLVMDIR
@@ -313,13 +312,13 @@ static std::string GetRelocatableHeaderName(const char *header, const std::strin
       // different relative path to the header files.
       result.erase(0, lenCurrWorkDir);
    }
-#ifdef ROOTBUILD
-   // For ROOT, convert module directories like core/base/inc/ to include/
-   int posInc = result.find("/inc/");
-   if (posInc != -1) {
-      result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+   if (buildingROOT) {
+      // For ROOT, convert module directories like core/base/inc/ to include/
+      int posInc = result.find("/inc/");
+      if (posInc != -1) {
+         result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+      }
    }
-#endif
    return result;
 }
 
@@ -2096,10 +2095,11 @@ const char *CopyArg(const char *original)
    // If the argument starts with MODULE/inc, strip it
    // to make it the name we can use in #includes.
 
-#ifdef ROOTBUILD
-   if (IsSelectionFile(original)) {
+   if (!buildingROOT)
       return original;
-   }
+
+   if (IsSelectionFile(original))
+      return original;
 
    const char *inc = strstr(original, "\\inc\\");
    if (!inc)
@@ -2107,9 +2107,6 @@ const char *CopyArg(const char *original)
    if (inc && strlen(inc) > 5)
       return inc + 5;
    return original;
-#else
-   return original;
-#endif
 }
 
 //______________________________________________________________________________
@@ -2213,9 +2210,9 @@ static int GenerateModule(TModuleGenerator& modGen,
 
       CI->getFrontendOpts().RelocatablePCH = true;
       std::string ISysRoot("/DUMMY_SYSROOT/include/");
-#ifdef ROOTBUILD
-      ISysRoot = (currentDirectory + "/").c_str();
-#endif
+      if (buildingROOT)
+         ISysRoot = (currentDirectory + "/").c_str();
+
       Writer.WriteAST(CI->getSema(), modGen.GetModuleFileName().c_str(),
                       module, ISysRoot.c_str());
 
@@ -3451,6 +3448,13 @@ int RootCling(int argc,
    GetCurrentDirectory(currentDirectory);
 
    ic = 1;
+#ifndef ROOT_STAGE1_BUILD
+   if (strcmp("-rootbuild", argv[ic]) == 0) {
+      // running rootcling for ROOT itself.
+      buildingROOT = true;
+      ic++;
+   }
+#endif
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
@@ -3591,8 +3595,9 @@ int RootCling(int argc,
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#if !defined(ROOTBUILD) && defined(ROOTINCDIR)
-   SetRootSys();
+#if defined(ROOTINCDIR)
+   if (!buildingROOT)
+      SetRootSys();
 #endif
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
@@ -3712,7 +3717,7 @@ int RootCling(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
+   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(buildingROOT));
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -3720,12 +3725,12 @@ int RootCling(int argc,
          pcmArgs.push_back(clingArgs[parg]);
    }
 
-#ifndef ROOTBUILD
+#ifndef ROOT_STAGE1_BUILD
    // (clingArgsC.size(), &clingArgsC[0], resourceDir.c_str())
    cling::Interpreter& interp = *((TCling*)gCling)->getInterpreter();
 #else
    // cling-only arguments
-   std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
+   std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT);
    clingArgs.push_back(interpInclude);
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
@@ -3747,14 +3752,19 @@ int RootCling(int argc,
 #ifdef R__LLVMRESOURCEDIR
    resourceDir = R__LLVMRESOURCEDIR;
 #else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(ROOTBUILDVAL);
+   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
 #endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
-#endif // ROOTBUILD
+#endif // ROOT_STAGE1_BUILD
 
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
+#ifdef ROOTINCDIR
+   const bool useROOTINCDIR = !buildingROOT;
+#else
+   const bool useROOTINCDIR = false;
+#endif
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 // CINT uses to define a few header implicitly, we need to do it explicitly.
        || interp.declare("#include <assert.h>\n"
@@ -3763,20 +3773,16 @@ int RootCling(int argc,
                          "#include <math.h>\n"
                          "#include <string.h>\n"
                          ) != cling::Interpreter::kSuccess
-#ifdef ROOTBUILD
-       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
-#else
-# ifndef ROOTINCDIR
-       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
-# else
-       || interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-# endif
+       || (!useROOTINCDIR
+           && interp.declare("#include \"Rtypes.h\"\n"
+                             "#include \"TClingRuntime.h\"\n"
+                             "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
+#ifdef ROOTINCDIR
+       || (useROOTINCDIR
+           && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
+                             "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
+                             "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
+           )
 #endif
        ) {
       // There was an error.
@@ -3954,7 +3960,7 @@ int RootCling(int argc,
    
    // Exclude string not to re-generatre the dictionary
    std::vector<std::pair<std::string,std::string>> namesForExclusion;
-   if (!ROOTBUILDVAL){
+   if (!buildingROOT){
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name,"std::string"));
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern,"ROOT::Meta::Selection*"));
    }
