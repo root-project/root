@@ -1632,14 +1632,18 @@ void TROOT::InitInterpreter()
             "This will cause problems; please hide them or dlopen() them "
             "after the call to TROOT::InitInterpreter()!");
    }
+
+   char *libclingStorage = 0;
+   const char *libcling = 0;
 #ifdef ROOTLIBDIR
-   char *libcling = gSystem->DynamicPathName(ROOTLIBDIR "/libCling");
+   libcling = ROOTLIBDIR "/libCling";
 #else
-   char *libcling = gSystem->DynamicPathName("libCling");
+   libclingStorage = gSystem->DynamicPathName("libCling");
+   libcling = libclingStorage;
 #endif
 
    gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
-   delete [] libcling;
+   delete [] libclingStorage;
    if (!gInterpreterLib) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
