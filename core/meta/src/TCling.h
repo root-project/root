@@ -45,6 +45,7 @@ namespace llvm {
 namespace clang {
    class CXXRecordDecl;
    class Decl;
+   class DeclContext;
    class EnumDecl;
    class FunctionDecl;
    class NamespaceDecl;
@@ -500,6 +501,7 @@ private: // Private Utility Functions
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
+   bool UpdateClassInstance(TClass* cl, const clang::DeclContext* DC);
 
 };
 
