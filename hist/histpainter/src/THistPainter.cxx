@@ -2370,12 +2370,21 @@ in <tt>colors[N]</tt>, etc. If the maximum cell content is greater than
 <p>If <tt> ncolors <= 0</tt>, a default palette (see below) of 50 colors is
 defined. This palette is recommended for pads, labels ...
 
-<p>If <tt>ncolors == 1 && colors == 0</tt>, a pretty palette with a violet to
-red spectrum is created. It is recommended you use this palette when drawing
-legos, surfaces or contours.
-
-<p>If ncolors > 50 and colors=0, the DeepSea palette is used.
-(see <tt>TColor::CreateGradientColorTable</tt> for more details)
+<tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
+Spectrum Violet->Red is created with 50 colors. That's the default rain bow
+palette.
+<p>
+Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>.
+The following value of <tt>ncolors</tt> give access to:
+<p>
+<pre>
+if ncolors = 51 and colors=0, a Deep Sea palette is used.
+if ncolors = 52 and colors=0, a Grey Scale palette is used.
+if ncolors = 53 and colors=0, a Dark Body Radiator palette is used.
+if ncolors = 54 and colors=0, a two-color hue palette palette is used.(dark blue through neutral gray to bright yellow)
+if ncolors = 55 and colors=0, a Rain Bow palette is used.
+if ncolors = 56 and colors=0, an inverted Dark Body Radiator palette is used.
+</pre>
 
 <p> If <tt>ncolors > 0 && colors == 0</tt>, the default palette is used
 with a maximum of ncolors.

@@ -1606,7 +1606,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    <p>
    <tt>if ncolors == 1 && colors == 0</tt>, then a Pretty Palette with a
    Spectrum Violet->Red is created with 50 colors. That's the default rain bow
-   pallette.
+   palette.
    <p>
    Other prefined palettes with 255 colors are available when <tt>colors == 0</tt>.
    The following value of <tt>ncolors</tt> give access to:
