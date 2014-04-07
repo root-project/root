@@ -789,10 +789,10 @@ endif
 	   touch $@; \
 	fi)
 
-$(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGTMPDEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCINTTMP) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
+	$(ROOTCLINGTMP) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
 $(call pcmname,$(CORELIB)): $(COREDS)
@@ -804,10 +804,10 @@ $(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	   "$(COREDO) $(COREO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 
-$(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCLINGTMPDEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating rootmap $@..."
-	$(ROOTCINTTMP) -r $(COREDS) -s lib/libCore.$(SOEXT) \
+	$(ROOTCLINGTMP) -r $(COREDS) -s lib/libCore.$(SOEXT) \
 	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
@@ -1058,8 +1058,8 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-etc/allDict.cxx.pch: $(MAKEONEPCM) $(ROOTCINTTMPDEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+etc/allDict.cxx.pch: $(ROOTCLINGTMPDEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
+	@$(MAKEONEPCM)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)

@@ -49,15 +49,15 @@ $(ODBCLIB):     $(ODBCO) $(ODBCDO) $(ORDER_) $(MAINLIBS) $(ODBCLIBDEP)
 $(call pcmrule,ODBC)
 	$(noop)
 
-$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
+$(ODBCDS):     $(ODBCH) $(ODBCL) $(ROOTCLINGEXE) $(call pcmdep,ODBC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
-$(ODBCMAP):     $(ODBCH) $(ODBCL) $(ROOTCINTTMPDEP) $(call pcmdep,ODBC)
+$(ODBCMAP):     $(ODBCH) $(ODBCL) $(ROOTCLINGEXE) $(call pcmdep,ODBC)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(ODBCDS) $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
+		$(ROOTCLINGSTAGE2) -r $(ODBCDS) $(call dictModule,ODBC) -c $(ODBCINCDIR:%=-I%) $(ODBCH) $(ODBCL)
 
 all-$(MODNAME): $(ODBCLIB)
 

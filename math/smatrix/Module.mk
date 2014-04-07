@@ -77,20 +77,20 @@ $(SMATRIXLIB): $(SMATRIXO) $(SMATRIXDO) $(SMATRIXDO32) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,SMATRIX)
 	$(noop)
 
-$(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcmdep,SMATRIX)
+$(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
 
-$(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCINTTMPDEP)
+$(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
+		$(ROOTCLINGSTAGE2) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32)
 
-$(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCINTTMPDEP) $(call pcmdep,SMATRIX)
+$(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
+		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
 
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range

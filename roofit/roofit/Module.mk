@@ -49,15 +49,15 @@ $(ROOFITLIB):   $(ROOFITO) $(ROOFITDO) $(ORDER_) $(MAINLIBS) $(ROOFITLIBDEP)
 $(call pcmrule,ROOFIT)
 	$(noop)
 
-$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
+$(ROOFITDS):    $(ROOFITH) $(ROOFITL) $(ROOTCLINGEXE) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
 
-$(ROOFITMAP):   $(ROOFITH) $(ROOFITL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOFIT)
+$(ROOFITMAP):   $(ROOFITH) $(ROOFITL) $(ROOTCLINGEXE) $(call pcmdep,ROOFIT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(ROOFITDS) $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
+		$(ROOTCLINGSTAGE2) -r $(ROOFITDS) $(call dictModule,ROOFIT) -c $(ROOFITH) $(ROOFITL)
 
 all-$(MODNAME): $(ROOFITLIB)
 

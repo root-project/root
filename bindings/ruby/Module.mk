@@ -63,15 +63,15 @@ $(RUBYROOTLIB): $(RUBYROOTO) $(RUBYROOTDO) $(ORDER_) $(MAINLIBS) $(RUBYLIBDEP)
 $(call pcmrule,RUBYROOT)
 	$(noop)
 
-$(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYROOT)
+$(RUBYROOTDS):  $(RUBYROOTH) $(RUBYROOTL) $(ROOTCLINGEXE) $(call pcmdep,RUBYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
 
-$(RUBYROOTMAP): $(RUBYROOTH) $(RUBYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,RUBYROOT)
+$(RUBYROOTMAP): $(RUBYROOTH) $(RUBYROOTL) $(ROOTCLINGEXE) $(call pcmdep,RUBYROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(RUBYROOTDS) $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
+		$(ROOTCLINGSTAGE2) -r $(RUBYROOTDS) $(call dictModule,RUBYROOT) -c $(RUBYROOTH) $(RUBYROOTL)
 
 $(RUBY64):      $(RUBY64O)
 		$(CC) $(LDFLAGS) -o $@ $(RUBY64O) \

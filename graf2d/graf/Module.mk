@@ -51,15 +51,15 @@ $(GRAFLIB):     $(GRAFO) $(GRAFDO) $(MATHTEXTLIBDEP) $(FREETYPEDEP) $(ORDER_) \
 $(call pcmrule,GRAF)
 	$(noop)
 
-$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
+$(GRAFDS):      $(GRAFH) $(GRAFL) $(ROOTCLINGEXE) $(call pcmdep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
-$(GRAFMAP):     $(GRAFH) $(GRAFL) $(ROOTCINTTMPDEP) $(call pcmdep,GRAF)
+$(GRAFMAP):     $(GRAFH) $(GRAFL) $(ROOTCLINGEXE) $(call pcmdep,GRAF)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GRAFDS) $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
+		$(ROOTCLINGSTAGE2) -r $(GRAFDS) $(call dictModule,GRAF) -c $(CINTFLAGS) $(GRAFH) $(GRAFL)
 
 all-$(MODNAME): $(GRAFLIB)
 

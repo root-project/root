@@ -50,16 +50,16 @@ $(SQLITELIB):   $(SQLITEO) $(SQLITEDO) $(ORDER_) $(MAINLIBS) $(SQLITELIBDEP)
 $(call pcmrule,SQLITE)
 	$(noop)
 
-$(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,SQLITE)
+$(SQLITEDS):    $(SQLITEH) $(SQLITEL) $(ROOTCLINGEXE) $(call pcmdep,SQLITE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SQLITE) \
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SQLITE) \
 		   -c $(SQLITEH) $(SQLITEL)
 
-$(SQLITEMAP):   $(SQLITEH) $(SQLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,SQLITE)
+$(SQLITEMAP):   $(SQLITEH) $(SQLITEL) $(ROOTCLINGEXE) $(call pcmdep,SQLITE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(SQLITEDS) $(call dictModule,SQLITE) \
+		$(ROOTCLINGSTAGE2) -r $(SQLITEDS) $(call dictModule,SQLITE) \
 		   -c $(SQLITEH) $(SQLITEL)
 
 all-$(MODNAME): $(SQLITELIB)

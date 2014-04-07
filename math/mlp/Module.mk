@@ -49,15 +49,15 @@ $(MLPLIB):      $(MLPO) $(MLPDO) $(ORDER_) $(MAINLIBS) $(MLPLIBDEP)
 $(call pcmrule,MLP)
 	$(noop)
 
-$(MLPDS):       $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcmdep,MLP)
+$(MLPDS):       $(MLPH) $(MLPL) $(ROOTCLINGEXE) $(call pcmdep,MLP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MLP) -c $(MLPH) $(MLPL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MLP) -c $(MLPH) $(MLPL)
 
-$(MLPMAP):      $(MLPH) $(MLPL) $(ROOTCINTTMPDEP) $(call pcmdep,MLP)
+$(MLPMAP):      $(MLPH) $(MLPL) $(ROOTCLINGEXE) $(call pcmdep,MLP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(MLPDS) $(call dictModule,MLP) -c $(MLPH) $(MLPL)
+		$(ROOTCLINGSTAGE2) -r $(MLPDS) $(call dictModule,MLP) -c $(MLPH) $(MLPL)
 
 all-$(MODNAME): $(MLPLIB)
 

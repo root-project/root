@@ -49,15 +49,15 @@ $(QTROOTLIB):   $(QTROOTO) $(QTROOTDO) $(ORDER_) $(MAINLIBS) $(QTROOTLIBDEP)
 $(call pcmrule,QTROOT)
 	$(noop)
 
-$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
+$(QTROOTDS):    $(QTROOTH) $(QTROOTL) $(ROOTCLINGEXE) $(call pcmdep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
 
-$(QTROOTMAP):   $(QTROOTH) $(QTROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,QTROOT)
+$(QTROOTMAP):   $(QTROOTH) $(QTROOTL) $(ROOTCLINGEXE) $(call pcmdep,QTROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(QTROOTDS) $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
+		$(ROOTCLINGSTAGE2) -r $(QTROOTDS) $(call dictModule,QTROOT) -c $(GQTCXXFLAGS) $(QTROOTH) $(QTROOTL)
 
 all-$(MODNAME): $(QTROOTLIB)
 

@@ -71,15 +71,15 @@ $(NETXLIB):     $(NETXO) $(NETXDO) $(ORDER_) $(MAINLIBS) $(NETXLIBDEP)
 $(call pcmrule,NETX)
 	$(noop)
 
-$(NETXDS):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+$(NETXDS):      $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
-$(NETXMAP):     $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP)
+$(NETXMAP):     $(NETXH) $(NETXL) $(XROOTDMAKE) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(NETXDS) $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
+		$(ROOTCLINGSTAGE2) -r $(NETXDS) $(call dictModule,NETX) -c $(NETXINCEXTRA) $(NETXH) $(NETXL)
 
 all-$(MODNAME): $(NETXLIB)
 

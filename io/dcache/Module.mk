@@ -48,15 +48,15 @@ $(DCACHELIB):   $(DCACHEO) $(DCACHEDO) $(ORDER_) $(MAINLIBS) $(DCACHELIBDEP)
 $(call pcmrule,DCACHE)
 	$(noop)
 
-$(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcmdep,DCACHE)
+$(DCACHEDS):    $(DCACHEH) $(DCACHEL) $(ROOTCLINGEXE) $(call pcmdep,DCACHE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
 
-$(DCACHEMAP):   $(DCACHEH) $(DCACHEL) $(ROOTCINTTMPDEP) $(call pcmdep,DCACHE)
+$(DCACHEMAP):   $(DCACHEH) $(DCACHEL) $(ROOTCLINGEXE) $(call pcmdep,DCACHE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(DCACHEDS) $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
+		$(ROOTCLINGSTAGE2) -r $(DCACHEDS) $(call dictModule,DCACHE) -c $(DCACHEH) $(DCACHEL)
 
 all-$(MODNAME): $(DCACHELIB)
 

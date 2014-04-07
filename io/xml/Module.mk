@@ -49,15 +49,15 @@ $(XMLLIB):      $(XMLO) $(XMLDO) $(ORDER_) $(MAINLIBS) $(XMLLIBDEP)
 $(call pcmrule,XML)
 	$(noop)
 
-$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcmdep,XML)
+$(XMLDS):       $(XMLH) $(XMLL) $(ROOTCLINGEXE) $(call pcmdep,XML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,XML) -c $(XMLH) $(XMLL)
 
-$(XMLMAP):      $(XMLH) $(XMLL) $(ROOTCINTTMPDEP) $(call pcmdep,XML)
+$(XMLMAP):      $(XMLH) $(XMLL) $(ROOTCLINGEXE) $(call pcmdep,XML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(XMLDS) $(call dictModule,XML) -c $(XMLH) $(XMLL)
+		$(ROOTCLINGSTAGE2) -r $(XMLDS) $(call dictModule,XML) -c $(XMLH) $(XMLL)
 
 all-$(MODNAME): $(XMLLIB)
 

@@ -53,15 +53,15 @@ $(GEOCADLIB):   $(GEOCADO) $(GEOCADDO) $(ORDER_) $(MAINLIBS) $(GEOCADLIBDEP)
 $(call pcmrule,GEOCAD)
 	$(noop)
 
-$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcmdep,GEOCAD)
+$(GEOCADDS):    $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCLINGEXE) $(call pcmdep,GEOCAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
 
-$(GEOCADMAP):   $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCINTTMPDEP) $(call pcmdep,GEOCAD)
+$(GEOCADMAP):   $(GEOCADH1) $(GEOCADH2) $(GEOCADL) $(ROOTCLINGEXE) $(call pcmdep,GEOCAD)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GEOCADDS) $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
+		$(ROOTCLINGSTAGE2) -r $(GEOCADDS) $(call dictModule,GEOCAD) -c $(GEOCADH2) $(GEOCADL)
 
 all-$(MODNAME): $(GEOCADLIB)
 

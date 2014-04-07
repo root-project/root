@@ -49,15 +49,15 @@ $(FITPANELLIB): $(FITPANELO) $(FITPANELDO) $(ORDER_) $(MAINLIBS) $(FITPANELLIBDE
 $(call pcmrule,FITPANEL)
 	$(noop)
 
-$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPANEL)
+$(FITPANELDS):  $(FITPANELH) $(FITPANELL) $(ROOTCLINGEXE) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
 
-$(FITPANELMAP): $(FITPANELH) $(FITPANELL) $(ROOTCINTTMPDEP) $(call pcmdep,FITPANEL)
+$(FITPANELMAP): $(FITPANELH) $(FITPANELL) $(ROOTCLINGEXE) $(call pcmdep,FITPANEL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(FITPANELDS) $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
+		$(ROOTCLINGSTAGE2) -r $(FITPANELDS) $(call dictModule,FITPANEL) -c $(FITPANELH) $(FITPANELL)
 
 all-$(MODNAME): $(FITPANELLIB)
 

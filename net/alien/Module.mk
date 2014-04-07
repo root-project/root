@@ -59,15 +59,15 @@ $(ALIENLIB):    $(ALIENO) $(ALIENDO) $(ORDER_) $(MAINLIBS) $(ALIENLIBDEP)
 $(call pcmrule,ALIEN)
 	$(noop)
 
-$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
+$(ALIENDS):     $(ALIENH) $(ALIENL) $(ROOTCLINGEXE) $(call pcmdep,ALIEN)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
 
-$(ALIENMAP):    $(ALIENH) $(ALIENL) $(ROOTCINTTMPDEP) $(call pcmdep,ALIEN)
+$(ALIENMAP):    $(ALIENH) $(ALIENL) $(ROOTCLINGEXE) $(call pcmdep,ALIEN)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(ALIENDS) $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
+		$(ROOTCLINGSTAGE2) -r $(ALIENDS) $(call dictModule,ALIEN) -c $(ALIENINCEXTRA) $(ALIENH) $(ALIENL)
 
 all-$(MODNAME): $(ALIENLIB)
 

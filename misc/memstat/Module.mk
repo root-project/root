@@ -56,15 +56,15 @@ $(MEMSTATLIB):  $(MEMSTATO) $(MEMSTATDO) $(ORDER_) $(MAINLIBS) $(MEMSTATLIBDEP)
 $(call pcmrule,MEMSTAT)
 	$(noop)
 
-$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcmdep,MEMSTAT)
+$(MEMSTATDS):   $(MEMSTATH) $(MEMSTATL) $(ROOTCLINGEXE) $(call pcmdep,MEMSTAT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
 
-$(MEMSTATMAP):  $(MEMSTATH) $(MEMSTATL) $(ROOTCINTTMPDEP) $(call pcmdep,MEMSTAT)
+$(MEMSTATMAP):  $(MEMSTATH) $(MEMSTATL) $(ROOTCLINGEXE) $(call pcmdep,MEMSTAT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(MEMSTATDS) $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
+		$(ROOTCLINGSTAGE2) -r $(MEMSTATDS) $(call dictModule,MEMSTAT) -c $(MEMSTATH) $(MEMSTATL)
 
 
 all-$(MODNAME): $(MEMSTATLIB)

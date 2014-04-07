@@ -49,15 +49,15 @@ $(IOLIB):       $(IOO) $(IODO) $(ORDER_) $(MAINLIBS) $(IOLIBDEP)
 $(call pcmrule,IO)
 	$(noop)
 
-$(IODS):        $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcmdep,IO)
+$(IODS):        $(IOH) $(IOL) $(ROOTCLINGTMPDEP) $(call pcmdep,IO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)
+		$(ROOTCLINGTMP) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)
 
-$(IOMAP):       $(IOH) $(IOL) $(ROOTCINTTMPDEP) $(call pcmdep,IO)
+$(IOMAP):       $(IOH) $(IOL) $(ROOTCLINGTMPDEP) $(call pcmdep,IO)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(IODS) $(call dictModule,IO) -c $(IOH) $(IOL)
+		$(ROOTCLINGTMP) -r $(IODS) $(call dictModule,IO) -c $(IOH) $(IOL)
 
 all-$(MODNAME): $(IOLIB)
 

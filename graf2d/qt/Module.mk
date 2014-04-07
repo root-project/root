@@ -97,15 +97,15 @@ $(GQTLIB):      $(GQTO) $(GQTDO) $(GQTMOCO) $(ORDER_) $(MAINLIBS) $(GQTLIBDEP)
 $(call pcmrule,GQT)
 	$(noop)
 
-$(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcmdep,GQT)
+$(GQTDS):       $(GQTH1) $(GQTL) $(ROOTCLINGEXE) $(call pcmdep,GQT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
 
-$(GQTMAP):      $(GQTH1) $(GQTL) $(ROOTCINTTMPDEP) $(call pcmdep,GQT)
+$(GQTMAP):      $(GQTH1) $(GQTL) $(ROOTCLINGEXE) $(call pcmdep,GQT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GQTDS) $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
+		$(ROOTCLINGSTAGE2) -r $(GQTDS) $(call dictModule,GQT) -c $(GQTCXXFLAGS) $(GQTH1) $(GQTL)
 
 all-$(MODNAME): $(GQTLIB)
 
@@ -164,7 +164,7 @@ lib/qtcint.dll: $(CINTTMP) $(ROOTCINTTMPEXE) cint/cint/lib/qt/qtcint.h \
                 cint/cint/lib/qt/qtfunctions.h
 	$(MAKECINTDLL) $(PLATFORM) C++ qtcint qt \
 	  " -p $(GQTCXXFLAGS) qtcint.h " \
-           "$(CINTTMP)" "$(ROOTCINTTMP)" \
+           "$(CINTTMP)" "$(ROOTCLINGSTAGE2)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" \
            "$(CINTCXXFLAGS) $(GQTCXXFLAGS)" "$(CINTCFLAGS)" \
            "$(LDFLAGS)" "$(QTLIBDIR) $(QTLIB) $(CINTDLLLIBLINK)" "$(SOFLAGS)" \

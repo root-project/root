@@ -49,15 +49,15 @@ $(GUIBLDLIB):   $(GUIBLDO) $(GUIBLDDO) $(ORDER_) $(MAINLIBS) $(GUIBLDLIBDEP)
 $(call pcmrule,GUIBLD)
 	$(noop)
 
-$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
+$(GUIBLDDS):    $(GUIBLDH) $(GUIBLDL) $(ROOTCLINGEXE) $(call pcmdep,GUIBLD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
 
-$(GUIBLDMAP):   $(GUIBLDH) $(GUIBLDL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIBLD)
+$(GUIBLDMAP):   $(GUIBLDH) $(GUIBLDL) $(ROOTCLINGEXE) $(call pcmdep,GUIBLD)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GUIBLDDS) $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
+		$(ROOTCLINGSTAGE2) -r $(GUIBLDDS) $(call dictModule,GUIBLD) -c $(GUIBLDH) $(GUIBLDL)
 
 all-$(MODNAME): $(GUIBLDLIB)
 

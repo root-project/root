@@ -49,15 +49,15 @@ $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)
 $(call pcmrule,TREE)
 	$(noop)
 
-$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
+$(TREEDS):      $(TREEH) $(TREEL) $(ROOTCLINGEXE) $(call pcmdep,TREE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TREE) -c $(TREEH) $(TREEL)
 
-$(TREEMAP):     $(TREEH) $(TREEL) $(ROOTCINTTMPDEP) $(call pcmdep,TREE)
+$(TREEMAP):     $(TREEH) $(TREEL) $(ROOTCLINGEXE) $(call pcmdep,TREE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(TREEDS) $(call dictModule,TREE) -c $(TREEH) $(TREEL)
+		$(ROOTCLINGSTAGE2) -r $(TREEDS) $(call dictModule,TREE) -c $(TREEH) $(TREEL)
 
 all-$(MODNAME): $(TREELIB)
 

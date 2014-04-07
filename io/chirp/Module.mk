@@ -48,15 +48,15 @@ $(CHIRPLIB):    $(CHIRPO) $(CHIRPDO) $(ORDER_) $(MAINLIBS) $(CHIRPLIBDEP)
 $(call pcmrule,CHIRP)
 	$(noop)
 
-$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcmdep,CHIRP)
+$(CHIRPDS):     $(CHIRPH) $(CHIRPL) $(ROOTCLINGEXE) $(call pcmdep,CHIRP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
 
-$(CHIRPMAP):    $(CHIRPH) $(CHIRPL) $(ROOTCINTTMPDEP) $(call pcmdep,CHIRP)
+$(CHIRPMAP):    $(CHIRPH) $(CHIRPL) $(ROOTCLINGEXE) $(call pcmdep,CHIRP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(CHIRPDS) $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
+		$(ROOTCLINGSTAGE2) -r $(CHIRPDS) $(call dictModule,CHIRP) -c $(CHIRPH) $(CHIRPL)
 
 all-$(MODNAME): $(CHIRPLIB)
 

@@ -50,15 +50,15 @@ $(VMCLIB):      $(VMCO) $(VMCDO) $(ORDER_) $(MAINLIBS) $(VMCLIBDEP)
 $(call pcmrule,VMC)
 	$(noop)
 
-$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcmdep,VMC)
+$(VMCDS):       $(VMCH1) $(VMCL) $(ROOTCLINGEXE) $(call pcmdep,VMC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
 
-$(VMCMAP):      $(VMCH1) $(VMCL) $(ROOTCINTTMPDEP) $(call pcmdep,VMC)
+$(VMCMAP):      $(VMCH1) $(VMCL) $(ROOTCLINGEXE) $(call pcmdep,VMC)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(VMCDS) $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
+		$(ROOTCLINGSTAGE2) -r $(VMCDS) $(call dictModule,VMC) -c $(VMCH1) $(VMCL)
 
 all-$(MODNAME): $(VMCLIB)
 

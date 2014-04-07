@@ -49,15 +49,15 @@ $(MATRIXLIB):   $(MATRIXO) $(MATRIXDO) $(ORDER_) $(MAINLIBS) $(MATRIXLIBDEP)
 $(call pcmrule,MATRIX)
 	$(noop)
 
-$(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
+$(MATRIXDS):    $(MATRIXH) $(MATRIXL) $(ROOTCLINGEXE) $(call pcmdep,MATRIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
 
-$(MATRIXMAP):   $(MATRIXH) $(MATRIXL) $(ROOTCINTTMPDEP) $(call pcmdep,MATRIX)
+$(MATRIXMAP):   $(MATRIXH) $(MATRIXL) $(ROOTCLINGEXE) $(call pcmdep,MATRIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(MATRIXDS) $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
+		$(ROOTCLINGSTAGE2) -r $(MATRIXDS) $(call dictModule,MATRIX) -c $(MATRIXH) $(MATRIXL)
 
 all-$(MODNAME): $(MATRIXLIB)
 

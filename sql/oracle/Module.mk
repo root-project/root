@@ -49,15 +49,15 @@ $(ORACLELIB):   $(ORACLEO) $(ORACLEDO) $(ORDER_) $(MAINLIBS) $(ORACLELIBDEP)
 $(call pcmrule,ORACLE)
 	$(noop)
 
-$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcmdep,ORACLE)
+$(ORACLEDS):    $(ORACLEH) $(ORACLEL) $(ROOTCLINGEXE) $(call pcmdep,ORACLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
 
-$(ORACLEMAP):   $(ORACLEH) $(ORACLEL) $(ROOTCINTTMPDEP) $(call pcmdep,ORACLE)
+$(ORACLEMAP):   $(ORACLEH) $(ORACLEL) $(ROOTCLINGEXE) $(call pcmdep,ORACLE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(ORACLEDS) $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
+		$(ROOTCLINGSTAGE2) -r $(ORACLEDS) $(call dictModule,ORACLE) -c $(ORACLEINCDIR:%=-I%) $(ORACLEH) $(ORACLEL)
 
 all-$(MODNAME): $(ORACLELIB)
 

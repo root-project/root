@@ -64,15 +64,15 @@ $(PYTHIA6LIB):  $(PYTHIA6O) $(PYTHIA6DO) $(ORDER_) $(MAINLIBS) $(PYTHIA6LIBDEP)
 $(call pcmrule,PYTHIA6)
 	$(noop)
 
-$(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA6)
+$(PYTHIA6DS):   $(PYTHIA6H) $(PYTHIA6L) $(ROOTCLINGEXE) $(call pcmdep,PYTHIA6)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
 
-$(PYTHIA6MAP):  $(PYTHIA6H) $(PYTHIA6L) $(ROOTCINTTMPDEP) $(call pcmdep,PYTHIA6)
+$(PYTHIA6MAP):  $(PYTHIA6H) $(PYTHIA6L) $(ROOTCLINGEXE) $(call pcmdep,PYTHIA6)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PYTHIA6DS) $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
+		$(ROOTCLINGSTAGE2) -r $(PYTHIA6DS) $(call dictModule,PYTHIA6) -c $(PYTHIA6H) $(PYTHIA6L)
 
 all-$(MODNAME): $(PYTHIA6LIB)
 

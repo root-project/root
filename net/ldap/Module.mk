@@ -49,15 +49,15 @@ $(LDAPLIB):     $(LDAPO) $(LDAPDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,LDAP)
 	$(noop)
 
-$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
+$(LDAPDS):      $(LDAPH) $(LDAPL) $(ROOTCLINGEXE) $(call pcmdep,LDAP)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
 
-$(LDAPMAP):     $(LDAPH) $(LDAPL) $(ROOTCINTTMPDEP) $(call pcmdep,LDAP)
+$(LDAPMAP):     $(LDAPH) $(LDAPL) $(ROOTCLINGEXE) $(call pcmdep,LDAP)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(LDAPDS) $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
+		$(ROOTCLINGSTAGE2) -r $(LDAPDS) $(call dictModule,LDAP) -c $(LDAPH) $(LDAPL)
 
 all-$(MODNAME): $(LDAPLIB)
 

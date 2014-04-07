@@ -49,15 +49,15 @@ $(SPLOTLIB):    $(SPLOTO) $(SPLOTDO) $(ORDER_) $(MAINLIBS) $(SPLOTLIBDEP)
 $(call pcmrule,SPLOT)
 	$(noop)
 
-$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
+$(SPLOTDS):     $(SPLOTH) $(SPLOTL) $(ROOTCLINGEXE) $(call pcmdep,SPLOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
 
-$(SPLOTMAP):    $(SPLOTH) $(SPLOTL) $(ROOTCINTTMPDEP) $(call pcmdep,SPLOT)
+$(SPLOTMAP):    $(SPLOTH) $(SPLOTL) $(ROOTCLINGEXE) $(call pcmdep,SPLOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(SPLOTDS) $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
+		$(ROOTCLINGSTAGE2) -r $(SPLOTDS) $(call dictModule,SPLOT) -c $(SPLOTH) $(SPLOTL)
 
 all-$(MODNAME): $(SPLOTLIB)
 

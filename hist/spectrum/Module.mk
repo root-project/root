@@ -51,15 +51,15 @@ $(SPECTRUMLIB): $(SPECTRUMO) $(SPECTRUMDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,SPECTRUM)
 	$(noop)
 
-$(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcmdep,SPECTRUM)
+$(SPECTRUMDS):  $(SPECTRUMH) $(SPECTRUML) $(ROOTCLINGEXE) $(call pcmdep,SPECTRUM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
 
-$(SPECTRUMMAP): $(SPECTRUMH) $(SPECTRUML) $(ROOTCINTTMPDEP) $(call pcmdep,SPECTRUM)
+$(SPECTRUMMAP): $(SPECTRUMH) $(SPECTRUML) $(ROOTCLINGEXE) $(call pcmdep,SPECTRUM)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(SPECTRUMDS) $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
+		$(ROOTCLINGSTAGE2) -r $(SPECTRUMDS) $(call dictModule,SPECTRUM) -c $(SPECTRUMH) $(SPECTRUML)
 
 all-$(MODNAME): $(SPECTRUMLIB)
 

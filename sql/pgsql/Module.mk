@@ -49,15 +49,15 @@ $(PGSQLLIB):    $(PGSQLO) $(PGSQLDO) $(ORDER_) $(MAINLIBS) $(PGSQLLIBDEP)
 $(call pcmrule,PGSQL)
 	$(noop)
 
-$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,PGSQL)
+$(PGSQLDS):     $(PGSQLH) $(PGSQLL) $(ROOTCLINGEXE) $(call pcmdep,PGSQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
 
-$(PGSQLMAP):    $(PGSQLH) $(PGSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,PGSQL)
+$(PGSQLMAP):    $(PGSQLH) $(PGSQLL) $(ROOTCLINGEXE) $(call pcmdep,PGSQL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PGSQLDS) $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
+		$(ROOTCLINGSTAGE2) -r $(PGSQLDS) $(call dictModule,PGSQL) -c $(PGSQLINCDIR:%=-I%) $(PGSQLH) $(PGSQLL)
 
 all-$(MODNAME): $(PGSQLLIB)
 
