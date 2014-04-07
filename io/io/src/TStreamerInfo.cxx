@@ -1056,6 +1056,17 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       return;
    }
 
+   if (!fClass->TestBit(TClass::kWarned)
+       && fClass->GetState() >= TClass::kInterpreted
+       && GetCheckSum() != fClass->GetCheckSum()
+       && fClassVersion == fClass->GetClassVersion()) {
+      // We got here, thus we are a perfect alias for the current streamerInfo,
+      // but we might had odd v5 style name spelling, so let's prefer the
+      // current one.
+      SetBit(kCanDelete);
+      return;
+   }
+
    fClass->RegisterStreamerInfo(this);
    ++fgCount;
    fNumber = fgCount;
