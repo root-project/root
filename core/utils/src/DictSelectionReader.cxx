@@ -238,7 +238,7 @@ bool DictSelectionReader::FirstPass(const clang::RecordDecl& recordDecl)
    std::string patternName("");
    if (lWedgePos != std::string::npos &&
        llvm::isa<clang::ClassTemplateSpecializationDecl>(recordDecl)) {
-      patternName = className.substr(0, lWedgePos) + "<*";
+      patternName = PatternifyName(className);
       csr.SetAttributeValue(ROOT::TMetaUtils::propNames::pattern, patternName);
 
    } else {
@@ -302,8 +302,8 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
          if (!selected && !excluded)
             continue;
          ClassSelectionRule aSelCsr(excluded? BaseSelectionRule::kNo : BaseSelectionRule::kYes);
-         ROOT::TMetaUtils::GetFullyQualifiedTypeName(
-             typeName, filedsIt->getType(), C);
+         ROOT::TMetaUtils::GetFullyQualifiedTypeName(typeName, filedsIt->getType(), C);
+         GetPointeeType(typeName);
          aSelCsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name, typeName);
          fSelectionRules.AddClassSelectionRule(aSelCsr);
       }
@@ -324,8 +324,7 @@ bool DictSelectionReader::SecondPass(const clang::RecordDecl& recordDecl)
       nArgsToKeep = it->second;
       // Check if we have to add a selection rule for this class
       if (className.find(pattern) == 0) {
-         fClassNameSelectionRuleMap
-             [className.substr(0, className.find_first_of("<")) + "<*"]
+         fClassNameSelectionRuleMap[PatternifyName(className)]
                  .SetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,
                                     std::to_string(nArgsToKeep));
       }
@@ -341,4 +340,28 @@ bool DictSelectionReader::VisitRecordDecl(clang::RecordDecl* recordDecl)
       return FirstPass(*recordDecl);
    else
       return SecondPass(*recordDecl);
+}
+
+//______________________________________________________________________________
+/** 
+ * Transform a name of a class instance into a pattern for selection 
+ * e.g. myClass<double, int, ...> in the selection namespace
+ * will translate into a pattern of the type myClass<*>
+ **/
+inline std::string DictSelectionReader::PatternifyName(const std::string& className)
+{
+
+   return className.substr(0, className.find_first_of("<")) + "<*>";
+   
+}
+
+//______________________________________________________________________________
+/**
+ * Transform the name of the type eliminating the trailing & and *
+ **/
+inline void DictSelectionReader::GetPointeeType(std::string& typeName){
+   while (typeName[typeName.size()-1] == '*' ||
+            typeName[typeName.size()-1] == '&'){
+      typeName = typeName.substr(0,typeName.size()-1);
+   }
 }

@@ -245,6 +245,10 @@ class DictSelectionReader
    inline const clang::TemplateArgumentList* GetTmplArgList(
        const clang::CXXRecordDecl&); ///< Get the template arguments list if any
 
+   std::string PatternifyName(const std::string& className); ///< Transform instance 
+                                                  ///< name in pattern for selection
+   void GetPointeeType(std::string& typeName); ///< Get name of the pointee type
+      
    SelectionRules& fSelectionRules; ///< The selection rules to be filled
    std::set<const clang::RecordDecl*>
    fSelectedRecordDecls; ///< The pointers of the selected RecordDecls
