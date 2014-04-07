@@ -8,6 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+extern "C" {
+   void usedToIdentifyRootClingByDlSym() {};
+}
+
 const char *shortHelp =
 "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] "
 "[-rml rootMapLibrary] [-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
@@ -3716,7 +3720,7 @@ int RootCling(int argc,
          pcmArgs.push_back(clingArgs[parg]);
    }
 
-#ifdef ROOTBUILD
+#ifndef ROOTBUILD
    // (clingArgsC.size(), &clingArgsC[0], resourceDir.c_str())
    cling::Interpreter& interp = *((TCling*)gCling)->getInterpreter();
 #else
@@ -5101,6 +5105,12 @@ int GenReflex(int argc, char **argv)
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
+
+   // Force the emission of the symbol - the compiler cannot know that argv
+   // is always set.
+   if (!argv) {
+      return (int)(long)&usedToIdentifyRootClingByDlSym;
+   }
 
    const std::string exePath ( GetExePath() );
 
