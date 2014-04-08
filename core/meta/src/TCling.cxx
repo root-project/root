@@ -3533,7 +3533,13 @@ const char* TCling::GetTopLevelMacroName() const
 
    Warning("GetTopLevelMacroName", "Must change return type!");
    static std::string sMacroName;
-   sMacroName = fMetaProcessor->getTopExecutingFile();
+   const cling::Transaction* T = fInterpreter->getLastTransaction();
+   while(const cling::Transaction* ParentT = T->getParent())
+      T = ParentT;
+   clang::FileID FID = T->getBufferFID();
+   clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
+   sMacroName = SM.getFileEntryForID(FID)->getName();
+
    return sMacroName.c_str();
 }
 
@@ -3589,7 +3595,11 @@ const char* TCling::GetCurrentMacroName() const
 #endif
 #endif
    static std::string sMacroName;
-   sMacroName = fMetaProcessor->getCurrentlyExecutingFile();
+   const cling::Transaction* T = fInterpreter->getLastTransaction();
+   clang::FileID FID = T->getBufferFID();
+   clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
+   sMacroName = SM.getFileEntryForID(FID)->getName();
+
    return sMacroName.c_str();
 }
 
