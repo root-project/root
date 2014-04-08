@@ -132,6 +132,11 @@ bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName) c
    else return false;
 }
 
+bool BaseSelectionRule::HasAttributeWithName(const EAttributeID attributeID) const
+{
+   return !fAttributesArray.at(attributeID).empty();
+}
+
 bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std::string& returnValue) const
 {
    AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
@@ -139,6 +144,12 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
    bool retVal = iter!=fAttributes.end();   
    returnValue = retVal ? iter->second : "";   
    return retVal;   
+}
+
+bool BaseSelectionRule::GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const
+{ 
+    returnValue=fAttributesArray.at(attributeID);   
+    return !returnValue.empty();
 }
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)
@@ -208,11 +219,11 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
     */ 
 
    std::string name_value;
-   bool has_name_attribute = GetAttributeValue("name", name_value);
+   bool has_name_attribute = GetAttributeValue(kNameID, name_value);
    std::string pattern_value;
-   bool has_pattern_attribute = GetAttributeValue("pattern", pattern_value);
+   bool has_pattern_attribute = GetAttributeValue(kPatternID, pattern_value);
    
-   if (has_pattern_attribute || HasAttributeWithName("proto_pattern")) {
+   if (has_pattern_attribute || HasAttributeWithName(kProtoPatternID)) {
       if (fSubPatterns.empty()) {
          std::cout<<"Error - skip?"<<std::endl;
          return kNoMatch;
@@ -259,9 +270,9 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
 
    // do we have matching against the file_name (or file_pattern) attribute and if yes - select or veto
    std::string file_name_value;
-   bool has_file_name_attribute = GetAttributeValue("file_name", file_name_value);
+   bool has_file_name_attribute = GetAttributeValue(kFileNameID, file_name_value);
    std::string file_pattern_value;
-   bool has_file_pattern_attribute = GetAttributeValue("file_pattern", file_pattern_value);
+   bool has_file_pattern_attribute = GetAttributeValue(kFilePatternID, file_pattern_value);
    
    if ((has_file_name_attribute||has_file_pattern_attribute)) {
       const char *file_name = R__GetDeclSourceFileName(decl);
@@ -338,9 +349,9 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    
 #if NOT_WORKING_AND_CURRENTLY_NOT_NEEDED
    std::string proto_name_value;
-   bool has_proto_name_attribute = GetAttributeValue("proto_name", proto_name_value);
+   bool has_proto_name_attribute = GetAttributeValue(kProtoNameID, proto_name_value);
    std::string proto_pattern_value;
-   bool has_proto_pattern_attribute = GetAttributeValue("proto_pattern", proto_pattern_value);
+   bool has_proto_pattern_attribute = GetAttributeValue(kProtoPatternID, proto_pattern_value);
    
    // do we have matching against the proto_name (or proto_pattern)  attribute and if yes - select or veto
    // The following selects functions on whether the requested prototype exactly matches the
@@ -389,7 +400,7 @@ void BaseSelectionRule::ProcessPattern(const std::string& pattern, std::list<std
    int pos;
    bool escape = false;
    
-   if (pattern == "*"){
+   if (pattern.size()==1 && pattern == "*"){
       out.push_back("");
       return;
    }
@@ -464,7 +475,7 @@ bool BaseSelectionRule::EndsWithStar(const std::string& pattern) {
 
 bool BaseSelectionRule::CheckPattern(const std::string& test, const std::string& pattern, const std::list<std::string>& patterns_list, bool isLinkdef)
 {
-   if (pattern == "*" /* && patterns_list.back().size() == 0 */) {
+   if (pattern.size() == 1 && pattern == "*" /* && patterns_list.back().size() == 0 */) {
       // We have the simple pattern '*', it matches everything by definition!
       return true;
    }
@@ -560,4 +571,22 @@ void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const
    fCXXRecordDecl = decl;
    fRequestedType = typeptr;
 }
+
+void BaseSelectionRule::FillCache()
+{
+   std::string value;
+   GetAttributeValue("name",value);
+   fAttributesArray[kNameID] = value;
+   GetAttributeValue("proto_name",value);
+   fAttributesArray[kProtoNameID] = value;
+   GetAttributeValue("pattern",value);
+   fAttributesArray[kPatternID] = value;
+   GetAttributeValue("proto_pattern",value);
+   fAttributesArray[kProtoPatternID] = value;
+   GetAttributeValue("file_name",value);
+   fAttributesArray[kFileNameID] = value;
+   GetAttributeValue("file_pattern",value);
+   fAttributesArray[kFilePatternID] = value;
+}
+
 

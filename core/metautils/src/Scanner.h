@@ -65,7 +65,7 @@ public:
    typedef std::vector<std::string> TypedefNamesColl_t;
    typedef void (*DeclCallback)(const char *type);
       
-   RScanner (const SelectionRules &rules,
+   RScanner (SelectionRules &rules,
              const cling::Interpreter &interpret,
              ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
              unsigned int verbose = 0);
@@ -164,7 +164,7 @@ private:
    static int fgAnonymousEnumCounter;
    static int fgBadClassCounter;
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
-   const SelectionRules &fSelectionRules;
+   SelectionRules &fSelectionRules;
    std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
    bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
 

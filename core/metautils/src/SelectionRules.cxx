@@ -1654,3 +1654,14 @@ bool SelectionRules::SearchNames(cling::Interpreter &interp)
    return true;
 }
 
+
+void SelectionRules::FillCache()
+{
+   // Fill the cache of every selection rule
+   for (auto& rule : fClassSelectionRules) rule.FillCache();
+   for (auto& rule : fFunctionSelectionRules) rule.FillCache();
+   for (auto& rule : fVariableSelectionRules) rule.FillCache();
+   for (auto& rule : fEnumSelectionRules) rule.FillCache();
+}
+
+

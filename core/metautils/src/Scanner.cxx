@@ -82,7 +82,7 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
-RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &interpret, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
+RScanner::RScanner (SelectionRules &rules, const cling::Interpreter &interpret, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
   fVerboseLevel(verbose),
   fSourceManager(0),
   fInterpreter(interpret),
@@ -93,6 +93,9 @@ RScanner::RScanner (const SelectionRules &rules, const cling::Interpreter &inter
 {
    // Regular constructor setting up the scanner to search for entities
    // matching the 'rules'.
+
+   // Build the cache for all selection rules
+   fSelectionRules.FillCache();
 
    for (int i = 0; i <= fgDeclLast; i ++)
       fDeclTable [i] = false;

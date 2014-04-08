@@ -25,6 +25,7 @@
 #include <map>
 #include <unordered_map>
 #include <list>
+#include <array>
 #include <iosfwd>
 
 #include "TMetaUtils.h"
@@ -55,6 +56,16 @@ public:
       kNoMatch
    };
 
+   // Used to access the attribute cache
+   enum EAttributeID{
+      kNameID,
+      kProtoNameID,
+      kPatternID,
+      kProtoPatternID,
+      kFileNameID,
+      kFilePatternID
+   };
+
 private:
    long                   fIndex;                  // Index indicating the ordering of the rules.
    AttributesMap_t        fAttributes;             // list of the attributes of the selection/exclusion rule
@@ -65,6 +76,7 @@ private:
    const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
    const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
    cling::Interpreter *fInterp; 
+   std::array<std::string,6> fAttributesArray;
       
 public:
 
@@ -81,8 +93,12 @@ public:
    void    SetIndex(long index) { fIndex=index; }
 
    bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
+   bool    HasAttributeWithName(const EAttributeID) const; // returns true if there is an attribute with the specified name
+
+   void    FillCache(); // Fill the cache for performant attribute retrival
 
    bool    GetAttributeValue(const std::string& attributeName, std::string& returnValue) const; // returns the value of the attribute with name attributeName
+   bool    GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const; // returns attribute but in a more performant way once the cache is built
    void    SetAttributeValue(const std::string& attributeName, const std::string& attributeValue); // sets an attribute with name attribute name and value attributeValue
 
    ESelect GetSelected() const;

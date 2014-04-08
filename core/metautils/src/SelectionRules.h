@@ -148,6 +148,7 @@ public:
    // and force the instantiation of template if any are used in the rules.
    bool SearchNames(cling::Interpreter &interp);
 
+   void FillCache(); // Fill the cache of all selection rules
    
 private:
    std::list<ClassSelectionRule>    fClassSelectionRules;    // list of the class selection rules
