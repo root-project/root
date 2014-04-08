@@ -26,7 +26,7 @@ void ConversionOp() {
    // A<T>
    B b;
    B* pb;
-   if (!&pb) printf("FOO"); // avoid unused var
+   (void)pb; // avoid unused var
 
    A<B>* pab;
    //printf("KNOWN FAILURE: b = ab\n");
@@ -46,10 +46,10 @@ void ConversionOp() {
    REPORTCINTFAILURE("b = c") b = c;
    REPORTCINTFAILURE("N::B nb = c") N::B nb = c;
    A<C>* pac;
-   if (!&pac) printf("FOO"); // avoid unused var
+   (void)pac; // avoid unused var
    REPORTCINTFAILURE("pac = c") pac = c;
    const A<B>* cpab;
-   if (!&cpab) printf("FOO"); // avoid unused var
+   (void)cpab; // avoid unused var
    REPORTCINTFAILURE("cpab = c") cpab = c;
    REPORTCINTFAILURE("pb = c") pb = c;
    const A<C> & rac(c);
