@@ -52,6 +52,8 @@ bool AddStreamerInfoToROOTFile(const char* normName)
    if (!cl)
       return false;
    TVirtualStreamerInfo* SI = cl->GetStreamerInfo();
+   //FIXME: merge with TStreamerOffsets branch, then:
+   // SI->BuildOffsets();
    if (!SI)
       return false;
    SI->ForceWriteInfo(gDictFile, true);
