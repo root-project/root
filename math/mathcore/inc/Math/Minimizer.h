@@ -251,6 +251,11 @@ public:
    }
 
 
+   /// set the initial range of an existing variable
+   virtual bool SetVariableInitialRange(unsigned int /* ivar */, double /* mininitial */, double /* maxinitial */) {
+     return false;
+   }
+
    /// method to perform the minimization
    virtual  bool Minimize() = 0; 
 
