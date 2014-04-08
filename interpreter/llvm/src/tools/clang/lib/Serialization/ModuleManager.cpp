@@ -168,7 +168,7 @@ void ModuleManager::removeModules(ModuleIterator first, ModuleIterator last,
   for (ModuleIterator victim = first; victim != last; ++victim) {
     Modules.erase((*victim)->File);
 
-    FileMgr.invalidateCache((*victim)->File);
+    FileMgr.invalidateCache(const_cast<FileEntry*>((*victim)->File));
     if (modMap) {
       StringRef ModuleName = llvm::sys::path::stem((*victim)->FileName);
       if (Module *mod = modMap->findModule(ModuleName)) {
