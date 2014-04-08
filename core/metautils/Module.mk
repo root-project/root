@@ -72,9 +72,7 @@ STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
 $(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE2DEP)
-	$(ROOTCLINGSTAGE2) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
-	   -c $(subst multi,,${*:2=}) \
-	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
+	$(ROOTCLINGSTAGE2) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT)) -c $(subst multi,,${*:2=}) $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(METAUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
