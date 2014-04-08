@@ -4190,7 +4190,7 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    if (!ignoreExistingDict){
-      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
+      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
       HeadersClassesMap_t headersClassesMap;
       ExtractHeadersForClasses(scan.fSelectedClasses,
                                scan.fSelectedTypedefs,
@@ -4205,14 +4205,16 @@ int RootCling(int argc,
          }            
       }
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
-      
-      GenerateModule(modGen, 
-                     CI, 
-                     currentDirectory, 
-                     fwdDeclnArgsToKeepString, 
-                     headersClassesMapString,
-                     dictStream, 
-                     inlineInputHeader);
+
+      if (onepcm /*disable clang:Modules*/) {
+         GenerateModule(modGen,
+                        CI,
+                        currentDirectory,
+                        fwdDeclnArgsToKeepString,
+                        headersClassesMapString,
+                        dictStream,
+                        inlineInputHeader);
+      }
    }
 
    if (liblistPrefix.length()) {
