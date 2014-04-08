@@ -21,7 +21,7 @@ namespace Atlas {
 
    public:
       /// Default constructor
-      ClassB();
+      ClassB(){};
 
       /// Get the first variable
       Int_t var1() const;
