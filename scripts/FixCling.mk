@@ -10,6 +10,7 @@ CALLROOTEXE = root.exe
 # Essential problems, must be fixed before the release.
 # (incorrect behavior of C++ compliant code)
 #CALLROOTEXE += -e "\#define ClingWorkAroundIncorrectTearDownOrder"
+CALLROOTEXE += -e "\#define ClingWorkAroundPrintfIssues"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndConversion"
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncReturnInt"
 CALLROOTEXE += -e "\#define ClingWorkAroundLackOfModule"
@@ -82,6 +83,7 @@ ClingWorkAroundJITfullSymbolResolution = yes   # See https://sft.its.cern.ch/jir
 #ClingWorkAroundMissingSmartInclude = yes
 ClingWorkAroundBrokenUnnamedReturn = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-4719
 ClingWorkAroundUnnamedIncorrectFileLoc = yes   # see https://sft.its.cern.ch/jira/browse/ROOT-4760
+ClingWorkAroundPrintfIssues = yes              # see https://sft.its.cern.ch/jira/browse/ROOT-6204
 #ClingWorkAroundCallfuncAndInline = yes        # see https://sft.its.cern.ch/jira/browse/ROOT-4615
 #ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://sft.its.cern.ch/jira/browse/ROOT-4601 and https://sft.its.cern.ch/jira/browse/ROOT-4587
 ClingWorkAroundDeletedSourceFile = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4894
