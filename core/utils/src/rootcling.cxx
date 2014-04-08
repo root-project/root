@@ -265,6 +265,17 @@ namespace genreflex {
 }
 
 //______________________________________________________________________________
+static void EmitStreamerInfo(const char* normName)
+{
+#ifndef ROOT_STAGE1_BUILD
+   if (!AddStreamerInfoToROOTFile(normName)) {
+      std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
+                << normName << '\n';
+   }
+#endif
+}
+
+//______________________________________________________________________________
 static void GetCurrentDirectory(std::string &output)
 {
    char fixedLength[1024];
@@ -2939,6 +2950,7 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
+                  EmitStreamerInfo(iter->GetNormalizedName());
                   ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
@@ -4154,7 +4166,11 @@ int RootCling(int argc,
       // priority first.
       constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
       constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
-      }
+
+#ifndef ROOT_STAGE1_BUILD
+      InitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
+#endif
+   }
    
    int retCode = GenerateFullDict(splitDictStream,
                                   interp,

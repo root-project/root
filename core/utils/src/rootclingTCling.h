@@ -15,7 +15,12 @@
 namespace cling {
    class Interpreter;
 }
+namespace clang {
+   class CXXRecordDecl;
+}
 
 extern "C" {
    cling::Interpreter* TCling__GetInterpreter();
+   void InitializeStreamerInfoROOTFile(const char* filename);
+   bool AddStreamerInfoToROOTFile(const char* normName);
 }
