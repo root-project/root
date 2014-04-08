@@ -1708,12 +1708,20 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*RelativePath*/ 0,
                                               /*SuggestedModule*/ 0,
                                               /*SkipCache*/ false);
-   if (FE) {
+   if (FE && FE->isValid()) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...
       clang::FileID FID = SM.translateFile(FE);
-      if (!FID.isInvalid()) return kTRUE;
+      if (!FID.isInvalid() && FID.getHashValue() == 0)
+         return kFALSE;
+      else {
+         clang::SrcMgr::SLocEntry SLocE = SM.getSLocEntry(FID);
+         if (SLocE.isFile() && SLocE.getFile().getContentCache()->getRawBuffer() == 0)
+            return kFALSE;
+         if (!FID.isInvalid())
+            return kTRUE;
+      }
       // ...then check shared library again, but with full path now
       sFilename = FE->getName();
       if (gSystem->FindDynamicLibrary(sFilename, kTRUE)
