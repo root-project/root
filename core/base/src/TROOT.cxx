@@ -433,14 +433,18 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
 
-   // initialize plugin manager early
-   fPluginManager->LoadHandlersFromEnv(gEnv);
+   // usedToIdentifyRootClingByDlSym is available when TROOT is part of
+   // rootcling.
+   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+      // initialize plugin manager early
+      fPluginManager->LoadHandlersFromEnv(gEnv);
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
-      TEnv plugins(".plugins-ios");
-      fPluginManager->LoadHandlersFromEnv(&plugins);
-   }
+      if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
+         TEnv plugins(".plugins-ios");
+         fPluginManager->LoadHandlersFromEnv(&plugins);
+      }
 #endif
+   }
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
@@ -1621,7 +1625,8 @@ void TROOT::InitInterpreter()
    // Initialize the interpreter. Should be called only after main(),
    // to make sure LLVM/Clang is fully initialized.
 
-   // ROOTBUILD_LIBCLING is defined when building ROOT
+   // usedToIdentifyRootClingByDlSym is available when TROOT is part of
+   // rootcling.
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
       // Make sure no llvm symbols are visible before loading libCling. If they
       // exist libCling will use those and not ours, causing havoc in the
