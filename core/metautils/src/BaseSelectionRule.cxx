@@ -134,7 +134,7 @@ bool BaseSelectionRule::HasAttributeWithName(const std::string& attributeName) c
 
 bool BaseSelectionRule::HasAttributeWithName(const EAttributeID attributeID) const
 {
-   return !fAttributesArray.at(attributeID).empty();
+   return !fAttributesArray[attributeID].empty();
 }
 
 bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std::string& returnValue) const
@@ -148,8 +148,9 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
 
 bool BaseSelectionRule::GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const
 { 
-    returnValue=fAttributesArray.at(attributeID);   
-    return !returnValue.empty();
+    if (fAttributesArray[attributeID].empty()) return false;
+    returnValue=fAttributesArray[attributeID];
+    return true;;
 }
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)

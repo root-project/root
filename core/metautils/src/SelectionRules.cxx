@@ -767,8 +767,9 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    bool earlyReturn=false;
    const ClassSelectionRule* retval = nullptr;
    std::string nArgsToKeep("");
+   const clang::NamedDecl* nDecl(llvm::dyn_cast<clang::NamedDecl>(D));
    for(auto& rule : fClassSelectionRules) {
-      BaseSelectionRule::EMatchType match = rule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", IsLinkdefFile());      
+      BaseSelectionRule::EMatchType match = rule.Match(nDecl, qual_name, "", IsLinkdefFile());      
       if (match != BaseSelectionRule::kNoMatch) {
          // Check if the template must have its arguments manipulated                             
          if (rule.GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){

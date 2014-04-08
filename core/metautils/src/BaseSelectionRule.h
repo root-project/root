@@ -25,7 +25,6 @@
 #include <map>
 #include <unordered_map>
 #include <list>
-#include <array>
 #include <iosfwd>
 
 #include "TMetaUtils.h"
@@ -76,7 +75,7 @@ private:
    const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
    const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
    cling::Interpreter *fInterp; 
-   std::array<std::string,6> fAttributesArray;
+   std::string fAttributesArray[6];
       
 public:
 
