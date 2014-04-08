@@ -460,9 +460,8 @@ void TProofDrawHist::Begin1D(TTree *)
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH1* hold;
    if (fTreeDrawArgsParser.GetNoParameters() == 0 && (hold = dynamic_cast<TH1*> (orig))) {
-      TH1* hnew = (TH1*) hold->Clone();
-      hnew->Reset();
-      fInput->Add(hnew);
+      hold->Reset();
+      fInput->Add(hold);
    } else {
       delete orig;
       DefVar1D();
@@ -479,9 +478,8 @@ void TProofDrawHist::Begin2D(TTree *)
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH2* hold;
    if (fTreeDrawArgsParser.GetNoParameters() == 0 && (hold = dynamic_cast<TH2*> (orig))) {
-      TH2* hnew = (TH2*) hold->Clone();
-      hnew->Reset();
-      fInput->Add(hnew);
+      hold->Reset();
+      fInput->Add(hold);
    } else {
       delete orig;
       DefVar2D();
@@ -498,9 +496,8 @@ void TProofDrawHist::Begin3D(TTree *)
    TObject* orig = fTreeDrawArgsParser.GetOriginal();
    TH3* hold;
    if ((hold = dynamic_cast<TH3*> (orig)) && fTreeDrawArgsParser.GetNoParameters() == 0) {
-      TH3* hnew = (TH3*) hold->Clone();
-      hnew->Reset();
-      fInput->Add(hnew);
+      hold->Reset();
+      fInput->Add(hold);
    } else {
       delete orig;
       DefVar3D();
