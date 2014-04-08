@@ -775,6 +775,9 @@ TCling::TCling(const char *name, const char *title)
 {
    // Initialize the cling interpreter interface.
 
+   // rootcling also uses TCling for generating the dictionary ROOT files.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::Value>();
@@ -787,9 +790,11 @@ TCling::TCling(const char *name, const char *title)
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    clingArgsStorage.push_back(interpInclude);
 
-   std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
-   clingArgsStorage.push_back("-include-pch");
-   clingArgsStorage.push_back(pchFilename);
+   if (!fromRootCling) {
+      std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      clingArgsStorage.push_back("-include-pch");
+      clingArgsStorage.push_back(pchFilename);
+   }
 
    // clingArgsStorage.push_back("-Xclang");
    // clingArgsStorage.push_back("-fmodules");
@@ -805,10 +810,9 @@ TCling::TCling(const char *name, const char *title)
    clingArgsStorage.push_back("-I");
    clingArgsStorage.push_back(include);
 
-   // rootcling also uses TCling for generating the dictionary ROOT files.
-   // It needs to run in syntax-only mode, i.e. without execution. Detect
+   // rootcling needs to run in syntax-only mode, i.e. without execution. Detect
    // rootcling by looking for a rootcling-only symbol:
-   if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+   if (fromRootCling) {
       clingArgsStorage.push_back("-D__ROOTCLING__");
       clingArgsStorage.push_back("-fsyntax-only");
       ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
