@@ -2188,6 +2188,10 @@ static int GenerateModule(TModuleGenerator& modGen,
                                   fwdDeclnArgsToKeepString,
                                   headersClassesMapString);
 
+   // Disable clang::Modules for now.
+   if (!modGen.IsPCH())
+      return 0;
+
    if (inlineInputHeader) return 0;
 
    if (!modGen.IsPCH()) {
@@ -4206,15 +4210,13 @@ int RootCling(int argc,
       }
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
 
-      if (onepcm /*disable clang:Modules*/) {
-         GenerateModule(modGen,
-                        CI,
-                        currentDirectory,
-                        fwdDeclnArgsToKeepString,
-                        headersClassesMapString,
-                        dictStream,
-                        inlineInputHeader);
-      }
+      GenerateModule(modGen,
+                     CI,
+                     currentDirectory,
+                     fwdDeclnArgsToKeepString,
+                     headersClassesMapString,
+                     dictStream,
+                     inlineInputHeader);
    }
 
    if (liblistPrefix.length()) {
