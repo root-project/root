@@ -65,7 +65,7 @@ namespace GenAlgoOptUtil {
       return *opt;
    }
 
-   void PrintAllDefault(std::ostream & os) { 
+   void GenAlgoOptions::PrintAllDefault(std::ostream & os) { 
       const OptionsMap & gOpts = GenAlgoOptUtil::gAlgoOptions; 
       for (  OptionsMap::const_iterator pos = gOpts.begin(); 
           pos != gOpts.end(); ++pos) { 
