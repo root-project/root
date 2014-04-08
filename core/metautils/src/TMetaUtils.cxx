@@ -1578,7 +1578,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       if (!dMember || (dMember && !dMember->hasAttrs())) continue;
 
       bool blockNeedsToBeClosed=true;
-      bool wasIoNameFound=false;
+      bool preceedingWasIO = false;
       // Now loop on its attributes
       for (clang::Decl::attr_iterator attrIt = internalDeclIt->attr_begin();
               attrIt!=internalDeclIt->attr_end();++attrIt){
@@ -1597,37 +1597,35 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          // Check if this is a "comment", "ioname" or "iotype"
 
          if (! isRelevant) continue;
-
+         
          // If this is not a comment, we must add the key-value pair
          if (!isComment)
             attrValue = attrName + propNames::separator + attrValue;
 
          if (!infrastructureGenerated){
-            finalString << "   if (true || gInterpreter){\n"
+            finalString << "   if (gInterpreter){\n"
                         << "      ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
                         << "      DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
                         << "      while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
             infrastructureGenerated=true;
          }
 
-         if ( ! (isIoType && wasIoNameFound ) ){
+         if ( ! (preceedingWasIO) ){
             const std::string memberName(dMember->getName());         
             finalString << "          if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI))){\n";
          }
          finalString << "             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";                           
          
-         if ( isComment || isIoType ){
+         if ( isComment || preceedingWasIO ){
             finalString << "          }\n";         
             blockNeedsToBeClosed = false;
-         } else {
-            wasIoNameFound=true;
          }
          
-         
-         
+         preceedingWasIO = isIoType || isIoName ;
+
       } // end loop on annotations of the decl
       
-      if (blockNeedsToBeClosed && wasIoNameFound){
+      if (blockNeedsToBeClosed && preceedingWasIO){
          finalString << "          }\n";      
       }
 
