@@ -84,15 +84,15 @@ $(THREADLIB):   $(THREADO) $(THREADDO) $(ORDER_) $(MAINLIBS) $(THREADLIBDEP)
 $(call pcmrule,THREAD)
 	$(noop)
 
-$(THREADDS):    $(THREADH) $(THREADL) $(ROOTCLINGTMPDEP) $(call pcmdep,THREAD)
+$(THREADDS):    $(THREADH) $(THREADL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,THREAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGTMP) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
 
-$(THREADMAP):   $(THREADH) $(THREADL) $(ROOTCLINGTMPDEP) $(call pcmdep,THREAD)
+$(THREADMAP):   $(THREADH) $(THREADL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,THREAD)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGTMP) -r $(THREADDS) $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
+		$(ROOTCLINGSTAGE1) -r $(THREADDS) $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
 
 all-$(MODNAME): $(THREADLIB)
 
@@ -108,9 +108,9 @@ distclean::     distclean-$(MODNAME)
 
 ##### cintdlls ######
 ifneq ($(ARCH),win32)
-$(CINTDIRDLLS)/pthread.dll: cint/cint/lib/pthread/pthd.h $(ROOTCLINGTMPDEP) $(CINTTMP)
+$(CINTDIRDLLS)/pthread.dll: cint/cint/lib/pthread/pthd.h $(ROOTCLINGSTAGE1DEP) $(CINTTMP)
 	@$(MAKECINTDLL) $(PLATFORM) C pthread pthread pthd.h \
-           "$(CINTTMP)" "$(ROOTCLINGTMP)" \
+           "$(CINTTMP)" "$(ROOTCLINGSTAGE1)" \
 	   "$(MAKELIB)" "$(CXX)" "$(CC)" "$(LD)" "$(OPT)" "$(CINTCXXFLAGS)" \
 	   "$(CINTCFLAGS)" "$(LDFLAGS)" "$(THREADLIBEXTRA) $(OSTHREADLIBDIR) $(OSTHREADLIB) $(CINTDLLLIBLINK)" \
 	   "$(SOFLAGS)" "$(SOEXT)" "$(COMPILER)" \

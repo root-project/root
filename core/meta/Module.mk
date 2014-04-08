@@ -80,19 +80,19 @@ $(CLINGLIB):    $(CLINGO) $(CLINGDO) $(METAOLLVM) $(METAUTILSOLLVM) \
 		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA)" \
 		   ""
 
-$(CLINGMAP):    $(CLINGL) $(ROOTCLINGTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
+$(CLINGMAP):    $(CLINGL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP) $(call pcmdep,CLING)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGTMP) -r $(CLINGDS) $(call dictModule,CLING) -c \
+		$(ROOTCLINGSTAGE1) -r $(CLINGDS) $(call dictModule,CLING) -c \
 		   $(CLINGH) $(CLINGL)
 
 $(call pcmrule,CLING)
 	$(noop)
 
-$(CLINGDS): $(CLINGL) $(ROOTCLINGTMPDEP) $(LLVMDEP) $(call pcmdep,CLING)
+$(CLINGDS): $(CLINGL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP) $(call pcmdep,CLING)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGTMP) -f $@ $(call dictModule,CLING) -c $(CLINGH) \
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,CLING) -c $(CLINGH) \
 		   $(CLINGL)
 
 all-$(MODNAME): $(METAO) $(METAOLLVM) $(CLINGLIB)

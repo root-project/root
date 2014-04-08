@@ -49,15 +49,15 @@ $(RINTLIB):     $(RINTO) $(RINTDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,RINT)
 	$(noop)
 
-$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCLINGTMPDEP) $(call pcmdep,RINT)
+$(RINTDS):      $(RINTH) $(RINTL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,RINT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGTMP) -f $@ $(call dictModule,RINT) -c $(RINTH) $(RINTL)
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,RINT) -c $(RINTH) $(RINTL)
 
-$(RINTMAP):     $(RINTH) $(RINTL) $(ROOTCLINGTMPDEP) $(call pcmdep,RINT)
+$(RINTMAP):     $(RINTH) $(RINTL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,RINT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCLINGTMP) -r $(RINTDS) $(call dictModule,RINT) -c $(RINTH) $(RINTL)
+		$(ROOTCLINGSTAGE1) -r $(RINTDS) $(call dictModule,RINT) -c $(RINTH) $(RINTL)
 
 all-$(MODNAME): $(RINTLIB)
 
