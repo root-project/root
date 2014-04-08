@@ -134,6 +134,10 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    std::cout << "\nTotal Time :       "      << totalTime     << "  (s)\n"
         <<   "Total Time/call :  " << totalUnitTime*1.E3 << "  (ms)\n" << std::endl;
 
+   // to avoid the warning for un-used variables
+   (void)result; 
+   (void)iresult; 
+
    delete [] vector;
    delete [] index;
 
