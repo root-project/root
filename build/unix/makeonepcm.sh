@@ -67,7 +67,7 @@ rm cppflags.txt
 # generate one large pcm
 rm -f allDict.* lib/allDict_rdict.pc*
 touch etc/allDict.cxx.h
-core/utils/src/rootcling_tmp -1 -f etc/allDict.cxx -c $cxxflags -I$srcdir include/allHeaders.h include/allLinkDef.h
+core/utils/src/rootcling_tmp -1 -f etc/allDict.cxx -noDictSelection -c $cxxflags -I$srcdir include/allHeaders.h include/allLinkDef.h
 res=$?
 if [ $res -eq 0 ] ; then
   mv etc/allDict_rdict.pch etc/allDict.cxx.pch

@@ -3436,6 +3436,7 @@ int RootCling(int argc,
    bool inlineInputHeader = false;
    bool interpreteronly = false;
    bool doSplit = false;
+   bool noDictSelection = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3470,25 +3471,32 @@ int RootCling(int argc,
          }
 
          if (strcmp("-oldRmfFormat", argv[ic]) == 0) {
-            // name for the rootmap file
+            // Generate old style rootmap files
             useNewRmfFormat = false;
             ic+=1;
             continue;
          }
 
          if (strcmp("-interpreteronly", argv[ic]) == 0) {
-            // name for the rootmap file
+            // Generate dictionaries only for the interpreter
             interpreteronly = true;
             ic+=1;
             continue;
          }         
 
          if (strcmp("-split", argv[ic]) == 0) {
-            // name for the rootmap file
+            // Split the dict
             doSplit = true;
             ic+=1;
             continue;
          }         
+
+         if (strcmp("-noDictSelection", argv[ic]) == 0) {
+            // Disable selection
+            noDictSelection = true;
+            ic+=1;
+            continue;
+         }            
          
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
@@ -3501,7 +3509,8 @@ int RootCling(int argc,
             baseModules.push_back(argv[ic+1]);
             ic+=2;
             continue;
-         }
+         }                  
+         
          if (strcmp("+P", argv[ic]) == 0 ||
              strcmp("+V", argv[ic]) == 0 ||
              strcmp("+STUB", argv[ic]) == 0) {
@@ -3780,7 +3789,8 @@ int RootCling(int argc,
 
    // Select using DictSelection
    clang::CompilerInstance* CI = interp.getCI();
-   DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
+   if(!noDictSelection)
+      DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
   
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
@@ -3898,7 +3908,8 @@ int RootCling(int argc,
       selectionRules.SetDeep(true);
    }
 
-   scan.Scan(CI->getASTContext());
+   // If we have dict selection enabled, we need 2 passes
+   scan.Scan(CI->getASTContext(),!noDictSelection);
 
    bool has_input_error = false;
 

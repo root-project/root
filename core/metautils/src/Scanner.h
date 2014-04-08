@@ -96,7 +96,7 @@ public:
    DeclCallback SetRecordDeclCallback(DeclCallback callback);
 
    // Main interface of this class.
-   void Scan(const clang::ASTContext &C);
+   void Scan(const clang::ASTContext &C, bool twoPasses);
 
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    std::string GetClassName(clang::DeclContext* DC) const;

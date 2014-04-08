@@ -1153,7 +1153,7 @@ bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) cons
 }
 
 //______________________________________________________________________________
-void RScanner::Scan(const clang::ASTContext &C)
+void RScanner::Scan(const clang::ASTContext &C, bool twoPasses)
 {
    fSourceManager = &C.getSourceManager();
    
@@ -1164,7 +1164,8 @@ void RScanner::Scan(const clang::ASTContext &C)
          std::cout<<"File name detected"<<std::endl;
    }
 
-   TraverseDecl(C.getTranslationUnitDecl());
+   if (twoPasses)
+      TraverseDecl(C.getTranslationUnitDecl());
 
 #ifdef SELECTION_DEBUG
    if (!fSelectionRules.AreAllSelectionRulesUsed()) {

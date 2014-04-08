@@ -136,14 +136,9 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
 {
    AttributesMap_t::const_iterator iter = fAttributes.find(attributeName);
    
-   if(iter!=fAttributes.end()) {
-      returnValue = iter->second;
-      return true;
-   }
-   else {
-      returnValue = "No such attribute";
-      return false;
-   }
+   bool retVal = iter!=fAttributes.end();   
+   returnValue = retVal ? iter->second : "";   
+   return retVal;   
 }
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)
@@ -211,18 +206,18 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
     *   file_name - name of the source file
     *   isLinkdef - if the selection rules were generating from a linkdef.h file 
     */ 
-   
-   if (HasAttributeWithName("pattern") || HasAttributeWithName("proto_pattern")) {
-      if (fSubPatterns.empty()) {
-         std::cout<<"Error - skip?"<<std::endl;
-         return kNoMatch;
-      }
-   }
 
    std::string name_value;
    bool has_name_attribute = GetAttributeValue("name", name_value);
    std::string pattern_value;
    bool has_pattern_attribute = GetAttributeValue("pattern", pattern_value);
+   
+   if (has_pattern_attribute || HasAttributeWithName("proto_pattern")) {
+      if (fSubPatterns.empty()) {
+         std::cout<<"Error - skip?"<<std::endl;
+         return kNoMatch;
+      }
+   }
 
    // Check if we have in hands a typedef to a RecordDecl
    const clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl> (decl);
@@ -325,15 +320,20 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       return kNoMatch;
    }
 
-   std::string nameNoSpaces(name);
-   nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
-                      nameNoSpaces.end());
-
-   if (has_pattern_attribute && 
-       (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef) ||
-        CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef)) ) {
-      const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-      return kPattern;
+   if (has_pattern_attribute){
+      bool patternMatched=CheckPattern(name, pattern_value, fSubPatterns, isLinkdef);
+      if (!patternMatched){
+         std::string nameNoSpaces(name);
+         nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
+                      nameNoSpaces.end());         
+         if (name.size()!=nameNoSpaces.size()){
+            patternMatched=CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef);
+         }
+      }
+      if (patternMatched){
+         const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
+         return kPattern;
+      }
    }
    
 #if NOT_WORKING_AND_CURRENTLY_NOT_NEEDED

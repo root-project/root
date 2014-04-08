@@ -23,6 +23,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <list>
 #include <iosfwd>
 
@@ -40,7 +41,7 @@ namespace cling {
 class BaseSelectionRule
 {
 public:
-   typedef std::map<std::string, std::string> AttributesMap_t; // The liste of selection rule's attributes (name, pattern, ...)
+   typedef std::unordered_map<std::string, std::string> AttributesMap_t; // The liste of selection rule's attributes (name, pattern, ...)
    
    enum ESelect { // a rule could be selected, vetoed or we don't care about it
       kYes,
