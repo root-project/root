@@ -13,9 +13,11 @@
 // without rtti).
 
 #include "TCling.h"
+#include "TROOT.h"
 
 extern "C"
 cling::Interpreter* TCling__GetInterpreter()
 {
+   gROOT; // trigger initialization
    return ((TCling*)gCling)->GetInterpreter();
 }
