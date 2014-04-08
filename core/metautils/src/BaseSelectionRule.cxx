@@ -325,8 +325,13 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       return kNoMatch;
    }
 
+   std::string nameNoSpaces(name);
+   nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
+                      nameNoSpaces.end());
 
-   if (has_pattern_attribute && CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
+   if (has_pattern_attribute && 
+       (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef) ||
+        CheckPattern(nameNoSpaces, pattern_value, fSubPatterns, isLinkdef)) ) {
       const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
       return kPattern;
    }
