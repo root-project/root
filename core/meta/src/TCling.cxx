@@ -5032,37 +5032,9 @@ int TCling::UnloadFile(const char* path) const
    }
 
    // Unload a shared library or a source file.
-
-   // Check fInterpreter->getLoadedFiles() to determine whether this is a shared
-   // library or code. If it's not in there complain.
-   std::string filesStr = "";
-   llvm::raw_string_ostream filesOS(filesStr);
-   clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
-   cling::ClangInternalState::printIncludedFiles(filesOS, SM);
-   filesOS.flush();
-
-   llvm::SmallVector<llvm::StringRef, 100> files;
-   llvm::StringRef(filesStr).split(files, "\n");
-
-   std::set<std::string> fileMap;
-   // Fill fileMap; return early on exact match.
-   std::string foundFile = "";
-   for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator 
-           iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
-      if ((*iF) == path)
-         foundFile = *iF;
-   }
-
-   if (foundFile.empty()) {
-      Error("UnloadFile", "File %s has not been loaded!", path);
-      return -1;
-   } else {
-      Error("UnloadFile", "Unloading of source files not yet implemented!\n"
-            "Not unloading file %s!", path);
-      return -1;
-   }
-
-   return -1;
+   cling::Interpreter::CompilationResult compRes;
+   fMetaProcessor->process(TString::Format(".U %s", path).Data(), compRes, /*cling::Value*/0);
+   return compRes == cling::Interpreter::kFailure;
 }
 
 //______________________________________________________________________________
