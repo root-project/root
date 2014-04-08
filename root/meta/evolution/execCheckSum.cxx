@@ -4,6 +4,12 @@
 
 typedef long MyLong_t;
 
+template <typename T> class UserTmplt
+{
+public:
+   T fValue;
+};
+
 class HasTypeDef
 {
 public:
@@ -14,6 +20,8 @@ public:
    std::vector<Int_t>    fVec1;
    std::vector<MyLong_t> fVec2;
    std::vector<Named_t>  fVec3;
+   UserTmplt<Int_t>      fUser1;
+   UserTmplt<Named_t>    fUser2;
    MyLong_t fInt1;
    Int_t    fInt2;
    void Print() {
@@ -49,9 +57,9 @@ void readFile(const char *filename = "checksum.root")
       return;
    }
    TClass *c = TClass::GetClass("HasTypeDef");
-   fprintf(stderr,"In memory the checksum is: 0x%x\n",c->GetCheckSum());
+   fprintf(stdout,"In memory the checksum is: 0x%x\n",c->GetCheckSum());
    TVirtualStreamerInfo *info =  (TVirtualStreamerInfo*)f->GetStreamerInfoList()->FindObject("HasTypeDef");
-   fprintf(stderr,"On file   the checksum is: 0x%x\n",info->GetCheckSum());
+   fprintf(stdout,"On file   the checksum is: 0x%x\n",info->GetCheckSum());
 
    HasTypeDef *obj;
    f->GetObject("obj",obj);
@@ -63,3 +71,9 @@ void readFile(const char *filename = "checksum.root")
    delete f;
 }
 
+int execCheckSum()
+{
+   readFile("checksum_v5.root");
+   readFile("checksum_v6.root");
+   return 0;
+}
