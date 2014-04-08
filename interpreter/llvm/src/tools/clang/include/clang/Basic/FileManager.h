@@ -258,7 +258,7 @@ public:
                              vfs::Status &Result);
 
   /// \brief Remove the real file \p Entry from the cache.
-  void invalidateCache(const FileEntry *Entry);
+  void invalidateCache(FileEntry *Entry);
 
   /// \brief If path is not absolute and FileSystemOptions set the working
   /// directory, the path is modified to be relative to the given

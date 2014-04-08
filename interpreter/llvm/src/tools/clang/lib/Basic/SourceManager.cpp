@@ -425,10 +425,19 @@ void SourceManager::clearIDTables() {
   createExpansionLoc(SourceLocation(),SourceLocation(),SourceLocation(), 1);
 }
 
-void SourceManager::invalidateCache(const FileEntry* Entry) {
+void SourceManager::invalidateCache(FileEntry* Entry) {
   if (ContentCache *&E = FileInfos[Entry]) {
     E->replaceBuffer(0, /*free*/ true);
     E = 0;
+  }
+  FileID FID = translateFile(Entry);
+  if (!FID.isInvalid()) {
+    const SrcMgr::SLocEntry& SLocE = getSLocEntry(FID);
+    if (SLocE.isFile()) {
+      SrcMgr::ContentCache* CC =
+        const_cast<SrcMgr::ContentCache*>(SLocE.getFile().getContentCache());
+      CC->replaceBuffer(0, /*free*/true);
+    }
   }
   getFileManager().invalidateCache(Entry);
 }

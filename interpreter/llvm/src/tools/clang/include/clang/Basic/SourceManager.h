@@ -699,7 +699,7 @@ public:
 
   void clearIDTables();
 
-  void invalidateCache(const FileEntry* Entry);
+  void invalidateCache(FileEntry* Entry);
 
   DiagnosticsEngine &getDiagnostics() const { return Diag; }
 
@@ -1499,7 +1499,19 @@ public:
       if (Invalid) *Invalid = true;
       return LocalSLocEntryTable[0];
     }
-    return getSLocEntryByID(FID.ID, Invalid);
+
+    // If we invalidated the cache we need to update the SLocEntry, too.
+    // FIXME: This only deals with files coming not from PCH
+    const SrcMgr::SLocEntry& SLocE = getSLocEntryByID(FID.ID, Invalid);
+    if (Invalid && !*Invalid && SLocE.isFile()) {
+      SrcMgr::ContentCache* CC
+        = const_cast<SrcMgr::ContentCache*>(SLocE.getFile().getContentCache());
+      if (!CC) {
+        CC = FileInfos.lookup(CC->OrigEntry);
+        const_cast<SrcMgr::FileInfo&>(SLocE.getFile()).Data = (uintptr_t) CC;
+      }
+    }
+    return SLocE;
   }
 
   unsigned getNextLocalOffset() const { return NextLocalOffset; }
