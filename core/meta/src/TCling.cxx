@@ -1694,7 +1694,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
    cling::DynamicLibraryManager* dyLibManager 
       = fInterpreter->getDynamicLibraryManager();
    if (found) {
-      if (dyLibManager->isDynamicLibraryLoaded(found)) {
+      if (dyLibManager->isLibraryLoaded(found)) {
          return kTRUE;
       }
    }
@@ -5033,7 +5033,7 @@ void TCling::SetTempLevel(int val) const
 int TCling::UnloadFile(const char* path) const
 {
 
-   if (fInterpreter->getDynamicLibraryManager()->isDynamicLibraryLoaded(path)) {
+   if (fInterpreter->getDynamicLibraryManager()->isLibraryLoaded(path)) {
       // Signal that the list of shared libs needs to be updated.
       const_cast<TCling*>(this)->fPrevLoadedDynLibInfo = 0;
       const_cast<TCling*>(this)->fSharedLibs = "";
