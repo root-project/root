@@ -750,8 +750,8 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    }
 
    // At this point tagDecl must be well defined   
-   
-   if (not ( IsLinkdefFile() || tagDecl->isClass() || tagDecl->isStruct() ))
+   const bool isLinkDefFile =  IsLinkdefFile();
+   if (not ( isLinkDefFile || tagDecl->isClass() || tagDecl->isStruct() ))
       return 0; // Union for Genreflex
    
    const ClassSelectionRule *selector = 0;
@@ -761,25 +761,24 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    int fFileNo = 0;
 
    // iterate through all class selection rles
-   std::string name_value;
    std::string pattern_value;
    
    bool earlyReturn=false;
    const ClassSelectionRule* retval = nullptr;
-   std::string nArgsToKeep("");
    const clang::NamedDecl* nDecl(llvm::dyn_cast<clang::NamedDecl>(D));
    for(auto& rule : fClassSelectionRules) {
-      BaseSelectionRule::EMatchType match = rule.Match(nDecl, qual_name, "", IsLinkdefFile());      
+      BaseSelectionRule::EMatchType match = rule.Match(nDecl, qual_name, "", isLinkDefFile);      
       if (match != BaseSelectionRule::kNoMatch) {
          // Check if the template must have its arguments manipulated                             
-         if (rule.GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
-            if (const clang::ClassTemplateSpecializationDecl* ctsd =
-            llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))            
-               if(const clang::ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
+         if (const clang::ClassTemplateSpecializationDecl* ctsd =
+         llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))            
+            if(const clang::ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
+               std::string nArgsToKeep;
+               if (rule.GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
                   fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
                                                    std::atoi(nArgsToKeep.c_str()));  
                }
-         }
+            }
          
          if (earlyReturn) continue;
          
@@ -787,19 +786,19 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
          selector = &(rule);         
          if (rule.GetSelected() == BaseSelectionRule::kYes) {
 
-            if (IsLinkdefFile()){
+            if (isLinkDefFile){
                // rootcint prefers explicit rules over pattern rules
                if (match == BaseSelectionRule::kName) {
                   explicit_selector = &(rule);
                } else if (match == BaseSelectionRule::kPattern) {
                   // NOTE: weird ...
-                  if (rule.GetAttributeValue("pattern", pattern_value) &&
+                  if (rule.GetAttributeValue(BaseSelectionRule::kPatternID, pattern_value) &&
                         pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(rule);
                }
             }
          } else if (rule.GetSelected() == BaseSelectionRule::kNo) {
 
-            if (!IsLinkdefFile()) {
+            if (!isLinkDefFile) {
                // in genreflex - we could explicitly select classes from other source files
                if (match == BaseSelectionRule::kFile) ++fFileNo; // if we have veto because of class defined in other source file -> implicit No
                else {
@@ -809,7 +808,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
             }
             if (match == BaseSelectionRule::kPattern) {
                //this is for the Linkdef selection
-               if (rule.GetAttributeValue("pattern", pattern_value) &&
+               if (rule.GetAttributeValue(BaseSelectionRule::kPatternID, pattern_value) &&
                      (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                else
                   earlyReturn=true;
@@ -825,7 +824,7 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    
    if (earlyReturn) return retval;
    
-   if (IsLinkdefFile()) {
+   if (isLinkDefFile) {
       // for rootcint explicit (name) Yes is stronger than implicit (pattern) No which is stronger than implicit (pattern) Yes
       if (explicit_selector) return explicit_selector;
       else if (specific_pattern_selector) return specific_pattern_selector;

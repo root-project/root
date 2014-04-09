@@ -148,8 +148,9 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
 
 bool BaseSelectionRule::GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const
 { 
-    if (fAttributesArray[attributeID].empty()) return false;
-    returnValue=fAttributesArray[attributeID];
+    const std::string& attribute = fAttributesArray[attributeID];
+    if (attribute.empty()) return false;
+    returnValue=attribute;
     return true;;
 }
 
@@ -562,7 +563,7 @@ const clang::Type *BaseSelectionRule::GetRequestedType() const
    return fRequestedType;
 }
 
-const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
+inline const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
 {
    return fCXXRecordDecl;
 }

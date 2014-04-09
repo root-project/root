@@ -116,7 +116,7 @@ public:
    bool  GetMatchFound() const;     // get fMatchFound
    
    const clang::Type *GetRequestedType() const;
-   const clang::CXXRecordDecl *GetCXXRecordDecl() const;
+   inline const clang::CXXRecordDecl *GetCXXRecordDecl() const;
    void SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr);
 
 protected:
