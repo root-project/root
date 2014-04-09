@@ -1168,7 +1168,7 @@ const char *TClingClassInfo::FileName()
    if (!IsValid()) {
       return 0;
    }
-   fDeclFileName = ROOT::TMetaUtils::GetFileName(GetDecl(), *fInterp);
+   fDeclFileName = ROOT::TMetaUtils::GetFileName(*GetDecl(), *fInterp);
    return fDeclFileName.c_str();
 }
 

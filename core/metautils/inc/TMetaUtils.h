@@ -490,7 +490,7 @@ bool HasCustomStreamerMemberFunction(const AnnotatedRecordDecl &cl,
 
 //______________________________________________________________________________
 // Return the header file to be included to declare the Decl
-llvm::StringRef GetFileName(const clang::Decl *decl,
+llvm::StringRef GetFileName(const clang::Decl& decl,
                             const cling::Interpreter& interp);
 
 //______________________________________________________________________________

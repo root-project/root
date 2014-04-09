@@ -1668,7 +1668,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       //      delete [] funcname;
 
       if (methodinfo &&
-          ROOT::TMetaUtils::GetFileName(methodinfo, interp).find("Rtypes.h") == llvm::StringRef::npos) {
+          ROOT::TMetaUtils::GetFileName(*methodinfo, interp).find("Rtypes.h") == llvm::StringRef::npos) {
 
          // GetClassVersion was defined in the header file.
          //fprintf(fp, "GetClassVersion((%s *)0x0), ",classname.c_str());
@@ -1681,7 +1681,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       //fprintf(stderr,"DEBUG: %s has value %d\n",classname.c_str(),(int)G__int(G__calc(temporary)));
    }
 
-   std::string filename = ROOT::TMetaUtils::GetFileName(cl, interp);
+   std::string filename = ROOT::TMetaUtils::GetFileName(*cl, interp);
    if (filename.length() > 0) {
       for (unsigned int i=0; i<filename.length(); i++) {
          if (filename[i]=='\\') filename[i]='/';
@@ -2169,7 +2169,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
 
    std::string a;
    std::string clName;
-   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(cl.GetRecordDecl(), interp).str().c_str());
+   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(*cl.GetRecordDecl(), interp).str().c_str());
    int version = ROOT::TMetaUtils::GetClassVersion(cl.GetRecordDecl());
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -2988,7 +2988,7 @@ getFinalSpellingLoc(clang::SourceManager& sourceManager,
 }
 
 //______________________________________________________________________________
-llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
+llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                               const cling::Interpreter& interp)
 {
    // Return the header file to be included to declare the Decl.
@@ -3022,14 +3022,14 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl *decl,
    // }
 
    using namespace clang;
-   SourceLocation headerLoc = decl->getLocation();
+   SourceLocation headerLoc = decl.getLocation();
 
    static const char invalidFilename[] = "invalid";
    if (!headerLoc.isValid()) return invalidFilename;
 
    HeaderSearch& HdrSearch = interp.getCI()->getPreprocessor().getHeaderSearchInfo();
 
-   SourceManager& sourceManager = decl->getASTContext().getSourceManager();
+   SourceManager& sourceManager = decl.getASTContext().getSourceManager();
    headerLoc = getFinalSpellingLoc(sourceManager, headerLoc);
    FileID headerFID = sourceManager.getFileID(headerLoc);
    SourceLocation includeLoc
