@@ -1300,12 +1300,15 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                break;
             }
          }
+
+         fCurExecutingMacros.push_back(fname);
          if (unnamedMacro) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
                                                         true /*ignoreOutmostBlock*/);
          } else {
             indent = fMetaProcessor->process(mod_line, compRes, &result);
          }
+         fCurExecutingMacros.pop_back();
       }
    } // .L / .X / .x
    else {
@@ -3525,7 +3528,10 @@ Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
    // Execute a cling macro.
    R__LOCKGUARD(gInterpreterMutex);
-   return TApplication::ExecuteFile(filename, (int*)error);
+   fCurExecutingMacros.push_back(filename);
+   Long_t result = TApplication::ExecuteFile(filename, (int*)error);
+   fCurExecutingMacros.pop_back();
+   return result;
 }
 
 //______________________________________________________________________________
@@ -3535,16 +3541,7 @@ const char* TCling::GetTopLevelMacroName() const
    // See the documentation for GetCurrentMacroName().
 
    Warning("GetTopLevelMacroName", "Must change return type!");
-   static std::string sMacroName;
-   const cling::Transaction* T = fInterpreter->getLastTransaction();
-   while(const cling::Transaction* ParentT = T->getParent())
-      T = ParentT;
-   clang::FileID FID = T->getBufferFID();
-   clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
-   if (const clang::FileEntry* FE = SM.getFileEntryForID(FID))
-      sMacroName = FE->getName();
-
-   return sMacroName.c_str();
+   return fCurExecutingMacros.back();
 }
 
 //______________________________________________________________________________
@@ -3598,14 +3595,7 @@ const char* TCling::GetCurrentMacroName() const
    Warning("GetCurrentMacroName", "Must change return type!");
 #endif
 #endif
-   static std::string sMacroName;
-   const cling::Transaction* T = fInterpreter->getLastTransaction();
-   clang::FileID FID = T->getBufferFID();
-   clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
-   if (const clang::FileEntry* FE = SM.getFileEntryForID(FID))
-      sMacroName = FE->getName();
-
-   return sMacroName.c_str();
+   return fCurExecutingMacros.back();
 }
 
 //______________________________________________________________________________

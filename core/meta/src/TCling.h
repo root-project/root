@@ -127,6 +127,7 @@ private: // Data Members
    void* fAutoLoadCallBack;
    ULong64_t fTransactionCount; // Cling counter for commited or unloaded transactions which changed the AST.
    std::unordered_set<std::string> fSeenRootmapEntry;
+   std::vector<const char*> fCurExecutingMacros;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
    
