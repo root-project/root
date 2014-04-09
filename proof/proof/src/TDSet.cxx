@@ -800,7 +800,7 @@ TDSet::TDSet(const TChain &chain, Bool_t withfriends)
    while ((elem = (TChainElement *)next())) {
       TString file(elem->GetTitle());
       TString tree(elem->GetName());
-      Int_t isl = tree.Index("/");
+      Int_t isl = tree.Last('/');
       TString dir = "/";
       if (isl >= 0) {
          // Copy the tree name specification
