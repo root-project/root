@@ -2867,7 +2867,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      if (code > TClass::kWithTypeDef ) {
+      if (code <= TClass::kWithTypeDef ) {
          // humm ... In the streamerInfo we only have the desugared/normalized
          // names, so we are unable to calculate the name with typedefs ...
          // except for the case of the ROOT typedef (Int_t, etc.) which are
