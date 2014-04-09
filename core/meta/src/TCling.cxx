@@ -1640,6 +1640,9 @@ Bool_t TCling::IsLoaded(const char* filename) const
    //            the shared library path
    R__LOCKGUARD(gInterpreterMutex);
 
+   //FIXME: if we use llvm::sys::fs::make_absolute all this can go away. See
+   // cling::DynamicLibraryManager.
+
    std::string file_name = filename;
    size_t at = std::string::npos;
    while ((at = file_name.find("/./")) != std::string::npos)
