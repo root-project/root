@@ -616,28 +616,28 @@ Int_t stressFit(const char *theFitter, Int_t N)
 
   gBenchmark->Start("stressFit");
 
-  Bool_t okRosenBrock    = kTRUE;
-  Bool_t okWood          = kTRUE;
-  Bool_t okPowell        = kTRUE;
-  Bool_t okFletcher      = kTRUE;
-  Bool_t okGoldStein1    = kTRUE;
-  Bool_t okGoldStein2    = kTRUE;
-  Bool_t okTrigoFletcher = kTRUE;
+  Int_t countRosenBrock    = 0;
+  Int_t countWood          = 0;
+  Int_t countPowell        = 0;
+  Int_t countFletcher      = 0;
+  Int_t countGoldStein1    = 0;
+  Int_t countGoldStein2    = 0;
+  Int_t countTrigoFletcher = 0;
   Int_t i;
-  for (i = 0; i < N; i++)  okWood          = RunWood4();
-  StatusPrint(1,"Wood",okWood);
-  for (i = 0; i < N; i++) okRosenBrock    = RunRosenBrock();
-  StatusPrint(2,"RosenBrock",okRosenBrock);
-  for (i = 0; i < N; i++) okPowell        = RunPowell();
-  StatusPrint(3,"Powell",okPowell);
-  for (i = 0; i < N; i++) okFletcher      = RunFletcher();
-  StatusPrint(4,"Fletcher",okFletcher);
-  for (i = 0; i < N; i++) okGoldStein1    = RunGoldStein1();
-  StatusPrint(5,"GoldStein1",okGoldStein1);
-  for (i = 0; i < N; i++) okGoldStein2    = RunGoldStein2();
-  StatusPrint(6,"GoldStein2",okGoldStein2);
-  okTrigoFletcher = RunTrigoFletcher();
-  StatusPrint(7,"TrigoFletcher",okTrigoFletcher);
+  for (i = 0; i < N; i++) if (RunWood4()) countWood++;
+  StatusPrint(1, "Wood", (countWood == N));
+  for (i = 0; i < N; i++) if (RunRosenBrock()) countRosenBrock++;
+  StatusPrint(2, "RosenBrock", (countRosenBrock == N));
+  for (i = 0; i < N; i++) if (RunPowell()) countPowell++;
+  StatusPrint(3, "Powell", (countPowell == N));
+  for (i = 0; i < N; i++) if (RunFletcher()) countFletcher++;
+  StatusPrint(4, "Fletcher", (countFletcher == N));
+  for (i = 0; i < N; i++) if (RunGoldStein1()) countGoldStein1++;
+  StatusPrint(5, "GoldStein1", (countGoldStein1 == N));
+  for (i = 0; i < N; i++) if (RunGoldStein2()) countGoldStein2++;
+  StatusPrint(6, "GoldStein2", (countGoldStein2 == N));
+  if (RunTrigoFletcher()) countTrigoFletcher++;
+  StatusPrint(7, "TrigoFletcher", (countTrigoFletcher == 1));
 
   gBenchmark->Stop("stressFit");
 
