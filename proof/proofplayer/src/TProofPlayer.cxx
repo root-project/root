@@ -2503,8 +2503,11 @@ Long64_t TProofPlayerRemote::Process(TDSet *dset, TSelector *selector,
    }
 
    fCreateSelObj = kFALSE;
+   Long64_t rc = Process(dset, selector->ClassName(), option, nentries, first);
+   fCreateSelObj = kTRUE;
 
-   return Process(dset, selector->ClassName(), option, nentries, first);
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
