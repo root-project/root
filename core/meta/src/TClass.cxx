@@ -5214,7 +5214,7 @@ Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
    // Return true if the checksum passed as argument is one of the checksum
    // value produced by the older checksum calulcation algorithm.
 
-   for(UInt_t i = 1; i < kLegacyCheckSum; ++i) {
+   for(UInt_t i = 1; i < kLatestCheckSum; ++i) {
       if ( checksum == GetCheckSum( (ECheckSum) i ) ) return kTRUE;
    }
    return kFALSE;
@@ -5246,6 +5246,11 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
    R__LOCKGUARD(gInterpreterMutex);
 
    if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
+
+   // kCurrentCheckSum (0) is the default parameter value and should be kept
+   // for backward compatibility, too be able to use the inequality checks,
+   // we need to set the code to the largest value.
+   if (code == kCurrentCheckSum) code = kLatestCheckSum;
 
    UInt_t id = 0;
 
@@ -5283,12 +5288,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
 
          if ( prop&kIsStatic)             continue;
          name = tdm->GetName(); il = name.Length();
-         if ( (code != kNoEnum) && prop&kIsEnum) id = id*3 + 1;
+         if ( (code > kNoEnum) && prop&kIsEnum) id = id*3 + 1;
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
 
-         if (code != kWithTypeDef ) {
+         if (code > kWithTypeDef ) {
             type = tdm->GetTrueTypeName();
             if (TClassEdit::IsSTLCont(type))
                type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
@@ -5305,7 +5310,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          if (prop&kIsArray) {
             for (int ii=0;ii<dim;ii++) id = id*3+tdm->GetMaxIndex(ii);
          }
-         if (code != kNoRange) {
+         if (code > kNoRange) {
             const char *left = strstr(tdm->GetTitle(),"[");
             if (left) {
                const char *right = strstr(left,"]");
@@ -5320,7 +5325,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          }
       }/*EndMembLoop*/
    }
-   if (code==kCurrentCheckSum) fCheckSum = id;
+   if (code==kLatestCheckSum) fCheckSum = id;
    return id;
 }
 
