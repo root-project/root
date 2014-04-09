@@ -159,9 +159,9 @@ static const char *gOpenTypes[] = { "ROOT files",   "*.root",
                                     "All files",    "*",
                                     0,              0 };
 
-static const char *gSaveAsTypes[] = { "PostScript",   "*.ps",
+static const char *gSaveAsTypes[] = { "PDF",          "*.pdf",
+                                      "PostScript",   "*.ps",
                                       "Encapsulated PostScript", "*.eps",
-                                      "PDF",          "*.pdf",
                                       "SVG",          "*.svg",
                                       "TeX",          "*.tex",
                                       "GIF",          "*.gif",
@@ -864,6 +864,14 @@ again:
                               }
                            }
                            Warning("ProcessMessage", "file %s cannot be saved with this extension", fi.fFilename);
+                        }
+                        for (int i=1;gSaveAsTypes[i];i+=2) {
+                           TString ftype = gSaveAsTypes[i];
+                           ftype.ReplaceAll("*.", ".");
+                           if (fn.EndsWith(ftype.Data())) {
+                              typeidx = i-1;
+                              break;
+                           }
                         }
                      }
                      break;
