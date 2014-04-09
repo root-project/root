@@ -88,7 +88,7 @@ public:
       kNoEnum          = 1, // Used since v3.3
       kNoRange         = 2, // Up to v5.17
       kWithTypeDef     = 3, // Up to v5.99/03
-      kLegacyCheckSum  = 4
+      kLatestCheckSum  = 4
    };
 
 private:

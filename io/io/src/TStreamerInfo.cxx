@@ -2795,7 +2795,7 @@ Bool_t TStreamerInfo::MatchLegacyCheckSum(UInt_t checksum) const
    // Return true if the checksum passed as argument is one of the checksum
    // value produced by the older checksum calulcation algorithm.
 
-   for(UInt_t i = 1; i < TClass::kLegacyCheckSum; ++i) {
+   for(UInt_t i = 1; i < TClass::kLatestCheckSum; ++i) {
       if ( checksum == GetCheckSum( (TClass::ECheckSum) i) ) return kTRUE;
    }
    return kFALSE;
@@ -2824,6 +2824,11 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
    // They are both used to handle backward compatibility and should both return the same values.
    // TStreamerInfo uses the information in TStreamerElement while TClass uses the information
    // from TClass::GetListOfBases and TClass::GetListOfDataMembers.
+
+   // kCurrentCheckSum (0) should be kept for backward compatibility, to be
+   // able to use the inequality checks, we need to set the code to the largest
+   // value.
+   if (code == TClass::kCurrentCheckSum) code = TClass::kLatestCheckSum;
 
    UInt_t id = 0;
 
@@ -2855,14 +2860,14 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
          // el->GetTypeName() should be return 'int'
          isenum = kTRUE;
       }
-      if ( (code != 1) && isenum) id = id*3 + 1;
+      if ( (code > TClass::kNoEnum) && isenum) id = id*3 + 1;
 
       name = el->GetName();  il = name.Length();
 
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      if (code != TClass::kWithTypeDef ) {
+      if (code > TClass::kWithTypeDef ) {
          // humm ... In the streamerInfo we only have the desugared/normalized
          // names, so we are unable to calculate the name with typedefs ...
          // except for the case of the ROOT typedef (Int_t, etc.) which are
@@ -2886,7 +2891,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       }
 
 
-      if (code != 2) {
+      if (code > TClass::kNoRange) {
          const char *left = strstr(el->GetTitle(),"[");
          if (left) {
             const char *right = strstr(left,"]");
