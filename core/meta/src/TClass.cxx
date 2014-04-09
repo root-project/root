@@ -2091,7 +2091,8 @@ Bool_t TClass::CanSplit() const
 
       TClass *valueClass = GetCollectionProxy()->GetValueClass();
       if (valueClass == 0) return kFALSE;
-      if (valueClass==TString::Class() || valueClass==TClass::GetClass("string"))
+      static TClassRef stdStringClass("std::string");
+      if (valueClass==TString::Class() || valueClass==stdStringClass)
          return kFALSE;
       if (!valueClass->CanSplit()) return kFALSE;
       if (valueClass->GetCollectionProxy() != 0) return kFALSE;
