@@ -10,17 +10,17 @@ echo
 echo Generating the one large pcm, patience...
 echo
 
-srcdir=.
-if [ $# -eq 1 ]; then
-   srcdir=$1
-   modules=./*/
-fi
-if [ $# -eq 2 ]; then
-   srcdir=$1
-   modules=$2
-fi
+srcdir=$1
+shift
+modules=$1
+shift
 
 rm -f include/allHeaders.h include/allHeaders.h.pch include/allLinkDef.h all.h cppflags.txt include/allLinkDef.h
+
+while ! [ "x$1" = "x" ]; do
+    echo '#include "'$1'"' >> all.h
+    shift
+done
 
 for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict`                   # to get foo/src
