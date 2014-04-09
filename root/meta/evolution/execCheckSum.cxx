@@ -25,12 +25,12 @@ public:
    MyLong_t fInt1;
    Int_t    fInt2;
    void Print() {
-      fprintf(stderr,"The %s object has:\n",Class()->GetName());
-      fprintf(stderr,"  fVec1.size() : %ld\n", fVec1.size());
-      fprintf(stderr,"  fVec2.size() : %ld\n", fVec2.size());
-      fprintf(stderr,"  fVec3.size() : %ld\n", fVec3.size());
-      fprintf(stderr,"  fInt1        : %ld\n", fInt1);
-      fprintf(stderr,"  fInt2        : %d\n", fInt2);
+      fprintf(stdout,"The %s object has:\n",Class()->GetName());
+      fprintf(stdout,"  fVec1.size() : %ld\n", fVec1.size());
+      fprintf(stdout,"  fVec2.size() : %ld\n", fVec2.size());
+      fprintf(stdout,"  fVec3.size() : %ld\n", fVec3.size());
+      fprintf(stdout,"  fInt1        : %ld\n", fInt1);
+      fprintf(stdout,"  fInt2        : %d\n", fInt2);
    }
 
    ClassDef(HasTypeDef,3);
@@ -73,6 +73,7 @@ void readFile(const char *filename = "checksum.root")
 
 int execCheckSum()
 {
+   readFile("checksum_v53418.root");
    readFile("checksum_v5.root");
    readFile("checksum_v6.root");
    return 0;
