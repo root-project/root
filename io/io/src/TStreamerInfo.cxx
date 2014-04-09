@@ -2876,7 +2876,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
          //
          type = el->GetTypeName();
       } else {
-         type = TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE);
+         type = TClassEdit::GetLong64_Name(TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE));
       }
       if (TClassEdit::IsSTLCont(type)) {
          type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
