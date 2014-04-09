@@ -14,7 +14,7 @@ x9  = 9009
 x10 = 10010
 x11 = 110011
 
-StreamerInfo for class: MyClass, version=1, checksum=0xe3b39f9d
+StreamerInfo for class: MyClass, version=1, checksum=0xb9ebd3fa
   TObject        BASE            offset=  0 type=66 Basic ROOT object   
   TAttFill       BASE            offset=  0 type= 0 Fill area attributes
   Int_t          x               offset= 16 type= 3                     
@@ -88,7 +88,7 @@ x9  = 9009
 x10 = 10010
 x11 = 110011
 
-StreamerInfo for class: MyClass, version=1, checksum=0xe3b39f9d
+StreamerInfo for class: MyClass, version=1, checksum=0xb9ebd3fa
   TObject        BASE            offset=  0 type=66 Basic ROOT object   
   TAttFill       BASE            offset=  0 type= 0 Fill area attributes
   Int_t          x               offset= 16 type= 3                     
