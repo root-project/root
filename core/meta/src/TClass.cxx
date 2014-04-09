@@ -5045,7 +5045,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          for (i=0; i<il; i++) id = id*3+name[i];
 
          if (code != kWithTypeDef ) {
-            type = tdm->GetTrueTypeName();
+            // TrueType name does not conserve Double32_t (it does in v6 though).
+            type = TClassEdit::ResolveTypedef(tdm->GetFullTypeName(),true);
             if (TClassEdit::IsSTLCont(type))
                type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
          } else {
