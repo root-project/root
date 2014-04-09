@@ -3541,7 +3541,8 @@ const char* TCling::GetTopLevelMacroName() const
       T = ParentT;
    clang::FileID FID = T->getBufferFID();
    clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
-   sMacroName = SM.getFileEntryForID(FID)->getName();
+   if (const clang::FileEntry* FE = SM.getFileEntryForID(FID))
+      sMacroName = FE->getName();
 
    return sMacroName.c_str();
 }
@@ -3601,7 +3602,8 @@ const char* TCling::GetCurrentMacroName() const
    const cling::Transaction* T = fInterpreter->getLastTransaction();
    clang::FileID FID = T->getBufferFID();
    clang::SourceManager& SM = fInterpreter->getCI()->getSourceManager();
-   sMacroName = SM.getFileEntryForID(FID)->getName();
+   if (const clang::FileEntry* FE = SM.getFileEntryForID(FID))
+      sMacroName = FE->getName();
 
    return sMacroName.c_str();
 }
