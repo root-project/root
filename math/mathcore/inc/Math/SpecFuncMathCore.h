@@ -25,16 +25,6 @@ N1687=04-0127, September 10, 2004</A>
 
 */
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-// avoid to include header file when using CINT 
-#ifndef _WIN32
-#include "../lib/libMathCore.so"
-#else
-#include "../bin/libMathCore.dll"
-#endif
-
-#else
-
 #ifndef ROOT_Math_SpecFuncMathCore
 #define ROOT_Math_SpecFuncMathCore
 
@@ -246,5 +236,3 @@ namespace Math {
 
 
 #endif // ROOT_Math_SpecFuncMathCore
-
-#endif // if defined (__CINT__) && !defined(__MAKECINT__)

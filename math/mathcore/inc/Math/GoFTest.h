@@ -8,10 +8,10 @@
  **********************************************************************/
 // Header file for GoFTest
 
-#include <memory>
-
 #ifndef ROOT_Math_GoFTest
 #define ROOT_Math_GoFTest
+
+#include <memory>
 
 #ifndef ROOT_Math_WrappedFunction
 #include "Math/WrappedFunction.h"

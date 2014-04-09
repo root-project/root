@@ -8,23 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// The current heuristics used by CINT to avoid parsing header file for
-// which it already has a (compiled) dictionary, is to compare the header
-// file name to the list of class names.  CINT will skip the #inclusion
-// of headers for compiled classes if they have the same name as a known class.
-// Since GuiTypes.h does not declare any class named 'GuiTypes', upon
-// seeing #include "GuiTypes.h" in an interpreted script, CINT will parse
-// GUiTypes.h and issue the following annoying warnings and error:
-/*
- Warning: Re-initialization ignored const kNone /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:90:
- Warning: Re-initialization ignored const kCopyFromParent /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:91:
- Warning: Re-initialization ignored const kParentRelative /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:92:
- Error: Function BIT(0) is not defined in current scope  /Users/pcanal/root_working/code/root.untouched/include/GuiTypes.h:141:
- *** Interpreter error recovered ***
-*/ 
-// To avoid these errors, we explicitly hide the content of GuiTypes.h from 
-// the CINT interpreter.
-#if !defined(ROOT_GuiTypes) && ( !defined(__CINT__) || defined (__MAKECINT__) )
+#ifndef ROOT_GuiTypes
 #define ROOT_GuiTypes
 
 //////////////////////////////////////////////////////////////////////////

@@ -9,6 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_TCLINGRUNTIME
+#define ROOT_TCLINGRUNTIME
 // Minimal set of headers/functions to be available from the interpreter
 // without any explicit include.
 
@@ -18,3 +20,4 @@
 #include <math.h>
 #include <string.h>
 
+#endif
