@@ -274,8 +274,20 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    if (fFileInfo->fFilename && fFileInfo->fFilename[0])
       fTbfname->AddText(0, fFileInfo->fFilename);
-   else
+   else {
       fTbfname->Clear();
+      if (dlg_type == kFDSave) {
+         fTbfname->AddText(0, "unnamed");
+         fName->SelectAll();
+         if (fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1] &&
+             strstr(fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1], "*.")) {
+            TString ext = fFileInfo->fFileTypes[fFileInfo->fFileTypeIdx+1];
+            ext.ReplaceAll("*.", ".");
+            fTbfname->AddText(7, ext.Data());
+         }
+         fName->SetFocus();
+      }
+   }
 
    fTypes->GetListBox()->Resize(230, 120);
    fHftype->AddFrame(fLftypes, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 2, 5, 2, 2));
@@ -335,6 +347,8 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 
    MapWindow();
    fFc->DisplayDirectory();
+   if (dlg_type == kFDSave)
+      fName->SetFocus();
    fClient->WaitFor(this);
 }
 
