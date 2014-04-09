@@ -19,6 +19,7 @@ public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
 
    Bool_t          fPlot;    // Whether to plot the result
+   Bool_t          fDoFriends; // Whether to use the friend tree
 
    // Specific members
    TH2F            *fXY;

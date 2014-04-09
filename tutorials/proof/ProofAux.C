@@ -28,6 +28,7 @@ ProofAux::ProofAux()
    fNEvents= -1;
    fMainList = 0;
    fFriendList = 0;
+   fDir = "";
 }
 
 //_____________________________________________________________________________
@@ -47,10 +48,18 @@ Int_t ProofAux::GetAction(TList *input)
    // Determine the test type
    TNamed *ntype = dynamic_cast<TNamed*>(input->FindObject("ProofAux_Action"));
    if (ntype) {
-      if (!strcmp(ntype->GetTitle(), "GenerateTrees")) {
-         action = 0;
-      } else if (!strcmp(ntype->GetTitle(), "GenerateTreesSameFile")) {
+      TString act(ntype->GetTitle());
+      if (act == "GenerateTreesSameFile") {
          action = 1;
+      } else if (act.BeginsWith("GenerateTrees")) {
+         action = 0;
+         // Extract directory, if any
+         Ssiz_t icol = act.Index(":");
+         if (icol != kNPOS) {
+            action = 2;
+            act.Remove(0, icol+1);
+            if (!act.IsNull()) fDir = act;
+         }
       } else {
          Warning("GetAction", "unknown action: '%s'", ntype->GetTitle());
       }
@@ -87,8 +96,10 @@ void ProofAux::SlaveBegin(TTree * /*tree*/)
    // Create lists
    fMainList = new TList;
    if (gProofServ) fMainList->SetName(TString::Format("MainList-%s", gProofServ->GetOrdinal()));
-   fFriendList = new TList;
-   if (gProofServ) fFriendList->SetName(TString::Format("FriendList-%s", gProofServ->GetOrdinal()));
+   if (fAction < 2) {
+      fFriendList = new TList;
+      if (gProofServ) fFriendList->SetName(TString::Format("FriendList-%s", gProofServ->GetOrdinal()));
+   }
 }
 
 //_____________________________________________________________________________
@@ -173,6 +184,14 @@ Bool_t ProofAux::Process(Long64_t entry)
                           fCurrent->GetName(), fnt.Data());
          return kFALSE;
       }
+   } else if (fAction == 2) {
+      TString fnt;
+      // Generate the TTree and save it in the specified file
+      if (GenerateTree(fCurrent->GetName(), fNEvents, fnt) != 0) {
+         Error("Process", "problems generating tree (%lld, %s, %lld)",
+                          entry, fCurrent->GetName(), fNEvents);
+         return kFALSE;
+      }
    } else {
       // Unknown action
       Warning("Process", "do not know how to process action %d - do nothing", fAction);
@@ -239,18 +258,34 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
    }
 
    // Create the file
-   TDirectory* savedir = gDirectory;
+   TDirectory *savedir = gDirectory;
    TFile *f = new TFile(fn, "RECREATE");
    if (!f || f->IsZombie()) {
       Error("GenerateTree", "problems opening file %s", fn.Data());
       return rc;
    }
    savedir->cd();
+
+   // Create sub-drirectory, if required
+   TDirectory *destdir = f;
+   if (!fDir.IsNull()) {
+      if (f->mkdir(fDir.Data())) {
+         Info("GenerateTree", "sub-directory '%s' successfully created", fDir.Data());
+         f->cd(fDir.Data());
+         destdir = gDirectory;
+      } else {
+         Error("GenerateTree", "creating sub-directory '%s'", fDir.Data());
+         f->Close();
+         delete f;
+         return rc;
+      }
+   }
+   
    rc = 0;
 
    // Create the tree
    TTree *T = new TTree("Tmain","Main tree for tutorial friends");
-   T->SetDirectory(f);
+   T->SetDirectory(destdir);
    Int_t Run = 1;
    T->Branch("Run",&Run,"Run/I");
    Long64_t Event = 0;
@@ -269,7 +304,7 @@ Int_t ProofAux::GenerateTree(const char *fnt, Long64_t ent, TString &fn)
       T->Fill();
    }
    T->Print();
-   f->cd();
+   destdir->cd();
    T->Write();
    T->SetDirectory(0);
    f->Close();

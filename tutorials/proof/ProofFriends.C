@@ -43,6 +43,7 @@ ProofFriends::ProofFriends()
    fR = 0;
    fRZ = 0;
    fPlot = kTRUE;
+   fDoFriends = kTRUE;
 }
 
 //_____________________________________________________________________________
@@ -56,6 +57,8 @@ void ProofFriends::Begin(TTree * /*tree*/)
 
    TNamed *out = (TNamed *) fInput->FindObject("PROOF_DONT_PLOT");
    if (out) fPlot = kFALSE;
+   out = (TNamed *) fInput->FindObject("PROOF_NO_FRIENDS");
+   if (out) fDoFriends = kFALSE;
 }
 
 //_____________________________________________________________________________
@@ -67,18 +70,22 @@ void ProofFriends::SlaveBegin(TTree * /*tree*/)
 
    TString option = GetOption();
 
+   TNamed *out = (TNamed *) fInput->FindObject("PROOF_NO_FRIENDS");
+   if (out) fDoFriends = kFALSE;
+
    // Histograms
    fXY = new TH2F("histo1", "y:x", 50, 5., 15., 50, 10., 30.);
    fZ = new TH1F("histo2", "z , sqrt(dx*dx+dy*dy) < 1", 50, 0., 5.);
-   fR = new TH1F("histo3", "Tfrnd.r , sqrt(dx*dx+dy*dy) < 1, z < 1", 50, 5., 15.);
-   fRZ = new TH2F("histo4", "Tfrnd.r:z , sqrt(dx*dx+dy*dy) < 1, z < 1", 50, 0., 1., 50, 5., 15.);
    fZ->SetFillColor(kBlue);
-   fR->SetFillColor(kRed);
    fOutput->Add(fXY);
    fOutput->Add(fZ);
-   fOutput->Add(fR);
-   fOutput->Add(fRZ);
-
+   if (fDoFriends) {
+      fR = new TH1F("histo3", "Tfrnd.r , sqrt(dx*dx+dy*dy) < 1, z < 1", 50, 5., 15.);
+      fRZ = new TH2F("histo4", "Tfrnd.r:z , sqrt(dx*dx+dy*dy) < 1, z < 1", 50, 0., 1., 50, 5., 15.);
+      fR->SetFillColor(kRed);
+      fOutput->Add(fR);
+      fOutput->Add(fRZ);
+   }
 }
 
 //_____________________________________________________________________________
@@ -117,9 +124,11 @@ Bool_t ProofFriends::Process(Long64_t entry)
    if (z > 1.) return kFALSE;
 
    // Read r and fill
-   b_r->GetEntry(entry);
-   fR->Fill(r, 1.);
-   fRZ->Fill(z, r, 1.);
+   if (fDoFriends) {
+      b_r->GetEntry(entry);
+      fR->Fill(r, 1.);
+      fRZ->Fill(z, r, 1.);
+   }
 
    return kTRUE;
 }
@@ -172,28 +181,32 @@ void ProofFriends::Terminate()
       fZ->Draw("");
    }
 
-   if ((fR = dynamic_cast<TH1F *>(fOutput->FindObject("histo3")))) {
-      p1 = (TPad *) c1->cd(3);
-      p1->SetBorderMode(0);
-      p1->SetFrameFillColor(cf);
-      fR->GetXaxis()->SetTitle("Tfrnd.r");
-      fR->GetYaxis()->SetTitle("N / 0.2");
-      fR->Draw();
-   }
+   if (fDoFriends) {
 
-   if ((fRZ = dynamic_cast<TH2F *>(fOutput->FindObject("histo4")))) {
-      p1 = (TPad *) c1->cd(4);
-      p1->SetBorderMode(0);
-      p1->SetFrameFillColor(cf);
-      fRZ->GetXaxis()->SetTitle("z");
-      fRZ->GetXaxis()->CenterTitle(1);
-      fRZ->GetXaxis()->SetTitleOffset(1.5);
-      fRZ->GetYaxis()->SetTitle("Tfrnd.r");
-      fRZ->GetYaxis()->CenterTitle(1);
-      fRZ->GetYaxis()->SetTitleOffset(1.75);
-      fRZ->GetZaxis()->SetTitle("N / 0.1 / 0.2");
-      fRZ->GetZaxis()->SetTitleOffset(1.25);
-      fRZ->Draw("lego");
+      if ((fR = dynamic_cast<TH1F *>(fOutput->FindObject("histo3")))) {
+         p1 = (TPad *) c1->cd(3);
+         p1->SetBorderMode(0);
+         p1->SetFrameFillColor(cf);
+         fR->GetXaxis()->SetTitle("Tfrnd.r");
+         fR->GetYaxis()->SetTitle("N / 0.2");
+         fR->Draw();
+      }
+
+      if ((fRZ = dynamic_cast<TH2F *>(fOutput->FindObject("histo4")))) {
+         p1 = (TPad *) c1->cd(4);
+         p1->SetBorderMode(0);
+         p1->SetFrameFillColor(cf);
+         fRZ->GetXaxis()->SetTitle("z");
+         fRZ->GetXaxis()->CenterTitle(1);
+         fRZ->GetXaxis()->SetTitleOffset(1.5);
+         fRZ->GetYaxis()->SetTitle("Tfrnd.r");
+         fRZ->GetYaxis()->CenterTitle(1);
+         fRZ->GetYaxis()->SetTitleOffset(1.75);
+         fRZ->GetZaxis()->SetTitle("N / 0.1 / 0.2");
+         fRZ->GetZaxis()->SetTitleOffset(1.25);
+         fRZ->Draw("lego");
+      }
+
    }
 
    // Final update
