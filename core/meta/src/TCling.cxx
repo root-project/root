@@ -4630,6 +4630,8 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    TListOfDataMembers* globals = (TListOfDataMembers*)gROOT->GetListOfGlobals();
    for(cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
        I != E; ++I) {
+      if (I->m_Call == cling::Transaction::kCCIHandleVTable)
+         continue;
       for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
               DE = I->m_DGR.end(); DI != DE; ++DI) {
          // Deal with global variables and globa enum constants.
