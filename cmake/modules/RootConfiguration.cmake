@@ -484,7 +484,7 @@ if(WIN32)
 else()
   set(makecompiledata ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh)
 endif()
-
+get_filename_component(cxx ${CMAKE_CXX_COMPILER} NAME)
 string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
 execute_process(COMMAND ${makecompiledata} include/compiledata.h "${cxx}" "" "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
 	   "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
