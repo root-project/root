@@ -30,7 +30,7 @@
 ClassImp(TListOfFunctions)
 
 //______________________________________________________________________________
-TListOfFunctions::TListOfFunctions(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0)
+TListOfFunctions::TListOfFunctions(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fLastLoadMarker(0)
 {
    // Constructor.
 
@@ -358,14 +358,19 @@ void TListOfFunctions::Load()
    
    R__LOCKGUARD(gInterpreterMutex);
 
+   ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
+   if (currentTransaction == fLastLoadMarker) {
+      return;
+   }
+   fLastLoadMarker = currentTransaction;
+
    ClassInfo_t *info;
    if (fClass) info = fClass->GetClassInfo();
    else info = gInterpreter->ClassInfo_Factory();
 
    MethodInfo_t *t = gInterpreter->MethodInfo_Factory(info);
    while (gInterpreter->MethodInfo_Next(t)) {
-      // if the name cannot be obtained there is no use to put in list
-      if (gInterpreter->MethodInfo_IsValid(t) && gInterpreter->MethodInfo_Name(t)) {
+      if (gInterpreter->MethodInfo_IsValid(t)) {
          TDictionary::DeclId_t mid = gInterpreter->GetDeclId(t);
          // Get will check if there is already there or create a new one
          // (or re-use a previously unloaded version).
