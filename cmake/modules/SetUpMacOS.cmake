@@ -85,7 +85,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
    
      #settings for cint
-     set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+     set(CPPPREP "${CXX} -E -C")
      set(CXXOUT "-o ")
      set(EXEEXT "")
      set(SOEXT "so")
@@ -119,7 +119,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
    
      #settings for cint
-     set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+     set(CPPPREP "${CXX} -E -C")  
      set(CXXOUT "-o ")
      set(EXEEXT "")
      set(SOEXT "so")

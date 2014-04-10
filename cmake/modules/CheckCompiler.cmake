@@ -11,6 +11,15 @@ if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GE
   enable_language(Fortran OPTIONAL)
 endif()
 
+#----Get the compiler file name (to ensure re-location)---------------------------------------------
+get_filename_component(_compiler_name ${CMAKE_CXX_COMPILER} NAME)
+get_filename_component(_compiler_path ${CMAKE_CXX_COMPILER} PATH)
+if("$ENV{PATH}" MATCHES ${_compiler_path})
+  set(CXX ${_compiler_name})
+else()
+  set(CXX ${CMAKE_CXX_COMPILER})
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -103,4 +112,4 @@ endif()
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${ALL_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${ALL_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")

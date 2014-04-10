@@ -70,7 +70,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR
   set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
  
   #Settings for cint
-  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+  set(CPPPREP "${CXX} -E -C")
   set(CXXOUT "-o ")
   set(EXPLICITLINK "no") #TODO
 
@@ -145,7 +145,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   set(CMAKE_C_FLAGS_DEBUG            "-g -O2")
 
   #Settings for cint
-  set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+  set(CPPPREP "${CXX} -E -C")  
   set(CXXOUT "-o ")
   set(EXPLICITLINK "no") #TODO
 

@@ -379,10 +379,11 @@ string(REPLACE "c++11" "cxx11" features ${features}) # change the name of the c+
 set(configfeatures ${features})
 set(configargs ${ROOT_CONFIGARGS})
 set(configoptions ${ROOT_CONFIGARGS})
-set(altcc ${CMAKE_C_COMPILER})
-set(altcxx ${CMAKE_CXX_COMPILER})
-set(altf77 ${CMAKE_Fortran_COMPILER})
-set(altld ${CMAKE_CXX_COMPILER})
+get_filename_component(altcc ${CMAKE_C_COMPILER} NAME)
+get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
+get_filename_component(altf77 ${CMAKE_Fortran_COMPILER} NAME)
+get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
+
 set(pythonvers ${PYTHON_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
@@ -470,20 +471,11 @@ endif()
 
 
 #---compiledata.h--------------------------------------------------------------------------------------------
-get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
-get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
-if("$ENV{PATH}" MATCHES ${_path})
-  set(cxx ${_name})
-else()
-  set(cxx ${CMAKE_CXX_COMPILER})
-endif()
-
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h)
 else()
-  string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${cxx}" "" 
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${CXX}" ""
        "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
 	     "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
 	     "${libdir}" "-lCore" "-Rint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
