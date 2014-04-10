@@ -357,7 +357,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
       TCanvas *canvas = gPad->GetCanvas();
-      if (canvas) canvas->Selected((TPad*)gPad, newpad, event);
+      if (canvas) canvas->Selected((TPad*)gPad, newpad, kButton1Down);
       padsav->cd();
       break;
    }
