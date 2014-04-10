@@ -83,7 +83,7 @@ add_custom_command(OUTPUT include/allLinkDef.h include/allHeaders.h cppflags.txt
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makeonepcm.sh ${__allFiles})
 set(__cxxflags -D__CLING__ -D__STDC_LIMIT_MACROS -D__STDC_CONSTANT_MACROS -DLDAP_DEPRECATED -Iinclude -Ietc -Ietc/cling -I${CMAKE_SOURCE_DIR})
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                  COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -c ${__cxxflags} `cat cppflags.txt | sort | uniq` include/allHeaders.h include/allLinkDef.h
+                  COMMAND bin/rootcling_tmp -1 -f etc/allDict.cxx -noDictSelection -c ${__cxxflags} `cat cppflags.txt | sort | uniq` include/allHeaders.h include/allLinkDef.h
                   COMMAND ${CMAKE_COMMAND} -E copy etc/allDict_rdict.pch etc/allDict.cxx.pch
                   DEPENDS include/allLinkDef.h include/allHeaders.h rootcling_tmp)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)

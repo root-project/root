@@ -21,7 +21,7 @@ endif()
 
 macro(ROOT_ADD_MACRO macrofile)
   get_filename_component(name ${macrofile} NAME_WE)
-  ROOT_ADD_TEST(macro-${name} COMMAND ${ROOT_root_CMD} -b -q ${macrofile} PASSRC 1 FAILREGEX Error)
+  ROOT_ADD_TEST(macro-${name} COMMAND ${ROOT_root_CMD} -b -q ${macrofile} FAILREGEX Error)
 endmacro()
 
 #---environment-------------------------------------------------------------------------------
