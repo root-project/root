@@ -5054,21 +5054,9 @@ void TCling::SetTempLevel(int val) const
 //______________________________________________________________________________
 int TCling::UnloadFile(const char* path) const
 {
-
-   if (fInterpreter->getDynamicLibraryManager()->isLibraryLoaded(path)) {
-      // Signal that the list of shared libs needs to be updated.
-      const_cast<TCling*>(this)->fPrevLoadedDynLibInfo = 0;
-      const_cast<TCling*>(this)->fSharedLibs = "";
-
-      Error("UnloadFile", "Unloading of shared libraries not yet implemented!\n"
-            "Not unloading file %s!", path);
-
-      return -1;
-   }
-
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
-   fMetaProcessor->process(TString::Format(".U %s", path).Data(), compRes, /*cling::Value*/0);
+   fMetaProcessor->process(Form(".U %s", path), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
