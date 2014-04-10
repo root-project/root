@@ -384,7 +384,6 @@ set(altcxx ${CMAKE_CXX_COMPILER})
 set(altf77 ${CMAKE_Fortran_COMPILER})
 set(altld ${CMAKE_CXX_COMPILER})
 set(pythonvers ${PYTHON_VERSION})
-get_filename_component(cxx ${CMAKE_CXX_COMPILER} NAME)
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h)
@@ -471,16 +470,24 @@ endif()
 
 
 #---compiledata.h--------------------------------------------------------------------------------------------
-if(WIN32)
-  set(makecompiledata ${CMAKE_SOURCE_DIR}/build/win/compiledata.sh)
+get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
+get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
+if("$ENV{PATH}" MATCHES ${_path})
+  set(cxx ${_name})
 else()
-  set(makecompiledata ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh)
+  set(cxx ${CMAKE_CXX_COMPILER})
 endif()
 
-string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
-execute_process(COMMAND ${makecompiledata} include/compiledata.h "${cxx}" "" "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
-	   "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
-	   "${libdir}" "-lCore" "-Rint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
+if(WIN32)
+  # We cannot use the compiledata.sh script for windows
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in include/compiledata.h)
+else()
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
+  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh include/compiledata.h "${cxx}" "" 
+       "${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}"
+	     "${CMAKE_CXX_FLAGS}" "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "${LibSuffix}" "${SYSLIBS}"
+	     "${libdir}" "-lCore" "-Rint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "" "${explicitlink}" )
+endif()
 
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY)
