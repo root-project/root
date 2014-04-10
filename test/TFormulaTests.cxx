@@ -10,6 +10,12 @@
 #include <TSystem.h>
 #include <TApplication.h>
 #include <TFormula.h>
+#include <TFormulaOld.h>
+#include <TRandom.h>
+#include <iostream>
+using namespace std;
+
+
 template<typename F, typename S, typename T>
 struct Triple
 {
@@ -346,6 +352,8 @@ Bool_t TFormulaTests::Parser()
 
 Bool_t TFormulaTests::Stress(Int_t n)
 {
+    
+#ifdef OLD
    TString formula = "x";
    SDpair *vars = new SDpair[n];
    SDpair *params = new SDpair[n*5];
@@ -354,30 +362,115 @@ Bool_t TFormulaTests::Stress(Int_t n)
    {
       vars[i] = SDpair(TString::Format("x%d",i),i+1);
       params[i] = SDpair(TString::Format("%d",i),i+1);
-      formula.Append(TString::Format("+ %s + %sgausn(0) - [%d]",vars[i].first.Data(),vars[i].first.Data(),i));
+      formula.Append(TString::Format("+ %s + %s*gausn(0) - [%d]",vars[i].first.Data(),vars[i].first.Data(),i));
+      //cout << formula.Data() << endl;
    }
    for(Int_t i = n; i < n*5; ++i)
    {
       params[i] = SDpair(TString::Format("%d",i),i+1);
       formula.Append(TString::Format("*[%d]",i));
+      //cout << formula.Data() << endl;
    }
+#else
+   TString formula = "x";
+   //SDpair *vars = new SDpair[n];
+   SDpair *params = new SDpair[n*5];
+   std::vector<double> parv;
+   gBenchmark->Start("TFormula Stress Total Time");
+   int i0 = 0;
+   for(Int_t i = 0; i < n ; i+=5)
+   {
+      // vars[i] = SDpair(TString::Format("x",i),i+1);
+      for (int j = 0; j < 5; ++j) {
+         double val = 2.0;
+         params[i+j] = SDpair(TString::Format("%d",i+j),val);
+         //cout << "set parameter " << i+j << " value " << j+1 << endl;
+         parv.push_back(val);
+      }
+      formula.Append(TString::Format("*[%d]+ y*[%d]*[%d] + z*gausn(%d)*[%d] - [%d]*t",i,i+1,i+1,i+2,i+3,i+4));
+      //formula.Append(TString::Format("*[%d]+ y*[%d]*[%d] + z*gausn(%d) - [%d]*t",i,i+1,i+1,i+2,i+5));
+      //cout << formula.Data() << endl;
+      i0 = i; 
+   }  
+   i0 += 5;
+   for(Int_t i = i0; i < n*5; ++i)
+   {
+      double val = i;
+      params[i] = SDpair(TString::Format("%d",i),val);
+      //cout << "set parameter " << i << " value " << i+1 << endl;
+      parv.push_back(val);
+      formula.Append(TString::Format("+[%d]",i));
+      //cout << formula.Data() << endl;
+   }
+#endif
+   // new version with only 4 variables but n-parameters
 
    gBenchmark->Start(TString::Format("TFormula Initialization with %d variables and %d parameters\n",n,n*5));
    TFormula *test = new TFormula("TFStressTest",formula);
    gBenchmark->Show(TString::Format("TFormula Initialization with %d variables and %d parameters\n",n,n*5));
-   gBenchmark->Start(TString::Format("Adding %d variables\n",n));
-   test->AddVariables(vars,n);
-   gBenchmark->Show(TString::Format("Adding %d variables\n",n));
+   // gBenchmark->Start(TString::Format("Adding %d variables\n",n));
+   // test->AddVariables(vars,n);
+   // gBenchmark->Show(TString::Format("Adding %d variables\n",n));
    gBenchmark->Start(TString::Format("Setting %d parameters\n",n*5));
    test->SetParameters(params,n*5);
    gBenchmark->Show(TString::Format("Setting %d parameters\n",n*5));
-   gBenchmark->Start(TString::Format("%d Evaluations\n",n*10));
-   for(Int_t i = 0; i < n*10; ++i)
+
+   int neval = n*10000;
+   gBenchmark->Start(TString::Format("%d Evaluations\n",neval));
+   double xx[4] = {3,3,3,3};
+   TRandom rndm;
+   TStopwatch w; w.Start();
+   double s = 0; 
+   for(Int_t i = 0; i < neval; ++i)
    {
-      test->Eval();
+      if (i > 0) rndm.RndmArray(4,xx);
+      double f = test->EvalPar(xx,0);
+      if (i == 0) printf(" f = %20.16g \n",f);
+      if (TMath::Even(i) ) s += f; 
+      else s -= f;          
    }
-   gBenchmark->Show(TString::Format("%d Evaluations\n",n*10));
+   printf("Evaluation time :\t");
+   w.Print();
+   std::cout << "result = " <<  s << std::endl; 
+   gBenchmark->Show(TString::Format("%d Evaluations\n",neval));
+   //test->Print("v");
    gBenchmark->Show("TFormula Stress Total Time");
+
+
+   std::cout << "\n\n Testing old TFormula \n" << endl;
+
+
+   gBenchmark->Start(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
+   TFormulaOld *testOld = new TFormulaOld("TFStressTestOld",formula);
+   gBenchmark->Show(TString::Format("TFormulaOld Initialization with %d variables and %d parameters\n",n,n*5));
+   // gBenchmark->Start(TString::Format("Adding %d variables\n",n));
+   // test->AddVariables(vars,n);
+   // gBenchmark->Show(TString::Format("Adding %d variables\n",n));
+   gBenchmark->Start(TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+   testOld->SetParameters(&parv[0]);
+   gBenchmark->Show( TString::Format("TFormulaOld: Setting %d parameters\n",n*5));
+
+   gBenchmark->Start(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   TRandom rndm2;
+   std::cout << "start evaluatuons  " << std::endl;
+   s = 0;
+   w.Start();
+   double xx2[4] = {3,3,3,3};
+   for(Int_t i = 0; i < neval; ++i)
+   {
+      if (i > 0) rndm2.RndmArray(4,xx2);      
+      double f = testOld->EvalPar(xx2,0);
+      if (i == 0) printf(" f = %20.16g \n",f);
+      if (TMath::Even(i) ) s += f; 
+      else s -= f;          
+   }
+   printf("Evaluation time :\t");
+   w.Print();
+   std::cout << "result = " <<  s << std::endl; 
+   gBenchmark->Show(TString::Format("TFormulaOld: %d Evaluations\n",neval));
+   //testOld->Print("v");
+   gBenchmark->Show("TFormulaOld Stress Total Time");
+
    
    return true;
 }
@@ -385,13 +478,20 @@ int main(int argc, char **argv)
 {
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
-   Int_t n = 1000;
+   Int_t n = 200;
    if(argc > 1) 
       n = TString(argv[1]).Atoi();
    printf("************************************************\n");
    printf("================TFormula Tests===============\n");
    printf("************************************************\n");
+
+
+
    testFormula = "x_1- [test]^(TMath::Sin(pi*var*TMath::DegToRad())) - var1pol2(0) + gausn(0)*ylandau(0)+zexpo(10)";
+   TFormulaTests * test = new TFormulaTests("TFtests",testFormula);
+
+#ifdef LATER
+
    Nparams = 6;
    Nvars = 6;
    testParams = new SDpair[Nparams];
@@ -410,7 +510,6 @@ int main(int argc, char **argv)
    testVars[4] = SDpair("y",456);
    testVars[5] = SDpair("z",123);
 
-   TFormulaTests * test = new TFormulaTests("TFtests",testFormula);
    
    test->AddVariables(testVars,Nvars);
    test->SetParameters(testParams,Nparams);
@@ -427,6 +526,7 @@ int main(int argc, char **argv)
    printf("SetParameters1 test:%s\n",(test->SetPars1() ? "PASSED" : "FAILED"));
    printf("SetParameters2 test:%s\n",(test->SetPars2() ? "PASSED" : "FAILED"));
    printf("Eval test:%s\n",(test->Eval() ? "PASSED" : "FAILED"));
+#endif
    printf("Stress test:%s\n",(test->Stress(n) ? "PASSED" : "FAILED"));
 
    return 0;
