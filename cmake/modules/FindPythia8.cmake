@@ -44,9 +44,4 @@ endforeach()
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(Pythia8 DEFAULT_MSG PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY)
 mark_as_advanced(PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
-
-if(PYTHIA8_FOUND)
-  file(READ ${PYTHIA8_INCLUDE_DIR}/../xmldoc/Version.xml versionstr)
-  string(REGEX REPLACE ".*Pythia:versionNumber.*default.*[0-9][.]([0-9]+).*" "\\1" PYTHIA8_VERSION "${versionstr}")
-endif()
-
+  
