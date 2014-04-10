@@ -378,7 +378,7 @@ set(configargs ${ROOT_CONFIGARGS})
 set(configoptions ${ROOT_CONFIGARGS})
 get_filename_component(altcc ${CMAKE_C_COMPILER} NAME)
 get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
-get_filename_component(altf77 ${CMAKE_Fortran_COMPILER} NAME)
+get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
 set(pythonvers ${PYTHON_VERSION})
