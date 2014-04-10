@@ -1899,14 +1899,29 @@ Int_t TCling::Load(const char* filename, Bool_t system)
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
    R__LOCKGUARD2(gInterpreterMutex);
+   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
+   std::string canonLib = DLM->lookupLibrary(filename);
    cling::DynamicLibraryManager::LoadLibResult res
-      = fInterpreter->getDynamicLibraryManager()->loadLibrary(filename, system);
+      = cling::DynamicLibraryManager::kLoadLibNotFound;
+   if (!canonLib.empty()) {
+      if (system)
+         res = DLM->loadLibrary(filename, system);
+      else {
+         // For the non system libs, we'd like to be able to unload them.
+         // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
+         cling::Interpreter::CompilationResult compRes;
+         fMetaProcessor->process(Form(".L %s", canonLib.c_str()), compRes, /*cling::Value*/0);
+         if (compRes == cling::Interpreter::kSuccess)
+            res = cling::DynamicLibraryManager::kLoadLibSuccess;
+      }
+   }
+
    if (res == cling::DynamicLibraryManager::kLoadLibSuccess) {
       UpdateListOfLoadedSharedLibraries();
    }
    switch (res) {
    case cling::DynamicLibraryManager::kLoadLibSuccess: return 0;
-   case cling::DynamicLibraryManager::kLoadLibExists:  return 1;
+   case cling::DynamicLibraryManager::kLoadLibAlreadyLoaded:  return 1;
    default: break;
    };
    return -1;
