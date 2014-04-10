@@ -737,6 +737,7 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    }
    t.ReplaceAll("&","\\&");
    t.ReplaceAll("#","\\#");
+   t.ReplaceAll("%","\\%");
    
    Int_t txalh = fTextAlign/10;
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
