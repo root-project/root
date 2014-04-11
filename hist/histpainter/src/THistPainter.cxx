@@ -3192,8 +3192,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       fH->TAttLine::Modify();
 
       if (opaque && dimension ==2) {
-         zoombox = new TBox(gPad->PixeltoX(px), gPad->PixeltoY(py-gPad->VtoPixel(0)),
-                            gPad->PixeltoX(px), gPad->PixeltoY(py-gPad->VtoPixel(0)));
+         zoombox = new TBox(gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py),
+                            gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
          Int_t ci = TColor::GetColor("#7d7dff");
          TColor *zoomcolor = gROOT->GetColor(ci);
          if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
@@ -3254,8 +3254,8 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
 
       if (opaque && dimension ==2) {
-         zoombox->SetX2(gPad->PixeltoX(px));
-         zoombox->SetY2(gPad->PixeltoY(py-gPad->VtoPixel(0)));
+         zoombox->SetX2(gPad->AbsPixeltoX(px));
+         zoombox->SetY2(gPad->AbsPixeltoY(py));
          gPad->Modified();
          gPad->Update();
       }
