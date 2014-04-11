@@ -31,7 +31,8 @@
 ClassImp(TListOfFunctionTemplates)
 
 //______________________________________________________________________________
-TListOfFunctionTemplates::TListOfFunctionTemplates(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0)
+TListOfFunctionTemplates::TListOfFunctionTemplates(TClass *cl) : fClass(cl),fIds(0),
+                          fUnloaded(0),fLastLoadMarker(0)
 {
    // Constructor.
 
@@ -349,6 +350,12 @@ void TListOfFunctionTemplates::Load()
    if (fClass && fClass->GetClassInfo() == 0) return;
 
    R__LOCKGUARD(gInterpreterMutex);
+
+   ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
+   if (currentTransaction == fLastLoadMarker) {
+      return;
+   }
+   fLastLoadMarker = currentTransaction;
 
    gInterpreter->LoadFunctionTemplates(fClass);
 }

@@ -42,6 +42,7 @@ private:
    TExMap    *fIds;      // Map from DeclId_t to TDataMember*
    THashList *fUnloaded; // Holder of TDataMember for unloaded DataMembers.
    Bool_t     fIsLoaded; // Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
 
    TListOfDataMembers(const TListOfDataMembers&);              // not implemented
    TListOfDataMembers& operator=(const TListOfDataMembers&);   // not implemented

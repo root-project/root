@@ -46,6 +46,7 @@ private:
    TExMap    *fIds;      // Map from DeclId_t to TFunction*
    THashList *fUnloaded; // Holder of TFunction for unloaded functions.
    THashTable fOverloads; // TLists of overloads.
+   ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
 
    TListOfFunctionTemplates(const TListOfFunctionTemplates&);              // not implemented
    TListOfFunctionTemplates& operator=(const TListOfFunctionTemplates&);   // not implemented

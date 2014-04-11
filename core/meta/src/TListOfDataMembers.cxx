@@ -30,7 +30,8 @@
 ClassImp(TListOfDataMembers)
 
 //______________________________________________________________________________
-TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE)
+TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE),
+                    fLastLoadMarker(0)
 {
    // Constructor.
 
@@ -346,6 +347,12 @@ void TListOfDataMembers::Load()
    // into this collection.
 
    if (fClass && fClass->GetClassInfo() == 0) return;
+
+   ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
+   if (currentTransaction == fLastLoadMarker) {
+      return;
+   }
+   fLastLoadMarker = currentTransaction;
 
    if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
       // Class and union are not extendable, if we already

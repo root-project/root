@@ -42,6 +42,7 @@ private:
    TExMap    *fIds;      // Map from DeclId_t to TEnum*
    THashList *fUnloaded; // Holder of TEnum for unloaded Enums.
    Bool_t     fIsLoaded; // Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
 
    TListOfEnums(const TListOfEnums&);              // not implemented
    TListOfEnums& operator=(const TListOfEnums&);   // not implemented
