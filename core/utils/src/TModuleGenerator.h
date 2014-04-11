@@ -60,7 +60,8 @@ public:
 
    void WriteRegistrationSource(std::ostream& out, 
                                 bool inlineHeader,
-                                const std::string& fwdDeclnArgsToKeepString) const;
+                                const std::string& fwdDeclnArgsToKeepString,
+                                const std::string& headersClassesMapString) const;
    void WriteContentHeader(std::ostream& out) const;
    void WriteUmbrellaHeader(std::ostream& out) const;
 

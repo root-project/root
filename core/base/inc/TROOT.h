@@ -272,7 +272,8 @@ public:
                                     const char** includePaths,
                                     const char* payLoadCode,
                                     void (*triggerFunc)(),
-                                    const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip);
+                                    const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
+                                    const char** classesHeaders);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();

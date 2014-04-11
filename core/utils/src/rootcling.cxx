@@ -244,6 +244,9 @@ const char *rootClingHelp =
 
 template <typename T> struct IsPointer { enum { kVal = 0 }; };
 
+// Maybe too ugly? let's see how it performs.
+using HeadersClassesMap_t=std::map<std::string, std::list<std::string>>;
+
 using namespace ROOT;
 using namespace TClassEdit;
 
@@ -868,7 +871,7 @@ bool CheckInputOperator(const char *what,
    }
    bool has_input_error = false;
    if (method != 0 && (method->getAccess() == clang::AS_public || method->getAccess() == clang::AS_none) ) {
-      std::string filename = ROOT::TMetaUtils::GetFileName(method, interp);
+      std::string filename = ROOT::TMetaUtils::GetFileName(*method, interp);
       if (strstr(filename.c_str(),"TBuffer.h")!=0 ||
           strstr(filename.c_str(),"Rtypes.h" )!=0) {
 
@@ -1434,7 +1437,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
       dictStream << "0 /*version*/, ";
    }
 
-   std::string filename = ROOT::TMetaUtils::GetFileName(cl, interp);
+   std::string filename = ROOT::TMetaUtils::GetFileName(*cl, interp);
    for (unsigned int i=0; i<filename.length(); i++) {
       if (filename[i]=='\\') filename[i]='/';
    }
@@ -2152,6 +2155,7 @@ static int GenerateModule(TModuleGenerator& modGen,
                           clang::CompilerInstance* CI,
                           const std::string& currentDirectory,
                           const std::string& fwdDeclnArgsToKeepString,
+                          const std::string& headersClassesMapString,
                           std::ostream& dictStream,
                           bool inlineInputHeader)
 {
@@ -2163,7 +2167,10 @@ static int GenerateModule(TModuleGenerator& modGen,
    // Returns != 0 on error.
 
 
-   modGen.WriteRegistrationSource(dictStream,inlineInputHeader, fwdDeclnArgsToKeepString);
+   modGen.WriteRegistrationSource(dictStream,
+                                  inlineInputHeader, 
+                                  fwdDeclnArgsToKeepString,
+                                  headersClassesMapString);
 
    if (inlineInputHeader) return 0;
 
@@ -2176,10 +2183,8 @@ static int GenerateModule(TModuleGenerator& modGen,
    clang::Module* module = 0;
    if (!modGen.IsPCH()) {
       std::vector<const char*> headersCStr;
-      for (std::vector<std::string>::const_iterator
-              iH = modGen.GetHeaders().begin(), eH = modGen.GetHeaders().end();
-           iH != eH; ++iH) {
-         headersCStr.push_back(iH->c_str());
+      for (auto& iH : modGen.GetHeaders()) {
+         headersCStr.push_back(iH.c_str());
       }
       headersCStr.push_back(0);
       module = ROOT::TMetaUtils::declareModuleMap(CI, modGen.GetModuleFileName().c_str(), &headersCStr[0]);
@@ -2538,7 +2543,8 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    // [libGpad.so libGraf.so libHist.so libMathCore.so]
    // class TAttCanvas
    // class TButton
-   // ...
+   // (header1.h header2.h .. headerN.h)
+   // class TMyClass
 
    // Create the rootmap file from the selected classes and namespaces
    std::ofstream rootmapFile(rootmapFileName.c_str());
@@ -2550,9 +2556,8 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    // Add the template definitions
    if (!classesDefsList.empty()){
       rootmapFile << "{ decls }\n";
-      for (std::list<std::string>::const_iterator tdefIt=classesDefsList.begin();
-           tdefIt!=classesDefsList.end();++tdefIt){
-         rootmapFile << *tdefIt << std::endl;
+      for (auto& classDef : classesDefsList){
+         rootmapFile << classDef << std::endl;
       }
       rootmapFile << "\n";
    }
@@ -2564,30 +2569,26 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       // Loop on selected classes and insert them in the rootmap
       if (!classesNames.empty()){
          rootmapFile << "# List of selected classes\n";
-      }      
-      for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
-         classNameIt!=classesNames.end();++classNameIt){
-         rootmapFile << "class " << *classNameIt << std::endl;
+         for (auto& className : classesNames){
+            rootmapFile << "class " << className << std::endl;
+         }
       }
 
       // Same for namespaces
       if (!nsNames.empty()){
          rootmapFile << "# List of selected namespaces\n";
-      }
-      for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
-         nsNameIt!=nsNames.end();++nsNameIt){
-         rootmapFile << "namespace " << *nsNameIt << std::endl;
+         for (auto& nsName : nsNames){
+            rootmapFile << "namespace " << nsName << std::endl;
+         }
       }
       
       // And typedefs. These are used just to trigger the autoload mechanism
       if (!typedefNames.empty()){
          rootmapFile << "# List of selected typedefs\n";
+         for (auto& tDefName : typedefNames){
+            rootmapFile << "typedef " << tDefName << std::endl;
+         }
       }
-      for (std::vector<std::string>::const_iterator typedefNameIt=typedefNames.begin();
-           typedefNameIt!=typedefNames.end();++typedefNameIt){
-         rootmapFile << "typedef " << *typedefNameIt << std::endl;
-      }
-      
    }
 
    return 0;
@@ -3254,6 +3255,116 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
 }   
 
 //______________________________________________________________________________
+std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd, 
+                                          const cling::Interpreter& interp)
+{
+   // Extract the list of headers necessary for the Decl   
+   std::list<std::string> headers;   
+   
+   // If this is a template
+   if (const clang::ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&rcd)){
+      
+      // Loop on base classes - with a newer llvm, range based possible
+      for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
+         auto baseQualType = baseIt->getType();
+         if (baseQualType.isNull() || !baseQualType->isDependentType()) continue;
+         if (const clang::CXXRecordDecl* baseRcdPtr = baseQualType->getAsCXXRecordDecl()){
+            headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp));
+         }
+      }      
+         
+      // Loop on the template args
+      for (auto& tArg : tsd->getTemplateArgs().asArray()){
+         auto tArgQualType = tArg.getAsType();
+         if (tArgQualType.isNull() || !tArgQualType->isDependentType()) continue;
+         if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
+            headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp));
+         }
+      }
+      
+      // Loop on the data members - with a newer llvm, range based possible
+      for (auto declIt = tsd->decls_begin(); declIt != tsd->decls_end(); ++declIt) {
+         if (const clang::FieldDecl* fieldDecl = llvm::dyn_cast<clang::FieldDecl>(*declIt)){
+            auto fieldQualType = fieldDecl->getType();
+            if (fieldQualType.isNull() || !fieldQualType->isDependentType()) continue ;
+            if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
+               headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp));
+            }
+         }
+      }
+      
+      // Loop on methods
+      for (auto methodIt = tsd->method_begin(); methodIt!=tsd->method_end();++methodIt){
+         // Check arguments
+         for (auto& fPar : methodIt->parameters()){
+            auto fParQualType = fPar->getOriginalType();
+            if(fParQualType.isNull() || !fParQualType->isDependentType()) continue;
+            if (const clang::CXXRecordDecl* fParCxxRcd = fParQualType->getAsCXXRecordDecl()){
+               headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp));
+            }
+         }
+         // Check return value
+         auto retQualType = methodIt->getReturnType();
+         if(retQualType.isNull() || !retQualType->isDependentType()) continue;
+         if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
+               headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp));
+         }         
+      }
+      
+   } // End template instance
+   
+   std::string header (ROOT::TMetaUtils::GetFileName(rcd, interp));
+   headers.push_back(header);
+   return headers;
+   
+}
+
+//______________________________________________________________________________
+void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
+                              HeadersClassesMap_t& headersClassesMap,
+                              const cling::Interpreter& interp)
+{
+   // Add some manip of headers
+   for (auto& annotatedRcd : annotatedRcds){
+      if (const clang::CXXRecordDecl* cxxRcd = 
+          llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
+         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp));
+         headers.unique();      
+         headersClassesMap[annotatedRcd.GetNormalizedName()] = headers;
+      }
+   }
+}
+//______________________________________________________________________________
+const std::string GenerateStringFromHeadersForClasses (const HeadersClassesMap_t& headersClassesMap,
+                                                       const std::string& detectedUmbrella)
+{
+   // Generate a string for the dictionary from the headers-classes map. 
+   std::string headerName;
+   
+   std::string headersClassesMapString="static const char* classesHeaders[]={\n";
+   for (auto& classHeaders : headersClassesMap){
+      headersClassesMapString+="\"";
+      headersClassesMapString+=classHeaders.first+"\"";
+      for (auto& header : classHeaders.second){         
+         headerName = (detectedUmbrella==header) ? "payloadCode" : "\""+header+"\"";
+         headersClassesMapString+=", "+ headerName +",";      
+      }
+      headersClassesMapString+=" \"@\",\n";
+   }
+   headersClassesMapString+="nullptr};\n";
+   return headersClassesMapString;
+}
+
+
+//______________________________________________________________________________
+bool IsHeaderName(const std::string& filename)
+{
+   return llvm::sys::path::extension(filename) ==".h" ||
+          llvm::sys::path::extension(filename) == ".hpp";
+}
+
+
+//______________________________________________________________________________
 int RootCling(int argc,
               char **argv,
               bool isDeep=false,
@@ -3789,7 +3900,7 @@ int RootCling(int argc,
 
    // Select using DictSelection
    clang::CompilerInstance* CI = interp.getCI();
-   if(!noDictSelection)
+   if(!noDictSelection && !onepcm)
       DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
   
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
@@ -3909,7 +4020,7 @@ int RootCling(int argc,
    }
 
    // If we have dict selection enabled, we need 2 passes
-   scan.Scan(CI->getASTContext(),!noDictSelection);
+   scan.Scan(CI->getASTContext(),!noDictSelection && !onepcm);
 
    bool has_input_error = false;
 
@@ -3978,11 +4089,26 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    if (!ignoreExistingDict){
-      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
+      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
+      HeadersClassesMap_t headersClassesMap;
+      ExtractHeadersForClasses(scan.fSelectedClasses,
+                               headersClassesMap,
+                               interp);  
+      
+      std::string detectedUmbrella;
+      for (auto& arg : pcmArgs){
+         if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)){
+            detectedUmbrella=arg;
+            break;
+         }            
+      }
+      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
+      
       GenerateModule(modGen, 
                      CI, 
                      currentDirectory, 
                      fwdDeclnArgsToKeepString, 
+                     headersClassesMapString,
                      dictStream, 
                      inlineInputHeader);
    }
@@ -4024,7 +4150,6 @@ int RootCling(int argc,
    std::list<std::string> classesNames;
    std::list<std::string> classesNamesForRootmap;
    std::list<std::string> classesDefsList;
-   std::list<std::string> nsNames;
 
    retCode = ExtractSelectedClassesAndTemplateDefs(scan,
                                                    classesNames,
@@ -4032,16 +4157,14 @@ int RootCling(int argc,
                                                    classesDefsList,
                                                    interp);   
    if (0!=retCode) return retCode;
-      
-   
-
-   if (rootMapNeeded){
-      ExtractSelectedNamespaces(scan,nsNames);
-   }
-
 
    // Create the rootmapfile if needed
-   if (rootMapNeeded){
+   if (rootMapNeeded){      
+      
+      std::list<std::string> nsNames;
+      
+      ExtractSelectedNamespaces(scan,nsNames);
+      
       AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
 
@@ -4089,7 +4212,7 @@ int RootCling(int argc,
 }
 
 namespace genreflex{
-
+   
 //______________________________________________________________________________
 bool endsWith(const std::string& theString, const std::string& theSubstring)
 {
@@ -4111,13 +4234,6 @@ bool beginsWith(const std::string& theString, const std::string& theSubstring)
 }
 
 //______________________________________________________________________________
-bool isHeaderName(const std::string& filename)
-{
-   return llvm::sys::path::extension(filename) ==".h" ||
-          llvm::sys::path::extension(filename) == ".hpp";
-}
-
-//______________________________________________________________________________
 unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
 {
    // Loop on arguments: stop at the first which starts with -
@@ -4125,7 +4241,7 @@ unsigned int checkHeadersNames(std::vector<std::string>& headersNames)
    for (std::vector<std::string>::iterator it=headersNames.begin();
         it!=headersNames.end();it++){
       const std::string headername(*it);
-      if ( isHeaderName( headername ) ) {
+      if ( IsHeaderName( headername ) ) {
          numberOfHeaders++;
       } else {
          ROOT::TMetaUtils::Warning(0,

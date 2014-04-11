@@ -990,7 +990,8 @@ void TCling::RegisterModule(const char* modulename,
                             const char** includePaths,
                             const char* payloadCode,                            
                             void (*triggerFunc)(),
-                            const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip)
+                            const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
+                            const char** classesHeaders)
 {
    // Inject the module named "modulename" into cling; load all headers.
    // headers is a 0-terminated array of header files to #include after
@@ -1123,6 +1124,29 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
+   // Now we register all the headers necessary for the class
+   // Typical format of the array:
+   //    {"A", "classes.h", "@",
+   //     "vector<A>", "vector", "@",
+   //     "myClass", payloadCode, "@",
+   //    nullptr};
+
+   size_t theHash;
+   std::string temp;
+   std::hash<std::string> hashFcn;
+   for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
+      temp=*classesHeader;
+      theHash = hashFcn(*classesHeader);
+      classesHeader++;
+      for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
+         // This is done in order to distinguish headers from files and from the payloadCode
+         if (payloadCode == *classesHeader_inner ){
+            fClassesPayloadsMap[theHash] = payloadCode;
+         }
+         fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
+      }
+   }
+   
    // Now that all the header have been registered/compiled, let's
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
@@ -3653,7 +3677,7 @@ namespace {
       // forward declarations in rootmaps and to set the external visible
       // storage flag for them.
    public:
-      ExtVisibleStorageAdder(std::set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
+      ExtVisibleStorageAdder(std::unordered_set<const NamespaceDecl*>& nsSet): fNSSet(nsSet) {};
       bool VisitNamespaceDecl(NamespaceDecl* nsDecl) {
          // We want to enable the external lookup for this namespace
          // because it may shadow the lookup of other names contained
@@ -3663,7 +3687,7 @@ namespace {
          return true;
       }
    private:
-      std::set<const NamespaceDecl*>& fNSSet;
+      std::unordered_set<const NamespaceDecl*>& fNSSet;
    
    };
 

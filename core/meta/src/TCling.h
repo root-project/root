@@ -99,8 +99,10 @@ private: // Data Members
    TString         fIncludePath;      // Interpreter include path.
    TString         fRootmapLoadPath;  // Dynamic load path for rootmap files.
    TEnv*           fMapfile;          // Association of classes to libraries.
-   //FIXME use an unordered set when C++11 is enabled
-   std::set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
+   std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
+   std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
+   std::map<size_t, const char*> fClassesPayloadsMap; // Map of classes and associated payload
+   std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
 
@@ -188,7 +190,8 @@ public: // Public Interface
                           const char** includePaths,
                           const char* payloadCode,                          
                           void (*triggerFunc)(),
-                          const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip);
+                          const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
+                          const char** classesHeaders);
    void    RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 

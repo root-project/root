@@ -140,7 +140,8 @@ public:
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
                                    void (* /*triggerFunc*/)(),
-                                   const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep) = 0;
+                                   const FwdDeclArgsToKeepCollection_t& fwdDeclArgsToKeep,
+                                   const char** classesHeaders) = 0;
    virtual void     RegisterTClassUpdate(TClass *oldcl,VoidFuncPtr_t dict) = 0;
    virtual void     UnRegisterTClassUpdate(const TClass *oldcl) = 0;
    virtual Int_t    SetClassSharedLibs(const char *cls, const char *libs) = 0;
