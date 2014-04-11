@@ -4,7 +4,7 @@
 using std::cout;
 using std::cerr;
 
-void runUnloading(){
+void execUnloading(){
    // GLOBALS
    cout<< "Unloading of globals: VarDecl and EnumConstDecl.\n";
    TGlobal* g;
