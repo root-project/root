@@ -563,7 +563,7 @@ const FileEntry *Preprocessor::LookupFile(
   // If the header lookup mechanism may be relative to the current inclusion
   // stack, record the parent #includes.
   SmallVector<const FileEntry *, 16> Includers;
-  if (!FromDir) {
+  if (!FromDir && getCurrentFileLexer()) {
     FileID FID = getCurrentFileLexer()->getFileID();
     const FileEntry *FileEnt = SourceMgr.getFileEntryForID(FID);
 
