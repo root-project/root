@@ -64,7 +64,7 @@ public:
    Int_t fArrayPos;
    Bool_t fFound;
    const char * GetName() const     { return fName.Data(); }
-   Double_t GetValue() const    { return fValue; }
+   Double_t GetInitialValue() const    { return fValue; }
    Int_t    GetArrayPos() const { return fArrayPos; }
    TFormulaVariable():fName(""),fValue(-1),fArrayPos(-1),fFound(false){}
    TFormulaVariable(const TString &name, Double_t value, Int_t pos)

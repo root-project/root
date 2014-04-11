@@ -1249,7 +1249,7 @@ Double_t TFormula::GetParameter(const TString &name)
       Error("GetParameter","Parameter %s is not defined.",name.Data());
       return -1;
    }
-   return fParams[name].fValue;
+   return fClingInitialized ? fClingParameters[fParams[name].fArrayPos] : fParams[name].fValue;
 }
 Double_t TFormula::GetParameter(Int_t param)
 {
@@ -1285,7 +1285,10 @@ void TFormula::GetParameters(Double_t *params)
 {
    for(Int_t i = 0; i < fNpar; ++i)
    {
-      params[i] = fClingParameters[i];
+      if (Int_t(fClingParameters.size()) > i) 
+         params[i] = fClingParameters[i];
+      else 
+         params[i] = -1;
    }
 }
 void TFormula::SetParameter(const TString &name, Double_t value)
@@ -1510,7 +1513,7 @@ Double_t TFormula::Eval()
          pair<TString,TFormulaVariable> param = *it;
          if(!param.second.fFound)
          {
-            printf("%s has default value %lf\n",param.first.Data(),param.second.GetValue());
+            printf("%s has default value %lf\n",param.first.Data(),param.second.GetInitialValue());
          }
       }  
 
@@ -1542,13 +1545,13 @@ void TFormula::Print(Option_t *option) const
       if (fNdim > 0) {
          printf("List of  Variables: \n");
          for ( map<TString,TFormulaVariable>::const_iterator it = fVars.begin(); it != fVars.end(); ++it) { 
-            printf(" %20s =  %10f \n",it->first.Data(), it->second.GetValue() );
+            printf(" %20s =  %10f \n",it->first.Data(), fClingVariables[it->second.GetArrayPos()] );
          }
       }
       if (fNpar > 0) {
          printf("List of  Parameters: \n");
          for ( map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it) { 
-            printf(" %20s =  %10f \n",it->first.Data(), it->second.GetValue() );
+            printf(" %20s =  %10f \n",it->first.Data(), fClingParameters[it->second.GetArrayPos()] );
          }
       }
       printf("Expression passed to Cling:\n");
