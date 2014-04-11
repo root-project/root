@@ -772,7 +772,7 @@ TSystem *TSystem::FindHelper(const char *path, void *dirptr)
    // create new helper
    TRegexp re("^root.*:");  // also roots, rootk, etc
    TString pname = path;
-   if (pname.Index(re) != kNPOS) {
+   if (pname.BeginsWith("xroot:") || pname.Index(re) != kNPOS) {
       // (x)rootd daemon ...
       if ((h = gROOT->GetPluginManager()->FindHandler("TSystem", path))) {
          if (h->LoadPlugin() == -1)
