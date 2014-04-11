@@ -952,7 +952,7 @@ void TFormula::ProcessFormula(TString &formula)
                                                    
             Bool_t silent = true;
             TClass *tclass = new TClass(className,silent);
-            TList *methodList = tclass->GetListOfAllPublicMethods();
+            const TList *methodList = tclass->GetListOfAllPublicMethods();
             TIter next(methodList);
             TMethod *p;
             while ((p = (TMethod*) next()))
