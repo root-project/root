@@ -2194,11 +2194,11 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox = new TBox(PixeltoX(px1old), GetUymin(),
-                                  PixeltoX(px2old), GetUymax());
+               zoombox = new TBox(AbsPixeltoX(px1old), GetUymin(),
+                                  AbsPixeltoX(px2old), GetUymax());
             } else if (axisNumber == 2) {
-               zoombox = new TBox(GetUxmin(), PixeltoY(py1old-VtoPixel(0)), 
-                                  GetUxmax(), PixeltoY(py2old-VtoPixel(0)));
+               zoombox = new TBox(GetUxmin(), AbsPixeltoY(py1old), 
+                                  GetUxmax(), AbsPixeltoY(py2old));
             }          
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
@@ -2229,15 +2229,15 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox->SetX1(PixeltoX(px1old));
+               zoombox->SetX1(AbsPixeltoX(px1old));
                zoombox->SetY1(GetUymin());
-               zoombox->SetX2(PixeltoX(px2old));
+               zoombox->SetX2(AbsPixeltoX(px2old));
                zoombox->SetY2(GetUymax());
             } else if (axisNumber == 2) {
                zoombox->SetX1(GetUxmin());
-               zoombox->SetY1(PixeltoY(py1old-VtoPixel(0)));
+               zoombox->SetY1(AbsPixeltoY(py1old));
                zoombox->SetX2(GetUxmax());
-               zoombox->SetY2(PixeltoY(py2old-VtoPixel(0)));
+               zoombox->SetY2(AbsPixeltoY(py2old));
             }          
             gPad->Modified();
             gPad->Update();
