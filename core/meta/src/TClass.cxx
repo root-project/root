@@ -705,7 +705,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                      if (wantBuild) valcl->BuildRealData(0, isTransient);
                   }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add), isTransient);
+                  dmclass->BuildRealData(const_cast<void*>(add ? add : 0), isTransient);
                }
             }
          }
@@ -1816,7 +1816,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
-   if (TClassEdit::IsStdClass(GetName())) {
+   if (TClassEdit::IsStdClass(GetName()) && strcmp(GetName(), "string")) {
       Error("BuildRealData", "Inspection for %s not supported!", GetName());
    }
 
@@ -1828,7 +1828,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // CallShowMember will force a call to InheritsFrom, which indirectly
    // calls TClass::GetClass.  It forces the loading of new typedefs in
    // case some of them were not yet loaded.
-   if ( ! CallShowMembers(0, brd, isTransient) ) {
+   if ( ! CallShowMembers(pointer, brd, isTransient) ) {
       if ( isTransient ) {
          // This is a transient data member, so it is probably fine to not have
          // access to its content.  However let's no mark it as definitively setup,
