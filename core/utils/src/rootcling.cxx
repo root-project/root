@@ -3275,6 +3275,7 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
          
       // Loop on the template args
       for (auto& tArg : tsd->getTemplateArgs().asArray()){
+         if (clang::TemplateArgument::ArgKind::Type != tArg.getKind()) continue;
          auto tArgQualType = tArg.getAsType();
          if (tArgQualType.isNull() || !tArgQualType->isDependentType()) continue;
          if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
