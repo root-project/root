@@ -53,6 +53,10 @@ extern "C" {
    int TCling__CompileMacro(const char *fileName, const char *options);
    void TCling__SplitAclicMode(const char* fileName, std::string &mode,
                   std::string &args, std::string &io, std::string &fname);
+   void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
+                                  llvm::StringRef canonicalName);
+   void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
+                                    llvm::StringRef canonicalName);
 }
 
 TClingCallbacks::TClingCallbacks(cling::Interpreter* interp) 
@@ -644,3 +648,14 @@ void TClingCallbacks::DeclDeserialized(const clang::Decl* D) {
       (void)RD;//TCling__AutoLoadCallback(RD->getNameAsString().c_str());
    }
 }
+
+void TClingCallbacks::LibraryLoaded(const void* dyLibHandle,
+                                    llvm::StringRef canonicalName) {
+   TCling__LibraryLoadedRTTI(dyLibHandle, canonicalName);
+}
+
+void TClingCallbacks::LibraryUnloaded(const void* dyLibHandle,
+                                      llvm::StringRef canonicalName) {
+   TCling__LibraryUnloadedRTTI(dyLibHandle, canonicalName);
+}
+

@@ -85,6 +85,11 @@ public:
    //
    virtual void DeclDeserialized(const clang::Decl* D);
 
+   virtual void LibraryLoaded(const void* dyLibHandle,
+                              llvm::StringRef canonicalName);
+   virtual void LibraryUnloaded(const void* dyLibHandle,
+                                llvm::StringRef canonicalName);
+
 private:
    bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R, 
                             clang::Scope *S);

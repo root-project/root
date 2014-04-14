@@ -404,6 +404,18 @@ void TCling__UpdateListsOnUnloaded(const cling::Transaction &T) {
 
    ((TCling*)gCling)->UpdateListsOnUnloaded(T);
 }
+extern "C" void TCling__LibraryLoadedRTTI(const void* dyLibHandle,
+                                          const char* canonicalName) {
+
+   ((TCling*)gCling)->LibraryLoaded(dyLibHandle, canonicalName);
+}
+
+extern "C" void TCling__LibraryUnloadedRTTI(const void* dyLibHandle,
+                                            const char* canonicalName) {
+
+   ((TCling*)gCling)->LibraryUnloaded(dyLibHandle, canonicalName);
+}
+
 
 extern "C"
 TObject* TCling__GetObjectAddress(const char *Name, void *&LookupCtx) {
@@ -4782,6 +4794,16 @@ void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
    }
 }
 
+//______________________________________________________________________________
+void TCling::LibraryLoaded(const void* dyLibHandle, const char* canonicalName) {
+   //UpdateListOfLoadedSharedLibraries();
+}
+
+//______________________________________________________________________________
+void TCling::LibraryUnloaded(const void* dyLibHandle, const char* canonicalName) {
+   fPrevLoadedDynLibInfo = 0;
+   fSharedLibs = "";
+}
 
 //______________________________________________________________________________
 const char* TCling::GetSharedLibs()
