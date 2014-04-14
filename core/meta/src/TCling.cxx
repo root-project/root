@@ -1401,6 +1401,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
+   static TClassRef clRefString("std::string");
+   if (clRefString == cl) {
+      // We stream std::string without going through members..
+      return;
+   }
+
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    static clang::PrintingPolicy
