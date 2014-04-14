@@ -584,7 +584,7 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
 }
 
 //_________________________________________________________________   
-void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> & unichars)const
+void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
 {
    assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
    

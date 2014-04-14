@@ -40,7 +40,8 @@ void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b
 
 //_________________________________________________________________
 TextLine::TextLine(const char *textLine, CTFontRef font)
-             : fCTLine(0)
+             : fCTLine(0),
+               fCTFont(font)
 {
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
@@ -51,6 +52,9 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
 
 //_________________________________________________________________
 TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
+             : fCTLine(0),
+               fCTFont(font)
+   
 {
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
@@ -61,7 +65,8 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
 
 //_________________________________________________________________
 TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
-            : fCTLine(0)
+            : fCTLine(0),
+              fCTFont(font)
 {
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
@@ -85,7 +90,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
 
 //_________________________________________________________________
 TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
-            : fCTLine(0)
+            : fCTLine(0),
+              fCTFont(font)
 {
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
@@ -105,7 +111,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
 
 //_________________________________________________________________
 TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t color)
-            : fCTLine(0)
+            : fCTLine(0),
+              fCTFont(font)
 {
    //Create attributed string with font and color.
    //TODO: Make code more general, this constructor is copy&paste.
@@ -139,17 +146,56 @@ TextLine::~TextLine()
 //_________________________________________________________________
 void TextLine::GetBounds(UInt_t &w, UInt_t &h)const
 {
+   //The old 'fallback' version:
    CGFloat ascent = 0., descent = 0., leading = 0.;
    w = UInt_t(CTLineGetTypographicBounds(fCTLine, &ascent, &descent, &leading));
    h = UInt_t(ascent);// + descent + leading);
+   
+   //The new 'experimental':
+   //We extract glyphs and use their bounding box.
+   //Typographic bounds for CTLine have a wrong height.
+   CFArrayRef runs = CTLineGetGlyphRuns(fCTLine);
+   if (runs && CFArrayGetCount(runs) && fCTFont) {
+      //We never (check!) has more than 1 run!
+      CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
+      if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
+         std::vector<CGGlyph> glyphs(nGlyphs);
+         //TODO: check the result?
+         CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
+         //std::vector<CGRect> bboxes(nGlyphs);//we can actually iterate on individual boxes if needed.
+         const CGRect rect = CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation ,
+                                                             &glyphs[0], 0, nGlyphs);
+         h = rect.size.height;
+      }
+   }
 }
 
 
 //_________________________________________________________________
 void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
 {
+   //The old 'fallback' version:
    CGFloat ascent = 0., descent = 0., leading = 0.;
    CTLineGetTypographicBounds(fCTLine, &ascent, &descent, &leading);
+   //The new 'experimental':
+   //with Core Text descent for a string '2' has some
+   //quite big value, making all TText to be way too high.
+   CFArrayRef runs = CTLineGetGlyphRuns(fCTLine);
+   if (runs && CFArrayGetCount(runs) && fCTFont) {
+      //TODO: verify that we _always_ have only one run!
+      CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
+      if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
+         std::vector<CGGlyph> glyphs(nGlyphs);
+         CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
+         //TODO: check the result?
+         const CGRect rect = CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation,
+                                                             &glyphs[0], 0, nGlyphs);
+         //TODO: Check this voodoo!!!
+         ascent = TMath::Ceil(rect.size.height) + rect.origin.y;
+         descent = TMath::Abs(TMath::Floor(rect.origin.y));
+      }
+   }
+
    asc = Int_t(ascent);
    desc = Int_t(descent);
 }
