@@ -1885,7 +1885,10 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
 
    // Tell the interpreter that this library is available; all libraries can be
    // used to resolve symbols.
-   fInterpreter->getDynamicLibraryManager()->loadLibrary(filename, true /*permanent*/);
+   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
+   if (!DLM->isLibraryLoaded(filename)) {
+      DLM->loadLibrary(filename, true /*permanent*/);
+   }
 
 #if defined(R__MACOSX)
    // Check that this is not a system library
