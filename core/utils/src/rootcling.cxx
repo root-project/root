@@ -3255,6 +3255,16 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
 }   
 
 //______________________________________________________________________________
+clang::QualType GetPointeeTypeIfPossible(const clang::QualType& qt)
+{
+   // Get the pointee type if possible
+   const clang::Type* qtPtr = qt.getTypePtr();
+   return (llvm::isa<clang::PointerType>(qtPtr) || llvm::isa<clang::ReferenceType>(qtPtr) ) ?
+       qtPtr->getPointeeType() : qt ;
+   
+}
+
+//______________________________________________________________________________
 std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd, 
                                           const cling::Interpreter& interp)
 {
@@ -3263,59 +3273,62 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
    
    // If this is a template
    if (const clang::ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&rcd)){
-      
-      // Loop on base classes - with a newer llvm, range based possible
-      for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
-         auto baseQualType = baseIt->getType();
-         if (baseQualType.isNull() || !baseQualType->isDependentType()) continue;
-         if (const clang::CXXRecordDecl* baseRcdPtr = baseQualType->getAsCXXRecordDecl()){
-            headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp));
-         }
-      }      
-         
+        
       // Loop on the template args
       for (auto& tArg : tsd->getTemplateArgs().asArray()){
          if (clang::TemplateArgument::ArgKind::Type != tArg.getKind()) continue;
          auto tArgQualType = tArg.getAsType();
-         if (tArgQualType.isNull() || !tArgQualType->isDependentType()) continue;
+         if (tArgQualType.isNull()) continue;         
          if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
             headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp));
          }
-      }
-      
-      // Loop on the data members - with a newer llvm, range based possible
-      for (auto declIt = tsd->decls_begin(); declIt != tsd->decls_end(); ++declIt) {
-         if (const clang::FieldDecl* fieldDecl = llvm::dyn_cast<clang::FieldDecl>(*declIt)){
-            auto fieldQualType = fieldDecl->getType();
-            if (fieldQualType.isNull() || !fieldQualType->isDependentType()) continue ;
-            if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
-               headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp));
+      }      
+          
+      if(!ROOT::TMetaUtils::IsStdClass(rcd)){
+         
+         // Loop on base classes - with a newer llvm, range based possible
+         for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
+            auto baseQualType = baseIt->getType();
+            if (baseQualType.isNull() || baseQualType->isDependentType()) continue;
+            if (const clang::CXXRecordDecl* baseRcdPtr = baseQualType->getAsCXXRecordDecl()){
+               headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp));
+            }
+         }      
+         
+         // Loop on the data members - with a newer llvm, range based possible
+         for (auto declIt = tsd->decls_begin(); declIt != tsd->decls_end(); ++declIt) {
+            if (const clang::FieldDecl* fieldDecl = llvm::dyn_cast<clang::FieldDecl>(*declIt)){
+               auto fieldQualType = fieldDecl->getType();
+               if (fieldQualType.isNull() ) continue ;            
+               if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
+                  headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp));
+               }
             }
          }
-      }
-      
-      // Loop on methods
-      for (auto methodIt = tsd->method_begin(); methodIt!=tsd->method_end();++methodIt){
-         // Check arguments
-         for (auto& fPar : methodIt->parameters()){
-            auto fParQualType = fPar->getOriginalType();
-            if(fParQualType.isNull() || !fParQualType->isDependentType()) continue;
-            if (const clang::CXXRecordDecl* fParCxxRcd = fParQualType->getAsCXXRecordDecl()){
-               headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp));
+         
+         // Loop on methods
+         for (auto methodIt = tsd->method_begin(); methodIt!=tsd->method_end();++methodIt){
+            // Check arguments
+            for (auto& fPar : methodIt->parameters()){
+               auto fParQualType = fPar->getOriginalType();
+               if(fParQualType.isNull()) continue;
+               if (const clang::CXXRecordDecl* fParCxxRcd = fParQualType->getAsCXXRecordDecl()){
+                  headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp));
+               }
             }
+/*            // Check return value - infinite loop??
+            auto retQualType = methodIt->getReturnType();
+            if(retQualType.isNull()) continue;
+            if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
+                  headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp));
+            }    */     
          }
-         // Check return value
-         auto retQualType = methodIt->getReturnType();
-         if(retQualType.isNull() || !retQualType->isDependentType()) continue;
-         if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
-               headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp));
-         }         
       }
       
    } // End template instance
    
-   std::string header (ROOT::TMetaUtils::GetFileName(rcd, interp));
-   headers.push_back(header);
+   std::string header = ROOT::TMetaUtils::GetFileName(rcd, interp);   
+   headers.emplace_back(header);
    return headers;
    
 }
@@ -3330,7 +3343,9 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
       if (const clang::CXXRecordDecl* cxxRcd = 
           llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp));
-         headers.unique();      
+         // remove duplicates, also if not subsequent
+         std::unordered_set<std::string> buffer;
+         headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersClassesMap[annotatedRcd.GetNormalizedName()] = headers;
       }
    }
@@ -3342,15 +3357,23 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersClassesMap_t
    // Generate a string for the dictionary from the headers-classes map. 
    std::string headerName;
    
+   if (genreflex::verbose)
+      std::cout << "Class-headers Mapping:\n";
    std::string headersClassesMapString="static const char* classesHeaders[]={\n";
    for (auto& classHeaders : headersClassesMap){
+      if (genreflex::verbose)
+         std::cout << " o " << classHeaders.first << " --> ";
       headersClassesMapString+="\"";
       headersClassesMapString+=classHeaders.first+"\"";
       for (auto& header : classHeaders.second){         
          headerName = (detectedUmbrella==header) ? "payloadCode" : "\""+header+"\"";
-         headersClassesMapString+=", "+ headerName +",";      
+         headersClassesMapString+=", "+ headerName;   
+         if (genreflex::verbose)
+            std::cout << ", " << headerName;
       }
-      headersClassesMapString+=" \"@\",\n";
+      if (genreflex::verbose)  
+         std::cout << std::endl;
+      headersClassesMapString+=", \"@\",\n";
    }
    headersClassesMapString+="nullptr};\n";
    return headersClassesMapString;
