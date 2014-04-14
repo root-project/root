@@ -1816,7 +1816,16 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
-   if (TClassEdit::IsStdClass(GetName()) && strcmp(GetName(), "string")) {
+   // return early on string
+   static TClassRef clRefString("std::string");
+   if (clRefString == this) {
+      return;
+   }
+
+   // Complain about stl classes ending up here (unique_ptr etc) - except for
+   // pair where we will build .first, .second just fine.
+   if (TClassEdit::IsStdClass(GetName())
+       && strncmp(GetName(), "pair<", 5) != 0) {
       Error("BuildRealData", "Inspection for %s not supported!", GetName());
    }
 
