@@ -428,7 +428,7 @@ extern "C" void DestroyInterpreter(TInterpreter *interp)
 // Load library containing specified class. Returns 0 in case of error
 // and 1 in case if success.
 extern "C" int TCling__AutoLoadCallback(const char* className)
-{
+{   
    return ((TCling*)gCling)->AutoLoad(className);
 }
 
@@ -1114,13 +1114,15 @@ void TCling::RegisterModule(const char* modulename,
       #endif
       #endif      
 
-      cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
+      if(!getenv("HEADER_PARSING_ON_DEMAND")){
+         cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
 
-      assert(cling::Interpreter::kSuccess == compRes &&
-                     "Payload code of a dictionary could not be parsed correctly.");
-      if (compRes!=cling::Interpreter::kSuccess){
-         Warning("TCling::RegisterModule",
-               "Problems declaring payload for module %s.", modulename) ;
+         assert(cling::Interpreter::kSuccess == compRes &&
+                        "Payload code of a dictionary could not be parsed correctly.");
+         if (compRes!=cling::Interpreter::kSuccess){
+            Warning("TCling::RegisterModule",
+                  "Problems declaring payload for module %s.", modulename) ;
+         }
       }
    }
 
@@ -1133,15 +1135,14 @@ void TCling::RegisterModule(const char* modulename,
 
    size_t theHash;
    std::string temp;
-   std::hash<std::string> hashFcn;
    for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
       temp=*classesHeader;
-      theHash = hashFcn(*classesHeader);
+      theHash = fStringHashFunction(*classesHeader);
       classesHeader++;
       for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
          // This is done in order to distinguish headers from files and from the payloadCode
          if (payloadCode == *classesHeader_inner ){
-            fClassesPayloadsMap[theHash] = payloadCode;
+            fPayloads.insert(theHash);
          }
          fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
       }
@@ -4280,6 +4281,7 @@ Int_t TCling::AutoLoad(const type_info& typeinfo)
       demangled_name = TClassEdit::GetLong64_Name(demangled_name);
       result = AutoLoad(demangled_name.c_str());
    }
+      
    return result;
 }
 
@@ -4338,7 +4340,35 @@ Int_t TCling::AutoLoad(const char* cls)
       }
       delete tokens;
    }
-   SetClassAutoloading(oldvalue);
+      
+   // Piggy-back the header parsing
+   if(getenv("HEADER_PARSING_ON_DEMAND")){
+      std::size_t normNameHash(fStringHashFunction(cls));
+      // If the class was not looked up
+      if (fLookedUpClasses.insert(normNameHash).second){
+         const std::vector<const char*> hNamesPtrs = fClassesHeadersMap[normNameHash];
+         for (auto & hName : hNamesPtrs){
+            if (0!=fPayloads.count(normNameHash)){
+               if (gDebug > 0) {
+                  Info("TCling::AutoLoad",
+                     "Parsing full payload for %s", cls);
+               }
+               fInterpreter->parseForModule(hName);
+            } else {
+               if (gDebug > 0) {
+                  Info("TCling::AutoLoad",
+                     "I would have included %s", hName);
+               }
+               std::string includeLine("#include \"");
+               includeLine+=hName;
+               includeLine+="\"";
+               fInterpreter->parseForModule(includeLine.c_str());
+            }
+         }
+      }
+   }
+   
+   SetClassAutoloading(oldvalue);         
    return status;
 }
 
