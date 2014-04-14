@@ -5160,9 +5160,14 @@ void TCling::SetTempLevel(int val) const
 //______________________________________________________________________________
 int TCling::UnloadFile(const char* path) const
 {
+   cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
+   std::string canonical = DLM->lookupLibrary(path);
+   if (canonical.empty()) {
+      canonical = path;
+   }
    // Unload a shared library or a source file.
    cling::Interpreter::CompilationResult compRes;
-   fMetaProcessor->process(Form(".U %s", path), compRes, /*cling::Value*/0);
+   fMetaProcessor->process(Form(".U %s", canonical.c_str()), compRes, /*cling::Value*/0);
    return compRes == cling::Interpreter::kFailure;
 }
 
