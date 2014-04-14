@@ -475,8 +475,8 @@ Int_t TGQuartz::GetFontAscent(const char *text) const
    if (!text || !text[0])//How it's usually tested in ROOT
       return GetFontAscent();
    
-//   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
-//      return Int_t(fPimpl->fFontManager.GetAscent());
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
+      return Int_t(fPimpl->fFontManager.GetAscent(text));
 
    return 0;
 }
@@ -504,8 +504,8 @@ Int_t TGQuartz::GetFontDescent(const char *text) const
    if (!text || !text[0])
       return GetFontDescent();
 
-//   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
-//      return Int_t(fPimpl->fFontManager.GetDescent());
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
+      return Int_t(fPimpl->fFontManager.GetDescent(text));
 
    return 0;
 }
