@@ -224,14 +224,16 @@ const FileEntry *FileManager::getFile(StringRef Filename, bool openFile,
   llvm::StringMapEntry<FileEntry *> &NamedFileEnt =
     SeenFileEntries.GetOrCreateValue(Filename);
 
+  const FileEntry *StaleFileEntry = 0;
   bool needsRereading = false;
   if (NamedFileEnt.getValue()) {
-     std::set<const FileEntry*>::const_iterator found
-        = FileEntriesToReread.find(NamedFileEnt.getValue());
-     if (found != FileEntriesToReread.end()) {
-        needsRereading = true;
-        FileEntriesToReread.erase(found);
-     }
+    std::set<const FileEntry*>::const_iterator found
+      = FileEntriesToReread.find(NamedFileEnt.getValue());
+    if (found != FileEntriesToReread.end()) {
+      needsRereading = true;
+      StaleFileEntry = NamedFileEnt.getValue();
+      FileEntriesToReread.erase(found);
+    }
   }
 
   // See if there is already an entry in the map.
@@ -303,6 +305,15 @@ const FileEntry *FileManager::getFile(StringRef Filename, bool openFile,
   UFE.InPCH = Data.InPCH;
   UFE.File.reset(F);
   UFE.IsValid = true;
+
+  if (StaleFileEntry) {
+    // Find occurrences of old FileEntry; update with new one:
+    for (auto& fe: SeenFileEntries) {
+      if (fe.getValue() == StaleFileEntry) {
+        fe.setValue(&UFE);
+      }
+    }
+  }
   return &UFE;
 }
 
