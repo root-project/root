@@ -1,4 +1,3 @@
-
 struct simPos {
    simPos() : X(0),Y(-1),Z(-2) {};
    simPos(int val) : X(val),Y(val+2),Z(val+4) {};
@@ -18,7 +17,7 @@ void runleaflist(int kase = 0) {
    vertexTree->Draw("simPosProxy.C+");
 
    if (kase==0) {
-#ifdef ClingWorkAroundMissingUnloading
+#ifdef ClingWorkAroundUnloadingVTABLES
       fprintf(stderr,"Info in <TTreePlayer::DrawScript>: Will process tree/chain using generatedSel.h+\n");
 #else
       gSystem->Unload("generatedSel_h");

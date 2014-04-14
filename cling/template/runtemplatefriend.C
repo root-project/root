@@ -13,7 +13,7 @@ gROOT->ProcessLine(".x templatefriend.cxx");
 #ifdef ClingWorkAroundErracticValuePrinter
 printf("(int)0\n");
 #endif
-#ifdef ClingWorkAroundMissingUnloading
+#ifdef ClingWorkAroundUnloadingIOSTREAM
 printf("shared_ptr<Child>::c'tor(T)\n");
 printf("shared_ptr<Parent>::c'tor(Y)\n");
 gROOT->ProcessLine("int res = 0");

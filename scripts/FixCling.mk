@@ -55,7 +55,9 @@ CALLROOTEXE += -e "\#define ClingWorkAroundStripDefaultArg"
 # CALLROOTEXE += -e "\#define ClingReinstateTemplateRootIOCtor"
 
 # Not for 6.0
-CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
+#CALLROOTEXE += -e "\#define ClingWorkAroundMissingUnloading"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnloadingIOSTREAM"
+CALLROOTEXE += -e "\#define ClingWorkAroundUnloadingVTABLES"
 
 # Fixes used when building library via ACLiC
 #CALLROOTEXEBUILD += -e "\#define ClingWorkAroundCallfuncAndInline"
@@ -71,7 +73,9 @@ ClingWorkAroundLackOfModule = yes
 #ClingWorkAroundMissingImplicitAuto = yes
 ClingWorkAroundExtraParensWithImplicitAuto = yes
 ClingWorkAroundMissingDynamicScope = yes
-ClingWorkAroundMissingUnloading = yes
+#ClingWorkAroundMissingUnloading = yes
+ClingWorkAroundUnloadingIOSTREAM = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6217
+ClingWorkAroundUnloadingVTABLES = yes           # See https://sft.its.cern.ch/jira/browse/ROOT-6219
 #ClingWorkAroundCallfuncReturnInt = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4963
 #ClingWorkAroundCallfuncAndConversion = yes     # See https://sft.its.cern.ch/jira/browse/ROOT-4827
 #ClingWorkAroundMissingAutoLoadingForNamespaces = yes # See: https://sft.its.cern.ch/jira/browse/ROOT-4779
