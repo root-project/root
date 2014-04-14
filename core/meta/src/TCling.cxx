@@ -1982,9 +1982,6 @@ void TCling::LoadMacro(const char* filename, EErrorCode* error)
 {
    // Load a macro file in cling's memory.
    ProcessLine(Form(".L %s", filename), error);
-   UpdateListOfTypes();
-   UpdateListOfGlobals();
-   UpdateListOfGlobalFunctions();
 }
 
 //______________________________________________________________________________
