@@ -11,7 +11,6 @@ Warning in <TClass::TClass>: no dictionary for class TObjFirst is available
 Warning in <TClass::TClass>: no dictionary for class TObjSecond is available
 Error in <TBufferFile::ReadObject>: trying to read an emulated class (TObjTopLevel) to store in a compiled pointer (TObject)
 Testing Directory
-Marker for Marker
 Testing Writing
 Delete original
 Marker for Holder

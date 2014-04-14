@@ -1,6 +1,5 @@
 
 Processing runmemleak.C+...
-Executing TMyData::~TMyData()
 ******************************************************************************
 *Tree    :MonoData  : branch=mono class=TMyData                              *
 *Entries :        2 : Total =         9414923 bytes  File  Size =     128056 *
