@@ -425,12 +425,14 @@ void SourceManager::clearIDTables() {
   createExpansionLoc(SourceLocation(),SourceLocation(),SourceLocation(), 1);
 }
 
-void SourceManager::invalidateCache(FileEntry* Entry) {
+void SourceManager::invalidateCache(FileID FID) {
+  const FileEntry* Entry = getFileEntryForID(FID);
+  if (!Entry)
+    return;
   if (ContentCache *&E = FileInfos[Entry]) {
     E->replaceBuffer(0, /*free*/ true);
     E = 0;
   }
-  FileID FID = translateFile(Entry);
   if (!FID.isInvalid()) {
     const SrcMgr::SLocEntry& SLocE = getSLocEntry(FID);
     if (SLocE.isFile()) {
@@ -439,7 +441,7 @@ void SourceManager::invalidateCache(FileEntry* Entry) {
       CC->replaceBuffer(0, /*free*/true);
     }
   }
-  getFileManager().invalidateCache(Entry);
+  getFileManager().invalidateCache(const_cast<FileEntry*>(Entry));
 }
 
 /// getOrCreateContentCache - Create or return a cached ContentCache for the

@@ -699,7 +699,7 @@ public:
 
   void clearIDTables();
 
-  void invalidateCache(FileEntry* Entry);
+  void invalidateCache(FileID FID);
 
   DiagnosticsEngine &getDiagnostics() const { return Diag; }
 
