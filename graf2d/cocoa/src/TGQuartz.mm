@@ -447,9 +447,21 @@ void TGQuartz::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
       h = 0;
       return;
    }
-   
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
-      fPimpl->fFontManager.GetTextBounds(w, h, text);
+
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+      const unsigned fontIndex = GetTextFont() / 10;
+      if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
+         typedef std::vector<UniChar>::size_type size_type;
+
+         std::vector<UniChar> unichars(std::strlen(text));
+         for (size_type i = 0, len = unichars.size(); i < len; ++i)
+            unichars[i] = 0xF000 + (unsigned char)text[i];
+         
+         fPimpl->fFontManager.GetTextBounds(w, h, unichars);
+      } else {
+         fPimpl->fFontManager.GetTextBounds(w, h, text);
+      }
+   }
 }
 
 //______________________________________________________________________________
