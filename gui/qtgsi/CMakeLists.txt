@@ -18,7 +18,7 @@ endif()
 QT4_WRAP_CPP(mocfiles inc/TQCanvasMenu.h inc/TQRootApplication.h
                       inc/TQRootCanvas.h inc/TQRootDialog.h)
 
-ROOT_GENERATE_DICTIONARY(G__QtGSI *.h MODULE QtGSI LINKDEF LinkDef.h OPTIONS -DQTVERS=0x${QT_VERSION_NUM})
+ROOT_GENERATE_DICTIONARY(G__QtGSI *.h MODULE QtGSI LINKDEF LinkDef.h OPTIONS -DQTVERS=0x${QT_VERSION_NUM} -Wno-deprecated)
 
 ROOT_LINKER_LIBRARY(QtGSI *.cxx ${mocfiles} G__QtGSI.cxx LIBRARIES ${QT_LIBRARIES} ${QT_QT3SUPPORT_LIBRARY} DEPENDENCIES Gui Gpad)
 

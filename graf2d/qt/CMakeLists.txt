@@ -20,7 +20,7 @@ QT4_WRAP_CPP(mocfiles inc/TQtWidget.h inc/TQtEmitter.h inc/TQtClientFilter.h
                       inc/TQtClientGuard.h inc/TQtClientWidget.h inc/TQtTimer.h
                       inc/TQtRootSlot.h)
 
-ROOT_GENERATE_DICTIONARY(G__GQt ${headers} MODULE GQt LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__GQt ${headers} MODULE GQt LINKDEF LinkDef.h OPTIONS -Wno-deprecated)
 
 
 ROOT_LINKER_LIBRARY(GQt *.cxx ${mocfiles} G__GQt.cxx LIBRARIES ${QT_LIBRARIES} DEPENDENCIES Gui Gpad Graf Rint)
