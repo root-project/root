@@ -1093,8 +1093,8 @@ void TAxis::UnZoom()
             hobj1->SetMinimum();
             hobj1->SetMaximum();
             hobj1->ResetBit(TH1::kIsZoomed);
-            return;
          }
+         return;
       }
       if (strcmp(hobj1->GetName(),"hframe") == 0 ) {
          hobj1->SetMinimum(fXmin);
