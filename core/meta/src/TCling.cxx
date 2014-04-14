@@ -5059,7 +5059,9 @@ int TCling::GetSecurityError() const
 int TCling::LoadFile(const char* path) const
 {
    // Load a source file or library called path into the interpreter.
-   return fInterpreter->loadFile(path);
+   cling::Interpreter::CompilationResult compRes;
+   fMetaProcessor->process(TString::Format(".L %s", path), compRes, /*cling::Value*/0);
+   return compRes == cling::Interpreter::kFailure;
 }
 
 //______________________________________________________________________________
