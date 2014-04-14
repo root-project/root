@@ -877,3 +877,7 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Yue Shi Lai
 E: ylai@mit.edu
 D: TMathText class
+
+N: Anna-Pia Lohfink
+E: anna-pia.lohfink@onlinehome.de
+D: Guide lines in Editor, Opacity, Gradient
