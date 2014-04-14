@@ -14,6 +14,7 @@
 #include "Adapters.h"
 
 // ROOT
+#include "TApplication.h"
 #include "TROOT.h"
 #include "TSystem.h"
 #include "TObject.h"
@@ -385,8 +386,17 @@ Bool_t PyROOT::Utility::AddBinaryOperator( PyObject* pyclass, const std::string&
    const std::string& rcname, const char* op, const char* label, const char* alt )
 {
 // Find a global function with a matching signature and install the result on pyclass;
-// in addition, __gnu_cxx is searched pro-actively (as there's AFAICS no way to unearth
-// using information).
+// in addition, __gnu_cxx, std::__1, and _pyroot_internal are searched pro-actively (as
+// there's AFAICS no way to unearth using information).
+
+// This function can be called too early when setting up some of the ROOT core classes,
+// which in turn can trigger the creation of a (default) TApplication. Wait with looking
+// for binary operators until fully initialized.
+   if ( !gApplication )
+      return kFALSE;
+
+// For GNU on clang, search the internal __gnu_cxx namespace for binary operators (is
+// typically the case for STL iterators operator==/!=.
    static TClassRef gnucxx( "__gnu_cxx" );
 
 // Same for clang on Mac. TODO: find proper pre-processor magic to only use those specific
