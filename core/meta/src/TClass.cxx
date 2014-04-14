@@ -705,7 +705,7 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                      if (wantBuild) valcl->BuildRealData(0, isTransient);
                   }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add), isTransient);
+                  dmclass->BuildRealData(const_cast<void*>(add ? add : 0), isTransient);
                }
             }
          }
@@ -1791,8 +1791,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // in all base classes. For each persistent data member, inserts a
    // TRealData object in the list fRealData.
    //
-   // If pointer is not 0, uses the object at pointer
-   // otherwise creates a temporary object of this class.
+
 
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -1817,96 +1816,52 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
       return;
    }
 
-   void* realDataObject = pointer;
-
-   // If we are not given an object, and the class
-   // is abstract (so that we cannot make one), give up.
-   if ((!pointer) && (Property() & kIsAbstract)) {
+   // return early on string
+   static TClassRef clRefString("std::string");
+   if (clRefString == this) {
       return;
    }
 
-   // If we are not given an object, make one.
-   // Note: We handle singletons carefully.
-   if (!realDataObject) {
-      if (!strcmp(GetName(), "TROOT")) {
-         realDataObject = gROOT;
-      } else if (!strcmp(GetName(), "TGWin32")) {
-         realDataObject = gVirtualX;
-      } else if (!strcmp(GetName(), "TGQt")) {
-         realDataObject = gVirtualX;
-      } else {
-         realDataObject = New(kClassNew /*default*/, isTransient);
-         // The creation of the object might recursively end up calling BuildRealData
-         // with a pointer and thus we do not have an infinite recursion but the
-         // inner call, set everything up correctly, so let's test again.
-         // This happens for example with $ROOTSYS/test/Event.cxx where the call
-         // to ' fWebHistogram.SetAction(this); ' requires the RealData for Event
-         // to set correctly.
-         if (fRealData) {
-            Int_t delta = GetBaseClassOffset(TObject::Class());
-            if (delta >= 0) {
-               TObject* tobj = (TObject*) (((char*) realDataObject) + delta);
-               tobj->SetBit(kZombie); //this info useful in object destructor
-               delete tobj;
-               tobj = 0;
-            } else {
-               Destructor(realDataObject);
-               realDataObject = 0;
-            }
-            return;
-         }
-      }
+   // Complain about stl classes ending up here (unique_ptr etc) - except for
+   // pair where we will build .first, .second just fine.
+   if (TClassEdit::IsStdClass(GetName())
+       && strncmp(GetName(), "pair<", 5) != 0) {
+      Error("BuildRealData", "Inspection for %s not supported!", GetName());
    }
 
    // The following statement will recursively call
    // all the subclasses of this class.
-   if (realDataObject) {
-      fRealData = new TList;
-      TBuildRealData brd(realDataObject, this);
+   fRealData = new TList;
+   TBuildRealData brd(pointer, this);
 
-      // CallShowMember will force a call to InheritsFrom, which indirectly
-      // calls TClass::GetClass.  It forces the loading of new typedefs in
-      // case some of them were not yet loaded.
-      if ( ! CallShowMembers(realDataObject, brd, isTransient) ) {
-         if ( isTransient ) {
-            // This is a transient data member, so it is probably fine to not have
-            // access to its content.  However let's no mark it as definitively setup,
-            // since another class might use this class for a persistent data member and
-            // in this case we really want the error message.
-            delete fRealData;
-            fRealData = 0;
-         } else {
-            Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
-         }
-      }
-
-      // Take this opportunity to build the real data for base classes.
-      // In case one base class is abstract, it would not be possible later
-      // to create the list of real data for this abstract class.
-      TBaseClass* base = 0;
-      TIter next(GetListOfBases());
-      while ((base = (TBaseClass*) next())) {
-         if (base->IsSTLContainer()) {
-            continue;
-         }
-         TClass* c = base->GetClassPointer();
-         if (c) {
-            c->BuildRealData(((char*) realDataObject) + base->GetDelta(), isTransient);
-         }
+   // CallShowMember will force a call to InheritsFrom, which indirectly
+   // calls TClass::GetClass.  It forces the loading of new typedefs in
+   // case some of them were not yet loaded.
+   if ( ! CallShowMembers(pointer, brd, isTransient) ) {
+      if ( isTransient ) {
+         // This is a transient data member, so it is probably fine to not have
+         // access to its content.  However let's no mark it as definitively setup,
+         // since another class might use this class for a persistent data member and
+         // in this case we really want the error message.
+         delete fRealData;
+         fRealData = 0;
+      } else {
+         Error("BuildRealData", "Cannot find any ShowMembers function for %s!", GetName());
       }
    }
 
-   // Clean up any allocated temporary object.
-   if (!pointer && realDataObject && (realDataObject != gROOT) && (realDataObject != gVirtualX)) {
-      Int_t delta = GetBaseClassOffset(TObject::Class());
-      if (delta >= 0) {
-         TObject* tobj = (TObject*) (((char*) realDataObject) + delta);
-         tobj->SetBit(kZombie); //this info useful in object destructor
-         delete tobj;
-         tobj = 0;
-      } else {
-         Destructor(realDataObject);
-         realDataObject = 0;
+   // Take this opportunity to build the real data for base classes.
+   // In case one base class is abstract, it would not be possible later
+   // to create the list of real data for this abstract class.
+   TBaseClass* base = 0;
+   TIter next(GetListOfBases());
+   while ((base = (TBaseClass*) next())) {
+      if (base->IsSTLContainer()) {
+         continue;
+      }
+      TClass* c = base->GetClassPointer();
+      if (c) {
+         c->BuildRealData(0, isTransient);
       }
    }
 }

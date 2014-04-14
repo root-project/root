@@ -294,7 +294,7 @@ void TStreamerInfo::Build()
             if (!clm->IsLoaded() && !(isCollection || isString)) {
                // Don't complain about the base classes of collections nor of
                // std::string.
-               Warning("Build:", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
+               Warning("Build", "%s: base class %s has no streamer or dictionary it will not be saved", GetName(), clm->GetName());
             }
          }
       }
@@ -435,7 +435,7 @@ void TStreamerInfo::Build()
                   } else {
                      element = new TStreamerObjectAnyPointer(dmName, dmTitle, offset, dmFull);
                      if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                        Error("Build:", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
+                        Error("Build", "%s: %s has no streamer or dictionary, data member %s will not be saved", GetName(), dmFull, dmName);
                      }
                   }
                }
@@ -446,7 +446,7 @@ void TStreamerInfo::Build()
             } else {
                element = new TStreamerObjectAny(dmName, dmTitle, offset, dmFull);
                if (!streamer && !clm->GetStreamer() && !clm->IsLoaded()) {
-                  Warning("Build:", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
+                  Warning("Build", "%s: %s has no streamer or dictionary, data member \"%s\" will not be saved", GetName(), dmFull, dmName);
                }
             }
          }

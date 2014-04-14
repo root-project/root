@@ -1401,6 +1401,12 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
+   static TClassRef clRefString("std::string");
+   if (clRefString == cl) {
+      // We stream std::string without going through members..
+      return;
+   }
+
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    static clang::PrintingPolicy
@@ -1429,6 +1435,8 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       Error("InspectMembers", "Cannot find Decl for class %s is not a CXXRecordDecl.", clname);
       return;
    }
+
+   cling::Interpreter::PushTransactionRAII deserRAII(fInterpreter);
 
    const clang::ASTRecordLayout& recLayout
       = astContext.getASTRecordLayout(recordDecl);
@@ -1607,7 +1615,33 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                sBaseName.c_str(), clname);
          continue;
       }
-      int64_t baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();
+      int64_t baseOffset;
+      if (iBase->isVirtual()) {
+         if (!obj) {
+            Error("InspectMembers",
+                  "Base %s of class %s is virtual but no object provided",
+                  sBaseName.c_str(), clname);
+            continue;
+         }
+         TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
+         TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
+         if (ci && baseCi) {
+            baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
+                                           true /*isDerivedObj*/);
+            if (baseOffset == -1) {
+               Error("InspectMembers",
+                     "Error calculating offset of virtual base %s of class %s",
+                     sBaseName.c_str(), clname);
+            }
+         } else {
+            Error("InspectMembers",
+                  "Cannot calculate offset of virtual base %s of class %s",
+                  sBaseName.c_str(), clname);
+            continue;
+         }
+      } else {
+         baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();
+      }
       if (baseCl->IsLoaded()) {
          // For loaded class, CallShowMember will (especially for TObject)
          // call the virtual ShowMember rather than the class specific version
