@@ -123,7 +123,9 @@ public:
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *mess);
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess);
    virtual Int_t     GetFontAscent() const;
-   virtual Int_t     GetFontDescent() const ;
+   virtual Int_t     GetFontAscent(const char *mess) const;
+   virtual Int_t     GetFontDescent() const;
+   virtual Int_t     GetFontDescent(const char *mess) const;   
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;
