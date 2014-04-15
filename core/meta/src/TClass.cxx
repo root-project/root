@@ -2059,6 +2059,8 @@ Bool_t TClass::CanSplit() const
          return kFALSE;
       }
 
+      return kTRUE;
+
    } else if ((GetShowMembersWrapper()==0 && fClassInfo==0) && GetStreamer()!=0) {
 
       // We do NOT have a collection.  The class is true opaque.
@@ -2075,7 +2077,7 @@ Bool_t TClass::CanSplit() const
    TIter nextb(ncThis->GetListOfBases());
    TBaseClass *base;
    while((base = (TBaseClass*)nextb())) {
-      if (!TClass::GetClass(base->GetName())) return kFALSE;
+      if (!base->GetClassPointer()) return kFALSE;
    }
 
    return kTRUE;
