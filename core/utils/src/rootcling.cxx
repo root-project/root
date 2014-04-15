@@ -3279,7 +3279,7 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
          if (clang::TemplateArgument::ArgKind::Type != tArg.getKind()) continue;
          auto tArgQualType = tArg.getAsType();
          if (tArgQualType.isNull()) continue;         
-         if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
+         if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getPointeeCXXRecordDecl()){
             headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp));
          }
       }      
