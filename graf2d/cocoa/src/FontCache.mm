@@ -583,6 +583,19 @@ void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const char *text)const
    }
 }
 
+//_________________________________________________________________   
+void FontCache::GetTextBounds(UInt_t &w, UInt_t &h, const std::vector<UniChar> &unichars)const
+{
+   assert(fSelectedFont != 0 && "GetTextBounds: no font was selected");
+   
+   try {
+      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      ctLine.GetBounds(w, h);
+      h += 2;
+   } catch (const std::exception &) {
+      throw;
+   }
+}
 
 //_________________________________________________________________
 double FontCache::GetAscent()const
@@ -591,12 +604,73 @@ double FontCache::GetAscent()const
    return CTFontGetAscent(fSelectedFont) + 1;
 }
 
+//_________________________________________________________________
+double FontCache::GetAscent(const char *text)const
+{
+   assert(text != 0 && "GetAscent, parameter 'text' is null");
+   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+
+   try {
+      const Quartz::TextLine ctLine(text, fSelectedFont);
+      Int_t ascent = 0, descent = 0;
+      ctLine.GetAscentDescent(ascent, descent);
+      return ascent;
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//_________________________________________________________________
+double FontCache::GetAscent(const std::vector<UniChar> &unichars)const
+{
+   assert(fSelectedFont != 0 && "GetAscent, no font was selected");
+
+   try {
+      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      Int_t ascent = 0, descent = 0;
+      ctLine.GetAscentDescent(ascent, descent);
+      return ascent;
+   } catch (const std::exception &) {
+      throw;
+   }
+}
 
 //_________________________________________________________________
 double FontCache::GetDescent()const
 {
    assert(fSelectedFont != 0 && "GetDescent, no font was selected");
    return CTFontGetDescent(fSelectedFont) + 1;
+}
+
+//_________________________________________________________________
+double FontCache::GetDescent(const char *text)const
+{
+   assert(text != 0 && "GetDescent, parameter 'text' is null");
+   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+
+   try {
+      const Quartz::TextLine ctLine(text, fSelectedFont);
+      Int_t ascent = 0, descent = 0;
+      ctLine.GetAscentDescent(ascent, descent);
+      return descent;
+   } catch (const std::exception &) {
+      throw;
+   }
+}
+
+//_________________________________________________________________
+double FontCache::GetDescent(const std::vector<UniChar> &unichars)const
+{
+   assert(fSelectedFont != 0 && "GetDescent, no font was selected");
+
+   try {
+      const Quartz::TextLine ctLine(unichars, fSelectedFont);
+      Int_t ascent = 0, descent = 0;
+      ctLine.GetAscentDescent(ascent, descent);
+      return descent;
+   } catch (const std::exception &) {
+      throw;
+   }
 }
 
 //_________________________________________________________________
