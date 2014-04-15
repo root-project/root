@@ -209,9 +209,6 @@ void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
       asc = Int_t(TMath::Ceil(box.size.height) + box.origin.y);
       desc = Int_t(TMath::Abs(TMath::Floor(box.origin.y)));
    }
-
-   asc = Int_t(ascent);
-   desc = Int_t(descent);
 }
 
 
