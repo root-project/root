@@ -79,7 +79,9 @@ public:
    
    virtual void      GetTextExtent(UInt_t &w, UInt_t &h, char *text);
    virtual Int_t     GetFontAscent() const;
-   virtual Int_t     GetFontDescent() const ;
+   virtual Int_t     GetFontAscent(const char *text) const;
+   virtual Int_t     GetFontDescent() const;
+   virtual Int_t     GetFontDescent(const char *text) const;
    virtual Float_t   GetTextMagnitude();
 
 private:
