@@ -28,6 +28,11 @@ public:
    //TVirtualX has these two methods with wchar_t
    using TVirtualX::DrawText;
    using TVirtualX::GetTextExtent;
+
+   //TVirtualX now has versions with parameters also,
+   //but TGQt defines only versions without parameters.
+   using TVirtualX::GetFontAscent;
+   using TVirtualX::GetFontDescent;
    
    virtual void      CreateOpenGLContext(Int_t wid=0);
    virtual void      DeleteOpenGLContext(Int_t wid=0);
