@@ -52,6 +52,7 @@ public:
    void DrawLine(CGContextRef ctx, Double_t x, Double_t y)const;
 private:
    CTLineRef fCTLine; //Core Text line, created from Attributed string.
+   CTFontRef fCTFont; //A font used for this CTLine.
 
    void Init(const char *textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values);
    void Init(const std::vector<UniChar> &textLine, UInt_t nAttribs, CFStringRef *keys, CFTypeRef *values);
