@@ -4115,9 +4115,10 @@ int RootCling(int argc,
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
       HeadersClassesMap_t headersClassesMap;
-      ExtractHeadersForClasses(scan.fSelectedClasses,
-                               headersClassesMap,
-                               interp);  
+      // Temporarly disable to disentangle from several failures on different platforms
+      //ExtractHeadersForClasses(scan.fSelectedClasses,
+      //                         headersClassesMap,
+      //                         interp);  
       
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
