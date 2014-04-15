@@ -532,7 +532,8 @@ const FileEntry *HeaderSearch::LookupFile(
     const DirectoryLookup *FromDir, const DirectoryLookup *&CurDir,
     ArrayRef<const FileEntry *> Includers, SmallVectorImpl<char> *SearchPath,
     SmallVectorImpl<char> *RelativePath,
-    ModuleMap::KnownHeader *SuggestedModule, bool SkipCache) {
+    ModuleMap::KnownHeader *SuggestedModule, bool SkipCache,
+    bool OpenFile, bool CacheFailures) {
   if (!HSOpts->ModuleMapFiles.empty()) {
     // Preload all explicitly specified module map files. This enables modules
     // map files lying in a directory structure separate from the header files
@@ -543,7 +544,7 @@ const FileEntry *HeaderSearch::LookupFile(
              I = HSOpts->ModuleMapFiles.begin(),
              E = HSOpts->ModuleMapFiles.end();
          I != E; ++I) {
-      const FileEntry *File = FileMgr.getFile(*I);
+      const FileEntry *File = FileMgr.getFile(*I, OpenFile, CacheFailures);
       if (!File)
         continue;
       loadModuleMapFile(File, /*IsSystem=*/false);
@@ -568,7 +569,7 @@ const FileEntry *HeaderSearch::LookupFile(
       RelativePath->append(Filename.begin(), Filename.end());
     }
     // Otherwise, just return the file.
-    return FileMgr.getFile(Filename, /*openFile=*/true);
+    return FileMgr.getFile(Filename, OpenFile, CacheFailures);
   }
 
   // This is the header that MSVC's header search would have found.
@@ -591,7 +592,7 @@ const FileEntry *HeaderSearch::LookupFile(
       TmpDir.push_back('/');
       TmpDir.append(Filename.begin(), Filename.end());
       if (const FileEntry *FE =
-              FileMgr.getFile(TmpDir.str(), /*openFile=*/true)) {
+              FileMgr.getFile(TmpDir.str(), OpenFile, CacheFailures)) {
         // Leave CurDir unset.
         // This file is a system header or C++ unfriendly if the old file is.
         //

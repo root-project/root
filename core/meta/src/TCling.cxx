@@ -1772,7 +1772,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
          return kTRUE;
       }
    }
-
+   //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
    const clang::DirectoryLookup *CurDir = 0;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
@@ -1784,7 +1784,9 @@ Bool_t TCling::IsLoaded(const char* filename) const
                                               /*SearchPath*/ 0,
                                               /*RelativePath*/ 0,
                                               /*SuggestedModule*/ 0,
-                                              /*SkipCache*/ false);
+                                              /*SkipCache*/ false,
+                                              /*OpenFile*/ false,
+                                              /*CacheFail*/ false);
    if (FE && FE->isValid()) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
