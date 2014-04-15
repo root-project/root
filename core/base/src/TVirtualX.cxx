@@ -456,7 +456,7 @@ Int_t   TVirtualX::GetFontAscent() const
 Int_t   TVirtualX::GetFontAscent(const char * /*mess*/) const
 {
    // Default version is noop, but in principle what
-   // ROOT understands as ascent is concrete text related.
+   // ROOT understands as ascent is text related.
    return GetFontAscent();
 }
 
