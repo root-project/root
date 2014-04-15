@@ -65,8 +65,10 @@ public:
    //
    double GetAscent()const;
    double GetAscent(const char *text)const;
+   double GetAscent(const std::vector<UniChar> & unichars)const;
    double GetDescent()const;
    double GetDescent(const char *text)const;
+   double GetDescent(const std::vector<UniChar> & unichars)const;
    double GetLeading()const;
 
 private:

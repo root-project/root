@@ -36,6 +36,23 @@ void GetTextColorForIndex(Color_t colorIndex, Float_t &r, Float_t &g, Float_t &b
    }
 }
 
+//_________________________________________________________________
+CGRect BBoxForCTRun(CTFontRef font, CTRunRef run)
+{
+   assert(font != 0 && "BBoxForCTRun, parameter 'font' is null");
+   assert(run != 0 && "BBoxForCTRun, parameter 'run' is null");
+
+   CGRect bbox = {};
+   if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
+      std::vector<CGGlyph> glyphs(nGlyphs);
+      CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
+      bbox = CTFontGetBoundingRectsForGlyphs(font, kCTFontDefaultOrientation,
+                                             &glyphs[0], 0, nGlyphs);
+   }
+
+   return bbox;
+}
+
 }
 
 //_________________________________________________________________
@@ -43,6 +60,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font)
              : fCTLine(0),
                fCTFont(font)
 {
+   //TODO: why don't I have asserts on parameters here?
+
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -56,6 +75,8 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font)
                fCTFont(font)
    
 {
+   //TODO: why don't I have asserts on parameters here?
+
    //Create attributed string with one attribue: the font.
    CFStringRef keys[] = {kCTFontAttributeName};
    CFTypeRef values[] = {font};
@@ -68,6 +89,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font, Color_t color)
             : fCTLine(0),
               fCTFont(font)
 {
+   //TODO: why don't I have asserts on parameters here?
+
    //Create attributed string with font and color.
    using MacOSX::Util::CFScopeGuard;
 
@@ -93,6 +116,8 @@ TextLine::TextLine(const char *textLine, CTFontRef font, const CGFloat *rgb)
             : fCTLine(0),
               fCTFont(font)
 {
+   //TODO: why don't I have asserts on parameters here?
+
    //Create attributed string with font and color.
    using ROOT::MacOSX::Util::CFScopeGuard;
    CFScopeGuard<CGColorSpaceRef> rgbColorSpace(CGColorSpaceCreateDeviceRGB());
@@ -114,6 +139,8 @@ TextLine::TextLine(const std::vector<UniChar> &unichars, CTFontRef font, Color_t
             : fCTLine(0),
               fCTFont(font)
 {
+   //TODO: why don't I have asserts on parameters here?
+
    //Create attributed string with font and color.
    //TODO: Make code more general, this constructor is copy&paste.
    using MacOSX::Util::CFScopeGuard;
@@ -150,24 +177,6 @@ void TextLine::GetBounds(UInt_t &w, UInt_t &h)const
    CGFloat ascent = 0., descent = 0., leading = 0.;
    w = UInt_t(CTLineGetTypographicBounds(fCTLine, &ascent, &descent, &leading));
    h = UInt_t(ascent);// + descent + leading);
-   
-   //The new 'experimental':
-   //We extract glyphs and use their bounding box.
-   //Typographic bounds for CTLine have a wrong height.
-   CFArrayRef runs = CTLineGetGlyphRuns(fCTLine);
-   if (runs && CFArrayGetCount(runs) && fCTFont) {
-      //We never (check!) has more than 1 run!
-      CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
-      if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
-         std::vector<CGGlyph> glyphs(nGlyphs);
-         //TODO: check the result?
-         CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
-         //std::vector<CGRect> bboxes(nGlyphs);//we can actually iterate on individual boxes if needed.
-         const CGRect rect = CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation ,
-                                                             &glyphs[0], 0, nGlyphs);
-         h = rect.size.height;
-      }
-   }
 }
 
 
@@ -177,23 +186,28 @@ void TextLine::GetAscentDescent(Int_t &asc, Int_t &desc)const
    //The old 'fallback' version:
    CGFloat ascent = 0., descent = 0., leading = 0.;
    CTLineGetTypographicBounds(fCTLine, &ascent, &descent, &leading);
+   asc = Int_t(ascent);
+   desc = Int_t(descent);
    //The new 'experimental':
    //with Core Text descent for a string '2' has some
    //quite big value, making all TText to be way too high.
    CFArrayRef runs = CTLineGetGlyphRuns(fCTLine);
    if (runs && CFArrayGetCount(runs) && fCTFont) {
-      //TODO: verify that we _always_ have only one run!
-      CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
-      if (const CFIndex nGlyphs = CTRunGetGlyphCount(run)) {
-         std::vector<CGGlyph> glyphs(nGlyphs);
-         CTRunGetGlyphs(run, CFRangeMake(0, 0), &glyphs[0]);
-         //TODO: check the result?
-         const CGRect rect = CTFontGetBoundingRectsForGlyphs(fCTFont, kCTFontDefaultOrientation,
-                                                             &glyphs[0], 0, nGlyphs);
-         //TODO: Check this voodoo!!!
-         ascent = TMath::Ceil(rect.size.height) + rect.origin.y;
-         descent = TMath::Abs(TMath::Floor(rect.origin.y));
+      CTRunRef firstRun = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, 0));
+      CGRect box = BBoxForCTRun(fCTFont, firstRun);
+      if (CGRectIsNull(box))
+         return;
+      
+      for (CFIndex i = 1, e = CFArrayGetCount(runs); i < e; ++i) {
+         CTRunRef run = static_cast<CTRunRef>(CFArrayGetValueAtIndex(runs, i));
+         CGRect nextBox = BBoxForCTRun(fCTFont, run);
+         if (CGRectIsNull(nextBox))
+            return;
+         box = CGRectUnion(box, nextBox);
       }
+
+      asc = Int_t(TMath::Ceil(box.size.height) + box.origin.y);
+      desc = Int_t(TMath::Abs(TMath::Floor(box.origin.y)));
    }
 
    asc = Int_t(ascent);
