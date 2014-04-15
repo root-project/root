@@ -484,7 +484,12 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       if ((gVirtualX->HasTTFonts() && TTF::IsInitialized()) || gPad->IsBatch()) {
          TTF::GetTextExtent(w, h, (char*)GetTitle());
       } else {
+         const Font_t oldFont = gVirtualX->GetTextFont();
+         if (gVirtualX->InheritsFrom("TGCocoa"))
+            gVirtualX->SetTextFont(fTextFont);
          gVirtualX->GetTextExtent(w, h, (char*)GetTitle());
+         if (gVirtualX->InheritsFrom("TGCocoa"))
+            gVirtualX->SetTextFont(oldFont);
       }
    }
 }
@@ -509,13 +514,18 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
       a = TTF::GetBox().yMax;
       d = TMath::Abs(TTF::GetBox().yMin);
    } else {
+      const Font_t oldFont = gVirtualX->GetTextFont();
+      if (gVirtualX->InheritsFrom("TGCocoa"))
+         gVirtualX->SetTextFont(fTextFont);
       gVirtualX->SetTextSize((int)tsize);
-      a = gVirtualX->GetFontAscent();
+      a = gVirtualX->GetFontAscent(text);
       if (!a) {
          UInt_t w;
          gVirtualX->GetTextExtent(w, a, (char*)text);
       }
-      d = gVirtualX->GetFontDescent();
+      d = gVirtualX->GetFontDescent(text);
+      if (gVirtualX->InheritsFrom("TGCocoa"))
+         gVirtualX->SetTextFont(oldFont);
    }
 }
 
@@ -568,8 +578,13 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
       TTF::SetTextSize(tsize);
       TTF::GetTextExtent(w, h, (char*)text);
    } else {
+      const Font_t oldFont = gVirtualX->GetTextFont();
+      if (gVirtualX->InheritsFrom("TGCocoa"))
+         gVirtualX->SetTextFont(fTextFont);
       gVirtualX->SetTextSize((int)tsize);
       gVirtualX->GetTextExtent(w, h, (char*)text);
+      if (gVirtualX->InheritsFrom("TGCocoa"))
+         gVirtualX->SetTextFont(oldFont);
    }
 }
 
