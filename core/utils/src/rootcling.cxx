@@ -3307,7 +3307,8 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
                auto fieldQualType = GetPointeeTypeIfPossible(fieldDecl->getType());
                if (fieldQualType.isNull() ) continue ;            
                if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
-                  headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp, visitedDecls));
+                  if (fieldCxxRcd->hasDefinition())
+                     headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp, visitedDecls));
                }
             }
          }
