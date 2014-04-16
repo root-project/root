@@ -5127,25 +5127,32 @@ bool testMergeProf3DLabelAllDiff()
    return ret;
 }
 
-bool testMerge1DDiff() 
+bool testMerge1D_Diff(bool testEmpty=false) 
 {
    // Tests the merge method with different binned 1D Histograms
+   // test also case when the first histogram is empty (bug Savannah 95190) 
 
-   TH1D *h1 = new TH1D("merge1DDiff-h1","h1-Title",110,-110,0);
-   TH1D *h2 = new TH1D("merge1DDiff-h2","h2-Title",220,0,110);
-   TH1D *h3 = new TH1D("merge1DDiff-h3","h3-Title",330,-55,55);
-   TH1D *h4 = new TH1D("merge1DDiff-h4","h4-Title",220,-110,110);
+   TH1D *h1 = new TH1D("merge1DDiff-h1","h1-Title",100,-100,0);
+   TH1D *h2 = new TH1D("merge1DDiff-h2","h2-Title",200,0,100);
+   TH1D *h3 = new TH1D("merge1DDiff-h3","h3-Title",25,-50,50);
+   // resulting histogram will have the bigger range and the larger bin width
+   // eventually range is extended by half bin width to have correct bin boundaries
+   // of largest bin width histogram
+   TH1D *h4 = new TH1D("merge1DDiff-h4","h4-Title",51,-102,102);
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
-   for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t value = r.Gaus(-55,10);
-      h1->Fill(value, 1.0);
-      h4->Fill(value, 1.0);
+
+   if (!testEmpty) { 
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t value = r.Gaus(-50,10);
+         h1->Fill(value, 1.0);
+         h4->Fill(value, 1.0);
+      }
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t value = r.Gaus(55,10);
+      Double_t value = r.Gaus(50,10);
       h2->Fill(value, 1.0);
       h4->Fill(value, 1.0);
    }
@@ -5162,14 +5169,22 @@ bool testMerge1DDiff()
 
    h1->Merge(list);
 
-   bool ret = equals("MergeDiff1D", h1, h4, cmpOptStats, 1E-10);
+   const char * testName = (!testEmpty) ? "Merge1D-Diff" : "Merge1D-DiffEmpty"; 
+   bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
    delete h3;
    return ret;
 }
 
-bool testMerge2DDiff() 
+bool testMerge1DDiff() {
+   return testMerge1D_Diff(false); 
+}
+bool testMerge1DDiffEmpty() {
+   return testMerge1D_Diff(true); 
+}
+
+bool testMerge2D_Diff(bool testEmpty = false) 
 {
    // Tests the merge method with different binned 2D Histograms
 
@@ -5191,18 +5206,20 @@ bool testMerge2DDiff()
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
-   for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t x = r.Gaus(-55,10);
-      Double_t y = r.Gaus(-55,10);
-      h1->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
+   if (!testEmpty) { 
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t x = r.Gaus(-55,10);
+         Double_t y = r.Gaus(-55,10);
+         h1->Fill(x, y, 1.0);
+         h4->Fill(x, y, 1.0);
+      }
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
       Double_t x = r.Gaus(55,10);
       Double_t y = r.Gaus(55,10);
       h2->Fill(x, y, 1.0);
-      h4->Fill(x, y, 1.0);
+      h4->Fill(x, y, 1.0); 
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -5218,18 +5235,26 @@ bool testMerge2DDiff()
 
    h1->Merge(list);
 
-   bool ret = equals("MergeDiff2D", h1, h4, cmpOptStats, 1E-10);
+   const char * testName = (!testEmpty) ? "Merge2D-Diff" : "Merge2D-DiffEmpty"; 
+   bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
    delete h3;
    return ret;
 }
 
-bool testMerge3DDiff() 
+bool testMerge2DDiff() {
+   return testMerge2D_Diff(false); 
+}
+bool testMerge2DDiffEmpty() {
+   return testMerge2D_Diff(true); 
+}
+
+bool testMerge3D_Diff(bool testEmpty = false) 
 {
    // Tests the merge method with different binned 3D Histograms
 
-   // This tests fails! It should not!
+
    TH3D *h1 = new TH3D("merge3DDiff-h1","h1-Title",
                        11,-110,0,
                        11,-110,0,
@@ -5249,12 +5274,14 @@ bool testMerge3DDiff()
 
    h1->Sumw2();h2->Sumw2();h3->Sumw2();h4->Sumw2();
 
-   for ( Int_t e = 0; e < nEvents ; ++e ) {
-      Double_t x = r.Gaus(-55,10);
-      Double_t y = r.Gaus(-55,10);
-      Double_t z = r.Gaus(-55,10);
-      h1->Fill(x, y, z, 1.0);
-      h4->Fill(x, y, z, 1.0);
+   if (!testEmpty) {
+      for ( Int_t e = 0; e < nEvents ; ++e ) {
+         Double_t x = r.Gaus(-55,10);
+         Double_t y = r.Gaus(-55,10);
+         Double_t z = r.Gaus(-55,10);
+         h1->Fill(x, y, z, 1.0);
+         h4->Fill(x, y, z, 1.0);
+      }
    }
 
    for ( Int_t e = 0; e < nEvents ; ++e ) {
@@ -5279,14 +5306,22 @@ bool testMerge3DDiff()
 
    h1->Merge(list);
 
-   bool ret = equals("MergeDiff3D", h1, h4, cmpOptStats, 1E-10);
+   const char * testName = (!testEmpty) ? "Merge3D-Diff" : "Merge3D-DiffEmpty"; 
+   bool ret = equals(testName, h1, h4, cmpOptStats, 1E-10);
    delete h1;
    delete h2;
    delete h3;
    return ret;
 }
 
-bool testMergeProf1DDiff() 
+bool testMerge3DDiff() {
+   return testMerge3D_Diff(false); 
+}
+bool testMerge3DDiffEmpty() {
+   return testMerge3D_Diff(true); 
+}
+
+bool testMergeProf1D_Diff(bool testEmpty = false) 
 {
    // Tests the merge method with different binned 1D Profile
 
@@ -5297,11 +5332,13 @@ bool testMergeProf1DDiff()
    TProfile *p3 = new TProfile("merge1DDiff-p3","p3-Title",330,-55,55);
    TProfile *p4 = new TProfile("merge1DDiff-p4","p4-Title",220,-110,110);
 
-   for ( Int_t e = 0; e < nEvents; ++e ) {
-      Double_t x = r.Gaus(-55,10);
-      Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
-      p1->Fill(x, y, 1.0);
-      p4->Fill(x, y, 1.0);
+   if (!testEmpty) { 
+      for ( Int_t e = 0; e < nEvents; ++e ) {
+         Double_t x = r.Gaus(-55,10);
+         Double_t y = r.Uniform(0.9 * minRange, 1.1 * maxRange);
+         p1->Fill(x, y, 1.0);
+         p4->Fill(x, y, 1.0);
+      }
    }
 
    for ( Int_t e = 0; e < nEvents; ++e ) {
@@ -5324,11 +5361,20 @@ bool testMergeProf1DDiff()
 
    p1->Merge(list);
 
-   bool ret = equals("MergeDiff1DProf", p1, p4, cmpOptNone , 1E-10);
+   const char * testName = (!testEmpty) ? "MergeProf1D-Diff" : "MergeProf1D-DiffEmpty"; 
+   bool ret = equals(testName, p1, p4, cmpOptNone , 1E-10);
    delete p1;
    delete p2;
    delete p3;
    return ret;
+}
+
+bool testMergeProf1DDiff() {
+   return testMergeProf1D_Diff(false); 
+}
+bool testMergeProf1DDiffEmpty() 
+{
+   return testMergeProf1D_Diff(true); 
 }
 
 bool testMergeProf2DDiff() 
@@ -5613,6 +5659,79 @@ bool testMerge1DRebinProf()
    delete h2;
    return ret;
 }
+
+bool testMerge1DWithBuffer(bool allNoLimits) 
+{
+   // Tests the merge method for different 1D Histograms
+   // where different axis are used, BUT the largest bin width must be
+   // a multiple of the smallest bin width
+
+   double x1 = 1; double x2 = 0; 
+   if (!allNoLimits) {
+      // case when one of the histogram has limits (mix mode)
+      x1 = minRange; x2 = maxRange;
+   } 
+
+   TH1D* h0 = new TH1D("merge1D-h0", "h1-Title", numberOfBins, 1, 0);
+   TH1D* h1 = new TH1D("merge1D-h1", "h1-Title", numberOfBins, x1, x2);
+   TH1D* h2 = new TH1D("merge1D-h2", "h2-Title", 1,1,0);
+   TH1D* h3 = new TH1D("merge1D-h3", "h3-Title", 1,1,0);
+   TH1D* h4 = new TH1D("merge1D-h4", "h4-Title", numberOfBins, x1,x2);
+
+   h0->Sumw2(); h1->Sumw2();h2->Sumw2();h4->Sumw2();
+   h1->SetBuffer(nEvents*10);
+   h2->SetBuffer(nEvents*10);
+   h3->SetBuffer(nEvents*10);
+   h4->SetBuffer(nEvents*10);
+
+
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t value = r.Uniform( minRange,  maxRange);
+      Double_t weight = std::exp(r.Gaus(0,1)); 
+      h1->Fill(value,weight);
+      h4->Fill(value,weight);
+   }
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t value = r.Uniform( (maxRange-minRange)/2, maxRange);
+      Double_t weight = std::exp(r.Gaus(0,1)); 
+      h2->Fill(value,weight);
+      h4->Fill(value,weight);
+   }
+   for ( Int_t e = 0; e < nEvents; ++e ) {
+      Double_t value = r.Uniform(minRange,  (maxRange-minRange)/2);
+      Double_t weight = std::exp(r.Gaus(0,1)); 
+      h3->Fill(value,weight);
+      h4->Fill(value,weight);
+   }
+
+   TList *list = new TList;
+   list->Add(h1);
+   list->Add(h2);
+   list->Add(h3);
+
+   h0->Merge(list);
+
+   // flush buffer before comparing
+   h0->BufferEmpty(); 
+   h4->BufferEmpty(); 
+
+   const char * testName = (allNoLimits) ? "Merge1DNoLimits" : "Merge1DMixedLimits";
+
+   bool ret = equals(testName, h0, h4, cmpOptStats, 1E-10);
+   delete h0; 
+   delete h1;
+   delete h2;
+   delete h3; 
+   return ret;
+}
+
+bool testMerge1DNoLimits() { 
+   return testMerge1DWithBuffer(true);
+}
+bool testMerge1DMixedLimits() { 
+   return testMerge1DWithBuffer(false);
+}
+
 
 
 bool testLabel()
@@ -9328,7 +9447,7 @@ int stressHistogram()
 
    // Test 10
    // Merge Tests
-   const unsigned int numberOfMerge = 43;
+   const unsigned int numberOfMerge = 48;
    pointer2Test mergeTestPointer[numberOfMerge] = { testMerge1D,                 testMergeProf1D,
                                                     testMergeVar1D,              testMergeProfVar1D,
                                                     testMerge2D,                 testMergeProf2D,
@@ -9350,8 +9469,11 @@ int stressHistogram()
                                                     testMerge1DDiff,             testMergeProf1DDiff,
                                                     testMerge2DDiff,             testMergeProf2DDiff,
                                                     testMerge3DDiff,            //  testMergeProf3DDiff, (this fails)
+                                                    testMerge1DDiffEmpty,       testMerge2DDiffEmpty, 
+                                                    testMerge3DDiffEmpty,       testMergeProf1DDiffEmpty, 
                                                     testMerge1DRebin,            testMerge2DRebin,
-                                                    testMerge3DRebin,            testMerge1DRebinProf
+                                                    testMerge3DRebin,            testMerge1DRebinProf,
+                                                    testMerge1DNoLimits
    };
    struct TTestSuite mergeTestSuite = { numberOfMerge, 
                                         "Merge tests for 1D, 2D and 3D Histograms and Profiles............",
@@ -9790,11 +9912,6 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
    bool debug = options & cmpOptDebug;
    bool compareError = ! (options & cmpOptNoError);
    bool compareStats = options & cmpOptStats;
-   
-
-   if (debug) { 
-      std::cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " ,  " <<  h2->GetXaxis()->GetNbins() << std::endl;
-   }
 
    int differents = ( h1 == h2 ); // Check they are not the same histogram!
    if (debug) {
@@ -9802,9 +9919,33 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
            << (h1 == h2 ) << " " << differents << std::endl;
    }
 
+   // check axis
+
+   differents += (bool) equals(h1->GetXaxis()->GetNbins() , h2->GetXaxis()->GetNbins() );
+   if (debug) { 
+      cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " ,  " <<  h2->GetXaxis()->GetNbins() << " | " << differents << std::endl;
+   }
+
+   differents += (bool) equals(h1->GetXaxis()->GetXmin() , h2->GetXaxis()->GetXmin() );
+   if (debug) {
+      cout << "Xmin   = "  << h1->GetXaxis()->GetXmin() << " ,  " <<  h2->GetXaxis()->GetXmin() << " | " << differents << std::endl;
+   }
+
+   differents += (bool) equals(h1->GetXaxis()->GetXmax() , h2->GetXaxis()->GetXmax() );
+   if (debug) {
+      cout << "Xmax   = "  << h1->GetXaxis()->GetXmax() << " ,  " <<  h2->GetXaxis()->GetXmax() << endl;
+   }
+   
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
    {
       Double_t x = h1->GetXaxis()->GetBinCenter(i);
+
+      differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
+      differents += (bool) equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
+      
+      if ( compareError )
+         differents += (bool) equals(h1->GetBinError(i),   h2->GetBinError(i), ERRORLIMIT);
+
       if ( debug )
       {
          std::cout << equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT)
@@ -9816,11 +9957,6 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
               << " "   << differents
               << std::endl;
       }
-      differents += (bool) equals(x, h2->GetXaxis()->GetBinCenter(i), ERRORLIMIT);
-      differents += (bool) equals(h1->GetBinContent(i), h2->GetBinContent(i), ERRORLIMIT);
-      
-      if ( compareError )
-         differents += (bool) equals(h1->GetBinError(i),   h2->GetBinError(i), ERRORLIMIT);
    }
    
    // Statistical tests:
@@ -9842,6 +9978,7 @@ int equals(Double_t n1, Double_t n2, double ERRORLIMIT)
 int compareStatistics( TH1* h1, TH1* h2, bool debug, double ERRORLIMIT)
 {
    int differents = 0;
+
 
    int pr = std::cout.precision(12);
 
