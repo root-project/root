@@ -114,12 +114,41 @@ namespace {
       return result;
    }
 
+//= PyROOT object dispatch support ===========================================
+   PyObject* op_dispatch( PyObject* self, PyObject* args, PyObject* /* kdws */ )
+   {
+      PyObject *mname = 0, *sigarg = 0;
+      if ( ! PyArg_ParseTuple( args, const_cast< char* >( "O!O!:__dispatch__" ),
+              &PyROOT_PyUnicode_Type, &mname, &PyROOT_PyUnicode_Type, &sigarg ) )
+         return 0;
+
+   // get the named overload
+      PyObject* pymeth = PyObject_GetAttr( self, mname );
+      if ( ! pymeth )
+         return 0;
+
+   // get the 'disp' method to allow overload selection
+      PyObject* pydisp = PyObject_GetAttrString( pymeth, const_cast<char*>( "disp" ) );
+      if ( ! pydisp ) {
+         Py_DECREF( pymeth );
+         return 0;
+      }
+
+   // finally, call dispatch to get the specific overload
+      PyObject* oload = PyObject_CallFunctionObjArgs( pydisp, sigarg, NULL );
+      Py_DECREF( pydisp );
+      Py_DECREF( pymeth );
+      return oload;
+   }
+
+
 //____________________________________________________________________________
    PyMethodDef op_methods[] = {
       { (char*)"__nonzero__",  (PyCFunction)op_nonzero,  METH_NOARGS, NULL },
       { (char*)"__bool__",     (PyCFunction)op_nonzero,  METH_NOARGS, NULL }, // for p3
       { (char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS, NULL },
       { (char*)"__reduce__",   (PyCFunction)op_reduce,   METH_NOARGS, NULL },
+      { (char*)"__dispatch__", (PyCFunction)op_dispatch, METH_VARARGS, (char*)"dispatch to selected overload" },
       { (char*)NULL, NULL, 0, NULL }
    };
 
