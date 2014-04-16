@@ -1,146 +1,191 @@
 # File: roottest/python/basic/PyROOT_overloadtests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 04/15/05
-# Last: 12/04/10
+# Last: 04/14/14
 
 """Overload unit tests for PyROOT package."""
 
-import sys, os, unittest
+import os, sys
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from array import array
-from ROOT import *
 from common import *
+from pytest import raises
 
-__all__ = [
-   'Overloads1ClassArrayTestCase',
-   'Overloads2TMathTestCase'
-]
+# Compatibility notes: __dispatch__ raises LookupError on failure; also it
+# still requires formal arguments.
 
-gROOT.LoadMacro( "Overloads.C+" )
+PYTEST_MIGRATION = True
 
-
-### class/array overloaded functions =========================================
-class Overloads1ClassArrayTestCase( MyTestCase ):
-   def test1ClassOverloads( self ):
-      """Test functions overloaded on different ROOT clases"""
-
-      self.assertEqual( MyC().GetInt( MyA() ), 42 )
-      self.assertEqual( MyC().GetInt( MyB() ), 13 )
-      self.assertEqual( MyD().GetInt( MyA() ), 42 )
-      self.assertEqual( MyD().GetInt( MyB() ), 13 )
-
-      self.assertEqual( MyC().GetInt( MyNSa.MyA() ),  88 )
-      self.assertEqual( MyC().GetInt( MyNSb.MyA() ), -33 )
-
-      self.assertEqual( MyD().GetInt( MyNSa.MyA() ),  88 )
-      self.assertEqual( MyD().GetInt( MyNSb.MyA() ), -33 )
-
-      c = MyC()
-      self.assertRaises( TypeError, c.GetInt.disp, 12 )
-      self.assertEqual( c.GetInt.disp( 'MyA* a' )( MyA() ), 42 )
-      self.assertEqual( c.GetInt.disp( 'MyB* b' )( MyB() ), 13 )
-
-      self.assertEqual( MyC().GetInt.disp( 'MyA* a' )( MyA() ), 42 )
-      self.assertEqual( MyC.GetInt.disp( 'MyB* b' )( c, MyB() ), 13 )
-
-      d = MyD()
-      self.assertEqual( d.GetInt.disp( 'MyA* a' )( MyA() ), 42 )
-      self.assertEqual( d.GetInt.disp( 'MyB* b' )( MyB() ), 13 )
-
-      nb = MyNSa.MyB()
-      self.assertRaises( TypeError, nb.f, MyC() )
-
-   def test2ClassOverloads( self ):
-      """Test functions overloaded on void* and non-existing classes"""
-
-      import ROOT
-      oldval = ROOT.gErrorIgnoreLevel
-      ROOT.gErrorIgnoreLevel = ROOT.kError
-
-    # first verify that BB and DD are indeed unknown
-      self.assertRaises( RuntimeError, BB )
-      self.assertRaises( RuntimeError, DD )
-
-    # then try overloads based on them
-      self.assertEqual( MyOverloads().call( AA() ),    "AA" )
-      self.assertEqual( MyOverloads().call( GetBB() ), "DD" ) # <- BB is unknown + void*
-      self.assertEqual( MyOverloads().call( CC() ),    "CC" )
-      self.assertEqual( MyOverloads().call( GetDD() ), "DD" ) # <- DD is unknown
-
-      ROOT.gErrorIgnoreLevel = oldval
-
-   def test3ClassOverloadsAmongUnknowns( self ):
-      """Test that unknown* is preferred over unknown&"""
-
-      import ROOT
-      oldval = ROOT.gErrorIgnoreLevel
-      ROOT.gErrorIgnoreLevel = ROOT.kError
-      self.assertEqual( MyOverloads2().call( GetBB() ), "BBptr" )
-      self.assertEqual( MyOverloads2().call( GetDD(), 1 ), "DDptr" )
-      ROOT.gErrorIgnoreLevel = oldval
-
-   def test4ArrayOverloads( self ):
-      """Test functions overloaded on different arrays"""
-
-      ai = array( 'i', [ 525252 ] )
-      self.assertEqual( MyC().GetInt( ai ), 525252 )
-      self.assertEqual( MyD().GetInt( ai ), 525252 )
-
-      ah = array( 'h', [ 25 ] )
-      self.assertEqual( MyC().GetInt( ah ), 25 )
-      self.assertEqual( MyD().GetInt( ah ), 25 )
+def setup_module(mod):
+    import sys, os
+    sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
+    err = os.system("make Overloads_C")
+    if err:
+        raise OSError("'make' failed (see stderr)")
 
 
-### basic functioning test cases =============================================
-class Overloads2TMathTestCase( MyTestCase ):
-   def test1MeanOverloads( self ):
-      """Test overloads using TMath::Mean(), TMath::Median"""
+class TestClassOVERLOADS:
+    def setup_class(cls):
+        import cppyy
+        cls.test_dct = "Overloads_C"
+        cls.datatypes = cppyy.load_reflection_info(cls.test_dct)
 
-      numbers = [ 8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7 ]
-      mean, median = 4.0, 4.0
+    def test01_class_based_overloads(self):
+        """Functions overloaded on different C++ class arguments"""
 
-      af = array( 'f', numbers )
-      self.assertEqual( round( TMath.Mean( len(af), af ) - mean, 5 ), 0 )
-      self.assertEqual( round( TMath.Median( len(af), af ) - median, 5 ), 0 )
+        import cppyy
+        OverloadA = cppyy.gbl.OverloadA
+        OverloadB = cppyy.gbl.OverloadB
+        OverloadC = cppyy.gbl.OverloadC
+        OverloadD = cppyy.gbl.OverloadD
 
-      ad = array( 'd', numbers )
-      self.assertEqual( round( TMath.Mean( len(ad), ad ) - mean, 8), 0 )
-      self.assertEqual( round( TMath.Median( len(ad), ad ) - median, 8), 0 )
+        NamespaceA = cppyy.gbl.NamespaceA
+        NamespaceB = cppyy.gbl.NamespaceB
 
-      ai = array( 'i', numbers )
-      self.assertEqual( round( TMath.Mean( len(ai), ai ) - mean, 8), 0 )
-      self.assertEqual( round( TMath.Median( len(ai), ai ) - median, 8), 0 )
+        assert OverloadC().get_int(OverloadA()) == 42
+        assert OverloadC().get_int(OverloadB()) == 13
+        assert OverloadD().get_int(OverloadA()) == 42
+        assert OverloadD().get_int(OverloadB()) == 13
 
-      ah = array( 'h', numbers )
-      self.assertEqual( round( TMath.Mean( len(ah), ah ) - mean, 8), 0 )
-      self.assertEqual( round( TMath.Median( len(ah), ah ) - median, 8), 0 )
+        assert OverloadC().get_int(NamespaceA.OverloadA()) ==  88
+        assert OverloadC().get_int(NamespaceB.OverloadA()) == -33
 
-      al = array( 'l', numbers )
-      self.assertEqual( round( TMath.Mean( len(al), al ) - mean, 8), 0 )
-      self.assertEqual( round( TMath.Median( len(al), al ) - median, 8), 0 )
+        assert OverloadD().get_int(NamespaceA.OverloadA()) ==  88
+        assert OverloadD().get_int(NamespaceB.OverloadA()) == -33
 
-      aL = array( 'L', numbers )
-      self.assertEqual( round( TMath.Mean( len(aL), aL ) - mean, 8), 0 )
-      self.assertEqual( round( TMath.Median( len(aL), aL ) - median, 8), 0 )
+    def test02_class_based_overloads_explicit_resolution(self):
+        """Explicitly resolved function overloads"""
 
-   def test2DoubleIntOverloads( self ):
-      """Test overloads on int/doubles"""
+        import cppyy
+        OverloadA = cppyy.gbl.OverloadA
+        OverloadB = cppyy.gbl.OverloadB
+        OverloadC = cppyy.gbl.OverloadC
+        OverloadD = cppyy.gbl.OverloadD
 
-      self.assertEqual( MyOverloads().call( 1 ), "int" )
-      self.assertEqual( MyOverloads().call( 1. ), "double" )
-      self.assertEqual( MyOverloads().call1( 1 ), "int" )
-      self.assertEqual( MyOverloads().call1( 1. ), "double" )
+        NamespaceA = cppyy.gbl.NamespaceA
+
+        c = OverloadC()
+        raises(TypeError, c.__dispatch__, 'get_int', 12)
+        raises(LookupError, c.__dispatch__, 'get_int', 'does_not_exist')
+        assert c.__dispatch__('get_int', 'OverloadA* a')(OverloadA()) == 42
+        assert c.__dispatch__('get_int', 'OverloadB* b')(OverloadB()) == 13
+
+        assert OverloadC().__dispatch__('get_int', 'OverloadA* a')(OverloadA())  == 42
+        # TODO: #assert c_overload.__dispatch__('get_int', 'OverloadB* b')(c, OverloadB()) == 13
+
+        d = OverloadD()
+        assert d.__dispatch__('get_int', 'OverloadA* a')(OverloadA()) == 42
+        assert d.__dispatch__('get_int', 'OverloadB* b')(OverloadB()) == 13
+
+        nb = NamespaceA.OverloadB()
+        raises(TypeError, nb.f, OverloadC())
+
+    def test03_fragile_class_based_overloads(self):
+        """Test functions overloaded on void* and non-existing classes"""
+
+        import cppyy
+        MoreOverloads = cppyy.gbl.MoreOverloads
+
+        # ROOT-specific ignores --
+        import ROOT
+        oldval = ROOT.gErrorIgnoreLevel
+        ROOT.gErrorIgnoreLevel = ROOT.kError
+
+        OlAA = cppyy.gbl.OlAA
+        OlBB = cppyy.gbl.OlBB
+        OlCC = cppyy.gbl.OlCC
+        OlDD = cppyy.gbl.OlDD
+
+        from cppyy.gbl import get_OlBB, get_OlDD
+
+        # first verify that BB and DD are indeed unknown
+        raises(RuntimeError, OlBB)
+        raises(RuntimeError, OlDD )
+
+        # then try overloads based on them
+        assert MoreOverloads().call(OlAA())     == "OlAA"
+        assert MoreOverloads().call(get_OlBB()) == "OlDD"   # <- bb_ol has an unknown + void*
+        assert MoreOverloads().call(OlCC())     == "OlCC"
+        assert MoreOverloads().call(get_OlDD()) == "OlDD"   # <- dd_ol has an unknown
+
+        # -- ROOT-specific ignores
+        ROOT.gErrorIgnoreLevel = oldval
+
+    def test04_fully_fragile_overloads(self):
+        """An unknown* is preferred over unknown&"""
+
+        import cppyy
+        MoreOverloads2 = cppyy.gbl.MoreOverloads2
+
+        # ROOT-specific ignores --
+        import ROOT
+        oldval = ROOT.gErrorIgnoreLevel
+        ROOT.gErrorIgnoreLevel = ROOT.kError
+
+        from cppyy.gbl import get_OlBB, get_OlDD
+
+        assert MoreOverloads2().call(get_OlBB())    == "OlBB*"
+        assert MoreOverloads2().call(get_OlDD(), 1) == "OlDD*"
+
+        # -- ROOT-specific ignores
+        ROOT.gErrorIgnoreLevel = oldval
+
+    def test05_array_overloads(self):
+        """Functions overloaded on different arrays"""
+
+        import cppyy
+        OverloadC = cppyy.gbl.OverloadC
+        OverloadD = cppyy.gbl.OverloadD
+
+        from array import array
+
+        ai = array('i', [525252])
+        assert OverloadC().get_int(ai) == 525252
+        assert OverloadD().get_int(ai) == 525252
+
+        ah = array('h', [25])
+        assert OverloadC().get_int(ah) == 25
+        assert OverloadD().get_int(ah) == 25
+
+    def test06_double_int_overloads(self):
+        """Overloads on int/doubles"""
+
+        import cppyy
+        MoreOverloads = cppyy.gbl.MoreOverloads
+
+        assert MoreOverloads().call(1)   == "int"
+        assert MoreOverloads().call(1.)  == "double"
+        assert MoreOverloads().call1(1)  == "int"
+        assert MoreOverloads().call1(1.) == "double"
+
+    def test07_mean_overloads(self):
+        """Adapted test for array overloading"""
+
+        import cppyy, array
+        cmean = cppyy.gbl.calc_mean
+
+        numbers = [8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7]
+        mean, median = 4.0, 4.0
+
+        for l in ['f', 'd', 'i', 'h', 'l']:
+            a = array.array(l, numbers)
+            assert round(cmean(len(a), a) - mean, 8) == 0
+
+    def test08_templated_mean_overloads(self):
+        """Adapted test for array overloading with templates"""
+
+        import cppyy, array
+        cmean = cppyy.gbl.calc_mean_templ
+
+        numbers = [8, 2, 4, 2, 4, 2, 4, 4, 1, 5, 6, 3, 7]
+        mean, median = 4.0, 4.0
+
+        for l in ['f', 'd', 'i', 'h', 'l']:
+            a = array.array(l, numbers)
+            assert round(cmean(len(a), a) - mean, 8) == 0
 
 
 ## actual test run
 if __name__ == '__main__':
-   from MyTextTestRunner import MyTextTestRunner
-
-   loader = unittest.TestLoader()
-   testSuite = loader.loadTestsFromModule( sys.modules[ __name__ ] )
-
-   runner = MyTextTestRunner( verbosity = 2 )
-   result = not runner.run( testSuite ).wasSuccessful()
-
-   sys.exit( result )
+    result = run_pytest(__file__)
+    sys.exit(result)

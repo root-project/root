@@ -1,6 +1,6 @@
 # This is a template for all makefile.
 
-.PHONY: DataTypes_C
+.PHONY: DataTypes_C Overloads_C
 
 #Set the list of files to be delete by clean:
 CLEAN_TARGETS +=  $(ALL_LIBRARIES) *.log *.clog
@@ -25,11 +25,15 @@ PyROOT_basictests.log: ArgumentPassingCompiled_C.$(DllSuf)
 PyROOT_basictests: PyROOT_basictests.log
 	$(TestDiff)
 
-PyROOT_overloadtests.log: Overloads_C.$(DllSuf)
+#-----
+Overloads_C:  Overloads_C.$(DllSuf)
+PyROOT_overloadtest.log: Overloads_C
 
 PyROOT_overloadtests: PyROOT_overloadtests.log
 	$(TestDiff)
 
+
+#-----
 DataTypes_C:  DataTypes_C.$(DllSuf)
 PyROOT_datatypetest.log: DataTypes_C
 

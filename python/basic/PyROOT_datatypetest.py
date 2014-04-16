@@ -34,7 +34,7 @@ class TestClassDATATYPES:
         cls.N = cppyy.gbl.N
 
     def test01_load_reflection_cache(self):
-        """Test whether loading a refl. info twice results in the same object"""
+        """Loading reflection info twice should result in the same object"""
         import cppyy
         lib2 = cppyy.load_reflection_info(self.test_dct)
         assert self.datatypes is lib2

@@ -255,6 +255,7 @@ long get_double_address(CppyyTestData& c)
     return (long)&c.m_pod.m_double;
 }
 
+
 //= global variables/pointers ===============================================
 int g_int = 42;
 

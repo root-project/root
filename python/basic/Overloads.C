@@ -1,100 +1,69 @@
-/*
-  File: roottest/python/basic/Overloads.C
-  Author: WLavrijsen@lbl.gov
-  Created: 04/15/05
-  Last: 12/04/10
-*/
-
-#include <string>
-#include <vector>
-
-class MyA {
-public:
-   MyA() { i1 = 42; i2 = -1; }
-   int i1, i2;
-};
-
-namespace MyNSa {
-   class MyA {
-   public:
-      MyA() { i1 = 88; i2 = -34; }
-      int i1, i2;
-   };
-
-   class MyB {
-   public:
-      int f( const std::vector<int>* v ) { return (*v)[0]; }
-   };
-}
-
-namespace MyNSb {
-   class MyA {
-   public:
-      MyA() { i1 = -33; i2 = 89; }
-      int i1, i2;
-   };
-}
-
-class MyB {
-public:
-   MyB() { i1 = -2; i2 = 13; }
-   int i1, i2;
-};
-
-class MyC {
-public:
-   MyC() {}
-   int GetInt( MyA* a )   { return a->i1; }
-   int GetInt( MyNSa::MyA* a ) { return a->i1; }
-   int GetInt( MyNSb::MyA* a ) { return a->i1; }
-   int GetInt( short* p ) { return *p; }
-   int GetInt( MyB* b )   { return b->i2; }
-   int GetInt( int* p )   { return *p; }
-};
-
-class MyD {
-public:
-   MyD() {}
-//   int GetInt( void* p ) { return *(int*)p; }
-   int GetInt( int* p )   { return *p; }
-   int GetInt( MyB* b )   { return b->i2; }
-   int GetInt( short* p ) { return *p; }
-   int GetInt( MyNSb::MyA* a ) { return a->i1; }
-   int GetInt( MyNSa::MyA* a ) { return a->i1; }
-   int GetInt( MyA* a )   { return a->i1; }
-};
+#include "Overloads.h"
 
 
-class AA {};
-class BB;
-class CC {};
-class DD;
+//===========================================================================
+OverloadA::OverloadA() { i1 = 42; i2 = -1; }
 
-class MyOverloads {
-public:
-   MyOverloads() {}
-   std::string call( const AA& ) { return "AA"; }
-   std::string call( const BB&, void* n = 0 ) { if (n) return "BB"; return "BB"; }
-   std::string call( const CC& ) { return "CC"; }
-   std::string call( const DD& ) { return "DD"; }
+NamespaceA::OverloadA::OverloadA() { i1 = 88; i2 = -34; }
+int NamespaceA::OverloadB::f(const std::vector<int>* v) { return (*v)[0]; }
 
-   std::string callUnknown( const DD& ) { return "DD"; }
+NamespaceB::OverloadA::OverloadA() { i1 = -33; i2 = 89; }
 
-   std::string call( double ) { return "double"; }
-   std::string call( int ) { return "int"; }
-   std::string call1( int ) { return "int"; }
-   std::string call1( double ) { return "double"; }
-};
+OverloadB::OverloadB() { i1 = -2; i2 = 13; }
 
-class MyOverloads2 {
-public:
-   MyOverloads2() {}
-   std::string call( const BB& ) { return "BBref"; }
-   std::string call( const BB* ) { return "BBptr"; }
 
-   std::string call( const DD*, int ) { return "DDptr"; }
-   std::string call( const DD&, int ) { return "DDref"; }
-};
+//===========================================================================
+OverloadC::OverloadC() {}
+int OverloadC::get_int(OverloadA* a)                 { return a->i1; }
+int OverloadC::get_int(NamespaceA::OverloadA* a)     { return a->i1; }
+int OverloadC::get_int(NamespaceB::OverloadA* a)     { return a->i1; }
+int OverloadC::get_int(short* p)                     { return *p; }
+int OverloadC::get_int(OverloadB* b)                 { return b->i2; }
+int OverloadC::get_int(int* p)                       { return *p; }
 
-BB* GetBB() { return (BB*)0; }
-DD* GetDD() { return (DD*)0; }
+
+//===========================================================================
+OverloadD::OverloadD() {}
+int OverloadD::get_int(int* p)                       { return *p; }
+int OverloadD::get_int(OverloadB* b)                 { return b->i2; }
+int OverloadD::get_int(short* p)                     { return *p; }
+int OverloadD::get_int(NamespaceB::OverloadA* a)     { return a->i1; }
+int OverloadD::get_int(NamespaceA::OverloadA* a)     { return a->i1; }
+int OverloadD::get_int(OverloadA* a)                 { return a->i1; }
+
+
+//===========================================================================
+OlBB* get_OlBB() { return (OlBB*)0; }
+OlDD* get_OlDD() { return (OlDD*)0; }
+
+
+//===========================================================================
+MoreOverloads::MoreOverloads() {}
+std::string MoreOverloads::call(const OlAA&) { return "OlAA"; }
+std::string MoreOverloads::call(const OlBB&, void* n) { n = 0; return "OlBB"; }
+std::string MoreOverloads::call(const OlCC&) { return "OlCC"; }
+std::string MoreOverloads::call(const OlDD&) { return "OlDD"; }
+
+std::string MoreOverloads::call_unknown(const OlDD&) { return "OlDD"; }
+
+std::string MoreOverloads::call(double)  { return "double"; }
+std::string MoreOverloads::call(int)     { return "int"; }
+std::string MoreOverloads::call1(int)    { return "int"; }
+std::string MoreOverloads::call1(double) { return "double"; }
+
+
+//===========================================================================
+MoreOverloads2::MoreOverloads2() {}
+std::string MoreOverloads2::call(const OlBB&) { return "OlBB&"; }
+std::string MoreOverloads2::call(const OlBB*) { return "OlBB*"; }
+
+std::string MoreOverloads2::call(const OlDD*, int) { return "OlDD*"; }
+std::string MoreOverloads2::call(const OlDD&, int) { return "OlDD&"; }
+
+
+//===========================================================================
+double calc_mean(long n, const float* a)  { return calc_mean_templ<float>(n, a); }
+double calc_mean(long n, const double* a) { return calc_mean_templ<double>(n, a); }
+double calc_mean(long n, const int* a)    { return calc_mean_templ<int>(n, a); }
+double calc_mean(long n, const short* a)  { return calc_mean_templ<short>(n, a); }
+double calc_mean(long n, const long* a)   { return calc_mean_templ<long>(n, a); }
