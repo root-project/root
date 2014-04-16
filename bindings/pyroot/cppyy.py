@@ -163,6 +163,7 @@ def getAllClasses() :
 
 #--- Global namespace and global objects -------------------------------
 gbl  = _global_cpp
+sys.modules['cppyy.gbl'] = gbl
 NULL = 0 # _backend.GetRootGlobal returns a descriptor, which needs a class
 class double(float): pass
 class short(int): pass
