@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 02/06/13
+# Last: 02/06/14
 
 """PyROOT user module.
 
@@ -339,6 +339,22 @@ def _displayhook( v ):
 # TODO: EndOfLineAction currently unresolvable (#98656?)
 #   _root.gInterpreter.EndOfLineAction()
    return _orig_dhook( v )
+
+
+### set import hook to be able to trigger auto-loading as appropriate
+import __builtin__
+_orig_ihook = __builtin__.__import__
+def _importhook( name, glbls = {}, lcls = {}, fromlist = [], level = -1 ):
+   if name[0:5] == 'ROOT.':
+      try:
+         sys.modules[ name ] = getattr( sys.modules[ 'ROOT' ], name[5:] )
+      except Exception:
+         pass
+   if 5 <= sys.version_info[1]:    # minor
+      return _orig_ihook( name, glbls, lcls, fromlist, level )
+   return _orig_ihook( name, glbls, lcls, fromlist )
+
+__builtin__.__import__ = _importhook
 
 
 ### helper to prevent GUIs from starving
