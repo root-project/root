@@ -3259,17 +3259,22 @@ clang::QualType GetPointeeTypeIfPossible(const clang::QualType& qt)
 {
    // Get the pointee type if possible
    const clang::Type* qtPtr = qt.getTypePtr();
-   return (llvm::isa<clang::PointerType>(qtPtr) || llvm::isa<clang::ReferenceType>(qtPtr) ) ?
+   return (!qt.isNull() && (llvm::isa<clang::PointerType>(qtPtr) || llvm::isa<clang::ReferenceType>(qtPtr) )) ?
        qtPtr->getPointeeType() : qt ;
    
 }
 
 //______________________________________________________________________________
-std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd, 
-                                          const cling::Interpreter& interp)
-{
+std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
+                                          const cling::Interpreter& interp,
+                                          std::set<const clang::CXXRecordDecl*>& visitedDecls)
+{   
    // Extract the list of headers necessary for the Decl   
    std::list<std::string> headers;   
+ 
+   // Avoid infinite recursion
+   if (!visitedDecls.insert(rcd.getCanonicalDecl()).second)
+      return headers;      
    
    // If this is a template
    if (const clang::ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&rcd)){
@@ -3277,31 +3282,32 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
       // Loop on the template args
       for (auto& tArg : tsd->getTemplateArgs().asArray()){
          if (clang::TemplateArgument::ArgKind::Type != tArg.getKind()) continue;
-         auto tArgQualType = tArg.getAsType();
+         auto tArgQualType = GetPointeeTypeIfPossible(tArg.getAsType());
          if (tArgQualType.isNull()) continue;         
-         if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getPointeeCXXRecordDecl()){
-            headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp));
+         if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
+            if (tArgCxxRcd->hasDefinition())
+               headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp, visitedDecls));
          }
       }      
-          
+      
       if(!ROOT::TMetaUtils::IsStdClass(rcd)){
          
          // Loop on base classes - with a newer llvm, range based possible
          for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
-            auto baseQualType = baseIt->getType();
-            if (baseQualType.isNull() || baseQualType->isDependentType()) continue;
+            auto baseQualType = GetPointeeTypeIfPossible(baseIt->getType());
+            if (baseQualType.isNull()) continue;
             if (const clang::CXXRecordDecl* baseRcdPtr = baseQualType->getAsCXXRecordDecl()){
-               headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp));
+               headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp, visitedDecls));
             }
          }      
          
          // Loop on the data members - with a newer llvm, range based possible
          for (auto declIt = tsd->decls_begin(); declIt != tsd->decls_end(); ++declIt) {
             if (const clang::FieldDecl* fieldDecl = llvm::dyn_cast<clang::FieldDecl>(*declIt)){
-               auto fieldQualType = fieldDecl->getType();
+               auto fieldQualType = GetPointeeTypeIfPossible(fieldDecl->getType());
                if (fieldQualType.isNull() ) continue ;            
                if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
-                  headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp));
+                  headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp, visitedDecls));
                }
             }
          }
@@ -3310,18 +3316,20 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
          for (auto methodIt = tsd->method_begin(); methodIt!=tsd->method_end();++methodIt){
             // Check arguments
             for (auto& fPar : methodIt->parameters()){
-               auto fParQualType = fPar->getOriginalType();
+               auto fParQualType = GetPointeeTypeIfPossible(fPar->getOriginalType());
                if(fParQualType.isNull()) continue;
                if (const clang::CXXRecordDecl* fParCxxRcd = fParQualType->getAsCXXRecordDecl()){
-                  headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp));
+                  if (fParCxxRcd->hasDefinition())
+                     headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp, visitedDecls));
                }
             }
-/*            // Check return value - infinite loop??
-            auto retQualType = methodIt->getReturnType();
+            // Check return value - infinite loop??
+            auto retQualType = GetPointeeTypeIfPossible(methodIt->getReturnType());
             if(retQualType.isNull()) continue;
             if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
-                  headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp));
-            }    */     
+               if (retCxxRcd->hasDefinition())
+                  headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp, visitedDecls));
+            }         
          }
       }
       
@@ -3342,7 +3350,8 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
    for (auto& annotatedRcd : annotatedRcds){
       if (const clang::CXXRecordDecl* cxxRcd = 
           llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
-         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp));
+         std::set<const clang::CXXRecordDecl*> visitedDecls;
+         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          // remove duplicates, also if not subsequent
          std::unordered_set<std::string> buffer;
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
@@ -4115,10 +4124,9 @@ int RootCling(int argc,
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
       HeadersClassesMap_t headersClassesMap;
-      // Temporarly disable to disentangle from several failures on different platforms
-      //ExtractHeadersForClasses(scan.fSelectedClasses,
-      //                         headersClassesMap,
-      //                         interp);  
+      ExtractHeadersForClasses(scan.fSelectedClasses,
+                              headersClassesMap,
+                              interp);  
       
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
