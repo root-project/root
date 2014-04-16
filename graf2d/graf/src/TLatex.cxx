@@ -2021,6 +2021,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
             t.ReplaceAll("#topbar","?");
             t.ReplaceAll("#arcbar","?");
             t.ReplaceAll("#downleftarrow","?");
+            t.ReplaceAll("#splitline","\\genfrac{}{}{0pt}{}");
 
             t.ReplaceAll("#","\\");
             t.ReplaceAll("%","\\%");
