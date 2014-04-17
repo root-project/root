@@ -2166,22 +2166,22 @@ char *TClass::EscapeChars(const char *text) const
    // Introduce an escape character (@) in front of a special chars.
    // You need to use the result immediately before it is being overwritten.
 
-   static char name[128];
-   Int_t nch = strlen(text);
-   if (nch > 127) nch = 127;
-   Int_t icur = -1;
-   for (Int_t i = 0; i < nch; i++) {
-      icur++;
+   static UInt_t maxsize = 255;
+   static char name[256];
+
+   UInt_t nch = strlen(text);
+   UInt_t icur = 0;
+   for (UInt_t i = 0; i < nch && icur < maxsize; ++i, ++icur) {
       if (text[i] == '\"' || text[i] == '[' || text[i] == '~' ||
           text[i] == ']'  || text[i] == '&' || text[i] == '#' ||
           text[i] == '!'  || text[i] == '^' || text[i] == '<' ||
           text[i] == '?'  || text[i] == '>') {
          name[icur] = '@';
-         icur++;
+         ++icur;
       }
       name[icur] = text[i];
    }
-   name[icur+1] = 0;
+   name[icur] = 0;
    return name;
 }
 
