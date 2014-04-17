@@ -1670,6 +1670,11 @@ void TFile::ReadFree()
    // This linked list has been written on the file via WriteFree
    // as a single data record.
 
+   // Avoid problem with file corruption.
+   if (fNbytesFree < 0 || fNbytesFree > fEND) {
+      fNbytesFree = 0;
+      return;
+   }
    TKey *headerfree = new TKey(fSeekFree, fNbytesFree, this);
    headerfree->ReadFile();
    char *buffer = headerfree->GetBuffer();
