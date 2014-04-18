@@ -2332,8 +2332,7 @@ TClingCallFunc::InterfaceMethod()
       return 0;
    }
    const FunctionDecl* decl = fMethod->GetMethodDecl();
-   map<const FunctionDecl*, void*>::iterator I =
-   wrapper_store.find(decl);
+   map<const FunctionDecl*, void*>::iterator I = wrapper_store.find(decl);
    if (I != wrapper_store.end()) {
       fWrapper = (tcling_callfunc_Wrapper_t) I->second;
    }
