@@ -2245,8 +2245,8 @@ char *TClass::EscapeChars(const char *text) const
    // Introduce an escape character (@) in front of a special chars.
    // You need to use the result immediately before it is being overwritten.
 
-   static UInt_t maxsize = 255;
-   static char name[256];
+   static const UInt_t maxsize = 255;
+   static char name[maxsize+2]; //One extra if last char needs to be escaped
 
    UInt_t nch = strlen(text);
    UInt_t icur = 0;
