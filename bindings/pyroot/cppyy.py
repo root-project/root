@@ -61,7 +61,7 @@ sys.modules[ __name__ ].libPyROOT = _backend
 
 if not _builtin_cppyy:
    _backend.SetMemoryPolicy( _backend.kMemoryStrict )
-_backend.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback()
+   _backend.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback()
 
 #--- Enable Autoloading ignoring possible error for the time being
 try:    _backend.gInterpreter.EnableAutoLoading()
