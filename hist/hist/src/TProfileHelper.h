@@ -190,7 +190,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
-   Bool_t firstNonEmptyHist = kTRUE;
+//   Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    T* h = p;
