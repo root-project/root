@@ -1,3 +1,7 @@
+24c24
+<       <TStreamerBase name="TObject" title="Basic ROOT object" v="3" type="66" typename="BASE" size="16" baseversion="1" basechecksum="-1877229523"/>
+---
+>       <TStreamerBase name="TObject" title="Basic ROOT object" v="3" type="66" typename="BASE" size="16" baseversion="1"/>
 28,29c28,29
 <     <TStreamerInfo name="SuperCluster" title="" v="9" classversion="-1" canoptimize="true" checksum="158258328">
 <       <TStreamerBasicType name="energy2" v="2" type="9" typename="Double32_t" size="8"/>
