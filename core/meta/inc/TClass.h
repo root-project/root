@@ -315,6 +315,7 @@ public:
    TObjArray         *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
+   TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
