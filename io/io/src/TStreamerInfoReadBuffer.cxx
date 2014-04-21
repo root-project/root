@@ -1402,9 +1402,11 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr, Int_t first,
                if(pstreamer)  {kase = TStreamerInfo::kStreamer; goto SWIT;}
                DOLOOP { ((TStreamerBase*)aElement)->ReadBuffer(b,arr[k]);}
             } else {
-               // FIXME: what is that?
-               Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-               TStreamerInfo *binfo = ((TStreamerInfo*)cle->GetStreamerInfo(clversion));
+               // FIXME: Rather than relying on the StreamerElement to
+               // contain the base class version information we should
+               // embed it in the bytestream even in the member-wise case.
+               // For now rely, on the StreamerElement:
+               TStreamerInfo *binfo = ((TStreamerInfo*)((TStreamerBase*)aElement)->GetBaseStreamerInfo());
                if (!binfo->TestBit(kCannotOptimize) && binfo->IsCompiled()) { 
                   binfo->SetBit(kCannotOptimize);
                   binfo->Compile();
