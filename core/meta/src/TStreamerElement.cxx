@@ -254,7 +254,7 @@ TClass *TStreamerElement::GetClassPointer() const
    if (fClassObject!=(TClass*)(-1)) return fClassObject;
    TString className = fTypeName.Strip(TString::kTrailing, '*');
    if (className.Index("const ")==0) className.Remove(0,6);
-   bool quiet = fType == TVirtualStreamerInfo::kArtificial;
+   bool quiet = (fType == TVirtualStreamerInfo::kArtificial);
    ((TStreamerElement*)this)->fClassObject = TClass::GetClass(className,kTRUE,quiet);
    return fClassObject;
 }
