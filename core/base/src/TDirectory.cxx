@@ -24,6 +24,7 @@
 #include "TSystem.h"
 #include "TVirtualMutex.h"
 #include "TThreadSlots.h"
+#include "TMethod.h"
 
 Bool_t TDirectory::fgAddDirectory = kTRUE;
 
@@ -231,6 +232,29 @@ void TDirectory::CleanTargets()
 }
 
 //______________________________________________________________________________
+static TBuffer* R__CreateBuffer()
+{
+   // Fast execution of 'new TBufferFile(TBuffer::kWrite,10000), without having
+   // a compile time circular dependency ... alternatively we could (should?)
+   // introduce yet another abstract interface.
+
+   typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
+   static tcling_callfunc_Wrapper_t creator = 0;
+   if (creator == 0) {
+      R__LOCKGUARD2(gROOTMutex);
+      TClass *c = TClass::GetClass("TBufferFile");
+      TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
+      creator = (tcling_callfunc_Wrapper_t)( m->InterfaceMethod() );
+   }
+   TBuffer::EMode mode = TBuffer::kWrite;
+   Int_t size = 10000;
+   void *args[] = { &mode, &size };
+   TBuffer *result;
+   creator(0,2,args,&result);
+   return result;
+}
+
+//______________________________________________________________________________
 TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE */)
 {
    // Clone an object.
@@ -259,7 +283,7 @@ TObject *TDirectory::CloneObject(const TObject *obj, Bool_t autoadd /* = kTRUE *
    //create a buffer where the object will be streamed
    //We are forced to go via the I/O package (ie TBufferFile).
    //Invoking TBufferFile via CINT will automatically load the I/O library
-   TBuffer *buffer = (TBuffer*)gROOT->ProcessLine("new TBufferFile(TBuffer::kWrite,10000);");
+   TBuffer *buffer = R__CreateBuffer();
    if (!buffer) return 0;
    buffer->MapObject(obj);  //register obj in map to handle self reference
    const_cast<TObject*>(obj)->Streamer(*buffer);
