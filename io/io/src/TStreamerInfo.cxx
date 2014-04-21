@@ -279,7 +279,8 @@ void TStreamerInfo::Build()
             delete element;
             element = 0;
          } else {
-            clm->GetStreamerInfo();
+            // Now part of the TStreamerBase constructor.
+            // clm->GetStreamerInfo();
             if ((clm == TObject::Class()) && fClass->CanIgnoreTObjectStreamer()) {
                // -- An ignored TObject base class.
                // Note: The TClass kIgnoreTObjectStreamer == BIT(15), but
@@ -1645,20 +1646,26 @@ void TStreamerInfo::BuildOld()
             }
             baseclass->BuildRealData();
 
-            // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
-            // case the base class contains a member used as an array dimension in the derived classes.
-            Int_t version = base->GetBaseVersion();
-            // Calculate the offset using the 'real' base class name (as opposed to the 
+            // Calculate the offset using the 'real' base class name (as opposed to the
             // '@@emulated' in the case of the emulation of an abstract base class.
             Int_t baseOffset = fClass->GetBaseClassOffset(baseclass);
+
+            // Force the StreamerInfo "Compilation" of the base classes first. This is necessary in
+            // case the base class contains a member used as an array dimension in the derived classes.
             TStreamerInfo* infobase;
             if (fClass->TestBit(TClass::kIsEmulation) && (baseclass->Property() & kIsAbstract)) {
-               infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
+               Int_t version = base->GetBaseVersion();
+               if (version >= 0 || base->GetBaseCheckSum() == 0) {
+                  infobase = (TStreamerInfo*)baseclass->GetStreamerInfoAbstractEmulated(version);
+               } else {
+                  infobase = (TStreamerInfo*)baseclass->FindStreamerInfoAbstractEmulated(base->GetBaseCheckSum());
+               }
                if (infobase) baseclass = infobase->GetClass();
             }
             else {
-               infobase = (TStreamerInfo*)baseclass->GetStreamerInfo(version);
+               infobase = (TStreamerInfo*)base->GetBaseStreamerInfo();
             }
+
             if (infobase && infobase->GetTypes() == 0) {
                infobase->BuildOld();
             }
