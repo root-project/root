@@ -3939,6 +3939,66 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
 }
 
 //______________________________________________________________________________
+TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) const
+{
+   // For the case where the requestor class is emulated and this class is abstract,
+   // returns a pointer to the TVirtualStreamerInfo object for version with an emulated
+   // representation whether or not the class is loaded.
+   //
+   // If the object does not exist, it is created
+   //
+   // Warning:  If we create a new streamer info, whether or not the build
+   //           optimizes is controlled externally to us by a global variable!
+   //           Don't call us unless you have set that variable properly
+   //           with TStreamer::Optimize()!
+   //
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   TString newname( GetName() );
+   newname += "@@emulated";
+
+   TClass *emulated = TClass::GetClass(newname);
+
+   TVirtualStreamerInfo* sinfo = 0;
+
+   if (emulated) {
+      sinfo = emulated->FindStreamerInfo(checksum);
+   }
+   if (!sinfo) {
+      // The emulated version of the streamerInfo is explicitly requested and has
+      // not been built yet.
+
+      sinfo = (TVirtualStreamerInfo*) FindStreamerInfo(checksum);
+      if (!sinfo && (checksum != fCheckSum)) {
+         // When the requested version does not exist we return
+         // the TVirtualStreamerInfo for the currently loaded class version.
+         // FIXME: This arguably makes no sense, we should warn and return nothing instead.
+         sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
+      }
+      if (!sinfo) {
+         // Let's take the first available StreamerInfo as a start
+         Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
+            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
+         }
+      }
+      if (sinfo) {
+         sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
+         if (sinfo) {
+            sinfo->SetClass(0);
+            sinfo->SetName( newname );
+            sinfo->BuildCheck();
+            sinfo->BuildOld();
+            sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
+         } else
+            Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+      }
+   }
+   return sinfo;
+}
+
+//______________________________________________________________________________
 void TClass::IgnoreTObjectStreamer(Bool_t doIgnore)
 {
    //  When the class kIgnoreTObjectStreamer bit is set, the automatically
