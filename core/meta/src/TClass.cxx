@@ -5641,6 +5641,8 @@ TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
 
+   if (fCheckSum == checksum) return GetStreamerInfo();
+
    Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;++i) {
       // TClass::fStreamerInfos has a lower bound not equal to 0,
