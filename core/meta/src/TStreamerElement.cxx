@@ -548,7 +548,10 @@ void TStreamerElement::Update(const TClass *oldClass, TClass *newClass)
 ClassImp(TStreamerBase)
 
 //______________________________________________________________________________
-TStreamerBase::TStreamerBase() : fStreamerFunc(0)
+TStreamerBase::TStreamerBase() :
+   // Abuse TStreamerElement data member that is not used by TStreamerBase
+   fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
+   fStreamerFunc(0), fStreamerInfo(0)
 {
    // Default ctor.
 
@@ -559,7 +562,11 @@ TStreamerBase::TStreamerBase() : fStreamerFunc(0)
 
 //______________________________________________________________________________
 TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
-        : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE"),fStreamerFunc(0)
+   : TStreamerElement(name,title,offset,TVirtualStreamerInfo::kBase,"BASE"),
+     // Abuse TStreamerElement data member that is not used by TStreamerBase
+     fBaseCheckSum( *( (UInt_t*)&(fMaxIndex[1]) ) ),
+     fStreamerFunc(0), fStreamerInfo(0)
+
 {
    // Create a TStreamerBase object.
 
@@ -567,8 +574,14 @@ TStreamerBase::TStreamerBase(const char *name, const char *title, Int_t offset)
    if (strcmp(name,"TNamed")  == 0) fType = TVirtualStreamerInfo::kTNamed;
    fNewType = fType;
    fBaseClass = TClass::GetClass(GetName());
-   if (fBaseClass) fBaseVersion = fBaseClass->GetClassVersion();
-   else fBaseVersion = 0;
+   if (fBaseClass) {
+      if (fBaseClass->IsVersioned()) {
+         fBaseVersion = fBaseClass->GetClassVersion();
+      } else {
+         fBaseVersion = -1;
+      }
+      fBaseCheckSum = fBaseClass->GetCheckSum();
+   } else fBaseVersion = 0;
    fNewBaseClass = 0;
    Init();
 }
@@ -603,18 +616,35 @@ void TStreamerBase::Init(TObject *)
 {
    // Setup the element.
 
-   if (fType == TVirtualStreamerInfo::kTObject || fType == TVirtualStreamerInfo::kTNamed) return;
    fBaseClass = TClass::GetClass(GetName());
    if (!fBaseClass) return;
-   if (!fBaseClass->GetListOfMethods(kFALSE)->FindObject("StreamerNVirtual")) {
-      // the function does not exist or has not been loaded yet, let's check.
-      TMethod *m = fBaseClass->GetMethodWithPrototype("StreamerNVirtual","TBuffer&");
-      if (!m || m->GetClass() != fBaseClass) {
-         // StreamerNVirtual is not defined in the base class.
-         return;
+
+   InitStreaming();
+}
+
+//______________________________________________________________________________
+void TStreamerBase::InitStreaming()
+{
+   // Setup the fStreamerFunc and fStreamerinfo
+
+   if (fNewBaseClass) {
+      fStreamerFunc = fNewBaseClass->GetStreamerFunc();
+      if (fBaseVersion > 0 || fBaseClass == 0) {
+         fStreamerInfo = fNewBaseClass->GetConversionStreamerInfo(fBaseClass,fBaseVersion);
+      } else {
+         fStreamerInfo = fNewBaseClass->FindConversionStreamerInfo(fBaseClass,fBaseCheckSum);
       }
+   } else if (fBaseClass && fBaseClass != (TClass*)-1) {
+      fStreamerFunc = fBaseClass->GetStreamerFunc();
+      if (fBaseVersion >= 0 || fBaseClass == 0) {
+         fStreamerInfo = fBaseClass->GetStreamerInfo(fBaseVersion);
+      } else {
+         fStreamerInfo = fBaseClass->FindStreamerInfo(fBaseCheckSum);
+      }
+   } else {
+      fStreamerFunc = 0;
+      fStreamerInfo = 0;
    }
-   fStreamerFunc = fBaseClass->GetStreamerFunc();
 }
 
 //______________________________________________________________________________
@@ -707,6 +737,8 @@ void TStreamerBase::Streamer(TBuffer &R__b)
       // yet emulated.
       fBaseClass = (TClass*)-1;
       fNewBaseClass = 0;
+      // Eventually we need a v3 that stores directly fBaseCheckSum (and
+      // a version of TStreamerElement should not stored fMaxIndex)
       if (R__v > 2) {
          R__b.ClassMember("fBaseVersion","Int_t");
          R__b >> fBaseVersion;
@@ -742,11 +774,7 @@ void TStreamerBase::Update(const TClass *oldClass, TClass *newClass)
        fClassObject && fClassObject->InheritsFrom(TObject::Class())) {
       fTObjectOffset = fClassObject->GetBaseClassOffset(TObject::Class());
    }
-   if (fBaseClass && fBaseClass != (TClass*)-1) {
-      fStreamerFunc = fBaseClass->GetStreamerFunc();
-   } else {
-      fStreamerFunc = 0;
-   }
+   InitStreaming();
 }
 
 //______________________________________________________________________________
