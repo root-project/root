@@ -3833,6 +3833,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
       // FIXME: This arguably makes no sense, we should warn and return nothing instead.
       // Note: This is done for STL collections
       // Note: fClassVersion could be -1 here (for an emulated class).
+      // This is also the code path take for unversioned classes.
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
