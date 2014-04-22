@@ -18,16 +18,8 @@
 #include "TClass.h"
 #include "TStreamerInfo.h"
 
-TFile* gDictFile = 0;
-
-/*
-  Done by ~TROOT() before.
-struct DictFileCloser {
-   ~DictFileCloser() {
-      delete gDictFile;
-   }
-} dictFileCloser;
-*/
+std::string gPCMFilename;
+TObjArray gStreamerInfos;
 
 extern "C"
 cling::Interpreter* TCling__GetInterpreter()
@@ -44,17 +36,17 @@ cling::Interpreter* TCling__GetInterpreter()
 extern "C"
 void InitializeStreamerInfoROOTFile(const char* filename)
 {
-   // Don't use TFile::Open(); we don't need plugins.
-   gDictFile = new TFile(filename, "RECREATE");
-   // Instead of plugins:
+   gPCMFilename = filename;
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 }
 
 extern "C"
 void CloseStreamerInfoROOTFile()
 {
-   delete gDictFile;
-   gDictFile = 0;
+   // Don't use TFile::Open(); we don't need plugins.
+   TFile dictFile(gPCMFilename.c_str(), "RECREATE");
+   // Instead of plugins:
+   gStreamerInfos.Write("__StreamerInfoOffsets", TObject::kSingleKey);
 }
 
 extern "C"
@@ -64,10 +56,10 @@ bool AddStreamerInfoToROOTFile(const char* normName)
    if (!cl)
       return false;
    TVirtualStreamerInfo* SI = cl->GetStreamerInfo();
-   //FIXME: merge with TStreamerOffsets branch, then:
-   // SI->BuildOffsets();
    if (!SI)
       return false;
-   SI->ForceWriteInfo(gDictFile, true);
+   //FIXME: merge with TStreamerOffsets branch, then:
+   // SI->BuildOffsets();
+   gStreamerInfos.AddLast(SI);
    return true;
 }
