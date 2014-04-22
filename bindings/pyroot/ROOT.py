@@ -2,7 +2,7 @@ from __future__ import generators
 # @(#)root/pyroot:$Id$
 # Author: Wim Lavrijsen (WLavrijsen@lbl.gov)
 # Created: 02/20/03
-# Last: 02/06/14
+# Last: 04/22/14
 
 """PyROOT user module.
 
@@ -610,6 +610,7 @@ def cleanup():
    sys.displayhook = sys.__displayhook__
    if not '__IPYTHON__' in __builtins__:
       sys.excepthook = sys.__excepthook__
+   __builtin__.__import__ = _orig_ihook
 
    facade = sys.modules[ __name__ ]
 
