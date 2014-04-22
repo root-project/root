@@ -265,15 +265,18 @@ namespace genreflex {
 }
 
 //______________________________________________________________________________
+#ifndef ROOT_STAGE1_BUILD
 static void EmitStreamerInfo(const char* normName)
 {
-#ifndef ROOT_STAGE1_BUILD
    if (!AddStreamerInfoToROOTFile(normName)) {
       std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
                 << normName << '\n';
    }
-#endif
+
 }
+#else
+static void EmitStreamerInfo(const char*) {}
+#endif
 
 //______________________________________________________________________________
 static void GetCurrentDirectory(std::string &output)
