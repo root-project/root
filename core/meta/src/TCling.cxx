@@ -1203,9 +1203,12 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   // Might be pulled in through PCH
+   // rootcling also uses TCling for generating the dictionary ROOT files.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   // __ROOTCLING__ might be pulled in through PCH
    fInterpreter->declare("#ifdef __ROOTCLING__\n"
-                         "#undef __ROOTCLING__\n" + gInterpreterClassDef +
+                         "#undef __ROOTCLING__\n"
+                         + (fromRootCling ? "" : gInterpreterClassDef) +
                          "#endif");
 
    if (dyLibName) {
