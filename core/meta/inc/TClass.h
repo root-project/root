@@ -87,8 +87,9 @@ public:
       kCurrentCheckSum = 0,
       kNoEnum          = 1, // Used since v3.3
       kNoRange         = 2, // Up to v5.17
-      kWithTypeDef     = 3, // Up to v5.99/03
-      kLatestCheckSum  = 4
+      kWithTypeDef     = 3, // Up to v5.34.18 and v5.99/06
+      kNoBaseCheckSum  = 4, // Up to v5.34.18 and v5.99/06
+      kLatestCheckSum  = 5
    };
 
 private:

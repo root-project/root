@@ -2852,6 +2852,10 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
          name = el->GetName();
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
+         if (code > TClass::kNoBaseCheckSum && el->IsA() == TStreamerBase::Class()) {
+            TStreamerBase *base = (TStreamerBase*)el;
+            id = id*3 + base->GetBaseCheckSum();
+         }
       }
    } /* End of Base Loop */
 
