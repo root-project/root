@@ -1611,11 +1611,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  If somebody modifies this function, may be similar changes should also
    //  be applied to TBox::ExecuteEvent.
 
-   static Double_t xmin;
-   static Double_t xmax;
-   static Double_t ymin;
-   static Double_t ymax;
-
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
    static Int_t pxorg, pyorg;
@@ -1636,13 +1631,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (fXlowNDC < 0 && event != kButton1Down) return;
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
-   // keep old range and mouse position
+   // keep old mouse position
    if (event == kButton1Down) {
-      xmin = fX1;
-      xmax = fX2;
-      ymin = fY1;
-      ymax = fY2;
-
       pxorg = px;
       pyorg = py;
    }
