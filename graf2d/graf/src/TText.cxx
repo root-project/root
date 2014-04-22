@@ -151,7 +151,7 @@ Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
    cBoxX[4] = cBoxX[0];
 
    // Check if the point (px,py) is inside the text control box
-   if(TMath::IsInside(px, py, 5, cBoxX, cBoxY)){
+   if (TMath::IsInside(px, py, 5, cBoxX, cBoxY)){
       return 0;
    } else {
       return 9999;
@@ -354,6 +354,9 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       if (opaque) {
          this->SetX(gPad->PadtoX(gPad->AbsPixeltoX(px1)));
          this->SetY(gPad->PadtoY(gPad->AbsPixeltoY(py1)));
+         if (resize) gPad->ShowGuidelines(this, event, 't', false);
+         if ((!resize)&&(!turn)) gPad->ShowGuidelines(this, event, 'i', true);
+         gPad->ShowGuidelines(this, event, !resize&!turn);
          this->SetTextAngle(theta);
          gPad->Modified(kTRUE);
          gPad->Update();
@@ -363,18 +366,22 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       break;
 
    case kButton1Up:
-      if (TestBit(kTextNDC)) {
-         dpx  = gPad->GetX2() - gPad->GetX1();
-         dpy  = gPad->GetY2() - gPad->GetY1();
-         xp1  = gPad->GetX1();
-         yp1  = gPad->GetY1();
-         fX = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
-         fY = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
+      if (opaque) {
+         gPad->ShowGuidelines(this, event, !resize&!turn);
       } else {
-         fX = gPad->PadtoX(gPad->AbsPixeltoX(px1));
-         fY = gPad->PadtoY(gPad->AbsPixeltoY(py1));
+         if (TestBit(kTextNDC)) {
+            dpx  = gPad->GetX2() - gPad->GetX1();
+            dpy  = gPad->GetY2() - gPad->GetY1();
+            xp1  = gPad->GetX1();
+            yp1  = gPad->GetY1();
+            fX = (gPad->AbsPixeltoX(px1)-xp1)/dpx;
+            fY = (gPad->AbsPixeltoY(py1)-yp1)/dpy;
+         } else {
+            fX = gPad->PadtoX(gPad->AbsPixeltoX(px1));
+            fY = gPad->PadtoY(gPad->AbsPixeltoY(py1));
+         }
+         fTextAngle = theta;
       }
-      fTextAngle = theta;
       gPad->Modified(kTRUE);
       break;
 
@@ -854,4 +861,107 @@ void TText::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TText::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+Rectangle_t TText::GetBBox()
+{
+   // Return the "bounding Box" of the Box
+
+   UInt_t w, h;
+   Int_t Dx, Dy;
+   Dx = Dy = 0;
+   GetBoundingBox(w, h, false);
+
+   Short_t halign = fTextAlign/10;
+   Short_t valign = fTextAlign - 10*halign;
+
+   switch (halign) {
+      case 1 : Dx = 0      ; break;
+      case 2 : Dx = -w/2   ; break;
+      case 3 : Dx = -w     ; break;
+   }
+   switch (valign) {
+      case 1 : Dy = -h     ; break;
+      case 2 : Dy = -h/2   ; break;
+      case 3 : Dy = 0      ; break;
+   }
+
+   Rectangle_t BBox;
+   BBox.fX = gPad->XtoPixel(fX)+Dx;
+   BBox.fY = gPad->YtoPixel(fY)+Dy;
+   BBox.fWidth = w;
+   BBox.fHeight = h;
+   return (BBox);
+}
+
+//______________________________________________________________________________
+TPoint TText::GetBBoxCenter()
+{
+   // Return the point given by Alignment as 'center'
+
+   TPoint p;
+   p.SetX(gPad->XtoPixel(fX));
+   p.SetY(gPad->YtoPixel(fY));
+   return(p);
+}
+
+//______________________________________________________________________________
+void TText::SetBBoxCenter(const TPoint &p)
+{
+   // Set the point given by Alignment as 'center'
+
+   this->SetX(gPad->PixeltoX(p.GetX()));
+   this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
+}
+
+//______________________________________________________________________________
+void TText::SetBBoxCenterX(const Int_t x)
+{
+   // Set X coordinate of the point given by Alignment as 'center'
+
+   this->SetX(gPad->PixeltoX(x));
+}
+
+//______________________________________________________________________________
+void TText::SetBBoxCenterY(const Int_t y)
+{
+   // Set Y coordinate of the point given by Alignment as 'center'
+
+   this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
+}
+
+//______________________________________________________________________________
+void TText::SetBBoxX1(const Int_t /*x*/)
+{
+   // Set lefthandside of BoundingBox to a value
+   // (resize in x direction on left)
+
+   //NOT IMPLEMENTED
+}
+
+//______________________________________________________________________________
+void TText::SetBBoxX2(const Int_t /*x*/)
+{
+   // Set righthandside of BoundingBox to a value
+   // (resize in x direction on right)
+
+   //NOT IMPLEMENTED
+}
+
+//_______________________________________________________________________________
+void TText::SetBBoxY1(const Int_t /*y*/)
+{
+   // Set top of BoundingBox to a value (resize in y direction on top)
+
+   //NOT IMPLEMENTED
+}
+
+//_______________________________________________________________________________
+void TText::SetBBoxY2(const Int_t /*y*/)
+{
+   // Set bottom of BoundingBox to a value
+   // (resize in y direction on bottom)
+
+   //NOT IMPLEMENTED
 }

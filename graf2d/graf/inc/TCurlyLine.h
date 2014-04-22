@@ -11,7 +11,6 @@
 #ifndef ROOT_TCurlyLine
 #define ROOT_TCurlyLine
 
-//
 // This class implements a curly or wavy polyline typically
 // used to draw Feynman diagrams.
 
@@ -21,8 +20,16 @@
 #ifndef ROOT_TPolyLine
 #include "TPolyLine.h"
 #endif
+#ifndef ROOT_TAttBBox2D
+#include "TAttBBox2D.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
-class TCurlyLine : public TPolyLine {
+class TPoint;
+
+class TCurlyLine : public TPolyLine , public TAttBBox2D {
 
 protected:
    Double_t fX1;             // start x, center for arc
@@ -39,10 +46,6 @@ protected:
    static Bool_t   fgDefaultIsCurly;      //default curly type
 
 public:
-   // TCurlyLine status bits
-   enum {
-      kTooShort = BIT(11)
-   };
    TCurlyLine();
    TCurlyLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
               Double_t wl = .02,
@@ -72,8 +75,17 @@ public:
    static Double_t GetDefaultWaveLength();
    static Double_t GetDefaultAmplitude ();
    static Bool_t   GetDefaultIsCurly   ();
+   virtual Rectangle_t  GetBBox();
+   virtual TPoint       GetBBoxCenter();
+   virtual void         SetBBoxCenter(const TPoint &p);
+   virtual void         SetBBoxCenterX(const Int_t x);
+   virtual void         SetBBoxCenterY(const Int_t y);
+   virtual void         SetBBoxX1(const Int_t x);
+   virtual void         SetBBoxX2(const Int_t x);
+   virtual void         SetBBoxY1(const Int_t y);
+   virtual void         SetBBoxY2(const Int_t y);
 
-   ClassDef(TCurlyLine,2) // A curly polyline
+   ClassDef(TCurlyLine,3) // A curly polyline
 };
 
 #endif

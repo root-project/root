@@ -229,6 +229,7 @@ public:
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
    virtual void     SetView(TView *view=0) = 0;
    virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
+   virtual void     ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;
@@ -251,9 +252,9 @@ public:
    virtual Bool_t            HasViewer3D() const = 0;
    virtual void              ReleaseViewer3D(Option_t * type = "")  = 0;
 
-   virtual Int_t    GetGLDevice() = 0;
+   virtual Int_t               GetGLDevice() = 0;
+   virtual void                SetCopyGLDevice(Bool_t copy) = 0;
    virtual TVirtualPadPainter *GetPainter() = 0;
-   virtual void     SetCopyGLDevice(Bool_t copy) = 0;
    
    virtual Bool_t PadInSelectionMode() const;
    virtual Bool_t PadInHighlightMode() const;
