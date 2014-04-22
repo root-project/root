@@ -29,6 +29,7 @@
 #include "QuartzPixmap.h"
 #include "QuartzUtils.h"
 #include "CocoaUtils.h"
+#include "RConfigure.h"
 #include "X11Colors.h"
 #include "X11Buffer.h"
 #include "X11Events.h"
@@ -36,7 +37,7 @@
 #include "TGClient.h"
 #include "TSystem.h"
 #include "TGCocoa.h"
-#include "RConfigure.h"
+
 
 namespace ROOT {
 namespace MacOSX {
