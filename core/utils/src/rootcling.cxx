@@ -3755,12 +3755,10 @@ int RootCling(int argc,
 #endif
 
 #ifndef ROOT_STAGE1_BUILD
-   // (clingArgsC.size(), &clingArgsC[0], resourceDir.c_str())
    cling::Interpreter& interp = *TCling__GetInterpreter();
 #else
    // cling-only arguments
-   std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT);
-   clingArgs.push_back(interpInclude);
+   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-Xclang");
@@ -3828,6 +3826,7 @@ int RootCling(int argc,
 
    std::string interpPragmaSource;
    std::string includeForSource;
+   std::string interpreterDeclarations;
    string esc_arg;
    int firstInputFile = 0;
    int linkdefLoc = 0;
@@ -3881,10 +3880,8 @@ int RootCling(int argc,
             if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
-            } else if (!IsSelectionXml(argv[i]) && interp.declare(std::string("#include \"") + header + "\"\n")
-                     != cling::Interpreter::kSuccess) {
-               ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
-               return 1;
+            } else if (!IsSelectionXml(argv[i])) {
+               interpreterDeclarations += std::string("#include \"") + header + "\"\n";
             }
          }
       }
@@ -3914,9 +3911,25 @@ int RootCling(int argc,
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
         dPrIt != diagnosticPragmas.end(); dPrIt++){
-           interp.declare(*dPrIt);
-      }   
+      interp.declare(*dPrIt);
+   }
    modGen.ParseArgs(pcmArgs);
+#ifndef ROOT_STAGE1_BUILD
+   // Forward the -I, -D, -U
+   for (const std::string& inclPath: modGen.GetIncludePaths()) {
+      interp.AddIncludePath(inclPath);
+   }
+   std::stringstream definesUndefinesStr;
+   modGen.WritePPDefines(definesUndefinesStr);
+   modGen.WritePPUndefines(definesUndefinesStr);
+   interp.declare(definesUndefinesStr.str());
+#endif
+
+   if (interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
+      return 1;
+   }
+
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
        || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
       return 1;
