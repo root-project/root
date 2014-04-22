@@ -3197,7 +3197,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          Int_t ci = TColor::GetColor("#7d7dff");
          TColor *zoomcolor = gROOT->GetColor(ci);
          if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
-         else                          zoomcolor->SetAlpha(0.13);
+         else                          zoomcolor->SetAlpha(0.5);
          zoombox->SetFillColor(ci);
          zoombox->Draw();
          gPad->Modified();
@@ -3339,6 +3339,7 @@ void THistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
    }
 }
+
 
 //______________________________________________________________________________
 TList *THistPainter::GetContourList(Double_t contour) const
