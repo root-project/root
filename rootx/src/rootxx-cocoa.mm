@@ -29,6 +29,7 @@
 #include <Cocoa/Cocoa.h>
 
 #include "CocoaUtils.h"
+#include "RConfigure.h"
 #include "RVersion.h"
 
 //
