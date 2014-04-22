@@ -5676,8 +5676,10 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    //     +--------------------------------------------+
    //    4                    b                         3
 
-   // When the object is moved with arrow we do not want to show guide lines. 
-   if ((event == kArrowKeyRelease) || (event == kArrowKeyPress)) return;
+   // When the object is moved with arrow or when the ShowGuideLines flag
+   // is off we do show guide lines. 
+   if ((event == kArrowKeyRelease) || (event == kArrowKeyPress) ||
+       !gEnv->GetValue("Canvas.ShowGuideLines", 0)) return;
 
    std::vector<dField> curDist;
    std::vector<dField> otherDist;

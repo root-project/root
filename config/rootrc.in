@@ -123,6 +123,7 @@ Root.Fitter:             Minuit
 # on mouse and key events.
 Canvas.MoveOpaque:          true
 Canvas.ResizeOpaque:        true
+Canvas.ShowGuideLines:      true
 Canvas.UseScreenFactor:     false
 Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
