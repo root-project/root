@@ -18,6 +18,7 @@
 #include "TVirtualX.h"
 #include "TClass.h"
 #include "TMath.h"
+#include "TPoint.h"
 
 
 ClassImp(TBox)
@@ -248,13 +249,10 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Bool_t pA, pB, pC, pD, pTop, pL, pR, pBot, pINSIDE;
    Int_t  wx, wy;
    TVirtualPad  *parent = gPad;
-   Bool_t doing_again = kFALSE;
    Bool_t opaque  = gPad->OpaqueMoving();
    Bool_t ropaque = gPad->OpaqueResizing();
 
    HideToolTip(event);
-
-again:
 
    switch (event) {
 
@@ -476,10 +474,48 @@ again:
       pxold = px;
       pyold = py;
 
+
       if ((pINSIDE && opaque) || (fResizing && ropaque)) {
-         event = kButton1Up;
-         doing_again = kTRUE;
-         goto again;
+         if (pA) {
+            fX1 = gPad->AbsPixeltoX(pxold);
+            fY1 = gPad->AbsPixeltoY(pyt);
+            fX2 = gPad->AbsPixeltoX(pxt);
+            fY2 = gPad->AbsPixeltoY(pyold);
+         }
+         if (pB) {
+            fX1 = gPad->AbsPixeltoX(pxl);
+            fY1 = gPad->AbsPixeltoY(pyt);
+            fX2 = gPad->AbsPixeltoX(pxold);
+            fY2 = gPad->AbsPixeltoY(pyold);
+         }
+         if (pC) {
+            fX1 = gPad->AbsPixeltoX(pxl);
+            fY1 = gPad->AbsPixeltoY(pyold);
+            fX2 = gPad->AbsPixeltoX(pxold);
+            fY2 = gPad->AbsPixeltoY(pyl);
+         }
+         if (pD) {
+            fX1 = gPad->AbsPixeltoX(pxold);
+            fY1 = gPad->AbsPixeltoY(pyold);
+            fX2 = gPad->AbsPixeltoX(pxt);
+            fY2 = gPad->AbsPixeltoY(pyl);
+         }
+         if (pTop || pBot || pL || pR || pINSIDE) {
+            fX1 = gPad->AbsPixeltoX(px1);
+            fY1 = gPad->AbsPixeltoY(py1);
+            fX2 = gPad->AbsPixeltoX(px2);
+            fY2 = gPad->AbsPixeltoY(py2);
+         }
+         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);         
+         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
+         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
+         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
+         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
+         if (pA) gPad->ShowGuidelines(this, event, '1', true);
+         if (pB) gPad->ShowGuidelines(this, event, '2', true);
+         if (pC) gPad->ShowGuidelines(this, event, '3', true);
+         if (pD) gPad->ShowGuidelines(this, event, '4', true);
+         gPad->Modified(kTRUE);
       }
 
       break;
@@ -498,50 +534,54 @@ again:
          break;
       }
 
-      if (px1 < 0 ) break;
-      if (pA) {
-         fX1 = gPad->AbsPixeltoX(pxold);
-         fY1 = gPad->AbsPixeltoY(pyt);
-         fX2 = gPad->AbsPixeltoX(pxt);
-         fY2 = gPad->AbsPixeltoY(pyold);
-      }
-      if (pB) {
-         fX1 = gPad->AbsPixeltoX(pxl);
-         fY1 = gPad->AbsPixeltoY(pyt);
-         fX2 = gPad->AbsPixeltoX(pxold);
-         fY2 = gPad->AbsPixeltoY(pyold);
-      }
-      if (pC) {
-         fX1 = gPad->AbsPixeltoX(pxl);
-         fY1 = gPad->AbsPixeltoY(pyold);
-         fX2 = gPad->AbsPixeltoX(pxold);
-         fY2 = gPad->AbsPixeltoY(pyl);
-      }
-      if (pD) {
-         fX1 = gPad->AbsPixeltoX(pxold);
-         fY1 = gPad->AbsPixeltoY(pyold);
-         fX2 = gPad->AbsPixeltoX(pxt);
-         fY2 = gPad->AbsPixeltoY(pyl);
-      }
-      if (pTop || pBot || pL || pR || pINSIDE) {
-         fX1 = gPad->AbsPixeltoX(px1);
-         fY1 = gPad->AbsPixeltoY(py1);
-         fX2 = gPad->AbsPixeltoX(px2);
-         fY2 = gPad->AbsPixeltoY(py2);
+      if (opaque || ropaque) {
+         gPad->ShowGuidelines(this, event);
+      } else {
+         if (px1 < 0 ) break;
+         if (pA) {
+            fX1 = gPad->AbsPixeltoX(pxold);
+            fY1 = gPad->AbsPixeltoY(pyt);
+            fX2 = gPad->AbsPixeltoX(pxt);
+            fY2 = gPad->AbsPixeltoY(pyold);
+         }
+         if (pB) {
+            fX1 = gPad->AbsPixeltoX(pxl);
+            fY1 = gPad->AbsPixeltoY(pyt);
+            fX2 = gPad->AbsPixeltoX(pxold);
+            fY2 = gPad->AbsPixeltoY(pyold);
+         }
+         if (pC) {
+            fX1 = gPad->AbsPixeltoX(pxl);
+            fY1 = gPad->AbsPixeltoY(pyold);
+            fX2 = gPad->AbsPixeltoX(pxold);
+            fY2 = gPad->AbsPixeltoY(pyl);
+         }
+         if (pD) {
+            fX1 = gPad->AbsPixeltoX(pxold);
+            fY1 = gPad->AbsPixeltoY(pyold);
+            fX2 = gPad->AbsPixeltoX(pxt);
+            fY2 = gPad->AbsPixeltoY(pyl);
+         }
+         if (pTop || pBot || pL || pR || pINSIDE) {
+            fX1 = gPad->AbsPixeltoX(px1);
+            fY1 = gPad->AbsPixeltoY(py1);
+            fX2 = gPad->AbsPixeltoX(px2);
+            fY2 = gPad->AbsPixeltoY(py2);
+         }
+
+         if (pINSIDE) {
+            // if it was not a pad that was moved then it must have been
+            // a box or something like that so we have to redraw the pad
+           if (parent == gPad) gPad->Modified(kTRUE);
+         }
       }
 
-      if (pINSIDE) {
-         // if it was not a pad that was moved then it must have been
-         // a box or something like that so we have to redraw the pad
-         if (parent == gPad) gPad->Modified(kTRUE);
-         if (!doing_again) gPad->SetCursor(kCross);
+      if (pA || pB || pC || pD || pTop || pL || pR || pBot) gPad->Modified(kTRUE);
+
+      if (!opaque) {
+         gVirtualX->SetLineColor(-1);
+         gVirtualX->SetLineWidth(-1);
       }
-
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
-         gPad->Modified(kTRUE);
-
-      gVirtualX->SetLineColor(-1);
-      gVirtualX->SetLineWidth(-1);
 
       break;
 
@@ -708,4 +748,131 @@ void TBox::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TBox::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+Rectangle_t TBox::GetBBox()
+{
+   // Return the "bounding Box" of the Box
+
+   Rectangle_t BBox;
+   Int_t px1, py1, px2, py2;
+   px1 = gPad->XtoPixel(fX1);
+   px2 = gPad->XtoPixel(fX2);
+   py1 = gPad->YtoPixel(fY1);
+   py2 = gPad->YtoPixel(fY2);
+   
+   Int_t tmp;
+   if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
+   if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
+   
+   BBox.fX = px1;
+   BBox.fY = py1;
+   BBox.fWidth = px2-px1; 
+   BBox.fHeight = py2-py1;
+
+   return (BBox);
+}
+
+
+//______________________________________________________________________________
+TPoint TBox::GetBBoxCenter()
+{
+   // Return the center of the Box as TPoint in pixels
+
+   TPoint p;
+   p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
+   p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
+   return(p);
+}
+
+
+//______________________________________________________________________________
+void TBox::SetBBoxCenter(const TPoint &p)
+{
+   // Set center of the Box
+
+   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
+   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
+   if (fX2>fX1) {
+      this->SetX1(gPad->PixeltoX(p.GetX())-0.5*w);
+      this->SetX2(gPad->PixeltoX(p.GetX())+0.5*w);
+   }
+   else {
+      this->SetX2(gPad->PixeltoX(p.GetX())-0.5*w);
+      this->SetX1(gPad->PixeltoX(p.GetX())+0.5*w);
+   }
+   if (fY2>fY1) {
+      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
+      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
+   }
+   else {
+      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
+      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
+   }
+}
+
+
+//______________________________________________________________________________
+void TBox::SetBBoxCenterX(const Int_t x)
+{
+   // Set X coordinate of the center of the Box
+
+   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
+   if (fX2>fX1) {
+      this->SetX1(gPad->PixeltoX(x)-0.5*w);
+      this->SetX2(gPad->PixeltoX(x)+0.5*w);
+   }
+   else {
+      this->SetX2(gPad->PixeltoX(x)-0.5*w);
+      this->SetX1(gPad->PixeltoX(x)+0.5*w);
+   }
+}
+
+
+//______________________________________________________________________________
+void TBox::SetBBoxCenterY(const Int_t y)
+{
+   // Set Y coordinate of the center of the Box
+
+   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
+   if (fY2>fY1) {
+      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
+      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
+   }
+   else {
+      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
+      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
+   }
+}
+
+//______________________________________________________________________________
+void TBox::SetBBoxX1(const Int_t x)
+{
+   // Set lefthandside of BoundingBox to a value
+   // (resize in x direction on left)
+   fX1 = gPad->PixeltoX(x);
+}
+
+//______________________________________________________________________________
+void TBox::SetBBoxX2(const Int_t x)
+{
+   // Set righthandside of BoundingBox to a value
+   // (resize in x direction on right)
+   fX2 = gPad->PixeltoX(x);
+}
+
+//_______________________________________________________________________________
+void TBox::SetBBoxY1(const Int_t y)
+{
+   // Set top of BoundingBox to a value (resize in y direction on top)
+   fY2 = gPad->PixeltoY(y - gPad->VtoPixel(0));
+}
+
+//_______________________________________________________________________________
+void TBox::SetBBoxY2(const Int_t y)
+{
+   // Set bottom of BoundingBox to a value
+   // (resize in y direction on bottom)
+   fY1 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }

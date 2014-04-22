@@ -11,7 +11,12 @@
 #ifndef ROOT_TCurlyArc
 #define ROOT_TCurlyArc
 
-//
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
+
+class TPoint;
+
 // This class implements a curly or wavy arc typically used
 // to draw Feynman diagrams.
 
@@ -47,14 +52,23 @@ public:
    virtual void SetPhimax(Double_t phimax);          // *MENU* *ARGS={phimax=>fPhimax}
    virtual void SavePrimitive(ostream &out, Option_t * = "");
 
-   static void     SetDefaultWaveLength(Double_t WaveLength); 
-   static void     SetDefaultAmplitude (Double_t Amplitude );    
-   static void     SetDefaultIsCurly   (Bool_t   IsCurly   );      
-   static Double_t GetDefaultWaveLength();  
-   static Double_t GetDefaultAmplitude (); 
-   static Bool_t   GetDefaultIsCurly   ();
+   static void          SetDefaultWaveLength(Double_t WaveLength); 
+   static void          SetDefaultAmplitude (Double_t Amplitude );    
+   static void          SetDefaultIsCurly   (Bool_t   IsCurly   );      
+   static Double_t      GetDefaultWaveLength();  
+   static Double_t      GetDefaultAmplitude (); 
+   static Bool_t        GetDefaultIsCurly   ();
+   virtual Rectangle_t  GetBBox();
+   virtual TPoint       GetBBoxCenter();
+   virtual void         SetBBoxCenter(const TPoint &p);
+   virtual void         SetBBoxCenterX(const Int_t x);
+   virtual void         SetBBoxCenterY(const Int_t y);
+   virtual void         SetBBoxX1(const Int_t x);
+   virtual void         SetBBoxX2(const Int_t x);
+   virtual void         SetBBoxY1(const Int_t y);
+   virtual void         SetBBoxY2(const Int_t y);
 
-   ClassDef(TCurlyArc,2) // A curly arc
+   ClassDef(TCurlyArc,3) // A curly arc
 };
 
 #endif

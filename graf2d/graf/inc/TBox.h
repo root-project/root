@@ -30,8 +30,16 @@
 #ifndef ROOT_TAttFill
 #include "TAttFill.h"
 #endif
+#ifndef ROOT_TAttBBox2D
+#include "TAttBBox2D.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
-class TBox : public TObject, public TAttLine, public TAttFill {
+class TPoint;
+
+class TBox : public TObject, public TAttLine, public TAttFill, public TAttBBox2D {
 
 private:
    TObject     *fTip;          //!tool tip associated with box
@@ -44,7 +52,7 @@ protected:
    Bool_t       fResizing;     //!True if box is being resized
 
 public:
-   //----- Private bits, clients can only test but not change them
+   // Private bits, clients can only test but not change them
    enum {
       kCannotMove    = BIT(12)  //if set the box cannot be moved/resized
    };
@@ -75,8 +83,17 @@ public:
    virtual void  SetY1(Double_t y1) {fY1=y1;}
    virtual void  SetY2(Double_t y2) {fY2=y2;}
    virtual void  SetToolTipText(const char *text, Long_t delayms = 1000);
+   virtual Rectangle_t  GetBBox();
+   virtual TPoint       GetBBoxCenter();
+   virtual void         SetBBoxCenter(const TPoint &p);
+   virtual void         SetBBoxCenterX(const Int_t x);
+   virtual void         SetBBoxCenterY(const Int_t y);
+   virtual void         SetBBoxX1(const Int_t x);
+   virtual void         SetBBoxX2(const Int_t x);
+   virtual void         SetBBoxY1(const Int_t y);
+   virtual void         SetBBoxY2(const Int_t y);
 
-   ClassDef(TBox,2)  //Box class
+   ClassDef(TBox,3)  //Box class
 };
 
 #endif

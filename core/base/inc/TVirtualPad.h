@@ -229,6 +229,7 @@ public:
    virtual void     SetVertical(Bool_t vert=kTRUE) = 0;
    virtual void     SetView(TView *view=0) = 0;
    virtual void     SetViewer3D(TVirtualViewer3D * /*viewer3d*/) {}
+   virtual void     ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true) = 0;
    virtual TObject *WaitPrimitive(const char *pname="", const char *emode="") = 0;
    virtual void     Update() = 0;
    virtual Int_t    UtoAbsPixel(Double_t u) const = 0;
