@@ -4966,7 +4966,6 @@ Long_t TClass::Property() const
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
 
-   Long_t dummy;
    TClass *kl = const_cast<TClass*>(this);
 
    kl->fStreamerType = TClass::kDefault;
@@ -4987,8 +4986,11 @@ Long_t TClass::Property() const
 
       kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
 
-      if (!gCling->ClassInfo_HasMethod(fClassInfo,"Streamer") ||
-          !gCling->ClassInfo_IsValidMethod(fClassInfo,"Streamer","TBuffer&",&dummy) ) {
+      // This code used to use ClassInfo_Has|IsValidMethod but since v6
+      // they return true if the routine is defined in the class or any of
+      // its parent.  We explicitly want to know whether the function is
+      // defined locally.
+      if (!const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
 
          kl->SetBit(kIsForeign);
          kl->fStreamerType  = kForeign;
