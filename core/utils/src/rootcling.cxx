@@ -2959,7 +2959,12 @@ int GenerateFullDict(std::ostream& dictStream,
                }
             }
          }
+
+#ifndef ROOT_STAGE1_BUILD
+         CloseStreamerInfoROOTFile();
+#endif
       }
+
       //
       // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
       // first to allow template specialisation to occur before template

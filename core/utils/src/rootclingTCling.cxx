@@ -46,6 +46,13 @@ void InitializeStreamerInfoROOTFile(const char* filename)
 }
 
 extern "C"
+void CloseStreamerInfoROOTFile()
+{
+   delete gDictFile;
+   gDictFile = 0;
+}
+
+extern "C"
 bool AddStreamerInfoToROOTFile(const char* normName)
 {
    TClass* cl = TClass::GetClass(normName, kTRUE /*load*/);

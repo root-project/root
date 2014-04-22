@@ -22,5 +22,6 @@ namespace clang {
 extern "C" {
    cling::Interpreter* TCling__GetInterpreter();
    void InitializeStreamerInfoROOTFile(const char* filename);
+   void CloseStreamerInfoROOTFile();
    bool AddStreamerInfoToROOTFile(const char* normName);
 }
