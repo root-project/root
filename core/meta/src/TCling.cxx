@@ -4328,6 +4328,9 @@ Int_t TCling::AutoLoad(const char* cls)
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       return status;
    }
+   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled ()) {
+      return 0;
+   }
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = SetClassAutoloading(false);
    // Try using externally provided callback first.
