@@ -32,7 +32,12 @@ struct DictFileCloser {
 extern "C"
 cling::Interpreter* TCling__GetInterpreter()
 {
+   static bool sInitialized = false;
    gROOT; // trigger initialization
+   if (!sInitialized) {
+      gCling->SetClassAutoloading(false);
+      sInitialized = true;
+   }
    return ((TCling*)gCling)->GetInterpreter();
 }
 
