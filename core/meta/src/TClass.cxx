@@ -5331,10 +5331,14 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
       TBaseClass *tbc=0;
       while((tbc=(TBaseClass*)nextBase())) {
          name = tbc->GetName();
-         if (TClassEdit::IsSTLCont(name))
+         Bool_t isSTL = TClassEdit::IsSTLCont(name);
+         if (isSTL)
             name = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
+         if (code > kNoBaseCheckSum && !isSTL) {
+            id = id*3 + tbc->GetClassPointer()->GetCheckSum();
+         }
       }/*EndBaseLoop*/
    }
    TList *tlm = ((TClass*)this)->GetListOfDataMembers();
