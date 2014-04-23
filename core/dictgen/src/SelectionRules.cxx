@@ -13,6 +13,9 @@
 \class SelectionRules
 The class representing the collection of selection rules.
 */
+// See Rtypes.h:
+#define R__NO_INLINE_CLASSDEF
+
 #include <iostream>
 #include <sstream>
 #include <algorithm>

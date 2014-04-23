@@ -166,6 +166,9 @@ const char *rootClingHelp =
 
 #include "rootcling_impl.h"
 
+// See Rtypes.h:
+#define R__NO_INLINE_CLASSDEF
+
 #include "RConfigure.h"
 #include "RConfig.h"
 
