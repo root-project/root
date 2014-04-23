@@ -86,6 +86,7 @@ private:
    TGToolTip           *fToolTip;            // tooltip for object info
 
    TVirtualPadEditor   *fEditor;     // pointer to currently loaded pad editor
+   Bool_t               fEmbedded;   // true if embedded in any other frame (e.g. in the browser)
    Int_t                fCanvasID;   // index in fWindows array of TGX11
    Bool_t               fAutoFit;    // when true canvas container keeps same size as canvas
    Int_t                fButton;     // currently pressed button
@@ -144,6 +145,8 @@ public:
    Bool_t   HasStatusBar() const;
    Bool_t   HasToolBar() const;
    Bool_t   HasToolTips() const;
+
+   void     Activated(Int_t id);
 
    TGMenuBar     *GetMenuBar() const { return fMenuBar; }
    TGLayoutHints *GetMenuBarItemLayout() const { return fMenuBarItemLayout; }
