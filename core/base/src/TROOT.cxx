@@ -1639,7 +1639,13 @@ void TROOT::InitInterpreter()
    char *libclingStorage = 0;
    const char *libcling = 0;
 #ifdef ROOTLIBDIR
-   libcling = ROOTLIBDIR "/libCling";
+   libcling = ROOTLIBDIR "/libCling."
+# ifdef R__WIN32
+      "dll";
+# else
+      "so";
+# endif
+
 #else
    libclingStorage = gSystem->DynamicPathName("libCling");
    libcling = libclingStorage;
