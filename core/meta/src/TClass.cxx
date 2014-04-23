@@ -1825,7 +1825,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    // Complain about stl classes ending up here (unique_ptr etc) - except for
    // pair where we will build .first, .second just fine
    // and those for which the user explicitly requested a dictionary.
-   if (GetState() != kHasTClassInit
+   if (!isTransient && GetState() != kHasTClassInit
        && TClassEdit::IsStdClass(GetName())
        && strncmp(GetName(), "pair<", 5) != 0) {
       Error("BuildRealData", "Inspection for %s not supported!", GetName());
