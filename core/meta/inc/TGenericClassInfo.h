@@ -108,6 +108,7 @@ namespace ROOT {
       NewArrFunc_t                      GetNewArray() const;
       const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRawRules() const;
       const std::vector<ROOT::Internal::TSchemaHelper> &GetReadRules() const;
+      void                              CallShowMembers(TMemberInspector& insp, void* obj);
       Int_t                             GetVersion() const;
 
       TClass                           *IsA(const void *obj);

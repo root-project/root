@@ -341,6 +341,12 @@ namespace Internal {
       return fReadRules;
    }
 
+   void TGenericClassInfo::CallShowMembers(TMemberInspector& insp, void* obj)
+   {
+      // Call ShowMembers on a given object, forwarding to TClass
+      GetClass()->CallShowMembers(obj, insp, -1 /*maybeTObject*/);
+   }
+
    void TGenericClassInfo::SetFromTemplate()
    {
       // Import the information from the class template.
