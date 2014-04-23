@@ -184,43 +184,119 @@ namespace ROOT {
 
 } // namespace ROOT
 
-// The macros below use TGenericClassInfo, so let's ensure it is included
+// The macros below use TGenericClassInfo and TInstrumentedIsAProxy, so let's
+// ensure they are included.
 #ifndef ROOT_TGenericClassInfo
 #include "TGenericClassInfo.h"
 #endif
+#ifndef ROOT_TIsAProxy
+#include "TIsAProxy.h"
+#endif
+
+
+// Parts or ROOT are compiled with no-rtti and cannot use or even see typeid().
+// Hide the following declaration (that is only needed by ClassDefInline) for
+// these cases by #defining R__NO_INLINE_CLASSDEF:
+#ifndef R__NO_INLINE_CLASSDEF
+namespace ROOT {
+   template <typename T>
+   class ClassDefGenerateInitInstanceLocalInjector {
+      static TClass* fgIsA;
+   public:
+      static void *New(void *p) { return p ? new(p) T : new T; };
+      static void *NewArray(Long_t nElements, void *p) {
+         return p ? new(p) T[nElements] : new T[nElements]; }
+      static void Delete(void *p) { delete ((T*)p); }
+      static void DeleteArray(void *p) { delete[] ((T*)p); }
+      static void Destruct(void *p) { ((T*)p)->~T();  }
+      static ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal() {
+         T *ptr = 0;
+         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(0);
+         static ::ROOT::TGenericClassInfo
+            R__instance(T::Class_Name(), T::Class_Version(),
+                        T::DeclFileName(), T::DeclFileLine(),
+                        typeid(T), ROOT::DefineBehavior(ptr, ptr),
+                        &T::Dictionary, isa_proxy, 0, sizeof(T) );
+         R__instance.SetNew(&New);
+         R__instance.SetNewArray(&NewArray);
+         R__instance.SetDelete(&Delete);
+         R__instance.SetDeleteArray(&DeleteArray);
+         R__instance.SetDestructor(&Destruct);
+         return &R__instance;
+      }
+      static void Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); }
+      static TClass *Class() { if (!fgIsA) Dictionary(); return fgIsA; }
+   };
+
+   template<typename T>
+   TClass* ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA = 0;
+} // namespace ROOT
+#endif // R__NO_INLINE_CLASSDEF
+
 
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
-#define _ClassDef_(name,id, virtual_keyword, overrd) \
+#define _ClassDefBase_(name,id, virtual_keyword, overrd) \
+public: \
+   static Version_t Class_Version() { return id; } \
+   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
+   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
+   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+   static const char *DeclFileName() { return __FILE__; }
+
+
+#define _ClassDefOutline_(name,id, virtual_keyword, overrd) \
+   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
 private: \
    static atomic_TClass_ptr fgIsA; \
 public: \
-   static TClass *Class(); \
-   static const char *Class_Name(); \
-   static Version_t Class_Version() { return id; } \
-   static TClass *Dictionary(); \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
-   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   virtual_keyword void Streamer(TBuffer&) overrd; \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   static const char *DeclFileName() { return __FILE__; } \
    static int ImplFileLine(); \
-   static const char *ImplFileName();
+   static const char *ImplFileName(); \
+   static const char *Class_Name(); \
+   static TClass *Dictionary(); \
+   static TClass *Class(); \
+   virtual_keyword void Streamer(TBuffer&) overrd;
+
+#define _ClassDefInline_(name,id, virtual_keyword, overrd) \
+   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
+public: \
+   static int ImplFileLine() { return -1; }     \
+   static const char *ImplFileName() { return 0; }      \
+   static const char *Class_Name() { return #name; } \
+   static void Dictionary() { ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
+   static TClass *Class() { return ROOT::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
+   virtual_keyword void Streamer(TBuffer& R__b) overrd {                \
+      if (R__b.IsReading()) R__b.ReadClassBuffer(name::Class(),this);   \
+      else R__b.WriteClassBuffer(name::Class(),this);}
 
 #define ClassDef(name,id) \
-   _ClassDef_(name,id,virtual,)   \
+   _ClassDefOutline_(name,id,virtual,)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefOverride(name,id) \
-   _ClassDef_(name,id,,override)   \
+   _ClassDefOutline_(name,id,,override)   \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefNV(name,id) \
-   _ClassDef_(name,id,,) \
+   _ClassDefOutline_(name,id,,) \
    static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInline(name,id) \
+   _ClassDefInline_(name,id,virtual,)                   \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInlineOverride(name,id)                       \
+   _ClassDefInline_(name,id,,override)                        \
+   static int DeclFileLine() { return __LINE__; }
+
+#define ClassDefInlineNV(name,id) \
+   _ClassDefInline_(name,id,,)                         \
+   static int DeclFileLine() { return __LINE__; }
+
+#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
 
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
@@ -263,11 +339,11 @@ public: \
 // backward compatibility.
 
 #define ClassDefT(name,id) \
-   _ClassDef_(name,id,virtual,) \
+   _ClassDefOutline_(name,id,virtual,) \
    static int DeclFileLine() { return __LINE__; }
 
 #define ClassDefTNV(name,id) \
-   _ClassDef_(name,id,virtual,) \
+   _ClassDefOutline_(name,id,virtual,) \
    static int DeclFileLine() { return __LINE__; }
 
 
