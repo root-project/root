@@ -111,10 +111,6 @@ merging: merging.log
 
 iobug.log : iobug_C.$(DllSuf)
 
-#ifneq ($(),)
-iobug: CINT_VERSION = UnnamedDetection
-#endif
-
 iobug: iobug.log
 	$(TestDiffCintSpecific)
 
