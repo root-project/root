@@ -2530,7 +2530,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
    TString name;
    TString type;
    TStreamerElement *el;
-   TStreamerElement *infoel;
+   TStreamerElement *infoel = 0;
 
    TIter next(GetElements());
    TIter infonext((TList*)0);
@@ -2584,7 +2584,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          localClass = TClassEdit::ShortType( localClass, TClassEdit::kDropStlDefault );
          otherClass = TClassEdit::ShortType( otherClass, TClassEdit::kDropStlDefault );
       }
-      // Need to normalized the name
+      // Need to normalize the name
       if (localClass != otherClass) {
          if (warn) {
             if (el==0) {
@@ -2603,6 +2603,72 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          }
          if (!complete) return kFALSE;
          result = result && kFALSE;
+      }
+      if (cl) {
+         TStreamerBase *localBase = dynamic_cast<TStreamerBase*>(el);
+         if (!localBase) continue;
+         // We already have localBaseClass == otherBaseClass
+         TClass *otherBaseClass = localBase->GetClassPointer();
+         if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBaseClass->GetClassVersion()) {
+            if (warn) {
+               Warning("CompareContent",
+                       "The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d has base class (%s) with version %d.",
+                       GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetClassVersion(),
+                       GetClassVersion(), localClass.Data(), localBase->GetBaseVersion());
+            }
+            if (!complete) return kFALSE;
+            result = result && kFALSE;
+
+         } else if (!otherBaseClass->IsVersioned() && localBase->GetBaseCheckSum() != otherBaseClass->GetCheckSum()) {
+            TVirtualStreamerInfo *localBaseInfo = otherBaseClass->FindStreamerInfo(localBase->GetBaseCheckSum());
+            if (localBaseInfo->CompareContent(otherBaseClass,0,kFALSE,kFALSE) ) {
+               // They are equivalent, no problem.
+               continue;
+            }
+            if (warn) {
+               Warning("CompareContent",
+                       "The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d has base class (%s) with checksum %x.",
+                       GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetCheckSum(),
+                       GetClassVersion(), localClass.Data(), localBase->GetBaseCheckSum());
+            }
+            if (!complete) return kFALSE;
+            result = result && kFALSE;
+         }
+      } else {
+         TStreamerBase *localBase = dynamic_cast<TStreamerBase*>(el);
+         TStreamerBase *otherBase = dynamic_cast<TStreamerBase*>(infoel);
+         if (!localBase || !otherBase) continue;
+
+         // We already have localBaseClass == otherBaseClass
+         TClass *otherBaseClass = localBase->GetClassPointer();
+         if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBase->GetBaseVersion()) {
+            if (warn) {
+               Warning("CompareContent",
+                       "The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d has base class (%s) with version %d.",
+                       GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseVersion(),
+                       GetClassVersion(), localClass.Data(), localBase->GetBaseVersion());
+            }
+            if (!complete) return kFALSE;
+            result = result && kFALSE;
+
+         } else if (!otherBaseClass->IsVersioned() && localBase->GetBaseCheckSum() != otherBase->GetBaseCheckSum())
+         {
+            TVirtualStreamerInfo *localBaseInfo = otherBaseClass->FindStreamerInfo(localBase->GetBaseCheckSum());
+            TVirtualStreamerInfo *otherBaseInfo = otherBaseClass->FindStreamerInfo(otherBase->GetBaseCheckSum());
+            if (localBaseInfo == otherBaseInfo ||
+                localBaseInfo->CompareContent(0,otherBaseInfo,kFALSE,kFALSE) ) {
+               // They are equivalent, no problem.
+               continue;
+            }
+            if (warn) {
+               Warning("CompareContent",
+                       "The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d has base class (%s) with checksum %x.",
+                       GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseCheckSum(),
+                       GetClassVersion(), localClass.Data(), localBase->GetBaseCheckSum());
+            }
+            if (!complete) return kFALSE;
+            result = result && kFALSE;
+         }
       }
    }
    if (!result && !complete) {
