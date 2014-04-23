@@ -33,7 +33,7 @@ TTextEditor::TTextEditor(const TGWindow *p,
    TGCompositeFrame *f1 = new TGCompositeFrame(this, 120, 20, kHorizontalFrame);
    TGLabel *lbl1 = new TGLabel(f1,"X Position");
    fXpos = new TGNumberEntry(f1, 4, 2, kText_Xpos, TGNumberEntry::kNESRealTwo, 
-   TGNumberEntry::kNEANonNegative);
+   TGNumberEntry::kNEAAnyNumber);
    fXpos->Resize(50, 20);
    f1->AddFrame(lbl1, new TGLayoutHints(kLHintsLeft,1, 1, 1, 1));
    f1->AddFrame(fXpos, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
@@ -42,7 +42,7 @@ TTextEditor::TTextEditor(const TGWindow *p,
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 120, 20, kHorizontalFrame);
    TGLabel *lbl2 = new TGLabel(f2,"Y Position");
    fYpos = new TGNumberEntry(f2, 4, 2, kText_Ypos, TGNumberEntry::kNESRealTwo, 
-   TGNumberEntry::kNEANonNegative);
+   TGNumberEntry::kNEAAnyNumber);
    fYpos->Resize(50, 20);
    f2->AddFrame(lbl2, new TGLayoutHints(kLHintsLeft,1, 1, 1, 1));
    f2->AddFrame(fYpos, new TGLayoutHints(kLHintsLeft, 7, 1, 1, 1));
