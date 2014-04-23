@@ -798,7 +798,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                   // (We could be more specific (see test for the same case below)
                   match = kTRUE;
                }
-               if (!match && CompareContent(0,info,kFALSE,kFALSE)) {
+               if (!match && CompareContent(0,info,kFALSE,kFALSE,file)) {
                   match = kTRUE;
                }
 #ifdef TEST_FOR_BACKWARD_COMPATIBILITY_ABSTRACT_CLASSES
@@ -850,7 +850,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                   // (We could be more specific (see test for the same case below)
                   match = kTRUE;
                }
-               if (!match && CompareContent(0,info,kFALSE,kFALSE)) {
+               if (!match && CompareContent(0,info,kFALSE,kFALSE,file)) {
                   match = kTRUE;
                }
             }
@@ -950,7 +950,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
                   }
                }
             }
-            CompareContent(0,info,kTRUE,kTRUE);
+            CompareContent(0,info,kTRUE,kTRUE,file);
             fClass->SetBit(TClass::kWarned);
          }
          if (done) {
@@ -976,7 +976,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
 
             Bool_t warn = !fClass->TestBit(TClass::kWarned);
             if (warn) {
-               warn = !CompareContent(fClass,0,kFALSE,kFALSE);
+               warn = !CompareContent(fClass,0,kFALSE,kFALSE,file);
             }
 #ifdef TEST_FOR_BACKWARD_COMPATIBILITY_ABSTRACT_CLASSES
             if (warn && file->GetVersion() < 51800 && fClass && (fClass->Property() & kIsAbstract)
@@ -1027,7 +1027,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
    Do not try to write objects with the current class definition,\n\
    the files will not be readable.\n", GetName(), fClassVersion, GetName(), fClassVersion + 1);
                }
-               CompareContent(fClass,0,kTRUE,kTRUE);
+               CompareContent(fClass,0,kTRUE,kTRUE,file);
                fClass->SetBit(TClass::kWarned);
             }
          } else {
@@ -2516,7 +2516,7 @@ TObject *TStreamerInfo::Clone(const char *newname) const
 }
 
 //______________________________________________________________________________
-Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete)
+Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file)
 {
    // Return True if the current StreamerInfo in cl or info is equivalent to this TStreamerInfo.
    // 'Equivalent' means the same number of persistent data member which the same actual C++ type and
@@ -2610,29 +2610,35 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          // We already have localBaseClass == otherBaseClass
          TClass *otherBaseClass = localBase->GetClassPointer();
          if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBaseClass->GetClassVersion()) {
-            if (warn) {
-               Warning("CompareContent",
-                       "The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d has base class (%s) with version %d.",
-                       GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetClassVersion(),
-                       GetClassVersion(), localClass.Data(), localBase->GetBaseVersion());
-            }
-            if (!complete) return kFALSE;
-            result = result && kFALSE;
+            TString msg;
+            msg.Form("   The StreamerInfo of class %s read from %s%s\n"
+                     "   has the same version (=%d) as the active class but a different checksum.\n"
+                     "   You should update the version to ClassDef(%s,%d).\n"
+                     "   The objects on this file might not be readable because:\n"
+                     "   The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d recorded the version number %d for this base class (%s).",
+                     GetName(), file ? "file " : "", file ? file->GetName() : "", fClassVersion, GetName(), fClassVersion + 1,
+                     GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetClassVersion(),
+                     GetClassVersion(), localBase->GetBaseVersion(), localClass.Data());
+            TStreamerBase *otherBase = (TStreamerBase*)cl->GetStreamerInfo()->GetElements()->FindObject(otherClass);
+            otherBase->SetErrorMessage(msg);
 
          } else if (!otherBaseClass->IsVersioned() && localBase->GetBaseCheckSum() != otherBaseClass->GetCheckSum()) {
             TVirtualStreamerInfo *localBaseInfo = otherBaseClass->FindStreamerInfo(localBase->GetBaseCheckSum());
-            if (localBaseInfo->CompareContent(otherBaseClass,0,kFALSE,kFALSE) ) {
+            if (localBaseInfo->CompareContent(otherBaseClass,0,kFALSE,kFALSE,file) ) {
                // They are equivalent, no problem.
                continue;
             }
-            if (warn) {
-               Warning("CompareContent",
-                       "The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d has base class (%s) with checksum %x.",
-                       GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetCheckSum(),
-                       GetClassVersion(), localClass.Data(), localBase->GetBaseCheckSum());
-            }
-            if (!complete) return kFALSE;
-            result = result && kFALSE;
+            TString msg;
+            msg.Form("   The StreamerInfo of class %s read from %s%s\n"
+                     "   has the same version (=%d) as the active class but a different checksum.\n"
+                     "   You should update the version to ClassDef(%s,%d).\n"
+                     "   The objects on this file might not be readable because:\n"
+                     "   The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d recorded the checksum value %x for this base class (%s).",
+                     GetName(), file ? "file " : "", file ? file->GetName() : "", fClassVersion, GetName(), fClassVersion + 1,
+                     GetClassVersion(), GetName(), otherClass.Data(), otherBaseClass->GetCheckSum(),
+                     GetClassVersion(), localBase->GetBaseCheckSum(), localClass.Data());
+            TStreamerBase *otherBase = (TStreamerBase*)cl->GetStreamerInfo()->GetElements()->FindObject(otherClass);
+            otherBase->SetErrorMessage(msg);
          }
       } else {
          TStreamerBase *localBase = dynamic_cast<TStreamerBase*>(el);
@@ -2642,32 +2648,36 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          // We already have localBaseClass == otherBaseClass
          TClass *otherBaseClass = localBase->GetClassPointer();
          if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBase->GetBaseVersion()) {
-            if (warn) {
-               Warning("CompareContent",
-                       "The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d has base class (%s) with version %d.",
-                       GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseVersion(),
-                       GetClassVersion(), localClass.Data(), localBase->GetBaseVersion());
-            }
-            if (!complete) return kFALSE;
-            result = result && kFALSE;
+            TString msg;
+            msg.Form("   The StreamerInfo of class %s read from %s%s\n"
+                     "   has the same version (=%d) as the active class but a different checksum.\n"
+                     "   You should update the version to ClassDef(%s,%d).\n"
+                     "   The objects on this file might not be readable because:\n"
+                     "   The in-memory layout version %d for class '%s' has a base class (%s) with version %d but the on-file layout version %d recorded the version number %d for this base class (%s).",
+                     GetName(), file ? "file " : "", file ? file->GetName() : "", fClassVersion, GetName(), fClassVersion + 1,
+                     GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseVersion(),
+                     GetClassVersion(), localBase->GetBaseVersion(), localClass.Data());
+            otherBase->SetErrorMessage(msg);
 
          } else if (!otherBaseClass->IsVersioned() && localBase->GetBaseCheckSum() != otherBase->GetBaseCheckSum())
          {
             TVirtualStreamerInfo *localBaseInfo = otherBaseClass->FindStreamerInfo(localBase->GetBaseCheckSum());
             TVirtualStreamerInfo *otherBaseInfo = otherBaseClass->FindStreamerInfo(otherBase->GetBaseCheckSum());
             if (localBaseInfo == otherBaseInfo ||
-                localBaseInfo->CompareContent(0,otherBaseInfo,kFALSE,kFALSE) ) {
+                localBaseInfo->CompareContent(0,otherBaseInfo,kFALSE,kFALSE,file) ) {
                // They are equivalent, no problem.
                continue;
             }
-            if (warn) {
-               Warning("CompareContent",
-                       "The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d has base class (%s) with checksum %x.",
-                       GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseCheckSum(),
-                       GetClassVersion(), localClass.Data(), localBase->GetBaseCheckSum());
-            }
-            if (!complete) return kFALSE;
-            result = result && kFALSE;
+            TString msg;
+            msg.Form("   The StreamerInfo of class %s read from %s%s\n"
+                     "   has the same version (=%d) as the active class but a different checksum.\n"
+                     "   You should update the version to ClassDef(%s,%d).\n"
+                     "   The objects on this file might not be readable because:\n"
+                     "   The in-memory layout version %d for class '%s' has a base class (%s) with checksum %x but the on-file layout version %d recorded the checksum value %x for this base class (%s).",
+                     GetName(), file ? "file " : "", file ? file->GetName() : "", fClassVersion, GetName(), fClassVersion + 1,
+                     GetClassVersion(), GetName(), otherClass.Data(), otherBase->GetBaseCheckSum(),
+                     GetClassVersion(), localBase->GetBaseCheckSum(), localClass.Data());
+            otherBase->SetErrorMessage(msg);
          }
       }
    }

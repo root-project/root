@@ -187,7 +187,7 @@ public:
    void                CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const;
    void                Clear(Option_t *);
    TObject            *Clone(const char *newname = "") const;
-   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete);
+   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file);
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
