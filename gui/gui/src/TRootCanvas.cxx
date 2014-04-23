@@ -60,6 +60,9 @@
 #include "TError.h"
 #include "TGDNDManager.h"
 #include "TBufferFile.h"
+#include "TRootBrowser.h"
+#include "TGTab.h"
+#include "TGedEditor.h"
 
 #include "TPluginManager.h"
 #include "TVirtualGL.h"
@@ -329,6 +332,7 @@ void TRootCanvas::CreateCanvas(const char *name)
    fButton    = 0;
    fAutoFit   = kTRUE;   // check also menu entry
    fEditor    = 0;
+   fEmbedded  = kFALSE;
 
    // Create menus
    fFileSaveMenu = new TGPopupMenu(fClient->GetDefaultRoot());
@@ -610,7 +614,7 @@ TRootCanvas::~TRootCanvas()
 
    delete fToolTip;
    if (fIconPic) gClient->FreePicture(fIconPic);
-   if (fEditor) delete fEditor;
+   if (fEditor && !fEmbedded) delete fEditor;
    if (fToolBar) {
       Disconnect(fToolDock, "Docked()",   this, "AdjustSize()");
       Disconnect(fToolDock, "Undocked()", this, "AdjustSize()");
@@ -658,8 +662,13 @@ void TRootCanvas::Close()
 {
    // Called via TCanvasImp interface by TCanvas.
    TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
-   if(gged && gged->GetCanvas() == fCanvas)
-      gged->Hide();
+   if(gged && gged->GetCanvas() == fCanvas) {
+      if (fEmbedded) {
+         ((TGedEditor *)gged)->SetModel(0, 0, kButton1Down);
+         ((TGedEditor *)gged)->SetCanvas(0);
+      }
+      else gged->Hide();
+   }
 
    gVirtualX->CloseWindow();
 }
@@ -670,8 +679,13 @@ void TRootCanvas::ReallyDelete()
    // Really delete the canvas and this GUI.
 
    TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
-   if(gged && gged->GetCanvas() == fCanvas)
-      gged->Hide();
+   if(gged && gged->GetCanvas() == fCanvas) {
+      if (fEmbedded) {
+         ((TGedEditor *)gged)->SetModel(0, 0, kButton1Down);
+         ((TGedEditor *)gged)->SetCanvas(0);
+      }
+      else gged->Hide();
+   }
 
    fToolTip->Hide();
    Disconnect(fCanvas, "ProcessedEvent(Int_t, Int_t, Int_t, TObject*)",
@@ -1304,8 +1318,7 @@ void TRootCanvas::FitCanvas()
    }
 }
 
-
- //______________________________________________________________________________
+//______________________________________________________________________________
 void TRootCanvas::PrintCanvas()
 {
    // Print the canvas.
@@ -1444,38 +1457,65 @@ void TRootCanvas::ShowEditor(Bool_t show)
    UInt_t h = GetHeight();
    UInt_t s = fHorizontal1->GetHeight();
 
-   if (show) {
-      if (!fEditor) CreateEditor();
-      TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
-      if(gged && gged->GetCanvas() == fCanvas){
-         gged->Hide();
-      }
-      if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-         ShowFrame(fHorizontal1);
-         h = h + s;
-      }
-      fMainFrame->ShowFrame(fEditorFrame);
-      fEditor->Show();
-      fViewMenu->CheckEntry(kViewEditor);
-      w = w + e;
-   } else {
-      if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-         HideFrame(fHorizontal1);
-         h = h - s;
-      }
-      if (fEditor) fEditor->Hide();
-      fMainFrame->HideFrame(fEditorFrame);
-      fViewMenu->UnCheckEntry(kViewEditor);
-      w = w - e;
-   }
-   Resize(w, h);
    if (fParent && fParent != fClient->GetDefaultRoot()) {
-      // if the canvas is embedded (e.g. in the browser), then the layout of
-      // the main frame has to be re-applied when showing/hiding the editor
       TGMainFrame *main = (TGMainFrame *)fParent->GetMainFrame();
-      if (main) main->Layout();
+      fMainFrame->HideFrame(fEditorFrame);
+      if (main && main->InheritsFrom("TRootBrowser")) {
+         TRootBrowser *browser = (TRootBrowser *)main;
+         if (!fEmbedded)
+            browser->GetTabRight()->Connect("Selected(Int_t)", "TRootCanvas",
+                                            this, "Activated(Int_t)");
+         fEmbedded = kTRUE;
+         if (show && (!fEditor || !((TGedEditor *)fEditor)->IsMapped())) {
+            if (!browser->GetTabLeft()->GetTabTab("Pad Editor")) {
+               browser->StartEmbedding(TRootBrowser::kLeft);
+               if (!fEditor)
+                  fEditor = TVirtualPadEditor::GetPadEditor(kTRUE);
+               else {
+                  ((TGedEditor *)fEditor)->ReparentWindow(fClient->GetRoot());
+                  ((TGedEditor *)fEditor)->MapWindow();
+               }
+               browser->StopEmbedding("Pad Editor");
+               fEditor->SetGlobal(kFALSE);
+               gROOT->GetListOfCleanups()->Remove((TGedEditor *)fEditor);
+               if (fEditor) {
+                  ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
+                  ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+               }
+            }
+            else
+               fEditor = TVirtualPadEditor::GetPadEditor(kFALSE);
+         }
+         if (show) browser->GetTabLeft()->SetTab("Pad Editor");
+      }
    }
-
+   else {
+      if (show) {
+         if (!fEditor) CreateEditor();
+         TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+         if(gged && gged->GetCanvas() == fCanvas){
+            gged->Hide();
+         }
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            ShowFrame(fHorizontal1);
+            h = h + s;
+         }
+         fMainFrame->ShowFrame(fEditorFrame);
+         fEditor->Show();
+         fViewMenu->CheckEntry(kViewEditor);
+         w = w + e;
+      } else {
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            HideFrame(fHorizontal1);
+            h = h - s;
+         }
+         if (fEditor) fEditor->Hide();
+         fMainFrame->HideFrame(fEditorFrame);
+         fViewMenu->UnCheckEntry(kViewEditor);
+         w = w - e;
+      }
+      Resize(w, h);
+   }
    if (savedPad) gPad = savedPad;
 }
 
@@ -1987,6 +2027,28 @@ Bool_t TRootCanvas::HandleDNDLeave()
    // Handle drag leave events.
 
    return kTRUE;
+}
+
+//______________________________________________________________________________
+void TRootCanvas::Activated(Int_t id)
+{
+   // Slot handling tab switching in the browser, to properly set the canvas 
+   // and the model to the editor.
+
+   if (fEmbedded) {
+      TGTab *sender = (TGTab *)gTQSender;
+      if (sender) {
+         TGCompositeFrame *cont = sender->GetTabContainer(id);
+         if (cont == fParent) {
+            if (!fEditor)
+               fEditor = TVirtualPadEditor::GetPadEditor(kFALSE);
+            if (fEditor && ((TGedEditor *)fEditor)->IsMapped()) {
+               ((TGedEditor *)fEditor)->SetCanvas(fCanvas);
+               ((TGedEditor *)fEditor)->SetModel(fCanvas, fCanvas, kButton1Down);
+            }
+         }
+      }
+   }
 }
 
 //______________________________________________________________________________
