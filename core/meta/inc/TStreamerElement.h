@@ -142,6 +142,7 @@ protected:
    TClass           *fNewBaseClass;   //!pointer to new base class if renamed
    ClassStreamerFunc_t   fStreamerFunc; //!Pointer to a wrapper around a custom streamer member function.
    TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
+   TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
 
    void InitStreaming();
 
@@ -153,6 +154,7 @@ public:
    Int_t            GetBaseVersion() {return fBaseVersion;}
    UInt_t           GetBaseCheckSum() {return fBaseCheckSum;}
    virtual TClass  *GetClassPointer() const;
+   const char      *GetErrorMessage() const { return fErrorMsg; }
    const char      *GetInclude() const;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
    ULong_t          GetMethod() const {return 0;}
@@ -165,6 +167,7 @@ public:
    void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; InitStreaming(); }
    void             SetBaseVersion(Int_t v) {fBaseVersion = v;}
    void             SetBaseCheckSum(UInt_t cs) {fBaseCheckSum = cs;}
+   void             SetErrorMessage(const char *msg) { fErrorMsg = msg; }
    virtual void     Update(const TClass *oldClass, TClass *newClass);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
 
