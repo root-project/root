@@ -266,16 +266,17 @@ namespace genreflex {
 
 //______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-static void EmitStreamerInfo(const char* normName)
+static bool EmitStreamerInfo(const char* normName)
 {
    if (!AddStreamerInfoToROOTFile(normName)) {
       std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
                 << normName << '\n';
+      return false;
    }
-
+   return true;
 }
 #else
-static void EmitStreamerInfo(const char*) {}
+static bool EmitStreamerInfo(const char*) { return true; }
 #endif
 
 //______________________________________________________________________________
@@ -2957,7 +2958,8 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
-                  EmitStreamerInfo(iter->GetNormalizedName());
+                  if (!EmitStreamerInfo(iter->GetNormalizedName()))
+                     return 1;
                   ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
