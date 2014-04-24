@@ -40,11 +40,11 @@ class TCollection;
 class TPolyMarker3D : public TObject, public TAttMarker, public TAtt3D
 {
 protected:
-   Int_t            fN;            //number of points
+   Int_t            fN;            //Number of allocated points
    Float_t         *fP;            //[3*fN] Array of X,Y,Z coordinates
-   TString          fOption;       //options
+   TString          fOption;       //Options
    Int_t            fLastPoint;    //The index of the last filled point
-   TString          fName;         //name of polymarker
+   TString          fName;         //Name of polymarker
 
    TPolyMarker3D& operator=(const TPolyMarker3D&);
    
