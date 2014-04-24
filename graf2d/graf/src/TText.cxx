@@ -878,19 +878,19 @@ Rectangle_t TText::GetBBox()
 
    switch (halign) {
       case 1 : Dx = 0      ; break;
-      case 2 : Dx = -w/2   ; break;
-      case 3 : Dx = -w     ; break;
+      case 2 : Dx = w/2   ; break;
+      case 3 : Dx = w     ; break;
    }
    switch (valign) {
-      case 1 : Dy = -h     ; break;
-      case 2 : Dy = -h/2   ; break;
+      case 1 : Dy = h     ; break;
+      case 2 : Dy = h/2   ; break;
       case 3 : Dy = 0      ; break;
    }
 
    Rectangle_t BBox;
-   BBox.fX = gPad->XtoPixel(fX)+Dx;
-   BBox.fY = gPad->YtoPixel(fY)+Dy;
-   BBox.fWidth = w;
+   BBox.fX = gPad->XtoPixel(fX)-Dx;
+   BBox.fY = gPad->YtoPixel(fY)-Dy;
+   BBox.fWidth  = w;
    BBox.fHeight = h;
    return (BBox);
 }
