@@ -3158,6 +3158,12 @@ void TBranchElement::InitializeOffsets()
                      Error("InitializeOffsets",
                            "Could not find the real data member '%s' when constructing the branch '%s' [Likely missing ShowMember].",
                            dataName.Data(),GetName());
+                  } else if (subInfo && subInfo->GetClassVersion()!=subInfo->GetClass()->GetClassVersion()) {
+                     // In the case where we are cloning a TTree that was created with an older version of the layout, we may not
+                     // able to find all the members
+                     Info("InitializeOffsets",
+                           "TTree created with an older schema, some data might not be copied in 'slow-cloning' mode; fast-cloning should have the correct result. '%s' is missing when constructing the branch '%s'. ",
+                           dataName.Data(),GetName());
                   } else {
                      // Something really bad happen.
                      Fatal("InitializeOffsets",
