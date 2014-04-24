@@ -61,7 +61,7 @@ TMarker::~TMarker()
 
 
 //______________________________________________________________________________
-TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker)
+TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), TAttBBox2D(marker)
 {
    // Marker copy constructor.
 
