@@ -56,7 +56,7 @@ TLine::~TLine()
 
 
 //______________________________________________________________________________
-TLine::TLine(const TLine &line) : TObject(line), TAttLine(line)
+TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line)
 {
    // Line copy constructor.
 

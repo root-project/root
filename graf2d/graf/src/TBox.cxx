@@ -79,7 +79,7 @@ TBox::~TBox()
 
 
 //______________________________________________________________________________
-TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box)
+TBox::TBox(const TBox &box) : TObject(box), TAttLine(box), TAttFill(box), TAttBBox2D(box)
 {
    // Box copy constructor.
 

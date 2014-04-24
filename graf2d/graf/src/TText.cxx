@@ -79,7 +79,7 @@ TText::~TText()
 
 
 //______________________________________________________________________________
-TText::TText(const TText &text) : TNamed(text), TAttText(text)
+TText::TText(const TText &text) : TNamed(text), TAttText(text), TAttBBox2D(text)
 {
    // Copy constructor.
 

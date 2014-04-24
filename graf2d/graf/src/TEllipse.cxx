@@ -89,7 +89,7 @@ TEllipse::~TEllipse()
 
 
 //______________________________________________________________________________
-TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
+TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse), TAttBBox2D(ellipse)
 {
    // Copy constructor.
 
