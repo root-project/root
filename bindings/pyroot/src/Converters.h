@@ -202,13 +202,16 @@ namespace PyROOT {
 
    class TRootObjectArrayConverter : public TRootObjectConverter {
    public:
-      TRootObjectArrayConverter( const TClassRef& klass, Bool_t keepControl = kFALSE ) :
-         TRootObjectConverter( klass, keepControl ) {}
+      TRootObjectArrayConverter( const TClassRef& klass, size_t size, Bool_t keepControl = kFALSE ) :
+         TRootObjectConverter( klass, keepControl ), m_size( size ) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter_t&, CallFunc_t* = 0, Long_t = 0 );
       virtual PyObject* FromMemory( void* address );
       virtual Bool_t ToMemory( PyObject* value, void* address );
+
+   protected:
+      size_t m_size;
    };
 
 // CLING WORKAROUND -- classes for STL iterators are completely undefined in that

@@ -193,6 +193,9 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    fOffset    = dm->GetOffsetCint();
    fProperty  = (Long_t)dm->Property();
 
+// arrays of objects do not require extra dereferencing
+   if ( ! dm->IsBasic() ) fProperty &= ~kIsArray;
+
    std::string fullType = dm->GetFullTypeName();
    if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
       fullType.append( "*" );

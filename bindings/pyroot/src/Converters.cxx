@@ -982,14 +982,13 @@ Bool_t PyROOT::TRootObjectArrayConverter::SetArg(
 }
 
 //____________________________________________________________________________
-PyObject* PyROOT::TRootObjectArrayConverter::FromMemory( void* /* address */ )
+PyObject* PyROOT::TRootObjectArrayConverter::FromMemory( void* address )
 {
 // construct python tuple of instances from C++ array read at <address>
+   if ( m_size <= 0 )   // if size unknown, just hand out the first object
+       return BindRootObjectNoCast( address, fClass );
 
-// TODO: need to get size from somewhere ...
-   PyErr_SetString( PyExc_NotImplementedError,
-      "access to C-arrays of objects not yet implemented!" );
-   return NULL;
+   return BindRootObjectArray( address, fClass, m_size );
 }
 
 //____________________________________________________________________________
@@ -1173,12 +1172,12 @@ PyROOT::TConverter* PyROOT::CreateConverter( const std::string& fullType, Long_t
    // -- CLING WORKAROUND
       if ( cpd == "**" || cpd == "*&" || cpd == "&*" )
          result = new TRootObjectPtrConverter( klass, control );
-      else if ( cpd == "*" )
+      else if ( cpd == "*" && user <= 0 )
          result = new TRootObjectConverter( klass, control );
       else if ( cpd == "&" )
          result = new TStrictRootObjectConverter( klass, control );
-      else if ( cpd == "[]" )
-         result = new TRootObjectArrayConverter( klass, kFALSE );
+      else if ( cpd == "[]" || user > 0 )
+         result = new TRootObjectArrayConverter( klass, user, kFALSE );
       else if ( cpd == "" )               // by value
          result = new TStrictRootObjectConverter( klass, kTRUE );
 
