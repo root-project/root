@@ -115,8 +115,9 @@
 #pragma link C++ typedef ROOT::Math::PxPyPzMVector;
 #pragma link C++ typedef ROOT::Math::PtEtaPhiMVector;
 
-
-
+// Needed for header on demand parsing
+#pragma link C++ typedef ROOT::Math::RhoZPhiVector;
+#pragma link C++ typedef ROOT::Math::PxPyPzEVector;
 
 // dictionary for points and vectors functions
 
