@@ -2535,7 +2535,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
-                         const std::vector<std::string>& typedefNames)
+                         const std::vector<clang::TypedefNameDecl*>& typedefDecls)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -2563,7 +2563,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
    }
 
    // Add the "section"
-   if (!nsNames.empty() || !classesNames.empty() || !typedefNames.empty()){
+   if (!nsNames.empty() || !classesNames.empty() || !typedefDecls.empty()){
       rootmapFile << "[" << rootmapLibName << " ]\n";
 
       // Loop on selected classes and insert them in the rootmap
@@ -2583,10 +2583,10 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
       }
       
       // And typedefs. These are used just to trigger the autoload mechanism
-      if (!typedefNames.empty()){
+      if (!typedefDecls.empty()){
          rootmapFile << "# List of selected typedefs\n";
-         for (auto& tDefName : typedefNames){
-            rootmapFile << "typedef " << tDefName << std::endl;
+         for (auto& tDef : typedefDecls){
+            rootmapFile << "typedef " << tDef->getQualifiedNameAsString() << std::endl;
          }
       }
    }
@@ -3338,25 +3338,39 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
    
    std::string header = ROOT::TMetaUtils::GetFileName(rcd, interp);   
    headers.emplace_back(header);
+   headers.reverse();
    return headers;
    
 }
 
 //______________________________________________________________________________
 void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
+                              const std::vector<clang::TypedefNameDecl*>& tDefDecls,
                               HeadersClassesMap_t& headersClassesMap,
                               const cling::Interpreter& interp)
 {
-   // Add some manip of headers
+   // Add some manip of headers      
    for (auto& annotatedRcd : annotatedRcds){
       if (const clang::CXXRecordDecl* cxxRcd = 
-          llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
+         llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
          std::set<const clang::CXXRecordDecl*> visitedDecls;
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          // remove duplicates, also if not subsequent
          std::unordered_set<std::string> buffer;
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersClassesMap[annotatedRcd.GetNormalizedName()] = headers;
+      }
+   }
+   // The same for the typedefs:
+   for (auto& tDef : tDefDecls){
+      if (clang::CXXRecordDecl* cxxRcd=tDef->getUnderlyingType()->getAsCXXRecordDecl()){
+         std::set<const clang::CXXRecordDecl*> visitedDecls;
+         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));         
+         // remove duplicates, also if not subsequent
+         std::unordered_set<std::string> buffer;         
+         headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
+         headers.push_back(ROOT::TMetaUtils::GetFileName(*tDef, interp));
+         headersClassesMap[tDef->getQualifiedNameAsString()] = headers;
       }
    }
 }
@@ -4126,8 +4140,9 @@ int RootCling(int argc,
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
       HeadersClassesMap_t headersClassesMap;
       ExtractHeadersForClasses(scan.fSelectedClasses,
-                              headersClassesMap,
-                              interp);  
+                               scan.fSelectedTypedefs,
+                               headersClassesMap,
+                               interp);  
       
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
@@ -4215,7 +4230,7 @@ int RootCling(int argc,
                                              classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
-                                             scan.fSelectedTypedefNames);
+                                             scan.fSelectedTypedefs);
       }
       else{
          rmStatusCode = CreateRootMapFile(rootmapFileName,

@@ -835,7 +835,11 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          // Here it does not make sense to use the name normalisation. It
          // indeed resolve all typedefs except the opaque ones. The best we can
          // do is to rely on clang.
-         fSelectedTypedefNames.push_back(typedefNameDecl->getQualifiedNameAsString());
+         if (clang::CXXRecordDecl* aRecordDecl = typedefNameDecl->getUnderlyingType()->getAsCXXRecordDecl()){
+            if(fVerboseLevel > 0)
+               std::cout << "This typedef ("<< typedefNameDecl->getQualifiedNameAsString()<< ") points to " << aRecordDecl->getQualifiedNameAsString() << std::endl;           
+         }
+         fSelectedTypedefs.push_back(typedefNameDecl);
       }     
 
    }      
@@ -863,8 +867,7 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
       isInStd = parent && 0 == parent->getQualifiedNameAsString().compare(0,5,"std::");
       }
 
-   if (fSelectionRules.IsSelectionXMLFile() &&
-       ROOT::TMetaUtils::GetUnderlyingRecordDecl(D->getUnderlyingType()) &&
+   if (ROOT::TMetaUtils::GetUnderlyingRecordDecl(D->getUnderlyingType()) &&
        !isInStd){
       TreatRecordDeclOrTypedefNameDecl(D);
    }
