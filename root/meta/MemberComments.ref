@@ -109,6 +109,8 @@ OBJ: TList	TList	Doubly linked list : 0
       int TArrow::DeclFileLine()
  OBJ: TMethod	operator=	 : 0
       TArrow& TArrow::operator=(const TArrow&)
+ OBJ: TMethod	Streamer	 : 0
+      void TLine::Streamer(TBuffer&)
  OBJ: TMethod	TLine	 : 0
       TLine TLine::TLine()
  OBJ: TMethod	TLine	 : 0
@@ -195,8 +197,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TLine::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TLine::ShowMembers(TMemberInspector& insp) const
- OBJ: TMethod	Streamer	 : 0
-      void TLine::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TLine::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
@@ -209,6 +209,8 @@ OBJ: TList	TList	Doubly linked list : 0
       int TLine::DeclFileLine()
  OBJ: TMethod	operator=	 : 0
       TLine& TLine::operator=(const TLine&)
+ OBJ: TMethod	Streamer	 : 0
+      void TObject::Streamer(TBuffer&)
  OBJ: TMethod	TObject	 : 0
       TObject TObject::TObject()
  OBJ: TMethod	TObject	 : 0
@@ -379,8 +381,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TObject::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TObject::ShowMembers(TMemberInspector& insp) const
- OBJ: TMethod	Streamer	 : 0
-      void TObject::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TObject::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
@@ -391,6 +391,8 @@ OBJ: TList	TList	Doubly linked list : 0
       const char* TObject::ImplFileName()
  OBJ: TMethod	DeclFileLine	 : 0
       int TObject::DeclFileLine()
+ OBJ: TMethod	Streamer	 : 0
+      void TAttLine::Streamer(TBuffer&)
  OBJ: TMethod	TAttLine	 : 0
       TAttLine TAttLine::TAttLine()
  OBJ: TMethod	TAttLine	 : 0
@@ -433,8 +435,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TAttLine::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TAttLine::ShowMembers(TMemberInspector& insp) const
- OBJ: TMethod	Streamer	 : 0
-      void TAttLine::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TAttLine::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
@@ -449,6 +449,8 @@ OBJ: TList	TList	Doubly linked list : 0
       TAttLine& TAttLine::operator=(const TAttLine&)
  OBJ: TMethod	TAttLine	 : 0
       TAttLine TAttLine::TAttLine(const TAttLine&)
+ OBJ: TMethod	Streamer	 : 0
+      void TAttBBox2D::Streamer(TBuffer&)
  OBJ: TMethod	~TAttBBox2D	 : 0
       void TAttBBox2D::~TAttBBox2D()
  OBJ: TMethod	GetBBox	Get TopLeft Corner with width and height : 0
@@ -481,8 +483,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TAttBBox2D::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TAttBBox2D::ShowMembers(TMemberInspector& insp) const
- OBJ: TMethod	Streamer	 : 0
-      void TAttBBox2D::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TAttBBox2D::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
@@ -499,6 +499,8 @@ OBJ: TList	TList	Doubly linked list : 0
       TAttBBox2D TAttBBox2D::TAttBBox2D()
  OBJ: TMethod	TAttBBox2D	 : 0
       TAttBBox2D TAttBBox2D::TAttBBox2D(const TAttBBox2D&)
+ OBJ: TMethod	Streamer	 : 0
+      void TAttFill::Streamer(TBuffer&)
  OBJ: TMethod	TAttFill	 : 0
       TAttFill TAttFill::TAttFill()
  OBJ: TMethod	TAttFill	 : 0
@@ -537,8 +539,6 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TAttFill::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TAttFill::ShowMembers(TMemberInspector& insp) const
- OBJ: TMethod	Streamer	 : 0
-      void TAttFill::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TAttFill::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
