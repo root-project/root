@@ -1,13 +1,17 @@
 # This is a template for all makefiles.
 
+BASE_FILES = baseClass_merge1.root baseClass_merge2.root baseClass_53410_v1.root baseClass_53410_v2.root
+MIXED_FILES = mixedBase_merge1.root mixedBase_merge2.root mixedBase_53410_v1.root mixedBase_53410_v2.root
+BASE_SUCCESS = $(subst .root,.success,$(BASE_FILES) $(MIXED_FILES))
+
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog data*.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog data*.root mixedBase_v?.root baseClass_v?.root baseClass_merge?.root mixedBase_merge?.root baseClass_merged?.root
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += foreign warning
+TEST_TARGETS += foreign warning $(BASE_SUCCESS)
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
@@ -77,4 +81,33 @@ endif
 
 warning: warning.log
 	$(TestDiff)
+
+baseClass_merge1.root: execBaseClass_v2.success
+	$(CMDECHO) hadd -f $@ baseClass_v1.root baseClass_v2.root > $@.build.log 2>&1 || handleError.sh --cmd="hadd -f $@ baseClass_v1.root baseClass_v2.root" --result=$$? --log=$@.build.log --test=$@
+
+baseClass_merge2.root: execBaseClass_v2.success
+	$(CMDECHO) hadd -f $@ baseClass_v2.root baseClass_v1.root > $@.build.log 2>&1 || handleError.sh --cmd="hadd -f $@ baseClass_v2.root baseClass_v1.root" --result=$$? --log=$@.build.log --test=$@
+
+mixedBase_merge1.root: execMixedBaseClass_v2.success
+	$(CMDECHO) hadd -f $@ mixedBase_v1.root mixedBase_v2.root > $@.build.log 2>&1 || handleError.sh --cmd="hadd -f $@ mixedBase_v1.root mixedBase_v2.root" --result=$$? --log=$@.build.log --test=$@
+
+mixedBase_merge2.root: execMixedBaseClass_v2.success
+	$(CMDECHO) hadd -f $@ mixedBase_v2.root mixedBase_v1.root > $@.build.log 2>&1 || handleError.sh --cmd="hadd -f $@ mixedBase_v2.root mixedBase_v1.root" --result=$$? --log=$@.build.log --test=$@
+
+execBaseClass_v2.clog: execBaseClass_v1.success
+
+execMixedBaseClass_v2.clog: execMixedBaseClass_v1.success
+
+$(subst .root,.log,$(BASE_FILES)): %.log: %.root
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l execBaseClass_v2.cxx+\(\"$<\"\) > $@ 2>&1 || handleError.sh --cmd="Execution of execBaseClass_v2.cxx+(\"$<\") > $@" --result=$$? --log=$@.build.log --test=$@
+
+$(subst .root,.log,$(MIXED_FILES)): %.log: %.root
+	$(CMDECHO) $(CALLROOTEXE) -b -q -l execMixedBaseClass_v2.cxx+\(\"$<\"\) > $@ 2>&1 || handleError.sh --cmd="Execution of execMixedBaseClass_v2.cxx+(\"$<\") > $@" --result=$$? --log=$@.build.log --test=$@
+
+$(BASE_SUCCESS): %.success: %.log
+	$(SuccessTestDiff) && touch $@
+
+
+
+
 
