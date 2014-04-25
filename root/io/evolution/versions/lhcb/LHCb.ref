@@ -69,7 +69,7 @@ Warning in <TClass::TClass>: no dictionary for class SmartRefVector<LHCb::Track>
 Warning in <TClass::TClass>: no dictionary for class LHCb::RecVertex is available
 Warning in <TClass::TClass>: no dictionary for class LHCb::VertexBase is available
 
-StreamerInfo for class: LHCb::ODIN, checksum=0xba07acab
+StreamerInfo for class: LHCb::ODIN, checksum=0x1f05423c
   DataObject     BASE            offset= n/a type= 0                     
   unsigned int   m_runNumber     offset= n/a type=13 Run number          
   unsigned int   m_eventType     offset= n/a type=13 Event type          
