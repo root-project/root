@@ -59,7 +59,7 @@ static const std::string gUserAgent = "ROOT/" + std::string(gROOT->GetVersion())
 " TDavixFile/" + VERSION + " davix/" + Davix::version();
 
 // The prefix that is used to find the variables in the gEnv
-#define ENVPFX	"Davix."
+#define ENVPFX "Davix."
 
 ClassImp(TDavixFile)
 
@@ -265,13 +265,12 @@ void TDavixFileInternal::enableGridMode()
    if (gDebug > 1)
       Info("enableGridMode", " grid mode enabled !");
 
-	if( ( env_var = getenv("X509_CERT_DIR")) == NULL){
-		env_var= "/etc/grid-security/certificates/";
-	}
-    davixParam->addCertificateAuthorityPath(env_var);
-    if (gDebug > 0)
-        Info("enableGridMode", "Adding CAdir %s", env_var);
-
+   if( ( env_var = getenv("X509_CERT_DIR")) == NULL){
+      env_var= "/etc/grid-security/certificates/";
+   }
+   davixParam->addCertificateAuthorityPath(env_var);
+   if (gDebug > 0)
+      Info("enableGridMode", "Adding CAdir %s", env_var);
 }
 
 //____________________________________________________________________________
