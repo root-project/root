@@ -71,6 +71,7 @@ private:
       kFunction,
       kEnum,
       kClass,
+      kTypeDef,
       kNamespace,
       kUnion,
       kStruct,

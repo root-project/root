@@ -13,9 +13,6 @@
 //                                                                      //
 // LinkdefReader                                                        //
 //                                                                      //
-// The following #pragma are currently ignored (not needed for cling):  //
-//      #pragma link spec typedef                                       //
-//      #pragma link spec nestedtypedef                                 //
 //                                                                      //
 // Note: some inconsistency in the way CINT parsed the #pragma:         //
 //   "#pragma link C++ class" is terminated by either a ';' or a newline//
@@ -68,6 +65,7 @@ void LinkdefReader::PopulatePragmaMap(){
    
    LinkdefReader::fgMapPragmaNames["TClass"] = kClass;
    LinkdefReader::fgMapPragmaNames["class"] = kClass;
+   LinkdefReader::fgMapPragmaNames["typedef"] = kTypeDef;
    LinkdefReader::fgMapPragmaNames["namespace"] = kNamespace;
    LinkdefReader::fgMapPragmaNames["function"] = kFunction;
    LinkdefReader::fgMapPragmaNames["global"] = kGlobal;
@@ -85,9 +83,6 @@ void LinkdefReader::PopulatePragmaMap(){
    // The following are listed here so we can officially ignore them
    LinkdefReader::fgMapPragmaNames["nestedtypedefs"] = kIgnore;
    LinkdefReader::fgMapPragmaNames["nestedtypedef"] = kIgnore;
-   LinkdefReader::fgMapPragmaNames["typedef"] = kIgnore;
-   // NOTE: need to add
-   // typedef
 }
 
 void LinkdefReader::PopulateCppMap(){
@@ -126,11 +121,15 @@ bool LinkdefReader::AddInclude(std::string include)
  * The method that processes the pragma statement.
  * Sometimes I had to do strange things to reflect the strange behavior of rootcint
  */
-bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool linkOn, bool request_only_tclass, LinkdefReader::Options *options /* = 0 */)
+bool LinkdefReader::AddRule(std::string ruletype, 
+                            std::string identifier, 
+                            bool linkOn, 
+                            bool request_only_tclass, 
+                            LinkdefReader::Options *options /* = 0 */)
 {
    
    EPragmaNames name = kUnknown;
-   
+   ROOT::TMetaUtils::Info("LinkdefReader::AddRule","Ruletype is %s with the identifier %s\n",ruletype.c_str(), identifier.c_str());
    std::map<std::string, EPragmaNames>::iterator it = LinkdefReader::fgMapPragmaNames.find(ruletype);
    if (it != LinkdefReader::fgMapPragmaNames.end()) {
       name = it->second;
@@ -352,12 +351,12 @@ bool LinkdefReader::AddRule(std::string ruletype, std::string identifier, bool l
          }
          break;
       case kClass:
+      case kTypeDef:
       case kNamespace:
       case kUnion:
       case kStruct:
          {
 //            std::cout<<"class selection rule for "<<identifier<<" to be impl."<<std::endl;
-            
             ClassSelectionRule csr(fCount++, fInterp);
             
             if (request_only_tclass) {
