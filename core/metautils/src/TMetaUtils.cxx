@@ -1603,21 +1603,21 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             attrValue = attrName + propNames::separator + attrValue;
 
          if (!infrastructureGenerated){
-            finalString << "   if (gInterpreter){\n"
-                        << "      ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
-                        << "      DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
-                        << "      while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
+            finalString << "      if (gInterpreter){\n"
+                        << "         ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
+                        << "         DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
+                        << "         while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
             infrastructureGenerated=true;
          }
 
          if ( ! (preceedingWasIO) ){
             const std::string memberName(dMember->getName());
-            finalString << "          if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI))){\n";
+            finalString << "             if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI))){\n";
          }
-         finalString << "             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
+         finalString << "                gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
 
          if ( isComment || preceedingWasIO ){
-            finalString << "          }\n";
+            finalString << "             }\n";
             blockNeedsToBeClosed = false;
          }
 
@@ -1626,13 +1626,14 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       } // end loop on annotations of the decl
 
       if (blockNeedsToBeClosed && preceedingWasIO){
-         finalString << "          }\n";
+         finalString << "             }\n";
       }
 
    } // end loop on class internal decls
 
-   if (infrastructureGenerated)
-      finalString << "          }\n      }\n";
+   if (infrastructureGenerated) {
+      finalString << "         }\n      }\n";
+   }
 
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
 
