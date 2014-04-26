@@ -1604,6 +1604,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          if (!infrastructureGenerated){
             finalString << "      if (gInterpreter){\n"
+                        << "         Int_t prevAutoLoad = gInterpreter->SetClassAutoloading(0);\n"
                         << "         ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
                         << "         DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
                         << "         while (gInterpreter->DataMemberInfo_Next(DMI)) {\n";
@@ -1632,7 +1633,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    } // end loop on class internal decls
 
    if (infrastructureGenerated) {
-      finalString << "         }\n      }\n";
+      finalString << "         }\n         gInterpreter->SetClassAutoloading(prevAutoLoad);\n      }\n";
    }
 
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
