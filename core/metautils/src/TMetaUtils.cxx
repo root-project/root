@@ -264,19 +264,19 @@ namespace ROOT{
    namespace TMetaUtils{
 
 //______________________________________________________________________________
-void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ, 
+void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* templ,
                                              unsigned int i){
-   // Add to the internal map the pointer of a template as key and the number of 
+   // Add to the internal map the pointer of a template as key and the number of
    // template arguments to keep as value.
-      
+
    if (!templ){
       Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
             "Tring to specify a number of template arguments to keep for a null pointer. Exiting without assigning any value.\n");
       return;
    }
-   
+
    const clang::ClassTemplateDecl* canTempl = templ->getCanonicalDecl();
-   
+
    if(fTemplatePtrArgsToKeepMap.count(canTempl)==1 &&
       fTemplatePtrArgsToKeepMap[canTempl]!=(int)i){
       const std::string templateName (canTempl->getNameAsString());
@@ -284,24 +284,24 @@ void TNormalizedCtxt::AddTemplAndNargsToKeep(const clang::ClassTemplateDecl* tem
       const std::string previousArgsToKeep(std::to_string(fTemplatePtrArgsToKeepMap[canTempl]));
       Error("TNormalizedCtxt::AddTemplAndNargsToKeep",
             "Tring to specify for template %s %s arguments to keep, while before this number was %s\n",
-            canTempl->getNameAsString().c_str(), 
-            i_str.c_str(), 
+            canTempl->getNameAsString().c_str(),
+            i_str.c_str(),
             previousArgsToKeep.c_str());
-   }  
-   
+   }
+
    fTemplatePtrArgsToKeepMap[canTempl]=i;
-}      
+}
 //______________________________________________________________________________
 int TNormalizedCtxt::GetNargsToKeep(const clang::ClassTemplateDecl* templ) const{
    // Get from the map the number of arguments to keep.
-   // It uses the canonical decl of the template as key. 
-   // If not present, returns -1.   
+   // It uses the canonical decl of the template as key.
+   // If not present, returns -1.
       const clang::ClassTemplateDecl* constTempl = templ->getCanonicalDecl();
-      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);   
+      auto thePairPtr = fTemplatePtrArgsToKeepMap.find(constTempl);
       int nArgsToKeep = (thePairPtr != fTemplatePtrArgsToKeepMap.end() ) ? thePairPtr->second : -1;
       return nArgsToKeep;
-   } 
-   
+   }
+
 //______________________________________________________________________________
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
@@ -1562,7 +1562,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol << "*)" << "\n" << "   {" << "\n";
 
-   /* If the attribute "comment" is present for data members, trigger the manipulaition of 
+   /* If the attribute "comment" is present for data members, trigger the manipulaition of
     * the decls.
     * 1) Seek the decl of the class thanks to the interpreter
     * 2) Annotate the decl with the value of the comment
@@ -1572,7 +1572,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    bool infrastructureGenerated=false;
    for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
           internalDeclIt != decl->decls_end(); ++internalDeclIt){
-      
+
       clang::FieldDecl* dMember = clang::dyn_cast<clang::FieldDecl>(*internalDeclIt);
       // Check if this is a field and if it has any attribute
       if (!dMember || (dMember && !dMember->hasAttrs())) continue;
@@ -1588,16 +1588,16 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
          // Split in name value
          if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)) continue;
-         
+
          bool isIoName =  attrName == propNames::ioname;
          bool isIoType =  attrName == propNames::iotype;
          bool isComment =  attrName == propNames::comment;
          bool isRelevant = isIoName || isIoType || isComment;
-         
+
          // Check if this is a "comment", "ioname" or "iotype"
 
          if (! isRelevant) continue;
-         
+
          // If this is not a comment, we must add the key-value pair
          if (!isComment)
             attrValue = attrName + propNames::separator + attrValue;
@@ -1611,22 +1611,22 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
          }
 
          if ( ! (preceedingWasIO) ){
-            const std::string memberName(dMember->getName());         
+            const std::string memberName(dMember->getName());
             finalString << "          if (!strcmp(\"" << memberName << "\", gInterpreter->DataMemberInfo_Name(DMI))){\n";
          }
-         finalString << "             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";                           
-         
+         finalString << "             gInterpreter->SetDeclAttr(gInterpreter->GetDeclId(DMI),\"" << attrValue << "\");\n";
+
          if ( isComment || preceedingWasIO ){
-            finalString << "          }\n";         
+            finalString << "          }\n";
             blockNeedsToBeClosed = false;
          }
-         
+
          preceedingWasIO = isIoType || isIoName ;
 
       } // end loop on annotations of the decl
-      
+
       if (blockNeedsToBeClosed && preceedingWasIO){
-         finalString << "          }\n";      
+         finalString << "          }\n";
       }
 
    } // end loop on class internal decls
@@ -1829,7 +1829,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       } // end of class has properties
 
       // Member properties
-      // Loop on declarations inside the class, including data members   
+      // Loop on declarations inside the class, including data members
       for(clang::CXXRecordDecl::decl_iterator internalDeclIt = decl->decls_begin();
           internalDeclIt != decl->decls_end(); ++internalDeclIt){
          if (!(!(*internalDeclIt)->isImplicit()
@@ -1861,27 +1861,27 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
             // Prepare a string to get the data member, it can be used later.
             const std::string dataMemberCreation= "      TDataMember* "+cppMemberName+" = theClass->GetDataMember(\""+memberName+"\");\n";
-            
+
             // Let's now attack regular properties
-            
+
             if (0!=ROOT::TMetaUtils::extractPropertyNameValFromString(attribute_s, attrName, attrValue)){
                continue;
             }
-            
+
             // Skip these
             if (attrName == propNames::comment ||
                 attrName == propNames::iotype ||
                 attrName == propNames::ioname ) continue;
-            
+
             if (!memberPtrCreated){
                manipString+=dataMemberCreation;
                memberPtrCreated=true;
             }
-            
+
             if (!attrMapExtracted){
-               manipString+="      "+cppMemberName+"->CreateAttributeMap();\n";            
+               manipString+="      "+cppMemberName+"->CreateAttributeMap();\n";
                manipString+="      TDictAttributeMap* memberAttrMap_"+memberName+"( theMember_"+memberName+"->GetAttributeMap() );\n";
-            attrMapExtracted=true;               
+            attrMapExtracted=true;
             }
 
             manipString+="      memberAttrMap_"+memberName+"->AddProperty(\""+attrName +"\",\""+attrValue+"\");\n";
@@ -2972,7 +2972,7 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
 
    // Remove initial numbers if any
    std::size_t firstNonNumber = out.find_first_not_of("0123456789");
-   out.replace(0,firstNonNumber,"");   
+   out.replace(0,firstNonNumber,"");
 
    return;
 }
@@ -3256,62 +3256,62 @@ clang::TemplateName ROOT::TMetaUtils::ExtractTemplateNameFromQualType(const clan
 }
 
 //______________________________________________________________________________
-static bool areEqualTypes(const clang::TemplateArgument& tArg, 
+static bool areEqualTypes(const clang::TemplateArgument& tArg,
                    llvm::SmallVectorImpl<clang::TemplateArgument>& preceedingTArgs,
-                   const clang::NamedDecl& tPar, 
+                   const clang::NamedDecl& tPar,
                    const cling::Interpreter& interp,
                    const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
 {
    using namespace ROOT::TMetaUtils;
    using namespace clang;
-   
+
    // Check if this is a type for security
    TemplateTypeParmDecl* ttpdPtr = const_cast<TemplateTypeParmDecl*>(llvm::dyn_cast<TemplateTypeParmDecl>(&tPar));
-   if (!ttpdPtr) return false;   
+   if (!ttpdPtr) return false;
    if (!ttpdPtr->hasDefaultArgument()) return false; // we should not be here in this case, but we protect us.
-   
-   // Try the fast solution      
+
+   // Try the fast solution
    const QualType tParQualType = ttpdPtr->getDefaultArgument();
    const QualType tArgQualType = tArg.getAsType();
-      
+
    // Now the equality tests for non template specialisations.
-   
-   // The easy cases: 
+
+   // The easy cases:
    // template <class T=double> class A; or
-   // template <class T=A<float>> class B;   
-   if (tParQualType.getTypePtr() == tArgQualType.getTypePtr()) return true;  
-   
+   // template <class T=A<float>> class B;
+   if (tParQualType.getTypePtr() == tArgQualType.getTypePtr()) return true;
+
    // Here the difficulty comes. We have to check if the argument is equal to its
    // default. We can do that bootstrapping an argument which has the default value
    // based on the preceeding arguments.
-   // Basically we ask sema to give us the value of the argument given the template 
+   // Basically we ask sema to give us the value of the argument given the template
    // of behind the parameter and the all the arguments.
    // So:
-   
+
    // Take the template out of the parameter
 
-   const TemplateSpecializationType* tst = 
-            llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());   
-   
+   const TemplateSpecializationType* tst =
+            llvm::dyn_cast<TemplateSpecializationType>(tParQualType.getTypePtr());
+
    if(!tst) // nothing more to be tried. They are different indeed.
       return false;
-               
+
    ClassTemplateSpecializationDecl* TSTdecl
       = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(tArgQualType->getAsCXXRecordDecl());
-      
-   TemplateDecl *Template = tst->getTemplateName().getAsTemplateDecl();   
-   
+
+   TemplateDecl *Template = tst->getTemplateName().getAsTemplateDecl();
+
    // Take the template location
    SourceLocation TemplateLoc = Template->getSourceRange ().getBegin();
-   
+
    // Get the position of the "<" (LA) of the specializaion
    SourceLocation LAngleLoc = TSTdecl->getSourceRange().getBegin();
-   
-   
+
+
    // Enclose in a scope for the RAII
    bool isEqual=false;
    TemplateArgument newArg = tArg;
-   {  
+   {
       clang::Sema& S = interp.getCI()->getSema();
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
       clang::sema::HackForDefaultTemplateArg raii; // Hic sunt leones
@@ -3330,22 +3330,22 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
          ROOT::TMetaUtils::Error("areEqualTypes",
                                  "Template parameter substitution failed!");
       }
-      
+
       ClassTemplateSpecializationDecl* nTSTdecl
       = llvm::dyn_cast_or_null<ClassTemplateSpecializationDecl>(newArg.getAsType()->getAsCXXRecordDecl());
          std::cout << "nSTdecl is " << nTSTdecl << std::endl;
-      
+
       isEqual =  nTSTdecl->getMostRecentDecl() == TSTdecl->getMostRecentDecl() ||
                  tParQualType.getTypePtr() == newArg.getAsType().getTypePtr();
    }
 
-      
+
    return isEqual;
 }
 
 
 //______________________________________________________________________________
-static bool areEqualValues(const clang::TemplateArgument& tArg, 
+static bool areEqualValues(const clang::TemplateArgument& tArg,
                     const clang::NamedDecl& tPar)
 {
    std::cout << "Are equal values?\n";
@@ -3356,7 +3356,7 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
 
    if (!nttpd.hasDefaultArgument())
       return false;
-   
+
    // 64 bits wide and signed (non unsigned, that is why "false")
    llvm::APSInt defaultValueAPSInt(64, false);
    if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
@@ -3367,7 +3367,7 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
    const int value = tArg.getAsIntegral().getLimitedValue();
 
    std::cout << (value == defaultValueAPSInt ? "yes!":"no")  << std::endl;
-   return  value == defaultValueAPSInt;   
+   return  value == defaultValueAPSInt;
    }
 
 //______________________________________________________________________________
@@ -3383,32 +3383,32 @@ static bool isTypeWithDefault(const clang::NamedDecl* nDecl)
    if (const NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<NonTypeTemplateParmDecl>(nDecl))
       return nttpd->hasDefaultArgument();
    return false;
-   
+
 }
 
 //______________________________________________________________________________
 static void KeepNParams(clang::QualType& normalizedType,
-                        const clang::QualType& vanillaType,                                   
+                        const clang::QualType& vanillaType,
                         const cling::Interpreter& interp,
                         const ROOT::TMetaUtils::TNormalizedCtxt& normCtxt)
 {
    // This function allows to manipulate the number of arguments in the type
    // of a template specialisation.
-   
+
    using namespace ROOT::TMetaUtils;
    using namespace clang;
 
-   // If this type has no template specialisation behind, we don't need to do 
+   // If this type has no template specialisation behind, we don't need to do
    // anything
    ClassTemplateSpecializationDecl* ctsd;
    ClassTemplateDecl* ctd;
    if (! QualType2Template(vanillaType, ctd,  ctsd)) return ;
-   
+
    // Even if this is a template, if we don't keep any argument, return
    const int nArgsToKeep = normCtxt.GetNargsToKeep(ctd);
-   
+
    // Important in case of early return: we must restore the original qualtype
-   QualType originalNormalizedType = normalizedType;   
+   QualType originalNormalizedType = normalizedType;
 
    const ASTContext& astCtxt = ctsd->getASTContext();
 
@@ -3467,7 +3467,7 @@ static void KeepNParams(clang::QualType& normalizedType,
       return;
    }
 
-   const TemplateSpecializationType* normalizedTst = 
+   const TemplateSpecializationType* normalizedTst =
             llvm::dyn_cast<TemplateSpecializationType>(normalizedType.getTypePtr());
    if (!normalizedTst) {
       normalizedType=originalNormalizedType;
@@ -3576,14 +3576,14 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
 
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
-   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);   
-   
-   // Readd missing default template parameters 
+   clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
+
+   // Readd missing default template parameters
    normalizedType = ROOT::TMetaUtils::AddDefaultParameters(normalizedType, interpreter, normCtxt);
 
-   // Get the number of arguments to keep in case they are not default.   
+   // Get the number of arguments to keep in case they are not default.
    KeepNParams(normalizedType,type,interpreter,normCtxt);
-   
+
    clang::PrintingPolicy policy(ctxt.getPrintingPolicy());
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
    policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
@@ -3605,7 +3605,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
    }
- 
+
 }
 
 //______________________________________________________________________________
@@ -3617,7 +3617,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name,
    const clang::Sema &sema = interpreter.getSema();
    clang::ASTContext& astCtxt = sema.getASTContext();
    clang::QualType qualType = astCtxt.getTypeDeclType(typeDecl);
-   
+
    ROOT::TMetaUtils::GetNormalizedName(norm_name,
                                        qualType,
                                        interpreter,
@@ -3823,7 +3823,7 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
    }
 
    commentStart += skipChars;
-   
+
    // Now skip the spaces after comment start until EOL.
    while ( *commentStart && isspace(*commentStart)
            && *commentStart != '\n' && *commentStart != '\r') {
@@ -4154,9 +4154,9 @@ int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int
       cur++;
    }
    cur--;
-   name = name.substr(0,cur)+">";   
+   name = name.substr(0,cur)+">";
    return 0;
-   
+
 }
 
 
@@ -4210,19 +4210,19 @@ void ROOT::TMetaUtils::ExtractEnclosingNameSpaces(const clang::Decl& decl,
                                                   std::list<std::pair<std::string,bool> >& enclosingNamespaces)
 {
    // Extract the immediately outer namespace and then launch the recursion
-   
+
    const clang::DeclContext* enclosingNamespaceDeclCtxt = decl.getDeclContext();
    if (!enclosingNamespaceDeclCtxt) return;
-   
+
    const clang::NamespaceDecl* enclosingNamespace =
              clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
    if (!enclosingNamespace) return;
-   
+
    enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
                                                 enclosingNamespace->isInline()));
-   
+
    ExtractCtxtEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
-   
+
 }
 
 //______________________________________________________________________________
@@ -4231,21 +4231,21 @@ void ROOT::TMetaUtils::ExtractCtxtEnclosingNameSpaces(const clang::DeclContext& 
 {
    // Extract enclosing namespaces recusrively
    const clang::DeclContext* enclosingNamespaceDeclCtxt = ctxt.getParent ();
-   
+
    // If no parent is found, nothing more to be done
    if (!enclosingNamespaceDeclCtxt) {
-      return;      
+      return;
    }
-   
+
    // Check if the parent is a namespace (it could be a class for example)
    // if not, nothing to be done here
    const clang::NamespaceDecl* enclosingNamespace = clang::dyn_cast<clang::NamespaceDecl>(enclosingNamespaceDeclCtxt);
    if (!enclosingNamespace) return;
-   
+
    // Add to the list of parent namespaces
    enclosingNamespaces.push_back(std::make_pair(enclosingNamespace->getNameAsString(),
                                                 enclosingNamespace->isInline()));
-   
+
    // here the recursion
    ExtractEnclosingNameSpaces(*enclosingNamespace, enclosingNamespaces);
 }
