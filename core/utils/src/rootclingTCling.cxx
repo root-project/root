@@ -55,6 +55,9 @@ bool AddStreamerInfoToROOTFile(const char* normName)
    TClass* cl = TClass::GetClass(normName, kTRUE /*load*/);
    if (!cl)
       return false;
+   // If the class is not persistent we return success.
+   if (cl->GetClassVersion() == 0)
+      return true;
    TVirtualStreamerInfo* SI = cl->GetStreamerInfo();
    if (!SI)
       return false;
