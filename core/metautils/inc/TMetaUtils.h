@@ -313,7 +313,7 @@ std::string GetROOTIncludeDir(bool rootbuild);
 bool CheckConstructor(const clang::CXXRecordDecl*, const RConstructorType&);
 
 //______________________________________________________________________________
-bool ClassInfo__HasMethod(const clang::RecordDecl *cl, char const*);
+const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::TSchemaType, std::less<std::string>, std::allocator<std::pair<std::string const, ROOT::TSchemaType> > >&);
@@ -416,7 +416,7 @@ int WriteNamespaceHeader(std::ostream&, const clang::RecordDecl *);
 void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &interp, const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-int GetClassVersion(const clang::RecordDecl *cl);
+int GetClassVersion(const clang::RecordDecl *cl, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
 int IsSTLContainer(const AnnotatedRecordDecl &annotated);
@@ -434,7 +434,7 @@ const char *ShortTypeName(const char *typeDesc);
 std::string ShortTypeName(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
-bool IsStreamableObject(const clang::FieldDecl &m);
+bool IsStreamableObject(const clang::FieldDecl &m, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 clang::RecordDecl *GetUnderlyingRecordDecl(clang::QualType type);

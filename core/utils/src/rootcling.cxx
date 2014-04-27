@@ -338,23 +338,10 @@ static std::string GetRelocatableHeaderName(const char *header, const std::strin
 }
 
 //______________________________________________________________________________
-bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
+bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name,
+                          const cling::Interpreter& interp)
 {
-   std::string given_name(name);
-   for (
-        clang::DeclContext::decl_iterator M = cl->decls_begin(),
-        MEnd = cl->decls_begin();
-        M != MEnd;
-        ++M
-        ) {
-      if (M->isFunctionOrFunctionTemplate()) {
-         clang::NamedDecl *named = llvm::dyn_cast<clang::NamedDecl>(*M);
-         if (named && named->getNameAsString() == given_name) {
-            return true;
-         }
-      }
-   }
-   return false;
+   return ROOT::TMetaUtils::ClassInfo__HasMethod(cl, name, interp);
 }
 
 //______________________________________________________________________________
@@ -948,7 +935,7 @@ bool CheckClassDef(const clang::RecordDecl& cl, const cling::Interpreter &interp
 
 
    // Detect if the class has a ClassDef
-   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(&cl,"Class_Version");
+   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(&cl,"Class_Version",interp);
 
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(&cl);
    if (!clxx) {
@@ -1435,7 +1422,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
 #endif
 
-   if (!Namespace__HasMethod(cl,"Dictionary"))
+   if (!Namespace__HasMethod(cl,"Dictionary",interp))
       dictStream << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
    dictStream << std::endl
 
@@ -1453,7 +1440,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    << "            instance(\"" << classname.c_str() << "\", ";
 
-   if (Namespace__HasMethod(cl,"Class_Version")) {
+   if (Namespace__HasMethod(cl,"Class_Version",interp)) {
       dictStream << "::" << classname.c_str() << "::Class_Version(), ";
    } else {
       dictStream << "0 /*version*/, ";
@@ -1467,7 +1454,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
                  << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
                  << "                     ";
 
-   if (Namespace__HasMethod(cl,"Dictionary")) {
+   if (Namespace__HasMethod(cl,"Dictionary",interp)) {
       dictStream << "&::" << classname.c_str() << "::Dictionary, ";
    } else {
       dictStream << "&" << mappedname.c_str() << "_Dictionary, ";
@@ -1484,7 +1471,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
    << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
 
-   if (!Namespace__HasMethod(cl,"Dictionary")) {
+   if (!Namespace__HasMethod(cl,"Dictionary",interp)) {
       dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
       << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
       << "         GenerateInitInstance()->GetClass();" << std::endl
@@ -1569,7 +1556,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    // In case of VersionID<=0 write dummy streamer only calling
    // its base class Streamer(s). If no base class(es) let Streamer
    // print error message, i.e. this Streamer should never have been called.
-   int version = ROOT::TMetaUtils::GetClassVersion(clxx);
+   int version = ROOT::TMetaUtils::GetClassVersion(clxx, interp);
    if (version <= 0) {
       // We also need to look at the base classes.
       int basestreamer = 0;
@@ -1577,7 +1564,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
           iter != end;
           ++iter)
       {
-         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer",interp)) {
             string base_fullname;
             ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
@@ -1633,7 +1620,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
           iter != end;
           ++iter)
       {
-         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer",interp)) {
             string base_fullname;
             ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
@@ -1914,7 +1901,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      dictStream << "[R__i].Streamer(R__b);" << std::endl;
                   }
                } else {
-                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer"))
+                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer",interp))
                      dictStream << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
                   else {
                      dictStream << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
@@ -2988,7 +2975,7 @@ int GenerateFullDict(std::ostream& dictStream,
             continue;
          }
          const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name")) {
+         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name",interp)) {
             if (!interpreteronly){
                WriteClassFunctions(cxxdecl,dictStream,isSplit);
             } else {
@@ -4158,9 +4145,9 @@ int RootCling(int argc,
    RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
    for( ; iter != end; ++iter)
    {
-      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer")) {
+      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer",interp)) {
          if (iter->RequestNoInputOperator()) {
-            int version = ROOT::TMetaUtils::GetClassVersion(*iter);
+            int version = ROOT::TMetaUtils::GetClassVersion(*iter, interp);
             if (version!=0) {
                // Only Check for input operator is the object is I/O has
                // been requested.
