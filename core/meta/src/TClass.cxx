@@ -675,7 +675,9 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
          if (dmclass) {
             if (dmclass->Property()) {
                if (dmclass->Property() & kIsAbstract) {
-                  ::Warning("TBuildRealData::Inspect()",": data member class: '%s'  is abstract.", dmclass->GetName());
+                  ::Warning("TBuildRealData::Inspect()",
+                            "type %s of data member '%s' is an abstract class.",
+                            dmclass->GetName(), dm->GetName());
                }
             }
             if ((dmclass != cl) && !dm->IsaPointer()) {
