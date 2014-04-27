@@ -2735,39 +2735,6 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
 
 
 //______________________________________________________________________________
-namespace {
-static bool DetermineClassVersionFromDecl(const TClingMethodInfo& mi, Version_t& newVersion)
-{
-   // Determine the ClassVersion by looking at the decl of Class_Version() passed
-   // in as mi. Returns false if unsuccessful.
-   const clang::FunctionDecl* FD = mi.GetMethodDecl();
-   if (!FD) return false;
-   const clang::CompoundStmt* FuncBody
-      = llvm::dyn_cast_or_null<clang::CompoundStmt>(FD->getBody());
-   if (!FuncBody) return false;
-   if (FuncBody->size() != 1) {
-      // This is a complex function - it might depend on state and thus
-      // we'll need the runtime and cannot determine the result statically.
-      return false;
-   }
-   const clang::ReturnStmt* RetStmt
-      = llvm::dyn_cast<clang::ReturnStmt>(FuncBody->body_back());
-   if (!RetStmt) return false;
-   const clang::Expr* RetExpr = RetStmt->getRetValue();
-   llvm::APSInt RetRes;
-   if (!RetExpr->isIntegerConstantExpr(RetRes, FD->getASTContext()))
-      return false;
-   if (RetRes.isSigned()) {
-      newVersion = (Version_t)RetRes.getSExtValue();
-   } else {
-      newVersion = (Version_t)RetRes.getZExtValue();
-   }
-   return true;
-}
-} // unnamed namespace
-
-
-//______________________________________________________________________________
 TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent /* = kFALSE */)
 {
    // Generate a TClass for the given class.
@@ -2817,7 +2784,9 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
             }
             return cl;
          }
-         if (!DetermineClassVersionFromDecl(mi, newvers)) {
+         newvers = ROOT::TMetaUtils::GetClassVersion(llvm::dyn_cast<clang::RecordDecl>(cli->GetDecl()),
+                                                     *fInterpreter);
+         if (newvers == -1) {
             // Didn't manage to determine the class version from the AST.
             // Use runtime instead.
             if (mi.Property() & kIsStatic) {
