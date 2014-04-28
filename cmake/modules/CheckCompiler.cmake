@@ -95,11 +95,12 @@ if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
-#---Check whether libc++ is used or not--------------------------------------------------------------- 
-include(CheckCXXSourceCompiles)
-set(CMAKE_REQUIRED_FLAGS -v -x c++ -E)
-CHECK_CXX_SOURCE_COMPILES("" _not_libcxx FAIL_REGEX -stdlib=libc[+][+])
-if(NOT _not_libcxx)
+#---Check whether libc++ is used or not---------------------------------------------------------------
+file(WRITE ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/empty.cxx "")
+set(_command ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} -v -x c++ -E ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/empty.cxx)
+separate_arguments(_command)
+execute_process(COMMAND ${_command} OUTPUT_QUIET ERROR_VARIABLE _output)
+if(_output MATCHES "-stdlib=libc[+][+]")
   set(USING_LIBCXX 1)
 endif()
 
