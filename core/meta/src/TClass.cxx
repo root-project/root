@@ -47,6 +47,7 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
+#include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TStreamer.h"
@@ -3643,6 +3644,19 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 }
 
 //______________________________________________________________________________
+void TClass::FillProto(TProtoClass* pcl) const
+{
+   // Fill a TProtoClass with data from this class.
+   pcl->fRealData = fRealData;
+   pcl->fBase = fBase;
+   pcl->fData = fData;
+   pcl->fCheckSum = fCheckSum;
+   pcl->fSizeof = fSizeof;
+   pcl->fCanSplit = fCanSplit;
+   pcl->fProperty = fProperty;
+}
+
+//______________________________________________________________________________
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
    // Find a method with decl id in this class or its bases.
    TFunction *f = GetMethodList()->Get(declId);
@@ -6053,3 +6067,8 @@ ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
    return fDirAutoAdd;
 }
 
+//______________________________________________________________________________
+TProtoClass::~TProtoClass()
+{
+   // Destructor; implemented in TClass.cxx to pin vtable.
+}

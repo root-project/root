@@ -60,6 +60,7 @@ class TListOfEnums;
 class TViewPubFunctions;
 class TViewPubDataMembers;
 class TFunctionTemplate;
+class TProtoClass;
 
 namespace clang {
    class Decl;
@@ -283,6 +284,7 @@ public:
    void               Dump() const { TDictionary::Dump(); }
    void               Dump(const void *obj, Bool_t noAddr = kFALSE) const;
    char              *EscapeChars(const char *text) const;
+   void               FillProto(TProtoClass* pcl) const;
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;
