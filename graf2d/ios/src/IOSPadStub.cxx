@@ -192,6 +192,16 @@ void PadStub::SetAttTextPS(Int_t, Float_t, Color_t, Style_t, Float_t)
 }
 
 //______________________________________________________________________________
+void PadStub::PaintText(Double_t, Double_t, const wchar_t *)
+{
+}
+
+//______________________________________________________________________________
+void PadStub::PaintTextNDC(Double_t, Double_t, const wchar_t *)
+{
+}
+
+//______________________________________________________________________________
 void PadStub::PaintBorderPS(Double_t, Double_t, Double_t, Double_t, Int_t, Int_t, Int_t, Int_t)
 {
 }
@@ -338,6 +348,12 @@ void PadStub::SetSelected(TObject *)
 }
 
 //______________________________________________________________________________
+void PadStub::ShowGuidelines(TObject *, Int_t, char, bool)
+{
+
+}
+
+//______________________________________________________________________________
 void PadStub::Update()
 {
 }
@@ -357,6 +373,12 @@ void PadStub::ReleaseViewer3D(Option_t *)
 Bool_t PadStub::HasViewer3D() const
 {
    return kFALSE;
+}
+
+//______________________________________________________________________________
+TVirtualPadPainter *PadStub::GetPainter()
+{
+   return 0;
 }
 
 }
