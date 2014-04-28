@@ -49,7 +49,7 @@ private:
 
    THashTable     fStringProperty;         //all properties of String type
 
-   ClassDef(TDictAttributeMap,1)  // Container for name/value pairs of TDictionary attributes
+   ClassDef(TDictAttributeMap,2)  // Container for name/value pairs of TDictionary attributes
 };
 
 #endif // ROOT_TDictAttributeMap
