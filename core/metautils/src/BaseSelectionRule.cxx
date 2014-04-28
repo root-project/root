@@ -148,10 +148,9 @@ bool BaseSelectionRule::GetAttributeValue(const std::string& attributeName, std:
 
 bool BaseSelectionRule::GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const
 { 
-    const std::string& attribute = fAttributesArray[attributeID];
-    if (attribute.empty()) return false;
-    returnValue=attribute;
-    return true;;
+    if (fAttributesArray[attributeID].empty()) return false;
+    returnValue=fAttributesArray[attributeID];
+    return true;
 }
 
 void BaseSelectionRule::SetAttributeValue(const std::string& attributeName, const std::string& attributeValue)
@@ -200,7 +199,8 @@ void BaseSelectionRule::PrintAttributes(int level) const
    PrintAttributes(std::cout, level);
 }
 
-BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl, const std::string& name, 
+BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl, 
+                                                       const std::string& name, 
                                                        const std::string& prototype, 
                                                        bool isLinkdef) const
 {
@@ -233,14 +233,18 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    }
 
    // Check if we have in hands a typedef to a RecordDecl
-   const clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl> (decl);
-   bool isTypedefNametoRecordDecl = typedefNameDecl &&
-                                    ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
+   const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);   
+   bool isTypedefNametoRecordDecl = false;
    
-   if (! isTypedefNametoRecordDecl && GetCXXRecordDecl() !=0 && GetCXXRecordDecl() != (void*)-1) {
-      const clang::CXXRecordDecl *target = GetCXXRecordDecl();
-      const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
-      if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
+   if (!D){
+      const clang::TypedefNameDecl* typedefNameDecl = clang::dyn_cast<clang::TypedefNameDecl> (decl);
+      isTypedefNametoRecordDecl = typedefNameDecl &&
+                                  ROOT::TMetaUtils::GetUnderlyingRecordDecl(typedefNameDecl->getUnderlyingType());
+      }
+   
+   if (! isTypedefNametoRecordDecl && fCXXRecordDecl !=0 && fCXXRecordDecl != (void*)-1) {
+      const clang::CXXRecordDecl *target = fCXXRecordDecl;
+      if ( target && D && target == D ) {
          //               fprintf(stderr,"DECL MATCH: %s %s\n",name_value.c_str(),name.c_str());
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
@@ -249,10 +253,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       if (name_value == name) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
-      } else if ( GetCXXRecordDecl() != (void*)-1 ) {
-         // Try a real match!
-         
-         const clang::CXXRecordDecl *D = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
+      } else if ( fCXXRecordDecl != (void*)-1 ) {
+         // Try a real match!         
          const clang::CXXRecordDecl *target
             = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
                                             true /*diagnose*/, 0);
@@ -263,7 +265,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             // If the lookup failed, let's not try it again, so mark the value has invalid.
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = (clang::CXXRecordDecl*)-1;
          }
-         if ( target && D && target == llvm::dyn_cast<clang::CXXRecordDecl>( D ) ) {
+         if ( target && D && target == D ) {
             const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
             return kName;
          }
@@ -335,7 +337,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
 
    if (has_pattern_attribute){
       bool patternMatched=CheckPattern(name, pattern_value, fSubPatterns, isLinkdef);
-      if (!patternMatched){
+      if (!patternMatched && !isLinkdef){
          std::string nameNoSpaces(name);
          nameNoSpaces.erase(std::remove_if(nameNoSpaces.begin(),nameNoSpaces.end(),isspace),
                       nameNoSpaces.end());         
@@ -561,11 +563,6 @@ bool BaseSelectionRule::GetMatchFound() const
 const clang::Type *BaseSelectionRule::GetRequestedType() const
 {
    return fRequestedType;
-}
-
-inline const clang::CXXRecordDecl *BaseSelectionRule::GetCXXRecordDecl() const
-{
-   return fCXXRecordDecl;
 }
 
 void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const clang::Type *typeptr)
