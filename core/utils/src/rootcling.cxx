@@ -3595,7 +3595,7 @@ int RootCling(int argc,
    bool inlineInputHeader = false;
    bool interpreteronly = false;
    bool doSplit = false;
-   bool noDictSelection = false;
+   bool dictSelection = true;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3652,7 +3652,7 @@ int RootCling(int argc,
 
          if (strcmp("-noDictSelection", argv[ic]) == 0) {
             // Disable selection
-            noDictSelection = true;
+            dictSelection = false;
             ic+=1;
             continue;
          }            
@@ -3948,7 +3948,7 @@ int RootCling(int argc,
 
    // Select using DictSelection
    clang::CompilerInstance* CI = interp.getCI();
-   if(!noDictSelection && !onepcm)
+   if(dictSelection && !onepcm)
       DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
   
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
@@ -4056,7 +4056,19 @@ int RootCling(int argc,
      scannerVerbLevel = (isGenreflex && gErrorIgnoreLevel != kFatal) ? 1:0;
    }
 
-   RScanner scan(selectionRules,interp,normCtxt,scannerVerbLevel);
+   // Select the type of scan
+   auto scanType = RScanner::EScanType::kNormal;
+   if (onepcm)
+      scanType = RScanner::EScanType::kOnePCM;
+   if (dictSelection)
+      scanType = RScanner::EScanType::kTwoPasses;
+   
+   RScanner scan(selectionRules,
+                 scanType,
+                 interp,
+                 normCtxt,
+                 scannerVerbLevel);
+   
    // If needed initialize the autoloading hook
    if (liblistPrefix.length()) {
       LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
@@ -4067,8 +4079,7 @@ int RootCling(int argc,
       selectionRules.SetDeep(true);
    }
 
-   // If we have dict selection enabled, we need 2 passes
-   scan.Scan(CI->getASTContext(),!noDictSelection && !onepcm);
+   scan.Scan(CI->getASTContext());
 
    bool has_input_error = false;
 

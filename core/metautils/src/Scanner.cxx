@@ -82,13 +82,18 @@ std::map <clang::Decl*, std::string> RScanner::fgAnonymousClassMap;
 std::map <clang::Decl*, std::string> RScanner::fgAnonymousEnumMap;
 
 //______________________________________________________________________________
-RScanner::RScanner (SelectionRules &rules, const cling::Interpreter &interpret, ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, unsigned int verbose /* = 0 */) : 
+RScanner::RScanner (SelectionRules &rules, 
+                    EScanType stype,
+                    const cling::Interpreter &interpret, 
+                    ROOT::TMetaUtils::TNormalizedCtxt &normCtxt, 
+                    unsigned int verbose /* = 0 */) : 
   fVerboseLevel(verbose),
   fSourceManager(0),
   fInterpreter(interpret),
   fRecordDeclCallback(0),
   fNormCtxt(normCtxt),
   fSelectionRules(rules),
+  fScanType(stype),
   fFirstPass(true)
 {
    // Regular constructor setting up the scanner to search for entities
@@ -616,7 +621,12 @@ std::string RScanner::FuncParameterList(clang::FunctionDecl* D) const
 bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 {
    // This method visits a namespace node    
-   // in case it is implicit we don't create a builder 
+   
+   // We don't need to visit this while creating the big PCM
+   if (fScanType == EScanType::kOnePCM)
+      return true;
+   
+   // in case it is implicit we don't create a builder         
    if(N && N->isImplicit()){
       return true;
    }
@@ -830,15 +840,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          
       }
-      // Add the typedef name if selected      
+      // Add the typedef if selected      
       if (selectedFromTypedef){
-         // Here it does not make sense to use the name normalisation. It
-         // indeed resolve all typedefs except the opaque ones. The best we can
-         // do is to rely on clang.
-         if (clang::CXXRecordDecl* aRecordDecl = typedefNameDecl->getUnderlyingType()->getAsCXXRecordDecl()){
-            if(fVerboseLevel > 0)
-               std::cout << "This typedef ("<< typedefNameDecl->getQualifiedNameAsString()<< ") points to " << aRecordDecl->getQualifiedNameAsString() << std::endl;           
-         }
          fSelectedTypedefs.push_back(typedefNameDecl);
       }     
 
@@ -854,10 +857,12 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 {
    // Visitor for every TypedefNameDecl, i.e. aliases and typedefs
    // We check three conditions before trying to match the name:
-   // 1) If we are using a selection XML
+   // 1) If we are creating a big PCM
    // 2) If the underlying decl is a RecordDecl
    // 3) If the typedef is eventually contained in the std namespace
    
+   if (fScanType == EScanType::kOnePCM)
+      return true;
    
    const clang::DeclContext *ctx = D->getDeclContext();
 
@@ -993,6 +998,8 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 {
+   if (fScanType == EScanType::kOnePCM)
+      return true;
    DumpDecl(D, "");
    
    bool ret = true;
@@ -1159,7 +1166,7 @@ bool RScanner::GetFunctionPrototype(clang::Decl* D, std::string& prototype) cons
 }
 
 //______________________________________________________________________________
-void RScanner::Scan(const clang::ASTContext &C, bool twoPasses)
+void RScanner::Scan(const clang::ASTContext &C)
 {
    fSourceManager = &C.getSourceManager();
    
@@ -1170,7 +1177,7 @@ void RScanner::Scan(const clang::ASTContext &C, bool twoPasses)
          std::cout<<"File name detected"<<std::endl;
    }
 
-   if (twoPasses)
+   if (fScanType == EScanType::kTwoPasses)
       TraverseDecl(C.getTranslationUnitDecl());
 
 #ifdef SELECTION_DEBUG

@@ -64,8 +64,11 @@ public:
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
    typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
    typedef void (*DeclCallback)(const char *type);
-      
+   
+   enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
+   
    RScanner (SelectionRules &rules,
+             EScanType stype,
              const cling::Interpreter &interpret,
              ROOT::TMetaUtils::TNormalizedCtxt &normCtxt,
              unsigned int verbose = 0);
@@ -96,7 +99,7 @@ public:
    DeclCallback SetRecordDeclCallback(DeclCallback callback);
 
    // Main interface of this class.
-   void Scan(const clang::ASTContext &C, bool twoPasses);
+   void Scan(const clang::ASTContext &C);
 
    // Utility routines.  Most belongs in TMetaUtils and should be shared with rootcling.cxx
    std::string GetClassName(clang::DeclContext* DC) const;
@@ -166,6 +169,7 @@ private:
    ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    SelectionRules &fSelectionRules;
    std::set<clang::RecordDecl*> fselectedRecordDecls; // Set for O(logN), unordered_set will be better
+   EScanType fScanType; // Differentiate among different kind of scans
    bool fFirstPass; // This flag allows to run twice, for example in presence of dict selection and recursive template list manipulations.
 
 
