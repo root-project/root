@@ -22,6 +22,7 @@ add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
                                    -DCOMPONENTS="headers\;tutorials"
                                    -P ${CMAKE_SOURCE_DIR}/cmake/scripts/local_install.cmake )
 
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/cint/reflex/python/genreflex ${CMAKE_BINARY_DIR}/lib/python/genreflex)
 
 #--Add all subdirectories with tests-----------------------------------------------------------
 
