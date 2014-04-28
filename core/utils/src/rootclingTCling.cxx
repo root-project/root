@@ -18,6 +18,7 @@
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include <iostream>
+#include "TProtoClass.h"
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
@@ -54,7 +55,7 @@ bool CloseStreamerInfoROOTFile()
    // Avoid plugins.
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
-   TObjArray classData;
+   TObjArray protoClasses;
    for (const auto& normName: gClassesToStore) {
       TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
@@ -69,6 +70,9 @@ bool CloseStreamerInfoROOTFile()
       if (cl->GetCollectionProxy())
          continue;
       // streamerInfos.AddLast(...)
+      TProtoClass* pcl = new TProtoClass();
+      cl->FillProto(pcl);
+      protoClasses.AddLast(pcl);
    }
 
    // Don't use TFile::Open(); we don't need plugins.
@@ -76,6 +80,6 @@ bool CloseStreamerInfoROOTFile()
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
-   classData.Write("__StreamerInfoOffsets", TObject::kSingleKey);
+   protoClasses.Write("__StreamerInfoOffsets", TObject::kSingleKey);
    return true;
 }
