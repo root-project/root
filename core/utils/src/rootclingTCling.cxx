@@ -61,11 +61,5 @@ bool AddStreamerInfoToROOTFile(const char* normName)
    // If this is a proxied collection then offsets are not needed.
    if (cl->GetCollectionProxy())
       return true;
-   TVirtualStreamerInfo* SI = cl->GetStreamerInfo();
-   if (!SI)
-      return false;
-   //FIXME: merge with TStreamerOffsets branch, then:
-   // SI->BuildOffsets();
-   gStreamerInfos.AddLast(SI);
    return true;
 }
