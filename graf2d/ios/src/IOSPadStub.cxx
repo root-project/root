@@ -348,6 +348,12 @@ void PadStub::SetSelected(TObject *)
 }
 
 //______________________________________________________________________________
+void PadStub::ShowGuidelines(TObject *, Int_t, char, bool)
+{
+
+}
+
+//______________________________________________________________________________
 void PadStub::Update()
 {
 }
