@@ -3258,10 +3258,14 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
 clang::QualType GetPointeeTypeIfPossible(const clang::QualType& qt)
 {
    // Get the pointee type if possible
-   const clang::Type* qtPtr = qt.getTypePtr();
-   return (!qt.isNull() && (llvm::isa<clang::PointerType>(qtPtr) || llvm::isa<clang::ReferenceType>(qtPtr) )) ?
-       qtPtr->getPointeeType() : qt ;
-   
+   if (qt.isNull()) return qt;
+   clang::QualType thisQt(qt);
+   while (thisQt->isPointerType() ||
+          thisQt->isReferenceType()){
+      thisQt = thisQt->getPointeeType();
+   }
+   return thisQt;
+
 }
 
 //______________________________________________________________________________
@@ -3324,7 +3328,7 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
                      headers.splice(headers.end(), RecordDecl2Headers(*fParCxxRcd, interp, visitedDecls));
                }
             }
-            // Check return value - infinite loop??
+            // Check return value
             auto retQualType = GetPointeeTypeIfPossible(methodIt->getReturnType());
             if(retQualType.isNull()) continue;
             if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
@@ -3349,14 +3353,16 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
                               HeadersClassesMap_t& headersClassesMap,
                               const cling::Interpreter& interp)
 {
+   std::set<const clang::CXXRecordDecl*> visitedDecls;
+   std::unordered_set<std::string> buffer;
    // Add some manip of headers      
    for (auto& annotatedRcd : annotatedRcds){
       if (const clang::CXXRecordDecl* cxxRcd = 
-         llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
-         std::set<const clang::CXXRecordDecl*> visitedDecls;
+           llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
+         visitedDecls.clear();
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          // remove duplicates, also if not subsequent
-         std::unordered_set<std::string> buffer;
+         buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersClassesMap[annotatedRcd.GetNormalizedName()] = headers;
       }
@@ -3364,12 +3370,12 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
    // The same for the typedefs:
    for (auto& tDef : tDefDecls){
       if (clang::CXXRecordDecl* cxxRcd=tDef->getUnderlyingType()->getAsCXXRecordDecl()){
-         std::set<const clang::CXXRecordDecl*> visitedDecls;
-         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));         
-         // remove duplicates, also if not subsequent
-         std::unordered_set<std::string> buffer;         
-         headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
+         visitedDecls.clear();
+         std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
          headers.push_back(ROOT::TMetaUtils::GetFileName(*tDef, interp));
+         // remove duplicates, also if not subsequent
+         buffer.clear();
+         headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersClassesMap[tDef->getQualifiedNameAsString()] = headers;
       }
    }
