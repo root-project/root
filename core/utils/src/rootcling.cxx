@@ -3611,6 +3611,11 @@ int RootCling(int argc,
 #if defined(ROOTINCDIR)
    if (!buildingROOT)
       SetRootSys();
+#elif !defined(ROOT_STAGE1_BUILD)
+   if (buildingROOT) {
+      // "Our" libCore needs ROOTSYS:
+      SetRootSys();
+   }
 #endif
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
