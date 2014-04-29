@@ -41,14 +41,18 @@
 
 
 namespace {
-   struct CleanupTheXMLParserOnlyOnceCommaEver {
-      ~CleanupTheXMLParserOnlyOnceCommaEver() {
-         // See https://lists.fedoraproject.org/pipermail/devel/2010-January/129117.html :
-         // "That function might delete TLS fields that belong to other libraries
-         // [...] if called twice."
+   // See https://lists.fedoraproject.org/pipermail/devel/2010-January/129117.html :
+   // "That function might delete TLS fields that belong to other libraries
+   // [...] if called twice."
+   // The same (though with less dramatic consequences) holds for xmlInitParser().
+   struct InitAndCleanupTheXMLParserOnlyOnceCommaEver {
+      InitAndCleanupTheXMLParserOnlyOnceCommaEver() {
+         xmlInitParser();
+      }
+      ~InitAndCleanupTheXMLParserOnlyOnceCommaEver() {
          xmlCleanupParser();
       }
-   } gCleanupTheXMLParserOnlyOnceCommaEver;
+   } gInitAndCleanupTheXMLParserOnlyOnceCommaEver;
 }
 
 ClassImp(TXMLParser);
@@ -58,8 +62,6 @@ TXMLParser::TXMLParser()
    : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fStopError(kFALSE), fParseCode(0)
 {
    // Initializes parser variables.
-
-   xmlInitParser();
 }
 
 //______________________________________________________________________________
