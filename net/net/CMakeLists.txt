@@ -18,7 +18,7 @@ else()
   add_definitions(-DR__SSL)
 endif()
 
-if(NOT ssl AND NOT CRYPTLIBS)
+if(NOT ssl OR NOT CRYPTLIBS)
   list(REMOVE_ITEM headers TS3HTTPRequest.h)
   list(REMOVE_ITEM headers TS3WebFile.h)
   list(REMOVE_ITEM sources TS3HTTPRequest.cxx)
