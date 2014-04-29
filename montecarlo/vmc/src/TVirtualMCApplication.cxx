@@ -20,11 +20,7 @@
 
 ClassImp(TVirtualMCApplication)
 
-#if defined(__linux__) && !defined(__CINT__)
-__thread TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
-#else
-TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
-#endif
+TMCThreadLocal TVirtualMCApplication* TVirtualMCApplication::fgInstance = 0;
 
 //_____________________________________________________________________________
 TVirtualMCApplication::TVirtualMCApplication(const char *name,

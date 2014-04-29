@@ -24,6 +24,7 @@
 #include "TMCProcess.h"
 #include "TMCParticleType.h"
 #include "TMCOptical.h"
+#include "TMCtls.h"
 #include "TVirtualMCApplication.h"
 #include "TVirtualMCStack.h"
 #include "TVirtualMCDecayer.h"
@@ -31,10 +32,6 @@
 #include "TRandom.h"
 #include "TString.h"
 #include "TError.h"
-
-#if defined(__linux__) && !defined(__CINT__)
-#include <pthread.h>
-#endif
 
 class TLorentzVector;
 class TGeoHMatrix;
@@ -866,10 +863,10 @@ private:
    TVirtualMC(const TVirtualMC &mc);
    TVirtualMC & operator=(const TVirtualMC &);
 
-#if defined(__linux__) && !defined(__CINT__)
-   static __thread TVirtualMC*  fgMC; // Monte Carlo singleton instance
+#if !defined(__CINT__)
+   static TMCThreadLocal TVirtualMC*  fgMC; // Monte Carlo singleton instance
 #else
-   static          TVirtualMC*  fgMC; // Monte Carlo singleton instance
+   static                TVirtualMC*  fgMC; // Monte Carlo singleton instance
 #endif
 
    TVirtualMCStack*    fStack;   //! Particles stack
@@ -880,10 +877,10 @@ private:
    ClassDef(TVirtualMC,1)  //Interface to Monte Carlo
 };
 
-#if defined(__linux__) && !defined(__CINT__)
-R__EXTERN __thread TVirtualMC *gMC;
+#if !defined(__CINT__)
+R__EXTERN TMCThreadLocal TVirtualMC *gMC;
 #else
-R__EXTERN          TVirtualMC *gMC;
+R__EXTERN                TVirtualMC *gMC;
 #endif
 
 #endif //ROOT_TVirtualMC
