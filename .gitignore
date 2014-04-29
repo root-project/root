@@ -605,6 +605,14 @@ AutoDict_*.cxx
 /root/meta/evolution/data6.root
 /root/meta/evolution/data1.root
 /root/meta/evolution/data3.root
+/root/meta/evolution/baseClass_merge1.root
+/root/meta/evolution/baseClass_merge2.root
+/root/meta/evolution/baseClass_v1.root
+/root/meta/evolution/baseClass_v2.root
+/root/meta/evolution/mixedBase_merge1.root
+/root/meta/evolution/mixedBase_merge2.root
+/root/meta/evolution/mixedBase_v1.root
+/root/meta/evolution/mixedBase_v2.root
 
 # /root/meta/genreflex
 /root/meta/genreflex/dicts/*
