@@ -375,8 +375,7 @@ void TListOfDataMembers::Load()
 
    DataMemberInfo_t *t = gInterpreter->DataMemberInfo_Factory(info);
    while (gInterpreter->DataMemberInfo_Next(t)) {
-      // if the name cannot be obtained there is no use to put in list
-      if (gInterpreter->DataMemberInfo_IsValid(t) && gInterpreter->DataMemberInfo_Name(t)) {
+      if (gInterpreter->DataMemberInfo_IsValid(t)) {
          // Get will check if there is already there or create a new one
          // (or re-use a previously unloaded version).
          Get(t);
