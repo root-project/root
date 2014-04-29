@@ -72,11 +72,11 @@ if(cxx11)
   endif()
 endif()
 
-#---Check for cxx11 option------------------------------------------------------------
-if(libcxx AND cxx11)
+#---Check for libcxx option------------------------------------------------------------
+if(libcxx)
   include(CheckCXXCompilerFlag)
-  CHECK_CXX_COMPILER_FLAG("-std=c++11 -stdlib=libc++" HAS_LIBCXX11)
-  if(NOT HAS_LIBCXX)
+  CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCXX11)
+  if(NOT HAS_LIBCXX11)
     message(STATUS "Current compiler does not suppport -stdlib=libc++ option. Switching OFF libcxx option")
     set(libcxx OFF CACHE BOOL "" FORCE)
   endif()

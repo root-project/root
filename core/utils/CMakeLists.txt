@@ -6,11 +6,11 @@ ROOT_USE_PACKAGE(core/metautils)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
 add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
-                          src/TModuleGenerator.cxx src/rootcling.cxx
+                          src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                           $<TARGET_OBJECTS:Clib>
                           $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
-                          LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS})
+                          LIBRARIES RIO ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS})
 
 add_dependencies(rootcling CLING LLVMRES)
 
@@ -25,7 +25,7 @@ install(PROGRAMS  ${CMAKE_BINARY_DIR}/bin/rootcint
 add_custom_command(OUTPUT rootcling_tmp.cxx
                    COMMAND cmake -E copy_if_different ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx rootcling_tmp.cxx
                    DEPENDS  ${CMAKE_CURRENT_SOURCE_DIR}/src/rootcling.cxx)
-set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOTBUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
+set_source_files_properties(rootcling_tmp.cxx PROPERTIES COMPILE_FLAGS "-DROOT_STAGE1_BUILD -DR__LLVMRESOURCEDIR=\"\\\"${CMAKE_BINARY_DIR}/etc/cling\\\"\"")
 ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
@@ -35,6 +35,7 @@ ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               NOINSTALL)
 add_dependencies(rootcling_tmp CLING LLVMRES)
 set_source_files_properties(src/LinkdefReader.cxx PROPERTIES COMPILE_FLAGS -fno-rtti)
+set_source_files_properties(src/rootclingTCling.cxx PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/meta/src)
 
 #---Deal with LLVM resource here----------------------------------------------
 set(files_to_copy COMMAND cmake -E copy ${CMAKE_BINARY_DIR}/LLVM-install/include/llvm/Config/llvm-config.h
