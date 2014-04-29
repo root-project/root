@@ -3738,17 +3738,6 @@ int RootCling(int argc,
          pcmArgs.push_back(clingArgs[parg]);
    }
 
-   std::string resourceDir;
-
-#ifdef R__LLVMRESOURCEDIR
-   resourceDir = R__LLVMRESOURCEDIR;
-#else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
-#endif
-
-#ifndef ROOT_STAGE1_BUILD
-   cling::Interpreter& interp = *TCling__GetInterpreter();
-#else
    // cling-only arguments
    clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
    clingArgs.push_back("-D__ROOTCLING__");
@@ -3760,6 +3749,17 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
+   std::string resourceDir;
+
+#ifdef R__LLVMRESOURCEDIR
+   resourceDir = R__LLVMRESOURCEDIR;
+#else
+   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
+#endif
+
+#ifndef ROOT_STAGE1_BUILD
+   cling::Interpreter& interp = *TCling__GetInterpreter();
+#else
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
