@@ -1030,7 +1030,9 @@ void TCling::RegisterModule(const char* modulename,
    // The value of 'triggerFunc' is used to find the shared library location.
 
    bool rootModulesDefined (getenv("ROOT_MODULES"));
-   
+   // rootcling also uses TCling for generating the dictionary ROOT files.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
       modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -1078,11 +1080,12 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = "#define __ROOTCLING__ 1\n"
-                  "#undef ClassDef\n"
-                  "#define ClassDef(name,id) \\\n"
-                  "_ClassDef_(name,id) \\\n"
-                  "static int DeclFileLine() { return __LINE__; }\n";
+   TString code = fromRootCling ? "" :
+      "#define __ROOTCLING__ 1\n"
+      "#undef ClassDef\n"
+      "#define ClassDef(name,id) \\\n"
+      "_ClassDef_(name,id) \\\n"
+      "static int DeclFileLine() { return __LINE__; }\n";
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -1203,13 +1206,13 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   // rootcling also uses TCling for generating the dictionary ROOT files.
-   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
-   // __ROOTCLING__ might be pulled in through PCH
-   fInterpreter->declare("#ifdef __ROOTCLING__\n"
-                         "#undef __ROOTCLING__\n"
-                         + (fromRootCling ? "" : gInterpreterClassDef) +
-                         "#endif");
+   if (!fromRootCling) {
+      // __ROOTCLING__ might be pulled in through PCH
+      fInterpreter->declare("#ifdef __ROOTCLING__\n"
+                            "#undef __ROOTCLING__\n"
+                            + gInterpreterClassDef +
+                            "#endif");
+   }
 
    if (dyLibName) {
       void* dyLibHandle = fRegisterModuleDyLibs.back();
