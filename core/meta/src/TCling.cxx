@@ -771,7 +771,7 @@ TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
    fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0),
-   fTransactionCount(0)
+   fTransactionCount(0), fHeaderParsingOnDemand(getenv("HEADER_PARSING_ON_DEMAND"))
 {
    // Initialize the cling interpreter interface.
 
@@ -1091,6 +1091,30 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
+   // Now we register all the headers necessary for the class
+   // Typical format of the array:
+   //    {"A", "classes.h", "@",
+   //     "vector<A>", "vector", "@",
+   //     "myClass", payloadCode, "@",
+   //    nullptr};
+   if (fHeaderParsingOnDemand){
+      size_t theHash;
+      std::string temp;
+      for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
+         temp=*classesHeader;
+         theHash = fStringHashFunction(*classesHeader);
+         classesHeader++;
+         for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
+            // This is done in order to distinguish headers from files and from the payloadCode
+            if (payloadCode == *classesHeader_inner ){
+               fPayloads.insert(theHash);
+            }
+            fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
+         }
+      }
+   }
+
+
    if (rootModulesDefined) {
       fInterpreter->declare(code.Data());
       code = "";
@@ -1126,7 +1150,7 @@ void TCling::RegisterModule(const char* modulename,
       #endif
       #endif      
 
-      if(!getenv("HEADER_PARSING_ON_DEMAND")){
+      if(!fHeaderParsingOnDemand){
          cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
 
          assert(cling::Interpreter::kSuccess == compRes &&
@@ -1138,46 +1162,26 @@ void TCling::RegisterModule(const char* modulename,
       }
    }
 
-   // Now we register all the headers necessary for the class
-   // Typical format of the array:
-   //    {"A", "classes.h", "@",
-   //     "vector<A>", "vector", "@",
-   //     "myClass", payloadCode, "@",
-   //    nullptr};
-
-   size_t theHash;
-   std::string temp;
-   for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
-      temp=*classesHeader;
-      theHash = fStringHashFunction(*classesHeader);
-      classesHeader++;
-      for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
-         // This is done in order to distinguish headers from files and from the payloadCode
-         if (payloadCode == *classesHeader_inner ){
-            fPayloads.insert(theHash);
-         }
-         fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
-      }
-   }
-   
    // Now that all the header have been registered/compiled, let's
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
    // loaded form other modules).
-   while (!fClassesToUpdate.empty()) {
-      TClass *oldcl = fClassesToUpdate.back().first;
-      if (oldcl->GetState() != TClass::kHasTClassInit) {
-         // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
-         TString classname = oldcl->GetName();
-         VoidFuncPtr_t dict = fClassesToUpdate.back().second;
-         fClassesToUpdate.pop_back();
-         // Calling func could manipulate the list so, let maintain the list
-         // then call the dictionary function.
-         dict();
-         TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
-         if (ncl) ncl->PostLoadCheck();
-      } else {
-         fClassesToUpdate.pop_back();
+   if (!fHeaderParsingOnDemand){
+      while (!fClassesToUpdate.empty()) {
+         TClass *oldcl = fClassesToUpdate.back().first;
+         if (oldcl->GetState() != TClass::kHasTClassInit) {
+            // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+            TString classname = oldcl->GetName();
+            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            fClassesToUpdate.pop_back();
+            // Calling func could manipulate the list so, let maintain the list
+            // then call the dictionary function.
+            dict();
+            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            if (ncl) ncl->PostLoadCheck();
+         } else {
+            fClassesToUpdate.pop_back();
+         }
       }
    }
 
@@ -4315,6 +4319,7 @@ Int_t TCling::AutoLoad(const char* cls)
    if (fAutoLoadCallBack) {
       int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
       if (success) {
+         AutoParse(cls);
          SetClassAutoloading(oldvalue);
          return success;
       }
@@ -4355,36 +4360,72 @@ Int_t TCling::AutoLoad(const char* cls)
       delete tokens;
    }
       
-   // Piggy-back the header parsing
-   if(getenv("HEADER_PARSING_ON_DEMAND")){
-      std::size_t normNameHash(fStringHashFunction(cls));
-      // If the class was not looked up
-      if (fLookedUpClasses.insert(normNameHash).second){
-         const std::vector<const char*> hNamesPtrs = fClassesHeadersMap[normNameHash];
-         for (auto & hName : hNamesPtrs){
-            if (0!=fPayloads.count(normNameHash)){
-               if (gDebug > 0) {
-                  Info("TCling::AutoLoad",
-                     "Parsing full payload for %s", cls);
-               }
-               fInterpreter->parseForModule(hName);
-            } else {
-               if (gDebug > 0) {
-                  Info("TCling::AutoLoad",
-                     "I would have included %s", hName);
-               }
-               std::string includeLine("#include \"");
-               includeLine+=hName;
-               includeLine+="\"";
-               fInterpreter->parseForModule(includeLine.c_str());
-            }
-         }
-      }
-   }
+   AutoParse(cls);
    
    SetClassAutoloading(oldvalue);         
    return status;
 }
+
+//______________________________________________________________________________
+Int_t TCling::AutoParse(const char* cls)
+{
+   // Parse the headers relative to the class
+
+   if(!fHeaderParsingOnDemand) return 0;
+
+   Int_t nHheadersParsed = 0;
+   std::size_t normNameHash(fStringHashFunction(cls));
+   // If the class was not looked up
+   if (fLookedUpClasses.insert(normNameHash).second){
+      const std::vector<const char*>& hNamesPtrs = fClassesHeadersMap[normNameHash];
+      for (auto& hName : hNamesPtrs){
+         if (0!=fPayloads.count(normNameHash)){
+            if (gDebug > 0) {
+               Info("AutoParse",
+                  "Parsing full payload for %s", cls);
+            }
+            auto cRes = fInterpreter->parseForModule(hName);
+            if (cRes != cling::Interpreter::kSuccess){
+               Error("AutoParse","Error parsing payload code for class %s.", cls);
+            }
+         } else {
+            if (gDebug > 0) {
+               Info("AutoParse",
+                  "Parsing single header %s", hName);
+            }
+            std::string includeLine("#include \"");
+            includeLine+=hName;
+            includeLine+="\"";
+            auto cRes = fInterpreter->parseForModule(includeLine.c_str());
+            if (cRes != cling::Interpreter::kSuccess){
+               Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
+            }
+         }
+      nHheadersParsed++;
+      }
+   }
+
+   if (nHheadersParsed != 0){
+      while (!fClassesToUpdate.empty()) {
+         TClass *oldcl = fClassesToUpdate.back().first;
+         if (oldcl->GetState() != TClass::kHasTClassInit) {
+            // if (gDebug > 2) Info("RegisterModule", "Forcing TClass init for %s", oldcl->GetName());
+            TString classname = oldcl->GetName();
+            VoidFuncPtr_t dict = fClassesToUpdate.back().second;
+            fClassesToUpdate.pop_back();
+            // Calling func could manipulate the list so, let maintain the list
+            // then call the dictionary function.
+            dict();
+            TClass *ncl = TClass::GetClass(classname, kFALSE, kTRUE);
+            if (ncl) ncl->PostLoadCheck();
+         } else {
+            fClassesToUpdate.pop_back();
+         }
+      }
+   }
+   return nHheadersParsed;
+}
+
 
 //______________________________________________________________________________
 void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {

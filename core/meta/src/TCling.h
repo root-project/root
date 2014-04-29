@@ -137,6 +137,8 @@ private: // Data Members
    std::vector<const char*> fCurExecutingMacros;
 
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
+
+   bool fHeaderParsingOnDemand;
    
 
 public: // Public Interface
@@ -511,6 +513,7 @@ private: // Private Utility Functions
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
    void UnloadClassMembers(TClass* cl, const clang::DeclContext* DC);
+   Int_t AutoParse(const char* cls);
 
 };
 
