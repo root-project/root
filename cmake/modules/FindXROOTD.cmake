@@ -53,7 +53,7 @@ if(XROOTD_FOUND)
   endif()
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
 
-  if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
+  if ( ${xrdversnum} LESS 300010000 )
      set(XROOTD_OLDPACK TRUE)
      set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOT_DIR})
      message(STATUS "Setting OLDPACK TRUE")

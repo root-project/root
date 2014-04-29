@@ -12,7 +12,7 @@ endif()
 
 if(xrootd)
   add_subdirectory(netx)
-  if(NOT WIN32)
+  if(NOT WIN32 AND ssl)
     add_subdirectory(rpdutils)
   endif()
   if(alien)
