@@ -112,15 +112,15 @@ $(RAUTHLIB):    $(RAUTHO) $(RAUTHDO) $(ORDER_) $(MAINLIBS) $(RAUTHLIBDEP)
 $(call pcmrule,RAUTH)
 	$(noop)
 
-$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
+$(RAUTHDS):     $(RAUTHH) $(RAUTHL) $(ROOTCLINGEXE) $(call pcmdep,RAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
-$(RAUTHMAP):    $(RAUTHH) $(RAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,RAUTH)
+$(RAUTHMAP):    $(RAUTHH) $(RAUTHL) $(ROOTCLINGEXE) $(call pcmdep,RAUTH)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(RAUTHDS) $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
+		$(ROOTCLINGSTAGE2) -r $(RAUTHDS) $(call dictModule,RAUTH) -c $(RAUTHH) $(RAUTHL)
 
 $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
@@ -131,15 +131,15 @@ $(AFSAUTHLIB):  $(AFSAUTHO) $(AFSAUTHDO) $(ORDER_) $(MAINLIBS) $(AFSAUTHLIBDEP)
 $(call pcmrule,AFSAUTH)
 	$(noop)
 
-$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,AFSAUTH)
+$(AFSAUTHDS):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCLINGEXE) $(call pcmdep,AFSAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
 
-$(AFSAUTHMAP):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCINTTMPDEP) $(call pcmdep,AFSAUTH)
+$(AFSAUTHMAP):   $(AFSAUTHH) $(AFSAUTHL) $(ROOTCLINGEXE) $(call pcmdep,AFSAUTH)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -r $(AFSAUTHMAP) $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
+		$(ROOTCLINGSTAGE2) -r $(AFSAUTHMAP) $(call dictModule,AFSAUTH) -c $(AFSAUTHH) $(AFSAUTHL)
 
 all-$(MODNAME): $(RAUTHLIB) $(AFSAUTHLIB)
 

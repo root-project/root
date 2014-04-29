@@ -49,15 +49,15 @@ $(GDMLLIB):     $(GDMLO) $(GDMLDO) $(ORDER_) $(MAINLIBS) $(GDMLLIBDEP)
 $(call pcmrule,GDML)
 	$(noop)
 
-$(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GDML)
+$(GDMLDS):      $(GDMLH) $(GDMLL) $(ROOTCLINGEXE) $(call pcmdep,GDML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
 
-$(GDMLMAP):     $(GDMLH) $(GDMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GDML)
+$(GDMLMAP):     $(GDMLH) $(GDMLL) $(ROOTCLINGEXE) $(call pcmdep,GDML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GDMLDS) $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
+		$(ROOTCLINGSTAGE2) -r $(GDMLDS) $(call dictModule,GDML) -c $(GDMLH) $(GDMLL)
 
 all-$(MODNAME): $(GDMLLIB)
 

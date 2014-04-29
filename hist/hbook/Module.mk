@@ -49,15 +49,15 @@ $(HBOOKLIB):    $(HBOOKO) $(HBOOKDO) $(ORDER_) $(MAINLIBS) $(HBOOKLIBDEP)
 $(call pcmrule,HBOOK)
 	$(noop)
 
-$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
+$(HBOOKDS):     $(HBOOKH) $(HBOOKL) $(ROOTCLINGEXE) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
 
-$(HBOOKMAP):    $(HBOOKH) $(HBOOKL) $(ROOTCINTTMPDEP) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
+$(HBOOKMAP):    $(HBOOKH) $(HBOOKL) $(ROOTCLINGEXE) $(filter-out lib/libminicern_rdict.pcm,$(call pcmdep,HBOOK))
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(HBOOKDS) $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
+		$(ROOTCLINGSTAGE2) -r $(HBOOKDS) $(call dictModule,HBOOK) -c $(HBOOKH) $(HBOOKL)
 
 all-$(MODNAME): $(HBOOKLIB)
 

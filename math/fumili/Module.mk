@@ -49,15 +49,15 @@ $(FUMILILIB):   $(FUMILIO) $(FUMILIDO) $(ORDER_) $(MAINLIBS) $(FUMILILIBDEP)
 $(call pcmrule,FUMILI)
 	$(noop)
 
-$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
+$(FUMILIDS):    $(FUMILIH) $(FUMILIL) $(ROOTCLINGEXE) $(call pcmdep,FUMILI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
 
-$(FUMILIMAP):   $(FUMILIH) $(FUMILIL) $(ROOTCINTTMPDEP) $(call pcmdep,FUMILI)
+$(FUMILIMAP):   $(FUMILIH) $(FUMILIL) $(ROOTCLINGEXE) $(call pcmdep,FUMILI)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(FUMILIDS) $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
+		$(ROOTCLINGSTAGE2) -r $(FUMILIDS) $(call dictModule,FUMILI) -c $(FUMILIH) $(FUMILIL)
 
 all-$(MODNAME): $(FUMILILIB)
 

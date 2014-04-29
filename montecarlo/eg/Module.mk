@@ -50,15 +50,15 @@ $(EGLIB):       $(EGO) $(EGDO) $(ORDER_) $(MAINLIBS) $(EGLIBDEP)
 $(call pcmrule,EG)
 	$(noop)
 
-$(EGDS):        $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcmdep,EG)
+$(EGDS):        $(EGH1) $(EGL) $(ROOTCLINGEXE) $(call pcmdep,EG)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,EG) -c $(EGH1) $(EGL)
 
-$(EGMAP):       $(EGH1) $(EGL) $(ROOTCINTTMPDEP) $(call pcmdep,EG)
+$(EGMAP):       $(EGH1) $(EGL) $(ROOTCLINGEXE) $(call pcmdep,EG)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(EGDS) $(call dictModule,EG) -c $(EGH1) $(EGL)
+		$(ROOTCLINGSTAGE2) -r $(EGDS) $(call dictModule,EG) -c $(EGH1) $(EGL)
 
 all-$(MODNAME): $(EGLIB)
 

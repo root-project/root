@@ -49,15 +49,15 @@ $(RECLIB):      $(RECO) $(RECDO) $(ORDER_) $(MAINLIBS) $(RECLIBDEP)
 $(call pcmrule,REC)
 	$(noop)
 
-$(RECDS):       $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcmdep,REC)
+$(RECDS):       $(RECH) $(RECL) $(ROOTCLINGEXE) $(call pcmdep,REC)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,REC) -c $(RECH) $(RECL)
 
-$(RECMAP):      $(RECH) $(RECL) $(ROOTCINTTMPDEP) $(call pcmdep,REC)
+$(RECMAP):      $(RECH) $(RECL) $(ROOTCLINGEXE) $(call pcmdep,REC)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(RECDS) $(call dictModule,REC) -c $(RECH) $(RECL)
+		$(ROOTCLINGSTAGE2) -r $(RECDS) $(call dictModule,REC) -c $(RECH) $(RECL)
 
 all-$(MODNAME): $(RECLIB)
 

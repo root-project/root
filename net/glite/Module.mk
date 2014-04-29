@@ -49,15 +49,15 @@ $(GLITELIB):    $(GLITEO) $(GLITEDO) $(ORDER_) $(MAINLIBS) $(GLITELIBDEP)
 $(call pcmrule,GLITE)
 	$(noop)
 
-$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,GLITE)
+$(GLITEDS):     $(GLITEH) $(GLITEL) $(ROOTCLINGEXE) $(call pcmdep,GLITE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
 
-$(GLITEMAP):    $(GLITEH) $(GLITEL) $(ROOTCINTTMPDEP) $(call pcmdep,GLITE)
+$(GLITEMAP):    $(GLITEH) $(GLITEL) $(ROOTCLINGEXE) $(call pcmdep,GLITE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GLITEDS) $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
+		$(ROOTCLINGSTAGE2) -r $(GLITEDS) $(call dictModule,GLITE) -c $(GLITEH) $(GLITEL)
 
 all-$(MODNAME): $(GLITELIB)
 

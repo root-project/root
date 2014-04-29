@@ -94,15 +94,15 @@ endif
 $(call pcmrule,PYROOT)
 	$(noop)
 
-$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
+$(PYROOTDS):    $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
-$(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCINTTMPDEP) $(call pcmdep,PYROOT)
+$(PYROOTMAP):   $(PYROOTH) $(PYROOTL) $(ROOTCLINGEXE) $(call pcmdep,PYROOT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PYROOTDS) $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
+		$(ROOTCLINGSTAGE2) -r $(PYROOTDS) $(call dictModule,PYROOT) -c $(PYROOTH) $(PYROOTL)
 
 $(PYTHON64):    $(PYTHON64O)
 		$(CC) $(LDFLAGS) -o $@ $(PYTHON64O) \

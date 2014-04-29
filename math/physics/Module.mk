@@ -49,15 +49,15 @@ $(PHYSICSLIB):  $(PHYSICSO) $(PHYSICSDO) $(ORDER_) $(MAINLIBS) $(PHYSICSLIBDEP)
 $(call pcmrule,PHYSICS)
 	$(noop)
 
-$(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcmdep,PHYSICS)
+$(PHYSICSDS):   $(PHYSICSH) $(PHYSICSL) $(ROOTCLINGEXE) $(call pcmdep,PHYSICS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
 
-$(PHYSICSMAP):  $(PHYSICSH) $(PHYSICSL) $(ROOTCINTTMPDEP) $(call pcmdep,PHYSICS)
+$(PHYSICSMAP):  $(PHYSICSH) $(PHYSICSL) $(ROOTCLINGEXE) $(call pcmdep,PHYSICS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PHYSICSDS) $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
+		$(ROOTCLINGSTAGE2) -r $(PHYSICSDS) $(call dictModule,PHYSICS) -c $(PHYSICSH) $(PHYSICSL)
 
 all-$(MODNAME): $(PHYSICSLIB)
 

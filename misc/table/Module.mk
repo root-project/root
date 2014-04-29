@@ -49,15 +49,15 @@ $(TABLELIB):    $(TABLEO) $(TABLEDO) $(ORDER_) $(MAINLIBS) $(TABLELIBDEP)
 $(call pcmrule,TABLE)
 	$(noop)
 
-$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcmdep,TABLE)
+$(TABLEDS):     $(TABLEH) $(TABLEL) $(ROOTCLINGEXE) $(call pcmdep,TABLE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
 
-$(TABLEMAP):    $(TABLEH) $(TABLEL) $(ROOTCINTTMPDEP) $(call pcmdep,TABLE)
+$(TABLEMAP):    $(TABLEH) $(TABLEL) $(ROOTCLINGEXE) $(call pcmdep,TABLE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(TABLEDS) $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
+		$(ROOTCLINGSTAGE2) -r $(TABLEDS) $(call dictModule,TABLE) -c $(TABLEH) $(TABLEL)
 
 all-$(MODNAME): $(TABLELIB)
 

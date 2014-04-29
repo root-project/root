@@ -49,15 +49,15 @@ $(GVIZLIB):     $(GVIZO) $(GVIZDO) $(ORDER_) $(MAINLIBS) $(GVIZLIBDEP)
 $(call pcmrule,GVIZ)
 	$(noop)
 
-$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
+$(GVIZDS):      $(GVIZH) $(GVIZL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
-$(GVIZMAP):     $(GVIZH) $(GVIZL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ)
+$(GVIZMAP):     $(GVIZH) $(GVIZL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GVIZDS) $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
+		$(ROOTCLINGSTAGE2) -r $(GVIZDS) $(call dictModule,GVIZ) -c $(GRAPHVIZINCDIR:%=-I%) $(GVIZH) $(GVIZL)
 
 all-$(MODNAME): $(GVIZLIB)
 

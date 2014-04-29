@@ -49,15 +49,15 @@ $(FOAMLIB):     $(FOAMO) $(FOAMDO) $(ORDER_) $(MAINLIBS) $(FOAMLIBDEP)
 $(call pcmrule,FOAM)
 	$(noop)
 
-$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
+$(FOAMDS):      $(FOAMH) $(FOAML) $(ROOTCLINGEXE) $(call pcmdep,FOAM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
 
-$(FOAMMAP):     $(FOAMH) $(FOAML) $(ROOTCINTTMPDEP) $(call pcmdep,FOAM)
+$(FOAMMAP):     $(FOAMH) $(FOAML) $(ROOTCLINGEXE) $(call pcmdep,FOAM)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(FOAMDS) $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
+		$(ROOTCLINGSTAGE2) -r $(FOAMDS) $(call dictModule,FOAM) -c $(FOAMH) $(FOAML)
 
 all-$(MODNAME): $(FOAMLIB)
 

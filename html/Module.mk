@@ -49,15 +49,15 @@ $(HTMLLIB):     $(HTMLO) $(HTMLDO) $(ORDER_) $(MAINLIBS) $(HTMLLIBDEP)
 $(call pcmrule,HTML)
 	$(noop)
 
-$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,HTML)
+$(HTMLDS):      $(HTMLH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
-$(HTMLMAP):     $(HTMLH) $(HTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,HTML)
+$(HTMLMAP):     $(HTMLH) $(HTMLL) $(ROOTCLINGEXE) $(call pcmdep,HTML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(HTMLDS) $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
+		$(ROOTCLINGSTAGE2) -r $(HTMLDS) $(call dictModule,HTML) -c $(HTMLH) $(HTMLL)
 
 all-$(MODNAME): $(HTMLLIB)
 

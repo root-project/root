@@ -71,15 +71,15 @@ $(EVELIB):      $(EVEO) $(EVEDO) $(ORDER_) $(MAINLIBS) $(EVELIBDEP) \
 $(call pcmrule,EVE)
 	$(noop)
 
-$(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcmdep,EVE)
+$(EVEDS):       $(EVEH) $(EVEL0) $(EVELS) $(ROOTCLINGEXE) $(call pcmdep,EVE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
 
-$(EVEMAP):      $(EVEH) $(EVEL0) $(EVELS) $(ROOTCINTTMPDEP) $(call pcmdep,EVE)
+$(EVEMAP):      $(EVEH) $(EVEL0) $(EVELS) $(ROOTCLINGEXE) $(call pcmdep,EVE)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(EVEDS) $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
+		$(ROOTCLINGSTAGE2) -r $(EVEDS) $(call dictModule,EVE) -c -I$(ROOT_SRCDIR) $(EVEH) $(EVEL0)
 
 all-$(MODNAME): $(EVELIB)
 

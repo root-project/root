@@ -59,15 +59,15 @@ $(QUARTZLIB):   $(QUARTZO) $(QUARTZOBJCPPO) $(QUARTZDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,QUARTZ)
 	$(noop)
 
-$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcmdep,QUARTZ)
+$(QUARTZDS):    $(QUARTZH1) $(QUARTZL) $(ROOTCLINGEXE) $(call pcmdep,QUARTZ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
 
-$(QUARTZMAP):   $(QUARTZH1) $(QUARTZL) $(ROOTCINTTMPDEP) $(call pcmdep,QUARTZ)
+$(QUARTZMAP):   $(QUARTZH1) $(QUARTZL) $(ROOTCLINGEXE) $(call pcmdep,QUARTZ)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(QUARTZDS) $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
+		$(ROOTCLINGSTAGE2) -r $(QUARTZDS) $(call dictModule,QUARTZ) -c $(QUARTZH1) $(QUARTZL)
 
 all-$(MODNAME): $(QUARTZLIB)
 

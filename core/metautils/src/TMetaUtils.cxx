@@ -536,25 +536,14 @@ inline bool IsTemplate(const clang::Decl &cl)
 
 
 //______________________________________________________________________________
-bool ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::RecordDecl *cl, const char* name)
+const clang::FunctionDecl* ROOT::TMetaUtils::ClassInfo__HasMethod(const clang::DeclContext *cl, const char* name,
+                                                            const cling::Interpreter& interp)
 {
-   const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
-   if (!CRD) {
-      return false;
-   }
-   std::string given_name(name);
-   for (
-        clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
-        MEnd = CRD->method_end();
-        M != MEnd;
-        ++M
-        )
-   {
-      if (M->getNameAsString() == given_name) {
-         return true;
-      }
-   }
-   return false;
+   clang::Sema* S = const_cast<clang::Sema*>(&interp.getSema());
+   const clang::NamedDecl* ND = cling::utils::Lookup::Named(S, name, cl);
+   if (ND == (clang::NamedDecl*)-1)
+      return (clang::FunctionDecl*)-1;
+   return llvm::dyn_cast_or_null<clang::FunctionDecl>(ND);
 }
 
 //______________________________________________________________________________
@@ -650,7 +639,7 @@ int ROOT::TMetaUtils::ElementStreamer(std::ostream& finalString,
    ROOT::TMetaUtils::GetQualifiedName(rawname, clang::QualType(rawtype,0), forcontext);
 
    clang::CXXRecordDecl *cxxtype = rawtype->getAsCXXRecordDecl() ;
-   int isStre = cxxtype && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxtype,"Streamer");
+   int isStre = cxxtype && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxtype,"Streamer",interp);
    int isTObj = cxxtype && (IsBase(cxxtype,TObject_decl) || rawname == "TObject");
 
    long kase = 0;
@@ -1453,7 +1442,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "namespace ROOT {" << "\n";
 
-   if (!ClassInfo__HasMethod(decl,"Dictionary") || IsTemplate(*decl))
+   if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl))
    {
       finalString << "   static void " << mappedname.c_str() << "_Dictionary();\n"
                   << "   static void " << mappedname.c_str() << "_TClassManip(TClass*);\n";
@@ -1639,7 +1628,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
-   if (ClassInfo__HasMethod(decl,"IsA") ) {
+   if (ClassInfo__HasMethod(decl,"IsA",interp) ) {
       finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(0);" << "\n";
    }
    else {
@@ -1647,7 +1636,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
    finalString << "      static ::ROOT::TGenericClassInfo " << "\n" << "         instance(\"" << classname.c_str() << "\", ";
 
-   if (ClassInfo__HasMethod(decl,"Class_Version")) {
+   if (ClassInfo__HasMethod(decl,"Class_Version",interp)) {
       finalString << csymbol << "::Class_Version(), ";
    } else if (bset) {
       finalString << "2, "; // bitset 'version number'
@@ -1691,7 +1680,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
    finalString << "\"" << filename << "\", " << ROOT::TMetaUtils::GetLineNumber(cl) << "," << "\n" << "                  typeid(" << csymbol << "), DefineBehavior(ptr, ptr)," << "\n" << "                  ";
 
-   if (ClassInfo__HasMethod(decl,"Dictionary") && !IsTemplate(*decl)) {
+   if (ClassInfo__HasMethod(decl,"Dictionary",interp) && !IsTemplate(*decl)) {
       finalString << "&" << csymbol << "::Dictionary, ";
    } else {
       finalString << "&" << mappedname << "_Dictionary, ";
@@ -1787,7 +1776,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)0x0); R__UseDummy(_R__UNIQUE_(Init));" << "\n";
 
-   if (!ClassInfo__HasMethod(decl,"Dictionary") || IsTemplate(*decl)) {
+   if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
                   << "   static void " << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
@@ -2172,7 +2161,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
    std::string a;
    std::string clName;
    TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(*cl.GetRecordDecl(), interp).str().c_str());
-   int version = ROOT::TMetaUtils::GetClassVersion(cl.GetRecordDecl());
+   int version = ROOT::TMetaUtils::GetClassVersion(cl.GetRecordDecl(),interp);
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
 
@@ -2207,7 +2196,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
          }
       }
 
-      if (!ROOT::TMetaUtils::IsStreamableObject(**field_iter)) continue;
+      if (!ROOT::TMetaUtils::IsStreamableObject(**field_iter, interp)) continue;
 
       int k = ROOT::TMetaUtils::IsSTLContainer( **field_iter );
       if (k!=0) {
@@ -2235,63 +2224,49 @@ std::string ROOT::TMetaUtils::TrueName(const clang::FieldDecl &m)
 }
 
 //______________________________________________________________________________
-int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl)
+int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::Interpreter& interp)
 {
    // Return the version number of the class or -1
    // if the function Class_Version does not exist.
-
-   if (!ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Class_Version")) return -1;
 
    const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(cl);
    if (!CRD) {
       // Must be an enum or namespace.
       // FIXME: Make it work for a namespace!
-      return false;
+      return -1;
    }
-   // Class_Version is know to be inline and we constrol (via the ClassDef macros)
-   // it's structure, so this is apriori fine, but we could consider replacing it
-   // with the slower but simpler:
-   //   gInterp->evaluate( classname + "::Class_Version()", &Value);
-   std::string given_name("Class_Version");
-   for (
-        clang::CXXRecordDecl::method_iterator M = CRD->method_begin(),
-        MEnd = CRD->method_end();
-        M != MEnd;
-        ++M
-        ) {
-      if (M->getNameAsString() == given_name) {
-         clang::CompoundStmt *func = 0;
-         if (M->getBody()) {
-            func = llvm::dyn_cast<clang::CompoundStmt>(M->getBody());
-         } else {
-            const clang::FunctionDecl *inst = M->getInstantiatedFromMemberFunction();
-            if (inst && inst->getBody()) {
-               func = llvm::dyn_cast<clang::CompoundStmt>(inst->getBody());
-            } else {
-               std::string qualName;
-               ROOT::TMetaUtils::GetQualifiedName(qualName,*cl);
-               ROOT::TMetaUtils::Error("GetClassVersion","Could not find the body for %s::ClassVersion!\n",qualName.c_str());
-            }
-         }
-         if (func && !func->body_empty()) {
-            clang::ReturnStmt *ret = llvm::dyn_cast<clang::ReturnStmt>(*func->body_begin());
-            if (ret) {
-               clang::IntegerLiteral *val;
-               clang::ImplicitCastExpr *cast = llvm::dyn_cast<clang::ImplicitCastExpr>( ret->getRetValue() );
-               if (cast) {
-                  val = llvm::dyn_cast<clang::IntegerLiteral>( cast->getSubExprAsWritten() );
-               } else {
-                  val = llvm::dyn_cast<clang::IntegerLiteral>( ret->getRetValue() );
-               }
-               if (val) {
-                  return (int)val->getValue().getLimitedValue(~0);
-               }
-            }
-         }
-         return 0;
-      }
+   const clang::FunctionDecl* funcCV = ROOT::TMetaUtils::ClassInfo__HasMethod(CRD,"Class_Version",interp);
+   // if we have no Class_Info() return -1.
+   if (!funcCV) return -1;
+   // if we have many Class_Info() (?!) return 1.
+   if (funcCV == (clang::FunctionDecl*)-1) return 1;
+
+   const clang::CompoundStmt* FuncBody
+      = llvm::dyn_cast_or_null<clang::CompoundStmt>(funcCV->getBody());
+   if (!FuncBody) return -1;
+   if (FuncBody->size() != 1) {
+      // This is a non-ClassDef(), complex function - it might depend on state
+      // and thus we'll need the runtime and cannot determine the result
+      // statically.
+      return -1;
    }
-   return 0;
+   const clang::ReturnStmt* RetStmt
+      = llvm::dyn_cast<clang::ReturnStmt>(FuncBody->body_back());
+   if (!RetStmt) return -1;
+   const clang::Expr* RetExpr = RetStmt->getRetValue();
+   // ClassDef controls the content of Class_Version() but not the return
+   // expression which is CPP expanded from what the user provided as second
+   // ClassDef argument. It's usually just be an integer literal but it could
+   // also be an enum or a variable template for all we know.
+   // Go through ICE to be more general.
+   llvm::APSInt RetRes;
+   if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
+      return -1;
+   if (RetRes.isSigned()) {
+      return (Version_t)RetRes.getSExtValue();
+   }
+   // else
+   return (Version_t)RetRes.getZExtValue();
 }
 
 //______________________________________________________________________________
@@ -2364,7 +2339,8 @@ const char *ROOT::TMetaUtils::ShortTypeName(const char *typeDesc)
    return t;
 }
 
-bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m)
+bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m,
+                                          const cling::Interpreter& interp)
 {
    const char *comment = ROOT::TMetaUtils::GetComment( m ).data();
 
@@ -2407,9 +2383,9 @@ bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m)
    }
 
    const clang::CXXRecordDecl *cxxdecl = rawtype->getAsCXXRecordDecl();
-   if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxdecl,"Streamer")) {
-      if (!(ROOT::TMetaUtils::ClassInfo__HasMethod(cxxdecl,"Class_Version"))) return true;
-      int version = ROOT::TMetaUtils::GetClassVersion(cxxdecl);
+   if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(cxxdecl,"Streamer", interp)) {
+      if (!(ROOT::TMetaUtils::ClassInfo__HasMethod(cxxdecl,"Class_Version", interp))) return true;
+      int version = ROOT::TMetaUtils::GetClassVersion(cxxdecl,interp);
       if (version > 0) return true;
    }
    return false;
@@ -2474,7 +2450,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
      return;
    }
 
-   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer")) {
+   if (ROOT::TMetaUtils::ClassInfo__HasMethod(cl,"Streamer",interp)) {
       if (cl.RootFlag()) ROOT::TMetaUtils::WritePointersSTL(cl, interp, normCtxt); // In particular this detect if the class has a version number.
       if (!(cl.RequestNoStreamer())) {
          (*WriteStreamerFunc)(cl, interp, normCtxt, dictStream, isGenreflex || cl.RequestStreamerInfo());

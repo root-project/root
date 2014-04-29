@@ -49,15 +49,15 @@ $(GUIHTMLLIB):  $(GUIHTMLO) $(GUIHTMLDO) $(ORDER_) $(MAINLIBS) $(GUIHTMLLIBDEP)
 $(call pcmrule,GUIHTML)
 	$(noop)
 
-$(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIHTML)
+$(GUIHTMLDS):   $(GUIHTMLH) $(GUIHTMLL) $(ROOTCLINGEXE) $(call pcmdep,GUIHTML)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
 
-$(GUIHTMLMAP):  $(GUIHTMLH) $(GUIHTMLL) $(ROOTCINTTMPDEP) $(call pcmdep,GUIHTML)
+$(GUIHTMLMAP):  $(GUIHTMLH) $(GUIHTMLL) $(ROOTCLINGEXE) $(call pcmdep,GUIHTML)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GUIHTMLDS) $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
+		$(ROOTCLINGSTAGE2) -r $(GUIHTMLDS) $(call dictModule,GUIHTML) -c $(GUIHTMLH) $(GUIHTMLL)
 
 all-$(MODNAME): $(GUIHTMLLIB)
 

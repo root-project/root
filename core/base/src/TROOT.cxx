@@ -433,14 +433,18 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    fStreamerInfo    = new TObjArray(100);
    fClassGenerators = new TList;
 
-   // initialize plugin manager early
-   fPluginManager->LoadHandlersFromEnv(gEnv);
+   // usedToIdentifyRootClingByDlSym is available when TROOT is part of
+   // rootcling.
+   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+      // initialize plugin manager early
+      fPluginManager->LoadHandlersFromEnv(gEnv);
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
-   if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
-      TEnv plugins(".plugins-ios");
-      fPluginManager->LoadHandlersFromEnv(&plugins);
-   }
+      if (TARGET_OS_IPHONE | TARGET_IPHONE_SIMULATOR) {
+         TEnv plugins(".plugins-ios");
+         fPluginManager->LoadHandlersFromEnv(&plugins);
+      }
 #endif
+   }
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
@@ -1621,54 +1625,58 @@ void TROOT::InitInterpreter()
    // Initialize the interpreter. Should be called only after main(),
    // to make sure LLVM/Clang is fully initialized.
 
-   // Make sure no llvm symbols are visible before loading libCling. If they
-   // exist libCling will use those and not ours, causing havoc in the
-   // interpreter. Look for an extern "C" symbol to avoid mangling; look for a
-   // symbol from llvm because clang builds on top, so users would likely
-   // have also their own llvm symbols when providing their own clang.
-   void *LLVMEnablePrettyStackTraceAddr = 0;
-   // Can't use gSystem->DynFindSymbol() because that iterates over all *known*
-   // libraries which is not the same!
-   LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
-   if (LLVMEnablePrettyStackTraceAddr) {
-      Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
-            "This will cause problems; please hide them or dlopen() them "
-            "after the call to TROOT::InitInterpreter()!");
-   }
+   // usedToIdentifyRootClingByDlSym is available when TROOT is part of
+   // rootcling.
+   if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
+      // Make sure no llvm symbols are visible before loading libCling. If they
+      // exist libCling will use those and not ours, causing havoc in the
+      // interpreter. Look for an extern "C" symbol to avoid mangling; look for a
+      // symbol from llvm because clang builds on top, so users would likely
+      // have also their own llvm symbols when providing their own clang.
+      void *LLVMEnablePrettyStackTraceAddr = 0;
+      // Can't use gSystem->DynFindSymbol() because that iterates over all *known*
+      // libraries which is not the same!
+      LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
+      if (LLVMEnablePrettyStackTraceAddr) {
+         Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
+               "This will cause problems; please hide them or dlopen() them "
+               "after the call to TROOT::InitInterpreter()!");
+      }
 
-   char *libclingStorage = 0;
-   const char *libcling = 0;
+      const char *libcling = 0;
+      char *libclingStorage = 0;
 #ifdef ROOTLIBDIR
-   libcling = ROOTLIBDIR "/libCling."
+      libcling = ROOTLIBDIR "/libCling."
 # ifdef R__WIN32
       "dll";
 # else
       "so";
 # endif
-
 #else
-   libclingStorage = gSystem->DynamicPathName("libCling");
-   libcling = libclingStorage;
+      libclingStorage = gSystem->DynamicPathName("libCling");
+      libcling = libclingStorage;
 #endif
+      gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
+      delete [] libclingStorage;
 
-   gInterpreterLib = dlopen(libcling, RTLD_LAZY|RTLD_LOCAL);
-   delete [] libclingStorage;
-   if (!gInterpreterLib) {
-      TString err = dlerror();
-      fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
-      exit(1);
+      if (!gInterpreterLib) {
+         TString err = dlerror();
+         fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
+         exit(1);
+      }
+      dlerror();   // reset error message
+   } else {
+      gInterpreterLib = RTLD_DEFAULT;
    }
-   dlerror();   // reset error message
-
-   // Schedule the destruction of TROOT.
-   atexit(at_exit_of_TROOT);
-
    CreateInterpreter_t *CreateInterpreter = (CreateInterpreter_t*) dlsym(gInterpreterLib, "CreateInterpreter");
    if (!CreateInterpreter) {
       TString err = dlerror();
       fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load symbol %s\n", err.Data());
       exit(1);
    }
+   // Schedule the destruction of TROOT.
+   atexit(at_exit_of_TROOT);
+
    gDestroyInterpreter = (DestroyInterpreter_t*) dlsym(gInterpreterLib, "DestroyInterpreter");
    if (!gDestroyInterpreter) {
       TString err = dlerror();

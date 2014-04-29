@@ -48,15 +48,15 @@ $(DAVIXLIB):    $(DAVIXO) $(DAVIXDO) $(ORDER_) $(MAINLIBS) $(DAVIXLIBDEP)
 $(call pcmrule,DAVIX)
 	$(noop)
 
-$(DAVIXDS):     $(DAVIXH) $(DAVIXL) $(ROOTCINTTMPDEP) $(call pcmdep,DAVIX)
+$(DAVIXDS):     $(DAVIXH) $(DAVIXL) $(ROOTCLINGEXE) $(call pcmdep,DAVIX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
 
-$(DAVIXMAP):    $(DAVIXH) $(DAVIXL) $(ROOTCINTTMPDEP) $(call pcmdep,DAVIX)
+$(DAVIXMAP):    $(DAVIXH) $(DAVIXL) $(ROOTCLINGEXE) $(call pcmdep,DAVIX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(DAVIXDS) $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
+		$(ROOTCLINGSTAGE2) -r $(DAVIXDS) $(call dictModule,DAVIX) -c $(DAVIXH) $(DAVIXL)
 
 all-$(MODNAME): $(DAVIXLIB)
 

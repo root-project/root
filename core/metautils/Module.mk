@@ -71,16 +71,14 @@ STLDICTS_HDR := $(call stripsrc,$(patsubst lib/lib%Dict.$(SOEXT),$(METAUTILSDIRS
 STLDICTS_OBJ := $(patsubst %.cxx,%.o,$(STLDICTS_SRC))
 STLDICTS_DEP := $(patsubst %.cxx,%.d,$(STLDICTS_SRC))
 
-$(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
-	$(ROOTCINTTMP) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
-	   -c $(subst multi,,${*:2=}) \
-	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
+$(call stripsrc,$(METAUTILSDIRS)/G__std__%.cxx): $(METAUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
+	$(ROOTCLINGSTAGE1) -f $@ -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT)) -c $(subst multi,,${*:2=}) $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 
 $(STLDICTS): lib/lib%Dict.$(SOEXT): $(call stripsrc,$(METAUTILSDIRS)/G__std__%.o) $(ORDER_) $(MAINLIBS)
 	@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" "$(SOFLAGS)" $(notdir $@) $@ "$(filter-out $(MAINLIBS),$^)" ""
 
-lib/lib%Dict.rootmap: $(METAUTILSDIRS)/%Linkdef.h $(ROOTCINTTMPDEP)
-	$(ROOTCINTTMP) -r $(METAUTILSDIRS)/G__std__%.cxx -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
+lib/lib%Dict.rootmap: $(METAUTILSDIRS)/%Linkdef.h $(ROOTCLINGSTAGE1DEP)
+	$(ROOTCLINGSTAGE1) -r $(METAUTILSDIRS)/G__std__%.cxx -s lib/lib$*Dict.pcm -m lib/libCore.pcm $(call rootmapModule, lib/lib$*Dict.$(SOEXT))\
 	   -c $(subst multi,,${*:2=}) \
 	   $(ROOT_SRCDIR)/core/metautils/src/$*Linkdef.h
 

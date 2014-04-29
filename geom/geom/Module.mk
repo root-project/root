@@ -69,15 +69,15 @@ $(GEOMLIB):     $(GEOMO) $(GEOMDO) $(ORDER_) $(MAINLIBS) $(GEOMLIBDEP)
 $(call pcmrule,GEOM)
 	$(noop)
 
-$(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcmdep,GEOM)
+$(GEOMDS):      $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCLINGEXE) $(call pcmdep,GEOM)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
 
-$(GEOMMAP):     $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCINTTMPDEP) $(call pcmdep,GEOM)
+$(GEOMMAP):     $(GEOMH) $(GEOML0) $(GEOMLS) $(ROOTCLINGEXE) $(call pcmdep,GEOM)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GEOMDS) $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
+		$(ROOTCLINGSTAGE2) -r $(GEOMDS) $(call dictModule,GEOM) -c -I$(ROOT_SRCDIR) $(GEOMH1) $(GEOMH2) $(GEOML0)
 
 all-$(MODNAME): $(GEOMLIB)
 

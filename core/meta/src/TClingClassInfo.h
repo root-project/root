@@ -69,9 +69,9 @@ private:
    TClingClassInfo &operator=(const TClingClassInfo &) /* = delete */; // NOT IMPLEMENTED
 public: // Types
 
-   enum InheritanceMode {
-      InThisScope = 0,
-      WithInheritance = 1
+   enum EInheritanceMode {
+      kInThisScope = 0,
+      kWithInheritance = 1
    };
 
 public:
@@ -92,22 +92,22 @@ public:
    TClingMethodInfo     GetMethod(const char *fname) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const char *proto, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethodWithArgs(const char *fname, const char *arglist, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    TClingMethodInfo     GetMethod(const char *fname, const llvm::SmallVectorImpl<clang::QualType> &proto, bool objectIsConst,
                                   long *poffset, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch,
-                                  InheritanceMode imode = WithInheritance) const;
+                                  EInheritanceMode imode = kWithInheritance) const;
    int                  GetMethodNArg(const char *method, const char *proto, Bool_t objectIsConst, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch) const;
    long                 GetOffset(const clang::CXXMethodDecl* md) const;
    ptrdiff_t            GetBaseOffset(TClingClassInfo* toBase, void* address, bool isDerivedObject);

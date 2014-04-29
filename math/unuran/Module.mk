@@ -141,15 +141,15 @@ $(UNURANLIB):   $(UNRCFG) $(UNRO) $(UNURANO) $(UNURANDO) $(ORDER_) \
 $(call pcmrule,UNURAN)
 	$(noop)
 
-$(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmdep,UNURAN)
+$(UNURANDS):    $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCLINGEXE) $(call pcmdep,UNURAN)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
-$(UNURANMAP):   $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCINTTMPDEP) $(call pcmdep,UNURAN)
+$(UNURANMAP):   $(UNRINIT) $(UNURANDH1) $(UNURANL) $(ROOTCLINGEXE) $(call pcmdep,UNURAN)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(UNURANDS) $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
+		$(ROOTCLINGSTAGE2) -r $(UNURANDS) $(call dictModule,UNURAN) -c $(UNRFLAGS) $(UNURANDH1) $(UNURANL)
 
 all-$(MODNAME): $(UNURANLIB)
 

@@ -775,6 +775,9 @@ TCling::TCling(const char *name, const char *title)
 {
    // Initialize the cling interpreter interface.
 
+   // rootcling also uses TCling for generating the dictionary ROOT files.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::Value>();
@@ -787,9 +790,11 @@ TCling::TCling(const char *name, const char *title)
    std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
    clingArgsStorage.push_back(interpInclude);
 
-   std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
-   clingArgsStorage.push_back("-include-pch");
-   clingArgsStorage.push_back(pchFilename);
+   if (!fromRootCling) {
+      std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
+      clingArgsStorage.push_back("-include-pch");
+      clingArgsStorage.push_back(pchFilename);
+   }
 
    // clingArgsStorage.push_back("-Xclang");
    // clingArgsStorage.push_back("-fmodules");
@@ -804,6 +809,14 @@ TCling::TCling(const char *name, const char *title)
 #endif // ROOTINCDIR
    clingArgsStorage.push_back("-I");
    clingArgsStorage.push_back(include);
+
+   // rootcling needs to run in syntax-only mode, i.e. without execution. Detect
+   // rootcling by looking for a rootcling-only symbol:
+   if (fromRootCling) {
+      clingArgsStorage.push_back("-D__ROOTCLING__");
+      clingArgsStorage.push_back("-fsyntax-only");
+      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+   }
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
@@ -844,7 +857,9 @@ TCling::TCling(const char *name, const char *title)
       ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
-   fInterpreter->declare("#include \"Rtypes.h\"\n"+ gInterpreterClassDef +"#include <string>\n"
+   fInterpreter->declare("#include \"Rtypes.h\"\n"
+                         + (fromRootCling ? "" : gInterpreterClassDef)
+                         + "#include <string>\n"
                          "using namespace std;");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
@@ -1015,7 +1030,9 @@ void TCling::RegisterModule(const char* modulename,
    // The value of 'triggerFunc' is used to find the shared library location.
 
    bool rootModulesDefined (getenv("ROOT_MODULES"));
-   
+   // rootcling also uses TCling for generating the dictionary ROOT files.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
       modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -1063,11 +1080,12 @@ void TCling::RegisterModule(const char* modulename,
    // FIXME: Remove #define __ROOTCLING__ once PCMs are there.
    // This is used to give Sema the same view on ACLiC'ed files (which
    // are then #included through the dictionary) as rootcling had.
-   TString code = "#define __ROOTCLING__ 1\n"
-                  "#undef ClassDef\n"
-                  "#define ClassDef(name,id) \\\n"
-                  "_ClassDef_(name,id) \\\n"
-                  "static int DeclFileLine() { return __LINE__; }\n";
+   TString code = fromRootCling ? "" :
+      "#define __ROOTCLING__ 1\n"
+      "#undef ClassDef\n"
+      "#define ClassDef(name,id) \\\n"
+      "_ClassDef_(name,id) \\\n"
+      "static int DeclFileLine() { return __LINE__; }\n";
    code += payloadCode;
 
    // We need to open the dictionary shared library, to resolve sylbols
@@ -1188,10 +1206,13 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   // Might be pulled in through PCH
-   fInterpreter->declare("#ifdef __ROOTCLING__\n"
-                         "#undef __ROOTCLING__\n" + gInterpreterClassDef +
-                         "#endif");
+   if (!fromRootCling) {
+      // __ROOTCLING__ might be pulled in through PCH
+      fInterpreter->declare("#ifdef __ROOTCLING__\n"
+                            "#undef __ROOTCLING__\n"
+                            + gInterpreterClassDef +
+                            "#endif");
+   }
 
    if (dyLibName) {
       void* dyLibHandle = fRegisterModuleDyLibs.back();
@@ -2715,6 +2736,7 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    }
 }
 
+
 //______________________________________________________________________________
 TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent /* = kFALSE */)
 {
@@ -2737,7 +2759,52 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
       version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
    }
    TClass *cl = new TClass(classname, version, silent);
-   if (emulation) cl->SetBit(TClass::kIsEmulation);
+   if (emulation) {
+      cl->SetBit(TClass::kIsEmulation);
+   } else {
+      // Set the class version if the class is versioned.
+      // Note that we cannot just call CLASS::Class_Version() as we might not have
+      // an execution engine (when invoked from rootcling).
+
+      // Do not call cl->GetClassVersion(), it has side effects!
+      Version_t oldvers = cl->fClassVersion;
+      if (oldvers == version && cl->GetClassInfo()) {
+         // We have a version and it might need an update.
+         Version_t newvers = oldvers;
+         TClingClassInfo* cli = (TClingClassInfo*)cl->GetClassInfo();
+         if (llvm::isa<clang::NamespaceDecl>(cli->GetDecl())) {
+            // Namespaces don't have class versions.
+            return cl;
+         }
+         TClingMethodInfo mi = cli->GetMethod("Class_Version", "", 0 /*poffset*/,
+                                              ROOT::kExactMatch,
+                                              TClingClassInfo::kInThisScope);
+         if (!mi.IsValid()) {
+            if (cl->TestBit(TClass::kIsTObject)) {
+               Error("GenerateTClass",
+                     "Cannot find %s::Class_Version()! Class version might be wrong.",
+                     cl->GetName());
+            }
+            return cl;
+         }
+         newvers = ROOT::TMetaUtils::GetClassVersion(llvm::dyn_cast<clang::RecordDecl>(cli->GetDecl()),
+                                                     *fInterpreter);
+         if (newvers == -1) {
+            // Didn't manage to determine the class version from the AST.
+            // Use runtime instead.
+            if (mi.Property() & kIsStatic) {
+               // This better be a static function.
+               TClingCallFunc callfunc(fInterpreter, *fNormalizedCtxt);
+               callfunc.SetFunc(&mi);
+               newvers = callfunc.ExecInt(0);
+            }
+         }
+         if (newvers != oldvers) {
+            cl->fClassVersion = newvers;
+            cl->fStreamerInfo->Expand(newvers + 2 + 10);
+         }
+      }
+   }
 
    return cl;
 
@@ -4312,6 +4379,9 @@ Int_t TCling::AutoLoad(const char* cls)
    Int_t status = 0;
    if (!gROOT || !gInterpreter || gROOT->TestBit(TObject::kInvalidObject)) {
       return status;
+   }
+   if (fClingCallbacks && !fClingCallbacks->IsAutoloadingEnabled ()) {
+      return 0;
    }
    // Prevent the recursion when the library dictionary are loaded.
    Int_t oldvalue = SetClassAutoloading(false);

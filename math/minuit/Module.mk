@@ -49,15 +49,15 @@ $(MINUITLIB):   $(MINUITO) $(MINUITDO) $(ORDER_) $(MAINLIBS) $(MINUITLIBDEP)
 $(call pcmrule,MINUIT)
 	$(noop)
 
-$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
+$(MINUITDS):    $(MINUITH) $(MINUITL) $(ROOTCLINGEXE) $(call pcmdep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
 
-$(MINUITMAP):   $(MINUITH) $(MINUITL) $(ROOTCINTTMPDEP) $(call pcmdep,MINUIT)
+$(MINUITMAP):   $(MINUITH) $(MINUITL) $(ROOTCLINGEXE) $(call pcmdep,MINUIT)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(MINUITDS) $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
+		$(ROOTCLINGSTAGE2) -r $(MINUITDS) $(call dictModule,MINUIT) -c $(MINUITH) $(MINUITL)
 
 all-$(MODNAME): $(MINUITLIB)
 

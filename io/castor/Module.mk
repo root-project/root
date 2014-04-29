@@ -50,15 +50,15 @@ $(CASTORLIB):   $(CASTORO) $(CASTORDO) $(ORDER_) $(MAINLIBS) $(CASTORLIBDEP)
 $(call pcmrule,CASTOR)
 	$(noop)
 
-$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
+$(CASTORDS):    $(CASTORH) $(CASTORL) $(ROOTCLINGEXE) $(call pcmdep,CASTOR)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
 
-$(CASTORMAP):   $(CASTORH) $(CASTORL) $(ROOTCINTTMPDEP) $(call pcmdep,CASTOR)
+$(CASTORMAP):   $(CASTORH) $(CASTORL) $(ROOTCLINGEXE) $(call pcmdep,CASTOR)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(CASTORDS) $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
+		$(ROOTCLINGSTAGE2) -r $(CASTORDS) $(call dictModule,CASTOR) -c $(CASTORH) $(CASTORL)
 
 all-$(MODNAME): $(CASTORLIB)
 

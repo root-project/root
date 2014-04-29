@@ -49,15 +49,15 @@ $(FFTWLIB):     $(FFTWO) $(FFTWDO) $(ORDER_) $(MAINLIBS) $(FFTWLIBDEP)
 $(call pcmrule,FFTW)
 	$(noop)
 
-$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcmdep,FFTW)
+$(FFTWDS):      $(FFTWH) $(FFTWL) $(ROOTCLINGEXE) $(call pcmdep,FFTW)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
 
-$(FFTWMAP):     $(FFTWH) $(FFTWL) $(ROOTCINTTMPDEP) $(call pcmdep,FFTW)
+$(FFTWMAP):     $(FFTWH) $(FFTWL) $(ROOTCLINGEXE) $(call pcmdep,FFTW)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(FFTWDS) $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
+		$(ROOTCLINGSTAGE2) -r $(FFTWDS) $(call dictModule,FFTW) -c $(FFTWH) $(FFTWL)
 
 all-$(MODNAME): $(FFTWLIB)
 

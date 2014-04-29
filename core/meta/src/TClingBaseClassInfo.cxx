@@ -166,6 +166,11 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
    // from the parameter derived class to the parameter toBase class for the
    // address.
 
+   // rootcling can trigger this, too, and without CodeGen we cannot use any
+   // offset calculation function.
+   if (!fInterp->getCodeGenerator())
+      return 0;
+
    // Get the dedcls for the two classes.
    const clang::RecordDecl* fromDerivedDecl
       = dyn_cast<clang::RecordDecl>(fromDerivedClass->GetDecl());

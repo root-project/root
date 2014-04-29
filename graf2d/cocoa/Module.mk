@@ -60,15 +60,15 @@ $(COCOALIB):    $(COCOAO) $(COCOAOBJCPPO) $(COCOADO) $(FREETYPEDEP) $(ORDER_) $(
 $(call pcmrule,COCOA)
 	$(noop)
 
-$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcmdep,COCOA)
+$(COCOADS):     $(COCOAH1) $(COCOAL) $(ROOTCLINGEXE) $(call pcmdep,COCOA)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
-$(COCOAMAP):    $(COCOAH1) $(COCOAL) $(ROOTCINTTMPDEP) $(call pcmdep,COCOA)
+$(COCOAMAP):    $(COCOAH1) $(COCOAL) $(ROOTCLINGEXE) $(call pcmdep,COCOA)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(COCOADS) $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
+		$(ROOTCLINGSTAGE2) -r $(COCOADS) $(call dictModule,COCOA) -c $(FREETYPEINC) $(COCOAH1) $(COCOAL)
 
 all-$(MODNAME): $(COCOALIB)
 

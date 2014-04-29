@@ -59,15 +59,15 @@ $(PROOFLIB):    $(PROOFO) $(PROOFDO) $(ORDER_) $(MAINLIBS) $(PROOFLIBDEP)
 $(call pcmrule,PROOF)
 	$(noop)
 
-$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOF)
+$(PROOFDS):     $(PROOFH) $(PROOFL) $(ROOTCLINGEXE) $(call pcmdep,PROOF)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
-$(PROOFMAP):    $(PROOFH) $(PROOFL) $(ROOTCINTTMPDEP) $(call pcmdep,PROOF)
+$(PROOFMAP):    $(PROOFH) $(PROOFL) $(ROOTCLINGEXE) $(call pcmdep,PROOF)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PROOFDS) $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
+		$(ROOTCLINGSTAGE2) -r $(PROOFDS) $(call dictModule,PROOF) -c $(ALIENDSMGR) $(PROOFH) $(PROOFL)
 
 all-$(MODNAME): $(PROOFLIB)
 

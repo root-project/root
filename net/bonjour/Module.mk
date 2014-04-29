@@ -49,15 +49,15 @@ $(BONJLIB):     $(BONJO) $(BONJDO) $(ORDER_) $(MAINLIBS)
 $(call pcmrule,BONJ)
 	$(noop)
 
-$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcmdep,BONJ)
+$(BONJDS):      $(BONJH) $(BONJL) $(ROOTCLINGEXE) $(call pcmdep,BONJ)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
 
-$(BONJMAP):     $(BONJH) $(BONJL) $(ROOTCINTTMPDEP) $(call pcmdep,BONJ)
+$(BONJMAP):     $(BONJH) $(BONJL) $(ROOTCLINGEXE) $(call pcmdep,BONJ)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(BONJDS) $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
+		$(ROOTCLINGSTAGE2) -r $(BONJDS) $(call dictModule,BONJ) -c $(BONJH) $(BONJL)
 
 all-$(MODNAME): $(BONJLIB)
 

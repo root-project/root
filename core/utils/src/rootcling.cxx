@@ -8,6 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+extern "C" {
+   void usedToIdentifyRootClingByDlSym() {};
+}
+
 const char *shortHelp =
 "Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] "
 "[-rml rootMapLibrary] [-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
@@ -211,6 +215,10 @@ const char *rootClingHelp =
 
 #include "OptionParser.h"
 
+#ifndef ROOT_STAGE1_BUILD
+#include "rootclingTCling.h"
+#endif
+
 #ifdef WIN32
  const std::string gPathSeparator ("\\");
  const std::string gLibraryExtension (".dll");
@@ -229,11 +237,10 @@ const char *rootClingHelp =
 #else
 #include <unistd.h>
 #endif
-
-#ifdef ROOTBUILD
-# define ROOTBUILDVAL true
+#ifdef ROOT_STAGE1_BUILD
+const bool buildingROOT = true;
 #else
-# define ROOTBUILDVAL false
+bool buildingROOT = false;
 #endif
 
 #ifdef R__EXTERN_LLVMDIR
@@ -256,6 +263,21 @@ using namespace std;
 namespace genreflex {
    bool verbose = false;
 }
+
+//______________________________________________________________________________
+#ifndef ROOT_STAGE1_BUILD
+static bool EmitStreamerInfo(const char* normName)
+{
+   if (!AddStreamerInfoToROOTFile(normName)) {
+      std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
+                << normName << '\n';
+      return false;
+   }
+   return true;
+}
+#else
+static bool EmitStreamerInfo(const char*) { return true; }
+#endif
 
 //______________________________________________________________________________
 static void GetCurrentDirectory(std::string &output)
@@ -305,34 +327,21 @@ static std::string GetRelocatableHeaderName(const char *header, const std::strin
       // different relative path to the header files.
       result.erase(0, lenCurrWorkDir);
    }
-#ifdef ROOTBUILD
-   // For ROOT, convert module directories like core/base/inc/ to include/
-   int posInc = result.find("/inc/");
-   if (posInc != -1) {
-      result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+   if (buildingROOT) {
+      // For ROOT, convert module directories like core/base/inc/ to include/
+      int posInc = result.find("/inc/");
+      if (posInc != -1) {
+         result = /*std::string("include") +*/ result.substr(posInc + 5, -1);
+      }
    }
-#endif
    return result;
 }
 
 //______________________________________________________________________________
-bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name)
+bool Namespace__HasMethod(const clang::NamespaceDecl *cl, const char* name,
+                          const cling::Interpreter& interp)
 {
-   std::string given_name(name);
-   for (
-        clang::DeclContext::decl_iterator M = cl->decls_begin(),
-        MEnd = cl->decls_begin();
-        M != MEnd;
-        ++M
-        ) {
-      if (M->isFunctionOrFunctionTemplate()) {
-         clang::NamedDecl *named = llvm::dyn_cast<clang::NamedDecl>(*M);
-         if (named && named->getNameAsString() == given_name) {
-            return true;
-         }
-      }
-   }
-   return false;
+   return ROOT::TMetaUtils::ClassInfo__HasMethod(cl, name, interp);
 }
 
 //______________________________________________________________________________
@@ -926,7 +935,7 @@ bool CheckClassDef(const clang::RecordDecl& cl, const cling::Interpreter &interp
 
 
    // Detect if the class has a ClassDef
-   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(&cl,"Class_Version");
+   bool hasClassDef = ROOT::TMetaUtils::ClassInfo__HasMethod(&cl,"Class_Version",interp);
 
    const clang::CXXRecordDecl* clxx = llvm::dyn_cast<clang::CXXRecordDecl>(&cl);
    if (!clxx) {
@@ -1413,7 +1422,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    dictStream << "      inline ::ROOT::TGenericClassInfo *GenerateInitInstance();" << std::endl;
 #endif
 
-   if (!Namespace__HasMethod(cl,"Dictionary"))
+   if (!Namespace__HasMethod(cl,"Dictionary",interp))
       dictStream << "      static void " << mappedname.c_str() << "_Dictionary();" << std::endl;
    dictStream << std::endl
 
@@ -1431,7 +1440,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 
    << "            instance(\"" << classname.c_str() << "\", ";
 
-   if (Namespace__HasMethod(cl,"Class_Version")) {
+   if (Namespace__HasMethod(cl,"Class_Version",interp)) {
       dictStream << "::" << classname.c_str() << "::Class_Version(), ";
    } else {
       dictStream << "0 /*version*/, ";
@@ -1445,7 +1454,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
                  << "                     ::ROOT::DefineBehavior((void*)0,(void*)0)," << std::endl
                  << "                     ";
 
-   if (Namespace__HasMethod(cl,"Dictionary")) {
+   if (Namespace__HasMethod(cl,"Dictionary",interp)) {
       dictStream << "&::" << classname.c_str() << "::Dictionary, ";
    } else {
       dictStream << "&" << mappedname.c_str() << "_Dictionary, ";
@@ -1462,7 +1471,7 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
    << "      static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstance();"
    << " R__UseDummy(_R__UNIQUE_(Init));" << std::endl;
 
-   if (!Namespace__HasMethod(cl,"Dictionary")) {
+   if (!Namespace__HasMethod(cl,"Dictionary",interp)) {
       dictStream <<  std::endl << "      // Dictionary for non-ClassDef classes" << std::endl
       << "      static void " << mappedname.c_str() << "_Dictionary() {" << std::endl
       << "         GenerateInitInstance()->GetClass();" << std::endl
@@ -1547,7 +1556,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    // In case of VersionID<=0 write dummy streamer only calling
    // its base class Streamer(s). If no base class(es) let Streamer
    // print error message, i.e. this Streamer should never have been called.
-   int version = ROOT::TMetaUtils::GetClassVersion(clxx);
+   int version = ROOT::TMetaUtils::GetClassVersion(clxx, interp);
    if (version <= 0) {
       // We also need to look at the base classes.
       int basestreamer = 0;
@@ -1555,7 +1564,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
           iter != end;
           ++iter)
       {
-         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer",interp)) {
             string base_fullname;
             ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
@@ -1611,7 +1620,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
           iter != end;
           ++iter)
       {
-         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer")) {
+         if (ROOT::TMetaUtils::ClassInfo__HasMethod(iter->getType()->getAsCXXRecordDecl (),"Streamer",interp)) {
             string base_fullname;
             ROOT::TMetaUtils::GetQualifiedName(base_fullname,* iter->getType()->getAsCXXRecordDecl ());
 
@@ -1892,7 +1901,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      dictStream << "[R__i].Streamer(R__b);" << std::endl;
                   }
                } else {
-                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer"))
+                  if (ROOT::TMetaUtils::ClassInfo__HasMethod(ROOT::TMetaUtils::GetUnderlyingRecordDecl(field_iter->getType()),"Streamer",interp))
                      dictStream << "      " << GetNonConstMemberName(**field_iter) << ".Streamer(R__b);" << std::endl;
                   else {
                      dictStream << "      R__b.StreamObject(&(" << field_iter->getName().str() << "),typeid("
@@ -2088,10 +2097,11 @@ const char *CopyArg(const char *original)
    // If the argument starts with MODULE/inc, strip it
    // to make it the name we can use in #includes.
 
-#ifdef ROOTBUILD
-   if (IsSelectionFile(original)) {
+   if (!buildingROOT)
       return original;
-   }
+
+   if (IsSelectionFile(original))
+      return original;
 
    const char *inc = strstr(original, "\\inc\\");
    if (!inc)
@@ -2099,9 +2109,6 @@ const char *CopyArg(const char *original)
    if (inc && strlen(inc) > 5)
       return inc + 5;
    return original;
-#else
-   return original;
-#endif
 }
 
 //______________________________________________________________________________
@@ -2172,6 +2179,10 @@ static int GenerateModule(TModuleGenerator& modGen,
                                   fwdDeclnArgsToKeepString,
                                   headersClassesMapString);
 
+   // Disable clang::Modules for now.
+   if (!modGen.IsPCH())
+      return 0;
+
    if (inlineInputHeader) return 0;
 
    if (!modGen.IsPCH()) {
@@ -2205,9 +2216,9 @@ static int GenerateModule(TModuleGenerator& modGen,
 
       CI->getFrontendOpts().RelocatablePCH = true;
       std::string ISysRoot("/DUMMY_SYSROOT/include/");
-#ifdef ROOTBUILD
-      ISysRoot = (currentDirectory + "/").c_str();
-#endif
+      if (buildingROOT)
+         ISysRoot = (currentDirectory + "/").c_str();
+
       Writer.WriteAST(CI->getSema(), modGen.GetModuleFileName().c_str(),
                       module, ISysRoot.c_str());
 
@@ -2934,11 +2945,18 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
+                  if (!EmitStreamerInfo(iter->GetNormalizedName()))
+                     return 1;
                   ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
          }
+
+#ifndef ROOT_STAGE1_BUILD
+         CloseStreamerInfoROOTFile();
+#endif
       }
+
       //
       // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
       // first to allow template specialisation to occur before template
@@ -2957,7 +2975,7 @@ int GenerateFullDict(std::ostream& dictStream,
             continue;
          }
          const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name")) {
+         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name",interp)) {
             if (!interpreteronly){
                WriteClassFunctions(cxxdecl,dictStream,isSplit);
             } else {
@@ -3443,6 +3461,13 @@ int RootCling(int argc,
    GetCurrentDirectory(currentDirectory);
 
    ic = 1;
+#ifndef ROOT_STAGE1_BUILD
+   if (strcmp("-rootbuild", argv[ic]) == 0) {
+      // running rootcling for ROOT itself.
+      buildingROOT = true;
+      ic++;
+   }
+#endif
    if (!strcmp(argv[ic], "-v")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kError; // The default is kError
       ic++;
@@ -3583,8 +3608,9 @@ int RootCling(int argc,
       clingArgs.push_back("-DG__VECTOR_HAS_CLASS_ITERATOR");
    }
 
-#if !defined(ROOTBUILD) && defined(ROOTINCDIR)
-   SetRootSys();
+#if defined(ROOTINCDIR)
+   if (!buildingROOT)
+      SetRootSys();
 #endif
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
@@ -3704,7 +3730,7 @@ int RootCling(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(ROOTBUILDVAL));
+   clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(buildingROOT));
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -3713,8 +3739,7 @@ int RootCling(int argc,
    }
 
    // cling-only arguments
-   std::string interpInclude = TMetaUtils::GetInterpreterExtraIncludePath(ROOTBUILDVAL);
-   clingArgs.push_back(interpInclude);
+   clingArgs.push_back(TMetaUtils::GetInterpreterExtraIncludePath(buildingROOT));
    clingArgs.push_back("-D__ROOTCLING__");
    clingArgs.push_back("-fsyntax-only");
    clingArgs.push_back("-Xclang");
@@ -3724,24 +3749,34 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
+   std::string resourceDir;
+
+#ifdef R__LLVMRESOURCEDIR
+   resourceDir = R__LLVMRESOURCEDIR;
+#else
+   resourceDir = TMetaUtils::GetLLVMResourceDir(buildingROOT);
+#endif
+
+#ifndef ROOT_STAGE1_BUILD
+   cling::Interpreter& interp = *TCling__GetInterpreter();
+#else
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
         iclingArgs < nclingArgs; ++iclingArgs) {
       clingArgsC.push_back(clingArgs[iclingArgs].c_str());
    }
 
-   std::string resourceDir;
-
-#ifdef R__LLVMRESOURCEDIR
-   resourceDir = R__LLVMRESOURCEDIR;
-#else
-   resourceDir = TMetaUtils::GetLLVMResourceDir(ROOTBUILDVAL);
-#endif
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
-   
+#endif // ROOT_STAGE1_BUILD
+
    interp.getOptions().ErrorOut = true;
    interp.enableRawInput(true);
+#ifdef ROOTINCDIR
+   const bool useROOTINCDIR = !buildingROOT;
+#else
+   const bool useROOTINCDIR = false;
+#endif
    if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
 // CINT uses to define a few header implicitly, we need to do it explicitly.
        || interp.declare("#include <assert.h>\n"
@@ -3750,20 +3785,16 @@ int RootCling(int argc,
                          "#include <math.h>\n"
                          "#include <string.h>\n"
                          ) != cling::Interpreter::kSuccess
-#ifdef ROOTBUILD
-       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
-#else
-# ifndef ROOTINCDIR
-       || interp.declare("#include \"Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"TObject.h\"") != cling::Interpreter::kSuccess
-# else
-       || interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"" ROOTINCDIR "/TClingRuntime.h\"") != cling::Interpreter::kSuccess
-       || interp.declare("#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-# endif
+       || (!useROOTINCDIR
+           && interp.declare("#include \"Rtypes.h\"\n"
+                             "#include \"TClingRuntime.h\"\n"
+                             "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
+#ifdef ROOTINCDIR
+       || (useROOTINCDIR
+           && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
+                             "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
+                             "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
+           )
 #endif
        ) {
       // There was an error.
@@ -3787,6 +3818,7 @@ int RootCling(int argc,
 
    std::string interpPragmaSource;
    std::string includeForSource;
+   std::string interpreterDeclarations;
    string esc_arg;
    int firstInputFile = 0;
    int linkdefLoc = 0;
@@ -3840,10 +3872,8 @@ int RootCling(int argc,
             if (!isSelectionFile) {
                includeForSource += std::string("#include \"") + header + "\"\n";
                pcmArgs.push_back(header);
-            } else if (!IsSelectionXml(argv[i]) && interp.declare(std::string("#include \"") + header + "\"\n")
-                     != cling::Interpreter::kSuccess) {
-               ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
-               return 1;
+            } else if (!IsSelectionXml(argv[i])) {
+               interpreterDeclarations += std::string("#include \"") + header + "\"\n";
             }
          }
       }
@@ -3873,9 +3903,25 @@ int RootCling(int argc,
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
         dPrIt != diagnosticPragmas.end(); dPrIt++){
-           interp.declare(*dPrIt);
-      }   
+      interp.declare(*dPrIt);
+   }
    modGen.ParseArgs(pcmArgs);
+#ifndef ROOT_STAGE1_BUILD
+   // Forward the -I, -D, -U
+   for (const std::string& inclPath: modGen.GetIncludePaths()) {
+      interp.AddIncludePath(inclPath);
+   }
+   std::stringstream definesUndefinesStr;
+   modGen.WritePPDefines(definesUndefinesStr);
+   modGen.WritePPUndefines(definesUndefinesStr);
+   interp.declare(definesUndefinesStr.str());
+#endif
+
+   if (interp.declare(interpreterDeclarations) != cling::Interpreter::kSuccess) {
+      ROOT::TMetaUtils::Error(0, "%s: Linkdef compilation failure\n", argv[0]);
+      return 1;
+   }
+
    if (!InjectModuleUtilHeader(argv[0], modGen, interp, true)
        || !InjectModuleUtilHeader(argv[0], modGen, interp, false)) {
       return 1;
@@ -3941,7 +3987,7 @@ int RootCling(int argc,
    
    // Exclude string not to re-generatre the dictionary
    std::vector<std::pair<std::string,std::string>> namesForExclusion;
-   if (!ROOTBUILDVAL){
+   if (!buildingROOT){
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name,"std::string"));
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern,"ROOT::Meta::Selection*"));
    }
@@ -4099,9 +4145,9 @@ int RootCling(int argc,
    RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
    for( ; iter != end; ++iter)
    {
-      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer")) {
+      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer",interp)) {
          if (iter->RequestNoInputOperator()) {
-            int version = ROOT::TMetaUtils::GetClassVersion(*iter);
+            int version = ROOT::TMetaUtils::GetClassVersion(*iter, interp);
             if (version!=0) {
                // Only Check for input operator is the object is I/O has
                // been requested.
@@ -4134,7 +4180,11 @@ int RootCling(int argc,
       // priority first.
       constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("TRootIOCtor", interp));
       constructorTypes.push_back(ROOT::TMetaUtils::RConstructorType("", interp));
-      }
+
+#ifndef ROOT_STAGE1_BUILD
+      InitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
+#endif
+   }
    
    int retCode = GenerateFullDict(splitDictStream,
                                   interp,
@@ -4154,7 +4204,7 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    if (!ignoreExistingDict){
-      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));      
+      const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
       HeadersClassesMap_t headersClassesMap;
       ExtractHeadersForClasses(scan.fSelectedClasses,
                                scan.fSelectedTypedefs,
@@ -4169,13 +4219,13 @@ int RootCling(int argc,
          }            
       }
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
-      
-      GenerateModule(modGen, 
-                     CI, 
-                     currentDirectory, 
-                     fwdDeclnArgsToKeepString, 
+
+      GenerateModule(modGen,
+                     CI,
+                     currentDirectory,
+                     fwdDeclnArgsToKeepString,
                      headersClassesMapString,
-                     dictStream, 
+                     dictStream,
                      inlineInputHeader);
    }
 
@@ -5092,6 +5142,12 @@ int GenReflex(int argc, char **argv)
 //______________________________________________________________________________
 int main(int argc, char **argv)
 {
+
+   // Force the emission of the symbol - the compiler cannot know that argv
+   // is always set.
+   if (!argv) {
+      return (int)(long)&usedToIdentifyRootClingByDlSym;
+   }
 
    const std::string exePath ( GetExePath() );
 

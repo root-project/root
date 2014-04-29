@@ -54,15 +54,15 @@ $(G3DLIB):      $(G3DO) $(G3DDO) $(ORDER_) $(MAINLIBS) $(G3DLIBDEP)
 $(call pcmrule,G3D)
 	$(noop)
 
-$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
+$(G3DDS):       $(G3DH1) $(G3DL) $(ROOTCLINGEXE) $(call pcmdep,G3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
 
-$(G3DMAP):      $(G3DH1) $(G3DL) $(ROOTCINTTMPDEP) $(call pcmdep,G3D)
+$(G3DMAP):      $(G3DH1) $(G3DL) $(ROOTCLINGEXE) $(call pcmdep,G3D)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(G3DDS) $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
+		$(ROOTCLINGSTAGE2) -r $(G3DDS) $(call dictModule,G3D) -c $(G3DH1) $(G3DL)
 
 all-$(MODNAME): $(G3DLIB)
 

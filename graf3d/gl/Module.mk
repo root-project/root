@@ -83,15 +83,15 @@ $(GLLIB):       $(GLO) $(GLDO) $(ORDER_) $(MAINLIBS) $(GLLIBDEP) $(FTGLLIB) \
 $(call pcmrule,GL)
 	$(noop)
 
-$(GLDS):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP) $(call pcmdep,GL)
+$(GLDS):	$(GLH2) $(GLL) $(ROOTCLINGEXE) $(call pcmdep,GL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
-$(GLMAP):	$(GLH2) $(GLL) $(ROOTCINTTMPDEP) $(call pcmdep,GL)
+$(GLMAP):	$(GLH2) $(GLL) $(ROOTCLINGEXE) $(call pcmdep,GL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GLDS) $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
+		$(ROOTCLINGSTAGE2) -r $(GLDS) $(call dictModule,GL) -c $(CINTFLAGS) $(GLH2) $(GLL)
 
 all-$(MODNAME): $(GLLIB)
 clean-$(MODNAME):

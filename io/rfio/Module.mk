@@ -49,15 +49,15 @@ $(RFIOLIB):     $(RFIOO) $(RFIODO) $(ORDER_) $(MAINLIBS) $(RFIOLIBDEP)
 $(call pcmrule,RFIO)
 	$(noop)
 
-$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
+$(RFIODS):      $(RFIOH) $(RFIOL) $(ROOTCLINGEXE) $(call pcmdep,RFIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
 
-$(RFIOMAP):     $(RFIOH) $(RFIOL) $(ROOTCINTTMPDEP) $(call pcmdep,RFIO)
+$(RFIOMAP):     $(RFIOH) $(RFIOL) $(ROOTCLINGEXE) $(call pcmdep,RFIO)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(RFIODS) $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
+		$(ROOTCLINGSTAGE2) -r $(RFIODS) $(call dictModule,RFIO) -c $(RFIOH) $(RFIOL)
 
 all-$(MODNAME): $(RFIOLIB)
 

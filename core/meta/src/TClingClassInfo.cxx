@@ -325,7 +325,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname) const
 
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
-      InheritanceMode imode /*= WithInheritance*/) const
+      EInheritanceMode imode /*= kWithInheritance*/) const
 {
    return GetMethod(fname,proto,false,poffset,mode,imode);
 }
@@ -333,7 +333,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       const char *proto, bool objectIsConst,
       long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
-      InheritanceMode imode /*= WithInheritance*/) const
+      EInheritanceMode imode /*= kWithInheritance*/) const
 {
    if (poffset) {
       *poffset = 0L;
@@ -397,7 +397,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
                                             const llvm::SmallVectorImpl<clang::QualType> &proto,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
-                                            InheritanceMode imode /*= WithInheritance*/) const
+                                            EInheritanceMode imode /*= kWithInheritance*/) const
 {
    return GetMethod(fname,proto,false,poffset,mode,imode);
 }
@@ -405,7 +405,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
                                             const llvm::SmallVectorImpl<clang::QualType> &proto, bool objectIsConst,
                                             long *poffset, EFunctionMatchMode mode /*= kConversionMatch*/,
-                                            InheritanceMode imode /*= WithInheritance*/) const
+                                            EInheritanceMode imode /*= kWithInheritance*/) const
 {
    if (poffset) {
       *poffset = 0L;
@@ -467,7 +467,7 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
 
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       const char *arglist, long *poffset, EFunctionMatchMode mode /* = kConversionMatch*/,
-      InheritanceMode imode /* = WithInheritance*/) const
+      EInheritanceMode imode /* = kWithInheritance*/) const
 {
    return GetMethodWithArgs(fname,arglist,false,poffset,mode,imode);
 }
@@ -475,7 +475,7 @@ TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
 TClingMethodInfo TClingClassInfo::GetMethodWithArgs(const char *fname,
       const char *arglist, bool objectIsConst,
       long *poffset, EFunctionMatchMode /*mode = kConversionMatch*/,
-      InheritanceMode /* imode = WithInheritance*/) const
+      EInheritanceMode /* imode = kWithInheritance*/) const
 {
    if (fType) {
       const TypedefType *TT = llvm::dyn_cast<TypedefType>(fType);

@@ -163,7 +163,7 @@ class TDictionary : public TNamed {
 
 private:
    TDictAttributeMap *fAttributeMap;    //pointer to a class attribute map
-   ULong64_t fUpdatingTransactionCount; //the Cling ID of the transaction that last updated the object
+   ULong64_t fUpdatingTransactionCount; //!the Cling ID of the transaction that last updated the object
 
 protected:
    Bool_t              UpdateInterpreterStateMarker();
@@ -200,7 +200,7 @@ public:
    };
 
    typedef const void *DeclId_t;
-   ClassDef(TDictionary,0)  //ABC defining interface to dictionary
+   ClassDef(TDictionary,2)  //Interface to dictionary
 };
 
 #endif

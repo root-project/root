@@ -49,15 +49,15 @@ $(GVIZ3DLIB):   $(GVIZ3DO) $(GVIZ3DDO) $(ORDER_) $(MAINLIBS) $(GVIZ3DLIBDEP)
 $(call pcmrule,GVIZ3D)
 	$(noop)
 
-$(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ3D)
+$(GVIZ3DDS):    $(GVIZ3DH) $(GVIZ3DL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ3D)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)
 
-$(GVIZ3DMAP):   $(GVIZ3DH) $(GVIZ3DL) $(ROOTCINTTMPDEP) $(call pcmdep,GVIZ3D)
+$(GVIZ3DMAP):   $(GVIZ3DH) $(GVIZ3DL) $(ROOTCLINGEXE) $(call pcmdep,GVIZ3D)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GVIZ3DDS) $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)
+		$(ROOTCLINGSTAGE2) -r $(GVIZ3DDS) $(call dictModule,GVIZ3D) -c $(GVIZ3DH) $(GVIZ3DL)
 
 all-$(MODNAME): $(GVIZ3DLIB)
 

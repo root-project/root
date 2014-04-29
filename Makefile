@@ -77,7 +77,7 @@ include $(MAKEFILEDEP)
 ##### Modules to build #####
 
 MODULES       = build interpreter/llvm interpreter/cling core/metautils \
-                core/pcre core/clib core/utils \
+                core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/io math/mathcore net/net core/zip core/lzma math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
@@ -117,6 +117,10 @@ SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 endif
 endif
+
+# utils/rootcling depends on system; must come after:
+MODULES += core/utils
+
 ifeq ($(PLATFORM),ios)
 MODULES      += graf2d/ios
 endif
@@ -789,10 +793,10 @@ endif
 	   touch $@; \
 	fi)
 
-$(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
-	$(ROOTCINTTMP) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
+	$(ROOTCLINGSTAGE1) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
 $(call pcmname,$(CORELIB)): $(COREDS)
@@ -804,10 +808,10 @@ $(CORELIB): $(COREO) $(COREDO) $(PCREDEP) $(CORELIBDEP)
 	   "$(COREDO) $(COREO)" \
 	   "$(CORELIBEXTRA) $(PCRELDFLAGS) $(PCRELIB) $(CRYPTLIBS)"
 
-$(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCINTTMPDEP) $(LLVMDEP)
+$(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating rootmap $@..."
-	$(ROOTCINTTMP) -r $(COREDS) -s lib/libCore.$(SOEXT) \
+	$(ROOTCLINGSTAGE1) -r $(COREDS) -s lib/libCore.$(SOEXT) \
 	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
 	   $(COREDICTH) $(COREL0)
 
@@ -1058,8 +1062,8 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-etc/allDict.cxx.pch: $(MAKEONEPCM) $(ROOTCINTTMPDEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
-	$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
+etc/allDict.cxx.pch: $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
+	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
 
 ifeq ($(BUILDX11),yes)
 ifeq ($(BUILDASIMAGE),yes)

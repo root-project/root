@@ -49,15 +49,15 @@ $(SQLLIB):      $(SQLO) $(SQLDO) $(ORDER_) $(MAINLIBS) $(SQLLIBDEP)
 $(call pcmrule,SQL)
 	$(noop)
 
-$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
+$(SQLDS):       $(SQLH) $(SQLL) $(ROOTCLINGEXE) $(call pcmdep,SQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,SQL) -c $(SQLH) $(SQLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,SQL) -c $(SQLH) $(SQLL)
 
-$(SQLMAP):      $(SQLH) $(SQLL) $(ROOTCINTTMPDEP) $(call pcmdep,SQL)
+$(SQLMAP):      $(SQLH) $(SQLL) $(ROOTCLINGEXE) $(call pcmdep,SQL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(SQLDS) $(call dictModule,SQL) -c $(SQLH) $(SQLL)
+		$(ROOTCLINGSTAGE2) -r $(SQLDS) $(call dictModule,SQL) -c $(SQLH) $(SQLL)
 
 all-$(MODNAME): $(SQLLIB)
 

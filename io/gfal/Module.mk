@@ -49,15 +49,15 @@ $(GFALLIB):     $(GFALO) $(GFALDO) $(ORDER_) $(MAINLIBS) $(GFALLIBDEP)
 $(call pcmrule,GFAL)
 	$(noop)
 
-$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcmdep,GFAL)
+$(GFALDS):      $(GFALH) $(GFALL) $(ROOTCLINGEXE) $(call pcmdep,GFAL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
 
-$(GFALMAP):     $(GFALH) $(GFALL) $(ROOTCINTTMPDEP) $(call pcmdep,GFAL)
+$(GFALMAP):     $(GFALH) $(GFALL) $(ROOTCLINGEXE) $(call pcmdep,GFAL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GFALDS) $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
+		$(ROOTCLINGSTAGE2) -r $(GFALDS) $(call dictModule,GFAL) -c $(GFALH) $(GFALL)
 
 all-$(MODNAME): $(GFALLIB)
 

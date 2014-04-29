@@ -49,15 +49,15 @@ $(FITSIOLIB):   $(FITSIOO) $(FITSIODO) $(ORDER_) $(MAINLIBS) $(FITSIOLIBDEP)
 $(call pcmrule,FITSIO)
 	$(noop)
 
-$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcmdep,FITSIO)
+$(FITSIODS):    $(FITSIOH) $(FITSIOL) $(ROOTCLINGEXE) $(call pcmdep,FITSIO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
 
-$(FITSIOMAP):   $(FITSIOH) $(FITSIOL) $(ROOTCINTTMPDEP) $(call pcmdep,FITSIO)
+$(FITSIOMAP):   $(FITSIOH) $(FITSIOL) $(ROOTCLINGEXE) $(call pcmdep,FITSIO)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(FITSIODS) $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
+		$(ROOTCLINGSTAGE2) -r $(FITSIODS) $(call dictModule,FITSIO) -c $(FITSIOH) $(FITSIOL)
 
 all-$(MODNAME): $(FITSIOLIB)
 

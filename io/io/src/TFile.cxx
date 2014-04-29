@@ -353,7 +353,8 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    fArchiveOffset = 0;
    fIsArchive     = kFALSE;
    fArchive       = 0;
-   if (fIsRootFile) {
+   if (fIsRootFile && fOption != "NEW" && fOption != "CREATE"
+       && fOption != "RECREATE") {
       fArchive = TArchiveFile::Open(fUrl.GetUrl(), this);
       if (fArchive) {
         fname1 = fArchive->GetArchiveName();

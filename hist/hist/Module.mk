@@ -60,15 +60,15 @@ $(HISTLIB):     $(HISTO) $(HISTDO) $(ORDER_) $(MAINLIBS) $(HISTLIBDEP)
 $(call pcmrule,HIST)
 	$(noop)
 
-$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
+$(HISTDS):      $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
 
-$(HISTMAP):     $(HISTHH) $(HISTL) $(ROOTCINTTMPDEP) $(call pcmdep,HIST)
+$(HISTMAP):     $(HISTHH) $(HISTL) $(ROOTCLINGEXE) $(call pcmdep,HIST)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(HISTDS) $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
+		$(ROOTCLINGSTAGE2) -r $(HISTDS) $(call dictModule,HIST) -c $(HISTHH) $(HISTL)
 
 all-$(MODNAME): $(HISTLIB)
 

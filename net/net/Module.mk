@@ -71,15 +71,15 @@ $(NETLIB):      $(NETO) $(NETDO) $(ORDER_) $(MAINLIBS) $(NETLIBDEP)
 $(call pcmrule,NET)
 	$(noop)
 
-$(NETDS):       $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcmdep,NET)
+$(NETDS):       $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
-$(NETMAP):      $(NETH) $(NETL) $(ROOTCINTTMPDEP) $(call pcmdep,NET)
+$(NETMAP):      $(NETH) $(NETL) $(ROOTCLINGEXE) $(call pcmdep,NET)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(NETDS) $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
+		$(ROOTCLINGSTAGE2) -r $(NETDS) $(call dictModule,NET) -c $(NETNOCRYPTO) $(NETSSL) $(NETH) $(NETL)
 
 all-$(MODNAME): $(NETLIB)
 

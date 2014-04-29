@@ -81,15 +81,15 @@ $(GUILIB):      $(GUIO) $(GUIDO) $(ORDER_) $(MAINLIBS) $(GUILIBDEP)
 $(call pcmrule,GUI)
 	$(noop)
 
-$(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcmdep,GUI)
+$(GUIDS):       $(GUIH) $(GUIL0) $(GUILS) $(ROOTCLINGEXE) $(call pcmdep,GUI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
-$(GUIMAP):      $(GUIH) $(GUIL0) $(GUILS) $(ROOTCINTTMPDEP) $(call pcmdep,GUI)
+$(GUIMAP):      $(GUIH) $(GUIL0) $(GUILS) $(ROOTCLINGEXE) $(call pcmdep,GUI)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GUIDS) $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
+		$(ROOTCLINGSTAGE2) -r $(GUIDS) $(call dictModule,GUI) -c -I$(ROOT_SRCDIR) $(GUIH1) $(GUIH2) $(GUIH3) $(GUIL0)
 
 all-$(MODNAME): $(GUILIB)
 

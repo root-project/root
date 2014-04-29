@@ -78,15 +78,15 @@ $(QTGSILIB):    $(QTGSIO) $(QTGSIDO) $(QTGSIMOCO) $(ORDER_) $(MAINLIBS) $(QTGSIL
 $(call pcmrule,QTGSI)
 	$(noop)
 
-$(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcmdep,QTGSI)
+$(QTGSIDS):     $(QTGSIH) $(QTGSIL) $(ROOTCLINGEXE) $(call pcmdep,QTGSI)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
 
-$(QTGSIMAP):    $(QTGSIH) $(QTGSIL) $(ROOTCINTTMPDEP) $(call pcmdep,QTGSI)
+$(QTGSIMAP):    $(QTGSIH) $(QTGSIL) $(ROOTCLINGEXE) $(call pcmdep,QTGSI)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(QTGSIDS) $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
+		$(ROOTCLINGSTAGE2) -r $(QTGSIDS) $(call dictModule,QTGSI) -c -DQTVERS=$(QTVERS) $(QTGSICXXFLAGS) $(QTGSIH) $(QTGSIL)
 
 all-$(MODNAME): $(QTGSILIB)
 

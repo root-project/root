@@ -107,15 +107,15 @@ $(PROOFXLIB):   $(PROOFXO) $(PROOFXDO) $(XPCONNO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,PROOFX)
 	$(noop)
 
-$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcmdep,PROOFX)
+$(PROOFXDS):    $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCLINGEXE) $(call pcmdep,PROOFX)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
-$(PROOFXMAP):   $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCINTTMPDEP) $(call pcmdep,PROOFX)
+$(PROOFXMAP):   $(PROOFXH) $(PROOFXL) $(XROOTDMAKE) $(ROOTCLINGEXE) $(call pcmdep,PROOFX)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(PROOFXDS) $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
+		$(ROOTCLINGSTAGE2) -r $(PROOFXDS) $(call dictModule,PROOFX) -c $(PROOFXINCEXTRA) $(PROOFXH) $(PROOFXL)
 
 all-$(MODNAME): $(PROOFXLIB)
 

@@ -49,15 +49,15 @@ $(GPADLIB):     $(GPADO) $(GPADDO) $(ORDER_) $(MAINLIBS) $(GPADLIBDEP)
 $(call pcmrule,GPAD)
 	$(noop)
 
-$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcmdep,GPAD)
+$(GPADDS):      $(GPADH) $(GPADL) $(ROOTCLINGEXE) $(call pcmdep,GPAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
 
-$(GPADMAP):     $(GPADH) $(GPADL) $(ROOTCINTTMPDEP) $(call pcmdep,GPAD)
+$(GPADMAP):     $(GPADH) $(GPADL) $(ROOTCLINGEXE) $(call pcmdep,GPAD)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GPADDS) $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
+		$(ROOTCLINGSTAGE2) -r $(GPADDS) $(call dictModule,GPAD) -c $(GPADH) $(GPADL)
 
 all-$(MODNAME): $(GPADLIB)
 

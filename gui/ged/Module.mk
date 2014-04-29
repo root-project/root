@@ -49,15 +49,15 @@ $(GEDLIB):      $(GEDO) $(GEDDO) $(ORDER_) $(MAINLIBS) $(GEDLIBDEP)
 $(call pcmrule,GED)
 	$(noop)
 
-$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
+$(GEDDS):       $(GEDH) $(GEDL) $(ROOTCLINGEXE) $(call pcmdep,GED)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,GED) -c $(GEDH) $(GEDL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,GED) -c $(GEDH) $(GEDL)
 
-$(GEDMAP):      $(GEDH) $(GEDL) $(ROOTCINTTMPDEP) $(call pcmdep,GED)
+$(GEDMAP):      $(GEDH) $(GEDL) $(ROOTCLINGEXE) $(call pcmdep,GED)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(GEDDS) $(call dictModule,GED) -c $(GEDH) $(GEDL)
+		$(ROOTCLINGSTAGE2) -r $(GEDDS) $(call dictModule,GED) -c $(GEDH) $(GEDL)
 
 all-$(MODNAME): $(GEDLIB)
 

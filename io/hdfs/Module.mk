@@ -49,15 +49,15 @@ $(HDFSLIB):     $(HDFSO) $(HDFSDO) $(ORDER_) $(MAINLIBS) $(HDFSLIBDEP)
 $(call pcmrule,HDFS)
 	$(noop)
 
-$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcmdep,HDFS)
+$(HDFSDS):      $(HDFSH) $(HDFSL) $(ROOTCLINGEXE) $(call pcmdep,HDFS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
 
-$(HDFSMAP):     $(HDFSH) $(HDFSL) $(ROOTCINTTMPDEP) $(call pcmdep,HDFS)
+$(HDFSMAP):     $(HDFSH) $(HDFSL) $(ROOTCLINGEXE) $(call pcmdep,HDFS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(HDFSDS) $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
+		$(ROOTCLINGSTAGE2) -r $(HDFSDS) $(call dictModule,HDFS) -c $(HDFSH) $(HDFSL)
 
 all-$(MODNAME): $(HDFSLIB)
 

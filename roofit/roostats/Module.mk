@@ -57,15 +57,15 @@ $(ROOSTATSLIB): $(ROOSTATSO) $(ROOSTATSDO) $(ORDER_) $(MAINLIBS) \
 $(call pcmrule,ROOSTATS)
 	$(noop)
 
-$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
+$(ROOSTATSDS):  $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
 
-$(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCINTTMPDEP) $(call pcmdep,ROOSTATS)
+$(ROOSTATSMAP): $(ROOSTATSH) $(ROOSTATSL) $(ROOTCLINGEXE) $(call pcmdep,ROOSTATS)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
+		$(ROOTCLINGSTAGE2) -r $(ROOSTATSDS) $(call dictModule,ROOSTATS) -c $(ROOSTATSH) $(ROOSTATSL)
 
 all-$(MODNAME): $(ROOSTATSLIB)
 

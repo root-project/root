@@ -49,15 +49,15 @@ $(MYSQLLIB):    $(MYSQLO) $(MYSQLDO) $(ORDER_) $(MAINLIBS) $(MYSQLLIBDEP)
 $(call pcmrule,MYSQL)
 	$(noop)
 
-$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,MYSQL)
+$(MYSQLDS):     $(MYSQLH) $(MYSQLL) $(ROOTCLINGEXE) $(call pcmdep,MYSQL)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCINTTMP) -f $@ $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
+		$(ROOTCLINGSTAGE2) -f $@ $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
-$(MYSQLMAP):    $(MYSQLH) $(MYSQLL) $(ROOTCINTTMPDEP) $(call pcmdep,MYSQL)
+$(MYSQLMAP):    $(MYSQLH) $(MYSQLL) $(ROOTCLINGEXE) $(call pcmdep,MYSQL)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
-		$(ROOTCINTTMP) -r $(MYSQLDS) $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
+		$(ROOTCLINGSTAGE2) -r $(MYSQLDS) $(call dictModule,MYSQL) -c $(MYSQLINCDIR:%=-I%) $(MYSQLH) $(MYSQLL)
 
 all-$(MODNAME): $(MYSQLLIB)
 
