@@ -31,7 +31,6 @@ public:
    TList              *fRealData; // TRealData for members + bases
    TList              *fBase;     // List of base classes
    TListOfDataMembers *fData;     // List of data members
-   UInt_t              fCheckSum; // Checksum of data members and base classes
    Int_t               fSizeof;   // Size of the class
    Int_t               fCanSplit; // Whether this class can be split
    Long_t              fProperty; // Class properties, see EProperties
