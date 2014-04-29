@@ -3833,6 +3833,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
       // FIXME: This arguably makes no sense, we should warn and return nothing instead.
       // Note: This is done for STL collections
       // Note: fClassVersion could be -1 here (for an emulated class).
+      // This is also the code path take for unversioned classes.
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
    }
    if (!sinfo) {
@@ -3911,6 +3912,66 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoAbstractEmulated(Int_t version /* =
 
       sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(version);
       if (!sinfo && (version != fClassVersion)) {
+         // When the requested version does not exist we return
+         // the TVirtualStreamerInfo for the currently loaded class version.
+         // FIXME: This arguably makes no sense, we should warn and return nothing instead.
+         sinfo = (TVirtualStreamerInfo*) fStreamerInfo->At(fClassVersion);
+      }
+      if (!sinfo) {
+         // Let's take the first available StreamerInfo as a start
+         Int_t ninfos = fStreamerInfo->GetEntriesFast() - 1;
+         for (Int_t i = -1; sinfo == 0 && i < ninfos; ++i) {
+            sinfo =  (TVirtualStreamerInfo*) fStreamerInfo->UncheckedAt(i);
+         }
+      }
+      if (sinfo) {
+         sinfo = dynamic_cast<TVirtualStreamerInfo*>( sinfo->Clone() );
+         if (sinfo) {
+            sinfo->SetClass(0);
+            sinfo->SetName( newname );
+            sinfo->BuildCheck();
+            sinfo->BuildOld();
+            sinfo->GetClass()->AddRule(TString::Format("sourceClass=%s targetClass=%s",GetName(),newname.Data()));
+         } else
+            Error("GetStreamerInfoAbstractEmulated", "could not create TVirtualStreamerInfo");
+      }
+   }
+   return sinfo;
+}
+
+//______________________________________________________________________________
+TVirtualStreamerInfo* TClass::FindStreamerInfoAbstractEmulated(UInt_t checksum) const
+{
+   // For the case where the requestor class is emulated and this class is abstract,
+   // returns a pointer to the TVirtualStreamerInfo object for version with an emulated
+   // representation whether or not the class is loaded.
+   //
+   // If the object does not exist, it is created
+   //
+   // Warning:  If we create a new streamer info, whether or not the build
+   //           optimizes is controlled externally to us by a global variable!
+   //           Don't call us unless you have set that variable properly
+   //           with TStreamer::Optimize()!
+   //
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   TString newname( GetName() );
+   newname += "@@emulated";
+
+   TClass *emulated = TClass::GetClass(newname);
+
+   TVirtualStreamerInfo* sinfo = 0;
+
+   if (emulated) {
+      sinfo = emulated->FindStreamerInfo(checksum);
+   }
+   if (!sinfo) {
+      // The emulated version of the streamerInfo is explicitly requested and has
+      // not been built yet.
+
+      sinfo = (TVirtualStreamerInfo*) FindStreamerInfo(checksum);
+      if (!sinfo && (checksum != fCheckSum)) {
          // When the requested version does not exist we return
          // the TVirtualStreamerInfo for the currently loaded class version.
          // FIXME: This arguably makes no sense, we should warn and return nothing instead.
@@ -4841,7 +4902,7 @@ void TClass::PostLoadCheck()
       // BuildCheck is not appropriate here since it check a streamerinfo against the
       // 'current streamerinfo' which, at time point, would be the same as 'info'!
       if (info && GetListOfDataMembers() && !GetCollectionProxy()
-          && (info->GetCheckSum()!=GetCheckSum() && info->GetCheckSum()!=GetCheckSum(1) && info->GetCheckSum()!=GetCheckSum(2)))
+          && (info->GetCheckSum()!=GetCheckSum() && !info->CompareContent(this,0,kFALSE,kFALSE, 0) && !(MatchLegacyCheckSum(info->GetCheckSum()))))
       {
          Bool_t warn = ! TestBit(kWarned);
          if (warn && info->GetOldVersion()<=2) {
@@ -4875,7 +4936,7 @@ void TClass::PostLoadCheck()
    the files will not be readable.\n"
                        , fClassVersion, GetName(), GetName(), fStreamerInfo->GetLast()+1);
             }
-            info->CompareContent(this,0,kTRUE,kTRUE);
+            info->CompareContent(this,0,kTRUE,kTRUE,0);
             SetBit(kWarned);
          }
       }
@@ -4905,7 +4966,6 @@ Long_t TClass::Property() const
    // gets allocated on the heap and not in the mapped file.
    TMmallocDescTemp setreset;
 
-   Long_t dummy;
    TClass *kl = const_cast<TClass*>(this);
 
    kl->fStreamerType = TClass::kDefault;
@@ -4926,8 +4986,11 @@ Long_t TClass::Property() const
 
       kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
 
-      if (!gCling->ClassInfo_HasMethod(fClassInfo,"Streamer") ||
-          !gCling->ClassInfo_IsValidMethod(fClassInfo,"Streamer","TBuffer&",&dummy) ) {
+      // This code used to use ClassInfo_Has|IsValidMethod but since v6
+      // they return true if the routine is defined in the class or any of
+      // its parent.  We explicitly want to know whether the function is
+      // defined locally.
+      if (!const_cast<TClass*>(this)->GetClassMethodWithPrototype("Streamer","TBuffer&",kFALSE)) {
 
          kl->SetBit(kIsForeign);
          kl->fStreamerType  = kForeign;
@@ -5209,18 +5272,34 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
 }
 
 //______________________________________________________________________________
-UInt_t TClass::GetCheckSum(UInt_t code) const
+Bool_t TClass::MatchLegacyCheckSum(UInt_t checksum) const
+{
+   // Return true if the checksum passed as argument is one of the checksum
+   // value produced by the older checksum calulcation algorithm.
+
+   for(UInt_t i = 1; i < kLatestCheckSum; ++i) {
+      if ( checksum == GetCheckSum( (ECheckSum) i ) ) return kTRUE;
+   }
+   return kFALSE;
+}
+
+//______________________________________________________________________________
+UInt_t TClass::GetCheckSum(ECheckSum code) const
 {
    // Compute and/or return the class check sum.
    // The class ckecksum is used by the automatic schema evolution algorithm
    // to uniquely identify a class version.
    // The check sum is built from the names/types of base classes and
    // data members.
-   // Algorithm from Victor Perevovchikov (perev@bnl.gov).
+   // Original algorithm from Victor Perevovchikov (perev@bnl.gov).
    //
-   // if code==1 data members of type enum are not counted in the checksum
-   // if code==2 return the checksum of data members and base classes, not including the ranges and array size found in comments.
-   //            This is needed for backward compatibility.
+   // The valid range of code is determined by ECheckSum
+   //
+   // kNoEnum:  data members of type enum are not counted in the checksum
+   // kNoRange: return the checksum of data members and base classes, not including the ranges and array size found in comments.
+   // kWithTypeDef: use the sugared type name in the calculation.
+   //
+   // This is needed for backward compatibility.
    //
    // WARNING: this function must be kept in sync with TStreamerInfo::GetCheckSum.
    // They are both used to handle backward compatibility and should both return the same values.
@@ -5229,7 +5308,12 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (fCheckSum && code == 0) return fCheckSum;
+   if (fCheckSum && code == kCurrentCheckSum) return fCheckSum;
+
+   // kCurrentCheckSum (0) is the default parameter value and should be kept
+   // for backward compatibility, too be able to use the inequality checks,
+   // we need to set the code to the largest value.
+   if (code == kCurrentCheckSum) code = kLatestCheckSum;
 
    UInt_t id = 0;
 
@@ -5247,10 +5331,14 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
       TBaseClass *tbc=0;
       while((tbc=(TBaseClass*)nextBase())) {
          name = tbc->GetName();
-         if (TClassEdit::IsSTLCont(name))
+         Bool_t isSTL = TClassEdit::IsSTLCont(name);
+         if (isSTL)
             name = TClassEdit::ShortType( name, TClassEdit::kDropStlDefault );
          il = name.Length();
          for (int i=0; i<il; i++) id = id*3+name[i];
+         if (code > kNoBaseCheckSum && !isSTL) {
+            id = id*3 + tbc->GetClassPointer()->GetCheckSum();
+         }
       }/*EndBaseLoop*/
    }
    TList *tlm = ((TClass*)this)->GetListOfDataMembers();
@@ -5267,13 +5355,20 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
 
          if ( prop&kIsStatic)             continue;
          name = tdm->GetName(); il = name.Length();
-         if ( (code != 1) && prop&kIsEnum) id = id*3 + 1;
+         if ( (code > kNoEnum) && prop&kIsEnum) id = id*3 + 1;
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
-         type = tdm->GetFullTypeName();
-         if (TClassEdit::IsSTLCont(type))
-            type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+
+         if (code > kWithTypeDef ) {
+            type = tdm->GetTrueTypeName();
+            if (TClassEdit::IsSTLCont(type))
+               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+         } else {
+            type = tdm->GetFullTypeName();
+            if (TClassEdit::IsSTLCont(type))
+               type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
+         }
 
          il = type.Length();
          for (i=0; i<il; i++) id = id*3+type[i];
@@ -5282,7 +5377,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          if (prop&kIsArray) {
             for (int ii=0;ii<dim;ii++) id = id*3+tdm->GetMaxIndex(ii);
          }
-         if (code != 2) {
+         if (code > kNoRange) {
             const char *left = strstr(tdm->GetTitle(),"[");
             if (left) {
                const char *right = strstr(left,"]");
@@ -5297,7 +5392,7 @@ UInt_t TClass::GetCheckSum(UInt_t code) const
          }
       }/*EndMembLoop*/
    }
-   if (code==0) fCheckSum = id;
+   if (code==kLatestCheckSum) fCheckSum = id;
    return id;
 }
 
@@ -5612,6 +5707,8 @@ void TClass::SetDirectoryAutoAdd(ROOT::DirAutoAdd_t autoAddFunc)
 TVirtualStreamerInfo *TClass::FindStreamerInfo(UInt_t checksum) const
 {
    // Find the TVirtualStreamerInfo in the StreamerInfos corresponding to checksum
+
+   if (fCheckSum == checksum) return GetStreamerInfo();
 
    Int_t ninfos = fStreamerInfo->GetEntriesFast()-1;
    for (Int_t i=-1;i<ninfos;++i) {

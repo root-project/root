@@ -98,6 +98,14 @@ public:
           kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
+   enum ECheckSum {
+      kCurrentCheckSum = 0,
+      kNoEnum          = 1, // Used since v3.3
+      kNoRange         = 2, // Up to v5.17
+      kWithTypeDef     = 3, // Up to v5.34.18 and v5.99/06
+      kNoBaseCheckSum  = 4, // Up to v5.34.18 and v5.99/06
+      kLatestCheckSum  = 5
+   };
 
    // Describe the current state of the TClass itself.
    enum EState {
@@ -281,7 +289,7 @@ public:
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
    Bool_t             HasDefaultConstructor() const;
-   UInt_t             GetCheckSum(UInt_t code=0) const;
+   UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
    TMethod           *GetClassMethod(const char *name, const char *params, Bool_t objectIsConst = kFALSE);
@@ -345,6 +353,7 @@ public:
    const TObjArray          *GetStreamerInfos() const { return fStreamerInfo; }
    TVirtualStreamerInfo     *GetStreamerInfo(Int_t version=0) const;
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
+   TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary();
    void               GetMissingDictionaries(TObjArray& result, bool recurse = false);
@@ -360,6 +369,7 @@ public:
    Bool_t             IsTObject() const;
    void               ls(Option_t *opt="") const;
    void               MakeCustomMenuList();
+   Bool_t             MatchLegacyCheckSum(UInt_t checksum) const;
    void               Move(void *arenaFrom, void *arenaTo) const;
    void              *New(ENewType defConstructor = kClassNew, Bool_t quiet = kFALSE) const;
    void              *New(void *arena, ENewType defConstructor = kClassNew) const;

@@ -2727,7 +2727,7 @@ void TBufferFile::SkipVersion(const TClass *cl)
             // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
             // the one from the current class, we can still assume that we can read
             // the data so let use it.
-            if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+            if (checksum==cl->GetCheckSum() || cl->MatchLegacyCheckSum(checksum)) {
                version = cl->GetClassVersion();
             } else {
                if (fParent) {
@@ -2823,7 +2823,7 @@ Version_t TBufferFile::ReadVersion(UInt_t *startpos, UInt_t *bcnt, const TClass 
                   // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
                   // the one from the current class, we can still assume that we can read
                   // the data so let use it.
-                  if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+                  if (checksum==cl->GetCheckSum() || cl->MatchLegacyCheckSum(checksum)) {
                      version = cl->GetClassVersion();
                   } else {
                      if (fParent) {
@@ -2941,7 +2941,7 @@ Version_t TBufferFile::ReadVersionForMemberWise(const TClass *cl)
                   // a ROOT file) where we do not have a TStreamerInfo.  If the checksum is
                   // the one from the current class, we can still assume that we can read
                   // the data so let use it.
-                  if (checksum==cl->GetCheckSum() || checksum==cl->GetCheckSum(1)) {
+                  if (checksum==cl->GetCheckSum() || cl->MatchLegacyCheckSum(checksum)) {
                      version = cl->GetClassVersion();
                   } else {
                      // If we can not find the streamerInfo this means that 

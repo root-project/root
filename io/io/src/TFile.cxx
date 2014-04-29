@@ -3334,8 +3334,35 @@ void TFile::ReadStreamerInfo()
 
    if (gDebug > 0) Info("ReadStreamerInfo", "called for file %s",GetName());
 
-   // loop on all TStreamerInfo classes
    TStreamerInfo *info;
+
+   if (fVersion < 53419 || (59900 < fVersion && fVersion < 59907)) {
+      // We need to update the fCheckSum field of the TStreamerBase.
+
+      // loop on all TStreamerInfo classes
+      TObjLink *lnk = list->FirstLink();
+      while (lnk) {
+         info = (TStreamerInfo*)lnk->GetObject();
+         if (info == 0 || info->IsA() != TStreamerInfo::Class()) {
+            lnk = lnk->Next();
+            continue;
+         }
+         TIter next(info->GetElements());
+         TStreamerElement *element;
+         while ((element = (TStreamerElement*) next())) {
+            TStreamerBase *base = dynamic_cast<TStreamerBase*>(element);
+            if (!base) continue;
+            if (base->GetBaseCheckSum() != 0) continue;
+            TStreamerInfo *baseinfo = (TStreamerInfo*)list->FindObject(base->GetName());
+            if (baseinfo) {
+               base->SetBaseCheckSum(baseinfo->GetCheckSum());
+            }
+         }
+         lnk = lnk->Next();
+      }
+   }
+
+   // loop on all TStreamerInfo classes
    for (int mode=0;mode<2; ++mode) {
       // In order for the collection proxy to be initialized properly, we need
       // to setup the TStreamerInfo for non-stl class before the stl classes.
@@ -3378,7 +3405,7 @@ void TFile::ReadStreamerInfo()
          if ( (!isstl && mode ==0) || (isstl && mode ==1) ) {
                // Skip the STL container the first time around
                // Skip the regular classes the second time around;
-            info->BuildCheck();
+            info->BuildCheck(this);
             Int_t uid = info->GetNumber();
             Int_t asize = fClassIndex->GetSize();
             if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);

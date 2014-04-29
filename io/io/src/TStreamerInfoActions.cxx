@@ -1108,17 +1108,20 @@ namespace TStreamerInfoActions
          //      // Idea: need to cache this result!
          //      TStreamerInfo *info = (TStreamerInfo*)config->fInfo;
          //      TStreamerElement *aElement = (TStreamerElement*)info->GetElems()[config->fElemId];
-         //      Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-         //      TClass *cle = aElement->GetNewBaseClass();
-         //      TSequence *actions = CreateReadMemberWiseActions( cle->GetStreamerInfo(clversion), ???? );
+         //
+         //      *Int_t clversion = ((TStreamerBase*)aElement)->Get BaseVersion();
+         //      *TClass *cle = aElement->GetNewBaseClass();
+         //      *(TSequence *actions = CreateReadMemberWiseActions( cle->GetStreamerInfo(clversion), ???? );
+         //
+         //      TSequence *actions = CreateReadMemberWiseActions( ((TStreamerBase*)aElement)->GetBaseStreamerInfo(), ???? );
+         //
          //      actions->ReadBuffer(b,start,end);
          //      delete actions;
          
          //      const Int_t incr = ((TVectorLoopConfig*)loopconfig)->fIncrement;
          //      for(void *iter = start; iter != end; iter = (char*)iter + incr ) 
          //      {
-         //         Int_t clversion = ((TStreamerBase*)aElement)->GetBaseVersion();
-         //         ((TStreamerInfo*)cle->GetStreamerInfo(clversion))->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
+         //         ((TStreamerInfo*)(((TStreamerBase*)aElement)->GetBaseStreamerInfo())->ReadBuffer(b,arr,-1,narr,ioffset,arrayMode);
          //
          //         ((TStreamerInfo*)config->fInfo)->ReadBuffer(buf, (char**)&iter, config->fElemId, 1, config->fOffset, 1|2 );
          //      }
@@ -2352,11 +2355,12 @@ void TStreamerInfo::Compile()
          // Make sure the StreamerInfo for the base class is also
          // not optimized.
          TClass *bclass = element->GetClassPointer();
-         Int_t clversion = 0;
+         TStreamerInfo *binfo;
          if (element->IsA() == TStreamerBase::Class()) {
-            clversion = ((TStreamerBase*)element)->GetBaseVersion();
+            binfo = ((TStreamerInfo*)((TStreamerBase*)element)->GetBaseStreamerInfo());
+         } else {
+            binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(0));
          }
-         TStreamerInfo *binfo = ((TStreamerInfo*)bclass->GetStreamerInfo(clversion));
          if (binfo) {
             // binfo might be null in cases where:
             // a) the class on file inherit from an abstract class
@@ -2909,6 +2913,17 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
       if (element->TestBit(TStreamerElement::kWrite)) {
          // Skip element that only for writing.
          continue;
+      }
+      TStreamerBase *baseEl = dynamic_cast<TStreamerBase*>(element);
+      if (baseEl) {
+         if (baseEl->GetErrorMessage()[0]) {
+            // There was a problem with the checksum, the user likely did not
+            // increment the version number of the derived class when the
+            // base class changed.  Since we will be member wise streaming
+            // this class, let's warn the user that something is wrong.
+            ::Warning("CreateReadMemberWiseActions","%s",
+                      baseEl->GetErrorMessage());
+         }
       }
       Int_t asize = element->GetSize();
       if (element->GetArrayLength()) {
