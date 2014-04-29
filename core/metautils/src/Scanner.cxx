@@ -742,18 +742,26 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    
    //Test
    const ClassSelectionRule *selectedFromTypedef = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : 0;
+
    const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl);
    
    const ClassSelectionRule *selected = typedefNameDecl ? selectedFromTypedef : selectedFromRecDecl;
 
    if (! selected) return true; // early exit. Nothing more to be done.
-   
+
    // Selected through typedef but excluded with concrete classname 
    bool excludedFromRecDecl = false;
    if ( selectedFromRecDecl )
       excludedFromRecDecl = selectedFromRecDecl->GetSelected() == BaseSelectionRule::kNo;
 
    if (selected->GetSelected() == BaseSelectionRule::kYes && !excludedFromRecDecl) {
+      // Save the typedef
+      if (selectedFromTypedef){
+         fSelectedTypedefs.push_back(typedefNameDecl);
+         // Early exit here if we are not in presence of XML
+         if (!fSelectionRules.IsSelectionXMLFile()) return true;
+      }
+
       if (typedefNameDecl)
          ROOT::TMetaUtils::Info("RScanner::TreatRecordDeclOrTypedefNameDecl",
                                 "Typedef is selected %s.\n", typedefNameDecl->getNameAsString().c_str());
@@ -783,7 +791,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       // We need this check since the same class can be selected through its name or typedef
       bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
       
-      if(rcrdDeclAlreadySelected && !fFirstPass){
+      if(rcrdDeclAlreadySelected &&
+         !fFirstPass){
          
          std::string name_value("");
          if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::name, name_value)) {
@@ -840,11 +849,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          
       }
-      // Add the typedef if selected      
-      if (selectedFromTypedef){
-         fSelectedTypedefs.push_back(typedefNameDecl);
-      }     
-
    }      
 
 
@@ -857,7 +861,7 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 {
    // Visitor for every TypedefNameDecl, i.e. aliases and typedefs
    // We check three conditions before trying to match the name:
-   // 1) If we are creating a big PCM
+   // 1) If we are creating a big PCM or we are not treating an XML
    // 2) If the underlying decl is a RecordDecl
    // 3) If the typedef is eventually contained in the std namespace
    
