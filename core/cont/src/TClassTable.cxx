@@ -258,8 +258,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
 {
    // Add a class to the class table (this is a static function).
 
-   if (!gClassTable)
+   if (!gClassTable) {
       new TClassTable;
+      // We will need this class at tear down, let's make sure they
+      // are initialized
+      TObjString::Class();
+
+   }
 
    // Only register the name without the default STL template arguments ...
    TClassEdit::TSplitType splitname( cname, TClassEdit::kLong64 );
