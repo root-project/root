@@ -55,7 +55,7 @@ if(XROOTD_FOUND)
 
   if ( ${xrdversnum} LESS 300010000 )
      set(XROOTD_OLDPACK TRUE)
-     set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOT_DIR})
+     set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR})
      message(STATUS "Setting OLDPACK TRUE")
   else()
      set(XROOTD_OLDPACK FALSE)
