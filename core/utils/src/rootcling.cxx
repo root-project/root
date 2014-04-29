@@ -265,6 +265,19 @@ namespace genreflex {
 }
 
 //______________________________________________________________________________
+#if !defined(ROOT_STAGE1_BUILD)
+void SetRootSys();
+
+struct SetROOTSYS {
+   SetROOTSYS() {
+      // "Our" libCore needs "our" ROOTSYS:
+      SetRootSys();
+   }
+} sROOTSYSSetter;
+#endif
+
+
+//______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
 static bool EmitStreamerInfo(const char* normName)
 {
@@ -3611,11 +3624,6 @@ int RootCling(int argc,
 #if defined(ROOTINCDIR)
    if (!buildingROOT)
       SetRootSys();
-#elif !defined(ROOT_STAGE1_BUILD)
-   if (buildingROOT) {
-      // "Our" libCore needs ROOTSYS:
-      SetRootSys();
-   }
 #endif
 
    if (ic < argc && !strcmp(argv[ic], "-c")) {
