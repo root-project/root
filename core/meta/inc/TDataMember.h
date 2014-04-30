@@ -87,9 +87,10 @@ public:
    Int_t          IsSTLContainer();
    Bool_t         IsValid();
    Long_t         Property() const;
+   void           SetClass(TClass* cl) { fClass = cl; }
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TDataMember,0)  //Dictionary for a class data member
+   ClassDef(TDataMember,2)  //Dictionary for a class data member
 };
 
 

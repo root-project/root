@@ -37,12 +37,12 @@ class TListOfDataMembers : public THashList
 {
 private:
    typedef TDictionary::DeclId_t DeclId_t;
-   TClass    *fClass; // Context of this list.  Not owned.
+   TClass    *fClass;    //! Context of this list.  Not owned.
 
-   TExMap    *fIds;      // Map from DeclId_t to TDataMember*
-   THashList *fUnloaded; // Holder of TDataMember for unloaded DataMembers.
-   Bool_t     fIsLoaded; // Mark whether Load was executed.
-   ULong64_t  fLastLoadMarker; // Represent interpreter state when we last did a full load.
+   TExMap    *fIds;      //! Map from DeclId_t to TDataMember*
+   THashList *fUnloaded; //! Holder of TDataMember for unloaded DataMembers.
+   Bool_t     fIsLoaded; //! Mark whether Load was executed.
+   ULong64_t  fLastLoadMarker; //! Represent interpreter state when we last did a full load.
 
    TListOfDataMembers(const TListOfDataMembers&);              // not implemented
    TListOfDataMembers& operator=(const TListOfDataMembers&);   // not implemented
@@ -75,6 +75,8 @@ public:
    void       AddBefore(const TObject *before, TObject *obj);
    void       AddBefore(TObjLink *before, TObject *obj);
 
+   void       SetClass(TClass* cl) { fClass = cl; }
+
    void       RecursiveRemove(TObject *obj);
    TObject   *Remove(TObject *obj);
    TObject   *Remove(TObjLink *lnk);
@@ -83,7 +85,7 @@ public:
    void Unload();
    void Unload(TDictionary *member);
 
-   ClassDef(TListOfDataMembers,0);  // List of TDataMembers for a class
+   ClassDef(TListOfDataMembers,2);  // List of TDataMembers for a class
 };
 
 #endif // ROOT_TListOfDataMembers
