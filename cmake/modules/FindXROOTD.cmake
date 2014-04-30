@@ -83,13 +83,20 @@ if(XROOTD_FOUND)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdNetUtil_LIBRARY})
     endif ()
   else()
-    foreach(l XrdMain XrdUtils XrdClient XrdCl)
+    foreach(l XrdMain XrdUtils XrdClient)
       find_library(XROOTD_${l}_LIBRARY
          NAMES ${l}
          HINTS ${searchpath}
          PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
     endforeach()
+    if(${xrdversnum} GREATER 300030000)
+      find_library(XROOTD_XrdCl_LIBRARY
+         NAMES XrdCl
+         HINTS ${searchpath}
+         PATH_SUFFIXES lib)
+      list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
+    endif()
   endif()
 
   if(XROOTD_LIBRARIES)
@@ -99,7 +106,6 @@ if(XROOTD_FOUND)
       message(STATUS "             libraries: ${XROOTD_LIBRARIES}")
     endif() 
   else ()
-    message("Herre")
     set(XROOTD_FOUND FALSE)
   endif ()
 endif()
@@ -108,7 +114,8 @@ mark_as_advanced(XROOTD_INCLUDE_DIR
                  XROOTD_XrdMain_LIBRARY
                  XROOTD_XrdUtils_LIBRARY
                  XROOTD_XrdClient_LIBRARY
-                 XROOTD_XrdNetUtils_LIBRARY
+                 XROOTD_XrdCl_LIBRARY
+                 XROOTD_XrdNetUtil_LIBRARY
                  XROOTD_XrdNet_LIBRARY
                  XROOTD_XrdSys_LIBRARY
                  XROOTD_XrdOuc_LIBRARY
