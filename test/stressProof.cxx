@@ -4278,7 +4278,7 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
 }
 
 //_____________________________________________________________________________
-Int_t PT_TreeSubDirs(void *sf, RunTimes &tt)
+Int_t PT_TreeSubDirs(void*, RunTimes &tt)
 {
    // Test processing of TTree in subdirectories
 
