@@ -201,23 +201,30 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    fSTLCont     = -1;
    if (!fInfo && !fClass) return; // default ctor is called
 
-   Init();
+   Init(false);
 }
 
 //______________________________________________________________________________
-void TDataMember::Init()
+void TDataMember::Init(bool afterReading)
 {
    // Routines called by the constructor and Update to reset the member's
    // information.
+   // afterReading is set when initializing after reading through Streamer().
+   const char *t = 0;
+   if (!afterReading) {
+      // Initialize from fInfo
+      if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
 
-   if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
-
-   fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
-   fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
-   fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
-   SetName(gCling->DataMemberInfo_Name(fInfo));
-   const char *t = gCling->DataMemberInfo_Title(fInfo);
-   SetTitle(t);
+      fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+      fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
+      SetName(gCling->DataMemberInfo_Name(fInfo));
+      t = gCling->DataMemberInfo_Title(fInfo);
+      SetTitle(t);
+   } else {
+      // We have read the persistent data members.
+      t = GetTitle();
+   }
    if (t && t[0] != '!') SetBit(kObjIsPersistent);
    fDataType = 0;
    if (IsBasic() || IsEnum()) {
@@ -244,6 +251,15 @@ void TDataMember::Init()
       //                  GetTypeName());
    }
 
+
+   if (afterReading) {
+      // Options are streamed; can't build TMethodCall for getters and setters
+      // because we deserialize a TDataMember when we do not have interpreter
+      // data. Thus do an early return.
+      return;
+   }
+
+
    // If option string exist in comment - we'll parse it and create
    // list of options
 
@@ -266,7 +282,7 @@ void TDataMember::Init()
    Int_t token_cnt;
    Int_t i;
 
-   strlcpy(cmt,gCling->DataMemberInfo_Title(fInfo),2048);
+   strlcpy(cmt,GetTitle(),2048);
 
    if ((opt_ptr=strstr(cmt,"*OPTION={"))) {
 
@@ -275,15 +291,15 @@ void TDataMember::Init()
       //let's cut the part lying between {}
       ptr1 = strtok(opt_ptr  ,"{}");  //starts tokenizing:extracts "*OPTION={"
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
       }
       ptr1 = strtok((char*)0,"{}");   //And now we have what we need in ptr1!!!
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
       }
-      
+
       //and save it:
       strlcpy(opt,ptr1,2048);
 
@@ -312,16 +328,16 @@ void TDataMember::Init()
          if (strstr(tokens[i],"GetMethod")) {
             ptr1 = strtok(tokens[i],"\"");    //tokenizing-strip text "GetMethod"
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             
-            if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
+            if (!afterReading &&  GetClass()->GetMethod(ptr1,"")) // check whether such method exists
                // FIXME: wrong in case called derives via multiple inheritance from this class
                fValueGetter = new TMethodCall(GetClass(),ptr1,"");
 
@@ -331,12 +347,12 @@ void TDataMember::Init()
          if (strstr(tokens[i],"SetMethod")) {
             ptr1 = strtok(tokens[i],"\"");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             if (GetClass()->GetMethod(ptr1,"1"))
@@ -354,15 +370,15 @@ void TDataMember::Init()
          if (strstr(tokens[i],"Items")) {
             ptr1 = strtok(tokens[i],"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok((char*)0,"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
             }
-            
+
             char opts[2048];  //and save it!
             strlcpy(opts,ptr1,2048);
 
@@ -418,7 +434,7 @@ void TDataMember::Init()
                   l = gInterpreter->Calc(Form("%s;",ptr1));
             } else
                l = atol(ptr1);
-            
+
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);
          }
@@ -864,8 +880,26 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
       return kTRUE;
    } else {
       fInfo = info;
-      Init();
+      Init(false);
       return kTRUE;
+   }
+}
+
+
+//______________________________________________________________________________
+void TDataMember::Streamer(TBuffer& b) {
+   // Stream an object of TDataMember. Forces calculation of all cached
+   // (and persistent) values.
+   this->TDictionary::Streamer(b);
+   if (b.IsReading()) {
+      b.ReadClassBuffer(Class(), this);
+      Init(true /*reading*/);
+   } else {
+      // Writing.
+      GetOffset();
+      IsSTLContainer();
+      Property(); // also calculates fTypeName and friends
+      b.WriteClassBuffer(Class(), this);
    }
 }
 

@@ -35,9 +35,9 @@ class TDataMember : public TDictionary {
 private:
    enum { kObjIsPersistent = BIT(2) };
 
-   DataMemberInfo_t   *fInfo;         //pointer to CINT data member info
-   TClass             *fClass;        //pointer to the class
-   TDataType          *fDataType;     //pointer to data basic type descriptor
+   DataMemberInfo_t   *fInfo;         //!pointer to CINT data member info
+   TClass             *fClass;        //!pointer to the class
+   TDataType          *fDataType;     //!pointer to data basic type descriptor
 
    Long_t              fOffset;       //offset 
    Int_t               fSTLCont;      //STL type 
@@ -50,11 +50,11 @@ private:
    // The following fields allows to access all (even private) datamembers and
    // provide a possibility of having options with names and strings.
    // These options are defined in a comment to a field!
-   TMethodCall        *fValueGetter;  //method that returns a value;
-   TMethodCall        *fValueSetter;  //method which sets value;
+   TMethodCall        *fValueGetter;  //!method that returns a value;
+   TMethodCall        *fValueSetter;  //!method which sets value;
    TList              *fOptions;      //list of possible values 0=no restrictions
 
-   void Init();
+   void Init(bool afterReading);
 
 protected:
    TDataMember(const TDataMember&);
@@ -100,7 +100,7 @@ public:
 class TOptionListItem : public TObject {
 
 public:
-   TDataMember     *fDataMember;     //Data member to which this option belongs
+   TDataMember     *fDataMember;     //!Data member to which this option belongs
    Long_t           fValue;          //Numerical value assigned to option
    Long_t           fValueMaskBit;   //Not used yet: bitmask used when option is a toggle group
    Long_t           fToggleMaskBit;  //Not used yet: bitmask used when toggling value
