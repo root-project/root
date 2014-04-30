@@ -19,7 +19,4 @@ void graphpolar3()
    grP1->SetTitle("");
    grP1->SetLineColor(2);
    grP1->Draw("AOL");
-
-   return CPol;
 }
-

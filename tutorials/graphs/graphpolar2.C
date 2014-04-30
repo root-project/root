@@ -29,7 +29,4 @@ void graphpolar2()
 
    CPol->Update();
    grP1->GetPolargram()->SetToRadian();
-
-   return CPol;
 }
-
