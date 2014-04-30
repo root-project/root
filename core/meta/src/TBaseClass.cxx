@@ -12,6 +12,7 @@
 #include "TBaseClass.h"
 #include "TClass.h"
 #include "TInterpreter.h"
+#include <limits.h>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -29,14 +30,12 @@
 ClassImp(TBaseClass)
 
 //______________________________________________________________________________
-TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) : TDictionary()
+TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) :
+   TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX)
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
    // via a call to TCling::CreateListOfBaseClasses().
 
-   fInfo     = info;
-   fClass    = cl;
-   fClassPtr = 0;
    if (fInfo) SetName(gCling->BaseClassInfo_FullName(fInfo));
 }
 
@@ -70,11 +69,15 @@ TClass *TBaseClass::GetClassPointer(Bool_t load)
 }
 
 //______________________________________________________________________________
-Int_t TBaseClass::GetDelta() const
+Int_t TBaseClass::GetDelta()
 {
    // Get offset from "this" to part of base class.
 
-   return (Int_t)gCling->BaseClassInfo_Offset(fInfo);
+   // Initialized to INT_MAX to signal that it's unset; -1 is a valid value
+   // meaning "cannot calculate base offset".
+   if (fDelta == INT_MAX)
+      fDelta = (Int_t)gCling->BaseClassInfo_Offset(fInfo);
+   return fDelta;
 }
 
 //______________________________________________________________________________
@@ -109,6 +112,7 @@ ROOT::ESTLType TBaseClass::IsSTLContainer()
 Long_t TBaseClass::Property() const
 {
    // Get property description word. For meaning of bits see EProperty.
-
-   return gCling->BaseClassInfo_Property(fInfo);
+   if (fProperty == -1)
+      fProperty = gCling->BaseClassInfo_Property(fInfo);
+   return fProperty;
 }
