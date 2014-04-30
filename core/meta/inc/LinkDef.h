@@ -17,14 +17,14 @@
 
 #pragma link C++ enum EProperty;
 
-#pragma link C++ class TBaseClass;
+#pragma link C++ class TBaseClass-;
 #pragma link C++ class TClass;
 #pragma link C++ class TClassStreamer+;
 #pragma link C++ class TMemberStreamer+;
 #pragma link C++ class TDictAttributeMap+;
 #pragma link C++ class TClassRef+;
 #pragma link C++ class TClassGenerator+;
-#pragma link C++ class TDataMember;
+#pragma link C++ class TDataMember-;
 #pragma link C++ class TDataType;
 #pragma link C++ class TDictionary;
 #pragma link C++ class TEnumConstant+;
@@ -64,7 +64,7 @@
 #pragma link C++ class TFileMergeInfo;
 #pragma link C++ class TListOfFunctions+;
 #pragma link C++ class TListOfFunctionTemplates+;
-#pragma link C++ class TListOfDataMembers;
+#pragma link C++ class TListOfDataMembers+;
 #pragma link C++ class TListOfEnums+;
 
 #endif
