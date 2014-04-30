@@ -14,6 +14,7 @@
 #include "TGeoPolygon.h"
 #include "TGeoManager.h"
 
+ClassImp(TGeoStateInfo)
 //_____________________________________________________________________________
 TGeoStateInfo::TGeoStateInfo()
               :fNode(0),
