@@ -44,6 +44,7 @@ private:
    TClass            *fClass;     //!pointer to parent class
    Int_t              fDelta;     // BaseClassInfo_t offset (INT_MAX if unset)
    mutable Int_t      fProperty;  // BaseClassInfo_t's properties
+   Int_t              fSTLType;   // cache of IsSTLContainer()
 
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);

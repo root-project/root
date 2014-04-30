@@ -31,7 +31,8 @@ ClassImp(TBaseClass)
 
 //______________________________________________________________________________
 TBaseClass::TBaseClass(BaseClassInfo_t *info, TClass *cl) :
-   TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX)
+TDictionary(), fInfo(info), fClass(cl), fDelta(INT_MAX),
+   fProperty(-1), fSTLType(-1)
 {
    // Default TBaseClass ctor. TBaseClasses are constructed in TClass
    // via a call to TCling::CreateListOfBaseClasses().
@@ -94,18 +95,27 @@ ROOT::ESTLType TBaseClass::IsSTLContainer()
 {
    // Return which type (if any) of STL container the data member is.
 
-   if (!fInfo) return ROOT::kNotSTL;
-   const char *type = gCling->BaseClassInfo_TmpltName(fInfo);
-   if (!type) return ROOT::kNotSTL;
+   // fSTLType is -1 if not yet evaulated.
+   // fSTLType is -2 if no fInfo was available.
 
-   if (!strcmp(type, "vector"))   return ROOT::kSTLvector;
-   if (!strcmp(type, "list"))     return ROOT::kSTLlist;
-   if (!strcmp(type, "deque"))    return ROOT::kSTLdeque;
-   if (!strcmp(type, "map"))      return ROOT::kSTLmap;
-   if (!strcmp(type, "multimap")) return ROOT::kSTLmultimap;
-   if (!strcmp(type, "set"))      return ROOT::kSTLset;
-   if (!strcmp(type, "multiset")) return ROOT::kSTLmultiset;
-   return ROOT::kNotSTL;
+   if (fSTLType < 0) {
+      if (!fInfo) {
+         fSTLType = -2;
+      } else {
+         const char *type = gCling->BaseClassInfo_TmpltName(fInfo);
+         if (!type)                          fSTLType = ROOT::kNotSTL;
+         else if (!strcmp(type, "vector"))   fSTLType = ROOT::kSTLvector;
+         else if (!strcmp(type, "list"))     fSTLType = ROOT::kSTLlist;
+         else if (!strcmp(type, "deque"))    fSTLType = ROOT::kSTLdeque;
+         else if (!strcmp(type, "map"))      fSTLType = ROOT::kSTLmap;
+         else if (!strcmp(type, "multimap")) fSTLType = ROOT::kSTLmultimap;
+         else if (!strcmp(type, "set"))      fSTLType = ROOT::kSTLset;
+         else if (!strcmp(type, "multiset")) fSTLType = ROOT::kSTLmultiset;
+         else                                fSTLType = ROOT::kNotSTL;
+      }
+   }
+   if (fSTLType == -2) return ROOT::kNotSTL;
+   return (ROOT::ESTLType) fSTLType;
 }
 
 //______________________________________________________________________________
@@ -115,4 +125,20 @@ Long_t TBaseClass::Property() const
    if (fProperty == -1)
       fProperty = gCling->BaseClassInfo_Property(fInfo);
    return fProperty;
+}
+
+//______________________________________________________________________________
+void TBaseClass::Streamer(TBuffer& b) {
+   // Stream an object of TBaseClass. Triggers the calculation of the
+   // cache variables to store them.
+   this->TBaseClass::Streamer(b);
+   if (b.IsReading()) {
+      b.ReadClassBuffer(Class(), this);
+   } else {
+      // Writing.
+      GetDelta();
+      Property();
+      IsSTLContainer();
+      b.WriteClassBuffer(Class(), this);
+   }
 }
