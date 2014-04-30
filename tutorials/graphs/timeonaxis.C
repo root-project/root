@@ -27,7 +27,7 @@ void timeonaxis()
 // If one changes it, it will be changed even on the graphs already defined
    gStyle->SetTimeOffset(script_time);
 
-   ct = new TCanvas("ct","Time on axis",10,10,700,900);
+   TCanvas *ct = new TCanvas("ct","Time on axis",10,10,700,900);
    ct->Divide(1,3);
    ct->SetFillColor(28);
 
@@ -38,7 +38,7 @@ void timeonaxis()
 
    gStyle->SetTitleH(0.08);
    float noise;
-   ht = new TH1F("ht","Love at first sight",3000,0.,2000.);
+   TH1F *ht = new TH1F("ht","Love at first sight",3000,0.,2000.);
    for (i=1;i<3000;i++) {
       noise = gRandom->Gaus(0,120);
       if (i>700) {
@@ -66,7 +66,7 @@ void timeonaxis()
       x[i] = sin(i*4*3.1415926/50)*exp(-(double)i/20);
       t[i] = 6000+(double)i/20;
    }
-   gt = new TGraph(100,t,x);
+   TGraph *gt = new TGraph(100,t,x);
    gt->SetTitle("Politics");
    ct->cd(2);
    ct_2->SetFillColor(41);
@@ -88,7 +88,7 @@ void timeonaxis()
       x2[i] = gRandom->Gaus(500,100)*i;
       t2[i] = i*365*86400;
    }
-   gt2 = new TGraph(10,t2,x2);
+   TGraph *gt2 = new TGraph(10,t2,x2);
    gt2->SetTitle("Number of monkeys on the moon");
    ct->cd(3);
    ct_3->SetFillColor(41);
@@ -124,5 +124,4 @@ void timeonaxis()
 
    gt2->GetXaxis()->SetTimeFormat("y. %Y %F2000-01-01 00:00:00");
    gPad->Modified();
-   
 }
