@@ -971,7 +971,8 @@ void TH2Editor::SetModel(TObject* obj)
 
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();
 
-   if (!player || player->GetHistogram()!=fHist ) {
+   if (!player || player->GetHistogram()!=fHist || 
+       fHist->GetEntries() != player->GetNfill())  {
       Int_t n1 = 0, n2 =0;
       Int_t upx =0, upy =0;
       if (fBinHist) n1 = fBinHist->GetXaxis()->GetNbins();
