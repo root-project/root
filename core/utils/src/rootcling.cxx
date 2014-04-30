@@ -881,7 +881,7 @@ bool CheckInputOperator(const char *what,
                         const char *proto,
                         const string &fullname,
                         const clang::RecordDecl *cl,
-                        cling::Interpreter &interp)
+                        const cling::Interpreter &interp)
 {
    // Check if the specificed operator (what) has been properly declared if the user has
    // resquested a custom version.
@@ -927,7 +927,7 @@ bool CheckInputOperator(const char *what,
 }
 
 //______________________________________________________________________________
-bool CheckInputOperator(const clang::RecordDecl *cl, cling::Interpreter &interp)
+bool CheckInputOperator(const clang::RecordDecl *cl, const cling::Interpreter &interp)
 {
    // Check if the operator>> has been properly declared if the user has
    // resquested a custom version.
@@ -2511,55 +2511,6 @@ void AdjustRootMapNames(std::string& rootmapFileName,
 }
 
 //______________________________________________________________________________
-int CreateRootMapFile(const std::string& rootmapFileName,
-                      const std::string& rootmapLibName,
-                      const std::list<std::string>& classesNames,
-                      const std::list<std::string>& nsNames)
-{
-
-   // Create the rootmap file from the selected classes and namespaces
-   std::ofstream rootmapFile(rootmapFileName.c_str());
-   if (!rootmapFile){
-      ROOT::TMetaUtils::Error(0,"Opening new rootmap file %s\n",rootmapFileName.c_str());
-      return 1;
-   }
-
-
-   // Preamble
-   rootmapFile << "#--Begin " << rootmapFileName << std::endl;
-
-   // The number used to have the same alignment of ROOT5
-   const int alignment=49;
-   
-   // Loop on selected classes and insert them in the rootmap
-   std::string thisClassName;
-   for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
-        classNameIt!=classesNames.end();++classNameIt){
-      thisClassName = *classNameIt;
-      ManipForRootmap(thisClassName);
-      rootmapFile << "Library." << thisClassName << ": "
-                  << std::setw(alignment-thisClassName.size()) << rootmapLibName
-                  << std::endl;
-      }
-
-   // Same for namespaces
-   std::string thisNsName;
-   for (std::list<std::string>::const_iterator nsNameIt=nsNames.begin();
-        nsNameIt!=nsNames.end();++nsNameIt){
-      thisNsName=*nsNameIt ;
-      ManipForRootmap(thisNsName);
-      rootmapFile << "Library." << thisNsName << ": "
-                  << std::setw(alignment-thisClassName.size()) << rootmapLibName
-                  << std::endl;
-        }
-
-   rootmapFile << "#--End " << rootmapFileName << std::endl;
-   rootmapFile << "#--Final End" << std::endl;
-
-   return 0;
-}
-
-//______________________________________________________________________________
 int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::string& rootmapLibName,
                          const std::list<std::string>& classesDefsList,
@@ -2896,6 +2847,48 @@ void ExtractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
 }
 
 //______________________________________________________________________________
+int CheckClassesForErrors(const RScanner::ClassColl_t& selectedClasses,
+                          const cling::Interpreter& interp,
+                          bool interpreteronly)
+{
+   // Check for inconsistencies and errors in the class layout before doing anything else.
+
+   bool has_input_error = false;
+
+   for(auto& selectedClass : selectedClasses){
+      if (interpreteronly){
+         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selectedClass.GetRecordDecl());
+         if (cxxdecl &&
+            ROOT::TMetaUtils::ClassInfo__HasMethod(selectedClass,"Class_Name",interp)) {
+            ROOT::TMetaUtils::Error("RootCling",
+                                    "Interactivity only dictionaries are not supported for classes with ClassDef\n");
+               return 1;
+            }
+      }
+
+      if (ROOT::TMetaUtils::ClassInfo__HasMethod(selectedClass,"Streamer",interp)) {
+         if (selectedClass.RequestNoInputOperator()) {
+            int version = ROOT::TMetaUtils::GetClassVersion(selectedClass, interp);
+            if (version!=0) {
+               // Only Check for input operator is the object is I/O has
+               // been requested.
+               has_input_error |= CheckInputOperator(selectedClass,interp);
+            }
+         }
+      }
+      has_input_error |= !CheckClassDef(*selectedClass, interp);
+   }
+
+   if (has_input_error) {
+      // Be a little bit makefile friendly and remove the dictionary in case of error.
+      // We could add an option -k to keep the file even in case of error.
+      return 1;
+   }
+
+   return 0;
+}
+
+//______________________________________________________________________________
 int AnnotateAST(const RScanner::ClassColl_t& selectedClasses,
                 const cling::Interpreter& interp,
                 SelectionRules& selectionRules,
@@ -2933,74 +2926,66 @@ int GenerateFullDict(std::ostream& dictStream,
                      SelectionRules& selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
                      bool onepcm,
-                     bool interpreteronly,
                      bool isSplit,
                      bool isGenreflex)
 {
 
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
-
-   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
-   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
-
    bool needsCollectionProxy = false;
    
    if (!onepcm) {
       
+   //
+   // We will loop over all the classes several times.
+   // In order we will call
+   //
+   //     WriteClassInit (code to create the TGenericClassInfo)
+   //     check for constructor and operator input
+   //     WriteClassFunctions (declared in ClassDef)
+   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+   //
+
       //
-      // We will loop over all the classes several times.
-      // In order we will call
-      //
-      //     WriteClassInit (code to create the TGenericClassInfo)
-      //     check for constructor and operator input
-      //     WriteClassFunctions (declared in ClassDef)
-      //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+      // Loop over all classes and create Streamer() & Showmembers() methods
       //
 
-      if (!interpreteronly){
-         //
-         // Loop over all classes and create Streamer() & Showmembers() methods
-         //
+      // SELECTION LOOP
+      for(auto& selecetedNamespace : scan.fSelectedNamespaces) {
+         WriteNamespaceInit(selecetedNamespace, interp, dictStream);
+      }
 
-         // SELECTION LOOP
-         RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
-         RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
-         for( ; ns_iter != ns_end; ++ns_iter) {
-            WriteNamespaceInit(*ns_iter, interp, dictStream);
+      for(auto& selectedClass : scan.fSelectedClasses){
+         if (!selectedClass.GetRecordDecl()->isCompleteDefinition()) {
+            ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::GetQualifiedName(selectedClass).c_str());
+            continue;
+         }
+         if (selectedClass.RequestOnlyTClass()) {
+            // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* selectedClass.GetRecordDecl()).c_str());
+            // For now delay those for later.
+            continue;
          }
 
-         for( ; iter != end; ++iter)
-         {
-            if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-               ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::GetQualifiedName(* iter).c_str());
-               continue;
-            }
-            if (iter->RequestOnlyTClass()) {
-               // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-               // For now delay those for later.
-               continue;
-            }
+         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selectedClass.GetRecordDecl());
 
-//             // Very important: here we decide if we want to attach attributes to the decl.
-//             if (clang::CXXRecordDecl* CXXRD =
-//                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-//                AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-//                }
-
-            const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-
-            if (CRD) {
-               ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
-               if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
-                  // coverity[fun_call_w_exception] - that's just fine.
-                  RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
-               } else {
-                  if (!EmitStreamerInfo(iter->GetNormalizedName()))
-                     return 1;
-                  ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
-               }
+         if (CRD) {
+            ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", selectedClass.GetNormalizedName() );
+            if (TMetaUtils::IsStdClass(*CRD) &&
+                  0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
+               // coverity[fun_call_w_exception] - that's just fine.
+               RStl::Instance().GenerateTClassFor( selectedClass.GetNormalizedName(), CRD, interp, normCtxt);
+            } else {
+               if (!EmitStreamerInfo(selectedClass.GetNormalizedName()))
+                  return 1;
+               ROOT::TMetaUtils::WriteClassInit(dictStream,
+                                                selectedClass,
+                                                CRD,
+                                                interp,
+                                                normCtxt,
+                                                ctorTypes,
+                                                needsCollectionProxy);
             }
          }
+      }
 
 #ifndef ROOT_STAGE1_BUILD
          // Make up for skipping RegisterModule, now that dictionary parsing
@@ -3010,7 +2995,6 @@ int GenerateFullDict(std::ostream& dictStream,
                                "#include \"TObjArray.h\"");
          CloseStreamerInfoROOTFile();
 #endif
-      }
 
       //
       // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
@@ -3018,26 +3002,17 @@ int GenerateFullDict(std::ostream& dictStream,
       // instantiation (STK)
       //
       // SELECTION LOOP
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter)
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
+      for(auto& selectedClass : scan.fSelectedClasses){
+         if (!selectedClass.GetRecordDecl()->isCompleteDefinition()) {
             continue;
          }
-         if (iter->RequestOnlyTClass()) {
+         if (selectedClass.RequestOnlyTClass()) {
             // For now delay those for later.
             continue;
          }
-         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name",interp)) {
-            if (!interpreteronly){
-               WriteClassFunctions(cxxdecl,dictStream,isSplit);
-            } else {
-               ROOT::TMetaUtils::Error("GenerateFullDict",
-                                       "Interactivity only dictionaries are not supported for classes with ClassDef\n");
-               return 1;
-            }
+         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selectedClass.GetRecordDecl());
+         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selectedClass,"Class_Name",interp)) {
+            WriteClassFunctions(cxxdecl,dictStream,isSplit);
          }
       }
 
@@ -3045,56 +3020,35 @@ int GenerateFullDict(std::ostream& dictStream,
       // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
       // STL class which is done via RStl::Instance().WriteClassInit(0);
       // and the ClassInit
-      if (!interpreteronly){
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
-         {
-            if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-               continue;
-            }
-            if (!iter->RequestOnlyTClass()) {
-               continue;
-            }
-
-            const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-
-            if (!ROOT::TMetaUtils::IsSTLContainer(*iter)) {
-               ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
-            }
+      for(auto& selectedClass : scan.fSelectedClasses){
+         if (!selectedClass.GetRecordDecl()->isCompleteDefinition()) {
+            continue;
          }
-         // Loop to write all the ClassCode
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
-         {
-            ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
-                                             *iter,
-                                             interp,
-                                             normCtxt,
-                                             dictStream,
-                                             ctorTypes,
-                                             isGenreflex);
+         if (!selectedClass.RequestOnlyTClass()) {
+            continue;
+         }
+
+         const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selectedClass.GetRecordDecl());
+
+         if (!ROOT::TMetaUtils::IsSTLContainer(selectedClass)) {
+            ROOT::TMetaUtils::WriteClassInit(dictStream, selectedClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
          }
       }
-   } else {
-      // We need annotations even in the PCH
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-//       for( ; iter != end; ++iter)
-//       {
-//          // Very important: here we decide if we want to attach attributes to the decl.
-//          if (clang::CXXRecordDecl* CXXRD =
-//             llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-//             AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-//             }
-//       }
+
+      // Loop to write all the ClassCode
+      for(auto& selectedClass : scan.fSelectedClasses){
+         ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
+                                          selectedClass,
+                                          interp,
+                                          normCtxt,
+                                          dictStream,
+                                          ctorTypes,
+                                          isGenreflex);
+      }
    }
 
-   if (!interpreteronly) {
-      // coverity[fun_call_w_exception] - that's just fine.
-      ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
-   }
+   // coverity[fun_call_w_exception] - that's just fine.
+   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
    
    return 0;
 }
@@ -3684,9 +3638,6 @@ int RootCling(int argc,
    bool doSplit = false;
    bool dictSelection = true;
 
-   // Temporary to decide if the new format is to be used
-   bool useNewRmfFormat = true;
-
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
    std::list<std::string> diagnosticPragmas;
@@ -3713,13 +3664,6 @@ int RootCling(int argc,
             // name for the rootmap file
             rootmapFileName = argv[ic+1];
             ic+=2;
-            continue;
-         }
-
-         if (strcmp("-oldRmfFormat", argv[ic]) == 0) {
-            // Generate old style rootmap files
-            useNewRmfFormat = false;
-            ic+=1;
             continue;
          }
 
@@ -4209,36 +4153,11 @@ int RootCling(int argc,
 
    scan.Scan(CI->getASTContext());
 
-   bool has_input_error = false;
-
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
-
-// SELECTION LOOP
-   // Check for error in the class layout before doing anything else.
-   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
-   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter)
-   {
-      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer",interp)) {
-         if (iter->RequestNoInputOperator()) {
-            int version = ROOT::TMetaUtils::GetClassVersion(*iter, interp);
-            if (version!=0) {
-               // Only Check for input operator is the object is I/O has
-               // been requested.
-               has_input_error |= CheckInputOperator(*iter,interp);
-            }
-         }
-      }
-      has_input_error |= !CheckClassDef(**iter, interp);
-   }
-
-   if (has_input_error) {
-      // Be a little bit makefile friendly and remove the dictionary in case of error.
-      // We could add an option -k to keep the file even in case of error.
-      exit(1);
-   }   
+   if (0 != CheckClassesForErrors(scan.fSelectedClasses, interp, interpreteronly) )
+      return 1;
 
    //---------------------------------------------------------------------------
    // Write all the necessary #include
@@ -4268,6 +4187,18 @@ int RootCling(int argc,
                   interp,
                   selectionRules,
                   isGenreflex);
+
+      int retCode = GenerateFullDict(dictStream,
+                                    interp,
+                                    scan,
+                                    selectionRules,
+                                    constructorTypes,
+                                    onepcm,
+                                    doSplit,
+                                    isGenreflex);
+      if (retCode!=0){
+         return retCode;
+      }
    }
 
    // Now we have done all our looping and thus all the possible
@@ -4298,19 +4229,6 @@ int RootCling(int argc,
                      inlineInputHeader);
    }
 
-   int retCode = GenerateFullDict(dictStream,
-                                  interp,
-                                  scan,
-                                  selectionRules,
-                                  constructorTypes,
-                                  onepcm,
-                                  interpreteronly,
-                                  doSplit,
-                                  isGenreflex);
-   if (retCode!=0){
-      return retCode;
-   }
-
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
 
    if (liblistPrefix.length()) {
@@ -4325,14 +4243,10 @@ int RootCling(int argc,
          outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
          // Add explicit delimiter
          outputfile << "# Now the list of classes\n";
-// SELECTION LOOP
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
-         {
-            // Shouldn't it be GetLong64_Name( cl_input.GetNormalizedName() )
-            // or maybe we should be normalizing to turn directly all long long into Long64_t
-            outputfile << iter->GetNormalizedName() << endl;
+         // Shouldn't it be GetLong64_Name( cl_input.GetNormalizedName() )
+         // or maybe we should be normalizing to turn directly all long long into Long64_t
+         for(auto& selectedClass : scan.fSelectedClasses){
+            outputfile << selectedClass.GetNormalizedName() << endl;
          }
       }
    }
@@ -4351,11 +4265,11 @@ int RootCling(int argc,
    std::list<std::string> classesNamesForRootmap;
    std::list<std::string> classesDefsList;
 
-   retCode = ExtractSelectedClassesAndTemplateDefs(scan,
-                                                   classesNames,
-                                                   classesNamesForRootmap,
-                                                   classesDefsList,
-                                                   interp);   
+   int retCode = ExtractSelectedClassesAndTemplateDefs(scan,
+                                                       classesNames,
+                                                       classesNamesForRootmap,
+                                                       classesDefsList,
+                                                       interp);
    if (0!=retCode) return retCode;
 
    // Create the rootmapfile if needed
@@ -4373,23 +4287,15 @@ int RootCling(int argc,
                              rootmapFileName.c_str());
 
       tmpCatalog.addFileName(rootmapFileName);
-      int rmStatusCode = 0;
-      if (useNewRmfFormat){
-         
-         rmStatusCode = CreateNewRootMapFile(rootmapFileName,
-                                             rootmapLibName,
-                                             classesDefsList,
-                                             classesNamesForRootmap,
-                                             nsNames,
-                                             scan.fSelectedTypedefs);
+      if (CreateNewRootMapFile(rootmapFileName,
+                               rootmapLibName,
+                               classesDefsList,
+                               classesNamesForRootmap,
+                               nsNames,
+                               scan.fSelectedTypedefs) != 0){
+         return 1;
       }
-      else{
-         rmStatusCode = CreateRootMapFile(rootmapFileName,
-                                          rootmapLibName,
-                                          classesNamesForRootmap,
-                                          nsNames);
-      }
-      if (0!=rmStatusCode) return 1;
+
    }
 
    // Create the capabilities file if needed
@@ -4564,7 +4470,6 @@ int invokeRootCling(const std::string& verbosity,
                     const std::vector<std::string>& preprocUndefines,
                     const std::vector<std::string>& warnings,
                     const std::string& rootmapFileName,
-                    bool newRmfFormat,
                     const std::string& rootmapLibName,
                     const std::string& capaFileName,
                     bool interpreteronly,
@@ -4615,10 +4520,6 @@ int invokeRootCling(const std::string& verbosity,
       argvVector.push_back(string2charptr("-rmf"));
       argvVector.push_back(string2charptr(newRootmapFileName));
    }
-
-   // Switch for the new format
-   if (!newRmfFormat)
-      argvVector.push_back(string2charptr("-oldRmfFormat"));
 
    // RootMap Lib filename
    if (!newRootmapLibName.empty()){
@@ -4698,7 +4599,6 @@ int invokeManyRootCling(const std::string& verbosity,
                         const std::vector<std::string>& preprocUndefines,
                         const std::vector<std::string>& warnings,
                         const std::string& rootmapFileName,
-                        bool newRmfFormat,
                         const std::string& rootmapLibName,
                         const std::string& capaFileName,
                         bool interpreteronly,
@@ -4731,7 +4631,6 @@ int invokeManyRootCling(const std::string& verbosity,
                                        preprocUndefines,
                                        warnings,
                                        rootmapFileName,
-                                       newRmfFormat,
                                        rootmapLibName,
                                        capaFileName,
                                        interpreteronly,
@@ -4835,7 +4734,6 @@ int GenReflex(int argc, char **argv)
                        ROOTMAPLIB,
                        PCMFILENAME,
                        DEEP,
-                       OLDRMFFORMAT,
                        DEBUG,
                        QUIET,
                        HELP,
@@ -4974,12 +4872,6 @@ int GenReflex(int argc, char **argv)
         "" , "deep",
         option::Arg::None,
         "--deep  \tGenerate dictionaries for all dependent classes (ignored).\n"},
-
-      {OLDRMFFORMAT,
-        NOTYPE ,
-        "" , "oldRmfFormat",
-        option::Arg::None,
-        ""},
 
       {DEBUG,
         NOTYPE ,
@@ -5124,10 +5016,6 @@ int GenReflex(int argc, char **argv)
       rootmapLibName = options[TARGETLIB].arg;
    }
 
-   bool newRmfFormat = true;
-   if (options[OLDRMFFORMAT])
-      newRmfFormat=false;
-
    bool interpreteronly = false;
    if (options[INTERPRETERONLY])
       interpreteronly=true;
@@ -5190,7 +5078,6 @@ int GenReflex(int argc, char **argv)
                                     preprocUndefines,
                                     warnings,
                                     rootmapFileName,
-                                    newRmfFormat,
                                     rootmapLibName,
                                     capaFileName,
                                     interpreteronly,
@@ -5209,7 +5096,6 @@ int GenReflex(int argc, char **argv)
                                         preprocUndefines,
                                         warnings,
                                         rootmapFileName,
-                                        newRmfFormat,
                                         rootmapLibName,
                                         capaFileName,
                                         interpreteronly,
