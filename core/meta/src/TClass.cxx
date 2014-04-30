@@ -3650,10 +3650,34 @@ void TClass::FillProto(TProtoClass* pcl) const
    pcl->fRealData = fRealData;
    pcl->fBase = fBase;
    pcl->fData = fData;
-   pcl->fCheckSum = fCheckSum;
    pcl->fSizeof = fSizeof;
    pcl->fCanSplit = fCanSplit;
    pcl->fProperty = fProperty;
+}
+
+//______________________________________________________________________________
+void TClass::AdoptProto(const TProtoClass* pcl)
+{
+   // Fill this TClass with data from the TProtoClass.
+   if (fRealData || fBase || fData || fSizeof || fCanSplit || fProperty) {
+      Error("AdoptProto", "TClass already initialized!");
+      return;
+   }
+   fBase = pcl->fBase;
+   fData = (TListOfDataMembers*)pcl->fData;
+   fRealData = pcl->fRealData;
+   fSizeof = pcl->fSizeof;
+   fCanSplit = pcl->fCanSplit;
+   fProperty = pcl->fProperty;
+
+   // Update pointers to TClass
+   for (auto base: *fBase) {
+      ((TBaseClass*)base)->SetClass(this);
+   }
+   for (auto dm: *fData) {
+      ((TDataMember*)dm)->SetClass(this);
+   }
+   ((TListOfDataMembers*)fData)->SetClass(this);
 }
 
 //______________________________________________________________________________
