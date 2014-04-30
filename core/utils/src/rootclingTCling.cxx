@@ -80,6 +80,7 @@ bool CloseStreamerInfoROOTFile()
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
-   protoClasses.Write("__StreamerInfoOffsets", TObject::kSingleKey);
+   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
+   protoClasses.Delete();
    return true;
 }
