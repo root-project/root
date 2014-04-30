@@ -3647,6 +3647,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 void TClass::FillProto(TProtoClass* pcl) const
 {
    // Fill a TProtoClass with data from this class.
+   *((TNamed*)pcl) = *this;
    pcl->fRealData = fRealData;
    pcl->fBase = fBase;
    pcl->fData = fData;
@@ -3663,6 +3664,7 @@ void TClass::AdoptProto(const TProtoClass* pcl)
       Error("AdoptProto", "TClass already initialized!");
       return;
    }
+   *((TNamed*)this) = *pcl;
    fBase = pcl->fBase;
    fData = (TListOfDataMembers*)pcl->fData;
    fRealData = pcl->fRealData;
