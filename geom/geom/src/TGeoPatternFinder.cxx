@@ -1960,13 +1960,9 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions)
 // constructor
 // compute step, start, end
    fStart = 0;
-   fEnd = 0;
-   fStep = 0;
-   fSinCos     = new Double_t[2*fNdivisions];
-   for (Int_t i = 0; i<fNdivisions; i++) {
-      fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-      fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-   }
+   fEnd = 360.;
+   fStep = 360./ndivisions;
+   CreateSinCos();
    CreateThreadData(1);
 }
 //_____________________________________________________________________________
@@ -1976,11 +1972,7 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
 // constructor
 // compute start, end
    fStep       = step;
-   fSinCos     = new Double_t[2*ndivisions];
-   for (Int_t i = 0; i<fNdivisions; i++) {
-      fSinCos[2*i] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-      fSinCos[2*i+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+i*fStep));
-   }
+   CreateSinCos();
    CreateThreadData(1);
 }
 //_____________________________________________________________________________
@@ -1997,26 +1989,36 @@ TGeoPatternSphPhi::TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions, Double_t
       fStep       = (end-start+360)/ndivisions;
    else
       fStep       = (end-start)/ndivisions;
-   fSinCos     = new Double_t[2*ndivisions];
-   for (Int_t idiv = 0; idiv<ndivisions; idiv++) {
-      fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
-      fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(start+0.5*fStep+idiv*fStep));
-   }
-
+   CreateSinCos();   
    CreateThreadData(1);
 }
+
 //_____________________________________________________________________________
 TGeoPatternSphPhi::~TGeoPatternSphPhi()
 {
 // Destructor
-   if (fSinCos) delete [] fSinCos;
+   delete [] fSinCos;
 }
+
+//_____________________________________________________________________________
+Double_t *TGeoPatternSphPhi::CreateSinCos()
+{
+// Create the sincos table if it does not exist
+   fSinCos     = new Double_t[2*fNdivisions];
+   for (Int_t idiv = 0; idiv<fNdivisions; idiv++) {
+      fSinCos[2*idiv] = TMath::Sin(TMath::DegToRad()*(fStart+0.5*fStep+idiv*fStep));
+      fSinCos[2*idiv+1] = TMath::Cos(TMath::DegToRad()*(fStart+0.5*fStep+idiv*fStep));
+   }
+   return fSinCos;
+}
+   
 //_____________________________________________________________________________
 void TGeoPatternSphPhi::cd(Int_t idiv)
 {
 // Update current division index and global matrix to point to a given slice.
    ThreadData_t& td = GetThreadData();
    td.fCurrent = idiv;
+   if (!fSinCos) CreateSinCos();
    ((TGeoRotation*)td.fMatrix)->FastRotZ(&fSinCos[2*idiv]);
 }
 
@@ -2063,7 +2065,7 @@ TGeoNode *TGeoPatternSphPhi::FindNode(Double_t * point, const Double_t * dir)
 TGeoPatternFinder *TGeoPatternSphPhi::MakeCopy(Bool_t reflect)
 {
 // Make a copy of this finder. Reflect by Z if required.
-   TGeoPatternSphPhi *finder = new TGeoPatternSphPhi(*this);
+   TGeoPatternSphPhi *finder = new TGeoPatternSphPhi(fVolume, fNdivisions, fStart, fEnd);
       if (!reflect) return finder;
    finder->Reflect();
    return finder;
@@ -2096,6 +2098,7 @@ void TGeoPatternSphPhi::UpdateMatrix(Int_t idiv, TGeoHMatrix &matrix) const
 {
 // Fills external matrix with the local one corresponding to the given division
 // index.
+   if (!fSinCos) ((TGeoPatternSphPhi*)this)->CreateSinCos();
    matrix.Clear();
    matrix.FastRotZ(&fSinCos[2*idiv]);
 }   
