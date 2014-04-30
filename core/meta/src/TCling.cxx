@@ -884,7 +884,9 @@ TCling::TCling(const char *name, const char *title)
    // Initialize for ROOT:
    TCling::AddIncludePath(include.c_str());
 
-   fInterpreter->enableDynamicLookup();
+   if (!fromRootCling) {
+      fInterpreter->enableDynamicLookup();
+   }
 
    // Attach cling callbacks
    fClingCallbacks = new TClingCallbacks(fInterpreter);
