@@ -25,8 +25,9 @@
 #pragma link C++ class TClassRef+;
 #pragma link C++ class TClassGenerator+;
 #pragma link C++ class TDataMember-;
+#pragma link C++ class TOptionListItem+;
 #pragma link C++ class TDataType;
-#pragma link C++ class TDictionary;
+#pragma link C++ class TDictionary+;
 #pragma link C++ class TEnumConstant+;
 #pragma link C++ class TEnum+;
 #pragma link C++ class TFunction;

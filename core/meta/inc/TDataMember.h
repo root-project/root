@@ -106,9 +106,13 @@ public:
    Long_t           fToggleMaskBit;  //Not used yet: bitmask used when toggling value
    TString          fOptName;        //Text assigned to option which appears in option menu
    TString          fOptLabel;       //Text (or enum) value assigned to option.
-
+   TOptionListItem():
+      fDataMember(0), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
+   {}
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
+
+   ClassDef(TOptionListItem,2); //Element in the list of options.
 };
 
 #endif
