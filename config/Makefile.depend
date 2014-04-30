@@ -139,6 +139,8 @@ MEMSTATLIBDEPM         = $(TREELIB) $(GPADLIB) $(GRAFLIB) $(HISTLIB) $(IOLIB)
 MEMSTATGUILIBDEPM      = $(MEMSTATLIB) $(TREELIB) $(GUILIB)
 RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
+HTTPLIBDEPM            = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
+                         $(GRAFLIB) $(IOLIB) $(XMLLIB)
 
 ifeq ($(EXPLICITLINK),yes)
 
@@ -242,6 +244,7 @@ MEMSTATLIBDEP          = $(MEMSTATLIBDEPM)
 MEMSTATGUILIBDEP       = $(MEMSTATGUILIBDEPM)
 RECLIBDEP              = $(RECLIBDEPM)
 FITSIOLIBDEP           = $(FITSIOLIBDEPM)
+HTTPLIBDEP             = $(HTTPLIBDEPM) 
 
 ifeq ($(PLATFORM),win32)
 
@@ -417,6 +420,9 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
                           lib/libThread.lib
 FITSIOLIBEXTRA          = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libMatrix.lib
+HTTPLIBEXTRA            = lib/libThread.lib lib/libTree.lib lib/libHist.lib \
+                          lib/libGpad.lib lib/libGraf.lib  lib/libRIO.lib \
+                          lib/libXMLIO.lib
 
 else
 
@@ -543,6 +549,7 @@ MEMSTATLIBEXTRA         = -Llib -lTree -lGpad -lGraf -lHist -lRIO
 MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
 FITSIOLIBEXTRA          = -Llib -lHist -lGpad -lGraf -lMatrix
+HTTPLIBEXTRA            = -Llib -lThread -lTree -lHist -lGpad -lGraf -lRIO -lXMLIO
 
 endif
 

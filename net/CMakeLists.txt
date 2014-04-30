@@ -1,6 +1,7 @@
 
 add_subdirectory(net)
 add_subdirectory(auth)  # special CMakeListst.txt
+add_subdirectory(http)
 
 if(bonjour)
   add_subdirectory(bonjour)

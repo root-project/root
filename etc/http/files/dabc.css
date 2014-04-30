@@ -1,0 +1,135 @@
+/* Interface stylesheet for Javascript ROOT Web Page. */
+
+* { padding: 0; margin: 0; }
+* html, body { height: 100%; }
+
+body, textarea {
+   font-family: "lucida sans", verdana, arial, helvetica, sans-serif;
+   font-size: 80%;
+}
+
+h1 { font-size: 20pt }
+h2 { font-size: 18pt; font-weight:bold; color: navy }
+h3 { font-size: 16pt; font-weight:bold; color: #483d8b }
+h4 { font-size: 14pt; font-weight:bold; color:#C71585; margin-bottom:2px; margin-top:8px; }
+h5 { font-size: 10pt; font-weight:bold; color:#6495ED; margin-bottom:2px; }
+h6 { font-size: 10pt; font-weight:bold; color:navy }
+
+body {
+   margin-left: 5px;
+   margin-right: 5px;
+   margin-top: 5px;
+   margin-bottom: 5px;
+}
+
+textarea { font-size: 100%;}
+
+p { margin-top: 6px; padding: 0 10px 1em; }
+
+#main { left: 3px; right: 76%; overflow: auto; }
+
+#dabc_draw { height:100%; }
+
+#status { font-size:70%; }
+
+#DabcPainterHolder {
+   left: 25%;
+   right: 3px;
+   overflow: auto;
+   font-size:9pt;font-weight:normal;color:#191970;
+}
+
+div.column {
+   border: 1px dotted #666;
+   background-color: #E6E6FA;
+   position: absolute;
+   top: 3px;
+   bottom: 3px;
+   padding: 8px;
+}
+
+input.tb {
+   margin-left: 8px;
+   margin-right: 8px;
+   width: 94%;
+}
+
+.basic div {
+   background-color: #eee;
+}
+
+#overlay {
+   z-index:1000;
+   position:absolute;
+   border: 1px solid #7777ff;
+   bottom:1px;
+   left:3px;
+   background:#ddddff;
+   opacity:0.6;
+   -moz-opacity:0.6;
+}
+
+/*--------------------------------------------------|
+| dTree 2.05 | www.destroydrop.com/javascript/tree/ |
+|---------------------------------------------------|
+| Copyright (c) 2002-2003 Geir Landrö               |
+|--------------------------------------------------*/
+
+.dtree {
+	font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+	color: #666;
+	white-space: nowrap;
+}
+.dtree img {
+	border: 0px;
+	vertical-align: middle;
+}
+.dtree a {
+	color: #333;
+	text-decoration: none;
+}
+.dtree a.node, .dtree a.nodeSel {
+	white-space: nowrap;
+	padding: 1px 2px 1px 2px;
+}
+.dtree a.node:hover, .dtree a.nodeSel:hover {
+	color: #333;
+	text-decoration: underline;
+}
+.dtree a.nodeSel {
+	background-color: #c0d2ec;
+}
+.dtree .clip {
+	overflow: hidden;
+}
+
+/*--------------------------------------------------|
+| tooltip style                                     |
+|--------------------------------------------------*/
+
+#tt {
+   position:absolute;
+   display:block;
+}
+#tttop {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
+#ttcont {
+   display:block;
+   padding:2px 12px 3px 7px;
+   margin-left:5px;
+   font-size: 11px;
+   background:#777;
+   color:#fff;
+}
+#ttbot {
+   display:block;
+   height:5px;
+   margin-left:5px;
+   overflow:hidden;
+}
+
