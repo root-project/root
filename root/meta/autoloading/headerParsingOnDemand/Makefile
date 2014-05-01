@@ -52,8 +52,10 @@ export HEADER_PARSING_ON_DEMAND:=1
 
 FullheaderParsingOnDemand.log: libFullheaderParsingOnDemand_dictrflx.$(DllSuf)
 
+# The greps are there to find a common denominator among all platforms for 
+# system headers.
 headerParsingOnDemand.log: FullheaderParsingOnDemand.log
-	$(CMDECHO) cat FullheaderParsingOnDemand.log |grep -v "Warning in <TInterpreter::RegisterModule()>: Header" | grep -v "status 0" | grep -v "memory" | grep -v "__functional_base" > headerParsingOnDemand.log 2>&1
+	$(CMDECHO) cat FullheaderParsingOnDemand.log |grep -v "Warning in <TInterpreter::RegisterModule()>: Header" | grep -v "status 0" | grep -v "memory" | grep -v "__functional_base"|grep -v "string" > headerParsingOnDemand.log 2>&1
 
 headerParsingOnDemand: headerParsingOnDemand.log
 	$(TestDiff)

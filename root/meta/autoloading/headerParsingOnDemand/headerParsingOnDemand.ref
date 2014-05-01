@@ -31,7 +31,6 @@ Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass8<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
-Info in <TInterpreter::AutoParse>: Parsing single header string
 Info in <TInterpreter::AutoParse>: Parsing single header set
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 
