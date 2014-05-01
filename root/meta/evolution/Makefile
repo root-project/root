@@ -101,7 +101,7 @@ execMixedBaseClass_v2.clog: execMixedBaseClass_v1.success
 $(subst .root,.log,$(BASE_FILES)): %.log: %.root execBaseClass_v2_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l execBaseClass_v2.cxx+\(\"$<\"\) > $@ 2>&1 || handleError.sh --cmd="Execution of execBaseClass_v2.cxx+(\"$<\") > $@" --result=$$? --log=$@.build.log --test=$@
 
-$(subst .root,.log,$(MIXED_FILES)): %.log: %.root execBaseClass_v2_cxx.$(DllSuf)
+$(subst .root,.log,$(MIXED_FILES)): %.log: %.root execMixedBaseClass_v2_cxx.$(DllSuf)
 	$(CMDECHO) $(CALLROOTEXE) -b -q -l execMixedBaseClass_v2.cxx+\(\"$<\"\) > $@ 2>&1 || handleError.sh --cmd="Execution of execMixedBaseClass_v2.cxx+(\"$<\") > $@" --result=$$? --log=$@.build.log --test=$@
 
 $(BASE_SUCCESS): %.success: %.log
