@@ -818,14 +818,17 @@ void TEveBrowser::CloseTab(Int_t id)
 
    // Check if this is an Eve window and destroy accordingly.
    TGCompositeFrame *pcf = fTabRight->GetTabContainer(id);
-   TGFrameElement   *fe  = (TGFrameElement *) pcf->GetList()->First();
-   if (fe)
+   if (pcf)
    {
-      TEveCompositeFrame *ecf = dynamic_cast<TEveCompositeFrame*>(fe->fFrame);
-      if (ecf)
+      TGFrameElement *fe = (TGFrameElement *) pcf->GetList()->First();
+      if (fe)
       {
-         ecf->GetEveWindow()->DestroyWindowAndSlot();
-         return;
+         TEveCompositeFrame *ecf = dynamic_cast<TEveCompositeFrame*>(fe->fFrame);
+         if (ecf)
+         {
+            ecf->GetEveWindow()->DestroyWindowAndSlot();
+            return;
+         }
       }
    }
 
