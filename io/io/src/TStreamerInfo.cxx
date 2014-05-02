@@ -255,6 +255,11 @@ void TStreamerInfo::Build()
       if (offset == kMissing) {
          continue;
       }
+      if (offset == kNeedObjectForVirtualBaseClass) {
+         Error("Build()", "Cannot stream virtual base %s of class %s",
+               base->GetName(), fClass->GetName());
+         continue;
+      }
       const char* bname  = base->GetName();
       const char* btitle = base->GetTitle();
       // this case appears with STL collections as base class.

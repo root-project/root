@@ -63,6 +63,7 @@
 #include "compiledata.h"
 #include "TMetaUtils.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
@@ -1686,23 +1687,25 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                      "Base %s of class %s is virtual but no object provided",
                      sBaseName.c_str(), clname);
             }
-            continue;
-         }
-         TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
-         TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
-         if (ci && baseCi) {
-            baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
-                                           true /*isDerivedObj*/);
-            if (baseOffset == -1) {
-               Error("InspectMembers",
-                     "Error calculating offset of virtual base %s of class %s",
-                     sBaseName.c_str(), clname);
-            }
+            baseOffset = TVirtualStreamerInfo::kNeedObjectForVirtualBaseClass;
          } else {
-            Error("InspectMembers",
-                  "Cannot calculate offset of virtual base %s of class %s",
-                  sBaseName.c_str(), clname);
-            continue;
+            // We have an object to determine the vbase offset.
+            TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
+            TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
+            if (ci && baseCi) {
+               baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
+                                              true /*isDerivedObj*/);
+               if (baseOffset == -1) {
+                  Error("InspectMembers",
+                        "Error calculating offset of virtual base %s of class %s",
+                        sBaseName.c_str(), clname);
+               }
+            } else {
+               Error("InspectMembers",
+                     "Cannot calculate offset of virtual base %s of class %s",
+                     sBaseName.c_str(), clname);
+               continue;
+            }
          }
       } else {
          baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();
