@@ -183,6 +183,7 @@ else
 		fi; \
 		if [ "$(FREETYPEDIRI)" != "" ]; then \
 			TTFINCDIR="--with-ttf-includes=-I../../../../$(FREETYPEDIRI)"; \
+      ACFLAGS="$$ACFLAGS -DHAVE_FREETYPE_FREETYPE"; \
 		fi; \
 		GNUMAKE=$(MAKE) CC=$$ACC CFLAGS=$$ACFLAGS \
 		./configure \
