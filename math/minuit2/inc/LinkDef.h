@@ -58,6 +58,6 @@
 
 #pragma link C++ class vector<ROOT::Minuit2::MinuitParameter >;
 
-#pragma link C++ class TMinuit2TraceObject-; 
+#pragma link C++ class TMinuit2TraceObject; 
 
 #endif

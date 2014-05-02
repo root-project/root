@@ -39,16 +39,16 @@ public:
 
    virtual void operator() (int i, const ROOT::Minuit2::MinimumState & state); 
 
-   // ClassDef(TMinuit2TraceObject,1) // Example Trace Object for Minuit2
+   ClassDef(TMinuit2TraceObject,1) // Example Trace Object for Minuit2
 
 private: 
 
-   int fIterOffset;                // offset in iteration in case of combined minimizers
-   TH1 * fHistoFval;               // Function value histogram
-   TH1 * fHistoEdm;                // Edm histogram
-   TList * fHistoParList;          // list of parameter values histograms
-   TVirtualPad * fOldPad;          // old existing current pad
-   TVirtualPad * fMinuitPad;       // new pad with trace histograms
+   int fIterOffset;                //! offset in iteration in case of combined minimizers
+   TH1 * fHistoFval;               //! Function value histogram
+   TH1 * fHistoEdm;                //! Edm histogram
+   TList * fHistoParList;          //! list of parameter values histograms
+   TVirtualPad * fOldPad;          //! old existing current pad
+   TVirtualPad * fMinuitPad;       //! new pad with trace histograms
    
 
 };
