@@ -52,13 +52,15 @@ private:
    Int_t    fSizeof;   // Size of the class
    Int_t    fCanSplit; // Whether this class can be split
    Long_t   fProperty; // Class properties, see EProperties
+   Long_t   fOffsetStreamer; // Offset to streamer function
 
    TProtoClass(const TProtoClass&) = delete;
    TProtoClass& operator=(const TProtoClass&) = delete;
 
 public:
    TProtoClass():
-      fBase(0), fData(0), fPRealData(0), fSizeof(0), fCanSplit(0), fProperty(0)
+      fBase(0), fData(0), fPRealData(0), fSizeof(0), fCanSplit(0), fProperty(0),
+      fOffsetStreamer(0)
    {}
 
    TProtoClass(TClass* cl);

@@ -49,6 +49,9 @@ TProtoClass::TProtoClass(TClass* cl):
       }
       fPRealData->AddLast(new TProtoRealData(rd));
    }
+
+   cl->CalculateStreamerOffset();
+   fOffsetStreamer = cl->fOffsetStreamer;
 }
 
 //______________________________________________________________________________
