@@ -45,7 +45,9 @@
 #pragma link C++ class TVirtualIsAProxy;
 #pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
-#pragma link C++ class TRealData+;
+#pragma link C++ class TProtoClass+;
+#pragma link C++ class TProtoClass::TProtoRealData+;
+#pragma link C++ class TRealData;
 #pragma link C++ class TStreamerArtificial-;
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;

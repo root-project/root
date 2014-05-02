@@ -13,9 +13,13 @@
 #ifndef ROOT_TProtoClass
 #define ROOT_TProtoClass
 
-#ifndef ROOT_TList
-#include "TList.h"
+#ifndef ROOT_TNamed
+#include "TNamed.h"
 #endif
+
+class TClass;
+class TList;
+class TRealData;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -28,9 +32,23 @@
 
 class TProtoClass: public TNamed {
 public:
+   class TProtoRealData: public TNamed {
+      Long_t fOffset; // data member offset
+      enum {
+         kIsObject = BIT(15) // member is an object
+      };
+   public:
+      TProtoRealData() {}
+      TProtoRealData(const TRealData* rd);
+      virtual ~TProtoRealData();
+      TRealData* CreateRealData(TClass* currentClass) const;
+      ClassDef(TProtoRealData, 2);//Persistent version of TRealData
+   };
+
+private:
    TList   *fBase;     // List of base classes
    TList   *fData;     // List of data members
-   TList   *fRealData; // TRealData; must be after fData for I/O!
+   TList   *fPRealData;// List of TProtoRealData
    Int_t    fSizeof;   // Size of the class
    Int_t    fCanSplit; // Whether this class can be split
    Long_t   fProperty; // Class properties, see EProperties
@@ -38,18 +56,16 @@ public:
    TProtoClass(const TProtoClass&) = delete;
    TProtoClass& operator=(const TProtoClass&) = delete;
 
+public:
    TProtoClass():
-      fBase(0), fData(0), fRealData(0), fSizeof(0), fCanSplit(0), fProperty(0)
+      fBase(0), fData(0), fPRealData(0), fSizeof(0), fCanSplit(0), fProperty(0)
    {}
 
-   virtual ~TProtoClass(); // implemented in TClass.cxx to pin vtable
+   TProtoClass(TClass* cl);
+   virtual ~TProtoClass();
 
-   void Delete(Option_t* opt = "") {
-      // Delete the containers that are usually owned by their TClass.
-      if (fRealData) fRealData->Delete(opt);
-      if (fBase) fBase->Delete(opt);
-      if (fData) fData->Delete(opt);
-   }
+   void FillTClass(TClass* pcl);
+   void Delete(Option_t* opt = "");
 
    ClassDef(TProtoClass,2); //Persistent TClass
 };

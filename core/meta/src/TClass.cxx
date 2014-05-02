@@ -3643,49 +3643,6 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
    return 0;
 }
 
-//______________________________________________________________________________
-void TClass::FillProto(TProtoClass* pcl)
-{
-   // Fill a TProtoClass with data from this class.
-
-   *((TNamed*)pcl) = *this;
-   pcl->fData = GetListOfDataMembers();
-   pcl->fBase = GetListOfBases();
-
-   // Build the list of RealData before we access it:
-   BuildRealData(0, true /*isTransient*/);
-   pcl->fRealData = GetListOfRealData();
-
-   pcl->fSizeof = fSizeof;
-   pcl->fCanSplit = fCanSplit;
-   pcl->fProperty = fProperty;
-}
-
-//______________________________________________________________________________
-void TClass::AdoptProto(const TProtoClass* pcl)
-{
-   // Fill this TClass with data from the TProtoClass.
-   if (fRealData || fBase || fData || fSizeof || fCanSplit || fProperty) {
-      Error("AdoptProto", "TClass already initialized!");
-      return;
-   }
-   *((TNamed*)this) = *pcl;
-   fBase = pcl->fBase;
-   fData = (TListOfDataMembers*)pcl->fData;
-   fRealData = pcl->fRealData;
-   fSizeof = pcl->fSizeof;
-   fCanSplit = pcl->fCanSplit;
-   fProperty = pcl->fProperty;
-
-   // Update pointers to TClass
-   for (auto base: *fBase) {
-      ((TBaseClass*)base)->SetClass(this);
-   }
-   for (auto dm: *fData) {
-      ((TDataMember*)dm)->SetClass(this);
-   }
-   ((TListOfDataMembers*)fData)->SetClass(this);
-}
 
 //______________________________________________________________________________
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
@@ -6096,10 +6053,4 @@ ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
    // Return the wrapper around the directory auto add function.
 
    return fDirAutoAdd;
-}
-
-//______________________________________________________________________________
-TProtoClass::~TProtoClass()
-{
-   // Destructor; implemented in TClass.cxx to pin vtable.
 }
