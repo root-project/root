@@ -69,10 +69,7 @@ bool CloseStreamerInfoROOTFile()
       // If this is a proxied collection then offsets are not needed.
       if (cl->GetCollectionProxy())
          continue;
-      // streamerInfos.AddLast(...)
-      TProtoClass* pcl = new TProtoClass();
-      cl->FillProto(pcl);
-      protoClasses.AddLast(pcl);
+      protoClasses.AddLast(new TProtoClass(cl));
    }
 
    // Don't use TFile::Open(); we don't need plugins.
@@ -82,5 +79,6 @@ bool CloseStreamerInfoROOTFile()
    // Instead of plugins:
    protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
    protoClasses.Delete();
+
    return true;
 }
