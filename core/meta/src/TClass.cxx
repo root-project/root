@@ -674,13 +674,6 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
             dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient);
          }
          if (dmclass) {
-            if (dmclass->Property()) {
-               if (dmclass->Property() & kIsAbstract) {
-                  ::Warning("TBuildRealData::Inspect()",
-                            "type %s of data member '%s' is an abstract class.",
-                            dmclass->GetName(), dm->GetName());
-               }
-            }
             if ((dmclass != cl) && !dm->IsaPointer()) {
                if (dmclass->GetCollectionProxy()) {
                   TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
