@@ -1681,9 +1681,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       int64_t baseOffset;
       if (iBase->isVirtual()) {
          if (!obj) {
-            Error("InspectMembers",
-                  "Base %s of class %s is virtual but no object provided",
-                  sBaseName.c_str(), clname);
+            if (!isTransient) {
+               Error("InspectMembers",
+                     "Base %s of class %s is virtual but no object provided",
+                     sBaseName.c_str(), clname);
+            }
             continue;
          }
          TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
