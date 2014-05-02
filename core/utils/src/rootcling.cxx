@@ -2966,6 +2966,11 @@ int GenerateFullDict(std::ostream& dictStream,
          }
 
 #ifndef ROOT_STAGE1_BUILD
+         // Make up for skipping RegisterModule, now that dictionary parsing
+         // is done and these headers cannot be selected anymore.
+         interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                               "#include \"TFile.h\"\n"
+                               "#include \"TObjArray.h\"");
          CloseStreamerInfoROOTFile();
 #endif
       }
@@ -3772,11 +3777,6 @@ int RootCling(int argc,
 
 #ifndef ROOT_STAGE1_BUILD
    cling::Interpreter& interp = *TCling__GetInterpreter();
-   // Make up for skipping RegisterModule.
-   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                         "#include \"TFile.h\"\n"
-                         "#include \"TObjArray.h\"");
-
 #else
    std::vector<const char*> clingArgsC;
    for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
