@@ -52,7 +52,7 @@ private:
 
 public:
 
-   TListOfDataMembers(TClass *cl);
+   TListOfDataMembers(TClass *cl = 0);
    ~TListOfDataMembers();
 
    virtual void Clear(Option_t *option);

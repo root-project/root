@@ -30,13 +30,10 @@
 ClassImp(TListOfDataMembers)
 
 //______________________________________________________________________________
-TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE),
-                    fLastLoadMarker(0)
+TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
+   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
    // Constructor.
-
-   fIds = new TExMap;
-   fUnloaded = new THashList;
 }
 
 //______________________________________________________________________________
@@ -46,7 +43,7 @@ TListOfDataMembers::~TListOfDataMembers()
 
    THashList::Delete();
    delete fIds;
-   fUnloaded->Delete();
+   if (fUnloaded) fUnloaded->Delete();
    delete fUnloaded;
 }
 
@@ -54,6 +51,8 @@ TListOfDataMembers::~TListOfDataMembers()
 void TListOfDataMembers::MapObject(TObject* obj)
 {
    // Add a pair<id, object> to the map of data members and their ids.
+   if (!fIds) fIds = new TExMap;
+
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
       if (d) {
@@ -162,8 +161,8 @@ void TListOfDataMembers::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
-   fUnloaded->Clear(option);
-   fIds->Clear();
+   if (fUnloaded) fUnloaded->Clear(option);
+   if (fIds) fIds->Clear();
    THashList::Clear(option);
    fIsLoaded = kFALSE;
 }
@@ -173,7 +172,7 @@ void TListOfDataMembers::Delete(Option_t *option /* ="" */)
 {
    // Delete all TDataMember object files.
 
-   fUnloaded->Delete(option);
+   if (fUnloaded) fUnloaded->Delete(option);
    THashList::Delete(option);
    fIsLoaded = kFALSE;
 }
@@ -202,7 +201,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 
    if (!id) return 0;
 
-   TDictionary *dm = (TDataMember*)fIds->GetValue((Long64_t)id);
+   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
    if (!dm) {
       if (fClass) {
          if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
@@ -214,7 +213,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
 
-      TDictionary *update = (TDictionary *)fUnloaded->FindObject(name);
+      TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
       if (update) {
          if (fClass) {
             ((TDataMember*)update)->Update(info);
@@ -230,6 +229,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
+      if (!fIds) fIds = new TExMap;
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
@@ -244,7 +244,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
    if (!info) return 0;
 
    TDictionary::DeclId_t id = gInterpreter->GetDeclId(info);
-   TDictionary *dm = (TDataMember*)fIds->GetValue((Long64_t)id);
+   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
    if (!dm) {
       if (fClass) {
          if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
@@ -256,7 +256,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
 
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
-      TDataMember *update = (TDataMember *)fUnloaded->FindObject(name);
+      TDataMember *update = fUnloaded ? (TDataMember *)fUnloaded->FindObject(name) : 0;
       if (update) {
          update->Update(dm_info);
          dm = update;
@@ -268,6 +268,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
+      if (!fIds) fIds = new TExMap;
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
@@ -276,6 +277,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
 void TListOfDataMembers::UnmapObject(TObject* obj)
 {
    // Remove a pair<id, object> from the map of data members and their ids.
+   if (!fIds) return;
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
       if (d) {
@@ -303,7 +305,7 @@ void TListOfDataMembers::RecursiveRemove(TObject *obj)
    if (!obj) return;
 
    THashList::RecursiveRemove(obj);
-   fUnloaded->RecursiveRemove(obj);
+   if (fUnloaded) fUnloaded->RecursiveRemove(obj);
    UnmapObject(obj);
 
 }
@@ -316,7 +318,7 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
    Bool_t found;
 
    found = THashList::Remove(obj);
-   if (!found) {
+   if (!found && fUnloaded) {
       found = fUnloaded->Remove(obj);
    }
    UnmapObject(obj);
@@ -334,7 +336,7 @@ TObject* TListOfDataMembers::Remove(TObjLink *lnk)
    TObject *obj = lnk->GetObject();
 
    THashList::Remove(lnk);
-   fUnloaded->Remove(obj);
+   if (fUnloaded) fUnloaded->Remove(obj);
 
    UnmapObject(obj);
    return obj;
@@ -396,6 +398,7 @@ void TListOfDataMembers::Unload()
    while (lnk) {
       TDictionary *data = (TDictionary *)lnk->GetObject();
       UnmapObject(data);
+      fUnloaded = new THashList;
       fUnloaded->Add(data);
 
       lnk = lnk->Next();
@@ -418,6 +421,7 @@ void TListOfDataMembers::Unload(TDictionary *mem)
       // list and move it to the list of unloaded objects.
 
       UnmapObject(mem);
+      fUnloaded = new THashList;
       fUnloaded->Add(mem);
    }
 }
