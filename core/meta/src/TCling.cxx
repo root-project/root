@@ -1034,6 +1034,10 @@ void TCling::RegisterModule(const char* modulename,
    bool rootModulesDefined (getenv("ROOT_MODULES"));
    // rootcling also uses TCling for generating the dictionary ROOT files.
    bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   // We need the dictionary initialization but we don't want to inject the
+   // declarations into the interpreter, except for those we really need for
+   // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
+   if (fromRootCling) return;
 
    if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
       modulename = "allDict";
