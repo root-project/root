@@ -285,7 +285,7 @@ public:
    void               Dump(const void *obj, Bool_t noAddr = kFALSE) const;
    char              *EscapeChars(const char *text) const;
    void               AdoptProto(const TProtoClass* pcl);
-   void               FillProto(TProtoClass* pcl) const;
+   void               FillProto(TProtoClass* pcl);
    TVirtualStreamerInfo     *FindStreamerInfo(UInt_t checksum) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const char* onfile_classname, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;

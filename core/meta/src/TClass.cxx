@@ -3644,13 +3644,18 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 }
 
 //______________________________________________________________________________
-void TClass::FillProto(TProtoClass* pcl) const
+void TClass::FillProto(TProtoClass* pcl)
 {
    // Fill a TProtoClass with data from this class.
+
    *((TNamed*)pcl) = *this;
-   pcl->fRealData = fRealData;
-   pcl->fBase = fBase;
-   pcl->fData = fData;
+   pcl->fData = GetListOfDataMembers();
+   pcl->fBase = GetListOfBases();
+
+   // Build the list of RealData before we access it:
+   BuildRealData(0, true /*isTransient*/);
+   pcl->fRealData = GetListOfRealData();
+
    pcl->fSizeof = fSizeof;
    pcl->fCanSplit = fCanSplit;
    pcl->fProperty = fProperty;
