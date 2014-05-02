@@ -890,7 +890,6 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
 void TDataMember::Streamer(TBuffer& b) {
    // Stream an object of TDataMember. Forces calculation of all cached
    // (and persistent) values.
-   this->TDictionary::Streamer(b);
    if (b.IsReading()) {
       b.ReadClassBuffer(Class(), this);
       Init(true /*reading*/);
