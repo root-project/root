@@ -27,7 +27,7 @@
 //______________________________________________________________________________
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), fData(cl->GetListOfDataMembers()),
-   fSizeof(cl->fSizeof), fCanSplit(cl->fCanSplit), fProperty(cl->fProperty)
+   fSizeof(cl->Size()), fCanSplit(cl->fCanSplit), fProperty(cl->fProperty)
 {
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
@@ -72,7 +72,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 //______________________________________________________________________________
 void TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
-   if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof || cl->fCanSplit
+   if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit
        || cl->fProperty) {
       Error("AdoptProto", "TClass %s already initialized!", cl->GetName());
       return;
