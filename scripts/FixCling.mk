@@ -43,7 +43,6 @@ CALLROOTEXE += -e "\#define ClingWorkAroundDeletedSourceFile"
 CALLROOTEXE += -e "\#define ClingWorkAroundValuePrinterNotFullyQualified"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundNoDotInclude"
-CALLROOTEXE += -e "\#define ClingWorkAroundNoDotOptimization"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedIncorrectFileLoc"
 #CALLROOTEXE += -e "\#define ClingWorkAroundTypeinfoToTypename"
 CALLROOTEXE += -e "\#define ClingWorkAroundTClassUpdateDouble32"
@@ -100,7 +99,6 @@ ClingWorkAroundNoDotInclude = yes              # See trello card about .include
 ClingWorkAroundScriptClassDef = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4769
 ClingWorkAroundMultipleInclude = yes           # File are included each time a module that contains them is 
                                                # loaded.  Should go away with the modules
-ClingWorkAroundNoDotOptimization = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4790
 ClingWorkAroundUnnamedDetection = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4791
 #ClingWorkAroundIncorrectTearDownOrder = yes    # See https://sft.its.cern.ch/jira/browse/ROOT-4768
 ClingWorkAroundNoPrivateClassIO = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-4865

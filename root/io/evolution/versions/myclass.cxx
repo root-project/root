@@ -88,9 +88,7 @@ int runAddVersion(int mode, const char *whatlib)
    case 0:
       return wcomp(whatlib);
    case 1:
-#ifndef ClingWorkAroundNoDotOptimization
       gROOT->ProcessLine(".O0");
-#endif
       return checkLibFirst(whatlib,0);
    case 2:
       return checkFileFirst(whatlib,0);
