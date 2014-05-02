@@ -1452,6 +1452,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 {
    // Visit all members over members, recursing over base classes.
 
+   if (insp.GetObjectValidity() == TMemberInspector::kUnset) {
+      insp.SetObjectValidity(obj ? TMemberInspector::kValidObjectGiven
+                             : TMemberInspector::kNoObjectGiven);
+   }
+
    if (!cl || cl->GetCollectionProxy()) {
       // We do not need to investigate the content of the STL
       // collection, they are opaque to us (and details are
@@ -1681,7 +1686,7 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       }
       int64_t baseOffset;
       if (iBase->isVirtual()) {
-         if (!obj) {
+         if (insp.GetObjectValidity() == TMemberInspector::kNoObjectGiven) {
             if (!isTransient) {
                Error("InspectMembers",
                      "Base %s of class %s is virtual but no object provided",
