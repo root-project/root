@@ -169,9 +169,10 @@ private:
 
            Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
-   mutable Bool_t     fVersionUsed;     //!Indicates whether GetClassVersion has been called
 
-   mutable Bool_t     fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
+   mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
+   mutable Bool_t     fIsOffsetStreamerSet : 1; //!saved remember if fOffsetStreamer has been set.
+
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
