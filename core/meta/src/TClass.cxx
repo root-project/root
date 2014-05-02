@@ -701,7 +701,11 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                      if (wantBuild) valcl->BuildRealData(0, isTransient);
                   }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add ? add : 0), isTransient);
+                  void* addrForRecursion = 0;
+                  if (GetObjectValidity() == kValidObjectGiven)
+                     addrForRecursion = const_cast<void*>(add);
+
+                  dmclass->BuildRealData(addrForRecursion, isTransient);
                }
             }
          }
