@@ -131,14 +131,11 @@ Long_t TBaseClass::Property() const
 void TBaseClass::Streamer(TBuffer& b) {
    // Stream an object of TBaseClass. Triggers the calculation of the
    // cache variables to store them.
-   this->TBaseClass::Streamer(b);
+   this->TDictionary::Streamer(b);
    if (b.IsReading()) {
       b.ReadClassBuffer(Class(), this);
    } else {
       // Writing.
-      GetDelta();
-      Property();
-      IsSTLContainer();
       b.WriteClassBuffer(Class(), this);
    }
 }
