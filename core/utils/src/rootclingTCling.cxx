@@ -37,12 +37,13 @@ extern "C"
 void InitializeStreamerInfoROOTFile(const char* filename)
 {
    gPCMFilename = filename;
-   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 }
 
 extern "C"
 void CloseStreamerInfoROOTFile()
 {
+   // Avoid plugins.
+   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
    // Don't use TFile::Open(); we don't need plugins.
    TFile dictFile(gPCMFilename.c_str(), "RECREATE");
    // Instead of plugins:
