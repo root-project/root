@@ -3801,7 +3801,26 @@ int RootCling(int argc,
 #else
    const bool useROOTINCDIR = false;
 #endif
-   if (!isGenreflex) {
+   if (isGenreflex) {
+      // genrefex needs TObject because the TClass properties test for "inherits
+      // from TObject" using TObject::Class() which in turn needs the dictionary
+      // of TObject initialized which in turn needs th declaration of TObject.
+      if ((!useROOTINCDIR
+           && interp.declare("using namespace std;\n"
+                             "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
+#ifdef ROOTINCDIR
+          || (useROOTINCDIR
+              && interp.declare("using namespace std;\n"
+                                "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
+              )
+#endif
+          ) {
+         // There was an error.
+         ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
+         return 1;
+      }
+   } else {
+      // rootcling case
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
           // CINT uses to define a few header implicitly, we need to do it explicitly.
           || interp.declare("#include <assert.h>\n"
