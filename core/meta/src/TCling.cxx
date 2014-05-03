@@ -801,12 +801,17 @@ TCling::TCling(const char *name, const char *title)
 
    std::string include;
    // Add the root include directory to list searched by default
+   if (fromRootCling && getenv("ROOT_BUILDINGROOT")) {
+      // Building ROOT need to -Iinclude and ignore ROOTINCDIR and ROOTSYS!
+      include = "include";
+   } else {
 #ifndef ROOTINCDIR
-   include = gSystem->Getenv("ROOTSYS");
-   include += "/include";
+      include = gSystem->Getenv("ROOTSYS");
+      include += "/include";
 #else // ROOTINCDIR
-   include = ROOTINCDIR;
+      include = ROOTINCDIR;
 #endif // ROOTINCDIR
+   }
    clingArgsStorage.push_back("-I");
    clingArgsStorage.push_back(include);
 
@@ -831,13 +836,13 @@ TCling::TCling(const char *name, const char *title)
    // Add include path to etc/cling. FIXME: This is a short term solution. The
    // llvm/clang header files shouldn't be there at all. We have to get rid of
    // that dependency and avoid copying the header files.
+   // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
    TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
 
    // Add the current path to the include path
    TCling::AddIncludePath(".");
 
    // Add the root include directory and etc/ to list searched by default.
-   // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
    TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
 
    // Don't check whether modules' files exist.
@@ -857,10 +862,18 @@ TCling::TCling(const char *name, const char *title)
       ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
-   fInterpreter->declare("#include \"Rtypes.h\"\n"
-                         + (fromRootCling ? "" : gInterpreterClassDef)
-                         + "#include <string>\n"
-                         "using namespace std;");
+   // rootcling does parts already if needed, e.g. genreflex does not want using
+   // namespace std.
+   if (fromRootCling) {
+      fInterpreter->declare("#include \"RtypesCore.h\"\n"
+                            "#include <string>\n"
+                            "using std::string;");
+   } else {
+      fInterpreter->declare("#include \"Rtypes.h\"\n"
+                            + gInterpreterClassDef
+                            + "#include <string>\n"
+                            "using namespace std;");
+   }
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());

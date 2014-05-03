@@ -632,6 +632,7 @@ const char *GetExePath()
 void SetRootSys()
 {
    // Set the ROOTSYS env var based on the executable location.
+   // Also sets ROOT_BUILDINGROOT if building stage 2 ROOT.
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
@@ -673,6 +674,11 @@ void SetRootSys()
       putenv(env);
       delete [] ep;
    }
+#if !defined(ROOT_STAGE1_BUILD)
+   if (buildingROOT) {
+      putenv(strdup("ROOT_BUILDINGROOT=happilyso"));
+   }
+#endif
 }
 
 //______________________________________________________________________________
@@ -3795,29 +3801,31 @@ int RootCling(int argc,
 #else
    const bool useROOTINCDIR = false;
 #endif
-   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
-// CINT uses to define a few header implicitly, we need to do it explicitly.
-       || interp.declare("#include <assert.h>\n"
-                         "#include <stdlib.h>\n"
-                         "#include <stddef.h>\n"
-                         "#include <math.h>\n"
-                         "#include <string.h>\n"
-                         ) != cling::Interpreter::kSuccess
-       || (!useROOTINCDIR
-           && interp.declare("#include \"Rtypes.h\"\n"
-                             "#include \"TClingRuntime.h\"\n"
-                             "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
+   if (!isGenreflex) {
+      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
+          // CINT uses to define a few header implicitly, we need to do it explicitly.
+          || interp.declare("#include <assert.h>\n"
+                            "#include <stdlib.h>\n"
+                            "#include <stddef.h>\n"
+                            "#include <math.h>\n"
+                            "#include <string.h>\n"
+                            ) != cling::Interpreter::kSuccess
+          || (!useROOTINCDIR
+              && interp.declare("#include \"Rtypes.h\"\n"
+                                "#include \"TClingRuntime.h\"\n"
+                                "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
 #ifdef ROOTINCDIR
-       || (useROOTINCDIR
-           && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
-                             "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
-                             "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-           )
+          || (useROOTINCDIR
+              && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
+                                "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
+                                "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
+              )
 #endif
-       ) {
-      // There was an error.
-      ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
-      return 1;
+          ) {
+         // There was an error.
+         ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
+         return 1;
+      }
    }
 
    // For the list of 'opaque' typedef to also include string, we have to include it now.
