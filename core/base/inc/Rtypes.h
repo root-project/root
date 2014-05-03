@@ -45,7 +45,6 @@ class TDirectory;
 class TMemberInspector;
 class TObject;
 class TNamed;
-class TRootIOCtor;
 class TCollection;
 class TFileMergeInfo;
 class TString;
