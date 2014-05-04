@@ -151,15 +151,17 @@ void DictSelectionReader::ManageFields(const clang::RecordDecl& recordDecl,
 
       if (attrCode & ROOT::Meta::Selection::kNonSplittable){
          VariableSelectionRule vsr(BaseSelectionRule::kYes);
+         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
+                               fieldsIt->getNameAsString());
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment,"||");
-         csr.AddFieldSelectionRule(vsr);         
+         csr.AddFieldSelectionRule(vsr);
       }        
       
       if (attrCode & ROOT::Meta::Selection::kTransient) {
          VariableSelectionRule vsr(BaseSelectionRule::kYes);
          vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::name,
                                fieldsIt->getNameAsString());
-         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::transient, "true");
+         vsr.SetAttributeValue(ROOT::TMetaUtils::propNames::comment, "!");
          csr.AddFieldSelectionRule(vsr);
       }                  
 
