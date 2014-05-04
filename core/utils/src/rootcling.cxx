@@ -420,7 +420,7 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
 //______________________________________________________________________________
 void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
                   SelectionRules& selectionRules,
-                  const cling::Interpreter& interpreter,
+                  cling::Interpreter& interpreter,
                   bool isGenreflex)
 {
 
@@ -2896,37 +2896,6 @@ void ExtractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
 }
 
 //______________________________________________________________________________
-int AnnotateAST(const RScanner::ClassColl_t& selectedClasses,
-                const cling::Interpreter& interp,
-                SelectionRules& selectionRules,
-                bool isGenreflex)
-{
-   // Annotate the decls in the ast
-
-   using clang::CXXRecordDecl;
-   using clang::RecordDecl;
-   using namespace ROOT::TMetaUtils;
-
-   for(auto& selectedClass : selectedClasses){
-      auto rcd = selectedClass.GetRecordDecl();
-      if (!rcd->isCompleteDefinition()) {
-         Error(0,"A dictionary has been requested for %s but there is no declaration!\n",
-               GetQualifiedName(* selectedClass).c_str());
-         continue;
-      }
-      if (selectedClass.RequestOnlyTClass()) continue;
-
-      // Very important: here we decide if we want to attach attributes to the decl.
-      CXXRecordDecl* CXXRD = llvm::dyn_cast<CXXRecordDecl>(const_cast<RecordDecl*>(rcd));
-      if (CXXRD){
-         AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-         }
-   }
-
-   return 0;
-}
-
-//______________________________________________________________________________
 int GenerateFullDict(std::ostream& dictStream,
                      cling::Interpreter& interp,
                      RScanner& scan,
@@ -2981,13 +2950,13 @@ int GenerateFullDict(std::ostream& dictStream,
                continue;
             }
 
-//             // Very important: here we decide if we want to attach attributes to the decl.
-//             if (clang::CXXRecordDecl* CXXRD =
-//                llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-//                AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-//                }
+            // Very important: here we decide if we want to attach attributes to the decl.
+            if (clang::CXXRecordDecl* CXXRD =
+               llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
+               AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
+               }
 
-            const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
+               const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
 
             if (CRD) {
                ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
@@ -3081,14 +3050,14 @@ int GenerateFullDict(std::ostream& dictStream,
       // We need annotations even in the PCH
       iter = scan.fSelectedClasses.begin();
       end = scan.fSelectedClasses.end();
-//       for( ; iter != end; ++iter)
-//       {
-//          // Very important: here we decide if we want to attach attributes to the decl.
-//          if (clang::CXXRecordDecl* CXXRD =
-//             llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-//             AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-//             }
-//       }
+      for( ; iter != end; ++iter)
+      {
+         // Very important: here we decide if we want to attach attributes to the decl.
+         if (clang::CXXRecordDecl* CXXRD =
+            llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
+            AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
+            }
+      }
    }
 
    if (!interpreteronly) {
@@ -4262,14 +4231,21 @@ int RootCling(int argc,
 #endif
    }
    
-
-   if (!interpreteronly){
-      AnnotateAST(scan.fSelectedClasses,
-                  interp,
-                  selectionRules,
-                  isGenreflex);
+   int retCode = GenerateFullDict(splitDictStream,
+                                  interp,
+                                  scan,
+                                  selectionRules,
+                                  constructorTypes,
+                                  onepcm,
+                                  interpreteronly,
+                                  doSplit,
+                                  isGenreflex);
+   if (retCode!=0){
+      return retCode;
    }
 
+   if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
+   
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    if (!ignoreExistingDict){
@@ -4297,21 +4273,6 @@ int RootCling(int argc,
                      dictStream,
                      inlineInputHeader);
    }
-
-   int retCode = GenerateFullDict(dictStream,
-                                  interp,
-                                  scan,
-                                  selectionRules,
-                                  constructorTypes,
-                                  onepcm,
-                                  interpreteronly,
-                                  doSplit,
-                                  isGenreflex);
-   if (retCode!=0){
-      return retCode;
-   }
-
-   if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
 
    if (liblistPrefix.length()) {
       string liblist_filename = liblistPrefix + ".out";
