@@ -77,7 +77,6 @@ void minuit2GausFit() {
    int n = 1000;
    testGausFit("Minuit2",n);
    testGausFit("Fumili2",n);
-
 }
 
 
