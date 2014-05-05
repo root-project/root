@@ -279,14 +279,9 @@ struct SetROOTSYS {
 
 //______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-static bool EmitStreamerInfo(const char* normName)
+static void EmitStreamerInfo(const char* normName)
 {
-   if (!AddStreamerInfoToROOTFile(normName)) {
-      std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
-                << normName << '\n';
-      return false;
-   }
-   return true;
+   AddStreamerInfoToROOTFile(normName);
 }
 #else
 static bool EmitStreamerInfo(const char*) { return true; }
@@ -2964,8 +2959,7 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
-                  if (!EmitStreamerInfo(iter->GetNormalizedName()))
-                     return 1;
+                  EmitStreamerInfo(iter->GetNormalizedName());
                   ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
@@ -2977,7 +2971,9 @@ int GenerateFullDict(std::ostream& dictStream,
          interp.parseForModule("#include \"TStreamerInfo.h\"\n"
                                "#include \"TFile.h\"\n"
                                "#include \"TObjArray.h\"");
-         CloseStreamerInfoROOTFile();
+         if (!CloseStreamerInfoROOTFile()) {
+            return 1;
+         }
 #endif
       }
 
@@ -3801,7 +3797,14 @@ int RootCling(int argc,
 #else
    const bool useROOTINCDIR = false;
 #endif
-   if (!isGenreflex) {
+   if (isGenreflex) {
+      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+         // There was an error.
+         ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
+         return 1;
+      }
+   } else {
+      // rootcling
       if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
           // CINT uses to define a few header implicitly, we need to do it explicitly.
           || interp.declare("#include <assert.h>\n"

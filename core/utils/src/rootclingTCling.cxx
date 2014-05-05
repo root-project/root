@@ -17,9 +17,10 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TStreamerInfo.h"
+#include <iostream>
 
 std::string gPCMFilename;
-TObjArray gStreamerInfos;
+std::vector<std::string> gClassesToStore;
 
 extern "C"
 cling::Interpreter* TCling__GetInterpreter()
@@ -40,27 +41,41 @@ void InitializeStreamerInfoROOTFile(const char* filename)
 }
 
 extern "C"
-void CloseStreamerInfoROOTFile()
+void AddStreamerInfoToROOTFile(const char* normName)
 {
-   // Avoid plugins.
-   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
-   // Don't use TFile::Open(); we don't need plugins.
-   TFile dictFile(gPCMFilename.c_str(), "RECREATE");
-   // Instead of plugins:
-   gStreamerInfos.Write("__StreamerInfoOffsets", TObject::kSingleKey);
+   gClassesToStore.push_back(normName);
 }
 
 extern "C"
-bool AddStreamerInfoToROOTFile(const char* normName)
+bool CloseStreamerInfoROOTFile()
 {
-   TClass* cl = TClass::GetClass(normName, kTRUE /*load*/);
-   if (!cl)
+   // Write all persistent TClasses.
+
+   // Avoid plugins.
+   TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
+
+   TObjArray classData;
+   for (const auto& normName: gClassesToStore) {
+      TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
+      if (!cl) {
+         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
+                   << normName << '\n';
+         return false;
+      }
+      // If the class is not persistent we return success.
+      if (cl->GetClassVersion() == 0)
+         continue;
+      // If this is a proxied collection then offsets are not needed.
+      if (cl->GetCollectionProxy())
+         continue;
+      // streamerInfos.AddLast(...)
+   }
+
+   // Don't use TFile::Open(); we don't need plugins.
+   TFile dictFile(gPCMFilename.c_str(), "RECREATE");
+   if (dictFile.IsZombie())
       return false;
-   // If the class is not persistent we return success.
-   if (cl->GetClassVersion() == 0)
-      return true;
-   // If this is a proxied collection then offsets are not needed.
-   if (cl->GetCollectionProxy())
-      return true;
+   // Instead of plugins:
+   classData.Write("__StreamerInfoOffsets", TObject::kSingleKey);
    return true;
 }
