@@ -891,15 +891,19 @@ void TFile::Close(Option_t *option)
    // Delete all supported directories structures from memory
    // If gDirectory points to this object or any of the nested
    // TDirectoryFile, TDirectoryFile::Close will induce the proper cd.
+   fMustFlush = kFALSE; // Make sure there is only one Flush.
    TDirectoryFile::Close();
 
    if (IsWritable()) {
       TFree *f1 = (TFree*)fFree->First();
       if (f1) {
          WriteFree();       //*-*- Write free segments linked list
-         WriteHeader();     //*-*- Now write file header
+         WriteHeader();     //*-*- Now write file header ; this forces a Flush/fsync
+      } else {
+         Flush();
       }
    }
+   fMustFlush = kTRUE;
 
    FlushWriteCache();
 
@@ -1342,7 +1346,7 @@ void TFile::MakeFree(Long64_t first, Long64_t last)
    // (attempted to be reused.
    // coverity[unchecked_value] 
    WriteBuffer(psave, nb);
-   Flush();
+   if (fMustFlush) Flush();
    delete [] psave;
 }
 
@@ -2362,7 +2366,7 @@ void TFile::WriteHeader()
    Int_t nbytes  = buffer - psave;
    Seek(0);
    WriteBuffer(psave, nbytes);
-   Flush();
+   Flush(); // Intentionally not conditional on fMustFlush, this is the 'obligatory' flush.
    delete [] psave;
 }
 

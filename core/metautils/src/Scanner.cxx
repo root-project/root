@@ -712,6 +712,10 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       return true;
    }
 
+   if (fScanType == EScanType::kOnePCM && ROOT::TMetaUtils::IsStdClass(*recordDecl))
+      return true;
+
+
    // At this point, recordDecl must be a RecordDecl pointer.
    
    if (recordDecl && fRecordDeclCallback) {
@@ -861,7 +865,7 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
 {
    // Visitor for every TypedefNameDecl, i.e. aliases and typedefs
    // We check three conditions before trying to match the name:
-   // 1) If we are creating a big PCM or we are not treating an XML
+   // 1) If we are creating a big PCM
    // 2) If the underlying decl is a RecordDecl
    // 3) If the typedef is eventually contained in the std namespace
    
@@ -1055,12 +1059,18 @@ bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
    
    if (!DC)
       return true;
-   
+
    clang::Decl* D = dyn_cast<clang::Decl>(DC);
    // skip implicit decls
    if (D && D->isImplicit()){
       return true;
    }
+
+   if (fScanType == EScanType::kOnePCM){
+      const clang::NamespaceDecl *parent = llvm::dyn_cast<clang::NamespaceDecl> (DC);
+      if (parent && 0 == parent->getQualifiedNameAsString().compare(0,5,"std::"))
+         return true;
+      }
    
    for (DeclContext::decl_iterator Child = DC->decls_begin(), ChildEnd = DC->decls_end(); 
         ret && (Child != ChildEnd); ++Child) {      

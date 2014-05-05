@@ -279,14 +279,9 @@ struct SetROOTSYS {
 
 //______________________________________________________________________________
 #ifndef ROOT_STAGE1_BUILD
-static bool EmitStreamerInfo(const char* normName)
+static void EmitStreamerInfo(const char* normName)
 {
-   if (!AddStreamerInfoToROOTFile(normName)) {
-      std::cerr << "ERROR in EmitStreamerInfo: cannot find class "
-                << normName << '\n';
-      return false;
-   }
-   return true;
+   AddStreamerInfoToROOTFile(normName);
 }
 #else
 static bool EmitStreamerInfo(const char*) { return true; }
@@ -632,6 +627,7 @@ const char *GetExePath()
 void SetRootSys()
 {
    // Set the ROOTSYS env var based on the executable location.
+   // Also sets ROOT_BUILDINGROOT if building stage 2 ROOT.
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
@@ -673,6 +669,11 @@ void SetRootSys()
       putenv(env);
       delete [] ep;
    }
+#if !defined(ROOT_STAGE1_BUILD)
+   if (buildingROOT) {
+      putenv(strdup("ROOT_BUILDINGROOT=happilyso"));
+   }
+#endif
 }
 
 //______________________________________________________________________________
@@ -2958,15 +2959,21 @@ int GenerateFullDict(std::ostream& dictStream,
                   // coverity[fun_call_w_exception] - that's just fine.
                   RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
                } else {
-                  if (!EmitStreamerInfo(iter->GetNormalizedName()))
-                     return 1;
+                  EmitStreamerInfo(iter->GetNormalizedName());
                   ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
                }
             }
          }
 
 #ifndef ROOT_STAGE1_BUILD
-         CloseStreamerInfoROOTFile();
+         // Make up for skipping RegisterModule, now that dictionary parsing
+         // is done and these headers cannot be selected anymore.
+         interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                               "#include \"TFile.h\"\n"
+                               "#include \"TObjArray.h\"");
+         if (!CloseStreamerInfoROOTFile()) {
+            return 1;
+         }
 #endif
       }
 
@@ -3790,29 +3797,38 @@ int RootCling(int argc,
 #else
    const bool useROOTINCDIR = false;
 #endif
-   if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
-// CINT uses to define a few header implicitly, we need to do it explicitly.
-       || interp.declare("#include <assert.h>\n"
-                         "#include <stdlib.h>\n"
-                         "#include <stddef.h>\n"
-                         "#include <math.h>\n"
-                         "#include <string.h>\n"
-                         ) != cling::Interpreter::kSuccess
-       || (!useROOTINCDIR
-           && interp.declare("#include \"Rtypes.h\"\n"
-                             "#include \"TClingRuntime.h\"\n"
-                             "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
+   if (isGenreflex) {
+      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+         // There was an error.
+         ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
+         return 1;
+      }
+   } else {
+      // rootcling
+      if (interp.declare("namespace std {} using namespace std;") != cling::Interpreter::kSuccess
+          // CINT uses to define a few header implicitly, we need to do it explicitly.
+          || interp.declare("#include <assert.h>\n"
+                            "#include <stdlib.h>\n"
+                            "#include <stddef.h>\n"
+                            "#include <math.h>\n"
+                            "#include <string.h>\n"
+                            ) != cling::Interpreter::kSuccess
+          || (!useROOTINCDIR
+              && interp.declare("#include \"Rtypes.h\"\n"
+                                "#include \"TClingRuntime.h\"\n"
+                                "#include \"TObject.h\"") != cling::Interpreter::kSuccess)
 #ifdef ROOTINCDIR
-       || (useROOTINCDIR
-           && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
-                             "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
-                             "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
-           )
+          || (useROOTINCDIR
+              && interp.declare("#include \"" ROOTINCDIR "/Rtypes.h\"\n"
+                                "#include \"" ROOTINCDIR "/TClingRuntime.h\"\n"
+                                "#include \"" ROOTINCDIR "/TObject.h\"") != cling::Interpreter::kSuccess
+              )
 #endif
-       ) {
-      // There was an error.
-      ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
-      return 1;
+          ) {
+         // There was an error.
+         ROOT::TMetaUtils::Error(0,"Error loading the default header files.\n");
+         return 1;
+      }
    }
 
    // For the list of 'opaque' typedef to also include string, we have to include it now.

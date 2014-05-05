@@ -200,6 +200,8 @@ public:
 
    Int_t* Dividers(Int_t n);
 
+   virtual void RecursiveRemove(TObject* obj);
+
    ClassDef(TH2Editor,0)  // TH2 editor
 };
 
