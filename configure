@@ -71,6 +71,7 @@ options="                    \
    enable_globus             \
    enable_gsl_shared         \
    enable_hdfs               \
+   enable_http               \
    enable_krb5               \
    enable_ldap               \
    enable_mathmore           \
@@ -153,6 +154,7 @@ enable_gdml=no
 enable_globus=no
 enable_explicitlink=no
 enable_gsl_shared=no
+enable_http=no
 enable_qt=no
 enable_qtgsi=no
 enable_roofit=no
@@ -177,6 +179,7 @@ enable_afdsmgrd=no
 
 if test "x$ENABLEALL" = "xyes"; then
     enable_gdml=yes
+    enable_http=yes
     enable_qt=yes
     enable_qtgsi=yes
     enable_roofit=yes
@@ -1642,6 +1645,7 @@ enable/disable options, prefix with either --enable- or --disable-
   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   gsl-shared         Enable linking against shared libraries for GSL (default no)
   hdfs               HDFS support; requires libhdfs from HDFS >= 0.19.1
+  http               Build the HTTP server library
   krb5               Kerberos5 support, requires Kerberos libs
   ldap               LDAP support, requires (Open)LDAP libs
   genvector          Build the new libGenVector library
@@ -6547,6 +6551,21 @@ fi
 
 ######################################################################
 #
+### echo %%% HTTP Server Library - Contributed library
+#
+message "Checking whether to build libRHTTP"
+if test "x$enable_xml" = "xno"; then
+   enable_http="no"
+fi
+hashttp="undef"
+if test "x$enable_http" = "xyes"; then
+   enable_http="yes"
+   hashttp="define"
+fi
+result $enable_http
+
+######################################################################
+#
 ### echo %%% MemStat Library - check for memory leaks in application.
 #
 message "Checking whether to build libMemStat"
@@ -7331,6 +7350,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildbonjour@|$enable_bonjour|"      \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildhdfs@|$enable_hdfs|"            \
+    -e "s|@buildhttp@|$enable_http|"            \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia6@|$enable_pythia6|"      \

@@ -372,6 +372,8 @@ BUILDTMVA      := @buildtmva@
 BUILDAFDSMGRD  := @buildafdsmgrd@
 AFDSMGRDAPMON  := @afdsmgrdapmon@
 
+BUILDHTTP      := @buildhttp@
+
 CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
 

@@ -89,7 +89,7 @@ MODULES       = build cint/cint core/metautils core/pcre core/clib core/utils \
                 math/foam math/splot math/smatrix io/sql \
                 geom/geombuilder hist/spectrum hist/spectrumpainter \
                 gui/fitpanel proof/proof proof/proofplayer \
-                gui/sessionviewer gui/guihtml gui/recorder net/http
+                gui/sessionviewer gui/guihtml gui/recorder
 
 ifeq ($(ARCH),win32)
 MODULES      += core/winnt graf2d/win32gdk
@@ -306,6 +306,9 @@ endif
 ifeq ($(BUILDAFDSMGRD),yes)
 MODULES      += proof/afdsmgrd
 endif
+ifeq ($(BUILDHTTP),yes)
+MODULES      += net/http
+endif
 
 -include MyModules.mk   # allow local modules
 
@@ -326,7 +329,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd cint/cling graf2d/ios \
-                graf2d/quartz graf2d/cocoa core/macosx
+                graf2d/quartz graf2d/cocoa core/macosx net/http
 MODULES      := $(sort $(MODULES))   # removes duplicates
 endif
 
