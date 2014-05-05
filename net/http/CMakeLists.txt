@@ -5,6 +5,7 @@
 
 ROOT_USE_PACKAGE(core)
 ROOT_USE_PACKAGE(tree/tree)
+ROOT_USE_PACKAGE(io/xml)
 
 add_definitions(-DHTTP_WITHOUT_FASTCGI)
 
