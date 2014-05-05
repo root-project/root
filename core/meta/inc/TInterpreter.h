@@ -188,7 +188,7 @@ public:
    //The dummy implementation avoids an implementation in TGWin32InterpreterProxy
 
    // Misc
-   virtual int    DisplayClass(FILE * /* fout */,const char * /* name */,int /* base */,int /* start */) const {return 0;}
+   virtual int    DisplayClass(const char* /* fout */,const char * /* name */,int /* base */,int /* start */) const {return 0;}
    virtual int    DisplayIncludePath(FILE * /* fout */) const {return 0;}
    virtual void  *FindSym(const char * /* entry */) const {return 0;}
    virtual void   GenericError(const char * /* error */) const {;}

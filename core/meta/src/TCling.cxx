@@ -5089,7 +5089,7 @@ const char* TCling::GetSTLIncludePath() const
 //                      M I S C
 //______________________________________________________________________________
 
-int TCling::DisplayClass(FILE* /*fout*/, const char* /*name*/, int /*base*/, int /*start*/) const
+int TCling::DisplayClass(const char* fout, const char* name, int /*base*/, int /*start*/) const
 {
    // Interface to cling function
    return 0;
