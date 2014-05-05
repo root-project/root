@@ -97,7 +97,7 @@ MODULES       = build interpreter/llvm interpreter/cling core/foundation \
                 math/matrix \
                 core/newdelete hist/hist hist/unfold tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
-                gui/gui math/minuit hist/histpainter tree/treeplayer \
+                gui/gui math/minuit math/cmaes hist/histpainter tree/treeplayer \
                 gui/ged tree/treeviewer math/physics graf2d/postscript \
                 core/rint html montecarlo/eg \
                 geom/geom geom/geompainter montecarlo/vmc \
@@ -265,6 +265,12 @@ endif
 ifeq ($(BUILDMINUIT2),yes)
 MODULES      += math/minuit2
 endif
+ifeq ($(BUILDCMAES),yes)
+MODULES      += math/cmaes
+endif
+ifeq ($(BUILDCMAES),yes)
+MODULES      += math/cmaes
+endif
 ifeq ($(BUILDUNURAN),yes)
 MODULES      += math/unuran
 endif
@@ -350,7 +356,7 @@ MODULES      += core/unix core/winnt graf2d/x11 graf2d/x11ttf \
                 tmva/tmva tmva/tmvagui math/genetic io/hdfs graf2d/fitsio \
                 roofit/roofitcore \
                 roofit/roofit roofit/roostats roofit/histfactory \
-                math/minuit2 net/monalisa math/fftw sql/odbc math/unuran \
+                math/minuit2 math/cmaes net/monalisa math/fftw sql/odbc math/unuran \
                 geom/geocad geom/gdml graf3d/eve net/glite misc/memstat \
                 math/genvector net/bonjour graf3d/gviz3d graf2d/gviz \
                 proof/proofbench proof/afdsmgrd graf2d/ios \
