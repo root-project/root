@@ -6554,15 +6554,13 @@ fi
 ### echo %%% HTTP Server Library - Contributed library
 #
 message "Checking whether to build libRHTTP"
-if test "x$enable_xml" = "xno"; then
-   enable_http="no"
+if test ! "x$enable_http" = "xno"; then
+    enable_http="yes"
+    result "yes"
+else
+    enable_http=""
+    result "no"
 fi
-hashttp="undef"
-if test "x$enable_http" = "xyes"; then
-   enable_http="yes"
-   hashttp="define"
-fi
-result $enable_http
 
 ######################################################################
 #
