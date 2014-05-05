@@ -126,9 +126,8 @@ namespace ROOT{
 
          class classAutoExcluded{};
 
-         template <typename A> class classTemplateElaborate:
-            ClassAttributes <kNonSplittable>{
-               MemberAttributes<kAutoSelected> autoselectedMember;
+         template <typename A> class classTemplateElaborate{
+               MemberAttributes<kAutoSelected+kNonSplittable> autoselectedMember;
                MemberAttributes<kTransient> transientMember;
                MemberAttributes<kTransient + kAutoSelected> autoselectedMemberAndTransientMemberMember;
             };

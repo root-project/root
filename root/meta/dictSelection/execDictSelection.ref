@@ -202,7 +202,7 @@ Class category: foreign.
 Class category: foreign.
  * Version: -1
  o Members (3):
-  * classAutoselectedFromTemplateElaborate1 autoselectedMember
+  * classAutoselectedFromTemplateElaborate1 autoselectedMember [ "||" ]
   * classVanilla transientMember [ isTransient "!" ]
   * classAutoselectedFromTemplateElaborate2 autoselectedMemberAndTransientMemberMember [ isTransient "!" ]
 --- End Class classTemplateElaborate<char>
