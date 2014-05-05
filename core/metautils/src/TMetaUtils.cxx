@@ -3129,20 +3129,20 @@ void ROOT::TMetaUtils::GetFullyQualifiedTypeName(std::string &typenamestr,
 std::string ROOT::TMetaUtils::GetInterpreterExtraIncludePath(bool rootbuild)
 {
    // Return the -I needed to find RuntimeUniverse.h
-   if (!rootbuild) {
-#ifndef ROOTETCDIR
+#ifdef ROOTETCDIR
+   if (rootbuild) {
+      // Building ROOT, ignore ROOTETCDIR!
+#endif
       const char* rootsys = getenv("ROOTSYS");
       if (!rootsys) {
          Error(0, "Environment variable ROOTSYS not set!");
          return "-Ietc";
       }
       return std::string("-I") + rootsys + "/etc";
-#else
-      return std::string("-I") + ROOTETCDIR;
-#endif
+#ifdef ROOTETCDIR
    }
-   // else
-   return "-Ietc";
+   return std::string("-I") + ROOTETCDIR;
+#endif
 }
 
 //______________________________________________________________________________
