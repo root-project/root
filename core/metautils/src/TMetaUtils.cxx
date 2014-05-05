@@ -1592,7 +1592,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
             attrValue = attrName + propNames::separator + attrValue;
 
          if (!infrastructureGenerated){
-            finalString << "      if (gInterpreter){\n"
+            finalString << "	  static bool firstCall = true;\n"
+                        << "	  if (gInterpreter && !firstCall){\n"
                         << "         Int_t prevAutoLoad = gInterpreter->SetClassAutoloading(0);\n"
                         << "         ClassInfo_t* CI = gInterpreter->ClassInfo_Factory(\"" << classname << "\");\n"
                         << "         DataMemberInfo_t *DMI = gInterpreter->DataMemberInfo_Factory(CI);\n"
@@ -1622,7 +1623,10 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    } // end loop on class internal decls
 
    if (infrastructureGenerated) {
-      finalString << "         }\n         gInterpreter->SetClassAutoloading(prevAutoLoad);\n      }\n";
+      finalString << "         }\n"
+                  << "         gInterpreter->SetClassAutoloading(prevAutoLoad);\n"
+                  << "      }\n"
+                  << "      firstCall=false; \n";
    }
 
    finalString << "      " << csymbol << " *ptr = 0;" << "\n";
