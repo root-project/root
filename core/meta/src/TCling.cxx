@@ -5092,6 +5092,21 @@ const char* TCling::GetSTLIncludePath() const
 int TCling::DisplayClass(const char* fout, const char* name, int /*base*/, int /*start*/) const
 {
    // Interface to cling function
+   // Redirect to the specified file name.
+   std::string buf = ".> ";
+   buf += fout;
+   gCling->ProcessLine(buf.c_str());
+   // Display the classes in the file.
+   buf = ".class ";
+   buf += name;
+   gCling->ProcessLine(buf.c_str());
+   // Display the namespaces in the file.
+   buf = ".namespace";
+   buf += name;
+   gCling->ProcessLine(buf.c_str());
+   // Unredirect.
+   buf = ".> \n";
+   gCling->ProcessLine(buf.c_str());
    return 0;
 }
 

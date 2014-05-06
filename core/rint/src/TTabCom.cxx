@@ -436,23 +436,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       time(&currentTime);
       outf += "/.TTabCom-";
       outf += currentTime;
-      // Redirect to the specified file name.
-   std::string buf = ".> ";
-   buf += outf;
-   const char* name = "";
-   gCling->ProcessLine(buf.c_str());
-   // Display the classes in the file.
-   buf = ".class ";
-   buf += name;
-   gCling->ProcessLine(buf.c_str());
-   // Display the namespaces in the file.
-   buf = ".namespace";
-   buf += name;
-   gCling->ProcessLine(buf.c_str());
-   // Unredirect.
-   buf = ".> \n";
-   gCling->ProcessLine(buf.c_str());
-      //gCling->DisplayClass(outf, (char*)"", 0, 0);
+      gCling->DisplayClass(outf, (char*)"", 0, 0);
 
       // open the file
       std::ifstream file1(outf);
@@ -487,16 +471,16 @@ const TSeqCollection *TTabCom::GetListOfClasses()
          Bool_t isanamespace = kFALSE;  // Flag used to check if we found a namespace name.
          if (0);
          else if ((index = line.Index(" class ")) >= 0)
-            line = line(index + 7, 32000);
+            line = line(index + 8, 32000);
          else if ((index = line.Index(" namespace ")) >= 0) {
-            line = line(index + 11, 32000);
+            line = line(index + 12, 32000);
             isanamespace = kTRUE;
          } else if ((index = line.Index(" struct ")) >= 0)
-            line = line(index + 8, 32000);
+            line = line(index + 9, 32000);
          else if ((index = line.Index(" enum ")) >= 0)
-            line = line(index + 6, 32000);
+            line = line(index + 7, 32000);
          else if ((index = line.Index(" (unknown) ")) >= 0)
-            line = line(index + 11, 32000);
+            line = line(index + 12, 32000);
          // 2 changes: 1. use spaces ^         ^          2. use offset ^^^^^ in case of long
          //               to reduce probablility that        filename which overflows
          //               these keywords will occur in       its field.
