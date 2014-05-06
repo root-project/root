@@ -47,6 +47,7 @@
 #include "TMethodArg.h"
 #include "TMethodCall.h"
 #include "TObjArray.h"
+#include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
 #include "TStreamer.h"
@@ -673,13 +674,6 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
             dmclass = TClass::GetClass(dm->GetTrueTypeName(), kTRUE, isTransient);
          }
          if (dmclass) {
-            if (dmclass->Property()) {
-               if (dmclass->Property() & kIsAbstract) {
-                  ::Warning("TBuildRealData::Inspect()",
-                            "type %s of data member '%s' is an abstract class.",
-                            dmclass->GetName(), dm->GetName());
-               }
-            }
             if ((dmclass != cl) && !dm->IsaPointer()) {
                if (dmclass->GetCollectionProxy()) {
                   TClass* valcl = dmclass->GetCollectionProxy()->GetValueClass();
@@ -707,7 +701,11 @@ void TBuildRealData::Inspect(TClass* cl, const char* pname, const char* mname, c
                      if (wantBuild) valcl->BuildRealData(0, isTransient);
                   }
                } else {
-                  dmclass->BuildRealData(const_cast<void*>(add ? add : 0), isTransient);
+                  void* addrForRecursion = 0;
+                  if (GetObjectValidity() == kValidObjectGiven)
+                     addrForRecursion = const_cast<void*>(add);
+
+                  dmclass->BuildRealData(addrForRecursion, isTransient);
                }
             }
          }
@@ -3642,6 +3640,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
    return 0;
 }
 
+
 //______________________________________________________________________________
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
    // Find a method with decl id in this class or its bases.
@@ -6052,4 +6051,3 @@ ROOT::DirAutoAdd_t TClass::GetDirectoryAutoAdd() const
 
    return fDirAutoAdd;
 }
-

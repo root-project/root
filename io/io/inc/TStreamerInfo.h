@@ -152,6 +152,7 @@ public:
       kArtificial  = 1000,
       kCacheNew    = 1001,
       kCacheDelete = 1002,
+      kNeedObjectForVirtualBaseClass = 99997,
       kMissing     = 99999
    };
 

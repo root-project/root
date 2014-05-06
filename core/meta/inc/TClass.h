@@ -60,6 +60,7 @@ class TListOfEnums;
 class TViewPubFunctions;
 class TViewPubDataMembers;
 class TFunctionTemplate;
+class TProtoClass;
 
 namespace clang {
    class Decl;
@@ -83,6 +84,7 @@ class TClass : public TDictionary {
 friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
+friend class TProtoClass;
 
 public:
    // TClass status bits

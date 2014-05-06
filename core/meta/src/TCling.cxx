@@ -63,6 +63,7 @@
 #include "compiledata.h"
 #include "TMetaUtils.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
@@ -1451,6 +1452,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 {
    // Visit all members over members, recursing over base classes.
 
+   if (insp.GetObjectValidity() == TMemberInspector::kUnset) {
+      insp.SetObjectValidity(obj ? TMemberInspector::kValidObjectGiven
+                             : TMemberInspector::kNoObjectGiven);
+   }
+
    if (!cl || cl->GetCollectionProxy()) {
       // We do not need to investigate the content of the STL
       // collection, they are opaque to us (and details are
@@ -1680,27 +1686,31 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       }
       int64_t baseOffset;
       if (iBase->isVirtual()) {
-         if (!obj) {
-            Error("InspectMembers",
-                  "Base %s of class %s is virtual but no object provided",
-                  sBaseName.c_str(), clname);
-            continue;
-         }
-         TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
-         TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
-         if (ci && baseCi) {
-            baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
-                                           true /*isDerivedObj*/);
-            if (baseOffset == -1) {
+         if (insp.GetObjectValidity() == TMemberInspector::kNoObjectGiven) {
+            if (!isTransient) {
                Error("InspectMembers",
-                     "Error calculating offset of virtual base %s of class %s",
+                     "Base %s of class %s is virtual but no object provided",
                      sBaseName.c_str(), clname);
             }
+            baseOffset = TVirtualStreamerInfo::kNeedObjectForVirtualBaseClass;
          } else {
-            Error("InspectMembers",
-                  "Cannot calculate offset of virtual base %s of class %s",
-                  sBaseName.c_str(), clname);
-            continue;
+            // We have an object to determine the vbase offset.
+            TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
+            TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
+            if (ci && baseCi) {
+               baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
+                                              true /*isDerivedObj*/);
+               if (baseOffset == -1) {
+                  Error("InspectMembers",
+                        "Error calculating offset of virtual base %s of class %s",
+                        sBaseName.c_str(), clname);
+               }
+            } else {
+               Error("InspectMembers",
+                     "Cannot calculate offset of virtual base %s of class %s",
+                     sBaseName.c_str(), clname);
+               continue;
+            }
          }
       } else {
          baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();

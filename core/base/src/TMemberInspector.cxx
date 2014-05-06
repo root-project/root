@@ -61,7 +61,9 @@ void TMemberInspector::TParentBuf::Remove(Ssiz_t startingAt)
 
 ClassImp(TMemberInspector)
 
-TMemberInspector::TMemberInspector() {
+TMemberInspector::TMemberInspector():
+   fObjectPointerState(kUnset)
+{
    // Construct a member inspector
 
    fParent = new TParentBuf();
