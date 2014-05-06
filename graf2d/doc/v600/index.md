@@ -114,6 +114,7 @@ file `simple.pdf`.
 ...
    hist->Draw();
 ```    
+-   `TGaxis::SetMaxDigits()` was not acitve on standalone `TGaxis`.
     
 ### TLegend
 
