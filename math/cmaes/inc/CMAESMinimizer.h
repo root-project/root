@@ -159,8 +159,7 @@ namespace ROOT
       virtual bool ProvidesError() const { return false; } 
       
       /// return errors at the minimum
-      //TODO.
-      virtual const double * Errors() const { return 0;} 
+      virtual const double* Errors() const; 
       
       /** 
 	  return covariance matrix elements 
@@ -307,6 +306,7 @@ namespace ROOT
       CMASolutions fCMAsols;
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
       mutable std::vector<double> fValues; // X values.
+      mutable std::vector<double> fErrors; // X errors.
     };
     
   }  // end namespace cmaes
