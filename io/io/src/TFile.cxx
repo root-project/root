@@ -2619,7 +2619,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
-         if (cl->GetClassInfo()) continue; // skip known classes
+         if (cl->HasInterpreterInfo()) continue; // skip known classes
       }
       // Find and use the proper rules for the TStreamerInfos.
       TMakeProject::GenerateMissingStreamerInfos( &extrainfos, info->GetName() );
@@ -2808,7 +2808,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       }
       TClass *cl = TClass::GetClass(info->GetName());
       if (cl) {
-         if (cl->GetClassInfo()) continue; // skip known classes
+         if (cl->HasInterpreterInfo()) continue; // skip known classes
          const ROOT::TSchemaMatch* rules = 0;
          if (cl->GetSchemaRules()) {
             rules = cl->GetSchemaRules()->FindRules(cl->GetName(), info->GetClassVersion());
@@ -2869,7 +2869,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
                   } else {
                      what.ReplaceAll("std::","");
                      TClass *paircl = TClass::GetClass(what.Data());
-                     if (paircl == 0 || paircl->GetClassInfo() == 0) {
+                     if (paircl == 0 || !paircl->HasInterpreterInfo()) {
                         fprintf(fp,"#pragma link C++ class %s+;\n",what.Data());
                      }
                   }

@@ -660,7 +660,7 @@ const char *TStreamerBase::GetInclude() const
 {
    // Return the proper include for this element.
 
-   if (GetClassPointer() && fBaseClass->GetClassInfo()) {
+   if (GetClassPointer() && fBaseClass->HasInterpreterInfo()) {
       gIncludeName.Form("\"%s\"",fBaseClass->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetName(), 1 ) );
@@ -1177,7 +1177,7 @@ const char *TStreamerObject::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) {
+   if (cl && cl->HasInterpreterInfo()) {
       gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
@@ -1268,7 +1268,7 @@ const char *TStreamerObjectAny::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) {
+   if (cl && cl->HasInterpreterInfo()) {
       gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
@@ -1364,7 +1364,7 @@ const char *TStreamerObjectPointer::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) {
+   if (cl && cl->HasInterpreterInfo()) {
       gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );
@@ -1467,7 +1467,7 @@ const char *TStreamerObjectAnyPointer::GetInclude() const
    // Return the proper include for this element.
 
    TClass *cl = GetClassPointer();
-   if (cl && cl->GetClassInfo()) {
+   if (cl && cl->HasInterpreterInfo()) {
       gIncludeName.Form("\"%s\"",cl->GetDeclFileName());
    } else {
       std::string shortname( TClassEdit::ShortType( GetTypeName(), 1 ) );

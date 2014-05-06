@@ -101,7 +101,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
             if (nest == 0 && name[i+1] == ':') {
                TString nsname(name, i);
                TClass *cl = gROOT->GetClass(nsname);
-               Bool_t definedInParent = !includeNested && cl && (cl->Size() != 0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/));
+               Bool_t definedInParent = !includeNested && cl && (cl->Size() != 0 || (cl->Size()==0 && !cl->HasInterpreterInfo() /*empty 'base' class on file*/));
                if (!definedInParent && cl==0 && extrainfos!=0) {
                   TStreamerInfo *clinfo = (TStreamerInfo*)extrainfos->FindObject(nsname);
                   if (clinfo && clinfo->GetClassVersion() == -5) {
@@ -499,7 +499,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                } else {
                   TClass *cl = gROOT->GetClass(incName);
                   if (!forward && cl) {
-                     if (cl->GetClassInfo()) {
+                     if (cl->HasInterpreterInfo()) {
                         // We have the real dictionary for this class.
 
                         const char *include = cl->GetDeclFileName();
@@ -555,7 +555,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   what.ReplaceAll("std::","");
                   // Only ask for it if needed.
                   TClass *paircl = TClass::GetClass(what.Data());
-                  if (paircl == 0 || paircl->GetClassInfo() == 0) {
+                  if (paircl == 0 || !paircl->HasInterpreterInfo()) {
                      AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n", what.Data()), inclist);
                   }
                   break;
@@ -605,7 +605,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          if (what.Length()) {
             // Only ask for it if needed.
             TClass *paircl = TClass::GetClass(what.Data());
-            if (paircl == 0 || paircl->GetClassInfo() == 0) {
+            if (paircl == 0 || !paircl->HasInterpreterInfo()) {
                AddUniqueStatement(fp, TString::Format("#ifdef __MAKECINT__\n#pragma link C++ class %s+;\n#endif\n",what.Data()), inclist);
             }
          }

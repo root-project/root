@@ -164,7 +164,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
       }
       if (!object) return;
 
-      if (fClass->GetClassInfo()) {
+      if (fClass->GetState() > TClass::kEmulated) {
          object->Streamer(b);
       } else {
          //emulated class has no Streamer

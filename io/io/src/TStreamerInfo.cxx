@@ -783,7 +783,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
             match = kFALSE;
             oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
 
-            if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->GetListOfDataMembers() && (fClass->GetClassInfo())) {
+            if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->HasDataMemberInfo()) {
                // In the case where the read-in TStreamerInfo does not
                // match in the 'current' in memory TStreamerInfo for
                // a non foreign class (we can not get here if this is
@@ -965,11 +965,10 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       // The slot was free, however it might still be reserved for the current
       // loaded version of the class
       if (fClass->IsLoaded()
-          && fClass->GetListOfDataMembers()
+          && fClass->HasDataMemberInfo()
           && (fClassVersion != 0) // We don't care about transient classes
           && (fClassVersion == fClass->GetClassVersion())
-          && (fCheckSum != fClass->GetCheckSum())
-          && (fClass->GetClassInfo())) {
+          && (fCheckSum != fClass->GetCheckSum())) {
 
          // If the old TStreamerInfo matches the in-memory one when we either
          //   - ignore the members of type enum
@@ -1795,7 +1794,7 @@ void TStreamerInfo::BuildOld()
       TDataMember* dm = 0;
 
       // First set the offset and sizes.
-      if (fClass->GetClassInfo() == 0) {
+      if (fClass->GetState() <= TClass::kEmulated) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
@@ -2155,12 +2154,12 @@ void TStreamerInfo::BuildOld()
          element->SetOffset(kMissing);
       }
 
-      if (offset != kMissing && fClass->GetClassInfo() == 0) {
+      if (offset != kMissing && fClass->GetState() <= TClass::kEmulated) {
          // Note the initialization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
          
-         // The class is NOT known to Cling (and thus IS emulated)
+         // The class is NOT known to Cling, i.e. is emulated,
          // and we need to use the calculated offset.
      
          Int_t asize;
@@ -3549,7 +3548,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 
    TClass *cl = TClass::GetClass(GetName());
    if (cl) {
-      if (cl->GetClassInfo()) return 0; // skip known classes
+      if (cl->HasInterpreterInfo()) return 0; // skip known classes
    }
    Bool_t isTemplate = kFALSE;
    if (strchr(GetName(),':')) {
@@ -3565,7 +3564,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
                   // We have a scope
                   TString nsname(GetName(), i-1);
                   cl = gROOT->GetClass(nsname);
-                  if (cl && (cl->Size()!=0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/))) {
+                  if (cl && (cl->Size()!=0 || (cl->Size()==0 && !cl->HasInterpreterInfo() /*empty 'base' class on file*/))) {
                      // This class is actually nested.
                      return 0;
                   } else if (cl == 0 && extrainfos != 0) {
@@ -3768,7 +3767,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
 
    // Not found, so now try the data members and base classes
    // of the base classes of our class.
-   if (fClass->GetClassInfo()) {
+   if (fClass->HasDataMemberInfo()) {
       // Our class has a dictionary loaded, use it to search the base classes.
       TStreamerElement* base_element = 0;
       TBaseClass* base = 0;

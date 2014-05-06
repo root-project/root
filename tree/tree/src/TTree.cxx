@@ -2093,8 +2093,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
          Error("Bronch", "TClonesArray with no class defined in branch: %s", name);
          return 0;
       }
-      void* classinfo = clones->GetClass()->GetClassInfo();
-      if (!classinfo) {
+      if (!clones->GetClass()->HasDataMemberInfo()) {
          Error("Bronch", "TClonesArray with no dictionary defined in branch: %s", name);
          return 0;
       }
@@ -2123,8 +2122,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
       if ((splitlevel > 0) && inklass && (inklass->GetCollectionProxy() == 0)) {
          Int_t stl = -TClassEdit::IsSTLCont(cl->GetName(), 0);
          if ((stl != ROOT::kSTLmap) && (stl != ROOT::kSTLmultimap)) {
-            void *classinfo = inklass->GetClassInfo();
-            if (!classinfo) {
+            if (!inklass->HasDataMemberInfo()) {
                Error("Bronch", "Container with no dictionary defined in branch: %s", name);
                return 0;
             }
@@ -2152,7 +2150,7 @@ TBranch* TTree::BronchExec(const char* name, const char* classname, void* addr, 
    }
 
    Bool_t hasCustomStreamer = kFALSE;
-   if (!cl->GetClassInfo() && !cl->GetCollectionProxy()) {
+   if (!cl->HasDataMemberInfo() && !cl->GetCollectionProxy()) {
       Error("Bronch", "Cannot find dictionary for class: %s", classname);
       return 0;
    }
