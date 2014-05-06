@@ -185,6 +185,10 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
 
    TObject *result = THashList::FindObject(name);
    if (!result) {
+      if (IsLoaded() && fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+         // We already have all the information, no need to search more
+         return 0;
+      }
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetDataMember(fClass->GetClassInfo(),name);
       else        decl = gInterpreter->GetDataMember(0,name);
@@ -274,6 +278,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
    return dm;
 }
 
+//______________________________________________________________________________
 void TListOfDataMembers::UnmapObject(TObject* obj)
 {
    // Remove a pair<id, object> from the map of data members and their ids.
