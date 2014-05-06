@@ -70,6 +70,7 @@ CHANGES:
     can specify auth_file and auth_domain parameters to protect 
     access to the server
   - Fix error in FastCgi, now correctly works with Apache
+  - Avoid direct usage of TASImage
   
 
   March 2014:

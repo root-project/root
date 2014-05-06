@@ -16,19 +16,6 @@ CIVETWEBDIR  := $(HTTPDIR)/civetweb
 HTTPCLILIB   := $(OSTHREADLIB)
 HTTPINCDIR   := $(CIVETWEBDIR) 
 
-
-########### this should be moved into Makefile.depend #################
-
-ifeq ($(PLATFORM),win32)
-HTTPLIBEXTRA  := lib/libThread.lib lib/libTree.lib lib/libHist.lib \
-                 lib/libGpad.lib lib/libGraf.lib  lib/libRIO.lib lib/libXMLIO.lib
-else
-HTTPLIBEXTRA := -Llib -lThread -lTree -lHist -lGpad -lGraf -lRIO -lXMLIO
-endif
-
-HTTPLIBDEP   = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(IOLIB) $(XMLLIB) 
-
-
 ##### libRHTTP #####
 HTTPL        := $(MODDIRI)/LinkDef.h
 HTTPDS       := $(call stripsrc,$(MODDIRS)/G__RHTTP.cxx)
@@ -42,40 +29,12 @@ HTTPO        := $(call stripsrc,$(HTTPS:.cxx=.o))
 CIVETWEBS    := $(CIVETWEBDIR)/civetweb.c
 CIVETWEBO    := $(call stripsrc,$(CIVETWEBS:.c=.o))
 
-
 HTTPDEP      := $(HTTPO:.o=.d) $(HTTPDO:.o=.d)
 
 HTTPLIB      := $(LPATH)/libRHTTP.$(SOEXT)
 HTTPMAP      := $(HTTPLIB:.$(SOEXT)=.rootmap)
 
-
-HTTPCXXFLAGS = $(HTTPINCDIR:%=-I%)
-
-
-########### this should be moved to Makefile.config #################
-
-ifneq ($(BUILDASIMAGE),no)
-ifeq ($(PLATFORM),win32)
-HTTPLIBEXTRA += lib/libASImage.lib
-else
-HTTPLIBEXTRA += -lASImage
-endif
-HTTPLIBDEPM += $(ASIMAGELIB)
-else
-HTTPCXXFLAGS += -DHTTP_WITHOUT_ASIMAGE
-endif
-
-
-ifneq ($(wildcard /usr/include/fastcgi/fcgiapp.h),)
-HTTPINCDIR += /usr/include/fastcgi
-HTTPLIBEXTRA += -lfcgi
-else
-ifneq ($(wildcard /usr/include/fcgiapp.h),)
-HTTPLIBEXTRA += -lfcgi
-else
-HTTPCXXFLAGS += -DHTTP_WITHOUT_FASTCGI
-endif
-endif
+HTTPCXXFLAGS = $(HTTPINCDIR:%=-I%) $(FASTCGIFLAGS)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))
