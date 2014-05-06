@@ -24,6 +24,11 @@ std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 
 extern "C"
+const char*** TROOT__GetExtraInterpreterArgs() {
+   return &TROOT::GetExtraInterpreterArgs();
+}
+
+extern "C"
 cling::Interpreter* TCling__GetInterpreter()
 {
    static bool sInitialized = false;
