@@ -65,7 +65,15 @@ namespace ROOT
     void TCMAESMinimizer::Clear()
     {
       fCMAsols = CMASolutions();
+      fDim = 0; fFreeDim = 0;
+      fLBounds.clear();
+      fUBounds.clear();
+      fVariablesType.clear();
+      fInitialX.clear();
+      fInitialSigma.clear();
+      fNames.clear();
       fGlobalCC.clear();
+      fValues.clear();
     }
 
     void TCMAESMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction &fun)
@@ -298,8 +306,11 @@ namespace ROOT
     const double* TCMAESMinimizer::X() const
     {
       //TODO: return pheno x when applicable (in solution object).
-      //std::cout << "X=" << fCMAsols.best_candidate()._x.transpose() << std::endl;
-      fValues.assign(fCMAsols.best_candidate()._x.data(),fCMAsols.best_candidate()._x.data()+fDim*sizeof(double));
+      std::cout << "X=" << fCMAsols.best_candidate()._x.transpose() << std::endl;
+      fValues.clear();
+      Candidate bc = fCMAsols.best_candidate();
+      for (int i=0;i<fDim;i++)
+	fValues.push_back(bc._x(i));
       return &fValues.front();
     }
 

@@ -32,6 +32,8 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
   std::string name; 
   name = "h1_" + type; 
   TH1D * h1 = new TH1D(name.c_str(),"Chi2 Fit",100, -5, 5. );
+  name = "h1bis_" + type; 
+  TH1D * h1bis = new TH1D(name.c_str(),"Likelihood Fit",100, -5, 5. );
   /*name = "h2_" + type; 
   TH1D * h2 = new TH1D(name.c_str(),"Chi2 Fit with Minos Error",100, -5, 5. );
   name = "h3_" + type; 
@@ -44,7 +46,8 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
 
   for (int i = 0; i < n; ++i) { 
      double x = gRandom->Gaus(0,1); 
-     h1->Fill( x ); 
+     h1->Fill( x );
+     h1bis->Fill( x );
      /*     h2->Fill( x ); 
      h3->Fill( x ); 
      h4->Fill( x ); */
@@ -52,13 +55,17 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
   
   std::string cname = type + "Canvas" ;    
   std::string ctitle = type + " Gaussian Fit" ;    
-  //TCanvas *c1 = new TCanvas(cname.c_str(),cname.c_str(),10,10,900,900);
-  //c1->Divide(2,2);
+  TCanvas *c1 = new TCanvas(cname.c_str(),cname.c_str(),10,10,900,900);
+  c1->Divide(2,1);
   
-  //c1->cd(1);
+  c1->cd(1);
   cout << "\nDo Fit 1\n";
   h1->Fit("gaus","Q"); 
   h1->Draw();
+  c1->cd(2);
+  cout << "\nDo Fit 1bis\n";
+  h1bis->Fit("gaus","VLE");
+  h1bis->Draw();
   /*c1->cd(2);
   cout << "\nDo Fit 2\n";
   h2->Fit("gaus","VE"); 
