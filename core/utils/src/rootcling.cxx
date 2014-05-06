@@ -265,7 +265,6 @@ namespace genreflex {
 }
 
 //______________________________________________________________________________
-#if !defined(ROOT_STAGE1_BUILD)
 void SetRootSys();
 
 struct SetROOTSYS {
@@ -274,7 +273,6 @@ struct SetROOTSYS {
       SetRootSys();
    }
 } sROOTSYSSetter;
-#endif
 
 
 //______________________________________________________________________________
@@ -634,13 +632,8 @@ void SetRootSys()
 #if !defined(_WIN32)
       char *ep = new char[PATH_MAX];
       if (!realpath(exepath, ep)) {
-         if (getenv("ROOTSYS")) {
-            delete [] ep;
-            return;
-         } else {
-            fprintf(stderr, "rootcling: error getting realpath of rootcling, please set ROOTSYS in the shell");
-            strlcpy(ep, exepath,PATH_MAX);
-         }
+         fprintf(stderr, "rootcling: error getting realpath of rootcling!");
+         strlcpy(ep, exepath,PATH_MAX);
       }
 #else
       int nche = strlen(exepath)+1;
@@ -651,7 +644,7 @@ void SetRootSys()
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s, "rootcling_tmp", 12))
+         if (!strncmp(s + 1, "rootcling_tmp", 13))
             // $ROOTSYS/core/utils/src/rootcling_tmp
             removesubdirs = 4;
          for (int i = 1; s && i < removesubdirs; ++i) {

@@ -87,7 +87,8 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
-           isa<EnumConstantDecl>(ValD)) &&
+           isa<EnumConstantDecl>(ValD) ||
+           isa<IndirectFieldDecl>(ValD)) &&
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");  
    
 }
