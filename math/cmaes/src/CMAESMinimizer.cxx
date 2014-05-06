@@ -298,7 +298,9 @@ namespace ROOT
     const double* TCMAESMinimizer::X() const
     {
       //TODO: return pheno x when applicable (in solution object).
-      return fCMAsols.best_candidate()._x.data(); // beware that lasts as long as the fCMAsols object only.
+      //std::cout << "X=" << fCMAsols.best_candidate()._x.transpose() << std::endl;
+      fValues.assign(fCMAsols.best_candidate()._x.data(),fCMAsols.best_candidate()._x.data()+fDim*sizeof(double));
+      return &fValues.front();
     }
 
     unsigned int TCMAESMinimizer::NCalls() const

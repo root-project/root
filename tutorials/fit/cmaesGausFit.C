@@ -16,15 +16,17 @@
 #include "TVirtualFitter.h"
 #include "TPaveLabel.h"
 #include "TStyle.h"
+#include "TSystem.h"
+#include "TFile.h"
+#include "TROOT.h"
 
 #include <iostream>
 #include <string>
 
-
 void testGausFit( std::string type = "cmaes", int n = 1000) { 
 
   gRandom = new TRandom3();
-
+  
   TVirtualFitter::SetDefaultFitter(type.c_str() );
 
   std::string name; 
@@ -73,7 +75,8 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
 }
 
 void cmaesGausFit() { 
-
+  gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
+  gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
   int n = 1000; 
   testGausFit("cmaes",n);
 }
