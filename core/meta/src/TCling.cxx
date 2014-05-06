@@ -786,42 +786,30 @@ TCling::TCling(const char *name, const char *title)
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
 
-   ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
-
-   std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-   clingArgsStorage.push_back(interpInclude);
-
+   std::string interpInclude;
+   // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
    if (!fromRootCling) {
+      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+
+      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+      clingArgsStorage.push_back(interpInclude);
+
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
       clingArgsStorage.push_back("-include-pch");
       clingArgsStorage.push_back(pchFilename);
-   }
 
-   // clingArgsStorage.push_back("-Xclang");
-   // clingArgsStorage.push_back("-fmodules");
+      // clingArgsStorage.push_back("-Xclang");
+      // clingArgsStorage.push_back("-fmodules");
 
-   std::string include;
-   // Add the root include directory to list searched by default
-   if (fromRootCling && getenv("ROOT_BUILDINGROOT")) {
-      // Building ROOT need to -Iinclude and ignore ROOTINCDIR and ROOTSYS!
-      include = "include";
-   } else {
+      std::string include;
 #ifndef ROOTINCDIR
       include = gSystem->Getenv("ROOTSYS");
       include += "/include";
 #else // ROOTINCDIR
       include = ROOTINCDIR;
 #endif // ROOTINCDIR
-   }
-   clingArgsStorage.push_back("-I");
-   clingArgsStorage.push_back(include);
-
-   // rootcling needs to run in syntax-only mode, i.e. without execution. Detect
-   // rootcling by looking for a rootcling-only symbol:
-   if (fromRootCling) {
-      clingArgsStorage.push_back("-D__ROOTCLING__");
-      clingArgsStorage.push_back("-fsyntax-only");
-      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(include);
    }
 
    std::vector<const char*> interpArgs;
@@ -829,22 +817,31 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+   // Add statically injected extra arguments, usually coming from rootcling.
+   for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
+        *extraArgs; ++extraArgs) {
+         interpArgs.push_back(*extraArgs);
+   }
+
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
-   fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
 
-   // Add include path to etc/cling. FIXME: This is a short term solution. The
-   // llvm/clang header files shouldn't be there at all. We have to get rid of
-   // that dependency and avoid copying the header files.
-   // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-   TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
+   if (!fromRootCling) {
+      fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
 
-   // Add the current path to the include path
-   TCling::AddIncludePath(".");
+      // Add include path to etc/cling. FIXME: This is a short term solution. The
+      // llvm/clang header files shouldn't be there at all. We have to get rid of
+      // that dependency and avoid copying the header files.
+      // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
+      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
 
-   // Add the root include directory and etc/ to list searched by default.
-   TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+      // Add the current path to the include path
+      TCling::AddIncludePath(".");
+
+      // Add the root include directory and etc/ to list searched by default.
+      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+   }
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
@@ -895,8 +892,6 @@ TCling::TCling(const char *name, const char *title)
 #ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
-   // Initialize for ROOT:
-   TCling::AddIncludePath(include.c_str());
 
    if (!fromRootCling) {
       fInterpreter->enableDynamicLookup();

@@ -2432,3 +2432,9 @@ Int_t TROOT::RootVersionCode()
 
    return ROOT_VERSION_CODE;
 }
+
+//______________________________________________________________________________
+const char**& TROOT::GetExtraInterpreterArgs() {
+   static const char** extraInterpArgs = 0;
+   return extraInterpArgs;
+}

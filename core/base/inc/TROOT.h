@@ -310,6 +310,7 @@ public:
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
+   static const char**&GetExtraInterpreterArgs();
    
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };
