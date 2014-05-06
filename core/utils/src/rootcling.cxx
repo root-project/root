@@ -625,7 +625,6 @@ const char *GetExePath()
 void SetRootSys()
 {
    // Set the ROOTSYS env var based on the executable location.
-   // Also sets ROOT_BUILDINGROOT if building stage 2 ROOT.
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
@@ -662,11 +661,6 @@ void SetRootSys()
       putenv(env);
       delete [] ep;
    }
-#if !defined(ROOT_STAGE1_BUILD)
-   if (buildingROOT) {
-      putenv(strdup("ROOT_BUILDINGROOT=happilyso"));
-   }
-#endif
 }
 
 //______________________________________________________________________________
@@ -3762,8 +3756,13 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
-   std::string resourceDir;
+   std::vector<const char*> clingArgsC;
+   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
+        iclingArgs < nclingArgs; ++iclingArgs) {
+      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
+   }
 
+   std::string resourceDir;
 #ifdef R__LLVMRESOURCEDIR
    resourceDir = R__LLVMRESOURCEDIR;
 #else
@@ -3771,13 +3770,12 @@ int RootCling(int argc,
 #endif
 
 #ifndef ROOT_STAGE1_BUILD
+   // Pass the interpreter arguments to TCling's interpreter:
+   clingArgsC.push_back(0); // signal end of array
+   const char**& extraArgs = *TROOT__GetExtraInterpreterArgs();
+   extraArgs = &clingArgsC[1]; // skip binary name
    cling::Interpreter& interp = *TCling__GetInterpreter();
 #else
-   std::vector<const char*> clingArgsC;
-   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
-        iclingArgs < nclingArgs; ++iclingArgs) {
-      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
-   }
 
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
