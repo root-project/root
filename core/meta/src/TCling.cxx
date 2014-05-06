@@ -819,7 +819,7 @@ TCling::TCling(const char *name, const char *title)
 
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
-        *extraArgs; ++extraArgs) {
+        extraArgs && *extraArgs; ++extraArgs) {
          interpArgs.push_back(*extraArgs);
    }
 
