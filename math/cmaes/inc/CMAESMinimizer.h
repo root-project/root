@@ -306,6 +306,7 @@ namespace ROOT
       std::vector<double> fInitialSigma; // User-set Initial step-size for each variables.
       CMASolutions fCMAsols;
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
+      mutable std::vector<double> fValues; // X values.
     };
     
   }  // end namespace cmaes
