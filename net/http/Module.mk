@@ -34,20 +34,7 @@ HTTPDEP      := $(HTTPO:.o=.d) $(HTTPDO:.o=.d)
 HTTPLIB      := $(LPATH)/libRHTTP.$(SOEXT)
 HTTPMAP      := $(HTTPLIB:.$(SOEXT)=.rootmap)
 
-HTTPCXXFLAGS = $(HTTPINCDIR:%=-I%)
-
-########### this should probably be checked in the configure script ###########
-
-ifneq ($(wildcard /usr/include/fastcgi/fcgiapp.h),)
-HTTPINCDIR += /usr/include/fastcgi
-HTTPLIBEXTRA += -lfcgi
-else
-ifneq ($(wildcard /usr/include/fcgiapp.h),)
-HTTPLIBEXTRA += -lfcgi
-else
-HTTPCXXFLAGS += -DHTTP_WITHOUT_FASTCGI
-endif
-endif
+HTTPCXXFLAGS = $(HTTPINCDIR:%=-I%) $(FASTCGIFLAGS)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))

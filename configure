@@ -6557,8 +6557,28 @@ message "Checking whether to build libRHTTP"
 if test ! "x$enable_http" = "xno"; then
     enable_http="yes"
     result "yes"
+    check_header "fcgiapp.h" "$fastcgiincdir" \
+        ${finkdir:+$finkdir/include/fastcgi} \
+        /usr/local/include \
+        /usr/local/include/fastcgi /usr/local/fastcgi /usr/local/fastcgi/include \
+        /opt/fastcgi /opt/fastcgi/include \
+        /usr/include /usr/include/fastcgi /usr/fastcgi /usr/fastcgi/include
+    fastcgiinc=$found_hdr
+    fastcgiincdir=$found_dir
+    check_library "libfcgi" "$enable_shared" "$fastcgilibdir" \
+        ${finkdir:+$finkdir/lib} \
+        /usr/local/lib /usr/lib /usr/lib/fastcgi \
+        /usr/local/lib/fastcgi /usr/fastcgi/lib /usr/local/fastcgi/lib
+    fastcgilib=$found_lib
+    fastcgilibdir=$found_dir
+    if ! test "x$fastcgiinc" = "x" && ! test "x$fastcgilib" = "x" ; then
+        use_fastcgi="yes"
+    else
+        use_fastcgi="no"
+    fi
 else
     enable_http=""
+    use_fastcgi="no"
     result "no"
 fi
 
@@ -7349,6 +7369,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildchirp@|$enable_chirp|"          \
     -e "s|@buildhdfs@|$enable_hdfs|"            \
     -e "s|@buildhttp@|$enable_http|"            \
+    -e "s|@usefastcgi@|$use_fastcgi|"           \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia6@|$enable_pythia6|"      \

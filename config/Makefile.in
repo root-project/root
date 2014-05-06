@@ -373,6 +373,10 @@ BUILDAFDSMGRD  := @buildafdsmgrd@
 AFDSMGRDAPMON  := @afdsmgrdapmon@
 
 BUILDHTTP      := @buildhttp@
+USEFASCGI      := @usefastcgi@
+ifeq ($(USEFASCGI), no)
+FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
+endif
 
 CPPUNIT        := @cppunit@
 GCCXML         := @gccxml@
