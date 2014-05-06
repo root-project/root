@@ -25,7 +25,7 @@ else()
                          TWin32Thread.cxx TWin32ThreadFactory.cxx)  
 endif() 
 
-ROOT_GENERATE_DICTIONARY(G__Thread ${headers} MODULE Thread LINKDEF LinkDef.h)
+ROOT_GENERATE_DICTIONARY(G__Thread ${headers} STAGE1 MODULE Thread LINKDEF LinkDef.h)
 
 ROOT_LINKER_LIBRARY(Thread ${sources} G__Thread.cxx LIBRARIES  ${CMAKE_THREAD_LIBS_INIT} DEPENDENCIES Core)
 ROOT_INSTALL_HEADERS()

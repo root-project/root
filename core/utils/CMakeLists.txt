@@ -2,14 +2,18 @@
 # CMakeLists.txt file for building ROOT core/utils package
 ############################################################################
 ROOT_USE_PACKAGE(core/metautils)
+ROOT_USE_PACKAGE(io/io)
+
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/../metautils/src ${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
 add_definitions(${CLING_CXXFLAGS} -Wno-shadow -Wno-unused-parameter)
 ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           src/TModuleGenerator.cxx src/rootcling.cxx src/rootclingTCling.cxx
                           ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
+                          $<TARGET_OBJECTS:MetaLLVM>
                           $<TARGET_OBJECTS:Clib>
-                          $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
+                          $<TARGET_OBJECTS:MetaUtils> 
+                          $<TARGET_OBJECTS:MetaUtilsLLVM>
                           LIBRARIES RIO ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS})
 
 add_dependencies(rootcling CLING LLVMRES)
@@ -30,7 +34,8 @@ ROOT_EXECUTABLE(rootcling_tmp src/LinkdefReader.cxx src/DictSelectionReader.cxx
                               src/TModuleGenerator.cxx rootcling_tmp.cxx
                               ${CMAKE_SOURCE_DIR}/core/metautils/src/TMetaUtils.cxx
                               $<TARGET_OBJECTS:Clib> 
-                              $<TARGET_OBJECTS:MetaUtils> $<TARGET_OBJECTS:MetaUtilsLLVM>
+                              $<TARGET_OBJECTS:MetaUtils> 
+                              $<TARGET_OBJECTS:MetaUtilsLLVM>
                               LIBRARIES ${CLING_LIBRARIES}  ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
                               NOINSTALL)
 add_dependencies(rootcling_tmp CLING LLVMRES)
