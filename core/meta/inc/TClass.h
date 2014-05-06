@@ -170,6 +170,8 @@ private:
            Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
 
+           Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
+   mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
    mutable Bool_t     fVersionUsed : 1;         //!Indicates whether GetClassVersion has been called
    mutable Bool_t     fIsOffsetStreamerSet : 1; //!saved remember if fOffsetStreamer has been set.
 
@@ -195,6 +197,7 @@ private:
              ClassInfo_t *classInfo,
              Bool_t silent);
    void ForceReload (TClass* oldcl);
+   void LoadClassInfo() const;
 
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
@@ -291,7 +294,10 @@ public:
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
+   Bool_t             HasDataMemberInfo() const { return fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor() const;
+   Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
+   Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
    TVirtualCollectionProxy *GetCollectionProxy() const;
    TVirtualIsAProxy  *GetIsAProxy() const;
@@ -306,7 +312,7 @@ public:
    ROOT::DelFunc_t    GetDelete() const;
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
-   ClassInfo_t       *GetClassInfo() const { return fClassInfo; }
+   ClassInfo_t       *GetClassInfo() const { if (fCanLoadClassInfo) LoadClassInfo(); return fClassInfo; }
    const char        *GetContextMenuTitle() const { return fContextMenuTitle; }
    TVirtualStreamerInfo     *GetCurrentStreamerInfo() {
       if (fCurrentInfo) return fCurrentInfo;

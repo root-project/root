@@ -889,7 +889,7 @@ TClass::TClass() :
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -915,7 +915,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -961,7 +961,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -987,7 +987,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -1042,7 +1042,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -1071,7 +1071,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fStreamer(0), fIsA(0), fGlobalIsA(0), fIsAMethod(0),
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fSizeof(-1),
-   fCanSplit(-1), fProperty(0),fVersionUsed(kFALSE),
+   fCanSplit(-1), fProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE), fVersionUsed(kFALSE),
    fIsOffsetStreamerSet(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
    fCurrentInfo(0), fRefStart(0), fRefProxy(0),
@@ -1179,6 +1179,10 @@ void TClass::Init(const char *name, Version_t cversion,
 
    Bool_t isStl = TClassEdit::IsSTLCont(fName);
 
+   if (!gInterpreter) {
+      ::Fatal("TClass::TClass", "gInterpreter not initialized");
+   }
+
    if (givenInfo) {
       if (!gInterpreter->ClassInfo_IsValid(givenInfo) ||
           !(gInterpreter->ClassInfo_Property(givenInfo) & (kIsClass | kIsStruct | kIsNamespace)) ||
@@ -1194,10 +1198,16 @@ void TClass::Init(const char *name, Version_t cversion,
       fClassInfo = gInterpreter->ClassInfo_Factory(givenInfo);
    }
    if (!fClassInfo) {
-      Bool_t shouldLoad = kFALSE;
 
-      if (gInterpreter->CheckClassInfo(fName)) shouldLoad = kTRUE;
-      else if (fImplFileLine>=0) {
+      if (gInterpreter->CheckClassInfo(fName)) {
+         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         if (!fClassInfo) {
+            if (IsZombie()) {
+               TClass::RemoveClass(this);
+               return;
+            }
+         }
+      } else if (fState == kHasTClassInit) {
          // If the TClass is being generated from a ROOT dictionary,
          // eventhough we do not seem to have a CINT dictionary for
          // the class, we will will try to load it anyway UNLESS
@@ -1210,23 +1220,12 @@ void TClass::Init(const char *name, Version_t cversion,
          // here *or* the user explicitly instantiate the template
          // we would not have a ClassInfo for the template
          // instantiation.
-         shouldLoad = true; // ! isStl;
-      }
-
-      if (shouldLoad) {
-         if (!gInterpreter)
-            ::Fatal("TClass::TClass", "gInterpreter not initialized");
-
-         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-         if (!fClassInfo) {
-            if (IsZombie()) {
-               TClass::RemoveClass(this);
-               return;
-            }
-         }
+         fCanLoadClassInfo = kTRUE;
+         // Here we should check or grab the info from the rootpcm.
+         fHasRootPcmInfo = kTRUE;
       }
    }
-   if (!silent && !fClassInfo && !isStl && fName.First('@')==kNPOS &&
+   if (!silent && (!fClassInfo && !fCanLoadClassInfo) && !isStl && fName.First('@')==kNPOS &&
        !TClassEdit::IsInterpreterDetail(fName.Data()) ) {
       if (fState == kHasTClassInit) {
          ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
@@ -1375,6 +1374,7 @@ TClass::TClass(const TClass& cl) :
   fSizeof(cl.fSizeof),
   fCanSplit(cl.fCanSplit),
   fProperty(cl.fProperty),
+  fCanLoadClassInfo(cl.fCanLoadClassInfo),
   fVersionUsed(cl.fVersionUsed),
   fIsOffsetStreamerSet(cl.fIsOffsetStreamerSet),
   fOffsetStreamer(cl.fOffsetStreamer),
@@ -1772,7 +1772,7 @@ void TClass::Browse(TBrowser *b)
 {
    // This method is called by a browser to get the class information.
 
-   if (!fClassInfo) return;
+   if (!HasInterpreterInfo()) return;
 
    if (b) {
       if (!fRealData) BuildRealData();
@@ -1810,7 +1810,7 @@ void TClass::BuildRealData(void* pointer, Bool_t isTransient)
    TMmallocDescTemp setreset;
 
    // Handle emulated classes and STL containers specially.
-   if (!fClassInfo || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName())) {
+   if (!HasInterpreterInfo() || TClassEdit::IsSTLCont(GetName(), 0) || TClassEdit::IsSTLBitset(GetName())) {
       // We are an emulated class or an STL container.
       fRealData = new TList;
       BuildEmulatedRealData("", 0, this);
@@ -1945,9 +1945,10 @@ void TClass::CalculateStreamerOffset() const
    // that offset to access any virtual method of TObject like
    // Streamer() and ShowMembers().
    R__LOCKGUARD(gInterpreterMutex);
-   if (!fIsOffsetStreamerSet && fClassInfo) {
+   if (!fIsOffsetStreamerSet && HasInterpreterInfo()) {
       // When called via TMapFile (e.g. Update()) make sure that the dictionary
       // gets allocated on the heap and not in the mapped file.
+
       TMmallocDescTemp setreset;
       fIsOffsetStreamerSet = kTRUE;
       fOffsetStreamer = const_cast<TClass*>(this)->GetBaseClassOffset(TObject::Class());
@@ -1972,6 +1973,7 @@ Bool_t TClass::CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t i
       return kTRUE;
    } else {
 
+      if (fCanLoadClassInfo) LoadClassInfo();
       if (fClassInfo) {
 
          if (strcmp(GetName(), "string") == 0) {
@@ -2035,6 +2037,7 @@ Bool_t TClass::CanSplit() const
 //      return kFALSE;
 //   }
 
+
    // If we do not have a showMembers or a fClassInfo and we have a streamer,
    // we are in the case of class that can never be split since it is
    // opaque to us.
@@ -2057,14 +2060,14 @@ Bool_t TClass::CanSplit() const
 
       Int_t stl = -TClassEdit::IsSTLCont(GetName(), 0);
       if ((stl==ROOT::kSTLmap || stl==ROOT::kSTLmultimap)
-          && valueClass->GetClassInfo()==0)
+          && !valueClass->HasDataMemberInfo()==0)
       {
          return kFALSE;
       }
 
       return kTRUE;
 
-   } else if ((GetShowMembersWrapper()==0 && fClassInfo==0) && GetStreamer()!=0) {
+   } else if ((GetShowMembersWrapper()==0 && !HasDataMemberInfo()) && GetStreamer()!=0) {
 
       // We do NOT have a collection.  The class is true opaque.
       return kFALSE;
@@ -2168,7 +2171,7 @@ void TClass::Draw(Option_t *option)
    // Member functions overridden by B are shown in class A with a blue line
    // erasing the corresponding member function
 
-   if (!fClassInfo) return;
+   if (!HasInterpreterInfo()) return;
 
    TVirtualPad *padsav = gPad;
 
@@ -2326,7 +2329,7 @@ TClass *TClass::GetBaseClass(const char *classname)
    // check if class name itself is equal to classname
    if (strcmp(GetName(), classname) == 0) return this;
 
-   if (!fClassInfo) return 0;
+   if (!HasDataMemberInfo()) return 0;
 
    // Make sure we deal with possible aliases, we could also have normalized
    // the name.
@@ -2345,7 +2348,7 @@ TClass *TClass::GetBaseClass(const TClass *cl)
    // check if class name itself is equal to classname
    if (cl == this) return this;
 
-   if (!fClassInfo) return 0;
+   if (!HasDataMemberInfo()) return 0;
 
    TObjLink *lnk = GetListOfBases() ? fBase->FirstLink() : 0;
 
@@ -2376,27 +2379,33 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    // check if class name itself is equal to classname
    if (cl == this) return 0;
 
-   if (!fClassInfo) {
-      TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
-      if (!sinfo) return -1;
-      TStreamerElement *element;
-      Int_t offset = 0;
+   if (!fBase) {
+      if (fCanLoadClassInfo) LoadClassInfo();
+      // If the information was not provided by the root pcm files and
+      // if we can not find the ClassInfo, we have to fall back to the
+      // StreamerInfo
+      if (!fClassInfo) {
+         TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
+         if (!sinfo) return -1;
+         TStreamerElement *element;
+         Int_t offset = 0;
 
-      TObjArray &elems = *(sinfo->GetElements());
-      Int_t size = elems.GetLast()+1;
-      for(Int_t i=0; i<size; i++) {
-         element = (TStreamerElement*)elems[i];
-         if (element->IsA() == TStreamerBase::Class()) {
-            TStreamerBase *base = (TStreamerBase*)element;
-            TClass *baseclass = base->GetClassPointer();
-            if (!baseclass) return -1;
-            Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
-            if (subOffset == -2) return -2;
-            if (subOffset != -1) return offset+subOffset;
-            offset += baseclass->Size();
+         TObjArray &elems = *(sinfo->GetElements());
+         Int_t size = elems.GetLast()+1;
+         for(Int_t i=0; i<size; i++) {
+            element = (TStreamerElement*)elems[i];
+            if (element->IsA() == TStreamerBase::Class()) {
+               TStreamerBase *base = (TStreamerBase*)element;
+               TClass *baseclass = base->GetClassPointer();
+               if (!baseclass) return -1;
+               Int_t subOffset = baseclass->GetBaseClassOffsetRecurse(cl);
+               if (subOffset == -2) return -2;
+               if (subOffset != -1) return offset+subOffset;
+               offset += baseclass->Size();
+            }
          }
+         return -1;
       }
-      return -1;
    }
 
    TClass     *c;
@@ -2437,6 +2446,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDer
    // Takes care of multiple inheritance.
 
    R__LOCKGUARD(gInterpreterMutex);
+   // Warning("GetBaseClassOffset","Requires the use of fClassInfo for %s to %s",GetName(),toBase->GetName());
    ClassInfo_t* derived = GetClassInfo();
    ClassInfo_t* base = toBase->GetClassInfo();
    if(derived && base) {
@@ -2456,7 +2466,7 @@ TClass *TClass::GetBaseDataMember(const char *datamember)
 {
    // Return pointer to (base) class that contains datamember.
 
-   if (!fClassInfo) return 0;
+   if (!HasDataMemberInfo()) return 0;
 
    // Check if data member exists in class itself
    TDataMember *dm = GetDataMember(datamember);
@@ -2938,7 +2948,8 @@ TDataMember *TClass::GetDataMember(const char *datamember) const
 {
    // Return pointer to datamember object with name "datamember".
 
-   if (!fClassInfo || datamember == 0) return 0;
+   if ((!(fData && fData->IsLoaded()) && !HasInterpreterInfo())
+       || datamember == 0) return 0;
 
    // Strip off leading *'s and trailing [
    const char *start_name = datamember;
@@ -3135,7 +3146,7 @@ TRealData* TClass::GetRealData(const char* name) const
 //______________________________________________________________________________
 TFunctionTemplate *TClass::GetFunctionTemplate(const char *name)
 {
-   if (!gInterpreter || !fClassInfo) return 0;
+   if (!gInterpreter || !HasInterpreterInfo()) return 0;
 
    // The following
    if (!fFuncTemplate) fFuncTemplate = new TListOfFunctionTemplates(this);
@@ -3165,6 +3176,7 @@ TList *TClass::GetListOfBases()
    // Return list containing the TBaseClass(es) of a class.
 
    if (!fBase) {
+      if (fCanLoadClassInfo) LoadClassInfo();
       if (!fClassInfo) return 0;
 
       if (!gInterpreter)
@@ -3280,7 +3292,7 @@ void TClass::GetMenuItems(TList *list)
 {
    // Returns list of methods accessible by context menu.
 
-   if (!fClassInfo) return;
+   if (!HasInterpreterInfo()) return;
 
    // get the base class
    TIter nextBase(GetListOfBases(), kIterBackward);
@@ -3545,7 +3557,7 @@ void TClass::Move(void *arenaFrom, void *arenaTo) const
    // constructor), this function should also perform the data move.
    // For now we just information the repository.
 
-   if (!fClassInfo && !fCollectionProxy) {
+   if ((GetState() <= kEmulated) && !fCollectionProxy) {
       MoveAddressInRepository("TClass::Move",arenaFrom,arenaTo,this);
    }
 }
@@ -3581,7 +3593,7 @@ TMethod *TClass::GetMethodAny(const char *method)
    // Has the side effect of loading all the TMethod object in the list
    // of the class.
 
-   if (!fClassInfo) return 0;
+   if (!HasInterpreterInfo()) return 0;
    return (TMethod*) GetListOfMethods()->FindObject(method);
 }
 
@@ -3591,7 +3603,7 @@ TMethod *TClass::GetMethodAllAny(const char *method)
    // Return pointer to method without looking at parameters.
    // Does look in all base classes.
 
-   if (!fClassInfo) return 0;
+   if (!HasInterpreterInfo()) return 0;
 
    TMethod* m = GetMethodAny(method);
    if (m) return m;
@@ -3619,6 +3631,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
    // in the class itself or in its base classes. Returns 0 in case method
    // is not found.
 
+   if (fCanLoadClassInfo) LoadClassInfo();
    if (!fClassInfo) return 0;
 
    if (!gInterpreter)
@@ -3644,6 +3657,7 @@ TMethod *TClass::GetMethod(const char *method, const char *params,
 //______________________________________________________________________________
 TMethod* TClass::FindClassOrBaseMethodWithId(DeclId_t declId) {
    // Find a method with decl id in this class or its bases.
+
    TFunction *f = GetMethodList()->Get(declId);
    if (f) return (TMethod*)f;
 
@@ -3667,6 +3681,7 @@ TMethod *TClass::GetMethodWithPrototype(const char *method, const char *proto,
    // Find the method with a given prototype. The proto string must be of the
    // form: "char*,int,double". Returns 0 in case method is not found.
 
+   if (fCanLoadClassInfo) LoadClassInfo();
    if (!fClassInfo) return 0;
 
    if (!gInterpreter)
@@ -3691,7 +3706,7 @@ TMethod *TClass::GetClassMethod(Long_t faddr)
    // Look for a method in this class that has the interface function
    // address faddr.
 
-   if (!fClassInfo) return 0;
+   if (!HasInterpreterInfo()) return 0;
 
    TMethod *m;
    TIter    next(GetListOfMethods());
@@ -3711,6 +3726,7 @@ TMethod *TClass::GetClassMethod(const char *name, const char* params,
    // Returns 0 in case method is not found.
    // See TClass::GetMethod to also search the base classes.
 
+   if (fCanLoadClassInfo) LoadClassInfo();
    if (!fClassInfo) return 0;
 
    if (!gInterpreter)
@@ -3736,6 +3752,7 @@ TMethod *TClass::GetClassMethodWithPrototype(const char *name, const char* proto
    // form: "char*,int,double". Returns 0 in case method is not found.
    // See TClass::GetMethodWithPrototype to also search the base classes.
 
+   if (fCanLoadClassInfo) LoadClassInfo();
    if (!fClassInfo) return 0;
 
    if (!gInterpreter)
@@ -3760,7 +3777,7 @@ Int_t TClass::GetNdata()
    // Note that in case the list of data members is not yet created, it will be done
    // by GetListOfDataMembers().
 
-   if (!fClassInfo) return 0;
+   if (!HasDataMemberInfo()) return 0;
 
    TList *lm = GetListOfDataMembers();
    if (lm)
@@ -3779,7 +3796,7 @@ Int_t TClass::GetNmethods()
    // number of currently loaded methods use:
    //    cl->GetListOfMethods(false)->GetSize();
 
-   if (!fClassInfo) return 0;
+   if (!HasInterpreterInfo()) return 0;
 
    TList *lm = GetListOfMethods();
    if (lm)
@@ -3843,7 +3860,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfo(Int_t version /* = 0 */) const
       if (gDebug > 0) {
          printf("Creating StreamerInfo for class: %s, version: %d\n", GetName(), fClassVersion);
       }
-      if (fClassInfo || fCollectionProxy) {
+      if (HasDataMemberInfo() || fCollectionProxy) {
          // If we do not have a StreamerInfo for this version and we do not
          // have dictionary information nor a proxy, there is nothing to build!
          //
@@ -4057,7 +4074,7 @@ Bool_t TClass::InheritsFrom(const TClass *cl) const
    if (!cl) return kFALSE;
    if (cl == this) return kTRUE;
 
-   if (!fClassInfo) {
+   if (!HasDataMemberInfo()) {
       TVirtualStreamerInfo *sinfo = ((TClass *)this)->GetCurrentStreamerInfo();
       if (sinfo==0) sinfo = GetStreamerInfo();
       TIter next(sinfo->GetElements());
@@ -4086,7 +4103,7 @@ void *TClass::DynamicCast(const TClass *cl, void *obj, Bool_t up)
 
    if (cl == this) return obj;
 
-   if (!fClassInfo) return 0;
+   if (!HasDataMemberInfo()) return 0;
 
    Int_t off;
    if ((off = GetBaseClassOffset(cl)) != -1) {
@@ -4154,7 +4171,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
       // not generated by rootcint.  Let's try to
@@ -4171,7 +4188,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
@@ -4182,7 +4199,7 @@ void *TClass::New(ENewType defConstructor, Bool_t quiet) const
          //Error("New", "cannot create object of class %s version %d", GetName(), fClassVersion);
          Error("New", "cannot create object of class %s", GetName());
       }
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4244,7 +4261,7 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
       // not generated by rootcint.  Let's try to
@@ -4260,14 +4277,14 @@ void *TClass::New(void *arena, ENewType defConstructor) const
       if (!p) {
          Error("New with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       fgCallingNew = defConstructor;
       p = fCollectionProxy->New(arena);
       fgCallingNew = kRealNew;
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4328,7 +4345,7 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the
       // constructor wrapper, so the dictionary was
       // not generated by rootcint.  Let's try to
@@ -4344,14 +4361,14 @@ void *TClass::NewArray(Long_t nElements, ENewType defConstructor) const
       if (!p) {
          Error("NewArray", "cannot create object of class %s version %d", GetName(), fClassVersion);
       }
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       fgCallingNew = defConstructor;
       p = fCollectionProxy->NewArray(nElements);
       fgCallingNew = kRealNew;
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4411,7 +4428,7 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the constructor wrapper,
       // so the dictionary was not generated by rootcint (it was made either
       // by cint or by some external mechanism).  Let's try to create the
@@ -4427,14 +4444,14 @@ void *TClass::NewArray(Long_t nElements, void *arena, ENewType defConstructor) c
       if (!p) {
          Error("NewArray with placement", "cannot create object of class %s version %d at address %p", GetName(), fClassVersion, arena);
       }
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       fgCallingNew = defConstructor;
       p = fCollectionProxy->NewArray(nElements, arena);
       fgCallingNew = kRealNew;
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4495,7 +4512,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
    } else if ((!dtorOnly) && fDelete) {
       // We have the delete wrapper, use it.
       fDelete(p);
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the
       // destruct/delete wrapper, so the dictionary was
       // not generated by rootcint (it could have been
@@ -4509,12 +4526,12 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       } else {
          gCling->ClassInfo_Delete(fClassInfo,p);
       }
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       fCollectionProxy->Destructor(p, dtorOnly);
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling a
@@ -4610,7 +4627,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
          // We have the array delete wrapper, use it.
          fDeleteArray(ary);
       }
-   } else if (fClassInfo) {
+   } else if (HasInterpreterInfo()) {
       // We have the dictionary but do not have the
       // array delete wrapper, so the dictionary was
       // not generated by rootcint.  Let's try to
@@ -4620,12 +4637,12 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // a destructor we can call.
       R__LOCKGUARD2(gInterpreterMutex);
       gCling->ClassInfo_DeleteArray(GetClassInfo(),ary, dtorOnly);
-   } else if (!fClassInfo && fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && fCollectionProxy) {
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
       fCollectionProxy->DeleteArray(ary, dtorOnly);
-   } else if (!fClassInfo && !fCollectionProxy) {
+   } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
       // use the streamer info to approximate calling the
@@ -4752,7 +4769,7 @@ Int_t TClass::Size() const
 
    if (fSizeof!=-1) return fSizeof;
    if (fCollectionProxy) return fCollectionProxy->Sizeof();
-   if (fClassInfo) return gCling->ClassInfo_Size(GetClassInfo());
+   if (HasInterpreterInfo()) return gCling->ClassInfo_Size(GetClassInfo());
    return GetStreamerInfo()->GetSize();
 }
 
@@ -4782,6 +4799,24 @@ TClass *TClass::Load(TBuffer &b)
 
    delete [] s;
    return cl;
+}
+
+//______________________________________________________________________________
+void TClass::LoadClassInfo() const
+{
+   // Try to load the classInfo (it may require parsing the header file
+   // and/or loading data from the clang pcm).
+
+   R__ASSERT(fCanLoadClassInfo);
+
+   R__LOCKGUARD(gInterpreterMutex);
+
+   // gInterpreter->AutoParseHeader(for this)
+   if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
+   if (!fClassInfo) {
+      ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
+   }
+   fCanLoadClassInfo = kFALSE;
 }
 
 //______________________________________________________________________________
@@ -4893,7 +4928,7 @@ void TClass::PostLoadCheck()
    {
       SetClassVersion(-1);
    }
-   else if (IsLoaded() && fClassInfo && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
+   else if (IsLoaded() && HasDataMemberInfo() && fStreamerInfo && (!IsForeign()||fClassVersion>1) )
    {
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)(fStreamerInfo->At(fClassVersion));
       // Here we need to check whether this TVirtualStreamerInfo (which presumably has been
@@ -4981,9 +5016,9 @@ Long_t TClass::Property() const
       kl->fStreamerImpl  = &TClass::StreamerTObject;
    }
 
-   if (fClassInfo) {
+   if (HasInterpreterInfo()) {
 
-      kl->fProperty = gCling->ClassInfo_Property(fClassInfo);
+      kl->fProperty = gCling->ClassInfo_Property(GetClassInfo());
 
       // This code used to use ClassInfo_Has|IsValidMethod but since v6
       // they return true if the routine is defined in the class or any of
@@ -5974,7 +6009,7 @@ Bool_t TClass::HasDefaultConstructor() const
 
    if (fNew) return kTRUE;
 
-   if (GetClassInfo()) {
+   if (HasInterpreterInfo()) {
       R__LOCKGUARD(gInterpreterMutex);
       return gCling->ClassInfo_HasDefaultConstructor(GetClassInfo());
    }
