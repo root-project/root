@@ -1406,7 +1406,8 @@ DABC.RootDrawElement.prototype.IsObjectDraw = function()
 {
    // returns true when normal ROOT drawing should be used
    // when false, streamer info drawing is applied
-   return this.json || (this.sinfo!=null); 
+   if (this.json) return this.itemname.indexOf("StreamerInfo")<0;
+   return this.sinfo!=null; 
 }
 
 DABC.RootDrawElement.prototype.CreateFrames = function(topid, id) {
@@ -1498,8 +1499,21 @@ DABC.RootDrawElement.prototype.DrawObject = function() {
 
          // if (this.painter)  console.log("painter is created");
       }
+   } else 
+   if (this.json) {
+      
+      // we create sinfo similar to the file itself
+      var sinfo = {};
+      for (var i=0;i<this.obj.arr.length;i++) {
+         sinfo[this.obj.arr[i].fName] = this.obj.arr[i];
+      }
+
+      // when doing binary exchanhe, object is gFile 
+      JSROOTPainter.displayStreamerInfos(sinfo, "#" + this.frameid);
    } else {
+      // when doing binary exchanhe, object is gFile 
       JSROOTPainter.displayStreamerInfos(this.obj.fStreamerInfos, "#" + this.frameid);
+   
    }
    
    this.first_draw = false;
@@ -1563,7 +1577,7 @@ DABC.RootDrawElement.prototype.RequestCallback = function(arg) {
       this.raw_data_size = arg.length;
       
       if (obj && ('_typename' in obj)) {
-         // console.log("Get JSON object of " + this.obj['_typename']);
+         // console.log("Get JSON object of " + obj['_typename']);
          
          if (this.painter && this.painter.UpdateObject(obj)) {
             // if painter accepted object update, we need later just redraw frame

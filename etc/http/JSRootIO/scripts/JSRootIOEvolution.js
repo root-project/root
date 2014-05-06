@@ -531,10 +531,10 @@ var kClassMask = 0x80000000;
             
             // console.log("name = " + streamerinfo['name']);
             
-            streamerinfo['checksum'] = this.ntou4();
-            streamerinfo['classversion'] = this.ntou4();
+            streamerinfo['fCheckSum'] = this.ntou4();
+            streamerinfo['fClassVersion'] = this.ntou4();
             
-            streamerinfo['elements'] = this.ReadObjectAny();
+            streamerinfo['fElements'] = this.ReadObjectAny();
          }
          return this.CheckBytecount(R__v, "ReadTStreamerInfo");
       };
@@ -544,8 +544,8 @@ var kClassMask = 0x80000000;
 
          var R__v = this.ReadVersion();
          this.ReadTNamed(element);
-         element['name'] = element['fName'];
-         element['title'] = element['fTitle'];
+         element['name'] = element['fName']; // TODO - should be removed
+         element['title'] = element['fTitle']; // TODO - should be removed
          element['type'] = this.ntou4(); 
          element['size'] = this.ntou4();
          element['length'] = this.ntou4();
@@ -556,7 +556,8 @@ var kClassMask = 0x80000000;
          } else {
             element['maxindex'] = this.ReadFastArray(5, 'U');
          }
-         element['typename'] = this.ReadTString();
+         element['fTypeName'] = this.ReadTString();
+         element['typename'] = element['fTypeName']; // TODO - should be removed  
          if ((element['type'] == 11) && (element['typename'] == "Bool_t" ||
               element['typename'] == "bool"))
             element['type'] = 18;
@@ -1764,25 +1765,25 @@ var kClassMask = 0x80000000;
          if (typeof(s_i) === 'undefined') return null;
          
          this.fStreamers[clname] = new JSROOTIO.TStreamer(this);
-         if (typeof(s_i['elements']) != 'undefined') {
-            var n_el = s_i['elements']['arr'].length;
+         if (typeof(s_i['fElements']) != 'undefined') {
+            var n_el = s_i['fElements']['arr'].length;
             for (var j=0;j<n_el;++j) {
-               var element = s_i['elements']['arr'][j];
+               var element = s_i['fElements']['arr'][j];
                if (element['typename'] === 'BASE') {
                   // generate streamer for the base classes
                   this.GetStreamer(element['name']);
                }
             }
          }
-         if (typeof(s_i['elements']) != 'undefined') {
-            var n_el = s_i['elements']['arr'].length;
+         if (typeof(s_i['fElements']) != 'undefined') {
+            var n_el = s_i['fElements']['arr'].length;
             for (var j=0;j<n_el;++j) {
                // extract streamer info for each class member
-               var element = s_i['elements']['arr'][j];
+               var element = s_i['fElements']['arr'][j];
                var streamer = {};
                streamer['typename'] = element['typename'];
                streamer['class']    = element['name'];
-               streamer['cntname']  = s_i['elements']['arr'][j]['countName'];
+               streamer['cntname']  = s_i['fElements']['arr'][j]['countName'];
                streamer['type']     = element['type'];
                streamer['length']   = element['length'];
                

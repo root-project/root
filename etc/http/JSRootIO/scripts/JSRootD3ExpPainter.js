@@ -7268,35 +7268,35 @@ var gStyle = {
       var cid = 0;
       var key;
       for (key in streamerInfo) {
-         var entry = streamerInfo[key]['name'];
+         var entry = streamerInfo[key]['fName'];
          d_tree.add(k, 0, entry); k++;
       }
       var j=0;
       for (key in streamerInfo) {
-         if (typeof(streamerInfo[key]['checksum']) != 'undefined')
-            d_tree.add(k, j+1, 'Checksum: ' + streamerInfo[key]['checksum']); ++k;
-         if (typeof(streamerInfo[key]['classversion']) != 'undefined')
-            d_tree.add(k, j+1, 'Class Version: ' + streamerInfo[key]['classversion']); ++k;
-         if (typeof(streamerInfo[key]['title']) != 'undefined')
-            d_tree.add(k, j+1, 'Title: ' + streamerInfo[key]['title']); ++k;
-         if (typeof(streamerInfo[key]['elements']) != 'undefined') {
+         if (typeof(streamerInfo[key]['fCheckSum']) != 'undefined')
+            d_tree.add(k, j+1, 'Checksum: ' + streamerInfo[key]['fCheckSum']); ++k;
+         if (typeof(streamerInfo[key]['fClassVersion']) != 'undefined')
+            d_tree.add(k, j+1, 'Class Version: ' + streamerInfo[key]['fClassVersion']); ++k;
+         if (typeof(streamerInfo[key]['fTitle']) != 'undefined')
+            d_tree.add(k, j+1, 'Title: ' + streamerInfo[key]['fTitle']); ++k;
+         if (typeof(streamerInfo[key]['fElements']) != 'undefined') {
             d_tree.add(k, j+1, 'Elements'); pid=k; ++k;
-            for (var l=0; l<streamerInfo[key]['elements']['arr'].length; ++l) {
-               if (typeof(streamerInfo[key]['elements']['arr'][l]['element']) != 'undefined') {
-                  d_tree.add(k, pid, streamerInfo[key]['elements']['arr'][l]['element']['name']); cid=k; ++k;
-                  d_tree.add(k, cid, streamerInfo[key]['elements']['arr'][l]['element']['title']); ++k;
-                  d_tree.add(k, cid, streamerInfo[key]['elements']['arr'][l]['element']['typename']); ++k;
+            for (var l=0; l<streamerInfo[key]['fElements']['arr'].length; ++l) {
+               if (typeof(streamerInfo[key]['fElements']['arr'][l]['element']) != 'undefined') {
+                  d_tree.add(k, pid, streamerInfo[key]['fElements']['arr'][l]['element']['fName']); cid=k; ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['fElements']['arr'][l]['element']['fTitle']); ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['fElements']['arr'][l]['element']['fTypeName']); ++k;
                }
-               else if (typeof(streamerInfo[key]['elements']['arr'][l]['name']) != 'undefined') {
-                  d_tree.add(k, pid, streamerInfo[key]['elements']['arr'][l]['name']); cid=k; ++k;
-                  d_tree.add(k, cid, streamerInfo[key]['elements']['arr'][l]['title']); ++k;
-                  d_tree.add(k, cid, streamerInfo[key]['elements']['arr'][l]['typename']); ++k;
+               else if (typeof(streamerInfo[key]['fElements']['arr'][l]['fName']) != 'undefined') {
+                  d_tree.add(k, pid, streamerInfo[key]['fElements']['arr'][l]['fName']); cid=k; ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['fElements']['arr'][l]['fTitle']); ++k;
+                  d_tree.add(k, cid, streamerInfo[key]['fElements']['arr'][l]['fTypeName']); ++k;
                }
             }
          }
-         else if (typeof(streamerInfo[key]['elements']) != 'undefined') {
-            for (var l=0; l<streamerInfo[key]['elements']['arr'].length; ++l) {
-               d_tree.add(k, j+1, streamerInfo[key]['elements']['arr'][l]['str']); ++k;
+         else if (typeof(streamerInfo[key]['fElements']) != 'undefined') {
+            for (var l=0; l<streamerInfo[key]['fElements']['arr'].length; ++l) {
+               d_tree.add(k, j+1, streamerInfo[key]['fElements']['arr'][l]['str']); ++k;
             }
          }
          ++j;

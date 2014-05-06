@@ -914,8 +914,8 @@ void TBufferJSON::ClassMember(const char* name, const char* typeName, Int_t arrs
       elem = new TStreamerBasicType(name, "title", 0, typ_id, typeName);
    }
    else if ((typ_id==TStreamerInfo::kObject) ||
-       (typ_id==TStreamerInfo::kTObject) ||
-       (typ_id==TStreamerInfo::kTNamed)) {
+            (typ_id==TStreamerInfo::kTObject) ||
+            (typ_id==TStreamerInfo::kTNamed)) {
       elem = new TStreamerObject(name, "title", 0, tname.Data());
    }
    else if (typ_id==TStreamerInfo::kObjectp) {
