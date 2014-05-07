@@ -83,10 +83,15 @@ long InterpOffsetTClassInfoInterface(void* obj, const char* fromDerivedClassName
 template <typename DERIVED, typename TARGET>
 void CheckFor(DERIVED* obj,
               const char* fromDerivedClassName, const char* toBaseClassName) {
-   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-          fromDerivedClassName, toBaseClassName,
-          CompOffset<DERIVED, TARGET>(obj),
-          InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName));
+   auto compilerOffset = CompOffset<DERIVED, TARGET>(obj);
+   auto interpreterOffset = InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName);
+   if(compilerOffset == interpreterOffset) {
+      printf("derived %s -> base %s: Compiler agrees with TClass.\n",
+             fromDerivedClassName, toBaseClassName);
+   } else {
+      printf("derived %s -> base %s: Compiler %ld does not agrees with TClass %ld.\n",
+             fromDerivedClassName, toBaseClassName, compilerOffset, interpreterOffset);
+   }
 }
 
 template <typename DERIVED, typename TARGET>
@@ -114,10 +119,15 @@ void CheckForNotDerived(TARGET* obj,
 template <typename DERIVED, typename TARGET>
 void CheckForWithClassInfo(DERIVED* obj,
               const char* fromDerivedClassName, const char* toBaseClassName) {
-   printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-          fromDerivedClassName, toBaseClassName,
-          CompOffset<DERIVED, TARGET>(obj),
-          InterpOffsetTClassInfoInterface(obj, fromDerivedClassName, toBaseClassName));
+   auto compilerOffset = CompOffset<DERIVED, TARGET>(obj);
+   auto interpreterOffset = InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName);
+   if(compilerOffset == interpreterOffset) {
+      printf("derived %s -> base %s: Compiler agrees with TClass.\n",
+             fromDerivedClassName, toBaseClassName);
+   } else {
+      printf("derived %s -> base %s: Compiler %ld does not agrees with TClass %ld.\n",
+             fromDerivedClassName, toBaseClassName, compilerOffset, interpreterOffset);
+   }
 }
 
 void runvbase() {
