@@ -1192,21 +1192,21 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
 //       This option makes sense only for profile filled with all weights =1. 
 //       When the profile is weighted (filled with weights different than 1) the  
 //       bin error of the projected histogram (obtained using this option "W") cannot be 
-//       correctly computed from the information stored in the profile. 
+//       correctly computed from the information stored in the profile. In that case the 
+//       obtained histogram contains as bin error square the weighted sum of the square of the 
+//       profiled observable (TProfile2D::fSumw2[bin] ) 
 
 
    TString opt = option;
    opt.ToLower();
    
-
-
    // Create the projection histogram
-   char *pname = (char*)name;
-   if (strcmp(name,"_px") == 0) {
-      Int_t nch = strlen(GetName()) + 4;
-      pname = new char[nch];
-      snprintf(pname,nch,"%s%s",GetName(),name);
-   }
+   // name of projected histogram is by default name of orginal histogram + _pxy
+   TString pname(name); 
+   if (pname.IsNull() || pname == "_pxy")
+      pname = TString(GetName() ) + TString("_pxy"); 
+
+
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
    const TArrayD *xbins = fXaxis.GetXbins();
@@ -1229,8 +1229,7 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
    if (opt.Contains("e")) computeErrors = kTRUE;
    if (opt.Contains("w")) binWeight = kTRUE;
    if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-   if (computeErrors || binWeight ) h1->Sumw2();
-   if (pname != name)  delete [] pname;
+   if (computeErrors || binWeight || (binEntries && fBinSumw2.fN)  ) h1->Sumw2();
 
    // Fill the projected histogram
    Int_t bin,binx, biny;
@@ -1250,21 +1249,136 @@ TH2D *TProfile2D::ProjectionXY(const char *name, Option_t *option) const
          if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
          // in case of option W bin error is deduced from bin sum of z**2 values of profile
          // this is correct only if the profile is unweighted 
-         if (binWeight)      h1->SetBinError(bin , TMath::Sqrt(fSumw2.fArray[bin] ) );
-         // in case of bin entries and h1 has sumw2 set set, we need to set the also bin error
-         if (binEntries && h1->GetSumw2() ) {
-            Double_t err2;
-            if (fBinSumw2.fN) 
-               err2 = fBinSumw2.fArray[bin]; 
-            else 
-               err2 = cont;  // this is fBinEntries.fArray[bin]
-            h1->SetBinError(bin, TMath::Sqrt(err2 ) ); 
+         if (binWeight)      h1->GetSumw2()->fArray[bin] = fSumw2.fArray[bin];
+         // in case of bin entries and profile is weighted, we need to set also the bin error
+         if (binEntries && fBinSumw2.fN ) {
+            R__ASSERT(  h1->GetSumw2() );
+            h1->GetSumw2()->fArray[bin] =  fBinSumw2.fArray[bin]; 
          }
       }
    }
    h1->SetEntries(fEntries);
    return h1;
 }
+
+//______________________________________________________________________________
+TProfile *TProfile2D::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Option_t *option) const
+{
+   // *-*-*-*-*Project a 2-D histogram into a profile histogram along X*-*-*-*-*-*
+   // *-*      ========================================================
+   //
+   //   The projection is made from the channels along the Y axis
+   //   ranging from firstybin to lastybin included.
+   //   The result is a 1D profile which contains the combination of all the considered bins along Y
+   //   By default, bins 1 to ny are included
+   //   When all bins are included, the number of entries in the projection
+   //   is set to the number of entries of the 2-D histogram, otherwise
+   //   the number of entries is incremented by 1 for all non empty cells.
+   //
+   //   The option can also be used to specify the projected profile error type.
+   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+   //
+   //
+   return DoProfile(true, name, firstybin, lastybin, option);
+}
+
+//______________________________________________________________________________
+TProfile *TProfile2D::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Option_t *option) const
+{
+   // *-*-*-*-*Project a 2-D histogram into a profile histogram along X*-*-*-*-*-*
+   // *-*      ========================================================
+   //
+   //   The projection is made from the channels along the X axis
+   //   ranging from firstybin to lastybin included.
+   //   The result is a 1D profile which contains the combination of all the considered bins along X
+   //   By default, bins 1 to ny are included
+   //   When all bins are included, the number of entries in the projection
+   //   is set to the number of entries of the 2-D histogram, otherwise
+   //   the number of entries is incremented by 1 for all non empty cells.
+   //
+   //   The option can also be used to specify the projected profile error type.
+   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+   //
+   //
+   //
+   return DoProfile(false, name, firstxbin, lastxbin, option);
+}
+
+//______________________________________________________________________________
+TProfile * TProfile2D::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const { 
+   // implementation of ProfileX or ProfileY for a TProfile2D
+   // Do correctly the combination of the bin averages when doing the projection
+
+   TString opt = option;
+   opt.ToLower();
+   bool originalRange = opt.Contains("o");
+
+   TString expectedName = ( onX ? "_pfx" : "_pfy" );
+
+   TString pname(name); 
+   if (pname.IsNull() || name == expectedName)
+      pname = TString(GetName() ) + expectedName; 
+
+   const TAxis& outAxis = ( onX ? fXaxis : fYaxis );
+   const TArrayD *bins = outAxis.GetXbins();
+   Int_t firstOutBin = outAxis.GetFirst();
+   Int_t lastOutBin = outAxis.GetLast();
+
+   TProfile  * p1 = 0; 
+   // case of fixed bins 
+   if (bins->fN == 0) {
+      if (originalRange)  
+         p1 =  new TProfile(pname,GetTitle(), outAxis.GetNbins(), outAxis.GetXmin(), outAxis.GetXmax(), opt );
+      else 
+         p1 =  new TProfile(pname,GetTitle(), lastOutBin-firstOutBin+1,
+                            outAxis.GetBinLowEdge(firstOutBin),outAxis.GetBinUpEdge(lastOutBin), opt);
+   } else { 
+      // case of variable bins 
+      if (originalRange )
+         p1 = new TProfile(pname,GetTitle(),outAxis.GetNbins(),bins->fArray,opt);
+      else
+         p1 = new TProfile(pname,GetTitle(),lastOutBin-firstOutBin+1,&bins->fArray[firstOutBin-1],opt);
+
+   }
+
+   if (fBinSumw2.fN) p1->Sumw2(); 
+
+   // make projection in a 2D first 
+   TH2D * h2dW = ProjectionXY("h2temp-W","W");
+   TH2D * h2dN = ProjectionXY("h2temp-N","B");
+
+   h2dW->SetDirectory(0); h2dN->SetDirectory(0);
+
+       
+   TString opt1 = (originalRange) ? "o" : "";
+   TH1D * h1W = (onX) ? h2dW->ProjectionX("h1temp-W",firstbin,lastbin,opt1) : h2dW->ProjectionY("h1temp-W",firstbin,lastbin,opt1);
+   TH1D * h1N = (onX) ? h2dN->ProjectionX("h1temp-N",firstbin,lastbin,opt1) : h2dN->ProjectionY("h1temp-N",firstbin,lastbin,opt1);
+   h1W->SetDirectory(0); h1N->SetDirectory(0);
+
+
+   // fill the bin content
+   R__ASSERT( h1W->fN == p1->fN ); 
+   R__ASSERT( h1N->fN == p1->fN ); 
+   R__ASSERT( h1W->GetSumw2()->fN != 0); // h1W should always be a weighted histogram since h2dW is
+   for (int i = 0; i < p1->fN ; ++i) {
+      p1->fArray[i] = h1W->GetBinContent(i);   // array of profile is sum of all values
+      p1->GetSumw2()->fArray[i]  = h1W->GetSumw2()->fArray[i];   // array of content square of profile is weight square of the W projected histogram
+      p1->SetBinEntries(i, h1N->GetBinContent(i) );          
+      if (fBinSumw2.fN) p1->GetBinSumw2()->fArray[i] = h1N->GetSumw2()->fArray[i];    // sum of weight squares are stored to compute errors in h1N histogram
+   }
+   // delete the created histograms
+   delete h2dW; 
+   delete h2dN; 
+   delete h1W; 
+   delete h1N; 
+
+   // Also we need to set the entries since they have not been correctly calculated during the projection
+   // we can only set them to the effective entries
+   p1->SetEntries( p1->GetEffectiveEntries() );
+
+   return p1; 
+}
+
 
 //______________________________________________________________________________
 void TProfile2D::PutStats(Double_t *stats)
