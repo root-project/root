@@ -1406,20 +1406,25 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
       return;
    }
 
-   ri = (Int_t)(255*r);
-   gi = (Int_t)(255*g);
-   bi = (Int_t)(255*b);
-   cname.Form("#%02x%02x%02x", ri, gi, bi);
-
    if (gROOT->ClassSaved(TColor::Class())) {
       out << std::endl;
    } else {
       out << std::endl;
-      out << "   Int_t ci;   // for color index setting" << std::endl;
+      out << "   Int_t ci;      // for color index setting" << std::endl;
+      out << "   TColor *color; // for color definition with alpha" << std::endl;
    }
 
-   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
-   if (a<1) out<<"   gROOT->GetColor(ci)->SetAlpha("<<a<<");"<<std::endl;
+   if (a<1) {
+      out<<"   ci = "<<ci<<";"<<std::endl;
+      out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
+      <<"\" \", "<<a<<");"<<std::endl;
+   } else {
+      ri = (Int_t)(255*r);
+      gi = (Int_t)(255*g);
+      bi = (Int_t)(255*b);
+      cname.Form("#%02x%02x%02x", ri, gi, bi);
+      out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
+   }
 }
 
 
