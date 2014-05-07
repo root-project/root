@@ -1370,7 +1370,7 @@ void TGColorDialog::CloseWindow()
    //OpenGL + XQuartz on Mac: gl context and related resources
    //must be deleted _before_ UnmapWindow.
    if (gVirtualX->InheritsFrom("TGX11") && fEcanvas->GetCanvas()->UseGL())
-      fEcanvas->GetCanvas()->DeleteGLPainter();
+      fEcanvas->GetCanvas()->DeleteCanvasPainter();
    
    UnmapWindow();
 }
