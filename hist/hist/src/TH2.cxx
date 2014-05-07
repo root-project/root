@@ -2174,7 +2174,7 @@ TProfile *TH2::ProfileX(const char *name, Int_t firstybin, Int_t lastybin, Optio
    //
    //   if option "d" is specified, the profile is drawn in the current pad.
    //
-   //   if option "o" original axis range of the taget axes will be
+   //   if option "o" original axis range of the target axes will be
    //   kept, but only bins inside the selected range will be filled.
    //
    //   The option can also be used to specify the projected profile error type.

@@ -8477,18 +8477,23 @@ bool testTH3toTH2()
 static const double centre_deviation = 0.3;
 
 
-class ProjectionTester {
+struct ProjectionTester {
    // This class implements the tests for all types of projections of
    // all the classes tested in this file.
 
 
-private:
+//public:
    static const unsigned int binsizeX =  8;
    static const unsigned int binsizeY = 10;
    static const unsigned int binsizeZ = 12;
    static const int lower_limit = 0;
    static const int upper_limit = 10;
-
+   static const int lower_limitX = 0;
+   static const int upper_limitX = 10;
+   static const int lower_limitY = -5;
+   static const int upper_limitY = 10;
+   static const int lower_limitZ = -10;
+   static const int upper_limitZ = 10;
 
    TH3D* h3;
    TH2D* h2XY;
@@ -8532,7 +8537,21 @@ private:
    TH1D* hw1YZ;
    TH1D* hw1ZX;
    TH1D* hw1ZY;
-   
+
+   TProfile3D* p3; 
+
+   TProfile2D* p2XY;
+   TProfile2D* p2XZ;
+   TProfile2D* p2YX;
+   TProfile2D* p2YZ;
+   TProfile2D* p2ZX;
+   TProfile2D* p2ZY;
+
+   TProfile* p1X;
+   TProfile* p1Y;
+   TProfile* p1Z;
+
+
    THnSparseD* s3;
    THnD* n3;
 
@@ -8540,12 +8559,14 @@ private:
 
    
 public:
-   ProjectionTester()
+
+   ProjectionTester(bool useWeights = false)
    {
+      buildWithWeights = useWeights;
+      CreateProfiles();
       CreateHistograms();
-      buildWithWeights = false;
    }
-   
+
    void CreateHistograms()
    {
       h3 = new TH3D("h3","h3", binsizeX, lower_limit, upper_limit, 
@@ -8587,7 +8608,7 @@ public:
       pe2ZX = new TProfile2D("pe2ZX", "pe2ZX", binsizeZ, lower_limit, upper_limit, 
                                                binsizeX, lower_limit, upper_limit);
       pe2ZY = new TProfile2D("pe2ZY", "pe2ZY", binsizeZ, lower_limit, upper_limit, 
-                                               binsizeY, lower_limit, upper_limit);
+                                              binsizeY, lower_limit, upper_limit);
       
       h2wXY = new TH2D("h2wXY", "h2wXY", binsizeX, lower_limit, upper_limit, 
                                          binsizeY, lower_limit, upper_limit);
@@ -8635,6 +8656,32 @@ public:
       Double_t xmax[] = {upper_limit, upper_limit, upper_limit};
       s3 = new THnSparseD("s3","s3", 3, bsize, xmin, xmax);
       n3 = new THnD("n3","n3", 3, bsize, xmin, xmax);
+
+   }
+
+   void CreateProfiles() { 
+
+      // create Profile histograms
+      p3 = new TProfile3D("p3","p3", binsizeX, lower_limitX, upper_limitX, 
+                          binsizeY, lower_limitY, upper_limitY, 
+                          binsizeZ, lower_limitZ, upper_limitZ);
+    
+      p2XY = new TProfile2D("p2XY", "p2XY", binsizeX, lower_limitX, upper_limitX, 
+                             binsizeY, lower_limitY, upper_limitY);  
+      p2XZ = new TProfile2D("p2XZ", "p2XZ", binsizeX, lower_limitX, upper_limitX, 
+                             binsizeZ, lower_limitZ, upper_limitZ);
+      p2YX = new TProfile2D("p2YX", "p2YX", binsizeY, lower_limitY, upper_limitY, 
+                             binsizeX, lower_limitX, upper_limitX);
+      p2YZ = new TProfile2D("p2YZ", "p2YZ", binsizeY, lower_limitY, upper_limitY, 
+                             binsizeZ, lower_limitZ, upper_limitZ);
+      p2ZX = new TProfile2D("p2ZX", "p2ZX", binsizeZ, lower_limitZ, upper_limitZ, 
+                             binsizeX, lower_limitX, upper_limitX);
+      p2ZY = new TProfile2D("p2ZY", "p2ZY", binsizeZ, lower_limitZ, upper_limitZ,     
+                             binsizeY, lower_limitY, upper_limitY);
+
+      p1X = new TProfile("p1X", "pe1X", binsizeX, lower_limitX, upper_limitX);
+      p1Y = new TProfile("p1Y", "pe1Y", binsizeY, lower_limitY, upper_limitY);
+      p1Z = new TProfile("p1Z", "pe1Z", binsizeZ, lower_limitZ, upper_limitZ);
 
    }
    
@@ -8688,6 +8735,20 @@ public:
       delete s3;
       delete n3;
 
+      // profiles
+      delete p3;
+
+      delete p2XY;
+      delete p2XZ;
+      delete p2YX;
+      delete p2YZ;
+      delete p2ZX;
+      delete p2ZY;
+
+      delete p1X; 
+      delete p1Y; 
+      delete p1Z;
+
       // delete all histogram in gROOT
       TList * l = gROOT->GetList(); 
       TIter next(l);
@@ -8705,6 +8766,7 @@ public:
    
    void buildHistograms()
    {
+
       if (h3->GetSumw2N() ) {s3->Sumw2(); n3->Sumw2();}
 
       for ( int ix = 0; ix <= h3->GetXaxis()->GetNbins() + 1; ++ix ) {
@@ -8785,6 +8847,7 @@ public:
 
    void buildHistogramsWithWeights()
    {
+
       s3->Sumw2();
       n3->Sumw2();
 
@@ -8972,6 +9035,7 @@ public:
       buildWithWeights = false;
    }
    
+
    int compareHistograms()
    {
       int status = 0;
@@ -9240,7 +9304,97 @@ public:
 
       return status;
    }
-   
+
+
+   void buildProfiles() { 
+
+      if (buildWithWeights) { 
+         p3->Sumw2(); 
+         p2XY->Sumw2();  p2YX->Sumw2(); p2YZ->Sumw2(); 
+         p2XZ->Sumw2();  p2ZX->Sumw2(); p2ZY->Sumw2(); 
+         p1X->Sumw2(); p1Y->Sumw2(); p1Z->Sumw2(); 
+      }
+
+
+      // use a different way to fill the histogram 
+      for (int i = 0; i < 100000; ++i) { 
+
+         // use in range in X but only overflow in Y and underflow/overflow in Z 
+         double x = gRandom->Uniform(lower_limitX, upper_limitX );
+         double y = gRandom->Uniform(lower_limitY, upper_limitY+2.);
+         double z = gRandom->Uniform(lower_limitZ-1, upper_limitZ+1);
+         double u = TMath::Gaus(x,0,3)*TMath::Gaus(y,3,5)*TMath::Gaus(z,-3,10);
+      
+         double w = 1; 
+         if (buildWithWeights) w += x*x + (y-2)*(y-2) + (z+2)*(z+2);
+      
+         p3->Fill(x,y,z,u,w); 
+
+         p2XY->Fill(x,y,u,w);
+         p2YX->Fill(y,x,u,w);
+         p2XZ->Fill(x,z,u,w);
+         p2ZX->Fill(z,x,u,w);
+         p2YZ->Fill(y,z,u,w);
+         p2ZY->Fill(z,y,u,w);
+         
+         p1X->Fill(x,u,w);
+         p1Y->Fill(y,u,w);
+         p1Z->Fill(z,u,w);         
+
+      }
+
+      // reset the statistics to get same statistics computed from bin centers
+      p1X->ResetStats();
+      p1Y->ResetStats();
+      p1Z->ResetStats();
+
+      p2XY->ResetStats();
+      p2YX->ResetStats();
+      p2XZ->ResetStats();
+      p2ZX->ResetStats();
+      p2YZ->ResetStats();
+      p2ZY->ResetStats();
+   }
+
+
+   // actual test of profile projections
+   int compareProfiles()
+   {
+      int status = 0;
+      int options = 0;
+      
+      // TProfile2d derived from TProfile3d
+      options = cmpOptStats;
+      //options = cmpOptPrint;
+      status += equals("TProfile3D -> XY", p2XY, p3->Project3DProfile("yx"), options);
+      status += equals("TProfile3D -> YX", p2YX, p3->Project3DProfile("xy"), options);
+      status += equals("TProfile3D -> XZ", p2XZ, p3->Project3DProfile("zx"), options);
+      status += equals("TProfile3D -> ZX", p2ZX, p3->Project3DProfile("xz"), options);
+      status += equals("TProfile3D -> YZ", p2YZ, p3->Project3DProfile("zy"), options);
+      status += equals("TProfile3D -> ZY", p2ZY, p3->Project3DProfile("yz"), options);
+      options = 0;
+      if ( defaultEqualOptions & cmpOptPrint )
+         cout << "----------------------------------------------" << endl;
+      
+      // TProfile1 derived from TProfile2D from TProfile3D
+      options = cmpOptStats;
+      //options = cmpOptDebug;
+      TProfile2D* tmp1 = 0;
+      status += equals("TProfile2D -> X", p1X, p2XY->ProfileX(), options);
+      tmp1 = p3->Project3DProfile("xz");
+      status += equals("TProfile3D -> X", p1X, tmp1->ProfileY(), options);
+      delete tmp1; tmp1 = 0;
+      status += equals("TProfile2D -> Y", p1Y, p2ZY->ProfileY(), options);
+      tmp1 = p3->Project3DProfile("xy");
+      status += equals("TProfile3D -> X", p1Y, tmp1->ProfileX(), options);
+      delete tmp1; tmp1 = 0;
+      status += equals("TProfile2D -> Z", p1Z, p2ZX->ProfileX(), options);
+      tmp1 = p3->Project3DProfile("zy");
+      status += equals("TProfile3D -> Z", p1Z, tmp1->ProfileY(), options);
+      delete tmp1; tmp1 = 0;
+
+      return status;
+   } 
 };
 
 int stressHistogram()
@@ -9288,10 +9442,18 @@ int stressHistogram()
    //Ht->buildHistograms(2,4,5,6,8,10);
    status = ht->compareHistograms();
    GlobalStatus += status;
-   printResult("Testing Projections without weights..............................", status);
    delete ht;
+   printResult("Testing Histogram Projections without weights....................", status);
 
-   // Test 2
+   ProjectionTester* htp = new ProjectionTester();
+   htp->buildProfiles(); 
+   status = htp->compareProfiles();
+   GlobalStatus += status;
+   delete htp;
+
+   printResult("Testing Profile Projections without weights......................", status);
+
+   // Test 3-4
    if ( defaultEqualOptions & cmpOptPrint )
       cout << "**********************************\n"
            << "        Test with weights         \n" 
@@ -9302,8 +9464,16 @@ int stressHistogram()
    ht2->buildHistogramsWithWeights();
    status = ht2->compareHistograms();
    GlobalStatus += status;
-   printResult("Testing Projections with weights.................................", status);
+   printResult("Testing Histogram Projections with weights.......................", status);
    delete ht2;
+
+
+   ProjectionTester* htp2 = new ProjectionTester(true);
+   htp2->buildProfiles();
+   status = htp2->compareProfiles();
+   GlobalStatus += status;
+   printResult("Testing Profile   Projections with weights.......................", status);
+   delete htp2;
    
    // Test 3
    // Range Tests
@@ -9465,7 +9635,7 @@ int stressHistogram()
                                                     testLabelsInflateProf1D
    };
    struct TTestSuite labelTestSuite = { numberOfLabel, 
-                                        "Label tests for 1D and 2D Histograms ...........................",
+                                        "Label tests for 1D and 2D Histograms ............................",
                                         labelTestPointer };
 
    // Test 12
@@ -9903,17 +10073,17 @@ int equals(const char* msg, TH1D* h1, TH1D* h2, int options, double ERRORLIMIT)
 
    differents += (bool) equals(h1->GetXaxis()->GetNbins() , h2->GetXaxis()->GetNbins() );
    if (debug) { 
-      cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " ,  " <<  h2->GetXaxis()->GetNbins() << " | " << differents << std::endl;
+      cout << "Nbins  = " << h1->GetXaxis()->GetNbins() << " |  " <<  h2->GetXaxis()->GetNbins() << " | " << differents << std::endl;
    }
 
    differents += (bool) equals(h1->GetXaxis()->GetXmin() , h2->GetXaxis()->GetXmin() );
    if (debug) {
-      cout << "Xmin   = "  << h1->GetXaxis()->GetXmin() << " ,  " <<  h2->GetXaxis()->GetXmin() << " | " << differents << std::endl;
+      cout << "Xmin   = "  << h1->GetXaxis()->GetXmin() << " |  " <<  h2->GetXaxis()->GetXmin() << " | " << differents << std::endl;
    }
 
    differents += (bool) equals(h1->GetXaxis()->GetXmax() , h2->GetXaxis()->GetXmax() );
    if (debug) {
-      cout << "Xmax   = "  << h1->GetXaxis()->GetXmax() << " ,  " <<  h2->GetXaxis()->GetXmax() << endl;
+      cout << "Xmax   = "  << h1->GetXaxis()->GetXmax() << " |  " <<  h2->GetXaxis()->GetXmax() << endl;
    }
    
    for ( int i = 0; i <= h1->GetNbinsX() + 1; ++i )
