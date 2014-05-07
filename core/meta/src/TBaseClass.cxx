@@ -135,6 +135,10 @@ void TBaseClass::Streamer(TBuffer& b) {
       b.ReadClassBuffer(Class(), this);
    } else {
       // Writing.
+      // Calculate cache properties first.
+      GetDelta();
+      Property();
+      IsSTLContainer();
       b.WriteClassBuffer(Class(), this);
    }
 }
