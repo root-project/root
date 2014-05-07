@@ -190,7 +190,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    Bool_t initialLimitsFound = kFALSE;
    Bool_t allSameLimits = kTRUE;
    Bool_t allHaveLimits = kTRUE;
-   Bool_t firstNonEmptyHist = kTRUE;
+//   Bool_t firstNonEmptyHist = kTRUE;
 
    TIter next(&inlist);
    T* h = p;
@@ -198,7 +198,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
    do {
 
       // skip empty histograms 
-      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
+      // if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
@@ -206,6 +206,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
       if (hasLimits) {
          h->BufferEmpty();
 
+#ifdef LATER
          // this is done in case the first histograms are empty and 
          // the histogram have different limits
          if (firstNonEmptyHist ) { 
@@ -220,6 +221,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
             }
             firstNonEmptyHist = kFALSE;     
          }
+#endif
 
          // this is executed the first time an histogram with limits is found
          // to set some initial values on the new axis
