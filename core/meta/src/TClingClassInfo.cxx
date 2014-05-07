@@ -390,8 +390,12 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       // derived class's function overloads (or used, which is fine). Only
       // if there is none will we find those from the base, in which case
       // we will reject them here:
-      if (fd->getDeclContext() != llvm::dyn_cast<clang::DeclContext>(fDecl))
+      const clang::DeclContext* ourDC = llvm::dyn_cast<clang::DeclContext>(fDecl);
+      if (!fd->getDeclContext()->Equals(ourDC)
+          && !(fd->getDeclContext()->isTransparentContext()
+               && fd->getDeclContext()->getParent()->Equals(ourDC)))
          return TClingMethodInfo(fInterp);
+
       // The offset must be 0 - the function must be ours.
       if (poffset) *poffset = 0;
    } else {
