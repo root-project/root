@@ -2957,7 +2957,15 @@ int GenerateFullDict(std::ostream& dictStream,
          // is done and these headers cannot be selected anymore.
          interp.parseForModule("#include \"TStreamerInfo.h\"\n"
                                "#include \"TFile.h\"\n"
-                               "#include \"TObjArray.h\"");
+                               "#include \"TObjArray.h\"\n"
+                               "#include \"TVirtualArray.h\"\n"
+                               "#include \"TStreamerElement.h\"\n"
+                               "#include \"TProtoClass.h\"\n"
+                               "#include \"TBaseClass.h\"\n"
+                               "#include \"TListOfDataMembers.h\"\n"
+                               "#include \"TDataMember.h\"\n"
+                               "#include \"TDictAttributeMap.h\"\n"
+                               );
          if (!CloseStreamerInfoROOTFile()) {
             return 1;
          }
