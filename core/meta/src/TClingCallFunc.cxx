@@ -282,23 +282,7 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
    }
-   if (QT->isArrayType()) {
-      string ar_typedef_name;
-      {
-         ostringstream ar;
-         ar << "AR" << wrapper_serial++;
-         type_name = ar.str();
-         raw_string_ostream OS(ar_typedef_name);
-         QT.print(OS, Policy, type_name);
-         OS.flush();
-      }
-      for (int i = 0; i < indent_level; ++i) {
-         typedefbuf << indent_string;
-      }
-      typedefbuf << "typedef " << ar_typedef_name << ";\n";
-      return;
-   }
-   else if (QT->isFunctionPointerType()) {
+   if (QT->isFunctionPointerType()) {
       string fp_typedef_name;
       {
          ostringstream nm;
@@ -337,6 +321,22 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
    else if (QT->isReferenceType()) {
       isReference = true;
       QT = cast<ReferenceType>(QT)->getPointeeType();
+   }
+   if (QT->isArrayType()) {
+      string ar_typedef_name;
+      {
+         ostringstream ar;
+         ar << "AR" << wrapper_serial++;
+         type_name = ar.str();
+         raw_string_ostream OS(ar_typedef_name);
+         QT.print(OS, Policy, type_name);
+         OS.flush();
+      }
+      for (int i = 0; i < indent_level; ++i) {
+         typedefbuf << indent_string;
+      }
+      typedefbuf << "typedef " << ar_typedef_name << ";\n";
+      return;
    }
    ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
 }
