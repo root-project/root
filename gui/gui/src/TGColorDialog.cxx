@@ -1371,7 +1371,6 @@ void TGColorDialog::CloseWindow()
    //must be deleted _before_ UnmapWindow.
    if (gVirtualX->InheritsFrom("TGX11") && fEcanvas->GetCanvas()->UseGL())
       fEcanvas->GetCanvas()->DeleteGLPainter();
-      
    
    UnmapWindow();
 }
