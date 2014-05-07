@@ -322,6 +322,7 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       isReference = true;
       QT = cast<ReferenceType>(QT)->getPointeeType();
    }
+   // Fall through for the array type to deal with reference/pointer ro array type.
    if (QT->isArrayType()) {
       string ar_typedef_name;
       {
