@@ -123,7 +123,6 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <time.h>
 
 #include "RConfigure.h"
 #include "TTabCom.h"
@@ -428,15 +427,24 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    if (!fpClasses) {
       // generate a text list of classes on disk
 
-      const char* dir = gSystem->TempDirectory();
+      auto dir = gSystem->TempDirectory();
       if (!dir) return 0;
       // The timestamp should be enough as the tab completion is an interactive feature.
       TString outf = dir;
-      time_t currentTime;
-      time(&currentTime);
+      TTime currentTime = gSystem->Now();
       outf += "/.TTabCom-";
-      outf += currentTime;
-      gCling->DisplayClass(outf, (char*)"", 0, 0);
+      outf += currentTime.AsString();
+      // Redirect to the specified file name.
+      std::string buf = ".> ";
+      buf += outf;
+      gCling->ProcessLine(buf.c_str());
+      // Display the classes in the file.
+      gCling->ProcessLine(".class ");
+      // Display the namespaces in the file.
+      gCling->ProcessLine(".namespace");
+      // Unredirect.
+      buf = ".> \n";
+      gCling->ProcessLine(buf.c_str());
 
       // open the file
       std::ifstream file1(outf);
