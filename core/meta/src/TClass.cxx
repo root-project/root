@@ -5394,7 +5394,7 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
 
-         if (code > kWithTypeDef ) {
+         if (code > kWithTypeDef || code == kReflexV5) {
             type = tdm->GetTrueTypeName();
             if (TClassEdit::IsSTLCont(type))
                type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
@@ -5412,7 +5412,11 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
             for (int ii=0;ii<dim;ii++) id = id*3+tdm->GetMaxIndex(ii);
          }
          if (code > kNoRange) {
-            const char *left = strstr(tdm->GetTitle(),"[");
+            const char *left;
+            if (code > TClass::kNoRangeCheck)
+               left = TVirtualStreamerInfo::GetElementCounterStart(tdm->GetTitle());
+            else
+               left = strstr(tdm->GetTitle(),"[");
             if (left) {
                const char *right = strstr(left,"]");
                if (right) {

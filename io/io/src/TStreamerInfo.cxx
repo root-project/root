@@ -344,7 +344,7 @@ void TStreamerInfo::Build()
          //      int n;
          //      double* MyArray; //[n]
          //
-         const char* lbracket = ::strchr(dmTitle, '[');
+         const char* lbracket = TVirtualStreamerInfo::GetElementCounterStart(dmTitle);
          const char* rbracket = ::strchr(dmTitle, ']');
          if (lbracket && rbracket) {
             const char* counterName = dm->GetArrayIndex();
@@ -2981,7 +2981,7 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      if (code <= TClass::kWithTypeDef ) {
+      if (code <= TClass::kWithTypeDef && code != TClass::kReflexV5) {
          // humm ... In the streamerInfo we only have the desugared/normalized
          // names, so we are unable to calculate the name with typedefs ...
          // except for the case of the ROOT typedef (Int_t, etc.) which are
@@ -3006,7 +3006,11 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
 
       if (code > TClass::kNoRange) {
-         const char *left = strstr(el->GetTitle(),"[");
+         const char *left;
+         if (code > TClass::kNoRangeCheck)
+            left = TVirtualStreamerInfo::GetElementCounterStart(el->GetTitle());
+         else
+            left = strstr(el->GetTitle(),"[");
          if (left) {
             const char *right = strstr(left,"]");
             if (right) {

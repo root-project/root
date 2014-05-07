@@ -87,6 +87,26 @@ Bool_t TVirtualStreamerInfo::CanOptimize()
 }
 
 //______________________________________________________________________________
+const char *TVirtualStreamerInfo::GetElementCounterStart(const char *dmTitle)
+{
+   // Given a comment/title declaring an array counter, for example:
+   //    //[fArraySize] array of size fArraySize
+   // return the start of the array dimension declaration start in the string
+   // (so the location of the 'f'.
+
+   for (const char *lbracket = dmTitle; *lbracket; ++lbracket) {
+      // = ::strchr(dmTitle, '[');
+      if ( (*lbracket) == '[' ) return lbracket;
+      if ( (*lbracket) != '/' && !isspace(*lbracket) ) {
+         // Allow only comment delimiters and white spaces
+         // before the array information.
+         return 0;
+      }
+   }
+   return 0;
+}
+
+//______________________________________________________________________________
 TStreamerBasicType *TVirtualStreamerInfo::GetElementCounter(const char *countName, TClass *cl)
 {
    // Get pointer to a TStreamerBasicType in TClass *cl

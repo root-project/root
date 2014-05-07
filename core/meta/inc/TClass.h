@@ -104,9 +104,11 @@ public:
       kCurrentCheckSum = 0,
       kNoEnum          = 1, // Used since v3.3
       kNoRange         = 2, // Up to v5.17
-      kWithTypeDef     = 3, // Up to v5.34.18 and v5.99/06
-      kNoBaseCheckSum  = 4, // Up to v5.34.18 and v5.99/06
-      kLatestCheckSum  = 5
+      kReflexV5        = 3, // Up to v5.34.18 (has no range/comment and no typedef)
+      kWithTypeDef     = 4, // Up to v5.34.18 and v5.99/06
+      kNoRangeCheck    = 5, // Up to v5.34.18 and v5.99/06
+      kNoBaseCheckSum  = 6, // Up to v5.34.18 and v5.99/06
+      kLatestCheckSum  = 7
    };
 
    // Describe the current state of the TClass itself.
