@@ -47,7 +47,7 @@ static int begin_request_handler(struct mg_connection *conn)
    arg.FillHttpHeader(hdr);
    mg_printf(conn, hdr.Data());
 
-   if (arg.GetContentLength()>0)
+   if (arg.GetContentLength() > 0)
       mg_write(conn, arg.GetContent(), (size_t) arg.GetContentLength());
 
    // Returning non-zero tells civetweb that our function has replied to
@@ -87,6 +87,7 @@ static int begin_request_handler(struct mg_connection *conn)
 //////////////////////////////////////////////////////////////////////////
 
 
+//______________________________________________________________________________
 TCivetweb::TCivetweb() :
    THttpEngine("civetweb", "compact embedded http server"),
    fCtx(0),
@@ -96,16 +97,18 @@ TCivetweb::TCivetweb() :
    // constructor
 }
 
+//______________________________________________________________________________
 TCivetweb::~TCivetweb()
 {
    // destructor
 
-   if (fCtx!=0) mg_stop((struct mg_context*) fCtx);
+   if (fCtx != 0) mg_stop((struct mg_context*) fCtx);
    if (fCallbacks != 0) free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
 }
 
+//______________________________________________________________________________
 Bool_t TCivetweb::Create(const char* args)
 {
    // Creates embedded civetweb server
@@ -120,7 +123,7 @@ Bool_t TCivetweb::Create(const char* args)
    TString auth_file, auth_domain;
 
    // for the moment the only argument is port number
-   if ((args!=0) && (strlen(args)>0)) {
+   if ((args != 0) && (strlen(args) > 0)) {
       TUrl url(TString::Format("http://localhost:%s", args));
 
       if (url.IsValid()) {
@@ -128,15 +131,15 @@ Bool_t TCivetweb::Create(const char* args)
          if (url.GetPort() > 0) sport.Form("%d", url.GetPort());
 
          const char* top = url.GetValueFromOptions("top");
-         if (top!=0) fTopName = top;
+         if (top != 0) fTopName = top;
 
          Int_t thrds = url.GetIntValueFromOptions("thrds");
          if (thrds>0) num_threads.Form("%d", thrds);
 
          const char* afile = url.GetValueFromOptions("auth_file");
-         if (afile!=0) auth_file = afile;
+         if (afile != 0) auth_file = afile;
          const char* adomain = url.GetValueFromOptions("auth_domain");
-         if (adomain!=0) auth_domain = adomain;
+         if (adomain != 0) auth_domain = adomain;
       }
    }
 
@@ -150,7 +153,7 @@ Bool_t TCivetweb::Create(const char* args)
    options[op++] = "num_threads";
    options[op++] = num_threads.Data();
 
-   if ((auth_file.Length()>0) && (auth_domain.Length()>0)) {
+   if ((auth_file.Length() > 0) && (auth_domain.Length() > 0)) {
       options[op++] = "global_auth_file";
       options[op++] = auth_file.Data();
       options[op++] = "authentication_domain";

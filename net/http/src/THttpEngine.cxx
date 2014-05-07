@@ -12,6 +12,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 
+//______________________________________________________________________________
 THttpEngine::THttpEngine(const char* name, const char* title) :
    TNamed(name, title),
    fServer(0)
@@ -19,6 +20,7 @@ THttpEngine::THttpEngine(const char* name, const char* title) :
    // normal constructor
 }
 
+//______________________________________________________________________________
 THttpEngine::~THttpEngine()
 {
    // destructor
