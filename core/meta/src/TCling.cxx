@@ -2822,11 +2822,16 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
          if (newvers == -1) {
             // Didn't manage to determine the class version from the AST.
             // Use runtime instead.
-            if (mi.Property() & kIsStatic) {
+            if ((mi.Property() & kIsStatic)
+                && fInterpreter->getCodeGenerator()) {
                // This better be a static function.
                TClingCallFunc callfunc(fInterpreter, *fNormalizedCtxt);
                callfunc.SetFunc(&mi);
                newvers = callfunc.ExecInt(0);
+            } else {
+               Error("GenerateTClass",
+                     "Cannot invoke %s::Class_Version()! Class version might be wrong.",
+                     cl->GetName());
             }
          }
          if (newvers != oldvers) {
