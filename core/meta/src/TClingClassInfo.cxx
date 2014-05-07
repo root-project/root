@@ -381,13 +381,28 @@ TClingMethodInfo TClingClassInfo::GetMethod(const char *fname,
       TClingMethodInfo tmi(fInterp);
       return tmi;
    }
-   if (poffset) {
-     // We have been asked to return a this pointer adjustment.
-     if (const CXXMethodDecl *md =
-           llvm::dyn_cast<CXXMethodDecl>(fd)) {
-        // This is a class member function.
-        *poffset = GetOffset(md);
-     }
+   if (imode == TClingClassInfo::kInThisScope) {
+      // If requested, check whether fd is a member function of this class.
+      // Even though this seems to be the wrong order (we should not allow the
+      // lookup to even collect candidates from the base) it does the right
+      // thing: if any function overload exists in the derived class, all
+      // (but explicitly used) will be hidden. Thus we will only find the
+      // derived class's function overloads (or used, which is fine). Only
+      // if there is none will we find those from the base, in which case
+      // we will reject them here:
+      if (fd->getDeclContext() != llvm::dyn_cast<clang::DeclContext>(fDecl))
+         return TClingMethodInfo(fInterp);
+      // The offset must be 0 - the function must be ours.
+      if (poffset) *poffset = 0;
+   } else {
+      if (poffset) {
+         // We have been asked to return a this pointer adjustment.
+         if (const CXXMethodDecl *md =
+             llvm::dyn_cast<CXXMethodDecl>(fd)) {
+            // This is a class member function.
+            *poffset = GetOffset(md);
+         }
+      }
    }
    TClingMethodInfo tmi(fInterp);
    tmi.Init(fd);
