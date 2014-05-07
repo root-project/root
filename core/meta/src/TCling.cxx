@@ -4506,7 +4506,7 @@ Int_t TCling::AutoParse(const char* cls)
                Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
             }
          }
-      nHheadersParsed++;
+         nHheadersParsed++;
       }
    }
 
