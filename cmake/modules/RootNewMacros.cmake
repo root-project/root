@@ -215,6 +215,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_CURRENT_SOURCE_DIR}/inc
+                    -I${CMAKE_SOURCE_DIR}/io/io/inc
                     -I${CMAKE_BINARY_DIR}/include)
   else()
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc) 
