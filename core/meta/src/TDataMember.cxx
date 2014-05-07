@@ -429,7 +429,7 @@ void TDataMember::Init(bool afterReading)
             } else if (IsEnum()) {
                TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
                if (obj)
-                  l = gInterpreter->Calc(Form("%s::%s;",fClass->GetName(),ptr1));
+                  l = ((TEnumConstant*)obj)->GetValue();
                else
                   l = gInterpreter->Calc(Form("%s;",ptr1));
             } else
