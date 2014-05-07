@@ -698,25 +698,6 @@ void RecordDeclCallback(const char *c)
 }
 
 //______________________________________________________________________________
-bool IsExistingDir(const std::string& path)
-{
-
-   int returnCode = 0;
-   bool isDir = false;
-   #ifdef WIN32
-   struct _stati64 finfo;
-   returnCode = _stati64(path.c_str(), &finfo);
-   isDir = (finfo.st_mode & S_IFDIR);
-   #else
-   struct stat finfo;
-   returnCode = lstat(path.c_str(), &finfo);
-   isDir = S_ISDIR(finfo.st_mode);
-   #endif
-   return returnCode==0 && isDir ;
-
-}
-
-//______________________________________________________________________________
 void CheckClassNameForRootMap(const std::string& classname, map<string,string>& autoloads)
 {
    if ( classname.find(':') == std::string::npos) return;
@@ -834,7 +815,7 @@ void LoadLibraryMap(const std::string& fileListName, map<string,string>& autoloa
 
    while ( filelist >> filename ) {
 
-      if (IsExistingDir(filename)) continue;
+      if (llvm::sys::fs::is_directory(filename)) continue;
 
       ifstream file(filename.c_str());
 
@@ -2132,7 +2113,7 @@ static bool InjectModuleUtilHeader(const char* argv0,
    const std::string& hdrName
       = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
    {
-      std::ofstream out(hdrName.c_str());
+      std::ofstream out(hdrName);
       if (!out) {
          ROOT::TMetaUtils::Error(0, "%s: failed to open header output %s\n",
                                  argv0, hdrName.c_str());
@@ -3450,6 +3431,12 @@ bool IsHeaderName(const std::string& filename)
           llvm::sys::path::extension(filename) == ".hpp";
 }
 
+//______________________________________________________________________________
+bool IsImplementationName(const std::string& filename)
+{
+   return !IsHeaderName(filename);
+}
+
 
 //______________________________________________________________________________
 int RootCling(int argc,
@@ -3581,9 +3568,7 @@ int RootCling(int argc,
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
 
-   if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
-       strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
-       strstr(argv[ic],".cc") || strstr(argv[ic],".c++") )) {
+   if (ic < argc && IsImplementationName(argv[ic])) {
       FILE *fp;
       if (!ignoreExistingDict &&(fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
@@ -3602,7 +3587,6 @@ int RootCling(int argc,
 
    dictpathname = argv[ic];
    dictname = llvm::sys::path::filename(dictpathname);
-
    ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
@@ -4666,6 +4650,9 @@ int invokeManyRootCling(const std::string& verbosity,
    std::vector<std::string> namesSingleton(1);
    for (unsigned int i=0;i<headersNames.size();++i){
       namesSingleton[0]=headersNames[i];
+      std::string ofilenameFullPath(ofilesNames[i]);
+      if (llvm::sys::path::parent_path(ofilenameFullPath)=="")
+         ofilenameFullPath=outputDirName+ofilenameFullPath;
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
                                        targetLibName,
@@ -4682,7 +4669,7 @@ int invokeManyRootCling(const std::string& verbosity,
                                        doSplit,
                                        isDeep,
                                        namesSingleton,
-                                       outputDirName+ofilesNames[i]);
+                                       ofilenameFullPath);
       if (returnCode!=0)
          return returnCode;
    }
@@ -5124,7 +5111,7 @@ int GenReflex(int argc, char **argv)
 
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
-   if (!ofileName.empty() && !IsExistingDir(ofileName)){
+   if (!ofileName.empty() && !llvm::sys::fs::is_directory(ofileName) ){
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
                                     targetLibName,
