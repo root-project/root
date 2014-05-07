@@ -16,6 +16,7 @@ include_directories(${LLVM_INCLUDE_DIR} ${CLING_INCLUDE_DIR})
 set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/src/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
 
 ROOT_OBJECT_LIBRARY(MetaLLVM ${sources})
+add_dependencies(MetaLLVM CLING)
 
 #ROOT_GENERATE_DICTIONARY(G__Cling ${CMAKE_CURRENT_SOURCE_DIR}/src/TCling.h
 #                         MODULE Cling DEPENDENCIES Core
