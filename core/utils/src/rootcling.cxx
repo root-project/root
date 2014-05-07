@@ -3891,6 +3891,11 @@ int RootCling(int argc,
       }
    }
 
+#ifndef ROOT_STAGE1_BUILD
+   for (const auto& baseModule : baseModules)
+      AddAncestorPCMROOTFile(baseModule.c_str());
+#endif
+
    if (!firstInputFile) {
       ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
       return 1;

@@ -19,9 +19,11 @@
 #include "TStreamerInfo.h"
 #include <iostream>
 #include "TProtoClass.h"
+#include "TObjString.h"
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
+std::vector<std::string> gAncestorPCMsNames;
 
 extern "C"
 const char*** TROOT__GetExtraInterpreterArgs() {
@@ -49,7 +51,13 @@ void InitializeStreamerInfoROOTFile(const char* filename)
 extern "C"
 void AddStreamerInfoToROOTFile(const char* normName)
 {
-   gClassesToStore.push_back(normName);
+   gClassesToStore.emplace_back(normName);
+}
+
+extern "C"
+void AddAncestorPCMROOTFile(const char* pcmName)
+{
+   gAncestorPCMsNames.emplace_back(pcmName);
 }
 
 extern "C"
@@ -84,6 +92,9 @@ bool CloseStreamerInfoROOTFile()
    // Instead of plugins:
    protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
    protoClasses.Delete();
+
+   dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
+
 
    return true;
 }
