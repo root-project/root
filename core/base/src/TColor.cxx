@@ -1394,13 +1394,17 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
    End_html */
 
    char quote = '"';
-   Float_t r,g,b;
+   Float_t r,g,b,a;
    Int_t ri, gi, bi;
    TString cname;
 
    TColor *c = gROOT->GetColor(ci);
-   if (c) c->GetRGB(r, g, b);
-   else return;
+   if (c) {
+      c->GetRGB(r, g, b);
+      a = c->GetAlpha();
+   } else {
+      return;
+   }
 
    ri = (Int_t)(255*r);
    gi = (Int_t)(255*g);
@@ -1415,6 +1419,7 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
    }
 
    out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
+   if (a<1) out<<"   gROOT->GetColor(ci)->SetAlpha("<<a<<");"<<std::endl;
 }
 
 
@@ -1725,7 +1730,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 7;
       return;
    }
- 
+
    // set Inverted Dark Body Radiator palette
    if (ncolors == 56 && colors == 0) {
       TColor::InitializeColors();
