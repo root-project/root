@@ -237,12 +237,15 @@ public:
    virtual void      Update();
    //Still need this.
    Bool_t            UseGL() const { return fUseGL; }
+   //A special function to be used with TRootEmbeddedCanvas.
+   void              DeleteGLPainter();
    void              SetSupportGL(Bool_t support) {fUseGL = support;}
    
    //Name is GetPainter, not GetPadPainter
    //to avoid name hiding and confusion.
    //GetPadPainter and GetPainter are non-virtual (no need, in fact).
    TVirtualPadPainter *GetCanvasPainter();
+
    
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();

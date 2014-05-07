@@ -2208,6 +2208,22 @@ void TCanvas::CreatePainter()
 }
 
 //______________________________________________________________________________
+void TCanvas::DeleteGLPainter()
+{
+   if (fGLDevice != -1) {
+      gGLManager->MakeCurrent(fGLDevice);
+      //fPainter has a font manager.
+      //Font manager will delete textures.
+      //If context is wrong (we can have several canvases) -
+      //wrong texture will be deleted, damaging some of our fonts.
+      delete fPainter;
+      fPainter = 0;
+      gGLManager->DeleteGLContext(fGLDevice);//?
+      fGLDevice = -1;
+   }
+}
+
+//______________________________________________________________________________
 TVirtualPadPainter *TCanvas::GetCanvasPainter()
 {
    // Access and (probably) creation of pad painter.
