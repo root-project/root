@@ -58,7 +58,7 @@ THttpCallArg::~THttpCallArg()
 }
 
 //______________________________________________________________________________
-void THttpCallArg::SetPathAndFileName(const char* fullpath)
+void THttpCallArg::SetPathAndFileName(const char *fullpath)
 {
    // set complete path of requested http element
    // For instance, it could be "/folder/subfolder/get.bin"
@@ -70,22 +70,21 @@ void THttpCallArg::SetPathAndFileName(const char* fullpath)
 
    if (fullpath == 0) return;
 
-   const char* rslash = strrchr(fullpath,'/');
+   const char *rslash = strrchr(fullpath, '/');
    if (rslash == 0) {
       fFileName = fullpath;
-   }
-   else {
+   } else {
       while ((fullpath != rslash) && (*fullpath == '/')) fullpath++;
       fPathName.Append(fullpath, rslash - fullpath);
       if (fPathName == "/") fPathName.Clear();
-      fFileName = rslash+1;
+      fFileName = rslash + 1;
    }
 }
 
 //______________________________________________________________________________
-void THttpCallArg::FillHttpHeader(TString& hdr, Bool_t normal)
+void THttpCallArg::FillHttpHeader(TString &hdr, Bool_t normal)
 {
-   const char* header = normal ? "HTTP/1.1" : "Status:";
+   const char *header = normal ? "HTTP/1.1" : "Status:";
 
    if ((fContentType.Length() == 0) || Is404()) {
       hdr.Form("%s 404 Not Found\r\n"
@@ -125,16 +124,19 @@ void THttpCallArg::FillHttpHeader(TString& hdr, Bool_t normal)
 class THttpTimer : public TTimer {
 public:
 
-   THttpServer* fServer;
+   THttpServer *fServer;
 
-   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer* serv) :
-      TTimer(milliSec, mode), fServer(serv) {
+   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) :
+      TTimer(milliSec, mode), fServer(serv)
+   {
       // construtor
    }
-   virtual ~THttpTimer() {
+   virtual ~THttpTimer()
+   {
       // destructor
    }
-   virtual void Timeout() {
+   virtual void Timeout()
+   {
       // timeout handler
       // used to process http requests in main ROOT thread
 
@@ -153,8 +155,8 @@ public:
 //////////////////////////////////////////////////////////////////////////
 
 //______________________________________________________________________________
-THttpServer::THttpServer(const char* engine) :
-   TNamed("http","ROOT http server"),
+THttpServer::THttpServer(const char *engine) :
+   TNamed("http", "ROOT http server"),
    fEngines(),
    fTimer(0),
    fSniffer(0),
@@ -176,12 +178,12 @@ THttpServer::THttpServer(const char* engine) :
 
    // Info("THttpServer", "Create %p in thrd %ld", this, (long) fMainThrdId);
 
-   const char* rootsys = gSystem->Getenv("ROOTSYS");
+   const char *rootsys = gSystem->Getenv("ROOTSYS");
    if (rootsys != 0) fRootSys = rootsys;
 
 #ifdef COMPILED_WITH_DABC
 
-   const char* dabcsys = gSystem->Getenv("DABCSYS");
+   const char *dabcsys = gSystem->Getenv("DABCSYS");
    if (dabcsys != 0) fHttpSys = TString::Format("%s/plugins/http", dabcsys);
 
 #else
@@ -191,7 +193,7 @@ THttpServer::THttpServer(const char* engine) :
 
    if (fHttpSys.IsNull()) fHttpSys = ".";
 
-   const char* jsrootiosys = gSystem->Getenv("JSROOTIOSYS");
+   const char *jsrootiosys = gSystem->Getenv("JSROOTIOSYS");
    if (jsrootiosys != 0)
       fJSRootIOSys = jsrootiosys;
    else
@@ -222,14 +224,14 @@ THttpServer::~THttpServer()
 }
 
 //______________________________________________________________________________
-void THttpServer::SetSniffer(TRootSniffer* sniff)
+void THttpServer::SetSniffer(TRootSniffer *sniff)
 {
    if (fSniffer) delete fSniffer;
    fSniffer = sniff;
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::CreateEngine(const char* engine)
+Bool_t THttpServer::CreateEngine(const char *engine)
 {
    // factory method to create different http engine
    // At the moment two engine kinds are supported:
@@ -241,11 +243,11 @@ Bool_t THttpServer::CreateEngine(const char* engine)
 
    if (engine == 0) return kFALSE;
 
-   const char* arg = strchr(engine,':');
+   const char *arg = strchr(engine, ':');
    if (arg == 0) return kFALSE;
 
    TString clname;
-   if (arg != engine) clname.Append(engine, arg-engine);
+   if (arg != engine) clname.Append(engine, arg - engine);
 
    if ((clname.Length() == 0) || (clname == "http") || (clname == "civetweb"))
       clname = "TCivetweb";
@@ -255,15 +257,18 @@ Bool_t THttpServer::CreateEngine(const char* engine)
       clname = "TDabcEngine";
 
    // ensure that required engine class exists before we try to create it
-   TClass* engine_class = gROOT->LoadClass(clname.Data());
+   TClass *engine_class = gROOT->LoadClass(clname.Data());
    if (engine_class == 0) return kFALSE;
 
-   THttpEngine* eng = (THttpEngine*) engine_class->New();
+   THttpEngine *eng = (THttpEngine *) engine_class->New();
    if (eng == 0) return kFALSE;
 
    eng->SetServer(this);
 
-   if (!eng->Create(arg+1)) { delete eng; return kFALSE; }
+   if (!eng->Create(arg + 1)) {
+      delete eng;
+      return kFALSE;
+   }
 
    fEngines.Add(eng);
 
@@ -293,7 +298,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::IsFileRequested(const char* uri, TString& res) const
+Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
    // verifies that request just file name
    // File names typically contains prefix like "httpsys/" or "jsrootiosys/"
@@ -306,7 +311,7 @@ Bool_t THttpServer::IsFileRequested(const char* uri, TString& res) const
    std::string fname = uri;
    size_t pos = fname.rfind("httpsys/");
    if (pos != std::string::npos) {
-      fname.erase(0, pos+7);
+      fname.erase(0, pos + 7);
       res = fHttpSys + fname.c_str();
       return kTRUE;
    }
@@ -314,7 +319,7 @@ Bool_t THttpServer::IsFileRequested(const char* uri, TString& res) const
    if (!fRootSys.IsNull()) {
       pos = fname.rfind("rootsys/");
       if (pos != std::string::npos) {
-         fname.erase(0, pos+7);
+         fname.erase(0, pos + 7);
          res = fRootSys + fname.c_str();
          return kTRUE;
       }
@@ -323,7 +328,7 @@ Bool_t THttpServer::IsFileRequested(const char* uri, TString& res) const
    if (!fJSRootIOSys.IsNull()) {
       pos = fname.rfind("jsrootiosys/");
       if (pos != std::string::npos) {
-         fname.erase(0, pos+11);
+         fname.erase(0, pos + 11);
          res = fJSRootIOSys + fname.c_str();
          return kTRUE;
       }
@@ -333,7 +338,7 @@ Bool_t THttpServer::IsFileRequested(const char* uri, TString& res) const
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::ExecuteHttp(THttpCallArg* arg)
+Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
    // Executes http request, specified in THttpCallArg structure
    // Method can be called from any thread
@@ -374,11 +379,11 @@ void THttpServer::ProcessRequests()
    }
 
    while (true) {
-      THttpCallArg* arg = 0;
+      THttpCallArg *arg = 0;
 
       fMutex.Lock();
       if (fCallArgs.GetSize() > 0) {
-         arg = (THttpCallArg*) fCallArgs.First();
+         arg = (THttpCallArg *) fCallArgs.First();
          fCallArgs.RemoveFirst();
       }
       fMutex.UnLock();
@@ -392,13 +397,13 @@ void THttpServer::ProcessRequests()
 
    // regularly call Process() method of engine to let perform actions in ROOT context
    TIter iter(&fEngines);
-   THttpEngine* engine = 0;
-   while ((engine = (THttpEngine*)iter()) != 0)
+   THttpEngine *engine = 0;
+   while ((engine = (THttpEngine *)iter()) != 0)
       engine->Process();
 }
 
 //______________________________________________________________________________
-void THttpServer::ProcessRequest(THttpCallArg* arg)
+void THttpServer::ProcessRequest(THttpCallArg *arg)
 {
    // Process single http request
    // Depending from requested path and filename different actions will be performed.
@@ -434,13 +439,13 @@ void THttpServer::ProcessRequest(THttpCallArg* arg)
    if (arg->fFileName == "h.xml")  {
 
       arg->fContent.Form(
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
-            "<dabc version=\"2\" xmlns:dabc=\"http://dabc.gsi.de/xhtml\" path=\"%s\">\n", arg->fPathName.Data());
+         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+         "<dabc version=\"2\" xmlns:dabc=\"http://dabc.gsi.de/xhtml\" path=\"%s\">\n", arg->fPathName.Data());
 
       {
          TRootSnifferStoreXml store(arg->fContent);
 
-         const char* topname = fTopName.Data();
+         const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
 
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
@@ -459,7 +464,7 @@ void THttpServer::ProcessRequest(THttpCallArg* arg)
       {
          TRootSnifferStoreJson store(arg->fContent);
 
-         const char* topname = fTopName.Data();
+         const char *topname = fTopName.Data();
          if (arg->fTopName.Length() > 0) topname = arg->fTopName.Data();
 
          fSniffer->ScanHierarchy(topname, arg->fPathName.Data(), &store);
@@ -477,57 +482,57 @@ void THttpServer::ProcessRequest(THttpCallArg* arg)
       return;
    }
 
- /*
-   if (arg->fFileName == "get.json.gz") {
-      if (fSniffer->ProduceJson(arg->fPathName.Data(), arg->fQuery.Data(), arg->fContent)) {
+   /*
+     if (arg->fFileName == "get.json.gz") {
+        if (fSniffer->ProduceJson(arg->fPathName.Data(), arg->fQuery.Data(), arg->fContent)) {
 
-         Int_t fObjlen = arg->fContent.Length();
-         Int_t cxlevel = 5;
-         Int_t cxAlgorithm = 0;
+           Int_t fObjlen = arg->fContent.Length();
+           Int_t cxlevel = 5;
+           Int_t cxAlgorithm = 0;
 
-         Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
-         Int_t buflen = fObjlen + 9*nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
-         if (buflen<512) buflen = 512;
+           Int_t nbuffers = 1 + (fObjlen - 1)/kMAXBUF;
+           Int_t buflen = fObjlen + 9*nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
+           if (buflen<512) buflen = 512;
 
-         void* fBuffer = malloc(buflen);
+           void* fBuffer = malloc(buflen);
 
-         char *objbuf = (char*) arg->fContent.Data();
-         char *bufcur = (char*) fBuffer;
-         Int_t noutot = 0;
-         Int_t nzip   = 0;
-         for (Int_t i = 0; i < nbuffers; ++i) {
-            Int_t bufmax = kMAXBUF, nout(0);
-            if (i == nbuffers - 1) bufmax = fObjlen - nzip;
-            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
-            if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
-               Error("", "Fail to compress data");
-               free(fBuffer);
-               return;
-            }
-            bufcur += nout;
-            noutot += nout;
-            objbuf += kMAXBUF;
-            nzip   += kMAXBUF;
-         }
+           char *objbuf = (char*) arg->fContent.Data();
+           char *bufcur = (char*) fBuffer;
+           Int_t noutot = 0;
+           Int_t nzip   = 0;
+           for (Int_t i = 0; i < nbuffers; ++i) {
+              Int_t bufmax = kMAXBUF, nout(0);
+              if (i == nbuffers - 1) bufmax = fObjlen - nzip;
+              R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+              if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
+                 Error("", "Fail to compress data");
+                 free(fBuffer);
+                 return;
+              }
+              bufcur += nout;
+              noutot += nout;
+              objbuf += kMAXBUF;
+              nzip   += kMAXBUF;
+           }
 
-         Info("Compress", "Original size %d compressed %d", fObjlen, noutot);
+           Info("Compress", "Original size %d compressed %d", fObjlen, noutot);
 
-         arg->fBinData = fBuffer;
-         arg->fBinDataLength = noutot;
-         arg->fContent.Clear();
+           arg->fBinData = fBuffer;
+           arg->fBinDataLength = noutot;
+           arg->fContent.Clear();
 
-         arg->SetEncoding("gzip");
-         arg->SetJson();
-         return;
-      }
-   }
-*/
+           arg->SetEncoding("gzip");
+           arg->SetJson();
+           return;
+        }
+     }
+   */
 
    arg->Set404();
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::Register(const char* subfolder, TObject* obj)
+Bool_t THttpServer::Register(const char *subfolder, TObject *obj)
 {
    // Register object in folders hierarchy
    //
@@ -537,7 +542,7 @@ Bool_t THttpServer::Register(const char* subfolder, TObject* obj)
 }
 
 //______________________________________________________________________________
-Bool_t THttpServer::Unregister(TObject* obj)
+Bool_t THttpServer::Unregister(TObject *obj)
 {
    // Unregister object in folders hierarchy
    //
@@ -548,7 +553,7 @@ Bool_t THttpServer::Unregister(TObject* obj)
 
 
 //______________________________________________________________________________
-const char* THttpServer::GetMimeType(const char* path)
+const char *THttpServer::GetMimeType(const char *path)
 {
    static const struct {
       const char *extension;
@@ -610,11 +615,11 @@ const char* THttpServer::GetMimeType(const char* path)
 
    for (int i = 0; builtin_mime_types[i].extension != NULL; i++) {
       if (path_len <= builtin_mime_types[i].ext_len) continue;
-      const char* ext = path + (path_len - builtin_mime_types[i].ext_len);
+      const char *ext = path + (path_len - builtin_mime_types[i].ext_len);
       if (strcmp(ext, builtin_mime_types[i].extension) == 0) {
          return builtin_mime_types[i].mime_type;
-     }
-  }
+      }
+   }
 
-  return "text/plain";
+   return "text/plain";
 }

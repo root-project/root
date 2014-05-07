@@ -22,57 +22,57 @@
 #include <fstream>
 #include <stdlib.h>
 
-void FCGX_ROOT_send_file(FCGX_Request* request, const char* fname)
+void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 {
    std::ifstream is(fname);
 
-   char* buf = 0;
+   char *buf = 0;
    int length = 0;
 
    if (is) {
-      is.seekg (0, is.end);
+      is.seekg(0, is.end);
       length = is.tellg();
-      is.seekg (0, is.beg);
+      is.seekg(0, is.beg);
 
-      buf = (char*) malloc(length);
+      buf = (char *) malloc(length);
       is.read(buf, length);
       if (!is) {
          free(buf);
-         buf = 0; length = 0;
+         buf = 0;
+         length = 0;
       }
    }
 
    if (buf == 0) {
       FCGX_FPrintF(request->out,
-            "Status: 404 Not Found\r\n"
-            "Content-Length: 0\r\n" // Always set Content-Length
-            "Connection: close\r\n\r\n");
-   }
-   else {
+                   "Status: 404 Not Found\r\n"
+                   "Content-Length: 0\r\n" // Always set Content-Length
+                   "Connection: close\r\n\r\n");
+   } else {
 
-/*      char sbuf[100], etag[100];
-      time_t curtime = time(NULL);
-      strftime(sbuf, sizeof(sbuf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&curtime));
-      snprintf(etag, sizeof(etag), "\"%lx.%ld\"",
-               (unsigned long) curtime, (long) length);
+      /*      char sbuf[100], etag[100];
+            time_t curtime = time(NULL);
+            strftime(sbuf, sizeof(sbuf), "%a, %d %b %Y %H:%M:%S GMT", gmtime(&curtime));
+            snprintf(etag, sizeof(etag), "\"%lx.%ld\"",
+                     (unsigned long) curtime, (long) length);
 
-      // Send HTTP reply to the client
+            // Send HTTP reply to the client
+            FCGX_FPrintF(request->out,
+                   "HTTP/1.1 200 OK\r\n"
+                   "Date: %s\r\n"
+                   "Last-Modified: %s\r\n"
+                   "Etag: %s\r\n"
+                   "Content-Type: %s\r\n"
+                   "Content-Length: %d\r\n"     // Always set Content-Length
+                   "\r\n", sbuf, sbuf, etag, THttpServer::GetMimeType(fname), length);
+
+      */
+
       FCGX_FPrintF(request->out,
-             "HTTP/1.1 200 OK\r\n"
-             "Date: %s\r\n"
-             "Last-Modified: %s\r\n"
-             "Etag: %s\r\n"
-             "Content-Type: %s\r\n"
-             "Content-Length: %d\r\n"     // Always set Content-Length
-             "\r\n", sbuf, sbuf, etag, THttpServer::GetMimeType(fname), length);
-
-*/
-
-      FCGX_FPrintF(request->out,
-             "Status: 200 OK\r\n"
-             "Content-Type: %s\r\n"
-             "Content-Length: %d\r\n"     // Always set Content-Length
-             "\r\n", THttpServer::GetMimeType(fname), length);
+                   "Status: 200 OK\r\n"
+                   "Content-Type: %s\r\n"
+                   "Content-Length: %d\r\n"     // Always set Content-Length
+                   "\r\n", THttpServer::GetMimeType(fname), length);
 
 
       FCGX_PutStr(buf, length, request->out);
@@ -154,7 +154,7 @@ TFastCgi::~TFastCgi()
 }
 
 //______________________________________________________________________________
-Bool_t TFastCgi::Create(const char* args)
+Bool_t TFastCgi::Create(const char *args)
 {
    // initializes fastcgi variables and start thread,
    // which will process incoming http requests
@@ -175,7 +175,7 @@ Bool_t TFastCgi::Create(const char* args)
 
          if (url.GetValueFromOptions("debug") != 0) fDebugMode = kTRUE;
 
-         const char* top = url.GetValueFromOptions("top");
+         const char *top = url.GetValueFromOptions("top");
 
          if (top != 0) fTopName = top;
       }
@@ -198,11 +198,11 @@ Bool_t TFastCgi::Create(const char* args)
 
 
 //______________________________________________________________________________
-void* TFastCgi::run_func(void* args)
+void *TFastCgi::run_func(void *args)
 {
 #ifndef HTTP_WITHOUT_FASTCGI
 
-   TFastCgi* engine = (TFastCgi*) args;
+   TFastCgi *engine = (TFastCgi *) args;
 
    FCGX_Request request;
 
@@ -218,8 +218,8 @@ void* TFastCgi::run_func(void* args)
 
       count++;
 
-      const char* inp_path = FCGX_GetParam("PATH_INFO", request.envp);
-      const char* inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
+      const char *inp_path = FCGX_GetParam("PATH_INFO", request.envp);
+      const char *inp_query = FCGX_GetParam("QUERY_STRING", request.envp);
 
       THttpCallArg arg;
       if (inp_path != 0) arg.SetPathAndFileName(inp_path);
@@ -243,14 +243,13 @@ void* TFastCgi::run_func(void* args)
 
          if (len <= 0) {
             FCGX_FPrintF(request.out, "No data from standard input.<p>\n");
-         }
-         else {
+         } else {
             int i, ch;
 
             FCGX_FPrintF(request.out, "Standard input:<br>\n<pre>\n");
             for (i = 0; i < len; i++) {
                if ((ch = FCGX_GetChar(request.in)) < 0) {
-                  FCGX_FPrintF(request.out, 
+                  FCGX_FPrintF(request.out,
                                "Error: Not enough bytes received on standard input<p>\n");
                   break;
                }
@@ -265,7 +264,7 @@ void* TFastCgi::run_func(void* args)
          FCGX_FPrintF(request.out, "<p>\n");
 
          FCGX_FPrintF(request.out, "Environment:<br>\n<pre>\n");
-         for (char** envp = request.envp; *envp != NULL; envp++) {
+         for (char **envp = request.envp; *envp != NULL; envp++) {
             FCGX_FPrintF(request.out, "%s\n", *envp);
          }
          FCGX_FPrintF(request.out, "</pre><p>\n");
@@ -290,16 +289,14 @@ void* TFastCgi::run_func(void* args)
       if (!engine->GetServer()->ExecuteHttp(&arg) || arg.Is404()) {
          arg.FillHttpHeader(hdr, kFALSE);
          FCGX_FPrintF(request.out, hdr.Data());
-      }
-      else if (arg.IsFile()) {
-         FCGX_ROOT_send_file(&request, (const char*) arg.GetContent());
-      }
-      else {
+      } else if (arg.IsFile()) {
+         FCGX_ROOT_send_file(&request, (const char *) arg.GetContent());
+      } else {
 
          arg.FillHttpHeader(hdr, kFALSE);
          FCGX_FPrintF(request.out, hdr.Data());
 
-         FCGX_PutStr((const char*) arg.GetContent(),
+         FCGX_PutStr((const char *) arg.GetContent(),
                      (int) arg.GetContentLength(), request.out);
       }
 

@@ -13,7 +13,7 @@
 
 
 //______________________________________________________________________________
-THttpEngine::THttpEngine(const char* name, const char* title) :
+THttpEngine::THttpEngine(const char *name, const char *title) :
    TNamed(name, title),
    fServer(0)
 {

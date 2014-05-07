@@ -12,9 +12,9 @@
 
 static int begin_request_handler(struct mg_connection *conn)
 {
-   TCivetweb* engine = (TCivetweb*) mg_get_request_info(conn)->user_data;
+   TCivetweb *engine = (TCivetweb *) mg_get_request_info(conn)->user_data;
    if (engine == 0) return 0;
-   THttpServer* serv = engine->GetServer();
+   THttpServer *serv = engine->GetServer();
    if (serv == 0) return 0;
 
    const struct mg_request_info *request_info = mg_get_request_info(conn);
@@ -40,7 +40,7 @@ static int begin_request_handler(struct mg_connection *conn)
    }
 
    if (arg.IsFile()) {
-      mg_send_file(conn, (const char*) arg.GetContent());
+      mg_send_file(conn, (const char *) arg.GetContent());
       return 1;
    }
 
@@ -102,21 +102,21 @@ TCivetweb::~TCivetweb()
 {
    // destructor
 
-   if (fCtx != 0) mg_stop((struct mg_context*) fCtx);
+   if (fCtx != 0) mg_stop((struct mg_context *) fCtx);
    if (fCallbacks != 0) free(fCallbacks);
    fCtx = 0;
    fCallbacks = 0;
 }
 
 //______________________________________________________________________________
-Bool_t TCivetweb::Create(const char* args)
+Bool_t TCivetweb::Create(const char *args)
 {
    // Creates embedded civetweb server
    // As argument, http port should be specified in form "8090"
 
    fCallbacks = malloc(sizeof(struct mg_callbacks));
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
-   ((struct mg_callbacks*) fCallbacks)->begin_request = begin_request_handler;
+   ((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
 
    TString sport = "8080";
    TString num_threads = "5";
@@ -130,15 +130,15 @@ Bool_t TCivetweb::Create(const char* args)
          url.ParseOptions();
          if (url.GetPort() > 0) sport.Form("%d", url.GetPort());
 
-         const char* top = url.GetValueFromOptions("top");
+         const char *top = url.GetValueFromOptions("top");
          if (top != 0) fTopName = top;
 
          Int_t thrds = url.GetIntValueFromOptions("thrds");
-         if (thrds>0) num_threads.Form("%d", thrds);
+         if (thrds > 0) num_threads.Form("%d", thrds);
 
-         const char* afile = url.GetValueFromOptions("auth_file");
+         const char *afile = url.GetValueFromOptions("auth_file");
          if (afile != 0) auth_file = afile;
-         const char* adomain = url.GetValueFromOptions("auth_domain");
+         const char *adomain = url.GetValueFromOptions("auth_domain");
          if (adomain != 0) auth_domain = adomain;
       }
    }
@@ -163,7 +163,7 @@ Bool_t TCivetweb::Create(const char* args)
    options[op++] = 0;
 
    // Start the web server.
-   fCtx = mg_start((struct mg_callbacks*) fCallbacks, this, options);
+   fCtx = mg_start((struct mg_callbacks *) fCallbacks, this, options);
 
    return kTRUE;
 }
