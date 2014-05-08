@@ -1024,9 +1024,8 @@ bool TCling::LoadPCM(TString pcmFileName,
 //______________________________________________________________________________
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
-                            const char** allHeaders,
                             const char** includePaths,
-                            const char* payloadCode,                            
+                            const char* payloadCode,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                             const char** classesHeaders)
@@ -1054,19 +1053,6 @@ void TCling::RegisterModule(const char* modulename,
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
-   }
-
-   if (gDebug > 0) {
-      for (const char** allHdr = allHeaders; *allHdr; ++allHdr) {
-         ModuleForHeader_t::iterator iMap = fModuleForHeader.find(*allHdr);
-         if (iMap != fModuleForHeader.end()) {
-            Warning("RegisterModule()",
-                    "Header %s provided by module %s was already available through module %s",
-                    *allHdr, modulename, iMap->second);
-         } else {
-            fModuleForHeader[*allHdr] = modulename;
-         }
-      }
    }
 
    // Put the template decls and the number of arguments to skip in the TNormalizedCtxt

@@ -126,9 +126,6 @@ private: // Data Members
          return strcmp(a, b) < 0;
       }
    };
-   typedef std::map<const char* /*hdr*/, const char* /*mod*/, CharPtrCmp_t>
-      ModuleForHeader_t;
-   ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
    std::set<TClass*> fModTClasses;
    std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
@@ -192,9 +189,8 @@ public: // Public Interface
    void    PrintIntro();
    void    RegisterModule(const char* modulename,
                           const char** headers,
-                          const char** allHeaders,
                           const char** includePaths,
-                          const char* payloadCode,                          
+                          const char* payloadCode,
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders);
