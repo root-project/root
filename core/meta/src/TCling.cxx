@@ -1123,9 +1123,12 @@ void TCling::RegisterModule(const char* modulename,
    }
 
 
-   if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
-      ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-              ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+   if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0) {
+      // No pcm for now for libCore or libRint, the info is in the pch.
+      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+      }
    }
 
    bool oldValue = false;
