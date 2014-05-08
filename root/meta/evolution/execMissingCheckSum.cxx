@@ -20,6 +20,13 @@ struct HcalFlagHFDigiTimeParam{
    std::vector<double> mHFdigiflagCoefficients; // coefficients used to parameterize TS(peak)/NTS threshold:  [0]-exp([1]+[2]*E+....)
 };
 
+struct WithLongLong {
+   WithLongLong() : mValue (0), mIndex(0) {}
+
+   long long mValue;
+   unsigned long long mIndex;
+};
+
 void execMissingCheckSum()
 {
    TFile *f = new TFile("missingCheckSum.root");
@@ -31,5 +38,10 @@ void execMissingCheckSum()
    f->Get("timeParam");
   ((TObjArray*)TClass::GetClass("HcalFlagHFDigiTimeParam")->GetStreamerInfos())->RemoveAt(1);
    f->Get("timeParam");
+
+   f->Get("withLL");
+   ((TObjArray*)TClass::GetClass("WithLongLong")->GetStreamerInfos())->RemoveAt(1);
+   f->Get("withLL");
+
 }
 
