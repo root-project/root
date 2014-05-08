@@ -1031,7 +1031,6 @@ void TCling::RegisterModule(const char* modulename,
    // The payload code is injected "as is" in the interpreter.
    // The value of 'triggerFunc' is used to find the shared library location.
 
-   bool rootModulesDefined (getenv("ROOT_MODULES"));
    // rootcling also uses TCling for generating the dictionary ROOT files.
    bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
@@ -1124,13 +1123,9 @@ void TCling::RegisterModule(const char* modulename,
    }
 
 
-   if (rootModulesDefined) {
-      fInterpreter->declare(code.Data());
-      code = "";
-      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
-         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      }
+   if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+      ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+              ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
    }
 
    bool oldValue = false;
@@ -1141,10 +1136,7 @@ void TCling::RegisterModule(const char* modulename,
       if (gDebug > 5) {
          ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
-      if(!rootModulesDefined)
-         code += TString::Format("#include \"%s\"\n", *hdr);
-      else
-         fInterpreter->loadModuleForHeader(*hdr);
+      code += TString::Format("#include \"%s\"\n", *hdr);
    }
 
    { // scope within which diagnostics are de-activated
