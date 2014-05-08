@@ -1394,27 +1394,37 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
    End_html */
 
    char quote = '"';
-   Float_t r,g,b;
+   Float_t r,g,b,a;
    Int_t ri, gi, bi;
    TString cname;
 
    TColor *c = gROOT->GetColor(ci);
-   if (c) c->GetRGB(r, g, b);
-   else return;
-
-   ri = (Int_t)(255*r);
-   gi = (Int_t)(255*g);
-   bi = (Int_t)(255*b);
-   cname.Form("#%02x%02x%02x", ri, gi, bi);
+   if (c) {
+      c->GetRGB(r, g, b);
+      a = c->GetAlpha();
+   } else {
+      return;
+   }
 
    if (gROOT->ClassSaved(TColor::Class())) {
       out << std::endl;
    } else {
       out << std::endl;
-      out << "   Int_t ci;   // for color index setting" << std::endl;
+      out << "   Int_t ci;      // for color index setting" << std::endl;
+      out << "   TColor *color; // for color definition with alpha" << std::endl;
    }
 
-   out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
+   if (a<1) {
+      out<<"   ci = "<<ci<<";"<<std::endl;
+      out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
+      <<"\" \", "<<a<<");"<<std::endl;
+   } else {
+      ri = (Int_t)(255*r);
+      gi = (Int_t)(255*g);
+      bi = (Int_t)(255*b);
+      cname.Form("#%02x%02x%02x", ri, gi, bi);
+      out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
+   }
 }
 
 
@@ -1725,7 +1735,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
       paletteType = 7;
       return;
    }
- 
+
    // set Inverted Dark Body Radiator palette
    if (ncolors == 56 && colors == 0) {
       TColor::InitializeColors();

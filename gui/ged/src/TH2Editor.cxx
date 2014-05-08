@@ -146,6 +146,7 @@
 #include "TGTab.h"
 #include "TGMsgBox.h"
 #include "TH2.h"
+#include "TROOT.h"
 
 
 ClassImp(TH2Editor)
@@ -365,6 +366,9 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
    fCutString = "";
 
    CreateBinTab();
+
+   // add itself in the least of cleanups to be notified when attached histogram is deleted
+   gROOT->GetListOfCleanups()->Add(this);
 }
 
 //______________________________________________________________________________
@@ -673,6 +677,9 @@ TH2Editor::~TH2Editor()
 {
    // Destructor.
 
+   // remove itselef from the list of cleanups
+   gROOT->GetListOfCleanups()->Remove(this);
+
    // children of TGButonGroup are not deleted
    delete fDim;
    delete fDim0;
@@ -777,14 +784,17 @@ void TH2Editor::SetModel(TObject* obj)
    if (fBinHist && (obj != fHist)) {
       //we have probably moved to a different pad.
       //let's restore the original histogram
-      fHist->Reset();
-      fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
-                     fBinHist->GetXaxis()->GetXmin(),
-                     fBinHist->GetXaxis()->GetXmax(),
-                     fBinHist->GetYaxis()->GetNbins(),
-                     fBinHist->GetYaxis()->GetXmin(),
-                     fBinHist->GetYaxis()->GetXmax());
-      fHist->Add(fBinHist);
+      if (fHist) { 
+         fHist->Reset();
+         fHist->SetBins(fBinHist->GetXaxis()->GetNbins(),
+                        fBinHist->GetXaxis()->GetXmin(),
+                        fBinHist->GetXaxis()->GetXmax(),
+                        fBinHist->GetYaxis()->GetNbins(),
+                        fBinHist->GetYaxis()->GetXmin(),
+                        fBinHist->GetYaxis()->GetXmax());
+         fHist->Add(fBinHist);
+      }
+      // delete in anycase fBinHist also when fHist is zero (i.e when it has been deleted)
       delete fBinHist;
       fBinHist = 0;
       if (fGedEditor->GetPad()) {
@@ -967,7 +977,22 @@ void TH2Editor::SetModel(TObject* obj)
 
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();
 
-   if (!player || player->GetHistogram()!=fHist ) {
+
+   // Check if histogram is from ntupla/tree or not.
+   // If it is a standard histogram or a ntupla based histogram  
+   // show a different frame in case of rebinning (fBinCont) with sliders and bin number entries 
+   // connected to different methods. 
+   // For example  the entry field fBinXNumberEntry is connected to 
+   // the method DoBinLabel in case of non-ntupla histograms which just call Th1::Rebin
+   // In csae of a tree based histogram the entry field fBinNumberEntry1 is used which is connected to 
+   // TH1Editor::DoBinLabel1 which is re-filling the histograms with the cached values from the TTreePlayer. 
+   // Since the actual number of histogram entry can be larger than the cache size of the TTreePlayer 
+   // (see JIRA ROOT-5900 or http://root.cern.ch/phpBB3/viewtopic.php?f=3&t=17107 )
+   // the GUI frame based on a non-tupla histogram is used when the number of entries of the histogram is 
+   // not the same as the number of filled entries in the TTreePlayer object.
+
+   if (!player || player->GetHistogram()!=fHist || 
+       fHist->GetEntries() != player->GetNfill())  {
       Int_t n1 = 0, n2 =0;
       Int_t upx =0, upy =0;
       if (fBinHist) n1 = fBinHist->GetXaxis()->GetNbins();
@@ -1007,7 +1032,7 @@ void TH2Editor::SetModel(TObject* obj)
       delete [] divx;
       delete [] divy;
    }
-   else if (fHist==player->GetHistogram()) {
+   else if (player &&  fHist==player->GetHistogram() && fHist->GetEntries() == player->GetNfill()) {
       fBin->HideFrame(fBinXCont);
       fBin->ShowFrame(fBinXCont1);
       fBin->ShowFrame(fBinYCont1);
@@ -1028,6 +1053,7 @@ void TH2Editor::SetModel(TObject* obj)
    if (fInit) ConnectSignals2Slots();
    fGedEditor->GetTab()->SetEnabled(1, kTRUE);
    fAvoidSignal = kFALSE;
+
 }
 
 //______________________________________________________________________________
@@ -1558,6 +1584,7 @@ void TH2Editor::DoBinReleased()
    if (fDelaydraw->GetState()==kButtonDown){
       if (!fBinHist) {
          fBinHist = (TH2*)fHist->Clone("BinHist");
+         fBinHist->SetDirectory(0); // TH2Editor manages this histogram 
       }
       Int_t nx = fBinHist->GetXaxis()->GetNbins();
       Int_t ny = fBinHist->GetYaxis()->GetNbins();
@@ -1654,6 +1681,7 @@ void TH2Editor::DoBinMoved()
          return;
       }
       fBinHist = (TH2*)fHist->Clone("BinHist");
+      fBinHist->SetDirectory(0);    // TH2Editor manages this histogram
       delete [] divx;
       delete [] divy;
    }
@@ -2891,5 +2919,15 @@ void TH2Editor::ActivateBaseClassEditors(TClass* /*cl*/)
    // Skip TH1Editor in building list of editors.
 
    fGedEditor->ActivateEditors(TH1::Class()->GetListOfBases(), kTRUE);
+}
+
+//_____________________________________________________________________________
+void TH2Editor::RecursiveRemove(TObject* obj)
+{
+   // If the contained histogram obj is deleted we must set its pointer to zero
+
+   if (obj == fHist) {
+      fHist = 0;    
+   }
 }
 

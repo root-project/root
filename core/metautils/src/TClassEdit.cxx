@@ -728,6 +728,10 @@ string TClassEdit::ResolveTypedef(const char *tname, bool resolveAll)
 
    if ( strchr(tname,'<')==0 && (tname[strlen(tname)-1]!='*') ) {
 
+      if (strcmp(tname,"Double32_t")==0 || strcmp(tname,"Float16_t")==0) {
+         return tname;
+      }
+
       if ( strchr(tname,':')!=0 ) {
          // We have a namespace an we have to check it first :(
 

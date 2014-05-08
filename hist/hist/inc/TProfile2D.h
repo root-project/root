@@ -53,6 +53,8 @@ protected:
                                                                      nbins[1], range[2], range[3]); };
    Int_t Fill(const Double_t* v) { return Fill(v[0], v[1], v[2], v[3]); };
 
+   virtual TProfile *DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const;
+
    using TH2::Fill;
    Int_t             Fill(Double_t, Double_t) {return TH2::Fill(0); } //MayNotUse
 
@@ -124,6 +126,8 @@ public:
    virtual Bool_t    Multiply(const TH1 *h1);
    virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    TH2D             *ProjectionXY(const char *name="_pxy", Option_t *option="e") const;
+   TProfile         *ProfileX(const char *name="_pfx", Int_t firstybin=0, Int_t lastybin=-1, Option_t *option="") const;   // *MENU*
+   TProfile         *ProfileY(const char *name="_pfy", Int_t firstxbin=0, Int_t lastxbin=-1, Option_t *option="") const;   // *MENU*
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, TAxis *axis);

@@ -49,14 +49,19 @@ int MnPrint::Level( ) {
 }
 
 void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const char * msg, int iter) { 
-   // helper function to print state and message in one single line
+   // helper function to print function value, edm and ncalls from state in one single line
+   MnPrint::PrintState(os, state.Fval(), state.Edm(), state.NFcn(), msg, iter);
+}
+
+void MnPrint::PrintState(std::ostream & os, double fval, double edm, int ncalls, const char * msg, int iter) { 
+   // helper function to print function value, edm and ncalls  and message in one single line
    os << msg; 
    if (iter>=0) os << std::setw(3) << iter; 
    int pr = os.precision(PRECISION);
    const int width = PRECISION+3;
-   os << " - FCN = " <<  std::setw(width) << state.Fval();
+   os << " - FCN = " <<  std::setw(width) << fval;
    os.precision(pr);
-   os << " Edm = " <<  std::setw(12) << state.Edm() << " NCalls = " << std::setw(6) << state.NFcn();         
+   os << " Edm = " <<  std::setw(12) << edm << " NCalls = " << std::setw(6) << ncalls;         
    os << std::endl;
 }
 

@@ -423,9 +423,9 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             }
 
             TClass *cl = TClass::GetClass(key->GetClassName());
-            if (!cl || !cl->InheritsFrom(TObject::Class())) {
-               Info("MergeRecursive", "cannot merge object type, name: %s title: %s",
-                    key->GetName(), key->GetTitle());
+            if (!cl) {
+               Info("MergeRecursive", "cannot indentify object type (%s), name: %s title: %s",
+                    key->GetClassName(), key->GetName(), key->GetTitle());
                continue;
             }
             // Check if only the listed objects are to be merged
@@ -440,7 +440,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             // For mergeable objects we add the names in a local hashlist handling them
             // again (see above)
             if (cl->GetMerge() || cl->InheritsFrom(TDirectory::Class()) ||
-               (cl->InheritsFrom(TObject::Class()) &&
+               (cl->IsTObject() &&
                (cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ||
                 cl->GetMethodWithPrototype("Merge", "TCollection*"))))
                allNames.Add(new TObjString(key->GetName()));
@@ -483,10 +483,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                     key->GetName(), key->GetTitle());
                continue;
             }
-            
+            if (cl->IsTObject() && cl != obj->IsA()) {
+               Error("MergeRecursive", "TKey and object retrieve disagree on type (%s vs %s).  Continuing with %s.",
+                    key->GetClassName(), obj->IsA()->GetName(), obj->IsA()->GetName());
+               cl = obj->IsA();
+            }
             Bool_t canBeMerged = kTRUE;
 
-            if ( obj->IsA()->InheritsFrom( TDirectory::Class() ) ) {
+            if ( cl->InheritsFrom( TDirectory::Class() ) ) {
                // it's a subdirectory
                
                target->cd();
@@ -512,19 +516,19 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                status = MergeRecursive(newdir, sourcelist, type);
                if (onlyListed) type |= kOnlyListed;
                if (!status) return status;
-            } else if (obj->IsA()->GetMerge()) {
+            } else if (cl->GetMerge()) {
                
                // Check if already treated
                if (alreadyseen) continue;
                
                TList inputs;
-               Bool_t oneGo = fHistoOneGo && obj->IsA()->InheritsFrom(R__TH1_Class);
+               Bool_t oneGo = fHistoOneGo && cl->InheritsFrom(R__TH1_Class);
                
                // Loop over all source files and merge same-name object
                TFile *nextsource = current_file ? (TFile*)sourcelist->After( current_file ) : (TFile*)sourcelist->First();
                if (nextsource == 0) {
                   // There is only one file in the list
-                  ROOT::MergeFunc_t func = obj->IsA()->GetMerge();
+                  ROOT::MergeFunc_t func = cl->GetMerge();
                   func(obj, &inputs, &info);
                   info.fIsFirst = kFALSE;
                } else {
@@ -549,7 +553,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                            hobj->ResetBit(kMustCleanup);
                            inputs.Add(hobj);
                            if (!oneGo) {
-                              ROOT::MergeFunc_t func = obj->IsA()->GetMerge();
+                              ROOT::MergeFunc_t func = cl->GetMerge();
                               Long64_t result = func(obj, &inputs, &info);
                               info.fIsFirst = kFALSE;
                               if (result < 0) {
@@ -564,14 +568,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                   } while (nextsource);
                   // Merge the list, if still to be done
                   if (oneGo || info.fIsFirst) {
-                     ROOT::MergeFunc_t func = obj->IsA()->GetMerge();
+                     ROOT::MergeFunc_t func = cl->GetMerge();
                      func(obj, &inputs, &info);
                      info.fIsFirst = kFALSE;
                      inputs.Delete();
                   }
                }
-            } else if (obj->InheritsFrom(TObject::Class()) &&
-                       obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ) {
+            } else if (cl->InheritsFrom(TObject::Class()) &&
+                       cl->GetMethodWithPrototype("Merge", "TCollection*,TFileMergeInfo*") ) {
                // Object implements Merge(TCollection*,TFileMergeInfo*) and has a reflex dictionary ... 
                
                // Check if already treated
@@ -633,8 +637,8 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                      listH.Delete();
                   }
                }
-            } else if (obj->InheritsFrom(TObject::Class()) &&
-                       obj->IsA()->GetMethodWithPrototype("Merge", "TCollection*") ) {
+            } else if (cl->InheritsFrom(TObject::Class()) &&
+                       cl->GetMethodWithPrototype("Merge", "TCollection*") ) {
                // Object implements Merge(TCollection*) and has a reflex dictionary ...
                
                // Check if already treated
@@ -708,7 +712,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             
             oldkeyname = key->GetName();
             //!!if the object is a tree, it is stored in globChain...
-            if(obj->IsA()->InheritsFrom( TDirectory::Class() )) {
+            if(cl->InheritsFrom( TDirectory::Class() )) {
                //printf("cas d'une directory\n");
                // Do not delete the directory if it is part of the output
                // and we are in incremental mode (because it will be reuse
@@ -717,7 +721,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
                if (!(type&kIncremental) || dynamic_cast<TDirectory*>(obj)->GetFile() != target) {
                   delete obj;
                }
-            } else if (obj->IsA()->InheritsFrom( TCollection::Class() )) {
+            } else if (cl->InheritsFrom( TCollection::Class() )) {
                // Don't overwrite, if the object were not merged.
                if ( obj->Write( oldkeyname, canBeMerged ? TObject::kSingleKey | TObject::kOverwrite : TObject::kSingleKey) <= 0 ) {
                   status = kFALSE;
@@ -727,8 +731,14 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
             } else {
                // Don't overwrite, if the object were not merged.
                // NOTE: this is probably wrong for emulated objects.
-               if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
-                  status = kFALSE;
+               if (cl->IsTObject()) {
+                  if ( obj->Write( oldkeyname, canBeMerged ? TObject::kOverwrite : 0) <= 0) {
+                     status = kFALSE;
+                  }
+               } else {
+                  if ( target->WriteObjectAny( (void*)obj, cl, oldkeyname, canBeMerged ? "OverWrite" : "" ) <= 0) {
+                     status = kFALSE;
+                  }
                }
                cl->Destructor(obj); // just in case the class is not loaded.
             }

@@ -26,7 +26,7 @@ class TMathTextRenderer;
 class TMathText
 	: public TText, public TAttFill {
 protected:
-		void *fRenderer;
+		void *fRenderer; //!TMathText Painter
 		TMathText &operator=(const TMathText &); 
 
 		void Render(const Double_t x, const Double_t y,
@@ -64,7 +64,7 @@ public:
 			std::ostream &out, Option_t *option = "");
 		friend class TMathTextRenderer;
 
-		ClassDef(TMathText,1) //TeX mathematical formula
+		ClassDef(TMathText,2) //TeX mathematical formula
 };
 
 #endif

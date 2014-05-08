@@ -796,6 +796,8 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement*
       TStreamerBase* base = (TStreamerBase*) elem;
       sprintf(sbuf, "%d", base->GetBaseVersion());
       fXML->NewAttr(node,0, "baseversion", sbuf);
+      sprintf(sbuf, "%d", base->GetBaseCheckSum());
+      fXML->NewAttr(node,0, "basechecksum", sbuf);
    } else
    if (cl == TStreamerBasicPointer::Class()) {
       TStreamerBasicPointer* bptr = (TStreamerBasicPointer*) elem;
@@ -838,6 +840,8 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo* info)
    if (cl == TStreamerBase::Class()) {
       int basever = fXML->GetIntAttr(node,"baseversion");
       ((TStreamerBase*) elem)->SetBaseVersion(basever);
+      Int_t baseCheckSum = fXML->GetIntAttr(node,"basechecksum");
+      ((TStreamerBase*) elem)->SetBaseCheckSum(baseCheckSum);
    } else
    if (cl == TStreamerBasicPointer::Class()) {
       TString countname = fXML->GetAttr(node,"countname");

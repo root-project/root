@@ -689,8 +689,21 @@ int exerciseAxialTest (XYZVector const & testVector)
 // ======================================
 
 
-int rotationApplication () {
+int rotationApplication (bool forceRun = false) {
   int ret = 0;
+
+  bool skipTests = false; 
+#if defined(__i386__)
+  // do not run by default tests on 32 bit architecture
+  // since extended precision will make it difficult 
+  skipTests = true;  
+#endif
+
+  if (skipTests && !forceRun) { 
+     std::cout << "Skip the tests - it is probably a 32 bit arch - return 0" << std::endl;
+     return 0; 
+  }
+ 
   std::vector<TestRotation> testRotations = makeTestRotations();
   std::vector<XYZVector>    testVectors   = makeTestVectors();
   for ( std::vector<TestRotation>::const_iterator n =  testRotations.begin();
@@ -709,7 +722,7 @@ int rotationApplication () {
 }
 
 int main() { 
-   int ret =  rotationApplication();
+  int ret =  rotationApplication(true);
    if (ret)  std::cerr << "test FAILED !!! " << std::endl; 
    else   std::cout << "test OK " << std::endl;
    return ret; 

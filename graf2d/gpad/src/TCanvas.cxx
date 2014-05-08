@@ -650,6 +650,8 @@ void TCanvas::Destructor()
 
    Close();
 
+   //In a batch mode fPainter can be non-null after
+   //the call to Close above (???)
    delete fPainter;
 }
 
@@ -751,17 +753,8 @@ void TCanvas::Close(Option_t *option)
 
    if (!IsBatch()) {
       gVirtualX->SelectWindow(fCanvasID);    //select current canvas
-
-      if (fGLDevice != -1) {
-         gGLManager->MakeCurrent(fGLDevice);
-         //fPainter has a font manager.
-         //Font manager will delete textures.
-         //If context is wrong (we can have several canvases) -
-         //wrong texture will be deleted, damaging some of our fonts.
-         delete fPainter;
-         fPainter = 0;
-         gGLManager->DeleteGLContext(fGLDevice);//?
-      }
+      
+      DeleteCanvasPainter();
 
       if (fCanvasImp) fCanvasImp->Close();
    }
@@ -2214,4 +2207,26 @@ TVirtualPadPainter *TCanvas::GetCanvasPainter()
 
    if (!fPainter) CreatePainter();
    return fPainter;
+}
+
+//______________________________________________________________________________
+void TCanvas::DeleteCanvasPainter()
+{
+   //assert on IsBatch() == false?
+   
+   if (fGLDevice != -1) {
+      //fPainter has a font manager.
+      //Font manager will delete textures.
+      //If context is wrong (we can have several canvases) -
+      //wrong texture will be deleted, damaging some of our fonts.
+      gGLManager->MakeCurrent(fGLDevice);
+   }
+   
+   delete fPainter;
+   fPainter = 0;
+   
+   if (fGLDevice != -1) {
+      gGLManager->DeleteGLContext(fGLDevice);//?
+      fGLDevice = -1;
+   }
 }

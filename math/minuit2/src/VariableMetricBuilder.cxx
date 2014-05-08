@@ -39,6 +39,23 @@ namespace ROOT {
 
 double inner_product(const LAVector&, const LAVector&);
 
+void VariableMetricBuilder::AddResult( std::vector<MinimumState>& result, const MinimumState & state, bool store) const {
+   if (!store) store = StorageLevel();
+   store |= (result.size() == 0);
+   if (store) 
+      result.push_back(state);
+   else { 
+      result.back() = state; 
+   }
+   if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
+   else {
+      if (PrintLevel() > 1) {
+         MnPrint::PrintState(std::cout, result.back(), "VariableMetric: Iteration # ",result.size()-1); 
+      }
+   }
+}
+
+
 FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientCalculator& gc, const MinimumSeed& seed, const MnStrategy& strategy, unsigned int maxfcn, double edmval) const {   
    // top level function to find minimum from a given initial seed 
    // iterate on a minimum search in case of first attempt is not successful
@@ -49,7 +66,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // LM: change factor to 2E-3 to be consistent with F77Minuit
    edmval *= 0.002;    
    
-   int printLevel = MnPrint::Level();
+   int printLevel = PrintLevel();
    
 #ifdef DEBUG
    std::cout<<"VariableMetricBuilder convergence when edm < "<<edmval<<std::endl;
@@ -74,17 +91,19 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    }
    
    std::vector<MinimumState> result;
-   //   result.reserve(1);
-   result.reserve(8);
+   if (StorageLevel() > 0) 
+      result.reserve(10);
+   else
+      result.reserve(2);
    
-   result.push_back( seed.State() );
-
    
    // do actual iterations
    if (printLevel >1) {
       std::cout << "VariableMetric: start iterating until Edm is < " << edmval << std::endl;
       MnPrint::PrintState(std::cout, seed.State(), "VariableMetric: Initial state  "); 
    }
+
+   AddResult( result, seed.State(), true);
    
    
    // try first with a maxfxn = 80% of maxfcn 
@@ -134,11 +153,11 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 #endif
          
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
-         result.push_back( st );
 
          if (printLevel > 1) {            
             MnPrint::PrintState(std::cout, st, "VariableMetric: After Hessian  "); 
          }
+         AddResult( result, st, true); 
 
          
          // check new edm 
@@ -224,8 +243,6 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    //   result.push_back(MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(), edm, fcn.NumOfCalls()));
    const MinimumState & initialState = result.back();
    
-   int printLevel = MnPrint::Level();
-   
    double edm = initialState.Edm();
    
    
@@ -246,8 +263,8 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    // keep also prevStep
    MnAlgebraicVector prevStep(initialState.Gradient().Vec().size());
    
-   do {   
-      
+   do {  
+
       //     const MinimumState& s0 = result.back();
       MinimumState s0 = result.back();
       
@@ -292,7 +309,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          MN_INFO_VAL(gdel);
 #endif
          if(gdel > 0.) {
-            result.push_back(s0);
+            AddResult(result, s0, result.size()<=1);
             return FunctionMinimum(seed, result, fcn.Up());
          }
       }
@@ -305,7 +322,10 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 #endif
          // no improvement exit   (is it really needed LM ? in vers. 1.22 tried alternative )
          // add new state where only fcn changes
-         result.push_back(MinimumState(s0.Parameters(), s0.Error(), s0.Gradient(), s0.Edm(), fcn.NumOfCalls()) );
+         AddResult(result, MinimumState(s0.Parameters(), s0.Error(), s0.Gradient(), s0.Edm(), fcn.NumOfCalls()), 
+                   result.size()<=1);
+
+
          break; 
          
          
@@ -353,12 +373,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
                 << " edm = " << edm << std::endl << std::endl;
 #endif
       
-      
-      result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls())); 
-
-      if (printLevel > 1) {
-         MnPrint::PrintState(std::cout, result.back(), "VariableMetric: Iteration # ",result.size()-1); 
-      }
+      AddResult(result, MinimumState(p, e, g, edm, fcn.NumOfCalls()), result.size() <= 1); 
       
       // correct edm 
       edm *= (1. + 3.*e.Dcovar());

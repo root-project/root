@@ -113,7 +113,7 @@ public:
          TH1D      *ProjectionZ(const char *name="_pz", Int_t firstxbin=0, Int_t lastxbin=-1, Int_t firstybin=0,
                                 Int_t lastybin=-1, Option_t *option="") const; // *MENU*
          TH1       *Project3D(Option_t *option="x") const; // *MENU*
-   TProfile2D      *Project3DProfile(Option_t *option="xy") const; // *MENU*
+   virtual TProfile2D  *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void     PutStats(Double_t *stats);
    virtual TH3     *RebinX(Int_t ngroup = 2, const char *newname = "");
    virtual TH3     *RebinY(Int_t ngroup = 2, const char *newname = "");
@@ -123,15 +123,26 @@ public:
    virtual void     SetShowProjection(const char *option="xy",Int_t nbins=1);   // *MENU*
 
 protected:
-   TH1D        *DoProject1D(const char* name, const char * title, TAxis* projX, 
+
+   virtual TH1D        *DoProject1D(const char* name, const char * title, TAxis* projX, 
                          bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
-   TH2D        *DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+   virtual TH2D        *DoProject2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
                         bool computeErrors, bool originalRange,
                          bool useUF, bool useOF) const;
-   TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
-                                        bool originalRange, bool useUF, bool useOF) const;
-   
+   virtual TProfile2D  *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+                                          bool originalRange, bool useUF, bool useOF) const;
+
+   // these functions are need to be used inside TProfile3D::DoProjectProfile2D
+   static TH1D         *DoProject1D(const TH3 & h, const char* name, const char * title, TAxis* projX,  
+                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  { 
+      return h.DoProject1D(name, title, projX, computeErrors, originalRange, useUF, useOF);
+   }
+   static TH2D         *DoProject2D(const TH3 & h, const char* name, const char * title, TAxis* projX, TAxis* projY, 
+                                    bool computeErrors, bool originalRange, bool useUF, bool useOF)  { 
+      return h.DoProject2D(name, title, projX,projY, computeErrors, originalRange, useUF, useOF);
+   }
+
    ClassDef(TH3,5)  //3-Dim histogram base class
 };
 

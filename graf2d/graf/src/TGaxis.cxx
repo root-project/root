@@ -901,8 +901,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
       return;
    }
 
-   Int_t maxDigits = 5;
-   if (fAxis) maxDigits = fgMaxDigits;
+   Int_t maxDigits = fgMaxDigits;
 
    TLatex *textaxis = new TLatex();
    SetLineStyle(1); // axis line style

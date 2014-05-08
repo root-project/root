@@ -1366,6 +1366,12 @@ void TGColorDialog::CloseWindow()
    }
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
+   
+   //OpenGL + XQuartz on Mac: gl context and related resources
+   //must be deleted _before_ UnmapWindow.
+   if (gVirtualX->InheritsFrom("TGX11") && fEcanvas->GetCanvas()->UseGL())
+      fEcanvas->GetCanvas()->DeleteCanvasPainter();
+   
    UnmapWindow();
 }
 

@@ -38,6 +38,7 @@ public:
   
    const MinimumSeedGenerator& SeedGenerator() const {return fSeedGenerator;}
    const MinimumBuilder& Builder() const {return fBuilder;}
+   MinimumBuilder& Builder()  {return fBuilder;}
   
 private:
   

@@ -25,9 +25,7 @@
 #include "TMath.h"
 #endif
 
-#if defined(__linux__) && !defined(__CINT__)
-#include <pthread.h>
-#endif
+#include "TMCtls.h"
 
 class TVirtualMCApplication : public TNamed {
 
@@ -112,10 +110,10 @@ public:
 
 private:
    // static data members
-#if defined(__linux__) && !defined(__CINT__)
-   static __thread TVirtualMCApplication* fgInstance; // singleton instance
+#if !defined(__CINT__)
+   static TMCThreadLocal TVirtualMCApplication* fgInstance; // singleton instance
 #else
-   static          TVirtualMCApplication* fgInstance; // singleton instance
+   static                TVirtualMCApplication* fgInstance; // singleton instance
 #endif
 
    ClassDef(TVirtualMCApplication,1)  //Interface to MonteCarlo application

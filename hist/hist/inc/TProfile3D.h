@@ -65,6 +65,9 @@ protected:
    Int_t             Fill(Double_t, const char *, Double_t, Double_t) {return TH3::Fill(0); } //MayNotUse
    Int_t             Fill(Double_t, Double_t, const char *, Double_t) {return TH3::Fill(0); } //MayNotUse
 
+   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+                                          bool originalRange, bool useUF, bool useOF) const;
+
    
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
@@ -123,7 +126,8 @@ public:
    virtual Bool_t    Multiply(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Multiply(const TH1 *h1);
    virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-   TH3D             *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
+   virtual TH3D     *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
+   virtual TProfile2D  *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      RebinAxis(Double_t x, TAxis *axis);

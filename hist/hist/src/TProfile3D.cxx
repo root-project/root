@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TProfile3D.h"
+#include "TProfile2D.h"
 #include "THashList.h"
 #include "TMath.h"
 #include "THLimitsFinder.h"
@@ -1079,46 +1080,213 @@ TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
 //      will be equal to the GetBinEntries(bin) of the profile,
 //   if option "C=E" the bin contents of the projection are set to the
 //       bin errors of the profile
-//
+//   if option "E" is specified  the errors of the projected histogram are computed and set 
+//      to be equal to the errors of the profile.
+//      Option "E" is defined as the default one in the header file. 
+//   if option "" is specified the histogram errors are simply the sqrt of its content
+//   if option "B" is specified, the content of bin of the returned histogram
+//      will be equal to the GetBinEntries(bin) of the profile,
+//   if option "C=E" the bin contents of the projection are set to the
+//       bin errors of the profile
+//   if option "W" is specified the bin content of the projected histogram  is set to the 
+//       product of the bin content of the profile and the entries. 
+//       With this option the returned histogram will be equivalent to the one obtained by 
+//       filling directly a TH2D using the 3-rd value as a weight. 
+//       This option makes sense only for profile filled with all weights =1. 
+//       When the profile is weighted (filled with weights different than 1) the  
+//       bin error of the projected histogram (obtained using this option "W") cannot be 
+//       correctly computed from the information stored in the profile. In that case the 
+//       obtained histogram contains as bin error square the weighted sum of the square of the 
+//       profiled observable (TProfile2D::fSumw2[bin] ) 
+
 
    TString opt = option;
    opt.ToLower();
    Int_t nx = fXaxis.GetNbins();
    Int_t ny = fYaxis.GetNbins();
    Int_t nz = fZaxis.GetNbins();
+   const TArrayD *xbins = fXaxis.GetXbins();
+   const TArrayD *ybins = fYaxis.GetXbins();
+   const TArrayD *zbins = fZaxis.GetXbins();
 
    // Create the projection histogram
    TString pname = name; 
    if (pname == "_px") { 
-      pname = GetName();  pname.Append("_px");
+      pname = GetName();  pname.Append("_pxyz");
    }
-   TH3D *h1 = new TH3D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
+   TH3D *h1 = 0 ; 
+   if (xbins->fN == 0 && ybins->fN == 0 && zbins->fN == 0) 
+      h1 = new TH3D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
+   else if ( xbins->fN != 0 && ybins->fN != 0 && zbins->fN != 0)
+      h1 = new TH3D(pname,GetTitle(),nx,xbins->GetArray(),ny,ybins->GetArray(), nz,zbins->GetArray() );
+   else {
+      Error("ProjectionXYZ","Histogram has an axis with variable bins and an axis with fixed bins. This case is not cupported - return a null pointer"); 
+      return 0; 
+   }
+   
+      
    Bool_t computeErrors = kFALSE;
    Bool_t cequalErrors  = kFALSE;
    Bool_t binEntries    = kFALSE;
+   Bool_t binWeight     = kFALSE;
+
    if (opt.Contains("b")) binEntries = kTRUE;
    if (opt.Contains("e")) computeErrors = kTRUE;
+   if (opt.Contains("w")) binWeight = kTRUE;
    if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-   if (computeErrors) h1->Sumw2();
+   if (computeErrors || binWeight || (binEntries && fBinSumw2.fN)  ) h1->Sumw2();
 
    // Fill the projected histogram
    Int_t bin,binx,biny,binz;
-   Double_t cont,err;
+   Double_t cont;
    for (binx =0;binx<=nx+1;binx++) {
       for (biny =0;biny<=ny+1;biny++) {
          for (binz =0;binz<=nz+1;binz++) {
             bin = GetBin(binx,biny,binz);
-            if (binEntries)    cont = GetBinEntries(bin);
-            else               cont = GetBinContent(bin);
-            err   = GetBinError(bin);
-            if (cequalErrors)  h1->SetBinContent(binx,biny,binz, err);
-            else               h1->SetBinContent(binx,biny,binz,cont);
-            if (computeErrors) h1->SetBinError(binx,biny,binz,err);
+
+            if (binEntries)         cont = GetBinEntries(bin);
+            else if (cequalErrors)  cont = GetBinError(bin);
+            else if (binWeight)     cont = GetBinContent(bin) * GetBinEntries(bin);
+            else                    cont = GetBinContent(bin);    // default case
+            
+            h1->SetBinContent(bin ,cont);
+            
+            // if option E projected histogram errors are same as profile
+            if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
+            // in case of option W bin error is deduced from bin sum of z**2 values of profile
+            // this is correct only if the profile is unweighted 
+            if (binWeight)      h1->GetSumw2()->fArray[bin] = fSumw2.fArray[bin];
+            // in case of bin entries and profile is weighted, we need to set also the bin error
+            if (binEntries && fBinSumw2.fN ) {
+               R__ASSERT(  h1->GetSumw2() );
+               h1->GetSumw2()->fArray[bin] =  fBinSumw2.fArray[bin]; 
+            }
          }
       }
    }
    h1->SetEntries(fEntries);
    return h1;
+}
+//______________________________________________________________________________
+TProfile2D *TProfile3D::Project3DProfile(Option_t *option) const
+{
+   // *-*-*-*-*Project a 3-D profile into a 2D-profile histogram depending
+   // on the option parameter
+   // option may contain a combination of the characters x,y,z
+   // option = "xy" return the x versus y projection into a TProfile2D histogram
+   // option = "yx" return the y versus x projection into a TProfile2D histogram
+   // option = "xz" return the x versus z projection into a TProfile2D histogram
+   // option = "zx" return the z versus x projection into a TProfile2D histogram
+   // option = "yz" return the y versus z projection into a TProfile2D histogram
+   // option = "zy" return the z versus y projection into a TProfile2D histogram
+   // NB: the notation "a vs b" means "a" vertical and "b" horizontalalong X*-*-*-*-*-*
+   //
+   //   The resulting profile contains the combination of all the considered bins along X
+   //   By default, all bins are included considering also underflow/overflows
+   //
+   //   The option can also be used to specify the projected profile error type.
+   //   Values which can be used are 's', 'i', or 'g'. See TProfile::BuildOptions for details
+   //
+   //   To select a bin range along an axis, use TAxis::SetRange, eg
+   //     h3.GetYaxis()->SetRange(23,56);
+   //
+   //
+   
+   // can call TH3 method which will call the virtual method :DoProjectProfile2D reimplented below 
+   // but need to add underflow/overflow
+   TString opt(option); 
+   opt.Append(" UF OF");
+   return TH3::Project3DProfile(opt);
+}
+
+//______________________________________________________________________________
+TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+                                           bool originalRange, bool useUF, bool useOF) const
+{
+   // internal method to project to a 2D Profile
+   // called from TH3::Project3DProfile but re-implemented in case of the TPRofile3D since what is done is different
+
+   // Get the ranges where we will work.
+   Int_t ixmin = projX->GetFirst();
+   Int_t ixmax = projX->GetLast();
+   Int_t iymin = projY->GetFirst();
+   Int_t iymax = projY->GetLast();
+   if (ixmin == 0 && ixmax == 0) { ixmin = 1; ixmax = projX->GetNbins(); }
+   if (iymin == 0 && iymax == 0) { iymin = 1; iymax = projY->GetNbins(); }
+   Int_t nx = ixmax-ixmin+1;
+   Int_t ny = iymax-iymin+1;
+
+   // Create the projected profiles
+   TProfile2D *p2 = 0;
+   // Create always a new TProfile2D (not as in the case of TH3 projection)
+
+   const TArrayD *xbins = projX->GetXbins();
+   const TArrayD *ybins = projY->GetXbins();
+   // assume all axis have variable bins or have fixed bins
+   if ( originalRange ) {
+      if (xbins->fN == 0 && ybins->fN == 0) {
+         p2 = new TProfile2D(name,title,projY->GetNbins(),projY->GetXmin(),projY->GetXmax()
+                             ,projX->GetNbins(),projX->GetXmin(),projX->GetXmax());
+      } else {
+         p2 = new TProfile2D(name,title,projY->GetNbins(),&ybins->fArray[iymin-1],projX->GetNbins(),&xbins->fArray[ixmin-1]);
+      }
+   } else {
+      if (xbins->fN == 0 && ybins->fN == 0) {
+         p2 = new TProfile2D(name,title,ny,projY->GetBinLowEdge(iymin),projY->GetBinUpEdge(iymax)
+                             ,nx,projX->GetBinLowEdge(ixmin),projX->GetBinUpEdge(ixmax));
+      } else {
+         p2 = new TProfile2D(name,title,ny,&ybins->fArray[iymin-1],nx,&xbins->fArray[ixmin-1]);
+      }
+   }
+
+   // weights 
+   bool useWeights = (fBinSumw2.fN != 0); 
+   if (useWeights) p2->Sumw2(); 
+
+   // make projection in a 3D first 
+   TH3D * h3dW = ProjectionXYZ("h3temp-W","W");
+   TH3D * h3dN = ProjectionXYZ("h3temp-N","B");
+
+   h3dW->SetDirectory(0); h3dN->SetDirectory(0);
+       
+   // note that h3dW is always a weighted histogram - so we need to compute error in the projection
+   TAxis * projX_hW = h3dW->GetXaxis(); 
+   TAxis * projX_hN = h3dN->GetXaxis(); 
+   if (projX == GetYaxis() ) {  projX_hW =  h3dW->GetYaxis();  projX_hN =  h3dN->GetYaxis(); }
+   if (projX == GetZaxis() ) {  projX_hW =  h3dW->GetZaxis();  projX_hN =  h3dN->GetZaxis(); }
+   TAxis * projY_hW = h3dW->GetYaxis(); 
+   TAxis * projY_hN = h3dN->GetYaxis(); 
+   if (projY == GetXaxis() ) {  projY_hW =  h3dW->GetXaxis();  projY_hN =  h3dN->GetXaxis(); }
+   if (projY == GetZaxis() ) {  projY_hW =  h3dW->GetZaxis();  projY_hN =  h3dN->GetZaxis(); }
+
+   TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF); 
+   TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF); 
+   h2W->SetDirectory(0); h2N->SetDirectory(0);
+
+
+   // fill the bin content
+   R__ASSERT( h2W->fN == p2->fN ); 
+   R__ASSERT( h2N->fN == p2->fN ); 
+   R__ASSERT( h2W->GetSumw2()->fN != 0); // h2W should always be a weighted histogram since h3dW is weighted
+   for (int i = 0; i < p2->fN ; ++i) {
+      //std::cout << " proj bin " << i << "  " <<  h2W->fArray[i] << "  " << h2N->fArray[i] << std::endl;
+      p2->fArray[i] = h2W->fArray[i];   // array of profile is sum of all values
+      p2->GetSumw2()->fArray[i]  = h2W->GetSumw2()->fArray[i];   // array of content square of profile is weight square of the W projected histogram
+      p2->SetBinEntries(i, h2N->fArray[i] );          
+      if (useWeights) p2->GetBinSumw2()->fArray[i] = h2N->GetSumw2()->fArray[i];    // sum of weight squares are stored to compute errors in h1N histogram
+   }
+   // delete the created histograms
+   delete h3dW; 
+   delete h3dN; 
+   delete h2W; 
+   delete h2N; 
+
+   // Also we need to set the entries since they have not been correctly calculated during the projection
+   // we can only set them to the effective entries
+   p2->SetEntries( p2->GetEffectiveEntries() );
+
+   return p2; 
+
 }
 
 //______________________________________________________________________________

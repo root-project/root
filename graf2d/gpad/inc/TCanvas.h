@@ -235,14 +235,13 @@ public:
    virtual void      ToggleEditor();
    virtual void      ToggleToolTips();
    virtual void      Update();
-   //Still need this.
-   Bool_t            UseGL() const { return fUseGL; }
-   void              SetSupportGL(Bool_t support) {fUseGL = support;}
-   
-   //Name is GetPainter, not GetPadPainter
-   //to avoid name hiding and confusion.
-   //GetPadPainter and GetPainter are non-virtual (no need, in fact).
+
+   //
+   Bool_t              UseGL() const { return fUseGL; }
+   void                SetSupportGL(Bool_t support) {fUseGL = support;}
    TVirtualPadPainter *GetCanvasPainter();
+   void                DeleteCanvasPainter();
+
    
    static TCanvas   *MakeDefCanvas();
    static Bool_t     SupportAlpha();

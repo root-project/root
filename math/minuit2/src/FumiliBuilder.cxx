@@ -79,11 +79,13 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
    
    result.push_back( seed.State() );
 
-   int printLevel = MnPrint::Level();
+   int printLevel = PrintLevel();
    if (printLevel >1) {
       std::cout << "Fumili: start iterating until Edm is < " << edmval << std::endl;
       MnPrint::PrintState(std::cout, seed.State(), "Fumili: Initial state  "); 
    }
+   if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
+
    
    // do actual iterations
    
@@ -135,6 +137,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 
       if (printLevel > 1) {            
          MnPrint::PrintState(std::cout, st, "Fumili: After Hessian  "); 
+         if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
       }
          
 
@@ -355,6 +358,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
          edm = Estimator().Estimate(g, s0.Error());
          if(edm < 0.) {
             result.push_back(s0);
+            if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
             return FunctionMinimum(seed, result, fcn.Up());
          }
       } 
@@ -374,6 +378,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
 #endif
             
       result.push_back(MinimumState(p, e, g, edm, fcn.NumOfCalls())); 
+      if (TraceIter() ) TraceIteration(result.size()-1, result.back() );
 
       if (printLevel > 1) {
          MnPrint::PrintState(std::cout, result.back(), "Fumili: Iteration # ",result.size()); 

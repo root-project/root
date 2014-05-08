@@ -208,6 +208,7 @@ if(NOT WIN32 AND ROOT_xrootd_FOUND)
   ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// 
                                          -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
+                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
                                          FAILREGEX "FAILED")  
 endif()
 
