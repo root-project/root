@@ -86,10 +86,13 @@ void CheckFor(DERIVED* obj,
    auto compilerOffset = CompOffset<DERIVED, TARGET>(obj);
    auto interpreterOffset = InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName);
    if(compilerOffset == interpreterOffset) {
-      printf("derived %s -> base %s: Compiler agrees with TClass.\n",
+      printf("derived %s -> base %s: Compiler and interpreter say the same value.\n",
+             fromDerivedClassName, toBaseClassName);
+   } else if (interpreterOffset == -1) {
+      printf("derived %s -> base %s: Compiler says something, interpreter says -1.\n",
              fromDerivedClassName, toBaseClassName);
    } else {
-      printf("derived %s -> base %s: Compiler %ld does not agrees with TClass %ld.\n",
+      printf("derived %s -> base %s: Compiler (%ld) says different value than interpreter (%ld).\n",
              fromDerivedClassName, toBaseClassName, compilerOffset, interpreterOffset);
    }
 }
@@ -100,19 +103,24 @@ void CheckForNotDerived(TARGET* obj,
    long offsetComp = CompOffsetNotDerived<DERIVED, TARGET>(obj);
    long offsetTClass = InterpOffsetTClassInterface(obj, fromDerivedClassName,
                                                   toBaseClassName, false);
-   // On some platforms (or stdlibs?) the interpreted dynamic_cast from a
-   // virtual base to derived returns 0, and the offset calculation thus returns
-   // -1.
    if (!strcmp(fromDerivedClassName, "Basement")
-       && !strcmp(toBaseClassName, "Top")
-       && (offsetTClass == -1 || offsetTClass == offsetComp)) {
-     printf("derived %s -> base %s: Compiler says %ld, TClass says -1 or %ld\n",
-            fromDerivedClassName, toBaseClassName,
-            offsetComp, offsetComp);
+       && !strcmp(toBaseClassName, "Top")) {
+         // On some platforms (or stdlibs?) the interpreted dynamic_cast from a
+         // virtual base to derived returns 0, and the offset calculation thus returns
+         // -1.
+     if (offsetTClass == offsetComp || offsetTClass == -1) {
+        printf("derived %s -> base %s: Compiler and TClass agree or offset fail - this is as good as it gets.\n",
+               fromDerivedClassName, toBaseClassName);
+     } else {
+        printf("derived %s -> base %s: Compiler (%ld) and TClass (%ld) disagree!\n",
+               fromDerivedClassName, toBaseClassName, offsetComp, offsetTClass);
+     }
+   } else if (offsetTClass == offsetComp) {
+      printf("derived %s -> base %s: Compiler and TClass say the same value.\n",
+             fromDerivedClassName, toBaseClassName);
    } else {
-     printf("derived %s -> base %s: Compiler says %ld, TClass says %ld\n",
-            fromDerivedClassName, toBaseClassName,
-            offsetComp, offsetTClass);
+      printf("derived %s -> base %s: Compiler (%ld) says different value than TClass (%ld).\n",
+             fromDerivedClassName, toBaseClassName, offsetComp, offsetTClass);
    }
 }
 
@@ -122,10 +130,13 @@ void CheckForWithClassInfo(DERIVED* obj,
    auto compilerOffset = CompOffset<DERIVED, TARGET>(obj);
    auto interpreterOffset = InterpOffsetTClassInterface(obj, fromDerivedClassName, toBaseClassName);
    if(compilerOffset == interpreterOffset) {
-      printf("derived %s -> base %s: Compiler agrees with TClass.\n",
+      printf("derived %s -> base %s: Compiler and interpreter say the same value.\n",
+             fromDerivedClassName, toBaseClassName);
+   } else if (interpreterOffset == -1) {
+      printf("derived %s -> base %s: Compiler says something, interpreter says -1.\n",
              fromDerivedClassName, toBaseClassName);
    } else {
-      printf("derived %s -> base %s: Compiler %ld does not agrees with TClass %ld.\n",
+      printf("derived %s -> base %s: Compiler (%ld) says different value than interpreter (%ld).\n",
              fromDerivedClassName, toBaseClassName, compilerOffset, interpreterOffset);
    }
 }
