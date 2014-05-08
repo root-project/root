@@ -39,11 +39,12 @@ using namespace ROOT;
 using namespace clang;
 
 TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
-                                   const char* shLibFileName):
+                                   const char* shLibFileName,
+                                   const char* dictName):
    fCI(CI),
    fShLibFileName(shLibFileName),
    fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
-   fDictionaryName(llvm::sys::path::stem(shLibFileName)),
+   fDictionaryName(dictName),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
 {
 
@@ -61,8 +62,9 @@ TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
       fModuleDirName += "/";
    }
 
-   fModuleFileName = fModuleDirName
-      + ROOT::TMetaUtils::GetModuleFileName(fDictionaryName.c_str());
+   std::string fullPCMFileName
+      = ROOT::TMetaUtils::GetPCMFileName(shLibFileName, fDictionaryName);
+   fModuleFileName = fModuleDirName + llvm::sys::path::filename(fullPCMFileName).str();
    // .pcm -> .pch
    if (IsPCH()) fModuleFileName[fModuleFileName.length() - 1] = 'h';
 

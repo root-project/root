@@ -771,7 +771,7 @@ namespace{
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0),
+   fClingCallbacks(0), fAutoLoadCallBack(0),
    fTransactionCount(0), fHeaderParsingOnDemand(getenv("HEADER_PARSING_ON_DEMAND"))
 {
    // Initialize the cling interpreter interface.
@@ -850,14 +850,6 @@ TCling::TCling(const char *name, const char *title)
    // the results in pipes (Savannah #99234).
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
-
-   if (getenv("ROOT_MODULES")) {
-      fHaveSinglePCM =
-         LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
-                 0 /*headers*/, 0 /*triggerFunc*/);
-   }
-   if (fHaveSinglePCM)
-      ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
    // rootcling does parts already if needed, e.g. genreflex does not want using
@@ -1039,7 +1031,6 @@ void TCling::RegisterModule(const char* modulename,
    // The payload code is injected "as is" in the interpreter.
    // The value of 'triggerFunc' is used to find the shared library location.
 
-   bool rootModulesDefined (getenv("ROOT_MODULES"));
    // rootcling also uses TCling for generating the dictionary ROOT files.
    bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
@@ -1047,9 +1038,8 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
-   if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
-      modulename = "allDict";
-   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+   const char* dyLibName = FindLibraryName(triggerFunc);
+   TString pcmFileName = ROOT::TMetaUtils::GetPCMFileName(dyLibName, modulename);
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
@@ -1093,7 +1083,6 @@ void TCling::RegisterModule(const char* modulename,
    // requested by the JIT from it: as the library is currently being dlopen'ed,
    // its symbols are not yet reachable from the process.
    // Recursive dlopen seems to work just fine.
-   const char* dyLibName = FindLibraryName(triggerFunc);
    if (dyLibName) {
       // We were able to determine the library name.
       void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
@@ -1134,13 +1123,9 @@ void TCling::RegisterModule(const char* modulename,
    }
 
 
-   if (rootModulesDefined) {
-      fInterpreter->declare(code.Data());
-      code = "";
-      if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
-         ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-                 ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
-      }
+   if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
+      ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
+              pcmFileName.Data());
    }
 
    bool oldValue = false;
@@ -1151,10 +1136,7 @@ void TCling::RegisterModule(const char* modulename,
       if (gDebug > 5) {
          ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
-      if(!rootModulesDefined)
-         code += TString::Format("#include \"%s\"\n", *hdr);
-      else
-         fInterpreter->loadModuleForHeader(*hdr);
+      code += TString::Format("#include \"%s\"\n", *hdr);
    }
 
    { // scope within which diagnostics are de-activated

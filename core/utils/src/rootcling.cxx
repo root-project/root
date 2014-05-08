@@ -3911,12 +3911,22 @@ int RootCling(int argc,
    string incCurDir = "-I";
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
-      
-   TModuleGenerator modGen(interp.getCI(), 
-                           sharedLibraryPathName.c_str());
-   
+
+   string main_dictname = llvm::sys::path::filename(dictpathname).str();
+   size_t dh = main_dictname.rfind('.');
+   if (dh != std::string::npos) {
+      main_dictname.erase(dh);
+   }
+   // Need to replace all the characters not allowed in a symbol ...
+   std::string main_dictname_copy(main_dictname);
+   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
+
+   TModuleGenerator modGen(interp.getCI(),
+                           sharedLibraryPathName.c_str(),
+                           main_dictname.c_str());
+
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
-   
+
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
         dPrIt != diagnosticPragmas.end(); dPrIt++){
@@ -3951,7 +3961,6 @@ int RootCling(int argc,
 
    // Check if code goes to stdout or rootcling file
    std::ofstream fileout;
-   string main_dictname(dictpathname);
    std::ostream* dictStreamPtr = NULL;
    if (!ignoreExistingDict){
       if (!dictpathname.empty()) {
@@ -3975,14 +3984,6 @@ int RootCling(int argc,
    std::ostream* splitDictStreamPtr = doSplit ? CreateStreamPtrForSplitDict(dictpathname, tmpCatalog) : dictStreamPtr;
    std::ostream& dictStream = *dictStreamPtr;
    std::ostream& splitDictStream = *splitDictStreamPtr;
-
-   size_t dh = main_dictname.rfind('.');
-   if (dh != std::string::npos) {
-      main_dictname.erase(dh);
-   }
-   // Need to replace all the characters not allowed in a symbol ...
-   std::string main_dictname_copy(main_dictname);
-   TMetaUtils::GetCppName(main_dictname, main_dictname_copy.c_str());
 
    CreateDictHeader(dictStream,main_dictname);
    if (doSplit)

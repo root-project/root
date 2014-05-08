@@ -3629,11 +3629,22 @@ std::string ROOT::TMetaUtils::GetROOTIncludeDir(bool rootbuild)
 }
 
 //______________________________________________________________________________
-std::string ROOT::TMetaUtils::GetModuleFileName(const char* moduleName)
+std::string ROOT::TMetaUtils::GetPCMFileName(const char* libraryName,
+                                             const std::string& moduleName)
 {
-   // Return the dictionary file name for a module
-   std::string dictFileName(moduleName);
-   dictFileName += "_rdict.pcm";
+   // Return the dictionary file name for a module. libraryName might be NULL
+   // if it was not provided to rootcling; moduleName must not be NULL.
+   std::string dictFileName;
+   if (libraryName) {
+      dictFileName = libraryName;
+      // Remove extension
+      size_t posExt = dictFileName.find_last_of('.');
+      if (posExt != std::string::npos) {
+         dictFileName.erase(posExt);
+      }
+      dictFileName += "_";
+   }
+   dictFileName += moduleName + "_rdict.pcm";
    return dictFileName;
 }
 

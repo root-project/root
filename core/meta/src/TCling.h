@@ -120,7 +120,6 @@ private: // Data Members
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    std::vector<void*> fRegisterModuleDyLibs; // Stack of libraries currently running RegisterModule
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
-   Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    struct CharPtrCmp_t {
       bool operator()(const char* a, const char *b) const {
          return strcmp(a, b) < 0;
@@ -136,7 +135,7 @@ private: // Data Members
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    bool fHeaderParsingOnDemand;
-   
+
 
 public: // Public Interface
    virtual ~TCling();
