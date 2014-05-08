@@ -771,7 +771,7 @@ namespace{
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0),
+   fClingCallbacks(0), fAutoLoadCallBack(0),
    fTransactionCount(0), fHeaderParsingOnDemand(getenv("HEADER_PARSING_ON_DEMAND"))
 {
    // Initialize the cling interpreter interface.
@@ -850,14 +850,6 @@ TCling::TCling(const char *name, const char *title)
    // the results in pipes (Savannah #99234).
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
-
-   if (getenv("ROOT_MODULES")) {
-      fHaveSinglePCM =
-         LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
-                 0 /*headers*/, 0 /*triggerFunc*/);
-   }
-   if (fHaveSinglePCM)
-      ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
    // rootcling does parts already if needed, e.g. genreflex does not want using
@@ -1047,8 +1039,6 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
-   if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
-      modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
