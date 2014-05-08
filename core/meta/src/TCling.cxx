@@ -3418,6 +3418,10 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::str
    // In the set of pointer for the classes without dictionaries.
 
    // Get the name of the class.
+
+   // If we deal with a std::string we do not need to recurse and we do not need to get the normalized name
+   // because we want to now if it is a std string or not.
+   if (strcmp(qType.getAsString().c_str(), "std::string")==0) return false;
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
    const char* name = buf.c_str();
