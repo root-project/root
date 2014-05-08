@@ -2981,7 +2981,12 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      if (code <= TClass::kWithTypeDef && code != TClass::kReflexV5) {
+      if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
+         // With TClass::kReflexV5 we do not want the Long64 in the name
+         // nor any typedef.
+         type = TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE);
+
+      } else if (code <= TClass::kWithTypeDef) {
          // humm ... In the streamerInfo we only have the desugared/normalized
          // names, so we are unable to calculate the name with typedefs ...
          // except for the case of the ROOT typedef (Int_t, etc.) which are
@@ -2994,6 +2999,10 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       }
       if (TClassEdit::IsSTLCont(type)) {
          type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
+      }
+      if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
+         type.ReplaceAll("ULong64_t","unsigned long long");
+         type.ReplaceAll("Long64_t","long long");
       }
 
       il = type.Length();

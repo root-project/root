@@ -103,12 +103,13 @@ public:
    enum ECheckSum {
       kCurrentCheckSum = 0,
       kNoEnum          = 1, // Used since v3.3
-      kNoRange         = 2, // Up to v5.17
-      kReflexV5        = 3, // Up to v5.34.18 (has no range/comment and no typedef)
+      kReflexNoComment = 2, // Up to v5.34.18 (has no range/comment and no typedef at all)
+      kNoRange         = 3, // Up to v5.17
       kWithTypeDef     = 4, // Up to v5.34.18 and v5.99/06
-      kNoRangeCheck    = 5, // Up to v5.34.18 and v5.99/06
-      kNoBaseCheckSum  = 6, // Up to v5.34.18 and v5.99/06
-      kLatestCheckSum  = 7
+      kReflex          = 5, // Up to v5.34.18 (has no typedef at all)
+      kNoRangeCheck    = 6, // Up to v5.34.18 and v5.99/06
+      kNoBaseCheckSum  = 7, // Up to v5.34.18 and v5.99/06
+      kLatestCheckSum  = 8
    };
 
    // Describe the current state of the TClass itself.
