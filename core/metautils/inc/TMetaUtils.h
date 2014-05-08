@@ -495,7 +495,8 @@ llvm::StringRef GetFileName(const clang::Decl& decl,
 
 //______________________________________________________________________________
 // Return the dictionary file name for a module
-std::string GetModuleFileName(const char* moduleName);
+std::string GetPCMFileName(const char* libraryName,
+                           const std::string& moduleName);
 
 //______________________________________________________________________________
 // Declare a virtual module.map to clang. Returns Module on success.

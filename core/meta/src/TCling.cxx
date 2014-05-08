@@ -1038,7 +1038,8 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
-   TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+   const char* dyLibName = FindLibraryName(triggerFunc);
+   TString pcmFileName = ROOT::TMetaUtils::GetPCMFileName(dyLibName, modulename);
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
@@ -1082,7 +1083,6 @@ void TCling::RegisterModule(const char* modulename,
    // requested by the JIT from it: as the library is currently being dlopen'ed,
    // its symbols are not yet reachable from the process.
    // Recursive dlopen seems to work just fine.
-   const char* dyLibName = FindLibraryName(triggerFunc);
    if (dyLibName) {
       // We were able to determine the library name.
       void* dyLibHandle = dlopen(dyLibName, RTLD_LAZY | RTLD_GLOBAL);
@@ -1125,7 +1125,7 @@ void TCling::RegisterModule(const char* modulename,
 
    if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
       ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
-              ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
+              pcmFileName.Data());
    }
 
    bool oldValue = false;

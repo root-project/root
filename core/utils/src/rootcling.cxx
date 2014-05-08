@@ -3911,12 +3911,13 @@ int RootCling(int argc,
    string incCurDir = "-I";
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
-      
-   TModuleGenerator modGen(interp.getCI(), 
-                           sharedLibraryPathName.c_str());
-   
+
+   TModuleGenerator modGen(interp.getCI(),
+                           sharedLibraryPathName.c_str(),
+                           dictname.c_str());
+
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
-   
+
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
         dPrIt != diagnosticPragmas.end(); dPrIt++){
