@@ -427,13 +427,13 @@ const TSeqCollection *TTabCom::GetListOfClasses()
    if (!fpClasses) {
       // generate a text list of classes on disk
 
-      auto dir = gSystem->TempDirectory();
+      const char* dir = gSystem->TempDirectory();
       if (!dir) return 0;
       // The timestamp should be enough as the tab completion is an interactive feature.
       TString outf = dir;
-      TTime currentTime = gSystem->Now();
+      unsigned long currentTime = gSystem->Now();
       outf += "/.TTabCom-";
-      outf += currentTime.AsString();
+      outf += currentTime;
       // Redirect to the specified file name.
       std::string buf = ".> ";
       buf += outf;
@@ -443,8 +443,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       // Display the namespaces in the file.
       gCling->ProcessLine(".namespace");
       // Unredirect.
-      buf = ".> \n";
-      gCling->ProcessLine(buf.c_str());
+      gCling->ProcessLine(".> \n");
 
       // open the file
       std::ifstream file1(outf);
