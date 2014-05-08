@@ -19,11 +19,12 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
 add_dependencies(rootcling CLING LLVMRES)
 
 add_custom_command(TARGET rootcling POST_BUILD
-                   COMMAND ln -f ../../bin/rootcling ../../bin/rootcint
-                   COMMAND ln -f ../../bin/rootcling ../../bin/genreflex)
+                   COMMAND ln -f rootcling rootcint
+                   COMMAND ln -f rootcling genreflex
+                   WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
 
-install(PROGRAMS  ${CMAKE_BINARY_DIR}/bin/rootcint 
-                  ${CMAKE_BINARY_DIR}/bin/genreflex
+install(PROGRAMS  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint
+                  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex
                   DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
 
 add_custom_command(OUTPUT rootcling_tmp.cxx
