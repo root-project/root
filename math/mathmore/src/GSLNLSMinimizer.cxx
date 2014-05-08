@@ -185,7 +185,6 @@ void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
       MATH_WARN_MSG("GSLNLSMinimizer::SetFunction","Objective function has zero elements");
    }
    
-   fDim = chi2Func->NDim(); 
    fNFree = NDim();
 
    // use vector by value 
