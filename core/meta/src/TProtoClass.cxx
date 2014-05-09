@@ -75,15 +75,37 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 //______________________________________________________________________________
 void TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
-   if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit
-       || cl->fProperty) {
-      Error("AdoptProto", "TClass %s already initialized!", cl->GetName());
+   if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit >= 0
+       || cl->fProperty !=(-1) ) {
+      Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return;
    }
-   *((TNamed*)cl) = *this;
+   Info("FillTClass","Loading TProtoClass for %s - %s",cl->GetName(),GetName());
+   // Copy only the TClass bits.
+   // not bit 13 and below and not bit 24 and above, just Bits 14 - 23
+   UInt_t newbits = TestBits(0x00ffc000);
+   cl->ResetBit(0x00ffc000);
+   cl->SetBit(newbits);
+
+   cl->fName  = this->fName;
+   cl->fTitle = this->fTitle;
    cl->fBase = fBase;
    cl->fData = (TListOfDataMembers*)fData;
    cl->fRealData = new TList(); // FIXME: this should really become a THashList!
+
+   cl->fSizeof = fSizeof;
+   cl->fCanSplit = fCanSplit;
+   cl->fProperty = fProperty;
+
+   // Update pointers to TClass
+   for (auto base: *cl->fBase) {
+      ((TBaseClass*)base)->SetClass(cl);
+   }
+   for (auto dm: *cl->fData) {
+      ((TDataMember*)dm)->SetClass(cl);
+   }
+   ((TListOfDataMembers*)cl->fData)->SetClass(cl);
+
    TClass* currentRDClass = cl;
    for (TObject* element: *fPRealData) {
       if (element->IsA() == TObjString::Class()) {
@@ -100,18 +122,6 @@ void TProtoClass::FillTClass(TClass* cl) {
          }
       }
    }
-   cl->fSizeof = fSizeof;
-   cl->fCanSplit = fCanSplit;
-   cl->fProperty = fProperty;
-
-   // Update pointers to TClass
-   for (auto base: *cl->fBase) {
-      ((TBaseClass*)base)->SetClass(cl);
-   }
-   for (auto dm: *cl->fData) {
-      ((TDataMember*)dm)->SetClass(cl);
-   }
-   ((TListOfDataMembers*)cl->fData)->SetClass(cl);
 
    fBase = 0;
    fData = 0;
