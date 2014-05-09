@@ -55,10 +55,11 @@
 
 #ifndef __CINT__
 
+//#define USE_MATHMORE
 
 #include "Math/DistFuncMathCore.h"
 #ifdef USE_MATHMORE
-#include "Math/DistMathMore.h"
+#include "Math/DistFuncMathMore.h"
 #endif
 
 #include "Math/IParamFunction.h"
@@ -261,7 +262,7 @@ int StatFunction<F1,F2,N1,N2>::Test(double xmin, double xmax, double xlow, doubl
       double q1 = Cdf(v1);
       //std::cout << "v1 " << v1 << " pdf " << (*this)(v1) << " cdf " << q1 << " quantile " << Quantile(q1) << std::endl;  
       // calculate integral of pdf
-      Integrator ig(IntegrationOneDim::ADAPTIVESINGULAR, 1.E-12,1.E-12,100000);
+      Integrator ig(IntegrationOneDim::kADAPTIVESINGULAR, 1.E-12,1.E-12,100000);
       ig.SetFunction(*this);
       double q2 = 0; 
       if (!c) { 
