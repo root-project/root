@@ -4155,7 +4155,9 @@ int RootCling(int argc,
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
-   if (!onepcm && !selectionRules.AreAllSelectionRulesUsed()){
+   if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
+       !onepcm &&
+       !selectionRules.AreAllSelectionRulesUsed()){
       ROOT::TMetaUtils::Warning(0,"Not all selection rules are used!\n");
    }
 
