@@ -1832,6 +1832,23 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
 }
 
 //______________________________________________________________________________
+Bool_t TROOT::IsRootFile(const char *filename) const
+{
+   // Return true if the file is local and is (likely) to be a ROOT file
+
+   Bool_t result = kFALSE;
+   FILE *mayberootfile = fopen(filename,"rb");
+   if (mayberootfile) {
+      char header[5];
+      if (fgets(header,5,mayberootfile)) {
+         result = strncmp(header,"root",4)==0;
+      }
+      fclose(mayberootfile);
+   }
+   return result;
+}
+
+//______________________________________________________________________________
 void TROOT::ls(Option_t *option) const
 {
    // To list all objects of the application.

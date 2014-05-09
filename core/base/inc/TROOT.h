@@ -253,6 +253,7 @@ public:
    Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
+   Bool_t            IsRootFile(const char *filename) const;
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
