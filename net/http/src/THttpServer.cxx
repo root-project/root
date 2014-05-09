@@ -239,7 +239,8 @@ Bool_t THttpServer::CreateEngine(const char *engine)
    // Examples:
    //   "civetweb:8090" or "http:8090" or ":8090" - creates civetweb web server with http port 8090
    //   "fastcgi:9000" - creates fastcgi server with port 9000
-   //   "dabc:1237"   - create DABC server with port 1237
+   //   "dabc:1237"   - create DABC server with port 1237 (only available with DABC installed)
+   //   "dabc:master_host:port" - attach to DABC master, running on master_host:port, (only available with DABC installed)
 
    if (engine == 0) return kFALSE;
 

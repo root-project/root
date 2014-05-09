@@ -229,7 +229,7 @@ public:
    /** Guess mime type base on file extension */
    static const char *GetMimeType(const char *path);
 
-   ClassDef(THttpServer, 0) // HTTP online server for analysis
+   ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
 };
 
 #endif

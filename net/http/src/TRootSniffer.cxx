@@ -324,7 +324,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj,
 {
    // method verifies if new level of hierarchy should be started with provided
    // object
-   // If necessary, all necessary nodes and fields will be created
+   // If required, all necessary nodes and fields will be created
    // Used when different collection kinds should be scanned
 
    if (super.Done()) return kFALSE;
@@ -1092,7 +1092,7 @@ Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path,
    //    options - extra options
    //
    // By default, image 300x200 is produced
-   // In options string one could provide following options:
+   // In options string one could provide following parameters:
    //    w - image width
    //    h - image height
    //    opt - draw options
@@ -1124,11 +1124,13 @@ Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path,
 
    if (obj->InheritsFrom(TPad::Class())) {
 
-      Info("TRootSniffer", "Crate IMAGE directly from pad");
+      if (gDebug>1)
+         Info("TRootSniffer", "Crate IMAGE directly from pad");
       img->FromPad((TPad *) obj);
    } else if (IsDrawableClass(obj->IsA())) {
 
-      Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
+      if (gDebug>1)
+         Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
 
       Int_t width(300), height(200);
       TString drawopt = "";
