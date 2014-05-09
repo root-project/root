@@ -203,69 +203,40 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    if (fTransformations.GetEntries() <= 0)
       return &events;
 
-   std::vector<Event*>* tmpEvents = new std::vector<TMVA::Event*>(events.size());
-
+   // the transformedEvents are initialised with the initial events and then 
+   // subsequently replaced with transformed ones. The n-th transformation will
+   // and on the events as they look like after the (n-1)-the transformation
+   // as intended for the chained transfromations
+   std::vector<Event*> *transformedEvents = new std::vector<TMVA::Event*>(events.size());
    for ( UInt_t ievt = 0; ievt<events.size(); ievt++)
-      tmpEvents->at(ievt) = new Event(*events.at(ievt));
-	 
-   
-
-   Bool_t replaceColl = kFALSE; // first let TransformCollection create a new vector
-
+      transformedEvents->at(ievt) = new Event(*events.at(ievt));
+ 
    TListIter trIt(&fTransformations);
    std::vector< Int_t >::iterator rClsIt = fTransformationsReferenceClasses.begin();
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
-      if (trf->PrepareTransformation(*tmpEvents)) {
-         tmpEvents = TransformCollection(trf, (*rClsIt), tmpEvents, replaceColl);
-         // we now created a new vector, so the next transformations replace the 
-         // events by their transformed versions
-         replaceColl = kTRUE;  
-         rClsIt++;
+      if (trf->PrepareTransformation(*transformedEvents)) {
+        for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
+          *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
+        }
+        rClsIt++;
       }
    }
-
-   CalcStats(*tmpEvents);
+   
+   CalcStats(*transformedEvents);
 
    // plot the variables once in this transformation
-   PlotVariables(*tmpEvents);
+   PlotVariables(*transformedEvents);
 
+   //sometimes, the actual transformed event vector is not used for anything but the previous
+   //CalcStat and PlotVariables calles, in that case, we delete it again (and return NULL)
    if (!createNewVector) {  // if we don't want that newly created event vector to persist, then delete it
-      if (replaceColl) {    
-         for ( UInt_t ievt = 0; ievt<tmpEvents->size(); ievt++)
-            delete (*tmpEvents)[ievt];
-         delete tmpEvents;
-      }
-      return 0;
-      delete tmpEvents;
+     for ( UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++)
+       delete (*transformedEvents)[ievt];
+     delete transformedEvents;
+     transformedEvents=NULL;
    }
 
-   return tmpEvents; // give back the newly created event collection (containing the transformed events)
-}
-
-//_______________________________________________________________________
-std::vector<TMVA::Event*>* TMVA::TransformationHandler::TransformCollection( VariableTransformBase* trf,
-                                                                             Int_t cls,
-                                                                             std::vector<TMVA::Event*>* events,
-                                                                             Bool_t replace) const 
-{
-   // a collection of transformations
-   std::vector<TMVA::Event*>* tmpEvents = 0;
-
-   if (replace) {   // the events should be replaced by their transformed versions
-      tmpEvents = events;
-   } 
-   else {           // a new event vector is created
-      tmpEvents = new std::vector<TMVA::Event*>(events->size());
-   }
-   for (UInt_t ievt = 0; ievt<events->size(); ievt++) {  // loop through all events
-      if (replace) {  // and replace the event by its transformed version
-         *(*tmpEvents)[ievt] = *trf->Transform((*events)[ievt],cls);
-      } 
-      else {         // and create a new event which is the transformed version of the old event
-         (*tmpEvents)[ievt] = new Event(*trf->Transform((*events)[ievt],cls));
-      }
-   }
-   return tmpEvents;
+   return transformedEvents; // give back the newly created event collection (containing the transformed events)
 }
 
 //_______________________________________________________________________
