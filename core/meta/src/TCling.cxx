@@ -3446,7 +3446,17 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::str
 
    // If we deal with a std::string we do not need to recurse and we do not need to get the normalized name
    // because we want to now if it is a std string or not.
-   if (strcmp(qType.getAsString().c_str(), "std::string")==0) return false;
+   const cling::LookupHelper& lh = fInterpreter->getLookupHelper();
+   static const clang::Decl* FD_std_string = 0;
+   if (!FD_std_string) {
+      auto stringType = lh.findType("std::string", cling::LookupHelper::WithDiagnostics);
+      const clang::Type* fieldType = ROOT::TMetaUtils::GetUnderlyingType(stringType);
+      FD_std_string = fieldType->getAsCXXRecordDecl();
+   }
+   const clang::Type* fieldType = ROOT::TMetaUtils::GetUnderlyingType(qType);
+   clang::Decl* FD = fieldType->getAsCXXRecordDecl();
+   if (FD == FD_std_string) return false;
+
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
    const char* name = buf.c_str();
@@ -3539,6 +3549,8 @@ void TCling::GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse 
    }
    const clang::Decl* D = cli->GetDecl();
    const clang::Type* T = cli->GetType();
+
+   R__LOCKGUARD(gInterpreterMutex);
 
    // Set containing all the decls of the classes that do not have a dictionary.
    std::set<std::string> netD;
