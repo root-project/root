@@ -1123,7 +1123,17 @@ void TCling::RegisterModule(const char* modulename,
    }
 
 
-   if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0) {
+   if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
+       && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
+       && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
+       && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libvectorDict")!=0
+       && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
+       && strcmp(modulename,"libmap2Dict")!=0 && strcmp(modulename,"libmultimapDict")!=0
+       && strcmp(modulename,"libsetDict")!=0 && strcmp(modulename,"libmultisetDict")!=0
+       && strcmp(modulename,"libvalarrayDict")!=0
+       && strcmp(modulename,"G__GenVector32")!=0 && strcmp(modulename,"G__Smatrix32")!=0
+
+       ) {
       // No pcm for now for libCore or libRint, the info is in the pch.
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
