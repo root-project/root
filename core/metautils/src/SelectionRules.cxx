@@ -1502,7 +1502,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
    if (!fClassSelectionRules.empty()) {
       for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it) {
-         if (!it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
+         if (BaseSelectionRule::kNo!=it->GetSelected() && !it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
             std::string name;
             if (it->GetAttributeValue("pattern", name)) {
                // keep it
@@ -1518,10 +1518,11 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                // don't complain about defined_in rules
                continue;
             }
+// For the time being a warning
+//             if (IsSelectionXMLFile()) std::cout<<"Warning - ";
+//             else std::cout<<"Error   - ";
 
-            if (IsSelectionXMLFile()) std::cout<<"Warning - ";
-            else std::cout<<"Error   - ";
-
+            std::cout<<"Warning - ";
             if (file_name_value.length()) {
                std::cout<< "unused file name rule: \n";
                //std::cout<< file_name_value << '\n';
