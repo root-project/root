@@ -1,7 +1,6 @@
 
 Processing runstaticfunc.C...
-In file included from input_line_365:1:
+In file included from input_line_171:1:
 staticfunc.C:--:9: error: call to non-static member function without an object argument
    Top::Run();
    ~~~~~^~~
-(int) 0

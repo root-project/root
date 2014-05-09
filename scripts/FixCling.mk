@@ -33,7 +33,7 @@ CALLROOTEXE += -e "\#define ClingWorkAroundExtraParensWithImplicitAuto"
 # Other missing features
 CALLROOTEXE += -e "\#define ClingWorkAroundNoPrivateClassIO"
 # Convenience features, would be nice to have.
-CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
+#CALLROOTEXE += -e "\#define ClingWorkAroundBrokenRecovery"
 #CALLROOTEXE += -e "\#define ClingWorkAroundMissingSmartInclude"
 CALLROOTEXE += -e "\#define ClingWorkAroundBrokenUnnamedReturn"
 CALLROOTEXE += -e "\#define ClingWorkAroundUnnamedDetection"
@@ -91,7 +91,7 @@ ClingWorkAroundPrintfIssues = yes              # see https://sft.its.cern.ch/jir
 #ClingWorkAroundCallfuncAndReturnByValue = yes  # See https://sft.its.cern.ch/jira/browse/ROOT-4601 and https://sft.its.cern.ch/jira/browse/ROOT-4587
 ClingWorkAroundDeletedSourceFile = yes         # See https://sft.its.cern.ch/jira/browse/ROOT-4894
 ClingWorkAroundUnnamedInclude = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4763
-ClingWorkAroundBrokenRecovery = yes
+#ClingWorkAroundBrokenRecovery = yes
 ClingWorkAroundNoDotNamespace = yes            # See https://sft.its.cern.ch/jira/browse/ROOT-4773
 ClingWorkAroundJITandInline = yes              # JIT does not instantiate inline even-though they are used (but not actually inlined)
 ClingWorkAroundValuePrinterNotFullyQualified = yes # See https://sft.its.cern.ch/jira/browse/ROOT-4774
