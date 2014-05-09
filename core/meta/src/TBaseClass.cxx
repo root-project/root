@@ -76,8 +76,12 @@ Int_t TBaseClass::GetDelta()
 
    // Initialized to INT_MAX to signal that it's unset; -1 is a valid value
    // meaning "cannot calculate base offset".
-   if (fDelta == INT_MAX)
-      fDelta = (Int_t)gCling->BaseClassInfo_Offset(fInfo);
+   if (fDelta == INT_MAX) {
+      if (Property() & kIsVirtualBase)
+         fDelta = -1;
+      else
+         fDelta = (Int_t)gCling->BaseClassInfo_Offset(fInfo);
+   }
    return fDelta;
 }
 
