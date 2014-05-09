@@ -310,12 +310,9 @@ void TAttTextEditor::DoLiveAlpha(Int_t a)
    fAlphaField->SetNumber((Float_t)a/1000);
 
    if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
-      // In case the color is not transparent an new color is created.
+      // In case the color is not transparent a new color is created.
       if (color->GetAlpha() == 1.) {
-         TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
-                                     color->GetRed(), color->GetGreen(), color->GetBlue());
-         colort->SetAlpha(0.99);
-         fAttText->SetTextColor(colort->GetNumber());
+         fAttText->SetTextColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
       } else {
          color->SetAlpha((Float_t)a/1000);
       }

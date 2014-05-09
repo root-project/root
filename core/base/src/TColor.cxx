@@ -1260,6 +1260,25 @@ Int_t TColor::GetColorDark(Int_t n)
 
 
 //______________________________________________________________________________
+Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
+{
+   /* Begin_html
+   Static function: Returns the transparent color number corresponding to n.
+   The transparency level is given by the alpha value a.
+   End_html */
+   
+   if (n < 0) return -1;
+   
+   TColor *color = gROOT->GetColor(n);
+   TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
+                               color->GetRed(), color->GetGreen(), color->GetBlue());
+   colort->SetAlpha(a);
+   colort->SetName(Form("%s_transparent",color->GetName()));
+   return colort->GetNumber();
+}   
+
+
+//______________________________________________________________________________
 ULong_t TColor::Number2Pixel(Int_t ci)
 {
    /* Begin_html
