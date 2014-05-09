@@ -17,7 +17,8 @@ include $(ROOTTEST_HOME)/scripts/Rules.mk
 include $(ROOTTEST_HOME)/scripts/Reflex.mk
 
 libTest%.$(DllSuf):%/AliAODForwardMult_cling.$(ObjSuf) %/AliAODForwardMult.$(ObjSuf)
-	$(BuildFromObjs) 
+	$(CMDECHO) cp $*/AliAODForwardMult_cling$(PcmSuf) .
+	$(BuildFromObjs)
 
 libTestv2.$(DllSuf):v2/AliAODForwardHeader.$(ObjSuf)
 

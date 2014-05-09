@@ -403,6 +403,7 @@ endif
 ifeq ($(PLATFORM),win32)
 
 # Windows with the VC++ compiler
+PcmSuf        = _rdict.pcm
 ObjSuf        = obj
 SrcSuf        = cxx
 ExeSuf        = .exe
@@ -442,6 +443,7 @@ export LD_LIBRARY_PATH := ${LD_LIBRARY_PATH}:.
 SetPathForBuild = echo
 export ROOT_LOC := $(ROOTSYS)
 
+PcmSuf        = _rdict.pcm
 ObjSuf        = o
 SrcSuf        = cxx
 ExeSuf        =
