@@ -69,6 +69,9 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 
+#include "TFile.h"
+class TProtoClass;
+
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclarationName.h"
@@ -989,8 +992,28 @@ bool TCling::LoadPCM(TString pcmFileName,
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
-   if (gDebug > 5)
-      ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
+   if (gROOT->IsRootFile(pcmFileName)) {
+      if (gDebug > 5)
+         ::Info("TCling::LoadPCM", "Loading ROOT PCM %s", pcmFileName.Data());
+
+      TFile *pcmFile = new TFile(pcmFileName,"READ");
+      TObjArray *protoClasses;
+      pcmFile->GetObject("__ProtoClasses", protoClasses);
+      if (protoClasses)
+         for(auto proto : *protoClasses)
+            TClassTable::Add((TProtoClass*)proto);
+      protoClasses->Clear(); // Owner ship was transfered to TClassTable.
+      delete protoClasses;
+      delete pcmFile;
+
+   } else {
+      if (gDebug > 5)
+         ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
+
+   }
+   // Note: Declaring the relationship between the module (pcm) and the header
+   // probably does not yet make sense since the pcm is 'only' a root file.
+   // We also have to review if we still need to do this with the delay loading.
    clang::CompilerInstance* CI = fInterpreter->getCI();
    ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    return kTRUE;
