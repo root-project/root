@@ -969,19 +969,22 @@ bool TCling::LoadPCM(TString pcmFileName,
 
    // pcmFileName is an intentional copy; updated by FindFile() below.
 
-   TString searchPath = gSystem->GetDynamicPath();
+   TString searchPath;
 
    if (triggerFunc) {
       const char *libraryName = FindLibraryName(triggerFunc);
       if (libraryName) {
-         std::string libDir = llvm::sys::path::parent_path(libraryName);
- #ifdef R__WIN32
-         searchPath += ";" + libDir;
+         searchPath = llvm::sys::path::parent_path(libraryName);
+#ifdef R__WIN32
+         searchPath += ";";
 #else
-         searchPath += ":" + libDir;
+         searchPath += ":";
 #endif
       }
    }
+   // Note: if we know where the library is, we probably shouldn't even
+   // look in other places.
+   searchPath.Append( gSystem->GetDynamicPath() );
 
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
