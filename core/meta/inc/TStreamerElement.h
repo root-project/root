@@ -136,10 +136,15 @@ private:
    TStreamerBase&operator=(const TStreamerBase&); // Not implemented
    
 protected:
-   Int_t             fBaseVersion;    //version number of the base class FIXME: What for? What about the schema evolution issues?
+   Int_t             fBaseVersion;    //version number of the base class (used during memberwise streaming)
+   UInt_t           &fBaseCheckSum;   //!checksum of the base class (used during memberwise streaming)
    TClass           *fBaseClass;      //!pointer to base class
    TClass           *fNewBaseClass;   //!pointer to new base class if renamed
-   ClassStreamerFunc_t fStreamerFunc; //!Pointer to a wrapper around a custom streamer member function.
+   ClassStreamerFunc_t   fStreamerFunc; //!Pointer to a wrapper around a custom streamer member function.
+   TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
+   TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
+
+   void InitStreaming();
 
 public:
 
@@ -147,17 +152,22 @@ public:
    TStreamerBase(const char *name, const char *title, Int_t offset);
    virtual         ~TStreamerBase();
    Int_t            GetBaseVersion() {return fBaseVersion;}
+   UInt_t           GetBaseCheckSum() {return fBaseCheckSum;}
    virtual TClass  *GetClassPointer() const;
+   const char      *GetErrorMessage() const { return fErrorMsg; }
    const char      *GetInclude() const;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
    ULong_t          GetMethod() const {return 0;}
    Int_t            GetSize() const;
+   TVirtualStreamerInfo *GetBaseStreamerInfo () const { return fStreamerInfo; }
    virtual void     Init(TObject *obj=0);
    Bool_t           IsBase() const;
    virtual void     ls(Option_t *option="") const;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
-   void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; }
+   void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; InitStreaming(); }
    void             SetBaseVersion(Int_t v) {fBaseVersion = v;}
+   void             SetBaseCheckSum(UInt_t cs) {fBaseCheckSum = cs;}
+   void             SetErrorMessage(const char *msg) { fErrorMsg = msg; }
    virtual void     Update(const TClass *oldClass, TClass *newClass);
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
 

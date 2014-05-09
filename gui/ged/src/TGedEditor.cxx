@@ -330,10 +330,12 @@ void TGedEditor::SetCanvas(TCanvas *newcan)
 {
    // Change connection to another canvas.
 
-   if (!newcan || (fCanvas == newcan)) return;
+   if (fCanvas == newcan) return;
 
    DisconnectFromCanvas();
    fCanvas = newcan;
+
+   if (!newcan) return;
 
    SetWindowName(Form("%s_Editor", fCanvas->GetName()));
    fPad = fCanvas->GetSelectedPad();

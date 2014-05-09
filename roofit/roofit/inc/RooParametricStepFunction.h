@@ -26,6 +26,8 @@ class RooArgList ;
 class RooParametricStepFunction : public RooAbsPdf {
 public:
 
+   RooParametricStepFunction() : _nBins(0), _coefIter(0) {} 
+
   RooParametricStepFunction(const char *name, const char *title,
 		RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins=1) ;
 

@@ -14,19 +14,23 @@ else()
 endif()
 
 set(CXX11_FLAG)
-set(_cxx11_flags "-std=c++11" "-std=c++0x")
-if(Vc_COMPILER_IS_GCC AND WIN32)
-   # MinGW fails to compile POSIX code unless gnu++11 is used
-   set(_cxx11_flags "-std=gnu++11" "-std=gnu++0x")
-endif()
+
+if(NOT DEFINED Vc_INSIDE_ROOT)
+   set(_cxx11_flags "-std=c++11" "-std=c++0x")
+   if(Vc_COMPILER_IS_GCC AND WIN32)
+      # MinGW fails to compile POSIX code unless gnu++11 is used
+      set(_cxx11_flags "-std=gnu++11" "-std=gnu++0x")
+    endif()
+
 foreach(_flag ${_cxx11_flags})
-   string(REGEX REPLACE "[-+/:= ]" "_" _flag_esc "${_flag}")
-   check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc})
-   if(check_cxx_compiler_flag_${_flag_esc})
-      set(CXX11_FLAG ${_flag})
-      break()
-   endif()
-endforeach()
+     string(REGEX REPLACE "[-+/:= ]" "_" _flag_esc "${_flag}")
+     check_cxx_compiler_flag("${_flag}" check_cxx_compiler_flag_${_flag_esc})
+     if(check_cxx_compiler_flag_${_flag_esc})
+        set(CXX11_FLAG ${_flag})
+        break()
+      endif()
+   endforeach()
+endif()
 
 macro(vc_add_run_target _target)
    add_custom_target(run_${_target}

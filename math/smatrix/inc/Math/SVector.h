@@ -314,6 +314,17 @@ public:
    template <class SubVector >  
    SubVector Sub(unsigned int row) const;
    
+
+   /** 
+       Function to check if a vector is sharing same memory location of the passed pointer
+       This function is used by the expression templates to avoid the alias problem during  
+       expression evaluation. When  the vector is in use, for example in operations 
+       like V = M * V, where M is a mtrix, a temporary object storing the intermediate result is automatically 
+       created when evaluating the expression. 
+      
+   */
+   bool IsInUse(const T* p) const; 
+
    
    /// used by operator<<()
    std::ostream& Print(std::ostream& os) const;

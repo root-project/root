@@ -27,9 +27,6 @@
 
 
 
-
-
-
 namespace ROOT { 
 
    namespace Minuit2 { 
@@ -37,6 +34,7 @@ namespace ROOT {
       class ModularFunctionMinimizer; 
       class FCNBase; 
       class FunctionMinimum;
+      class MnTraceObject;
 
       // enumeration specifying the type of Minuit2 minimizers
       enum EMinimizerType { 
@@ -114,11 +112,27 @@ public:
    virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
    /// set variable
    virtual bool SetVariableValue(unsigned int ivar, double val);
+   // set variable values
    virtual bool SetVariableValues(const double * val);
-
+   /// set the step size of an already existing variable
+   virtual bool SetVariableStepSize(unsigned int ivar, double step );
+   /// set the lower-limit of an already existing variable 
+   virtual bool SetVariableLowerLimit(unsigned int ivar, double lower);
+   /// set the upper-limit of an already existing variable 
+   virtual bool SetVariableUpperLimit(unsigned int ivar, double upper);
+   /// set the limits of an already existing variable 
+   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper); 
+   /// fix an existing variable
+   virtual bool FixVariable(unsigned int ivar);
+   /// release an existing variable
+   virtual bool ReleaseVariable(unsigned int ivar);
+   /// query if an existing variable is fixed (i.e. considered constant in the minimization)
+   /// note that by default all variables are not fixed 
+   virtual bool IsFixedVariable(unsigned int ivar)  const;
+   /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
+   virtual bool GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const;
    /// get name of variables (override if minimizer support storing of variable names)
    virtual std::string VariableName(unsigned int ivar) const;
-
    /// get index of variable given a variable given a name
    /// return -1 if variable is not found
    virtual int VariableIndex(const std::string & name) const;
@@ -265,6 +279,17 @@ public:
 
    /// print result of minimization
    virtual void PrintResults(); 
+
+   /// set an object to trace operation for each iteration
+   /// The object muust implement operator() (unsigned int, MinimumState & state)
+   void SetTraceObject(MnTraceObject & obj);
+
+   /// set storage level   = 1 : store all iteration states (default)
+   ///                     = 0 : store only first and last state to save memory
+   void SetStorageLevel(int level); 
+  
+   /// return the minimizer state (containing values, step size , etc..)
+   const ROOT::Minuit2::MnUserParameterState & State() { return fState; }
 
 protected: 
    

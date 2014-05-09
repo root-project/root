@@ -193,6 +193,10 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    }
    fProperty  = (Long_t)dm->Property();
 
+// arrays of objects are not supported yet (they are, partly, in ROOT6),
+// this will provide access to the first element at least
+   if ( ! dm->IsBasic() ) fProperty &= ~kIsArray;
+
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
    fName      = dm->GetName();
 

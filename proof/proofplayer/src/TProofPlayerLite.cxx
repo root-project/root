@@ -94,8 +94,11 @@ Long64_t TProofPlayerLite::Process(TDSet *dset, TSelector *selector,
    }
 
    fCreateSelObj = kFALSE;
+   Long64_t rc = Process(dset, selector->ClassName(), option, nentries, first);
+   fCreateSelObj = kTRUE;
 
-   return Process(dset, selector->ClassName(), option, nentries, first);
+   // Done
+   return rc;
 }
 
 //______________________________________________________________________________
@@ -419,7 +422,7 @@ Long64_t TProofPlayerLite::Finalize(Bool_t force, Bool_t sync)
       fOutput->SetOwner();
       SafeDelete(fSelector);
       if (!fCreateSelObj) fSelector = 0;
-    }
+   }
 
    PDB(kGlobal,1) Info("Finalize","exit");
    return rv;

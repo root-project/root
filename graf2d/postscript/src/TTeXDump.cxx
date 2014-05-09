@@ -391,7 +391,11 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       PrintFast(1,")");
    }
 
-   PrintStr("}{\\draw[mark options={color=c,fill=c},mark size=");
+   if (fMarkerStyle == 23 || fMarkerStyle == 32) {
+      PrintStr("}{\\draw[mark options={color=c,fill=c,rotate=180},mark size=");
+   } else {
+      PrintStr("}{\\draw[mark options={color=c,fill=c},mark size=");
+   }
    PrintStr(Form("%fpt,mark=",8./3.33*fMarkerSize));
    switch (fMarkerStyle) {
    case 1 :
@@ -421,7 +425,6 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       break;
    case 23 :
       PrintStr("triangle*");
-      PrintStr(",mark options={rotate=180}");
       break;
    case 24 :
       PrintStr("o");
@@ -449,7 +452,6 @@ void TTeXDump::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       break;
    case 32 :
       PrintStr("triangle");
-      PrintStr(",mark options={rotate=180}");
       break;
    case 33 :
       PrintStr("diamond*");
@@ -719,13 +721,20 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    // yy: y position of the text
    // chars: text to be drawn
 
-   Float_t ftsize;
-   if (fXsize < fYsize) {
-      ftsize = fTextSize*fXsize;
+   Double_t wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
+   Double_t hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Float_t tsize, ftsize;
+   if (wh < hh) {
+      tsize = fTextSize*wh;
+      Int_t sizeTTF = (Int_t)(tsize+0.5);
+      ftsize = (sizeTTF*fXsize*gPad->GetAbsWNDC())/wh;
    } else {
-      ftsize = fTextSize*fYsize;
+      tsize = fTextSize*hh;
+      Int_t sizeTTF = (Int_t)(tsize+0.5);
+      ftsize = (sizeTTF*fYsize*gPad->GetAbsHNDC())/hh;
    }
    ftsize *= 2.22097;
+   if (ftsize <= 0) return;
 
    TString t(chars);
    if (t.Index("\\")>=0 || t.Index("^")>=0) {
@@ -737,7 +746,8 @@ void TTeXDump::Text(Double_t x, Double_t y, const char *chars)
    }
    t.ReplaceAll("&","\\&");
    t.ReplaceAll("#","\\#");
-   
+   t.ReplaceAll("%","\\%");
+
    Int_t txalh = fTextAlign/10;
    if (txalh <1) txalh = 1; if (txalh > 3) txalh = 3;
    Int_t txalv = fTextAlign%10;

@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id$
+// @(#)root/graf:$Id: 06ab95ef02ecfd3ab047786bcc61eb4a3ba8ac29 $
 // Author: Guido Volpi, Olivier Couet 03/11/2006
 
 /*************************************************************************
@@ -447,6 +447,8 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Double_t mdx, mdy;
 
    switch(event) {
+   
+      case kArrowKeyPress:
       case kButton1Down:
          // Change cursor to show pie's movement.
          gVirtualX->SetLineColor(1);
@@ -497,6 +499,7 @@ void TPie::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          if (isMovingPie || isMovingSlice) gPad->SetCursor(kMove);
          break;
 
+      case kArrowKeyRelease:
       case kButton1Motion:
          if (!isMovingSlice || !isMovingPie || !isResizing || !isRotating) {
             if (prev_event==kButton1Down) {

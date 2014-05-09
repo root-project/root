@@ -188,7 +188,9 @@ TEveElement::TEveElement(const TEveElement& e) :
 //______________________________________________________________________________
 TEveElement::~TEveElement()
 {
-   // Destructor.
+   // Destructor. Do not call this method directly, either call Destroy() or
+   // Annihilate(). See also DestroyElements() and AnnihilateElements() if you
+   // need to delete all children of an element.
   
    if (fDestructing != kAnnihilate)
    { 
@@ -1730,6 +1732,9 @@ void TEveElement::AnnihilateElements()
 void TEveElement::Destroy()
 {
    // Destroy this element. Throws an exception if deny-destroy is in force.
+   // This method should be called instead of a destructor.
+   // Note that an exception will be thrown if the element has been
+   // protected against destruction with IncDenyDestroy().
 
    static const TEveException eh("TEveElement::Destroy ");
 

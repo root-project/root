@@ -104,10 +104,17 @@ SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
 else
+ifeq ($(ARCH),win64gcc)
 MODULES      += core/unix
 SYSTEML       = $(UNIXL)
 SYSTEMO       = $(UNIXO)
 SYSTEMDO      = $(UNIXDO)
+else
+MODULES      += core/unix
+SYSTEML       = $(UNIXL)
+SYSTEMO       = $(UNIXO)
+SYSTEMDO      = $(UNIXDO)
+endif
 endif
 endif
 ifeq ($(PLATFORM),ios)
@@ -1159,7 +1166,7 @@ install: all
 	   echo "Installing libraries in $(DESTDIR)$(LIBDIR)"; \
 	   $(INSTALLDIR)                        $(DESTDIR)$(LIBDIR); \
 	   $(INSTALLDATA) lib/*                 $(DESTDIR)$(LIBDIR); \
-	   if [ x"$(ARCH)" = x"win32gcc" ]; then \
+	   if ([ x"$(ARCH)" = x"win32gcc" ] || [ x"$(ARCH)" = x"win64gcc" ]); then \
 	      $(INSTALLDATA) bin/*.dll             $(DESTDIR)$(BINDIR); \
 	      for f in $(DESTDIR)$(LIBDIR)/*.dll; do \
 	         bindll=`basename $$f | sed 's,\..*$$,,'`; \

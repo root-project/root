@@ -20,7 +20,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
                   COMMAND cut -d . -f 2 
                   OUTPUT_VARIABLE MACOSX_MINOR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  if(MACOSX_VERSION VERSION_GREATER 10.8 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang)
+  if(MACOSX_VERSION VERSION_GREATER 10.8 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL Clang AND cxx11)
     set(libcxx ON CACHE BOOL "Build using libc++" FORCE)
   endif()
 
@@ -87,7 +87,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
    
      #settings for cint
-     set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+     set(CPPPREP "${CXX} -E -C")
      set(CXXOUT "-o ")
      set(EXEEXT "")
      set(SOEXT "so")
@@ -122,7 +122,7 @@ if (CMAKE_SYSTEM_NAME MATCHES Darwin)
      set(CMAKE_C_FLAGS_PROFILE          "-g3 -fno-inline -ftest-coverage -fprofile-arcs")
    
      #settings for cint
-     set(CPPPREP "${CMAKE_CXX_COMPILER} -E -C")  
+     set(CPPPREP "${CXX} -E -C")  
      set(CXXOUT "-o ")
      set(EXEEXT "")
      set(SOEXT "so")

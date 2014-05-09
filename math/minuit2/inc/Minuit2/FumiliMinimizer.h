@@ -89,6 +89,7 @@ public:
    */
 
    const FumiliBuilder& Builder() const {return fMinBuilder;}
+   FumiliBuilder& Builder()  {return fMinBuilder;}
 
 
    // for Fumili

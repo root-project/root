@@ -189,7 +189,7 @@ public:
    void                CallShowMembers(void* obj, TMemberInspector &insp) const;
    void                Clear(Option_t *);
    TObject            *Clone(const char *newname = "") const;
-   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete);
+   Bool_t              CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file);
    void                Compile();
    void                ComputeSize();
    void                ForceWriteInfo(TFile *file, Bool_t force=kFALSE);
@@ -197,7 +197,7 @@ public:
    TClass             *GetActualClass(const void *obj) const;
    TClass             *GetClass() const {return fClass;}
    UInt_t              GetCheckSum() const {return fCheckSum;}
-   UInt_t              GetCheckSum(UInt_t code) const;
+   UInt_t              GetCheckSum(TClass::ECheckSum code) const;
    Int_t               GetClassVersion() const {return fClassVersion;}
    Int_t               GetDataMemberOffset(TDataMember *dm, TMemberStreamer *&streamer) const;
    TObjArray          *GetElements() const {return fElements;}
@@ -229,6 +229,7 @@ public:
    Double_t            GetValueSTL(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTL<Double_t>(cont, i, j, k, eoffset); }
    Double_t            GetValueSTLP(TVirtualCollectionProxy *cont, Int_t i, Int_t j, Int_t k, Int_t eoffset) const { return GetTypedValueSTLP<Double_t>(cont, i, j, k, eoffset); }
    void                ls(Option_t *option="") const;
+   Bool_t              MatchLegacyCheckSum(UInt_t checksum) const;
    TVirtualStreamerInfo *NewInfo(TClass *cl) {return new TStreamerInfo(cl);}
    void               *New(void *obj = 0);
    void               *NewArray(Long_t nElements, void* ary = 0);

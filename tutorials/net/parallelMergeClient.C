@@ -32,7 +32,7 @@ void parallelMergeClient()
    UInt_t idx = file->fServerIdx; // This works on in ACLiC.
 
    TH1 *hpx;
-   if (idx == 0) {
+   if (idx%2 == 0) {
       // Create the histogram
       hpx = new TH1F("hpx","This is the px distribution",100,-4,4);
       hpx->SetFillColor(48);  // set nice fillcolor

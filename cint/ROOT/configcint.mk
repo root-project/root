@@ -23,7 +23,7 @@ $(CINTCONF): $(ROOT_SRCDIR)/config/Makefile.$(ARCH) config/Makefile.comp \
 	     macosx*) \
 	       echo '#define G__CFG_ARCH "$(ARCH)"' >> $@__ && \
 	       echo '#define G__CFG_IMPLIBEXT ".dylib"' >> $@__ ;; \
-	     win32gcc) \
+	     win32gcc | win64gcc) \
 	       echo '#define G__CFG_ARCH "cygwin"' >> $@__ && \
 	       echo '#define G__CFG_IMPLIBEXT ".a"' >> $@__ ;; \
 	     *)	\

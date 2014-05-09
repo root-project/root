@@ -18,7 +18,7 @@
 #include "TClass.h"
 #include "TVirtualX.h"
 #include "TMath.h"
-
+#include "TPoint.h"
 
 ClassImp(TLine)
 
@@ -56,7 +56,7 @@ TLine::~TLine()
 
 
 //______________________________________________________________________________
-TLine::TLine(const TLine &line) : TObject(line), TAttLine(line)
+TLine::TLine(const TLine &line) : TObject(line), TAttLine(line), TAttBBox2D(line)
 {
    // Line copy constructor.
 
@@ -132,6 +132,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    Int_t kMaxDiff = 20;
    static Int_t d1,d2,px1,px2,py1,py2;
    static Int_t pxold, pyold, px1old, py1old, px2old, py2old;
+   static Double_t oldX1, oldY1, oldX2, oldY2;
    static Bool_t p1, p2, pL;
    Double_t dpx,dpy,xp1,yp1;
    Int_t dx, dy;
@@ -142,7 +143,12 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
+      oldX1 = fX1;
+      oldY1 = fY1;
+      oldX2 = fX2;
+      oldY2 = fY2;
       if (!opaque) {
          gVirtualX->SetLineColor(-1);
          TAttLine::Modify();  //Change line attributes only if necessary
@@ -186,6 +192,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       if (p1) {
@@ -224,9 +231,44 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             this->SetY1(gPad->AbsPixeltoY(py1));
             this->SetX2(gPad->AbsPixeltoX(px2));
             this->SetY2(gPad->AbsPixeltoY(py2));
-            gPad->Modified(kTRUE);
-            gPad->Update();
          }
+      }
+      if (opaque) {
+         if (p1) {
+            //check in which corner the BBox is eddited
+            if (fX1>fX2) {
+               if (fY1>fY2)
+                  gPad->ShowGuidelines(this, event, '2', true);
+               else
+                  gPad->ShowGuidelines(this, event, '3', true);
+            }
+            else {
+               if (fY1>fY2)
+                  gPad->ShowGuidelines(this, event, '1', true);
+               else
+                  gPad->ShowGuidelines(this, event, '4', true);
+            }
+         }
+         if (p2) {
+            //check in which corner the BBox is eddited
+            if (fX1>fX2) {
+               if (fY1>fY2)
+                  gPad->ShowGuidelines(this, event, '4', true);
+               else
+                  gPad->ShowGuidelines(this, event, '1', true);
+            }
+            else {
+               if (fY1>fY2)
+                  gPad->ShowGuidelines(this, event, '3', true);
+               else
+                  gPad->ShowGuidelines(this, event, '2', true);
+            }
+         }
+         if (pL) {
+            gPad->ShowGuidelines(this, event, 'i', true);
+         }
+         gPad->Modified(kTRUE);
+         gPad->Update();
       }
       break;
 
@@ -234,9 +276,19 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
+         if (opaque) {
+            this->SetX1(oldX1);
+            this->SetY1(oldY1);
+            this->SetX2(oldX2);
+            this->SetY2(oldY2);
+            gPad->Modified(kTRUE);
+            gPad->Update();
+         }
          break;
       }
-      if (!opaque) {
+      if (opaque) {
+         gPad->ShowGuidelines(this, event);
+      } else {
          if (TestBit(kLineNDC)) {
             dpx  = gPad->GetX2() - gPad->GetX1();
             dpy  = gPad->GetY2() - gPad->GetY1();
@@ -281,7 +333,8 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             if (p2) fY1 = fY2;
          }
          gPad->Modified(kTRUE);
-         gVirtualX->SetLineColor(-1);
+         gPad->Update();
+         if (!opaque) gVirtualX->SetLineColor(-1);
       }
       break;
 
@@ -472,4 +525,143 @@ void TLine::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TLine::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+Rectangle_t TLine::GetBBox()
+{
+   // Return the bounding Box of the Line
+
+   Rectangle_t BBox;
+   Int_t px1, py1, px2, py2;
+   px1 = gPad->XtoPixel(fX1);
+   px2 = gPad->XtoPixel(fX2);
+   py1 = gPad->YtoPixel(fY1);
+   py2 = gPad->YtoPixel(fY2);
+   
+   Int_t tmp;
+   if (px1>px2) { tmp = px1; px1 = px2; px2 = tmp;}
+   if (py1>py2) { tmp = py1; py1 = py2; py2 = tmp;}
+   
+   BBox.fX = px1;
+   BBox.fY = py1;
+   BBox.fWidth = px2-px1; 
+   BBox.fHeight = py2-py1;
+
+   return (BBox);
+}
+
+//______________________________________________________________________________
+TPoint TLine::GetBBoxCenter()
+{
+   // Return the center of the BoundingBox as TPoint in pixels
+
+   TPoint p;
+   p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
+   p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
+   return(p);
+}
+
+//______________________________________________________________________________
+void TLine::SetBBoxCenter(const TPoint &p)
+{
+   // Set center of the BoundingBox
+
+   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
+   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
+   if (fX2>fX1) {
+      this->SetX1(gPad->PixeltoX(p.GetX())-0.5*w);
+      this->SetX2(gPad->PixeltoX(p.GetX())+0.5*w);
+   }
+   else {
+      this->SetX2(gPad->PixeltoX(p.GetX())-0.5*w);
+      this->SetX1(gPad->PixeltoX(p.GetX())+0.5*w);
+   }
+   if (fY2>fY1) {
+      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
+      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
+   }
+   else {
+      this->SetY2(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h);
+      this->SetY1(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h);
+   }
+}
+
+//______________________________________________________________________________
+void TLine::SetBBoxCenterX(const Int_t x)
+{
+   // Set X coordinate of the center of the BoundingBox
+
+   Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
+   if (fX2>fX1) {
+      this->SetX1(gPad->PixeltoX(x)-0.5*w);
+      this->SetX2(gPad->PixeltoX(x)+0.5*w);
+   }
+   else {
+      this->SetX2(gPad->PixeltoX(x)-0.5*w);
+      this->SetX1(gPad->PixeltoX(x)+0.5*w);
+   }
+}
+
+//______________________________________________________________________________
+void TLine::SetBBoxCenterY(const Int_t y)
+{
+   // Set Y coordinate of the center of the BoundingBox
+
+   Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
+   if (fY2>fY1) {
+      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
+      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
+   }
+   else {
+      this->SetY2(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
+      this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))+0.5*h);
+   }
+}
+
+//______________________________________________________________________________
+void TLine::SetBBoxX1(const Int_t x)
+{
+   // Set lefthandside of BoundingBox to a value
+   // (resize in x direction on left)
+
+   if (fX2>fX1)
+      this->SetX1(gPad->PixeltoX(x));
+   else
+      this->SetX2(gPad->PixeltoX(x));
+}
+
+//______________________________________________________________________________
+void TLine::SetBBoxX2(const Int_t x)
+{
+   // Set righthandside of BoundingBox to a value
+   // (resize in x direction on right)
+
+   if (fX2>fX1)
+      this->SetX2(gPad->PixeltoX(x));
+   else
+      this->SetX1(gPad->PixeltoX(x));
+}
+
+//_______________________________________________________________________________
+void TLine::SetBBoxY1(const Int_t y)
+{
+   // Set top of BoundingBox to a value (resize in y direction on top)
+
+   if (fY2>fY1)
+      this->SetY2(gPad->PixeltoY(y - gPad->VtoPixel(0)));
+   else
+      this->SetY1(gPad->PixeltoY(y - gPad->VtoPixel(0)));
+}
+
+//_______________________________________________________________________________
+void TLine::SetBBoxY2(const Int_t y)
+{
+   // Set bottom of BoundingBox to a value
+   // (resize in y direction on bottom)
+
+   if (fY2>fY1)
+      this->SetY1(gPad->PixeltoY(y - gPad->VtoPixel(0)));
+   else
+      this->SetY2(gPad->PixeltoY(y - gPad->VtoPixel(0)));
 }

@@ -285,7 +285,11 @@ TAlienFile *TAlienFile::Open(const char *url, Option_t *option,
          repcommand += " 0 ";
          repcommand += imagenr;
       }
-
+      
+      if (gSystem->Getenv("ALIEN_SITE")) {
+         repcommand += " 0 ";
+         repcommand += gSystem->Getenv("ALIEN_SITE"); 
+      }
       result = gGrid->Command(repcommand.Data(), kFALSE, TAlien::kOUTPUT);
       alienResult = dynamic_cast < TAlienResult * >(result);
       list = dynamic_cast < TList * >(alienResult);

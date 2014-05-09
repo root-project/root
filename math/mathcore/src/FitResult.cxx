@@ -85,11 +85,16 @@ FitResult::FitResult(const FitConfig & fconfig) :
       fParams[i]   =  par.Value();
       fErrors[i]   =  par.StepSize();
       fParNames[i] =  par.Name();
-      if (par.IsFixed() ) fFixedParams.push_back(i); 
+      if (par.IsFixed() ) fFixedParams[i] = true;  
       else fNFree++;
-      if (par.IsBound() ) fBoundParams.push_back(i); 
+      if (par.IsBound() ) { 
+         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fBoundParams[i] = fParamBounds.size();
+         fParamBounds.push_back(std::make_pair(lower,upper));
+      }
    }
-
+   std::cout << "create fit result from config - nfree " << fNFree << std::endl;
 } 
 
 FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, const IModelFunction * func,  bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls ) : 
@@ -154,11 +159,24 @@ FitResult::FitResult(ROOT::Math::Minimizer & min, const FitConfig & fconfig, con
 
 
    // check for fixed or limited parameters
+   unsigned int nfree = 0;
    for (unsigned int ipar = 0; ipar < npar; ++ipar) { 
       const ParameterSettings & par = fconfig.ParSettings(ipar); 
-      if (par.IsFixed() ) fFixedParams.push_back(ipar); 
-      if (par.IsBound() ) fBoundParams.push_back(ipar); 
+      if (par.IsFixed() ) fFixedParams[ipar] = true;  
+      else nfree++;
+      if (par.IsBound() ) { 
+         double lower = (par.HasLowerLimit()) ? par.LowerLimit() : - std::numeric_limits<double>::infinity() ;
+         double upper = (par.HasUpperLimit()) ? par.UpperLimit() :   std::numeric_limits<double>::infinity() ;
+         fBoundParams[ipar] = fParamBounds.size();
+         fParamBounds.push_back(std::make_pair(lower,upper));
+      }
    } 
+   // check if nfree (from FitConfig) and fNFree (from minimizer) are consistent 
+   if (nfree != fNFree ) { 
+      MATH_ERROR_MSG("FitResult","FitConfiguration and Minimizer result are not consistent");
+      std::cout << "Number of free parameters from FitConfig = " << nfree << std::endl;
+      std::cout << "Number of free parameters from Minimizer = " << fNFree << std::endl;
+   }
 
    // if flag is binned compute a chi2 when a chi2 function is given 
    if (binnedFit) { 
@@ -247,6 +265,7 @@ FitResult & FitResult::operator = (const FitResult &rhs) {
 
    fFixedParams = rhs.fFixedParams;
    fBoundParams = rhs.fBoundParams;
+   fParamBounds = rhs.fParamBounds;
    fParams = rhs.fParams; 
    fErrors = rhs.fErrors; 
    fCovMatrix = rhs.fCovMatrix; 
@@ -275,7 +294,7 @@ bool FitResult::Update(const ROOT::Math::Minimizer & min, bool isValid, unsigned
    }
    //fNFree = min.NFree(); 
    if (fNFree != min.NFree() ) { 
-      MATH_ERROR_MSG("FitResult::Update","Configuration has changed  ");
+      MATH_ERROR_MSG("FitResult::Update","Configuration has changed ");
       return false; 
    }
 
@@ -386,14 +405,23 @@ int FitResult::Index(const std::string & name) const {
 } 
 
 bool FitResult::IsParameterBound(unsigned int ipar) const { 
-   for (unsigned int i = 0; i < fBoundParams.size() ; ++i) 
-      if ( fBoundParams[i] == ipar) return true; 
-   return false; 
+   return fBoundParams.find(ipar) != fBoundParams.end();
 }
 
 bool FitResult::IsParameterFixed(unsigned int ipar) const { 
-   for (unsigned int i = 0; i < fFixedParams.size() ; ++i) 
-      if ( fFixedParams[i] == ipar) return true; 
+   return fFixedParams.find(ipar) != fFixedParams.end();
+}
+
+bool FitResult::ParameterBounds(unsigned int ipar, double & lower, double & upper) const { 
+   std::map<unsigned int, unsigned int>::const_iterator itr =  fBoundParams.find(ipar);
+   if (itr ==  fBoundParams.end() ) { 
+      lower =  -std::numeric_limits<Double_t>::infinity(); 
+      upper =  std::numeric_limits<Double_t>::infinity(); 
+      return false; 
+   }
+   assert(itr->second < fParamBounds.size() );
+   lower = fParamBounds[itr->second].first;
+   upper = fParamBounds[itr->second].second;
    return false; 
 }
 
@@ -409,7 +437,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
    // need to add also minos errors , globalCC, etc..
    unsigned int npar = fParams.size(); 
    if (npar == 0) { 
-      std::cout << "Error: Empty  FitResult  ! " << std::endl;
+      std::cout << "FitResult::Print - Error: Empty  FitResult  ! " << std::endl;
       return;
    }
    os << "\n****************************************\n";
@@ -436,7 +464,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       os << std::left << std::setw(nw) <<  "Chi2"         << " = " << std::right << std::setw(nn) << fChi2 << std::endl;
    os << std::left << std::setw(nw) << "NDf"              << " = " << std::right << std::setw(nn) << fNdf << std::endl; 
    if (fMinimType.find("Linear") == std::string::npos) {  // no need to print this for linear fits
-      os << std::left << std::setw(nw) << "Edm"    << " = " << std::right << std::setw(nn) << fEdm << std::endl; 
+      if (fEdm >=0) os << std::left << std::setw(nw) << "Edm"    << " = " << std::right << std::setw(nn) << fEdm << std::endl; 
       os << std::left << std::setw(nw) << "NCalls" << " = " << std::right << std::setw(nn) << fNCalls << std::endl; 
    }
    for (unsigned int i = 0; i < npar; ++i) { 

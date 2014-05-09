@@ -114,15 +114,16 @@ Root.Fitter:             Minuit
 #TabCom.FileIgnore:       .cpp:.h:.cmz
 
 # TCanvas specific settings. Opaque move and resize show full pad during
-# the operation instead of only the outline. Especially for resize you'll
-# need serious CPU power. UseScreenFactor=true means to size canvas according
-# to size of screen, so a canvas still looks good on a low resolution
-# laptop screen without having to change canvas size in macros.
+# the operation instead of only the outline. In case you have a really very
+# old graphics card turn these options off. UseScreenFactor=true means to
+# size canvas according to size of screen, so a canvas still looks good on a
+# low resolution laptop screen without having to change canvas size in macros.
 # HighLightColor 2 = red. ShowEventStatus allows the event status bar to
 # be turned on by default. AutoExec allows TExec objects to be executed
 # on mouse and key events.
-Canvas.MoveOpaque:          false
-Canvas.ResizeOpaque:        false
+Canvas.MoveOpaque:          true
+Canvas.ResizeOpaque:        true
+Canvas.ShowGuideLines:      true
 Canvas.UseScreenFactor:     false
 Canvas.HighLightColor:      2
 Canvas.ShowEventStatus:     false
@@ -131,7 +132,8 @@ Canvas.ShowToolBar:         false
 Canvas.ShowEditor:          false
 Canvas.AutoExec:            true
 Canvas.PrintDirectory:      .
-#set the default precision when writing floating point numbers in TCanvas::SaveSource
+# Set the default precision when writing floating point numbers in
+# TCanvas::SaveSource
 Canvas.SavePrecision:       7
 # Set the default TStyle
 # Predefined styles are: Plain, Bold, Video, Pub, Classic, Modern.

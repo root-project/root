@@ -645,7 +645,7 @@ static TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element)
 {
    TStreamerBase *base = dynamic_cast<TStreamerBase*>(element);
    if (base) {
-      TVirtualStreamerInfo *info = base->GetClassPointer()->GetStreamerInfo(base->GetBaseVersion());
+      TVirtualStreamerInfo *info = base->GetBaseStreamerInfo();
       if (info) return info;
    }
    return 0;

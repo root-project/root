@@ -155,7 +155,7 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
       polygon[3].fX = x1, polygon[3].fY = y2;
       
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          4, polygon, kTRUE); //kTRUE == draw a shadow.
+                                          4, polygon, kFALSE); //kFALSE == don't draw a shadow.
    } else {
       const bool isHollow = mode == kHollow || GetFillStyle() / 1000 == 2;
       
@@ -219,7 +219,7 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
 
    if (const TColorGradient * const gradient = dynamic_cast<const TColorGradient *>(fillColor)) {
       Quartz::DrawPolygonWithGradientFill(ctx, gradient, CGSizeMake(drawable.fWidth, drawable.fHeight),
-                                          n, &fConvertedPoints[0], kTRUE);//kTRUE == also draw a shadow.
+                                          n, &fConvertedPoints[0], kFALSE);//kFALSE == don't draw a shadow.
    } else {
       unsigned patternIndex = 0;
       if (!Quartz::SetFillAreaParameters(ctx, &patternIndex)) {
@@ -448,8 +448,20 @@ void TGQuartz::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
       return;
    }
    
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
-      fPimpl->fFontManager.GetTextBounds(w, h, text);
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+      const unsigned fontIndex = GetTextFont() / 10;
+      if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
+         typedef std::vector<UniChar>::size_type size_type;
+
+         std::vector<UniChar> unichars(std::strlen(text));
+         for (size_type i = 0, len = unichars.size(); i < len; ++i)
+            unichars[i] = 0xF000 + (unsigned char)text[i];
+         
+         fPimpl->fFontManager.GetTextBounds(w, h, unichars);
+      } else {
+         fPimpl->fFontManager.GetTextBounds(w, h, text);
+      }
+   }
 }
 
 //______________________________________________________________________________
@@ -460,6 +472,35 @@ Int_t TGQuartz::GetFontAscent() const
    // to the highest position characters extend to.
    if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
       return Int_t(fPimpl->fFontManager.GetAscent());
+
+   return 0;
+}
+
+//______________________________________________________________________________
+Int_t TGQuartz::GetFontAscent(const char *text) const
+{
+   // Returns the ascent of the current font (in pixels).
+   // The ascent of a font is the distance from the baseline
+   // to the highest position characters extend to.
+   
+   //In case of any problem we can always resort to the old version:
+   if (!text || !text[0])//How it's usually tested in ROOT
+      return GetFontAscent();
+   
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+      const unsigned fontIndex = GetTextFont() / 10;
+      if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
+         //That's an ugly hack :)
+         typedef std::vector<UniChar>::size_type size_type;
+
+         std::vector<UniChar> unichars(std::strlen(text));
+         for (size_type i = 0, len = unichars.size(); i < len; ++i)
+            unichars[i] = 0xF000 + (unsigned char)text[i];
+         
+         return Int_t(fPimpl->fFontManager.GetAscent(unichars));
+      } else
+         return Int_t(fPimpl->fFontManager.GetAscent(text));
+   }
 
    return 0;
 }
@@ -476,6 +517,34 @@ Int_t TGQuartz::GetFontDescent() const
    return 0;
 }
 
+//______________________________________________________________________________
+Int_t TGQuartz::GetFontDescent(const char *text) const
+{
+   // Returns the descent of the current font (in pixels.
+   // The descent is the distance from the base line
+   // to the lowest point characters extend to.
+
+   //That's how it's tested in ROOT:
+   if (!text || !text[0])
+      return GetFontDescent();
+
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+      const unsigned fontIndex = GetTextFont() / 10;
+      if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
+         //That's an ugly hack :)
+         typedef std::vector<UniChar>::size_type size_type;
+
+         std::vector<UniChar> unichars(std::strlen(text));
+         for (size_type i = 0, len = unichars.size(); i < len; ++i)
+            unichars[i] = 0xF000 + (unsigned char)text[i];
+         
+         return Int_t(fPimpl->fFontManager.GetDescent(unichars));
+      } else
+         return Int_t(fPimpl->fFontManager.GetDescent(text));
+   }
+
+   return 0;
+}
 
 //______________________________________________________________________________
 Float_t TGQuartz::GetTextMagnitude()

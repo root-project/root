@@ -105,6 +105,8 @@ public:
       }
    }
 
+   // set ownership
+   void SetOwnership(bool on = true) { fOwner = on;  }
 
    /// precision value used for calculating the derivative step-size 
    /// h = eps * |x|. The default is 0.001, give a smaller in case function chanes rapidly

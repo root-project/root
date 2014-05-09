@@ -382,8 +382,24 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
     return 0 ;
   }
 
+
+  // Find histogram observable corresponding to pdf observable
+  RooAbsArg* hobs(0) ;
+  _histObsIter->Reset() ;
+  _pdfObsIter->Reset() ;
+  RooAbsArg* harg, *parg ;
+  while((harg=(RooAbsArg*)_histObsIter->Next())) {
+    parg = (RooAbsArg*)_pdfObsIter->Next() ;
+    if (string(parg->GetName())==obs.GetName()) {
+      hobs=harg ; 
+    }
+  }
+  if (!hobs) {
+    return 0 ;
+  }
+
   // Check that observable is in dataset, if not no hint is generated
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
+  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
     return 0 ;
   }
@@ -425,9 +441,33 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
     return 0 ;
   }
 
+  // Find histogram observable corresponding to pdf observable
+  RooAbsArg* hobs(0) ;
+  _histObsIter->Reset() ;
+  _pdfObsIter->Reset() ;
+  RooAbsArg* harg, *parg ;
+  while((harg=(RooAbsArg*)_histObsIter->Next())) {
+    parg = (RooAbsArg*)_pdfObsIter->Next() ;
+    if (string(parg->GetName())==obs.GetName()) {
+      hobs=harg ; 
+    }
+  }
+  if (!hobs) {
+    cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << endl ;
+    return 0 ;
+  }
+
+
   // Check that observable is in dataset, if not no hint is generated
-  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(obs.GetName())) ;
+  RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;
+  if (!xtmp) {
+    cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " is not found in dataset?" << endl ;
+    _dataHist->get()->Print("v") ;
+    return 0 ;
+  }
+  RooAbsLValue* lvarg = dynamic_cast<RooAbsLValue*>(_dataHist->get()->find(hobs->GetName())) ;
   if (!lvarg) {
+    cout << "RooHistFunc::binBoundaries(" << GetName() << ") hobs = " << hobs->GetName() << " but is not an LV, returning null" << endl ;
     return 0 ;
   }
 
@@ -446,31 +486,6 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   }
 
   return hint ;
-}
-
-
-
-//_____________________________________________________________________________
-Bool_t RooHistFunc::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
-{
-  // If we detect a name change in the observable, apply the corresponding name change in the embedded datahist
-
-  RooFIter iter = _depList.fwdIterator() ;
-  RooAbsArg* arg ;
-  while ((arg=iter.next())) {
-    
-    RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newServerList,nameChange) ;
-    if (replace && (string(arg->GetName())!=replace->GetName())) {
-      _dataHist->changeObservableName(arg->GetName(),replace->GetName()) ;
-    } else if (replace && _dataHist->get()->find(arg->GetName())==0) {
-      const char* origName = replace->getStringAttribute("origName") ;
-      if (origName) {
-	_dataHist->changeObservableName(origName,replace->GetName()) ;
-      }
-    }
-
-  }
-  return kFALSE ;
 }
 
 
@@ -547,6 +562,7 @@ Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
     dh2.get(i) ;
     if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
   }
+  if (!(RooNameSet(*dh1.get())==RooNameSet(*dh2.get()))) return kFALSE ;
   return kTRUE ;
 }
 

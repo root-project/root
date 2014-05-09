@@ -99,10 +99,13 @@ public:
    void SetName(const char *);
    void SetTitle(const char *);
    void SetSelected(TObject *);
+   void ShowGuidelines(TObject *, Int_t, char, bool);
    void Update();
    TObject *WaitPrimitive(const char *, const char *);
    void ReleaseViewer3D(Option_t *);
    Bool_t HasViewer3D() const;
+   
+   TVirtualPadPainter *GetPainter();
 };
 
 }//namespace iOS

@@ -15,6 +15,8 @@
 #include "Math/IFunction.h"
 #include "Math/IOptions.h"
 
+#include "Fit/ParameterSettings.h"
+
 #include "Minuit2/FCNAdapter.h"
 #include "Minuit2/FumiliFCNAdapter.h"
 #include "Minuit2/FCNGradAdapter.h"
@@ -34,14 +36,18 @@
 #include "Minuit2/FumiliMinimizer.h"
 #include "Minuit2/MnParameterScan.h"
 #include "Minuit2/MnContours.h"
- 
-
+#include "Minuit2/MnTraceObject.h" 
+#include "Minuit2/MinimumBuilder.h"
 
 #include <cassert> 
 #include <iostream> 
 #include <algorithm>
 #include <functional>
 
+#ifdef USE_ROOT_ERROR
+#include "TROOT.h"
+#include "TMinuit2TraceObject.h"
+#endif
 
 namespace ROOT { 
 
@@ -264,7 +270,77 @@ bool Minuit2Minimizer::SetVariableValues(const double * x)  {
    return true; 
 }
 
+bool Minuit2Minimizer::SetVariableStepSize(unsigned int ivar, double step) { 
+   // set the step-size of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetError(ivar, step);
+   return true; 
+}
 
+bool Minuit2Minimizer::SetVariableLowerLimit(unsigned int ivar, double lower) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetLowerLimit(ivar, lower);
+   return true; 
+}
+bool Minuit2Minimizer::SetVariableUpperLimit(unsigned int ivar, double upper ) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetUpperLimit(ivar, upper);
+   return true; 
+}
+
+bool Minuit2Minimizer::SetVariableLimits(unsigned int ivar, double lower, double upper) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.SetLimits(ivar, lower,upper);
+   return true; 
+}
+
+bool Minuit2Minimizer::FixVariable(unsigned int ivar) { 
+   // Fix an existing variable
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.Fix(ivar);
+   return true; 
+}
+
+bool Minuit2Minimizer::ReleaseVariable(unsigned int ivar) { 
+   // Release an existing variable
+   if (ivar >= fState.MinuitParameters().size() ) return false; 
+   fState.Release(ivar);
+   return true; 
+}
+
+bool Minuit2Minimizer::IsFixedVariable(unsigned int ivar) const { 
+   // query if variable is fixed
+   if (ivar >= fState.MinuitParameters().size() ) {
+      MN_ERROR_MSG2("Minuit2Minimizer","wrong variable index");  
+      return false; 
+   }
+   return (fState.Parameter(ivar).IsFixed() || fState.Parameter(ivar).IsConst() );
+} 
+
+bool Minuit2Minimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & varObj) const { 
+   // retrieve variable settings (all set info on the variable)
+   if (ivar >= fState.MinuitParameters().size() ) {
+      MN_ERROR_MSG2("Minuit2Minimizer","wrong variable index");  
+      return false; 
+   }
+   const MinuitParameter & par = fState.Parameter(ivar); 
+   varObj.Set( par.Name(), par.Value(), par.Error() );
+   if (par.HasLowerLimit() ) varObj.SetLowerLimit(par.LowerLimit() );
+   else if (par.HasUpperLimit() ) varObj.SetUpperLimit(par.UpperLimit() );
+   else if (par.HasLimits() ) varObj.SetLimits(par.LowerLimit(), par.UpperLimit() );
+   if (par.IsConst() || par.IsFixed() ) varObj.Fix(); 
+   return true; 
+}
+
+
+   
 void Minuit2Minimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) { 
    // set function to be minimized
    if (fMinuitFCN) delete fMinuitFCN;
@@ -321,7 +397,8 @@ bool Minuit2Minimizer::Minimize() {
    int strategyLevel = Strategy(); 
    fMinuitFCN->SetErrorDef(ErrorDef() );
 
-   if (PrintLevel() >=1) { 
+   int printLevel = PrintLevel();
+   if (printLevel >=1) { 
       // print the real number of maxfcn used (defined in ModularFuncitonMinimizer)
       int maxfcn_used = maxfcn; 
       if (maxfcn_used == 0) { 
@@ -334,10 +411,11 @@ bool Minuit2Minimizer::Minimize() {
    }
 
    // internal minuit messages
-   MnPrint::SetLevel(PrintLevel() );
+   MnPrint::SetLevel(printLevel );
+   fMinimizer->Builder().SetPrintLevel(printLevel);
 
    // switch off Minuit2 printing
-   int prev_level = (PrintLevel() <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
+   int prev_level = (printLevel <= 0 ) ?   TurnOffPrintInfoLevel() : -2; 
 
    // set the precision if needed
    if (Precision() > 0) fState.SetPrecision(Precision());
@@ -374,11 +452,44 @@ bool Minuit2Minimizer::Minimize() {
       strategy.SetHessianStepTolerance(hessStepTol);
       strategy.SetHessianG2Tolerance(hessStepTol);
 
-      if (PrintLevel() > 0) { 
-         std::cout << "Minuit2Minimizer::Minuit  - Changing default stratgey options" << std::endl;
+      if (printLevel > 0) { 
+         std::cout << "Minuit2Minimizer::Minuit  - Changing default strategy options" << std::endl;
          minuit2Opt->Print();
       }
+
+      int storageLevel = 1; 
+      bool ret = minuit2Opt->GetValue("StorageLevel",storageLevel);
+      if (ret) SetStorageLevel(storageLevel);
       
+   }
+
+   // set a minimizer tracer object (defult for printlevel=10, from gROOT for printLevel=11)
+   // use some special print levels
+   MnTraceObject * traceObj = 0;
+#ifdef USE_ROOT_ERROR 
+   if (printLevel == 10 && gROOT) { 
+      TObject * obj = gROOT->FindObject("Minuit2TraceObject");
+      traceObj = dynamic_cast<ROOT::Minuit2::MnTraceObject*>(obj);
+      if (traceObj) {
+         // need to remove from the list
+         gROOT->Remove(obj);
+      }
+   }
+   if (printLevel == 20 || printLevel == 30 || printLevel == 40 || (printLevel >= 20000 && printLevel < 30000) ) { 
+      int parNumber = printLevel-20000;
+      if (printLevel == 20) parNumber = -1;
+      if (printLevel == 30) parNumber = -2;
+      if (printLevel == 40) parNumber = 0;
+      traceObj = new TMinuit2TraceObject(parNumber);
+   }
+#endif
+   if (printLevel == 100 || (printLevel >= 10000 && printLevel < 20000)) {
+      int parNumber = printLevel-10000; 
+      traceObj = new MnTraceObject(parNumber);
+   }
+   if (traceObj) { 
+      traceObj->Init(fState);
+      SetTraceObject(*traceObj);
    }
       
    const ROOT::Minuit2::FCNGradientBase * gradFCN = dynamic_cast<const ROOT::Minuit2::FCNGradientBase *>( fMinuitFCN ); 
@@ -406,6 +517,9 @@ bool Minuit2Minimizer::Minimize() {
    fState = fMinimum->UserState(); 
    bool ok =  ExamineMinimum(*fMinimum);
    //fMinimum = 0; 
+
+   // delete trace object if it was constructed
+   if (traceObj) {       delete traceObj;   }
    return ok; 
 }
 
@@ -970,7 +1084,17 @@ int Minuit2Minimizer::CovMatrixStatus() const {
    return 0; 
 }
 
+void Minuit2Minimizer::SetTraceObject(MnTraceObject & obj) {
+   // set trace object
+   if (!fMinimizer) return;
+   fMinimizer->Builder().SetTraceObject(obj);
+}
 
+void Minuit2Minimizer::SetStorageLevel(int level) { 
+   // set storage level
+   if (!fMinimizer) return;
+   fMinimizer->Builder().SetStorageLevel(level);
+ }
    
 } // end namespace Minuit2
 

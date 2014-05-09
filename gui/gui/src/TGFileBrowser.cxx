@@ -48,6 +48,8 @@
 #include "TGedEditor.h"
 #include "TBaseClass.h"
 
+#include "RConfigure.h"
+
 #ifdef WIN32
 const char rootdir[] = "\\";
 #else
@@ -1524,7 +1526,15 @@ Long_t TGFileBrowser::XXExecuteDefaultAction(TObject *obj)
          // special case for remote object: remote process
          if (obj->InheritsFrom("TRemoteObject"))
             gApplication->SetBit(TApplication::kProcessRemotely);
-         return gApplication->ProcessLine(act.Data());
+
+         const Long_t res = gApplication->ProcessLine(act.Data());
+#ifdef R__HAS_COCOA
+         if (act.Contains(".x") || act.Contains(".X")) {
+            if (gPad) gPad->Update();
+         }
+#endif
+         return res;
+
       }
    }
    return 0;

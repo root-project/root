@@ -5111,13 +5111,13 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
 }
 
 //______________________________________________________________________________
-static Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
+static inline Bool_t AlmostEqual(Double_t a, Double_t b, Double_t epsilon = 0.00000001)
 {
    return TMath::Abs(a - b) < epsilon;
 }
 
 //______________________________________________________________________________
-static Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
+static inline Bool_t AlmostInteger(Double_t a, Double_t epsilon = 0.00000001)
 {
    return AlmostEqual(a - TMath::Floor(a), 0, epsilon) ||
       AlmostEqual(a - TMath::Floor(a), 1, epsilon);
@@ -5136,6 +5136,23 @@ Bool_t TH1::SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2)
       return kFALSE;
 }
 
+static inline bool IsEquidistantBinning(const TAxis& axis)
+{
+   // check if axis bin are equals
+   if (!axis.GetXbins()->fN) return true;  //  
+   // not able to check if there is only one axis entry
+   bool isEquidistant = true;
+   const Double_t firstBinWidth = axis.GetBinWidth(1);
+   for (int i = 1; i < axis.GetNbins(); ++i) {
+      const Double_t binWidth = axis.GetBinWidth(i);
+      const bool match = TMath::AreEqualRel(firstBinWidth, binWidth, TMath::Limits<Double_t>::Epsilon());
+      isEquidistant &= match;
+      if (!match)
+         break;
+   }
+   return isEquidistant;
+}
+
 //______________________________________________________________________________
 Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
 {
@@ -5144,8 +5161,8 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    if (SameLimitsAndNBins(destAxis, anAxis))
       return kTRUE;
 
-   if (destAxis.GetXbins()->fN || anAxis.GetXbins()->fN)
-      return kFALSE;       // user binning not supported
+   if (!IsEquidistantBinning(destAxis) || !IsEquidistantBinning(anAxis))
+      return kFALSE;       // not equidistant user binning not supported
 
    Double_t width1 = destAxis.GetBinWidth(0);
    Double_t width2 = anAxis.GetBinWidth(0);
@@ -5160,6 +5177,10 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    if (!AlmostInteger(width/width1) || !AlmostInteger(width/width2))
       return kFALSE;
 
+   // std::cout << "Find new limit using given axis " << anAxis.GetXmin() << " , " <<  anAxis.GetXmax() << " bin width " << width2 << std::endl;
+   // std::cout << "           and destination axis " << destAxis.GetXmin() << " , " <<  destAxis.GetXmax() << " bin width " << width1 << std::endl;
+
+
    // check the limits
    Double_t delta;
    delta = (destAxis.GetXmin() - xmin)/width1;
@@ -5170,17 +5191,21 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
    if (!AlmostInteger(delta))
       xmin -= (TMath::Ceil(delta) - delta)*width2;
 
+
    delta = (destAxis.GetXmin() - xmin)/width1;
    if (!AlmostInteger(delta))
       return kFALSE;
+
 
    delta = (xmax - destAxis.GetXmax())/width1;
    if (!AlmostInteger(delta))
       xmax += (TMath::Ceil(delta) - delta)*width1;
 
+
    delta = (xmax - anAxis.GetXmax())/width2;
    if (!AlmostInteger(delta))
       xmax += (TMath::Ceil(delta) - delta)*width2;
+
 
    delta = (xmax - destAxis.GetXmax())/width1;
    if (!AlmostInteger(delta))
@@ -5191,7 +5216,12 @@ Bool_t TH1::RecomputeAxisLimits(TAxis& destAxis, const TAxis& anAxis)
       return kFALSE;
    }
 #endif
+
+
    destAxis.Set(TMath::Nint((xmax - xmin)/width), xmin, xmax);
+
+   //std::cout << "New re-computed axis : [ " << xmin << " , " << xmax << " ] width = " << width << " nbins " << destAxis.GetNbins() << std::endl;
+   
    return kTRUE;
 }
 
@@ -5249,7 +5279,7 @@ Long64_t TH1::Merge(TCollection *li)
    Bool_t allHaveLimits = kTRUE;
    Bool_t allSameLimits = kTRUE;
    Bool_t foundLabelHist = kFALSE;
-   Bool_t firstNonEmptyHist = kTRUE;
+   //Bool_t firstHistWithLimits = kTRUE;
 
 
    TIter next(&inlist);
@@ -5257,10 +5287,8 @@ Long64_t TH1::Merge(TCollection *li)
    TH1 * h = this;
 
    do  {
-      // skip empty histograms
-      if (h->fTsumw == 0 && h->GetEntries() == 0) continue;
-
-
+      // do not skip anymore empty histograms 
+      // since are used to set the limits 
       Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
       allHaveLimits = allHaveLimits && hasLimits;
 
@@ -5269,20 +5297,23 @@ Long64_t TH1::Merge(TCollection *li)
 
          // this is done in case the first histograms are empty and
          // the histogram have different limits
-         if (firstNonEmptyHist ) {
-            // set axis limits in the case the first histogram was empty
+#ifdef LATER
+         if (firstHistWithLimits ) {
+            // set axis limits in the case the first histogram did not have limits 
             if (h != this && !SameLimitsAndNBins( fXaxis, *h->GetXaxis()) ) {
-               fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),h->GetXaxis()->GetXmax());
+              if (h->GetXaxis()->GetXbins()->GetSize() != 0) fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+              else                                           fXaxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
             }
-            firstNonEmptyHist = kFALSE;
+            firstHistWithLimits = kFALSE;
          }
+#endif
 
          // this is executed the first time an histogram with limits is found
          // to set some initial values on the new axis
          if (!initialLimitsFound) {
             initialLimitsFound = kTRUE;
-            newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(),
-               h->GetXaxis()->GetXmax());
+            if (h->GetXaxis()->GetXbins()->GetSize() != 0) newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXbins()->GetArray());
+            else                                           newXAxis.Set(h->GetXaxis()->GetNbins(), h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
          }
          else {
             // check first if histograms have same bins
@@ -5365,8 +5396,17 @@ Long64_t TH1::Merge(TCollection *li)
       inlist.AddFirst(hclone);
    }
 
-   if (!allSameLimits && initialLimitsFound)
-      SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
+   // set the binning and cell content on the histogram to merge when the histograms do not have the same binning 
+   // and when one of the histogram does not have limits
+   if (initialLimitsFound && (!allSameLimits || !allHaveLimits )) {
+     if (newXAxis.GetXbins()->GetSize() != 0) SetBins(newXAxis.GetNbins(), newXAxis.GetXbins()->GetArray());
+     else                                     SetBins(newXAxis.GetNbins(), newXAxis.GetXmin(), newXAxis.GetXmax());
+   }
+
+   // std::cout << "Merging on histogram " << GetName() << std::endl;
+   // std::cout << "Merging flags : allHaveLimits - allHaveLabels - initialLimitsFound - allSameLimits " << std::endl;
+   // std::cout << "                 " << allHaveLimits << "\t\t" << allHaveLabels << "\t\t" <<  initialLimitsFound << "\t\t" <<  allSameLimits << std::endl;
+
 
    if (!allHaveLimits && !allHaveLabels) {
       // fill this histogram with all the data from buffers of histograms without limits
@@ -5393,6 +5433,11 @@ Long64_t TH1::Merge(TCollection *li)
          }
          return (Long64_t) GetEntries();
       }
+
+      // In case some of the histograms do not have limits 
+      // I need to remove the buffer 
+      if (fBuffer) BufferEmpty(1); 
+
       next.Reset();
    }
 
@@ -5407,14 +5452,23 @@ Long64_t TH1::Merge(TCollection *li)
    // reset, otherwise setting the under/overflow will rebin and make a mess
    if (!allHaveLabels) ResetBit(kCanRebin);
    while (TH1* hist=(TH1*)next()) {
-      // process only if the histogram has limits; otherwise it was processed before
+      // process only if the histogram has limits; otherwise it was processed before      
       // in the case of an existing buffer (see if statement just before)
+
+      //std::cout << "merging histogram " << GetName() << " with " << hist->GetName() << std::endl;
+
+      // skip empty histograms 
+      Double_t histEntries = hist->GetEntries();
+      if (hist->fTsumw == 0 && histEntries == 0) continue;
+
+
+      // merge for labels or histogram with limits 
       if (allHaveLabels || (hist->GetXaxis()->GetXmin() < hist->GetXaxis()->GetXmax()) ) {
          // import statistics
          hist->GetStats(stats);
          for (Int_t i=0;i<kNstat;i++)
             totstats[i] += stats[i];
-         nentries += hist->GetEntries();
+         nentries += histEntries;
 
 
          Int_t nx = hist->GetXaxis()->GetNbins();
@@ -5483,6 +5537,10 @@ Long64_t TH1::Merge(TCollection *li)
                }
                if (ix >= 0) {
                   // MERGE here the bin contents
+                  //std::cout << "merging bin " << binx << " into " << ix << " with bin content " << cu << " bin center x = " << GetBinCenter(ix) << std::endl;
+                  if (ix > fNcells )
+                     Fatal("Merge","Fatal error merging histogram %s - bin number is %d and array size is %d",GetName(), ix,fNcells); 
+
                   AddBinContent(ix,cu);
                   if (fSumw2.fN)  fSumw2.fArray[ix] += error1*error1;
                }
@@ -5491,6 +5549,7 @@ Long64_t TH1::Merge(TCollection *li)
       }
    }
    if (canRebin) SetBit(kCanRebin);
+
 
    //copy merged stats
    PutStats(totstats);

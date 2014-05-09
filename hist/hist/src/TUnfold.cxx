@@ -1,10 +1,13 @@
-// @(#)root/hist:$Id$
 // Author: Stefan Schmitt
 // DESY, 13/10/08
 
-// Version 16, fix calculation of global correlations, improved error messages
+//  Version 17.1, bug fixes in GetFoldedOutput, GetOutput
 //
 //  History:
+//    Version 17.0, option to specify an error matrix with SetInput(), new ScanRho() method
+//    Version 16.2, in parallel to bug-fix in TUnfoldSys
+//    Version 16.1, fix bug with error matrix in case kEConstraintArea is used
+//    Version 16.0, fix calculation of global correlations, improved error messages
 //    Version 15, simplified L-curve scan, new tau definition, new error calc., area preservation
 //    Version 14, with changes in TUnfoldSys.cxx
 //    Version 13, new methods for derived classes and small bug fix
@@ -24,41 +27,81 @@
 
 ////////////////////////////////////////////////////////////////////////
 //
-// TUnfold solves the inverse problem
+//  TUnfold is used to decompose a measurement y into several sources x
+//  given the measurement uncertainties and a matrix of migrations A
 //
-//   chi**2 = (y-Ax)# Vyy^-1 (y-Ax) + tau^2 (L(x-x0))# L(x-x0) + lambda sum_i(y_i -(Ax)_i)
+//  *************************************************************
+//  * For most applications, it is better to use TUnfoldDensity *
+//  * instead of using TUnfoldSys or TUnfold                    *
+//  *************************************************************
 //
-// where # means that the matrix is transposed
+//  If you use this software, please consider the following citation
+//       S.Schmitt, JINST 7 (2012) T10003 [arXiv:1205.6201]
 //
-// Monte Carlo input
-// -----------------
+//  More documentation and updates are available on
+//      http://www.desy.de/~sschmitt
+//
+//
+//  A short summary of the algorithm is given in the following:
+//
+//  the "best" x matching the measurement y within errors
+//  is determined by minimizing the function
+//    L1+L2+L3
+//
+//  where
+//   L1 = (y-Ax)# Vyy^-1 (y-Ax)
+//   L2 = tau^2 (L(x-x0))# L(x-x0)
+//   L3 = lambda sum_i(y_i -(Ax)_i)
+//
+//  [the notation # means that the matrix is transposed ]
+//
+//  The term L1 is familiar from a least-square minimisation
+//  The term L2 defines the regularisation (smootheness condition on x),
+//    where the parameter tau^2 gives the strength of teh regularisation
+//  The term L3 is an optional area constraint with Lagrangian parameter
+//    lambda, ensuring that that the normalisation of x is consistent with the
+//    normalisation of y
+//
+//  The method can be applied to a very large number of problems,
+//  where the measured distribution y is a linear superposition
+//  of several Monte Carlo shapes
+//
+// Input from measurement:
+// -----------------------
 //   y: vector of measured quantities  (dimension ny)
 //   Vyy: covariance matrix for y (dimension ny x ny)
 //        in many cases V is diagonal and calculated from the errors of y
+//
+// From simulation:
+// ----------------
 //   A: migration matrix               (dimension ny x nx)
+//
+// Result
+// ------
 //   x: unknown underlying distribution (dimension nx)
+//      The error matrix of x, V_xx, is also determined
 //
 // Regularisation
 // --------------
 //   tau: parameter, defining the regularisation strength
 //   L: matrix of regularisation conditions (dimension nl x nx)
-//   x0: bias distribution
+//        depends on the structure of the input data
+//   x0: bias distribution, from simulation
 //
 // Preservation of the area
 // ------------------------
 //   lambda: lagrangian multiplier
 //   y_i: one component of the vector y
 //   (Ax)_i: one component of the vector Ax
-//                                                                     
-// and chi**2 is minimized
-//   (a) not constrained: minimisation is performed a function of x for fixed lambda=0
-//  or
-//   (b) constrained: minimisation is performed a function of x and lambda
-//                                                                      
-// This applies to a very large number of problems, where the measured
-// distribution y is a linear superposition of several Monte Carlo shapes
-// and the sum of these shapes gives the output distribution x
 //
+//
+// Determination of the unfolding result x:
+//
+//   (a) not constrained: minimisation is performed as a function of x
+//         for fixed lambda=0
+//  or
+//   (b) constrained: stationary point is found as a function of x and lambda
+//                                                                      
 // The constraint can be useful to reduce biases on the result x
 // in cases where the vector y follows non-Gaussian probability densities
 // (example: Poisson statistics at counting experiments in particle physics)
@@ -77,29 +120,22 @@
 // Some technical documentation is available here:
 //   http://www.desy.de/~sschmitt
 //
-// References:
-// ===========
-// A nice overview of the method is given in:
-//  The L-curve and Its Use in the Numerical Treatment of Inverse Problems
-//  (2000) by P. C. Hansen, in Computational Inverse Problems in
-//  Electrocardiology, ed. P. Johnston,
-//  Advances in Computational Bioengineering
-//  http://www.imm.dtu.dk/~pch/TR/Lcurve.ps 
-// The relevant equations are (1), (2) for the unfolding
-// and (14) for the L-curve curvature definition
+// Note:
+//   For most applications it is better to use the derived class
+//     TUnfoldSys or even better TUnfoldDensity
 //
-// Related literature on unfolding:
-//  The program package RUN and the web-page by V.Blobel
-//    http://www.desy.de/~blobel/unfold.html
-//  Talk by V. Blobel, Terascale Statistics school
-//    https://indico.desy.de/contributionDisplay.py?contribId=23&confId=1149
-//  References quoted in Blobel's talk:
-//   Per Chistian Hansen, Rank-Deficient and Discrete Ill-posed Problems,
-//        Siam (1998)
-//   Jari Kaipio and Erkki Somersalo, Statistical and Computational 
-//        Inverse problems, Springer (2005)
+//  TUnfoldSys extends the functionality of TUnfold
+//             such that systematic errors are propagated to teh result
+//             and that the unfolding can be done with proper background
+//             subtraction
 //
-//
+//  TUnfoldDensity extends further the functionality of TUnfoldSys
+//                 complex binning schemes are supported
+//                 The binning of input histograms is handeld consistently:
+//                  (1) the regularisation may be done by density,
+//                      i.e respecting the bin widths
+//                  (2) methods are provided which preserve the proper binning
+//                      of the result histograms
 //
 // Implementation
 // ==============
@@ -133,128 +169,27 @@
 //    ny should not be much larger than 1000
 //
 //
-//
-// Example of using TUnfold:
-// =========================
-// imagine a 2-dimensional histogram is filled, named A
-//    y-axis: generated quantity (e.g. 10 bins)
-//    x-axis: reconstructed quantity (e.g. 20 bin)
-// The data are filled in a 1-dimensional histogram, named y
-// Note1: ALWAYS choose a higher number of bins on the reconstructed side
-//         as compared to the generated size!
-// Note2: the events which are generated but not reconstructed
-//         have to be added to the appropriate overflow bins of A
-// Note3: make sure all bins have sufficient statistics and their error is
-//         non-zero. By default, bins with zero error are simply skipped;
-//         however, this may cause problems if You try to unfold something
-//         which depends on these input bins.
-//
-// code fragment (with histograms A and y filled):
-//
-//      TUnfold unfold(A,TUnfold::kHistMapOutputHoriz);
-//      Double_t tau=1.E-4;
-//      Double_t biasScale=0.0;
-//      unfold.DoUnfold(tau,y,biasScale);
-//      TH1D *x=unfold.GetOutput("x","myVariable");
-//      TH2D *rhoij=unfold.GetRhoIJ("correlation","myVariable");
-//
-// will create histograms "x" and "correlation" from A and y.
-// if tau is very large, the output is biased to the generated distribution scaled by biasScale
-// if tau is very small, the output will show oscillations
-// and large entries in the correlation matrix
-//
-//
 // Proper choice of tau
 // ====================
-// One of the difficult questions is about the choice of tau. The most
-// common method is the L-curve method: a two-dimensional curve is plotted
+// One of the difficult questions is about the choice of tau.
+// The method implemented in TUnfold is the L-curve method:
+// a two-dimensional curve is plotted
 //   x-axis: log10(chisquare)
 //   y-axis: log10(regularisation condition)
 // In many cases this curve has an L-shape. The best choice of tau is in the
 // kink of the L
 //
-// Within TUnfold a simple version of the L-curve analysis is included.
+// Within TUnfold a simple version of the L-curve analysis is available.
 // It tests a given number of points in a predefined tau-range and searches
 // for the maximum of the curvature in the L-curve (kink position). 
-// if no tau range is given, the range of teh scan is determied automatically
+// if no tau range is given, the range of the scan is determined automatically
 //
-// Example: scan tau and produce the L-curve plot
-//
-// Code fragment: assume A and y are filled
-//
-//      TUnfold unfold(A,TUnfold::kHistMapOutputHoriz);
-//
-//      unfold.SetInput(y);
-//
-//      Int_t nScan=30;
-//      Int_t iBest;
-//      TSpline *logTauX,*logTauY;
-//      TGraph *lCurve;
-//
-//      iBest=unfold.ScanLcurve(nScan,0.0,0.0,&lCurve);
-//
-//      std::cout<<"tau="<<unfold.GetTau()<<"\n";
-//
-//      TH1D *x=unfold.GetOutput("x","myVariable");
-//      TH2D *rhoij=unfold.GetRhoIJ("correlation","myVariable");
-//
-// This creates
-//    logTauX: the L-curve's x-coordinate as a function of log(tau) 
-//    logTauY: the L-curve's y-coordinate as a function of log(tau) 
-//    lCurve: a graph of the L-curve
-//    x,rhoij: unfolding result for best choice of tau
-//    iBest: the coordinate/spline knot number with the best choice of tau 
-//
-// Note: always check the L curve after unfolding. The algorithm is not
-//    perfect
-//
-//
-// Bin averaging of the output
-// ===========================
-// Sometimes it is useful to unfold for a fine binning in x and
-// calculate the final result with a smaller number of bins. The advantage
-// is a reduction in the correlation coefficients if bins are averaged.
-// For this type of averaging the full error matrix has to be used.
-// There are methods in TUnfold to support this type of calculation
-// Example:
-//    The vector x has dimension 49, it consists of 7x7 bins
-//      in two variables (Pt,Eta)
-//    The unfolding result is to be presented as one-dimensional projections
-//    in (Pt) and (Eta)
-//    The bins of x are mapped as: bins 1..7 the first Eta bin
-//                                 bins 2..14 the second Eta bin
-//                                 ...
-//                                 bins 1,8,15,... the first Pt bin
-//                                 ...
-// code fragment:
-//
-//      TUnfold unfold(A,TUnfold::kHistMapOutputHoriz);
-//      Double_t tau=1.E-4;
-//      Double_t biasScale=0.0;
-//      unfold.DoUnfold(tau,y,biasScale);
-//      Int_t binMapEta[49+2];
-//      Int_t binMapPt[49+2];
-//      // overflow and underflow bins are not used
-//      binMapEta[0]=-1;
-//      binMapEta[49+1]=-1;
-//      binMapPt[0]=-1;
-//      binMapPt[49+1]=-1;
-//      for(Int_t i=1;i<=49;i++) {
-//         // all bins (i) with the same (i-1)/7 are added
-//         binMapEta[i] = (i-1)/7 +1;
-//         // all bins (i) with the same (i-1)%7 are added
-//         binMapPt[i]  = (i-1)%7 +1;
-//      }
-//      TH1D *etaHist=new TH1D("eta(unfolded)",";eta",7,etamin,etamax);
-//      TH1D *etaCorr=new TH2D("eta(unfolded)",";eta;eta",7,etamin,etamax,7,etamin,etamax);
-//      TH1D *ptHist=new TH1D("pt(unfolded)",";pt",7,ptmin,ptmax);
-//      TH1D *ptCorr=new TH2D("pt(unfolded)",";pt;pt",7,ptmin,ptmax,7,ptmin,ptmax);
-//      unfold.GetOutput(etaHist,binMapEta);
-//      unfold.GetRhoIJ(etaCorrt,binMapEta);
-//      unfold.GetOutput(ptHist,binMapPt);
-//      unfold.GetRhoIJ(ptCorrt,binMapPt);
-//
-//
+//  A nice overview of the L-curve method is given in:
+//   The L-curve and Its Use in the Numerical Treatment of Inverse Problems
+//   (2000) by P. C. Hansen, in Computational Inverse Problems in
+//   Electrocardiology, ed. P. Johnston,
+//   Advances in Computational Bioengineering
+//   http://www.imm.dtu.dk/~pch/TR/Lcurve.ps 
 //
 // Alternative Regularisation conditions
 // =====================================
@@ -289,11 +224,12 @@
 //    kRegModeDerivative   minimize the 1st derivative of (x-x0)
 //    kRegModeCurvature    minimize the 2nd derivative of (x-x0)
 //
-// kRegModeSize is the regularisation scheme which usually is found in
-// literature. In addition, the bias usually is not present
-// (bias scale factor is zero).
+// kRegModeSize is the regularisation scheme which often is found in
+// literature. The second derivative is often named curvature.
+// Sometimes the bias is not discussed,  equivalent to a bias scale factor
+// of zero.
 //
-// The non-standard regularisation schemes kRegModeDerivative and 
+// The regularisation schemes kRegModeDerivative and 
 // kRegModeCurvature have the nice feature that they create correlations
 // between x-bins, whereas the non-regularized unfolding tends to create 
 // negative correlations between bins. For these regularisation schemes the
@@ -312,42 +248,55 @@
 //          RegularizeBins()   specify a 1-dimensional group of bins
 //          RegularizeBins2D() specify a 2-dimensional group of bins
 //
+// Note, the class TUnfoldDensity provides an automatic setup of complex
+// regularisation schemes
+//
 // For ultimate flexibility, the regularisation condition can be set on each
 // bin individually
 //  -> give  kRegModeNone  in the constructor and use
 //      RegularizeSize()        regularize one bin   
 //      RegularizeDerivative()  regularize the slope given by two bins
 //      RegularizeCurvature()   regularize the curvature given by three bins
+//      AddRegularisationCondition()
+//                              define an arbitrary regulatisation condition
+//
+///////////////////////////////////////////////////////////////////////////
 
+/*
+  This file is part of TUnfold.
+
+  TUnfold is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  TUnfold is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with TUnfold.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #include <iostream>
 #include <TMatrixD.h>
 #include <TMatrixDSparse.h>
 #include <TMatrixDSym.h>
+#include <TMatrixDSymEigen.h>
 #include <TMath.h>
-#include <TDecompBK.h>
-
-#include <TUnfold.h>
+#include "TUnfold.h"
 
 #include <map>
 #include <vector>
 
-
-// this option enables the use of Schur complement for matrix inversion
-// with large diagonal sub-matrices
-#define SCHUR_COMPLEMENT_MATRIX_INVERSION
-
-// this option enables pre-conditioning of matrices prior to inversion
-// This type of preconditioning is expected to improve the numerical
-// accuracy for the symmetric and positive definite matrices connected
-// to unfolding problems. Also, the determinant is more likely to be non-zero
-// in case of non-singular matrices
-#define INVERT_WITH_CONDITIONING
-
 // this option saves the spline of the L curve curvature to a file 
 // named splinec.ps for debugging
 
+//#define DEBUG
+//#define DEBUG_DETAIL
 //#define DEBUG_LCURVE
+//#define FORCE_EIGENVALUE_DECOMPOSITION
 
 #ifdef DEBUG_LCURVE
 #include <TCanvas.h>
@@ -356,7 +305,8 @@
 ClassImp(TUnfold)
 //______________________________________________________________________________
 
-const char *TUnfold::GetTUnfoldVersion(void) {
+const char *TUnfold::GetTUnfoldVersion(void)
+{
    return TUnfold_VERSION;
 }
 
@@ -368,7 +318,7 @@ void TUnfold::InitTUnfold(void)
    fHistToX.Set(0);
    fSumOverY.Set(0);
    fA = 0;
-   fLsquared = 0;
+   fL = 0;
    fVyy = 0;
    fY = 0;
    fX0 = 0;
@@ -378,6 +328,7 @@ void TUnfold::InitTUnfold(void)
    fConstraint = kEConstraintNone;
    fRegMode = kRegModeNone;
    // output
+   fVyyInv = 0;
    fVxx = 0;
    fX = 0;
    fAx = 0;
@@ -394,22 +345,31 @@ void TUnfold::InitTUnfold(void)
    fEinv = 0;
    fE = 0;
    fVxxInv = 0;
+   fEpsMatrix=1.E-13;
+   fIgnoredBins=0;
 }
 
-void TUnfold::DeleteMatrix(TMatrixD **m) {
+void TUnfold::DeleteMatrix(TMatrixD **m)
+{
    if(*m) delete *m;
    *m=0;
 }
 
-void TUnfold::DeleteMatrix(TMatrixDSparse **m) {
+void TUnfold::DeleteMatrix(TMatrixDSparse **m)
+{
    if(*m) delete *m;
    *m=0;
 }
 
-void TUnfold::ClearResults(void) {
+void TUnfold::ClearResults(void)
+{
    // delete old results (if any)
-   // this function is virtual, so derived classes may flag their results
-   // ad non-valid as well
+   // this function is virtual, so derived classes may implement their own
+   // method to flag results as non-valid
+
+   // note: the inverse of the input covariance is not cleared
+   //       because it does not change until the input is changed
+
    DeleteMatrix(&fVxx);
    DeleteMatrix(&fX);
    DeleteMatrix(&fAx);
@@ -446,12 +406,14 @@ Double_t TUnfold::DoUnfold(void)
    //     fX0: bias on x
    //     fBiasScale: scale factor for fX0
    //     fVyy:  covariance matrix for y
-   //     fLsquared: regularisation conditions
+   //     fL: regularisation conditions
    //     fTauSquared: regularisation strength
    //     fConstraint: whether the constraint is applied
    // Data members modified:
-   //     fEinv: inverse of the covariance matrix of x
-   //     fE:    covariance matrix of x
+   //     fVyyInv: inverse of input data covariance matrix
+   //     fNdf: number of dgerres of freedom
+   //     fEinv: inverse of the matrix needed for unfolding calculations
+   //     fE:    the matrix needed for unfolding calculations
    //     fX:    unfolded data points
    //     fDXDY: derivative of x wrt y (for error propagation)
    //     fVxx:  error matrix (covariance matrix) on x
@@ -468,108 +430,28 @@ Double_t TUnfold::DoUnfold(void)
 
    ClearResults();
 
-   // get inverse matrix Vyyinv
-   //   (1) create mapping for data bins, excluding bins with zero error
-   Int_t ny=fVyy->GetNrows();
-   const Int_t *vyy_rows=fVyy->GetRowIndexArray();
-   const Int_t *vyy_cols=fVyy->GetColIndexArray();
-   const Double_t *vyy_data=fVyy->GetMatrixArray();
-   Int_t *usedBin=new Int_t[ny];
-   for(Int_t i=0;i<ny;i++) {
-      usedBin[i]=0;
-   }
-   for(Int_t i=0;i<ny;i++) {
-      for(Int_t k=vyy_rows[i];k<vyy_rows[i+1];k++) {
-         if(vyy_data[k]>0.0) {
-            usedBin[i]++;
-            usedBin[vyy_cols[k]]++;
-         }
+   // get pseudo-inverse matrix Vyyinv and NDF
+   if(!fVyyInv) {
+      GetInputInverseEmatrix(0);
+      if(fConstraint != kEConstraintNone) {
+	fNdf--;
       }
    }
-   Int_t n=0;
-   Int_t *yToI=new Int_t[ny];
-   Int_t *iToY=new Int_t[ny];
-   for(Int_t i=0;i<ny;i++) {
-      if(usedBin[i]) {
-         yToI[i]=n;
-         iToY[n]=i;
-         n++;
-      } else {
-         yToI[i]=-1;
-      }
-   }
-   delete[] usedBin;
-   // here:
-   //   n: dimension of non-degenerate error matrix
-   //   yToI: return non-degenerate bin number (or -1)
-   //   iToY: convert non-degenerate bin number to original bin number
-
-   //  (2) create copy of Vyy, with unused bins removed
-   Int_t nn=vyy_rows[ny];
-   Int_t *vyyred_rows=new Int_t[nn];
-   Int_t *vyyred_cols=new Int_t[nn];
-   Double_t *vyyred_data=new Double_t[nn];
-   nn=0;
-   for(Int_t i=0;i<ny;i++) {
-      for(Int_t k=vyy_rows[i];k<vyy_rows[i+1];k++) {
-         if(vyy_data[k]>0.0) {
-            vyyred_rows[nn]=yToI[i];
-            vyyred_cols[nn]=yToI[vyy_cols[k]];
-            vyyred_data[nn]=vyy_data[k];
-            nn++;
-         }
-      }
-   }
-   TMatrixDSparse *vyyred=CreateSparseMatrix
-      (n,n,nn,vyyred_rows,vyyred_cols,vyyred_data);
-   delete[] vyyred_rows;
-   delete[] vyyred_cols;
-   delete[] vyyred_data;
-   //   (3) invert this copy of Vyy
-   TMatrixD *vyyredinv=InvertMSparse(vyyred);
-   DeleteMatrix(&vyyred);
-   //   (4) create sparse inverted matrix
-   nn=ny*ny;
-   Int_t *vyyinv_rows=new Int_t[nn];
-   Int_t *vyyinv_cols=new Int_t[nn];
-   Double_t *vyyinv_data=new Double_t[nn];
-   nn=0;
-   for(Int_t ix=0;ix<n;ix++) {
-      for(Int_t iy=0;iy<n;iy++) {
-         Double_t d=(*vyyredinv)(ix,iy);
-         if(d != 0.0) {
-            vyyinv_rows[nn]=iToY[ix];
-            vyyinv_cols[nn]=iToY[iy];
-            vyyinv_data[nn]=d;
-            nn++;
-         }
-      }
-   }
-   DeleteMatrix(&vyyredinv);
-   TMatrixDSparse *Vyyinv=CreateSparseMatrix
-      (ny,ny,nn,vyyinv_rows,vyyinv_cols,vyyinv_data);
-
-   delete[] vyyinv_rows;
-   delete[] vyyinv_cols;
-   delete[] vyyinv_data;
-
-   delete[] yToI;
-   delete[] iToY;
-
    //
    // get matrix
    //              T
    //            fA fV  = mAt_V
    //
-   TMatrixDSparse *AtVyyinv=MultiplyMSparseTranspMSparse(fA,Vyyinv);
+   TMatrixDSparse *AtVyyinv=MultiplyMSparseTranspMSparse(fA,fVyyInv);
    //
    // get
    //       T
    //     fA fVyyinv fY + fTauSquared fBiasScale Lsquared fX0 = rhs
    //
    TMatrixDSparse *rhs=MultiplyMSparseM(AtVyyinv,fY);
+   TMatrixDSparse *lSquared=MultiplyMSparseTranspMSparse(fL,fL);
    if (fBiasScale != 0.0) {
-     TMatrixDSparse *rhs2=MultiplyMSparseM(fLsquared,fX0);
+     TMatrixDSparse *rhs2=MultiplyMSparseM(lSquared,fX0);
       AddMSparse(rhs, fTauSquared * fBiasScale ,rhs2);
       DeleteMatrix(&rhs2);
    }
@@ -579,22 +461,27 @@ Double_t TUnfold::DoUnfold(void)
    //              T
    //           (fA fV)fA + fTauSquared*fLsquared  = fEinv
    fEinv=MultiplyMSparseMSparse(AtVyyinv,fA);
-   AddMSparse(fEinv,fTauSquared,fLsquared);
+   AddMSparse(fEinv,fTauSquared,lSquared);
 
    //
    // get matrix
    //             -1
    //        fEinv    = fE
    //
-   TMatrixD *EE = InvertMSparse(fEinv);
-   fE=new TMatrixDSparse(*EE);
+   Int_t rank=0;
+   fE = InvertMSparseSymmPos(fEinv,&rank);
+   if(rank != GetNx()) {
+      Warning("DoUnfold","rank of matrix E %d expect %d",rank,GetNx());
+   }
 
    //
    // get result
    //        fE rhs  = x
    //
-   fX = new TMatrixD(*EE, TMatrixD::kMult, *rhs);
+   TMatrixDSparse *xSparse=MultiplyMSparseMSparse(fE,rhs);
+   fX = new TMatrixD(*xSparse);
    DeleteMatrix(&rhs);
+   DeleteMatrix(&xSparse);
 
    // additional correction for constraint
    Double_t lambda_half=0.0;
@@ -620,7 +507,7 @@ Double_t TUnfold::DoUnfold(void)
       if(epsilonEepsilon->GetRowIndexArray()[1]==1) {
          one_over_epsEeps=1./epsilonEepsilon->GetMatrixArray()[0];
       } else {
-         Fatal("TUnfold::Unfold","epsilon#Eepsilon has dimension %d != 1",
+         Fatal("Unfold","epsilon#Eepsilon has dimension %d != 1",
                epsilonEepsilon->GetRowIndexArray()[1]);
       }
       DeleteMatrix(&epsilonEepsilon);
@@ -683,11 +570,11 @@ Double_t TUnfold::DoUnfold(void)
 
    //
    // get error matrix on x
-   //   fDXDY * Vyy * fDXDY# = fDXDY * A * E    (Note: E# = E)
-   TMatrixDSparse *AE = MultiplyMSparseMSparse(fA,fE);
-   fVxx = MultiplyMSparseMSparse(fDXDY,AE);
+   //   fDXDY * Vyy * fDXDY#
+   TMatrixDSparse *fDXDYVyy = MultiplyMSparseMSparse(fDXDY,fVyy);
+   fVxx = MultiplyMSparseMSparseTranspVector(fDXDYVyy,fDXDY,0);
 
-   DeleteMatrix(&AE);
+   DeleteMatrix(&fDXDYVyy);
 
    //
    // get result
@@ -700,8 +587,7 @@ Double_t TUnfold::DoUnfold(void)
 
    // chi**2 contribution from (y-Ax)V(y-Ax)
    TMatrixD dy(*fY, TMatrixD::kMinus, *fAx);
-   TMatrixDSparse *VyyinvDy=MultiplyMSparseM(Vyyinv,&dy);
-   DeleteMatrix(&Vyyinv);
+   TMatrixDSparse *VyyinvDy=MultiplyMSparseM(fVyyInv,&dy);
 
    const Int_t *VyyinvDy_rows=VyyinvDy->GetRowIndexArray();
    const Double_t *VyyinvDy_data=VyyinvDy->GetMatrixArray();
@@ -712,7 +598,7 @@ Double_t TUnfold::DoUnfold(void)
       }
    }
    TMatrixD dx( fBiasScale * (*fX0), TMatrixD::kMinus,(*fX));
-   TMatrixDSparse *LsquaredDx=MultiplyMSparseM(fLsquared,&dx);
+   TMatrixDSparse *LsquaredDx=MultiplyMSparseM(lSquared,&dx);
    const Int_t *LsquaredDx_rows=LsquaredDx->GetRowIndexArray();
    const Double_t *LsquaredDx_data=LsquaredDx->GetMatrixArray();
    fLXsquared = 0.0;
@@ -732,7 +618,7 @@ Double_t TUnfold::DoUnfold(void)
       if(temp->GetRowIndexArray()[1]==1) {
          f=temp->GetMatrixArray()[0]*one_over_epsEeps;
       } else if(temp->GetRowIndexArray()[1]>1) {
-         Fatal("TUnfold::Unfold",
+         Fatal("Unfold",
                "epsilon#fDXDtauSquared has dimension %d != 1",
                temp->GetRowIndexArray()[1]);
       }
@@ -744,6 +630,7 @@ Double_t TUnfold::DoUnfold(void)
    DeleteMatrix(&epsilon);
 
    DeleteMatrix(&LsquaredDx);
+   DeleteMatrix(&lSquared);
 
    // calculate/store matrices defining the derivatives dx/dA
    fDXDAM[0]=new TMatrixDSparse(*fE);
@@ -777,10 +664,25 @@ Double_t TUnfold::DoUnfold(void)
    }
 
    DeleteMatrix(&Eepsilon);
-   DeleteMatrix(&EE);
 
-   TMatrixD *VxxINV = InvertMSparse(fVxx);
-   fVxxInv=new TMatrixDSparse(*VxxINV);
+   rank=0;
+   fVxxInv = InvertMSparseSymmPos(fVxx,&rank);
+   if(rank != GetNx()) {
+      Warning("DoUnfold","rank of output covariance is %d expect %d",
+              rank,GetNx());
+   }
+
+   TVectorD VxxInvDiag(fVxxInv->GetNrows());
+   const Int_t *VxxInv_rows=fVxxInv->GetRowIndexArray();
+   const Int_t *VxxInv_cols=fVxxInv->GetColIndexArray();
+   const Double_t *VxxInv_data=fVxxInv->GetMatrixArray();
+   for (int ix = 0; ix < fVxxInv->GetNrows(); ix++) {
+      for(int ik=VxxInv_rows[ix];ik<VxxInv_rows[ix+1];ik++) {
+         if(ix==VxxInv_cols[ik]) {
+            VxxInvDiag(ix)=VxxInv_data[ik];
+         }
+      }
+   }
 
    // maximum global correlation coefficient
    const Int_t *Vxx_rows=fVxx->GetRowIndexArray();
@@ -794,7 +696,7 @@ Double_t TUnfold::DoUnfold(void)
       for(int ik=Vxx_rows[ix];ik<Vxx_rows[ix+1];ik++) {
          if(ix==Vxx_cols[ik]) {
             Double_t rho_squared =
-               1. - 1. / ((*VxxINV) (ix, ix) * Vxx_data[ik]);
+               1. - 1. / (VxxInvDiag(ix) * Vxx_data[ik]);
             if (rho_squared > rho_squared_max)
                rho_squared_max = rho_squared;
             if(rho_squared>0.0) {
@@ -808,13 +710,16 @@ Double_t TUnfold::DoUnfold(void)
    fRhoMax = TMath::Sqrt(rho_squared_max);
    fRhoAvg = (n_rho>0) ? (rho_sum/n_rho) : -1.0;
 
-   delete VxxINV;
-
    return fRhoMax;
 }
 
 TMatrixDSparse *TUnfold::CreateSparseMatrix
-(Int_t nrow,Int_t ncol,Int_t nel,Int_t *row,Int_t *col,Double_t *data) const {
+(Int_t nrow,Int_t ncol,Int_t nel,Int_t *row,Int_t *col,Double_t *data) const
+{
+   // create a sparse matri
+   //   nrow,ncol : dimension of the matrix
+   //   nel: number of non-zero elements
+   //   row[nel],col[nel],data[nel] : indices and data of the non-zero elements
    TMatrixDSparse *A=new TMatrixDSparse(nrow,ncol);
    if(nel>0) {
       A->SetMatrixArray(nel,row,col,data);
@@ -890,8 +795,8 @@ TMatrixDSparse *TUnfold::MultiplyMSparseMSparse(const TMatrixDSparse *a,
 }
 
 
-TMatrixDSparse *TUnfold::MultiplyMSparseTranspMSparse(const TMatrixDSparse *a,
-                                                      const TMatrixDSparse *b) const
+TMatrixDSparse *TUnfold::MultiplyMSparseTranspMSparse
+(const TMatrixDSparse *a,const TMatrixDSparse *b) const
 {
    // multiply a transposed Sparse matrix with another Sparse matrix
    //    a:  pointer to sparse matrix (to be transposed)
@@ -1023,7 +928,8 @@ TMatrixDSparse *TUnfold::MultiplyMSparseM(const TMatrixDSparse *a,
 
 TMatrixDSparse *TUnfold::MultiplyMSparseMSparseTranspVector
 (const TMatrixDSparse *m1,const TMatrixDSparse *m2,
- const TMatrixTBase<Double_t> *v) const {
+ const TMatrixTBase<Double_t> *v) const
+{
    // calculate M_ij = sum_k [m1_ik*m2_jk*v[k] ].
    //    m1: pointer to sparse matrix with dimension I*K
    //    m2: pointer to sparse matrix with dimension J*K
@@ -1112,7 +1018,8 @@ TMatrixDSparse *TUnfold::MultiplyMSparseMSparseTranspVector
 }
 
 void TUnfold::AddMSparse(TMatrixDSparse *dest,Double_t f,
-                         const TMatrixDSparse *src) {
+                         const TMatrixDSparse *src) const
+{
    // a replacement for
    //     (*dest) += f*(*src)
    const Int_t *dest_rows=dest->GetRowIndexArray();
@@ -1151,7 +1058,13 @@ void TUnfold::AddMSparse(TMatrixDSparse *dest,Double_t f,
             result_cols[n]=col_dest;
             result_data[n]=dest_data[i_dest++]+f*src_data[i_src++];
          }
-         if(result_data[n] !=0.0) n++;
+         if(result_data[n] !=0.0) {
+            if(!TMath::Finite(result_data[n])) {
+               Fatal("AddMSparse","Nan detected %d %d %d",
+                     row,i_dest,i_src);
+            }
+            n++;
+         }
       }
    }
    if(n<=0) {
@@ -1166,289 +1079,690 @@ void TUnfold::AddMSparse(TMatrixDSparse *dest,Double_t f,
    delete[] result_cols;
 }
 
-TMatrixD *TUnfold::InvertMSparse(const TMatrixDSparse *A) const {
-   // get the inverse of a sparse matrix
+TMatrixDSparse *TUnfold::InvertMSparseSymmPos
+(const TMatrixDSparse *A,Int_t *rankPtr) const
+{
+   // get the inverse or pseudo-inverse of a sparse matrix
    //    A: the original matrix
-   // this is a replacement of the call
-   //    new TMatrixD(TMatrixD::kInverted, a);
+   //    rank: 
+   //      if(rankPtr==0)
+   //          rerturn the inverse if it exists, or return NULL
+   //      else
+   //          return the pseudo-invers
+   //          and return the rank of the matrix in *rankPtr 
    // the matrix inversion is optimized for the case
    // where a large submatrix of A is diagonal
 
    if(A->GetNcols()!=A->GetNrows()) {
-      Fatal("InvertMSparse","inconsistent matrix row/col %d!=%d",
+      Fatal("InvertMSparseSymmPos","inconsistent matrix row/col %d!=%d",
             A->GetNcols(),A->GetNrows());
    }
 
-#ifdef SCHUR_COMPLEMENT_MATRIX_INVERSION
-
+   Bool_t *isZero=new Bool_t[A->GetNrows()];
    const Int_t *a_rows=A->GetRowIndexArray();
    const Int_t *a_cols=A->GetColIndexArray();
    const Double_t *a_data=A->GetMatrixArray();
 
-   Int_t nmin=0,nmax=0;
-   // find largest diagonal submatrix
-   for(Int_t imin=0;imin<A->GetNrows();imin++) {
-      Int_t imax=A->GetNrows();
-      for(Int_t i2=imin;i2<imax;i2++) {
-         for(Int_t i=a_rows[i2];i<a_rows[i2+1];i++) {
-            if(a_data[i]==0.0) continue;
-            Int_t icol=a_cols[i];
-            if(icol<imin) continue; // ignore first part of the matrix
-            if(icol==i2) continue; // ignore diagonals
-            if(icol<i2) {
-               // this row spoils the diagonal matrix, so do not use
-               imax=i2;
-               break;
-            } else {
-               // this entry limits imax
-               imax=icol;
-               break;
-            }
+   // determine diagonal elements
+   //  Aii: diagonals of A
+   Int_t iDiagonal=0;
+   Int_t iBlock=A->GetNrows();
+   Bool_t isDiagonal=kTRUE;
+   TVectorD aII(A->GetNrows());
+   Int_t nError=0;
+   for(Int_t iA=0;iA<A->GetNrows();iA++) {
+      for(Int_t indexA=a_rows[iA];indexA<a_rows[iA+1];indexA++) {
+         Int_t jA=a_cols[indexA];
+         if(iA==jA) {
+            if(!(a_data[indexA]>=0.0)) nError++;
+            aII(iA)=a_data[indexA];
          }
-      }
-      if(imax-imin>nmax-nmin) {
-         nmin=imin;
-         nmax=imax;
       }
    }
-   // if the diagonal part has size zero or one, use standard matrix inversion
-   if(nmin>=nmax-1) {
-      TMatrixD *r=new TMatrixD(*A);
-      if(!InvertMConditioned(r)) {
-         Fatal("InvertMSparse","InvertMConditioned(full matrix) failed");
-      }
-      return r;
-   } else if((nmin==0)&&(nmax==A->GetNrows())) {
-      // if the diagonal part spans the whole matrix,
-      //   just set the diagomal elements
-      TMatrixD *r=new TMatrixD(A->GetNrows(),A->GetNcols());
-      Int_t error=0;
-      for(Int_t irow=nmin;irow<nmax;irow++) {
-         for(Int_t i=a_rows[irow];i<a_rows[irow+1];i++) {
-            if(a_cols[i]==irow) {
-               if(a_data[i] !=0.0) (*r)(irow,irow)=1./a_data[i];
-               else error++;
-            }
-         }
-      }
-      if(error) {
-         Error("InvertMSparse",
-               "inversion failed (diagonal matrix) nerror=%d",error);
-      }
-      return r;
+   if(nError>0) {
+      delete isZero;
+      Fatal("InvertMSparseSymmPos",
+            "Matrix has %d negative elements on the diagonal", nError);
+      return 0;
    }
 
-   //  A  B
-   // (    )
-   //  C  D
+   // reorder matrix such that the largest block of zeros is swapped
+   // to the lowest indices
+   // the result of this ordering:
+   //  swap[i] : for index i point to the row in A
+   //  swapBack[iA] : for index iA in A point to the swapped index i
+   // the indices are grouped into three groups
+   //   0..iDiagonal-1 : these rows only have diagonal elements
+   //   iDiagonal..iBlock : these rows contain a diagonal block matrix
    //
-   // get inverse of diagonal part
-   std::vector<Double_t> Dinv;
-   Dinv.resize(nmax-nmin);
-   Int_t error=0;
-   for(Int_t irow=nmin;irow<nmax;irow++) {
-      for(Int_t i=a_rows[irow];i<a_rows[irow+1];i++) {
-         if(a_cols[i]==irow) {
-            if(a_data[i]!=0.0) {
-               Dinv[irow-nmin]=1./a_data[i];
-            } else {
-               Dinv[irow-nmin]=0.0;
-               error++;
-            }
-            break;
+   Int_t *swap=new Int_t[A->GetNrows()];
+   for(Int_t j=0;j<A->GetNrows();j++) swap[j]=j;
+   for(Int_t iStart=0;iStart<iBlock;iStart++) {
+      Int_t nZero=0;
+      for(Int_t i=iStart;i<iBlock;i++) {
+         Int_t iA=swap[i];
+         Int_t n=A->GetNrows()-(a_rows[iA+1]-a_rows[iA]);
+         if(n>nZero) {
+            Int_t tmp=swap[iStart];
+            swap[iStart]=swap[i];
+            swap[i]=tmp;
+            nZero=n;
          }
       }
-   }
-   if(error) {
-      Error("InvertMSparse",
-            "inversion failed (diagonal part) nerror=%d",error);      
-   }
-   // B*Dinv and C
-   Int_t nBDinv=0,nC=0;
-   for(Int_t irow_a=0;irow_a<A->GetNrows();irow_a++) {
-      if((irow_a<nmin)||(irow_a>=nmax)) {
-         for(Int_t i=a_rows[irow_a];i<a_rows[irow_a+1];i++) {
-            Int_t icol=a_cols[i];
-            if((icol>=nmin)&&(icol<nmax)) nBDinv++;
+      for(Int_t i=0;i<A->GetNrows();i++) isZero[i]=kTRUE;
+      Int_t iA=swap[iStart];
+      for(Int_t indexA=a_rows[iA];indexA<a_rows[iA+1];indexA++) {
+         Int_t jA=a_cols[indexA];
+         isZero[jA]=kFALSE;
+         if(iA!=jA) {
+            isDiagonal=kFALSE;
          }
+      }
+      if(isDiagonal) {
+         iDiagonal=iStart+1;
       } else {
-         for(Int_t i=a_rows[irow_a];i<a_rows[irow_a+1];i++) {
-            Int_t icol = a_cols[i];
-            if((icol<nmin)||(icol>=nmax)) nC++;
-         }
-      }
-   }
-   Int_t *row_BDinv=new Int_t[nBDinv+1];
-   Int_t *col_BDinv=new Int_t[nBDinv+1];
-   Double_t *data_BDinv=new Double_t[nBDinv+1];
-
-   Int_t *row_C=new Int_t[nC+1];
-   Int_t *col_C=new Int_t[nC+1];
-   Double_t *data_C=new Double_t[nC+1];
-
-   TMatrixD Aschur(A->GetNrows()-(nmax-nmin),A->GetNcols()-(nmax-nmin));
-
-   nBDinv=0;
-   nC=0;
-   for(Int_t irow_a=0;irow_a<A->GetNrows();irow_a++) {
-      if((irow_a<nmin)||(irow_a>=nmax)) {
-         Int_t row=(irow_a<nmin) ? irow_a : (irow_a-(nmax-nmin));
-         for(Int_t i=a_rows[irow_a];i<a_rows[irow_a+1];i++) {
-            Int_t icol_a=a_cols[i];
-            if(icol_a<nmin) {
-               Aschur(row,icol_a)=a_data[i];
-            } else if(icol_a>=nmax) {
-               Aschur(row,icol_a-(nmax-nmin))=a_data[i];
+         for(Int_t i=iStart+1;i<iBlock;) {
+            if(isZero[swap[i]]) {
+               i++;
             } else {
-               row_BDinv[nBDinv]=row;
-               col_BDinv[nBDinv]=icol_a-nmin;
-               data_BDinv[nBDinv]=a_data[i]*Dinv[icol_a-nmin];
-               nBDinv++;
-            }
-         }
-      } else {
-         for(Int_t i=a_rows[irow_a];i<a_rows[irow_a+1];i++) {
-            Int_t icol_a=a_cols[i];
-            if(icol_a<nmin) {
-               row_C[nC]=irow_a-nmin;
-               col_C[nC]=icol_a;
-               data_C[nC]=a_data[i];
-               nC++;
-            } else if(icol_a>=nmax) {
-               row_C[nC]=irow_a-nmin;
-               col_C[nC]=icol_a-(nmax-nmin);
-               data_C[nC]=a_data[i];
-               nC++;
+               iBlock--;
+               Int_t tmp=swap[iBlock];
+               swap[iBlock]=swap[i];
+               swap[i]=tmp;
             }
          }
       }
    }
-   TMatrixDSparse *BDinv=CreateSparseMatrix
-      (A->GetNrows()-(nmax-nmin),nmax-nmin,
-       nBDinv,row_BDinv,col_BDinv,data_BDinv);
-   delete[] row_BDinv;
-   delete[] col_BDinv;
-   delete[] data_BDinv;
+
+   // for tests uncomment this:
+   //  iBlock=iDiagonal;
 
 
-   TMatrixDSparse *C=CreateSparseMatrix(nmax-nmin,A->GetNcols()-(nmax-nmin),
-                                        nC,row_C,col_C,data_C);
-   delete[] row_C;
-   delete[] col_C;
-   delete[] data_C;
-
-   TMatrixDSparse *BDinvC=MultiplyMSparseMSparse(BDinv,C);
-
-   Aschur -= *BDinvC;
-   if(!InvertMConditioned(&Aschur)) {
-      Fatal("InvertMSparse","InvertMConditioned failed (part of matrix)");
-   }
-
-   DeleteMatrix(&BDinvC);
-
-   TMatrixD *r=new TMatrixD(A->GetNrows(),A->GetNcols());
-
-   for(Int_t row_a=0;row_a<Aschur.GetNrows();row_a++) {
-      for(Int_t col_a=0;col_a<Aschur.GetNcols();col_a++) {
-         (*r)((row_a<nmin) ? row_a : (row_a+nmax-nmin),
-              (col_a<nmin) ? col_a : (col_a+nmax-nmin))=Aschur(row_a,col_a);
-      }
-   }
-
-   TMatrixDSparse *CAschur=MultiplyMSparseM(C,&Aschur);
-   TMatrixDSparse *CAschurBDinv=MultiplyMSparseMSparse(CAschur,BDinv);
-
-   DeleteMatrix(&C);
-
-   const Int_t *CAschurBDinv_row=CAschurBDinv->GetRowIndexArray();
-   const Int_t *CAschurBDinv_col=CAschurBDinv->GetColIndexArray();
-   const Double_t *CAschurBDinv_data=CAschurBDinv->GetMatrixArray();
-   for(Int_t row=0;row<CAschurBDinv->GetNrows();row++) {
-      for(Int_t i=CAschurBDinv_row[row];i<CAschurBDinv_row[row+1];i++) {
-         Int_t col=CAschurBDinv_col[i];
-         (*r)(row+nmin,col+nmin)=CAschurBDinv_data[i]*Dinv[row];
-      }
-      (*r)(row+nmin,row+nmin) += Dinv[row];
-   }
-
-   DeleteMatrix(&CAschurBDinv);
-
-   const Int_t *CAschur_row=CAschur->GetRowIndexArray();
-   const Int_t *CAschur_col=CAschur->GetColIndexArray();
-   const Double_t *CAschur_data=CAschur->GetMatrixArray();
-   for(Int_t row=0;row<CAschur->GetNrows();row++) {
-      for(Int_t i=CAschur_row[row];i<CAschur_row[row+1];i++) {
-         Int_t col=CAschur_col[i];
-         (*r)(row+nmin,
-              (col<nmin) ? col : (col+nmax-nmin))= -CAschur_data[i]*Dinv[row];
-      }
-   }
-   DeleteMatrix(&CAschur);
-
-   const Int_t *BDinv_row=BDinv->GetRowIndexArray();
-   const Int_t *BDinv_col=BDinv->GetColIndexArray();
-   const Double_t *BDinv_data=BDinv->GetMatrixArray();  
-   for(Int_t row_aschur=0;row_aschur<Aschur.GetNrows();row_aschur++) {
-      Int_t row=(row_aschur<nmin) ? row_aschur : (row_aschur+nmax-nmin);
-      for(Int_t row_bdinv=0;row_bdinv<BDinv->GetNrows();row_bdinv++) {
-         for(Int_t i=BDinv_row[row_bdinv];i<BDinv_row[row_bdinv+1];i++) {
-            (*r)(row,BDinv_col[i]+nmin) -= Aschur(row_aschur,row_bdinv)*
-               BDinv_data[i];
+   // conditioning of the iBlock part
+#ifdef CONDITION_BLOCK_PART
+   Int_t nn=A->GetNrows()-iBlock;
+   for(int inc=(nn+1)/2;inc;inc /= 2) {
+      for(int i=inc;i<nn;i++) {
+         int itmp=swap[i+iBlock];
+         int j;
+         for(j=i;(j>=inc)&&(aII(swap[j-inc+iBlock])<aII(itmp));j -=inc) {
+            swap[j+iBlock]=swap[j-inc+iBlock];
          }
+         swap[j+iBlock]=itmp;
       }
    }
-   DeleteMatrix(&BDinv);
-
-   return r;
-#else
-   TMatrixD *r=new TMatrixD(A);
-   if(!InvertMConditioned(*r)) {
-      Fatal("InvertMSparse","InvertMConditioned failed (full matrix)";
-      print_backtrace();
-   }
-   return r;
 #endif
+   // construct array for swapping back
+   Int_t *swapBack=new Int_t[A->GetNrows()];
+   for(Int_t i=0;i<A->GetNrows();i++) {
+      swapBack[swap[i]]=i;
+   }
+#ifdef DEBUG_DETAIL
+   for(Int_t i=0;i<A->GetNrows();i++) {
+      std::cout<<"    "<<i<<" "<<swap[i]<<" "<<swapBack[i]<<"\n";
+   }
+   std::cout<<"after sorting\n";
+   for(Int_t i=0;i<A->GetNrows();i++) {
+      if(i==iDiagonal) std::cout<<"iDiagonal="<<i<<"\n";
+      if(i==iBlock) std::cout<<"iBlock="<<i<<"\n";
+      std::cout<<" "<<swap[i]<<" "<<aII(swap[i])<<"\n";
+   }
+   {
+      // sanity check:
+      // (1) sub-matrix swapped[0]..swapped[iDiagonal]
+      //       must not contain off-diagonals
+      // (2) sub-matrix swapped[0]..swapped[iBlock-1] must be diagonal
+      Int_t nDiag=0;
+      Int_t nError1=0;
+      Int_t nError2=0;
+      Int_t nBlock=0;
+      Int_t nNonzero=0;
+      for(Int_t i=0;i<A->GetNrows();i++) {
+         Int_t row=swap[i];
+         for(Int_t indexA=a_rows[row];indexA<a_rows[row+1];indexA++) {
+            Int_t j=swapBack[a_cols[indexA]];
+            if(i==j) nDiag++;
+            else if((i<iDiagonal)||(j<iDiagonal)) nError1++;
+            else if((i<iBlock)&&(j<iBlock)) nError2++;
+            else if((i<iBlock)||(j<iBlock)) nBlock++;
+            else nNonzero++;
+         }
+      }
+      if(nError1+nError2>0) {
+         Fatal("InvertMSparseSymmPos","sparse matrix analysis failed %d %d %d %d %d",
+               iDiagonal,iBlock,A->GetNrows(),nError1,nError2);
+      }
+   }
+#endif
+#ifdef DEBUG
+   Info("InvertMSparseSymmPos","iDiagonal=%d iBlock=%d nRow=%d",
+        iDiagonal,iBlock,A->GetNrows());
+#endif
+
+   //=============================================
+   // matrix inversion starts here
+   //
+   //  the matrix is split into several parts
+   //         D1  0   0
+   //  A = (  0   D2  B# )
+   //         0   B   C
+   //
+   //  D1,D2 are diagonal matrices
+   //
+   //  first, the D1 part is inverted by calculating 1/D1
+   //   dim(D1)= iDiagonal
+   //  next, the other parts are inverted using Schur complement
+   //
+   //           1/D1   0    0
+   //  Ainv = (  0     E    G#   )
+   //            0     G    F^-1
+   //
+   //  where F = C + (-B/D2) B#
+   //        G = (F^-1) (-B/D2)
+   //        E = 1/D2 + (-B#/D2) G)
+   //
+   //  the inverse of F is calculated using a Cholesky decomposition
+   //
+   // Error handling:
+   // (a) if rankPtr==0: user requests inverse
+   //
+   //    if D1 is not strictly positive, return NULL
+   //    if D2 is not strictly positive, return NULL
+   //    if F is not strictly positive (Cholesky decomposition failed)
+   //           return NULL
+   //    else
+   //      return Ainv as defined above
+   //
+   // (b) if rankPtr !=0: user requests pseudo-inverse
+   //    if D2 is not strictly positive or F is not strictly positive
+   //      calculate singular-value decomposition of
+   //          D2   B#
+   //         (       ) = O D O^-1
+   //           B   C
+   //      if some eigenvalues are negative, return NULL
+   //      else calculate pseudo-inverse
+   //        *rankPtr = rank(D1)+rank(D)
+   //    else
+   //      calculate pseudo-inverse of D1  (D1_ii==0) ? 0 : 1/D1_ii
+   //      *rankPtr=rank(D1)+nrow(D2)+nrow(C)
+   //      return Ainv as defined above
+
+   Double_t *rEl_data=new Double_t[A->GetNrows()*A->GetNrows()];
+   Int_t *rEl_col=new Int_t[A->GetNrows()*A->GetNrows()];
+   Int_t *rEl_row=new Int_t[A->GetNrows()*A->GetNrows()];
+   Int_t rNumEl=0;
+
+   //====================================================
+   // invert D1
+   Int_t rankD1=0;
+   for(Int_t i=0;i<iDiagonal;++i) {
+      Int_t iA=swap[i];
+      if(aII(iA)>0.0) {
+         rEl_col[rNumEl]=iA;
+         rEl_row[rNumEl]=iA;
+         rEl_data[rNumEl]=1./aII(iA);
+         ++rankD1;
+         ++rNumEl;
+      }
+   }
+   if((!rankPtr)&&(rankD1!=iDiagonal)) {
+      Fatal("InvertMSparseSymmPos",
+            "diagonal part 1 has rank %d != %d, matrix can not be inverted",
+            rankD1,iDiagonal);
+      rNumEl=-1;
+   }
+
+
+   //====================================================
+   // invert D2
+   Int_t nD2=iBlock-iDiagonal;
+   TMatrixDSparse *D2inv=0;
+   if((rNumEl>=0)&&(nD2>0)) {
+      Double_t *D2inv_data=new Double_t[nD2];
+      Int_t *D2inv_col=new Int_t[nD2];
+      Int_t *D2inv_row=new Int_t[nD2];
+      Int_t D2invNumEl=0;
+      for(Int_t i=0;i<nD2;++i) {
+         Int_t iA=swap[i+iDiagonal];
+         if(aII(iA)>0.0) {
+            D2inv_col[D2invNumEl]=i;
+            D2inv_row[D2invNumEl]=i;
+            D2inv_data[D2invNumEl]=1./aII(iA);
+            ++D2invNumEl;
+         }
+      }
+      if(D2invNumEl==nD2) {
+         D2inv=CreateSparseMatrix(nD2,nD2,D2invNumEl,D2inv_row,D2inv_col,
+                                  D2inv_data);
+      } else if(!rankPtr) {
+         Fatal("InvertMSparseSymmPos",
+               "diagonal part 2 has rank %d != %d, matrix can not be inverted",
+               D2invNumEl,nD2);
+         rNumEl=-2;
+      }
+      delete [] D2inv_data;
+      delete [] D2inv_col;
+      delete [] D2inv_row;
+   }
+
+   //====================================================
+   // invert F
+
+   Int_t nF=A->GetNrows()-iBlock;
+   TMatrixDSparse *Finv=0;
+   TMatrixDSparse *B=0;
+   TMatrixDSparse *minusBD2inv=0;
+   if((rNumEl>=0)&&(nF>0)&&((nD2==0)||D2inv)) {
+      // construct matrices F and B
+      Int_t nFmax=nF*nF;
+      Double_t epsilonF2=fEpsMatrix;
+      Double_t *F_data=new Double_t[nFmax];
+      Int_t *F_col=new Int_t[nFmax];
+      Int_t *F_row=new Int_t[nFmax];
+      Int_t FnumEl=0;
+
+      Int_t nBmax=nF*(nD2+1);
+      Double_t *B_data=new Double_t[nBmax];
+      Int_t *B_col=new Int_t[nBmax];
+      Int_t *B_row=new Int_t[nBmax];
+      Int_t BnumEl=0;
+
+      for(Int_t i=0;i<nF;i++) {
+         Int_t iA=swap[i+iBlock];
+         for(Int_t indexA=a_rows[iA];indexA<a_rows[iA+1];indexA++) {
+            Int_t jA=a_cols[indexA];
+            Int_t j0=swapBack[jA];
+            if(j0>=iBlock) {
+               Int_t j=j0-iBlock;
+               F_row[FnumEl]=i;
+               F_col[FnumEl]=j;
+               F_data[FnumEl]=a_data[indexA];
+               FnumEl++;
+            } else if(j0>=iDiagonal) {
+               Int_t j=j0-iDiagonal;
+               B_row[BnumEl]=i;
+               B_col[BnumEl]=j;
+               B_data[BnumEl]=a_data[indexA];
+               BnumEl++;               
+            }
+         }
+      }
+      TMatrixDSparse *F=0;
+      if(FnumEl) {
+#ifndef FORCE_EIGENVALUE_DECOMPOSITION
+         F=CreateSparseMatrix(nF,nF,FnumEl,F_row,F_col,F_data);
+#endif
+      }
+      delete [] F_data;
+      delete [] F_col;
+      delete [] F_row;
+      if(BnumEl) {
+         B=CreateSparseMatrix(nF,nD2,BnumEl,B_row,B_col,B_data);
+      }
+      delete [] B_data;
+      delete [] B_col;
+      delete [] B_row;
+
+      if(B && D2inv) {
+         minusBD2inv=MultiplyMSparseMSparse(B,D2inv);
+         if(minusBD2inv) {
+            Int_t mbd2_nMax=minusBD2inv->GetRowIndexArray()
+               [minusBD2inv->GetNrows()];
+            Double_t *mbd2_data=minusBD2inv->GetMatrixArray();
+            for(Int_t i=0;i<mbd2_nMax;i++) {
+               mbd2_data[i] = -  mbd2_data[i];
+            }
+         }
+      }
+      if(minusBD2inv && F) {
+         TMatrixDSparse *minusBD2invBt=
+            MultiplyMSparseMSparseTranspVector(minusBD2inv,B,0);
+         AddMSparse(F,1.,minusBD2invBt);
+         DeleteMatrix(&minusBD2invBt);
+      }
+
+      if(F) {
+         // cholesky decomposition with preconditioning
+         const Int_t *f_rows=F->GetRowIndexArray();
+         const Int_t *f_cols=F->GetColIndexArray();
+         const Double_t *f_data=F->GetMatrixArray();
+         // cholesky-type decomposition of F
+         TMatrixD c(nF,nF);
+         Int_t nErrorF=0;
+         for(Int_t i=0;i<nF;i++) {
+            for(Int_t indexF=f_rows[i];indexF<f_rows[i+1];indexF++) {
+               if(f_cols[indexF]>=i) c(f_cols[indexF],i)=f_data[indexF];
+            }
+            // calculate diagonal element
+	    Double_t c_ii=c(i,i);
+            for(Int_t j=0;j<i;j++) {
+               Double_t c_ij=c(i,j);
+               c_ii -= c_ij*c_ij;
+            }
+            if(c_ii<=0.0) {
+               nErrorF++;
+               break;
+            }
+	    c_ii=TMath::Sqrt(c_ii);
+	    c(i,i)=c_ii;
+            // off-diagonal elements
+            for(Int_t j=i+1;j<nF;j++) {
+               Double_t c_ji=c(j,i);
+               for(Int_t k=0;k<i;k++) {
+                  c_ji -= c(i,k)*c(j,k);
+               }
+               c(j,i) = c_ji/c_ii;
+            }
+         }
+         // check condition of dInv
+         if(!nErrorF) {
+            Double_t dmin=c(0,0);
+            Double_t dmax=dmin;
+            for(Int_t i=1;i<nF;i++) {
+               dmin=TMath::Min(dmin,c(i,i));
+               dmax=TMath::Max(dmax,c(i,i));
+            }
+#ifdef DEBUG
+            std::cout<<"dmin,dmax: "<<dmin<<" "<<dmax<<"\n";
+#endif
+            if(dmin/dmax<epsilonF2*nF) nErrorF=2;
+         }
+         if(!nErrorF) {
+            // here: F = c c#
+            // construct inverse of c
+            TMatrixD cinv(nF,nF);
+            for(Int_t i=0;i<nF;i++) {
+               cinv(i,i)=1./c(i,i);
+            }
+            for(Int_t i=0;i<nF;i++) {
+               for(Int_t j=i+1;j<nF;j++) {
+                  Double_t tmp=-c(j,i)*cinv(i,i);
+                  for(Int_t k=i+1;k<j;k++) {
+                     tmp -= cinv(k,i)*c(j,k);
+                  }
+                  cinv(j,i)=tmp*cinv(j,j);
+               }
+            }
+            TMatrixDSparse cInvSparse(cinv);
+            Finv=MultiplyMSparseTranspMSparse
+               (&cInvSparse,&cInvSparse);
+         }
+         DeleteMatrix(&F);
+      }
+   }
+
+   // here:
+   //   rNumEl>=0: diagonal part has been inverted
+   //   (nD2==0)||D2inv : D2 part has been inverted or is empty
+   //   (nF==0)||Finv : F part has been inverted or is empty
+
+   Int_t rankD2Block=0;
+   if(rNumEl>=0) {
+      if( ((nD2==0)||D2inv) && ((nF==0)||Finv) ) {
+         // all matrix parts have been inverted, compose full matrix
+         //           1/D1   0    0
+         //  Ainv = (  0     E    G#   )
+         //            0     G    F^-1
+         //
+         //        G = (F^-1) (-B/D2)
+         //        E = 1/D2 + (-B#/D2) G)
+
+         TMatrixDSparse *G=0;
+         if(Finv && minusBD2inv) {
+            G=MultiplyMSparseMSparse(Finv,minusBD2inv);
+         }
+         TMatrixDSparse *E=0;
+         if(D2inv) E=new TMatrixDSparse(*D2inv);
+         if(G && minusBD2inv) {
+            TMatrixDSparse *minusBD2invTransG=
+               MultiplyMSparseTranspMSparse(minusBD2inv,G);
+            if(E) {
+               AddMSparse(E,1.,minusBD2invTransG);
+               DeleteMatrix(&minusBD2invTransG);
+            } else {
+               E=minusBD2invTransG;
+            }
+         }
+         // pack matrix E to r
+         if(E) {
+            const Int_t *e_rows=E->GetRowIndexArray();
+            const Int_t *e_cols=E->GetColIndexArray();
+            const Double_t *e_data=E->GetMatrixArray();
+            for(Int_t iE=0;iE<E->GetNrows();iE++) {
+               Int_t iA=swap[iE+iDiagonal];
+               for(Int_t indexE=e_rows[iE];indexE<e_rows[iE+1];++indexE) {
+                  Int_t jE=e_cols[indexE];
+                  Int_t jA=swap[jE+iDiagonal];
+                  rEl_col[rNumEl]=iA;
+                  rEl_row[rNumEl]=jA;
+                  rEl_data[rNumEl]=e_data[indexE];
+                  ++rNumEl;
+               }
+            }
+            DeleteMatrix(&E);
+         }
+         // pack matrix G to r
+         if(G) {
+            const Int_t *g_rows=G->GetRowIndexArray();
+            const Int_t *g_cols=G->GetColIndexArray();
+            const Double_t *g_data=G->GetMatrixArray();
+            for(Int_t iG=0;iG<G->GetNrows();iG++) {
+               Int_t iA=swap[iG+iBlock];
+               for(Int_t indexG=g_rows[iG];indexG<g_rows[iG+1];++indexG) {
+                  Int_t jG=g_cols[indexG];
+                  Int_t jA=swap[jG+iDiagonal];
+                  // G
+                  rEl_col[rNumEl]=iA;
+                  rEl_row[rNumEl]=jA;
+                  rEl_data[rNumEl]=g_data[indexG];
+                  ++rNumEl;
+                  // G#
+                  rEl_col[rNumEl]=jA;
+                  rEl_row[rNumEl]=iA;
+                  rEl_data[rNumEl]=g_data[indexG];
+                  ++rNumEl;
+               }
+            }
+            DeleteMatrix(&G);
+         }
+         if(Finv) {
+            // pack matrix Finv to r
+            const Int_t *finv_rows=Finv->GetRowIndexArray();
+            const Int_t *finv_cols=Finv->GetColIndexArray();
+            const Double_t *finv_data=Finv->GetMatrixArray();
+            for(Int_t iF=0;iF<Finv->GetNrows();iF++) {
+               Int_t iA=swap[iF+iBlock];
+               for(Int_t indexF=finv_rows[iF];indexF<finv_rows[iF+1];++indexF) {
+                  Int_t jF=finv_cols[indexF];
+                  Int_t jA=swap[jF+iBlock];
+                  rEl_col[rNumEl]=iA;
+                  rEl_row[rNumEl]=jA;
+                  rEl_data[rNumEl]=finv_data[indexF];
+                  ++rNumEl;
+               }
+            }
+         }
+         rankD2Block=nD2+nF;
+      } else if(!rankPtr) {
+         rNumEl=-3;
+         Fatal("InvertMSparseSymmPos",
+               "non-trivial part has rank < %d, matrix can not be inverted",
+               nF);
+      } else {
+         // part of the matrix could not be inverted, get eingenvalue
+         // decomposition
+         Int_t nEV=nD2+nF;
+         Double_t epsilonEV2=fEpsMatrix /* *nEV*nEV */;
+         Info("InvertMSparseSymmPos",
+              "cholesky-decomposition failed, try eigenvalue analysis");
+#ifdef DEBUG
+         std::cout<<"nEV="<<nEV<<" iDiagonal="<<iDiagonal<<"\n";
+#endif
+         TMatrixDSym EV(nEV);
+         for(Int_t i=0;i<nEV;i++) {
+            Int_t iA=swap[i+iDiagonal];
+            for(Int_t indexA=a_rows[iA];indexA<a_rows[iA+1];indexA++) {
+               Int_t jA=a_cols[indexA];
+               Int_t j0=swapBack[jA];
+               if(j0>=iDiagonal) {
+                  Int_t j=j0-iDiagonal;
+#ifdef DEBUG
+                  if((i<0)||(j<0)||(i>=nEV)||(j>=nEV)) {
+                     std::cout<<" error "<<nEV<<" "<<i<<" "<<j<<"\n";
+                  }
+#endif
+                  if(!TMath::Finite(a_data[indexA])) {
+                     Fatal("InvertMSparseSymmPos",
+                           "non-finite number detected element %d %d\n",
+                           iA,jA);
+                  }
+                  EV(i,j)=a_data[indexA];
+               }
+            }
+         }
+         // EV.Print();
+         TMatrixDSymEigen Eigen(EV);
+#ifdef DEBUG
+         std::cout<<"Eigenvalues\n";
+         // Eigen.GetEigenValues().Print();
+#endif
+         Int_t errorEV=0;
+         Double_t condition=1.0;
+         if(Eigen.GetEigenValues()(0)<0.0) {
+            errorEV=1;
+         } else if(Eigen.GetEigenValues()(0)>0.0) {
+            condition=Eigen.GetEigenValues()(nEV-1)/Eigen.GetEigenValues()(0);
+         }
+         if(condition<-epsilonEV2) {
+            errorEV=2;
+         }
+         if(errorEV) {
+            if(errorEV==1) {
+               Error("InvertMSparseSymmPos",
+                     "Largest Eigenvalue is negative %f",
+                     Eigen.GetEigenValues()(0));
+            } else {
+               Error("InvertMSparseSymmPos",
+                     "Some Eigenvalues are negative (EV%d/EV0=%g epsilon=%g)",
+                     nEV-1,
+                     Eigen.GetEigenValues()(nEV-1)/Eigen.GetEigenValues()(0),
+                     epsilonEV2);
+            }
+         }
+         // compose inverse matrix
+         rankD2Block=0;
+         Double_t setToZero=epsilonEV2*Eigen.GetEigenValues()(0);
+         TMatrixD inverseEV(nEV,1);
+         for(Int_t i=0;i<nEV;i++) {
+            Double_t x=Eigen.GetEigenValues()(i);
+            if(x>setToZero) {
+               inverseEV(i,0)=1./x;
+               ++rankD2Block;
+            }
+         }
+         TMatrixDSparse V(Eigen.GetEigenVectors());
+         TMatrixDSparse *VDVt=MultiplyMSparseMSparseTranspVector
+            (&V,&V,&inverseEV);
+         
+         // pack matrix VDVt to r
+         const Int_t *vdvt_rows=VDVt->GetRowIndexArray();
+         const Int_t *vdvt_cols=VDVt->GetColIndexArray();
+         const Double_t *vdvt_data=VDVt->GetMatrixArray();
+         for(Int_t iVDVt=0;iVDVt<VDVt->GetNrows();iVDVt++) {
+            Int_t iA=swap[iVDVt+iDiagonal];
+            for(Int_t indexVDVt=vdvt_rows[iVDVt];
+                indexVDVt<vdvt_rows[iVDVt+1];++indexVDVt) {
+               Int_t jVDVt=vdvt_cols[indexVDVt];
+               Int_t jA=swap[jVDVt+iDiagonal];
+               rEl_col[rNumEl]=iA;
+               rEl_row[rNumEl]=jA;
+               rEl_data[rNumEl]=vdvt_data[indexVDVt];
+               ++rNumEl;
+            }
+         }
+         DeleteMatrix(&VDVt);
+      }
+   }
+   if(rankPtr) {
+      *rankPtr=rankD1+rankD2Block;
+   }
+      
+
+   DeleteMatrix(&D2inv);
+   DeleteMatrix(&Finv);
+   DeleteMatrix(&B);
+   DeleteMatrix(&minusBD2inv);
+
+   delete [] swap;
+   delete [] swapBack;
+   delete [] isZero;
+
+   TMatrixDSparse *r=(rNumEl>=0) ?
+      CreateSparseMatrix(A->GetNrows(),A->GetNrows(),rNumEl,
+                         rEl_row,rEl_col,rEl_data) : 0;
+   delete [] rEl_data;
+   delete [] rEl_col;
+   delete [] rEl_row;
+
+#ifdef DEBUG_DETAIL
+   // sanity test
+   if(r) {
+      TMatrixDSparse *Ar=MultiplyMSparseMSparse(A,r);
+      TMatrixDSparse *ArA=MultiplyMSparseMSparse(Ar,A);
+      TMatrixDSparse *rAr=MultiplyMSparseMSparse(r,Ar);
+
+      TMatrixD ar(*Ar);
+      TMatrixD a(*A);
+      TMatrixD ara(*ArA);
+      TMatrixD R(*r);
+      TMatrixD rar(*rAr);
+
+      DeleteMatrix(&Ar);
+      DeleteMatrix(&ArA);
+      DeleteMatrix(&rAr);
+
+      Double_t epsilonA2=fEpsMatrix /* *a.GetNrows()*a.GetNcols() */;
+      for(Int_t i=0;i<a.GetNrows();i++) {
+         for(Int_t j=0;j<a.GetNcols();j++) {
+            // ar should be symmetric
+            if(TMath::Abs(ar(i,j)-ar(j,i))>
+               epsilonA2*(TMath::Abs(ar(i,j))+TMath::Abs(ar(j,i)))) {
+               std::cout<<"Ar is not symmetric Ar("<<i<<","<<j<<")="<<ar(i,j)
+                        <<" Ar("<<j<<","<<i<<")="<<ar(j,i)<<"\n";
+            }
+            // ara should be equal a
+            if(TMath::Abs(ara(i,j)-a(i,j))>
+               epsilonA2*(TMath::Abs(ara(i,j))+TMath::Abs(a(i,j)))) {
+               std::cout<<"ArA is not equal A ArA("<<i<<","<<j<<")="<<ara(i,j)
+                        <<" A("<<i<<","<<j<<")="<<a(i,j)<<"\n";
+            }
+            // ara should be equal a
+            if(TMath::Abs(rar(i,j)-R(i,j))>
+               epsilonA2*(TMath::Abs(rar(i,j))+TMath::Abs(R(i,j)))) {
+               std::cout<<"rAr is not equal r rAr("<<i<<","<<j<<")="<<rar(i,j)
+                        <<" r("<<i<<","<<j<<")="<<R(i,j)<<"\n";
+            }
+         }
+      }
+      if(rankPtr) std::cout<<"rank="<<*rankPtr<<"\n";
+   } else {
+      std::cout<<"Matrix is not positive\n";
+   }
+#endif
+   return r;
+
 }
 
-Bool_t TUnfold::InvertMConditioned(TMatrixD *A) {
-   // invert the matrix A
-   // the inversion is done with pre-conditioning
-   // all rows and columns are normalized to sqrt(abs(a_ii*a_jj))
-   // such that the diagonals are equal to 1.0
-   // This type of preconditioning improves the numerival results
-   // for the symmetric, positive definite matrices which are
-   // treated here in the context of unfolding
-#ifdef INVERT_WITH_CONDITIONING
-   // divide matrix by the square-root of its diagonals
-   Double_t *A_diagonals=new Double_t[A->GetNrows()];
-   for(Int_t i=0;i<A->GetNrows();i++) {
-      A_diagonals[i]=TMath::Sqrt(TMath::Abs((*A)(i,i)));
-      if(A_diagonals[i]>0.0) A_diagonals[i]=1./A_diagonals[i];
-      else A_diagonals[i]=1.0;
-   }
-   // condition the matrix prior to inversion
-   for(Int_t i=0;i<A->GetNrows();i++) {
-      for(Int_t j=0;j<A->GetNcols();j++) {
-         (*A)(i,j) *= A_diagonals[i]*A_diagonals[j];
-      }
-   }
-#endif
-   Double_t det=0.0;
-   A->Invert(&det);
-#ifdef INVERT_WITH_CONDITIONING
-   // revert conditioning on the inverted matrix
-   for(Int_t i=0;i<A->GetNrows();i++) {
-      for(Int_t j=0;j<A->GetNcols();j++) {
-         (*A)(i,j) *= A_diagonals[i]*A_diagonals[j];
-      }
-   }
-   delete[] A_diagonals;
-#endif
-   return (det !=0.0);
+TString TUnfold::GetOutputBinName(Int_t iBinX) const
+{
+   // given a bin number, return the name of the output bin
+   // this method makes more sense for the class TUnfoldDnesity
+   // where it gets overwritten
+   return TString::Format("#%d",iBinX);
 }
 
 TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
-                 TUnfold::EConstraint constraint)
+                 EConstraint constraint)
 {
    // set up unfolding matrix and initial regularisation scheme
    //    hist_A:  matrix that describes the migrations
@@ -1459,7 +1773,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
    //    fA: filled from hist_A
    //    fDA: filled from hist_A
    //    fX0: filled from hist_A
-   //    fLsquared: filled depending on the regularisation scheme
+   //    fL: filled depending on the regularisation scheme
    // Treatment of overflow bins
    //    Bins where the unfolding input (Detector level) is in overflow
    //    are used for the efficiency correction. They have to be filled
@@ -1504,6 +1818,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
       // calculate sum over all detector bins
       // excluding the overflow bins
       Double_t sum = 0.0;
+      Int_t nonZeroY = 0;
       for (Int_t iy = 0; iy < ny; iy++) {
          Double_t z;
          if (histmap == kHistMapOutputHoriz) {
@@ -1511,13 +1826,15 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
          } else {
             z = hist_A->GetBinContent(iy + 1, ix);
          }
-         if (z > 0.0) {
+         if (z != 0.0) {
             nonzeroA++;
+            nonZeroY++;
             sum += z;
          }
       }
       // check whether there is any sensitivity to this generator bin
-      if (sum > 0.0) {
+
+      if (nonZeroY) {
          // update mapping tables to convert bin number to matrix index
          fXToHist[nx] = ix;
          fHistToX[ix] = nx;
@@ -1554,6 +1871,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
       Int_t nprint=0;
       Int_t ixfirst=-1,ixlast=-1;
       TString binlist;
+      int nDisconnected=0;
       for (Int_t ix = 0; ix < nx0; ix++) {
          if(fHistToX[ix]<0) {
             nprint++;
@@ -1563,6 +1881,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
                ixfirst=ix;
             }
             ixlast=ix;
+            nDisconnected++;
          }
          if(((fHistToX[ix]>=0)&&(ixlast>=0))||
             (nprint==nskipped)) {
@@ -1578,13 +1897,12 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
          }
       }
       if(nskipped==(2-underflowBin-overflowBin)) {
-         Info("TUnfold","the following output bins "
-              "are not connected to the input side %s",
-              static_cast<const char *>(binlist));
+         Info("TUnfold","underflow and overflow bin "
+	      "do not depend on the input data");
       } else {
-         Warning("TUnfold","the following output bins "
-                 "are not connected to the input side %s",
-                 static_cast<const char *>(binlist));
+         Warning("TUnfold","%d output bins "
+                 "do not depend on the input data %s",nDisconnected,
+                 static_cast<const char *>(binlist));         
       }
    }
    // store bias as matrix
@@ -1604,7 +1922,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
          } else {
             z = hist_A->GetBinContent(iy + 1, ibinx);
          }
-         if (z > 0.0) {
+         if (z != 0.0) {
             rowA[index]=iy;
             colA[index] = ix;
             dataA[index] = z / fSumOverY[ix];
@@ -1631,7 +1949,7 @@ TUnfold::TUnfold(const TH2 *hist_A, EHistMap histmap, ERegMode regmode,
    delete[] colA;
    delete[] dataA;
    // regularisation conditions squared
-   fLsquared = new TMatrixDSparse(GetNx(), GetNx());
+   fL = new TMatrixDSparse(1, GetNx());
    if (regmode != kRegModeNone) {
       Int_t nError=RegularizeBins(0, 1, nx0, regmode);
       if(nError>0) {
@@ -1651,7 +1969,7 @@ TUnfold::~TUnfold(void)
    // delete all data members
 
    DeleteMatrix(&fA);
-   DeleteMatrix(&fLsquared);
+   DeleteMatrix(&fL);
    DeleteMatrix(&fVyy);
    DeleteMatrix(&fY);
    DeleteMatrix(&fX0);
@@ -1670,23 +1988,115 @@ void TUnfold::SetBias(const TH1 *bias)
    }
 }
 
+Bool_t TUnfold::AddRegularisationCondition
+(Int_t i0,Double_t f0,Int_t i1,Double_t f1,Int_t i2,Double_t f2)
+{
+   // add regularisation condition for a triplet of bins and scale factors
+   // the arguments are used to form one row (k) of the matrix L
+   //   L(k,i0)=f0
+   //   L(k,i1)=f1
+   //   L(k,i2)=f2
+   // the indices i0,i1,i2 are transformed of bin numbers
+   // if i2<0, do not fill  L(k,i2)
+   // if i1<0, do not fill  L(k,i1)
+
+   Int_t indices[3];
+   Double_t data[3];
+   Int_t nEle=0;
+
+   if(i2>=0) {   
+      data[nEle]=f2;
+      indices[nEle]=i2;
+      nEle++;
+   }
+   if(i1>=0) {
+      data[nEle]=f1;
+      indices[nEle]=i1;
+      nEle++;
+   }
+   if(i0>=0) {
+      data[nEle]=f0;
+      indices[nEle]=i0;
+      nEle++;
+   }
+   return AddRegularisationCondition(nEle,indices,data);
+}
+
+Bool_t TUnfold::AddRegularisationCondition
+(Int_t nEle,const Int_t *indices,const Double_t *rowData)
+{
+   // add a regularisation condition 
+   // the arguments are used to form one row (k) of the matrix L
+   //   L(k,indices[0])=rowData[0]
+   //    ...
+   //   L(k,indices[nEle-1])=rowData[nEle-1]
+   //
+   // the indices are taken as bin numbers,
+   // transformed to internal bin numbers using the array fHistToX
+
+
+   Bool_t r=kTRUE;
+   const Int_t *l0_rows=fL->GetRowIndexArray();
+   const Int_t *l0_cols=fL->GetColIndexArray();
+   const Double_t *l0_data=fL->GetMatrixArray();
+
+   Int_t nF=l0_rows[fL->GetNrows()]+nEle;
+   Int_t *l_row=new Int_t[nF];
+   Int_t *l_col=new Int_t[nF];
+   Double_t *l_data=new Double_t[nF];
+   // decode original matrix
+   nF=0;
+   for(Int_t row=0;row<fL->GetNrows();row++) {
+      for(Int_t k=l0_rows[row];k<l0_rows[row+1];k++) {
+         l_row[nF]=row;
+         l_col[nF]=l0_cols[k];
+         l_data[nF]=l0_data[k];
+         nF++;
+      }
+   }
+
+   // if the original matrix does not have any data, reset its row count
+   Int_t rowMax=0;
+   if(nF>0) {
+      rowMax=fL->GetNrows();
+   }
+
+   // add the new regularisation conditions
+   for(Int_t i=0;i<nEle;i++) {
+      Int_t col=fHistToX[indices[i]];
+      if(col<0) {
+         r=kFALSE;
+         break;
+      }
+      l_row[nF]=rowMax;
+      l_col[nF]=col;
+      l_data[nF]=rowData[i];
+      nF++;
+   }
+
+   // replace the old matrix fL
+   if(r) {
+      DeleteMatrix(&fL);
+      fL=CreateSparseMatrix(rowMax+1,GetNx(),nF,l_row,l_col,l_data);
+   }
+   delete [] l_row;
+   delete [] l_col;
+   delete [] l_data;
+   return r;
+}
+
 Int_t TUnfold::RegularizeSize(int bin, Double_t scale)
 {
    // add regularisation on the size of bin i
    //    bin: bin number
    //    scale: size of the regularisation
    // return value: number of conditions which have been skipped
-   // modifies data member fLsquared
+   // modifies data member fL
 
    if(fRegMode==kRegModeNone) fRegMode=kRegModeSize;
    if(fRegMode!=kRegModeSize) fRegMode=kRegModeMixed;
 
-   Int_t i = fHistToX[bin];
-   if (i < 0) {
-      return 1;
-   }
-   (*fLsquared) (i, i) = scale * scale;
-   return 0;
+   return AddRegularisationCondition(bin,scale) ? 0 : 1;
 }
 
 Int_t TUnfold::RegularizeDerivative(int left_bin, int right_bin,
@@ -1697,22 +2107,12 @@ Int_t TUnfold::RegularizeDerivative(int left_bin, int right_bin,
    //   right_bin: 2nd bin
    //   scale: size of the regularisation
    // return value: number of conditions which have been skipped
-   // modifies data member fLsquared
+   // modifies data member fL
 
    if(fRegMode==kRegModeNone) fRegMode=kRegModeDerivative;
    if(fRegMode!=kRegModeDerivative) fRegMode=kRegModeMixed;
 
-   Int_t il = fHistToX[left_bin];
-   Int_t ir = fHistToX[right_bin];
-   if ((il < 0) || (ir < 0)) {
-      return 1;
-   }
-   Double_t scale_squared = scale * scale;
-   (*fLsquared) (il, il) += scale_squared;
-   (*fLsquared) (il, ir) -= scale_squared;
-   (*fLsquared) (ir, il) -= scale_squared;
-   (*fLsquared) (ir, ir) += scale_squared;
-   return 0;
+   return AddRegularisationCondition(left_bin,-scale,right_bin,scale) ? 0 : 1;
 }
 
 Int_t TUnfold::RegularizeCurvature(int left_bin, int center_bin,
@@ -1727,33 +2127,16 @@ Int_t TUnfold::RegularizeCurvature(int left_bin, int center_bin,
    //   scale_left: scale factor on center-left difference
    //   scale_right: scale factor on right-center difference
    // return value: number of conditions which have been skipped
-   // modifies data member fLsquared
+   // modifies data member fL
 
    if(fRegMode==kRegModeNone) fRegMode=kRegModeCurvature;
    if(fRegMode!=kRegModeCurvature) fRegMode=kRegModeMixed;
 
-   Int_t il, ic, ir;
-   il = fHistToX[left_bin];
-   ic = fHistToX[center_bin];
-   ir = fHistToX[right_bin];
-   if ((il < 0) || (ic < 0) || (ir < 0)) {
-      return 1;
-   }
-   Double_t r[3];
-   r[0] = -scale_left;
-   r[2] = -scale_right;
-   r[1] = -r[0] - r[2];
-   // diagonal elements
-   (*fLsquared) (il, il) += r[0] * r[0];
-   (*fLsquared) (il, ic) += r[0] * r[1];
-   (*fLsquared) (il, ir) += r[0] * r[2];
-   (*fLsquared) (ic, il) += r[1] * r[0];
-   (*fLsquared) (ic, ic) += r[1] * r[1];
-   (*fLsquared) (ic, ir) += r[1] * r[2];
-   (*fLsquared) (ir, il) += r[2] * r[0];
-   (*fLsquared) (ir, ic) += r[2] * r[1];
-   (*fLsquared) (ir, ir) += r[2] * r[2];
-   return 0;
+   return AddRegularisationCondition
+      (left_bin,-scale_left,
+       center_bin,scale_left+scale_right,
+       right_bin,-scale_right)
+          ? 0 : 1;
 }
 
 Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
@@ -1766,7 +2149,7 @@ Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
    //   regmode:  regularisation mode
    // return value:
    //   number of errors (i.e. conditions which have been skipped)
-   // modifies data member fLsquared
+   // modifies data member fL
 
    Int_t i0, i1, i2;
    i0 = start;
@@ -1779,7 +2162,7 @@ Int_t TUnfold::RegularizeBins(int start, int step, int nbin,
    } else if (regmode == kRegModeCurvature) {
       nSkip = 2;
    } else if(regmode != kRegModeSize) {
-      Error("TUnfold::RegularizeBins","regmode = %d is not valid",regmode);
+      Error("RegularizeBins","regmode = %d is not valid",regmode);
    }
    for (Int_t i = nSkip; i < nbin; i++) {
       if (regmode == kRegModeSize) {
@@ -1807,7 +2190,7 @@ Int_t TUnfold::RegularizeBins2D(int start_bin, int step1, int nbin1,
    //     nbin2: number of bins in 2nd direction
     // return value:
    //   number of errors (i.e. conditions which have been skipped)
-  // modifies data member fLsquared
+  // modifies data member fL
 
    Int_t nError = 0;
    for (Int_t i1 = 0; i1 < nbin1; i1++) {
@@ -1827,7 +2210,7 @@ Double_t TUnfold::DoUnfold(Double_t tau_reg,const TH1 *input,
    //   input:   input distribution with errors
    //   scaleBias:  scale factor applied to the bias
    // Data members required:
-   //   fA, fX0, fLsquared
+   //   fA, fX0, fL
    // Data members modified:
    //   those documented in SetInput()
    //   and those documented in DoUnfold(Double_t)
@@ -1842,57 +2225,129 @@ Double_t TUnfold::DoUnfold(Double_t tau_reg,const TH1 *input,
 }
 
 Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
-                        Double_t oneOverZeroError) {
+                        Double_t oneOverZeroError,const TH2 *hist_vyy,
+                        const TH2 *hist_vyy_inv)
+{
   // Define the input data for subsequent calls to DoUnfold(Double_t)
   //   input:   input distribution with errors
   //   scaleBias:  scale factor applied to the bias
   //   oneOverZeroError: for bins with zero error, this number defines 1/error.
+  //   hist_vyy: if non-zero, defines the data covariance matrix
+  //             otherwise it is calculated from the data errors
+  //   hist_vyy_inv: if non-zero and if hist_vyy  is set, defines the inverse of the data covariance matrix
   // Return value: number of bins with bad error
   //                 +10000*number of unconstrained output bins
   //         Note: return values>=10000 are fatal errors, 
   //               for the given input, the unfolding can not be done!
   // Data members modified:
-  //   fY, fVyy, fVyyinv, fBiasScale, fNdf
+  //   fY, fVyy, , fBiasScale
   // Data members cleared
-  //   see ClearResults
+  //   fVyyInv, fNdf
+  //   + see ClearResults
+
+  DeleteMatrix(&fVyyInv);
+  fNdf=0;
+
   fBiasScale = scaleBias;
 
    // delete old results (if any)
   ClearResults();
 
   // construct error matrix and inverted error matrix of measured quantities
-  // from errors of input histogram
-  // and count number of degrees of freedom
-  fNdf = -GetNpar();
-  Int_t *rowColVyy=new Int_t[GetNy()];
-  Int_t *col1Vyy=new Int_t[GetNy()];
-  Double_t *dataVyy=new Double_t[GetNy()];
+  // from errors of input histogram or use error matrix
+
+  Int_t *rowVyyN=new Int_t[GetNy()*GetNy()+1];
+  Int_t *colVyyN=new Int_t[GetNy()*GetNy()+1];
+  Double_t *dataVyyN=new Double_t[GetNy()*GetNy()+1];
+
+  Int_t *rowVyy1=new Int_t[GetNy()];
+  Int_t *colVyy1=new Int_t[GetNy()];
+  Double_t *dataVyy1=new Double_t[GetNy()];
+  Double_t *dataVyyDiag=new Double_t[GetNy()];
+
   Int_t nError=0;
+  Int_t nVyyN=0;
+  Int_t nVyy1=0;
   for (Int_t iy = 0; iy < GetNy(); iy++) {
-     Double_t dy = input->GetBinError(iy + 1);
-     rowColVyy[iy] = iy;
-     col1Vyy[iy] = 0;
-     if (dy <= 0.0) {
-        nError++;
-        if(oneOverZeroError>0.0) {
-           dataVyy[iy] = 1./ ( oneOverZeroError*oneOverZeroError);
-        } else {
-           dataVyy[iy] = 0.0;
+     // diagonals
+     Double_t dy2;
+     if(!hist_vyy) {
+        Double_t dy = input->GetBinError(iy + 1);
+        dy2=dy*dy;
+        if (dy2 <= 0.0) {
+           nError++;
+           if(oneOverZeroError>0.0) {
+              dy2 = 1./ ( oneOverZeroError*oneOverZeroError);
+           }
         }
      } else {
-        dataVyy[iy] = dy * dy;
+        dy2 = hist_vyy->GetBinContent(iy+1,iy+1);
      }
-     if( dataVyy[iy]>0.0) fNdf ++;
+     rowVyyN[nVyyN] = iy;
+     colVyyN[nVyyN] = iy;
+     rowVyy1[nVyy1] = iy;
+     colVyy1[nVyy1] = 0;
+     dataVyyDiag[iy] = dy2;
+     if(dy2>0.0) {
+        dataVyyN[nVyyN++] = dy2;
+        dataVyy1[nVyy1++] = dy2;
+     }
+  }
+  if(hist_vyy) {
+     // non-diagonal elements
+     for (Int_t iy = 0; iy < GetNy(); iy++) {
+        // ignore rows where the diagonal is zero
+        if(dataVyyDiag[iy]<=0.0) continue;
+        for (Int_t jy = 0; jy < GetNy(); jy++) {
+           // skip diagonal elements
+           if(iy==jy) continue;
+           // ignore columns where the diagonal is zero
+           if(dataVyyDiag[jy]<=0.0) continue;
+
+           rowVyyN[nVyyN] = iy;
+           colVyyN[nVyyN] = jy;
+           dataVyyN[nVyyN]= hist_vyy->GetBinContent(iy+1,jy+1);
+           if(dataVyyN[nVyyN] == 0.0) continue;
+           nVyyN ++;
+        }
+     }
+     if(hist_vyy_inv) {
+        Warning("SetInput",
+                "inverse of input covariance is taken from user input");
+        Int_t *rowVyyInv=new Int_t[GetNy()*GetNy()+1];
+        Int_t *colVyyInv=new Int_t[GetNy()*GetNy()+1];
+        Double_t *dataVyyInv=new Double_t[GetNy()*GetNy()+1];
+        Int_t nVyyInv=0;
+        for (Int_t iy = 0; iy < GetNy(); iy++) {
+           for (Int_t jy = 0; jy < GetNy(); jy++) {
+              rowVyyInv[nVyyInv] = iy;
+              colVyyInv[nVyyInv] = jy;
+              dataVyyInv[nVyyInv]= hist_vyy_inv->GetBinContent(iy+1,jy+1);
+              if(dataVyyInv[nVyyInv] == 0.0) continue;
+              nVyyInv ++;
+           }
+        }
+        fVyyInv=CreateSparseMatrix
+           (GetNy(),GetNy(),nVyyInv,rowVyyInv,colVyyInv,dataVyyInv);
+        delete [] rowVyyInv;
+        delete [] colVyyInv;
+        delete [] dataVyyInv;
+     }
   }
   DeleteMatrix(&fVyy);
   fVyy = CreateSparseMatrix
-     (GetNy(),GetNy(),GetNy(),rowColVyy,rowColVyy,dataVyy);
+     (GetNy(),GetNy(),nVyyN,rowVyyN,colVyyN,dataVyyN);
+
+  delete[] rowVyyN;
+  delete[] colVyyN;
+  delete[] dataVyyN;
 
   TMatrixDSparse *vecV=CreateSparseMatrix
-     (GetNy(),1,GetNy(),rowColVyy,col1Vyy, dataVyy);
-  delete[] rowColVyy;
-  delete[] col1Vyy;
-  delete[] dataVyy;
+     (GetNy(),1,nVyy1,rowVyy1,colVyy1, dataVyy1);
+
+  delete[] rowVyy1;
+  delete[] colVyy1;
+  delete[] dataVyy1;
 
   //
   // get input vector
@@ -1914,58 +2369,62 @@ Int_t TUnfold::SetInput(const TH1 *input, Double_t scaleBias,
   if(nError>0) {
      if(oneOverZeroError !=0.0) {
         if(nError>1) {
-           Warning("SetInput","%d input bins have zero error,"
-                   " 1/error set to %lf.",nError,oneOverZeroError);
+           Warning("SetInput","%d/%d input bins have zero error,"
+                   " 1/error set to %lf.",nError,GetNy(),oneOverZeroError);
         } else {
            Warning("SetInput","One input bin has zero error,"
                    " 1/error set to %lf.",oneOverZeroError);
         }
      } else {
         if(nError>1) {
-           Warning("SetInput","%d input bins have zero error,"
-                   " and are ignored.",nError);
+           Warning("SetInput","%d/%d input bins have zero error,"
+                   " and are ignored.",nError,GetNy());
         } else {
            Warning("SetInput","One input bin has zero error,"
                    " and is ignored.");
         }
      }
+     fIgnoredBins=nError;
   }
   if(nError2>0) {
-     if(nError2>1) {
-        Warning("SetInput","%d output bins are not constrained by any data.",
-                nError2);
-     } else {
-        Warning("SetInput","One output bins is not constrained by any data.");
-     }
      // check whether data points with zero error are responsible
      if(oneOverZeroError<=0.0) {
-        const Int_t *a_rows=fA->GetRowIndexArray();
-        const Int_t *a_cols=fA->GetColIndexArray();
+        //const Int_t *a_rows=fA->GetRowIndexArray();
+        //const Int_t *a_cols=fA->GetColIndexArray();
         for (Int_t col = 0; col <mAtV->GetNrows();col++) {
            if(mAtV->GetRowIndexArray()[col]==
               mAtV->GetRowIndexArray()[col+1]) {
-              TString binlist("output bin ");
-              binlist += fXToHist[col];
-              binlist +=" depends on ignored input bins ";
+              TString binlist("no data to constrain output bin ");
+              binlist += GetOutputBinName(fXToHist[col]);
+              /* binlist +=" depends on ignored input bins ";
               for(Int_t row=0;row<fA->GetNrows();row++) {
-                 if(input->GetBinError(row + 1)>0.0) continue;
+                 if(dataVyyDiag[row]>0.0) continue;
                  for(Int_t i=a_rows[row];i<a_rows[row+1];i++) {
                     if(a_cols[i]!=col) continue;
                     binlist +=" ";
                     binlist +=row;
                  }
-              }
+                 } */
               Warning("SetInput","%s",binlist.Data());
            }
         }
      }
+     if(nError2>1) {
+        Error("SetInput","%d/%d output bins are not constrained by any data.",
+                nError2,mAtV->GetNrows());
+     } else {
+        Error("SetInput","One output bins is not constrained by any data.");
+     }
   }
   DeleteMatrix(&mAtV);
+
+  delete[] dataVyyDiag;
 
   return nError+10000*nError2;
 }
 
-Double_t TUnfold::DoUnfold(Double_t tau) {
+Double_t TUnfold::DoUnfold(Double_t tau)
+{
    // Unfold with given value of regularisation parameter tau
    //     tau: new tau parameter
    // required data members:
@@ -1974,7 +2433,7 @@ Double_t TUnfold::DoUnfold(Double_t tau) {
    //     fX0: bias on x
    //     fBiasScale: scale factor for fX0
    //     fV:  inverse of covariance matrix for y
-   //     fLsquared: regularisation conditions
+   //     fL: regularisation conditions
    // modified data members:
    //     fTauSquared and those documented in DoUnfold(void)
    fTauSquared=tau*tau;
@@ -1984,7 +2443,8 @@ Double_t TUnfold::DoUnfold(Double_t tau) {
 Int_t TUnfold::ScanLcurve(Int_t nPoint,
                           Double_t tauMin,Double_t tauMax,
 			  TGraph **lCurve,TSpline **logTauX,
-			  TSpline **logTauY) {
+			  TSpline **logTauY)
+{
   // scan the L curve
   //   nPoint: number of points on the resulting curve
   //   tauMin: smallest tau value to study
@@ -2020,25 +2480,37 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   //    (1a) store minimum and maximum tau to curve
 
   if((tauMin<=0)||(tauMax<=0.0)||(tauMin>=tauMax)) {
-     // if the number of degrees of freedom is too small, create an error
-     if(GetNdf()<=0) {
-        Error("ScanLcurve","too few input bins, NDF<=0");  
-     }
      // here no range is given, has to be determined automatically
      // the maximum tau is determined from the chi**2 values 
      // observed from unfolding without regulatisation
 
      // first unfolding, without regularisation
      DoUnfold(0.0);
+
+     // if the number of degrees of freedom is too small, create an error
+     if(GetNdf()<=0) {
+        Error("ScanLcurve","too few input bins, NDF<=0 %d",GetNdf());  
+     }
+
      Double_t x0=GetLcurveX();
      Double_t y0=GetLcurveY();
      Info("ScanLcurve","logtau=-Infinity X=%lf Y=%lf",x0,y0);
+     if(!TMath::Finite(x0)) {
+        Fatal("ScanLcurve","problem (too few input bins?) X=%f",x0);
+     }
+     if(!TMath::Finite(y0)) {
+        Fatal("ScanLcurve","problem (missing regularisation?) Y=%f",y0);
+     }
      {
         // unfolding guess maximum tau and store it
         Double_t logTau=
            0.5*(TMath::Log10(fChi2A+3.*TMath::Sqrt(GetNdf()+1.0))
                 -GetLcurveY());
         DoUnfold(TMath::Power(10.,logTau));
+        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+           Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                 GetLcurveX(),GetLcurveY());
+        }
         curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
         Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
              logTau,GetLcurveX(),GetLcurveY());
@@ -2049,11 +2521,15 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
         //
         // "unstable" means that there is a finite tau where the
         // unfolding chi**2 is smaller than for the case of no
-        // regularisation. Ideally this shoukld never happen
+        // regularisation. Ideally this should never happen
         do {
            x0=GetLcurveX();
            Double_t logTau=(*curve.begin()).first-0.5;
            DoUnfold(TMath::Power(10.,logTau));
+           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+              Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                    GetLcurveX(),GetLcurveY());
+           }
            curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
            Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
                 logTau,GetLcurveX(),GetLcurveY());
@@ -2061,17 +2537,21 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
         while(((int)curve.size()<(nPoint-1)/2)&&
               ((*curve.begin()).second.first<x0));
      } else {
-        // minimum tau is chosen such that it is less than
+        // minimum tau is chosen such that is less than
         // 1% different from the case of no regularusation
         // log10(1.01) = 0.00432
 
-        // here, more than one point are insetred in necessary
+        // here, more than one point are inserted if necessary
         while(((int)curve.size()<nPoint-1)&&
               (((*curve.begin()).second.first-x0>0.00432)||
                ((*curve.begin()).second.second-y0>0.00432)||
                (curve.size()<2))) {
            Double_t logTau=(*curve.begin()).first-0.5;
            DoUnfold(TMath::Power(10.,logTau));
+           if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+              Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                    GetLcurveX(),GetLcurveY());
+           }
            curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
            Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
                 logTau,GetLcurveX(),GetLcurveY());
@@ -2083,12 +2563,20 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
      if(nPoint>1) {
         // insert maximum tau
         DoUnfold(TMath::Power(10.,logTauMax));
+        if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+           Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+                 GetLcurveX(),GetLcurveY());
+        }
         Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
              logTauMax,GetLcurveX(),GetLcurveY());
         curve[logTauMax]=std::make_pair(GetLcurveX(),GetLcurveY());
      }
      // insert minimum tau
      DoUnfold(TMath::Power(10.,logTauMin));
+     if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+        Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+              GetLcurveX(),GetLcurveY());
+     }
      Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",
           logTauMin,GetLcurveX(),GetLcurveY());
      curve[logTauMin]=std::make_pair(GetLcurveX(),GetLcurveY());
@@ -2120,6 +2608,10 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
       i0=i1;
     }
     DoUnfold(TMath::Power(10.,logTau));
+    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+       Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+             GetLcurveX(),GetLcurveY());
+    }
     Info("ScanLcurve","logtau=%lf X=%lf Y=%lf",logTau,GetLcurveX(),GetLcurveY());
     curve[logTau]=std::make_pair(GetLcurveX(),GetLcurveY());
   }
@@ -2255,6 +2747,10 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
     delete[] cCi;
     logTauFin=cTmax;
     DoUnfold(TMath::Power(10.,logTauFin));
+    if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
+       Fatal("ScanLcurve","problem (missing regularisation?) X=%f Y=%f",
+             GetLcurveX(),GetLcurveY());
+    }
     Info("ScanLcurve","Result logtau=%lf X=%lf Y=%lf",
          logTauFin,GetLcurveX(),GetLcurveY());
     curve[logTauFin]=std::make_pair(GetLcurveX(),GetLcurveY());
@@ -2294,65 +2790,61 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   return bestChoice;
 }
 
-
-TH1D *TUnfold::GetOutput(const char *name,const char *title,
-                         Double_t xmin, Double_t xmax) const
+void TUnfold::GetNormalisationVector(TH1 *out,const Int_t *binMap) const
 {
-   // retreive unfolding result as histogram
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //          if (x0>=x1) then x0=0 and x1=nbin are used
+   // get vector of normalisation factors
+   //   out: output histogram
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
 
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
-   }
-   TH1D *out = new TH1D(name, title, nbins, xmin, xmax);
-   GetOutput(out);
-
-   return out;
-}
-
-TH1D *TUnfold::GetBias(const char *name,const char *title,
-                       Double_t xmin, Double_t xmax) const
-{
-   // retreive bias as histogram
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //          if (x0>=x1) then x0=0 and x1=nbin are used
-
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
-   }
-   TH1D *out = new TH1D(name, title, nbins, xmin, xmax);
+   ClearHistogram(out);
    for (Int_t i = 0; i < GetNx(); i++) {
-      out->SetBinContent(fXToHist[i], (*fX0) (i, 0));
+      int dest=binMap ? binMap[fXToHist[i]] : fXToHist[i];
+      if(dest>=0) {
+         out->SetBinContent(dest, fSumOverY[i] + out->GetBinContent(dest));
+      }
    }
-   return out;
 }
 
-TH1D *TUnfold::GetFoldedOutput(const char *name,const char *title,
-                               Double_t y0, Double_t y1) const
+void TUnfold::GetBias(TH1 *out,const Int_t *binMap) const
 {
-   // retreive unfolding result folded back by the matrix
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   y0,y1: lower/upper edge of histogram.
-   //          if (y0>=y1) then y0=0 and y1=nbin are used
+   // get bias distribution, possibly with bin remapping
+   //   out: output histogram
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
 
-   if (y0 >= y1) {
-      y0 = 0.0;
-      y1 = GetNy();
+   ClearHistogram(out);
+   for (Int_t i = 0; i < GetNx(); i++) {
+      int dest=binMap ? binMap[fXToHist[i]] : fXToHist[i];
+      if(dest>=0) {
+         out->SetBinContent(dest, fBiasScale*(*fX0) (i, 0) +
+                            out->GetBinContent(dest));
+      }
    }
-   TH1D *out = new TH1D(name, title, GetNy(), y0, y1);
+}
 
+void TUnfold::GetFoldedOutput(TH1 *out,const Int_t *binMap) const
+{
+   // get unfolding result, folded back trough the matrix
+   //   out: output histogram
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
+
+   ClearHistogram(out);
+  
    TMatrixDSparse *AVxx=MultiplyMSparseMSparse(fA,fVxx);
-
 
    const Int_t *rows_A=fA->GetRowIndexArray();
    const Int_t *cols_A=fA->GetColIndexArray();
@@ -2362,7 +2854,10 @@ TH1D *TUnfold::GetFoldedOutput(const char *name,const char *title,
    const Double_t *data_AVxx=AVxx->GetMatrixArray();
    
    for (Int_t i = 0; i < GetNy(); i++) {
-      out->SetBinContent(i + 1, (*fAx) (i, 0));
+      Int_t destI = binMap ? binMap[i+1] : i+1;
+      if(destI<0) continue;
+
+      out->SetBinContent(destI, (*fAx) (i, 0)+ out->GetBinContent(destI));
       Double_t e2=0.0;
       Int_t index_a=rows_A[i];
       Int_t index_av=rows_AVxx[i];
@@ -2379,139 +2874,149 @@ TH1D *TUnfold::GetFoldedOutput(const char *name,const char *title,
             index_av++;
          }
       }
-      out->SetBinError(i + 1,TMath::Sqrt(e2));
+      out->SetBinError(destI,TMath::Sqrt(e2));
    }
    DeleteMatrix(&AVxx);
-   return out;
 }
 
-TH1D *TUnfold::GetInput(const char *name,const char *title,
-                        Double_t y0, Double_t y1) const
+void TUnfold::GetProbabilityMatrix(TH2 *A,EHistMap histmap) const
+{
+   // retreive matrix of probabilities
+   //    histmap: on which axis to arrange the input/output vector
+   //    A: histogram to store the probability matrix
+   const Int_t *rows_A=fA->GetRowIndexArray();
+   const Int_t *cols_A=fA->GetColIndexArray();
+   const Double_t *data_A=fA->GetMatrixArray();
+   for (Int_t iy = 0; iy <fA->GetNrows(); iy++) {
+      for(Int_t indexA=rows_A[iy];indexA<rows_A[iy+1];indexA++) {
+         Int_t ix = cols_A[indexA];
+         Int_t ih=fXToHist[ix];
+         if (histmap == kHistMapOutputHoriz) {
+            A->SetBinContent(ih, iy,data_A[indexA]);
+         } else {
+            A->SetBinContent(iy, ih,data_A[indexA]);
+         }
+      }
+   }
+}
+
+void TUnfold::GetInput(TH1 *out,const Int_t *binMap) const
 {
    // retreive input distribution
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   y0,y1: lower/upper edge of histogram.
-   //          if (y0>=y1) then y0=0 and y1=nbin are used
+   //   out: output histogram
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
 
-   if (y0 >= y1) {
-      y0 = 0.0;
-      y1 = GetNy();
-   }
-   TH1D *out = new TH1D(name, title, GetNy(), y0, y1);
+   ClearHistogram(out);
 
    const Int_t *rows_Vyy=fVyy->GetRowIndexArray();
    const Int_t *cols_Vyy=fVyy->GetColIndexArray();
    const Double_t *data_Vyy=fVyy->GetMatrixArray();
 
-
    for (Int_t i = 0; i < GetNy(); i++) {
-      out->SetBinContent(i + 1, (*fY) (i, 0));
+      Int_t destI=binMap ? binMap[i] : i;
+      if(destI<0) continue;
+
+      out->SetBinContent(destI, (*fY) (i, 0)+out->GetBinContent(destI));
+
       Double_t e=0.0;
       for(int index=rows_Vyy[i];index<rows_Vyy[i+1];index++) {
          if(cols_Vyy[index]==i) {
             e=TMath::Sqrt(data_Vyy[index]);
          }
       }
-      out->SetBinError(i + 1, e);
+      out->SetBinError(destI, e);
    }
-   return out;
 }
 
-TH2D *TUnfold::GetRhoIJ(const char *name,const char *title,
-                        Double_t xmin, Double_t xmax) const
+void TUnfold::GetInputInverseEmatrix(TH2 *out)
 {
-   // retreive full matrix of correlation coefficients
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //          if (x0>=x1) then x0=0 and x1=nbin are used
+   // calculate the inverse of the contribution to the error matrix 
+   // corresponding to the input data
+   if(!fVyyInv) {
+      Int_t rank=0;
+      fVyyInv=InvertMSparseSymmPos(fVyy,&rank);
+      // and count number of degrees of freedom
+      fNdf = rank-GetNpar();
 
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
+      if(rank<GetNy()-fIgnoredBins) {
+         Warning("GetInputInverseEmatrix","input covariance matrix has rank %d expect %d",
+                 rank,GetNy());
+      }
+      if(fNdf<0) {
+         Error("GetInputInverseEmatrix","number of parameters %d > %d (rank of input covariance). Problem can not be solved",GetNpar(),rank);
+      } else if(fNdf==0) {
+         Warning("GetInputInverseEmatrix","number of parameters %d = input rank %d. Problem is ill posed",GetNpar(),rank);
+      }
    }
-   TH2D *out = new TH2D(name, title, nbins, xmin, xmax, nbins, xmin, xmax);
-   GetRhoIJ(out);
-   return out;
+   if(out) {
+      // return matrix as histogram
+      const Int_t *rows_Vyy=fVyy->GetRowIndexArray();
+      const Int_t *cols_Vyy=fVyy->GetColIndexArray();
+      const Double_t *data_Vyy=fVyy->GetMatrixArray();
+
+      for(int i=0;i<=out->GetNbinsX()+1;i++) {
+         for(int j=0;j<=out->GetNbinsY()+1;j++) {
+            out->SetBinContent(i,j,0.);
+         }
+      }
+
+      for (Int_t i = 0; i < fVyy->GetNrows(); i++) {
+         for(int index=rows_Vyy[i];index<rows_Vyy[i+1];index++) {
+            Int_t j=cols_Vyy[index];
+            out->SetBinContent(i+1,j+1,data_Vyy[index]);
+         }
+      }
+   }
 }
 
-TH2D *TUnfold::GetEmatrix(const char *name,const char *title,
-                          Double_t xmin, Double_t xmax) const
+void TUnfold::GetLsquared(TH2 *out) const
 {
-   // retreive full error matrix
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //          if (x0>=x1) then x0=0 and x1=nbin are used
+   // retreive matrix of regularisation conditions squared
+   //   out: prebooked matrix
 
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
-   }
-   TH2D *out = new TH2D(name, title, nbins, xmin, xmax, nbins, xmin, xmax);
-   GetEmatrix(out);
-
-   return out;
-}
-
-TH1D *TUnfold::GetRhoI(const char *name,const char *title,
-                       Double_t xmin, Double_t xmax) const
-{
-   // retreive matrix of global correlation coefficients
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //          if (x0>=x1) then x0=0 and x1=nbin are used
-
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
-   }
-   TH1D *out = new TH1D(name, title, nbins, xmin, xmax);
-   GetRhoI(out);
-
-   return out;
-}
-
-TH2D *TUnfold::GetLsquared(const char *name,const char *title,
-                           Double_t xmin, Double_t xmax) const
-{
-   // retreive ix of regularisation conditions squared
-   //   name:  name of the histogram
-   //   title: title of the histogram
-   //   x0,x1: lower/upper edge of histogram.
-   //            if (x0>=x1) then x0=0 and x1=nbin are used
-
-   int nbins = fHistToX.GetSize() - 2;
-   if (xmin >= xmax) {
-      xmin = 0.0;
-      xmax = nbins;
-   }
-   TH2D *out = new TH2D(name, title, nbins, xmin, xmax, nbins, xmin, xmax);
-   out->SetOption("BOX");
+   TMatrixDSparse *lSquared=MultiplyMSparseTranspMSparse(fL,fL);
    // loop over sparse matrix
-   const Int_t *rows=fLsquared->GetRowIndexArray();
-   const Int_t *cols=fLsquared->GetColIndexArray();
-   const Double_t *data=fLsquared->GetMatrixArray();
+   const Int_t *rows=lSquared->GetRowIndexArray();
+   const Int_t *cols=lSquared->GetColIndexArray();
+   const Double_t *data=lSquared->GetMatrixArray();
    for (Int_t i = 0; i < GetNx(); i++) {
       for (Int_t cindex = rows[i]; cindex < rows[i+1]; cindex++) {
         Int_t j=cols[cindex];
-        out->SetBinContent(fXToHist[i], fXToHist[j], fTauSquared * data[cindex]);
+        out->SetBinContent(fXToHist[i], fXToHist[j],data[cindex]);
       }
    }
-
-  return out;
+   DeleteMatrix(&lSquared);
 }
 
-void TUnfold::SetConstraint(TUnfold::EConstraint constraint) {
+void TUnfold::GetL(TH2 *out) const
+{
+   // retreive matrix of regularisation conditions
+   //   out: prebooked matrix
+
+   // loop over sparse matrix
+   const Int_t *rows=fL->GetRowIndexArray();
+   const Int_t *cols=fL->GetColIndexArray();
+   const Double_t *data=fL->GetMatrixArray();
+   for (Int_t row = 0; row < GetNr(); row++) {
+      for (Int_t cindex = rows[row]; cindex < rows[row+1]; cindex++) {
+        Int_t col=cols[cindex];
+        Int_t indexH=fXToHist[col];
+        out->SetBinContent(indexH,row+1,data[cindex]);
+      }
+   }
+}
+
+void TUnfold::SetConstraint(EConstraint constraint)
+{
    // set type of constraint for the next unfolding
    if(fConstraint !=constraint) ClearResults();
    fConstraint=constraint;
-   Info("TUnfold::SetConstraint","fConstraint=%d",fConstraint);
+   Info("SetConstraint","fConstraint=%d",fConstraint);
 }
 
 Double_t TUnfold::GetTau(void) const
@@ -2532,17 +3037,20 @@ Int_t TUnfold::GetNpar(void) const
    return GetNx();
 }
 
-Double_t TUnfold::GetLcurveX(void) const {
+Double_t TUnfold::GetLcurveX(void) const
+{
   // return value on x axis of L curve
   return TMath::Log10(fChi2A);
 }
 
-Double_t TUnfold::GetLcurveY(void) const {
+Double_t TUnfold::GetLcurveY(void) const
+{
   // return value on y axis of L curve
   return TMath::Log10(fLXsquared);
 }
 
-void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const {
+void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const
+{
    // get output distribution, cumulated over several bins
    //   output: output histogram
    //   binMap: for each bin of the original output distribution
@@ -2551,13 +3059,17 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const {
    //        binMap[0] : destination of underflow bin
    //        binMap[1] : destination of first bin
    //          ...
-   Int_t nbin=output->GetNbinsX();
+   
+   ClearHistogram(output);
+   /* Int_t nbin=output->GetNbinsX();
    Double_t *c=new Double_t[nbin+2];
    Double_t *e2=new Double_t[nbin+2];
    for(Int_t i=0;i<nbin+2;i++) {
       c[i]=0.0;
       e2[i]=0.0;
-   }
+      } */
+
+   std::map<Int_t,Double_t> e2;
 
    const Int_t *rows_Vxx=fVxx->GetRowIndexArray();
    const Int_t *cols_Vxx=fVxx->GetColIndexArray();
@@ -2565,25 +3077,27 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const {
 
    Int_t binMapSize = fHistToX.GetSize();
    for(Int_t i=0;i<binMapSize;i++) {
-      Int_t destBinI=binMap ? binMap[i] : i;
-      Int_t srcBinI=fHistToX[i];
-      if((destBinI>=0)&&(destBinI<nbin+2)&&(srcBinI>=0)) {
-         c[destBinI]+=(*fX)(srcBinI,0);
+      Int_t destBinI=binMap ? binMap[i] : i; // histogram bin
+      Int_t srcBinI=fHistToX[i]; // matrix row index
+      if((destBinI>=0)&&(srcBinI>=0)) {
+         output->SetBinContent
+            (destBinI, (*fX)(srcBinI,0)+ output->GetBinContent(destBinI));
          // here we loop over the columns of the error matrix
          //   j: counts histogram bins
          //   index: counts sparse matrix index
          // the algorithm makes use of the fact that fHistToX is ordered
-         Int_t j=0;
+         Int_t j=0; // histogram bin
          Int_t index_vxx=rows_Vxx[srcBinI];
+         //Double_t e2=TMath::Power(output->GetBinError(destBinI),2.);
          while((j<binMapSize)&&(index_vxx<rows_Vxx[srcBinI+1])) {
-            Int_t destBinJ=binMap ? binMap[j] : j;
+            Int_t destBinJ=binMap ? binMap[j] : j; // histogram bin
             if(destBinI!=destBinJ) {
                // only diagonal elements are calculated
                j++;
             } else {
-               Int_t srcBinJ=fHistToX[j];
+               Int_t srcBinJ=fHistToX[j]; // matrix column index
                if(srcBinJ<0) {
-                  // bin is not used, check next bin
+                  // bin was not unfolded, check next bin
                   j++;
                } else {
                   if(cols_Vxx[index_vxx]<srcBinJ) {
@@ -2594,26 +3108,26 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const {
                      j++;
                   } else {
                      // add this bin
-                     e2[destBinI]+= data_Vxx[index_vxx];
+                     e2[destBinI] += data_Vxx[index_vxx];
                      j++;
                      index_vxx++;
                   }
                }
             }
          }
+         //output->SetBinError(destBinI,TMath::Sqrt(e2));
       }
    }
-   for(Int_t i=0;i<nbin+2;i++) {
-      output->SetBinContent(i,c[i]);
-      output->SetBinError(i,TMath::Sqrt(e2[i]));
+   for(std::map<Int_t,Double_t>::const_iterator i=e2.begin();
+       i!=e2.end();i++) {
+      //cout<<(*i).first<<" "<<(*i).second<<"\n";
+      output->SetBinError((*i).first,TMath::Sqrt((*i).second));
    }
-   delete[] c;
-   delete[] e2;
 }
 
 void TUnfold::ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,
-                                const Int_t *binMap,Bool_t doClear) const {
-
+                                const Int_t *binMap,Bool_t doClear) const
+{
    // get an error matrix, cumulated over several bins
    //   ematrix: output error matrix histogram
    //   emat: error matrix
@@ -2677,7 +3191,8 @@ void TUnfold::ErrorMatrixToHist(TH2 *ematrix,const TMatrixDSparse *emat,
    }
 }
 
-void TUnfold::GetEmatrix(TH2 *ematrix,const Int_t *binMap) const {
+void TUnfold::GetEmatrix(TH2 *ematrix,const Int_t *binMap) const
+{
    // get output error matrix, cumulated over several bins
    //   ematrix: output error matrix histogram
    //   binMap: for each bin of the original output distribution
@@ -2689,109 +3204,8 @@ void TUnfold::GetEmatrix(TH2 *ematrix,const Int_t *binMap) const {
    ErrorMatrixToHist(ematrix,fVxx,binMap,kTRUE);
 }
 
-Double_t TUnfold::GetRhoI(TH1 *rhoi,TH2 *ematrixinv,const Int_t *binMap) const {
-   // get global correlation coefficients and inverted error matrix,
-   // cumulated over several bins
-   //   rhoi: global correlation histogram
-   //   ematrixinv: inverse of error matrix (if pointer==0 it is not returned)
-   //   binMap: for each bin of the original output distribution
-   //           specify the destination bin. A value of -1 means that the bin
-   //           is discarded. 0 means underflow bin, 1 first bin, ...
-   //        binMap[0] : destination of underflow bin
-   //        binMap[1] : destination of first bin
-   //          ...
-   // return value: average global correlation
-
-   Int_t nbin=rhoi->GetNbinsX();  
-
-   // The unfolding is based on a root TH2D histogram.
-   // Internally, these histogram bins are mapped to Matrix cols:
-   //    fHistToX[i]   is the matrix-row corresponding to matrix-bin i
-   //    fXToHist[i]   is the matrix-bin corresponding to matrix-col i
-   //
-   // for the output, another level of mapping is added, such that
-   // a matrix-bin is mapped to one or more output-bins
-   //    binMap[i]     is the output-bin corresponding to matrix-bin i
-
-   // below, the matrix-rows are summed to emat-rows, then the emat-rows
-   // are stored to output-bins
-
-   // n counts the number of active bins in the output histogram
-   Int_t n=0;
-   Int_t *outputToEmat=new Int_t[nbin+2];
-   Int_t *ematToOutput=new Int_t[nbin+2];
-   Int_t *vxxToEmat=new Int_t[GetNx()];
-   for(Int_t i=0;i<nbin+2;i++) {
-      outputToEmat[i]=-1;
-   }
-   for(Int_t i=0;i<GetNx();i++) {
-      Int_t matrix_bin=fXToHist[i];
-      Int_t output_bin=binMap ? binMap[matrix_bin] : matrix_bin;
-      if((output_bin>=0)&&(output_bin<nbin+2)) {
-         // matrix-col i will be stored to output_bin
-         if(outputToEmat[output_bin]<0) {
-            // new bin n
-            outputToEmat[output_bin]=n;
-            ematToOutput[n]=output_bin;
-            n++;
-         }
-         vxxToEmat[i]=outputToEmat[output_bin];
-      } else {
-         vxxToEmat[i]=-1;
-      }
-   }
-   delete[] outputToEmat;
-
-   // now:
-   //   create new error matrix emat(n,n)
-   //   sum all bins of Vxx into the new matrix, using the mapping
-   //    vxxToEmat[]
-   // later:
-   //   pack emat(n,n) to the histogram, using the mapping
-   //    ematToOutput
-
-   // set up reduced error matrix
-   TMatrixD e(n,n);
-   const Int_t *rows_Vxx=fVxx->GetRowIndexArray();
-   const Int_t *cols_Vxx=fVxx->GetColIndexArray();
-   const Double_t *data_Vxx=fVxx->GetMatrixArray();
-   for(Int_t i=0;i<GetNx();i++) {
-      Int_t ie=vxxToEmat[i];
-      if(ie<0) continue;
-      for(int index_vxx=rows_Vxx[i];index_vxx<rows_Vxx[i+1];index_vxx++) {
-         Int_t je=vxxToEmat[cols_Vxx[index_vxx]];
-         if(je<0) continue;
-         e(ie,je) += data_Vxx[index_vxx];
-      }
-   }
-   delete[] vxxToEmat;
-
-   // invert error matrix
-   TMatrixD einv(e);
-   InvertMConditioned(&einv);
-
-   Double_t rhoMax=0.0;
-   for(Int_t i=0;i<n;i++) {
-      Int_t i_out=ematToOutput[i];
-      Double_t rho=1.-1./(einv(i,i)*e(i,i));
-      if(rho>=0.0) rho=TMath::Sqrt(rho);
-      else rho=-TMath::Sqrt(-rho);
-      if(rho>rhoMax) {
-         rhoMax = rho;
-      }
-      rhoi->SetBinContent(i_out,rho);
-      if(ematrixinv) {
-         for(Int_t j=0;j<n;j++) {
-            ematrixinv->SetBinContent(i_out,ematToOutput[j],einv(i,j));
-         }
-      }
-   }
-   delete[] ematToOutput;
-
-   return rhoMax;
-}
-
-void TUnfold::GetRhoIJ(TH2 *rhoij,const Int_t *binMap) const {
+void TUnfold::GetRhoIJ(TH2 *rhoij,const Int_t *binMap) const
+{
    // get correlation coefficient matrix, cumulated over several bins
    //   rhoij:  correlation coefficient matrix histogram
    //   binMap: for each bin of the original output distribution
@@ -2816,4 +3230,211 @@ void TUnfold::GetRhoIJ(TH2 *rhoij,const Int_t *binMap) const {
       }
    }
    delete[] e;
+}
+
+Double_t TUnfold::GetRhoI(TH1 *rhoi,const Int_t *binMap,TH2 *invEmat) const
+{
+   // get global correlation coefficients with arbitrary min map
+   //   rhoi: global correlation histogram
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
+   // return value: maximum global correlation
+
+   ClearHistogram(rhoi,-1.);
+
+   if(binMap) {
+      // if there is a bin map, the matrix needs to be inverted
+      // otherwise, use the existing inverse, such that
+      // no matrix inversion is needed
+      return GetRhoIFromMatrix(rhoi,fVxx,binMap,invEmat);
+   } else {
+      Double_t rhoMax=0.0;
+
+      const Int_t *rows_Vxx=fVxx->GetRowIndexArray();
+      const Int_t *cols_Vxx=fVxx->GetColIndexArray();
+      const Double_t *data_Vxx=fVxx->GetMatrixArray();
+
+      const Int_t *rows_VxxInv=fVxxInv->GetRowIndexArray();
+      const Int_t *cols_VxxInv=fVxxInv->GetColIndexArray();
+      const Double_t *data_VxxInv=fVxxInv->GetMatrixArray();
+      
+      for(Int_t i=0;i<GetNx();i++) {
+         Int_t destI=fXToHist[i];
+         Double_t e_ii=0.0,einv_ii=0.0;
+         for(int index_vxx=rows_Vxx[i];index_vxx<rows_Vxx[i+1];index_vxx++) {
+            if(cols_Vxx[index_vxx]==i) {
+               e_ii=data_Vxx[index_vxx];
+               break;
+            }
+         }
+         for(int index_vxxinv=rows_VxxInv[i];index_vxxinv<rows_VxxInv[i+1];
+             index_vxxinv++) {
+            if(cols_VxxInv[index_vxxinv]==i) {
+               einv_ii=data_VxxInv[index_vxxinv];
+               break;
+            }
+         }
+         Double_t rho=1.0;
+         if((einv_ii>0.0)&&(e_ii>0.0)) rho=1.-1./(einv_ii*e_ii);
+         if(rho>=0.0) rho=TMath::Sqrt(rho);
+         else rho=-TMath::Sqrt(-rho);
+         if(rho>rhoMax) {
+            rhoMax = rho;
+         }
+         rhoi->SetBinContent(destI,rho);
+      }
+      return rhoMax;
+   }
+}
+
+Double_t TUnfold::GetRhoIFromMatrix(TH1 *rhoi,const TMatrixDSparse *eOrig,
+                                    const Int_t *binMap,TH2 *invEmat) const
+{
+   // get global correlation coefficients with arbitrary min map
+   //   rhoi: global correlation histogram
+   //   emat: error matrix
+   //   binMap: for each bin of the original output distribution
+   //           specify the destination bin. A value of -1 means that the bin
+   //           is discarded. 0 means underflow bin, 1 first bin, ...
+   //        binMap[0] : destination of underflow bin
+   //        binMap[1] : destination of first bin
+   //          ...
+   // return value: maximum global correlation
+
+   Double_t rhoMax=0.;
+   // original number of bins:
+   //    fHistToX.GetSize()
+   // loop over binMap and find number of used bins
+
+   Int_t binMapSize = fHistToX.GetSize();
+
+   // histToLocalBin[iBin] points to a local index
+   //    only bins iBin of the histogram rhoi whih are referenced
+   //    in the bin map have a local index
+   std::map<int,int> histToLocalBin;
+   Int_t nBin=0;
+   for(Int_t i=0;i<binMapSize;i++) {
+      Int_t mapped_i=binMap ? binMap[i] : i;
+      if(mapped_i>=0) {
+         if(histToLocalBin.find(mapped_i)==histToLocalBin.end()) {
+            histToLocalBin[mapped_i]=nBin;
+            nBin++;
+         }
+      }
+   }
+   // number of local indices: nBin
+   if(nBin>0) {
+      // construct inverse mapping function
+      //    local index -> histogram bin
+      Int_t *localBinToHist=new Int_t[nBin];
+      for(std::map<int,int>::const_iterator i=histToLocalBin.begin();
+          i!=histToLocalBin.end();i++) {
+         localBinToHist[(*i).second]=(*i).first;
+      }
+
+      const Int_t *rows_eOrig=eOrig->GetRowIndexArray();
+      const Int_t *cols_eOrig=eOrig->GetColIndexArray();
+      const Double_t *data_eOrig=eOrig->GetMatrixArray();
+
+      // remap error matrix
+      //   matrix row  i  -> origI  (fXToHist[i])
+      //   origI  -> destI  (binMap)
+      //   destI -> ematBinI  (histToLocalBin)
+      TMatrixD eRemap(nBin,nBin);
+      // i:  row of the matrix eOrig
+      for(Int_t i=0;i<GetNx();i++) {
+         // origI: pointer in output histogram with all bins
+         Int_t origI=fXToHist[i];
+         // destI: pointer in the histogram rhoi
+         Int_t destI=binMap ? binMap[origI] : origI;
+         if(destI<0) continue;
+         Int_t ematBinI=histToLocalBin[destI];
+         for(int index_eOrig=rows_eOrig[i];index_eOrig<rows_eOrig[i+1];
+             index_eOrig++) {
+            // j: column of the matrix fVxx
+            Int_t j=cols_eOrig[index_eOrig];
+            // origJ: pointer in output histogram with all bins
+            Int_t origJ=fXToHist[j];
+            // destJ: pointer in the histogram rhoi
+            Int_t destJ=binMap ? binMap[origJ] : origJ;
+            if(destJ<0) continue;
+            Int_t ematBinJ=histToLocalBin[destJ];
+            eRemap(ematBinI,ematBinJ) += data_eOrig[index_eOrig];
+         }
+      }
+      // invert remapped error matrix
+      TMatrixDSparse eSparse(eRemap);
+      Int_t rank=0;
+      TMatrixDSparse *einvSparse=InvertMSparseSymmPos(&eSparse,&rank);
+      if(rank!=einvSparse->GetNrows()) {
+         Warning("GetRhoIFormMatrix","Covariance matrix has rank %d expect %d",
+                 rank,einvSparse->GetNrows());
+      }
+      // fill to histogram
+      const Int_t *rows_eInv=einvSparse->GetRowIndexArray();
+      const Int_t *cols_eInv=einvSparse->GetColIndexArray();
+      const Double_t *data_eInv=einvSparse->GetMatrixArray();
+
+      for(Int_t i=0;i<einvSparse->GetNrows();i++) {
+         Double_t e_ii=eRemap(i,i);
+         Double_t einv_ii=0.0;
+         for(Int_t index_einv=rows_eInv[i];index_einv<rows_eInv[i+1];
+             index_einv++) {
+            Int_t j=cols_eInv[index_einv];
+            if(j==i) {
+               einv_ii=data_eInv[index_einv];
+            }
+            if(invEmat) {
+               invEmat->SetBinContent(localBinToHist[i],localBinToHist[j],
+                                      data_eInv[index_einv]);
+            }
+         }
+         Double_t rho=1.0;
+         if((einv_ii>0.0)&&(e_ii>0.0)) rho=1.-1./(einv_ii*e_ii);
+         if(rho>=0.0) rho=TMath::Sqrt(rho);
+         else rho=-TMath::Sqrt(-rho);
+         if(rho>rhoMax) {
+            rhoMax = rho;
+         }
+         //std::cout<<i<<" "<<localBinToHist[i]<<" "<<rho<<"\n";
+         rhoi->SetBinContent(localBinToHist[i],rho);
+      }
+         
+      DeleteMatrix(&einvSparse);
+      delete [] localBinToHist;
+   }
+   return rhoMax;
+}
+
+void TUnfold::ClearHistogram(TH1 *h,Double_t x) const
+{
+   // clear histogram contents and error
+   Int_t nxyz[3];
+   nxyz[0]=h->GetNbinsX()+1;
+   nxyz[1]=h->GetNbinsY()+1;
+   nxyz[2]=h->GetNbinsZ()+1;
+   for(int i=h->GetDimension();i<3;i++) nxyz[i]=0;
+   Int_t ixyz[3];
+   for(int i=0;i<3;i++) ixyz[i]=0;
+   while((ixyz[0]<=nxyz[0])&&
+         (ixyz[1]<=nxyz[1])&&
+         (ixyz[2]<=nxyz[2])){
+      Int_t ibin=h->GetBin(ixyz[0],ixyz[1],ixyz[2]);
+      h->SetBinContent(ibin,x);
+      h->SetBinError(ibin,0.0);
+      for(Int_t i=0;i<3;i++) {
+         ixyz[i] += 1;
+         if(ixyz[i]<=nxyz[i]) break;
+         if(i<2) ixyz[i]=0;
+      }
+   }
+}
+
+void TUnfold::SetEpsMatrix(Double_t eps) {
+   // set accuracy for matrix inversion
+   if((eps>0.0)&&(eps<1.0)) fEpsMatrix=eps;
 }

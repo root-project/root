@@ -1,36 +1,47 @@
 # Find the Pythia8 includes and library.
 # 
 # This module defines
-# PYTHIA8_INCLUDE_DIR, where to locate Pythia.h file
-# PYTHIA8_LIBRARIES, the libraries to link against to use Pythia6
-# PYTHIA8_FOUND.  If false, you cannot build anything that requires Pythia6.
-# PYTHIA8_LIBRARY, where to find the libpythia8 library.
+# PYTHIA8_INCLUDE_DIR   where to locate Pythia.h file
+# PYTHIA8_LIBRARY       where to find the libpythia8 library
+# PYTHIA8_<lib>_LIBRARY Addicional libraries
+# PYTHIA8_LIBRARIES     (not cached) the libraries to link against to use Pythia8
+# PYTHIA8_FOUND         if false, you cannot build anything that requires Pythia8
+# PYTHIA8_VERSION       version of Pythia8 if found
 
-set(PYTHIA8_FOUND 0)
+set(_pythia8dirs ${PYTHIA8_DIR} $ENV{PYTHIA8_DIR} /usr /opt/pythia8)
 
-find_path(PYTHIA8_INCLUDE_DIR Pythia.h
-  $ENV{PYTHIA8_DIR}/include
-  /opt/pythia8/include
-  /usr/local/include
-  /usr/include
-  /usr/include/pythia
-  DOC "Specify the directory containing Pythia.h."
-)
+find_path(PYTHIA8_INCLUDE_DIR 
+          NAMES Pythia.h Pythia8/Pythia.h 
+          PATHS ${_pythia8dirs} 
+          PATH_SUFFIXES include
+          DOC "Specify the directory containing Pythia.h.")
 
-find_library(PYTHIA8_LIBRARY NAMES Pythia8 pythia8 PATHS
-  $ENV{PYTHIA8_DIR}/lib
-  /opt/pythia8/lib
-  /usr/local/lib
-  /usr/lib
-  DOC "Specify the Pythia8 library here."
-)
+find_library(PYTHIA8_LIBRARY 
+             NAMES pythia8 Pythia8 
+             PATHS ${_pythia8dirs} 
+             PATH_SUFFIXES lib
+             DOC "Specify the Pythia8 library here.")
 
-if(PYTHIA8_INCLUDE_DIR AND PYTHIA8_LIBRARY)
-  set(PYTHIA8_FOUND 1 )
-  message(STATUS "Found Pythia8 library at ${PYTHIA8_LIBRARY}")
-endif()
+find_library(PYTHIA8_hepmcinterface_LIBRARY 
+             NAMES hepmcinterface pythia8tohepmc 
+             PATHS ${_pythia8dirs} 
+             PATH_SUFFIXES lib)
 
+find_library(PYTHIA8_lhapdfdummy_LIBRARY 
+             NAMES lhapdfdummy 
+             PATHS ${_pythia8dirs} 
+             PATH_SUFFIXES lib)
 
-set(PYTHIA8_LIBRARIES ${PYTHIA8_LIBRARY})
+foreach(_lib PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
+  if(${_lib})
+    set(PYTHIA8_LIBRARIES ${PYTHIA8_LIBRARIES} ${${_lib}})
+  endif()
+endforeach()
 
-MARK_AS_ADVANCED( PYTHIA8_FOUND PYTHIA8_LIBRARY PYTHIA8_INCLUDE_DIR)
+# handle the QUIETLY and REQUIRED arguments and set PYTHIA8_FOUND to TRUE if
+# all listed variables are TRUE
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(Pythia8 DEFAULT_MSG PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY)
+mark_as_advanced(PYTHIA8_INCLUDE_DIR PYTHIA8_LIBRARY PYTHIA8_hepmcinterface_LIBRARY PYTHIA8_lhapdfdummy_LIBRARY)
+  

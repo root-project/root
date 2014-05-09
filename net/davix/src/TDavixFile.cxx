@@ -53,13 +53,13 @@
 #include <cstring>
 
 
-static const std::string VERSION = "0.0.1";
+static const std::string VERSION = "0.2.0";
 
 static const std::string gUserAgent = "ROOT/" + std::string(gROOT->GetVersion()) +
 " TDavixFile/" + VERSION + " davix/" + Davix::version();
 
 // The prefix that is used to find the variables in the gEnv
-#define ENVPFX	"Davix."
+#define ENVPFX "Davix."
 
 ClassImp(TDavixFile)
 
@@ -235,7 +235,7 @@ Davix_fd *TDavixFileInternal::Open()
    DavixError *davixErr = NULL;
    Davix_fd *fd = davixPosix->open(davixParam, fUrl.GetUrl(), oflags, &davixErr);
    if (fd == NULL) {
-      Error("DavixOpen", "failed to open file with davix: %s (%d)",
+      Error("DavixOpen", "can not open file with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {
@@ -251,7 +251,7 @@ void TDavixFileInternal::Close()
 {
    DavixError *davixErr = NULL;
    if (davixFd != NULL && davixPosix->close(davixFd, &davixErr)) {
-      Error("DavixClose", "failed to close file with davix: %s (%d)",
+      Error("DavixClose", "can not to close file with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    }
@@ -265,14 +265,12 @@ void TDavixFileInternal::enableGridMode()
    if (gDebug > 1)
       Info("enableGridMode", " grid mode enabled !");
 
-   env_var = gEnv->GetValue("Davix.GSI.CAdir", (const char *) NULL);
-   if (!env_var) {
-      env_var = (((char *) getenv("X509_CERT_DIR")) ? env_var : "/etc/grid-security/certificates/");
-      davixParam->addCertificateAuthorityPath(env_var);
-      if (gDebug > 0)
-         Info("enableGridMode", "Setting CAdir to %s", env_var);
+   if( ( env_var = getenv("X509_CERT_DIR")) == NULL){
+      env_var= "/etc/grid-security/certificates/";
    }
-
+   davixParam->addCertificateAuthorityPath(env_var);
+   if (gDebug > 0)
+      Info("enableGridMode", "Adding CAdir %s", env_var);
 }
 
 //____________________________________________________________________________
@@ -297,7 +295,7 @@ void TDavixFileInternal::parseConfig()
    if (env_var) {
       davixParam->addCertificateAuthorityPath(env_var);
       if (gDebug > 0)
-         Info("parseConfig", "Add Setting CA dir: %s", env_var);
+         Info("parseConfig", "Add CAdir: %s", env_var);
    }
    // CA Check
    bool ca_check_local = !isno(gEnv->GetValue("Davix.GSI.CACheck", (const char *)"y"));
@@ -378,7 +376,7 @@ Int_t TDavixFileInternal::DavixStat(const char *url, struct stat *st)
 
    if (davixPosix->stat(davixParam, url, st, &davixErr) < 0) {
 
-      Error("DavixStat", "failed to stat the file with davix: %s (%d)",
+      Error("DavixStat", "can not stat the file with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
       return 0;
@@ -408,7 +406,14 @@ TDavixFile::~TDavixFile()
 void TDavixFile::Init(Bool_t init)
 {
    (void) init;
+   //initialize davix   
    d_ptr->init();
+   // pre-open file
+   if ((d_ptr->getDavixFileInstance()) == NULL){
+         MakeZombie();
+         gDirectory = gROOT;
+         return;
+   }
    TFile::Init(kFALSE);
    fOffset = 0;
    fD = -2; // so TFile::IsOpen() will return true when in TFile::~TFi */
@@ -608,7 +613,7 @@ Long64_t TDavixFile::DavixReadBuffer(Davix_fd *fd, char *buf, Int_t len)
 
    Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, fOffset, &davixErr);
    if (ret < 0) {
-      Error("DavixReadBuffer", "failed to read data with davix: %s (%d)",
+      Error("DavixReadBuffer", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {
@@ -627,7 +632,7 @@ Long64_t TDavixFile::DavixWriteBuffer(Davix_fd *fd, const char *buf, Int_t len)
 
    Long64_t ret = d_ptr->davixPosix->pwrite(fd, buf, len, fOffset, &davixErr);
    if (ret < 0) {
-      Error("DavixWriteBuffer", "failed to write data with davix: %s (%d)",
+      Error("DavixWriteBuffer", "can not write data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {
@@ -646,7 +651,7 @@ Long64_t TDavixFile::DavixPReadBuffer(Davix_fd *fd, char *buf, Long64_t pos, Int
 
    Long64_t ret = d_ptr->davixPosix->pread(fd, buf, len, pos, &davixErr);
    if (ret < 0) {
-      Error("DavixPReadBuffer", "failed to read data with davix: %s (%d)",
+      Error("DavixPReadBuffer", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {
@@ -674,7 +679,7 @@ Long64_t TDavixFile::DavixReadBuffers(Davix_fd *fd, char *buf, Long64_t *pos, In
 
    Long64_t ret = d_ptr->davixPosix->preadVec(fd, in, out, nbuf, &davixErr);
    if (ret < 0) {
-      Error("DavixReadBuffers", "failed to read data with davix: %s (%d)",
+      Error("DavixReadBuffers", "can not read data with davix: %s (%d)",
             davixErr->getErrMsg().c_str(), davixErr->getStatus());
       DavixError::clearError(&davixErr);
    } else {

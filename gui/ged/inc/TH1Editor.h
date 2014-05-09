@@ -171,6 +171,8 @@ public:
    virtual void DoCancel();
    virtual void PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    Int_t* Dividers(Int_t n);
+   virtual void RecursiveRemove(TObject* obj);
+
 
    ClassDef(TH1Editor,0)  // TH1 editor
 };

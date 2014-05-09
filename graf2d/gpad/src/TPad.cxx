@@ -1611,11 +1611,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    //  If somebody modifies this function, may be similar changes should also
    //  be applied to TBox::ExecuteEvent.
 
-   static Double_t xmin;
-   static Double_t xmax;
-   static Double_t ymin;
-   static Double_t ymax;
-
    const Int_t kMaxDiff = 5;
    const Int_t kMinSize = 20;
    static Int_t pxorg, pyorg;
@@ -1636,13 +1631,8 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    if (fXlowNDC < 0 && event != kButton1Down) return;
    if (fYlowNDC < 0 && event != kButton1Down) return;
 
-   // keep old range and mouse position
+   // keep old mouse position
    if (event == kButton1Down) {
-      xmin = fX1;
-      xmax = fX2;
-      ymin = fY1;
-      ymax = fY2;
-
       pxorg = px;
       pyorg = py;
    }
@@ -1695,9 +1685,6 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       }
       if (newcode) return;
 
-   Bool_t doing_again = kFALSE;
-again:
-
    switch (event) {
 
    case kMouseEnter:
@@ -1705,7 +1692,11 @@ again:
          ResetToolTip(fTip);
       break;
 
+   case kArrowKeyPress:
    case kButton1Down:
+
+      fXUpNDC = fXlowNDC + fWNDC;
+      fYUpNDC = fYlowNDC + fHNDC;
 
       GetPainter()->SetLineColor(-1);
       TAttLine::Modify();  //Change line attributes only if necessary
@@ -1824,6 +1815,7 @@ again:
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       if (TestBit(kCannotMove)) break;
@@ -2000,92 +1992,156 @@ again:
       pxold = px;
       pyold = py;
 
+      Double_t x1, y1, x2, y2;
+      x1 = x2 = y1 = y2 = 0;
+
       if ((!fResizing && opaque) || (fResizing && ropaque)) {
-         event = kButton1Up;
-         doing_again = kTRUE;
-         goto again;
+         if (pA) {
+            x1 = AbsPixeltoX(pxold);
+            y1 = AbsPixeltoY(pyt);
+            x2 = AbsPixeltoX(pxt);
+            y2 = AbsPixeltoY(pyold);
+         }
+         if (pB) {
+            x1 = AbsPixeltoX(pxl);
+            y1 = AbsPixeltoY(pyt);
+            x2 = AbsPixeltoX(pxold);
+            y2 = AbsPixeltoY(pyold);
+         }
+         if (pC) {
+            x1 = AbsPixeltoX(pxl);
+            y1 = AbsPixeltoY(pyold);
+            x2 = AbsPixeltoX(pxold);
+            y2 = AbsPixeltoY(pyl);
+         }
+         if (pD) {
+            x1 = AbsPixeltoX(pxold);
+            y1 = AbsPixeltoY(pyold);
+            x2 = AbsPixeltoX(pxt);
+            y2 = AbsPixeltoY(pyl);
+         }
+         if (pTop || pBot || pL || pR || pINSIDE) {
+            x1 = AbsPixeltoX(px1);
+            y1 = AbsPixeltoY(py1);
+            x2 = AbsPixeltoX(px2);
+            y2 = AbsPixeltoY(py2);
+         }
+
+         if (px != pxorg || py != pyorg) {
+
+            // Get parent corners pixels coordinates
+            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
+            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
+            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
+            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
+
+            // Get pad new corners pixels coordinates
+            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
+            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
+            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
+            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
+
+            // Compute new pad positions in the NDC space of parent
+            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
+            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
+         }
+
+         // Reset pad parameters and recompute conversion coefficients
+         ResizePad();         
+
+         if (pINSIDE) gPad->ShowGuidelines(this, event);
+         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
+         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
+         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
+         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
+         if (pA) gPad->ShowGuidelines(this, event, '1', true);
+         if (pB) gPad->ShowGuidelines(this, event, '2', true);
+         if (pC) gPad->ShowGuidelines(this, event, '3', true);
+         if (pD) gPad->ShowGuidelines(this, event, '4', true);
+
+         Modified(kTRUE);
       }
 
       break;
 
    case kButton1Up:
+
       if (gROOT->IsEscaped()) {
          gROOT->SetEscape(kFALSE);
          break;
       }
 
-      if (pA) {
-         fX1 = AbsPixeltoX(pxold);
-         fY1 = AbsPixeltoY(pyt);
-         fX2 = AbsPixeltoX(pxt);
-         fY2 = AbsPixeltoY(pyold);
+      if (opaque||ropaque) {
+         ShowGuidelines(this, event);
+      } else {
+         x1 = x2 = y1 = y2 = 0;
+
+         if (pA) {
+            x1 = AbsPixeltoX(pxold);
+            y1 = AbsPixeltoY(pyt);
+            x2 = AbsPixeltoX(pxt);
+            y2 = AbsPixeltoY(pyold);
+         }
+         if (pB) {
+            x1 = AbsPixeltoX(pxl);
+            y1 = AbsPixeltoY(pyt);
+            x2 = AbsPixeltoX(pxold);
+            y2 = AbsPixeltoY(pyold);
+         }
+         if (pC) {
+            x1 = AbsPixeltoX(pxl);
+            y1 = AbsPixeltoY(pyold);
+            x2 = AbsPixeltoX(pxold);
+            y2 = AbsPixeltoY(pyl);
+         }
+         if (pD) {
+            x1 = AbsPixeltoX(pxold);
+            y1 = AbsPixeltoY(pyold);
+            x2 = AbsPixeltoX(pxt);
+            y2 = AbsPixeltoY(pyl);
+         }
+         if (pTop || pBot || pL || pR || pINSIDE) {
+            x1 = AbsPixeltoX(px1);
+            y1 = AbsPixeltoY(py1);
+            x2 = AbsPixeltoX(px2);
+            y2 = AbsPixeltoY(py2);
+         }
+
+         if (pA || pB || pC || pD || pTop || pL || pR || pBot)
+            Modified(kTRUE);
+
+         gVirtualX->SetLineColor(-1);
+         gVirtualX->SetLineWidth(-1);
+
+         if (px != pxorg || py != pyorg) {
+
+            // Get parent corners pixels coordinates
+            Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
+            Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
+            Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
+            Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
+
+            // Get pad new corners pixels coordinates
+            Int_t apx1 = XtoAbsPixel(x1); if (apx1 < parentpx1) {apx1 = parentpx1; }
+            Int_t apx2 = XtoAbsPixel(x2); if (apx2 > parentpx2) {apx2 = parentpx2; }
+            Int_t apy1 = YtoAbsPixel(y1); if (apy1 > parentpy1) {apy1 = parentpy1; }
+            Int_t apy2 = YtoAbsPixel(y2); if (apy2 < parentpy2) {apy2 = parentpy2; }
+
+            // Compute new pad positions in the NDC space of parent
+            fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
+            fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
+            fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
+            fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
+         }
+      
+         // Reset pad parameters and recompute conversion coefficients
+         ResizePad();
+
+         // emit signal
+         RangeChanged();
       }
-      if (pB) {
-         fX1 = AbsPixeltoX(pxl);
-         fY1 = AbsPixeltoY(pyt);
-         fX2 = AbsPixeltoX(pxold);
-         fY2 = AbsPixeltoY(pyold);
-      }
-      if (pC) {
-         fX1 = AbsPixeltoX(pxl);
-         fY1 = AbsPixeltoY(pyold);
-         fX2 = AbsPixeltoX(pxold);
-         fY2 = AbsPixeltoY(pyl);
-      }
-      if (pD) {
-         fX1 = AbsPixeltoX(pxold);
-         fY1 = AbsPixeltoY(pyold);
-         fX2 = AbsPixeltoX(pxt);
-         fY2 = AbsPixeltoY(pyl);
-      }
-      if (pTop || pBot || pL || pR || pINSIDE) {
-         fX1 = AbsPixeltoX(px1);
-         fY1 = AbsPixeltoY(py1);
-         fX2 = AbsPixeltoX(px2);
-         fY2 = AbsPixeltoY(py2);
-      }
-
-      if (pINSIDE)
-         if (!doing_again) gPad->SetCursor(kCross);
-
-      if (pA || pB || pC || pD || pTop || pL || pR || pBot)
-         Modified(kTRUE);
-
-      gVirtualX->SetLineColor(-1);
-      gVirtualX->SetLineWidth(-1);
-
-      if (px != pxorg || py != pyorg) {
-
-         // Get parent corners pixels coordinates
-         Int_t parentpx1 = fMother->XtoAbsPixel(parent->GetX1());
-         Int_t parentpx2 = fMother->XtoAbsPixel(parent->GetX2());
-         Int_t parentpy1 = fMother->YtoAbsPixel(parent->GetY1());
-         Int_t parentpy2 = fMother->YtoAbsPixel(parent->GetY2());
-
-         // Get pad new corners pixels coordinates
-         Int_t apx1 = XtoAbsPixel(fX1); if (apx1 < parentpx1) {apx1 = parentpx1; }
-         Int_t apx2 = XtoAbsPixel(fX2); if (apx2 > parentpx2) {apx2 = parentpx2; }
-         Int_t apy1 = YtoAbsPixel(fY1); if (apy1 > parentpy1) {apy1 = parentpy1; }
-         Int_t apy2 = YtoAbsPixel(fY2); if (apy2 < parentpy2) {apy2 = parentpy2; }
-
-         // Compute new pad positions in the NDC space of parent
-         fXlowNDC = Double_t(apx1 - parentpx1)/Double_t(parentpx2 - parentpx1);
-         fYlowNDC = Double_t(apy1 - parentpy1)/Double_t(parentpy2 - parentpy1);
-         fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
-         fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
-      }
-
-      // Restore old range
-      fX1 = xmin;
-      fX2 = xmax;
-      fY1 = ymin;
-      fY2 = ymax;
-
-      // Reset pad parameters and recompute conversion coefficients
-      ResizePad();
-
-      // emit signal
-      RangeChanged();
 
       break;
 
@@ -2192,16 +2248,16 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox = new TBox(PixeltoX(px1old), GetUymin(),
-                                  PixeltoX(px2old), GetUymax());
+               zoombox = new TBox(AbsPixeltoX(px1old), GetUymin(),
+                                  AbsPixeltoX(px2old), GetUymax());
             } else if (axisNumber == 2) {
-               zoombox = new TBox(GetUxmin(), PixeltoY(py1old-VtoPixel(0)), 
-                                  GetUxmax(), PixeltoY(py2old-VtoPixel(0)));
+               zoombox = new TBox(GetUxmin(), AbsPixeltoY(py1old), 
+                                  GetUxmax(), AbsPixeltoY(py2old));
             }          
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
             if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
-            else                          zoomcolor->SetAlpha(0.13);      
+            else                          zoomcolor->SetAlpha(0.5);      
             zoombox->SetFillColor(ci);
             zoombox->Draw();
             gPad->Modified();
@@ -2227,15 +2283,15 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
             gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
          } else {
             if (axisNumber == 1) {
-               zoombox->SetX1(PixeltoX(px1old));
+               zoombox->SetX1(AbsPixeltoX(px1old));
                zoombox->SetY1(GetUymin());
-               zoombox->SetX2(PixeltoX(px2old));
+               zoombox->SetX2(AbsPixeltoX(px2old));
                zoombox->SetY2(GetUymax());
             } else if (axisNumber == 2) {
                zoombox->SetX1(GetUxmin());
-               zoombox->SetY1(PixeltoY(py1old-VtoPixel(0)));
+               zoombox->SetY1(AbsPixeltoY(py1old));
                zoombox->SetX2(GetUxmax());
-               zoombox->SetY2(PixeltoY(py2old-VtoPixel(0)));
+               zoombox->SetY2(AbsPixeltoY(py2old));
             }          
             gPad->Modified();
             gPad->Update();
@@ -4427,7 +4483,7 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    Int_t wid = 0;
    if (!GetCanvas()) return;
-   if (!gROOT->IsBatch() && image && (GetCanvas()->UseGL() || gVirtualX->InheritsFrom("TGCocoa"))) {
+   if (!gROOT->IsBatch() && image) {
       if ((gtype == TImage::kGif) && !ContainsTImage(fPrimitives)) {
          wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
          Color_t hc = gPad->GetCanvas()->GetHighLightColor();
@@ -5517,6 +5573,393 @@ void TPad::SetAttTextPS(Int_t align, Float_t angle, Color_t color, Style_t font,
 
 
 //______________________________________________________________________________
+void TPad::DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode)
+{
+   // Draw Arrows to indicated equal distances of Objects with given BBoxes.
+   // Used by ShowGuidelines
+   
+   Int_t lineColor = TColor::GetColor(239, 202, 0);
+   Int_t x1,x2,y1,y2;
+   x1 = x2 = y1 = y2 = 0;
+   if (mode == 'x') {
+      if (aBBox.fX<bBBox.fX) {
+         x1 = aBBox.fX+aBBox.fWidth;
+         x2 = bBBox.fX;
+      }
+      else {
+         x1 = bBBox.fX+bBBox.fWidth;
+         x2 = aBBox.fX;
+      }
+
+      if ((aBBox.fY > bBBox.fY) && (aBBox.fY + aBBox.fHeight < bBBox.fY + bBBox.fHeight))
+                                    y1 = y2 = aBBox.fY + TMath::Nint(0.5*(Double_t)(aBBox.fHeight))+1;
+      else if ((bBBox.fY > aBBox.fY) && (bBBox.fY + bBBox.fHeight < aBBox.fY + aBBox.fHeight))
+                                    y1 = y2 = bBBox.fY + TMath::Nint(0.5*(Double_t)(bBBox.fHeight))+1;
+      else if (aBBox.fY>bBBox.fY)   y1 = y2 = aBBox.fY-TMath::Nint(0.5*(Double_t)(aBBox.fY-(bBBox.fY+bBBox.fHeight)));
+      else                          y1 = y2 = bBBox.fY-TMath::Nint(0.5*(Double_t)(bBBox.fY-(aBBox.fY+aBBox.fHeight)));
+   }
+   else if (mode == 'y') {
+      if (aBBox.fY<bBBox.fY) {
+         y1 = aBBox.fY+aBBox.fHeight;
+         y2 = bBBox.fY;
+      }
+      else {
+         y1 = bBBox.fY+bBBox.fHeight;
+         y2 = aBBox.fY;
+      }
+      if ((aBBox.fX > bBBox.fX) && (aBBox.fX + aBBox.fWidth < bBBox.fX + bBBox.fWidth))
+                                    x1 = x2 = aBBox.fX + TMath::Nint(0.5*(Double_t)(aBBox.fWidth))+1;
+      else if ((bBBox.fX > aBBox.fX) && (bBBox.fX + bBBox.fWidth < aBBox.fX + aBBox.fWidth))
+                                    x1 = x2 = bBBox.fX + TMath::Nint(0.5*(Double_t)(bBBox.fWidth))+1;
+      else if (aBBox.fX>bBBox.fX)   x1 = x2 = aBBox.fX+TMath::Nint(0.5*(Double_t)(bBBox.fX+bBBox.fWidth-aBBox.fX));
+      else                          x1 = x2 = bBBox.fX+TMath::Nint(0.5*(Double_t)(aBBox.fX+aBBox.fWidth-bBBox.fX));
+   }
+   
+   TArrow *A = new TArrow(gPad->PixeltoX(x1), gPad->PixeltoY(y1-gPad->VtoPixel(0)), gPad->PixeltoX(x2), gPad->PixeltoY(y2-gPad->VtoPixel(0)), 0.01, "<|>");
+   A->SetBit(kCanDelete);
+   A->SetFillColor(lineColor);
+   A->SetLineWidth(1);
+   A->SetLineColor(lineColor);
+   A->Draw();
+   
+   return;
+}
+
+
+//______________________________________________________________________________
+struct dField {
+
+   // Used by ShowGuidelines to store the distance Field between
+   // objects in the canvas
+
+   TAttBBox2D *fa;
+   TAttBBox2D *fb;
+   Int_t fdist;
+   char fdir;
+
+      
+   dField()
+      : fa(0), fb(0), fdist(0), fdir(' ')
+   {}
+
+   dField(TAttBBox2D *a, TAttBBox2D *b, Int_t dist, char direction)
+      : fa(a), fb(b), fdist(dist), fdir(direction)
+   {}
+};
+
+
+//______________________________________________________________________________
+void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, const bool cling )
+{
+   // Shows lines to indicate if a TAttBBox2D object is alligned to 
+   // the centeror to another object, shows distance arrows if two 
+   // objects on screen have the same distance to another object
+   // Call from primitive in Execute Event, in ButtonMotion after 
+   // the new coordinates have been set, to 'stick'
+   // once when button is up to delete lines
+   //
+   // modes: t (Top), b (bottom), l (left), r (right), i (inside)
+   // in resize modes (t,b,l,r) only size arrows are sticky
+   //
+   // in mode, the function gets the point on the element that is clicked to
+   // move (i) or resize (all others). The expected values are:
+   //    1                    t                         2
+   //     +--------------------------------------------+
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //    l|                   i                        |r
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //     |                                            |
+   //     +--------------------------------------------+
+   //    4                    b                         3
+
+   // When the object is moved with arrow or when the ShowGuideLines flag
+   // is off we do show guide lines. 
+   if ((event == kArrowKeyRelease) || (event == kArrowKeyPress) ||
+       !gEnv->GetValue("Canvas.ShowGuideLines", 0)) return;
+
+   std::vector<dField> curDist;
+   std::vector<dField> otherDist;
+   Int_t pMX, pMY;
+   Double_t MX, MY;
+   Int_t threshold;
+   TList *prims;
+   UInt_t n;
+   Rectangle_t aBBox, bBBox;
+   aBBox = bBBox = Rectangle_t();
+   TLine *L;
+   TArrow *A;
+   Int_t dSizeArrow = 12;   // distance of arrows indicating same size from BBox in px
+   Bool_t movedX, movedY;   // make sure the current object is moved just once
+   movedX = movedY = false;
+   Bool_t resize = false;   // indicates resize mode
+   if (mode != 'i') resize = true;
+
+   TPad *is_pad = dynamic_cast<TPad *>( object );
+   TVirtualPad *padSave = 0;
+   padSave = gPad;
+   if (is_pad) is_pad->GetMother()->cd();
+
+   static TPad * tmpGuideLinePad;
+
+   //delete all existing Guidelines and create new invisible pad
+   if (tmpGuideLinePad) {
+      tmpGuideLinePad->Delete();
+      tmpGuideLinePad = 0;
+   }
+
+   // Get Primitives
+   prims = gPad->GetListOfPrimitives();
+   n     = prims->GetSize();
+   Int_t lineColor = TColor::GetColor(239, 202, 0);
+
+   TAttBBox2D *cur = dynamic_cast<TAttBBox2D *>( object );
+   if (cur) {
+      //create invisible TPad above gPad
+      if (!tmpGuideLinePad){
+         tmpGuideLinePad = new TPad("tmpGuideLinePad", "tmpGuideLinePad", 0, 0, 1, 1);
+         Double_t x1, y1, x2, y2;
+         gPad->GetRange(x1, y1, x2, y2);
+         tmpGuideLinePad->Range(x1, y1, x2, y2);
+         tmpGuideLinePad->SetFillStyle(0);
+         tmpGuideLinePad->SetFillColor(0);
+         tmpGuideLinePad->Draw();
+         tmpGuideLinePad->cd();
+         gPad->GetRange(x1, y1, x2, y2);
+      }
+      if (cling) threshold = 7;
+      else threshold = 1;
+
+      Rectangle_t BBox = cur->GetBBox();
+      TPoint center = cur->GetBBoxCenter();
+
+      otherDist.clear();
+      curDist.clear();
+      
+      switch (event) {
+
+      case kButton1Down:
+      case kButton1Motion:
+         MX  = gPad->GetX1() + 0.5 * (gPad->GetX2()-gPad->GetX1());
+         MY  = gPad->GetY1() + 0.5 * (gPad->GetY2()-gPad->GetY1());
+         pMX = gPad->XtoPixel(MX);
+         pMY = gPad->YtoPixel(MY);
+         // Middlelines
+         if (TMath::Abs(pMX-center.GetX())<threshold) {
+            if (cling && (!resize)) {
+               cur->SetBBoxCenterX(pMX);
+               center = cur->GetBBoxCenter();
+               BBox = cur->GetBBox();
+               center = cur->GetBBoxCenter();
+            }
+            L = new TLine(MX, gPad->GetY1(), MX, gPad->GetY2());
+            L->SetBit(kCanDelete);
+            L->SetLineColor(lineColor);
+            L->Draw();
+         }
+         if (TMath::Abs(pMY-center.GetY())<threshold) {
+            if (cling && (!resize)) {
+               cur->SetBBoxCenterY(pMY);
+               center = cur->GetBBoxCenter();
+               BBox = cur->GetBBox();
+               center = cur->GetBBoxCenter();
+            }
+            L = new TLine(gPad->GetX1(), MY, gPad->GetX2(), MY);
+            L->SetBit(kCanDelete);
+            L->SetLineColor(lineColor);
+            L->Draw();
+         }
+         // Alignment to other objects
+         for (UInt_t i = 0; i<n; i++) {
+            TAttBBox2D *other = dynamic_cast<TAttBBox2D *>( prims->At(i) );
+            if (other) {
+               if (other != cur) {
+                  TPoint centerOther = other->GetBBoxCenter();
+                  if (TMath::Abs(center.GetX()-centerOther.GetX())<threshold) {
+                     if (cling && (!resize)) {
+                        cur->SetBBoxCenterX(centerOther.GetX());
+                        BBox   = cur->GetBBox();
+                        center = cur->GetBBoxCenter();
+                     }
+                     L = new TLine(gPad->PixeltoX(centerOther.GetX()), gPad->PixeltoY(center.GetY()-gPad->VtoPixel(0)),
+                                   gPad->PixeltoX(centerOther.GetX()), gPad->PixeltoY(centerOther.GetY()-gPad->VtoPixel(0)));
+                     L->SetLineColor(lineColor);
+                     L->Draw();
+                     L->SetBit(kCanDelete);
+                  }
+                  if (TMath::Abs(center.GetY()-centerOther.GetY())<threshold) {
+                     if (cling && (!resize)) {
+                        cur->SetBBoxCenterY(centerOther.GetY());
+                        BBox   = cur->GetBBox();
+                        center = cur->GetBBoxCenter();
+                     }
+                     L = new TLine(gPad->PixeltoX(center.GetX()), gPad->PixeltoY(centerOther.GetY()-gPad->VtoPixel(0)),
+                                   gPad->PixeltoX(centerOther.GetX()), gPad->PixeltoY(centerOther.GetY()-gPad->VtoPixel(0)));
+                     L->SetBit(kCanDelete);
+                     L->SetLineColor(lineColor);
+                     L->Draw();
+                  }
+               }
+            }
+         }
+         // Get Distances between objects
+         for (UInt_t i = 0; i<n; i++) {
+            TAttBBox2D *a = dynamic_cast<TAttBBox2D *>( prims->At(i) );
+            if (a) {
+               aBBox = a->GetBBox();
+               for (UInt_t j = i+1; j<n; j++) {
+                  TAttBBox2D *b = dynamic_cast<TAttBBox2D *>( prims->At(j) );
+                  if (b) {
+                     bBBox = b->GetBBox();
+
+                     //only when bounding boxes overlap in x or y direction
+                     if (((aBBox.fX<bBBox.fX)&&(bBBox.fX-aBBox.fX<=aBBox.fWidth))||((aBBox.fX>bBBox.fX)&&(aBBox.fX-bBBox.fX<=bBBox.fWidth))){ //BBoxes overlap in x direction
+                        if ((aBBox.fY+aBBox.fHeight<bBBox.fY)||(bBBox.fY+bBBox.fHeight<aBBox.fY)) {//No overlap in Y-direction required
+                           dField abDist = dField();
+                           if (aBBox.fY>bBBox.fY) abDist = dField(a, b, TMath::Abs(aBBox.fY-(bBBox.fY+bBBox.fHeight)), 'y');
+                           else                   abDist = dField(a, b, TMath::Abs(bBBox.fY-(aBBox.fY+aBBox.fHeight)), 'y');
+                           if ((b != cur)&&(a != cur)) otherDist.push_back(abDist);
+                           else curDist.push_back(abDist);
+                        }
+                     } else if (((aBBox.fY<bBBox.fY)&&(bBBox.fY-aBBox.fY<=aBBox.fHeight))||((aBBox.fY>bBBox.fY)&&(aBBox.fY-bBBox.fY<=bBBox.fHeight))) { //BBoxes overlap in y direction
+                        if ((aBBox.fX+aBBox.fWidth<bBBox.fX)||(bBBox.fX+bBBox.fWidth<aBBox.fX)) {//No overlap in x-direction required
+                           dField abDist = dField();
+                           if (aBBox.fX>bBBox.fX) abDist = dField(a, b, TMath::Abs(aBBox.fX-(bBBox.fX+bBBox.fWidth)), 'x');
+                           else                   abDist = dField(a, b, TMath::Abs(bBBox.fX-(aBBox.fX+aBBox.fWidth)), 'x');
+                           if ((b != cur)&&(a != cur)) otherDist.push_back(abDist);
+                           else                        curDist.push_back(abDist);
+                        }
+                     }
+                  }
+               }
+            }
+         }
+         // Show equal distances       
+         for (UInt_t i = 0; i<curDist.size(); i++) {
+            for (UInt_t j = 0; j<otherDist.size(); j++) {
+               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+                  if (cling && (!movedX) && (!resize)) {
+                     if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
+                           cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - otherDist[j].fdist + curDist[i].fdist);
+                     else  cur->SetBBoxCenterX(cur->GetBBoxCenter().fX + otherDist[j].fdist - curDist[i].fdist);
+                     movedX = true;
+                  }
+                  DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'x');
+                  DrawDist(otherDist[j].fa->GetBBox(), otherDist[j].fb->GetBBox(), 'x');
+               }
+               if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
+                  if (cling && (!movedY) && (!resize)) {
+                     if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
+                           cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - otherDist[j].fdist + curDist[i].fdist);
+                     else  cur->SetBBoxCenterY(cur->GetBBoxCenter().fY + otherDist[j].fdist - curDist[i].fdist);
+                     movedY = true;
+                  }
+                  DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'y');
+                  DrawDist(otherDist[j].fa->GetBBox(), otherDist[j].fb->GetBBox(), 'y');
+               }
+            }
+            for (UInt_t j = i; j<curDist.size(); j++) {
+               if (i!=j) {
+                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                     if (cling && (!movedX) && (!resize)) {
+                        if ((cur->GetBBoxCenter().fX < curDist[i].fb->GetBBoxCenter().fX)||(cur->GetBBoxCenter().fX < curDist[i].fa->GetBBoxCenter().fX))
+                              cur->SetBBoxCenterX(cur->GetBBoxCenter().fX - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
+                        else  cur->SetBBoxCenterX(cur->GetBBoxCenter().fX + floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
+                     }
+                     DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'x');
+                     DrawDist(curDist[j].fa->GetBBox(), curDist[j].fb->GetBBox(), 'x');
+                  }
+
+                  if ((curDist[i].fdir == curDist[j].fdir)&&(curDist[j].fdir=='y')&&(TMath::Abs(curDist[i].fdist-curDist[j].fdist)<threshold)) {
+                     if (cling && (!movedY) && (!resize)) {
+                        if ((cur->GetBBoxCenter().fY < curDist[i].fb->GetBBoxCenter().fY)||(cur->GetBBoxCenter().fY < curDist[i].fa->GetBBoxCenter().fY))
+                              cur->SetBBoxCenterY(cur->GetBBoxCenter().fY - floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
+                        else  cur->SetBBoxCenterY(cur->GetBBoxCenter().fY + floor(0.5*(curDist[j].fdist - curDist[i].fdist)));
+                     }
+                     DrawDist(curDist[i].fa->GetBBox(), curDist[i].fb->GetBBox(), 'y');
+                     DrawDist(curDist[j].fa->GetBBox(), curDist[j].fb->GetBBox(), 'y');
+                  }
+               }
+            }
+         }
+         if (resize) {
+            // Show equal Sizes
+            for (UInt_t i = 0; i<n; i++) {
+               TAttBBox2D *a = dynamic_cast<TAttBBox2D *>( prims->At(i) );
+               if (a && (cur != a)) {
+                  aBBox = a->GetBBox();
+
+                  if ((TMath::Abs(aBBox.fWidth - BBox.fWidth)<threshold) && (mode != 't') && (mode != 'b')) {
+                     if (cling) {
+                        if (mode == 'l') cur->SetBBoxX1(BBox.fX + BBox.fWidth - aBBox.fWidth);
+                        if (mode == 'r') cur->SetBBoxX2(BBox.fX + aBBox.fWidth);
+                        if ((mode == '1')||(mode == '4')) cur->SetBBoxX1(BBox.fX + BBox.fWidth - aBBox.fWidth);
+                        if ((mode == '2')||(mode == '3')) cur->SetBBoxX2(BBox.fX + aBBox.fWidth);
+                        BBox = cur->GetBBox();
+                     }
+
+                     A = new TArrow(gPad->PixeltoX(aBBox.fX), gPad->PixeltoY(aBBox.fY-dSizeArrow-gPad->VtoPixel(0)), 
+                                    gPad->PixeltoX(aBBox.fX+aBBox.fWidth), gPad->PixeltoY(aBBox.fY-dSizeArrow-gPad->VtoPixel(0)), 0.01, "<|>");
+                     A->SetBit(kCanDelete);
+                     A->SetLineColor(lineColor);
+                     A->SetFillColor(lineColor);
+                     A->Draw();
+
+                     A = new TArrow(gPad->PixeltoX(BBox.fX), gPad->PixeltoY(BBox.fY-dSizeArrow-gPad->VtoPixel(0)), 
+                                    gPad->PixeltoX(BBox.fX+BBox.fWidth), gPad->PixeltoY(BBox.fY-dSizeArrow-gPad->VtoPixel(0)), 0.01, "<|>");
+                     A->SetBit(kCanDelete);
+                     A->SetLineColor(lineColor);
+                     A->SetFillColor(lineColor);
+                     A->Draw();
+                  }
+                  if ((TMath::Abs(aBBox.fHeight - BBox.fHeight)<threshold) && (mode != 'r') && (mode != 'l')) {
+                     if (cling) {
+                        if (mode == 't') cur->SetBBoxY1(BBox.fY + BBox.fHeight - aBBox.fHeight);
+                        if (mode == 'b') cur->SetBBoxY2(BBox.fY + aBBox.fHeight);
+                        if ((mode == '1')||(mode == '2')) cur->SetBBoxY1(BBox.fY + BBox.fHeight - aBBox.fHeight);
+                        if ((mode == '3')||(mode == '4')) cur->SetBBoxY2(BBox.fY + aBBox.fHeight);
+                        BBox = cur->GetBBox();
+                     }
+                     A = new TArrow(gPad->PixeltoX(aBBox.fX-dSizeArrow), gPad->PixeltoY(aBBox.fY-gPad->VtoPixel(0)), 
+                                    gPad->PixeltoX(aBBox.fX-dSizeArrow), gPad->PixeltoY(aBBox.fY+aBBox.fHeight-gPad->VtoPixel(0)), 0.01, "<|>");
+                     A->SetBit(kCanDelete);
+                     A->SetLineColor(lineColor);
+                     A->SetFillColor(lineColor);
+                     A->Draw();
+
+                     A = new TArrow(gPad->PixeltoX(BBox.fX-dSizeArrow), gPad->PixeltoY(BBox.fY-gPad->VtoPixel(0)), 
+                                   gPad->PixeltoX(BBox.fX-dSizeArrow), gPad->PixeltoY(BBox.fY+BBox.fHeight-gPad->VtoPixel(0)), 0.01, "<|>");
+                     A->SetBit(kCanDelete);
+                     A->SetLineColor(lineColor);
+                     A->SetFillColor(lineColor);
+                     A->Draw();
+                  }
+               }
+            }
+         }
+
+         break;
+         
+      case kButton1Up:
+         if (tmpGuideLinePad) {
+            // All the arrows and lines in that pad are also deleted because
+            // they all have the bit kCanDelete on.
+            tmpGuideLinePad->Delete();
+            tmpGuideLinePad = 0;
+         }
+         break;
+      }
+   }
+
+   gPad->Modified(kTRUE);
+   padSave->cd();
+}
+
+
+//______________________________________________________________________________
 Bool_t TPad::HasCrosshair() const
 {
    // Return kTRUE if the crosshair has been activated (via SetCrosshair).
@@ -6138,3 +6581,104 @@ TVirtualPadPainter *TPad::GetPainter()
    if (!fCanvas) return 0;
    return fCanvas->GetCanvasPainter();
 }
+
+//______________________________________________________________________________
+Rectangle_t TPad::GetBBox()
+{
+   // Return the bounding Box of the Pad
+
+   Rectangle_t BBox;
+   BBox.fX = gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
+   BBox.fY = gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
+   BBox.fWidth = gPad->XtoPixel((fXlowNDC+fWNDC)*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1()) - gPad->XtoPixel(fXlowNDC*(gPad->GetX2()-gPad->GetX1()) + gPad->GetX1());
+   BBox.fHeight = gPad->YtoPixel((fYlowNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1()) - gPad->YtoPixel((fYlowNDC+fHNDC)*(gPad->GetY2()-gPad->GetY1()) + gPad->GetY1());
+   return (BBox);
+}
+
+
+//______________________________________________________________________________
+TPoint TPad::GetBBoxCenter()
+{
+   // Return the center of the Pad as TPoint in pixels
+
+   TPoint p;
+   Double_t x = ((fXlowNDC+0.5*fWNDC)*(gPad->GetX2()-gPad->GetX1())) + gPad->GetX1();
+   Double_t y = ((fYlowNDC+0.5*fHNDC)*(gPad->GetY2()-gPad->GetY1())) + gPad->GetY1();
+
+   p.SetX(gPad->XtoPixel(x));
+   p.SetY(gPad->YtoPixel(y));
+   return(p);
+}
+
+
+//______________________________________________________________________________
+void TPad::SetBBoxCenter(const TPoint &p)
+{
+   // Set center of the Pad
+
+   fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
+   fYlowNDC = (gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   ResizePad();         
+}
+
+
+//______________________________________________________________________________
+void TPad::SetBBoxCenterX(const Int_t x)
+{
+   // Set X coordinate of the center of the Pad
+
+   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
+   ResizePad();  
+}
+
+
+//______________________________________________________________________________
+void TPad::SetBBoxCenterY(const Int_t y)
+{
+   // Set Y coordinate of the center of the Pad
+
+   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
+   ResizePad(); 
+}
+
+//______________________________________________________________________________
+void TPad::SetBBoxX1(const Int_t x)
+{
+   // Set lefthandside of BoundingBox to a value
+   // (resize in x direction on left)
+
+   fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
+   fWNDC = fXUpNDC - fXlowNDC;
+   ResizePad(); 
+}
+
+//______________________________________________________________________________
+void TPad::SetBBoxX2(const Int_t x)
+{
+   // Set righthandside of BoundingBox to a value
+   // (resize in x direction on right)
+
+   fWNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-fXlowNDC;
+   ResizePad(); 
+}
+
+//_______________________________________________________________________________
+void TPad::SetBBoxY1(const Int_t y)
+{
+   // Set top of BoundingBox to a value (resize in y direction on top)
+
+   fHNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-fYlowNDC;
+   ResizePad(); 
+}
+
+//_______________________________________________________________________________
+void TPad::SetBBoxY2(const Int_t y)
+{
+   // Set bottom of BoundingBox to a value
+   // (resize in y direction on bottom)
+
+   fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
+   fHNDC = fYUpNDC - fYlowNDC;
+   ResizePad(); 
+}
+

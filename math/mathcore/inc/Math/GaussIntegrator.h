@@ -49,7 +49,7 @@ public:
    virtual ~GaussIntegrator();
 
    /** Default Constructor. */
-   GaussIntegrator(double relTol = 1.E-12);
+   GaussIntegrator(double absTol = 0, double relTol = 0);
    
 
    /** Static function: set the fgAbsValue flag.
@@ -63,10 +63,10 @@ public:
    // Implementing VirtualIntegrator Interface
 
    /** Set the desired relative Error. */
-   virtual void SetRelTolerance (double);
+   virtual void SetRelTolerance (double eps) { fEpsRel = eps; }
 
    /** This method is not implemented. */
-   virtual void SetAbsTolerance (double);
+   virtual void SetAbsTolerance (double eps) { fEpsAbs = eps; }
 
    /** Returns the result of the last Integral calculation. */
    double Result () const;
@@ -120,6 +120,9 @@ public:
       set equal to zero.
 
    Accuracy:
+      The user provides absolute and relative error bounds (epsrel and epsabs) and the 
+      algorithm will stop when the estimated error is less than the epsabs OR is less 
+      than |I| * epsrel. 
       Unless there is severe cancellation of positive and negative values of
       f(x) over the interval [A,B], the relative error may be considered as
       specifying a bound on the <I>relative</I> error of I in the case
@@ -220,7 +223,8 @@ private:
 protected:
 
    static bool fgAbsValue;          // AbsValue used for the calculation of the integral
-   double fEpsilon;                 // Relative error.
+   double fEpsRel;                  // Relative error.
+   double fEpsAbs;                  // Absolute error.
    bool fUsedOnce;                  // Bool value to check if the function was at least called once.
    double fLastResult;              // Result from the last stimation.
    double fLastError;               // Error from the last stimation.

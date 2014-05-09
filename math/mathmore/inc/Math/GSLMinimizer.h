@@ -41,8 +41,8 @@
 #include "Math/IParamFunctionfwd.h"
 #endif
 
-#ifndef ROOT_Math_MinimizerVariable
-#include "Math/MinimizerVariable.h"
+#ifndef ROOT_Math_BasicMinimizer
+#include "Math/BasicMinimizer.h"
 #endif
 
 
@@ -91,7 +91,7 @@ namespace Math {
 
    @ingroup MultiMin
 */ 
-class GSLMinimizer : public ROOT::Math::Minimizer {
+class GSLMinimizer : public ROOT::Math::BasicMinimizer {
 
 public: 
 
@@ -116,7 +116,7 @@ private:
    /** 
       Copy constructor
    */ 
-   GSLMinimizer(const GSLMinimizer &) : Minimizer() {}
+   GSLMinimizer(const GSLMinimizer &) : BasicMinimizer() {}
 
    /** 
       Assignment operator
@@ -131,37 +131,16 @@ public:
    /// set the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
 
-   /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
-
-   /// set free variable 
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
-
-
-   /// set lower limit variable  (override if minimizer supports them )
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
-   /// set upper limit variable (override if minimizer supports them )
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ); 
-   /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
-   /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
-   /// set the value of an existing variable 
-   virtual bool SetVariableValue(unsigned int ivar, double val );
-   /// set the values of all existing variables (array must be dimensioned to the size of existing parameters)
-   virtual bool SetVariableValues(const double * x);
+   /// set the function to minimize 
+   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func) { BasicMinimizer::SetFunction(func);}
 
    /// method to perform the minimization
    virtual  bool Minimize(); 
 
-   /// return minimum function value
-   virtual double MinValue() const { return fMinVal; } 
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return 0; } // not impl. }
 
-   /// return  pointer to X values at the minimum 
-   virtual const double *  X() const { return &fValues.front(); } 
 
    /// return pointer to gradient values at the minimum 
    virtual const double *  MinGradient() const; 
@@ -169,13 +148,6 @@ public:
    /// number of function calls to reach the minimum 
    virtual unsigned int NCalls() const;  
 
-   /// this is <= Function().NDim() which is the total 
-   /// number of variables (free+ constrained ones) 
-   virtual unsigned int NDim() const { return fValues.size(); }   
-
-   /// number of free variables (real dimension of the problem) 
-   /// this is <= Function().NDim() which is the total number of free parameters
-   virtual unsigned int NFree() const { return fObjFunc->NDim(); }  
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return false; } 
@@ -192,33 +164,16 @@ public:
    virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
 
 
-   // method of only GSL  minimizer (not inherited from interface)
- 
-   /// return pointer to used objective gradient function 
-   const ROOT::Math::IMultiGradFunction * ObjFunction() const { return fObjFunc; }
-
-   /// return transformation function (NULL if not having a transformation) 
-   const ROOT::Math::MinimTransformFunction * TransformFunction() const; 
 
 
 protected: 
 
 private: 
    
-   // dimension of the function to be minimized 
-   unsigned int fDim; 
 
    ROOT::Math::GSLMultiMinimizer * fGSLMultiMin; 
-   const ROOT::Math::IMultiGradFunction * fObjFunc; 
    
-   double fMinVal; 
    double fLSTolerance;  // Line Search Tolerance
-   std::vector<double> fValues;
-   //mutable std::vector<double> fErrors;
-   std::vector<double> fSteps;
-   std::vector<std::string> fNames;
-   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
-   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
 
 }; 
 

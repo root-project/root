@@ -131,7 +131,6 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    static Int_t i,x[5], y[5];
    Int_t  wx, wy;
    TVirtualPad  *parent;
-   Bool_t doing_again = kFALSE;
    Bool_t opaque  = gPad->OpaqueMoving();
    Bool_t ropaque = gPad->OpaqueResizing();
 
@@ -139,10 +138,9 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    parent = gPad;
 
-again:
-
    switch (event) {
-
+   
+   case kArrowKeyPress:
    case kButton1Down:
 
       gVirtualX->SetLineColor(-1);
@@ -238,6 +236,7 @@ again:
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
 
       wx = wy = 0;
@@ -311,34 +310,59 @@ again:
       pyold = py;
 
       if ((pINSIDE && opaque) || (fResizing && ropaque)) {
-         event = kButton1Up;
-         doing_again = kTRUE;
-         goto again;
+         if (pTop || pBot || pL || pR) {
+            fX1 = gPad->AbsPixeltoX(px1);
+            fY1 = gPad->AbsPixeltoY(py1);
+            fX2 = gPad->AbsPixeltoX(px2);
+            fY2 = gPad->AbsPixeltoY(py2);
+         }
+         if (pINSIDE) {
+            fX1 = gPad->AbsPixeltoX(px1);
+            fY1 = gPad->AbsPixeltoY(py1);
+            fX2 = gPad->AbsPixeltoX(px2);
+            fY2 = gPad->AbsPixeltoY(py2);
+            // if it was not a pad that was moved then it must have been
+            // a box or something like that so we have to redraw the pad
+            if (parent == gPad) gPad->Modified(kTRUE);
+         }
+
+         if (pINSIDE) gPad->ShowGuidelines(this, event, 'i', true);
+         if (pTop) gPad->ShowGuidelines(this, event, 't', true);
+         if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
+         if (pL) gPad->ShowGuidelines(this, event, 'l', true);
+         if (pR) gPad->ShowGuidelines(this, event, 'r', true);
+
+         if (pTop || pL || pR || pBot)
+            gPad->Modified(kTRUE);
       }
 
       break;
 
    case kButton1Up:
+   
+      if (opaque) {
+         gPad->ShowGuidelines(this, event);
+      } else {
+         if (pTop || pBot || pL || pR || pINSIDE) {
+            fX1 = gPad->AbsPixeltoX(px1);
+            fY1 = gPad->AbsPixeltoY(py1);
+            fX2 = gPad->AbsPixeltoX(px2);
+            fY2 = gPad->AbsPixeltoY(py2);
+         }
 
-      if (pTop || pBot || pL || pR || pINSIDE) {
-         fX1 = gPad->AbsPixeltoX(px1);
-         fY1 = gPad->AbsPixeltoY(py1);
-         fX2 = gPad->AbsPixeltoX(px2);
-         fY2 = gPad->AbsPixeltoY(py2);
+         if (pINSIDE) {
+            // if it was not a pad that was moved then it must have been
+            // a box or something like that so we have to redraw the pad
+            if (parent == gPad) gPad->Modified(kTRUE);
+         }
       }
 
-      if (pINSIDE) {
-         // if it was not a pad that was moved then it must have been
-         // a box or something like that so we have to redraw the pad
-         if (parent == gPad) gPad->Modified(kTRUE);
-         if (!doing_again) gPad->SetCursor(kCross);
+      if (pTop || pL || pR || pBot) gPad->Modified(kTRUE);
+
+      if (!opaque) {
+         gVirtualX->SetLineColor(-1);
+         gVirtualX->SetLineWidth(-1);
       }
-
-      if (pTop || pL || pR || pBot)
-         gPad->Modified(kTRUE);
-
-      gVirtualX->SetLineColor(-1);
-      gVirtualX->SetLineWidth(-1);
 
       break;
 

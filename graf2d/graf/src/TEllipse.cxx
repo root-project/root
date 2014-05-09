@@ -17,6 +17,7 @@
 #include "TVirtualPad.h"
 #include "TMath.h"
 #include "TClass.h"
+#include "TPoint.h"
 
 const Double_t kPI = 3.14159265358979323846;
 
@@ -88,7 +89,7 @@ TEllipse::~TEllipse()
 
 
 //______________________________________________________________________________
-TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse)
+TEllipse::TEllipse(const TEllipse &ellipse) : TObject(ellipse), TAttLine(ellipse), TAttFill(ellipse), TAttBBox2D(ellipse)
 {
    // Copy constructor.
 
@@ -224,6 +225,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    switch (event) {
 
+   case kArrowKeyPress:
    case kButton1Down:
          oldX1 = fX1;
          oldY1 = fY1;
@@ -325,6 +327,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
 
+   case kArrowKeyRelease:
    case kButton1Motion:
       if (!opaque)
       {
@@ -424,6 +427,10 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             this->SetY1(gPad->AbsPixeltoY(py1));
             this->SetR1(TMath::Abs(gPad->AbsPixeltoX(px1-r1)-gPad->AbsPixeltoX(px1+r1))/2);
             this->SetR2(TMath::Abs(gPad->AbsPixeltoY(py1-r2)-gPad->AbsPixeltoY(py1+r2))/2);
+            if (pTop) gPad->ShowGuidelines(this, event, 't', true);
+            if (pBot) gPad->ShowGuidelines(this, event, 'b', true);
+            if (pL) gPad->ShowGuidelines(this, event, 'l', true);
+            if (pR) gPad->ShowGuidelines(this, event, 'r', true);
             gPad->Modified(kTRUE);
             gPad->Update();
          }
@@ -438,6 +445,7 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          else {
             this->SetX1(gPad->AbsPixeltoX(px)+sdx);
             this->SetY1(gPad->AbsPixeltoY(py)+sdy);
+            gPad->ShowGuidelines(this, event, 'i', true);
             gPad->Modified(kTRUE);
             gPad->Update();
          }
@@ -484,7 +492,9 @@ void TEllipse::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          break;
       }
 
-      if (!opaque) {
+      if (opaque) {
+         gPad->ShowGuidelines(this, event);
+      } else {
          fX1 = gPad->AbsPixeltoX(px1);
          fY1 = gPad->AbsPixeltoY(py1);
          fBy = gPad->AbsPixeltoY(py1+r2);
@@ -656,4 +666,106 @@ void TEllipse::Streamer(TBuffer &R__b)
    } else {
       R__b.WriteClassBuffer(TEllipse::Class(),this);
    }
+}
+
+//______________________________________________________________________________
+Rectangle_t TEllipse::GetBBox()
+{
+   // Return the bounding Box of the Ellipse, currently not taking into
+   // account the rotating angle.
+
+   Rectangle_t BBox;
+   BBox.fX = gPad->XtoPixel(fX1-fR1);
+   BBox.fY = gPad->YtoPixel(fY1+fR2);
+   BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
+   BBox.fHeight = gPad->YtoPixel(fY1-fR2)-gPad->YtoPixel(fY1+fR2);
+   return (BBox);
+}
+
+//______________________________________________________________________________
+TPoint TEllipse::GetBBoxCenter()
+{
+   // Return the center of the Ellipse as TPoint in pixels
+
+   TPoint p;
+   p.SetX(gPad->XtoPixel(fX1));
+   p.SetY(gPad->YtoPixel(fY1));
+   return(p);
+}
+
+//______________________________________________________________________________
+void TEllipse::SetBBoxCenter(const TPoint &p)
+{
+   // Set center of the Ellipse
+
+   fX1 = gPad->PixeltoX(p.GetX());
+   fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
+}
+
+//______________________________________________________________________________
+void TEllipse::SetBBoxCenterX(const Int_t x)
+{
+   // Set X coordinate of the center of the Ellipse
+
+   fX1 = gPad->PixeltoX(x);
+}
+
+//______________________________________________________________________________
+void TEllipse::SetBBoxCenterY(const Int_t y)
+{
+   // Set Y coordinate of the center of the Ellipse
+
+   fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
+}
+
+//_______________________________________________________________________________
+void TEllipse::SetBBoxX1(const Int_t x)
+{
+   // Set lefthandside of BoundingBox to a value
+   // (resize in x direction on left)
+
+   Double_t x1 = gPad->PixeltoX(x);
+   if (x1>fX1+fR1) return;
+
+   fR1 = (fX1+fR1-x1)*0.5;
+   fX1 = x1 + fR1;
+}
+
+//_______________________________________________________________________________
+void TEllipse::SetBBoxX2(const Int_t x)
+{
+   // Set righthandside of BoundingBox to a value
+   // (resize in x direction on right)
+
+   Double_t x2 = gPad->PixeltoX(x);
+   if (x2<fX1-fR1) return;
+
+   fR1 = (x2-fX1+fR1)*0.5;
+   fX1 = x2-fR1;
+}
+
+//_______________________________________________________________________________
+void TEllipse::SetBBoxY1(const Int_t y)
+{
+   // Set top of BoundingBox to a value (resize in y direction on top)
+
+   Double_t y1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
+   if (y1<fY1-fR2) return;
+
+   fR2 = (y1-fY1+fR2)*0.5;
+   fY1 = y1-fR2;
+}
+
+//_______________________________________________________________________________
+void TEllipse::SetBBoxY2(const Int_t y)
+{
+   // Set bottom of BoundingBox to a value
+   // (resize in y direction on bottom)
+
+   Double_t y2 = gPad->PixeltoY(y-gPad->VtoPixel(0));
+
+   if (y2>fY1+fR2) return;
+
+   fR2 = (fY1+fR2-y2)*0.5;
+   fY1 = y2+fR2;
 }

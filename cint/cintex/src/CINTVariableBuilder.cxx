@@ -66,6 +66,13 @@ namespace ROOT { namespace Cintex {
       return;
    }
 
+   static void writeArrayIndex(ostream &ost, const Type& array)
+   {
+      Type toArray = array.ToType();
+      if ( toArray.IsArray() ) writeArrayIndex(ost,toArray);
+      ost << "[" << array.ArrayLength() << "]";
+   }
+ 
    void CINTVariableBuilder::Setup(const Member& dm ) {
       // Setup variable info.
       char* comment = NULL;
@@ -130,8 +137,11 @@ namespace ROOT { namespace Cintex {
       CintTypeDesc type = CintType(indir.second);
       string dname = dm.Properties().HasProperty("ioname") ? dm.Properties().PropertyAsString("ioname") : dm.Name();
       ostringstream ost;
-      if ( dmType.IsArray() ) ost << dname << "[" << dmType.ArrayLength() << "]=";
-      else                    ost << dname << "=";
+      if ( dmType.IsArray() ) {
+         ost << dname;
+         writeArrayIndex(ost,dmType);
+         ost << "=";
+      } else                    ost << dname << "=";
       string expr = ost.str();
       int member_type     = type.first;
       int member_indir    = 0;

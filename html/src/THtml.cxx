@@ -310,13 +310,11 @@ TString THtml::TFileDefinition::MatchFileSysName(TString& filename, TFileSysEntr
          if (!filename.EndsWith(fsentry->GetName()))
             continue;
          fsentry->GetFullName(filesysname, kTRUE); // get the short version
-         filename = filesysname;
          if (!filename.EndsWith(filesysname)) {
-            // It's something - let's see whether we find something better
-            // else leave it as plan B. This helps finding Reflex sources.
-            //filesysname = "";
+            filesysname = "";
             continue;
          }
+         filename = filesysname;
          fsentry->GetFullName(filesysname, kFALSE); // get the long version
          if (fse) *fse = fsentry;
          break;

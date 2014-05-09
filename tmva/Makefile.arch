@@ -563,6 +563,19 @@ SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
 EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
 endif
 
+ifeq ($(ARCH),win64gcc)
+# Windows 64 bit with gcc
+DllSuf        = dll
+ExeSuf        = .exe
+CXX           = g++
+CXXFLAGS      = -O -pipe -Wshadow -Wall -Woverloaded-virtual -I/usr/include/X11
+LD            = g++
+LDFLAGS       = -O -Wl,--enable-auto-import -Wl,--enable-runtime-pseudo-reloc \
+		-L/usr/lib/X11 
+SOFLAGS       = -shared -D_DLL -Wl,--export-all-symbols
+EXPLLINKLIBS  = $(ROOTLIBS) $(ROOTGLIBS)
+endif
+
 ifeq ($(CXX),)
 $(error $(ARCH) invalid architecture)
 endif

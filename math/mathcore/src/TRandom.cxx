@@ -317,17 +317,23 @@ UInt_t TRandom::Integer(UInt_t imax)
 }
 
 //______________________________________________________________________________
-Double_t TRandom::Landau(Double_t mpv, Double_t sigma)
+Double_t TRandom::Landau(Double_t mu, Double_t sigma)
 {
    // Generate a random number following a Landau distribution
-   // with mpv(most probable value) and sigma.
-   // Use function landau_quantile(x,sigma) which provides 
+   // with location parameter mu and scale parameter sigma:
+   //      Landau( (x-mu)/sigma )
+   // Note that mu is not the mpv(most probable value) of the Landa distribution 
+   // and sigma is not the standard deviation of the distribution which is not defined. 
+   // For mu  =0 and sigma=1, the mpv = -0.22278
+   //
+   // The Landau random number generation is implemented using the 
+   // function landau_quantile(x,sigma), which provides 
    // the inverse of the landau cumulative distribution.
    // landau_quantile has been converted from CERNLIB ranlan(G110).
 
    if (sigma <= 0) return 0;
    Double_t x = Rndm(); 
-   Double_t res = mpv + ROOT::Math::landau_quantile(x, sigma);
+   Double_t res = mu + ROOT::Math::landau_quantile(x, sigma);
    return res;
 }
 
@@ -492,7 +498,7 @@ Double_t TRandom::Rndm(Int_t)
    //  Based on the BSD Unix (Rand) Linear congrential generator.
    //  Produces uniformly-distributed floating points between 0 and 1.
    //  Identical sequence on all machines of >= 32 bits.
-   //  Periodicity = 2**31, generates a number in ]0,1].
+   //  Periodicity = 2**31, generates a number in (0,1).
    //  Note that this is a generator which is known to have defects
    //  (the lower random bits are correlated) and therefore should NOT be
    //  used in any statistical study).
@@ -507,7 +513,8 @@ Double_t TRandom::Rndm(Int_t)
    return Rndm();
 #endif
 
-   const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31))
+   // kCONS = 1./2147483648 = 1./(RAND_MAX+1) and RAND_MAX= 0x7fffffffUL
+   const Double_t kCONS = 4.6566128730774E-10; // (1/pow(2,31)
    fSeed = (1103515245 * fSeed + 12345) & 0x7fffffffUL;
 
    if (fSeed) return  kCONS*fSeed;
@@ -588,7 +595,7 @@ void TRandom::Sphere(Double_t &x, Double_t &y, Double_t &z, Double_t r)
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1)
 {
-   // Returns a uniform deviate on the interval  ]0, x1].
+   // Returns a uniform deviate on the interval  (0, x1).
 
    Double_t ans = Rndm();
    return x1*ans;
@@ -597,7 +604,7 @@ Double_t TRandom::Uniform(Double_t x1)
 //______________________________________________________________________________
 Double_t TRandom::Uniform(Double_t x1, Double_t x2)
 {
-   // Returns a uniform deviate on the interval ]x1, x2].
+   // Returns a uniform deviate on the interval (x1, x2).
 
    Double_t ans= Rndm();
    return x1 + (x2-x1)*ans;

@@ -455,18 +455,18 @@ Double_t TMath::Gaus(Double_t x, Double_t mean, Double_t sigma, Bool_t norm)
 }
 
 //______________________________________________________________________________
-Double_t TMath::Landau(Double_t x, Double_t mpv, Double_t sigma, Bool_t norm)
+Double_t TMath::Landau(Double_t x, Double_t mu, Double_t sigma, Bool_t norm)
 {
    // The LANDAU function. 
-   // mpv is a location parameter and correspond approximatly to the most probable value
+   // mu is a location parameter and correspond approximatly to the most probable value
    // and sigma is a scale parameter (not the sigma of the full distribution which is not defined)
-   // Note that for mpv=0 and sigma=1 (default values) the exact location of the maximum of the distribution (most proble value) is at 
-   // x = -0.22278
+   // Note that for mu=0 and sigma=1 (default values) the exact location of the maximum of the distribution 
+   // (most proble value) is at x = -0.22278
    // This function has been adapted from the CERNLIB routine G110 denlan.
    // If norm=kTRUE (default is kFALSE) the result is divided by sigma
 
    if (sigma <= 0) return 0; 
-   Double_t den = ::ROOT::Math::landau_pdf( (x-mpv)/sigma ); 
+   Double_t den = ::ROOT::Math::landau_pdf( (x-mu)/sigma ); 
    if (!norm) return den;
    return den/sigma;
 }

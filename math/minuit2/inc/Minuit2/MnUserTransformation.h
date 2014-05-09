@@ -73,13 +73,15 @@ public:
       fLowerLimTrafo(trafo.fLowerLimTrafo), fCache(trafo.fCache) {}
   
    MnUserTransformation& operator=(const MnUserTransformation& trafo) {
-      fPrecision = trafo.fPrecision;
-      fParameters = trafo.fParameters;
-      fExtOfInt = trafo.fExtOfInt;
-      fDoubleLimTrafo = trafo.fDoubleLimTrafo;
-      fUpperLimTrafo = trafo.fUpperLimTrafo;
-      fLowerLimTrafo = trafo.fLowerLimTrafo;
-      fCache = trafo.fCache;
+      if(this != &trafo) {
+         fPrecision = trafo.fPrecision;
+         fParameters = trafo.fParameters;
+         fExtOfInt = trafo.fExtOfInt;
+         fDoubleLimTrafo = trafo.fDoubleLimTrafo;
+         fUpperLimTrafo = trafo.fUpperLimTrafo;
+         fLowerLimTrafo = trafo.fLowerLimTrafo;
+         fCache = trafo.fCache;
+      }
       return *this;
    }
 

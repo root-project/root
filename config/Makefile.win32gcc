@@ -18,8 +18,8 @@ endif
 CXX           = g++
 CC            = gcc
 CXXFLAGS      = -pipe -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
-                -I/usr/X11R6/include
-CFLAGS        = -pipe -Wall $(EXTRA_CFLAGS) -I/usr/X11R6/include
+                -I/usr/X11R6/include -I/usr/include/X11
+CFLAGS        = -pipe -Wall $(EXTRA_CFLAGS) -I/usr/X11R6/include -I/usr/include/X11
 CINTCXXFLAGS  = -pipe -Wall -Woverloaded-virtual $(EXTRA_CXXFLAGS) \
                 -DG__REGEXP -DG__UNIX -DG__SHAREDLIB \
                 -DG__OSFDLL -DG__ROOT -DG__REDIRECTIO -DG__CYGWIN \
@@ -34,7 +34,7 @@ COMPILER      = gnu
 LD            = $(ROOT_SRCDIR)/build/unix/wingcc_ld.sh
 LDFLAGS       = $(OPT) -Wl,--enable-auto-import \
                 -Wl,--enable-runtime-pseudo-reloc \
-                -L/usr/X11R6/lib \
+                -L/usr/X11R6/lib -L/usr/lib/X11 \
                 $(EXTRA_LDFLAGS)
 SOFLAGS       = -shared -Wl,--export-all-symbols -Wl,--enable-auto-image-base \
                 -Wl,-soname=

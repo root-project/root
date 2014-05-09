@@ -175,10 +175,20 @@ namespace RooLinkedListImplDetails {
   void Pool::push_free_elem(RooLinkedListElem* el)
   {
     // find from which chunk el came
-    AddrMap::iterator ci = _addrmap.lower_bound(el);
-    if (ci == _addrmap.end()) return;
-    if (!_addrmap.empty() && _addrmap.begin() != ci && ci->first != el) --ci;
-    // ci should now point to the chunk which might contain el
+    AddrMap::iterator ci = _addrmap.end();
+    if (!_addrmap.empty()) {
+      ci = _addrmap.lower_bound(el);
+      if (ci == _addrmap.end()) {
+	// point beyond last element, so get last one
+	ci = (++_addrmap.rbegin()).base();
+      } else {
+	// valid ci, check if we need to decrement ci because el isn't the
+	// first element in the chunk
+	if (_addrmap.begin() != ci && ci->first != el) --ci;
+      }
+    }
+    // either empty addressmap, or ci should now point to the chunk which might
+    // contain el
     if (_addrmap.empty() || !ci->second->contains(el)) {
       // el is not in any chunk we know about, so just delete it
       delete el;

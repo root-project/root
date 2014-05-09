@@ -76,6 +76,7 @@
 #include "TGFileBrowser.h"
 #include "TGInputDialog.h"
 #include "TRootHelpDialog.h"
+#include "TVirtualPadEditor.h"
 #include "HelpText.h"
 #include "Getline.h"
 
@@ -401,7 +402,10 @@ void TRootBrowser::CloseTabs()
       el = (TGFrameElement *)container->GetList()->First();
       if (el && el->fFrame) {
          el->fFrame->SetFrameElement(0);
-         if (el->fFrame->InheritsFrom("TGMainFrame")) {
+         if (el->fFrame->InheritsFrom("TVirtualPadEditor")) {
+            TVirtualPadEditor::Terminate();
+         }
+         else if (el->fFrame->InheritsFrom("TGMainFrame")) {
             ((TGMainFrame *)el->fFrame)->CloseWindow();
             gSystem->ProcessEvents();
          }
@@ -1097,6 +1101,7 @@ void TRootBrowser::StopEmbedding(const char *name, TGLayoutHints *layout)
    if (name && strlen(name)) {
       SetTabTitle(name, fEditPos, fEditSubPos);
    }
+   fEditTab->Selected(fEditSubPos);
    fEditFrame = fEditTab = 0;
    fEditPos = fEditSubPos = -1;
 }

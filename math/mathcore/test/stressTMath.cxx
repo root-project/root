@@ -45,8 +45,9 @@ template <typename T> double stressVector(unsigned int size, const char* type)
 
    unsigned int ntest = 3 * NUMTEST;
    w.Start( kTRUE );
+   volatile int iresult = 0; 
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::MinElement(size, vector);
+      iresult = TMath::MinElement(size, vector);
    w.Stop();
    cout << "MinMaxElement() \tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -56,7 +57,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    ntest = 3 * NUMTEST;
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::LocMin(size, vector);
+      iresult  = TMath::LocMin(size, vector);
    w.Stop();
    cout << "LocMin/Max() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -65,8 +66,9 @@ template <typename T> double stressVector(unsigned int size, const char* type)
 
    ntest = 10 * NUMTEST;
    w.Start( kTRUE );
+   volatile double result; 
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::Mean(size, vector);
+      result = TMath::Mean(size, vector);
    w.Stop();
    cout << "Mean() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -76,7 +78,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    ntest = (unsigned int) ( NUMTEST/2.5 );
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::Median(size, vector);
+      result = TMath::Median(size, vector);
    w.Stop();
    cout << "Median() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -86,7 +88,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    ntest = (unsigned int) ( 10 * NUMTEST );
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::RMS(size, vector);
+      result = TMath::RMS(size, vector);
    w.Stop();
    cout << "RMS() \t\t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -96,7 +98,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    ntest = (unsigned int) ( NUMTEST/2.5 );
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::GeomMean(size, vector);
+      result = TMath::GeomMean(size, vector);
    w.Stop();
    cout << "GeomMean() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -122,7 +124,7 @@ template <typename T> double stressVector(unsigned int size, const char* type)
    ntest = 20000*NUMTEST;
    w.Start( kTRUE );
    for ( unsigned int i = 0; i < ntest; ++i )
-      TMath::BinarySearch(size, vector, vector[ i % size ]);
+      iresult = TMath::BinarySearch(size, vector, vector[ i % size ]);
    w.Stop();
    cout << "BinarySearch() \t\tTotal Time: " << Time(w) << "  (s)\t\t" 
         << " Time/call: " << Time(w)/(ntest)*1.E6 << "   (microsec)" << endl;
@@ -131,6 +133,10 @@ template <typename T> double stressVector(unsigned int size, const char* type)
 
    cout << "\nTotal Time :       "      << totalTime     << "  (s)\n"
         <<   "Total Time/call :  " << totalUnitTime*1.E3 << "  (ms)\n" << endl;
+
+   // to avoid the warning for un-used variables
+   (void)result; 
+   (void)iresult; 
 
    delete [] vector;
    delete [] index;

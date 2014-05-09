@@ -11,6 +11,15 @@ if(fortran AND NOT WIN32 AND NOT CMAKE_GENERATOR STREQUAL Xcode AND NOT CMAKE_GE
   enable_language(Fortran OPTIONAL)
 endif()
 
+#----Get the compiler file name (to ensure re-location)---------------------------------------------
+get_filename_component(_compiler_name ${CMAKE_CXX_COMPILER} NAME)
+get_filename_component(_compiler_path ${CMAKE_CXX_COMPILER} PATH)
+if("$ENV{PATH}" MATCHES ${_compiler_path})
+  set(CXX ${_compiler_name})
+else()
+  set(CXX ${CMAKE_CXX_COMPILER})
+endif()
+string(TOUPPER "${CMAKE_BUILD_TYPE}" uppercase_CMAKE_BUILD_TYPE)
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -51,13 +60,13 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
-#---Check for c++11 option------------------------------------------------------------
-if(c++11)
+#---Check for cxx11 option------------------------------------------------------------
+if(cxx11)
   include(CheckCXXCompilerFlag)
   CHECK_CXX_COMPILER_FLAG("-std=c++11" HAS_CXX11)
   if(NOT HAS_CXX11)
-    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF c++11 option")
-    set(c++11 OFF CACHE BOOL "" FORCE)
+    message(STATUS "Current compiler does not suppport -std=c++11 option. Switching OFF cxx11 option")
+    set(cxx11 OFF CACHE BOOL "" FORCE)
   endif()
 endif()
 
@@ -73,8 +82,11 @@ elseif(WIN32)
   include(SetupWindows)
 endif()
 
-if(c++11)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wno-deprecated-declarations")
+if(cxx11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+  if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-deprecated-declarations")
+  endif()
 endif()
 if(libcxx)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
@@ -83,9 +95,17 @@ if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
+#---Check whether libc++ is used or not---------------------------------------------------------------
+file(WRITE ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/empty.cxx "")
+set(_command ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS} -v -x c++ -E ${CMAKE_BINARY_DIR}/CMakeFiles/CMakeTmp/empty.cxx)
+separate_arguments(_command)
+execute_process(COMMAND ${_command} OUTPUT_QUIET ERROR_VARIABLE _output)
+if(_output MATCHES "-stdlib=libc[+][+]")
+  set(USING_LIBCXX 1)
+endif()
 
 #---Print the final compiler flags--------------------------------------------------------------------
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
 message(STATUS "Build Type: ${CMAKE_BUILD_TYPE}")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${ALL_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}")

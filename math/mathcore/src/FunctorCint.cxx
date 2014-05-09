@@ -93,6 +93,8 @@ private:
    inline double DoDerivative (const double * x,unsigned int ipar ) const;
    inline double DoEval (const double * x) const;
 
+   // objects of this class are not meant for assignment
+   FunctorCintHandler<ParentFunctor>& operator=(const FunctorCintHandler<ParentFunctor>& rhs);
 
    mutable TMethodCall *fMethodCall; // pointer to method call
    mutable TMethodCall *fMethodCall2; // pointer to second method call (for deriv)

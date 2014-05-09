@@ -186,7 +186,9 @@ TEveProjected::~TEveProjected()
 //______________________________________________________________________________
 TEveElement* TEveProjected::GetProjectedAsElement()
 {
-   // Returns fProjectable dynamic-casted to TEveElement.
+   // Returns this projected dynamic-casted to TEveElement.
+   // This is needed as class TEveProjected is used as secondary
+   // inheritance.
 
    return dynamic_cast<TEveElement*>(this);
 }

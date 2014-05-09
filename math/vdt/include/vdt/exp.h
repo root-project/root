@@ -130,8 +130,6 @@ inline float fast_expf(float initial_x) {
     z = x*details::PX1expf;
     z += details::PX2expf;
     z *= x;
-    z += details::PX2expf;
-    z *= x;
     z += details::PX3expf;
     z *= x;
     z += details::PX4expf;

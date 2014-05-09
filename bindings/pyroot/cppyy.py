@@ -61,7 +61,7 @@ sys.modules[ __name__ ].libPyROOT = _backend
 
 if not _builtin_cppyy:
    _backend.SetMemoryPolicy( _backend.kMemoryStrict )
-_backend.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback()
+   _backend.MakeRootClass( 'PyROOT::TPyROOTApplication' ).InitCINTMessageCallback()
 
 #--- Enable Autoloading ignoring possible error for the time being
 try:    _backend.gInterpreter.EnableAutoLoading()
@@ -98,16 +98,23 @@ if not _builtin_cppyy:
 #--- LoadDictionary function and aliases -----------------------------
 def loadDictionary(name) :
    # prepend "lib" 
-   if sys.platform != 'win32' and name[:3] != 'lib' :
+   if sys.platform != 'win32' and name[:3] != 'lib':
        name = 'lib' + name
-   sc = _backend.gSystem.Load(name)
-   if sc == -1 : raise RuntimeError("Error Loading dictionary")
+   if not _builtin_cppyy:
+      sc = _backend.gSystem.Load(name)
+      if sc == -1 : raise RuntimeError("Error Loading dictionary")
+   else:
+      if sys.platform != 'win32' and name[-3:] != '.so':
+         name = name + '.so'
+      elif name[-4:] != '.dll':
+         name = name + '.dll'
+      _thismodule.load_reflection_info(name)
 loadDict = loadDictionary
 
 #--- Load Cintex module and enable conversions Reflex->CINT-----------
 # TSystem::Load() already knows that cintex depends on reflex.
 # _backend.gSystem.Load('libReflex')
-_backend.gSystem.Load( 'libCintex' )
+loadDictionary( 'libCintex' )
 
 Cintex = _backend.MakeRootClass( 'Cintex' )
 Cintex.SetDebug(0)

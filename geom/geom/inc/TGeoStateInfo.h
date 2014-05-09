@@ -58,7 +58,9 @@ struct TGeoStateInfo {
    TGeoStateInfo();
    TGeoStateInfo(const TGeoStateInfo &other);
    TGeoStateInfo & operator=(const TGeoStateInfo &other);
-   ~TGeoStateInfo();
+   virtual ~TGeoStateInfo();
+
+   ClassDef(TGeoStateInfo, 0)  // No I/O for this structure
 };
 
 #endif

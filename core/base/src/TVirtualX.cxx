@@ -430,6 +430,7 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, char * /*mess*/)
 
    w = h = 0;
 }
+
 //______________________________________________________________________________
 void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t * /*mess*/)
 {
@@ -441,6 +442,7 @@ void TVirtualX::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t * /*mess*/)
 
    w = h = 0;
 }
+
 //______________________________________________________________________________
 Int_t   TVirtualX::GetFontAscent() const
 {
@@ -449,6 +451,15 @@ Int_t   TVirtualX::GetFontAscent() const
    // to the highest position characters extend to
    return 0;
 }
+
+//______________________________________________________________________________
+Int_t   TVirtualX::GetFontAscent(const char * /*mess*/) const
+{
+   // Default version is noop, but in principle what
+   // ROOT understands as ascent is text related.
+   return GetFontAscent();
+}
+
 //______________________________________________________________________________
 Int_t   TVirtualX::GetFontDescent() const
 {
@@ -456,6 +467,14 @@ Int_t   TVirtualX::GetFontDescent() const
   // The descent is the distance from the base line
   // to the lowest point characters extend to.
    return 0;
+}
+
+//______________________________________________________________________________
+Int_t   TVirtualX::GetFontDescent(const char * /*mess*/) const
+{
+   // Default version is noop, but in principle what
+   // ROOT understands as descent requires a certain text.
+   return GetFontDescent();
 }
 
 //______________________________________________________________________________

@@ -25,14 +25,22 @@
 #ifndef ROOT_TVirtualPad
 #include "TVirtualPad.h"
 #endif
+#ifndef ROOT_TAttBBox2D
+#include "TAttBBox2D.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
 class TVirtualViewer3D;
 class TVirtualPadPainter;
 class TBrowser;
 class TBox;
 class TLegend;
+class TArrow;
+class TPoint;
 
-class TPad : public TVirtualPad {
+class TPad : public TVirtualPad, public TAttBBox2D {
 
 private:
    TObject      *fTip;             //! tool tip associated with box
@@ -66,6 +74,8 @@ protected:
 
    Double_t      fXlowNDC;         //  X bottom left corner of pad in NDC [0,1]
    Double_t      fYlowNDC;         //  Y bottom left corner of pad in NDC [0,1]
+   Double_t      fXUpNDC;
+   Double_t      fYUpNDC;
    Double_t      fWNDC;            //  Width of pad along X in NDC
    Double_t      fHNDC;            //  Height of pad along Y in NDC
 
@@ -136,6 +146,7 @@ private:
 
    void CopyBackgroundPixmap(Int_t x, Int_t y);
    void CopyBackgroundPixmaps(TPad *start, TPad *stop, Int_t x, Int_t y);
+   void DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode);
 
 public:
    // TPad status bits
@@ -179,10 +190,6 @@ public:
    static  void      DrawColorTable();
    virtual void      DrawCrosshair();
    TH1F             *DrawFrame(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax, const char *title="");
-///   void              DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2);
-///   void              DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2);
-///   void              DrawText(Double_t x, Double_t y, const char *text);
-///   void              DrawTextNDC(Double_t u, Double_t v, const char *text);
    virtual void      ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis);
    virtual TObject  *FindObject(const char *name) const;
    virtual TObject  *FindObject(const TObject *obj) const;
@@ -343,15 +350,12 @@ public:
    virtual void      SetVertical(Bool_t vert=kTRUE);
    virtual void      SetView(TView *view = 0);
    virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
-   //
+
    virtual void      SetGLDevice(Int_t dev) {fGLDevice = dev;}
    virtual void      SetCopyGLDevice(Bool_t copy) {fCopyGLDevice = copy;}
-   //
+
+   virtual void      ShowGuidelines(TObject *object, const Int_t event, const char mode = 'i', const bool cling = true);
    virtual void      Update();
-///   virtual void      UpdateFillAttributes(Int_t col, Int_t sty);
-///   virtual void      UpdateLineAttributes(Int_t col, Int_t sty, Int_t width);
-///   virtual void      UpdateMarkerAttributes(Int_t col, Int_t sty, Float_t msiz);
-///   virtual void      UpdateTextAttributes(Int_t align,Float_t angle,Int_t col,Int_t font,Float_t tsize);
    Int_t             UtoAbsPixel(Double_t u) const {return Int_t(fUtoAbsPixelk + u*fUtoPixel);}
    Int_t             VtoAbsPixel(Double_t v) const {return Int_t(fVtoAbsPixelk + v*fVtoPixel);}
    Int_t             UtoPixel(Double_t u) const;
@@ -377,16 +381,24 @@ public:
    virtual Bool_t            HasViewer3D() const { return (fViewer3D); }
    virtual void              ReleaseViewer3D(Option_t * type = "");
 
+   virtual Rectangle_t  GetBBox();
+   virtual TPoint       GetBBoxCenter();
+   virtual void         SetBBoxCenter(const TPoint &p);
+   virtual void         SetBBoxCenterX(const Int_t x);
+   virtual void         SetBBoxCenterY(const Int_t y);
+   virtual void         SetBBoxX1(const Int_t x);
+   virtual void         SetBBoxX2(const Int_t x);
+   virtual void         SetBBoxY1(const Int_t y);
+   virtual void         SetBBoxY2(const Int_t y);
+
    virtual void      RecordPave(const TObject *obj);              // *SIGNAL*
    virtual void      RecordLatex(const TObject *obj);             // *SIGNAL*
    virtual void      EventPave() { Emit("EventPave()"); }         // *SIGNAL*
    virtual void      StartEditing() { Emit("StartEditing()"); }   // *SIGNAL*
 
-   ClassDef(TPad,10)  //A Graphics pad
+   ClassDef(TPad,11)  //A Graphics pad
 };
 
-
-//---- inlines -----------------------------------------------------------------
 
 //______________________________________________________________________________
 inline void TPad::Modified(Bool_t flag)
@@ -395,12 +407,14 @@ inline void TPad::Modified(Bool_t flag)
    fModified = flag;
 }
 
+
 //______________________________________________________________________________
 inline void TPad::AbsPixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
 {
    x = AbsPixeltoX(xpixel);
    y = AbsPixeltoY(ypixel);
 }
+
 
 //______________________________________________________________________________
 inline Double_t TPad::PixeltoX(Int_t px)
@@ -409,6 +423,7 @@ inline Double_t TPad::PixeltoX(Int_t px)
    else           return fPixeltoXk    + px*fPixeltoX;
 }
 
+
 //______________________________________________________________________________
 inline Double_t TPad::PixeltoY(Int_t py)
 {
@@ -416,12 +431,14 @@ inline Double_t TPad::PixeltoY(Int_t py)
    else           return fPixeltoYk    + py*fPixeltoY;
 }
 
+
 //______________________________________________________________________________
 inline void TPad::PixeltoXY(Int_t xpixel, Int_t ypixel, Double_t &x, Double_t &y)
 {
    x = PixeltoX(xpixel);
    y = PixeltoY(ypixel);
 }
+
 
 //______________________________________________________________________________
 inline Int_t TPad::UtoPixel(Double_t u) const
@@ -434,6 +451,7 @@ inline Int_t TPad::UtoPixel(Double_t u) const
    return Int_t(val);
 }
 
+
 //______________________________________________________________________________
 inline Int_t TPad::VtoPixel(Double_t v) const
 {
@@ -445,6 +463,7 @@ inline Int_t TPad::VtoPixel(Double_t v) const
    return Int_t(val);
 }
 
+
 //______________________________________________________________________________
 inline Int_t TPad::XtoAbsPixel(Double_t x) const
 {
@@ -453,6 +472,7 @@ inline Int_t TPad::XtoAbsPixel(Double_t x) const
    if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
+
 
 //______________________________________________________________________________
 inline Int_t TPad::XtoPixel(Double_t x) const
@@ -465,6 +485,7 @@ inline Int_t TPad::XtoPixel(Double_t x) const
    return Int_t(val);
 }
 
+
 //______________________________________________________________________________
 inline Int_t TPad::YtoAbsPixel(Double_t y) const
 {
@@ -473,6 +494,7 @@ inline Int_t TPad::YtoAbsPixel(Double_t y) const
    if (val >  kMaxPixel) return  kMaxPixel;
    return Int_t(val);
 }
+
 
 //______________________________________________________________________________
 inline Int_t TPad::YtoPixel(Double_t y) const
@@ -485,6 +507,7 @@ inline Int_t TPad::YtoPixel(Double_t y) const
    return Int_t(val);
 }
 
+
 //______________________________________________________________________________
 inline void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
@@ -492,12 +515,14 @@ inline void TPad::XYtoAbsPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypi
    ypixel = YtoAbsPixel(y);
 }
 
+
 //______________________________________________________________________________
 inline void TPad::XYtoPixel(Double_t x, Double_t y, Int_t &xpixel, Int_t &ypixel) const
 {
    xpixel = XtoPixel(x);
    ypixel = YtoPixel(y);
 }
+
 
 //______________________________________________________________________________
 inline void TPad::SetDrawOption(Option_t *)

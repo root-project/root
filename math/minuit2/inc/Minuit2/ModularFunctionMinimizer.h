@@ -85,6 +85,7 @@ public:
 
    virtual const MinimumSeedGenerator& SeedGenerator() const = 0;
    virtual const MinimumBuilder& Builder() const = 0;
+   virtual MinimumBuilder& Builder()  = 0;
 
 public:
 

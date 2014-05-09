@@ -12,6 +12,7 @@
 
 #include "TMinuitMinimizer.h"
 #include "Math/IFunction.h"
+#include "Fit/ParameterSettings.h"
 
 #include "TMinuit.h"
 #include "TROOT.h"
@@ -262,10 +263,7 @@ void TMinuitMinimizer::FcnGrad( int &, double * g, double & f, double * x , int 
 
 bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step) { 
    // set a free variable.
-   if (fMinuit == 0) { 
-      Error("SetVariable","invalid TMinuit pointer. Need to call first SetFunction"); 
-      return false; 
-   }
+   if (!CheckMinuitInstance()) return false; 
 
    fUsed = fgUsed; 
 
@@ -281,10 +279,7 @@ bool TMinuitMinimizer::SetVariable(unsigned int ivar, const std::string & name, 
 
 bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string & name, double val, double step, double lower, double upper) { 
    // set a limited variable.
-   if (fMinuit == 0) { 
-      Error("SetVariable","invalid TMinuit pointer. Need to call first SetFunction"); 
-      return false; 
-   }
+   if (!CheckMinuitInstance()) return false; 
 
    fUsed = fgUsed; 
 
@@ -296,6 +291,24 @@ bool TMinuitMinimizer::SetLimitedVariable(unsigned int ivar, const std::string &
 
    int iret = fMinuit->DefineParameter(ivar, name.c_str(), val, step, lower, upper ); 
    return (iret == 0); 
+}
+
+bool TMinuitMinimizer::CheckMinuitInstance() const {
+   // check instance of fMinuit
+   if (fMinuit == 0) { 
+      Error("CheckMinuitInstance","Invalid TMinuit pointer. Need to call first SetFunction"); 
+      return false; 
+   }
+   return true; 
+}
+
+bool TMinuitMinimizer::CheckVarIndex(unsigned int ivar) const {
+   // check index of Variable (assume fMinuit exists) 
+   if ((int) ivar >= fMinuit->fNu ) {
+      Error("CheckVarIndex","Invalid parameter index"); 
+      return false; 
+   }
+   return true; 
 }
 
 bool TMinuitMinimizer::SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) { 
@@ -314,10 +327,7 @@ bool TMinuitMinimizer::SetUpperLimitedVariable(unsigned int  ivar , const std::s
 
 bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & name, double val) { 
    // set a fixed variable.
-   if (fMinuit == 0) { 
-      Error("SetVariable","invalid TMinuit pointer. Need to call first SetFunction"); 
-      return false; 
-   }
+   if (!CheckMinuitInstance()) return false; 
 
    // clear after minimization when setting params
    fUsed = fgUsed; 
@@ -337,11 +347,7 @@ bool TMinuitMinimizer::SetFixedVariable(unsigned int ivar, const std::string & n
 bool TMinuitMinimizer::SetVariableValue(unsigned int ivar, double val) { 
    // set the value of an existing variable
    // parameter must exist or return false
-
-   if (fMinuit == 0) { 
-      Error("SetVariable","invalid TMinuit pointer. Need to call first SetFunction"); 
-      return false; 
-   }
+   if (!CheckMinuitInstance()) return false; 
 
    double arglist[2]; 
    int ierr = 0; 
@@ -352,9 +358,95 @@ bool TMinuitMinimizer::SetVariableValue(unsigned int ivar, double val) {
    return (ierr==0);
 }
 
+bool TMinuitMinimizer::SetVariableStepSize(unsigned int ivar, double step) { 
+   // set the step-size of an existing variable
+   // parameter must exist or return false
+   if (!CheckMinuitInstance()) return false; 
+   // need to re-implement re-calling mnparm
+   // get first current parameter values and limits
+   double curval,err, lowlim, uplim;
+   int iuint;  // internal index  
+   TString name; 
+   fMinuit->mnpout(ivar, name, curval, err, lowlim, uplim,iuint);
+   if (iuint == -1) return false; 
+   int iret = fMinuit->DefineParameter(ivar, name, curval, step, lowlim, uplim ); 
+   return (iret == 0); 
+   
+}
+
+bool TMinuitMinimizer::SetVariableLowerLimit(unsigned int , double  ) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   Error("SetVariableLowerLimit","not implemented - use SetVariableLimits"); 
+   return false;
+}
+bool TMinuitMinimizer::SetVariableUpperLimit(unsigned int , double  ) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+   Error("SetVariableUpperLimit","not implemented - use SetVariableLimits"); 
+   return false;
+}
+
+bool TMinuitMinimizer::SetVariableLimits(unsigned int ivar, double lower, double upper) { 
+   // set the limits of an existing variable
+   // parameter must exist or return false
+
+   if (!CheckMinuitInstance()) return false; 
+   // need to re-implement re-calling mnparm
+   // get first current parameter values and limits
+   double curval,err, lowlim, uplim;
+   int iuint;  // internal index  
+   TString name; 
+   fMinuit->mnpout(ivar, name, curval, err, lowlim, uplim,iuint);
+   if (iuint == -1) return false; 
+   int iret = fMinuit->DefineParameter(ivar, name, curval, err, lower, upper ); 
+   return (iret == 0); 
+   
+}
+
+bool TMinuitMinimizer::FixVariable(unsigned int ivar) { 
+   // Fix an existing variable
+   if (!CheckMinuitInstance()) return false; 
+   if (!CheckVarIndex(ivar)) return false; 
+   int iret = fMinuit->FixParameter(ivar);
+   return (iret == 0);
+}
+
+bool TMinuitMinimizer::ReleaseVariable(unsigned int ivar) { 
+   // Fix an existing variable
+   if (!CheckMinuitInstance()) return false; 
+   if (!CheckVarIndex(ivar)) return false; 
+   int iret = fMinuit->Release(ivar);
+   return (iret == 0);
+}
+
+bool TMinuitMinimizer::IsFixedVariable(unsigned int ivar) const { 
+   // query if variable is fixed
+   if (!CheckMinuitInstance()) return false; 
+   if (!CheckVarIndex(ivar)) return false; 
+   return (fMinuit->fNiofex[ivar] == 0 );
+} 
+
+bool TMinuitMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings & var) const { 
+   // retrieve variable settings (all set info on the variable)
+   if (!CheckMinuitInstance()) return false; 
+   if (!CheckVarIndex(ivar)) return false; 
+   double curval,err, lowlim, uplim;
+   int iuint;  // internal index  
+   TString name; 
+   fMinuit->mnpout(ivar, name, curval, err, lowlim, uplim,iuint);
+   if (iuint == -1) return false; 
+   var.Set(name.Data(), curval, err, lowlim, uplim);
+   if (IsFixedVariable(ivar)) var.Fix();
+   return true; 
+}
+
+
+
 std::string TMinuitMinimizer::VariableName(unsigned int ivar) const { 
    // return the variable name
-   if (!fMinuit || (int) ivar > fMinuit->fNu) return std::string();
+   if (!CheckMinuitInstance()) return std::string(); 
+   if (!CheckVarIndex(ivar)) return std::string(); 
    return std::string(fMinuit->fCpnam[ivar]);
 }
 
@@ -681,13 +773,14 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    double arglist[2];
    int ierr = 0; 
 
-   // set error and print level, precision and stratgey if needed
+
+   // set error, print level, precision and strategy if they have changed
    if (fMinuit->fUp != ErrorDef() ) { 
       arglist[0] = ErrorDef(); 
       fMinuit->mnexcm("SET Err",arglist,1,ierr);
    }
       
-   if (fMinuit->fISW[4] != (PrintLevel()-1) )  { 
+   if (fMinuit->fISW[4] != (PrintLevel()-1) ) { 
       arglist[0] = PrintLevel()-1; 
       fMinuit->mnexcm("SET PRINT",arglist,1,ierr);
       // suppress warning in case Printlevel() == 0 

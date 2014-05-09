@@ -97,6 +97,15 @@ public:
   };
 #endif
 
+  /** 
+      function to  determine if any use operand 
+      is being used (has same memory adress)
+   */ 
+  inline bool IsInUse (const T * p) const { 
+    return rhs_.IsInUse(p); 
+  }
+
+
   /// used by operator<<()
   std::ostream& print(std::ostream& os) const {
     os.setf(std::ios::right,std::ios::adjustfield);

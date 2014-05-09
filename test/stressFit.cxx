@@ -54,7 +54,6 @@
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
 #include <stdlib.h>
-#include "TVirtualFitter.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBenchmark.h"
@@ -64,12 +63,18 @@
 #include "TVectorD.h"
 #include "TMatrixD.h"
 
-Int_t stressFit(const char *theFitter="Minuit", Int_t N=2000);
+#include "Math/Factory.h"
+#include "Math/Functor.h"
+#include "Math/IFunction.h"
+#include "Math/MinimizerOptions.h"
+#include "Math/Minimizer.h"
+
+Int_t stressFit(const char *type = "Minuit", const char *algo = "Migrad", Int_t N = 2000);
 Int_t    gVerbose      = -1;
-Double_t gAbsTolerance = 0.005;
+Double_t gToleranceMult = 1.e-3;
 
 //------------------------------------------------------------------------
-void StatusPrint(Int_t id,const TString &title,Bool_t status)
+void StatusPrint(Int_t id,const TString &title, Int_t nsuccess, Int_t nattempts)
 {
   // Print test program number and its title
   const Int_t kMAX = 65;
@@ -78,17 +83,17 @@ void StatusPrint(Int_t id,const TString &title,Bool_t status)
   TString header = TString("Test ")+number+" : "+title;
   const Int_t nch = header.Length();
   for (Int_t i = nch; i < kMAX; i++) header += '.';
-  cout << header << (status ? "OK" : "FAILED") << endl;
+  std::cout << header << " " << nsuccess << " out of " << nattempts << std::endl;
 }
 
 //______________________________________________________________________________
-void RosenBrock(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t RosenBrock(const Double_t *par)
 {
   const Double_t x = par[0];
   const Double_t y = par[1];
   const Double_t tmp1 = y-x*x;
   const Double_t tmp2 = 1-x;
-  f = 100*tmp1*tmp1+tmp2*tmp2;
+  return 100*tmp1*tmp1+tmp2*tmp2;
 }
 
 //______________________________________________________________________________
@@ -108,32 +113,31 @@ Bool_t RunRosenBrock()
 // [Reference: Comput. J. 3,175 (1960).]
 
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,2);
-  min->SetFCN(RosenBrock);
+  const int nvars = 2;
 
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  min->SetPrintLevel(gVerbose);
 
-  min->SetParameter(0,"x",-1.2,0.01,0,0);
-  min->SetParameter(1,"y", 1.0,0.01,0,0);
+  ROOT::Math::Functor f(&RosenBrock, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -5.0;
+  double xmax =  5.0;
+  double tolerance = 1.e-3;
 
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.001; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
+  min->SetVariable(0, "x", -1.2, step);
+  min->SetVariable(1, "y",  1.0, step);
+  for (int ivar = 0; ivar < nvars; ivar++)
+    min->SetVariableInitialRange(ivar, xmin, xmax);
 
-  Double_t parx,pary;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
-  
-  ok = ( TMath::Abs(parx-1.) < gAbsTolerance &&
-         TMath::Abs(pary-1.) < gAbsTolerance );
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
+
+  min->Minimize();
+
+  if (min->MinValue() > tolerance)
+    ok = kFALSE;
 
   delete min;
 
@@ -141,7 +145,7 @@ Bool_t RunRosenBrock()
 }
 
 //______________________________________________________________________________
-void Wood4(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t Wood4(const Double_t *par)
 {
   const Double_t w = par[0]; 
   const Double_t x = par[1]; 
@@ -155,7 +159,7 @@ void Wood4(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
   const Double_t tmp1 = x-w*w;
   const Double_t tmp2 = z-y*y;
 
-  f = 100*tmp1*tmp1+w1*w1+90*tmp2*tmp2+y1*y1+10.1*(x1*x1+z1*z1)+19.8*x1*z1;
+  return 100*tmp1*tmp1+w1*w1+90*tmp2*tmp2+y1*y1+10.1*(x1*x1+z1*z1)+19.8*x1*z1;
 }
 
 //______________________________________________________________________________
@@ -177,47 +181,46 @@ Bool_t RunWood4()
 // approximation is known .
 // [Reference: Unpublished. See IBM Technical Report No. 320-2949.]
 
+
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,4);
-  min->SetFCN(Wood4);
+  const int nvars = 4;
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  if (!min)
+    {
+      std::cerr << "RunWood4(): failed to create ROOT::Math::Minimizer" << std::endl;
+      return 0;
+    }
+  min->SetPrintLevel(gVerbose);
 
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
+  ROOT::Math::Functor f(&Wood4, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -5.0;
+  double xmax =  5.0;
+  double tolerance = 1.e-3;
 
-  min->SetParameter(0,"w",-3.0,0.01,0,0);
-  min->SetParameter(1,"x",-1.0,0.01,0,0);
-  min->SetParameter(2,"y",-3.0,0.01,0,0);
-  min->SetParameter(3,"z",-1.0,0.01,0,0);
+  min->SetVariable(0, "w", -3.0, step);
+  min->SetVariable(1, "x", -1.0, step);
+  min->SetVariable(2, "y", -3.0, step);
+  min->SetVariable(3, "z", -1.0, step);
+  for (int ivar = 0; ivar < nvars; ivar++)
+    min->SetVariableInitialRange(ivar, xmin, xmax);
 
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.001; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
 
-  Double_t parw,parx,pary,parz;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(1,parName,parw,we,al,bl);
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
-  min->GetParameter(1,parName,parz,we,al,bl);
-  
-  ok = ( TMath::Abs(parw-1.) < gAbsTolerance &&
-         TMath::Abs(parx-1.) < gAbsTolerance &&
-         TMath::Abs(pary-1.) < gAbsTolerance &&
-         TMath::Abs(parz-1.) < gAbsTolerance );
+  min->Minimize();
 
+  if (min->MinValue() > tolerance)
+    ok = kFALSE;
   delete min;
 
   return ok;
 }
 
 //______________________________________________________________________________
-void Powell(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t Powell(const Double_t *par)
 {
   const Double_t w = par[0]; 
   const Double_t x = par[1]; 
@@ -229,7 +232,7 @@ void Powell(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
   const Double_t tmp3 = x-2*y;
   const Double_t tmp4 = w-z;
 
-  f = tmp1*tmp1+5*tmp2*tmp2+tmp3*tmp3*tmp3*tmp3+10*tmp4*tmp4*tmp4*tmp4;
+  return tmp1*tmp1+5*tmp2*tmp2+tmp3*tmp3*tmp3*tmp3+10*tmp4*tmp4*tmp4*tmp4;
 }
 
 //______________________________________________________________________________
@@ -247,38 +250,33 @@ Bool_t RunPowell()
 // [Reference: Comput. J. 5, 147 (1962).]
 
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,4);
-  min->SetFCN(Powell);
-  
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
-  
-  min->SetParameter(0,"w",+3.0,0.01,0,0);
-  min->SetParameter(1,"x",-1.0,0.01,0,0);
-  min->SetParameter(2,"y", 0.0,0.01,0,0);
-  min->SetParameter(3,"z",+1.0,0.01,0,0);
-    
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.001; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
-    
-  Double_t parw,parx,pary,parz;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(1,parName,parw,we,al,bl);
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
-  min->GetParameter(1,parName,parz,we,al,bl);
-  
-  ok = ( TMath::Abs(parw-0.) < gAbsTolerance &&
-         TMath::Abs(parx-0.) < 10.*gAbsTolerance &&
-         TMath::Abs(pary-0.) < gAbsTolerance &&
-         TMath::Abs(parz-0.) < gAbsTolerance );
+  const int nvars = 4;
+
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  min->SetPrintLevel(gVerbose);
+
+  ROOT::Math::Functor f(&Powell, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -5.0;
+  double xmax =  5.0;
+  double tolerance = 1.e-3;
+
+  min->SetVariable(0, "w", +3.0, step);
+  min->SetVariable(1, "x", -1.0, step);
+  min->SetVariable(2, "y",  0.0, step);
+  min->SetVariable(3, "z", +1.0, step);
+  for (int ivar = 0; ivar < nvars; ivar++)
+    min->SetVariableInitialRange(ivar, xmin, xmax);
+
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
+
+  min->Minimize();
+
+  if (min->MinValue() > tolerance)
+    ok = kFALSE;
 
   delete min;
 
@@ -286,7 +284,7 @@ Bool_t RunPowell()
 }
 
 //______________________________________________________________________________
-void Fletcher(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t Fletcher(const Double_t *par)
 {
   const Double_t x = par[0];
   const Double_t y = par[1];
@@ -303,7 +301,7 @@ void Fletcher(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
   const Double_t tmp1 = z-10*psi;
   const Double_t tmp2 = TMath::Sqrt(x*x+y*y)-1;
 
-  f = 100*(tmp1*tmp1+tmp2*tmp2)+z*z;
+  return 100*(tmp1*tmp1+tmp2*tmp2)+z*z;
 }
 
 //______________________________________________________________________________
@@ -325,35 +323,32 @@ Bool_t RunFletcher()
 // [Reference: Comput. J. 6, 163 (1963).]
 
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,3);
-  min->SetFCN(Fletcher);
+  const int nvars = 3;
 
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  min->SetPrintLevel(gVerbose);
 
-  min->SetParameter(0,"x",-1.0,0.01,0,0);
-  min->SetParameter(1,"y", 0.0,0.01,0,0);
-  min->SetParameter(2,"z", 0.0,0.01,0,0);
+  ROOT::Math::Functor f(&Fletcher, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -5.0;
+  double xmax =  5.0;
+  double tolerance = 1.e-3;
 
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.001; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
+  min->SetVariable(0, "x", -1.0, step);
+  min->SetVariable(1, "y",  0.0, step);
+  min->SetVariable(2, "z",  0.0, step);
+  for (int ivar = 0; ivar < nvars; ivar++)
+    min->SetVariableInitialRange(ivar, xmin, xmax);
 
-  Double_t parx,pary,parz;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
-  min->GetParameter(1,parName,parz,we,al,bl);
-  
-  ok = ( TMath::Abs(parx-1.) < gAbsTolerance &&
-         TMath::Abs(pary-0.) < gAbsTolerance &&
-         TMath::Abs(parz-0.) < gAbsTolerance );
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
+
+  min->Minimize();
+
+  if (min->MinValue() > tolerance)
+    ok = kFALSE;
 
   delete min;
 
@@ -361,7 +356,7 @@ Bool_t RunFletcher()
 }
 
 //______________________________________________________________________________
-void GoldStein1(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t GoldStein1(const Double_t *par)
 {
   const Double_t x = par[0];
   const Double_t y = par[1];
@@ -371,7 +366,7 @@ void GoldStein1(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/
   const Double_t tmp3 = 2*x-3*y;
   const Double_t tmp4 = 18-32*x+12*x*x+48*y-36*x*y+27*y*y;
 
-  f = (1+tmp1*tmp1*tmp2)*(30+tmp3*tmp3*tmp4);
+  return (1+tmp1*tmp1*tmp2)*(30+tmp3*tmp3*tmp4);
 }
 
 //______________________________________________________________________________
@@ -394,41 +389,38 @@ Bool_t RunGoldStein1()
 // [Reference: Math. Comp. 25, 571 (1971).]
 
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,2);
-  min->SetFCN(GoldStein1);
+  const int nvars = 2;
 
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
-  
-  min->SetParameter(0,"x",-0.3999,0.01,-2.0,+2.0);
-  min->SetParameter(1,"y",-0.6,0.01,-2.0,+2.0);
-  
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.001; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  min->SetPrintLevel(gVerbose);
 
-  Double_t parx,pary;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
+  ROOT::Math::Functor f(&GoldStein1, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -2.0;
+  double xmax =  2.0;
+  double ymin = 3.0;
+  double tolerance = 1.e-3;
 
-  ok = ( TMath::Abs(parx-0.) < gAbsTolerance &&
-         TMath::Abs(pary+1.) < gAbsTolerance );
-  
+  min->SetLimitedVariable(0, "x", -0.3999, step, xmin, xmax);
+  min->SetLimitedVariable(1, "y", -0.6,    step, xmin, xmax);
+
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
+
+  min->Minimize();
+
+  if (min->MinValue() > ymin + tolerance)
+    ok = kFALSE;
+
   delete min;
 
   return ok;
 }
 
 //______________________________________________________________________________
-void GoldStein2(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t GoldStein2(const Double_t *par)
 {
   const Double_t x = par[0];
   const Double_t y = par[1];
@@ -437,7 +429,7 @@ void GoldStein2(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/
   const Double_t tmp2 = TMath::Sin(4*x-3*y);
   const Double_t tmp3 = 2*x+y-10;
 
-  f = TMath::Exp(0.5*tmp1*tmp1)+tmp2*tmp2*tmp2*tmp2+0.5*tmp3*tmp3;
+  return TMath::Exp(0.5*tmp1*tmp1)+tmp2*tmp2*tmp2*tmp2+0.5*tmp3*tmp3;
 }
 
 //______________________________________________________________________________
@@ -454,32 +446,30 @@ Bool_t RunGoldStein2()
 // [Reference: Math. Comp. 25, 571 (1971).]
 
   Bool_t ok = kTRUE;
-  TVirtualFitter *min = TVirtualFitter::Fitter(0,2);
-  min->SetFCN(GoldStein2);
+  const int nvars = 2;
 
-  Double_t arglist[100];
-  arglist[0] = gVerbose;
-  min->ExecuteCommand("SET PRINT",arglist,1);
+  ROOT::Math::Minimizer* min =
+    ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+  min->SetPrintLevel(gVerbose);
 
-  min->SetParameter(0,"x",+1.0,0.01,-5.0,+5.0);
-  min->SetParameter(1,"y",+3.2,0.01,-5.0,+5.0);
+  ROOT::Math::Functor f(&GoldStein2, nvars);
+  min->SetFunction(f);
+  double step = 0.01;
+  double xmin = -5.0;
+  double xmax =  5.0;
+  double ymin = 1.0;
+  double tolerance = 1.e-2;
 
-  arglist[0] = 0;
-  min->ExecuteCommand("SET NOW",arglist,0);
-  arglist[0] = 1000; // number of function calls 
-  arglist[1] = 0.01; // tolerance 
-  min->ExecuteCommand("MIGRAD",arglist,0);
-  min->ExecuteCommand("MIGRAD",arglist,2);
-  min->ExecuteCommand("MINOS",arglist,0);
+  min->SetLimitedVariable(0, "x", +1.0, step, xmin, xmax);
+  min->SetLimitedVariable(1, "y", +3.2, step, xmin, xmax);
 
-  Double_t parx,pary;
-  Double_t we,al,bl;
-  Char_t parName[32];
-  min->GetParameter(0,parName,parx,we,al,bl);
-  min->GetParameter(1,parName,pary,we,al,bl);
+  min->SetMaxFunctionCalls(100000);
+  min->SetTolerance(tolerance * gToleranceMult);
 
-  ok = ( TMath::Abs(parx-3.) < gAbsTolerance &&
-         TMath::Abs(pary-4.) < gAbsTolerance );
+  min->Minimize();
+
+  if (min->MinValue() > ymin + tolerance)
+    ok = kFALSE;
 
   delete min;
 
@@ -500,7 +490,7 @@ TVectorD v;
 TVectorD r;
 
 //______________________________________________________________________________
-void TrigoFletcher(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*iflag*/)
+Double_t TrigoFletcher(const Double_t *par)
 {
   Int_t i;
   for (i = 0; i < nf ; i++) {
@@ -514,7 +504,7 @@ void TrigoFletcher(Int_t &, Double_t *, Double_t &f, Double_t *par, Int_t /*ifla
   v  = A*sx +B*cx;
   r  = v0-v;
  
-  f = r * r;
+  return r * r;
 }
 
 //______________________________________________________________________________
@@ -543,14 +533,16 @@ Bool_t RunTrigoFletcher()
   const Double_t pi = TMath::Pi();
   Bool_t ok = kTRUE;
   Double_t delta = 0.1;
-  
+  Double_t tolerance = 1.e-2;
+
   for (nf = 5; nf<32;nf +=5) {
-     TVirtualFitter *min = TVirtualFitter::Fitter(0,nf);
-     min->SetFCN(TrigoFletcher);
-     
-     Double_t arglist[100];
-     arglist[0] = gVerbose;
-     min->ExecuteCommand("SET PRINT",arglist,1);
+     ROOT::Math::Minimizer* min =
+       ROOT::Math::Factory::CreateMinimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType(), ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo());
+     min->SetPrintLevel(gVerbose);
+
+     ROOT::Math::Functor f(&TrigoFletcher, nf);
+     min->SetFunction(f);
+
      A.ResizeTo(nf,nf);
      B.ResizeTo(nf,nf);
      x0.ResizeTo(nf);
@@ -575,23 +567,16 @@ Bool_t RunTrigoFletcher()
      x1+= x0;
 
      for (Int_t i = 0; i < nf; i++)
-       min->SetParameter(i,Form("x_%d",i),x1[i],0.01,-pi*(1+delta),+pi*(1+delta));
+       min->SetLimitedVariable(i, Form("x_%d",i), x1[i], 0.01, -pi*(1+delta), +pi*(1+delta));
 
-     arglist[0] = 0;
-     min->ExecuteCommand("SET NOW",arglist,0);
-     arglist[0] = 1000; // number of function calls 
-     arglist[1] = 0.01; // tolerance 
-     min->ExecuteCommand("MIGRAD",arglist,0);
-     min->ExecuteCommand("MIGRAD",arglist,2);
-     min->ExecuteCommand("MINOS",arglist,0);
+     min->SetMaxFunctionCalls(100000);
+     min->SetTolerance(tolerance * gToleranceMult);
 
-     Double_t par,we,al,bl;
-     Char_t parName[32];
-     for (Int_t i = 0; i < nf; i++) {
-       min->GetParameter(i,parName,par,we,al,bl);
-       ok = ok && ( TMath::Abs(par) -TMath::Abs(x0[i]) < gAbsTolerance );
-       if (!ok) printf("nf=%d, i=%d, par=%g, x0=%g\n",nf,i,par,x0[i]);
-     }
+     min->Minimize();
+
+     if (min->MinValue() > tolerance)
+       ok = kFALSE;
+
      delete min;
   }  
 
@@ -599,45 +584,47 @@ Bool_t RunTrigoFletcher()
 }
 
 //______________________________________________________________________________
-Int_t stressFit(const char *theFitter, Int_t N)
+Int_t stressFit(const char *type, const char *algo, Int_t N)
 {
-  TVirtualFitter::SetDefaultFitter(theFitter);
-  
-  cout << "******************************************************************" <<endl;
-  cout << "*  Minimization - S T R E S S suite                              *" <<endl;
-  cout << "******************************************************************" <<endl;
-  cout << "******************************************************************" <<endl;
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type, algo);
+
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "*  Minimization - S T R E S S suite                              *" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
+  std::cout << "******************************************************************" <<std::endl;
 
    TStopwatch timer;
    timer.Start();
 
-  cout << "*  Starting  S T R E S S  with fitter : "<<TVirtualFitter::GetDefaultFitter() <<endl;
-  cout << "******************************************************************" <<endl;
+  std::cout << "*  Starting  S T R E S S  with fitter : "
+            << ROOT::Math::MinimizerOptions::DefaultMinimizerType() << " / "
+            << ROOT::Math::MinimizerOptions::DefaultMinimizerAlgo() << std::endl;
+  std::cout << "******************************************************************" << std::endl;
 
   gBenchmark->Start("stressFit");
 
-  Bool_t okRosenBrock    = kTRUE;
-  Bool_t okWood          = kTRUE;
-  Bool_t okPowell        = kTRUE;
-  Bool_t okFletcher      = kTRUE;
-  Bool_t okGoldStein1    = kTRUE;
-  Bool_t okGoldStein2    = kTRUE;
-  Bool_t okTrigoFletcher = kTRUE;
+  int okRosenBrock    = 0;
+  int okWood          = 0;
+  int okPowell        = 0;
+  int okFletcher      = 0;
+  int okGoldStein1    = 0;
+  int okGoldStein2    = 0;
+  int okTrigoFletcher = 0;
   Int_t i;
-  for (i = 0; i < N; i++)  okWood          = RunWood4();
-  StatusPrint(1,"Wood",okWood);
-  for (i = 0; i < N; i++) okRosenBrock    = RunRosenBrock();
-  StatusPrint(2,"RosenBrock",okRosenBrock);
-  for (i = 0; i < N; i++) okPowell        = RunPowell();
-  StatusPrint(3,"Powell",okPowell);
-  for (i = 0; i < N; i++) okFletcher      = RunFletcher();
-  StatusPrint(4,"Fletcher",okFletcher);
-  for (i = 0; i < N; i++) okGoldStein1    = RunGoldStein1();
-  StatusPrint(5,"GoldStein1",okGoldStein1);
-  for (i = 0; i < N; i++) okGoldStein2    = RunGoldStein2();
-  StatusPrint(6,"GoldStein2",okGoldStein2);
-  okTrigoFletcher = RunTrigoFletcher();
-  StatusPrint(7,"TrigoFletcher",okTrigoFletcher);
+  for (i = 0; i < N; i++) if (RunWood4()) okWood++;
+  StatusPrint(1, "Wood", okWood, N);
+  for (i = 0; i < N; i++) if (RunRosenBrock()) okRosenBrock++;
+  StatusPrint(2, "RosenBrock", okRosenBrock, N);
+  for (i = 0; i < N; i++) if (RunPowell()) okPowell++;
+  StatusPrint(3, "Powell", okPowell, N);
+  for (i = 0; i < N; i++) if (RunFletcher()) okFletcher++;
+  StatusPrint(4, "Fletcher", okFletcher, N);
+  for (i = 0; i < N; i++) if (RunGoldStein1()) okGoldStein1++;
+  StatusPrint(5, "GoldStein1", okGoldStein1, N);
+  for (i = 0; i < N; i++) if (RunGoldStein2()) okGoldStein2++;
+  StatusPrint(6, "GoldStein2", okGoldStein2, N);
+  if (RunTrigoFletcher()) okTrigoFletcher++;
+  StatusPrint(7, "TrigoFletcher", okTrigoFletcher, 1);
 
   gBenchmark->Stop("stressFit");
 
@@ -687,15 +674,18 @@ Int_t stressFit(const char *theFitter, Int_t N)
 int main(int argc,const char *argv[]) 
 {
   gBenchmark = new TBenchmark();
-  const char *fitter = "Minuit";
-  if (argc > 1)  fitter = argv[1];
-  if (strcmp(fitter,"Minuit") && strcmp(fitter,"Minuit2") && strcmp(fitter,"Fumili")) {
-     printf("stressFit illegal option %s, using Minuit instead\n",fitter);
-     fitter = "Minuit";
+  const char *fittertype = "Minuit";
+  const char *fitteralgo = "Migrad";
+  if (argc > 1)  fittertype = argv[1];
+  if (argc > 2)  fitteralgo = argv[2];
+  if (strcmp(fittertype, "Minuit") && strcmp(fittertype, "Minuit2") && strcmp(fittertype, "Fumili")) {
+     printf("stressFit illegal option %s, using Minuit instead\n", fittertype);
+     fittertype = "Minuit";
+     fitteralgo = "Migrad";
   }
   Int_t N = 2000;
-  if (argc > 2) N = atoi(argv[2]);
-  stressFit(fitter,N);  //default is Minuit
+  if (argc > 3) N = atoi(argv[3]);
+  stressFit(fittertype, fitteralgo, N);  //default is Minuit
   return 0;
 }
 

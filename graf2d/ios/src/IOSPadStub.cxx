@@ -348,6 +348,12 @@ void PadStub::SetSelected(TObject *)
 }
 
 //______________________________________________________________________________
+void PadStub::ShowGuidelines(TObject *, Int_t, char, bool)
+{
+
+}
+
+//______________________________________________________________________________
 void PadStub::Update()
 {
 }
@@ -367,6 +373,12 @@ void PadStub::ReleaseViewer3D(Option_t *)
 Bool_t PadStub::HasViewer3D() const
 {
    return kFALSE;
+}
+
+//______________________________________________________________________________
+TVirtualPadPainter *PadStub::GetPainter()
+{
+   return 0;
 }
 
 }

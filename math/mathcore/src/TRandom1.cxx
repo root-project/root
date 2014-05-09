@@ -408,7 +408,7 @@ void TRandom1::RndmArray(const Int_t size, Float_t *vect)
 //______________________________________________________________________________
 void TRandom1::RndmArray(const Int_t size, Double_t *vect)
 {
-   //return an array of random numbers in ]0,1]
+   //return an array of random numbers in ]0,1[
    float next_random;
    float uni;
    int i;

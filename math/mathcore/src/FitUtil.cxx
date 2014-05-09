@@ -146,6 +146,10 @@ namespace ROOT {
 
          private: 
 
+            // objects of this class are not meant to be copied / assigned
+            IntegralEvaluator(const IntegralEvaluator& rhs);
+            IntegralEvaluator& operator=(const IntegralEvaluator& rhs);
+
             unsigned int fDim; 
             const double * fParams;
             //ROOT::Math::IParamMultiFunction * fFunc;  // copy of function in order to be able to change parameters    
@@ -346,6 +350,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
    const DataOptions & fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+   bool useExpErrors = (fitOpt.fExpErrors);
 
 #ifdef DEBUG
    std::cout << "\n\nFit data size = " << n << std::endl;
@@ -400,6 +405,17 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       // normalize result if requested according to bin volume
       if (useBinVolume) fval *= binVolume;
 
+      // expected errors
+      if (useExpErrors) {
+         // we need first to check if a weight factor needs to be applied
+         // weight = sumw2/sumw = error**2/content
+         double invWeight = y * invError * invError;
+         if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0; 
+         // compute expected error  as f(x) / weight
+         double invError2 = (fval > 0) ? invWeight / fval : 0.0; 
+         invError = std::sqrt(invError2); 
+      }         
+
 //#define DEBUG
 #ifdef DEBUG      
       std::cout << x[0] << "  " << y << "  " << 1./invError << " params : "; 
@@ -408,6 +424,7 @@ double FitUtil::EvaluateChi2(const IModelFunction & func, const BinData & data, 
       std::cout << "\tfval = " << fval << " bin volume " << binVolume << " ref " << wrefVolume << std::endl; 
 #endif
 //#undef DEBUG
+
 
       if (invError > 0) { 
          nPoints++;
@@ -575,6 +592,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    const DataOptions & fitOpt = data.Opt();
    bool useBinIntegral = fitOpt.fIntegral && data.HasBinEdges(); 
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
+   bool useExpErrors = (fitOpt.fExpErrors);
 
    const double * x1 = data.GetPoint(i,y, invError);
 
@@ -609,6 +627,18 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    }
    // normalize result if requested according to bin volume
    if (useBinVolume) fval *= binVolume;
+
+   // expected errors
+   if (useExpErrors) {
+      // we need first to check if a weight factor needs to be applied
+      // weight = sumw2/sumw = error**2/content
+      double invWeight = y * invError * invError;
+      if (invError == 0) invWeight = (data.SumOfError2() > 0) ? data.SumOfContent()/ data.SumOfError2() : 1.0; 
+      // compute expected error  as f(x) / weight
+      double invError2 = (fval > 0) ? invWeight / fval : 0.0; 
+      invError = std::sqrt(invError2); 
+   }         
+
 
    double resval =   ( y -fval )* invError;  	   
 

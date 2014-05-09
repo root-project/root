@@ -119,10 +119,10 @@ namespace TMVA {
 
    private:
       
-      std::vector<TMVA::Event*>* TransformCollection( VariableTransformBase* trf,
-                                                      Int_t cls,
-                                                      std::vector<TMVA::Event*>* events,
-                                                      Bool_t replace ) const;
+      //      std::vector<TMVA::Event*>* TransformCollection( VariableTransformBase* trf,
+      //                                                Int_t cls,
+      //                                                std::vector<TMVA::Event*>* events,
+      //                                                Bool_t replace ) const;
       
       const TMVA::VariableInfo& Variable(UInt_t ivar) const { return fDataSetInfo.GetVariableInfos().at(ivar); }
       const TMVA::VariableInfo& Target  (UInt_t itgt) const { return fDataSetInfo.GetTargetInfos()[itgt]; }

@@ -64,6 +64,7 @@
 // *   Test 26 : Handling output via file ......................... OK *   * //
 // *   Test 27 : Simple: selector by object ....................... OK *   * //
 // *   Test 28 : H1 dataset: selector by object ................... OK *   * //
+// *   Test 29 : Chain with TTree in subdirs ...................... OK *   * //
 // *  * All registered tests have been passed  :-)                     *   * //
 // *  ******************************************************************   * //
 // *                                                                       * //
@@ -133,7 +134,7 @@
 
 #include "proof/getProof.C"
 
-#define PT_NUMTEST 28
+#define PT_NUMTEST 29
 
 static const char *urldef = "proof://localhost:40000";
 static TString gtutdir;
@@ -249,7 +250,7 @@ int main(int argc,const char *argv[])
       printf("                 in case of error.\n");
       printf("   -k,-keeplog   keep all logfiles, including the ones from the PROOF nodes (in one single file)\n");
       printf("                 The paths are printed on the screen.\n");
-      printf("   -catlog       prints all the logfiles (also the ones from PROOF nodes) on stdout; useful for");
+      printf("   -catlog       prints all the logfiles (also the ones from PROOF nodes) on stdout; useful for\n");
       printf("                 presenting a single aggregated output for automatic tests. If specified in\n");
       printf("                 conjunction with -cleanlog it will only print the logfiles in case of errors\n");
       printf("   -dyn          run the test in dynamicStartup mode\n");
@@ -619,7 +620,8 @@ Double_t ProofTest::gRefReal[PT_NUMTEST] = {
    0.259239,   // #25: TTree friends, same file
    6.868858,   // #26: Simple generation: merge-via-file
    6.362017,   // #27: Simple random number generation by TSelector object
-   5.519631    // #28: H1: by-object processing
+   5.519631,   // #28: H1: by-object processing
+   7.452465    // #29: Chain with TTree in subdirs
 };
 
 //
@@ -750,6 +752,7 @@ Int_t PT_EventRange(void *, RunTimes &);
 Int_t PT_POFNtuple(void *, RunTimes &);
 Int_t PT_POFDataset(void *, RunTimes &);
 Int_t PT_Friends(void *, RunTimes &);
+Int_t PT_TreeSubDirs(void *, RunTimes &);
 Int_t PT_SimpleByObj(void *, RunTimes &);
 Int_t PT_H1ChainByObj(void *, RunTimes &);
 Int_t PT_AssertTutorialDir(const char *tutdir);
@@ -1066,6 +1069,8 @@ int stressProof(const char *url, const char *tests, Int_t nwrks,
    testList->Add(new ProofTest("Simple: selector by object", 27, &PT_SimpleByObj, 0, "1", "ProofSimple", kTRUE));
    // H1 analysis over HTTP by TSeletor object
    testList->Add(new ProofTest("H1 chain: selector by object", 28, &PT_H1ChainByObj, 0, "1", "h1analysis", kTRUE));
+   // Test TPacketizerFile and TTree friends in separate files
+   testList->Add(new ProofTest("Chain with TTree in subdirs", 29, &PT_TreeSubDirs, 0, "1", "ProofFriends,ProofAux", kTRUE));
    // The selectors
    if (PT_AssertTutorialDir(gTutDir) != 0) {
       printf("*  Some of the tutorial files are missing! Stop\n");
@@ -2107,7 +2112,7 @@ Int_t PT_CheckDataset(TQueryResult *qr, Long64_t nevt)
 }
 
 //_____________________________________________________________________________
-Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
+Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt, bool withfriends)
 {
    // Check the result of the ProofFriends analysis
 
@@ -2134,6 +2139,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
 
    TString emsg;
    // Check the histogram entries and mean values
+   Int_t nchk = (withfriends) ? 4 : 2;
    Int_t rchs = 0;
    const char *hnam[4] = { "histo1", "histo2", "histo3", "histo4" };
    const char *hcls[4] = { "TH2F", "TH1F", "TH1F", "TH2F" };
@@ -2141,7 +2147,7 @@ Int_t PT_CheckFriends(TQueryResult *qr, Long64_t nevt)
    TObject *o = 0;
    Double_t ent = -1;
    Double_t prec = 1. / TMath::Sqrt(nevt);
-   for (Int_t i = 0; i < 4; i++) {
+   for (Int_t i = 0; i < nchk; i++) {
       if (!(o = out->FindObject(hnam[i]))) {
          emsg.Form("object '%s' not found", hnam[i]);
          rchs = -1;
@@ -4268,7 +4274,127 @@ Int_t PT_Friends(void *sf, RunTimes &tt)
 
    // Check the results
    PutPoint();
-   return PT_CheckFriends(gProof->GetQueryResult(), nevt * nwrk);
+   return PT_CheckFriends(gProof->GetQueryResult(), nevt * nwrk, 1);
+}
+
+//_____________________________________________________________________________
+Int_t PT_TreeSubDirs(void*, RunTimes &tt)
+{
+   // Test processing of TTree in subdirectories
+
+   // Checking arguments
+   PutPoint();
+   if (!gProof) {
+      printf("\n >>> Test failure: no PROOF session found\n");
+      return -1;
+   }
+
+   // Not supported in dynamic mode
+   if (gDynamicStartup) {
+      return 1;
+   }
+   PutPoint();
+
+   // File generation: we use TPacketizerFile in here to create two files per node
+   TList *wrks = gProof->GetListOfSlaveInfos();
+   if (!wrks) {
+      printf("\n >>> Test failure: could not get the list of information about the workers\n");
+      return -1;
+   }
+   
+   // Create the map
+   TString fntree;
+   TMap *files = new TMap;
+   files->SetName("PROOF_FilesToProcess");
+   TIter nxwi(wrks);
+   TSlaveInfo *wi = 0;
+   while ((wi = (TSlaveInfo *) nxwi())) {
+      fntree.Form("tree_%s.root", wi->GetOrdinal());
+      THashList *wrklist = (THashList *) files->GetValue(wi->GetName());
+      if (!wrklist) {
+         wrklist = new THashList;
+         wrklist->SetName(wi->GetName());
+         files->Add(new TObjString(wi->GetName()), wrklist);
+      }
+      wrklist->Add(new TObjString(fntree));
+   }
+   Int_t nwrk = wrks->GetSize();
+
+   // Generate the files
+   gProof->AddInput(files);
+   gProof->SetParameter("ProofAux_Action", "GenerateTrees:dir1/dir2/dir3");
+
+   // File generation: define the number of events per worker
+   Long64_t nevt = 1000;
+   gProof->SetParameter("ProofAux_NEvents", (Long64_t)nevt);
+   // Special Packetizer
+   gProof->SetParameter("PROOF_Packetizer", "TPacketizerFile");
+   // Now process
+   gProof->Process(gAuxSel.Data(), 1);
+   // Remove the packetizer specifications
+   gProof->DeleteParameters("PROOF_Packetizer");
+
+   // Check that we got some output
+   if (!gProof->GetOutputList()) {
+      printf("\n >>> Test failure: output list not found!\n");
+      return -1;
+   }
+
+   // Create the TChain objects
+   TChain *dset = new TChain("dir1/dir2/dir3/Tmain");
+   // Fill them with the information found in the output list
+   Bool_t foundMain = kFALSE;
+   TIter nxo(gProof->GetOutputList());
+   TObject *o = 0;
+   TObjString *os = 0;
+   while ((o = nxo())) {
+      TList *l = dynamic_cast<TList *> (o);
+      if (l && !strncmp(l->GetName(), "MainList-", 9)) {
+         foundMain = kTRUE;
+         TIter nxf(l);
+         while ((os = (TObjString *) nxf()))
+            dset->Add(os->GetName());
+      }
+   }
+   dset->SetProof();
+   
+   // If we did not found the main or the friend meta info we fail
+   if (!foundMain) {
+      printf("\n >>> Test failure: 'main' meta info missing!\n");
+      return -1;
+   }
+
+   // We do not plot the ntuple (we are in batch mode)
+   gProof->SetParameter("PROOF_DONT_PLOT", "yes");
+
+   // We do use friends
+   gProof->SetParameter("PROOF_NO_FRIENDS", "yes");
+
+   // Clear the list of query results
+   if (gProof->GetQueryResults()) gProof->GetQueryResults()->Clear();
+
+   // Process
+   PutPoint();
+   {  SwitchProgressGuard spg;
+      gTimer.Start();
+      dset->Process(gFriendsSel.Data());
+      gTimer.Stop();
+   }
+
+   // Remove any setting
+   gProof->DeleteParameters("PROOF_DONT_PLOT");
+   gProof->GetInputList()->Remove(files);
+   files->SetOwner(kTRUE);
+   SafeDelete(files);
+   // Clear the files created by this run
+   gProof->ClearData(TProof::kUnregistered | TProof::kForceClear);
+
+   // The runtimes
+   PT_GetLastProofTimes(tt);
+
+   // Check the results
+   PutPoint();
+   return PT_CheckFriends(gProof->GetQueryResult(), nevt * nwrk, 0);
 }
 
 //_____________________________________________________________________________

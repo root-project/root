@@ -25,13 +25,19 @@
 #ifndef ROOT_TAttText
 #include "TAttText.h"
 #endif
-
 #ifndef ROOT_TNamed
 #include "TNamed.h"
 #endif
+#ifndef ROOT_TAttBBox2D
+#include "TAttBBox2D.h"
+#endif
+#ifndef ROOT_GuiTypes
+#include "GuiTypes.h"
+#endif
 
+class TPoint;
 
-class TText : public TNamed, public TAttText {
+class TText : public TNamed, public TAttText, public TAttBBox2D {
 
 protected:
    Double_t     fX;           // X position of text (left,center,etc..)
@@ -83,7 +89,17 @@ public:
    virtual void     SetX(Double_t x) { fX = x; } // *MENU*
    virtual void     SetY(Double_t y) { fY = y; } // *MENU*
 
-   ClassDef(TText,2)  //Text
+   virtual Rectangle_t  GetBBox();
+   virtual TPoint       GetBBoxCenter();
+   virtual void         SetBBoxCenter(const TPoint &p);
+   virtual void         SetBBoxCenterX(const Int_t x);
+   virtual void         SetBBoxCenterY(const Int_t y);
+   virtual void         SetBBoxX1(const Int_t x); //Not Implemented
+   virtual void         SetBBoxX2(const Int_t x); //Not Implemented
+   virtual void         SetBBoxY1(const Int_t y); //Not Implemented
+   virtual void         SetBBoxY2(const Int_t y); //Not Implemented
+
+   ClassDef(TText,3)  //Text
 };
 
 #endif

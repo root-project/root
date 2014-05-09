@@ -9,6 +9,7 @@
  **********************************************************************/
 
 #include "Math/GaussIntegrator.h"
+#include "Math/IntegratorOptions.h"
 #include <cmath>
 
 namespace ROOT {
@@ -17,11 +18,19 @@ namespace Math {
 
 bool GaussIntegrator::fgAbsValue = false;
 
-GaussIntegrator::GaussIntegrator(double eps)
+   GaussIntegrator::GaussIntegrator(double epsabs, double epsrel)
 {
-// Default Constructor.
+// Default Constructor. If no relative espsilon is specified assume is equal to the absolute one
 
-   fEpsilon = eps;
+   if (epsabs <= 0 ) { 
+      fEpsAbs = ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
+      fEpsRel = ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+   }
+   else { 
+      fEpsAbs = epsabs;
+      if (epsrel <= 0 ) fEpsRel = epsabs;   // use relative tiolerance = to abs if it is given only one
+      else fEpsRel = epsrel; 
+   }
    fLastResult = fLastError = 0;
    fUsedOnce = false;
    fFunction = 0;
@@ -57,6 +66,16 @@ double GaussIntegrator::IntegralLow (double b) {
 double GaussIntegrator::DoIntegral(double a, double b, const IGenFunction* function)
 {
    //  Return Integral of function between a and b.
+
+   if (fEpsRel <=0 || fEpsAbs <= 0) { 
+      if (fEpsRel > 0) fEpsAbs = fEpsRel;
+      else if (fEpsAbs > 0) fEpsRel = fEpsAbs;
+      else {
+         MATH_INFO_MSG("ROOT::Math::GausIntegratorOneDim", "Invalid tolerance given - use default values");
+         fEpsRel =  ROOT::Math::IntegratorOneDimOptions::DefaultRelTolerance();
+         fEpsAbs =  ROOT::Math::IntegratorOneDimOptions::DefaultAbsTolerance();
+      }
+   }
 
    const double kHF = 0.5;
    const double kCST = 5./1000;
@@ -119,12 +138,15 @@ CASE2:
       s16  += w[i]*(f1 + f2);
    }
    s16 = c2*s16;
-   if (std::abs(s16-c2*s8) <= fEpsilon*(1. + std::abs(s16))) {
+   //if (std::abs(s16-c2*s8) <= fEpsilon*(1. + std::abs(s16))) {
+   Double_t error = std::abs(s16-c2*s8);
+   if (error <= fEpsAbs || error <= fEpsRel*std::abs(s16)) {
       h += s16;
       if(bb != b) goto CASE1;
    } else {
       bb = c1;
       if(1. + aconst*std::abs(c2) != 1) goto CASE2;
+      MATH_WARN_MSG("ROOT::Math::GausIntegratorOneDim", "Failed to reach the desired tolerance");
       h = s8;  //this is a crude approximation (cernlib function returned 0 !)
    }
 
@@ -134,12 +156,6 @@ CASE2:
    return h;
 }
    
-
-void GaussIntegrator::SetRelTolerance (double eps)
-{   fEpsilon = eps;  }
-
-void GaussIntegrator::SetAbsTolerance (double)
-{   MATH_WARN_MSG("ROOT::Math::GaussIntegrator", "There is no Absolute Tolerance!");  }
 
 double GaussIntegrator::Result () const
 {
@@ -182,14 +198,15 @@ double GaussIntegrator::IntegralCauchy (double /*a*/, double /*b*/, double /*c*/
 void GaussIntegrator::SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) {
    // set options
    SetRelTolerance(opt.RelTolerance() );
+   SetAbsTolerance(opt.AbsTolerance() );
 }
 
 ROOT::Math::IntegratorOneDimOptions  GaussIntegrator::Options() const { 
    // retrieve options 
    ROOT::Math::IntegratorOneDimOptions opt; 
    opt.SetIntegrator("Gauss");
-   //opt.SetAbsTolerance(fEpsilon); 
-   opt.SetRelTolerance(fEpsilon); 
+   opt.SetAbsTolerance(fEpsAbs); 
+   opt.SetRelTolerance(fEpsRel); 
    opt.SetWKSize(0); 
    opt.SetNPoints(0); 
    return opt; 

@@ -646,7 +646,7 @@ TGTabElement *TGTab::GetTabTab(const char *name) const
       next();
    }
 
-   return tab;
+   return 0;
 }
 
 //______________________________________________________________________________

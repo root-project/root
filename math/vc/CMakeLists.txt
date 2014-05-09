@@ -1,3 +1,5 @@
+set(Vc_INSIDE_ROOT TRUE)
+
 include(cmake/VcMacros.cmake)
 include(cmake/AddTargetProperty.cmake)
 vc_determine_compiler()

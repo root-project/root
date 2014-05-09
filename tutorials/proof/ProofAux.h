@@ -7,6 +7,7 @@
 #ifndef ProofAux_h
 #define ProofAux_h
 
+#include <TString.h>
 #include <TSelector.h>
 
 class TList;
@@ -23,6 +24,7 @@ public :
    Long64_t        fNEvents;
    TList          *fMainList;
    TList          *fFriendList;
+   TString         fDir;
 
    ProofAux();
    virtual ~ProofAux();

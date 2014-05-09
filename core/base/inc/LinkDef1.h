@@ -148,6 +148,7 @@
 #pragma link C++ class TAttText+;
 #pragma link C++ class TAtt3D+;
 #pragma link C++ class TAttBBox+;
+#pragma link C++ class TAttBBox2D+;
 #pragma link C++ class TBenchmark+;
 #pragma link C++ class TBrowser+;
 #pragma link C++ class TBrowserImp+;

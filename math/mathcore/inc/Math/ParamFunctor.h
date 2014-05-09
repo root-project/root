@@ -276,12 +276,12 @@ public:
 //       fImpl.reset(copy.fImpl.release());
 //       copy.fImpl.reset(p);
 
-      
-      if (fImpl) delete fImpl;
-      fImpl = 0; 
-      if (rhs.fImpl != 0) 
-         fImpl = rhs.fImpl->Clone();
-
+      if(this != &rhs) {
+         if (fImpl) delete fImpl;
+         fImpl = 0; 
+         if (rhs.fImpl != 0) 
+            fImpl = rhs.fImpl->Clone();
+      }
       return *this;
    }
 

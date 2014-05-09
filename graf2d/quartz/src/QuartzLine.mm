@@ -116,7 +116,7 @@ void SetLineWidth(CGContextRef ctx, Int_t width)
    if (width < 0)
       return;
 
-   CGContextSetLineWidth(ctx, width);
+   CGContextSetLineWidth(ctx, width ? width : 1);
 }
 
 //______________________________________________________________________________

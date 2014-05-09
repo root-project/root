@@ -53,9 +53,9 @@ if(XROOTD_FOUND)
   endif()
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
 
-  if ( ${xrdversnum} LESS 300010000 AND ${xrdversnum} LESS 20111022)
+  if ( ${xrdversnum} LESS 300010000 )
      set(XROOTD_OLDPACK TRUE)
-     set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOT_DIR})
+     set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR})
      message(STATUS "Setting OLDPACK TRUE")
   else()
      set(XROOTD_OLDPACK FALSE)
@@ -83,13 +83,20 @@ if(XROOTD_FOUND)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdNetUtil_LIBRARY})
     endif ()
   else()
-    foreach(l XrdMain XrdUtils XrdClient XrdCl)
+    foreach(l XrdMain XrdUtils XrdClient)
       find_library(XROOTD_${l}_LIBRARY
          NAMES ${l}
          HINTS ${searchpath}
          PATH_SUFFIXES lib)
       list(APPEND XROOTD_LIBRARIES ${XROOTD_${l}_LIBRARY})
     endforeach()
+    if(${xrdversnum} GREATER 300030000)
+      find_library(XROOTD_XrdCl_LIBRARY
+         NAMES XrdCl
+         HINTS ${searchpath}
+         PATH_SUFFIXES lib)
+      list(APPEND XROOTD_LIBRARIES ${XROOTD_XrdCl_LIBRARY})
+    endif()
   endif()
 
   if(XROOTD_LIBRARIES)
@@ -107,7 +114,8 @@ mark_as_advanced(XROOTD_INCLUDE_DIR
                  XROOTD_XrdMain_LIBRARY
                  XROOTD_XrdUtils_LIBRARY
                  XROOTD_XrdClient_LIBRARY
-                 XROOTD_XrdNetUtils_LIBRARY
+                 XROOTD_XrdCl_LIBRARY
+                 XROOTD_XrdNetUtil_LIBRARY
                  XROOTD_XrdNet_LIBRARY
                  XROOTD_XrdSys_LIBRARY
                  XROOTD_XrdOuc_LIBRARY

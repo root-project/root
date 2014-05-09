@@ -10,6 +10,8 @@
  *************************************************************************/
 
 #include "TROOT.h"
+#include "TEnv.h"
+#include "TBrowser.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
 #include "TH1.h"
@@ -403,11 +405,16 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
 
 
 //______________________________________________________________________________
-void TMultiGraph::Browse(TBrowser *)
+void TMultiGraph::Browse(TBrowser *b)
 {
    // Browse multigraph.
 
-   Draw("alp");
+   TString opt = gEnv->GetValue("TGraph.BrowseOption", "");
+   if (opt.IsNull()) {
+      opt = b ? b->GetDrawOption() : "alp";
+      opt = (opt == "") ? "alp" : opt.Data();
+   }
+   Draw(opt.Data());
    gPad->Update();
 }
 

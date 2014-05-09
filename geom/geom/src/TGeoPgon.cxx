@@ -44,8 +44,64 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
+#include "TThread.h"
    
 ClassImp(TGeoPgon)
+
+//______________________________________________________________________________
+TGeoPgon::ThreadData_t::ThreadData_t() :
+   fIntBuffer(0), fDblBuffer(0)
+{
+   // Constructor.
+}
+
+//______________________________________________________________________________
+TGeoPgon::ThreadData_t::~ThreadData_t()
+{
+   // Destructor.
+   delete [] fIntBuffer;
+   delete [] fDblBuffer;
+}
+
+//______________________________________________________________________________
+TGeoPgon::ThreadData_t& TGeoPgon::GetThreadData() const
+{
+   Int_t tid = TGeoManager::ThreadId();
+   return *fThreadData[tid];
+}
+
+//______________________________________________________________________________
+void TGeoPgon::ClearThreadData() const
+{
+   TThread::Lock();
+   std::vector<ThreadData_t*>::iterator i = fThreadData.begin();
+   while (i != fThreadData.end())
+   {
+      delete *i;
+      ++i;
+   }
+   fThreadData.clear();
+   fThreadSize = 0;
+   TThread::UnLock();
+}
+
+//______________________________________________________________________________
+void TGeoPgon::CreateThreadData(Int_t nthreads)
+{
+// Create thread data for n threads max.
+   if (fThreadSize) ClearThreadData();
+   TThread::Lock();
+   fThreadData.resize(nthreads);
+   fThreadSize = nthreads;
+   for (Int_t tid=0; tid<nthreads; tid++) {
+      if (fThreadData[tid] == 0) {
+         fThreadData[tid] = new ThreadData_t;
+         fThreadData[tid]->fIntBuffer = new Int_t[fNedges+10];
+         fThreadData[tid]->fDblBuffer = new Double_t[fNedges+10];
+      }
+   }   
+   TThread::UnLock();
+}
 
 //_____________________________________________________________________________
 TGeoPgon::TGeoPgon()
@@ -53,8 +109,7 @@ TGeoPgon::TGeoPgon()
 // dummy ctor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = 0;
-   fIntBuffer = 0;
-   fDblBuffer = 0;
+   fThreadSize = 0;
 }   
 
 //_____________________________________________________________________________
@@ -64,8 +119,8 @@ TGeoPgon::TGeoPgon(Double_t phi, Double_t dphi, Int_t nedges, Int_t nz)
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fIntBuffer = 0;
-   fDblBuffer = 0;
+   fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -75,8 +130,8 @@ TGeoPgon::TGeoPgon(const char *name, Double_t phi, Double_t dphi, Int_t nedges, 
 // Default constructor
    SetShapeBit(TGeoShape::kGeoPgon);
    fNedges = nedges;
-   fIntBuffer = 0;
-   fDblBuffer = 0;
+   fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
@@ -93,19 +148,18 @@ TGeoPgon::TGeoPgon(Double_t *param)
 // param[5] = Rmin1
 // param[6] = Rmax1
 // ...
-   fIntBuffer = 0;
-   fDblBuffer = 0;
    SetShapeBit(TGeoShape::kGeoPgon);
    SetDimensions(param);
    ComputeBBox();
+   fThreadSize = 0;
+   CreateThreadData(1);
 }
 
 //_____________________________________________________________________________
 TGeoPgon::~TGeoPgon()
 {
 // destructor
-   delete [] fIntBuffer;
-   delete [] fDblBuffer;
+   ClearThreadData();
 }
 
 //_____________________________________________________________________________
@@ -358,10 +412,10 @@ Double_t TGeoPgon::DistFromInside(const Double_t *point, const Double_t *dir, In
       ipl++;
    }
    Double_t stepmax = step;
-   if (!fIntBuffer) fIntBuffer = new Int_t[fNedges+10];
-   if (!fDblBuffer) fDblBuffer = new Double_t[fNedges+10];
-   Double_t *sph = fDblBuffer;
-   Int_t *iph = fIntBuffer;
+   if (!fThreadSize) ((TGeoPgon*)this)->CreateThreadData(1);
+   ThreadData_t& td = GetThreadData();
+   Double_t *sph = td.fDblBuffer;
+   Int_t *iph = td.fIntBuffer;
    // locate current phi sector [0,fNedges-1]; -1 for dead region
    LocatePhi(point, ipsec);
    if (ipsec<0) {
@@ -1047,10 +1101,10 @@ Double_t TGeoPgon::DistFromOutside(const Double_t *point, const Double_t *dir, I
          }   
       }   
    }   
-   if (!fIntBuffer) fIntBuffer = new Int_t[fNedges+10];
-   if (!fDblBuffer) fDblBuffer = new Double_t[fNedges+10];
-   Double_t *sph = fDblBuffer;
-   Int_t *iph = fIntBuffer;
+   if (!fThreadSize) ((TGeoPgon*)this)->CreateThreadData(1);
+   ThreadData_t& td = GetThreadData();
+   Double_t *sph = td.fDblBuffer;
+   Int_t *iph = td.fIntBuffer;
    Int_t icrossed;
    // locate current phi sector [0,fNedges-1]; -1 for dead region
    // if ray is perpendicular to Z, solve this particular case

@@ -101,7 +101,16 @@ public:
    /// minimizer type 
    const std::string & MinimizerType() const { return fMinimType; } 
 
-   /// True if fit successful, otherwise false.
+   /** 
+       True if fit successful, otherwise false.
+       A fit is considered successful if the minimizer succeded in finding the 
+       minimum. It could happen that subsequent operations like error analysis (e.g. Minos) 
+       failed. In that case the status can be still true if the original minimization algorithm 
+       succeeded in finding the minimum. 
+       One can query in that case the minimizer return status using Status(). 
+       It is responability to the Minimizer class to tag a found minimum as valid or not 
+       and to produce also a status code.
+   */
    bool IsValid() const { return fValid; }
 
    /// True if a fit result does not exist (even invalid) with parameter values 
@@ -285,6 +294,10 @@ public:
    /// query if a parameter is fixed 
    bool IsParameterFixed(unsigned int ipar) const; 
 
+   /// retrieve parameter bounds - return false if parameter is not bound
+   bool ParameterBounds(unsigned int ipar, double &lower, double &upper) const; 
+
+
    /// get name of parameter (deprecated)
    std::string GetParameterName(unsigned int ipar) const { 
       return ParName(ipar);
@@ -313,8 +326,9 @@ protected:
    double fEdm;             // expected distance from mimimum
    double fChi2;            // fit chi2 value (different than fval in case of chi2 fits)
    IModelFunction * fFitFunc; //! model function resulting  from the fit. It is given by Fitter but it is managed by FitResult
-   std::vector<unsigned int>   fFixedParams; // list of fixed parameters
-   std::vector<unsigned int>   fBoundParams; // list of limited parameters
+   std::map<unsigned int, bool>           fFixedParams; // list of fixed parameters
+   std::map<unsigned int, unsigned int>   fBoundParams; // list of limited parameters
+   std::vector<std::pair<double,double> >  fParamBounds; // parameter bounds
    std::vector<double>         fParams;  // parameter values. Size is total number of parameters
    std::vector<double>         fErrors;  // errors 
    std::vector<double>         fCovMatrix;  // covariance matrix (size is npar*(npar+1)/2) where npar is total parameters

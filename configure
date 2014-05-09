@@ -104,6 +104,7 @@ options="                    \
    enable_unuran             \
    enable_vc                 \
    enable_vdt                \
+   enable_werror             \
    enable_winrtdebug         \
    enable_x11                \
    enable_xft                \
@@ -164,6 +165,7 @@ enable_table=no
 enable_thread=yes        # cannot be disabled (not in above options list)
 enable_unuran=no
 enable_vc=no
+enable_werror=no
 enable_winrtdebug=
 enable_builtin_freetype=no
 enable_builtin_ftgl=no
@@ -1229,6 +1231,11 @@ check_comp() {
                 altldtmp="$altld"
                 altld="$altldorg"
             fi
+            if test "x$arch" = "xwin64gcc" ; then
+                altldorg="g++"
+                altldtmp="$altld"
+                altld="$altldorg"
+            fi
         fi
         altld1=`echo "$altld" | awk '{print $1}'`
         if `$cwhich $altld1 > /dev/null 2>&1` ; then
@@ -1668,6 +1675,7 @@ enable/disable options, prefix with either --enable- or --disable-
   tmva               Build TMVA multi variate analysis library
   vc                 Vc adds a few new types for portable and intuitive SIMD programming
   unuran             UNURAN - package for generating non-uniform random numbers
+  werror             Turn on -Werror on most systems to force warnings to be errors
   winrtdebug         Link against the Windows debug runtime library
   x11                X11 support
   xml                XML parser interface
@@ -2777,7 +2785,7 @@ linux|fbsd)
     ;;
 esac
 case $arch in
-win32gcc)
+win32gcc | win64gcc)
     # if it was not set it was turned on in the above "linux" case
     if test "x$enable_thread" = "xyes"; then
         threadflag=
@@ -3300,6 +3308,9 @@ if test ! "x$enable_pgsql" = "xno"; then
         enable_pgsql="no"
     else
         if test "x$arch" = xwin32gcc; then
+            pgsqllib="$pgsqllib -lssl -lldap -lcrypto -lintl"
+        fi
+        if test "x$arch" = xwin64gcc; then
             pgsqllib="$pgsqllib -lssl -lldap -lcrypto -lintl"
         fi
     fi
@@ -4765,7 +4776,7 @@ if test ! "x$enable_xml" = "xno" ; then
           enable_xml="no"
        else
           case $arch in
-             win32gcc)  xmllib="$xmllib -liconv"              ;;
+             win32gcc | win64gcc)  xmllib="$xmllib -liconv"   ;;
           esac
           case $platform in
              linux)     xmllib="$xmllib -lpthread"            ;;
@@ -7330,6 +7341,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildnetxng@|$buildnetxng|"          \
     -e "s|@c++11@|$enable_cxx11|"               \
     -e "s|@libc++@|$enable_libcxx|"             \
+    -e "s|@werror@|$enable_werror|"             \
     < Makefile.tmp > $MAKEOUT
 rm -f Makefile.tmp
 
@@ -7701,7 +7713,7 @@ fi
 if test "x$enable_reflex" = "xyes"; then
     libdirreflex=$libdir
     if test "x$haveconfig" = "x" ; then
-        libdirreflex='$0; if readlink $dir > /dev/null 2>\&1; then lndir=`readlink $dir`; dir=`dirname $dir`; lndir=`dirname $lndir`; dir=`cd $dir \&\& cd $lndir \&\& pwd \|\| echo $lndir`; else dir=`dirname ${dir}`; fi; dir=${dir}/../lib'
+        libdirreflex=' $ROOTSYS/lib'
     fi
     modpath=""
     if test "x$platform" = "xwin32"; then

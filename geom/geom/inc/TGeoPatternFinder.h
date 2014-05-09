@@ -498,18 +498,14 @@ public:
 
 class TGeoPatternSphPhi : public TGeoPatternFinder
 {
-//new_code_start
 private:
-	Double_t           *fSinCos;
-//new_code_end
+	Double_t           *fSinCos;         //! Sincos table
 
+protected:
+   TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc); // Not implemented 
+   TGeoPatternSphPhi& operator=(const TGeoPatternSphPhi& pfc); // Not implemented
+   Double_t           *CreateSinCos();
 public:
-   TGeoPatternSphPhi(const TGeoPatternSphPhi& pfc) 
-     : TGeoPatternFinder(pfc), fSinCos(pfc.fSinCos) {CreateThreadData(1);}
-   TGeoPatternSphPhi& operator=(const TGeoPatternSphPhi& pfc)
-     {if(this!=&pfc) {TGeoPatternFinder::operator=(pfc); fSinCos=pfc.fSinCos; CreateThreadData(1);}
-     return *this;}
-
    // constructors
    TGeoPatternSphPhi();
    TGeoPatternSphPhi(TGeoVolume *vol, Int_t ndivisions);

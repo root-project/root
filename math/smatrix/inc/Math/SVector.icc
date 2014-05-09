@@ -194,8 +194,20 @@ SVector<T,D>& SVector<T,D>::operator=(const T& a1) {
 template <class T, unsigned int D>
 template <class A>
 SVector<T,D>& SVector<T,D>::operator=(const VecExpr<A,T,D>& rhs) {
-   for(unsigned int i=0; i<D; ++i) {
-      fArray[i] = rhs.apply(i);
+   if (! rhs.IsInUse(fArray) ) { 
+      for(unsigned int i=0; i<D; ++i) {
+         fArray[i] = rhs.apply(i);
+      }
+   }
+   else { 
+      // otherwise we need to create a temporary object
+      T tmp[D];
+      for(unsigned int i=0; i<D; ++i) {
+         tmp[i] = rhs.apply(i);
+      }
+      for(unsigned int i=0; i<D; ++i) {
+         fArray[i] = tmp[i];
+      }
    }
    return *this;
 }
@@ -599,6 +611,13 @@ SubVector SVector<T,D>::Sub(unsigned int row) const {
    }
    return tmp;
 }
+
+// check if the given passed pointer is teh same contained in the vector
+template <class T, unsigned int D>
+bool SVector<T,D>::IsInUse( const T * p) const { 
+   return p == fArray; 
+} 
+
 
 //==============================================================================
 // operator<<

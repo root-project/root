@@ -10,6 +10,15 @@ find_package(ROOT REQUIRED)
 
 include(${ROOT_USE_FILE})
 
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  # To avoid to set ld_Library_path to locate the test libraries
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,@loader_path/.")
+endif()
+
 include_directories(${ROOT_INCLUDE_DIRS})
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   include_directories(${ROOT_SOURCE_DIR}/tutorials)
@@ -199,6 +208,7 @@ if(NOT WIN32 AND ROOT_xrootd_FOUND)
   ROOT_ADD_TEST(test-stressproof COMMAND stressProof lite:// 
                                          -h1 ${CMAKE_SOURCE_DIR}/files/h1 -event ${CMAKE_SOURCE_DIR}/files/event
                                          -l /tmp/stressProof-%d.log -cleanlog -catlog -noprogress
+                                         ENVIRONMENT PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
                                          FAILREGEX "FAILED")  
 endif()
 

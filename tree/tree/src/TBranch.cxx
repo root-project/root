@@ -642,7 +642,9 @@ void TBranch::DropBaskets(Option_t* options)
          basket = (TBasket*)fBaskets.UncheckedAt(i);
          if (!basket) continue;
          if ((i == fReadBasket || i == fWriteBasket) && !all) continue;
-         if (fBasketBytes[i]==0) continue; // Since it is not on file, we can read it back.
+         // if the basket is not yet on file but already has event in it
+         // we must continue to avoid dropping the basket (and thus losing data)
+         if (fBasketBytes[i]==0 && basket->GetNevBuf() > 0) continue; 
          basket->DropBuffers();
          --fNBaskets;
          fBaskets.RemoveAt(i);
