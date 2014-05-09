@@ -212,12 +212,9 @@ void TAttFillEditor::DoLiveAlpha(Int_t a)
    fAlphaField->SetNumber((Float_t)a/1000);
 
    if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor()))  {
-      // In case the color is not transparent an new color is created.
+      // In case the color is not transparent a new color is created.
       if (color->GetAlpha() == 1.) {
-         TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
-                                     color->GetRed(), color->GetGreen(), color->GetBlue());
-         colort->SetAlpha(0.99);
-         fAttFill->SetFillColor(colort->GetNumber());
+         fAttFill->SetFillColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
       } else {
          color->SetAlpha((Float_t)a/1000);
       }
