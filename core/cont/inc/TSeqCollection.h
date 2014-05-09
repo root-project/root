@@ -66,7 +66,7 @@ public:
    static inline void QSort(TObject **a, TObject **b, Int_t first, Int_t last) { QSort(a, 1, &b, first, last); }
    static void        QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last);
 
-   TIter begin() const { return TIter(this); }
+   TIter begin() const { return ++(TIter(this)); }
    TIter end() const { return TIter::End(); }
 
    ClassDef(TSeqCollection,0)  //Sequenceable collection ABC
