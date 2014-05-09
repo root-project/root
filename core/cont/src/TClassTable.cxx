@@ -489,6 +489,21 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
    return 0;
 }
 
+//______________________________________________________________________________
+TProtoClass *TClassTable::GetProto(const char *cname)
+{
+   // Given the class name returns the TClassProto object for the class.
+   // (uses hash of name).
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
+      fgIdMap->Print();
+   }
+
+   TClassRec *r = FindElement(cname);
+   if (r) return r->fProto;
+   return 0;
+}
 
 //______________________________________________________________________________
 extern "C" {
