@@ -967,29 +967,9 @@ bool TCling::LoadPCM(TString pcmFileName,
                      void (*triggerFunc)()) const {
    // Tries to load a PCM; returns true on success.
 
-   // pcmFileName is an intentional copy; updaed by FindFile() below.
+   // pcmFileName is an intentional copy; updated by FindFile() below.
 
-   // Assemble search path:
-#ifdef R__WIN32
-   TString searchPath = "$(PATH);";
-#else
-   TString searchPath = "$(LD_LIBRARY_PATH):";
-#endif
-#ifndef ROOTLIBDIR
-   TString rootsys = gSystem->Getenv("ROOTSYS");
-# ifdef R__WIN32
-   searchPath += rootsys + "/bin";
-# else
-   searchPath += rootsys + "/lib";
-# endif
-#else // ROOTLIBDIR
-# ifdef R__WIN32
-   searchPath += ROOTBINDIR;
-# else
-   searchPath += ROOTLIBDIR;
-# endif
-#endif // ROOTLIBDIR
-   gSystem->ExpandPathName(searchPath);
+   TString searchPath = gSystem->GetDynamicPath();
 
    if (triggerFunc) {
       const char *libraryName = FindLibraryName(triggerFunc);
