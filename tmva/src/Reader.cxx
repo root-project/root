@@ -273,6 +273,11 @@ void TMVA::Reader::DeclareOptions()
 TMVA::Reader::~Reader( void )
 {
    // destructor
+   std::map<TString, IMethod* >::iterator itr;
+   for( itr = fMethodMap.begin(); itr != fMethodMap.end(); itr++) {
+      delete itr->second;
+   }
+   fMethodMap.clear();
 
    delete fDataSetManager; // DSMTEST
 
