@@ -73,11 +73,11 @@ include/%.h:    $(METADIRI)/%.h
 		cp $< $@
 
 $(CLINGLIB):    $(CLINGO) $(CLINGDO) $(METAOLLVM) $(METAUTILSOLLVM) \
-                $(METAUTILSTO) $(ORDER_) $(MAINLIBS)
+                $(METAUTILSTO) $(ORDER_) $(MAINLIBS) $(TCLINGLIBDEPM)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)" \
 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
 		   "$(METAOLLVM) $(METAUTILSOLLVM) $(METAUTILSTO) \
-		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA)" \
+		    $(CLINGO) $(CLINGDO) $(CLINGLIBEXTRA) $(TCLINGLIBEXTRA)" \
 		   ""
 
 $(CLINGMAP):    $(CLINGL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP) $(call pcmdep,CLING)
