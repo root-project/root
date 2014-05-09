@@ -2338,6 +2338,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       return kTRUE;
    }
 
+   if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
+      // __len__ is already set from GetSize()
+      Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+   }
+
 // Make RooFit 'using' member functions available (not supported by dictionary)
    if ( name == "RooDataHist" )
       return Utility::AddUsingToClass( pyclass, "plotOn" );
