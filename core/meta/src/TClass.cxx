@@ -1199,15 +1199,7 @@ void TClass::Init(const char *name, Version_t cversion,
    }
    if (!fClassInfo) {
 
-      if (gInterpreter->CheckClassInfo(fName)) {
-         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
-         if (!fClassInfo) {
-            if (IsZombie()) {
-               TClass::RemoveClass(this);
-               return;
-            }
-         }
-      } else if (fState == kHasTClassInit) {
+      if (fState == kHasTClassInit) {
          // If the TClass is being generated from a ROOT dictionary,
          // eventhough we do not seem to have a CINT dictionary for
          // the class, we will will try to load it anyway UNLESS
@@ -1221,8 +1213,20 @@ void TClass::Init(const char *name, Version_t cversion,
          // we would not have a ClassInfo for the template
          // instantiation.
          fCanLoadClassInfo = kTRUE;
-         // Here we should check or grab the info from the rootpcm.
-         fHasRootPcmInfo = kTRUE;
+         // Here we check and grab the info from the rootpcm.
+         TProtoClass *proto = TClassTable::GetProto(GetName());
+         if (0 && proto && proto->FillTClass(this)) {
+            fHasRootPcmInfo = kTRUE;
+         }
+      }
+      if (!fHasRootPcmInfo && gInterpreter->CheckClassInfo(fName)) {
+         gInterpreter->SetClassInfo(this);   // sets fClassInfo pointer
+         if (!fClassInfo) {
+            if (IsZombie()) {
+               TClass::RemoveClass(this);
+               return;
+            }
+         }
       }
    }
    if (!silent && (!fClassInfo && !fCanLoadClassInfo) && !isStl && fName.First('@')==kNPOS &&
