@@ -28,6 +28,7 @@
 #include "TClassTable.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TProtoClass.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TError.h"
@@ -303,12 +304,54 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
    r->fBits = pragmabits;
    r->fDict = dict;
    r->fInfo = &info;
+   r->fProto= 0;
 
    fgIdMap->Add(info.name(),r);
 
    fgTally++;
    fgSorted = kFALSE;
 }
+
+//______________________________________________________________________________
+void TClassTable::Add(TProtoClass *proto)
+{
+   // Add a class to the class table (this is a static function).
+
+   if (!gClassTable)
+      new TClassTable;
+
+   // By definition the name in the TProtoClass is (must be) the normalized
+   // name, so there is no need to tweak it.
+   const char *cname = proto->GetName();
+
+   // check if already in table, if so return
+   TClassRec *r = FindElementImpl(cname, kTRUE);
+   if (r->fName) {
+      r->fProto = proto;
+      return;
+   } else if (ROOT::gROOTLocal && gCling) {
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
+      if (oldcl) { //  && oldcl->GetClassInfo()) {
+                   // As a work-around to ROOT-6012, we need to register the class even if
+                   // it is not a template instance, because a forward declaration in the header
+                   // files loaded by the current dictionary wil also de-activate the update
+                   // class info mechanism!
+
+         ::Warning("TClassTable::Add(TProtoClass*)","Called for existing class without a prior call add the dictionary function.");
+      }
+   }
+
+   r->fName = StrDup(cname);
+   r->fId   = 0;
+   r->fBits = 0;
+   r->fDict = 0;
+   r->fInfo = 0;
+   r->fProto= proto;
+
+   fgTally++;
+   fgSorted = kFALSE;
+}
+
 
 //______________________________________________________________________________
 void TClassTable::Remove(const char *cname)
@@ -335,6 +378,7 @@ void TClassTable::Remove(const char *cname)
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
          delete [] r->fName;
+         delete r->fProto;
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -370,6 +414,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    r->fId   = 0;
    r->fDict = 0;
    r->fInfo = 0;
+   r->fProto= 0;
    r->fNext = fgTable[slot];
    fgTable[slot] = r;
 
