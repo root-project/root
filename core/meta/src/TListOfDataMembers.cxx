@@ -303,12 +303,12 @@ void TListOfDataMembers::UnmapObject(TObject* obj)
    if (!fIds) return;
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
-      if (d) {
+      if (d && d->GetDeclId()) {
          fIds->Remove((Long64_t)d->GetDeclId());
       }
    } else {
       TGlobal *g = dynamic_cast<TGlobal*>(obj);
-      if (g) {
+      if (g && g->GetDeclId()) {
          fIds->Remove((Long64_t)g->GetDeclId());
       }
    }
