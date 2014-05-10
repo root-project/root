@@ -993,9 +993,15 @@ bool TCling::LoadPCM(TString pcmFileName,
       return kFALSE;
 
    if (gROOT->IsRootFile(pcmFileName)) {
-      if (gDebug > 5)
+      Int_t oldDebug = gDebug;
+      if (gDebug > 5) {
+         gDebug -= 5;
          ::Info("TCling::LoadPCM", "Loading ROOT PCM %s", pcmFileName.Data());
+      } else {
+         gDebug = 0;
+      }
 
+      TDirectory::TContext ctxt(0);
       TFile *pcmFile = new TFile(pcmFileName,"READ");
       TObjArray *protoClasses;
       pcmFile->GetObject("__ProtoClasses", protoClasses);
@@ -1006,6 +1012,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       delete protoClasses;
       delete pcmFile;
 
+      gDebug = oldDebug;
    } else {
       if (gDebug > 5)
          ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
