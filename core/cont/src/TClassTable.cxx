@@ -269,7 +269,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
 
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(shortName.c_str(), kTRUE);
-   if (r->fName) {
+   if (r->fName && r->fInfo) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
          // We have a namespace being reloaded.
@@ -299,12 +299,11 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       }
    }
 
-   r->fName = StrDup(shortName.c_str());
+   if (!r->fName) r->fName = StrDup(shortName.c_str());
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;
    r->fInfo = &info;
-   r->fProto= 0;
 
    fgIdMap->Add(info.name(),r);
 
