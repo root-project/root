@@ -4927,7 +4927,7 @@ void TClass::PostLoadCheck()
    // we reset fClassVersion to be -1 so that the current TVirtualStreamerInfo will not
    // be confused with a previously loaded streamerInfo.
 
-   if (IsLoaded() && fClassInfo && fClassVersion==1 /*&& fStreamerInfo
+   if (IsLoaded() && HasInterpreterInfo() && fClassVersion==1 /*&& fStreamerInfo
        && fStreamerInfo->At(1)*/ && IsForeign() )
    {
       SetClassVersion(-1);
