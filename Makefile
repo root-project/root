@@ -813,7 +813,7 @@ $(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	@echo "Generating rootmap $@..."
 	$(ROOTCLINGSTAGE1) -r $(COREDS) -s lib/libCore.$(SOEXT) \
 	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
-	   $(COREDICTH) $(COREL0)
+	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
 
 map::   $(ALLMAPS)
 
