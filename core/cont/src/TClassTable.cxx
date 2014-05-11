@@ -308,7 +308,6 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
 
    fgIdMap->Add(info.name(),r);
 
-   fgTally++;
    fgSorted = kFALSE;
 }
 
@@ -348,7 +347,6 @@ void TClassTable::Add(TProtoClass *proto)
    r->fInfo = 0;
    r->fProto= proto;
 
-   fgTally++;
    fgSorted = kFALSE;
 }
 
@@ -418,6 +416,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    r->fNext = fgTable[slot];
    fgTable[slot] = r;
 
+   fgTally++;
    return r;
 }
 
