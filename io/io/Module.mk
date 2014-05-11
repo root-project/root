@@ -52,13 +52,13 @@ $(call pcmrule,IO)
 $(IODS):        $(IOH) $(IOL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,IO)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL)
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,IO) -c $(IOH) $(IOL) && touch lib/libRIO_rdict.pcm
+
 
 $(IOMAP):       $(IOH) $(IOL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,IO)
 		$(MAKEDIR)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE1) -r $(IODS) $(call dictModule,IO) -c $(IOH) $(IOL)
-
 all-$(MODNAME): $(IOLIB)
 
 clean-$(MODNAME):
