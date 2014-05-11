@@ -1001,6 +1001,7 @@ bool TCling::LoadPCM(TString pcmFileName,
          gDebug = 0;
       }
 
+#if 0
       TDirectory::TContext ctxt(0);
       TFile *pcmFile = new TFile(pcmFileName,"READ");
       TObjArray *protoClasses;
@@ -1011,6 +1012,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       protoClasses->Clear(); // Owner ship was transfered to TClassTable.
       delete protoClasses;
       delete pcmFile;
+#endif
 
       gDebug = oldDebug;
    } else {
