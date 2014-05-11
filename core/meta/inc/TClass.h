@@ -220,7 +220,7 @@ private:
    static Int_t       fgClassCount;     //provides unique id for a each class
                                         //stored in TObject::fUniqueID
    // Internal status bits
-   enum { kLoading = BIT(14) };
+   enum { kLoading = BIT(14), kUnloading = BIT(14) };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
 

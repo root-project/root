@@ -2669,7 +2669,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (cl) {
 
-      if (cl->IsLoaded()) return cl;
+      if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
 
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
@@ -5140,10 +5140,12 @@ void TClass::SetUnloaded()
    // Call this method to indicate that the shared library containing this
    // class's code has been removed (unloaded) from the process's memory
 
-   if (TestBit(kUnloaded)) {
+   if (TestBit(kUnloaded) && !TestBit(kUnloading)) {
       // Don't redo the work.
       return;
    }
+   SetBit(kUnloading);
+
    //R__ASSERT(fState == kLoaded);
    if (fState != kLoaded) {
       Fatal("SetUnloaded","The TClass for %s is being unloaded when in state %d\n",
@@ -5179,6 +5181,7 @@ void TClass::SetUnloaded()
       fState = kEmulated;
    }
 
+   ResetBit(kUnloading);
    SetBit(kUnloaded);
 }
 
