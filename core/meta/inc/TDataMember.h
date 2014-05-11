@@ -39,8 +39,8 @@ private:
    TClass             *fClass;        //!pointer to the class
    TDataType          *fDataType;     //!pointer to data basic type descriptor
 
-   Long_t              fOffset;       //offset 
-   Int_t               fSTLCont;      //STL type 
+   Long_t              fOffset;       //offset
+   Int_t               fSTLCont;      //STL type
    Long_t              fProperty;     //Property
 
    TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
