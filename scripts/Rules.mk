@@ -85,7 +85,7 @@ CLEAN_TARGETS +=
 
 ALL_LIBRARIES += AutoDict_* *_ACLiC_* *.success *.summary *.d *.o *.obj *.so *.pcm *.def *.exp *.dll *.lib dummy.C \
 	*.pdb .def *.ilk *.manifest rootmap_* dummy* *.clog *.log *.elog *.celog *.eclog *.pylog \
-	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap
+	*_C.rootmap *_cc.rootmap *_cpp.rootmap *_cxx.rootmap *_h.rootmap *_rflx.cpp *_cint.cpp
 
 .PHONY: clean removefiles tests all test $(TEST_TARGETS) $(TEST_TARGETS_DIR) utils check logs.tar.gz perftrack.tar.gz
 
