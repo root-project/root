@@ -73,12 +73,12 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 }
 
 //______________________________________________________________________________
-void TProtoClass::FillTClass(TClass* cl) {
+Bool_t TProtoClass::FillTClass(TClass* cl) {
    // Move data from this TProtoClass into cl.
    if (cl->fRealData || cl->fBase || cl->fData || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty !=(-1) ) {
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
-      return;
+      return kFALSE;
    }
    Info("FillTClass","Loading TProtoClass for %s - %s",cl->GetName(),GetName());
    // Copy only the TClass bits.
@@ -128,6 +128,8 @@ void TProtoClass::FillTClass(TClass* cl) {
    fPRealData->Delete();
    delete fPRealData;
    fPRealData = 0;
+
+   return kTRUE;
 }
 
 //______________________________________________________________________________

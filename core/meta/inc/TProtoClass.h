@@ -66,7 +66,7 @@ public:
    TProtoClass(TClass* cl);
    virtual ~TProtoClass();
 
-   void FillTClass(TClass* pcl);
+   Bool_t FillTClass(TClass* pcl);
    void Delete(Option_t* opt = "");
 
    ClassDef(TProtoClass,2); //Persistent TClass
