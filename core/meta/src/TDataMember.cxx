@@ -777,6 +777,8 @@ Bool_t TDataMember::IsValid()
    // loaded data member.  If a function is unloaded after the TDataMember
    // is created, the TDataMember will be set to be invalid.
 
+   if (fOffset >= 0) return kTRUE;
+
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetDataMember(fClass->GetClassInfo(), fName);
@@ -926,6 +928,14 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
    }
 
    if (info == 0) {
+      fOffset      = -1;
+      fProperty    = -1;
+      fSTLCont     = -1;
+      fArrayDim    = -1;
+      delete [] fArrayMaxIndex;
+      fArrayMaxIndex=0;
+      fArrayIndex.Clear();
+
       fInfo = 0;
       return kTRUE;
    } else {
