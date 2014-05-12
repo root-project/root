@@ -14,15 +14,14 @@ GENREFLEXCXXFLAGS += --rootmap autoload.rootmap --rootmap-lib libclasses_dictrfl
 execionameiotype.log: libclasses_dictrflx.$(DllSuf)
 
 newFileTrimmed: execionameiotype.log
-	$(CMDECHO)cat newFile.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" >$@.xml 2>&1
+	$(CMDECHO)cat newFile.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" | sed 's,size="[^"]*",size="masked",g' >$@.xml 2>&1
 
 exampleTrimmed: execionameiotype.log
-	$(CMDECHO) cat example.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" >$@.xml 2>&1
+	$(CMDECHO) cat example.xml |grep -v created| grep -v XmlKey |grep -v "TObject fUniqueID" | sed 's,size="[^"]*",size="masked",g' >$@.xml 2>&1
 
 # Here we use true since diff returns 1 if the files are different. Here we expect them to be different!
 newDiffFile.log: newFileTrimmed exampleTrimmed
 	$(CMDECHO) diff newFileTrimmed.xml exampleTrimmed.xml >$@ ; true
-	
 
 testNewFileDiff: newDiffFile.success
 
