@@ -1594,6 +1594,8 @@ var kClassMask = 0x80000000;
                      file.ReadObject(file.fKeys[i]['name'], file.fKeys[i]['cycle']);
                   }
                }
+               if (typeof(userCallback) == 'function')
+                  userCallback(file);
             };
             file.ReadObjBuffer(key, callback2);
             
