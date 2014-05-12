@@ -397,14 +397,30 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
                 }
             
             
+            // These lines are here to use the root pcms. Indeed we need to annotate the AST
+            // before persisting the ProtoClasses in the root pcms.
+            // BEGIN ROOT PCMS
+            if (name == propNames::comment){
+               decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, value, 0));
+            }
+            // END ROOT PCMS
 
             if ( (name == propNames::transient && value == "true") or
-                 (name == propNames::persistent && value == "false")) // special case
+                 (name == propNames::persistent && value == "false")){ // special case
                userDefinedProperty=propNames::comment+propNames::separator+"!";
-            else
+            // This next line is here to use the root pcms. Indeed we need to annotate the AST
+            // before persisting the ProtoClasses in the root pcms.
+            // BEGIN ROOT PCMS
+               decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, "!", 0));
+            // END ROOT PCMS
+            // The rest of the lines are not changed to leave in place the system which
+            // works with bulk header parsing on library load.
+            } else {
                userDefinedProperty=name+propNames::separator+value;
+            }
             ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
             decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+
          }
       }
    }
