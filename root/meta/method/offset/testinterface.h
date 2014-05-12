@@ -6,13 +6,13 @@
 #include "TMethod.h"
 
 class TestInterface {
-	int someMember;
+   int someMember;
 public:
-	TestInterface() {someMember=42;};
-	virtual ~TestInterface() {};
-	void foo() const;
-	void fooVirtual() const;
-	ClassDef(TestInterface,0);
+   TestInterface() {someMember=42;};
+   virtual ~TestInterface() {};
+   void foo() const;
+   void fooVirtual() const;
+   ClassDef(TestInterface,0);
 };
 
 #endif
