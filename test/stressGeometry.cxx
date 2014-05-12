@@ -57,6 +57,7 @@ void stressGeometry(const char*, Bool_t);
 
 int main(int argc, char **argv)
 {
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    if (argc > 1) stressGeometry(argv[1],kFALSE);
    else          stressGeometry("*",kFALSE);
