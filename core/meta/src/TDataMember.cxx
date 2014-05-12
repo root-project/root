@@ -958,7 +958,14 @@ void TDataMember::Streamer(TBuffer& b) {
       Init(true /*reading*/);
    } else {
       // Writing.
-      GetOffset();
+      if (fProperty & kIsStatic) {
+         // We have a static member and in this case fOffset contains the
+         // actual address in memory of the data, it will be different everytime,
+         // let's not record it.
+         fOffset = -1;
+      } else {
+         GetOffset();
+      }
       IsSTLContainer();
       GetArrayDim();
       GetArrayIndex();
