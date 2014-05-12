@@ -581,9 +581,11 @@ Int_t TDataMember::GetArrayDim() const
       TDataMember *dm = const_cast<TDataMember*>(this);
       dm->fArrayDim = gCling->DataMemberInfo_ArrayDim(fInfo);
       // fArrayMaxIndex should be zero
-      dm->fArrayMaxIndex = new Int_t[fArrayDim];
-      for(Int_t dim = 0; dim < fArrayDim; ++dim) {
-         dm->fArrayMaxIndex[dim] = gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+      if (dm->fArrayDim) {
+         dm->fArrayMaxIndex = new Int_t[fArrayDim];
+         for(Int_t dim = 0; dim < fArrayDim; ++dim) {
+            dm->fArrayMaxIndex[dim] = gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+         }
       }
    }
    return fArrayDim;
@@ -621,6 +623,7 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
    if (fArrayDim<0 && fInfo) {
       return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
    } else {
+      if (dim < 0 || dim >= fArrayDim) return -1;
       return fArrayMaxIndex[dim];
    }
 }
