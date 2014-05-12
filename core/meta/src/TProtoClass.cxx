@@ -27,7 +27,8 @@
 //______________________________________________________________________________
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), fData(cl->GetListOfDataMembers()),
-   fSizeof(cl->Size()), fCanSplit(cl->fCanSplit), fProperty(cl->fProperty)
+   fSizeof(cl->Size()), fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType),
+   fProperty(cl->fProperty)
 {
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
@@ -80,7 +81,8 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
       Error("FillTClass", "TClass %s already initialized!", cl->GetName());
       return kFALSE;
    }
-   Info("FillTClass","Loading TProtoClass for %s - %s",cl->GetName(),GetName());
+   if (gDebug > 1) Info("FillTClass","Loading TProtoClass for %s - %s",cl->GetName(),GetName());
+
    // Copy only the TClass bits.
    // not bit 13 and below and not bit 24 and above, just Bits 14 - 23
    UInt_t newbits = TestBits(0x00ffc000);
@@ -96,6 +98,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fSizeof = fSizeof;
    cl->fCanSplit = fCanSplit;
    cl->fProperty = fProperty;
+   cl->fStreamerType = fStreamerType;
 
    // Update pointers to TClass
    for (auto base: *cl->fBase) {
@@ -122,6 +125,8 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
          }
       }
    }
+
+   cl->SetStreamerImpl();
 
    fBase = 0;
    fData = 0;

@@ -205,6 +205,8 @@ private:
    void               SetClassVersion(Version_t version);
    void               SetClassSize(Int_t sizof) { fSizeof = sizof; }
 
+   void SetStreamerImpl();
+
    // Various implementation for TClass::Stramer
    void StreamerExternal(void *object, TBuffer &b, const TClass *onfile_class) const;
    void StreamerTObject(void *object, TBuffer &b, const TClass *onfile_class) const;

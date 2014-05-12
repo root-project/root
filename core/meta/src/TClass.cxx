@@ -5059,20 +5059,40 @@ Long_t TClass::Property() const
       }
 
       kl->fStreamerType |= kEmulatedStreamer;
-      switch (fStreamerType) {
-         case kEmulatedStreamer:               // intentional fall through
-         case kForeign|kEmulatedStreamer:      // intentional fall through
-         case kInstrumented|kEmulatedStreamer: kl->fStreamerImpl = &TClass::StreamerStreamerInfo; break;
-         case kExternal|kEmulatedStreamer:     kl->fStreamerImpl = &TClass::StreamerExternal; break;
-         case kTObject|kEmulatedStreamer:      kl->fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
-         case TClass::kDefault:                kl->fStreamerImpl = &TClass::StreamerDefault; break;
-
-      }
+      kl->SetStreamerImpl();
       return 0;
    }
 
    return fProperty;
 }
+
+//_____________________________________________________________________________
+void TClass::SetStreamerImpl()
+{
+   // Internal routine to set fStreamerImpl based on the value of
+   // fStreamerType.
+
+   switch (fStreamerType) {
+      case kTObject:  fStreamerImpl  = &TClass::StreamerTObject; break;
+      case kForeign:  fStreamerImpl = &TClass::StreamerStreamerInfo; break;
+      case kExternal: fStreamerImpl  = &TClass::StreamerExternal; break;
+      case kInstrumented:  {
+         if (fStreamerFunc) fStreamerImpl  = &TClass::StreamerInstrumented;
+         else                   fStreamerImpl  = &TClass::StreamerStreamerInfo;
+         break;
+      }
+
+      case kEmulatedStreamer:               // intentional fall through
+      case kForeign|kEmulatedStreamer:      // intentional fall through
+      case kInstrumented|kEmulatedStreamer: fStreamerImpl = &TClass::StreamerStreamerInfo; break;
+      case kExternal|kEmulatedStreamer:     fStreamerImpl = &TClass::StreamerExternal; break;
+      case kTObject|kEmulatedStreamer:      fStreamerImpl = &TClass::StreamerTObjectEmulated; break;
+      case TClass::kDefault:                fStreamerImpl = &TClass::StreamerDefault; break;
+      default:
+         Error("SetStreamerImpl","Unexpected value of fStreamerType: %d",fStreamerType);
+   }
+}
+
 
 //_____________________________________________________________________________
 void TClass::SetCollectionProxy(const ROOT::TCollectionProxyInfo &info)
