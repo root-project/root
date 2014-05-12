@@ -177,6 +177,7 @@
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
  
 #include <stdlib.h>
 
@@ -199,6 +200,8 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    fOffset      = -1;
    fProperty    = -1;
    fSTLCont     = -1;
+   fArrayDim    = -1;
+   fArrayMaxIndex=0;
    if (!fInfo && !fClass) return; // default ctor is called
 
    Init(false);
@@ -504,6 +507,9 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fOffset(dm.fOffset),
   fSTLCont(dm.fSTLCont),
   fProperty(dm.fProperty),
+  fArrayDim(dm.fArrayDim),
+  fArrayMaxIndex( dm.fArrayDim ? new Int_t[dm.fArrayDim] : 0),
+  fArrayIndex(dm.fArrayIndex),
   fTypeName(dm.fTypeName),
   fFullTypeName(dm.fFullTypeName),
   fTrueTypeName(dm.fTrueTypeName),
@@ -512,6 +518,8 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 { 
    //copy constructor
+   for(Int_t d = 0; d < fArrayDim; ++d)
+      fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
 }
 
 //______________________________________________________________________________
@@ -535,6 +543,11 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fOffset=dm.fOffset;
       fSTLCont=dm.fSTLCont;
       fProperty=dm.fProperty;
+      fArrayDim = dm.fArrayDim;
+      fArrayMaxIndex = dm.fArrayDim ? new Int_t[dm.fArrayDim] : 0;
+      for(Int_t d = 0; d < fArrayDim; ++d)
+         fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
+      fArrayIndex = dm.fArrayIndex;
       fTypeName=dm.fTypeName;
       fFullTypeName=dm.fFullTypeName;
       fTrueTypeName=dm.fTrueTypeName;
@@ -548,6 +561,7 @@ TDataMember::~TDataMember()
 {
    // TDataMember dtor deletes adopted CINT DataMemberInfo object.
 
+   delete [] fArrayMaxIndex;
    gCling->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
    delete fValueGetter;
@@ -562,7 +576,17 @@ Int_t TDataMember::GetArrayDim() const
 {
    // Return number of array dimensions.
 
-   return gCling->DataMemberInfo_ArrayDim(fInfo);
+   if (fArrayDim<0 && fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TDataMember *dm = const_cast<TDataMember*>(this);
+      dm->fArrayDim = gCling->DataMemberInfo_ArrayDim(fInfo);
+      // fArrayMaxIndex should be zero
+      dm->fArrayMaxIndex = new Int_t[fArrayDim];
+      for(Int_t dim = 0; dim < fArrayDim; ++dim) {
+         dm->fArrayMaxIndex[dim] = gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+      }
+   }
+   return fArrayDim;
 }
 
 //______________________________________________________________________________
@@ -572,8 +596,15 @@ const char *TDataMember::GetArrayIndex() const
    // GetArrayIndex returns a string pointing to it;
    // otherwise it returns an empty string.
 
-   const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
-   return (val && IsaPointer() ) ? val : "";
+   if (!IsaPointer()) return "";
+   if (fArrayIndex.Length()==0 && fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TDataMember *dm = const_cast<TDataMember*>(this);
+     const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
+      if (val) dm->fArrayIndex = val;
+      else dm->fArrayIndex.Append((Char_t)0); // Make length non-zero but string still empty.
+   }
+   return fArrayIndex;
 }
 
 //______________________________________________________________________________
@@ -587,7 +618,11 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
 
-   return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+   if (fArrayDim<0 && fInfo) {
+      return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+   } else {
+      return fArrayMaxIndex[dim];
+   }
 }
 
 //______________________________________________________________________________
@@ -623,6 +658,7 @@ Long_t TDataMember::GetOffset() const
 
    if (fOffset>=0) return fOffset;
 
+   R__LOCKGUARD(gInterpreterMutex);
    //case of an interpreted or emulated class
    if (fClass->GetDeclFileLine() < 0) {
       ((TDataMember*)this)->fOffset = gCling->DataMemberInfo_Offset(fInfo);
@@ -723,6 +759,7 @@ int TDataMember::IsSTLContainer()
    // The return type is defined in TDictionary (kVector, kList, etc.)
 
    if (fSTLCont != -1) return fSTLCont;
+   R__LOCKGUARD(gInterpreterMutex);
    fSTLCont = abs(TClassEdit::IsSTLCont(GetTrueTypeName()));
    return fSTLCont;
 }
@@ -753,6 +790,7 @@ Long_t TDataMember::Property() const
 
    if (fProperty!=(-1)) return fProperty;
 
+   R__LOCKGUARD(gInterpreterMutex);
    TDataMember *t = (TDataMember*)this;
    if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
@@ -785,6 +823,8 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
    // offset).
 
    if (!fValueGetter || cl) {
+
+      R__LOCKGUARD(gInterpreterMutex);
 
       if (!cl) cl = fClass;
 
@@ -828,6 +868,8 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
 
    if (!fValueSetter || cl) {
 
+      R__LOCKGUARD(gInterpreterMutex);
+
       if (!cl) cl = fClass;
 
       if (fValueSetter) {
@@ -867,6 +909,8 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
    // This can be used to implement unloading (info == 0) and then reloading
    // (info being the 'new' decl address).
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
    SafeDelete(fValueSetter);
    SafeDelete(fValueGetter);
@@ -897,6 +941,8 @@ void TDataMember::Streamer(TBuffer& b) {
       // Writing.
       GetOffset();
       IsSTLContainer();
+      GetArrayDim();
+      GetArrayIndex();
       Property(); // also calculates fTypeName and friends
       b.WriteClassBuffer(Class(), this);
    }

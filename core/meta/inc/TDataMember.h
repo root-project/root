@@ -42,6 +42,9 @@ private:
    Long_t              fOffset;       //offset
    Int_t               fSTLCont;      //STL type
    Long_t              fProperty;     //Property
+   Int_t               fArrayDim;     //Number of array dimensions
+   Int_t              *fArrayMaxIndex;//[fArrayDim] Maximum index for each dimension
+   TString             fArrayIndex;   //String representation of the index variable name
 
    TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
    TString             fFullTypeName; //full type description of data member, e,g.: "class TDirectory*".
