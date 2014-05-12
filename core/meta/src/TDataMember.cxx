@@ -600,7 +600,7 @@ const char *TDataMember::GetArrayIndex() const
    if (fArrayIndex.Length()==0 && fInfo) {
       R__LOCKGUARD(gInterpreterMutex);
       TDataMember *dm = const_cast<TDataMember*>(this);
-     const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
+      const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
       if (val) dm->fArrayIndex = val;
       else dm->fArrayIndex.Append((Char_t)0); // Make length non-zero but string still empty.
    }
