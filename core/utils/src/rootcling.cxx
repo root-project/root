@@ -3566,6 +3566,12 @@ int RootCling(int argc,
       force = 0;
    }
 
+   if (argc == ic){ // Something wrong here
+      ROOT::TMetaUtils::Error(0, "Insufficient number of arguments!\n");
+      fprintf(stderr, "%s\n", shortHelp);
+      return 1;
+   }
+
 #if defined(R__WIN32) && !defined(R__WINGCC)
    // cygwin's make is presenting us some cygwin paths even though
    // we are windows native. Convert them as good as we can.
@@ -3594,16 +3600,16 @@ int RootCling(int argc,
          }
       }
 
-   // remove possible pathname to get the dictionary name
-   if (strlen(argv[ic]) > (PATH_MAX-1)) {
-      ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
-            (PATH_MAX-1),argv[ic]);
-      return 1;
-   }
+      // remove possible pathname to get the dictionary name
+      if (strlen(argv[ic]) > (PATH_MAX-1)) {
+         ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
+               (PATH_MAX-1),argv[ic]);
+         return 1;
+      }
 
-   dictpathname = argv[ic];
-   dictname = llvm::sys::path::filename(dictpathname);
-   ic++;
+      dictpathname = argv[ic];
+      dictname = llvm::sys::path::filename(dictpathname);
+      ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", rootClingHelp);
@@ -3611,6 +3617,12 @@ int RootCling(int argc,
    } else {
       ic = 1;
       if (force) ic = 2;
+   }
+
+   if (force && dictname.empty()){
+      ROOT::TMetaUtils::Error(0, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
+      fprintf(stderr, "%s\n", shortHelp);
+      return 1;
    }
 
    std::vector<std::string> clingArgs;
