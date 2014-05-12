@@ -19,7 +19,6 @@
 #include "TStreamerInfo.h"
 #include <iostream>
 #include "TProtoClass.h"
-#include "TObjString.h"
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
