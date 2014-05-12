@@ -81,6 +81,7 @@ bool CloseStreamerInfoROOTFile()
       // If this is a proxied collection then offsets are not needed.
       if (cl->GetCollectionProxy())
          continue;
+      cl->Property(); // Force initialization of the bits and property fields.
       protoClasses.AddLast(new TProtoClass(cl));
    }
 
