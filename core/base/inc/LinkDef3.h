@@ -117,22 +117,22 @@
 #pragma link C++ global kNumCursors;
 
 #pragma link C++ typedef timespec_t;
-#pragma link C++ typedef Handle_t;
-#pragma link C++ typedef Display_t;
-#pragma link C++ typedef Visual_t;
-#pragma link C++ typedef Window_t;
-#pragma link C++ typedef Pixmap_t;
-#pragma link C++ typedef Drawable_t;
-#pragma link C++ typedef Region_t;
-#pragma link C++ typedef Colormap_t;
-#pragma link C++ typedef Cursor_t;
-#pragma link C++ typedef FontH_t;
-#pragma link C++ typedef KeySym_t;
-#pragma link C++ typedef Atom_t;
-#pragma link C++ typedef GContext_t;
-#pragma link C++ typedef FontStruct_t;
-#pragma link C++ typedef Mask_t;
-#pragma link C++ typedef Time_t;
+// #pragma link C++ typedef Handle_t;
+// #pragma link C++ typedef Display_t;
+// #pragma link C++ typedef Visual_t;
+// #pragma link C++ typedef Window_t;
+// #pragma link C++ typedef Pixmap_t;
+// #pragma link C++ typedef Drawable_t;
+// #pragma link C++ typedef Region_t;
+// #pragma link C++ typedef Colormap_t;
+// #pragma link C++ typedef Cursor_t;
+// #pragma link C++ typedef FontH_t;
+// #pragma link C++ typedef KeySym_t;
+// #pragma link C++ typedef Atom_t;
+// #pragma link C++ typedef GContext_t;
+// #pragma link C++ typedef FontStruct_t;
+// #pragma link C++ typedef Mask_t;
+// #pragma link C++ typedef Time_t;
 
 #pragma link C++ struct Event_t;
 #pragma link C++ struct SetWindowAttributes_t;
