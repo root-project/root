@@ -4,6 +4,16 @@
 #ifndef ROOT_Math_MatrixRepresentationsStatic
 #define ROOT_Math_MatrixRepresentationsStatic 1
 
+//#ifndef SMATRIX_USE_COMPUTATION
+//#define SMATRIX_USE_CONSTEXPR
+//#endif
+
+
+#ifndef SMATRIX_USE_CONSTEXPR
+#define SMATRIX_USE_COMPUTATION
+#endif
+
+
 // Include files
 
 /** 
@@ -22,6 +32,14 @@
 #ifndef ROOT_Math_StaticCheck
 #include "Math/StaticCheck.h"
 #endif
+
+#ifdef SMATRIX_USE_CONSTEXPR
+#include <cstddef>
+#include <utility>
+#include <type_traits>
+#include <array>
+#endif
+
 
 namespace ROOT {
    
@@ -142,6 +160,56 @@ namespace Math {
       int fOff[D*D];
    };
 
+#ifdef SMATRIX_USE_CONSTEXPR
+  namespace rowOffsetsUtils {
+
+    ///////////
+    // Some meta template stuff
+    template<int...> struct indices{};
+
+    template<int I, class IndexTuple, int N>
+    struct make_indices_impl;
+
+    template<int I, int... Indices, int N>
+    struct make_indices_impl<I, indices<Indices...>, N>
+    {
+      typedef typename make_indices_impl<I + 1, indices<Indices..., I>,
+					 N>::type type;
+    };
+
+    template<int N, int... Indices>
+    struct make_indices_impl<N, indices<Indices...>, N> {
+      typedef indices<Indices...> type;
+    };
+
+    template<int N>
+    struct make_indices : make_indices_impl<0, indices<>, N> {};
+    // end of stuff
+
+
+
+    template<int I0, class F, int... I>
+    constexpr std::array<decltype(std::declval<F>()(std::declval<int>())), sizeof...(I)>
+    do_make(F f, indices<I...>)
+    {
+      return  std::array<decltype(std::declval<F>()(std::declval<int>())),
+			 sizeof...(I)>{{ f(I0 + I)... }};
+    }
+
+    template<int N, int I0 = 0, class F>
+    constexpr std::array<decltype(std::declval<F>()(std::declval<int>())), N>
+    make(F f) {
+      return do_make<I0>(f, typename make_indices<N>::type());
+    }
+
+  } // namespace rowOffsetsUtils 
+
+#elif defined(SMATRIX_USE_COMPUTATION)
+
+#else
+
+
+
 // Make the lookup tables available at compile time:
 // Add them to a namespace?
 static const int fOff1x1[] = {0};
@@ -233,6 +301,8 @@ template<>
 	  int apply(unsigned int i) const { return fOff10x10[i]; }
 	};
 
+#endif
+
 //_________________________________________________________________________________
    /**
       MatRepSym
@@ -257,35 +327,35 @@ template<>
 
    public: 
 
+#if defined(SMATRIX_USE_CONSTEXPR) || defined(SMATRIX_USE_COMPUTATION)
+     /* constexpr */ inline MatRepSym(){}
+#else
       MatRepSym() :fOff(0) { CreateOffsets(); } 
-
+#endif
       typedef T  value_type;
 
-      inline const T& operator()(unsigned int i, unsigned int j) const {
-         return fArray[Offsets()(i,j)];
-      }
-      inline T& operator()(unsigned int i, unsigned int j) {
-         return fArray[Offsets()(i,j)];
-      }
 
-      inline T& operator[](unsigned int i) { 
-         return fArray[Offsets().apply(i) ];
-//return fArray[Offsets()(i/D, i%D)];
-      }
+    inline T & operator()(unsigned int i, unsigned int j)
+     { return fArray[offset(i, j)]; }
 
-      inline const T& operator[](unsigned int i) const {
-         return fArray[Offsets().apply(i) ];
-//return fArray[Offsets()(i/D, i%D)];
-      }
+     inline /* constexpr */ T const & operator()(unsigned int i, unsigned int j) const
+     { return fArray[offset(i, j)]; }
 
-      inline T apply(unsigned int i) const {
-         return fArray[Offsets().apply(i) ];
-         //return operator()(i/D, i%D);
-      }
+     inline T& operator[](unsigned int i) { 
+       return fArray[off(i)];
+     }
 
-      inline T* Array() { return fArray; }  
+     inline /* constexpr */ T const & operator[](unsigned int i) const {
+       return fArray[off(i)];
+     }
 
-      inline const T* Array() const { return fArray; }  
+     inline /* constexpr */ T apply(unsigned int i) const {
+       return fArray[off(i)];
+     }
+
+     inline T* Array() { return fArray; }  
+
+     inline const T* Array() const { return fArray; }  
 
       /**
          assignment : only symmetric to symmetric allowed
@@ -336,7 +406,7 @@ template<>
          }
          return rc;
       }
-      
+
       enum {
          /// return no. of matrix rows
          kRows = D,
@@ -346,26 +416,68 @@ template<>
          kSize = D*(D+1)/2
       };
 
-      
-      void CreateOffsets() {
-         const static RowOffsets<D> off;
-         fOff = &off;
-      }
-      
-      inline const RowOffsets<D> & Offsets() const {
-         return *fOff;
-      }
+
+#ifdef SMATRIX_USE_CONSTEXPR
+     static constexpr int off0(int i) { return i==0 ? 0 : off0(i-1)+i;} 
+     static constexpr int off2(int i, int j) { return j<i ? off0(i)+j : off0(j)+i; }
+     static constexpr int off1(int i) { return off2(i/D, i%D);}
+
+     static int off(int i) {
+       static constexpr auto v = rowOffsetsUtils::make<D*D>(off1);
+       return v[i];
+     }
+
+     static inline constexpr unsigned int
+     offset(unsigned int i, unsigned int j)
+     {
+       //if (j > i) std::swap(i, j);
+       return off(i*D+j);
+       // return (i>j) ? (i * (i+1) / 2) + j :  (j * (j+1) / 2) + i;
+     }
+#elif defined(SMATRIX_USE_COMPUTATION)
+     static inline unsigned int
+     offset(unsigned int i, unsigned int j)
+     {
+       return (i>j) ? (i * (i+1) / 2) + j :  (j * (j+1) / 2) + i;
+     }
+     static inline unsigned int 
+     off(unsigned int i) {
+       return offset(i/D, i%D);
+     }
+#else
+     unsigned int
+     offset(unsigned int i, unsigned int j) const
+     {
+       return Offsets()(i,j);
+     }
+     unsigned int 
+     off(unsigned int i) const {
+       return Offsets().apply(i);
+     }
+
+
+     void CreateOffsets() {
+       const static RowOffsets<D> off;
+       fOff = &off;
+     }
+
+     inline const RowOffsets<D> & Offsets() const {
+       return *fOff;
+     }
+#endif
+
 
    private:
       //T __attribute__ ((aligned (16))) fArray[kSize];
       T fArray[kSize];
 
+#if !defined(SMATRIX_USE_CONSTEXPR) && !defined(SMATRIX_USE_COMPUTATION)
       const RowOffsets<D> * fOff;   //! transient
-
+#endif
    };
 
 
- 
+
 } // namespace Math
 } // namespace ROOT
 

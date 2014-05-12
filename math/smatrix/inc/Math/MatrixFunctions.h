@@ -744,7 +744,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2, MatRepStd<T,D1,D2> > tmp = lhs * rhs;
   typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
+  SMatrixSym mret =SMatrixNoInit(); 
   AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
   return mret; 
 }
@@ -758,7 +758,7 @@ template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D2,D2,MatRepSym<T,D2> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = lhs * rhs;
   typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
+  SMatrixSym mret = SMatrixNoInit(); 
   AssignSym::Evaluate(mret,  tmp * Transpose(lhs)  ); 
   return mret; 
 }
@@ -773,7 +773,7 @@ template <class T, unsigned int D1>
 inline SMatrix<T,D1,D1,MatRepSym<T,D1> > Similarity(const SMatrix<T,D1,D1,MatRepSym<T,D1> >& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D1, MatRepStd<T,D1,D1> > tmp = lhs * rhs;
   typedef  SMatrix<T,D1,D1,MatRepSym<T,D1> > SMatrixSym; 
-  SMatrixSym mret; 
+  SMatrixSym mret = SMatrixNoInit(); 
   AssignSym::Evaluate(mret,  tmp * lhs  ); 
   return mret; 
 }
@@ -794,7 +794,7 @@ template <class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const SMatrix<T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
   typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
-  SMatrixSym mret; 
+  SMatrixSym mret = SMatrixNoInit(); 
   AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
   return mret; 
 }
@@ -808,7 +808,7 @@ template <class A, class T, unsigned int D1, unsigned int D2, class R>
 inline SMatrix<T,D2,D2,MatRepSym<T,D2> > SimilarityT(const Expr<A,T,D1,D2,R>& lhs, const SMatrix<T,D1,D1,MatRepSym<T,D1> >& rhs) {
   SMatrix<T,D1,D2,MatRepStd<T,D1,D2> > tmp = rhs * lhs;
   typedef  SMatrix<T,D2,D2,MatRepSym<T,D2> > SMatrixSym; 
-  SMatrixSym mret; 
+  SMatrixSym mret = SMatrixNoInit(); 
   AssignSym::Evaluate(mret,  Transpose(lhs) * tmp ); 
   return mret; 
 }
