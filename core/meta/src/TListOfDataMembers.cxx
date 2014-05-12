@@ -428,6 +428,49 @@ void TListOfDataMembers::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(TListOfDataMembers::Class(),this);
    }
 }
+
+//______________________________________________________________________________
+void TListOfDataMembers::Update(TDictionary *member) {
+   // Move the member or data member to the expect set of list.
+
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(member);
+      if (d) {
+         if (d->GetDeclId()) {
+            if (!fIds) fIds = new TExMap;
+            fIds->Add((Long64_t)d->GetDeclId(),(Long64_t)d);
+         }
+         TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(d->GetName()) : 0;
+         if (update) fUnloaded->Remove(update);
+
+         if (! THashList::FindObject(d) ) {
+            // Calling 'just' THahList::Add would turn around and call
+            // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
+            THashList::AddLast(d);
+         }
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(member);
+      if (g) {
+         if (g->GetDeclId()) {
+            if (!fIds) fIds = new TExMap;
+            fIds->Add((Long64_t)g->GetDeclId(),(Long64_t)g);
+
+            TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(g->GetName()) : 0;
+            if (update) fUnloaded->Remove(update);
+
+            if (! THashList::FindObject(g) ) {
+               // Calling 'just' THahList::Add would turn around and call
+               // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
+               THashList::AddLast(g);
+            }
+         }
+      }
+   }
+
+
+}
+
 //______________________________________________________________________________
 void TListOfDataMembers::Unload()
 {

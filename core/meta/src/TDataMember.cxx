@@ -173,6 +173,7 @@
 #include "TInterpreter.h"
 #include "TIterator.h"
 #include "TList.h"
+#include "TListOfDataMembers.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
@@ -788,6 +789,10 @@ Bool_t TDataMember::IsValid()
       if (newId) {
          DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
          Update(info);
+         // We need to make sure that the list of data member is properly
+         // informed and updated.
+         TListOfDataMembers *lst = dynamic_cast<TListOfDataMembers*>(fClass->GetListOfDataMembers());
+         lst->Update(this);
       }
       return newId != 0;
    }

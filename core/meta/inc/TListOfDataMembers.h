@@ -76,6 +76,7 @@ public:
    void       AddBefore(TObjLink *before, TObject *obj);
 
    void       SetClass(TClass* cl) { fClass = cl; }
+   void       Update(TDictionary *member);
 
    void       RecursiveRemove(TObject *obj);
    TObject   *Remove(TObject *obj);
