@@ -705,7 +705,13 @@ Long_t TDataMember::GetOffsetCint() const
 {
    // Get offset from "this" using the information in CINT only.
 
-   return gCling->DataMemberInfo_Offset(fInfo);
+   if (fOffset>=0) return fOffset;
+
+   R__LOCKGUARD(gInterpreterMutex);
+   TDataMember *dm = const_cast<TDataMember*>(this);
+
+   if (dm->IsValid()) return gCling->DataMemberInfo_Offset(dm->fInfo);
+   else return -1;
 }
 
 //______________________________________________________________________________
@@ -767,7 +773,7 @@ int TDataMember::IsSTLContainer()
 //______________________________________________________________________________
 Bool_t TDataMember::IsValid()
 {
-  // Return true if this data member object is pointing to a currently
+   // Return true if this data member object is pointing to a currently
    // loaded data member.  If a function is unloaded after the TDataMember
    // is created, the TDataMember will be set to be invalid.
 
