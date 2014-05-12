@@ -2613,6 +2613,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          if (!localBase) continue;
          // We already have localBaseClass == otherBaseClass
          TClass *otherBaseClass = localBase->GetClassPointer();
+         if (!otherBaseClass) continue;
          if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBaseClass->GetClassVersion()) {
             TString msg;
             msg.Form("   The StreamerInfo of class %s read from %s%s\n"
