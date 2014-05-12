@@ -44,6 +44,20 @@ class TObjArray;
 class TVirtualMutex;
 class TEnum;
 
+
+
+
+class TType;
+
+namespace ROOT {
+namespace TMetaUtils {
+class TNormalizedCtxt;
+} // namespace TMetaUtils
+} // namespace ROOT
+
+
+
+
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
 class TInterpreter : public TNamed {
@@ -95,6 +109,9 @@ public:
    TInterpreter() { }   // for Dictionary
    TInterpreter(const char *name, const char *title = "Generic Interpreter");
    virtual ~TInterpreter() { }
+
+   virtual void    *GetBackendInterpreter() const { return 0; }
+   ROOT::TMetaUtils::TNormalizedCtxt *GetNormalizedCtxt() const { return 0; }
 
    virtual void     AddIncludePath(const char *path) = 0;
    virtual void    *SetAutoLoadCallBack(void* /*cb*/) { return 0; }
@@ -420,6 +437,45 @@ public:
    virtual const char *TypedefInfo_TrueName(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_Name(TypedefInfo_t * /* tinfo */) const {return 0;}
    virtual const char *TypedefInfo_Title(TypedefInfo_t * /* tinfo */) const {return 0;}
+
+
+   // Type interface
+   virtual bool Type_Bool(void* /*obj*/) const { return false; }
+   virtual bool Type_CheckType(void* /*obj*/, bool /*noComponents*/ = false) const { return false; }
+   virtual void Type_Delete(void* /*obj*/) const {}
+   virtual void Type_Dump(void* /*obj*/) const {}
+   virtual TType* Type_Factory() const { return 0; }
+   virtual TType* Type_Factory(const char* /*name*/) const { return 0; }
+   virtual TType* Type_Factory(const std::string& /*name*/) const { return 0; }
+   virtual TType* Type_Factory(const std::type_info& /*ti*/) const { return 0; }
+   virtual TType* Type_GetParent(void* /*obj*/) const { return 0; };
+   virtual void Type_Init(void* /*obj*/, const char* /*name*/) const {}
+   virtual void Type_Init(void* /*obj*/, const std::string& /*name*/) const {}
+   virtual void Type_Init(void* /*obj*/, const std::type_info& /*ti*/) const {}
+   virtual void Type_InitWithTypeInfoName(void* /*obj*/, const char* /*name*/) const {}
+   virtual bool Type_IsAbstract(void* /*obj*/) const { return false; }
+   virtual bool Type_IsArray(void* /*obj*/) const { return false; }
+   virtual bool Type_IsClass(void* /*obj*/) const { return false; }
+   virtual bool Type_IsConst(void* /*obj*/) const { return false; }
+   virtual bool Type_IsDynamicClass(void* /*obj*/) const { return false; }
+   virtual bool Type_IsEnum(void* /*obj*/) const { return false; }
+   virtual bool Type_IsFundamental(void* /*obj*/) const { return false; }
+   virtual bool Type_IsPointer(void* /*obj*/) const { return false; }
+   virtual bool Type_IsReference(void* /*obj*/) const { return false; }
+   virtual bool Type_IsStruct(void* /*obj*/) const { return false; }
+   virtual bool Type_IsTemplateInstance(void* /*obj*/) const { return false; }
+   virtual bool Type_IsTypedef(void* /*obj*/) const { return false; }
+   virtual bool Type_IsUnion(void* /*obj*/) const { return false; }
+   virtual bool Type_IsValid(void* /*obj*/) const { return false; }
+   virtual bool Type_IsVirtual(void* /*obj*/) const { return false; }
+   virtual std::string Type_QualifiedName(void* /*obj*/) const { return ""; }
+   virtual unsigned long Type_Size(void* /*obj*/) const { return 0UL; }
+   virtual unsigned long Type_ArraySize(void* /*obj*/) const { return 0UL; }
+   virtual TType* Type_FinalType(void* /*obj*/) const { return 0; }
+   virtual TType* Type_ToType(void* /*obj*/) const { return 0; }
+   virtual const std::type_info* Type_TypeInfo(void* /*obj*/) const { return 0; }
+   virtual unsigned long Type_ArrayDim(void* /*obj*/) const { return 0UL; }
+   virtual unsigned long Type_MaxIndex(void* /*obj*/, unsigned long /*dim*/) const { return 0UL; }
 
    static TInterpreter *Instance();
 

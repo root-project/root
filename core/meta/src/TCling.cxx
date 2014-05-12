@@ -70,6 +70,7 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
+#include "clang/AST/DeclCXX.h"
 #include "clang/AST/DeclarationName.h"
 #include "clang/AST/GlobalDecl.h"
 #include "clang/AST/RecordLayout.h"
@@ -112,6 +113,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
 #include <unordered_map>
@@ -906,6 +908,12 @@ TCling::TCling(const char *name, const char *title)
    fInterpreter->setCallbacks(fClingCallbacks);
 }
 
+
+//______________________________________________________________________________
+void* TCling::GetBackendInterpreter() const
+{
+   return static_cast<void*>(fInterpreter);
+}
 
 //______________________________________________________________________________
 TCling::~TCling()
@@ -6792,3 +6800,1083 @@ const char* TCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Title();
 }
+
+//______________________________________________________________________________
+//
+//  TType
+//
+
+
+static
+std::string
+demangle(const char* mangled_name, int* err_ret)
+{
+  int err = 0;
+  char* name = abi::__cxa_demangle(mangled_name, 0, 0, &err);
+  if (err_ret) {
+    *err_ret = err;
+  }
+  if (err) {
+    if (err == -1) {
+      fprintf(stderr, "demangle: malloc failure!\n");
+    }
+    else if (err == -2) {
+      fprintf(stderr, "demangle: invalid mangled name!\n");
+    }
+    else if (err == -3) {
+      fprintf(stderr, "demangle: invalid argument!\n");
+    }
+    else {
+      fprintf(stderr, "demangle: unknown error!\n");
+    }
+  }
+  std::string retval;
+  if (!err) {
+    retval = std::string(name);
+  }
+  free(name);
+  return retval;
+}
+
+class TType {
+private:
+   cling::Interpreter* fInterp;
+   const std::type_info* fTypeInfo;
+   clang::QualType fType;
+private:
+   void* compile_wrapper(const char* type_name) const;
+public:
+   virtual ~TType();
+   TType();
+   TType(const TType& rhs);
+   TType& operator=(const TType& rhs);
+   TType(const std::type_info& ti);
+   TType(const char* name);
+   TType(const std::string& name);
+public:
+   operator bool() const;
+   unsigned long ArrayDim() const;
+   unsigned long ArraySize() const;
+   bool CheckType(bool noComponents = false) const;
+   void Dump() const;
+   TType* FinalType() const;
+   TType* GetParent() const;
+   void Init(clang::QualType QT);
+   void Init(const char* name);
+   void Init(const std::string& name);
+   void Init(const std::type_info& ti);
+   void InitWithTypeInfoName(const char* name);
+   bool IsAbstract() const;
+   bool IsArray() const;
+   bool IsClass() const;
+   bool IsConst() const;
+   bool IsDynamicClass() const;
+   bool IsEnum() const;
+   bool IsFundamental() const;
+   bool IsParentANamespace() const;
+   bool IsPointer() const;
+   bool IsReference() const;
+   bool IsStruct() const;
+   bool IsTemplateInstance() const;
+   bool IsTypedef() const;
+   bool IsUnion() const;
+   bool IsValid() const;
+   bool IsVirtual() const;
+   unsigned long MaxIndex(unsigned long dim) const;
+   std::string QualifiedName() const;
+   unsigned long Size() const;
+   TType* ToType() const;
+   const std::type_info* TypeInfo() const;
+};
+
+TType::~TType()
+{
+}
+
+TType::TType()
+   : fInterp(0), fTypeInfo(0)
+{
+   fInterp = reinterpret_cast<cling::Interpreter*>(
+      gInterpreter->GetBackendInterpreter());
+}
+
+TType::TType(const TType& rhs)
+{
+   fInterp = rhs.fInterp;
+   fTypeInfo = rhs.fTypeInfo;
+   fType = rhs.fType;
+}
+
+TType&
+TType::operator=(const TType& rhs)
+{
+   if (this != &rhs) {
+      fInterp = rhs.fInterp;
+      fTypeInfo = rhs.fTypeInfo;
+      fType = rhs.fType;
+   }
+   return *this;
+}
+
+TType::TType(const std::type_info& ti)
+   : fInterp(0), fTypeInfo(0)
+{
+   fInterp = reinterpret_cast<cling::Interpreter*>(
+      gInterpreter->GetBackendInterpreter());
+   Init(ti);
+}
+
+TType::TType(const char* name)
+   : fInterp(0), fTypeInfo(0)
+{
+   fInterp = reinterpret_cast<cling::Interpreter*>(
+      gInterpreter->GetBackendInterpreter());
+   Init(name);
+}
+
+TType::TType(const std::string& name)
+   : fInterp(0), fTypeInfo(0)
+{
+   fInterp = reinterpret_cast<cling::Interpreter*>(
+      gInterpreter->GetBackendInterpreter());
+   Init(name);
+}
+
+TType::operator bool() const
+{
+  return fInterp && !fType.isNull();
+}
+
+static unsigned long long ttype_wrap_cnt = 0;
+
+void*
+TType::compile_wrapper(const char* type_name) const
+{
+   static map<string, void*> wrapper_cache;
+   auto val_iter = wrapper_cache.find(type_name);
+   if (val_iter != wrapper_cache.end()) {
+      return val_iter->second;
+   }
+   string typeid_wrap_name("_ttype_wrap_");
+   {
+      ostringstream buf;
+      buf << ttype_wrap_cnt;
+      ++ttype_wrap_cnt;
+      typeid_wrap_name += buf.str();
+   }
+   string typeid_wrapper("void*\n");
+   typeid_wrapper += typeid_wrap_name;
+   typeid_wrapper += "() {\n";
+   typeid_wrapper += "  return (void*) &typeid(";
+   typeid_wrapper += type_name;
+   typeid_wrapper += ");\n}\n";
+   const FunctionDecl* WFD = 0;
+   {
+      LangOptions& LO = const_cast<LangOptions&>(
+         fInterp->getCI()->getLangOpts());
+      bool savedAccessControl = LO.AccessControl;
+      LO.AccessControl = 0;
+      cling::Transaction* T = 0;
+      cling::Interpreter::CompilationResult CR =
+         fInterp->declare(typeid_wrapper, &T);
+      LO.AccessControl = savedAccessControl;
+      if (CR != cling::Interpreter::kSuccess) {
+         Error("TType::CompileWrapper", "Wrapper compile failed!");
+         return 0;
+      }
+      for (cling::Transaction::const_iterator I = T->decls_begin(),
+            E = T->decls_end(); I != E; ++I) {
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl) {
+            continue;
+         }
+         const FunctionDecl* D = dyn_cast<FunctionDecl>(*I->m_DGR.begin());
+         if (!isa<TranslationUnitDecl>(D->getDeclContext())) {
+            continue;
+         }
+         DeclarationName N = D->getDeclName();
+         const IdentifierInfo* II = N.getAsIdentifierInfo();
+         if (!II) {
+            continue;
+         }
+         if (II->getName() == typeid_wrap_name) {
+            WFD = D;
+            break;
+         }
+      }
+      if (!WFD) {
+         Error("TType::compile_wrapper",
+               "Wrapper compile did not return a function decl!");
+         return 0;
+      }
+   }
+   //
+   //  Lookup the new wrapper declaration.
+   //
+   string MN;
+   GlobalDecl GD;
+   if (const CXXConstructorDecl* Ctor =
+         llvm::dyn_cast<CXXConstructorDecl>(WFD)) {
+      GD = GlobalDecl(Ctor, Ctor_Complete);
+   }
+   else if (const CXXDestructorDecl* Dtor =
+         llvm::dyn_cast<CXXDestructorDecl>(WFD)) {
+      GD = GlobalDecl(Dtor, Dtor_Deleting);
+   }
+   else {
+      GD = GlobalDecl(WFD);
+   }
+   cling::utils::Analyze::maybeMangleDeclName(GD, MN);
+   const NamedDecl* WND = llvm::dyn_cast<NamedDecl>(WFD);
+   if (!WND) {
+      Error("TType::make_wrapper", "Wrapper named decl is null!");
+      return 0;
+   }
+   {
+      //WND->dump();
+      //fInterp->getModule()->dump();
+      //gROOT->ProcessLine(".printIR");
+   }
+   //
+   //  Get the wrapper function pointer
+   //  from the ExecutionEngine (the JIT).
+   //
+   const llvm::GlobalValue* GV =
+      fInterp->getCodeGenerator()->GetModule()->getNamedValue(MN);
+   if (!GV) {
+      Error("TType::make_wrapper",
+            "Wrapper function name not found in Module!");
+      return 0;
+   }
+   llvm::ExecutionEngine* EE = fInterp->getExecutionEngine();
+   void* F = EE->getPointerToGlobalIfAvailable(GV);
+   if (!F) {
+      //
+      //  Wrapper function not yet codegened by the JIT,
+      //  force this to happen now.
+      //
+      F = EE->getPointerToGlobal(GV);
+      if (!F) {
+         Error("TType::make_wrapper", "Wrapper function has no "
+               "mapping in Module after forced codegen!");
+         return 0;
+      }
+   }
+   wrapper_cache.insert({type_name, F});
+   return F;
+}
+
+unsigned long
+TType::ArrayDim() const
+{
+   // For now we support only ConstantArrayType, and not
+   // VariableArrayType (c++11 only).
+   if (!IsValid()) {
+      return 0;
+   }
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   const Type* Ty = Context.getAsArrayType(fType.getCanonicalType());
+   if (!Ty) {
+      // Not an array.
+      return 0;
+   }
+   const ConstantArrayType* CAryTy =
+      Context.getAsConstantArrayType(fType.getCanonicalType());
+   if (!CAryTy) {
+      // Not a constant array.
+      return 0;
+   }
+   // To get this information we must count the number
+   // of array type nodes in the canonical type chain.
+   QualType QT = fType.getCanonicalType();
+   unsigned long cnt = 0UL;
+   while (1) {
+      if (QT->isArrayType()) {
+         ++cnt;
+         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         continue;
+      }
+      else if (QT->isReferenceType()) {
+         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isPointerType()) {
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isMemberPointerType()) {
+         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   return cnt;
+}
+
+unsigned long
+TType::ArraySize() const
+{
+   // For now we support only ConstantArrayType, and not
+   // VariableArrayType (c++11 only).
+   if (!IsValid()) {
+      return 0;
+   }
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   const Type* Ty = Context.getAsArrayType(fType.getCanonicalType());
+   if (!Ty) {
+      // Not an array.
+      return 0;
+   }
+   const ConstantArrayType* CAryTy =
+      Context.getAsConstantArrayType(fType.getCanonicalType());
+   if (!CAryTy) {
+      // Not a constant array.
+      return 0;
+   }
+   unsigned long ret = Context.getConstantArrayElementCount(CAryTy);
+   return ret;
+}
+
+bool
+TType::CheckType(bool noComponents /*=false*/) const
+{
+   const CXXRecordDecl* RD = fType.getCanonicalType()->getAsCXXRecordDecl();
+   if (!RD) {
+      // Not a class, we are not interested.
+      return true;
+   }
+   // This is a class, struct, or union, now get the name.
+   PrintingPolicy Policy(RD->getASTContext().getPrintingPolicy());
+   string name;
+   llvm::raw_string_ostream stream(name);
+   RD->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+   // Check for a dictionary.
+   TClass* cl = TClass::GetClass(name.c_str());
+   if (!cl) {
+      // No class bootstrap possible, no chance for a dictionary.
+      return false;
+   }
+   if (!cl->IsLoaded()) {
+      // We do not have a dictionary for this class.
+      return false;
+   }
+   // At this point we have determined that the class has a dictionary.
+   if (noComponents) {
+      // We are not going to check contained types, all done.
+      return true;
+   }
+   //
+   //  For standard library containers, check the contained classes,
+   //  that is, the template arguments.
+   //
+   //  For a non-standard library class, check the base classes and
+   //  the data members of class type for dictionaries.
+   //
+   if (name.find("std::") == 0) {
+      // This is a standard library class.
+      const ClassTemplateSpecializationDecl* CTSD =
+         llvm::dyn_cast<ClassTemplateSpecializationDecl>(RD);
+      if (!CTSD) {
+         // Not a container, we are not interested.
+         return true;
+      }
+      // The class is a template specialization, assume it is a
+      // standard library container and check the template
+      // arguments for dictionaries.
+      const TemplateArgumentList& TAL = CTSD->getTemplateArgs();
+      for (unsigned I = 0U, E = TAL.size(); I != E; ++I) {
+            const TemplateArgument& TA = TAL[I];
+         TemplateArgument::ArgKind AK = TA.getKind();
+         if (AK == TemplateArgument::Type) {
+           // A type template argument.
+           QualType QT = TA.getAsType();
+           TType Ty(*this);
+           Ty.Init(QT);
+           if (!Ty.CheckType()) {
+             return false;
+           }
+         }
+      }
+      return true;
+   }
+   // This is not a standard library class, check the base classes.
+   for (CXXRecordDecl::base_class_const_iterator I = RD->bases_begin(),
+         E = RD->bases_end(); I != E; ++I) {
+      const CXXBaseSpecifier& BS = *I;
+      QualType QT = BS.getType();
+      const CXXRecordDecl* BRD = QT.getCanonicalType()->getAsCXXRecordDecl();
+      if (!BRD) {
+         // Note: This cannot happen, but we test to keep static analyzers happy.
+         continue;
+      }
+      TType Ty(*this);
+      Ty.Init(QT);
+      if (!Ty.CheckType()) {
+         return false;
+      }
+   }
+   // This is not a standard library class, check the non-static data members
+   // of class type.
+   for (CXXRecordDecl::field_iterator I = RD->field_begin(),
+         E = RD->field_end(); I != E; ++I) {
+      // We are looping over non-static data members.
+      const FieldDecl* FD = *I;
+      QualType QT = FD->getType();
+      const CXXRecordDecl* FRD = QT.getCanonicalType()->getAsCXXRecordDecl();
+      if (!FRD) {
+         // Data member is not of class type, skip it.
+         continue;
+      }
+      if (FD->hasAttrs()) {
+         // The data member has attributes, look for the annotated attribute
+         // that rootcling/genreflex may have attached, and if there is one,
+         // check if the data member is marked transient/non-persistent and
+         // skip it if so.
+         bool skipIt = false;
+         for (Decl::attr_iterator AI = FD->attr_begin(), AE = FD->attr_end();
+               AI != AE; ++AI) {
+            AnnotateAttr* Attr = llvm::dyn_cast<AnnotateAttr>(*AI);
+            if (!Attr) {
+               // Not an annotation attribute, skip it.
+               continue;
+            }
+            string val = Attr->getAnnotation();
+            if (val.substr(0, 3) == "//!") {
+               // Data member is marked transient/not-persistent, skip it.
+               skipIt = true;
+               break;
+            }
+         }
+         if (skipIt) {
+            // Data member is marked transient/not-persistent, skip it.
+            continue;
+         }
+      }
+      // Not marked transient/not-persistent, check the type.
+      TType Ty(*this);
+      Ty.Init(QT);
+      if (!Ty.CheckType()) {
+         return false;
+      }
+   }
+   return true;
+}
+
+void
+TType::Dump() const
+{
+   fType.dump();
+}
+
+TType*
+TType::FinalType() const
+{
+   TType* ret = new TType();
+   if (!IsValid()) {
+      return ret;
+   }
+   QualType QT = fType.getCanonicalType();
+   ret->Init(QT);
+   return ret;
+}
+
+TType*
+TType::GetParent() const
+{
+   const Type* Ty = fType.getCanonicalType().getTypePtr();
+   if (const TagType* TT = Ty->getAs<TagType>()) {
+      const TagDecl* TD = TT->getDecl();
+      const DeclContext* DC = TD->getDeclContext();
+      if (DC->isTranslationUnit() || DC->isNamespace()) {
+         return 0;
+      }
+      if (DC->isRecord()) {
+         const Type* ParentTy = llvm::cast<RecordDecl>(DC)->getTypeForDecl();
+         TType* ret = new TType();
+         ret->Init(QualType(ParentTy, 0));
+         return ret;
+      }
+      if (DC->isFunctionOrMethod()) {
+         return 0;
+      }
+      // FIXME: Check for TagDecl
+      return 0;
+   }
+   return 0;
+}
+
+void
+TType::Init(QualType QT)
+{
+   fTypeInfo = 0;
+   fType = QT;
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   string name;
+   QT.getAsStringInternal(name, Policy);
+   void* f = compile_wrapper(name.c_str());
+   if (!f) {
+      Error("TType::Init(QualType)", "Unable to compile wrapper!\n%s",
+            name.c_str());
+   }
+   typedef void* (*F)(void);
+   fTypeInfo = (const std::type_info*) (*(F)f)();
+#if 0
+   cling::StoredValueRef valRef;
+   cling::Interpreter::CompilationResult cr = fInterp->evaluate(typeid_expr, valRef);
+   if (cr != cling::Interpreter::kSuccess) {
+      return;
+   }
+   if (!valRef.isValid()) {
+      return;
+   }
+   if (valRef.get().isVoid(fInterp->getCI()->getASTContext())) {
+      return;
+   }
+   fTypeInfo = (const std::type_info*) valRef.get().simplisticCastAs<unsigned long>();
+#endif // 0
+   //--
+}
+
+void
+TType::Init(const char* name)
+{
+   fTypeInfo = 0;
+   const cling::LookupHelper& LH = fInterp->getLookupHelper();
+   fType = LH.findType(name, cling::LookupHelper::NoDiagnostics);
+   if (fType.isNull()) {
+      if (gDebug > 0) {
+      }
+      return;
+   }
+   else {
+      if (gDebug > 0) {
+      }
+   }
+   void* f = compile_wrapper(name);
+   if (!f) {
+      Error("TType::Init(QualType)", "Unable to compile wrapper!\n%s",
+            name);
+   }
+   typedef void* (*F)(void);
+   fTypeInfo = (const std::type_info*) (*(F)f)();
+#if 0
+   string typeid_expr("&typeid(");
+   typeid_expr += name;
+   typeid_expr += ");";
+   cling::StoredValueRef valRef;
+   cling::Interpreter::CompilationResult cr = fInterp->evaluate(typeid_expr, valRef);
+   if (cr != cling::Interpreter::kSuccess) {
+      return;
+   }
+   if (!valRef.isValid()) {
+      return;
+   }
+   if (valRef.get().isVoid(fInterp->getCI()->getASTContext())) {
+      return;
+   }
+   fTypeInfo = (const std::type_info*) valRef.get().simplisticCastAs<unsigned long>();
+#endif // 0
+   //--
+}
+
+void
+TType::Init(const string& name)
+{
+   Init(name.c_str());
+}
+
+void
+TType::Init(const std::type_info& ti)
+{
+   // Note: We may have to cache the result of LH.findType()
+   //       here, it may be too slow to live with.
+   fTypeInfo = &ti;
+   int err = 0;
+   std::string demangled_name = demangle(ti.name(), &err);
+   const cling::LookupHelper& LH = fInterp->getLookupHelper();
+   fType = LH.findType(demangled_name, cling::LookupHelper::NoDiagnostics);
+   if (fType.isNull()) {
+      if (gDebug > 0) {
+      }
+      return;
+   }
+   else {
+      if (gDebug > 0) {
+      }
+   }
+}
+
+void
+TType::InitWithTypeInfoName(const char* name)
+{
+   fTypeInfo = 0;
+   int err = 0;
+   std::string demangled_name = demangle(name, &err);
+   Init(demangled_name);
+}
+
+bool
+TType::IsAbstract() const
+{
+   // Class has at least one pure virtual function.
+   const Type* Ty = fType.getCanonicalType().getTypePtr();
+   if (const CXXRecordDecl* RD = Ty->getAsCXXRecordDecl()) {
+      return RD->isAbstract();
+   }
+   if (const InjectedClassNameType* ICNTy =
+         Ty->getAs<InjectedClassNameType>()) {
+      const CXXRecordDecl* CRD = ICNTy->getDecl();
+      return CRD->isAbstract();
+   }
+   return false;
+}
+
+bool
+TType::IsArray() const
+{
+   // Note: Only c++03 array types for now.
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   const Type* Ty = Context.getAsArrayType(fType.getCanonicalType());
+   if (Ty) {
+      return true;
+   }
+   return false;
+}
+
+bool
+TType::IsClass() const
+{
+   // Note: This really means class, struct, or union.
+   const Type* Ty = fType.getCanonicalType().getTypePtr();
+   if (Ty->getAs<RecordType>()) {
+      return true;
+   }
+   if (Ty->getAs<InjectedClassNameType>()) {
+      return true;
+   }
+   return false;
+}
+
+bool
+TType::IsConst() const
+{
+   return fType.isConstQualified();
+}
+
+bool
+TType::IsDynamicClass() const
+{
+   // Class has a virtual table because it has at least one virtual
+   // member function, or at least one virtual base, or both.
+   const Type* Ty = fType.getCanonicalType().getTypePtr();
+   if (const CXXRecordDecl* RD = Ty->getAsCXXRecordDecl()) {
+      return RD->isDynamicClass();
+   }
+   if (const InjectedClassNameType* ICNTy =
+         Ty->getAs<InjectedClassNameType>()) {
+      const CXXRecordDecl* CRD = ICNTy->getDecl();
+      return CRD->isDynamicClass();
+   }
+   return false;
+}
+
+bool
+TType::IsEnum() const
+{
+   return fType.getCanonicalType()->isEnumeralType();
+}
+
+bool
+TType::IsFundamental() const
+{
+   return fType.getCanonicalType()->isFundamentalType();
+}
+
+bool
+TType::IsPointer() const
+{
+   return fType.getCanonicalType()->isPointerType();
+}
+
+bool
+TType::IsReference() const
+{
+   return fType.getCanonicalType()->isReferenceType();
+}
+
+bool
+TType::IsStruct() const
+{
+   // Note: Test for injected class name here?
+   return fType.getCanonicalType()->isStructureType();
+}
+
+bool
+TType::IsTemplateInstance() const
+{
+   if (CXXRecordDecl* RD = fType.getCanonicalType()->getAsCXXRecordDecl()) {
+      if (llvm::dyn_cast<ClassTemplateSpecializationDecl>(RD)) {
+         return true;
+      }
+   }
+   return false;
+}
+
+bool
+TType::IsTypedef() const
+{
+   return fType->getAs<TypedefType>();
+}
+
+bool
+TType::IsUnion() const
+{
+   // Note: Test for injected class name here?
+   return fType.getCanonicalType()->isUnionType();
+}
+
+bool
+TType::IsValid() const
+{
+   return !fType.isNull();
+}
+
+bool
+TType::IsVirtual() const
+{
+   // Class has at least one virtual member function.
+   const Type* Ty = fType.getCanonicalType().getTypePtr();
+   if (const CXXRecordDecl* RD = Ty->getAsCXXRecordDecl()) {
+      return RD->isPolymorphic();
+   }
+   if (const InjectedClassNameType* ICNTy =
+         Ty->getAs<InjectedClassNameType>()) {
+      const CXXRecordDecl* CRD = ICNTy->getDecl();
+      return CRD->isPolymorphic();
+   }
+   return false;
+}
+
+unsigned long
+TType::MaxIndex(unsigned long dim) const
+{
+   if (!IsValid()) {
+      return 0;
+   }
+   // To get this information we must count the number
+   // of arry type nodes in the canonical type chain.
+   QualType QT = fType.getCanonicalType();
+   unsigned long num_dim = ArrayDim();
+   if (dim >= num_dim) {
+      // Passed dimension is out of bounds.
+      return 0;
+   }
+   unsigned long cnt = dim;
+   unsigned long max = 0UL;
+   while (1) {
+      if (QT->isArrayType()) {
+         if (cnt == 0) {
+            if (const ConstantArrayType* CAT =
+                  llvm::dyn_cast<ConstantArrayType>(QT)) {
+               max = static_cast<unsigned long>(CAT->getSize().getZExtValue());
+            }
+            else if (llvm::dyn_cast<IncompleteArrayType>(QT)) {
+               max = ULONG_MAX;
+            }
+            else {
+               max = 0UL;
+            }
+            break;
+         }
+         --cnt;
+         QT = llvm::cast<clang::ArrayType>(QT)->getElementType();
+         continue;
+      }
+      else if (QT->isReferenceType()) {
+         QT = llvm::cast<clang::ReferenceType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isPointerType()) {
+         QT = llvm::cast<clang::PointerType>(QT)->getPointeeType();
+         continue;
+      }
+      else if (QT->isMemberPointerType()) {
+         QT = llvm::cast<clang::MemberPointerType>(QT)->getPointeeType();
+         continue;
+      }
+      break;
+   }
+   return max;
+}
+
+string
+TType::QualifiedName() const
+{
+   string name;
+   if (!IsValid()) {
+      return name;
+   }
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   PrintingPolicy Policy(Context.getPrintingPolicy());
+   fType.getAsStringInternal(name, Policy);
+   return name;
+}
+
+unsigned long
+TType::Size() const
+{
+   ASTContext& Context = fInterp->getCI()->getASTContext();
+   unsigned long ret =
+      Context.getTypeInfoDataSizeInChars(fType).first.getQuantity();
+   return ret;
+}
+
+TType*
+TType::ToType() const
+{
+   TType* ret = new TType();
+   if (!IsValid()) {
+      return ret;
+   }
+   QualType QT = fType.getCanonicalType();
+   if (QT->isReferenceType()) {
+      QT = llvm::cast<ReferenceType>(QT)->getPointeeType();
+      ret->Init(QT);
+      return ret;
+   }
+   else if (QT->isPointerType()) {
+      QT = llvm::cast<PointerType>(QT)->getPointeeType();
+      ret->Init(QT);
+      return ret;
+   }
+   else if (QT->isMemberPointerType()) {
+      QT = llvm::cast<MemberPointerType>(QT)->getPointeeType();
+      ret->Init(QT);
+      return ret;
+   }
+   else if (QT->isArrayType()) {
+      QT = llvm::cast<ArrayType>(QT)->getElementType();
+      ret->Init(QT);
+      return ret;
+   }
+   return ret;
+}
+
+const std::type_info*
+TType::TypeInfo() const
+{
+   return fTypeInfo;
+}
+
+unsigned long TCling::Type_ArrayDim(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->ArrayDim();
+}
+
+unsigned long TCling::Type_ArraySize(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->ArraySize();
+}
+
+bool TCling::Type_Bool(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->operator bool();
+}
+
+bool TCling::Type_CheckType(void* obj, bool noComponents /*= false*/) const
+{
+   TType* p = (TType*) obj;
+   return p->CheckType(noComponents);
+}
+
+void TCling::Type_Delete(void* obj) const
+{
+   TType* p = (TType*) obj;
+   delete p;
+}
+
+void TCling::Type_Dump(void* obj) const
+{
+   TType* p = (TType*) obj;
+   p->Dump();
+}
+
+TType* TCling::Type_Factory() const
+{
+   return new TType();
+}
+
+TType* TCling::Type_Factory(const char* name) const
+{
+   return new TType(name);
+}
+
+TType* TCling::Type_Factory(const std::string& name) const
+{
+   return new TType(name);
+}
+
+TType* TCling::Type_Factory(const std::type_info& ti) const
+{
+   return new TType(ti);
+}
+
+TType* TCling::Type_FinalType(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->FinalType();
+}
+
+TType* TCling::Type_GetParent(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->GetParent();
+}
+
+void TCling::Type_Init(void* obj, const char* name) const
+{
+   TType* p = (TType*) obj;
+   p->Init(name);
+}
+
+void TCling::Type_Init(void* obj, const std::string& name) const
+{
+   TType* p = (TType*) obj;
+   p->Init(name);
+}
+
+void TCling::Type_Init(void* obj, const std::type_info& ti) const
+{
+   TType* p = (TType*) obj;
+   p->Init(ti);
+}
+
+void TCling::Type_InitWithTypeInfoName(void* obj, const char* name) const
+{
+   TType* p = (TType*) obj;
+   p->InitWithTypeInfoName(name);
+}
+
+bool TCling::Type_IsAbstract(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsAbstract();
+}
+
+bool TCling::Type_IsArray(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsArray();
+}
+
+bool TCling::Type_IsClass(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsClass();
+}
+
+bool TCling::Type_IsConst(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsConst();
+}
+
+bool TCling::Type_IsDynamicClass(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsDynamicClass();
+}
+
+bool TCling::Type_IsEnum(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsEnum();
+}
+
+bool TCling::Type_IsFundamental(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsFundamental();
+}
+
+bool TCling::Type_IsPointer(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsPointer();
+}
+
+bool TCling::Type_IsReference(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsReference();
+}
+
+bool TCling::Type_IsStruct(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsStruct();
+}
+
+bool TCling::Type_IsTemplateInstance(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsTemplateInstance();
+}
+
+bool TCling::Type_IsTypedef(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsTypedef();
+}
+
+bool TCling::Type_IsUnion(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsUnion();
+}
+
+bool TCling::Type_IsValid(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsValid();
+}
+
+bool TCling::Type_IsVirtual(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->IsVirtual();
+}
+
+unsigned long TCling::Type_MaxIndex(void* obj, unsigned long dim) const
+{
+   TType* p = (TType*) obj;
+   return p->MaxIndex(dim);
+}
+
+std::string TCling::Type_QualifiedName(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->QualifiedName();
+}
+
+unsigned long TCling::Type_Size(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->Size();
+}
+
+TType* TCling::Type_ToType(void* obj) const
+{
+   TType* p = (TType*) obj;
+   return p->ToType();
+}
+
+const std::type_info* TCling::Type_TypeInfo(void *obj) const
+{
+   TType* p = (TType*) obj;
+   return p->TypeInfo();
+}
+
