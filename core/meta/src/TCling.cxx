@@ -2826,7 +2826,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
             // Didn't manage to determine the class version from the AST.
             // Use runtime instead.
             if ((mi.Property() & kIsStatic)
-                && fInterpreter->getCodeGenerator()) {
+                && !fInterpreter->isInSyntaxOnlyMode()) {
                // This better be a static function.
                TClingCallFunc callfunc(fInterpreter, *fNormalizedCtxt);
                callfunc.SetFunc(&mi);
@@ -3122,7 +3122,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) cons
    // Return pointer to cling DeclId for a global variable that is a pointer
    // whose value is 'ptrvalue'.
 
-   llvm::Module* module = fInterpreter->getCodeGenerator()->GetModule();
+   llvm::Module* module = fInterpreter->getLastTransaction()->getModule();
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
    llvm::Module::global_iterator iter = module->global_begin();
