@@ -2783,9 +2783,9 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Decla
 
    if (errnum) *errnum = VALID;
 
+   if (title.size() == 0 || (title[0] != '[')) return 0; 
    size_t rightbracket = title.find(']');
-   if ((title[0] != '[') ||
-       (rightbracket == llvm::StringRef::npos)) return 0;
+   if (rightbracket == llvm::StringRef::npos) return 0;
 
    std::string working;
    static std::string indexvar;
