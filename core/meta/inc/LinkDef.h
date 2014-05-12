@@ -67,7 +67,7 @@
 #pragma link C++ class TFileMergeInfo;
 #pragma link C++ class TListOfFunctions+;
 #pragma link C++ class TListOfFunctionTemplates+;
-#pragma link C++ class TListOfDataMembers+;
+#pragma link C++ class TListOfDataMembers-;
 #pragma link C++ class TListOfEnums+;
 
 #endif

@@ -411,6 +411,18 @@ void TListOfDataMembers::Load()
 }
 
 //______________________________________________________________________________
+void TListOfDataMembers::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TListOfDataMembers.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TListOfDataMembers::Class(),this);
+      fIsLoaded = kTRUE;
+   } else {
+      R__b.WriteClassBuffer(TListOfDataMembers::Class(),this);
+   }
+}
+//______________________________________________________________________________
 void TListOfDataMembers::Unload()
 {
    // Mark 'all func' as being unloaded.
