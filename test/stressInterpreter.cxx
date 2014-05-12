@@ -443,8 +443,8 @@ int main(int argc, char **argv)
       }
    }
 
-   TApplication theApp("App", &argc, argv);
    gROOT->SetBatch();
+   TApplication theApp("App", &argc, argv);
 
    TString exe(argv[0]);
    if (exe.EndsWith(".exe")) exe.Remove(exe.Length() - 4, 4);
