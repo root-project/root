@@ -1983,35 +1983,54 @@ Double_t TGeoTubeSeg::Safety(const Double_t *point, Bool_t in) const
 {
 // computes the closest distance from given point InitTrigonometry();to this shape, according
 // to option. The matching point on the shape is stored in spoint.
+   Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
-
-   Double_t safe = TGeoShape::Big();
    if (in) {
       saf[0] = fDz-TMath::Abs(point[2]);
       saf[1] = r-fRmin;
       saf[2] = fRmax-r;
       safe   = saf[TMath::LocMin(3,saf)];
-   } else {
-   // at least one positive
-      saf[0] = TMath::Abs(point[2])-fDz;
+      if ((fPhi2-fPhi1)>=360.) return safe;
+      Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
+      return TMath::Min(safe, safphi);
+   }   
+   // Point expected to be outside
+   Bool_t inphi  = kFALSE;
+   Double_t cpsi=point[0]*fCm+point[1]*fSm;
+   saf[0] = TMath::Abs(point[2])-fDz;
+   if (cpsi>r*fCdfi-TGeoShape::Tolerance())  inphi = kTRUE;
+   if (inphi) {
       saf[1] = fRmin-r;
       saf[2] = r-fRmax;
-      safe   = saf[TMath::LocMax(3,saf)];
+      safe = saf[TMath::LocMax(3,saf)];
+      safe = TMath::Max(0., safe);
+      return safe;
    }
-   if ((fPhi2-fPhi1)>=360.) return safe;
+   // Point outside the phi range
+   // Compute projected radius of the (r,phi) position vector onto 
+   // phi1 and phi2 edges and take the maximum for chosing the side.
+   Double_t rproj = TMath::Max(point[0]*fC1+point[1]*fS1, point[0]*fC2+point[1]*fS2);
+   saf[1] = fRmin-rproj;
+   saf[2] = rproj-fRmax;
+   safe = TMath::Max(saf[1], saf[2]);
+   if ((fPhi2-fPhi1)>=360.) return TMath::Max(safe,saf[0]);
+   if (safe>0) {
+      // rproj not within (rmin,rmax) - > no need to calculate safphi
+      safe = TMath::Sqrt(rsq-rproj*rproj+safe*safe);
+      return (saf[0]<0) ? safe : TMath::Sqrt(safe*safe+saf[0]*saf[0]);
+   }   
    Double_t safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
-
-   if (in) return TMath::Min(safe, safphi);
-   return TMath::Max(safe, safphi);
+   return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
 
 //_____________________________________________________________________________
 Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, Double_t rmax, Double_t dz,
-                              Double_t phi1, Double_t phi2, Int_t skipz)
+                              Double_t phi1d, Double_t phi2d, Int_t skipz)
 {
 // Static method to compute the closest distance from given point to this shape.
+   Double_t safe = TGeoShape::Big();
    Double_t saf[3];
    Double_t rsq = point[0]*point[0]+point[1]*point[1];
    Double_t r = TMath::Sqrt(rsq);
@@ -2029,19 +2048,55 @@ Double_t TGeoTubeSeg::SafetyS(const Double_t *point, Bool_t in, Double_t rmin, D
       default:
          saf[0] = dz-TMath::Abs(point[2]);
    }
-   saf[1] = r-rmin;
-   saf[2] = rmax-r;
-   Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1,phi2);
-   Double_t safe = TGeoShape::Big();
-
-   if (in)  {
-      safe = saf[TMath::LocMin(3,saf)];
+   
+   if (in) {
+      saf[1] = r-rmin;
+      saf[2] = rmax-r;
+      safe   = saf[TMath::LocMin(3,saf)];
+      if ((phi2d-phi1d)>=360.) return safe;
+      Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1d,phi2d);
       return TMath::Min(safe, safphi);
+   }   
+   // Point expected to be outside
+   saf[0] = -saf[0];
+   Bool_t inphi  = kFALSE;
+   Double_t phi1 = phi1d*TMath::DegToRad();
+   Double_t phi2 = phi2d*TMath::DegToRad();
+   
+   Double_t fio = 0.5*(phi1+phi2);
+   Double_t cm = TMath::Cos(fio);
+   Double_t sm = TMath::Sin(fio);   
+   Double_t cpsi=point[0]*cm+point[1]*sm;
+   Double_t dfi = 0.5*(phi2-phi1);
+   Double_t cdfi = TMath::Cos(dfi);
+   if (cpsi>r*cdfi-TGeoShape::Tolerance())  inphi = kTRUE;
+   if (inphi) {
+      saf[1] = rmin-r;
+      saf[2] = r-rmax;
+      safe = saf[TMath::LocMax(3,saf)];
+      safe = TMath::Max(0., safe);
+      return safe;
    }
-
-   for (Int_t i=0; i<3; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(3,saf)];
-   return TMath::Max(safe, safphi);
+   // Point outside the phi range
+   // Compute projected radius of the (r,phi) position vector onto 
+   // phi1 and phi2 edges and take the maximum for chosing the side.
+   Double_t c1 = TMath::Cos(phi1);
+   Double_t s1 = TMath::Sin(phi1);
+   Double_t c2 = TMath::Cos(phi2);
+   Double_t s2 = TMath::Sin(phi2);
+   
+   Double_t rproj = TMath::Max(point[0]*c1+point[1]*s1, point[0]*c2+point[1]*s2);
+   saf[1] = rmin-rproj;
+   saf[2] = rproj-rmax;
+   safe   = TMath::Max(saf[1], saf[2]);
+   if ((phi2d-phi1d)>=360.) return TMath::Max(safe,saf[0]);
+   if (safe>0) {
+      // rproj not within (rmin,rmax) - > no need to calculate safphi
+      safe = TMath::Sqrt(rsq-rproj*rproj+safe*safe);
+      return (saf[0]<0) ? safe : TMath::Sqrt(safe*safe+saf[0]*saf[0]);
+   }   
+   Double_t safphi = TGeoShape::SafetyPhi(point,in,phi1d,phi2d);
+   return (saf[0]<0) ? safphi : TMath::Sqrt(saf[0]*saf[0]+safphi*safphi);
 }
 
 //_____________________________________________________________________________
