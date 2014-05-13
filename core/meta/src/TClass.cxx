@@ -1215,7 +1215,7 @@ void TClass::Init(const char *name, Version_t cversion,
          fCanLoadClassInfo = kTRUE;
          // Here we check and grab the info from the rootpcm.
          TProtoClass *proto = TClassTable::GetProto(GetName());
-         if (0 && proto && proto->FillTClass(this)) {
+         if (proto && proto->FillTClass(this)) {
             fHasRootPcmInfo = kTRUE;
          }
       }

@@ -992,7 +992,8 @@ bool TCling::LoadPCM(TString pcmFileName,
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
-   if (gROOT->IsRootFile(pcmFileName)) {
+   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
+   if (enableRootPcm && gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
       if (gDebug > 5) {
          gDebug -= 5;
@@ -1015,7 +1016,7 @@ bool TCling::LoadPCM(TString pcmFileName,
       gDebug = oldDebug;
    } else {
       if (gDebug > 5)
-         ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
+         ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
 
    }
    // Note: Declaring the relationship between the module (pcm) and the header
