@@ -2544,7 +2544,8 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
-                         const std::vector<clang::TypedefNameDecl*>& typedefDecls)
+                         const std::vector<clang::TypedefNameDecl*>& typedefDecls,
+                         const HeadersClassesMap_t& headersClassesMap)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -2581,6 +2582,17 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          for (auto& className : classesNames){
             rootmapFile << "class " << className << std::endl;
          }
+         // And headers
+         std::unordered_set<std::string> writtenHeaders;
+         for (auto className : classesNames){
+            if (headersClassesMap.count(className)){
+               auto& headers = headersClassesMap.at(className);
+               auto& header = headers.front();
+               if (writtenHeaders.insert(header).second &&
+                   llvm::sys::path::extension(header)==".h")
+                  rootmapFile << "header " << header << std::endl;
+            }
+         }
       }
 
       // Same for namespaces
@@ -2598,6 +2610,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
             rootmapFile << "typedef " << tDef->getQualifiedNameAsString() << std::endl;
          }
       }
+
    }
 
    return 0;
@@ -4254,9 +4267,9 @@ int RootCling(int argc,
    
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
+   HeadersClassesMap_t headersClassesMap;
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
-      HeadersClassesMap_t headersClassesMap;
       ExtractHeadersForClasses(scan.fSelectedClasses,
                                scan.fSelectedTypedefs,
                                headersClassesMap,
@@ -4348,7 +4361,8 @@ int RootCling(int argc,
                                              classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
-                                             scan.fSelectedTypedefs);
+                                             scan.fSelectedTypedefs,
+                                             headersClassesMap);
       }
       else{
          rmStatusCode = CreateRootMapFile(rootmapFileName,
