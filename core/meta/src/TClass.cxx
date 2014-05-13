@@ -3376,13 +3376,99 @@ Bool_t TClass::HasDictionary()
    return gInterpreter->HasDictionary(this);
 }
 
+//______________________________________________________________________________
+bool TClass::InsertMissingDictionary(TClass* cl, TObjArray& result)
+{
+
+   // Utility function to insert a TClass to a decl that does not have a dictionary
+   // In the set of pointer for the classes without dictionaries.
+
+   // Get the name of the class.
+   const char* name = cl->GetName();
+
+   // Check whether the type pointer is not already in the set.
+   TClass* t = (TClass*)result.FindObject(name);
+   if (t) return false;
+
+   // Check for the dictionary of the curent class.
+   if ((t = TClass::GetClass(name))) {
+   //Check whether a custom streamer
+      if (t->TestBit(TClass::kHasCustomStreamerMember)) return false;
+      // Deal with proxies.
+      if (t->GetCollectionProxy()) {
+         // We need to make sure the collection proxy is not emulated
+         if ((t->GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
+            // oups we are missing the dictionary for the collection.
+            result.Add(t);
+            return false;
+         } else {
+            // We need to *not* look at t but instead at its content
+            // The collection has different kind of elements the check would be required.
+            if ((t = t->GetCollectionProxy()->GetValueClass())) {
+               // Get the name of the class.
+               const char* elemName = t->GetName();
+               if (!gClassTable->GetDict(elemName)) {
+                  TClass* existingClass = (TClass*)result.FindObject(elemName);
+                  if (!existingClass) return false;
+                  result.Add(existingClass);
+               }
+            }
+            return true;
+         }
+      }
+   }
+   if (!gClassTable->GetDict(name)) {
+         result.Add(t);
+   }
+
+   return true;
+}
+
+void TClass::GetMissingDictionariesForClass(TClass* cl, TObjArray& result, bool recurse)
+{
+   // Utility function to get the missing dictionaries for a class and it's data members.
+   // Checks all the data members and if the recurse flag is true it recurses over contents of the data members.
+
+   // Insert this class in the set if it is not already there and it does not have a dictionary.
+   if (!cl) return;
+   if (!InsertMissingDictionary(cl, result)) return;
+
+   // Verify the Data Members.
+   TListOfDataMembers* ldm = (TListOfDataMembers*)cl->GetListOfDataMembers();
+   if (ldm) {
+      TIter nextMemb(ldm);
+      TDataMember *dm=0;
+      TClass* dmTClass = 0;
+      while((dm=(TDataMember*)nextMemb())) {
+         // If it is a built-in data type.
+         if (dm->GetDataType()) {
+            dmTClass = dm->GetDataType()->Class();
+         // Otherwise get the string representing the type.
+         } else if (strcmp(dm->GetTrueTypeName(), "string") == 0) {
+            continue;
+         } else if (strstr(dm->GetTrueTypeName(), "typedef")) {
+            dmTClass = TClass::GetClass(dm->GetTrueTypeName());
+         } else if (dm->GetTypeName()) {
+            dmTClass = TClass::GetClass(dm->GetTypeName());
+         }
+         if (dmTClass) {
+            if(recurse) {
+               GetMissingDictionariesForClass(dmTClass, result, recurse);
+            } else {
+               InsertMissingDictionary(dmTClass, result);
+            }
+         }
+      }
+   }
+}
+
 void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
 {
    // Get the classes that have a missing dictionary.
    // Recurse over the data members using the flag recurse.
    // By default is is not recursing on the data members.
 
-   gInterpreter->GetMissingDictionaries(this, result, recurse);
+   GetMissingDictionariesForClass(this, result, recurse);
 }
 
 //______________________________________________________________________________
