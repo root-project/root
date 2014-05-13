@@ -613,7 +613,8 @@ const char *TDataMember::GetArrayIndex() const
 //______________________________________________________________________________
 TDictionary::DeclId_t TDataMember::GetDeclId() const
 {
-   return gInterpreter->GetDeclId(fInfo);
+   if (fInfo) return gInterpreter->GetDeclId(fInfo);
+   else return 0;
 }
 
 //______________________________________________________________________________
