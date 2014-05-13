@@ -1,5 +1,6 @@
 #include "TFile.h"
 #include "TTreeReader.h"
+#include "TChain.h"
 #include "TInterpreter.h"
 #include "TSystem.h"
 #include "TTreeReaderValue.h"
@@ -22,7 +23,7 @@
 #define MYDOUBLEARRAY_SIZE 8
 #define MYBOOLARRAYB_SIZE 12
 
-void makeTree(const char* fileName = "HardTreeFile.root", Int_t startI = 1){
+void makeTree(const char* fileName, Int_t startI = 1){
     TFile *myFile = new TFile(fileName, "RECREATE");
     TTree *myTree = new TTree("HardTree", "This is hard to read");
 
@@ -166,9 +167,43 @@ void makeTree(const char* fileName = "HardTreeFile.root", Int_t startI = 1){
     delete myFile;
 }
 
-void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+// Extracts either a single tree or creates a TChain from  the input files.
+class TreeGetter {
+   std::vector<std::string> fFileNames;
+   TFile* fFile;
+   TChain* fChain;
+
+public:
+   TreeGetter(): fFile(0), fChain(0) {}
+   ~TreeGetter() { delete fFile; delete fChain; }
+   void Add(const char* fileName) { fFileNames.push_back(fileName); }
+   TTree* GetTree() {
+      // If we have opened the file, close it.
+      delete fFile;
+      fFile = 0;
+      // If we have created a TChain, get rid of it.
+      delete fChain;
+      fChain = 0;
+      if (fFileNames.size() == 1) {
+         // Single tree case.
+         fFile = TFile::Open(fFileNames[0].c_str());
+         TTree* tree = 0;
+         fFile->GetObject("HardTree", tree);
+         return tree;
+      } else if (fFileNames.size() > 1) {
+         // Multiple files, thus return a chain.
+         fChain = new TChain("HardTree");
+         for (const auto& str: fFileNames) {
+            fChain->Add(str.c_str());
+         }
+         return fChain;
+      }
+      return 0;
+   }
+};
+
+void readNum(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+    TTreeReader myTreeReader (getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "num";
@@ -184,12 +219,10 @@ void readNum(const char* branchName = "A99.", Bool_t printOut = true, Bool_t tes
         if (printOut) fprintf(stderr, "Num: %i\n", *myNum);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBObject(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter) {
+    TTreeReader myTreeReader (getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BObject";
@@ -205,12 +238,10 @@ void readBObject(const char* branchName = "A99.", Bool_t printOut = true, Bool_t
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBObject->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBObjectBranch(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+    TTreeReader myTreeReader (getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BObject.";
@@ -226,12 +257,11 @@ void readBObjectBranch(const char* branchName = "A99.", Bool_t printOut = true, 
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBObject->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBObjectDummy(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BObject.dummy";
@@ -247,12 +277,11 @@ void readBObjectDummy(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "Dummy: %i\n", *myDummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBStar(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BStar";
@@ -268,12 +297,11 @@ void readBStar(const char* branchName = "A99.", Bool_t printOut = true, Bool_t t
         if (printOut) fprintf(stderr, "Dummy: %i\n", myBStar->dummy);
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorBValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorB";
@@ -295,12 +323,11 @@ void readVectorBValue(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorStarBValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorStarB";
@@ -322,12 +349,11 @@ void readVectorStarBValue(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorStarBArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorStarB";
@@ -349,12 +375,11 @@ void readVectorStarBArray(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorBArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorB";
@@ -376,12 +401,11 @@ void readVectorBArray(const char* branchName = "A99.", Bool_t printOut = true, B
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BArray[12]";
@@ -403,12 +427,11 @@ void readBArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t 
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBStarArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BStarArray";
@@ -430,12 +453,11 @@ void readBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Boo
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorBStarValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorBStar";
@@ -457,12 +479,11 @@ void readVectorBStarValue(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorBStarArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorBStar";
@@ -484,12 +505,11 @@ void readVectorBStarArray(const char* branchName = "A99.", Bool_t printOut = tru
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBClonesArrayValue(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BClonesArray";
@@ -511,12 +531,11 @@ void readBClonesArrayValue(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBClonesArrayArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BClonesArray";
@@ -538,12 +557,11 @@ void readBClonesArrayArray(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readVectorBDummyArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "vectorB.dummy";
@@ -565,12 +583,11 @@ void readVectorBDummyArray(const char* branchName = "A99.", Bool_t printOut = tr
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readBClonesArrayDummyArray(const char* branchName, Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString finalBranchName = branchName;
     finalBranchName += "BClonesArray.dummy";
@@ -592,12 +609,11 @@ void readBClonesArrayDummyArray(const char* branchName = "A99.", Bool_t printOut
         if (printOut) fprintf(stderr, "\n");
     }
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readLeafFloatX(Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString branchName = "MyLeafList.x";
 
@@ -612,12 +628,11 @@ void readLeafFloatX(Bool_t printOut = true, Bool_t testValues = false, const cha
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readLeafFloatY(Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString branchName = "MyLeafList.y";
 
@@ -632,12 +647,11 @@ void readLeafFloatY(Bool_t printOut = true, Bool_t testValues = false, const cha
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readLeafIntN(Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString branchName = "MyLeafList.n";
 
@@ -652,12 +666,11 @@ void readLeafIntN(Bool_t printOut = true, Bool_t testValues = false, const char*
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readLeafDoubleAArray(Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString branchName = "MyLeafList.a";
 
@@ -678,12 +691,11 @@ void readLeafDoubleAArray(Bool_t printOut = true, Bool_t testValues = false, con
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
-void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const char* fileName = "HardTreeFile.root"){
-    TFile* myFile = TFile::Open(fileName);
-    TTreeReader myTreeReader ("HardTree");
+void readLeafBoolBArray(Bool_t printOut, Bool_t testValues, TreeGetter& getter){
+
+    TTreeReader myTreeReader(getter.GetTree());
 
     TString branchName = "MyLeafList.b";
 
@@ -704,7 +716,6 @@ void readLeafBoolBArray(Bool_t printOut = true, Bool_t testValues = false, const
     }
 
     if (testValues) fprintf(stderr, "%s\n", success && read ? "Success!" : "Failure");
-    delete myFile;
 }
 
 void readTree(const char* fileName = "HardTreeFile.root"){
@@ -715,167 +726,176 @@ void readTree(const char* fileName = "HardTreeFile.root"){
     for (int i = 0; i < 10 && i < myTree->GetEntries(); ++i){
         myTree->Show(i);
     }
-
     delete myFile;
 }
 
 
-void output(Bool_t printAll = false, Bool_t testAll = true, const char* fileName = "HardTreeFile.root"){
-    fprintf(stderr, "A0: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                    "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(                "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(           "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                  "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(           "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(       "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(       "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(           "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(       "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(       "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(      "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(      "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "A0.", printAll, testAll, fileName);
-    fprintf(stderr, "A0: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray( "A0.", printAll, testAll, fileName);
+void output(Bool_t printAll, Bool_t testAll, TreeGetter& getter){
+    fprintf(stderr, "A0: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                    "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(                "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(           "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                  "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(           "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(       "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(       "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(           "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(       "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(       "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(      "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(      "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "A0.", printAll, testAll, getter);
+    fprintf(stderr, "A0: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray( "A0.", printAll, testAll, getter);
 
-    fprintf(stderr, "A1: readNum(): ------------------------------ %s", printAll ? "\n": ""); readNum(                   "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBObject(): -------------------------- %s", printAll ? "\n": ""); readBObject(               "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBStar(): ---------------------------- %s", printAll ? "\n": ""); readBStar(                 "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorBValue(): --------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorStarBValue(): ----------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorStarBArray(): ----------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorBArray(): --------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBArray(): --------------------------- %s", printAll ? "\n": ""); readBArray(                "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBStarArray(): ----------------------- %s", printAll ? "\n": ""); readBStarArray(            "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorBStarValue(): ----------------- %s", printAll ? "\n": ""); readVectorBStarValue(      "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readVectorBStarArray(): ----------------- %s", printAll ? "\n": ""); readVectorBStarArray(      "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBClonesArrayValue(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A1.", printAll, testAll, fileName);
-    fprintf(stderr, "A1: readBClonesArrayArray(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A1.", printAll, testAll, fileName);
+    fprintf(stderr, "A1: readNum(): ------------------------------ %s", printAll ? "\n": ""); readNum(                   "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBObject(): -------------------------- %s", printAll ? "\n": ""); readBObject(               "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBStar(): ---------------------------- %s", printAll ? "\n": ""); readBStar(                 "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorBValue(): --------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorStarBValue(): ----------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorStarBArray(): ----------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorBArray(): --------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBArray(): --------------------------- %s", printAll ? "\n": ""); readBArray(                "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBStarArray(): ----------------------- %s", printAll ? "\n": ""); readBStarArray(            "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorBStarValue(): ----------------- %s", printAll ? "\n": ""); readVectorBStarValue(      "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readVectorBStarArray(): ----------------- %s", printAll ? "\n": ""); readVectorBStarArray(      "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBClonesArrayValue(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A1.", printAll, testAll, getter);
+    fprintf(stderr, "A1: readBClonesArrayArray(): ---------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A1.", printAll, testAll, getter);
 
 
-    fprintf(stderr, "A99: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                   "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(               "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(          "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(            "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(      "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(      "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "A99.", printAll, testAll, fileName);
-    fprintf(stderr, "A99: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray("A99.", printAll, testAll, fileName);
+    fprintf(stderr, "A99: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                   "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObject(               "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(          "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(            "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(      "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(      "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "A99.", printAll, testAll, getter);
+    fprintf(stderr, "A99: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray("A99.", printAll, testAll, getter);
     //fprintf(stderr, "readAObject(): ------------------------ %s", printAll ? "\n": ""); readAObject();
 
 
-    fprintf(stderr, "A101: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(                   "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObject(               "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(                 "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readVectorBValue(): ------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readVectorStarBValue(): --------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readVectorStarBArray(): --------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readVectorBArray(): ------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readBArray(): ------------------------- %s", printAll ? "\n": ""); readBArray(                "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readBStarArray(): --------------------- %s", printAll ? "\n": ""); readBStarArray(            "A101.", printAll, testAll, fileName);
-    //fprintf(stderr, "A101: readVectorBStarValue(): --------------- %s", printAll ? "\n": ""); readVectorBStarValue(            "A101.", printAll, testAll, fileName); // Segfault
-    //fprintf(stderr, "A101: readVectorBStarArray(): --------------- %s", printAll ? "\n": ""); readVectorBStarArray(            "A101.", printAll, testAll, fileName); // Segfault
-    fprintf(stderr, "A101: readBClonesArrayValue(): -------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A101.", printAll, testAll, fileName);
-    fprintf(stderr, "A101: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A101.", printAll, testAll, fileName);
+    fprintf(stderr, "A101: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(                   "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObject(               "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(                 "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readVectorBValue(): ------------------- %s", printAll ? "\n": ""); readVectorBValue(          "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readVectorStarBValue(): --------------- %s", printAll ? "\n": ""); readVectorStarBValue(      "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readVectorStarBArray(): --------------- %s", printAll ? "\n": ""); readVectorStarBArray(      "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readVectorBArray(): ------------------- %s", printAll ? "\n": ""); readVectorBArray(          "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readBArray(): ------------------------- %s", printAll ? "\n": ""); readBArray(                "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readBStarArray(): --------------------- %s", printAll ? "\n": ""); readBStarArray(            "A101.", printAll, testAll, getter);
+    //fprintf(stderr, "A101: readVectorBStarValue(): --------------- %s", printAll ? "\n": ""); readVectorBStarValue(            "A101.", printAll, testAll, getter); // Segfault
+    //fprintf(stderr, "A101: readVectorBStarArray(): --------------- %s", printAll ? "\n": ""); readVectorBStarArray(            "A101.", printAll, testAll, getter); // Segfault
+    fprintf(stderr, "A101: readBClonesArrayValue(): -------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "A101.", printAll, testAll, getter);
+    fprintf(stderr, "A101: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "A101.", printAll, testAll, getter);
 
 
-    // fprintf(stderr, "S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                        "S0_", printAll, testAll, fileName); // Leaflist
-    fprintf(stderr, "S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S0_", printAll, testAll, fileName);
-    // fprintf(stderr, "S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(               "S0_", printAll, testAll, fileName); // Branch not created
-    fprintf(stderr, "S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "S0_", printAll, testAll, fileName);
-    fprintf(stderr, "S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S0_", printAll, testAll, fileName);
-    fprintf(stderr, "S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S0_", printAll, testAll, fileName);
-    fprintf(stderr, "S0_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S0_", printAll, testAll, fileName);
-    fprintf(stderr, "S0_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S0_", printAll, testAll, fileName);
-    // fprintf(stderr, "S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "S0_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "S0_", printAll, testAll, fileName); // Branch not created
-    fprintf(stderr, "S0_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S0_", printAll, testAll, fileName);
-    fprintf(stderr, "S0_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S0_", printAll, testAll, fileName);
-    // fprintf(stderr, "S0_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(      "S0_", printAll, testAll, fileName); // TBranchProxy->Read() fails
-    // fprintf(stderr, "S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(      "S0_", printAll, testAll, fileName); // TBranchProxy->Read() fails
-    // fprintf(stderr, "S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "S0_", printAll, testAll, fileName); // Branch not found
-    // fprintf(stderr, "S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray( "S0_", printAll, testAll, fileName); // Branch not found
+    // fprintf(stderr, "S0_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                        "S0_", printAll, testAll, getter); // Leaflist
+    fprintf(stderr, "S0_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S0_", printAll, testAll, getter);
+    // fprintf(stderr, "S0_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(               "S0_", printAll, testAll, getter); // Branch not created
+    fprintf(stderr, "S0_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S0_", printAll, testAll, getter);
+    // fprintf(stderr, "S0_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "S0_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S0_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "S0_", printAll, testAll, getter); // Branch not created
+    fprintf(stderr, "S0_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S0_", printAll, testAll, getter);
+    fprintf(stderr, "S0_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S0_", printAll, testAll, getter);
+    // fprintf(stderr, "S0_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(      "S0_", printAll, testAll, getter); // TBranchProxy->Read() fails
+    // fprintf(stderr, "S0_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(      "S0_", printAll, testAll, getter); // TBranchProxy->Read() fails
+    // fprintf(stderr, "S0_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "S0_", printAll, testAll, getter); // Branch not found
+    // fprintf(stderr, "S0_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray( "S0_", printAll, testAll, getter); // Branch not found
 
 
-    // fprintf(stderr, "S1_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                        "S1_", printAll, testAll, fileName); // Leaflist
-    fprintf(stderr, "S1_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(              "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S1_", printAll, testAll, fileName);
-    // fprintf(stderr, "S1_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "S1_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S1_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "S1_", printAll, testAll, fileName); // Branch not created
-    fprintf(stderr, "S1_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "S1_", printAll, testAll, fileName);
-    fprintf(stderr, "S1_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S1_", printAll, testAll, fileName);
+    // fprintf(stderr, "S1_: readNum(): ----------------------------- %s", printAll ? "\n": ""); readNum(                        "S1_", printAll, testAll, getter); // Leaflist
+    fprintf(stderr, "S1_: readBObject(): ------------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readBObjectDummy(): -------------------- %s", printAll ? "\n": ""); readBObjectDummy(              "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readBStar(): --------------------------- %s", printAll ? "\n": ""); readBStar(                 "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorBValue(): -------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorStarBValue(): ---------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorStarBArray(): ---------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorBArray(): -------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S1_", printAll, testAll, getter);
+    // fprintf(stderr, "S1_: readBArray(): -------------------------- %s", printAll ? "\n": ""); readBArray(                 "S1_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S1_: readBStarArray(): ---------------------- %s", printAll ? "\n": ""); readBStarArray(             "S1_", printAll, testAll, getter); // Branch not created
+    fprintf(stderr, "S1_: readVectorBStarValue(): ---------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorBStarArray(): ---------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readBClonesArrayValue(): --------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readBClonesArrayArray(): --------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readVectorBDummyArray(): --------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "S1_", printAll, testAll, getter);
+    fprintf(stderr, "S1_: readBClonesArrayDummyArray(): ---------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S1_", printAll, testAll, getter);
 
 
-    // fprintf(stderr, "S99_: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(                        "S99_", printAll, testAll, fileName); // Leaflist
-    fprintf(stderr, "S99_: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObjectBranch(                 "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readBObjectDummy(): ------------------- %s", printAll ? "\n": ""); readBObjectDummy(              "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(                 "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorBValue(): ------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorStarBValue(): --------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorStarBArray(): --------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorBArray(): ------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S99_", printAll, testAll, fileName);
-    // fprintf(stderr, "S99_: readBArray(): ------------------------- %s", printAll ? "\n": ""); readBArray(                 "S99_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S99_: readBStarArray(): --------------------- %s", printAll ? "\n": ""); readBStarArray(             "S99_", printAll, testAll, fileName); // Branch not created
-    fprintf(stderr, "S99_: readVectorBStarValue(): --------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorBStarArray(): --------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readBClonesArrayValue(): -------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readVectorBDummyArray(): -------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "S99_", printAll, testAll, fileName);
-    fprintf(stderr, "S99_: readBClonesArrayDummyArray(): --------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S99_", printAll, testAll, fileName);
+    // fprintf(stderr, "S99_: readNum(): ---------------------------- %s", printAll ? "\n": ""); readNum(                        "S99_", printAll, testAll, getter); // Leaflist
+    fprintf(stderr, "S99_: readBObject(): ------------------------ %s", printAll ? "\n": ""); readBObjectBranch(                 "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readBObjectDummy(): ------------------- %s", printAll ? "\n": ""); readBObjectDummy(              "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readBStar(): -------------------------- %s", printAll ? "\n": ""); readBStar(                 "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorBValue(): ------------------- %s", printAll ? "\n": ""); readVectorBValue(              "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorStarBValue(): --------------- %s", printAll ? "\n": ""); readVectorStarBValue(          "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorStarBArray(): --------------- %s", printAll ? "\n": ""); readVectorStarBArray(          "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorBArray(): ------------------- %s", printAll ? "\n": ""); readVectorBArray(              "S99_", printAll, testAll, getter);
+    // fprintf(stderr, "S99_: readBArray(): ------------------------- %s", printAll ? "\n": ""); readBArray(                 "S99_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S99_: readBStarArray(): --------------------- %s", printAll ? "\n": ""); readBStarArray(             "S99_", printAll, testAll, getter); // Branch not created
+    fprintf(stderr, "S99_: readVectorBStarValue(): --------------- %s", printAll ? "\n": ""); readVectorBStarValue(          "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorBStarArray(): --------------- %s", printAll ? "\n": ""); readVectorBStarArray(          "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readBClonesArrayValue(): -------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readBClonesArrayArray(): -------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readVectorBDummyArray(): -------------- %s", printAll ? "\n": ""); readVectorBDummyArray(     "S99_", printAll, testAll, getter);
+    fprintf(stderr, "S99_: readBClonesArrayDummyArray(): --------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S99_", printAll, testAll, getter);
 
-    // fprintf(stderr, "S101_: readNum(): --------------------------- %s", printAll ? "\n": ""); readNum(                        "S101_", printAll, testAll, fileName); // Leaflist
-    fprintf(stderr, "S101_: readBObject(): ----------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S101_", printAll, testAll, fileName);
-    fprintf(stderr, "S101_: readBObjectDummy(): ------------------ %s", printAll ? "\n": ""); readBObjectDummy(              "S101_", printAll, testAll, fileName);
-    fprintf(stderr, "S101_: readBStar(): ------------------------- %s", printAll ? "\n": ""); readBStar(                 "S101_", printAll, testAll, fileName);
-    // fprintf(stderr, "S101_: readVectorBValue(): ------------------ %s", printAll ? "\n": ""); readVectorBValue(               "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readVectorStarBValue(): -------------- %s", printAll ? "\n": ""); readVectorStarBValue(           "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readVectorStarBArray(): -------------- %s", printAll ? "\n": ""); readVectorStarBArray(           "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readVectorBArray(): ------------------ %s", printAll ? "\n": ""); readVectorBArray(               "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readBArray(): ------------------------ %s", printAll ? "\n": ""); readBArray(                 "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readBStarArray(): -------------------- %s", printAll ? "\n": ""); readBStarArray(             "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readVectorBStarValue(): -------------- %s", printAll ? "\n": ""); readVectorBStarValue(           "S101_", printAll, testAll, fileName); // Branch not created
-    // fprintf(stderr, "S101_: readVectorBStarArray(): -------------- %s", printAll ? "\n": ""); readVectorBStarArray(           "S101_", printAll, testAll, fileName); // Branch not created
-    fprintf(stderr, "S101_: readBClonesArrayValue(): ------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S101_", printAll, testAll, fileName);
-    fprintf(stderr, "S101_: readBClonesArrayArray(): ------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S101_", printAll, testAll, fileName);
-    // fprintf(stderr, "S101_: readVectorBDummyArray(): ------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "S101_", printAll, testAll, fileName);  // Branch not created
-    fprintf(stderr, "S101_: readBClonesArrayDummyArray(): -------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S101_", printAll, testAll, fileName);
+    // fprintf(stderr, "S101_: readNum(): --------------------------- %s", printAll ? "\n": ""); readNum(                        "S101_", printAll, testAll, getter); // Leaflist
+    fprintf(stderr, "S101_: readBObject(): ----------------------- %s", printAll ? "\n": ""); readBObjectBranch(                 "S101_", printAll, testAll, getter);
+    fprintf(stderr, "S101_: readBObjectDummy(): ------------------ %s", printAll ? "\n": ""); readBObjectDummy(              "S101_", printAll, testAll, getter);
+    fprintf(stderr, "S101_: readBStar(): ------------------------- %s", printAll ? "\n": ""); readBStar(                 "S101_", printAll, testAll, getter);
+    // fprintf(stderr, "S101_: readVectorBValue(): ------------------ %s", printAll ? "\n": ""); readVectorBValue(               "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readVectorStarBValue(): -------------- %s", printAll ? "\n": ""); readVectorStarBValue(           "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readVectorStarBArray(): -------------- %s", printAll ? "\n": ""); readVectorStarBArray(           "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readVectorBArray(): ------------------ %s", printAll ? "\n": ""); readVectorBArray(               "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readBArray(): ------------------------ %s", printAll ? "\n": ""); readBArray(                 "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readBStarArray(): -------------------- %s", printAll ? "\n": ""); readBStarArray(             "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readVectorBStarValue(): -------------- %s", printAll ? "\n": ""); readVectorBStarValue(           "S101_", printAll, testAll, getter); // Branch not created
+    // fprintf(stderr, "S101_: readVectorBStarArray(): -------------- %s", printAll ? "\n": ""); readVectorBStarArray(           "S101_", printAll, testAll, getter); // Branch not created
+    fprintf(stderr, "S101_: readBClonesArrayValue(): ------------- %s", printAll ? "\n": ""); readBClonesArrayValue(     "S101_", printAll, testAll, getter);
+    fprintf(stderr, "S101_: readBClonesArrayArray(): ------------- %s", printAll ? "\n": ""); readBClonesArrayArray(     "S101_", printAll, testAll, getter);
+    // fprintf(stderr, "S101_: readVectorBDummyArray(): ------------- %s", printAll ? "\n": ""); readVectorBDummyArray(      "S101_", printAll, testAll, getter);  // Branch not created
+    fprintf(stderr, "S101_: readBClonesArrayDummyArray(): -------- %s", printAll ? "\n": ""); readBClonesArrayDummyArray(    "S101_", printAll, testAll, getter);
 
-    fprintf(stderr, "readLeafFloatX(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatX(        printAll, testAll, fileName);
-    fprintf(stderr, "readLeafFloatY(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatY(        printAll, testAll, fileName);
-    fprintf(stderr, "readLeafIntN(): ----------------------------- %s", printAll ? "\n": ""); readLeafIntN(          printAll, testAll, fileName);
-    fprintf(stderr, "readLeafDoubleAArray(): --------------------- %s", printAll ? "\n": ""); readLeafDoubleAArray(  printAll, testAll, fileName);
-    fprintf(stderr, "readLeafBoolBArray(): ----------------------- %s", printAll ? "\n": ""); readLeafBoolBArray(    printAll, testAll, fileName);
+    fprintf(stderr, "readLeafFloatX(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatX(        printAll, testAll, getter);
+    fprintf(stderr, "readLeafFloatY(): --------------------------- %s", printAll ? "\n": ""); readLeafFloatY(        printAll, testAll, getter);
+    fprintf(stderr, "readLeafIntN(): ----------------------------- %s", printAll ? "\n": ""); readLeafIntN(          printAll, testAll, getter);
+    fprintf(stderr, "readLeafDoubleAArray(): --------------------- %s", printAll ? "\n": ""); readLeafDoubleAArray(  printAll, testAll, getter);
+    fprintf(stderr, "readLeafBoolBArray(): ----------------------- %s", printAll ? "\n": ""); readLeafBoolBArray(    printAll, testAll, getter);
 }
 
 void testAll(){
-    output(false, true);
+   TreeGetter tg;
+   tg.Add("./HardTreeFile.root");
+   output(false, true, tg);
 }
 
 void printAll(){
-    output(true, true);
+   TreeGetter tg;
+   tg.Add("./HardTreeFile.root");
+   output(true, true, tg);
 }
 
 void testChain(){
-    output(false, true, "HardChainFile.root");
+   TreeGetter tg;
+   tg.Add("./HardTreeFile.root");
+   tg.Add("./HardTreeFile2.root");
+   output(false, true, tg);
 }
 
 void printChain(){
-    output(true, true, "HardChainFile.root");
+   TreeGetter tg;
+   tg.Add("./HardTreeFile.root");
+   tg.Add("./HardTreeFile2.root");
+   output(true, true, tg);
 }
