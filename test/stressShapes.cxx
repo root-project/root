@@ -15,6 +15,7 @@ void stressShapes();
 
 int main(int argc, char **argv)
 {
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    stressShapes();
    return 0;

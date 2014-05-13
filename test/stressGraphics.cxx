@@ -173,6 +173,7 @@ char      gLine[80];
 //______________________________________________________________________________
 int main(int argc, char *argv[])
 {
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
 
@@ -221,7 +222,6 @@ void stressGraphics(Int_t verbose = 0)
    // Run all graphics stress tests.
 
    gErrorIgnoreLevel = 9999;
-   gROOT->SetBatch();
    gROOT->SetStyle("Classic");
 
    // Check if $ROOTSYS/tutorials/hsimple.root exists

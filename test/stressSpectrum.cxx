@@ -276,8 +276,8 @@ void stressSpectrum(Int_t ntimes=100) {
 
 int main(int argc, char **argv)
 {
-   TApplication theApp("App", &argc, argv);
    gROOT->SetBatch();
+   TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
    Int_t ntimes = 100;
    if (argc > 1)  ntimes = atoi(argv[1]);

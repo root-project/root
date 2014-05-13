@@ -622,8 +622,9 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    Int_t nentries = 10000;
    Int_t nfiles = 10;
