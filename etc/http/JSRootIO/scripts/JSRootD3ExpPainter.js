@@ -5543,8 +5543,8 @@ var gStyle = {
                   point = {
                      x: grx1,
                      y: gry2,
-                     width: grx2-grx1,
-                     height: gry1-gry2,
+                     width: 1+grx2-grx1,
+                     height: 1+gry1-gry2,
                      stroke: "none",
                      fill: this.getValueColor(binz)
                   }
