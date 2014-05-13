@@ -4118,6 +4118,25 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
+      // NOTE: Before adding the rule we should check that the source do
+      // existing in this StreamerInfo.
+      const TObjArray *sources = rule->GetSource();
+      TIter input(sources);
+      TObject *src;
+      while((src = input())) {
+         if ( !GetElements()->FindObject(src->GetName()) ) {
+            // Missing source.
+            TString ruleStr;
+            rule->AsString(ruleStr);
+            Warning("InsertArtificialElements","For class %s in StreamerInfo %d missing the source data member %s when trying to apply the rule:\n   %s",
+                   GetName(),GetClassVersion(),src->GetName(),ruleStr.Data());
+            rule = 0;
+            break;
+         }
+      }
+
+      if (!rule) continue;
+
       TStreamerArtificial *newel;
       if (rule->GetTarget()==0) {
          TString newName;
