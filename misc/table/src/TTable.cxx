@@ -1670,7 +1670,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
       for (; member != dscE; member++){
          TString membertype = GetTypeName(EColumnType((*member).fType));
          isdate = kFALSE;
-         if (strcmp((*member).fColumnName,"fDatime") == 0 && membertype == "UInt_t")
+         if (strcmp((*member).fColumnName,"fDatime") == 0 && ColumnType((*member).fType) = kUInt_t)
                                                                                    isdate = kTRUE;
          std::cout << membertype.Data();
 

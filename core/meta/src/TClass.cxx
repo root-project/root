@@ -407,7 +407,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    char line[kline];
 
    TDataType *membertype;
-   TString memberTypeName;
+   EDataType memberDataType = kNoType_t;
    const char *memberName;
    const char *memberFullTypeName;
    const char *memberTitle;
@@ -415,7 +415,9 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
    Bool_t isbasic;
 
    if (TDataMember *member = cl->GetDataMember(mname)) {
-      memberTypeName = member->GetTypeName();
+      if (member->GetDataType()) {
+         memberDataType = (EDataType)member->GetDataType()->GetType();
+      }
       memberName = member->GetName();
       memberFullTypeName = member->GetFullTypeName();
       memberTitle = member->GetTitle();
@@ -438,9 +440,7 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
       if (!element) return;
       memberFullTypeName = element->GetTypeName();
 
-      memberTypeName = memberFullTypeName;
-      memberTypeName = memberTypeName.Strip(TString::kTrailing, '*');
-      if (memberTypeName.Index("const ")==0) memberTypeName.Remove(0,6);
+      memberDataType = (EDataType)element->GetType();
 
       memberName = element->GetName();
       memberTitle = element->GetTitle();
@@ -454,11 +454,11 @@ void TDumpMembers::Inspect(TClass *cl, const char *pname, const char *mname, con
 
 
    Bool_t isdate = kFALSE;
-   if (strcmp(memberName,"fDatime") == 0 && strcmp(memberTypeName,"UInt_t") == 0) {
+   if (strcmp(memberName,"fDatime") == 0 && memberDataType == kUInt_t) {
       isdate = kTRUE;
    }
    Bool_t isbits = kFALSE;
-   if (strcmp(memberName,"fBits") == 0 && strcmp(memberTypeName,"UInt_t") == 0) {
+   if (strcmp(memberName,"fBits") == 0 && memberDataType == kUInt_t) {
       isbits = kTRUE;
    }
    TClass * dataClass = TClass::GetClass(memberFullTypeName);
