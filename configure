@@ -2655,18 +2655,26 @@ if test "x$enable_cocoa" = "xyes"; then
     hascocoa="define"
     enable_x11="no"
     result "yes"
-    message "Checking for OSX SDK"
+    message "Checking for Xcode OSX SDK"
     xcodepath=`/usr/bin/xcode-select -print-path`
-    osxsdk=$xcodepath/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$macosxvers.sdk
-    result "$osxsdk"
-    if [ ! -d $osxsdk ]; then
-        result "`basename $0`: no OSX SDK found at $osxsdk"
+    xcodesdk=$xcodepath/Platforms/MacOSX.platform/Developer/SDKs/MacOSX$macosxvers.sdk
+    if [ -d $xcodesdk ]; then
+        osxsdk=$xcodesdk
+    else
+        result "no"
+        message "Checking for system OSX SDK"
+        osxsdk=""
+    fi
+    openglincdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Headers
+    opengllibdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Libraries
+    if [ -d $openglincdir ] && [ -d $opengllibdir ]; then
+        result "yes"
+    else
+        result "no"
+        result "`basename $0`: no Xcode OSX SDK found at $xcodesdk"
         result "Run "xcode-select" to update the developer directory path"
         result "or make sure the desired SDK version is installed"
         exit 1
-    else
-        openglincdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Headers
-        opengllibdir=${osxsdk}/System/Library/Frameworks/OpenGL.framework/Libraries
     fi
 fi
 
