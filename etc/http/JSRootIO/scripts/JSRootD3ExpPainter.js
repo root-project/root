@@ -5467,7 +5467,7 @@ var gStyle = {
       var wmin = this.minbin, wmax = this.maxbin;
           wlmin = wmin, wlmax = wmax;
       var ndivz = this.histo['fContour'].length;
-      if (ndivz<16) ndivz = 16;
+      if (ndivz < 16) ndivz = 16;
       var scale = ndivz / (wlmax - wlmin);
       if (this.options.Logz) {
          if (wmin <= 0 && wmax > 0) wmin = Math.min(1.0, 0.001 * wmax);
@@ -5493,6 +5493,7 @@ var gStyle = {
       var color = Math.round(0.01 + (zc - wlmin) * scale);
       var theColor = Math.round((color + 0.99) * ncolors / ndivz);
       var icol = theColor % ncolors;
+      if (theColor == ncolors) icol = ncolors - 1;
       if (icol < 0) icol = 0;
 
       return default_palette[icol];
