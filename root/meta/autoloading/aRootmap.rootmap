@@ -1,0 +1,4 @@
+{ decls }
+
+[ libHist.so ]
+header aHeader.h
