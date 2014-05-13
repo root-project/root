@@ -254,9 +254,6 @@ private:
 private:
    TClass(const TClass& tc);
    TClass& operator=(const TClass&);
-   void GetMissingDictionariesForClass(TClass*, TObjArray& result, bool recurse);
-   bool InsertMissingDictionary(TClass* cl, TObjArray& result);
-
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
