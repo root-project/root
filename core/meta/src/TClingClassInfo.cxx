@@ -1242,10 +1242,17 @@ const char *TClingClassInfo::Title()
    // redecl chain (came from merging of pcms).
    if (const TagDecl *TD = llvm::dyn_cast<TagDecl>(GetDecl())) {
       if ( (TD = ROOT::TMetaUtils::GetAnnotatedRedeclarable(TD)) ) {
-         std::string attr;
-         if (TMetaUtils::ExtractAttrPropertyFromName(*TD,TMetaUtils::propNames::comment,attr)) {
-            fTitle = attr;
-            return fTitle.c_str();
+         if (AnnotateAttr *A = TD->getAttr<AnnotateAttr>()) {
+            std::string attr = A->getAnnotation().str();
+            if (attr.find(TMetaUtils::propNames::separator) != std::string::npos) {
+               if (TMetaUtils::ExtractAttrPropertyFromName(*TD,TMetaUtils::propNames::comment,attr)) {
+                  fTitle = attr;
+                  return fTitle.c_str();
+               }
+            } else {
+               fTitle = attr;
+               return fTitle.c_str();
+            }
          }
       }
    }
