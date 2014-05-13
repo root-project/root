@@ -42,6 +42,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TRandom.h"
+#include "TROOT.h"
 #include "TH1F.h"
 #include "TCut.h"
 #include "TFile.h"
