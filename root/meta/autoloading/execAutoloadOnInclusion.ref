@@ -1,0 +1,16 @@
+
+Processing execAutoloadOnInclusion.C...
+ 
+Loaded shared libraries
+=======================
+/home/dpiparo/RootDevel/Root6/root/lib/libCore.so
+/home/dpiparo/RootDevel/Root6/root/lib/libRint.so
+/home/dpiparo/RootDevel/Root6/root/lib/libCling.so
+/home/dpiparo/RootDevel/Root6/root/lib/libRIO.so
+/home/dpiparo/RootDevel/Root6/root/lib/libThread.so
+/home/dpiparo/RootDevel/Root6/root/lib/libMathCore.so
+/home/dpiparo/RootDevel/Root6/root/lib/libHist.so
+/home/dpiparo/RootDevel/Root6/root/lib/libMatrix.so
+-----------------------
+8 libraries loaded
+=======================
