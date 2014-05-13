@@ -27,7 +27,7 @@ ROOT_LINKER_LIBRARY(Cling
                     $<TARGET_OBJECTS:MetaLLVM>
                     $<TARGET_OBJECTS:MetaUtilsLLVM>
                     LIBRARIES ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS}
-                    DEPENDENCIES Core)
+                    DEPENDENCIES Core RIO)
 
 ROOT_INSTALL_HEADERS()
 
