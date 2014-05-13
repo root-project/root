@@ -140,25 +140,15 @@ function displayTree(tree, cycle, node_id) {
 
 function displayCollection(name, cycle, c_id, coll) {
    var fullname = name + ";" + cycle;
-   
+
    collections_list[fullname] = coll;
-   
+
    JSROOTPainter.addCollectionContents(fullname, c_id, coll, '#status');
 };
 
 function displayObject(obj, cycle, idx) {
-   if (!obj['_typename'].match(/\bJSROOTIO.TH1/) &&
-       !obj['_typename'].match(/\bJSROOTIO.TH2/) &&
-       !obj['_typename'].match(/\bJSROOTIO.TH3/) &&
-       !obj['_typename'].match(/\bJSROOTIO.TGraph/) &&
-       !obj['_typename'].match(/\bRooHist/) &&
-       !obj['_typename'].match(/\RooCurve/) &&
-       obj['_typename'] != 'JSROOTIO.TCanvas' &&
-       obj['_typename'] != 'JSROOTIO.TF1' &&
-       obj['_typename'] != 'JSROOTIO.TProfile') {
-      if (typeof(checkUserTypes) != 'function' || checkUserTypes(obj) == false)
-         return;
-   }
+   if (!obj) return;
+   if (!JSROOTPainter.canDrawObject(obj['_typename'])) return;
    var uid = "uid_accordion_"+(++last_index);
    var entryInfo = "<h5 id=\""+uid+"\"><a> " + obj['fName'] + ";" + cycle + "</a>&nbsp; </h5>\n";
    entryInfo += "<div id='histogram" + idx + "'>\n";
@@ -168,24 +158,24 @@ function displayObject(obj, cycle, idx) {
 };
 
 function showListObject(list_name, obj_name) {
-   
+
    var fullname = list_name+"/"+obj_name+"1";
-   
+
    // do not display object twice
    if (obj_list.indexOf(fullname)>=0) return;
-   
+
    var coll = collections_list[list_name];
    if (!coll) return;
 
    var obj = null;
-   
+
    for (var i=0;i<coll.arr.length;i++)
      if (coll.arr[i].fName == obj_name) {
         obj = coll.arr[i];
         break;
      }
    if (!obj) return;
-   
+
    displayObject(obj, "1", obj_index);
    obj_list.push(fullname);
    obj_index++;
@@ -216,7 +206,7 @@ function AssertPrerequisites(andThen) {
             $(version).prependTo("body");
             $('#report').addClass("ui-accordion ui-accordion-icons ui-widget ui-helper-reset");
          }
-         
+
       }) }) }) }) }) }) }) }) }) }) });
    } else {
       if (andThen!=null) andThen();
@@ -290,7 +280,7 @@ function BuildSimpleGUI() {
    }
    var arrFiles = files.split(';');
 
-   
+
    var guiCode = "<div id='overlay'><font face='Verdana' size='1px'>&nbspJSROOTIO version:" + JSROOTIO.version + "&nbsp</font></div>"
 
       guiCode += "<div id='main' class='column'>\n"

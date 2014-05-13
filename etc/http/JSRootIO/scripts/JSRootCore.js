@@ -129,7 +129,7 @@ landaun = function(f, x, i) {
       }
       function_list.push(sig);
    };
-   
+
    JSROOTCore.CreateTList = function() {
       var list = {};
       list['_typename'] = "JSROOTIO.TList";
@@ -138,8 +138,8 @@ landaun = function(f, x, i) {
       list['opt'] = new Array;
       return list;
    }
-   
-   
+
+
    JSROOTCore.CreateTAxis = function() {
       var axis = {};
 
@@ -193,11 +193,11 @@ landaun = function(f, x, i) {
 
       histo['fXaxis'] = JSROOTCore.CreateTAxis();
       histo['fYaxis'] = JSROOTCore.CreateTAxis();
-      
+
       if (nbinsx!=null) {
-         histo['fNcells'] = nbinsx+2; 
+         histo['fNcells'] = nbinsx+2;
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         histo['fXaxis']['fNbins'] = nbinsx; 
+         histo['fXaxis']['fNbins'] = nbinsx;
          histo['fXaxis']['fXmin'] = 0;
          histo['fXaxis']['fXmax'] = nbinsx;
       }
@@ -230,19 +230,19 @@ landaun = function(f, x, i) {
       histo['fXaxis'] = JSROOTCore.CreateTAxis();
       histo['fYaxis'] = JSROOTCore.CreateTAxis();
       histo['fZaxis'] = JSROOTCore.CreateTAxis();
-      
+
       if ((nbinsx!=null) && (nbinsy!=null)) {
          histo['fNcells'] = (nbinsx+2) * (nbinsy+2);
          for (var i=0;i<histo['fNcells'];i++) histo['fArray'].push(0);
-         histo['fXaxis']['fNbins'] = nbinsx; 
+         histo['fXaxis']['fNbins'] = nbinsx;
          histo['fYaxis']['fNbins'] = nbinsy;
-         
+
          histo['fXaxis']['fXmin'] = 0;
          histo['fXaxis']['fXmax'] = nbinsx;
          histo['fYaxis']['fXmin'] = 0;
          histo['fYaxis']['fXmax'] = nbinsy;
       }
-      
+
       JSROOTCore.addMethods(histo);
 
       return histo;
@@ -281,36 +281,36 @@ landaun = function(f, x, i) {
          }
          JSROOTCore.AdjustTGraphRanges(graph);
       }
-      
+
       JSROOTCore.addMethods(graph);
       return graph;
    }
-   
+
    JSROOTCore.AdjustTGraphRanges = function(graph) {
       if (graph['fNpoints']==0) return;
-      
+
       var minx = graph['fX'][0], maxx = minx;
       var miny = graph['fY'][0], maxy = miny;
-      
+
       for (var i=1;i<graph['fNpoints'];i++) {
          if (graph['fX'][i] < minx) minx = graph['fX'][i];
          if (graph['fX'][i] > maxx) maxx = graph['fX'][i];
          if (graph['fY'][i] < miny) miny = graph['fY'][i];
          if (graph['fY'][i] > maxy) maxy = graph['fY'][i];
       }
-      
+
       if (miny==maxy) maxy = miny + 1;
-   
+
       // console.log("search minx = " + minx + " maxx = " + maxx);
-      
+
       graph['fHistogram']['fXaxis']['fXmin'] = minx;
       graph['fHistogram']['fXaxis']['fXmax'] = maxx;
 
       graph['fHistogram']['fYaxis']['fXmin'] = miny;
       graph['fHistogram']['fYaxis']['fXmax'] = maxy;
    }
-   
-      
+
+
    JSROOTCore.addMethods = function(obj) {
       // check object type and add methods if needed
       if (('fBits' in obj) && !('TestBit' in obj)) {
@@ -744,7 +744,7 @@ landaun = function(f, x, i) {
             axis['fFirst'] = 1;
             axis['fLast'] = axis['fNbins'];
             this['fBits'] &= ~(EAxisBits.kAxisRange & 0x00ffffff); // SetBit(kAxisRange, 0);
-            // double the bins and recompute ncells 
+            // double the bins and recompute ncells
             axis['fNbins'] = 2*nbins;
             axis['fXmin']  = xmin;
             axis['fXmax']  = xmax;
@@ -762,12 +762,12 @@ landaun = function(f, x, i) {
             //now loop on all bins and refill
             var oldEntries = this['fEntries'];
             var bin, ibin, bins;
-            for (ibin = 0; ibin < this['fNcells']; ibin++) { 
+            for (ibin = 0; ibin < this['fNcells']; ibin++) {
                bins = this.getBinXYZ(ibin);
                bin = hold.getBin(bins['binx'],bins['biny'],bins['binz']);
                // NOTE that overflow in hold will be not considered
                if (bins['binx'] > nbxold  || bins['biny'] > nbyold || bins['binz'] > nbzold) bin = -1;
-               if (bin > 0)  { 
+               if (bin > 0)  {
                   var cu = hold.getBinContent(bin);
                   this['fArray'][bin] += cu;
                   if (errors) this['fSumw2']['fArray'][ibin] += hold['fSumw2']['fArray'][bin];
@@ -790,7 +790,7 @@ landaun = function(f, x, i) {
             this['fTsumwx2'] = stats[3];
             this['fEntries'] = Math.abs(this['fTsumw']);
             // use effective entries for weighted histograms:  (sum_w) ^2 / sum_w2
-            if (this['fSumw2']['fN'] > 0 && this['fTsumw'] > 0 && stats[1] > 0 ) 
+            if (this['fSumw2']['fN'] > 0 && this['fTsumw'] > 0 && stats[1] > 0 )
                this['fEntries'] = stats[0] * stats[0] / stats[1];
          }
          obj['setBinContent'] = function(bin, content) {
@@ -837,10 +837,10 @@ landaun = function(f, x, i) {
          };
       }
       if (obj['_typename'].indexOf("JSROOTIO.TH1") == 0) {
-         obj['getBinContent'] = function(bin) { 
+         obj['getBinContent'] = function(bin) {
             if (bin < 0) bin = 0;
             if (bin >= this['fNcells']) bin = this['fNcells']-1;
-            return this['fArray'][bin]; 
+            return this['fArray'][bin];
          };
          obj['getStats'] = function() {
             // fill the array stats from the contents of this histogram
@@ -851,15 +851,15 @@ landaun = function(f, x, i) {
             // stats[3] = sumwx2
             // Loop on bins (possibly including underflows/overflows)
             var bin, binx, w, err, x, stats = new Array(0,0,0,0,0);
-            // case of labels with rebin of axis set 
-            // statistics in x does not make any sense - set to zero 
-            if (this['fXaxis']['fLabels'] && this.TestBit(TH1StatusBits.kCanRebin) ) { 
+            // case of labels with rebin of axis set
+            // statistics in x does not make any sense - set to zero
+            if (this['fXaxis']['fLabels'] && this.TestBit(TH1StatusBits.kCanRebin) ) {
                stats[0] = this['fTsumw'];
                stats[1] = this['fTsumw2'];
-               stats[2] = 0; 
+               stats[2] = 0;
                stats[3] = 0;
             }
-            else if ((this['fTsumw'] == 0 && this['fEntries'] > 0) || 
+            else if ((this['fTsumw'] == 0 && this['fEntries'] > 0) ||
                      this['fXaxis'].TestBit(EAxisBits.kAxisRange)) {
                for (bin=0;bin<4;bin++) stats[bin] = 0;
 
@@ -1593,8 +1593,8 @@ landaun = function(f, x, i) {
 
    JSROOTMath.landau_pdf = function(x, xi, x0) {
       // LANDAU pdf : algorithm from CERNLIB G110 denlan
-      // same algorithm is used in GSL 
-      if (xi <= 0) return 0; 
+      // same algorithm is used in GSL
+      if (xi <= 0) return 0;
       var v = (x - x0)/xi;
       var u, ue, us, denlan;
       if (v < -5.5) {
@@ -1634,8 +1634,8 @@ landaun = function(f, x, i) {
    };
 
    JSROOTMath.Landau = function(x, mpv, sigma, norm) {
-      if (sigma <= 0) return 0; 
-      var den = JSROOTMath.landau_pdf((x - mpv) / sigma, 1, 0); 
+      if (sigma <= 0) return 0;
+      var den = JSROOTMath.landau_pdf((x - mpv) / sigma, 1, 0);
       if (!norm) return den;
       return den/sigma;
    };
