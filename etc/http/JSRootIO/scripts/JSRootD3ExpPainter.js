@@ -5314,7 +5314,7 @@ var gStyle = {
       this.fillcolor = root_colors[this.histo['fFillColor']];
       this.linecolor = root_colors[this.histo['fLineColor']];
 
-      if (this.histo['fFillColor'] == 0) this.fillcolor = '#4572A7';
+      //if (this.histo['fFillColor'] == 0) this.fillcolor = '#4572A7'; // why?
       if (this.histo['fLineColor'] == 0) this.linecolor = '#4572A7';
 
       this.nbinsx = this.histo['fXaxis']['fNbins'];
