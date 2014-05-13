@@ -7,8 +7,6 @@ int execmethodtest() {
    TestObj *bar = new TestObj;
    // printf("<main>Address of TestObj is %lx\n", (Long_t) bar);
    // printf("<main>Performing dynamic_cast of TestObj to TObject, gives us %lx\n", (Long_t) dynamic_cast<TObject*>(bar));
-        Long_t diff = ((Long_t) (TestInterface*) bar) - ( (Long_t) dynamic_cast<TObject*>(bar));
-        printf("<main>Difference with TestInterface and TObject part is %lx.\n",diff);
    {
       printf("\n");
       printf("<main>Calling method foo of TestObj...\n");
