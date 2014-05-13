@@ -221,7 +221,7 @@ void TDataMember::Init(bool afterReading)
 
       fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
       fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
-      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
+      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fTrueTypeName));
       SetName(gCling->DataMemberInfo_Name(fInfo));
       t = gCling->DataMemberInfo_Title(fInfo);
       SetTitle(t);
@@ -809,13 +809,16 @@ Long_t TDataMember::Property() const
 
    R__LOCKGUARD(gInterpreterMutex);
    TDataMember *t = (TDataMember*)this;
+
    if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
    int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
    t->fProperty = prop|propt;
-   const char *tname = gCling->DataMemberInfo_TypeName(fInfo);
-   t->fTypeName = gCling->TypeName(tname);
-   t->fFullTypeName = tname;
+
+   t->fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+   t->fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+   t->fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fTrueTypeName));
+
    t->fName  = gCling->DataMemberInfo_Name(fInfo);
    t->fTitle = gCling->DataMemberInfo_Title(fInfo);
 
