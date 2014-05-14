@@ -68,6 +68,8 @@ END_HTML
 #include "RooFunctor.h"
 #include "RooProfileLL.h"
 
+#include "TMinuitMinimizer.h"
+
 #include <string>
 #include <algorithm>
 #include <functional>
@@ -268,6 +270,8 @@ bool LikelihoodInterval::CreateMinimizer() {
       ccoutE(InputArguments) << minimType << " is wrong type of minimizer for getting interval limits or contours - must use Minuit or Minuit2" << std::endl;
       return false; 
    }
+   // do not use static instance of TMInuit which could interfere with RooFit
+   if (minimType == "Minuit")  TMinuitMinimizer::UseStaticMinuit(false);
    // create minimizer class 
    fMinimizer = std::auto_ptr<ROOT::Math::Minimizer>(ROOT::Math::Factory::CreateMinimizer(minimType, "Migrad"));
 
@@ -384,7 +388,7 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    int ix = params.index(&paramX); 
    int iy = params.index(&paramY); 
    if (ix < 0 || iy < 0) { 
-      ccoutE(InputArguments) << "Error - invalid parameters specified for finding the contours; parX = " << paramX.GetName() 
+      coutE(InputArguments) << "LikelihoodInterval - Error - invalid parameters specified for finding the contours; parX = " << paramX.GetName() 
              << " parY = " << paramY.GetName() << std::endl;
          return 0; 
    }
@@ -392,7 +396,7 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    bool ret = true; 
    if (!fMinimizer.get()) ret = CreateMinimizer(); 
    if (!ret) { 
-      ccoutE(Eval) << "Error returned creating minimizer for likelihood function - cannot find contour points " << std::endl;
+      coutE(Eval) << "LikelihoodInterval - Error returned creating minimizer for likelihood function - cannot find contour points " << std::endl;
       return 0; 
    }
 
@@ -406,13 +410,14 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    unsigned int ncp = npoints; 
    unsigned int ivarX = ix; 
    unsigned int ivarY = iy; 
+   coutI(Minimization)  << "LikelihoodInterval - Finding the contour of " << paramX.GetName() << " ( " << ivarX << " ) and " << paramY.GetName() << " ( " << ivarY << " ) " << std::endl;
    ret = fMinimizer->Contour(ivarX, ivarY, ncp, x, y );
    if (!ret) { 
-      ccoutE(Minimization) << "Error finding contour for parameters " << paramX.GetName() << " and " << paramY.GetName()  << std::endl;
+      coutE(Minimization) << "LikelihoodInterval - Error finding contour for parameters " << paramX.GetName() << " and " << paramY.GetName()  << std::endl;
       return 0; 
    }
    if (int(ncp) < npoints) {
-      ccoutW(Minimization) << "Warning - Less points calculated in contours np = " << ncp << " / " << npoints << std::endl;
+      coutW(Minimization) << "LikelihoodInterval -Warning - Less points calculated in contours np = " << ncp << " / " << npoints << std::endl;
    }
 
    return ncp;
