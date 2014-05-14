@@ -1,7 +1,6 @@
 #ifndef _h1_
 #define _h1_
 
-
 template <class T>
 class myTemplate;
 
@@ -58,11 +57,17 @@ private:
 };
 
 //--------------------
-
 template <class T>
 class myClass8{
 private:
    std::set<T> dummy;
+};
+
+#include <vector>
+template <class T>
+class myClass9{
+private:
+   std::set<std::vector<T>> dummy;
 };
 
 

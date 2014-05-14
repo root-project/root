@@ -12,6 +12,8 @@ void runFullheaderParsingOnDemand(){
    TClass::GetClass("myClass6<E>")->GetClassInfo();
    TClass::GetClass("myClass7<E>")->GetClassInfo();
    TClass::GetClass("myClass8<E>")->GetClassInfo();
+   TClass::GetClass("myClass8<std::vector<E>>")->GetClassInfo();
+   TClass::GetClass("myClass9<E>")->GetClassInfo();
 
    std::cout << "\n";
 }
