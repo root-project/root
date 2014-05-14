@@ -4919,12 +4919,12 @@ int GenReflex(int argc, char **argv)
    "-l, --library \t Target library\n"
    "      The flag -l must be followed by the name of the library that will\n"
    "      contain the object file corresponding to the dictionary produced by\n"
-   "      this invocation of genreflex.\"
+   "      this invocation of genreflex.\n"
    "      The name takes priority over the one specified for the rootmapfile.\n"
    "      The name influences the name of the created pcm:\n"
-   "       1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm\n
-   "       2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm\n
-   "          Any \"liblib\" occurence is transformed in the expected \"lib\".
+   "       1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm\n"
+   "       2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm\n"
+   "          Any \"liblib\" occurence is transformed in the expected \"lib\".\n"
    "       3) If this is specified in conjunction with --multiDict, the output is\n"
    "          libTARGETLIBRARY_DICTIONARY_rdict.pcm\n";
 
