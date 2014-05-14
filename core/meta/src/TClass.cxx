@@ -3374,29 +3374,36 @@ Bool_t TClass::HasDictionary()
 {
    // Check whether a class has a dictionary or not.
 
+   if (gClassTable->GetDict(fName)) return true;
+
+   return false;
+}
+
+//______________________________________________________________________________
+TClass* TClass::GetMissingDictionaryForType()
+{
+   // Get the missing dictionary for a type.
+   // This can be the class itself or the element of a collection proxy.
+
    //Check whether a custom streamer
-      if (TestBit(TClass::kHasCustomStreamerMember)) return false;
-      // Deal with proxies.
-      if (GetCollectionProxy()) {
-         // We need to make sure the collection proxy is not emulated
-         if ((GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
-            // oups we are missing the dictionary for the collection.
-            return false;
-         } else {
-            // We need to *not* look at t but instead at its content
-            // The collection has different kind of elements the check would be required.
-            TClass* t = 0;
-            if ((t = (GetCollectionProxy()->GetValueClass()))) {
-               // Get the name of the class.
-               const char* elemName = t->GetName();
-               if (!gClassTable->GetDict(elemName)) return false;
-            }
-            return true;
+   if (TestBit(TClass::kHasCustomStreamerMember)) return 0;
+   // Deal with proxies.
+   if (GetCollectionProxy()) {
+      // We need to make sure the collection proxy is not emulated
+      if ((GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) {
+         // oups we are missing the dictionary for the collection.
+         return this;
+      } else {
+         // We need to *not* look at t but instead at its content
+         // The collection has different kind of elements the check would be required.
+         TClass* t = 0;
+         if ((t = (GetCollectionProxy()->GetValueClass()))) {
+            return t;
          }
       }
-   if (!gClassTable->GetDict(fName)) return false;
-
-   return true;
+   }
+   if (!HasDictionary()) return this;
+   return 0;
 }
 
 //______________________________________________________________________________
@@ -3405,10 +3412,19 @@ void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
    // Get the classes that have a missing dictionary.
    // Recurse over the data members using the flag recurse.
    // By default is is not recursing on the data members.
-
-   // Insert this class in the set if it is not already there and it does not have a dictionary.
+   
    if (result.FindObject(this)) return;
-   if (!this->HasDictionary()) result.Add(this);
+
+   TClass* clMissingDict = GetMissingDictionaryForType();
+   if(clMissingDict && !result.FindObject(clMissingDict->GetName())) {
+      result.Add(clMissingDict);
+   } else {
+      return;
+   }
+   if (GetCollectionProxy()) {
+      if ((GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) return;
+   }
+
    // Verify the Data Members.
    TListOfDataMembers* ldm = (TListOfDataMembers*)this->GetListOfDataMembers();
    if (ldm) {
@@ -3428,8 +3444,9 @@ void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
          if (dmTClass) {
             if(recurse) {
                dmTClass->GetMissingDictionaries(result, recurse);
-            } else if (dmTClass->HasDictionary()) {
-                  result.Add(dmTClass);
+            } else if ((dmTClass = dmTClass->GetMissingDictionaryForType())
+                        && !result.FindObject(dmTClass)) {
+               result.Add(dmTClass);
             }
          }
       }

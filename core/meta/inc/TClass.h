@@ -254,6 +254,7 @@ private:
 private:
    TClass(const TClass& tc);
    TClass& operator=(const TClass&);
+   TClass* GetMissingDictionaryForType();
 
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
