@@ -42,7 +42,7 @@ class TestClassDATATYPES:
     def test02_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -126,7 +126,7 @@ class TestClassDATATYPES:
     def test03_instance_data_write_access(self):
         """Write access to instance public data and verify values"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -239,7 +239,7 @@ class TestClassDATATYPES:
     def test04_array_passing(self):
         """Passing of arrays as function arguments"""
 
-        import cppyy, array, sys
+        import cppyy, array
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -270,13 +270,15 @@ class TestClassDATATYPES:
             raises(Exception, c.pass_array(0).__getitem__, 0)    # raises SegfaultException
             assert not c.pass_array(None)
             raises(Exception, c.pass_array(None).__getitem__, 0) # id.
+            assert not c.pass_array(cppyy.gbl.nullptr)
+            raises(Exception, c.pass_array(cppyy.gbl.nullptr).__getitem__, 0) # id. id.
 
         c.__destruct__()
 
     def test05_class_read_access(self):
         """Read access to class public data"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -322,7 +324,7 @@ class TestClassDATATYPES:
         assert round(CppyyTestData.s_double  + 707., 11) == 0
         assert round(c.s_double              + 707., 11) == 0
         assert round(CppyyTestData.s_ldouble + 808., 24) == 0
-        assert round(c.s_ldouble              + 808., 42) == 0
+        assert round(c.s_ldouble             + 808., 42) == 0
 
         assert c.s_enum             == CppyyTestData.kNothing
         assert CppyyTestData.s_enum == CppyyTestData.kNothing
@@ -332,7 +334,7 @@ class TestClassDATATYPES:
     def test06_class_data_write_access(self):
         """Write access to class public data"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -349,10 +351,14 @@ class TestClassDATATYPES:
         assert c.s_char              == 'a'
         c.s_char                      = 'b'
         assert CppyyTestData.s_char  == 'b'
-        CppyyTestData.s_uchar         = 'c'
-        assert c.s_uchar             == 'c'
-        c.s_uchar                     = 'd'
-        assert CppyyTestData.s_uchar == 'd'
+        CppyyTestData.s_schar         = 'c'
+        assert c.s_schar             == 'c'
+        c.s_schar                     = 'd'
+        assert CppyyTestData.s_schar == 'd'
+        CppyyTestData.s_uchar         = 'e'
+        assert c.s_uchar             == 'e'
+        c.s_uchar                     = 'f'
+        assert CppyyTestData.s_uchar == 'f'
         raises(ValueError, setattr, CppyyTestData, 's_uchar', -1)
         raises(ValueError, setattr, c,             's_uchar', -1)
 
@@ -398,9 +404,9 @@ class TestClassDATATYPES:
 
         # floating point types
         CppyyTestData.s_float                    = -3.1415
-        assert round(c.s_float, 5 )             == -3.1415
+        assert round(c.s_float, 5)              == -3.1415
         c.s_float                                =  3.1415
-        assert round(CppyyTestData.s_float, 5 ) ==  3.1415
+        assert round(CppyyTestData.s_float, 5)  ==  3.1415
         import math
         c.s_double                               = -math.pi
         assert CppyyTestData.s_double           == -math.pi
@@ -422,7 +428,7 @@ class TestClassDATATYPES:
     def test07_range_access(self):
         """Integer type ranges"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -438,7 +444,7 @@ class TestClassDATATYPES:
     def test08_type_conversions(self):
         """Conversions between builtin types"""
 
-        import cppyy, sys
+        import cppyy
         CppyyTestData = cppyy.gbl.CppyyTestData
 
         c = CppyyTestData()
@@ -521,16 +527,16 @@ class TestClassDATATYPES:
 
         # test that the enum is accessible as a type
         if not PYTEST_MIGRATION:
-            assert CppyyTestData.what
+            assert CppyyTestData.EWhat
 
         assert CppyyTestData.kNothing   ==   6
         assert CppyyTestData.kSomething == 111
         assert CppyyTestData.kLots      ==  42
 
         if not PYTEST_MIGRATION:
-            assert CppyyTestData.what(CppyyTestData.kNothing) == CppyyTestData.kNothing
-            assert CppyyTestData.what(6) == CppyyTestData.kNothing
-            # TODO: only allow instantiations with correct values (C++11)
+            assert CppyyTestData.EWhat(CppyyTestData.kNothing) == CppyyTestData.kNothing
+            assert CppyyTestData.EWhat(6) == CppyyTestData.kNothing
+        # TODO: only allow instantiations with correct values (C++11)
 
         assert c.get_enum() == CppyyTestData.kNothing
         assert c.m_enum == CppyyTestData.kNothing
@@ -575,14 +581,14 @@ class TestClassDATATYPES:
 
         import cppyy
         FourVector = cppyy.gbl.FourVector
-        
+
         t1 = FourVector(1., 2., 3., -4.)
         t2 = FourVector(0., 0., 0.,  0.)
         t3 = FourVector(t1)
-  
+
         assert t1 == t3
         assert t1 != t2
-        
+
         for i in range(4):
             assert t1[i] == t3[i]
 
@@ -711,8 +717,8 @@ class TestClassDATATYPES:
 
     def test18_object_and_pointer_comparisons(self):
         """Object and pointer comparisons"""
-    
-        import cppyy 
+
+        import cppyy
         gbl = cppyy.gbl
 
         c1 = cppyy.bind_object(0, gbl.CppyyTestData)
@@ -748,11 +754,11 @@ class TestClassDATATYPES:
 
     def test19_object_validity(self):
         """Object validity checking"""
-        
+
         from cppyy import gbl
 
         d = gbl.CppyyTestPod()
-                     
+
         assert d
         assert not not d
 
@@ -783,6 +789,56 @@ class TestClassDATATYPES:
             l = list(arr)
             for i in range(self.N):
                 assert arr[i] == l[i]
+
+    def test21_voidp(self):
+        """Use of void* data"""
+
+        import cppyy
+        CppyyTestData = cppyy.gbl.CppyyTestData
+
+        c = CppyyTestData()
+
+        if PYTEST_MIGRATION:
+            return
+        assert not cppyy.gbl.nullptr
+
+        assert c.s_voidp                is cppyy.gbl.nullptr
+        assert CppyyTestData.s_voidp    is cppyy.gbl.nullptr
+
+        assert c.m_voidp                is cppyy.gbl.nullptr
+        assert c.get_voidp()            is cppyy.gbl.nullptr
+
+        c2 = CppyyTestData()
+        assert c2.m_voidp               is cppyy.gbl.nullptr
+        c.set_voidp(c2.m_voidp)
+        assert c.m_voidp                is cppyy.gbl.nullptr
+        c.set_voidp(c2.get_voidp())
+        assert c.m_voidp                is cppyy.gbl.nullptr
+        c.set_voidp(cppyy.gbl.nullptr)
+        assert c.m_voidp                is cppyy.gbl.nullptr
+
+        c.set_voidp(c2)
+        def address_equality_test(a, b):
+            assert cppyy.addressof(a) == cppyy.addressof(b)
+            b2 = cppyy.bind_object(a, CppyyTestData)
+            assert b is b2    # memory regulator recycles
+            b3 = cppyy.bind_object(cppyy.addressof(a), CppyyTestData)
+            assert b is b3    # likewise
+
+        address_equality_test(c.m_voidp, c2)
+        address_equality_test(c.get_voidp(), c2)
+
+        def null_test(null):
+            c.m_voidp = null
+            assert c.m_voidp is cppyy.gbl.nullptr
+        map(null_test, [0, None, cppyy.gbl.nullptr])
+
+        c.m_voidp = c2
+        address_equality_test(c.m_voidp,     c2)
+        address_equality_test(c.get_voidp(), c2)
+
+        c.s_voidp = c2
+        address_equality_test(c.s_voidp, c2)
 
 
 ## actual test run

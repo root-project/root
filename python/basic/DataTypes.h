@@ -18,9 +18,9 @@ enum EFruit { kApple=78, kBanana=29, kCitrus=34 };
 class FourVector {
 public:
     FourVector(double x, double y, double z, double t) :
-       m_cc_called(false), m_x(x), m_y(y), m_z(z), m_t(t) {}
+        m_cc_called(false), m_x(x), m_y(y), m_z(z), m_t(t) {}
     FourVector(const FourVector& s) :
-       m_cc_called(true), m_x(s.m_x), m_y(s.m_y), m_z(s.m_z), m_t(s.m_t) {}
+        m_cc_called(true), m_x(s.m_x), m_y(s.m_y), m_z(s.m_z), m_t(s.m_t) {}
 
     double operator[](int i) {
        if (i == 0) return m_x;
@@ -74,6 +74,7 @@ public:
     double               get_double();
     long double          get_ldouble();
     EWhat                get_enum();
+    void*                get_voidp();
 
     bool*           get_bool_array();
     bool*           get_bool_array2();
@@ -141,6 +142,7 @@ public:
     void set_double(double);
     void set_ldouble(long double);
     void set_enum(EWhat);
+    void set_voidp(void*);
 
     void set_pod_val(CppyyTestPod);             // for m_pod
     void set_pod_ptr_in(CppyyTestPod*);
@@ -216,6 +218,7 @@ public:
     double               m_double;
     long double          m_ldouble;
     EWhat                m_enum;
+    void*                m_voidp;
 
 // array types
     bool            m_bool_array[N];
@@ -261,6 +264,7 @@ public:
     static double                  s_double;
     static long double             s_ldouble;
     static EWhat                   s_enum;
+    static void*                   s_voidp;
 
 private:
     bool m_owns_arrays;

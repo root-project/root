@@ -11,8 +11,7 @@ sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 from common import *
 from pytest import raises
 
-# Compatibility notes: __dispatch__ raises LookupError on failure; also it
-# still requires formal arguments.
+# Compatibility notes: __dispatch__ still requires formal arguments.
 
 PYTEST_MIGRATION = True
 
@@ -104,9 +103,9 @@ class TestClassOVERLOADS:
 
         # then try overloads based on them
         assert MoreOverloads().call(OlAA())     == "OlAA"
-        assert MoreOverloads().call(get_OlBB()) == "OlDD"   # <- bb_ol has an unknown + void*
+        assert MoreOverloads().call(get_OlBB()) == "OlDD"   # <- has an unknown + void*
         assert MoreOverloads().call(OlCC())     == "OlCC"
-        assert MoreOverloads().call(get_OlDD()) == "OlDD"   # <- dd_ol has an unknown
+        assert MoreOverloads().call(get_OlDD()) == "OlDD"   # <- has an unknown
 
         # -- ROOT-specific ignores
         ROOT.gErrorIgnoreLevel = oldval

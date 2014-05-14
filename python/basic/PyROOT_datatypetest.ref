@@ -18,4 +18,5 @@
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test18_object_and_pointer_comparisons
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test19_object_validity
 . PyROOT_datatypetest.py::TestClassDATATYPES::()::test20_buffer_reshaping
+. PyROOT_datatypetest.py::TestClassDATATYPES::()::test21_voidp
 

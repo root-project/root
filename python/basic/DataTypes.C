@@ -22,6 +22,7 @@ CppyyTestData::CppyyTestData() : m_owns_arrays(false)
     m_double  = -77.;
     m_ldouble = -88.l;
     m_enum    = kNothing;
+    m_voidp   = (void*)0;
 
     m_bool_array2   = new bool[N];
     m_short_array2  = new short[N];
@@ -89,8 +90,8 @@ void CppyyTestData::destroy_arrays() {
 //- getters -----------------------------------------------------------------
 bool                 CppyyTestData::get_bool()    { return m_bool; }
 char                 CppyyTestData::get_char()    { return m_char; }
-unsigned char        CppyyTestData::get_uchar()   { return m_uchar; }
 signed char          CppyyTestData::get_schar()   { return m_schar; }
+unsigned char        CppyyTestData::get_uchar()   { return m_uchar; }
 short                CppyyTestData::get_short()   { return m_short; }
 unsigned short       CppyyTestData::get_ushort()  { return m_ushort; }
 int                  CppyyTestData::get_int()     { return m_int; }
@@ -105,6 +106,7 @@ float                CppyyTestData::get_float()   { return m_float; }
 double               CppyyTestData::get_double()  { return m_double; }
 long double          CppyyTestData::get_ldouble() { return m_ldouble; }
 CppyyTestData::EWhat CppyyTestData::get_enum()    { return m_enum; }
+void*                CppyyTestData::get_voidp()   { return m_voidp; }
 
 bool*           CppyyTestData::get_bool_array()    { return m_bool_array; }
 bool*           CppyyTestData::get_bool_array2()   { return m_bool_array2; }
@@ -126,10 +128,10 @@ float*  CppyyTestData::get_float_array2()  { return m_float_array2; }
 double* CppyyTestData::get_double_array()  { return m_double_array; }
 double* CppyyTestData::get_double_array2() { return m_double_array2; }
 
-CppyyTestPod CppyyTestData::get_pod_val() { return m_pod; }
-CppyyTestPod* CppyyTestData::get_pod_val_ptr() { return &m_pod; }
-CppyyTestPod& CppyyTestData::get_pod_val_ref() { return m_pod; }
-CppyyTestPod*& CppyyTestData::get_pod_ptrref() { return m_ppod; }
+CppyyTestPod   CppyyTestData::get_pod_val()     { return m_pod; }
+CppyyTestPod*  CppyyTestData::get_pod_val_ptr() { return &m_pod; }
+CppyyTestPod&  CppyyTestData::get_pod_val_ref() { return m_pod; }
+CppyyTestPod*& CppyyTestData::get_pod_ptrref()  { return m_ppod; }
 
 CppyyTestPod* CppyyTestData::get_pod_ptr() { return m_ppod; }
 
@@ -172,6 +174,7 @@ void CppyyTestData::set_float(float f)                     { m_float   = f; }
 void CppyyTestData::set_double(double d)                   { m_double  = d; }
 void CppyyTestData::set_ldouble(long double ld)            { m_ldouble = ld; }
 void CppyyTestData::set_enum(EWhat w)                      { m_enum    = w; }
+void CppyyTestData::set_voidp(void* p)                     { m_voidp   = p; }
 
 void CppyyTestData::set_pod_val(CppyyTestPod p)            { m_pod = p; }
 void CppyyTestData::set_pod_ptr_in(CppyyTestPod* pp)       { m_pod = *pp; }
@@ -233,6 +236,7 @@ float                CppyyTestData::s_float   = -606.f;
 double               CppyyTestData::s_double  = -707.;
 long double          CppyyTestData::s_ldouble = -808.l;
 CppyyTestData::EWhat CppyyTestData::s_enum    = CppyyTestData::kNothing;
+void*                CppyyTestData::s_voidp   = (void*)0;
 
 //- strings -----------------------------------------------------------------
 const char* CppyyTestData::get_valid_string(const char* in) { return in; }
