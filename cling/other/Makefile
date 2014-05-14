@@ -5,7 +5,7 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) *.clog *.log runStaticDataMemberDict.* *.times
 
 #Set the list of target to make while testing
 TEST_TARGETS += fileClose sprintfselect staticConstTest StaticDataMemberDict StaticDataMember \
-    savannah54662 assertBaseMembers
+    savannah54662 assertBaseMembers missingXFunc
 
 # adjust the location of Rules.mk as needed.
 ifeq ($(strip $(ROOTTEST_HOME)),)
@@ -57,3 +57,9 @@ savannah54662: savannah54662.log
 
 assertBaseMembers:
 	$(WarnFailTest)
+
+missingXFunc.log: runmissingXFunc.C
+	$(CMDECHO) ( ! $(CALLROOTEXE) -l -b -q $^ > $@ 2>&1 ) || handleError.sh --cmd='! $(CALLROOTEXE) -l -b -q $^' --result=$$? --log=$@
+
+missingXFunc: missingXFunc.log
+	$(TestDiff)
