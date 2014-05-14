@@ -3416,14 +3416,12 @@ void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
    if (result.FindObject(this)) return;
 
    TClass* clMissingDict = GetMissingDictionaryForType();
-   if(clMissingDict && !result.FindObject(clMissingDict->GetName())) {
+   if(clMissingDict && !result.FindObject(clMissingDict)) {
       result.Add(clMissingDict);
    } else {
       return;
    }
-   if (GetCollectionProxy()) {
-      if ((GetCollectionProxy()->GetProperties() & TVirtualCollectionProxy::kIsEmulated) != 0) return;
-   }
+   if (GetCollectionProxy()) return;
 
    // Verify the Data Members.
    TListOfDataMembers* ldm = (TListOfDataMembers*)this->GetListOfDataMembers();
