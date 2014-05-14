@@ -41,7 +41,6 @@ using namespace clang;
 TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
                                    const char* shLibFileName):
    fCI(CI),
-   fShLibFileName(shLibFileName),
    fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))

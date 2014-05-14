@@ -106,7 +106,6 @@ private:
                            std::ostream& out) const;
 
    clang::CompilerInstance* fCI;
-   std::string fShLibFileName;
    bool fIsPCH;
 
    std::string fDictionaryName; // Name of the dictionary, e.g. "Base"
