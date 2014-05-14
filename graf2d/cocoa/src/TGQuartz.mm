@@ -43,6 +43,9 @@
 #include "TROOT.h"
 #include "TEnv.h"
 
+// To scale fonts to the same size as the TTF version
+const Float_t kScale = 0.93376068;
+
 ClassImp(TGQuartz)
 
 //TODO:
@@ -379,7 +382,7 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t /*angle*/, Float_t /*mgn*/,
    CGContextSetTextMatrix(ctx, CGAffineTransformIdentity);
 
    try {
-      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+      if (CTFontRef currentFont = fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
          const unsigned fontIndex = GetTextFont() / 10;
          if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
             //This is a hack. Correct way is to extract glyphs from symbol.ttf,
@@ -448,7 +451,7 @@ void TGQuartz::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
       return;
    }
    
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
       const unsigned fontIndex = GetTextFont() / 10;
       if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
          typedef std::vector<UniChar>::size_type size_type;
@@ -470,7 +473,7 @@ Int_t TGQuartz::GetFontAscent() const
    // Returns the ascent of the current font (in pixels).
    // The ascent of a font is the distance from the baseline
    // to the highest position characters extend to.
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize()))
       return Int_t(fPimpl->fFontManager.GetAscent());
 
    return 0;
@@ -487,7 +490,7 @@ Int_t TGQuartz::GetFontAscent(const char *text) const
    if (!text || !text[0])//How it's usually tested in ROOT
       return GetFontAscent();
    
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
       const unsigned fontIndex = GetTextFont() / 10;
       if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
          //That's an ugly hack :)
@@ -511,7 +514,7 @@ Int_t TGQuartz::GetFontDescent() const
    // Returns the descent of the current font (in pixels.
    // The descent is the distance from the base line
    // to the lowest point characters extend to.
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize()))
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize()))
       return Int_t(fPimpl->fFontManager.GetDescent());
 
    return 0;
@@ -528,7 +531,7 @@ Int_t TGQuartz::GetFontDescent(const char *text) const
    if (!text || !text[0])
       return GetFontDescent();
 
-   if (fPimpl->fFontManager.SelectFont(GetTextFont(), GetTextSize())) {
+   if (fPimpl->fFontManager.SelectFont(GetTextFont(), kScale*GetTextSize())) {
       const unsigned fontIndex = GetTextFont() / 10;
       if (fontIndex == 12 || fontIndex == 15) {//Greek and math symbols.
          //That's an ugly hack :)
@@ -545,6 +548,7 @@ Int_t TGQuartz::GetFontDescent(const char *text) const
 
    return 0;
 }
+
 
 //______________________________________________________________________________
 Float_t TGQuartz::GetTextMagnitude()
