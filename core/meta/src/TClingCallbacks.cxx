@@ -537,6 +537,13 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    if (!R.empty())
       return false;
 
+   const Transaction* T = getInterpreter()->getCurrentTransaction();
+   if (!T)
+      return false;
+   const cling::CompilationOptions& COpts = T->getCompilationOpts();
+   if (!COpts.DynamicScoping)
+      return false;
+
    // FIXME: Figure out better way to handle:
    // C++ [basic.lookup.classref]p1:
    //   In a class member access expression (5.2.5), if the . or -> token is
