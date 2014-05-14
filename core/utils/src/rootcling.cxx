@@ -3668,6 +3668,7 @@ int RootCling(int argc,
    bool interpreteronly = false;
    bool doSplit = false;
    bool dictSelection = true;
+   bool multiDict = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3708,6 +3709,13 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-multiDict", argv[ic]) == 0) {
+            // Generate a pcm name which contains the libname and the dict name
+            multiDict = true;
+            ic+=1;
+            continue;
+         }
+
          if (strcmp("-interpreteronly", argv[ic]) == 0) {
             // Generate dictionaries only for the interpreter
             interpreteronly = true;
@@ -3730,11 +3738,13 @@ int RootCling(int argc,
          }            
          
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
-            // precompiled modules
+            // Target shared library name
             sharedLibraryPathName = argv[ic+1];
             ic+=2;
             continue;
          }
+
+
          if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             baseModules.push_back(argv[ic+1]);
@@ -3767,6 +3777,12 @@ int RootCling(int argc,
          nextStart = ic;
       }
       ic++;
+   }
+
+   // Check if we have a multi dict request but no target library
+   if (multiDict && sharedLibraryPathName.empty()) {
+      ROOT::TMetaUtils::Error("","Multidict requested but no target library. Please specify one with the -s argument.\n");
+      return 1;
    }
 
    ic = nextStart;
@@ -3944,6 +3960,20 @@ int RootCling(int argc,
 
    if (sharedLibraryPathName.empty()) {
       sharedLibraryPathName = dictpathname;
+   }
+
+   // We have a multiDict request. This implies generating a pcm which is of the form
+   // dictName_libname_rdict.pcm
+   if (multiDict){
+
+      std::string newName=llvm::sys::path::parent_path(sharedLibraryPathName).str();
+      //newName+=gPathSeparator;
+      newName+=llvm::sys::path::stem(sharedLibraryPathName);
+      newName+="_";
+      newName+=llvm::sys::path::stem(dictpathname);
+      newName+=llvm::sys::path::extension(sharedLibraryPathName);
+      std::cout << "New name is " << newName << std::endl;
+      sharedLibraryPathName=newName;
    }
 
    // Until the module are actually enabled in ROOT, we need to register
@@ -4539,6 +4569,7 @@ void AddToArgVectorSplit(std::vector<char*>& argvVector,
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
                     const std::string& targetLibName,
+                    bool multiDict,
                     const std::vector<std::string>& pcmsNames,
                     const std::vector<std::string>& includes,
                     const std::vector<std::string>& preprocDefines,
@@ -4625,10 +4656,16 @@ int invokeRootCling(const std::string& verbosity,
       if (doSplit)
          argvVector.push_back(string2charptr("-split"));
    
+   // Targetlib
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
       argvVector.push_back(string2charptr(targetLibName));
    }
+
+   // Multidict support
+   if (multiDict)
+      argvVector.push_back(string2charptr("-multiDict"));
+
 
    AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
@@ -4673,6 +4710,7 @@ int invokeRootCling(const std::string& verbosity,
 int invokeManyRootCling(const std::string& verbosity,
                         const std::string& selectionFileName,
                         const std::string& targetLibName,
+                        bool multiDict,
                         const std::vector<std::string>& pcmsNames,
                         const std::vector<std::string>& includes,
                         const std::vector<std::string>& preprocDefines,
@@ -4709,6 +4747,7 @@ int invokeManyRootCling(const std::string& verbosity,
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
                                        targetLibName,
+                                       multiDict,
                                        pcmsNames,
                                        includes,
                                        preprocDefines,
@@ -4814,6 +4853,7 @@ int GenReflex(int argc, char **argv)
    enum  optionIndex { UNKNOWN,
                        OFILENAME,
                        TARGETLIB,
+                       MULTIDICT,
                        SELECTIONFILENAME,
                        ROOTMAP,
                        ROOTMAPLIB,
@@ -4910,6 +4950,12 @@ int GenReflex(int argc, char **argv)
         "l" , "library" ,
         option::FullArg::Required,
         targetLib},
+
+      {MULTIDICT,
+        NOTYPE ,
+        "" , "muldiDict" ,
+        option::FullArg::Required,
+        "Form correct pcm names if multiple dictionaries will be in the same library (needs target library specify)\n"},
 
       {SELECTIONFILENAME,
         STRING ,
@@ -5099,13 +5145,23 @@ int GenReflex(int argc, char **argv)
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
       if (!endsWith(targetLibName, gLibraryExtension)){
-         ROOT::TMetaUtils::Error(0,
-            "*** genreflex: Invalid target library extension: filename is %s and extension %s is expected!\n",
+         ROOT::TMetaUtils::Error("genreflex",
+            "Invalid target library extension: filename is %s and extension %s is expected!\n",
             gLibraryExtension.c_str(),
             targetLibName.c_str());
       }
       // Target lib has precedence over rootmap lib
       rootmapLibName = options[TARGETLIB].arg;
+   }
+
+   bool multiLib = false;
+   if (options[MULTIDICT])
+      multiLib = true;
+
+   if (multiLib && targetLibName.empty()){
+      ROOT::TMetaUtils::Error("genreflex",
+            "Multilib support is requested but no target lib is specified. A sane pcm name cannot be formed.\n");
+      return 1;
    }
 
    bool newRmfFormat = true;
@@ -5168,6 +5224,7 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
                                     targetLibName,
+                                    multiLib,
                                     pcmsNames,
                                     includes,
                                     preprocDefines,
@@ -5187,6 +5244,7 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
                                         targetLibName,
+                                        multiLib,
                                         pcmsNames,
                                         includes,
                                         preprocDefines,
