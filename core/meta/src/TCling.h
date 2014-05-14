@@ -148,6 +148,7 @@ public: // Public Interface
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
    Int_t   AutoLoad(const char* cls);
    Int_t   AutoLoad(const std::type_info& typeinfo);
+   Int_t   AutoParse(const char* cls);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
@@ -508,7 +509,6 @@ private: // Private Utility Functions
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
    void UnloadClassMembers(TClass* cl, const clang::DeclContext* DC);
-   Int_t AutoParse(const char* cls);
 
 };
 
