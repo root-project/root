@@ -788,7 +788,8 @@ Bool_t TDataMember::IsValid()
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetDataMember(fClass->GetClassInfo(), fName);
       if (newId) {
-         DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
+         DataMemberInfo_t *info
+            = gInterpreter->DataMemberInfo_Factory(newId, fClass->GetClassInfo());
          Update(info);
          // We need to make sure that the list of data member is properly
          // informed and updated.
