@@ -36,11 +36,8 @@ Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header set
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
-Info in <TInterpreter::AutoParse>: Parsing single header vector
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header vector
-Info in <TInterpreter::AutoParse>: Parsing single header set
-Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libRint.so for class TRint
 Info in <TInterpreter::AutoParse>: Parsing single header TRint.h
 
