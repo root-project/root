@@ -4815,7 +4815,7 @@ void TClass::LoadClassInfo() const
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   // gInterpreter->AutoParseHeader(for this)
+   gInterpreter->AutoParse(GetName());
    if (!fClassInfo) gInterpreter->SetClassInfo(const_cast<TClass*>(this));   // sets fClassInfo pointer
    if (!fClassInfo) {
       ::Error("TClass::TClass", "no interpreter information for class %s is available eventhough it has a TClass initialization routine.", fName.Data());
