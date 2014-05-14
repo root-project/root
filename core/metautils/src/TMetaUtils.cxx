@@ -4114,6 +4114,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    return input;
 }
+
 //______________________________________________________________________________
 int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int nArgsToRemove)
 {
@@ -4140,7 +4141,6 @@ int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int
    return 0;
 
 }
-
 
 //______________________________________________________________________________
 ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)
