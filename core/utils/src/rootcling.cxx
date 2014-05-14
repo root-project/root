@@ -2584,7 +2584,9 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          }
          // And headers
          std::unordered_set<std::string> writtenHeaders;
-         for (auto className : classesNames){
+         for (auto& className : classesNames){
+            // Don't treat templates
+            if (className.find("<")!=std::string::npos) continue;
             if (headersClassesMap.count(className)){
                auto& headers = headersClassesMap.at(className);
                auto& header = headers.front();
