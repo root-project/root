@@ -3029,7 +3029,8 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
                                 true /*isAngled*/, 0/*FromDir*/, foundDir,
                                 ArrayRef<const FileEntry*>(),
                                 0/*Searchpath*/, 0/*RelPath*/,
-                                0/*SuggModule*/);
+                                0/*SuggModule*/, false /*SkipCache*/,
+                                false /*OpenFile*/, true /*CacheFailures*/);
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
       headerFE = sourceManager.getFileEntryForID(headerFID);
@@ -3675,7 +3676,8 @@ clang::Module* ROOT::TMetaUtils::declareModuleMap(clang::CompilerInstance* CI,
                                  false /*isAngled*/, 0 /*FromDir*/, CurDir,
                                  llvm::ArrayRef<const clang::FileEntry*>(),
                                  0 /*SearchPath*/, 0 /*RelativePath*/,
-                                 0 /*SuggestedModule*/);
+                                 0/*SuggModule*/, false /*SkipCache*/,
+                                 false /*OpenFile*/, true /*CacheFailures*/);
       if (!hdrFileEntry) {
          std::cerr << "TMetaUtils::declareModuleMap: "
             "Cannot find header file " << *hdr
