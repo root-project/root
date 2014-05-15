@@ -56,6 +56,7 @@ private:
    const myTemplate<T***const>**const* dummy;
 };
 
+#include <queue>
 //--------------------
 template <class T>
 class myClass8{

@@ -4,16 +4,18 @@ Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnD
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass0<E>
+Info in <TInterpreter::AutoParse>: Parsing single header h1.h
+Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass1<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
-Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass1<int>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
+Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass2<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
-Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass2<float>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
+Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass3<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
@@ -28,16 +30,24 @@ Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass7<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
+Info in <TInterpreter::AutoParse>: Parsing single header set
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::TCling::AutoLoad>: loaded library libFullheaderParsingOnDemand_dictrflx.so for class myClass8<E>
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header set
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
+Info in <TInterpreter::AutoParse>: Parsing single header vector
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header set
+Info in <TInterpreter::AutoParse>: Parsing single header queue
+Info in <TInterpreter::AutoParse>: Parsing single header deque
 Info in <TInterpreter::AutoParse>: Parsing single header h2.h
+Info in <TInterpreter::AutoParse>: Parsing single header vector
 Info in <TInterpreter::AutoParse>: Parsing single header h1.h
 Info in <TInterpreter::AutoParse>: Parsing single header vector
-Info in <TInterpreter::TCling::AutoLoad>: loaded library libRint.so for class TRint
+Info in <TInterpreter::AutoParse>: Parsing single header set
+Info in <TInterpreter::AutoParse>: Parsing single header h2.h
 Info in <TInterpreter::AutoParse>: Parsing single header TRint.h
+Info in <TInterpreter::TCling::AutoLoad>: loaded library libRint.so for class TRint.h
+Info in <TInterpreter::AutoParse>: Parsing single header TApplication.h
 
