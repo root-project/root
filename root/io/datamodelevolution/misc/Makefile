@@ -1,13 +1,13 @@
 # This is a template for all makefiles.
 
 #Set the list of files to be deleted by clean (Targets can also be specified).:
-CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog treeTest.root
+CLEAN_TARGETS += $(ALL_LIBRARIES) *.log *.clog treeTest.root arr_cint* arr_rflx*
 
 # Set the list of target to make while testing.  By default, mytest is the
 # only target added.  If the name of the target is changed in the rules then
 # the name should be changed accordingly in this list.
 
-TEST_TARGETS += postobj
+TEST_TARGETS += postobj arrayRules
 
 # Search for Rules.mk in roottest/scripts
 # Algorithm:  Find the current working directory and remove everything after
@@ -74,3 +74,11 @@ postobj.log: readTree.C treeTest.root MyClass_cxx.$(DllSuf) SomeClass_cxx.$(DllS
 
 postobj: postobj.log
 	$(TestDiff)
+
+arr_cint.cpp: arrayRules.h arrayRulesLinkDef.h $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) rootcint -f arr_cint.cpp -c arrayRules.h arrayRulesLinkDef.h > arr_cint.log 2>&1 || handleError.sh --cmd='rootcint -f arr_cint.cxx -c arrayRules.h ArrayRulesLinkDef.h' --result=$$? --log=arr_cint.log --test=$@  
+
+arr_rflx.cpp: arrayRules.h arrayRulesSelection.xml $(ROOTCORELIBS) $(ROOTCINT) $(ROOTV)
+	$(CMDECHO) genreflex arrayRules.h -o arr_rflx.cpp -s arrayRulesSelection.xml > arr_rflx.log 2>&1 || handleError.sh --cmd='genreflex arrayRules.h -o arr_rflx.cxx -s arrayRulesSelection.xml' --result=$$? --log=arr_rflx.log --test=$@ 
+
+arrayRules: arr_cint.$(ObjSuf) arr_rflx.$(ObjSuf)
