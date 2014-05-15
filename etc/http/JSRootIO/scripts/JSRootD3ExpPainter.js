@@ -5491,9 +5491,8 @@ var gStyle = {
       if (zc < wlmin) zc = wlmin;
       var ncolors = default_palette.length;
       var color = Math.round(0.01 + (zc - wlmin) * scale);
-      var theColor = Math.round((color + 0.99) * ncolors / ndivz);
+      var theColor = Math.round((color + 0.99) * ncolors / ndivz) - 1;
       var icol = theColor % ncolors;
-      if (theColor == ncolors) icol = ncolors - 1;
       if (icol < 0) icol = 0;
 
       return default_palette[icol];
