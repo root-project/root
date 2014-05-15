@@ -1,20 +1,23 @@
 void runFullheaderParsingOnDemand(){
    gDebug=1;
 
-   TClass::GetClass("myClass0<E>")->GetClassInfo();
-   TClass::GetClass("myClass1<E>")->GetClassInfo();
-   TClass::GetClass("myClass1<int>")->GetClassInfo();
-   TClass::GetClass("myClass2<E>")->GetClassInfo();
-   TClass::GetClass("myClass2<float>")->GetClassInfo();
-   TClass::GetClass("myClass3<E>")->GetClassInfo();
-   TClass::GetClass("myClass4<E>")->GetClassInfo();
-   TClass::GetClass("myClass5<E>")->GetClassInfo();
-   TClass::GetClass("myClass6<E>")->GetClassInfo();
-   TClass::GetClass("myClass7<E>")->GetClassInfo();
-   TClass::GetClass("myClass8<E>")->GetClassInfo();
-   TClass::GetClass("myClass8<std::vector<E>>")->GetClassInfo();
-   TClass::GetClass("myClass8<std::vector<std::queue<E>>>")->GetClassInfo();
-   TClass::GetClass("myClass9<E>")->GetClassInfo();
 
-   std::cout << "\n";
+   std::vector<std::string> classNames={"myClass0<E>",
+                                        "myClass1<E>",
+                                        "myClass1<int>",
+                                        "myClass2<E>",
+                                        "myClass2<float>",
+                                        "myClass3<E>",
+                                        "myClass4<E>",
+                                        "myClass5<E>",
+                                        "myClass6<E>",
+                                        "myClass7<E>",
+                                        "myClass8<E>"};
+//                                         "myClass8<std::vector<E>>",
+//                                         "myClass8<std::vector<std::queue<E>>>",
+//                                         "myClass9<E>"};
+   for (auto& name : classNames){
+      std::cout << "Class name " << name << std::endl;
+      TClass::GetClass(name.c_str())->GetClassInfo();
+   }
 }
