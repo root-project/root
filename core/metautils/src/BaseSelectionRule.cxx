@@ -559,7 +559,8 @@ void BaseSelectionRule::FillCache()
    fHasProtoPatternAttribute = GetAttributeValue("proto_pattern",fProtoPattern);
    fHasFileNameAttribute = GetAttributeValue("file_name",fFileName);
    fHasFilePatternAttribute = GetAttributeValue("file_pattern",fFilePattern);
-   fHasFromTypedefAttribute = GetAttributeValue("fromTypedef",fHasFromTypedefAttribute);
+   std::string dummy;
+   fHasFromTypedefAttribute = GetAttributeValue("fromTypedef",dummy);
 
    GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,fNArgsToKeep);
 
