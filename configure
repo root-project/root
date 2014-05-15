@@ -6539,10 +6539,10 @@ fi
 #
 ### echo %%% libcmaes support - Third party libraries
 #
-check_header "cmaes.h" "/home/beniz/research/siminole/dev/libcmaes/src" /usr/include
+check_header "cmaes.h" $HOME/include/libcmaes /usr/include/libcmaes
 cmaesinc=$found_hdr
 cmaesincdir=$found_dir
-check_library "libcmaes" "yes" "/home/beniz/research/siminole/dev/libcmaes/src/.libs" /usr/lib
+check_library "libcmaes" "yes" $HOME/lib /usr/lib
 cmaeslib=$found_lib
 cmaeslibdir=$found_dir
 
