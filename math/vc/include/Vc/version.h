@@ -20,8 +20,8 @@
 #ifndef VC_VERSION_H
 #define VC_VERSION_H
 
-#define VC_VERSION_STRING "0.7.3-dev"
-#define VC_VERSION_NUMBER 0x000707
+#define VC_VERSION_STRING "0.7.4"
+#define VC_VERSION_NUMBER 0x000708
 #define VC_VERSION_CHECK(major, minor, patch) ((major << 16) | (minor << 8) | (patch << 1))
 #define VC_LIBRARY_ABI_VERSION 3
 
