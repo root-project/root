@@ -3517,6 +3517,7 @@ int RootCling(int argc,
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
+      genreflex::verbose = true;
       ic++;
    }
    if (ic < argc) {
@@ -4194,7 +4195,7 @@ int RootCling(int argc,
    int scannerVerbLevel = 0;
    { 
      using namespace ROOT::TMetaUtils;
-     scannerVerbLevel = (isGenreflex && gErrorIgnoreLevel != kFatal) ? 1:0;
+     scannerVerbLevel = (gErrorIgnoreLevel == kInfo || (isGenreflex && gErrorIgnoreLevel != kFatal)) ? 1:0;
    }
 
    // Select the type of scan
