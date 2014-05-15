@@ -610,22 +610,29 @@ Bool_t TNetXNGFile::GetVectorReadLimits()
 
    using namespace XrdCl;
 
+   fReadvIorMax = 2097136;
+   fReadvIovMax = 1024;
+
    // Check the file isn't a zombie or closed
    if (!IsUseable())
       return kFALSE;
 
+#if XrdVNUMBER >= 40000
+   std::string dataServerStr;
+   if( !fFile->GetProperty( "DataServer", dataServerStr ) )
+      return kFALSE;
+   URL dataServer(dataServerStr);
+#else
    URL dataServer(fFile->GetDataServer());
+#endif
    FileSystem fs(dataServer);
    Buffer  arg;
    Buffer *response;
    arg.FromString(std::string("readv_ior_max readv_iov_max"));
 
    XRootDStatus status = fs.Query(QueryCode::Config, arg, response);
-   if (!status.IsOK()) {
-      fReadvIorMax = 2097136;
-      fReadvIovMax = 1024;
+   if (!status.IsOK())
       return kFALSE;
-   }
 
    Ssiz_t from = 0;
    TString token;
