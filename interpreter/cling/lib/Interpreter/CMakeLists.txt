@@ -53,6 +53,8 @@ if(NOT WIN32)
 set_source_files_properties(RuntimeException.cpp COMPILE_FLAGS -fexceptions)
 endif()
 
+set_source_files_properties(Interpreter.cpp COMPILE_FLAGS -DCLING_VERSION=\\\"${CLING_VERSION}\\\")
+
 #set_source_files_properties(RuntimeException.cpp COMPILE_FLAGS " /EHsc ")
 # the line above doesn't work, and it gives the following warnings:
 # cl : Command line warning D9025: overriding '/EHs' with '/EHs-'
@@ -82,18 +84,6 @@ add_file_dependencies(${CMAKE_CURRENT_SOURCE_DIR}/Interpreter.cpp
 # Remove all -I from CMAKE_CXX_FLAGS
 string(REPLACE ";" " " __flags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "-I[^ ]+" "" CMAKE_CXX_FLAGS_NO_I "${__flags}")
-find_program(git_executable NAMES git git.exe git.cmd)
-if( git_executable )
-  execute_process(COMMAND ${git_executable} describe --always
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          TIMEOUT 5
-          RESULT_VARIABLE git_result
-          OUTPUT_VARIABLE git_output
-          OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if( git_result EQUAL 0 )
-    set(CLING_VERSION "${git_output}")
-  endif( )
-endif( git_executable )
 
 # Remove absolute path from CMAKE_CXX_COMPILER
 get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
@@ -106,6 +96,5 @@ endif()
 
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h
   "#define LLVM_CXX \"${CMAKE_CXX_COMPILER_RELATIVE} ${CMAKE_CXX_FLAGS_NO_I} ${CMAKE_CXX_FLAGS_${uppercase_CMAKE_BUILD_TYPE}}\"
-#define CLING_VERSION \"${CLING_VERSION}\"
 "
 )

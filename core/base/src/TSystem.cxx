@@ -3344,7 +3344,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    rcling += "\\";
 #endif
 #endif
-   rcling += "rootcling \"--lib-list-prefix=";
+   rcling += "rootcling -v0 \"--lib-list-prefix=";
    rcling += mapfile;
    rcling += "\" -f \"";
    rcling.Append(dict).Append("\" -c -p ");

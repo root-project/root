@@ -53,11 +53,11 @@ Begin_Macro(source)
       printf("Please run <ROOT location>/tutorials/hsimple.C before.");
       return;
    }
-   TNtuple* ntuple = f->Get("ntuple");
+   TNtuple* ntuple = (TNtuple*)f->Get("ntuple");
    TString varexp = "px:py:pz:random:sin(px):log(px/py):log(pz)";
-   TString select = "px>0 && py>0 && pz>0";
+   TString selectStr = "px>0 && py>0 && pz>0";
    TString options = "average";
-   TSpider *spider = new TSpider(ntuple,varexp.Data(),select.Data(),options.Data());
+   TSpider *spider = new TSpider(ntuple,varexp.Data(),selectStr.Data(),options.Data());
    spider->Draw();
    c1->ToggleEditor();
    c1->Selected(c1,spider,1);

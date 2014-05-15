@@ -190,10 +190,11 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_GENERATE_DICTIONARY( dictionary headerfiles MODULE module DEPENDENCIES dep1 dep2 LINKDEF linkdef OPTIONS opt1 opt2 ...)
+#---ROOT_GENERATE_DICTIONARY( dictionary headerfiles MODULE module DEPENDENCIES dep1 dep2 
+#                                                    STAGE1 LINKDEF linkdef OPTIONS opt1 opt2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "STAGE1" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
   #---Get the list of header files-------------------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
@@ -214,6 +215,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     set(includedirs -I${CMAKE_SOURCE_DIR}
                     -I${CMAKE_CURRENT_SOURCE_DIR}/inc
+                    -I${CMAKE_SOURCE_DIR}/io/io/inc
                     -I${CMAKE_BINARY_DIR}/include)
   else()
     set(includedirs -I${CMAKE_CURRENT_SOURCE_DIR}/inc) 
@@ -252,10 +254,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   set(rootmap_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${target_lib_common}.rootmap)
   set(library_name ${target_lib_common}${libsuffix})
   set(rootmapargs -rml ${library_name} -rmf ${rootmap_name})
-  
+
   if(ARG_MODULE)
-    set(newargs -s ${libprefix}${ARG_MODULE}${libsuffix})
-    set(pcm_name ${libprefix}${ARG_MODULE}_rdict.pcm)
+    set(newargs -s ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}${libsuffix})
+    set(pcm_name ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${libprefix}${ARG_MODULE}_rdict.pcm)
   else()
     set(pcm_name ${dictionary}_rdict.pcm)
   endif()
@@ -266,17 +268,34 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
   
+  #---what rootcling command to use--------------------------
+  if(ARG_STAGE1)
+    set(command rootcling_tmp)
+    set(pcm_name)
+  else()
+    if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+      set(command rootcling -rootbuild)
+    else()
+      set(command rootcling)
+    endif()
+  endif()
+  
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
-                     COMMAND ${rootcint_cmd} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
-                                             -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
+                     COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
+                                        -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
   add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
   set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${pcm_name} ${rootmap_name}
-                DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  if(ARG_STAGE1)
+    install(FILES ${rootmap_name}
+                  DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  else()
+    install(FILES ${pcm_name} ${rootmap_name}
+                  DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+  endif()
 endfunction()
 
 
@@ -511,8 +530,7 @@ endfunction()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDENCIES" ${ARGN})
-  ROOT_GENERATE_DICTIONARY(G__${libname} *.h LINKDEF LinkDef.h)
-  ROOT_GENERATE_ROOTMAP(${libname} LINKDEF LinkDef.h DEPENDENCIES ${ARG_DEPENDENCIES})
+  ROOT_GENERATE_DICTIONARY(G__${libname} *.h MODULE ${libname} LINKDEF LinkDef.h)
   ROOT_LINKER_LIBRARY(${libname} *.cxx G__${libname}.cxx DEPENDENCIES ${ARG_DEPENDENCIES})
   ROOT_INSTALL_HEADERS()
 endfunction()

@@ -108,7 +108,7 @@ void TAttLineEditor::ConnectSignals2Slots()
 
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
    fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttLineEditor", this, "DoLineAlphaColor(ULong_t)");
-   fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)"); 
+   fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)");
    fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)");
    fAlpha->Connect("Released()","TAttLineEditor", this, "DoAlpha()");
    fAlpha->Connect("PositionChanged(Int_t)","TAttLineEditor", this, "DoLiveAlpha(Int_t)");
@@ -125,7 +125,7 @@ void TAttLineEditor::SetModel(TObject* obj)
 
    TAttLine *attline = dynamic_cast<TAttLine*>(obj);
    if (!attline) return;
-   
+
    fAttLine = attline;
    fAvoidSignal = kTRUE;
 
@@ -148,7 +148,7 @@ void TAttLineEditor::SetModel(TObject* obj)
    if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
-   } 
+   }
 }
 
 //______________________________________________________________________________
@@ -163,7 +163,7 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }
-   
+
    Update();
 }
 
@@ -249,7 +249,14 @@ void TAttLineEditor::DoLiveAlpha(Int_t a)
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
-   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) color->SetAlpha((Float_t)a/1000);
+   if (TColor *color = gROOT->GetColor(fAttLine->GetLineColor())) {
+      // In case the color is not transparent a new color is created.
+      if (color->GetAlpha() == 1.) {
+         fAttLine->SetLineColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
+      } else {
+         color->SetAlpha((Float_t)a/1000);
+      }
+   }
    Update();
 }
 

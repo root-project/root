@@ -341,8 +341,9 @@ TString TDocMacroDirective::CreateSubprocessInputFile() {
    if (!fIsFilename) {
       TString fileSysName;
       GetName(fileSysName);
+      fileSysName += ".C";
       gSystem->PrependPathName(gSystem->TempDirectory(), fileSysName);
-      fMacro->Write(fileSysName);
+      fMacro->SaveSource(fileSysName);
       return fileSysName;
    }
 

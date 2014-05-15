@@ -265,7 +265,6 @@ namespace genreflex {
 }
 
 //______________________________________________________________________________
-#if !defined(ROOT_STAGE1_BUILD)
 void SetRootSys();
 
 struct SetROOTSYS {
@@ -274,7 +273,6 @@ struct SetROOTSYS {
       SetRootSys();
    }
 } sROOTSYSSetter;
-#endif
 
 
 //______________________________________________________________________________
@@ -399,14 +397,30 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
                 }
             
             
+            // These lines are here to use the root pcms. Indeed we need to annotate the AST
+            // before persisting the ProtoClasses in the root pcms.
+            // BEGIN ROOT PCMS
+            if (name == propNames::comment){
+               decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, value, 0));
+            }
+            // END ROOT PCMS
 
             if ( (name == propNames::transient && value == "true") or
-                 (name == propNames::persistent && value == "false")) // special case
+                 (name == propNames::persistent && value == "false")){ // special case
                userDefinedProperty=propNames::comment+propNames::separator+"!";
-            else
+            // This next line is here to use the root pcms. Indeed we need to annotate the AST
+            // before persisting the ProtoClasses in the root pcms.
+            // BEGIN ROOT PCMS
+               decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, "!", 0));
+            // END ROOT PCMS
+            // The rest of the lines are not changed to leave in place the system which
+            // works with bulk header parsing on library load.
+            } else {
                userDefinedProperty=name+propNames::separator+value;
+            }
             ROOT::TMetaUtils::Info(0,"%s %s\n",varName.c_str(),userDefinedProperty.c_str());
             decl.addAttr(new (C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+
          }
       }
    }
@@ -627,20 +641,14 @@ const char *GetExePath()
 void SetRootSys()
 {
    // Set the ROOTSYS env var based on the executable location.
-   // Also sets ROOT_BUILDINGROOT if building stage 2 ROOT.
 
    const char *exepath = GetExePath();
    if (exepath && *exepath) {
 #if !defined(_WIN32)
       char *ep = new char[PATH_MAX];
       if (!realpath(exepath, ep)) {
-         if (getenv("ROOTSYS")) {
-            delete [] ep;
-            return;
-         } else {
-            fprintf(stderr, "rootcling: error getting realpath of rootcling, please set ROOTSYS in the shell");
-            strlcpy(ep, exepath,PATH_MAX);
-         }
+         fprintf(stderr, "rootcling: error getting realpath of rootcling!");
+         strlcpy(ep, exepath,PATH_MAX);
       }
 #else
       int nche = strlen(exepath)+1;
@@ -651,7 +659,7 @@ void SetRootSys()
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s, "rootcling_tmp", 12))
+         if (!strncmp(s + 1, "rootcling_tmp", 13))
             // $ROOTSYS/core/utils/src/rootcling_tmp
             removesubdirs = 4;
          for (int i = 1; s && i < removesubdirs; ++i) {
@@ -669,11 +677,6 @@ void SetRootSys()
       putenv(env);
       delete [] ep;
    }
-#if !defined(ROOT_STAGE1_BUILD)
-   if (buildingROOT) {
-      putenv(strdup("ROOT_BUILDINGROOT=happilyso"));
-   }
-#endif
 }
 
 //______________________________________________________________________________
@@ -708,25 +711,6 @@ void RecordDeclCallback(const char *c)
    if (need.length() && gLibsNeeded.find(need)==string::npos) {
       gLibsNeeded += " " + need;
    }
-}
-
-//______________________________________________________________________________
-bool IsExistingDir(const std::string& path)
-{
-
-   int returnCode = 0;
-   bool isDir = false;
-   #ifdef WIN32
-   struct _stati64 finfo;
-   returnCode = _stati64(path.c_str(), &finfo);
-   isDir = (finfo.st_mode & S_IFDIR);
-   #else
-   struct stat finfo;
-   returnCode = lstat(path.c_str(), &finfo);
-   isDir = S_ISDIR(finfo.st_mode);
-   #endif
-   return returnCode==0 && isDir ;
-
 }
 
 //______________________________________________________________________________
@@ -847,7 +831,7 @@ void LoadLibraryMap(const std::string& fileListName, map<string,string>& autoloa
 
    while ( filelist >> filename ) {
 
-      if (IsExistingDir(filename)) continue;
+      if (llvm::sys::fs::is_directory(filename)) continue;
 
       ifstream file(filename.c_str());
 
@@ -2145,7 +2129,7 @@ static bool InjectModuleUtilHeader(const char* argv0,
    const std::string& hdrName
       = umbrella ? modGen.GetUmbrellaName() : modGen.GetContentName();
    {
-      std::ofstream out(hdrName.c_str());
+      std::ofstream out(hdrName);
       if (!out) {
          ROOT::TMetaUtils::Error(0, "%s: failed to open header output %s\n",
                                  argv0, hdrName.c_str());
@@ -2560,7 +2544,8 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::list<std::string>& classesDefsList,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
-                         const std::vector<clang::TypedefNameDecl*>& typedefDecls)
+                         const std::vector<clang::TypedefNameDecl*>& typedefDecls,
+                         const HeadersClassesMap_t& headersClassesMap)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -2597,6 +2582,19 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
          for (auto& className : classesNames){
             rootmapFile << "class " << className << std::endl;
          }
+         // And headers
+         std::unordered_set<std::string> writtenHeaders;
+         for (auto& className : classesNames){
+            // Don't treat templates
+            if (className.find("<")!=std::string::npos) continue;
+            if (headersClassesMap.count(className)){
+               auto& headers = headersClassesMap.at(className);
+               auto& header = headers.front();
+               if (writtenHeaders.insert(header).second &&
+                   llvm::sys::path::extension(header)==".h")
+                  rootmapFile << "header " << header << std::endl;
+            }
+         }
       }
 
       // Same for namespaces
@@ -2614,6 +2612,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
             rootmapFile << "typedef " << tDef->getQualifiedNameAsString() << std::endl;
          }
       }
+
    }
 
    return 0;
@@ -2970,7 +2969,15 @@ int GenerateFullDict(std::ostream& dictStream,
          // is done and these headers cannot be selected anymore.
          interp.parseForModule("#include \"TStreamerInfo.h\"\n"
                                "#include \"TFile.h\"\n"
-                               "#include \"TObjArray.h\"");
+                               "#include \"TObjArray.h\"\n"
+                               "#include \"TVirtualArray.h\"\n"
+                               "#include \"TStreamerElement.h\"\n"
+                               "#include \"TProtoClass.h\"\n"
+                               "#include \"TBaseClass.h\"\n"
+                               "#include \"TListOfDataMembers.h\"\n"
+                               "#include \"TDataMember.h\"\n"
+                               "#include \"TDictAttributeMap.h\"\n"
+                               );
          if (!CloseStreamerInfoROOTFile()) {
             return 1;
          }
@@ -3327,12 +3334,11 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
          auto tArgQualType = GetPointeeTypeIfPossible(tArg.getAsType());
          if (tArgQualType.isNull()) continue;         
          if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
-            if (tArgCxxRcd->hasDefinition())
-               headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp, visitedDecls));
+            headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp, visitedDecls));
          }
       }      
       
-      if(!ROOT::TMetaUtils::IsStdClass(rcd)){
+      if(!ROOT::TMetaUtils::IsStdClass(rcd) && rcd.hasDefinition()){
          
          // Loop on base classes - with a newer llvm, range based possible
          for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
@@ -3455,6 +3461,12 @@ bool IsHeaderName(const std::string& filename)
           llvm::sys::path::extension(filename) == ".hpp";
 }
 
+//______________________________________________________________________________
+bool IsImplementationName(const std::string& filename)
+{
+   return !IsHeaderName(filename);
+}
+
 
 //______________________________________________________________________________
 int RootCling(int argc,
@@ -3568,6 +3580,12 @@ int RootCling(int argc,
       force = 0;
    }
 
+   if (argc == ic){ // Something wrong here
+      ROOT::TMetaUtils::Error(0, "Insufficient number of arguments!\n");
+      fprintf(stderr, "%s\n", shortHelp);
+      return 1;
+   }
+
 #if defined(R__WIN32) && !defined(R__WINGCC)
    // cygwin's make is presenting us some cygwin paths even though
    // we are windows native. Convert them as good as we can.
@@ -3586,9 +3604,7 @@ int RootCling(int argc,
    // Store the temp files
    tempFileNamesCatalog tmpCatalog;
 
-   if (ic < argc && (strstr(argv[ic],".C")  || strstr(argv[ic],".cpp") ||
-       strstr(argv[ic],".cp") || strstr(argv[ic],".cxx") ||
-       strstr(argv[ic],".cc") || strstr(argv[ic],".c++") )) {
+   if (ic < argc && IsImplementationName(argv[ic])) {
       FILE *fp;
       if (!ignoreExistingDict &&(fp = fopen(argv[ic], "r")) != 0) {
          fclose(fp);
@@ -3598,17 +3614,16 @@ int RootCling(int argc,
          }
       }
 
-   // remove possible pathname to get the dictionary name
-   if (strlen(argv[ic]) > (PATH_MAX-1)) {
-      ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
-            (PATH_MAX-1),argv[ic]);
-      return 1;
-   }
+      // remove possible pathname to get the dictionary name
+      if (strlen(argv[ic]) > (PATH_MAX-1)) {
+         ROOT::TMetaUtils::Error(0, "rootcling: dictionary name too long (more than %d characters): %s\n",
+               (PATH_MAX-1),argv[ic]);
+         return 1;
+      }
 
-   dictpathname = argv[ic];
-   dictname = llvm::sys::path::filename(dictpathname);
-
-   ic++;
+      dictpathname = argv[ic];
+      dictname = llvm::sys::path::filename(dictpathname);
+      ic++;
 
    } else if (!strcmp(argv[1], "-?") || !strcmp(argv[1], "-h")) {
       fprintf(stderr, "%s\n", rootClingHelp);
@@ -3616,6 +3631,12 @@ int RootCling(int argc,
    } else {
       ic = 1;
       if (force) ic = 2;
+   }
+
+   if (force && dictname.empty()){
+      ROOT::TMetaUtils::Error(0, "Inconsistent set of arguments detected: overwrite of dictionary file forced but no filename specified.\n");
+      fprintf(stderr, "%s\n", shortHelp);
+      return 1;
    }
 
    std::vector<std::string> clingArgs;
@@ -3648,6 +3669,7 @@ int RootCling(int argc,
    bool interpreteronly = false;
    bool doSplit = false;
    bool dictSelection = true;
+   bool multiDict = false;
 
    // Temporary to decide if the new format is to be used
    bool useNewRmfFormat = true;
@@ -3688,6 +3710,13 @@ int RootCling(int argc,
             continue;
          }
 
+         if (strcmp("-multiDict", argv[ic]) == 0) {
+            // Generate a pcm name which contains the libname and the dict name
+            multiDict = true;
+            ic+=1;
+            continue;
+         }
+
          if (strcmp("-interpreteronly", argv[ic]) == 0) {
             // Generate dictionaries only for the interpreter
             interpreteronly = true;
@@ -3710,11 +3739,13 @@ int RootCling(int argc,
          }            
          
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
-            // precompiled modules
+            // Target shared library name
             sharedLibraryPathName = argv[ic+1];
             ic+=2;
             continue;
          }
+
+
          if (strcmp("-m", argv[ic]) == 0 && (ic+1) < argc) {
             // precompiled modules
             baseModules.push_back(argv[ic+1]);
@@ -3749,6 +3780,12 @@ int RootCling(int argc,
       ic++;
    }
 
+   // Check if we have a multi dict request but no target library
+   if (multiDict && sharedLibraryPathName.empty()) {
+      ROOT::TMetaUtils::Error("","Multidict requested but no target library. Please specify one with the -s argument.\n");
+      return 1;
+   }
+
    ic = nextStart;
    clingArgs.push_back(std::string("-I") + TMetaUtils::GetROOTIncludeDir(buildingROOT));
 
@@ -3769,8 +3806,13 @@ int RootCling(int argc,
 
    ROOT::TMetaUtils::SetPathsForRelocatability(clingArgs);
 
-   std::string resourceDir;
+   std::vector<const char*> clingArgsC;
+   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
+        iclingArgs < nclingArgs; ++iclingArgs) {
+      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
+   }
 
+   std::string resourceDir;
 #ifdef R__LLVMRESOURCEDIR
    resourceDir = R__LLVMRESOURCEDIR;
 #else
@@ -3778,13 +3820,12 @@ int RootCling(int argc,
 #endif
 
 #ifndef ROOT_STAGE1_BUILD
+   // Pass the interpreter arguments to TCling's interpreter:
+   clingArgsC.push_back(0); // signal end of array
+   const char**& extraArgs = *TROOT__GetExtraInterpreterArgs();
+   extraArgs = &clingArgsC[1]; // skip binary name
    cling::Interpreter& interp = *TCling__GetInterpreter();
 #else
-   std::vector<const char*> clingArgsC;
-   for (size_t iclingArgs = 0, nclingArgs = clingArgs.size();
-        iclingArgs < nclingArgs; ++iclingArgs) {
-      clingArgsC.push_back(clingArgs[iclingArgs].c_str());
-   }
 
    cling::Interpreter interp(clingArgsC.size(), &clingArgsC[0],
                              resourceDir.c_str());
@@ -3908,6 +3949,11 @@ int RootCling(int argc,
       }
    }
 
+#ifndef ROOT_STAGE1_BUILD
+   for (const auto& baseModule : baseModules)
+      AddAncestorPCMROOTFile(baseModule.c_str());
+#endif
+
    if (!firstInputFile) {
       ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
       return 1;
@@ -3915,6 +3961,20 @@ int RootCling(int argc,
 
    if (sharedLibraryPathName.empty()) {
       sharedLibraryPathName = dictpathname;
+   }
+
+   // We have a multiDict request. This implies generating a pcm which is of the form
+   // dictName_libname_rdict.pcm
+   if (multiDict){
+
+      std::string newName=llvm::sys::path::parent_path(sharedLibraryPathName).str();
+      //newName+=gPathSeparator;
+      newName+=llvm::sys::path::stem(sharedLibraryPathName);
+      newName+="_";
+      newName+=llvm::sys::path::stem(dictpathname);
+      newName+=llvm::sys::path::extension(sharedLibraryPathName);
+      std::cout << "New name is " << newName << std::endl;
+      sharedLibraryPathName=newName;
    }
 
    // Until the module are actually enabled in ROOT, we need to register
@@ -4167,6 +4227,12 @@ int RootCling(int argc,
    if (genreflex::verbose)
       selectionRules.PrintSelectionRules();
 
+   if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
+       !onepcm &&
+       !selectionRules.AreAllSelectionRulesUsed()){
+      ROOT::TMetaUtils::Warning(0,"Not all selection rules are used!\n");
+   }
+
 
 // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
@@ -4232,9 +4298,9 @@ int RootCling(int argc,
    
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
+   HeadersClassesMap_t headersClassesMap;
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
-      HeadersClassesMap_t headersClassesMap;
       ExtractHeadersForClasses(scan.fSelectedClasses,
                                scan.fSelectedTypedefs,
                                headersClassesMap,
@@ -4326,7 +4392,8 @@ int RootCling(int argc,
                                              classesDefsList,
                                              classesNamesForRootmap,
                                              nsNames,
-                                             scan.fSelectedTypedefs);
+                                             scan.fSelectedTypedefs,
+                                             headersClassesMap);
       }
       else{
          rmStatusCode = CreateRootMapFile(rootmapFileName,
@@ -4503,6 +4570,7 @@ void AddToArgVectorSplit(std::vector<char*>& argvVector,
 int invokeRootCling(const std::string& verbosity,
                     const std::string& selectionFileName,
                     const std::string& targetLibName,
+                    bool multiDict,
                     const std::vector<std::string>& pcmsNames,
                     const std::vector<std::string>& includes,
                     const std::vector<std::string>& preprocDefines,
@@ -4589,10 +4657,16 @@ int invokeRootCling(const std::string& verbosity,
       if (doSplit)
          argvVector.push_back(string2charptr("-split"));
    
+   // Targetlib
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
       argvVector.push_back(string2charptr(targetLibName));
    }
+
+   // Multidict support
+   if (multiDict)
+      argvVector.push_back(string2charptr("-multiDict"));
+
 
    AddToArgVectorSplit(argvVector, pcmsNames, "-m");
 
@@ -4637,6 +4711,7 @@ int invokeRootCling(const std::string& verbosity,
 int invokeManyRootCling(const std::string& verbosity,
                         const std::string& selectionFileName,
                         const std::string& targetLibName,
+                        bool multiDict,
                         const std::vector<std::string>& pcmsNames,
                         const std::vector<std::string>& includes,
                         const std::vector<std::string>& preprocDefines,
@@ -4667,9 +4742,13 @@ int invokeManyRootCling(const std::string& verbosity,
    std::vector<std::string> namesSingleton(1);
    for (unsigned int i=0;i<headersNames.size();++i){
       namesSingleton[0]=headersNames[i];
+      std::string ofilenameFullPath(ofilesNames[i]);
+      if (llvm::sys::path::parent_path(ofilenameFullPath)=="")
+         ofilenameFullPath=outputDirName+ofilenameFullPath;
       int returnCode = invokeRootCling(verbosity,
                                        selectionFileName,
                                        targetLibName,
+                                       multiDict,
                                        pcmsNames,
                                        includes,
                                        preprocDefines,
@@ -4683,7 +4762,7 @@ int invokeManyRootCling(const std::string& verbosity,
                                        doSplit,
                                        isDeep,
                                        namesSingleton,
-                                       outputDirName+ofilesNames[i]);
+                                       ofilenameFullPath);
       if (returnCode!=0)
          return returnCode;
    }
@@ -4775,6 +4854,7 @@ int GenReflex(int argc, char **argv)
    enum  optionIndex { UNKNOWN,
                        OFILENAME,
                        TARGETLIB,
+                       MULTIDICT,
                        SELECTIONFILENAME,
                        ROOTMAP,
                        ROOTMAPLIB,
@@ -4799,7 +4879,7 @@ int GenReflex(int argc, char **argv)
 
    // Some long help strings
    const char* genreflexUsage =
-   "Generates pcm file from starting from the old genreflex syntax\n"
+   "Generates dictionary source and pcm file starting from the old genreflex syntax\n"
    "Usage: genreflex headerfile1.h [ ... headerfileN.h] [opts] [preproc. opts]\n\n"
    "Options:\n";
 
@@ -4839,9 +4919,14 @@ int GenReflex(int argc, char **argv)
    "-l, --library \t Target library\n"
    "      The flag -l must be followed by the name of the library that will\n"
    "      contain the object file corresponding to the dictionary produced by\n"
-   "      this invocation of genreflex.  The name will be used as the stem\n"
-   "      for the name of the precompiled module generated by this\n"
-   "      invocation of genreflex. It takes precedence over the rootmap lib.\n";
+   "      this invocation of genreflex.\n"
+   "      The name takes priority over the one specified for the rootmapfile.\n"
+   "      The name influences the name of the created pcm:\n"
+   "       1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm\n"
+   "       2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm\n"
+   "          Any \"liblib\" occurence is transformed in the expected \"lib\".\n"
+   "       3) If this is specified in conjunction with --multiDict, the output is\n"
+   "          libTARGETLIBRARY_DICTIONARY_rdict.pcm\n";
 
    const char* rootmapUsage=
    "--rootmap  \tGenerate the rootmap file to be used by ROOT.\n"
@@ -4871,6 +4956,13 @@ int GenReflex(int argc, char **argv)
         "l" , "library" ,
         option::FullArg::Required,
         targetLib},
+
+      {MULTIDICT,
+        NOTYPE ,
+        "" , "muldiDict" ,
+        option::FullArg::Required,
+        "--multiDict\tForm correct pcm names if multiple dictionaries will be in the same \n"
+        "      library (needs target library specify)\n"},
 
       {SELECTIONFILENAME,
         STRING ,
@@ -5060,13 +5152,23 @@ int GenReflex(int argc, char **argv)
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
       if (!endsWith(targetLibName, gLibraryExtension)){
-         ROOT::TMetaUtils::Error(0,
-            "*** genreflex: Invalid target library extension: filename is %s and extension %s is expected!\n",
+         ROOT::TMetaUtils::Error("genreflex",
+            "Invalid target library extension: filename is %s and extension %s is expected!\n",
             gLibraryExtension.c_str(),
             targetLibName.c_str());
       }
       // Target lib has precedence over rootmap lib
       rootmapLibName = options[TARGETLIB].arg;
+   }
+
+   bool multiLib = false;
+   if (options[MULTIDICT])
+      multiLib = true;
+
+   if (multiLib && targetLibName.empty()){
+      ROOT::TMetaUtils::Error("genreflex",
+            "Multilib support is requested but no target lib is specified. A sane pcm name cannot be formed.\n");
+      return 1;
    }
 
    bool newRmfFormat = true;
@@ -5125,10 +5227,11 @@ int GenReflex(int argc, char **argv)
 
    // If not empty and not a directory (therefore it's a file)
    // call rootcling directly. The number of headers files is irrelevant.
-   if (!ofileName.empty() && !IsExistingDir(ofileName)){
+   if (!ofileName.empty() && !llvm::sys::fs::is_directory(ofileName) ){
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
                                     targetLibName,
+                                    multiLib,
                                     pcmsNames,
                                     includes,
                                     preprocDefines,
@@ -5148,6 +5251,7 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
                                         targetLibName,
+                                        multiLib,
                                         pcmsNames,
                                         includes,
                                         preprocDefines,

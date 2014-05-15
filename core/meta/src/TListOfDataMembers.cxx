@@ -26,17 +26,15 @@
 #include "TGlobal.h"
 #include "TInterpreter.h"
 #include "TVirtualMutex.h"
+#include "TError.h"
 
 ClassImp(TListOfDataMembers)
 
 //______________________________________________________________________________
-TListOfDataMembers::TListOfDataMembers(TClass *cl) : fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE),
-                    fLastLoadMarker(0)
+TListOfDataMembers::TListOfDataMembers(TClass *cl /*=0*/) :
+   fClass(cl),fIds(0),fUnloaded(0),fIsLoaded(kFALSE), fLastLoadMarker(0)
 {
    // Constructor.
-
-   fIds = new TExMap;
-   fUnloaded = new THashList;
 }
 
 //______________________________________________________________________________
@@ -46,7 +44,7 @@ TListOfDataMembers::~TListOfDataMembers()
 
    THashList::Delete();
    delete fIds;
-   fUnloaded->Delete();
+   if (fUnloaded) fUnloaded->Delete();
    delete fUnloaded;
 }
 
@@ -54,6 +52,8 @@ TListOfDataMembers::~TListOfDataMembers()
 void TListOfDataMembers::MapObject(TObject* obj)
 {
    // Add a pair<id, object> to the map of data members and their ids.
+   if (!fIds) fIds = new TExMap;
+
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
       if (d) {
@@ -162,8 +162,8 @@ void TListOfDataMembers::Clear(Option_t *option)
    // Remove all objects from the list. Does not delete the objects unless
    // the THashList is the owner (set via SetOwner()).
 
-   fUnloaded->Clear(option);
-   fIds->Clear();
+   if (fUnloaded) fUnloaded->Clear(option);
+   if (fIds) fIds->Clear();
    THashList::Clear(option);
    fIsLoaded = kFALSE;
 }
@@ -173,7 +173,7 @@ void TListOfDataMembers::Delete(Option_t *option /* ="" */)
 {
    // Delete all TDataMember object files.
 
-   fUnloaded->Delete(option);
+   if (fUnloaded) fUnloaded->Delete(option);
    THashList::Delete(option);
    fIsLoaded = kFALSE;
 }
@@ -186,6 +186,10 @@ TObject *TListOfDataMembers::FindObject(const char *name) const
 
    TObject *result = THashList::FindObject(name);
    if (!result) {
+      if (IsLoaded() && fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+         // We already have all the information, no need to search more
+         return 0;
+      }
       TInterpreter::DeclId_t decl;
       if (fClass) decl = gInterpreter->GetDataMember(fClass->GetClassInfo(),name);
       else        decl = gInterpreter->GetDataMember(0,name);
@@ -202,9 +206,17 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
 
    if (!id) return 0;
 
-   TDictionary *dm = (TDataMember*)fIds->GetValue((Long64_t)id);
+   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
    if (!dm) {
       if (fClass) {
+         if (!fClass->HasInterpreterInfoInMemory()) {
+            // The interpreter does not know about this class yet (or a problem
+            // occurred that prevented the proper updating of fClassInfo).
+            // So this decl can not possibly be part of this class.
+            // [In addition calling GetClassInfo would trigger a late parsing
+            //  of the header which we want to avoid].
+            return 0;
+         }
          if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
@@ -214,7 +226,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
 
-      TDictionary *update = (TDictionary *)fUnloaded->FindObject(name);
+      TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(name) : 0;
       if (update) {
          if (fClass) {
             ((TDataMember*)update)->Update(info);
@@ -230,6 +242,7 @@ TDictionary *TListOfDataMembers::Get(DeclId_t id)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
+      if (!fIds) fIds = new TExMap;
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
@@ -244,9 +257,18 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
    if (!info) return 0;
 
    TDictionary::DeclId_t id = gInterpreter->GetDeclId(info);
-   TDictionary *dm = (TDataMember*)fIds->GetValue((Long64_t)id);
+   R__ASSERT( id != 0 && "DeclId should not be null");
+   TDictionary *dm = fIds ? (TDataMember*)fIds->GetValue((Long64_t)id) : 0;
    if (!dm) {
       if (fClass) {
+         if (!fClass->HasInterpreterInfoInMemory()) {
+            // The interpreter does not know about this class yet (or a problem
+            // occurred that prevented the proper updating of fClassInfo).
+            // So this decl can not possibly be part of this class.
+            // [In addition calling GetClassInfo would trigger a late parsing
+            //  of the header which we want to avoid].
+            return 0;
+         }
          if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
@@ -256,7 +278,7 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
 
       // Let's see if this is a reload ...
       const char *name = gInterpreter->DataMemberInfo_Name(info);
-      TDataMember *update = (TDataMember *)fUnloaded->FindObject(name);
+      TDataMember *update = fUnloaded ? (TDataMember *)fUnloaded->FindObject(name) : 0;
       if (update) {
          update->Update(dm_info);
          dm = update;
@@ -268,23 +290,32 @@ TDictionary *TListOfDataMembers::Get(DataMemberInfo_t *info)
       // Calling 'just' THahList::Add would turn around and call
       // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
       THashList::AddLast(dm);
+      if (!fIds) fIds = new TExMap;
       fIds->Add((Long64_t)id,(Long64_t)dm);
    }
    return dm;
 }
 
+//______________________________________________________________________________
 void TListOfDataMembers::UnmapObject(TObject* obj)
 {
    // Remove a pair<id, object> from the map of data members and their ids.
+   if (!fIds) return;
    if (fClass) {
       TDataMember *d = dynamic_cast<TDataMember*>(obj);
       if (d) {
-         fIds->Remove((Long64_t)d->GetDeclId());
+         if (d->GetDeclId()) {
+            fIds->Remove((Long64_t)d->GetDeclId());
+         }
+         d->Update(0);
       }
    } else {
       TGlobal *g = dynamic_cast<TGlobal*>(obj);
       if (g) {
-         fIds->Remove((Long64_t)g->GetDeclId());
+         if (g->GetDeclId()) {
+            fIds->Remove((Long64_t)g->GetDeclId());
+         }
+         g->Update(0);
       }
    }
 }
@@ -303,7 +334,7 @@ void TListOfDataMembers::RecursiveRemove(TObject *obj)
    if (!obj) return;
 
    THashList::RecursiveRemove(obj);
-   fUnloaded->RecursiveRemove(obj);
+   if (fUnloaded) fUnloaded->RecursiveRemove(obj);
    UnmapObject(obj);
 
 }
@@ -316,7 +347,7 @@ TObject* TListOfDataMembers::Remove(TObject *obj)
    Bool_t found;
 
    found = THashList::Remove(obj);
-   if (!found) {
+   if (!found && fUnloaded) {
       found = fUnloaded->Remove(obj);
    }
    UnmapObject(obj);
@@ -334,7 +365,7 @@ TObject* TListOfDataMembers::Remove(TObjLink *lnk)
    TObject *obj = lnk->GetObject();
 
    THashList::Remove(lnk);
-   fUnloaded->Remove(obj);
+   if (fUnloaded) fUnloaded->Remove(obj);
 
    UnmapObject(obj);
    return obj;
@@ -346,6 +377,13 @@ void TListOfDataMembers::Load()
    // Load all the DataMembers known to the intepreter for the scope 'fClass'
    // into this collection.
 
+   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+      // Class and union are not extendable, if we already
+      // loaded all the data member there is no need to recheck
+      if (fIsLoaded) return;
+   }
+
+   // This will provoke the parsing of the headers if need be.
    if (fClass && fClass->GetClassInfo() == 0) return;
 
    ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
@@ -354,14 +392,8 @@ void TListOfDataMembers::Load()
    }
    fLastLoadMarker = currentTransaction;
 
-   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
-      // Class and union are not extendable, if we already
-      // loaded all the data member there is no need to recheck
-      if (fIsLoaded) return;
-   }
    // In the case of namespace, even if we have loaded before we need to
    // load again in case there was new data member added.
-   // (We may want to avoid doing it if there was no change in the AST).
 
    // Mark the list as loaded to avoid an infinite recursion in the case
    // where we have a data member that is a variable size array.  In that
@@ -385,6 +417,61 @@ void TListOfDataMembers::Load()
 }
 
 //______________________________________________________________________________
+void TListOfDataMembers::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TListOfDataMembers.
+
+   if (R__b.IsReading()) {
+      R__b.ReadClassBuffer(TListOfDataMembers::Class(),this);
+      fIsLoaded = kTRUE;
+   } else {
+      R__b.WriteClassBuffer(TListOfDataMembers::Class(),this);
+   }
+}
+
+//______________________________________________________________________________
+void TListOfDataMembers::Update(TDictionary *member) {
+   // Move the member or data member to the expect set of list.
+
+   if (fClass) {
+      TDataMember *d = dynamic_cast<TDataMember*>(member);
+      if (d) {
+         if (d->GetDeclId()) {
+            if (!fIds) fIds = new TExMap;
+            fIds->Add((Long64_t)d->GetDeclId(),(Long64_t)d);
+         }
+         TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(d->GetName()) : 0;
+         if (update) fUnloaded->Remove(update);
+
+         if (! THashList::FindObject(d) ) {
+            // Calling 'just' THahList::Add would turn around and call
+            // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
+            THashList::AddLast(d);
+         }
+      }
+   } else {
+      TGlobal *g = dynamic_cast<TGlobal*>(member);
+      if (g) {
+         if (g->GetDeclId()) {
+            if (!fIds) fIds = new TExMap;
+            fIds->Add((Long64_t)g->GetDeclId(),(Long64_t)g);
+
+            TDictionary *update = fUnloaded ? (TDictionary *)fUnloaded->FindObject(g->GetName()) : 0;
+            if (update) fUnloaded->Remove(update);
+
+            if (! THashList::FindObject(g) ) {
+               // Calling 'just' THahList::Add would turn around and call
+               // TListOfDataMembers::AddLast which should *also* do the fIds->Add.
+               THashList::AddLast(g);
+            }
+         }
+      }
+   }
+
+
+}
+
+//______________________________________________________________________________
 void TListOfDataMembers::Unload()
 {
    // Mark 'all func' as being unloaded.
@@ -396,6 +483,7 @@ void TListOfDataMembers::Unload()
    while (lnk) {
       TDictionary *data = (TDictionary *)lnk->GetObject();
       UnmapObject(data);
+      fUnloaded = new THashList;
       fUnloaded->Add(data);
 
       lnk = lnk->Next();
@@ -418,6 +506,7 @@ void TListOfDataMembers::Unload(TDictionary *mem)
       // list and move it to the list of unloaded objects.
 
       UnmapObject(mem);
+      fUnloaded = new THashList;
       fUnloaded->Add(mem);
    }
 }

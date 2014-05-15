@@ -284,25 +284,22 @@ bool SelectionRules::GetDeep() const
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::RecordDecl *D) const
 {  
-   std::string str_name;    // name of the Decl
-   std::string qual_name;   // name of the Decl
-   GetDeclName(D, str_name, qual_name);
+   std::string qual_name;
+   GetDeclQualName(D,qual_name);
    return IsClassSelected(D, qual_name);
 }
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::TypedefNameDecl *D) const
 {
-   std::string str_name;    // name of the Decl
-   std::string qual_name;   // name of the Decl
-   GetDeclName(D, str_name, qual_name);
+   std::string qual_name;
+   GetDeclQualName(D,qual_name);
    return IsClassSelected(D, qual_name);
 }
 
 const ClassSelectionRule *SelectionRules::IsDeclSelected(clang::NamespaceDecl *D) const
 {  
-   std::string str_name;    // name of the Decl
-   std::string qual_name;   // name of the Decl
-   GetDeclName(D, str_name, qual_name);
+   std::string qual_name;
+   GetDeclQualName(D,qual_name);
    return IsNamespaceSelected(D, qual_name);
 }
 
@@ -463,6 +460,12 @@ bool SelectionRules::GetDeclName(clang::Decl* D, std::string& name, std::string&
       return false;
    }  
 }
+
+inline void SelectionRules::GetDeclQualName(clang::Decl* D, std::string& qual_name) const{
+      clang::NamedDecl* N = static_cast<clang::NamedDecl*> (D);
+      llvm::raw_string_ostream stream(qual_name);
+      N->getNameForDiagnostic(stream,N->getASTContext().getPrintingPolicy(),true);
+   }
 
 bool SelectionRules::GetFunctionPrototype(clang::Decl* D, std::string& prototype) const {
    if (!D) {
@@ -761,20 +764,18 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
    int fFileNo = 0;
 
    // iterate through all class selection rles
-   std::string pattern_value;
-   
    bool earlyReturn=false;
    const ClassSelectionRule* retval = nullptr;
    const clang::NamedDecl* nDecl(llvm::dyn_cast<clang::NamedDecl>(D));
    for(auto& rule : fClassSelectionRules) {
-      BaseSelectionRule::EMatchType match = rule.Match(nDecl, qual_name, "", isLinkDefFile);      
+      BaseSelectionRule::EMatchType match = rule.Match(nDecl, qual_name, "", isLinkDefFile);
       if (match != BaseSelectionRule::kNoMatch) {
          // Check if the template must have its arguments manipulated                             
          if (const clang::ClassTemplateSpecializationDecl* ctsd =
          llvm::dyn_cast_or_null<clang::ClassTemplateSpecializationDecl>(D))            
             if(const clang::ClassTemplateDecl* ctd = ctsd->getSpecializedTemplate()){
-               std::string nArgsToKeep;
-               if (rule.GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep, nArgsToKeep)){
+               const std::string& nArgsToKeep = rule.GetAttributeNArgsToKeep();
+               if (!nArgsToKeep.empty()){
                   fNormCtxt.AddTemplAndNargsToKeep(ctd->getCanonicalDecl(),
                                                    std::atoi(nArgsToKeep.c_str()));  
                }
@@ -792,8 +793,10 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
                   explicit_selector = &(rule);
                } else if (match == BaseSelectionRule::kPattern) {
                   // NOTE: weird ...
-                  if (rule.GetAttributeValue(BaseSelectionRule::kPatternID, pattern_value) &&
-                        pattern_value != "*" && pattern_value != "*::*") specific_pattern_selector = &(rule);
+                  const std::string& pattern_value=rule.GetAttributePattern();
+                  if (!pattern_value.empty() &&
+                      pattern_value != "*" &&
+                      pattern_value != "*::*") specific_pattern_selector = &(rule);
                }
             }
          } else if (rule.GetSelected() == BaseSelectionRule::kNo) {
@@ -808,8 +811,9 @@ const ClassSelectionRule *SelectionRules::IsClassSelected(clang::Decl* D, const 
             }
             if (match == BaseSelectionRule::kPattern) {
                //this is for the Linkdef selection
-               if (rule.GetAttributeValue(BaseSelectionRule::kPatternID, pattern_value) &&
-                     (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
+               const std::string& pattern_value=rule.GetAttributePattern();
+               if (!pattern_value.empty() &&
+                   (pattern_value == "*" || pattern_value == "*::*")) ++fImplNo;
                else
                   earlyReturn=true;
             }
@@ -1502,7 +1506,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
    if (!fClassSelectionRules.empty()) {
       for(std::list<ClassSelectionRule>::const_iterator it = fClassSelectionRules.begin(); 
           it != fClassSelectionRules.end(); ++it) {
-         if (!it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
+         if (BaseSelectionRule::kNo!=it->GetSelected() && !it->GetMatchFound() /* && !GetHasFileNameRule() */ ) {
             std::string name;
             if (it->GetAttributeValue("pattern", name)) {
                // keep it
@@ -1518,10 +1522,11 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                // don't complain about defined_in rules
                continue;
             }
+// For the time being a warning
+//             if (IsSelectionXMLFile()) std::cout<<"Warning - ";
+//             else std::cout<<"Error   - ";
 
-            if (IsSelectionXMLFile()) std::cout<<"Warning - ";
-            else std::cout<<"Error   - ";
-
+            std::cout<<"Warning - ";
             if (file_name_value.length()) {
                std::cout<< "unused file name rule: \n";
                //std::cout<< file_name_value << '\n';

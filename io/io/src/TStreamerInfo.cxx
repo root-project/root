@@ -255,6 +255,11 @@ void TStreamerInfo::Build()
       if (offset == kMissing) {
          continue;
       }
+      if (offset == kNeedObjectForVirtualBaseClass) {
+         Error("Build()", "Cannot stream virtual base %s of class %s",
+               base->GetName(), fClass->GetName());
+         continue;
+      }
       const char* bname  = base->GetName();
       const char* btitle = base->GetTitle();
       // this case appears with STL collections as base class.
@@ -339,7 +344,7 @@ void TStreamerInfo::Build()
          //      int n;
          //      double* MyArray; //[n]
          //
-         const char* lbracket = ::strchr(dmTitle, '[');
+         const char* lbracket = TVirtualStreamerInfo::GetElementCounterStart(dmTitle);
          const char* rbracket = ::strchr(dmTitle, ']');
          if (lbracket && rbracket) {
             const char* counterName = dm->GetArrayIndex();
@@ -778,7 +783,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
             match = kFALSE;
             oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
 
-            if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->GetListOfDataMembers() && (fClass->GetClassInfo())) {
+            if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->HasDataMemberInfo()) {
                // In the case where the read-in TStreamerInfo does not
                // match in the 'current' in memory TStreamerInfo for
                // a non foreign class (we can not get here if this is
@@ -960,11 +965,10 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */)
       // The slot was free, however it might still be reserved for the current
       // loaded version of the class
       if (fClass->IsLoaded()
-          && fClass->GetListOfDataMembers()
+          && fClass->HasDataMemberInfo()
           && (fClassVersion != 0) // We don't care about transient classes
           && (fClassVersion == fClass->GetClassVersion())
-          && (fCheckSum != fClass->GetCheckSum())
-          && (fClass->GetClassInfo())) {
+          && (fCheckSum != fClass->GetCheckSum())) {
 
          // If the old TStreamerInfo matches the in-memory one when we either
          //   - ignore the members of type enum
@@ -1790,7 +1794,7 @@ void TStreamerInfo::BuildOld()
       TDataMember* dm = 0;
 
       // First set the offset and sizes.
-      if (fClass->GetClassInfo() == 0) {
+      if (fClass->GetState() <= TClass::kEmulated) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
@@ -2150,12 +2154,12 @@ void TStreamerInfo::BuildOld()
          element->SetOffset(kMissing);
       }
 
-      if (offset != kMissing && fClass->GetClassInfo() == 0) {
+      if (offset != kMissing && fClass->GetState() <= TClass::kEmulated) {
          // Note the initialization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
          
-         // The class is NOT known to Cling (and thus IS emulated)
+         // The class is NOT known to Cling, i.e. is emulated,
          // and we need to use the calculated offset.
      
          Int_t asize;
@@ -2609,6 +2613,7 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          if (!localBase) continue;
          // We already have localBaseClass == otherBaseClass
          TClass *otherBaseClass = localBase->GetClassPointer();
+         if (!otherBaseClass) continue;
          if (otherBaseClass->IsVersioned() && localBase->GetBaseVersion() != otherBaseClass->GetClassVersion()) {
             TString msg;
             msg.Form("   The StreamerInfo of class %s read from %s%s\n"
@@ -2977,7 +2982,12 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       int i;
       for (i=0; i<il; i++) id = id*3+name[i];
 
-      if (code <= TClass::kWithTypeDef ) {
+      if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
+         // With TClass::kReflexV5 we do not want the Long64 in the name
+         // nor any typedef.
+         type = TClassEdit::ResolveTypedef(el->GetTypeName(),kTRUE);
+
+      } else if (code <= TClass::kWithTypeDef) {
          // humm ... In the streamerInfo we only have the desugared/normalized
          // names, so we are unable to calculate the name with typedefs ...
          // except for the case of the ROOT typedef (Int_t, etc.) which are
@@ -2991,6 +3001,10 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
       if (TClassEdit::IsSTLCont(type)) {
          type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault | TClassEdit::kLong64 );
       }
+      if (code == TClass::kReflex || code == TClass::kReflexNoComment) {
+         type.ReplaceAll("ULong64_t","unsigned long long");
+         type.ReplaceAll("Long64_t","long long");
+      }
 
       il = type.Length();
       for (i=0; i<il; i++) id = id*3+type[i];
@@ -3002,7 +3016,11 @@ UInt_t TStreamerInfo::GetCheckSum(TClass::ECheckSum code) const
 
 
       if (code > TClass::kNoRange) {
-         const char *left = strstr(el->GetTitle(),"[");
+         const char *left;
+         if (code > TClass::kNoRangeCheck)
+            left = TVirtualStreamerInfo::GetElementCounterStart(el->GetTitle());
+         else
+            left = strstr(el->GetTitle(),"[");
          if (left) {
             const char *right = strstr(left,"]");
             if (right) {
@@ -3544,7 +3562,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
 
    TClass *cl = TClass::GetClass(GetName());
    if (cl) {
-      if (cl->GetClassInfo()) return 0; // skip known classes
+      if (cl->HasInterpreterInfo()) return 0; // skip known classes
    }
    Bool_t isTemplate = kFALSE;
    if (strchr(GetName(),':')) {
@@ -3560,7 +3578,7 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
                   // We have a scope
                   TString nsname(GetName(), i-1);
                   cl = gROOT->GetClass(nsname);
-                  if (cl && (cl->Size()!=0 || (cl->Size()==0 && cl->GetClassInfo()==0 /*empty 'base' class on file*/))) {
+                  if (cl && (cl->Size()!=0 || (cl->Size()==0 && !cl->HasInterpreterInfo() /*empty 'base' class on file*/))) {
                      // This class is actually nested.
                      return 0;
                   } else if (cl == 0 && extrainfos != 0) {
@@ -3763,7 +3781,7 @@ TStreamerElement* TStreamerInfo::GetStreamerElement(const char* datamember, Int_
 
    // Not found, so now try the data members and base classes
    // of the base classes of our class.
-   if (fClass->GetClassInfo()) {
+   if (fClass->HasDataMemberInfo()) {
       // Our class has a dictionary loaded, use it to search the base classes.
       TStreamerElement* base_element = 0;
       TBaseClass* base = 0;
@@ -4100,6 +4118,31 @@ void TStreamerInfo::InsertArtificialElements(const TObjArray *rules)
             break;
          }
       }
+      // NOTE: Before adding the rule we should check that the source do
+      // existing in this StreamerInfo.
+      const TObjArray *sources = rule->GetSource();
+      TIter input(sources);
+      TObject *src;
+      while((src = input())) {
+         if ( !GetElements()->FindObject(src->GetName()) ) {
+            // Missing source.
+#if 0 // Don't warn about not activating the rule.  If don't warn the user can
+      // have more flexibility in specifiying when the rule applies and relying
+      // on both the version number *and* the presence of the source members.
+      // Activating this warning would for example mean that we need to carefully
+      // tweak $ROOTSYS/etc/class.rules.
+            TString ruleStr;
+            rule->AsString(ruleStr);
+            Warning("InsertArtificialElements","For class %s in StreamerInfo %d is missing the source data member %s when trying to apply the rule:\n   %s",
+                   GetName(),GetClassVersion(),src->GetName(),ruleStr.Data());
+            rule = 0;
+#endif
+            break;
+         }
+      }
+
+      if (!rule) continue;
+
       TStreamerArtificial *newel;
       if (rule->GetTarget()==0) {
          TString newName;

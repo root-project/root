@@ -29,7 +29,7 @@ namespace cling {
    class Interpreter;
 }
 
-class ClassSelectionRule: public BaseSelectionRule
+class ClassSelectionRule final : public BaseSelectionRule
 {
 private:
    std::list<VariableSelectionRule> fFieldSelectionRules;

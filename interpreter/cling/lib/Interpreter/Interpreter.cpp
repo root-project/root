@@ -109,10 +109,11 @@ namespace cling {
     if (!i->isPrintingDebug())
       return;
     const CompilerInstance& CI = *m_Interpreter->getCI();
+    CodeGenerator* CG = i->getCodeGenerator();
     m_State.reset(new ClangInternalState(CI.getASTContext(),
                                          CI.getPreprocessor(),
-                                         i->getCodeGenerator()->GetModule(),
-                                         i->getCodeGenerator(),
+                                         CG ? CG->GetModule() : 0,
+                                         CG,
                                          "aName"));
   }
 
@@ -214,12 +215,7 @@ namespace cling {
   }
 
   const char* Interpreter::getVersion() const {
-    return "cling http://cern.ch/cling - version "
-#ifdef CLING_VERSION
-      CLING_VERSION;
-#else
-      "<unknown>";
-#endif
+    return CLING_VERSION;
   }
 
   void Interpreter::handleFrontendOptions() {
@@ -1050,6 +1046,11 @@ namespace cling {
     return m_IncrParser->getLastTransaction();
   }
 
+  const Transaction* Interpreter::getCurrentTransaction() const {
+    return m_IncrParser->getCurrentTransaction();
+  }
+
+
   void Interpreter::enableDynamicLookup(bool value /*=true*/) {
     m_DynamicLookupEnabled = value;
 
@@ -1101,7 +1102,9 @@ namespace cling {
   void* Interpreter::getAddressOfGlobal(llvm::StringRef SymName,
                                         bool* fromJIT /*=0*/) const {
     // Return a symbol's address, and whether it was jitted.
-    llvm::Module* module = m_IncrParser->getCodeGenerator()->GetModule();
+    if (!m_IncrParser->hasCodeGenerator())
+      return 0;
+    llvm::Module* module = getCodeGenerator()->GetModule();
     return m_Executor->getAddressOfGlobal(module, SymName, fromJIT);
   }
 

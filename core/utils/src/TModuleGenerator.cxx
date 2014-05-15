@@ -41,7 +41,6 @@ using namespace clang;
 TModuleGenerator::TModuleGenerator(CompilerInstance* CI,
                                    const char* shLibFileName):
    fCI(CI),
-   fShLibFileName(shLibFileName),
    fIsPCH(!strcmp(shLibFileName, "etc/allDict.cxx")),
    fDictionaryName(llvm::sys::path::stem(shLibFileName)),
    fModuleDirName(llvm::sys::path::parent_path(shLibFileName))
@@ -283,42 +282,6 @@ std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
    return out;
 }
 
-std::ostream& TModuleGenerator::WriteAllSeenHeadersArray(std::ostream& out) const
-{
-   
-   std::vector<std::string> headerNames;
-   headerNames.reserve(200);
-   
-   SourceManager& srcMgr = fCI->getSourceManager();
-   for (SourceManager::fileinfo_iterator i = srcMgr.fileinfo_begin(),
-           e = srcMgr.fileinfo_end(); i != e; ++i) {
-      const FileEntry* fileEntry = i->first;
-      headerNames.push_back(fileEntry->getName());
-   }
-
-   // Sort them in order to obtain always identical dictionaries
-   std::sort(headerNames.begin(),headerNames.end());
-
-   for (std::vector<std::string>::iterator headerNameIt = headerNames.begin();
-        headerNameIt != headerNames.end(); ++headerNameIt){
-      // Skip these 2 files as they have a unique substring inside and make the 
-      // dictionary non reproducible. This prevents the correct functioning of 
-      // cached builds.
-      if (headerNameIt->find(fUmbrellaName) != std::string::npos ){
-         out << "// Umbrella file skipped for reproducibility\n";
-      }
-      else if (headerNameIt->find(fContentName) != std::string::npos){
-         out << "// Content file skipped for reproducibility\n";
-      }
-      else {
-         out << "\"" << *headerNameIt << "\",\n";
-      }
-   }   
-   
-   out << "0" << std::endl;
-   return out;
-}
-
 std::ostream& TModuleGenerator::WriteStringVec(const std::vector<std::string>& vec,
                                       std::ostream& out) const
 {
@@ -414,9 +377,6 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
       WriteHeaderArray(out);
    };
    out << "    };\n"
-      "    static const char* allHeaders[] = {\n";
-   WriteAllSeenHeadersArray(out) << 
-      "    };\n"
       "    static const char* includePaths[] = {\n";                           
    WriteIncludePathArray(out) << 
       "    };\n"
@@ -425,7 +385,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
       "    static bool isInitialized = false;\n"
       "    if (!isInitialized) {\n"
       "      TROOT::RegisterModule(\"" << GetDictionaryName() << "\",\n"
-      "        headers, allHeaders, includePaths, payloadCode,\n"
+      "        headers, includePaths, payloadCode,\n"
       "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
       "      isInitialized = true;\n"
       "    }\n"
@@ -455,9 +415,6 @@ void TModuleGenerator::WriteContentHeader(std::ostream& out) const
 
    out << "const char* arrIncludes[] = {\n";
    WriteHeaderArray(out) << "};\n";
-
-   out << "const char* arrAllHeaders[] = {\n";
-   WriteAllSeenHeadersArray(out) << "};\n";
 
    out << "const char* arrIncludePaths[] = {\n";
    WriteIncludePathArray(out) << "};\n";

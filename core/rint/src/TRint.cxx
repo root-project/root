@@ -383,14 +383,7 @@ void TRint::Run(Bool_t retrn)
                if (file->String().EndsWith(".root") || file->String().BeginsWith("file:")) {
                   rootfile = kTRUE;
                } else {
-                  FILE *mayberootfile = fopen(file->String(),"rb");
-                  if (mayberootfile) {
-                     char header[5];
-                     if (fgets(header,5,mayberootfile)) {
-                        rootfile = strncmp(header,"root",4)==0;
-                     }
-                     fclose(mayberootfile);
-                  }
+                  rootfile = gROOT->IsRootFile(file->String());
                }
                if (rootfile) {
                   // special trick to be able to open files using UNC path names

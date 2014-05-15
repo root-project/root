@@ -114,6 +114,7 @@ file `simple.pdf`.
 ...
    hist->Draw();
 ```    
+-   `TGaxis::SetMaxDigits()` was not acitve on standalone `TGaxis`.
     
 ### TLegend
 
@@ -187,6 +188,8 @@ file `simple.pdf`.
     between `TLatex`, `TMathText` and `TTexDump`.
 -   Some operators like `#minus`, `#plus`, `#mp`, `#hbar` etc ... 
     ignored the color  defined by the operator `#color`. 
+-   With the Cocoa backend on Mac the text string were a bit too large
+    compared to the TTF rendering. 
 
 ### TPave
 

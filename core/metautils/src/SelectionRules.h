@@ -95,12 +95,12 @@ public:
    //const BaseSelectionRule  *IsDeclSelected(clang::Decl* D) const; 
    const ClassSelectionRule *IsDeclSelected(clang::RecordDecl* D) const;
    const ClassSelectionRule *IsDeclSelected(clang::TypedefNameDecl* D) const;
-   const ClassSelectionRule *IsDeclSelected(clang::NamespaceDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::EnumDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::VarDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::FieldDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::FunctionDecl* D) const; 
-   const BaseSelectionRule *IsDeclSelected(clang::Decl* D) const;   
+   const ClassSelectionRule *IsDeclSelected(clang::NamespaceDecl* D) const;
+   const BaseSelectionRule *IsDeclSelected(clang::EnumDecl* D) const;
+   const BaseSelectionRule *IsDeclSelected(clang::VarDecl* D) const;
+   const BaseSelectionRule *IsDeclSelected(clang::FieldDecl* D) const;
+   const BaseSelectionRule *IsDeclSelected(clang::FunctionDecl* D) const;
+   const BaseSelectionRule *IsDeclSelected(clang::Decl* D) const;
 
    const ClassSelectionRule *IsClassSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
    const ClassSelectionRule *IsNamespaceSelected(clang::Decl* D, const std::string& qual_name) const; // is the class selected
@@ -134,6 +134,9 @@ public:
    // gets the name and qualified name of the Decl
    bool GetDeclName(clang::Decl* D, std::string& name, std::string& qual_name) const;
    
+   // gets the qualname of the decl, no checks performed
+   inline void GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
+
    // gets the function prototype if the Decl (if it is global function or method)
    bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
    

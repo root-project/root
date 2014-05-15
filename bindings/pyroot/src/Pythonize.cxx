@@ -2033,21 +2033,33 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       PyObject* pyfullname = PyObject_GetAttr( pyclass, PyStrings::gName );
       TClass* klass = TClass::GetClass( PyROOT_PyUnicode_AsString( pyfullname ) );
       Py_DECREF( pyfullname );
-      TMethod* meth = klass->GetMethodAllAny( "begin" );
 
-      TClass* iklass = 0;
-      if ( meth ) {
-         Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
-         iklass = TClass::GetClass( meth->GetReturnTypeNormalizedName().c_str() );
-         gErrorIgnoreLevel = oldl;
-      }
+      if (!klass->InheritsFrom(TCollection::Class())) {
+         // TCollection has a begin and end method so that they can be used in
+         // the C++ range expression.  However, unlike any other use of TIter,
+         // TCollection::begin must include the first iteration.  PyROOT is
+         // handling TIter as a special case (as it should) and also does this
+         // first iteration (via the first call to Next to get the first element)
+         // and thus using begin in this case lead to the first element being
+         // forgotten by PyROOT.
+         // i.e. Don't search for begin in TCollection since we can not use.'
 
-      if ( iklass && iklass->GetClassInfo() ) {
-         ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)StlSequenceIter;
-         Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter, METH_NOARGS );
-      } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
-         Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
-         Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+         TMethod* meth = klass->GetMethodAllAny( "begin" );
+
+         TClass* iklass = 0;
+         if ( meth ) {
+            Int_t oldl = gErrorIgnoreLevel; gErrorIgnoreLevel = 3000;
+            iklass = TClass::GetClass( meth->GetReturnTypeNormalizedName().c_str() );
+            gErrorIgnoreLevel = oldl;
+         }
+
+         if ( iklass && iklass->GetClassInfo() ) {
+            ((PyTypeObject*)pyclass)->tp_iter     = (getiterfunc)StlSequenceIter;
+            Utility::AddToClass( pyclass, "__iter__", (PyCFunction) StlSequenceIter, METH_NOARGS );
+         } else if ( HasAttrDirect( pyclass, PyStrings::gGetItem ) && HasAttrDirect( pyclass, PyStrings::gLen ) ) {
+            Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+            Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
+         }
       }
    }
 
@@ -2333,6 +2345,12 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
 
       return kTRUE;
+   }
+
+   if ( name.substr(0,6) == "TArray" ) {    // allow proper iteration
+      // __len__ is already set from GetSize()
+      Utility::AddToClass( pyclass, "_getitem__unchecked", "__getitem__" );
+      Utility::AddToClass( pyclass, "__getitem__", (PyCFunction) CheckedGetItem, METH_O );
    }
 
 // Make RooFit 'using' member functions available (not supported by dictionary)

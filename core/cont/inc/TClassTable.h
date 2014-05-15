@@ -29,6 +29,8 @@
 #include "TString.h"
 #endif
 
+class TProtoClass;
+
 class TClassRec {
 public:
    char            *fName;
@@ -36,6 +38,7 @@ public:
    Int_t            fBits;
    VoidFuncPtr_t    fDict;
    const type_info *fInfo;
+   TProtoClass     *fProto;
    TClassRec       *fNext;
 };
 
@@ -76,12 +79,14 @@ public:
    static void          Add(const char *cname, Version_t id,
                             const type_info &info, VoidFuncPtr_t dict,
                             Int_t pragmabits);
+   static void          Add(TProtoClass *protoClass);
    static char         *At(int index);
    int                  Classes();
    static Version_t     GetID(const char *cname);
    static Int_t         GetPragmaBits(const char *name);
    static VoidFuncPtr_t GetDict(const char *cname);
    static VoidFuncPtr_t GetDict(const type_info& info);
+   static TProtoClass  *GetProto(const char *cname);
    static void          Init();
    static char         *Next();
    void                 Print(Option_t *option="") const;

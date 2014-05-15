@@ -92,7 +92,7 @@ public:
 
 private:
    bool tryAutoloadInternal(llvm::StringRef Name, clang::LookupResult &R, 
-                            clang::Scope *S);
+                            clang::Scope *S, bool noLookup=false);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

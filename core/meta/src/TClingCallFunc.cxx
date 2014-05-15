@@ -265,7 +265,7 @@ TClingCallFunc::compile_wrapper(const string& wrapper_name, const string& wrappe
 void
 TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
                   ostringstream& callbuf, string& type_name,
-                  bool& isReference, int& ptrCnt, int indent_level,
+                  bool& isReference, bool& isPointer, int indent_level,
                   bool forArgument)
 {
    //
@@ -275,7 +275,6 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
    const FunctionDecl* FD = fMethod->GetMethodDecl();
    PrintingPolicy Policy(FD->getASTContext().getPrintingPolicy());
    isReference = false;
-   ptrCnt = 0;
    if (QT->isRecordType() && forArgument) {
       // Note: We treat object of class type as if it were a reference
       //       type because we hold it by pointer.
@@ -283,68 +282,64 @@ TClingCallFunc::collect_type_info(QualType& QT, ostringstream& typedefbuf,
       ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
       return;
    }
-   while (1) {
-      if (QT->isArrayType()) {
-         string ar_typedef_name;
-         {
-            ostringstream ar;
-            ar << "AR" << wrapper_serial++;
-            type_name = ar.str();
-            raw_string_ostream OS(ar_typedef_name);
-            QT.print(OS, Policy, type_name);
-            OS.flush();
-         }
-         for (int i = 0; i < indent_level; ++i) {
-            typedefbuf << indent_string;
-         }
-         typedefbuf << "typedef " << ar_typedef_name << ";\n";
-         break;
+   if (QT->isFunctionPointerType()) {
+      string fp_typedef_name;
+      {
+         ostringstream nm;
+         nm << "FP" << wrapper_serial++;
+         type_name = nm.str();
+         raw_string_ostream OS(fp_typedef_name);
+         QT.print(OS, Policy, type_name);
+         OS.flush();
       }
-      else if (QT->isFunctionPointerType()) {
-         string fp_typedef_name;
-         {
-            ostringstream nm;
-            nm << "FP" << wrapper_serial++;
-            type_name = nm.str();
-            raw_string_ostream OS(fp_typedef_name);
-            QT.print(OS, Policy, type_name);
-            OS.flush();
-         }
-         for (int i = 0; i < indent_level; ++i) {
-            typedefbuf << indent_string;
-         }
-         typedefbuf << "typedef " << fp_typedef_name << ";\n";
-         break;
+      for (int i = 0; i < indent_level; ++i) {
+         typedefbuf << indent_string;
       }
-      else if (QT->isMemberPointerType()) {
-         string mp_typedef_name;
-         {
-            ostringstream nm;
-            nm << "MP" << wrapper_serial++;
-            type_name = nm.str();
-            raw_string_ostream OS(mp_typedef_name);
-            QT.print(OS, Policy, type_name);
-            OS.flush();
-         }
-         for (int i = 0; i < indent_level; ++i) {
-            typedefbuf << indent_string;
-         }
-         typedefbuf << "typedef " << mp_typedef_name << ";\n";
-         break;
-      }
-      else if (QT->isPointerType()) {
-         ++ptrCnt;
-         QT = cast<clang::PointerType>(QT)->getPointeeType();
-         continue;
-      }
-      else if (QT->isReferenceType()) {
-         isReference = true;
-         QT = cast<ReferenceType>(QT)->getPointeeType();
-         continue;
-      }
-      ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
-      break;
+      typedefbuf << "typedef " << fp_typedef_name << ";\n";
+      return;
    }
+   else if (QT->isMemberPointerType()) {
+      string mp_typedef_name;
+      {
+         ostringstream nm;
+         nm << "MP" << wrapper_serial++;
+         type_name = nm.str();
+         raw_string_ostream OS(mp_typedef_name);
+         QT.print(OS, Policy, type_name);
+         OS.flush();
+      }
+      for (int i = 0; i < indent_level; ++i) {
+         typedefbuf << indent_string;
+      }
+      typedefbuf << "typedef " << mp_typedef_name << ";\n";
+      return;
+   }
+   else if (QT->isPointerType()) {
+      isPointer = true;
+      QT = cast<clang::PointerType>(QT)->getPointeeType();
+   }
+   else if (QT->isReferenceType()) {
+      isReference = true;
+      QT = cast<ReferenceType>(QT)->getPointeeType();
+   }
+   // Fall through for the array type to deal with reference/pointer ro array type.
+   if (QT->isArrayType()) {
+      string ar_typedef_name;
+      {
+         ostringstream ar;
+         ar << "AR" << wrapper_serial++;
+         type_name = ar.str();
+         raw_string_ostream OS(ar_typedef_name);
+         QT.print(OS, Policy, type_name);
+         OS.flush();
+      }
+      for (int i = 0; i < indent_level; ++i) {
+         typedefbuf << indent_string;
+      }
+      typedefbuf << "typedef " << ar_typedef_name << ";\n";
+      return;
+   }
+   ROOT::TMetaUtils::GetNormalizedName(type_name, QT, *fInterp, fNormCtxt);
 }
 
 void
@@ -365,9 +360,9 @@ TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
       QualType QT = Ty.getCanonicalType();
       string type_name;
       bool isReference = false;
-      int ptrCnt = 0;
+      bool isPointer = false;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, ptrCnt, indent_level,true);
+                        isReference, isPointer, indent_level,true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -381,19 +376,10 @@ TClingCallFunc::make_narg_ctor(const unsigned N, ostringstream& typedefbuf,
          }
       }
       if (isReference) {
-         string stars;
-         for (int j = 0; j < ptrCnt; ++j) {
-            stars.push_back('*');
-         }
-         callbuf << "**(" << type_name.c_str() << stars << "**)args["
+         callbuf << "**(" << type_name.c_str() << "**)args["
                  << i << "]";
-      }
-      else if (ptrCnt) {
-         string stars;
-         for (int j = 0; j < ptrCnt; ++j) {
-            stars.push_back('*');
-         }
-         callbuf << "*(" << type_name.c_str() << stars << "*)args["
+      } else if (isPointer) {
+         callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       }
       else {
@@ -442,9 +428,9 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
       QualType QT = Ty.getCanonicalType();
       string type_name;
       bool isReference = false;
-      int ptrCnt = 0;
+      bool isPointer = false;
       collect_type_info(QT, typedefbuf, callbuf, type_name,
-                        isReference, ptrCnt, indent_level, true);
+                        isReference, isPointer, indent_level, true);
       if (i) {
          callbuf << ',';
          if (i % 2) {
@@ -458,22 +444,15 @@ TClingCallFunc::make_narg_call(const unsigned N, ostringstream& typedefbuf,
          }
       }
       if (isReference) {
-         string stars;
-         for (int j = 0; j < ptrCnt; ++j) {
-            stars.push_back('*');
-         }
-         callbuf << "**(" << type_name.c_str() << stars << "**)args["
+         callbuf << "**(" << type_name.c_str() << "**)args["
                  << i << "]";
-      }
-      else if (ptrCnt) {
-         string stars;
-         for (int j = 0; j < ptrCnt; ++j) {
-            stars.push_back('*');
-         }
-         callbuf << "*(" << type_name.c_str() << stars << "*)args["
+      } else if (isPointer) {
+         callbuf << "*(" << type_name.c_str() << "**)args["
                  << i << "]";
       }
       else {
+         // pointer falls back to non-pointer case; the argument preserves
+         // the "pointerness" (i.e. doesn't refernce the value).
          callbuf << "*(" << type_name.c_str() << "*)args[" << i << "]";
       }
    }
@@ -608,28 +587,21 @@ TClingCallFunc::make_narg_call_with_return(const unsigned N, const string& class
          callbuf << "new (ret) ";
          string type_name;
          bool isReference = false;
-         int ptrCnt = 0;
+         bool isPointer = false;
          collect_type_info(QT, typedefbuf, callbuf, type_name,
-                           isReference, ptrCnt, indent_level, false);
+                           isReference, isPointer, indent_level, false);
          //
          //  Write the type part of the placement new.
          //
+         callbuf << "(" << type_name.c_str();
          if (isReference) {
-            string stars;
-            for (int j = 0; j < ptrCnt; ++j) {
-               stars.push_back('*');
-            }
-            callbuf << "(" << type_name.c_str() << stars << "*) (&";
+            callbuf << "*) (&";
          }
-         else if (ptrCnt) {
-            string stars;
-            for (int j = 0; j < ptrCnt; ++j) {
-               stars.push_back('*');
-            }
-            callbuf << "(" << type_name.c_str() << stars << ") (";
+         else if (isPointer) {
+            callbuf << "*) (";
          }
          else {
-            callbuf << "(" << type_name.c_str() << ") (";
+            callbuf << ") (";
          }
          //
          //  Write the actual function call.

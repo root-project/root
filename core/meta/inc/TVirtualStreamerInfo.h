@@ -81,6 +81,7 @@ public:
       kArtificial  = 1000, 
       kCacheNew    = 1001,
       kCacheDelete = 1002,
+      kNeedObjectForVirtualBaseClass = 99997,
       kMissing     = 99999
    };
 
@@ -150,6 +151,7 @@ public:
    virtual void        TagFile(TFile *fFile) = 0;
    virtual void        Update(const TClass *oldClass, TClass *newClass) = 0;
 
+   static const char         *GetElementCounterStart(const char *dmTitle);
    static TStreamerBasicType *GetElementCounter(const char *countName, TClass *cl);
 
    static Bool_t       CanOptimize();

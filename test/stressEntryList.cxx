@@ -42,6 +42,7 @@
 #include "TTree.h"
 #include "TChain.h"
 #include "TRandom.h"
+#include "TROOT.h"
 #include "TH1F.h"
 #include "TCut.h"
 #include "TFile.h"
@@ -622,8 +623,9 @@ Int_t stressEntryList(Int_t nentries, Int_t nfiles)
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
+   gROOT->SetBatch();
    TApplication theApp("App", &argc, argv);
    Int_t nentries = 10000;
    Int_t nfiles = 10;

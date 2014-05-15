@@ -209,7 +209,6 @@ namespace {
    struct ModuleHeaderInfo_t {
       ModuleHeaderInfo_t(const char* moduleName,
                          const char** headers,
-                         const char** allHeaders,
                          const char** includePaths,
                          const char* payloadCode,
                          void (*triggerFunc)(),
@@ -218,7 +217,6 @@ namespace {
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
-                           fAllHeaders(allHeaders),
                            fIncludePaths(includePaths),
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
@@ -227,7 +225,6 @@ namespace {
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
       const char* fPayloadCode; // Additional code to be given to cling at library load
-      const char** fAllHeaders; // 0-terminated array of all seen header files
       const char** fIncludePaths; // 0-terminated array of header files      
       void (*fTriggerFunc)(); // Pointer to the dict initialization used to find the library name
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
@@ -1698,7 +1695,6 @@ void TROOT::InitInterpreter()
          // process buffered module registrations
       fInterpreter->RegisterModule(li->fModuleName,
                                    li->fHeaders,
-                                   li->fAllHeaders,
                                    li->fIncludePaths,
                                    li->fPayloadCode,
                                    li->fTriggerFunc,
@@ -1833,6 +1829,23 @@ Int_t TROOT::LoadClass(const char * /*classname*/, const char *libname,
    }
 
    return err;
+}
+
+//______________________________________________________________________________
+Bool_t TROOT::IsRootFile(const char *filename) const
+{
+   // Return true if the file is local and is (likely) to be a ROOT file
+
+   Bool_t result = kFALSE;
+   FILE *mayberootfile = fopen(filename,"rb");
+   if (mayberootfile) {
+      char header[5];
+      if (fgets(header,5,mayberootfile)) {
+         result = strncmp(header,"root",4)==0;
+      }
+      fclose(mayberootfile);
+   }
+   return result;
 }
 
 //______________________________________________________________________________
@@ -2110,7 +2123,6 @@ static void CallCloseFiles()
 //______________________________________________________________________________
 void TROOT::RegisterModule(const char* modulename,
                            const char** headers,                           
-                           const char** allHeaders,
                            const char** includePaths,
                            const char* payloadCode,
                            void (*triggerFunc)(),
@@ -2182,11 +2194,12 @@ void TROOT::RegisterModule(const char* modulename,
    
    // Now register with TCling.
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, allHeaders,
-                             includePaths, payloadCode, triggerFunc, fwdDeclsArgToSkip, classesHeaders);
+      gCling->RegisterModule(modulename, headers, includePaths, payloadCode,
+                             triggerFunc, fwdDeclsArgToSkip, classesHeaders);
    } else {
-      GetModuleHeaderInfoBuffer().push_back(ModuleHeaderInfo_t (modulename, headers, allHeaders,
-                                                                includePaths, payloadCode, triggerFunc, fwdDeclsArgToSkip,classesHeaders));
+      GetModuleHeaderInfoBuffer()
+         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode,
+                                        triggerFunc, fwdDeclsArgToSkip,classesHeaders));
    }
 }
 
@@ -2431,4 +2444,10 @@ Int_t TROOT::RootVersionCode()
    // Return ROOT version code as defined in RVersion.h.
 
    return ROOT_VERSION_CODE;
+}
+
+//______________________________________________________________________________
+const char**& TROOT::GetExtraInterpreterArgs() {
+   static const char** extraInterpArgs = 0;
+   return extraInterpArgs;
 }

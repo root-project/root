@@ -87,7 +87,7 @@ $(call pcmrule,THREAD)
 $(THREADDS):    $(THREADH) $(THREADL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,THREAD)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL)
+		$(ROOTCLINGSTAGE1) -f $@ $(call dictModule,THREAD) -c $(THREADH) $(THREADL) && touch lib/libThread_rdict.pcm
 
 $(THREADMAP):   $(THREADH) $(THREADL) $(ROOTCLINGSTAGE1DEP) $(call pcmdep,THREAD)
 		$(MAKEDIR)

@@ -511,7 +511,7 @@ long TClingBaseClassInfo::Property() const
    if (Paths.getDetectedVirtual()) {
       property |= kIsVirtualBase;
    }
-   
+
    clang::AccessSpecifier AS = clang::AS_public;
    // Derived: public Mid; Mid : protected Base: Derived inherits protected Base?
    for (clang::CXXBasePaths::const_paths_iterator IB = Paths.begin(), EB = Paths.end();

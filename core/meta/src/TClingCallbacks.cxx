@@ -74,7 +74,7 @@ TClingCallbacks::TClingCallbacks(cling::Interpreter* interp)
 //pin the vtable here
 TClingCallbacks::~TClingCallbacks() {}
 
-void TClingCallbacks::InclusionDirective(clang::SourceLocation /*HashLoc*/,
+void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          const clang::Token &/*IncludeTok*/,
                                          llvm::StringRef FileName,
                                          bool /*IsAngled*/,
@@ -86,19 +86,35 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation /*HashLoc*/,
    // Method called via Callbacks->InclusionDirective()
    // in Preprocessor::HandleIncludeDirective(), invoked whenever an
    // inclusion directive has been processed, and allowing us to try
-   // to autoload classes using their header file name. For example
-   // try to autoload TGClient (libGui) when seeing #include "TGClient.h"
+   // to autoload libraries using their header file name.
+   // Two strategies are tried:
+   // 1) The header name is looked for in the list of autoload keys
+   // 2) Heurists are applied to the header name to distill a classname.
+   //    For example try to autoload TGClient (libGui) when seeing #include "TGClient.h"
+   //    or TH1F in presence of TH1F.h.
+   // Strategy 2) is tried only if 1) fails.
 
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively) return;
+   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively || !FileName.endswith(".h")) return;
 
-   std::string ClassName = FileName.str();
-   if ((ClassName.find(".h") != std::string::npos) && (ClassName[0] == 'T')) {
-      ClassName.erase(ClassName.find(".h"), std::string::npos);
-      Sema &SemaR = m_Interpreter->getSema();
-      DeclarationName Name = &SemaR.getASTContext().Idents.get(ClassName.c_str());
-      LookupResult R(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
-      tryAutoloadInternal(ClassName, R, SemaR.getCurScope());
-   }
+   std::string localString(FileName.str());
+
+   Sema &SemaR = m_Interpreter->getSema();
+   DeclarationName Name = &SemaR.getASTContext().Idents.get(localString.c_str());
+   LookupResult RHeader(SemaR, Name, sLoc, Sema::LookupOrdinaryName);
+
+   bool success = tryAutoloadInternal(localString, RHeader, SemaR.getCurScope(),true);
+
+   if (success || !FileName.startswith("T")) return;
+
+   // Old implementation, revisited. We leave in place the old heuristics, for cases
+   // like #include "TH1F.h"
+   // Try to recover the class name
+   localString.resize(localString.size()-2); // 2 chars: '.','h'
+   Name = &SemaR.getASTContext().Idents.get(localString.c_str());
+   LookupResult RReconnstructedClassName(SemaR, Name, SourceLocation(), Sema::LookupOrdinaryName);
+   tryAutoloadInternal(localString, RReconnstructedClassName, SemaR.getCurScope());
+
+
 }
 
 // Preprocessor callbacks used to handle special cases like for example:
@@ -303,7 +319,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 // returns true when a declaration is found and no error should be emitted.
 //
 bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
-                                          Scope *S) {
+                                          Scope *S, bool noLookup) {
    Sema &SemaR = m_Interpreter->getSema();
 
    // Try to autoload first if autoloading is enabled
@@ -323,7 +339,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
      bool lookupSuccess = false;
      if (getenv("ROOT_MODULES")) {
         if (TCling__AutoLoadCallback(Name.data())) {
-           lookupSuccess = SemaR.LookupName(R, S);
+           lookupSuccess = noLookup || SemaR.LookupName(R, S);
         }
      }
      else {
@@ -347,7 +363,7 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
         if (TCling__AutoLoadCallback(Name.data())) {
            pushedDCAndS.pop();
            cleanupRAII.pop();
-           lookupSuccess = SemaR.LookupName(R, S);
+           lookupSuccess = noLookup || SemaR.LookupName(R, S);
         }
      }
 
@@ -519,6 +535,13 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
       return false;
 
    if (!R.empty())
+      return false;
+
+   const Transaction* T = getInterpreter()->getCurrentTransaction();
+   if (!T)
+      return false;
+   const cling::CompilationOptions& COpts = T->getCompilationOpts();
+   if (!COpts.DynamicScoping)
       return false;
 
    // FIXME: Figure out better way to handle:

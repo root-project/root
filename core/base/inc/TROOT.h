@@ -253,6 +253,7 @@ public:
    Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
+   Bool_t            IsRootFile(const char *filename) const;
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
@@ -268,7 +269,6 @@ public:
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
-                                    const char** allHeaders,
                                     const char** includePaths,
                                     const char* payLoadCode,
                                     void (*triggerFunc)(),
@@ -310,6 +310,7 @@ public:
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);
    static Int_t       RootVersionCode();
+   static const char**&GetExtraInterpreterArgs();
    
    ClassDef(TROOT,0)  //Top level (or root) structure for all classes
 };

@@ -121,15 +121,11 @@ private: // Data Members
    void*           fPrevLoadedDynLibInfo; // Internal info to mark the last loaded libray.
    std::vector<void*> fRegisterModuleDyLibs; // Stack of libraries currently running RegisterModule
    TClingCallbacks* fClingCallbacks; // cling::Interpreter owns it.
-   Bool_t          fHaveSinglePCM; // Whether a single ROOT PCM was provided
    struct CharPtrCmp_t {
       bool operator()(const char* a, const char *b) const {
          return strcmp(a, b) < 0;
       }
    };
-   typedef std::map<const char* /*hdr*/, const char* /*mod*/, CharPtrCmp_t>
-      ModuleForHeader_t;
-   ModuleForHeader_t fModuleForHeader; // Which module a header is in. Assumes string storage in dictionary.
    std::set<TClass*> fModTClasses;
    std::vector<std::pair<TClass*,VoidFuncPtr_t> > fClassesToUpdate;
    void* fAutoLoadCallBack;
@@ -140,7 +136,7 @@ private: // Data Members
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    bool fHeaderParsingOnDemand;
-   
+
 
 public: // Public Interface
    virtual ~TCling();
@@ -155,6 +151,7 @@ public: // Public Interface
    void   *SetAutoLoadCallBack(void* cb) { void* prev = fAutoLoadCallBack; fAutoLoadCallBack = cb; return prev; }
    Int_t   AutoLoad(const char* cls);
    Int_t   AutoLoad(const std::type_info& typeinfo);
+   Int_t   AutoParse(const char* cls);
    void*   LazyFunctionCreatorAutoload(const std::string& mangled_name);
    Bool_t  IsAutoLoadNamespaceCandidate(const char* name);
    Bool_t  IsAutoLoadNamespaceCandidate(const clang::NamespaceDecl* nsDecl);
@@ -195,9 +192,8 @@ public: // Public Interface
    void    PrintIntro();
    void    RegisterModule(const char* modulename,
                           const char** headers,
-                          const char** allHeaders,
                           const char** includePaths,
-                          const char* payloadCode,                          
+                          const char* payloadCode,
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders);
@@ -553,7 +549,6 @@ private: // Private Utility Functions
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);
    void UnloadClassMembers(TClass* cl, const clang::DeclContext* DC);
-   Int_t AutoParse(const char* cls);
 
 };
 

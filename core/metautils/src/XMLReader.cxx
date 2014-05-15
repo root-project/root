@@ -773,30 +773,13 @@ bool XMLReader::Parse(std::ifstream &file, SelectionRules& out)
             // save attributes in a map to then format the new line which is of the form
             // #pragma read sourceClass="class1" targetClass="class2" version="[1-]" source="" target="transient_" code="{ newObj->initializeTransientss(); }";
             // where "#pragma read" should not appear
-            // Therefore these attributes are expected:
-            // 1) sourceClass
-            // 2) targetClass
-            // 3) version
-            // 4) source
-            // 5) target
-            // 6) code
+            // The check for the sanity of the pragma is delegated to the ProcessReadPragma routine
+
             std::map<std::string,std::string> pragmaArgs;
             for (int i = 0, n = attr.size(); i < n; ++i) {
                pragmaArgs[attr[i].fName]=attr[i].fValue;
             }
             
-            bool mapIsSane= pragmaArgs.count("sourceClass") == 1 &&
-                            pragmaArgs.count("targetClass") == 1 &&
-                            pragmaArgs.count("version") == 1 &&
-                            pragmaArgs.count("source") == 1 &&
-                            pragmaArgs.count("target") == 1 &&
-                            pragmaArgs.count("code") == 1;
-                            
-            if (!mapIsSane){
-               ROOT::TMetaUtils::Error(0,"At line %s. Incomplete ioread tag.\n",lineNumCharp);
-               return false;
-            }
-
             std::stringstream pragmaLineStream;
             const std::string attrs[10] ={"sourceClass",
                                           "version",

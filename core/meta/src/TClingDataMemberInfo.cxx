@@ -87,7 +87,8 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
            isa<EnumConstantDecl>(ValD)) && "Not TU?");
    assert((isa<VarDecl>(ValD) || 
            isa<FieldDecl>(ValD) || 
-           isa<EnumConstantDecl>(ValD)) &&
+           isa<EnumConstantDecl>(ValD) ||
+           isa<IndirectFieldDecl>(ValD)) &&
           "The decl should be either VarDecl or FieldDecl or EnumConstDecl");  
    
 }
@@ -611,7 +612,8 @@ const char *TClingDataMemberInfo::ValidArrayIndex() const
    if (!IsValid()) {
       return 0;
    }
-   const clang::FieldDecl *FD = llvm::dyn_cast<clang::FieldDecl>(GetDecl());
-   return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*FD);
+   const clang::DeclaratorDecl *FD = llvm::dyn_cast<clang::DeclaratorDecl>(GetDecl());
+   if (FD) return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*FD);
+   else return 0;
 }
 

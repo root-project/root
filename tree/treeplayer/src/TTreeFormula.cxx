@@ -1288,7 +1288,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                Error("DefinedVariable","Can not call '%s' with a class",work);
                return -1;
             }
-            if (cl->GetClassInfo()==0 && !cl->GetCollectionProxy()) {
+            if (!cl->HasDataMemberInfo() && !cl->GetCollectionProxy()) {
                Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
                return -2;
             }
@@ -1384,7 +1384,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, Bool_t
                leafinfo = new TFormLeafInfoCollectionSize(cl);
                cl = 0;
             } else {
-               if (cl->GetClassInfo()==0) {
+               if (!cl->HasDataMemberInfo()) {
                   Error("DefinedVariable",
                         "Can not call method %s on class without dictionary (%s)!",
                         right,cl->GetName());

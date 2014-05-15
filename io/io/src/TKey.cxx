@@ -646,7 +646,7 @@ Bool_t TKey::IsFolder() const
    Bool_t ret = kFALSE;
 
    TClass *classPtr = TClass::GetClass((const char *) fClassName);
-   if (classPtr && classPtr->GetClassInfo() && classPtr->InheritsFrom(TObject::Class())) {
+   if (classPtr && classPtr->GetState() > TClass::kEmulated && classPtr->InheritsFrom(TObject::Class())) {
       TObject *obj = (TObject *) classPtr->New(TClass::kDummyNew);
       if (obj) {
          ret = obj->IsFolder();
@@ -1035,7 +1035,7 @@ void *TKey::ReadObjectAny(const TClass* expectedClass)
          cl = const_cast<TClass*>(expectedClass);
          Info("ReadObjectAny","Using Converter StreamerInfo from %s to %s",clOnfile->GetName(),expectedClass->GetName());
       }
-      if (cl->GetClassInfo() && !expectedClass->GetClassInfo()) {
+      if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance
          Warning("ReadObjectAny",
                  "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",

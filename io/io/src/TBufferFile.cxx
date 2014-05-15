@@ -2344,7 +2344,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          clRef = const_cast<TClass*>(clCast);
 
       }
-      if (clCast->GetClassInfo() && !clRef->GetClassInfo()) {
+      if (clCast->GetState() > TClass::kEmulated && clRef->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());

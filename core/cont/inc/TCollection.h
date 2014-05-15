@@ -38,6 +38,7 @@
 class TClass;
 class TObjectTable;
 class TVirtualMutex;
+class TIter;
 
 const Bool_t kIterForward  = kTRUE;
 const Bool_t kIterBackward = !kIterForward;
@@ -122,6 +123,9 @@ public:
    static void          GarbageCollect(TObject *obj);
    static void          EmptyGarbageCollection();
 
+   TIter begin() const;
+   TIter end() const;
+
    ClassDef(TCollection,3)  //Collection abstract base class
 };
 
@@ -174,6 +178,10 @@ public:
    TIterCategory &Begin() { TIter::Begin(); return *this; }
    static TIterCategory End() { return TIterCategory(static_cast<TIterator*>(nullptr)); }
 };
+
+
+inline TIter TCollection::begin() const { return ++(TIter(this)); }
+inline TIter TCollection::end() const { return TIter::End(); }
 
 
 //---- R__FOR_EACH macro -------------------------------------------------------

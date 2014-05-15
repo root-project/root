@@ -69,7 +69,9 @@ protected:
    //virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { Double_t err = GetBinError(bin); return err*err; }
 
-   
+   virtual TProfile2D *DoProjectProfile2D(const char* name, const char * title, TAxis* projX, TAxis* projY, 
+                                          bool originalRange, bool useUF, bool useOF) const;
+
 private:
    Double_t *GetB()  {return &fBinEntries.fArray[0];}
    Double_t *GetB2() {return (fBinSumw2.fN ? &fBinSumw2.fArray[0] : 0 ); }
@@ -127,7 +129,8 @@ public:
    virtual Bool_t    Multiply(TF1 *h1, Double_t c1=1);
    virtual Bool_t    Multiply(const TH1 *h1);
    virtual Bool_t    Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
-   TH3D             *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
+   virtual TH3D     *ProjectionXYZ(const char *name="_pxyz", Option_t *option="e") const;
+   virtual TProfile2D  *Project3DProfile(Option_t *option="xy") const; // *MENU*
    virtual void      PutStats(Double_t *stats);
    virtual void      Reset(Option_t *option="");
    virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");

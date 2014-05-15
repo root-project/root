@@ -39,9 +39,12 @@ private:
    TBaseClass&operator=(const TBaseClass&); // Not implemented
    
 private:
-   BaseClassInfo_t   *fInfo;      //pointer to CINT base class info
-   TClassRef          fClassPtr;  //pointer to the base class TClass
-   TClass            *fClass;     //pointer to parent class
+   BaseClassInfo_t   *fInfo;      //!pointer to CINT base class info
+   TClassRef          fClassPtr;  // pointer to the base class TClass
+   TClass            *fClass;     //!pointer to parent class
+   Int_t              fDelta;     // BaseClassInfo_t offset (INT_MAX if unset)
+   mutable Int_t      fProperty;  // BaseClassInfo_t's properties
+   Int_t              fSTLType;   // cache of IsSTLContainer()
 
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
@@ -49,12 +52,13 @@ public:
    virtual void   Browse(TBrowser *b);
    const char    *GetTitle() const;
    TClass        *GetClassPointer(Bool_t load=kTRUE);
-   Int_t          GetDelta() const;
+   Int_t          GetDelta();
    Bool_t         IsFolder() const {return kTRUE;}
    ROOT::ESTLType IsSTLContainer();
    Long_t         Property() const;
+   void           SetClass(TClass* cl) { fClass = cl; }
 
-   ClassDef(TBaseClass,0)  //Description of a base class
+   ClassDef(TBaseClass,2)  //Description of a base class
 };
 
 #endif

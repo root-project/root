@@ -96,8 +96,8 @@
 #pragma link C++ namespace ROOT::Math::IntegrationOneDim;
 #pragma link C++ enum ROOT::Math::IntegrationOneDim::Type;
 #pragma link C++ namespace ROOT::Math::IntegrationMultiDim;
-#pragma link C++ typedef ROOT::Math::IntegratorOneDim::Type;
-#pragma link C++ typedef ROOT::Math::IntegratorMultiDim::Type;
+// #pragma link C++ typedef ROOT::Math::IntegratorOneDim::Type;
+// #pragma link C++ typedef ROOT::Math::IntegratorMultiDim::Type;
 
 
 #pragma link C++ class ROOT::Math::BasicFitMethodFunction<ROOT::Math::IBaseFunctionMultiDim>+;

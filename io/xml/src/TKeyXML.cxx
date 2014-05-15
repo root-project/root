@@ -347,7 +347,7 @@ void* TKeyXML::XmlReadAny(void* obj, const TClass* expectedClass)
          if (obj==0) cl->Destructor(res);
          return 0;
       }
-      if (cl->GetClassInfo() && !expectedClass->GetClassInfo()) {
+      if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          //we cannot mix a compiled class with an emulated class in the inheritance
          Warning("XmlReadAny",
                  "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
