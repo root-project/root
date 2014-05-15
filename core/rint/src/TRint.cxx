@@ -406,7 +406,7 @@ void TRint::Run(Bool_t retrn)
             // GetLinem(kInit,"Root >") is called and we are jump back
             // to RETRY ... and we have to avoid the Getlinem(kInit, GetPrompt());
             needGetlinemInit = kFALSE;
-            retval = ProcessLine(cmd, kFALSE, &error);
+            retval = ProcessLineNr("ROOT_cli_", cmd, &error);
             gCling->EndOfLineAction();
 
             // The ProcessLine has successfully completed and we need
@@ -576,7 +576,7 @@ Bool_t TRint::HandleTermInput()
          TRY {
             if (!sline.IsNull())
                LineProcessed(sline);
-            ProcessLine(sline);
+            ProcessLineNr("ROOT_prompt_", sline);
          } CATCH(excode) {
             // enable again input handler
             fInputHandler->Activate();
@@ -689,6 +689,20 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
    }
 
    return ret;
+}
+
+
+//______________________________________________________________________________
+Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
+{
+   // Calls ProcessLine() possibly prepending a #line directive for
+   // better diagnostics. Must be called after fNcmd has been increased for
+   // the next line.
+   if (line && line[0] != '.') {
+      TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
+      return ProcessLine(lineWithNr + line, kFALSE, error);
+   }
+   return ProcessLine(line, kFALSE, error);
 }
 
 
