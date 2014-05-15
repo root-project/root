@@ -20,8 +20,10 @@ namespace clang {
 }
 
 extern "C" {
+   const char*** TROOT__GetExtraInterpreterArgs();
    cling::Interpreter* TCling__GetInterpreter();
    void InitializeStreamerInfoROOTFile(const char* filename);
    void AddStreamerInfoToROOTFile(const char* normName);
+   void AddAncestorPCMROOTFile(const char* pcmName);
    bool CloseStreamerInfoROOTFile();
 }

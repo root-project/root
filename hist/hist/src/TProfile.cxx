@@ -1238,7 +1238,7 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
    if (opt.Contains("e")) computeErrors = kTRUE;
    if (opt.Contains("w")) binWeight = kTRUE;
    if (opt.Contains("c=e")) {cequalErrors = kTRUE; computeErrors=kFALSE;}
-   if (computeErrors || binWeight ) h1->Sumw2();
+   if (computeErrors || binWeight || (binEntries && fBinSumw2.fN) ) h1->Sumw2();
 
    // Fill the projected histogram
    Double_t cont;
@@ -1255,15 +1255,11 @@ TH1D *TProfile::ProjectionX(const char *name, Option_t *option) const
       if (computeErrors ) h1->SetBinError(bin , GetBinError(bin) );
       // in case of option W bin error is deduced from bin sum of z**2 values of profile
       // this is correct only if the profile is filled with weights =1
-      if (binWeight) h1->SetBinError(bin , TMath::Sqrt(fSumw2.fArray[bin] ) );
-      // in case of bin entries and h1 has sumw2 set, we need to set also the bin error
-      if (binEntries && h1->GetSumw2() ) {
-         Double_t err2;
-         if (fBinSumw2.fN) 
-            err2 = fBinSumw2.fArray[bin]; 
-         else 
-            err2 = cont; // this is fBinEntries.fArray[bin]
-         h1->SetBinError(bin, TMath::Sqrt(err2 ) ); 
+      if (binWeight) h1->GetSumw2()->fArray[bin] = fSumw2.fArray[bin];
+      // in case of bin entries and profile is weighted, we need to set also the bin error
+      if (binEntries && fBinSumw2.fN ) {
+         R__ASSERT(  h1->GetSumw2() );
+         h1->GetSumw2()->fArray[bin] =  fBinSumw2.fArray[bin]; 
       }
 
    }

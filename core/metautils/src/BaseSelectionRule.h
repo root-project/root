@@ -55,16 +55,6 @@ public:
       kNoMatch
    };
 
-   // Used to access the attribute cache
-   enum EAttributeID{
-      kNameID,
-      kProtoNameID,
-      kPatternID,
-      kProtoPatternID,
-      kFileNameID,
-      kFilePatternID
-   };
-
 private:
    long                   fIndex;                  // Index indicating the ordering of the rules.
    AttributesMap_t        fAttributes;             // list of the attributes of the selection/exclusion rule
@@ -75,8 +65,22 @@ private:
    const clang::CXXRecordDecl  *fCXXRecordDecl;    // Record decl of the entity searched for.
    const clang::Type           *fRequestedType;    // Same as the record decl but with some of the typedef preserved (Double32_t, Float16_t, etc..)
    cling::Interpreter *fInterp; 
-   std::string fAttributesArray[6];
-      
+
+   // Cached for performance
+   std::string fName;
+   std::string fPattern;
+   std::string fProtoName;
+   std::string fProtoPattern;
+   std::string fFileName;
+   std::string fFilePattern;
+   std::string fNArgsToKeep;
+   bool fHasNameAttribute;
+   bool fHasProtoNameAttribute;
+   bool fHasPatternAttribute;
+   bool fHasProtoPatternAttribute;
+   bool fHasFileNameAttribute;
+   bool fHasFilePatternAttribute;
+
 public:
 
    BaseSelectionRule(ESelect sel) : fIndex(-1),fIsSelected(sel),fMatchFound(false),fCXXRecordDecl(NULL),fRequestedType(NULL),fInterp(NULL) {}
@@ -92,12 +96,31 @@ public:
    void    SetIndex(long index) { fIndex=index; }
 
    bool    HasAttributeWithName(const std::string& attributeName) const; // returns true if there is an attribute with the specified name
-   bool    HasAttributeWithName(const EAttributeID) const; // returns true if there is an attribute with the specified name
 
    void    FillCache(); // Fill the cache for performant attribute retrival
 
    bool    GetAttributeValue(const std::string& attributeName, std::string& returnValue) const; // returns the value of the attribute with name attributeName
-   bool    GetAttributeValue(const EAttributeID attributeID, std::string& returnValue) const; // returns attribute but in a more performant way once the cache is built
+
+   inline const std::string& GetAttributeName() const {return fName;};
+   inline bool HasAttributeName() const {return fHasNameAttribute;};
+
+   inline const std::string& GetAttributeProtoName() const {return fProtoName;};
+   inline bool HasAttributeProtoName() const {return fHasProtoNameAttribute;};
+
+   inline const std::string& GetAttributePattern() const {return fPattern;};
+   inline bool HasAttributePattern() const {return fHasPatternAttribute;};
+
+   inline const std::string& GetAttributeProtoPattern() const {return fProtoPattern;};
+   inline bool HasAttributeProtoPattern() const {return fHasProtoPatternAttribute;};
+
+   inline const std::string& GetAttributeFileName() const {return fFileName;};
+   inline bool HasAttributeFileName() const {return fHasFileNameAttribute;};
+
+   inline const std::string& GetAttributeFilePattern() const {return fFilePattern;};
+   inline bool HasAttributeFilePattern() const {return fHasFilePatternAttribute;};
+
+   inline const std::string& GetAttributeNArgsToKeep() const {return fNArgsToKeep;};
+
    void    SetAttributeValue(const std::string& attributeName, const std::string& attributeValue); // sets an attribute with name attribute name and value attributeValue
 
    ESelect GetSelected() const;

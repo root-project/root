@@ -28,6 +28,7 @@
 #include "TClassTable.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TProtoClass.h"
 #include "TROOT.h"
 #include "TString.h"
 #include "TError.h"
@@ -268,7 +269,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
 
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(shortName.c_str(), kTRUE);
-   if (r->fName) {
+   if (r->fName && r->fInfo) {
       if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
            && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
          // We have a namespace being reloaded.
@@ -298,7 +299,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
       }
    }
 
-   r->fName = StrDup(shortName.c_str());
+   if (!r->fName) r->fName = StrDup(shortName.c_str());
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;
@@ -306,9 +307,48 @@ void TClassTable::Add(const char *cname, Version_t id,  const type_info &info,
 
    fgIdMap->Add(info.name(),r);
 
-   fgTally++;
    fgSorted = kFALSE;
 }
+
+//______________________________________________________________________________
+void TClassTable::Add(TProtoClass *proto)
+{
+   // Add a class to the class table (this is a static function).
+
+   if (!gClassTable)
+      new TClassTable;
+
+   // By definition the name in the TProtoClass is (must be) the normalized
+   // name, so there is no need to tweak it.
+   const char *cname = proto->GetName();
+
+   // check if already in table, if so return
+   TClassRec *r = FindElementImpl(cname, kTRUE);
+   if (r->fName) {
+      r->fProto = proto;
+      return;
+   } else if (ROOT::gROOTLocal && gCling) {
+      TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
+      if (oldcl) { //  && oldcl->GetClassInfo()) {
+                   // As a work-around to ROOT-6012, we need to register the class even if
+                   // it is not a template instance, because a forward declaration in the header
+                   // files loaded by the current dictionary wil also de-activate the update
+                   // class info mechanism!
+
+         ::Warning("TClassTable::Add(TProtoClass*)","Called for existing class without a prior call add the dictionary function.");
+      }
+   }
+
+   r->fName = StrDup(cname);
+   r->fId   = 0;
+   r->fBits = 0;
+   r->fDict = 0;
+   r->fInfo = 0;
+   r->fProto= proto;
+
+   fgSorted = kFALSE;
+}
+
 
 //______________________________________________________________________________
 void TClassTable::Remove(const char *cname)
@@ -335,6 +375,7 @@ void TClassTable::Remove(const char *cname)
             fgTable[slot] = r->fNext;
          fgIdMap->Remove(r->fInfo->name());
          delete [] r->fName;
+         delete r->fProto;
          delete r;
          fgTally--;
          fgSorted = kFALSE;
@@ -370,9 +411,11 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    r->fId   = 0;
    r->fDict = 0;
    r->fInfo = 0;
+   r->fProto= 0;
    r->fNext = fgTable[slot];
    fgTable[slot] = r;
 
+   fgTally++;
    return r;
 }
 
@@ -445,6 +488,21 @@ VoidFuncPtr_t TClassTable::GetDict(const type_info& info)
    return 0;
 }
 
+//______________________________________________________________________________
+TProtoClass *TClassTable::GetProto(const char *cname)
+{
+   // Given the class name returns the TClassProto object for the class.
+   // (uses hash of name).
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
+      fgIdMap->Print();
+   }
+
+   TClassRec *r = FindElement(cname);
+   if (r) return r->fProto;
+   return 0;
+}
 
 //______________________________________________________________________________
 extern "C" {

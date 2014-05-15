@@ -63,10 +63,14 @@
 #include "compiledata.h"
 #include "TMetaUtils.h"
 #include "TVirtualCollectionProxy.h"
+#include "TVirtualStreamerInfo.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
+
+#include "TFile.h"
+class TProtoClass;
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/Decl.h"
@@ -770,7 +774,7 @@ namespace{
 TCling::TCling(const char *name, const char *title)
 : TInterpreter(name, title), fGlobalsListSerial(-1), fInterpreter(0),
    fMetaProcessor(0), fNormalizedCtxt(0), fPrevLoadedDynLibInfo(0),
-   fClingCallbacks(0), fHaveSinglePCM(kFALSE), fAutoLoadCallBack(0),
+   fClingCallbacks(0), fAutoLoadCallBack(0),
    fTransactionCount(0), fHeaderParsingOnDemand(getenv("HEADER_PARSING_ON_DEMAND"))
 {
    // Initialize the cling interpreter interface.
@@ -785,42 +789,30 @@ TCling::TCling(const char *name, const char *title)
    std::vector<std::string> clingArgsStorage;
    clingArgsStorage.push_back("cling4root");
 
-   ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
-
-   std::string interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
-   clingArgsStorage.push_back(interpInclude);
-
+   std::string interpInclude;
+   // rootcling sets its arguments through TROOT::GetExtraInterpreterArgs().
    if (!fromRootCling) {
+      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+
+      interpInclude = ROOT::TMetaUtils::GetInterpreterExtraIncludePath(false);
+      clingArgsStorage.push_back(interpInclude);
+
       std::string pchFilename = interpInclude.substr(2) + "/allDict.cxx.pch";
       clingArgsStorage.push_back("-include-pch");
       clingArgsStorage.push_back(pchFilename);
-   }
 
-   // clingArgsStorage.push_back("-Xclang");
-   // clingArgsStorage.push_back("-fmodules");
+      // clingArgsStorage.push_back("-Xclang");
+      // clingArgsStorage.push_back("-fmodules");
 
-   std::string include;
-   // Add the root include directory to list searched by default
-   if (fromRootCling && getenv("ROOT_BUILDINGROOT")) {
-      // Building ROOT need to -Iinclude and ignore ROOTINCDIR and ROOTSYS!
-      include = "include";
-   } else {
+      std::string include;
 #ifndef ROOTINCDIR
       include = gSystem->Getenv("ROOTSYS");
       include += "/include";
 #else // ROOTINCDIR
       include = ROOTINCDIR;
 #endif // ROOTINCDIR
-   }
-   clingArgsStorage.push_back("-I");
-   clingArgsStorage.push_back(include);
-
-   // rootcling needs to run in syntax-only mode, i.e. without execution. Detect
-   // rootcling by looking for a rootcling-only symbol:
-   if (fromRootCling) {
-      clingArgsStorage.push_back("-D__ROOTCLING__");
-      clingArgsStorage.push_back("-fsyntax-only");
-      ROOT::TMetaUtils::SetPathsForRelocatability(clingArgsStorage);
+      clingArgsStorage.push_back("-I");
+      clingArgsStorage.push_back(include);
    }
 
    std::vector<const char*> interpArgs;
@@ -828,22 +820,31 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+   // Add statically injected extra arguments, usually coming from rootcling.
+   for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
+        extraArgs && *extraArgs; ++extraArgs) {
+         interpArgs.push_back(*extraArgs);
+   }
+
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
                                          ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
-   fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
 
-   // Add include path to etc/cling. FIXME: This is a short term solution. The
-   // llvm/clang header files shouldn't be there at all. We have to get rid of
-   // that dependency and avoid copying the header files.
-   // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
-   TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
+   if (!fromRootCling) {
+      fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
 
-   // Add the current path to the include path
-   TCling::AddIncludePath(".");
+      // Add include path to etc/cling. FIXME: This is a short term solution. The
+      // llvm/clang header files shouldn't be there at all. We have to get rid of
+      // that dependency and avoid copying the header files.
+      // Use explicit TCling::AddIncludePath() to avoid vtable: we're in the c'tor!
+      TCling::AddIncludePath((interpInclude.substr(2) + "/cling").c_str());
 
-   // Add the root include directory and etc/ to list searched by default.
-   TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+      // Add the current path to the include path
+      TCling::AddIncludePath(".");
+
+      // Add the root include directory and etc/ to list searched by default.
+      TCling::AddIncludePath(ROOT::TMetaUtils::GetROOTIncludeDir(false).c_str());
+   }
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
@@ -852,14 +853,6 @@ TCling::TCling(const char *name, const char *title)
    // the results in pipes (Savannah #99234).
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
-
-   if (getenv("ROOT_MODULES")) {
-      fHaveSinglePCM =
-         LoadPCM(ROOT::TMetaUtils::GetModuleFileName("allDict").c_str(),
-                 0 /*headers*/, 0 /*triggerFunc*/);
-   }
-   if (fHaveSinglePCM)
-      ::Info("TCling::TCling", "Using one PCM.");
 
    // For the list to also include string, we have to include it now.
    // rootcling does parts already if needed, e.g. genreflex does not want using
@@ -894,8 +887,6 @@ TCling::TCling(const char *name, const char *title)
 #ifndef R__WIN32
    optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
-   // Initialize for ROOT:
-   TCling::AddIncludePath(include.c_str());
 
    if (!fromRootCling) {
       fInterpreter->enableDynamicLookup();
@@ -979,47 +970,58 @@ bool TCling::LoadPCM(TString pcmFileName,
                      void (*triggerFunc)()) const {
    // Tries to load a PCM; returns true on success.
 
-   // pcmFileName is an intentional copy; updaed by FindFile() below.
+   // pcmFileName is an intentional copy; updated by FindFile() below.
 
-   // Assemble search path:
-#ifdef R__WIN32
-   TString searchPath = "$(PATH);";
-#else
-   TString searchPath = "$(LD_LIBRARY_PATH):";
-#endif
-#ifndef ROOTLIBDIR
-   TString rootsys = gSystem->Getenv("ROOTSYS");
-# ifdef R__WIN32
-   searchPath += rootsys + "/bin";
-# else
-   searchPath += rootsys + "/lib";
-# endif
-#else // ROOTLIBDIR
-# ifdef R__WIN32
-   searchPath += ROOTBINDIR;
-# else
-   searchPath += ROOTLIBDIR;
-# endif
-#endif // ROOTLIBDIR
-   gSystem->ExpandPathName(searchPath);
+   TString searchPath;
 
    if (triggerFunc) {
       const char *libraryName = FindLibraryName(triggerFunc);
       if (libraryName) {
-         std::string libDir = llvm::sys::path::parent_path(libraryName);
- #ifdef R__WIN32
-         searchPath += ";" + libDir;
+         searchPath = llvm::sys::path::parent_path(libraryName);
+#ifdef R__WIN32
+         searchPath += ";";
 #else
-         searchPath += ":" + libDir;
+         searchPath += ":";
 #endif
       }
    }
+   // Note: if we know where the library is, we probably shouldn't even
+   // look in other places.
+   searchPath.Append( gSystem->GetDynamicPath() );
 
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
-   if (gDebug > 5)
-      ::Info("TCling::LoadPCM", "Loading PCM %s", pcmFileName.Data());
+   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
+   if (enableRootPcm && gROOT->IsRootFile(pcmFileName)) {
+      Int_t oldDebug = gDebug;
+      if (gDebug > 5) {
+         gDebug -= 5;
+         ::Info("TCling::LoadPCM", "Loading ROOT PCM %s", pcmFileName.Data());
+      } else {
+         gDebug = 0;
+      }
+
+      TDirectory::TContext ctxt(0);
+      TFile *pcmFile = new TFile(pcmFileName,"READ");
+      TObjArray *protoClasses;
+      pcmFile->GetObject("__ProtoClasses", protoClasses);
+      if (protoClasses)
+         for(auto proto : *protoClasses)
+            TClassTable::Add((TProtoClass*)proto);
+      protoClasses->Clear(); // Owner ship was transfered to TClassTable.
+      delete protoClasses;
+      delete pcmFile;
+
+      gDebug = oldDebug;
+   } else {
+      if (gDebug > 5)
+         ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
+
+   }
+   // Note: Declaring the relationship between the module (pcm) and the header
+   // probably does not yet make sense since the pcm is 'only' a root file.
+   // We also have to review if we still need to do this with the delay loading.
    clang::CompilerInstance* CI = fInterpreter->getCI();
    ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    return kTRUE;
@@ -1028,9 +1030,8 @@ bool TCling::LoadPCM(TString pcmFileName,
 //______________________________________________________________________________
 void TCling::RegisterModule(const char* modulename,
                             const char** headers,
-                            const char** allHeaders,
                             const char** includePaths,
-                            const char* payloadCode,                            
+                            const char* payloadCode,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                             const char** classesHeaders)
@@ -1044,7 +1045,6 @@ void TCling::RegisterModule(const char* modulename,
    // The payload code is injected "as is" in the interpreter.
    // The value of 'triggerFunc' is used to find the shared library location.
 
-   bool rootModulesDefined (getenv("ROOT_MODULES"));
    // rootcling also uses TCling for generating the dictionary ROOT files.
    bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
    // We need the dictionary initialization but we don't want to inject the
@@ -1052,25 +1052,10 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
-   if (fHaveSinglePCM && !strncmp(modulename, "G__", 3))
-      modulename = "allDict";
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
       TCling::AddIncludePath(*inclPath);
-   }
-
-   if (gDebug > 0) {
-      for (const char** allHdr = allHeaders; *allHdr; ++allHdr) {
-         ModuleForHeader_t::iterator iMap = fModuleForHeader.find(*allHdr);
-         if (iMap != fModuleForHeader.end()) {
-            Warning("RegisterModule()",
-                    "Header %s provided by module %s was already available through module %s",
-                    *allHdr, modulename, iMap->second);
-         } else {
-            fModuleForHeader[*allHdr] = modulename;
-         }
-      }
    }
 
    // Put the template decls and the number of arguments to skip in the TNormalizedCtxt
@@ -1152,9 +1137,18 @@ void TCling::RegisterModule(const char* modulename,
    }
 
 
-   if (rootModulesDefined) {
-      fInterpreter->declare(code.Data());
-      code = "";
+   if (strcmp(modulename,"libCore")!=0 && strcmp(modulename,"libRint")!=0
+       && strcmp(modulename,"libThread")!=0 && strcmp(modulename,"libRIO")!=0
+       && strcmp(modulename,"libcomplexDict")!=0 && strcmp(modulename,"libdequeDict")!=0
+       && strcmp(modulename,"liblistDict")!=0 && strcmp(modulename,"libvectorDict")!=0
+       && strcmp(modulename,"libmapDict")!=0 && strcmp(modulename,"libmultimap2Dict")!=0
+       && strcmp(modulename,"libmap2Dict")!=0 && strcmp(modulename,"libmultimapDict")!=0
+       && strcmp(modulename,"libsetDict")!=0 && strcmp(modulename,"libmultisetDict")!=0
+       && strcmp(modulename,"libvalarrayDict")!=0
+       && strcmp(modulename,"G__GenVector32")!=0 && strcmp(modulename,"G__Smatrix32")!=0
+
+       ) {
+      // No pcm for now for libCore or libRint, the info is in the pch.
       if (!LoadPCM(pcmFileName, headers, triggerFunc)) {
          ::Error("TCling::RegisterModule", "cannot find dictionary module %s",
                  ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
@@ -1169,10 +1163,7 @@ void TCling::RegisterModule(const char* modulename,
       if (gDebug > 5) {
          ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
       }
-      if(!rootModulesDefined)
-         code += TString::Format("#include \"%s\"\n", *hdr);
-      else
-         fInterpreter->loadModuleForHeader(*hdr);
+      code += TString::Format("#include \"%s\"\n", *hdr);
    }
 
    { // scope within which diagnostics are de-activated
@@ -1451,6 +1442,11 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
 {
    // Visit all members over members, recursing over base classes.
 
+   if (insp.GetObjectValidity() == TMemberInspector::kUnset) {
+      insp.SetObjectValidity(obj ? TMemberInspector::kValidObjectGiven
+                             : TMemberInspector::kNoObjectGiven);
+   }
+
    if (!cl || cl->GetCollectionProxy()) {
       // We do not need to investigate the content of the STL
       // collection, they are opaque to us (and details are
@@ -1680,27 +1676,31 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       }
       int64_t baseOffset;
       if (iBase->isVirtual()) {
-         if (!obj) {
-            Error("InspectMembers",
-                  "Base %s of class %s is virtual but no object provided",
-                  sBaseName.c_str(), clname);
-            continue;
-         }
-         TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
-         TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
-         if (ci && baseCi) {
-            baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
-                                           true /*isDerivedObj*/);
-            if (baseOffset == -1) {
+         if (insp.GetObjectValidity() == TMemberInspector::kNoObjectGiven) {
+            if (!isTransient) {
                Error("InspectMembers",
-                     "Error calculating offset of virtual base %s of class %s",
+                     "Base %s of class %s is virtual but no object provided",
                      sBaseName.c_str(), clname);
             }
+            baseOffset = TVirtualStreamerInfo::kNeedObjectForVirtualBaseClass;
          } else {
-            Error("InspectMembers",
-                  "Cannot calculate offset of virtual base %s of class %s",
-                  sBaseName.c_str(), clname);
-            continue;
+            // We have an object to determine the vbase offset.
+            TClingClassInfo* ci = (TClingClassInfo*)cl->GetClassInfo();
+            TClingClassInfo* baseCi = (TClingClassInfo*)baseCl->GetClassInfo();
+            if (ci && baseCi) {
+               baseOffset = ci->GetBaseOffset(baseCi, const_cast<void*>(obj),
+                                              true /*isDerivedObj*/);
+               if (baseOffset == -1) {
+                  Error("InspectMembers",
+                        "Error calculating offset of virtual base %s of class %s",
+                        sBaseName.c_str(), clname);
+               }
+            } else {
+               Error("InspectMembers",
+                     "Cannot calculate offset of virtual base %s of class %s",
+                     sBaseName.c_str(), clname);
+               continue;
+            }
          }
       } else {
          baseOffset = recLayout.getBaseClassOffset(baseDecl).getQuantity();
@@ -2817,11 +2817,16 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
          if (newvers == -1) {
             // Didn't manage to determine the class version from the AST.
             // Use runtime instead.
-            if (mi.Property() & kIsStatic) {
+            if ((mi.Property() & kIsStatic)
+                && fInterpreter->getCodeGenerator()) {
                // This better be a static function.
                TClingCallFunc callfunc(fInterpreter, *fNormalizedCtxt);
                callfunc.SetFunc(&mi);
                newvers = callfunc.ExecInt(0);
+            } else {
+               Error("GenerateTClass",
+                     "Cannot invoke %s::Class_Version()! Class version might be wrong.",
+                     cl->GetName());
             }
          }
          if (newvers != oldvers) {
@@ -3422,6 +3427,10 @@ bool TCling::InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::str
    // In the set of pointer for the classes without dictionaries.
 
    // Get the name of the class.
+
+   // If we deal with a std::string we do not need to recurse and we do not need to get the normalized name
+   // because we want to now if it is a std string or not.
+   if (strcmp(qType.getAsString().c_str(), "std::string")==0) return false;
    std::string buf;
    ROOT::TMetaUtils::GetNormalizedName(buf, qType, *fInterpreter, *fNormalizedCtxt);
    const char* name = buf.c_str();
@@ -3861,8 +3870,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile)
    // success, -1 if the file has already been read, and -3 in case its format
    // is the old one (e.g. containing "Library.ClassName")
    
-   // For "class ", "namespace " and "typedef " respectively
-   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
+   // For "class ", "namespace ", "typedef ", "header " respectively
+   const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7}};
    
    if (rootmapfile && *rootmapfile) {
 
@@ -4496,7 +4505,7 @@ Int_t TCling::AutoParse(const char* cls)
                Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
             }
          }
-      nHheadersParsed++;
+         nHheadersParsed++;
       }
    }
 

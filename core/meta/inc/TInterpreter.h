@@ -101,6 +101,7 @@ public:
    virtual void    *GetAutoLoadCallBack() const { return 0; }
    virtual Int_t    AutoLoad(const char *classname) = 0;
    virtual Int_t    AutoLoad(const std::type_info& typeinfo) = 0;
+   virtual Int_t    AutoParse(const char* cls) = 0;
    virtual void     ClearFileBusy() = 0;
    virtual void     ClearStack() = 0; // Delete existing temporary values
    virtual void     EnableAutoLoading() = 0;
@@ -136,7 +137,6 @@ public:
    virtual void     PrintIntro() = 0;
    virtual void     RegisterModule(const char* /*modulename*/,
                                    const char** /*headers*/,
-                                   const char** /*allHeaders*/,
                                    const char** /*includePaths*/,
                                    const char* /*payloadCode*/,
                                    void (* /*triggerFunc*/)(),

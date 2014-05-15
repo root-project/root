@@ -256,11 +256,11 @@ void TInspectCanvas::InspectObject(TObject *obj)
          if (!member) continue;
          TDataType *membertype = member->GetDataType();
          isdate = kFALSE;
-         if (strcmp(member->GetName(),"fDatime") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
+         if (strcmp(member->GetName(),"fDatime") == 0 && membertype && membertype->GetType() == kUInt_t) {
             isdate = kTRUE;
          }
          isbits = kFALSE;
-         if (strcmp(member->GetName(),"fBits") == 0 && strcmp(member->GetTypeName(),"UInt_t") == 0) {
+         if (strcmp(member->GetName(),"fBits") == 0 && membertype && membertype->GetType() == kUInt_t) {
             isbits = kTRUE;
          }
 

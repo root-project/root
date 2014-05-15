@@ -5,7 +5,16 @@
 #
 # Author: Fons Rademakers, 29/2/2000
 
-ROOTVERS=`cat build/version_number | sed -e 's/\//\./'`
+# first arguments is the source directory
+if [ $# -ge 1 ]; then
+   ROOT_SRCDIR=$1
+   shift
+else
+   echo "$0: expecting at least ROOT_SRCDIR as first argument"
+   exit 1
+fi
+
+ROOTVERS=`cat $ROOT_SRCDIR/build/version_number | sed -e 's/\//\./'`
 TYPE=`bin/root-config --arch`
 if [ "x`bin/root-config --platform`" = "xmacosx" ]; then
    TYPE=$TYPE-`sw_vers -productVersion | cut -d . -f1 -f2`
@@ -47,7 +56,7 @@ TARFILE=root_v${ROOTVERS}.${TYPE}${COMPILER}${DEBUG}
 # figure out which tar to use
 if [ "x$MSI" = "x1" ]; then
    TARFILE=../${TARFILE}.msi
-   TARCMD="build/package/msi/makemsi.sh ${TARFILE} -T ${TARFILE}.filelist"
+   TARCMD="$ROOT_SRCDIR/build/package/msi/makemsi.sh ${TARFILE} -T ${TARFILE}.filelist"
 else
    TARFILE=${TARFILE}.tar
    ISGNUTAR="`tar --version 2>&1 | grep GNU`"
@@ -68,14 +77,14 @@ else
    fi
 fi
 
-cp -f main/src/rmain.cxx include/
+cp -f $ROOT_SRCDIR/main/src/rmain.cxx include/
 pwd=`pwd`
 if [ "x${MSI}" = "x" ]; then
    dir=`basename $pwd`
    cd ..
 fi
 
-${pwd}/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
+$ROOT_SRCDIR/build/unix/distfilelist.sh $dir > ${TARFILE}.filelist
 rm -f ${TARFILE}
 if [ "x${TAR}" != "x" ] || [ "x$MSI" = "x1" ]; then
    $TARCMD || exit 1

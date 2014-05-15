@@ -80,7 +80,6 @@ private:
       return WritePPIncludes(out);
    }
 
-   std::ostream& WriteAllSeenHeadersArray(std::ostream& out) const;
    std::ostream& WriteHeaderArray(std::ostream& out) const {
       // Write "header1.h",\n"header2.h",\n0\n
       return WriteStringVec(fHeaders, out);
@@ -107,7 +106,6 @@ private:
                            std::ostream& out) const;
 
    clang::CompilerInstance* fCI;
-   std::string fShLibFileName;
    bool fIsPCH;
 
    std::string fDictionaryName; // Name of the dictionary, e.g. "Base"

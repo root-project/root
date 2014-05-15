@@ -102,7 +102,7 @@
 
 #pragma link C++ class TExec+;
 #pragma link C++ class TFolder+;
-#pragma link C++ class TListOfTypes+;
+// #pragma link C++ class TListOfTypes+;
 #pragma link C++ class TMacro+;
 #pragma link C++ class TMD5+;
 #pragma link C++ class TMemberInspector;

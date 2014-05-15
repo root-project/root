@@ -156,7 +156,7 @@ void TAttTextEditor::SetModel(TObject* obj)
    if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
       fAlpha->SetPosition((Int_t)color->GetAlpha()*1000);
       fAlphaField->SetNumber(color->GetAlpha());
-   }  
+   }
 }
 
 //______________________________________________________________________________
@@ -186,7 +186,7 @@ void TAttTextEditor::DoTextAlphaColor(ULong_t p)
    fAttText->SetTextColor(color->GetNumber());
    fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
    fAlphaField->SetNumber(color->GetAlpha());
-   
+
    Update();
 }
 
@@ -309,7 +309,14 @@ void TAttTextEditor::DoLiveAlpha(Int_t a)
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
-   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) color->SetAlpha((Float_t)a/1000);
+   if (TColor *color = gROOT->GetColor(fAttText->GetTextColor())) {
+      // In case the color is not transparent a new color is created.
+      if (color->GetAlpha() == 1.) {
+         fAttText->SetTextColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
+      } else {
+         color->SetAlpha((Float_t)a/1000);
+      }
+   }
    Update();
 }
 

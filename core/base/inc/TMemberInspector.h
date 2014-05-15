@@ -29,9 +29,16 @@ class TObject;
 class TClass;
 
 class TMemberInspector {
+public:
+   enum EObjectPointerState {
+      kUnset, // No Inspect() call has been seen yet.
+      kNoObjectGiven, // No object was given to the initial Inspect() call.
+      kValidObjectGiven // The address points to an actual object.
+   };
 private:
    class TParentBuf;
    TParentBuf* fParent; // current inspection "path"
+   EObjectPointerState fObjectPointerState; // whether the address is valid or only an offset
 
    TMemberInspector(const TMemberInspector&);            // Not implemented.
    TMemberInspector &operator=(const TMemberInspector&); // Not implemented.
@@ -40,6 +47,8 @@ public:
    TMemberInspector();
    virtual ~TMemberInspector();
 
+   EObjectPointerState GetObjectValidity() const { return fObjectPointerState; }
+   void SetObjectValidity(EObjectPointerState val) { fObjectPointerState = val; }
    virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr);
    virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t /* isTransient */) { Inspect(cl,parent,name,addr); }
 

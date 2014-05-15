@@ -53,7 +53,7 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
    fPriority = 2;
 
    fAttFill = 0;
-   
+
    MakeTitle("Fill");
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
@@ -87,7 +87,7 @@ TAttFillEditor::TAttFillEditor(const TGWindow *p, Int_t width,
 
 //______________________________________________________________________________
 TAttFillEditor::~TAttFillEditor()
-{ 
+{
   // Destructor of fill editor.
 }
 
@@ -113,10 +113,10 @@ void TAttFillEditor::SetModel(TObject* obj)
 
    TAttFill *attfill = dynamic_cast<TAttFill *>(obj);
    if (!attfill) return;
-   
+
    fAttFill = attfill;
    fAvoidSignal = kTRUE;
-   
+
    Color_t c = fAttFill->GetFillColor();
    Pixel_t p = TColor::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
@@ -130,7 +130,7 @@ void TAttFillEditor::SetModel(TObject* obj)
    if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor())) {
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
-   }   
+   }
 }
 
 //______________________________________________________________________________
@@ -160,7 +160,7 @@ void TAttFillEditor::DoFillColor(Pixel_t color)
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }
-      
+
    Update();
 }
 
@@ -210,7 +210,14 @@ void TAttFillEditor::DoLiveAlpha(Int_t a)
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
-   if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor())) color->SetAlpha((Float_t)a/1000);
+   if (TColor *color = gROOT->GetColor(fAttFill->GetFillColor()))  {
+      // In case the color is not transparent a new color is created.
+      if (color->GetAlpha() == 1.) {
+         fAttFill->SetFillColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
+      } else {
+         color->SetAlpha((Float_t)a/1000);
+      }
+   }
    Update();
 }
 

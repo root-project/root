@@ -1,2 +1,2 @@
-% Processing and Visualization Functions
-% Miroslav Morháč
+% Minuit 2
+%  Fred JAMES and Matthias WINKLER

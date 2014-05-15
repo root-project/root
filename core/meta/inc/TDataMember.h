@@ -35,13 +35,16 @@ class TDataMember : public TDictionary {
 private:
    enum { kObjIsPersistent = BIT(2) };
 
-   DataMemberInfo_t   *fInfo;         //pointer to CINT data member info
-   TClass             *fClass;        //pointer to the class
-   TDataType          *fDataType;     //pointer to data basic type descriptor
+   DataMemberInfo_t   *fInfo;         //!pointer to CINT data member info
+   TClass             *fClass;        //!pointer to the class
+   TDataType          *fDataType;     //!pointer to data basic type descriptor
 
-   Long_t              fOffset;       //offset 
-   Int_t               fSTLCont;      //STL type 
+   Long_t              fOffset;       //offset
+   Int_t               fSTLCont;      //STL type
    Long_t              fProperty;     //Property
+   Int_t               fArrayDim;     //Number of array dimensions
+   Int_t              *fArrayMaxIndex;//[fArrayDim] Maximum index for each dimension
+   TString             fArrayIndex;   //String representation of the index variable name
 
    TString             fTypeName;     //data member type, e,g.: "class TDirectory*" -> "TDirectory".
    TString             fFullTypeName; //full type description of data member, e,g.: "class TDirectory*".
@@ -50,11 +53,11 @@ private:
    // The following fields allows to access all (even private) datamembers and
    // provide a possibility of having options with names and strings.
    // These options are defined in a comment to a field!
-   TMethodCall        *fValueGetter;  //method that returns a value;
-   TMethodCall        *fValueSetter;  //method which sets value;
+   TMethodCall        *fValueGetter;  //!method that returns a value;
+   TMethodCall        *fValueSetter;  //!method which sets value;
    TList              *fOptions;      //list of possible values 0=no restrictions
 
-   void Init();
+   void Init(bool afterReading);
 
 protected:
    TDataMember(const TDataMember&);
@@ -87,9 +90,10 @@ public:
    Int_t          IsSTLContainer();
    Bool_t         IsValid();
    Long_t         Property() const;
+   void           SetClass(TClass* cl) { fClass = cl; }
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TDataMember,0)  //Dictionary for a class data member
+   ClassDef(TDataMember,2)  //Dictionary for a class data member
 };
 
 
@@ -99,15 +103,19 @@ public:
 class TOptionListItem : public TObject {
 
 public:
-   TDataMember     *fDataMember;     //Data member to which this option belongs
+   TDataMember     *fDataMember;     //!Data member to which this option belongs
    Long_t           fValue;          //Numerical value assigned to option
    Long_t           fValueMaskBit;   //Not used yet: bitmask used when option is a toggle group
    Long_t           fToggleMaskBit;  //Not used yet: bitmask used when toggling value
    TString          fOptName;        //Text assigned to option which appears in option menu
    TString          fOptLabel;       //Text (or enum) value assigned to option.
-
+   TOptionListItem():
+      fDataMember(0), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
+   {}
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
+
+   ClassDef(TOptionListItem,2); //Element in the list of options.
 };
 
 #endif

@@ -11,7 +11,8 @@
 
    // load TMVA shared library created in local release 
    // (not required anymore with the use of rootmaps, but problems with MAC OSX)
-   if (TString(gSystem->GetBuildArch()).Contains("macosx") ) gSystem->Load( "libTMVA.1" );
+
+   if (TString(gSystem->GetBuildArch()).Contains("macosx") ) gSystem->Load( "libTMVA" );
 
    TMVA::Tools::Instance();
 

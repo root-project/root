@@ -2749,7 +2749,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 }
 
 //______________________________________________________________________________
-const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum, const char **errstr)
+const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum, const char **errstr)
 {
    // ValidArrayIndex return a static string (so use it or copy it immediatly, do not
    // call GrabIndex twice in the same expression) containing the size of the
@@ -2783,9 +2783,9 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
 
    if (errnum) *errnum = VALID;
 
+   if (title.size() == 0 || (title[0] != '[')) return 0; 
    size_t rightbracket = title.find(']');
-   if ((title[0] != '[') ||
-       (rightbracket == llvm::StringRef::npos)) return 0;
+   if (rightbracket == llvm::StringRef::npos) return 0;
 
    std::string working;
    static std::string indexvar;
@@ -2825,7 +2825,7 @@ const char* ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::Field
       } else { // current token is not a digit
          // first let's see if it is a data member:
          int found = 0;
-         const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getParent());
+         const clang::CXXRecordDecl *parent_clxx = llvm::dyn_cast<clang::CXXRecordDecl>(m.getDeclContext());
          const clang::FieldDecl *index1 = GetDataMemberFromAll(*parent_clxx, current );
          if ( index1 ) {
             if ( IsFieldDeclInt(index1) ) {
@@ -3995,6 +3995,10 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    if (!instance) return input;
 
+   using namespace llvm;
+   using namespace clang;
+   const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
+
    // Treat scope (clang::ElaboratedType) if any.
    const clang::ElaboratedType* etype
       = llvm::dyn_cast<clang::ElaboratedType>(input.getTypePtr());
@@ -4003,7 +4007,6 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
       clang::Qualifiers scope_qualifiers = input.getLocalQualifiers();
       assert(instance->getAsCXXRecordDecl()!=0 && "ReSubstTemplateArg only makes sense with a type representing a class.");
-      const clang::ASTContext &Ctxt = instance->getAsCXXRecordDecl()->getASTContext();
 
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
@@ -4011,6 +4014,102 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       if (scope) subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
       subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
       return subTy;
+   }
+
+   QualType QT = input;
+
+   // In case of Int_t* we need to strip the pointer first, ReSubst and attach
+   // the pointer once again.
+   if (isa<PointerType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();
+      QualType nQT;
+      nQT = ReSubstTemplateArg(QT->getPointeeType(),instance);
+      if (nQT == QT->getPointeeType()) return QT;
+
+      QT = Ctxt.getPointerType(nQT);
+      // Add back the qualifiers.
+      QT = Ctxt.getQualifiedType(QT, quals);
+      return QT;
+   }
+
+   // In case of Int_t& we need to strip the pointer first, ReSubst and attach
+   // the reference once again.
+   if (isa<ReferenceType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      bool isLValueRefTy = isa<LValueReferenceType>(QT.getTypePtr());
+      Qualifiers quals = QT.getQualifiers();
+      QualType nQT;
+      nQT = ReSubstTemplateArg(QT->getPointeeType(),instance);
+      if (nQT == QT->getPointeeType()) return QT;
+
+      // Add the r- or l-value reference type back to the desugared one.
+      if (isLValueRefTy)
+         QT = Ctxt.getLValueReferenceType(nQT);
+      else
+         QT = Ctxt.getRValueReferenceType(nQT);
+      // Add back the qualifiers.
+      QT = Ctxt.getQualifiedType(QT, quals);
+      return QT;
+   }
+
+   // In case of Int_t[2] we need to strip the array first, ReSubst and attach
+   // the array once again.
+   if (isa<ArrayType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();
+
+      if (isa<ConstantArrayType>(QT.getTypePtr())) {
+         const ConstantArrayType *arr = dyn_cast<ConstantArrayType>(QT.getTypePtr());
+
+         QualType newQT= ReSubstTemplateArg(arr->getElementType(),instance);
+
+         if (newQT == arr->getElementType()) return QT;
+         QT = Ctxt.getConstantArrayType (newQT,
+                                        arr->getSize(),
+                                        arr->getSizeModifier(),
+                                        arr->getIndexTypeCVRQualifiers());
+
+      } else if (isa<DependentSizedArrayType>(QT.getTypePtr())) {
+         const DependentSizedArrayType *arr = dyn_cast<DependentSizedArrayType>(QT.getTypePtr());
+
+         QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
+
+         if (newQT == QT) return QT;
+         QT = Ctxt.getDependentSizedArrayType (newQT,
+                                              arr->getSizeExpr(),
+                                              arr->getSizeModifier(),
+                                              arr->getIndexTypeCVRQualifiers(),
+                                              arr->getBracketsRange());
+
+      } else if (isa<IncompleteArrayType>(QT.getTypePtr())) {
+         const IncompleteArrayType *arr
+           = dyn_cast<IncompleteArrayType>(QT.getTypePtr());
+
+         QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
+
+         if (newQT == arr->getElementType()) return QT;
+         QT = Ctxt.getIncompleteArrayType (newQT,
+                                          arr->getSizeModifier(),
+                                          arr->getIndexTypeCVRQualifiers());
+
+      } else if (isa<VariableArrayType>(QT.getTypePtr())) {
+         const VariableArrayType *arr
+            = dyn_cast<VariableArrayType>(QT.getTypePtr());
+
+         QualType newQT = ReSubstTemplateArg(arr->getElementType(),instance);
+
+         if (newQT == arr->getElementType()) return QT;
+         QT = Ctxt.getVariableArrayType (newQT,
+                                        arr->getSizeExpr(),
+                                        arr->getSizeModifier(),
+                                        arr->getIndexTypeCVRQualifiers(),
+                                        arr->getBracketsRange());
+      }
+
+      // Add back the qualifiers.
+      QT = Ctxt.getQualifiedType(QT, quals);
+      return QT;
    }
 
    // If the instance is also an elaborated type, we need to skip
@@ -4114,6 +4213,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
    return input;
 }
+
 //______________________________________________________________________________
 int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int nArgsToRemove)
 {
@@ -4140,7 +4240,6 @@ int ROOT::TMetaUtils::RemoveTemplateArgsFromName(std::string& name, unsigned int
    return 0;
 
 }
-
 
 //______________________________________________________________________________
 ROOT::ESTLType ROOT::TMetaUtils::STLKind(const llvm::StringRef type)

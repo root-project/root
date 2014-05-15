@@ -199,6 +199,14 @@ TEnum *TListOfEnums::Get(DeclId_t id, const char *name)
    TEnum *e = (TEnum*)fIds->GetValue((Long64_t)id);
    if (!e) {
       if (fClass) {
+         if (!fClass->HasInterpreterInfoInMemory()) {
+            // The interpreter does not know about this class yet (or a problem
+            // occurred that prevented the proper updating of fClassInfo).
+            // So this decl can not possibly be part of this class.
+            // [In addition calling GetClassInfo would trigger a late parsing
+            //  of the header which we want to avoid].
+            return 0;
+         }
          if (!gInterpreter->ClassInfo_Contains(fClass->GetClassInfo(),id)) return 0;
       } else {
          if (!gInterpreter->ClassInfo_Contains(0,id)) return 0;
@@ -286,6 +294,13 @@ void TListOfEnums::Load()
    // Load all the DataMembers known to the intepreter for the scope 'fClass'
    // into this collection.
 
+   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
+      // Class and union are not extendable, if we already
+      // loaded all the data member there is no need to recheck
+      if (fIsLoaded) return;
+   }
+
+   // This will provoke the parsing of the headers if need be.
    if (fClass && fClass->GetClassInfo() == 0) return;
 
    ULong64_t currentTransaction = gInterpreter->GetInterpreterStateMarker();
@@ -294,14 +309,8 @@ void TListOfEnums::Load()
    }
    fLastLoadMarker = currentTransaction;
 
-   if (fClass && fClass->Property() & (kIsClass|kIsStruct|kIsUnion)) {
-      // Class and union are not extendable, if we already
-      // loaded all the data member there is no need to recheck
-      if (fIsLoaded) return;
-   }
    // In the case of namespace, even if we have loaded before we need to
    // load again in case there was new data member added.
-   // (We may want to avoid doing it if there was no change in the AST).
 
    // Mark the list as loaded to avoid an infinite recursion in the case
    // where we have a data member that is a variable size array.  In that

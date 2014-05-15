@@ -22,7 +22,7 @@
 #include "BaseSelectionRule.h"
 #include <string>
 
-class VariableSelectionRule : public BaseSelectionRule
+class VariableSelectionRule final : public BaseSelectionRule
 {
 public:
    VariableSelectionRule(ESelect sel) : BaseSelectionRule(sel) {}

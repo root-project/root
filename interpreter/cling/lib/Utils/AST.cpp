@@ -773,9 +773,12 @@ namespace utils {
     if (isa<PointerType>(QT.getTypePtr())) {
       // Get the qualifiers.
       Qualifiers quals = QT.getQualifiers();
-      QT = GetPartiallyDesugaredTypeImpl(Ctx, QT->getPointeeType(), TypeConfig,
-                                         fullyQualifyType,fullyQualifyTmpltArg);
-      QT = Ctx.getPointerType(QT);
+      QualType nQT;
+      nQT = GetPartiallyDesugaredTypeImpl(Ctx, QT->getPointeeType(), TypeConfig,
+                                          fullyQualifyType,fullyQualifyTmpltArg);
+      if (nQT == QT->getPointeeType()) return QT;
+
+      QT = Ctx.getPointerType(nQT);
       // Add back the qualifiers.
       QT = Ctx.getQualifiedType(QT, quals);
       return QT;
@@ -792,18 +795,82 @@ namespace utils {
     }
 
     // In case of Int_t& we need to strip the pointer first, desugar and attach
-    // the pointer once again.
+    // the reference once again.
     if (isa<ReferenceType>(QT.getTypePtr())) {
       // Get the qualifiers.
       bool isLValueRefTy = isa<LValueReferenceType>(QT.getTypePtr());
       Qualifiers quals = QT.getQualifiers();
-      QT = GetPartiallyDesugaredTypeImpl(Ctx, QT->getPointeeType(), TypeConfig,
+      QualType nQT;
+      nQT = GetPartiallyDesugaredTypeImpl(Ctx, QT->getPointeeType(), TypeConfig,
                                          fullyQualifyType,fullyQualifyTmpltArg);
+      if (nQT == QT->getPointeeType()) return QT;
+
       // Add the r- or l-value reference type back to the desugared one.
       if (isLValueRefTy)
-        QT = Ctx.getLValueReferenceType(QT);
+        QT = Ctx.getLValueReferenceType(nQT);
       else
-        QT = Ctx.getRValueReferenceType(QT);
+        QT = Ctx.getRValueReferenceType(nQT);
+      // Add back the qualifiers.
+      QT = Ctx.getQualifiedType(QT, quals);
+      return QT;
+    }
+
+    // In case of Int_t[2] we need to strip the array first, desugar and attach
+    // the array once again.
+    if (isa<ArrayType>(QT.getTypePtr())) {
+      // Get the qualifiers.
+      Qualifiers quals = QT.getQualifiers();
+
+      if (isa<ConstantArrayType>(QT.getTypePtr())) {
+        const ConstantArrayType *arr
+          = dyn_cast<ConstantArrayType>(QT.getTypePtr());
+        QualType newQT
+           = GetPartiallyDesugaredTypeImpl(Ctx,arr->getElementType(), TypeConfig,
+                                         fullyQualifyType,fullyQualifyTmpltArg);
+        if (newQT == arr->getElementType()) return QT;
+        QT = Ctx.getConstantArrayType (newQT,
+                                       arr->getSize(),
+                                       arr->getSizeModifier(),
+                                       arr->getIndexTypeCVRQualifiers());
+
+      } else if (isa<DependentSizedArrayType>(QT.getTypePtr())) {
+        const DependentSizedArrayType *arr
+          = dyn_cast<DependentSizedArrayType>(QT.getTypePtr());
+        QualType newQT
+          = GetPartiallyDesugaredTypeImpl(Ctx,arr->getElementType(), TypeConfig,
+                                          fullyQualifyType,fullyQualifyTmpltArg);
+        if (newQT == QT) return QT;
+        QT = Ctx.getDependentSizedArrayType (newQT,
+                                            arr->getSizeExpr(),
+                                            arr->getSizeModifier(),
+                                            arr->getIndexTypeCVRQualifiers(),
+                                            arr->getBracketsRange());
+
+      } else if (isa<IncompleteArrayType>(QT.getTypePtr())) {
+        const IncompleteArrayType *arr
+          = dyn_cast<IncompleteArrayType>(QT.getTypePtr());
+        QualType newQT
+          = GetPartiallyDesugaredTypeImpl(Ctx,arr->getElementType(), TypeConfig,
+                                          fullyQualifyType,fullyQualifyTmpltArg);
+        if (newQT == arr->getElementType()) return QT;
+        QT = Ctx.getIncompleteArrayType (newQT,
+                                         arr->getSizeModifier(),
+                                         arr->getIndexTypeCVRQualifiers());
+
+      } else if (isa<VariableArrayType>(QT.getTypePtr())) {
+        const VariableArrayType *arr
+          = dyn_cast<VariableArrayType>(QT.getTypePtr());
+        QualType newQT
+          = GetPartiallyDesugaredTypeImpl(Ctx,arr->getElementType(), TypeConfig,
+                                          fullyQualifyType,fullyQualifyTmpltArg);
+        if (newQT == arr->getElementType()) return QT;
+        QT = Ctx.getVariableArrayType (newQT,
+                                       arr->getSizeExpr(),
+                                       arr->getSizeModifier(),
+                                       arr->getIndexTypeCVRQualifiers(),
+                                       arr->getBracketsRange());
+      }
+
       // Add back the qualifiers.
       QT = Ctx.getQualifiedType(QT, quals);
       return QT;
@@ -872,10 +939,11 @@ namespace utils {
       }
     }
 
-    // If we have a reference or pointer we still need to
+    // If we have a reference, array or pointer we still need to
     // desugar what they point to.
     if (isa<PointerType>(QT.getTypePtr()) ||
-        isa<ReferenceType>(QT.getTypePtr()) ) {
+        isa<ReferenceType>(QT.getTypePtr()) ||
+        isa<ArrayType>(QT.getTypePtr())) {
       return GetPartiallyDesugaredTypeImpl(Ctx, QT, TypeConfig,
                                            fullyQualifyType,
                                            fullyQualifyTmpltArg);

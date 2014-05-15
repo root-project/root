@@ -173,10 +173,12 @@
 #include "TInterpreter.h"
 #include "TIterator.h"
 #include "TList.h"
+#include "TListOfDataMembers.h"
 #include "TMethod.h"
 #include "TMethodCall.h"
 #include "TRealData.h"
 #include "TROOT.h"
+#include "TVirtualMutex.h"
  
 #include <stdlib.h>
 
@@ -199,25 +201,34 @@ TDataMember::TDataMember(DataMemberInfo_t *info, TClass *cl) : TDictionary()
    fOffset      = -1;
    fProperty    = -1;
    fSTLCont     = -1;
+   fArrayDim    = -1;
+   fArrayMaxIndex=0;
    if (!fInfo && !fClass) return; // default ctor is called
 
-   Init();
+   Init(false);
 }
 
 //______________________________________________________________________________
-void TDataMember::Init()
+void TDataMember::Init(bool afterReading)
 {
    // Routines called by the constructor and Update to reset the member's
    // information.
+   // afterReading is set when initializing after reading through Streamer().
+   const char *t = 0;
+   if (!afterReading) {
+      // Initialize from fInfo
+      if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
 
-   if (!fInfo || !gInterpreter->DataMemberInfo_IsValid(fInfo)) return;
-
-   fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
-   fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
-   fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fFullTypeName));
-   SetName(gCling->DataMemberInfo_Name(fInfo));
-   const char *t = gCling->DataMemberInfo_Title(fInfo);
-   SetTitle(t);
+      fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+      fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+      fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fTrueTypeName));
+      SetName(gCling->DataMemberInfo_Name(fInfo));
+      t = gCling->DataMemberInfo_Title(fInfo);
+      SetTitle(t);
+   } else {
+      // We have read the persistent data members.
+      t = GetTitle();
+   }
    if (t && t[0] != '!') SetBit(kObjIsPersistent);
    fDataType = 0;
    if (IsBasic() || IsEnum()) {
@@ -244,6 +255,15 @@ void TDataMember::Init()
       //                  GetTypeName());
    }
 
+
+   if (afterReading) {
+      // Options are streamed; can't build TMethodCall for getters and setters
+      // because we deserialize a TDataMember when we do not have interpreter
+      // data. Thus do an early return.
+      return;
+   }
+
+
    // If option string exist in comment - we'll parse it and create
    // list of options
 
@@ -266,7 +286,7 @@ void TDataMember::Init()
    Int_t token_cnt;
    Int_t i;
 
-   strlcpy(cmt,gCling->DataMemberInfo_Title(fInfo),2048);
+   strlcpy(cmt,GetTitle(),2048);
 
    if ((opt_ptr=strstr(cmt,"*OPTION={"))) {
 
@@ -275,15 +295,15 @@ void TDataMember::Init()
       //let's cut the part lying between {}
       ptr1 = strtok(opt_ptr  ,"{}");  //starts tokenizing:extracts "*OPTION={"
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
       }
       ptr1 = strtok((char*)0,"{}");   //And now we have what we need in ptr1!!!
       if (ptr1 == 0) {
-         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+         Fatal("TDataMember","Internal error, found \"*OPTION={\" but not \"{}\" in %s.",GetTitle());
          return;
       }
-      
+
       //and save it:
       strlcpy(opt,ptr1,2048);
 
@@ -312,16 +332,16 @@ void TDataMember::Init()
          if (strstr(tokens[i],"GetMethod")) {
             ptr1 = strtok(tokens[i],"\"");    //tokenizing-strip text "GetMethod"
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok(0,"\"");         //tokenizing - name is in ptr1!
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"GetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             
-            if (GetClass()->GetMethod(ptr1,"")) // check whether such method exists
+            if (!afterReading &&  GetClass()->GetMethod(ptr1,"")) // check whether such method exists
                // FIXME: wrong in case called derives via multiple inheritance from this class
                fValueGetter = new TMethodCall(GetClass(),ptr1,"");
 
@@ -331,12 +351,12 @@ void TDataMember::Init()
          if (strstr(tokens[i],"SetMethod")) {
             ptr1 = strtok(tokens[i],"\"");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok((char*)0,"\"");    //name of Setter in ptr1
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"SetMethod\" but not \"\\\"\" in %s.",GetTitle());
                return;
             }
             if (GetClass()->GetMethod(ptr1,"1"))
@@ -354,15 +374,15 @@ void TDataMember::Init()
          if (strstr(tokens[i],"Items")) {
             ptr1 = strtok(tokens[i],"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
             }
             ptr1 = strtok((char*)0,"()");
             if (ptr1 == 0) {
-               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",gCling->DataMemberInfo_Title(fInfo));
+               Fatal("TDataMember","Internal error, found \"Items\" but not \"()\" in %s.",GetTitle());
                return;
             }
-            
+
             char opts[2048];  //and save it!
             strlcpy(opts,ptr1,2048);
 
@@ -413,12 +433,12 @@ void TDataMember::Init()
             } else if (IsEnum()) {
                TObject *obj = fClass->GetListOfDataMembers(false)->FindObject(ptr1);
                if (obj)
-                  l = gInterpreter->Calc(Form("%s::%s;",fClass->GetName(),ptr1));
+                  l = ((TEnumConstant*)obj)->GetValue();
                else
                   l = gInterpreter->Calc(Form("%s;",ptr1));
             } else
                l = atol(ptr1);
-            
+
             it1 = new TOptionListItem(this,l,0,0,ptr3,ptr1);
             fOptions->Add(it1);
          }
@@ -488,6 +508,9 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fOffset(dm.fOffset),
   fSTLCont(dm.fSTLCont),
   fProperty(dm.fProperty),
+  fArrayDim(dm.fArrayDim),
+  fArrayMaxIndex( dm.fArrayDim ? new Int_t[dm.fArrayDim] : 0),
+  fArrayIndex(dm.fArrayIndex),
   fTypeName(dm.fTypeName),
   fFullTypeName(dm.fFullTypeName),
   fTrueTypeName(dm.fTrueTypeName),
@@ -496,6 +519,8 @@ TDataMember::TDataMember(const TDataMember& dm) :
   fOptions(dm.fOptions ? (TList*)dm.fOptions->Clone() : 0)
 { 
    //copy constructor
+   for(Int_t d = 0; d < fArrayDim; ++d)
+      fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
 }
 
 //______________________________________________________________________________
@@ -519,6 +544,11 @@ TDataMember& TDataMember::operator=(const TDataMember& dm)
       fOffset=dm.fOffset;
       fSTLCont=dm.fSTLCont;
       fProperty=dm.fProperty;
+      fArrayDim = dm.fArrayDim;
+      fArrayMaxIndex = dm.fArrayDim ? new Int_t[dm.fArrayDim] : 0;
+      for(Int_t d = 0; d < fArrayDim; ++d)
+         fArrayMaxIndex[d] = dm.fArrayMaxIndex[d];
+      fArrayIndex = dm.fArrayIndex;
       fTypeName=dm.fTypeName;
       fFullTypeName=dm.fFullTypeName;
       fTrueTypeName=dm.fTrueTypeName;
@@ -532,6 +562,7 @@ TDataMember::~TDataMember()
 {
    // TDataMember dtor deletes adopted CINT DataMemberInfo object.
 
+   delete [] fArrayMaxIndex;
    gCling->DataMemberInfo_Delete(fInfo);
    delete fValueSetter;
    delete fValueGetter;
@@ -546,7 +577,19 @@ Int_t TDataMember::GetArrayDim() const
 {
    // Return number of array dimensions.
 
-   return gCling->DataMemberInfo_ArrayDim(fInfo);
+   if (fArrayDim<0 && fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TDataMember *dm = const_cast<TDataMember*>(this);
+      dm->fArrayDim = gCling->DataMemberInfo_ArrayDim(fInfo);
+      // fArrayMaxIndex should be zero
+      if (dm->fArrayDim) {
+         dm->fArrayMaxIndex = new Int_t[fArrayDim];
+         for(Int_t dim = 0; dim < fArrayDim; ++dim) {
+            dm->fArrayMaxIndex[dim] = gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+         }
+      }
+   }
+   return fArrayDim;
 }
 
 //______________________________________________________________________________
@@ -556,14 +599,22 @@ const char *TDataMember::GetArrayIndex() const
    // GetArrayIndex returns a string pointing to it;
    // otherwise it returns an empty string.
 
-   const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
-   return (val && IsaPointer() ) ? val : "";
+   if (!IsaPointer()) return "";
+   if (fArrayIndex.Length()==0 && fInfo) {
+      R__LOCKGUARD(gInterpreterMutex);
+      TDataMember *dm = const_cast<TDataMember*>(this);
+      const char* val = gCling->DataMemberInfo_ValidArrayIndex(fInfo);
+      if (val) dm->fArrayIndex = val;
+      else dm->fArrayIndex.Append((Char_t)0); // Make length non-zero but string still empty.
+   }
+   return fArrayIndex;
 }
 
 //______________________________________________________________________________
 TDictionary::DeclId_t TDataMember::GetDeclId() const
 {
-   return gInterpreter->GetDeclId(fInfo);
+   if (fInfo) return gInterpreter->GetDeclId(fInfo);
+   else return 0;
 }
 
 //______________________________________________________________________________
@@ -571,7 +622,12 @@ Int_t TDataMember::GetMaxIndex(Int_t dim) const
 {
    // Return maximum index for array dimension "dim".
 
-   return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+   if (fArrayDim<0 && fInfo) {
+      return gCling->DataMemberInfo_MaxIndex(fInfo,dim);
+   } else {
+      if (dim < 0 || dim >= fArrayDim) return -1;
+      return fArrayMaxIndex[dim];
+   }
 }
 
 //______________________________________________________________________________
@@ -607,6 +663,7 @@ Long_t TDataMember::GetOffset() const
 
    if (fOffset>=0) return fOffset;
 
+   R__LOCKGUARD(gInterpreterMutex);
    //case of an interpreted or emulated class
    if (fClass->GetDeclFileLine() < 0) {
       ((TDataMember*)this)->fOffset = gCling->DataMemberInfo_Offset(fInfo);
@@ -653,7 +710,13 @@ Long_t TDataMember::GetOffsetCint() const
 {
    // Get offset from "this" using the information in CINT only.
 
-   return gCling->DataMemberInfo_Offset(fInfo);
+   if (fOffset>=0) return fOffset;
+
+   R__LOCKGUARD(gInterpreterMutex);
+   TDataMember *dm = const_cast<TDataMember*>(this);
+
+   if (dm->IsValid()) return gCling->DataMemberInfo_Offset(dm->fInfo);
+   else return -1;
 }
 
 //______________________________________________________________________________
@@ -707,6 +770,7 @@ int TDataMember::IsSTLContainer()
    // The return type is defined in TDictionary (kVector, kList, etc.)
 
    if (fSTLCont != -1) return fSTLCont;
+   R__LOCKGUARD(gInterpreterMutex);
    fSTLCont = abs(TClassEdit::IsSTLCont(GetTrueTypeName()));
    return fSTLCont;
 }
@@ -714,16 +778,23 @@ int TDataMember::IsSTLContainer()
 //______________________________________________________________________________
 Bool_t TDataMember::IsValid()
 {
-  // Return true if this data member object is pointing to a currently
+   // Return true if this data member object is pointing to a currently
    // loaded data member.  If a function is unloaded after the TDataMember
    // is created, the TDataMember will be set to be invalid.
+
+   if (fOffset >= 0) return kTRUE;
 
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
       DeclId_t newId = gInterpreter->GetDataMember(fClass->GetClassInfo(), fName);
       if (newId) {
-         DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
+         DataMemberInfo_t *info
+            = gInterpreter->DataMemberInfo_Factory(newId, fClass->GetClassInfo());
          Update(info);
+         // We need to make sure that the list of data member is properly
+         // informed and updated.
+         TListOfDataMembers *lst = dynamic_cast<TListOfDataMembers*>(fClass->GetListOfDataMembers());
+         lst->Update(this);
       }
       return newId != 0;
    }
@@ -737,14 +808,18 @@ Long_t TDataMember::Property() const
 
    if (fProperty!=(-1)) return fProperty;
 
+   R__LOCKGUARD(gInterpreterMutex);
    TDataMember *t = (TDataMember*)this;
+
    if (!fInfo || !gCling->DataMemberInfo_IsValid(fInfo)) return 0;
    int prop  = gCling->DataMemberInfo_Property(fInfo);
    int propt = gCling->DataMemberInfo_TypeProperty(fInfo);
    t->fProperty = prop|propt;
-   const char *tname = gCling->DataMemberInfo_TypeName(fInfo);
-   t->fTypeName = gCling->TypeName(tname);
-   t->fFullTypeName = tname;
+
+   t->fFullTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeName(fInfo));
+   t->fTrueTypeName = TClassEdit::GetLong64_Name(gCling->DataMemberInfo_TypeTrueName(fInfo));
+   t->fTypeName     = TClassEdit::GetLong64_Name(gCling->TypeName(fTrueTypeName));
+
    t->fName  = gCling->DataMemberInfo_Name(fInfo);
    t->fTitle = gCling->DataMemberInfo_Title(fInfo);
 
@@ -769,6 +844,8 @@ TMethodCall *TDataMember::GetterMethod(TClass *cl)
    // offset).
 
    if (!fValueGetter || cl) {
+
+      R__LOCKGUARD(gInterpreterMutex);
 
       if (!cl) cl = fClass;
 
@@ -812,6 +889,8 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
 
    if (!fValueSetter || cl) {
 
+      R__LOCKGUARD(gInterpreterMutex);
+
       if (!cl) cl = fClass;
 
       if (fValueSetter) {
@@ -851,6 +930,8 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
    // This can be used to implement unloading (info == 0) and then reloading
    // (info being the 'new' decl address).
 
+   R__LOCKGUARD(gInterpreterMutex);
+
    if (fInfo) gCling->DataMemberInfo_Delete(fInfo);
    SafeDelete(fValueSetter);
    SafeDelete(fValueGetter);
@@ -860,12 +941,46 @@ Bool_t TDataMember::Update(DataMemberInfo_t *info)
    }
 
    if (info == 0) {
+      fOffset      = -1;
+      fProperty    = -1;
+      fSTLCont     = -1;
+      fArrayDim    = -1;
+      delete [] fArrayMaxIndex;
+      fArrayMaxIndex=0;
+      fArrayIndex.Clear();
+
       fInfo = 0;
       return kTRUE;
    } else {
       fInfo = info;
-      Init();
+      Init(false);
       return kTRUE;
+   }
+}
+
+
+//______________________________________________________________________________
+void TDataMember::Streamer(TBuffer& b) {
+   // Stream an object of TDataMember. Forces calculation of all cached
+   // (and persistent) values.
+   if (b.IsReading()) {
+      b.ReadClassBuffer(Class(), this);
+      Init(true /*reading*/);
+   } else {
+      // Writing.
+      if (fProperty & kIsStatic) {
+         // We have a static member and in this case fOffset contains the
+         // actual address in memory of the data, it will be different everytime,
+         // let's not record it.
+         fOffset = -1;
+      } else {
+         GetOffset();
+      }
+      IsSTLContainer();
+      GetArrayDim();
+      GetArrayIndex();
+      Property(); // also calculates fTypeName and friends
+      b.WriteClassBuffer(Class(), this);
    }
 }
 

@@ -54,7 +54,7 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
 
    fAttMarker = 0;
    fSizeForText = kFALSE;
-   
+
    MakeTitle("Marker");
 
    TGCompositeFrame *f2 = new TGCompositeFrame(this, 80, 20, kHorizontalFrame);
@@ -66,9 +66,9 @@ TAttMarkerEditor::TAttMarkerEditor(const TGWindow *p, Int_t width,
    f2->AddFrame(fMarkerType, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
    fMarkerType->Associate(this);
 
-   fMarkerSize = new TGNumberEntry(f2, 0., 4, kMARKER_SIZE, 
+   fMarkerSize = new TGNumberEntry(f2, 0., 4, kMARKER_SIZE,
                                    TGNumberFormat::kNESRealOne,
-                                   TGNumberFormat::kNEANonNegative, 
+                                   TGNumberFormat::kNEANonNegative,
                                    TGNumberFormat::kNELLimitMinMax, 0.2, 5.0);
    fMarkerSize->GetNumberEntry()->SetToolTipText("Set marker size");
    f2->AddFrame(fMarkerSize, new TGLayoutHints(kLHintsLeft, 1, 1, 1, 1));
@@ -133,7 +133,7 @@ void TAttMarkerEditor::SetModel(TObject* obj)
       fSizeForText = kTRUE;
    } else {
       fSizeForText = kFALSE;
-   }   
+   }
    Style_t marker = fAttMarker->GetMarkerStyle();
    if ((marker==1 || marker==6 || marker==7) && !fSizeForText) {
       fMarkerSize->SetNumber(1.);
@@ -155,7 +155,7 @@ void TAttMarkerEditor::SetModel(TObject* obj)
    if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
       fAlpha->SetPosition((Int_t)(color->GetAlpha()*1000));
       fAlphaField->SetNumber(color->GetAlpha());
-   }  
+   }
 }
 
 
@@ -259,7 +259,14 @@ void TAttMarkerEditor::DoLiveAlpha(Int_t a)
    if (fAvoidSignal) return;
    fAlphaField->SetNumber((Float_t)a/1000);
 
-   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) color->SetAlpha((Float_t)a/1000);
+   if (TColor *color = gROOT->GetColor(fAttMarker->GetMarkerColor())) {
+      // In case the color is not transparent a new color is created.
+      if (color->GetAlpha() == 1.) {
+         fAttMarker->SetMarkerColor(TColor::GetColorTransparent(color->GetNumber(),0.99));
+      } else {
+         color->SetAlpha((Float_t)a/1000);
+      }
+   }
    Update();
 }
 

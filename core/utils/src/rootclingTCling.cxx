@@ -18,9 +18,16 @@
 #include "TClass.h"
 #include "TStreamerInfo.h"
 #include <iostream>
+#include "TProtoClass.h"
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
+std::vector<std::string> gAncestorPCMsNames;
+
+extern "C"
+const char*** TROOT__GetExtraInterpreterArgs() {
+   return &TROOT::GetExtraInterpreterArgs();
+}
 
 extern "C"
 cling::Interpreter* TCling__GetInterpreter()
@@ -43,7 +50,13 @@ void InitializeStreamerInfoROOTFile(const char* filename)
 extern "C"
 void AddStreamerInfoToROOTFile(const char* normName)
 {
-   gClassesToStore.push_back(normName);
+   gClassesToStore.emplace_back(normName);
+}
+
+extern "C"
+void AddAncestorPCMROOTFile(const char* pcmName)
+{
+   gAncestorPCMsNames.emplace_back(pcmName);
 }
 
 extern "C"
@@ -54,7 +67,7 @@ bool CloseStreamerInfoROOTFile()
    // Avoid plugins.
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
-   TObjArray classData;
+   TObjArray protoClasses;
    for (const auto& normName: gClassesToStore) {
       TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
@@ -68,7 +81,8 @@ bool CloseStreamerInfoROOTFile()
       // If this is a proxied collection then offsets are not needed.
       if (cl->GetCollectionProxy())
          continue;
-      // streamerInfos.AddLast(...)
+      cl->Property(); // Force initialization of the bits and property fields.
+      protoClasses.AddLast(new TProtoClass(cl));
    }
 
    // Don't use TFile::Open(); we don't need plugins.
@@ -76,6 +90,11 @@ bool CloseStreamerInfoROOTFile()
    if (dictFile.IsZombie())
       return false;
    // Instead of plugins:
-   classData.Write("__StreamerInfoOffsets", TObject::kSingleKey);
+   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
+   protoClasses.Delete();
+
+   dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
+
+
    return true;
 }

@@ -17,16 +17,17 @@
 
 #pragma link C++ enum EProperty;
 
-#pragma link C++ class TBaseClass;
+#pragma link C++ class TBaseClass-;
 #pragma link C++ class TClass;
 #pragma link C++ class TClassStreamer+;
 #pragma link C++ class TMemberStreamer+;
 #pragma link C++ class TDictAttributeMap+;
 #pragma link C++ class TClassRef+;
 #pragma link C++ class TClassGenerator+;
-#pragma link C++ class TDataMember;
+#pragma link C++ class TDataMember-;
+#pragma link C++ class TOptionListItem+;
 #pragma link C++ class TDataType;
-#pragma link C++ class TDictionary;
+#pragma link C++ class TDictionary+;
 #pragma link C++ class TEnumConstant+;
 #pragma link C++ class TEnum+;
 #pragma link C++ class TFunction;
@@ -44,7 +45,9 @@
 #pragma link C++ class TVirtualIsAProxy;
 #pragma link C++ class TVirtualStreamerInfo-;
 #pragma link C++ class TIsAProxy;
-#pragma link C++ class TRealData+;
+#pragma link C++ class TProtoClass+;
+#pragma link C++ class TProtoClass::TProtoRealData+;
+#pragma link C++ class TRealData;
 #pragma link C++ class TStreamerArtificial-;
 #pragma link C++ class TStreamerBase-;
 #pragma link C++ class TStreamerBasicPointer-;
@@ -64,7 +67,7 @@
 #pragma link C++ class TFileMergeInfo;
 #pragma link C++ class TListOfFunctions+;
 #pragma link C++ class TListOfFunctionTemplates+;
-#pragma link C++ class TListOfDataMembers;
+#pragma link C++ class TListOfDataMembers-;
 #pragma link C++ class TListOfEnums+;
 
 #endif

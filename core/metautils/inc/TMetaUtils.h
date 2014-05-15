@@ -30,6 +30,7 @@ namespace clang {
    class CXXBaseSpecifier;
    class CXXRecordDecl;
    class Decl;
+   class DeclaratorDecl;
    class FieldDecl;
    class FunctionDecl;
    class Module;
@@ -303,7 +304,7 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-const char* DataMemberInfo__ValidArrayIndex(const clang::FieldDecl &m, int *errnum = 0, const char **errstr = 0);
+const char* DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, const char **errstr = 0);
 
 //______________________________________________________________________________
 // Return the ROOT include directory

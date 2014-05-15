@@ -160,6 +160,15 @@ void* RooArgSet::operator new (size_t bytes)
 }
 
 
+//_____________________________________________________________________________
+void* RooArgSet::operator new (size_t bytes, void* ptr) noexcept
+{
+  // Overloaded new operator with placement does not guarante that all
+  // RooArgSets allocated with new have a unique address, but uses the global
+  // operator.
+   return ::operator new (bytes, ptr);
+}
+
 
 //_____________________________________________________________________________
 void RooArgSet::operator delete (void* ptr)
@@ -170,10 +179,11 @@ void RooArgSet::operator delete (void* ptr)
   for (std::list<POOLDATA>::iterator poolIter =  _memPoolList.begin() ; poolIter!=_memPoolList.end() ; ++poolIter) {
     if ((char*)ptr > (char*)poolIter->_base && (char*)ptr < (char*)poolIter->_base + POOLSIZE) {
       (*(Int_t*)(poolIter->_base))-- ;
-      break ;
+      return ;
     }
   }
-  
+  // Not part of any pool; use global op delete:
+  ::operator delete(ptr);
 }
 
 #endif

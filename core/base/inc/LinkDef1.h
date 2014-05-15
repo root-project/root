@@ -129,14 +129,14 @@
 #pragma link C++ namespace ROOT;
 #pragma create TClass TMath;
 #pragma link C++ global ROOT_TMathBase;
-#pragma link C++ typedef ShowMembersFunc_t;
-#pragma link C++ typedef ROOT::NewFunc_t;
-#pragma link C++ typedef ROOT::NewArrFunc_t;
-#pragma link C++ typedef ROOT::DelFunc_t;
-#pragma link C++ typedef ROOT::DelArrFunc_t;
-#pragma link C++ typedef ROOT::DesFunc_t;
-#pragma link C++ typedef Float16_t;
-#pragma link C++ typedef Double32_t;
+// #pragma link C++ typedef ShowMembersFunc_t;
+// #pragma link C++ typedef ROOT::NewFunc_t;
+// #pragma link C++ typedef ROOT::NewArrFunc_t;
+// #pragma link C++ typedef ROOT::DelFunc_t;
+// #pragma link C++ typedef ROOT::DelArrFunc_t;
+// #pragma link C++ typedef ROOT::DesFunc_t;
+// #pragma link C++ typedef Float16_t;
+// #pragma link C++ typedef Double32_t;
 
 #pragma link C++ class TApplication;
 #pragma link C++ class TApplicationImp;

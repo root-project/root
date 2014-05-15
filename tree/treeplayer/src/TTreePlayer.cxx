@@ -976,7 +976,7 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             continue;
          }
          if (bre->GetStreamerType() == 0) {
-            if (!TClass::GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+            if (!TClass::GetClass(bre->GetClassName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
             fprintf(fp,"%s%-15s *%s;\n",head,bre->GetClassName(), branchname);
             if (leafStatus[l] == 0) mustInit.Add(bre);
             continue;
@@ -996,11 +996,11 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
             if (elem) {
                if (elem->IsA() == TStreamerBase::Class()) {leafStatus[l] = 1; continue;}
                if (!TClass::GetClass(elem->GetTypeName())) {leafStatus[l] = 1; continue;}
-               if (!TClass::GetClass(elem->GetTypeName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+               if (!TClass::GetClass(elem->GetTypeName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
                if (leafcount) fprintf(fp,"%s%-15s %s[kMax%s];\n",head,elem->GetTypeName(), branchname,blen);
                else           fprintf(fp,"%s%-15s %s;\n",head,elem->GetTypeName(), branchname);
             } else {
-               if (!TClass::GetClass(bre->GetClassName())->GetClassInfo()) {leafStatus[l] = 1; head = headcom;}
+               if (!TClass::GetClass(bre->GetClassName())->HasInterpreterInfo()) {leafStatus[l] = 1; head = headcom;}
                fprintf(fp,"%s%-15s %s;\n",head,bre->GetClassName(), branchname);
             }
             continue;
