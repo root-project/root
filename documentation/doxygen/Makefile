@@ -3,7 +3,7 @@
 
 docdir="$(shell ./makedocdir.sh)"
 imgdir="$(shell ./makeimgdir.sh)"
-macdir="$(shell ./makemacdir.sh)"
+macdir="$(shell ./makemacrodir.sh)"
 
 all: images doxygen
 
