@@ -674,7 +674,6 @@ bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
 
    // This method visits a class node
-
    return TreatRecordDeclOrTypedefNameDecl(D);
    
 
@@ -686,8 +685,6 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
    // For every class is created a new class buider irrespectful of weather the
    // class is internal for another class declaration or not.
-   // For every class the class builder is put on top of the fClassBuilders
-   // stack.
    // RecordDecls and TypedefDecls (or RecordDecls!) are treated.   
    // We follow two different codepaths if the typeDecl is a RecordDecl or
    // a TypedefDecl. If typeDecl is a TypedefDecl, recordDecl becomes the
@@ -741,10 +738,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
    if (cxxdecl && cxxdecl->getDescribedClassTemplate ()) {
       return true;
    }
-   
-   DumpDecl(recordDecl, "");
-   
-   //Test
+
    const ClassSelectionRule *selectedFromTypedef = typedefNameDecl ? fSelectionRules.IsDeclSelected(typedefNameDecl) : 0;
 
    const ClassSelectionRule *selectedFromRecDecl = fSelectionRules.IsDeclSelected(recordDecl);
@@ -759,6 +753,8 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
       excludedFromRecDecl = selectedFromRecDecl->GetSelected() == BaseSelectionRule::kNo;
 
    if (selected->GetSelected() == BaseSelectionRule::kYes && !excludedFromRecDecl) {
+      // The record decl will results to be selected
+
       // Save the typedef
       if (selectedFromTypedef){
          fSelectedTypedefs.push_back(typedefNameDecl);
@@ -785,7 +781,7 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
          }
          const clang::NamespaceDecl *nsCanonical = nsDecl->getCanonicalDecl();
          if (nsCanonical && nsCanonical == fInterpreter.getCI()->getSema().getStdNamespace()) {
-            if (selected->HasAttributeWithName("file_name") || selected->HasAttributeWithName("file_pattern")) {
+            if (selected->HasAttributeFileName() || selected->HasAttributeFilePattern()) {
                return true;
             }
          }
@@ -793,13 +789,13 @@ bool RScanner::TreatRecordDeclOrTypedefNameDecl(clang::TypeDecl* typeDecl)
 
       // Insert in the selected classes if not already there
       // We need this check since the same class can be selected through its name or typedef
-      bool rcrdDeclAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
-      
-      if(rcrdDeclAlreadySelected &&
+      bool rcrdDeclNotAlreadySelected = fselectedRecordDecls.insert(recordDecl).second;
+
+      if(rcrdDeclNotAlreadySelected &&
          !fFirstPass){
-         
-         std::string name_value("");
-         if (selected->GetAttributeValue(ROOT::TMetaUtils::propNames::name, name_value)) {
+
+         const std::string& name_value = selected->GetAttributeName();
+         if (selected->HasAttributeName()) {
             ROOT::TMetaUtils::AnnotatedRecordDecl annRecDecl(selected->GetIndex(),
                                                             selected->GetRequestedType(),
                                                             recordDecl,
@@ -1056,7 +1052,7 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
 {
    bool ret = true;
-   
+
    if (!DC)
       return true;
 
@@ -1071,9 +1067,9 @@ bool RScanner::TraverseDeclContextHelper(DeclContext *DC)
       if (parent && 0 == parent->getQualifiedNameAsString().compare(0,5,"std::"))
          return true;
       }
-   
-   for (DeclContext::decl_iterator Child = DC->decls_begin(), ChildEnd = DC->decls_end(); 
-        ret && (Child != ChildEnd); ++Child) {      
+
+   for (DeclContext::decl_iterator Child = DC->decls_begin(), ChildEnd = DC->decls_end();
+        ret && (Child != ChildEnd); ++Child) {
       ret=TraverseDecl(*Child);
    }
    

@@ -80,6 +80,7 @@ private:
    bool fHasProtoPatternAttribute;
    bool fHasFileNameAttribute;
    bool fHasFilePatternAttribute;
+   bool fHasFromTypedefAttribute;
 
 public:
 
@@ -118,6 +119,8 @@ public:
 
    inline const std::string& GetAttributeFilePattern() const {return fFilePattern;};
    inline bool HasAttributeFilePattern() const {return fHasFilePatternAttribute;};
+
+   inline bool HasAttributeFromTypedef() const {return fHasFromTypedefAttribute;};
 
    inline const std::string& GetAttributeNArgsToKeep() const {return fNArgsToKeep;};
 
