@@ -229,7 +229,8 @@ const FileEntry *DirectoryLookup::LookupFile(
     SmallVectorImpl<char> *RelativePath,
     ModuleMap::KnownHeader *SuggestedModule,
     bool &InUserSpecifiedSystemFramework,
-    SmallVectorImpl<char> &MappedName) const {
+    SmallVectorImpl<char> &MappedName,
+    bool OpenFile) const {
   InUserSpecifiedSystemFramework = false;
 
   SmallString<1024> TmpDir;
@@ -264,7 +265,7 @@ const FileEntry *DirectoryLookup::LookupFile(
       return File;
     }
     
-    return HS.getFileMgr().getFile(TmpDir.str(), /*openFile=*/true);
+    return HS.getFileMgr().getFile(TmpDir.str(), OpenFile);
   }
 
   if (isFramework())
@@ -290,7 +291,7 @@ const FileEntry *DirectoryLookup::LookupFile(
     Result = HM->LookupFile(Filename, HS.getFileMgr());
 
   } else {
-    Result = HS.getFileMgr().getFile(Dest);
+    Result = HS.getFileMgr().getFile(Dest, OpenFile);
   }
 
   if (Result) {
@@ -674,7 +675,7 @@ const FileEntry *HeaderSearch::LookupFile(
     const FileEntry *FE =
       SearchDirs[i].LookupFile(Filename, *this, SearchPath, RelativePath,
                                SuggestedModule, InUserSpecifiedSystemFramework,
-                               MappedName);
+                               MappedName, OpenFile);
     if (!FE) continue;
 
     CurDir = &SearchDirs[i];

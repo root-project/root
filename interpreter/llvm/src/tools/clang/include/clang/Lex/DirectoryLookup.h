@@ -170,7 +170,8 @@ public:
                               SmallVectorImpl<char> *RelativePath,
                               ModuleMap::KnownHeader *SuggestedModule,
                               bool &InUserSpecifiedSystemFramework,
-                              SmallVectorImpl<char> &MappedName) const;
+                              SmallVectorImpl<char> &MappedName,
+                              bool OpenFile = true) const;
 
 private:
   const FileEntry *DoFrameworkLookup(
