@@ -940,7 +940,12 @@ class genDictionary(object) :
     generateOnFile = False
     sc += '#if 0\n'
     for member in source:
-      sc += '  static int id_%s = oldObj->GetId("%s");\n' % (member[1], member[1])
+      if member[1] != '' and member[1][-1] == ']':
+         name = member[1]
+         varname = name[:name.find('[')]
+      else:
+         varname = member[1]
+      sc += '  static int id_%s = oldObj->GetId("%s");\n' % (varname, varname)
       if member[0] != '':
         generateOnFile = True
     sc += '#endif\n'
@@ -958,11 +963,18 @@ class genDictionary(object) :
       for member in source:
         if member[0] == '': continue
         if member[0][-1] == ']':
-          t = memTypes[0]
+          t = member[0]
           arraydim = t[t.find('['):]
           arraytype  = t[:t.find('[')]
-          sc += '  typedef %s onfile_%s_t%s;\n' % (arraytype,member[1],arraydim)
-          sc += '    onfile_%s_t &%s\n' % (member[1],member[1])
+          sc += '    typedef %s onfile_%s_t%s;\n' % (arraytype,member[1],arraydim)
+          sc += '    onfile_%s_t &%s;\n' % (member[1],member[1])
+        elif member[1][-1] == ']':
+           arraytype = member[0]
+           name = member[1]
+           arraydim = name[name.find('['):]
+           varname = name[:name.find('[')]
+           sc += '    typedef %s onfile_%s_t%s;\n' % (arraytype,varname,arraydim)
+           sc += '    onfile_%s_t &%s;\n' % (varname,varname)
         else:
           sc += '    ' + member[0] + ' &' + member[1] + ';\n'
 
@@ -977,7 +989,15 @@ class genDictionary(object) :
         if not start: sc += ', ';
         else: start = False
 
-        sc += member[0] + ' &onfile_' + member[1]
+        if member[1] != '' and member[1][-1] == ']':
+           name = member[1]
+           varname = name[:name.find('[')]
+           tname = 'onfile_' + varname + '_t';
+        else:
+           varname = member[1]
+           tname = member[0]
+
+        sc += tname + ' &onfile_' + varname
       sc += ' ): '
 
       #---------------------------------------------------------------------------
@@ -990,7 +1010,15 @@ class genDictionary(object) :
         if not start: sc += ', ';
         else: start = False
 
-        sc += member[1] + '(onfile_' + member[1] + ')'
+        if member[1] != '' and member[1][-1] == ']':
+           name = member[1]
+           varname = name[:name.find('[')]
+           tname = 'onfile_' + varname + '_t';
+        else:
+           varname = member[1]
+           tname = member[0]
+
+        sc += varname + '(onfile_' + varname + ')'
       sc += '{}\n'
       sc += '  };\n'
 
@@ -999,9 +1027,16 @@ class genDictionary(object) :
       #---------------------------------------------------------------------------
       for member in source:
         if member[0] == '': continue;
+        if member[1] != '' and member[1][-1] == ']':
+           name = member[1]
+           varname = name[:name.find('[')]
+           tname = 'onfile_' + varname + '_t';
+        else:
+           varname = member[1]
+           tname = member[0]
         sc += '  static Long_t offset_Onfile_' + mappedName
-        sc += '_' + member[1] + ' = oldObj->GetClass()->GetDataMemberOffset("'
-        sc += member[1] +'");\n';
+        sc += '_' + varname + ' = oldObj->GetClass()->GetDataMemberOffset("'
+        sc += varname +'");\n';
 
       sc += '  char *onfile_add = (char*)oldObj->GetObject();\n'
       sc += '  ' + mappedName + '_Onfile onfile(\n'
@@ -1013,9 +1048,16 @@ class genDictionary(object) :
         if not start: sc += ",\n"
         else: start = False
 
+        if member[1] != '' and member[1][-1] == ']':
+           name = member[1]
+           varname = name[:name.find('[')]
+           tname = mappedName + '_Onfile::onfile_' + varname + '_t';
+        else:
+           varname = member[1]
+           tname = member[0]
         sc += '         '
-        sc += '*(' + member[0] + '*)(onfile_add+offset_Onfile_'
-        sc += mappedName + '_' + member[1] + ')'  
+        sc += '*(' + tname + '*)(onfile_add+offset_Onfile_'
+        sc += mappedName + '_' + varname + ')'
 
       sc += ' );\n\n'
 
