@@ -293,7 +293,8 @@ namespace ROOT
 	{
 	  return (*fObjFunc)(x);
 	};
-      fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
+      ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
+      fCMAsols = libcmaes::cmaes<>(ffit,cmaparams,pfunc);
       //fCMAsols = cmaes<>([this](const double *x, const int N){ return (*fObjFunc)(x);},cmaparams); //TODO: use bounds as needed.
       fStatus = fCMAsols._run_status; //TODO: convert so that to match that of Minuit2 ?
       return fCMAsols._run_status >= 0;
