@@ -2205,7 +2205,7 @@ var gStyle = {
             };
          }
          else if (pthis.graph['_typename'] == 'JSROOTIO.TGraphAsymmErrors' ||
-               pthis.graph['_typename'].match(/\bRooHist/)) {
+                  pthis.graph['_typename'].match(/\bRooHist/)) {
             return {
                x: pthis.graph['fX'][p],
                y: pthis.graph['fY'][p],
@@ -4634,6 +4634,8 @@ var gStyle = {
           this.options.Error == 0 && this.options.Same == 0) {
          this.draw_content = false;
       }
+      if (this.options.Axis > 0) // Paint histogram axis only
+         this.draw_content = false;
    }
 
    JSROOTPainter.Hist1DPainter.prototype.CountStat = function()
