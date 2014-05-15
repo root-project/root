@@ -5159,7 +5159,9 @@ int GenReflex(int argc, char **argv)
             targetLibName.c_str());
       }
       // Target lib has precedence over rootmap lib
-      rootmapLibName = options[TARGETLIB].arg;
+      if (options[ROOTMAP]){
+         rootmapLibName = options[TARGETLIB].arg;
+      }
    }
 
    bool multiLib = false;
