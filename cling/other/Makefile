@@ -59,7 +59,9 @@ assertBaseMembers:
 	$(WarnFailTest)
 
 missingXFunc.log: runmissingXFunc.C
-	$(CMDECHO) ( ! $(CALLROOTEXE) -l -b -q $^ > $@ 2>&1 ) || handleError.sh --cmd='! $(CALLROOTEXE) -l -b -q $^' --result=$$? --log=$@
+	$(CMDECHO) ( ! $(CALLROOTEXE) -l -b -q $^ > $@.tmp 2>&1) || handleError.sh --cmd='! $(CALLROOTEXE) -l -b -q $^' --result=$$? --log=$@.tmp
+	$(CMDECHO) sed 's,input_line_[[:digit:]]\+,input_line_,g' $@.tmp > $@
+	$(CMDECHO) rm -f $@.tmp
 
 missingXFunc: missingXFunc.log
 	$(TestDiff)
