@@ -90,7 +90,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
        minim = s1.c_str();
      }
 
-   std::cout << "minimizerType: " << minimizerType << " / minim: " << minim << std::endl;
+   //std::cout << "minimizerType: " << minimizerType << " / minim: " << minim << std::endl;
    
    if (minimizerType.empty() ) minim = ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str(); 
 
@@ -115,7 +115,7 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       else 
          std::cout << "Error creating Minimizer " << minimizerType << "  " << algoType << std::endl;
 #endif
-      std::cout << "min: " << min << std::endl;
+      //std::cout << "min: " << min << std::endl;
       return min; 
    }
    std::cout << "returning 0\n";
