@@ -947,7 +947,7 @@ Begin_Macro(source)
    ce4->cd(1);
    he4->Draw("E4");
    ce4->cd(2);
-   TH1F *he3 = he4->DrawClone("E3");
+   TH1F *he3 = (TH1F*)he4->DrawClone("E3");
    he3->SetTitle("Distribution drawn option E3");
    return ce4;
 }
@@ -1276,7 +1276,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol2->Fill(px,5*py);
    }
-   hcol2->Fill(0,0,-200);
+   hcol2->Fill(0.,0.,-200.);
    gStyle->SetPalette(1);
    hcol2->Draw("COLZ");
    return c1;
