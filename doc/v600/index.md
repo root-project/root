@@ -19,6 +19,7 @@ The following people have contributed to this new version:
  Bertrand Bellenot, CERN/SFT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
+ Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
  Gerri Ganis, CERN/SFT,\
@@ -26,12 +27,14 @@ The following people have contributed to this new version:
  Wim Lavrijsen, LBNL, PyRoot,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
+ Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Paul Russo, FNAL, \
  Joerg Stelzer, DESY/Atlas, TMVA, \
  Alja Tadel, UCSD/CMS, Eve, \
  Matevz Tadel, UCSD/CMS, Eve, \
  Eckhard von Toerne, University Bonn, ATLAS, TMVA, \
+ Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Yue Shi Lai, MIT, \
  Philippe Gras, CEA Saclay, \
