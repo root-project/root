@@ -55,9 +55,12 @@ namespace RooStats {
 
     //set plot precision (when drawing a RooPlot)
     void SetPrecision(double eps) { fPrecision = eps; }
-
-    void SetContourColor(const Color_t color) {fColor = color;}
+    // set the line color for the 1D interval lines or contours (2D)
     void SetLineColor(const Color_t color) {fLineColor = color;}
+    // set the fill contour color
+    void SetFillStyle(const Style_t style) {fFillStyle = style;}
+    // set the fill contour color
+    void SetContourColor(const Color_t color) {fColor = color;}
     void SetMaximum(const Double_t theMaximum) {fMaximum = theMaximum;}
     void SetNPoints(Int_t np) { fNPoints = np; }
 
@@ -71,9 +74,9 @@ namespace RooStats {
 
   private:
 
-    Int_t fColor;         // color for the contour (for 2D) or function (in 1D)
-    Int_t fFillStyle;     // fill style for contours
-    Int_t fLineColor;     // line color for the interval (1D) or for other contours (2D)
+    Color_t fColor;         // color for the contour (for 2D) or function (in 1D)
+    Style_t fFillStyle;     // fill style for contours
+    Color_t fLineColor;     // line color for the interval (1D) or for other contours (2D)
     Int_t fNdimPlot;
     Int_t fNPoints; // number of points used to scan the PL 
 

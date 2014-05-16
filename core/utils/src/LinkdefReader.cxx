@@ -464,6 +464,10 @@ bool LinkdefReader::AddRule(std::string ruletype,
             }
             csr.SetAttributeValue("name", identifier);
 
+            if (name == kTypeDef){
+               csr.SetAttributeValue("fromTypedef", "true");
+            }
+
             fSelectionRules->AddClassSelectionRule(csr);
             //csr.PrintAttributes(std::cout,3);
          }

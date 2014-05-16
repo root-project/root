@@ -237,8 +237,8 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
       } else if ( fCXXRecordDecl != (void*)-1 ) {
          // Try a real match!         
          const clang::CXXRecordDecl *target
-            = ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
-                                            true /*diagnose*/, 0);
+            = fHasFromTypedefAttribute ? nullptr : ROOT::TMetaUtils::ScopeSearch(name_value.c_str(), *fInterp,
+                                                   true /*diagnose*/, 0);
          
          if ( target ) {
             const_cast<BaseSelectionRule*>(this)->fCXXRecordDecl = target;
@@ -553,32 +553,17 @@ void BaseSelectionRule::SetCXXRecordDecl(const clang::CXXRecordDecl *decl, const
 void BaseSelectionRule::FillCache()
 {
    std::string value;
-   GetAttributeValue("name",value);
-   fName=value;
-   fHasNameAttribute = !fName.empty();
+   fHasNameAttribute = GetAttributeValue("name",fName);
+   fHasProtoNameAttribute = GetAttributeValue("proto_name",fProtoName);
+   fHasPatternAttribute = GetAttributeValue("pattern",fPattern);
+   fHasProtoPatternAttribute = GetAttributeValue("proto_pattern",fProtoPattern);
+   fHasFileNameAttribute = GetAttributeValue("file_name",fFileName);
+   fHasFilePatternAttribute = GetAttributeValue("file_pattern",fFilePattern);
+   std::string dummy;
+   fHasFromTypedefAttribute = GetAttributeValue("fromTypedef",dummy);
 
-   GetAttributeValue("proto_name",value);
-   fProtoName=value;
-   fHasProtoNameAttribute = !fProtoName.empty();
+   GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,fNArgsToKeep);
 
-   GetAttributeValue("pattern",value);
-   fPattern = value;
-   fHasPatternAttribute = !fPattern.empty();
-
-   GetAttributeValue("proto_pattern",value);
-   fProtoPattern=value;
-   fHasProtoPatternAttribute = !fProtoPattern.empty();
-
-   GetAttributeValue("file_name",value);
-   fFileName=value;
-   fHasFileNameAttribute = !fFileName.empty();
-
-   GetAttributeValue("file_pattern",value);
-   fFilePattern=value;
-   fHasFilePatternAttribute = !fFilePattern.empty();
-
-   GetAttributeValue(ROOT::TMetaUtils::propNames::nArgsToKeep,value);
-   fNArgsToKeep=value;
 
    if (fHasPatternAttribute || fHasProtoPatternAttribute) {
       if (fSubPatterns.empty()) {

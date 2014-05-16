@@ -3517,6 +3517,7 @@ int RootCling(int argc,
       ic++;
    } else if (!strcmp(argv[ic], "-v4")) {
       ROOT::TMetaUtils::gErrorIgnoreLevel = ROOT::TMetaUtils::kInfo; // Display all information (same as -v)
+      genreflex::verbose = true;
       ic++;
    }
    if (ic < argc) {
@@ -4194,7 +4195,7 @@ int RootCling(int argc,
    int scannerVerbLevel = 0;
    { 
      using namespace ROOT::TMetaUtils;
-     scannerVerbLevel = (isGenreflex && gErrorIgnoreLevel != kFatal) ? 1:0;
+     scannerVerbLevel = (gErrorIgnoreLevel == kInfo || (isGenreflex && gErrorIgnoreLevel != kFatal)) ? 1:0;
    }
 
    // Select the type of scan
@@ -4959,9 +4960,10 @@ int GenReflex(int argc, char **argv)
 
       {MULTIDICT,
         NOTYPE ,
-        "" , "muldiDict" ,
-        option::FullArg::Required,
-        "--multiDict\tForm correct pcm names if multiple dictionaries will be in the same \n"
+        "" , "multiDict" ,
+        option::FullArg::None,
+        "--multiDict\t Support for many dictionaries in one library\n"
+        "      Form correct pcm names if multiple dictionaries will be in the same \n"
         "      library (needs target library specify)\n"},
 
       {SELECTIONFILENAME,
@@ -5096,7 +5098,7 @@ int GenReflex(int argc, char **argv)
    option::Parser parse(genreflexUsageDescriptor, argc, argv, &options[0], &buffer[0], 5);
 
    if (parse.error()){
-      ROOT::TMetaUtils::Error(0, "*** genreflex: Argument parsing error!\n");
+      ROOT::TMetaUtils::Error(0, "Argument parsing error!\n");
       return 1;
    }
 
@@ -5108,7 +5110,7 @@ int GenReflex(int argc, char **argv)
    // See if no header was provided
    int numberOfHeaders = checkHeadersNames(headersNames);
    if (0 == numberOfHeaders){
-      ROOT::TMetaUtils::Error(0, "*** genreflex: No valid header was provided!\n");
+      ROOT::TMetaUtils::Error(0, "No valid header was provided!\n");
       return 1;
       }
 
@@ -5128,7 +5130,7 @@ int GenReflex(int argc, char **argv)
       selectionFileName = options[SELECTIONFILENAME].arg;
       if (!endsWith(selectionFileName, ".xml")){
          ROOT::TMetaUtils::Error(0,
-            "*** genreflex: Invalid selection file extension: filename is %s and extension .xml is expected!\n",
+            "Invalid selection file extension: filename is %s and extension .xml is expected!\n",
             selectionFileName.c_str());
          return 1;
       }
@@ -5152,21 +5154,22 @@ int GenReflex(int argc, char **argv)
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
       if (!endsWith(targetLibName, gLibraryExtension)){
-         ROOT::TMetaUtils::Error("genreflex",
+         ROOT::TMetaUtils::Error("",
             "Invalid target library extension: filename is %s and extension %s is expected!\n",
             gLibraryExtension.c_str(),
             targetLibName.c_str());
       }
       // Target lib has precedence over rootmap lib
-      rootmapLibName = options[TARGETLIB].arg;
+      if (options[ROOTMAP]){
+         rootmapLibName = options[TARGETLIB].arg;
+      }
    }
 
-   bool multiLib = false;
-   if (options[MULTIDICT])
-      multiLib = true;
+   bool multidict = false;
+   if (options[MULTIDICT]) multidict = true;
 
-   if (multiLib && targetLibName.empty()){
-      ROOT::TMetaUtils::Error("genreflex",
+   if (multidict && targetLibName.empty()){
+      ROOT::TMetaUtils::Error("",
             "Multilib support is requested but no target lib is specified. A sane pcm name cannot be formed.\n");
       return 1;
    }
@@ -5231,7 +5234,7 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeRootCling(verbosityOption,
                                     selectionFileName,
                                     targetLibName,
-                                    multiLib,
+                                    multidict,
                                     pcmsNames,
                                     includes,
                                     preprocDefines,
@@ -5251,7 +5254,7 @@ int GenReflex(int argc, char **argv)
       returnValue = invokeManyRootCling(verbosityOption,
                                         selectionFileName,
                                         targetLibName,
-                                        multiLib,
+                                        multidict,
                                         pcmsNames,
                                         includes,
                                         preprocDefines,

@@ -399,6 +399,8 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
       if (!useMinuit || plotHist) { 
       
+         // find contour from a scanned histogram of points
+
          // draw directly the TH2 from the profile LL
          TString histName = TString::Format("_hist2D__%s_%s",myparam->GetName(),myparamY->GetName() );
          int nBins = int( std::sqrt(double(nPoints)) + 0.5 );
@@ -437,7 +439,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             contLevels[k] = 0.5*ROOT::Math::chisquared_quantile(confLevels[k],2);
          }
          hist2D->SetContour(nLevels,contLevels);
-         hist2D->SetLineColor(fLineColor);
+         if (fLineColor) hist2D->SetLineColor(fLineColor);
          
          // defult options for drawing a second histogram 
          TString tmpOpt = opt; 
@@ -505,10 +507,15 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
                      TIterator * itgr = contourList->MakeIterator();
                      TGraph * gr = 0;
                      while( (gr = dynamic_cast<TGraph*>(itgr->Next()) ) ){
-                        gr->SetLineColor(fColor);
+                        if (fLineColor) gr->SetLineColor(fLineColor);
                         gr->SetLineStyle(kDashed);
                         gr->SetLineWidth(3);
-                        gr->Draw("L");
+                        if (fColor) { 
+                           gr->SetFillColor(fColor);
+                           gr->Draw("FL");
+                        }
+                        else 
+                           gr->Draw("L");
                      } 
                      delete itgr;
                   }
@@ -524,7 +531,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          }
       }
       if (useMinuit) { 
-
+         
          // find contours  using Minuit       
          TGraph * gr = new TGraph(nPoints+1); 
          
@@ -536,7 +543,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          }
          // add last point to same as first one to close the contour
          gr->SetPoint(ncp, gr->GetX()[0], gr->GetY()[0] );
-         opt.Append("L");
+         if (!opt.Contains("c")) opt.Append("L");  // use by default option L if C is not specified
          // draw first a dummy 2d histogram gfor the axis 
          if (!opt.Contains("same") && !plotHist) { 
 
@@ -548,7 +555,12 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
             hist2D->SetMaximum(1);  // to avoid problem with subsequents draws
             hist2D->Draw("AXIS");
          }
-         gr->SetLineColor(fColor);
+         if (fLineColor) gr->SetLineColor(fLineColor);
+         if (fColor) { 
+            // draw contour as filled area (add option "F")
+            gr->SetFillColor(fColor);
+            opt.Append("F");
+         }
          gr->SetLineWidth(3);
          if (opt.Contains("same"))  gr->SetFillStyle(fFillStyle); // put transparent
          gr->Draw(opt);
@@ -568,7 +580,10 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
          double y0 = bestFitParams->getRealValue(myparamY->GetName());
          gr0->SetPoint(0,x0,y0);
          gr0->SetMarkerStyle(33);
-         gr0->SetMarkerColor(fColor);
+         if (fColor)  { 
+            if (fColor != kBlack) gr0->SetMarkerColor(fColor+4);
+            else  gr0->SetMarkerColor(kGray);
+         }
          gr0->Draw("P");
          delete bestFitParams;
       }
