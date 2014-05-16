@@ -1416,7 +1416,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (compRes == cling::Interpreter::kSuccess
        && result.isValid()
-       && !result.isVoid(fInterpreter->getCI()->getASTContext()))
+       && !result.isVoid())
    {
       gROOT->SetLineHasBeenProcessed();
       return result.simplisticCastAs<long>();
@@ -2106,7 +2106,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       return 0L;
    }
 
-   if (valRef.isVoid(fInterpreter->getCI()->getASTContext())) {
+   if (valRef.isVoid()) {
       return 0;
    }
 
