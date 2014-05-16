@@ -59,7 +59,7 @@ Begin_Macro(source)
    cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
 
    // Creating a view
-   TView3D *view = TView::CreateView(1);
+   TView3D *view = (TView3D*) TView::CreateView(1);
    view->SetRange(5,5,5,25,25,25);
 
    // Create a first PolyLine3D
