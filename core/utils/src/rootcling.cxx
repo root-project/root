@@ -5154,7 +5154,7 @@ int GenReflex(int argc, char **argv)
    if (options[TARGETLIB]){
       targetLibName = options[TARGETLIB].arg;
       if (!endsWith(targetLibName, gLibraryExtension)){
-         ROOT::TMetaUtils::Error(,
+         ROOT::TMetaUtils::Error("",
             "Invalid target library extension: filename is %s and extension %s is expected!\n",
             gLibraryExtension.c_str(),
             targetLibName.c_str());
