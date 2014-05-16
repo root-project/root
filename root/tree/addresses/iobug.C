@@ -1,7 +1,162 @@
-#include "TGraphErrors.h"
 #include "TFile.h"
 #include "TTree.h"
 #include "TClonesArray.h"
+
+#include "TH1F.h"
+
+class Graph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
+
+protected:
+
+   Int_t              fMaxSize;   //!Current dimension of arrays fX and fY
+   Int_t              fNpoints;   //Number of points <= fMaxSize
+   Double_t          *fX;         //[fNpoints] array of X points
+   Double_t          *fY;         //[fNpoints] array of Y points
+   TList             *fFunctions; //Pointer to list of functions (fits and user)
+   TH1F              *fHistogram; //Pointer to histogram used for drawing axis
+   Double_t           fMinimum;   //Minimum value for plotting along y
+   Double_t           fMaximum;   //Maximum value for plotting along y
+
+   Double_t** AllocateArrays(Int_t Narrays, Int_t arraySize)
+   {
+      // Allocate arrays.
+
+      if (arraySize < 0) {
+         arraySize = 0;
+      }
+      Double_t **newarrays = new Double_t*[Narrays];
+      if (!arraySize) {
+         for (Int_t i = 0; i < Narrays; ++i)
+            newarrays[i] = 0;
+      } else {
+         for (Int_t i = 0; i < Narrays; ++i)
+            newarrays[i] = new Double_t[arraySize];
+      }
+      fMaxSize = arraySize;
+      return newarrays;
+   }
+
+   Double_t **Allocate(Int_t newsize) {
+      return AllocateArrays(2, newsize);
+   }
+
+   void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
+                       Int_t obegin)
+   {
+      // Copy points from fX and fY to arrays[0] and arrays[1]
+      // or to fX and fY if arrays == 0 and ibegin != iend.
+      // If newarrays is non null, replace fX, fY with pointers from newarrays[0,1].
+      // Delete newarrays, old fX and fY
+
+      CopyPoints(newarrays, ibegin, iend, obegin);
+      if (newarrays) {
+         delete[] fX;
+         fX = newarrays[0];
+         delete[] fY;
+         fY = newarrays[1];
+         delete[] newarrays;
+      }
+   }
+
+   Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
+                     Int_t obegin)
+   {
+      // Copy points from fX and fY to arrays[0] and arrays[1]
+      // or to fX and fY if arrays == 0 and ibegin != iend.
+
+      if (ibegin < 0 || iend <= ibegin || obegin < 0) { // Error;
+         return kFALSE;
+      }
+      if (!arrays && ibegin == obegin) { // No copying is needed
+         return kFALSE;
+      }
+      Int_t n = (iend - ibegin) * sizeof(Double_t);
+      if (arrays) {
+         memmove(&arrays[0][obegin], &fX[ibegin], n);
+         memmove(&arrays[1][obegin], &fY[ibegin], n);
+      } else {
+         memmove(&fX[obegin], &fX[ibegin], n);
+         memmove(&fY[obegin], &fY[ibegin], n);
+      }
+      return kTRUE;
+   }
+
+   Double_t **ExpandAndCopy(Int_t size, Int_t iend)
+   {
+      // if size > fMaxSize allocate new arrays of 2*size points
+      //  and copy oend first points.
+      // Return pointer to new arrays.
+
+      if (size <= fMaxSize) {
+         return 0;
+      }
+      Double_t **newarrays = Allocate(2 * size);
+      CopyPoints(newarrays, 0, iend, 0);
+      return newarrays;
+   }
+
+   void FillZero(Int_t begin, Int_t end)
+   {
+      // Set zero values for point arrays in the range [begin, end)
+      // Should be redefined in descendant classes
+
+      memset(fX + begin, 0, (end - begin)*sizeof(Double_t));
+      memset(fY + begin, 0, (end - begin)*sizeof(Double_t));
+   }
+
+public:
+
+   Graph() : fMaxSize(0),fNpoints(0), fX(0),fY(0),fFunctions(0),fHistogram(0),fMinimum(0),fMaximum(0) {}
+   Graph(Int_t n) : TNamed("Graph", "Graph"), TAttLine(), TAttFill(1, 1001), TAttMarker(),
+                    fMaxSize(n),fNpoints(n), fX(new Double_t[n]),fY(new Double_t[n]),fFunctions(0),fHistogram(0),fMinimum(0),fMaximum(0) {}
+   ~Graph() {
+      delete [] fX;
+      delete [] fY;
+   }
+
+   void SetPoint(Int_t i, Double_t x, Double_t y)
+   {
+      // Set x and y values for point number i.
+
+      if (i < 0) return;
+      if (fHistogram) {
+         delete fHistogram;
+         fHistogram = 0;
+      }
+      if (i >= fMaxSize) {
+         Double_t **ps = ExpandAndCopy(i + 1, fNpoints);
+         CopyAndRelease(ps, 0, 0, 0);
+      }
+      if (i >= fNpoints) {
+         // points above i can be not initialized
+         // set zero up to i-th point to avoid redefenition
+         // of this method in descendant classes
+         FillZero(fNpoints, i + 1);
+         fNpoints = i + 1;
+      }
+      fX[i] = x;
+      fY[i] = y;
+   }
+
+   ClassDef(Graph,4)  //Graph graphics class
+};
+
+class GraphErrors : public Graph {
+
+protected:
+   Double_t    *fEX;        //[fNpoints] array of X errors
+   Double_t    *fEY;        //[fNpoints] array of Y errors
+
+public:
+   GraphErrors() : Graph(0), fEX(0),fEY(0) {}
+   GraphErrors(Int_t n) : Graph(n),fEX(new Double_t[n]),fEY(new Double_t[n]) {}
+   ~GraphErrors() {
+      delete [] fEX;
+      delete [] fEY;
+   }
+
+   ClassDef(GraphErrors,3)  //A graph with error bars
+};
 
 void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, int dumpmode = 0)
 {
@@ -11,27 +166,27 @@ void iobug(int split = 0, int classtype = 0, int clonesmode = 0, int show = 0, i
    // root -b -q iobug.C(0,1)  OK
    // root -b -q iobug.C(1,1)  Bad numerical expressions
    // root -b -q iobug.C(2,1)  wrong result
-   TGraph* g = 0;
-   TGraph* g2 = 0;
-   TGraph* g3 = 0;
+   Graph* g = 0;
+   Graph* g2 = 0;
+   Graph* g3 = 0;
    if (clonesmode == 0) {
       clonesmode = 1;
    }
    TClonesArray* clones = 0;
    if (classtype == 0) {
-      g = new TGraph(2);
-      clones = new TClonesArray("TGraph");
-      new((*clones)[0]) TGraph(2);
-      g2 = (TGraph*) (*clones)[0];
-      new((*clones)[1]) TGraph(2);
-      g3 = (TGraph*) (*clones)[1];
+      g = new Graph(2);
+      clones = new TClonesArray("Graph");
+      new((*clones)[0]) Graph(2);
+      g2 = (Graph*) (*clones)[0];
+      new((*clones)[1]) Graph(2);
+      g3 = (Graph*) (*clones)[1];
    } else {
-      g = new TGraphErrors(2);
-      clones = new TClonesArray("TGraphErrors");
-      new((*clones)[0]) TGraphErrors(2);
-      g2 = (TGraphErrors*) (*clones)[0];
-      new((*clones)[1]) TGraphErrors(2);
-      g3 = (TGraphErrors*) (*clones)[1];
+      g = new GraphErrors(2);
+      clones = new TClonesArray("GraphErrors");
+      new((*clones)[0]) GraphErrors(2);
+      g2 = (GraphErrors*) (*clones)[0];
+      new((*clones)[1]) GraphErrors(2);
+      g3 = (GraphErrors*) (*clones)[1];
    }
    g->SetPoint(0, 1, 2);
    g->SetPoint(1, 3, 4);
