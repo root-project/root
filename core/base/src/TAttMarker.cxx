@@ -48,7 +48,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *c = new TCanvas("c","Marker colors",0,0,500,200);
-   c.DrawColorTable();
+   c->DrawColorTable();
    return c;
 }
 End_Macro

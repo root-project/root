@@ -65,7 +65,7 @@ TH1F* h1f = h1;
 ```
 Cling does not allow this anymore. We might add this feature later if demand exists (ROOT-4802).
 
-#### Using symbols that only available at runtime: load libFoo; foo()
+#### Using symbols that are only available at runtime: load libFoo; foo()
 CINT was processing macros line by line; cling compiles code.
 When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, cling will in some cases report an unresolved symbol:
 ``` {.cpp}
@@ -76,6 +76,12 @@ void dynload() {
 }
 ```
 You will currently have to provide a rootmap file for libEvent (which also requires include guards for Event.h). This might get fixed in a later version (ROOT-4691).
+
+#### Using identifiers that are only available at runtime: gROOT->LoadMacro("foo.h"); foo()
+CINT was processing macros line by line; cling compiles code.
+During this compilation, cling will not see identifiers provided by `gROOT->LoadMacro()`.
+While this will covered by dynamic scopes, they are currently too limited to handle this.
+Please `#include` the header instead.
 
 ### TInterpreter
 

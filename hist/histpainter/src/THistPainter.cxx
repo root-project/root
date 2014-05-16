@@ -947,7 +947,7 @@ Begin_Macro(source)
    ce4->cd(1);
    he4->Draw("E4");
    ce4->cd(2);
-   TH1F *he3 = he4->DrawClone("E3");
+   TH1F *he3 = (TH1F*)he4->DrawClone("E3");
    he3->SetTitle("Distribution drawn option E3");
    return ce4;
 }
@@ -1276,7 +1276,7 @@ Begin_Macro(source)
       gRandom->Rannor(px,py);
       hcol2->Fill(px,5*py);
    }
-   hcol2->Fill(0,0,-200);
+   hcol2->Fill(0.,0.,-200.);
    gStyle->SetPalette(1);
    hcol2->Draw("COLZ");
    return c1;
@@ -1974,7 +1974,7 @@ surface.
 End_Html
 Begin_Macro(source)
 {
-   TCanvas *c1=new TCanvas("c2","c2",600,400);
+   TCanvas *c20=new TCanvas("c20","c20",600,400);
    int NBins = 50;
    double d = 2;
    TH2F* hsc = new TH2F("hsc", "Surface and contour with option SAME ", NBins, -d, d, NBins, -d, d);
@@ -1988,7 +1988,7 @@ Begin_Macro(source)
    gStyle->SetPalette(1);
    hsc->Draw("surf2");
    hsc->Draw("CONT1 SAME");
-   return c2;
+   return c20;
 }
 End_Macro
 Begin_Html
@@ -2043,11 +2043,11 @@ Begin_Macro(source)
    }
    hlcc->SetFillColor(kYellow);
    c3->cd(1); hlcc->Draw("LEGO1 CYL");
-   c3->cd(2); TH2F *hlpc = hlcc->DrawClone("LEGO1 POL");
+   c3->cd(2); TH2F *hlpc = (TH2F*) hlcc->DrawClone("LEGO1 POL");
    hlpc->SetTitle("Polar coordinates");
-   c3->cd(3); TH2F *hlsc = hlcc->DrawClone("LEGO1 SPH");
+   c3->cd(3); TH2F *hlsc = (TH2F*) hlcc->DrawClone("LEGO1 SPH");
    hlsc->SetTitle("Spherical coordinates");
-   c3->cd(4); TH2F *hlprpc = hlcc->DrawClone("LEGO1 PSR");
+   c3->cd(4); TH2F *hlprpc = (TH2F*) hlcc->DrawClone("LEGO1 PSR");
    hlprpc->SetTitle("PseudoRapidity/Phi coordinates");
    return c3;
 }
@@ -2071,11 +2071,11 @@ Begin_Macro(source)
    }
    gStyle->SetPalette(1);
    c4->cd(1); hscc->Draw("SURF1 CYL");
-   c4->cd(2); TH2F *hspc = hscc->DrawClone("SURF1 POL");
+   c4->cd(2); TH2F *hspc = (TH2F*) hscc->DrawClone("SURF1 POL");
    hspc->SetTitle("Polar coordinates");
-   c4->cd(3); TH2F *hssc = hscc->DrawClone("SURF1 SPH");
+   c4->cd(3); TH2F *hssc = (TH2F*) hscc->DrawClone("SURF1 SPH");
    hssc->SetTitle("Spherical coordinates");
-   c4->cd(4); TH2F *hsprpc = hscc->DrawClone("SURF1 PSR");
+   c4->cd(4); TH2F *hsprpc = (TH2F*) hscc->DrawClone("SURF1 PSR");
    hsprpc->SetTitle("PseudoRapidity/Phi coordinates");
    return c4;
 }
@@ -2231,15 +2231,15 @@ Begin_Macro(source)
    TH2Poly *h2p = new TH2Poly();
    h2p->SetName("h2poly_name");
    h2p->SetTitle("h2poly_title");
-   Double_t x1[] = {0, 5, 6};
-   Double_t y1[] = {0, 0, 5};
-   Double_t x2[] = {0, -1, -1, 0};
-   Double_t y2[] = {0, 0, -1, 3};
-   Double_t x3[] = {4, 3, 0, 1, 2.4};
-   Double_t y3[] = {4, 3.7, 1, 3.7, 2.5};
-   h2p->AddBin(3, x1, y1);
-   h2p->AddBin(4, x2, y2);
-   h2p->AddBin(5, x3, y3);
+   Double_t px1[] = {0, 5, 6};
+   Double_t py1[] = {0, 0, 5};
+   Double_t px2[] = {0, -1, -1, 0};
+   Double_t py2[] = {0, 0, -1, 3};
+   Double_t px3[] = {4, 3, 0, 1, 2.4};
+   Double_t py3[] = {4, 3.7, 1, 3.7, 2.5};
+   h2p->AddBin(3, px1, py1);
+   h2p->AddBin(4, px2, py2);
+   h2p->AddBin(5, px3, py3);
    h2p->Fill(0.1, 0.01, 3);
    h2p->Fill(-0.5, -0.5, 7);
    h2p->Fill(-0.7, -0.5, 1);
@@ -2275,7 +2275,7 @@ Begin_Macro(source)
 
    Int_t i, bin;
    const Int_t nx = 48;
-   char *states [nx] = {
+   const char *states [nx] = {
       "alabama",      "arizona",        "arkansas",       "california",
       "colorado",     "connecticut",    "delaware",       "florida",
       "georgia",      "idaho",          "illinois",       "indiana",
@@ -2289,7 +2289,7 @@ Begin_Macro(source)
       "texas",        "utah",           "vermont",        "virginia",
       "washington",   "west_virginia",  "wisconsin",      "wyoming"
    };
-   Float_t pop[nx] = {
+   Double_t pop[nx] = {
     4708708, 6595778,  2889450, 36961664, 5024748,  3518288,  885122, 18537969,
     9829211, 1545801, 12910409,  6423113, 3007856,  2818747, 4314113,  4492076,
     1318301, 5699478,  6593587,  9969727, 5266214,  2951996, 5987580,   974989,
@@ -2310,8 +2310,8 @@ Begin_Macro(source)
    TMultiGraph *mg;
    TKey *key;
    TIter nextkey(gDirectory->GetListOfKeys());
-   while (key = (TKey*)nextkey()) {
-      obj = key->ReadObj();
+   while ((key = (TKey*)nextkey())) {
+      TObject *obj = key->ReadObj();
       if (obj->InheritsFrom("TMultiGraph")) {
          mg = (TMultiGraph*)obj;
          bin = p->AddBin(mg);

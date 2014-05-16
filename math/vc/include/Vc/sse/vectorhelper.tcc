@@ -68,11 +68,11 @@ Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x,
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, AlignedFlag)
 {
-    _mm_store_ps(mem, _mm_blendv_ps(_mm_load_ps(mem), x, m));
+    _mm_store_ps(mem, mm_blendv_ps(_mm_load_ps(mem), x, m));
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, UnalignedFlag)
 {
-    _mm_storeu_ps(mem, _mm_blendv_ps(_mm_loadu_ps(mem), x, m));
+    _mm_storeu_ps(mem, mm_blendv_ps(_mm_loadu_ps(mem), x, m));
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128>::store(float *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
 {
@@ -129,13 +129,13 @@ Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, Str
 }
 Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, AlignedFlag)
 {
-    _mm_store_ps(mem, _mm_blendv_ps(_mm_load_ps(mem), x[0], m[0]));
-    _mm_store_ps(mem + 4, _mm_blendv_ps(_mm_load_ps(mem + 4), x[1], m[1]));
+    _mm_store_ps(mem, mm_blendv_ps(_mm_load_ps(mem), x[0], m[0]));
+    _mm_store_ps(mem + 4, mm_blendv_ps(_mm_load_ps(mem + 4), x[1], m[1]));
 }
 Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, UnalignedFlag)
 {
-    _mm_storeu_ps(mem, _mm_blendv_ps(_mm_loadu_ps(mem), x[0], m[0]));
-    _mm_storeu_ps(mem + 4, _mm_blendv_ps(_mm_loadu_ps(mem + 4), x[1], m[1]));
+    _mm_storeu_ps(mem, mm_blendv_ps(_mm_loadu_ps(mem), x[0], m[0]));
+    _mm_storeu_ps(mem + 4, mm_blendv_ps(_mm_loadu_ps(mem + 4), x[1], m[1]));
 }
 Vc_ALWAYS_INLINE void VectorHelper<M256>::store(float *mem, VectorTypeArg x, VectorTypeArg m, StreamingAndAlignedFlag)
 {
@@ -190,11 +190,11 @@ Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType 
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, AlignedFlag)
 {
-    _mm_store_pd(mem, _mm_blendv_pd(_mm_load_pd(mem), x, m));
+    _mm_store_pd(mem, mm_blendv_pd(_mm_load_pd(mem), x, m));
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, UnalignedFlag)
 {
-    _mm_storeu_pd(mem, _mm_blendv_pd(_mm_loadu_pd(mem), x, m));
+    _mm_storeu_pd(mem, mm_blendv_pd(_mm_loadu_pd(mem), x, m));
 }
 Vc_ALWAYS_INLINE void VectorHelper<_M128D>::store(double *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
 {
@@ -247,11 +247,11 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
 }
 template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, AlignedFlag align)
 {
-    store(mem, _mm_blendv_epi8(load(mem, align), x, m), align);
+    store(mem, mm_blendv_epi8(load(mem, align), x, m), align);
 }
 template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, UnalignedFlag align)
 {
-    store(mem, _mm_blendv_epi8(load(mem, align), x, m), align);
+    store(mem, mm_blendv_epi8(load(mem, align), x, m), align);
 }
 template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, const VectorType x, const VectorType m, StreamingAndAlignedFlag)
 {
@@ -269,17 +269,17 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
         y = Mem::permute<X1, X0, X3, X2, X5, X4, X7, X6>(x);
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
-        x = _mm_blend_epi16(lo, hi, 0xaa);
+        x = mm_blend_epi16(lo, hi, 0xaa);
 
         // merge left and right quads
         y = Mem::permute<X3, X2, X1, X0, X7, X6, X5, X4>(x);
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
-        x = _mm_blend_epi16(lo, hi, 0xcc);
+        x = mm_blend_epi16(lo, hi, 0xcc);
         y = _mm_srli_si128(x, 2);
         lo = _mm_min_epi16(x, y);
         hi = _mm_max_epi16(x, y);
-        x = _mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
+        x = mm_blend_epi16(lo, _mm_slli_si128(hi, 2), 0xaa);
 
         // merge quads into octs
         y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
@@ -307,8 +307,8 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
         // x = [a b c d]
         // y = [c d a b]
         _M128I y = _mm_shuffle_epi32(x, _MM_SHUFFLE(1, 0, 3, 2));
-        _M128I l = _mm_min_epi32(x, y); // min[ac bd ac bd]
-        _M128I h = _mm_max_epi32(x, y); // max[ac bd ac bd]
+        _M128I l = mm_min_epi32(x, y); // min[ac bd ac bd]
+        _M128I h = mm_max_epi32(x, y); // max[ac bd ac bd]
         if (IS_UNLIKELY(_mm_cvtsi128_si32(h) <= l[1])) { // l[0] < h[0] < l[1] < h[1]
             return _mm_unpacklo_epi32(l, h);
         }
@@ -317,19 +317,19 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
 
         // sort pairs
         _M128I y = _mm_shuffle_epi32(x, _MM_SHUFFLE(2, 3, 0, 1));
-        _M128I l = _mm_min_epi32(x, y);
-        _M128I h = _mm_max_epi32(x, y);
+        _M128I l = mm_min_epi32(x, y);
+        _M128I h = mm_max_epi32(x, y);
         x = _mm_unpacklo_epi32(l, h);
         y = _mm_unpackhi_epi32(h, l);
 
         // sort quads
-        l = _mm_min_epi32(x, y);
-        h = _mm_max_epi32(x, y);
+        l = mm_min_epi32(x, y);
+        h = mm_max_epi32(x, y);
         x = _mm_unpacklo_epi32(l, h);
         y = _mm_unpackhi_epi64(x, x);
 
-        l = _mm_min_epi32(x, y);
-        h = _mm_max_epi32(x, y);
+        l = mm_min_epi32(x, y);
+        h = mm_max_epi32(x, y);
         return _mm_unpacklo_epi32(l, h);
     }
     template<> inline Vc_CONST _M128 SortHelper<_M128, 4>::sort(_M128 x)
@@ -350,15 +350,15 @@ template<typename T> Vc_ALWAYS_INLINE void VectorHelper<_M128I>::store(T *mem, c
         return _mm_unpacklo_ps(l, h);
 //X         _M128 k = _mm_cmpgt_ps(x, y);
 //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(2, 2, 0, 0));
-//X         x = _mm_blendv_ps(x, y, k);
+//X         x = mm_blendv_ps(x, y, k);
 //X         y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(1, 0, 3, 2));
 //X         k = _mm_cmpgt_ps(x, y);
 //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(1, 0, 1, 0));
-//X         x = _mm_blendv_ps(x, y, k);
+//X         x = mm_blendv_ps(x, y, k);
 //X         y = _mm_shuffle_ps(x, x, _MM_SHUFFLE(3, 1, 2, 0));
 //X         k = _mm_cmpgt_ps(x, y);
 //X         k = _mm_shuffle_ps(k, k, _MM_SHUFFLE(0, 1, 1, 0));
-//X         return _mm_blendv_ps(x, y, k);
+//X         return mm_blendv_ps(x, y, k);
     }
     template<> inline Vc_PURE M256 SortHelper<M256, 8>::sort(const M256 &_x)
     {

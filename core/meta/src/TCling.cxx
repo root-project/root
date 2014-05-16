@@ -850,6 +850,12 @@ TCling::TCling(const char *name, const char *title)
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+
+   // Until we can disable autoloading during Sema::CorrectTypo() we have
+   // to disable spell checking.
+   fInterpreter->getCI()->getLangOpts().SpellChecking = false;
+
+
    // We need stream that doesn't close its file descriptor, thus we are not
    // using llvm::outs. Keeping file descriptor open we will be able to use
    // the results in pipes (Savannah #99234).
@@ -997,11 +1003,13 @@ bool TCling::LoadPCM(TString pcmFileName,
    // look in other places.
    searchPath.Append( gSystem->GetDynamicPath() );
 
+   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
+   if (!enableRootPcm) return kTRUE;
+
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
-   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
-   if (enableRootPcm && gROOT->IsRootFile(pcmFileName)) {
+   if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
       if (gDebug > 5) {
          gDebug -= 5;

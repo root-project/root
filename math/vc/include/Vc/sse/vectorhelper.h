@@ -90,7 +90,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
         OP2(xor_, VectorType::create(_mm_xor_ps(a[0], b[0]), _mm_xor_ps(a[1], b[1])))
         OP2(and_, VectorType::create(_mm_and_ps(a[0], b[0]), _mm_and_ps(a[1], b[1])))
         OP2(andnot_, VectorType::create(_mm_andnot_ps(a[0], b[0]), _mm_andnot_ps(a[1], b[1])))
-        OP3(blend, VectorType::create(_mm_blendv_ps(a[0], b[0], c[0]), _mm_blendv_ps(a[1], b[1], c[1])))
+        OP3(blend, VectorType::create(mm_blendv_ps(a[0], b[0], c[0]), mm_blendv_ps(a[1], b[1], c[1])))
     };
 #undef OP0
 #undef OP2
@@ -120,7 +120,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
             OP2(xor_, _mm_xor_ps(a, b))
             OP2(and_, _mm_and_ps(a, b))
             OP2(andnot_, _mm_andnot_ps(a, b))
-            OP3(blend, _mm_blendv_ps(a, b, c))
+            OP3(blend, mm_blendv_ps(a, b, c))
         };
 
 
@@ -143,7 +143,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
             OP2(xor_, _mm_xor_pd(a, b))
             OP2(and_, _mm_and_pd(a, b))
             OP2(andnot_, _mm_andnot_pd(a, b))
-            OP3(blend, _mm_blendv_pd(a, b, c))
+            OP3(blend, mm_blendv_pd(a, b, c))
         };
 
         template<> struct VectorHelper<_M128I>
@@ -168,7 +168,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
             OP2(xor_, _mm_xor_si128(a, b))
             OP2(and_, _mm_and_si128(a, b))
             OP2(andnot_, _mm_andnot_si128(a, b))
-            OP3(blend, _mm_blendv_epi8(a, b, c))
+            OP3(blend, mm_blendv_epi8(a, b, c))
         };
 
 #undef OP1
@@ -226,8 +226,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
                 const VectorType hh = mul(h1, h2);
                 // ll < lh < hh for all entries is certain
                 const VectorType lh_lt_v3 = cmplt(abs(lh), abs(v3)); // |lh| < |v3|
-                const VectorType b = _mm_blendv_pd(v3, lh, lh_lt_v3);
-                const VectorType c = _mm_blendv_pd(lh, v3, lh_lt_v3);
+                const VectorType b = mm_blendv_pd(v3, lh, lh_lt_v3);
+                const VectorType c = mm_blendv_pd(lh, v3, lh_lt_v3);
                 v1 = add(add(ll, b), add(c, hh));
             }
 #endif
@@ -464,9 +464,10 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
             static Vc_ALWAYS_INLINE Vc_CONST VectorType shiftRight(VectorType a, int shift) {
                 return CAT(_mm_srai_, SUFFIX)(a, shift);
             }
-            OP1(abs)
+            static Vc_INTRINSIC Vc_CONST VectorType abs(const VectorType a) { return mm_abs_epi32(a); }
 
-            MINMAX
+            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return mm_min_epi32(a, b); }
+            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return mm_max_epi32(a, b); }
             static Vc_ALWAYS_INLINE Vc_CONST EntryType min(VectorType a) {
                 a = min(a, _mm_shuffle_epi32(a, _MM_SHUFFLE(1, 0, 3, 2)));
                 // using lo_epi16 for speed here
@@ -525,7 +526,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
 #define SUFFIX epu32
             static Vc_ALWAYS_INLINE Vc_CONST VectorType one() { return CAT(_mm_setone_, SUFFIX)(); }
 
-            MINMAX
+            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return mm_min_epu32(a, b); }
+            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return mm_max_epu32(a, b); }
             static Vc_ALWAYS_INLINE Vc_CONST EntryType min(VectorType a) {
                 a = min(a, _mm_shuffle_epi32(a, _MM_SHUFFLE(1, 0, 3, 2)));
                 // using lo_epi16 for speed here
@@ -640,7 +642,7 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
             static Vc_ALWAYS_INLINE void fma(VectorType &v1, VectorType v2, VectorType v3) {
                 v1 = add(mul(v1, v2), v3); }
 
-            OP1(abs)
+            static Vc_INTRINSIC Vc_CONST VectorType abs(const VectorType a) { return mm_abs_epi16(a); }
 
             OPx(mul, mullo)
             OP(min) OP(max)
@@ -722,7 +724,8 @@ Vc_INTRINSIC Vc_CONST __m128d exponent(__m128d v)
 //X                 return mul(a, set(b));
 //X             }
 #if !defined(USE_INCORRECT_UNSIGNED_COMPARE) || VC_IMPL_SSE4_1
-            OP(min) OP(max)
+            static Vc_INTRINSIC Vc_CONST VectorType min(const VectorType a, const VectorType b) { return CAT(mm_min_, SUFFIX)(a, b); }
+            static Vc_INTRINSIC Vc_CONST VectorType max(const VectorType a, const VectorType b) { return CAT(mm_max_, SUFFIX)(a, b); }
 #endif
 #undef SUFFIX
 #define SUFFIX epi16

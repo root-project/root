@@ -1286,24 +1286,27 @@ template<typename VectorType, typename EntryType> struct VectorShift<32, 8, Vect
 };
 template<typename VectorType, typename EntryType> struct VectorShift<16, 8, VectorType, EntryType>
 {
+    enum {
+        EntryTypeSizeof = sizeof(EntryType)
+    };
     static Vc_INTRINSIC VectorType shifted(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
     {
         switch (amount) {
         case  0: return v;
-        case  1: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 1 * sizeof(EntryType)));
-        case  2: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 2 * sizeof(EntryType)));
-        case  3: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 3 * sizeof(EntryType)));
-        case  4: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 4 * sizeof(EntryType)));
-        case  5: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 5 * sizeof(EntryType)));
-        case  6: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 6 * sizeof(EntryType)));
-        case  7: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 7 * sizeof(EntryType)));
-        case -1: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 1 * sizeof(EntryType)));
-        case -2: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 2 * sizeof(EntryType)));
-        case -3: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 3 * sizeof(EntryType)));
-        case -4: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 4 * sizeof(EntryType)));
-        case -5: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 5 * sizeof(EntryType)));
-        case -6: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 6 * sizeof(EntryType)));
-        case -7: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 7 * sizeof(EntryType)));
+        case  1: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 1 * EntryTypeSizeof));
+        case  2: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 2 * EntryTypeSizeof));
+        case  3: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 3 * EntryTypeSizeof));
+        case  4: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 4 * EntryTypeSizeof));
+        case  5: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 5 * EntryTypeSizeof));
+        case  6: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 6 * EntryTypeSizeof));
+        case  7: return avx_cast<VectorType>(_mm_srli_si128(avx_cast<m128i>(v), 7 * EntryTypeSizeof));
+        case -1: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 1 * EntryTypeSizeof));
+        case -2: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 2 * EntryTypeSizeof));
+        case -3: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 3 * EntryTypeSizeof));
+        case -4: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 4 * EntryTypeSizeof));
+        case -5: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 5 * EntryTypeSizeof));
+        case -6: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 6 * EntryTypeSizeof));
+        case -7: return avx_cast<VectorType>(_mm_slli_si128(avx_cast<m128i>(v), 7 * EntryTypeSizeof));
         }
         return _mm_setzero_si128();
     }
@@ -1316,15 +1319,18 @@ template<size_t SIMDWidth, size_t Size, typename VectorType, typename EntryType>
 template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, VectorType, EntryType>
 {
     typedef typename SseVectorType<VectorType>::Type SmallV;
+    enum {
+        EntryTypeSizeof = sizeof(EntryType)
+    };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
     {
         const m128i vLo = avx_cast<m128i>(lo128(v));
         const m128i vHi = avx_cast<m128i>(hi128(v));
         switch (static_cast<unsigned int>(amount) % 4) {
         case  0: return v;
-        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))));
+        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)));
         case  2: return Mem::permute128<X1, X0>(v);
-        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))));
+        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)));
         }
         return _mm256_setzero_pd();
     }
@@ -1332,36 +1338,42 @@ template<typename VectorType, typename EntryType> struct VectorRotate<32, 4, Vec
 template<typename VectorType, typename EntryType> struct VectorRotate<32, 8, VectorType, EntryType>
 {
     typedef typename SseVectorType<VectorType>::Type SmallV;
+    enum {
+        EntryTypeSizeof = sizeof(EntryType)
+    };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
     {
         const m128i vLo = avx_cast<m128i>(lo128(v));
         const m128i vHi = avx_cast<m128i>(hi128(v));
         switch (static_cast<unsigned int>(amount) % 8) {
         case  0: return v;
-        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))));
-        case  2: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * sizeof(EntryType))));
-        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * sizeof(EntryType))));
+        case  1: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)));
+        case  2: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * EntryTypeSizeof)));
+        case  3: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * EntryTypeSizeof)));
         case  4: return Mem::permute128<X1, X0>(v);
-        case  5: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * sizeof(EntryType))));
-        case  6: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * sizeof(EntryType))));
-        case  7: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * sizeof(EntryType))), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * sizeof(EntryType))));
+        case  5: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 1 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 1 * EntryTypeSizeof)));
+        case  6: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 2 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 2 * EntryTypeSizeof)));
+        case  7: return concat(avx_cast<SmallV>(_mm_alignr_epi8(vLo, vHi, 3 * EntryTypeSizeof)), avx_cast<SmallV>(_mm_alignr_epi8(vHi, vLo, 3 * EntryTypeSizeof)));
         }
         return avx_cast<VectorType>(_mm256_setzero_ps());
     }
 };
 template<typename VectorType, typename EntryType> struct VectorRotate<16, 8, VectorType, EntryType>
 {
+    enum {
+        EntryTypeSizeof = sizeof(EntryType)
+    };
     static Vc_INTRINSIC VectorType rotated(VC_ALIGNED_PARAMETER(VectorType) v, int amount)
     {
         switch (static_cast<unsigned int>(amount) % 8) {
         case  0: return v;
-        case  1: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 1 * sizeof(EntryType)));
-        case  2: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 2 * sizeof(EntryType)));
-        case  3: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 3 * sizeof(EntryType)));
-        case  4: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 4 * sizeof(EntryType)));
-        case  5: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 5 * sizeof(EntryType)));
-        case  6: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 6 * sizeof(EntryType)));
-        case  7: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 7 * sizeof(EntryType)));
+        case  1: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 1 * EntryTypeSizeof));
+        case  2: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 2 * EntryTypeSizeof));
+        case  3: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 3 * EntryTypeSizeof));
+        case  4: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 4 * EntryTypeSizeof));
+        case  5: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 5 * EntryTypeSizeof));
+        case  6: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 6 * EntryTypeSizeof));
+        case  7: return avx_cast<VectorType>(_mm_alignr_epi8(v, v, 7 * EntryTypeSizeof));
         }
         return _mm_setzero_si128();
     }

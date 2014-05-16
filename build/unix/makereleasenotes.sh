@@ -54,7 +54,7 @@ for v in $VERS; do
 done
 echo ""
 
-pandoc -f markdown -t html -s -S -f markdown --toc -H docbook/users-guide/css/github.css --mathjax \
+pandoc -f markdown -t html -s -S -f markdown --toc -H documentation/users-guide/css/github.css --mathjax \
 $OUTDIR/v${v}/index.md -o $OUTDIR/v${v}/index.html
 
 echo "Generated $OUTDIR/v${v}/index.html"

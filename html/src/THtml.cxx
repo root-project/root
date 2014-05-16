@@ -782,6 +782,7 @@ Overview:
 These are typical things people do with THtml:
 <pre>
     root[] <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> html;                // create a <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> object
+    root[] html.LoadAllLibs();         // Load all rootmap'ed libraries
     root[] html.MakeAll();             // generate documentation for all changed classes
 </pre>
 or to run on just a few classes:
@@ -1624,7 +1625,7 @@ void THtml::CreateListOfClasses(const char* filter)
                Info("CreateListOfClasses", "Cannot find header file for TObject at %s given the input path %s.",
                   classPtr->GetDeclFileName(), GetInputPath().Data());
                Info("CreateListOfClasses", "Assuming documentation is not for ROOT classes, or you need to pass "
-                  "the proper directory to THtml::SetInputPath() so I can find %s.", classPtr->GetDeclFileName());
+                  "the proper directory to THtml::SetInputDir() so I can find %s.", classPtr->GetDeclFileName());
                continue;
             }
             // ignore STL

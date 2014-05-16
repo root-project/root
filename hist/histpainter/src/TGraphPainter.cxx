@@ -397,7 +397,7 @@ Begin_Macro(source)
    double zero[5] = {0, 0, 0, 0, 0};
 
    // data set (1) with stat and sys errors
-   double y1[5]       = {1.2, 1.15, 1.19, 0.9, 1.4};
+   double py1[5]      = {1.2, 1.15, 1.19, 0.9, 1.4};
    double ey_stat1[5] = {0.2, 0.18, 0.17, 0.2, 0.4};
    double ey_sys1[5]  = {0.5, 0.71, 0.76, 0.5, 0.45};
 
@@ -409,13 +409,13 @@ Begin_Macro(source)
    // Now draw data set (1)
 
    // We first have to draw it only with the stat errors
-   TGraphErrors *graph1 = new TGraphErrors(5, x, y1, zero, ey_stat1);
+   TGraphErrors *graph1 = new TGraphErrors(5, x, py1, zero, ey_stat1);
    graph1->SetMarkerStyle(20);
    graph1->Draw("P");
 
    // Now we have to somehow depict the sys errors
 
-   TGraphErrors *graph1_sys = new TGraphErrors(5, x, y1, zero, ey_sys1);
+   TGraphErrors *graph1_sys = new TGraphErrors(5, x, py1, zero, ey_sys1);
    graph1_sys->Draw("[]");
 
    // Now draw data set (2)
