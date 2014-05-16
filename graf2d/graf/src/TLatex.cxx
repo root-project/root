@@ -192,9 +192,7 @@ Begin_Macro(source)
    TCanvas Tlva("Tlva","Tlva",500,500);
    Tlva.SetGrid();
    Tlva.DrawFrame(0,0,1,1);
-   const char *longstring = "K_{S}... K^{*0}... #frac{2s}{#pi#alpha^{2}}
-   #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) =
-   #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)";
+   const char *longstring = "K_{S}... K^{*0}... #frac{2s}{#pi#alpha^{2}} #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = #left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta)";
 
    TLatex latex;
    latex.SetTextSize(0.025);
@@ -219,11 +217,11 @@ Begin_Macro(source)
    latex.DrawLatex(.2,.1,longstring);
 
    latex.SetTextAlign(12);
-   latex->SetTextFont(72);
-   latex->DrawLatex(.1,.80,"13");
-   latex->DrawLatex(.1,.55,"12");
-   latex->DrawLatex(.1,.35,"11");
-   latex->DrawLatex(.1,.18,"10");
+   latex.SetTextFont(72);
+   latex.DrawLatex(.1,.80,"13");
+   latex.DrawLatex(.1,.55,"12");
+   latex.DrawLatex(.1,.35,"11");
+   latex.DrawLatex(.1,.18,"10");
    return Tlva;
 }
 End_Macro
@@ -293,8 +291,7 @@ Begin_Macro(source)
    TPaveText pt(.1,.1,.9,.9);
    pt.AddText("#frac{2s}{#pi#alpha^{2}}  #frac{d#sigma}{dcos#theta} (e^{+}e^{-} #rightarrow f#bar{f} ) = ");
    pt.AddText("#left| #frac{1}{1 - #Delta#alpha} #right|^{2} (1+cos^{2}#theta");
-   pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f}
-   (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
+   pt.AddText("+ 4 Re #left{ #frac{2}{1 - #Delta#alpha} #chi(s) #[]{#hat{g}_{#nu}^{e}#hat{g}_{#nu}^{f} (1 + cos^{2}#theta) + 2 #hat{g}_{a}^{e}#hat{g}_{a}^{f} cos#theta) } #right}");
    pt.SetLabel("Born equation");
    pt.Draw();
    return ex3;

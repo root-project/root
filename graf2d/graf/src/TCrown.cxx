@@ -30,8 +30,8 @@ Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",400,400);
    TCrown cr1(.5,.5,.3,.4);
-   cr1->SetLineStyle(2);
-   cr1->SetLineWidth(4);
+   cr1.SetLineStyle(2);
+   cr1.SetLineWidth(4);
    cr1.Draw();
    TCrown cr2(.5,.5,.2,.3,45,315);
    cr2.SetFillColor(38);
