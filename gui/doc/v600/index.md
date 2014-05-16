@@ -18,3 +18,5 @@
 
 ### ROOT browser and pad editor
 -	The Pad Editor is now embedded in the left tab of the browser instead of inside the canvas itself, so the layout of the canvas remains untouched when opening the editor.
+
+
