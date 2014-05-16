@@ -75,7 +75,7 @@ void dynload() {
    new Event();
 }
 ```
-There are two options to make this work in both ROOT v5 and v6: either remove the `#include` or provide a rootmap file for libEvent (which also requires include guards for Event.h). This might get fixed in a later version (ROOT-4691).
+You will currently have to provide a rootmap file for libEvent (which also requires include guards for Event.h). This might get fixed in a later version (ROOT-4691).
 
 ### TInterpreter
 
