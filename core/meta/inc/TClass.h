@@ -97,7 +97,7 @@ public:
           kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
           kWarned      = BIT(21),
           kHasNameMapNode = BIT(22),
-          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user.
+          kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
