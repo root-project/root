@@ -2450,6 +2450,19 @@ Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDer
 
    R__LOCKGUARD(gInterpreterMutex);
    // Warning("GetBaseClassOffset","Requires the use of fClassInfo for %s to %s",GetName(),toBase->GetName());
+
+   if ((!address /* || !has_virtual_base */) &&
+       (!HasInterpreterInfoInMemory() || !toBase->HasInterpreterInfoInMemory())) {
+      // At least of the ClassInfo have not been loaded in memory yet and
+      // since there is no virtual base class (or we don't have enough so it
+      // would not make a difference) we can use the 'static' information
+      Int_t offset = GetBaseClassOffsetRecurse (toBase);
+      if (offset != -2) {
+         return offset;
+      }
+      return offset;
+   }
+
    ClassInfo_t* derived = GetClassInfo();
    ClassInfo_t* base = toBase->GetClassInfo();
    if(derived && base) {
