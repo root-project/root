@@ -64,11 +64,11 @@ ClassImp(STreeEvent)
 // begin of code - STreeEventLinkDef.h
 #ifdef __CINT__
 
-#pragma link C++ class TopTrack;
-#pragma link C++ class BottomTrack;
-#pragma link C++ class PhotonsList;
-#pragma link C++ class FittedList;
-#pragma link C++ class STreeEvent;
+#pragma link C++ class TopTrack+;
+#pragma link C++ class BottomTrack+;
+#pragma link C++ class PhotonsList+;
+#pragma link C++ class FittedList+;
+#pragma link C++ class STreeEvent+;
 
 #endif
 // end of code - STreeEventLinkDef.h
