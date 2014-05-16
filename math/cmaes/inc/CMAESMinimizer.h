@@ -293,8 +293,8 @@ namespace ROOT
       //bool ExamineMinimum(const ROOT::Minuit2::FunctionMinimum & min); 
       
     private: 
-      unsigned int fDim;       // dimension of the function to be minimized 
-      unsigned int fFreeDim; // Number of free dimensions.
+      unsigned int fDim = 0;       // dimension of the function to be minimized 
+      unsigned int fFreeDim = 0; // Number of free dimensions.
       //int fMinimizer; // minimizer algo.
       const ROOT::Math::IMultiGenFunction *fObjFunc = nullptr;
       std::vector<double> fLBounds; // Lower bounds of variables
@@ -307,6 +307,7 @@ namespace ROOT
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
       mutable std::vector<double> fValues; // X values.
       mutable std::vector<double> fErrors; // X errors.
+      bool fWithBounds = false; // whether using box-type constraints as required by parameters.
     };
     
   }  // end namespace cmaes

@@ -29,18 +29,20 @@
 #include "TROOT.h"
 #endif
 
+using namespace libcmaes;
+
 namespace ROOT
 {
   namespace cmaes
   {
 
     TCMAESMinimizer::TCMAESMinimizer()
-      :Minimizer(),fDim(0),fFreeDim(0)
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
     {
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const char *type)
-      :Minimizer(),fDim(0),fFreeDim(0)
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
     {
       //std::string algoname(type);
       // tolower() is not an  std function (Windows)
@@ -48,7 +50,7 @@ namespace ROOT
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
-      :Minimizer()
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
     {
     }
 
@@ -93,8 +95,8 @@ namespace ROOT
 	fInitialX.push_back(val); 
 	fNames.push_back(name);	
 	fInitialSigma.push_back(step);
-	fLBounds.push_back(0);
-	fUBounds.push_back(0);
+	fLBounds.push_back(-std::numeric_limits<double>::max());
+	fUBounds.push_back(std::numeric_limits<double>::max());
 	if (step==0.){
 	  fVariablesType.push_back(1);
 	}
@@ -132,6 +134,7 @@ namespace ROOT
       if (!r) return false;
       fLBounds[ivar] = lower;
       fVariablesType[ivar] = 2;
+      fWithBounds = true;
       return true;
     }
 
@@ -144,6 +147,7 @@ namespace ROOT
       if (!r) return false;
       fUBounds[ivar] = upper;
       fVariablesType[ivar] = 3;
+      fWithBounds = true;
       return true;
     }
 
@@ -167,6 +171,7 @@ namespace ROOT
       fLBounds[ivar] = lower;
       fUBounds[ivar] = upper;
       fVariablesType[ivar] = 4;
+      fWithBounds = true;
       return true;
     }
     
@@ -211,6 +216,7 @@ namespace ROOT
 	return false;
       fLBounds[ivar] = lower;
       fVariablesType[ivar] = 2;
+      fWithBounds = true;
       return true;
     }
 
@@ -220,6 +226,7 @@ namespace ROOT
 	return false;
       fUBounds[ivar] = upper;
       fVariablesType[ivar] = 3;
+      fWithBounds = true;
       return true;
     }
 
@@ -230,6 +237,7 @@ namespace ROOT
       fLBounds[ivar] = lower;
       fUBounds[ivar] = upper;
       fVariablesType[ivar] = 4;
+      fWithBounds = true;
       return true;
     }
 
@@ -286,15 +294,26 @@ namespace ROOT
       //ROOT::Math::IOptions *cmaesOpt = ROOT::Math::MinimizerOptions::FindDefault("cmaes"); //TODO.
       
       //TODO: phenotype / genotype.
-      
-      CMAParameters<> cmaparams(fDim);
-      //TODO: x0, sigma0, ...
+
       FitFunc ffit = [this](const double *x, const int N)
 	{
 	  return (*fObjFunc)(x);
 	};
       ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-      fCMAsols = libcmaes::cmaes<>(ffit,cmaparams,pfunc);
+
+      //TODO: x0, sigma0, ...
+      if (fWithBounds)
+	{
+	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
+	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,-1,-1.0,0,gp);
+	  cmaparams._quiet = true;
+	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
+	}
+      else
+	{
+	  CMAParameters<> cmaparams(fDim);
+	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams,pfunc);
+	}
       //fCMAsols = cmaes<>([this](const double *x, const int N){ return (*fObjFunc)(x);},cmaparams); //TODO: use bounds as needed.
       fStatus = fCMAsols._run_status; //TODO: convert so that to match that of Minuit2 ?
       return fCMAsols._run_status >= 0;
