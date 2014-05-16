@@ -2187,7 +2187,8 @@ TString TString::BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out)
    if (!isSigned && s_in_[0] == '+') s_in_.Remove(0, 1);  // !isSigned to avoid strings beginning with "-+"
    if (base_in == 16 && s_in_.BeginsWith("0x")) s_in_.Remove(0, 2);  // removing hex prefix if any
    s_in_ = TString(s_in_.Strip(TString::kLeading, '0'));  // removing leading zeros (necessary for length comparison below)
-   // checking s_in_ is expressed in the mentionned base
+   if (!s_in_.Length()) s_in_ += '0';
+   // checking s_in_ is expressed in the mentioned base
    if (!s_in_.IsInBaseN(base_in)) {
       Error("TString::BaseConvert", "s_in=\"%s\" is not in base %d", s_in.Data(), base_in);
       return (s_out);

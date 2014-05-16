@@ -46,6 +46,7 @@ private:
 
    void    ExecLogon();
    Long_t  ProcessRemote(const char *line, Int_t *error = 0);
+   Long_t  ProcessLineNr(const char* filestem, const char *line, Int_t *error = 0);
 
 public:
    TRint(const char *appClassName, int *argc, char **argv,
