@@ -114,7 +114,7 @@ namespace Vc
         static Vc_ALWAYS_INLINE m256i Vc_CONST blend(param256i x, param256i y) {
             return _mm256_castps_si256(blend<Dst0, Dst1, Dst2, Dst3, Dst4, Dst5, Dst6, Dst7>(_mm256_castsi256_ps(x), _mm256_castsi256_ps(y)));
         }
-        template<VecPos Dst> struct ScaleForBlend { enum { Value = Dst >= X4 ? Dst - X4 + Y0 : Dst }; };
+        template<VecPos Dst> struct ScaleForBlend { enum JustSomeName__ { Value = Dst >= X4 ? Dst - X4 + Y0 : Dst }; };
         template<VecPos Dst0, VecPos Dst1, VecPos Dst2, VecPos Dst3, VecPos Dst4, VecPos Dst5, VecPos Dst6, VecPos Dst7>
         static Vc_ALWAYS_INLINE m256 Vc_CONST permute(param256 x) {
             VC_STATIC_ASSERT(Dst0 >= X0 && Dst0 <= X7, Incorrect_Range);

@@ -6,12 +6,12 @@ namespace
 template<typename Cond, typename T> struct EnableIfNeitherIntegerNorVector : public EnableIf<!CanConvertToInt<Cond>::Value, T> {};
 template<typename Cond, typename T> struct EnableIfNeitherIntegerNorVector<Vector<Cond>, T>;
 
-template<typename T> struct IsVector             { enum { Value = false }; };
-template<typename T> struct IsVector<Vector<T> > { enum { Value =  true }; };
+template<typename T> struct IsVector             { enum JustSomeName__ { Value = false }; };
+template<typename T> struct IsVector<Vector<T> > { enum JustSomeName__ { Value =  true }; };
 
 template<typename T0, typename T1, typename V0, typename V1> struct IsTypeCombinationOf
 {
-    enum {
+    enum JustSomeName__ {
         Value = IsVector<V0>::Value ? (IsVector<V1>::Value ? ( // Vec × Vec
                     (    IsEqualType<T0, V0>::Value && HasImplicitCast<T1, V1>::Value && !HasImplicitCast<T1, int>::Value) ||
                     (HasImplicitCast<T0, V0>::Value &&     IsEqualType<T1, V1>::Value && !HasImplicitCast<T0, int>::Value) ||
@@ -32,7 +32,7 @@ template<typename T0, typename T1, typename V0, typename V1> struct IsTypeCombin
 
 template<typename T0, typename T1, typename V> struct IsVectorOperands
 {
-    enum {
+    enum JustSomeName__ {
         Value = (HasImplicitCast<T0, V>::Value && !HasImplicitCast<T0, int>::Value && !IsEqualType<T0, V>::Value && IsEqualType<T1, V>::Value)
             ||  (HasImplicitCast<T1, V>::Value && !HasImplicitCast<T1, int>::Value && !IsEqualType<T1, V>::Value && IsEqualType<T0, V>::Value)
     };
