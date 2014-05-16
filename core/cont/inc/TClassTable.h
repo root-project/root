@@ -86,6 +86,7 @@ public:
    static Int_t         GetPragmaBits(const char *name);
    static VoidFuncPtr_t GetDict(const char *cname);
    static VoidFuncPtr_t GetDict(const type_info& info);
+   static VoidFuncPtr_t GetDictNorm(const char *cname);
    static TProtoClass  *GetProto(const char *cname);
    static void          Init();
    static char         *Next();

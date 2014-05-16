@@ -2660,6 +2660,22 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    // long-ish TSplitType
    if (cl && cl->IsLoaded()) return cl;
 
+   // To avoid spurrious auto parsing, let's check if the name as-is is
+   // known in the TClassTable.
+   VoidFuncPtr_t dict = TClassTable::GetDictNorm(name);
+   if (dict) {
+      // The name is normalized, so the result of the first search is
+      // authoritive.
+      if (!load) return 0;
+
+      TClass *loadedcl = gROOT->LoadClass(name,silent);
+
+      if (loadedcl) return loadedcl;
+
+      // We should really not fall through to here, but if we do, let's just
+      // continue as before ...
+   }
+
    TClassEdit::TSplitType splitname( name, TClassEdit::kLong64 );
 
    if (!cl) {
