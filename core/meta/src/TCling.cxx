@@ -989,11 +989,13 @@ bool TCling::LoadPCM(TString pcmFileName,
    // look in other places.
    searchPath.Append( gSystem->GetDynamicPath() );
 
+   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
+   if (!enableRootPcm) return kTRUE;
+
    if (!gSystem->FindFile(searchPath, pcmFileName))
       return kFALSE;
 
-   static bool enableRootPcm = !gSystem->Getenv("DISABLE_ROOT_PCM");
-   if (enableRootPcm && gROOT->IsRootFile(pcmFileName)) {
+   if (gROOT->IsRootFile(pcmFileName)) {
       Int_t oldDebug = gDebug;
       if (gDebug > 5) {
          gDebug -= 5;
