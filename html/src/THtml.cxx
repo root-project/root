@@ -1625,7 +1625,7 @@ void THtml::CreateListOfClasses(const char* filter)
                Info("CreateListOfClasses", "Cannot find header file for TObject at %s given the input path %s.",
                   classPtr->GetDeclFileName(), GetInputPath().Data());
                Info("CreateListOfClasses", "Assuming documentation is not for ROOT classes, or you need to pass "
-                  "the proper directory to THtml::SetInputPath() so I can find %s.", classPtr->GetDeclFileName());
+                  "the proper directory to THtml::SetInputDir() so I can find %s.", classPtr->GetDeclFileName());
                continue;
             }
             // ignore STL
