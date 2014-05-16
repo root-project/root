@@ -99,14 +99,14 @@ indent(ostringstream& buf, int indent_level)
 
 static
 void
-EvaluateExpr(cling::Interpreter* interp, const Expr* E, cling::Value& V)
+EvaluateExpr(cling::Interpreter& interp, const Expr* E, cling::Value& V)
 {
    // Evaluate an Expr* and return its cling::Value
-   ASTContext& C = interp->getCI()->getASTContext();
+   ASTContext& C = interp.getCI()->getASTContext();
    APSInt res;
    if (E->EvaluateAsInt(res, C, /*AllowSideEffects*/Expr::SE_NoSideEffects)) {
       // IntTy or maybe better E->getType()?
-      V = cling::Value(C.IntTy, 0);
+      V = cling::Value(C.IntTy, interp);
       V.getULL() = res.getZExtValue();
       return;
    }
@@ -123,7 +123,7 @@ EvaluateExpr(cling::Interpreter* interp, const Expr* E, cling::Value& V)
    out << ';'; // no value printing
    out.flush();
    // Evaluate() will set V to invalid if evaluation fails.
-   interp->evaluate(buf, V);
+   interp.evaluate(buf, V);
 }
 
 namespace {
@@ -1929,14 +1929,14 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
       const TypeDecl* TD = dyn_cast<TypeDecl>(CD->getDeclContext());
       QualType ClassTy(TD->getTypeForDecl(), 0);
       QualType QT = Context.getLValueReferenceType(ClassTy);
-      *ret = cling::Value(QT, fInterp);
+      *ret = cling::Value(QT, *fInterp);
       // Store the new()'ed address in getPtr()
       exec(address, &ret->getPtr());
       return;
    }
    QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
-      *ret = cling::Value(QT, 0);
+      *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
    }
@@ -1948,23 +1948,23 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
          // storage to the storage for the designated data member.
          // But that's not relevant: we use it as a non-builtin, allocated
          // type.
-         *ret = cling::Value(QT, fInterp);
+         *ret = cling::Value(QT, *fInterp);
          exec(address, ret->getPtr());
          return;
       }
       // We are a function member pointer.
-      *ret = cling::Value(QT, fInterp);
+      *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
    }
    else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      *ret = cling::Value(QT, 0);
+      *ret = cling::Value(QT, *fInterp);
       exec(address, &ret->getPtr());
       return;
    }
    else if (QT->isRecordType()) {
-      *ret = cling::Value(QT, fInterp);
+      *ret = cling::Value(QT, *fInterp);
       exec(address, ret->getPtr());
       return;
    }
@@ -1972,12 +1972,12 @@ TClingCallFunc::exec_with_valref_return(void* address, cling::Value* ret) const
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
-      *ret = cling::Value(QT, 0);
+      *ret = cling::Value(QT, *fInterp);
       execWithLL<int>(address, QT, ret);
       return;
    }
    else if (const BuiltinType* BT = dyn_cast<BuiltinType>(&*QT)) {
-      *ret = cling::Value(QT, 0);
+      *ret = cling::Value(QT, *fInterp);
       switch (BT->getKind()) {
          case BuiltinType::Void:
             exec(address, 0);
@@ -2119,7 +2119,7 @@ TClingCallFunc::EvaluateArgList(const string& ArgList)
    for (SmallVectorImpl<Expr*>::const_iterator I = exprs.begin(),
          E = exprs.end(); I != E; ++I) {
       cling::Value val;
-      EvaluateExpr(fInterp, *I, val);
+      EvaluateExpr(*fInterp, *I, val);
       if (!val.isValid()) {
          // Bad expression, all done.
          Error("TClingCallFunc::EvaluateArgList",
@@ -2353,7 +2353,7 @@ void
 TClingCallFunc::SetArg(long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongTy, 0));
+   fArgVals.push_back(cling::Value(C.LongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
@@ -2361,7 +2361,7 @@ void
 TClingCallFunc::SetArg(double param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.DoubleTy, 0));
+   fArgVals.push_back(cling::Value(C.DoubleTy, *fInterp));
    fArgVals.back().getDouble() = param;
 }
 
@@ -2369,7 +2369,7 @@ void
 TClingCallFunc::SetArg(long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.LongLongTy, 0));
+   fArgVals.push_back(cling::Value(C.LongLongTy, *fInterp));
    fArgVals.back().getLL() = param;
 }
 
@@ -2377,7 +2377,7 @@ void
 TClingCallFunc::SetArg(unsigned long long param)
 {
    ASTContext& C = fInterp->getCI()->getASTContext();
-   fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, 0));
+   fArgVals.push_back(cling::Value(C.UnsignedLongLongTy, *fInterp));
    fArgVals.back().getULL() = param;
 }
 
