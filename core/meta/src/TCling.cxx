@@ -848,6 +848,12 @@ TCling::TCling(const char *name, const char *title)
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+
+   // Until we can disable autoloading during Sema::CorrectTypo() we have
+   // to disable spell checking.
+   fInterpreter->getCI()->getLangOpts().SpellChecking = false;
+
+
    // We need stream that doesn't close its file descriptor, thus we are not
    // using llvm::outs. Keeping file descriptor open we will be able to use
    // the results in pipes (Savannah #99234).
