@@ -26,7 +26,7 @@ void th2polyUSA()
       "texas",        "utah",           "vermont",        "virginia",
       "washington",   "west_virginia",  "wisconsin",      "wyoming"
    };
-   Float_t pop[nx] = {
+   Double_t pop[nx] = {
     4708708, 6595778,  2889450, 36961664, 5024748,  3518288,  885122, 18537969,
     9829211, 1545801, 12910409,  6423113, 3007856,  2818747, 4314113,  4492076,
     1318301, 5699478,  6593587,  9969727, 5266214,  2951996, 5987580,   974989,
@@ -69,5 +69,5 @@ void th2polyUSA()
 
    gStyle->SetOptStat(11);
    gStyle->SetPalette(1);
-   p->Draw("gllego");
+   p->Draw("legogl");
 }
