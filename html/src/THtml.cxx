@@ -782,6 +782,7 @@ Overview:
 These are typical things people do with THtml:
 <pre>
     root[] <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> html;                // create a <a href="http://root.cern.ch/root/html/THtml.html">THtml</a> object
+    root[] html.LoadAllLibs();         // Load all rootmap'ed libraries
     root[] html.MakeAll();             // generate documentation for all changed classes
 </pre>
 or to run on just a few classes:
