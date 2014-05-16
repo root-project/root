@@ -5073,11 +5073,11 @@ void TClass::SetStreamerImpl()
 
    switch (fStreamerType) {
       case kTObject:  fStreamerImpl  = &TClass::StreamerTObject; break;
-      case kForeign:  fStreamerImpl = &TClass::StreamerStreamerInfo; break;
+      case kForeign:  fStreamerImpl  = &TClass::StreamerStreamerInfo; break;
       case kExternal: fStreamerImpl  = &TClass::StreamerExternal; break;
       case kInstrumented:  {
          if (fStreamerFunc) fStreamerImpl  = &TClass::StreamerInstrumented;
-         else                   fStreamerImpl  = &TClass::StreamerStreamerInfo;
+         else               fStreamerImpl  = &TClass::StreamerStreamerInfo;
          break;
       }
 
@@ -5695,10 +5695,14 @@ void TClass::SetStreamerFunc(ClassStreamerFunc_t strm)
    if (fProperty != -1 &&
        ( (fStreamerFunc == 0 && strm != 0) || (fStreamerFunc != 0 && strm == 0) ) )
    {
-      // If the initialization has already been done, make sure to have it redone.
       fStreamerFunc = strm;
-      fProperty = -1;
-      Property();
+
+      // Since initialization has already been done, make sure to tweak it
+      // for the new state.
+      if (HasInterpreterInfo() && fStreamerType != kTObject && !fStreamer) {
+         fStreamerType  = kInstrumented;
+         fStreamerImpl  = &TClass::StreamerInstrumented;
+      }
    } else {
       fStreamerFunc = strm;
    }
