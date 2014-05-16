@@ -2035,13 +2035,6 @@ Bool_t TClass::CanSplit() const
    if (fName == "string")         return kFALSE;
    if (fName == "std::string")    return kFALSE;
 
-//   Uncommenting this would change the default bahavior and disallow the splitting by
-//   default.
-//   if (!GetCollectionProxy() && (GetStreamer()!=0 || TestBit(TClass::kHasCustomStreamerMember))) {
-//      return kFALSE;
-//   }
-
-
    // If we do not have a showMembers or a fClassInfo and we have a streamer,
    // we are in the case of class that can never be split since it is
    // opaque to us.
@@ -2071,11 +2064,17 @@ Bool_t TClass::CanSplit() const
 
       return kTRUE;
 
-   } else if ((GetShowMembersWrapper()==0 && !HasDataMemberInfo()) && GetStreamer()!=0) {
+   } else if (GetStreamer()!=0) {
 
-      // We do NOT have a collection.  The class is true opaque.
+      // We have an external custom streamer provided by the user, we must not
+      // split it.
       return kFALSE;
 
+   } else if ( TestBit(TClass::kHasCustomStreamerMember) ) {
+
+      // We have a custom member function streamer or
+      // an older (not StreamerInfo based) automatic streamer.
+      return kFALSE;
    }
 
    if (Size()==1) {

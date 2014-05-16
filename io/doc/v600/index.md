@@ -1,5 +1,39 @@
 ## I/O Libraries
 
+### I/O Behavior change.
+
+#### Classes with custom streamer
+
+Classes for which a Streamer function was externally provided are no longer
+split; they were split in v5 if the dictionary was generated via rootcint but
+were not split if the dictionary was generated via genreflex.
+
+Classes with a custom Streamer function and classes with an older, non StreamerInfo
+based automatic streamer are also no longer split.
+
+To force the splitting of those classes, thus by-passing the custom Streamer,
+when storing the object in a TTree and in a collection object, use:
+
+
+``` {.cpp}
+       TClass::GetClass(classname)->SetCanSplit(true);
+```
+
+### I/O Schema Checksum
+
+The algorithm used to calculate a single number giving an indication on whether
+the schema layout has changed (i.e. if two StreamerInfo are equivalent) have 
+been update to
+
+- Use the normalized name for the types (i.e. two different spelling of the same
+name will lead to the same checksum)
+- Take into account the base classes' checksum in the derived class checksum;
+this is necessary to properly support base classes during memberwise streaming.
+
+The algorithm that checks whether two StreamerInfo are equal even-though their
+checksum is different has been significantly enhanced in particular to also
+check the base classes.
+
 ### TFileMerger
 
 -   Added possibility to merge only a list of objects/folders from the
