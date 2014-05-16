@@ -27,6 +27,12 @@ Reading member : WithAttachedStreamer fTwo index: 11
 Reading a WithAttachedStreamer
 Reading member : WithAttachedStreamer fOne index: 12
 Reading member : WithAttachedStreamer fTwo index: 12
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 13
+Reading member : WithStreamerOnly fTwo index: 13
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 14
+Reading member : WithStreamerOnly fTwo index: 14
 Reading in member-wise mode
 Reading member : fOne index: 1
 Reading member : fOne index: 2
@@ -54,3 +60,9 @@ Reading member : WithAttachedStreamer fTwo index: 11
 Reading a WithAttachedStreamer
 Reading member : WithAttachedStreamer fOne index: 12
 Reading member : WithAttachedStreamer fTwo index: 12
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 13
+Reading member : WithStreamerOnly fTwo index: 13
+Reading a WithStreamerOnly
+Reading member : WithStreamerOnly fOne index: 14
+Reading member : WithStreamerOnly fTwo index: 14

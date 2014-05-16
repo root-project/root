@@ -134,6 +134,8 @@ public:
       fStreamerOnly.push_back(WithStreamerOnly(10));
       fCannotSplit.push_back(WithExplicitCannotSplit(11));
       fCannotSplit.push_back(WithExplicitCannotSplit(12));
+      fStreamerOnlyNoReq.push_back(WithStreamerOnly(13));
+      fStreamerOnlyNoReq.push_back(WithStreamerOnly(14));
    }
    
    std::vector<Content>  fNormal;
@@ -143,7 +145,8 @@ public:
    std::vector<WithAttachedStreamer> fAttachedStreamer;
    std::vector<WithStreamerOnly> fStreamerOnly; //!
    std::vector<WithExplicitCannotSplit> fCannotSplit;
-   
+   std::vector<WithStreamerOnly> fStreamerOnlyNoReq; //
+
    std::vector<NeverWritten> fAlwaysEmpty;
 };
 
