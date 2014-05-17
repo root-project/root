@@ -79,10 +79,11 @@ void TClingTypedefInfo::Init(const char *name)
                                     : cling::LookupHelper::NoDiagnostics);
    if (QT.isNull()) {
       std::string buf = TClassEdit::InsertStd(name);
-      QT = lh.findType(buf,
-                       gDebug > 5 ? cling::LookupHelper::WithDiagnostics
-                       : cling::LookupHelper::NoDiagnostics);
-
+      if (buf != name) {
+         QT = lh.findType(buf,
+                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                          : cling::LookupHelper::NoDiagnostics);
+      }
       if (QT.isNull()) {
          fDecl = 0;
          return;
