@@ -4483,7 +4483,10 @@ Int_t TCling::AutoParse(const char* cls)
 {
    // Parse the headers relative to the class
 
-   if(!fHeaderParsingOnDemand) return 0;
+   if (!fHeaderParsingOnDemand) return 0;
+
+   // No recursive header parsing on demand; we require headers to be standalone.
+   fHeaderParsingOnDemand = false;
 
    Int_t nHheadersParsed = 0;
    std::size_t normNameHash(fStringHashFunction(cls));
@@ -4535,6 +4538,9 @@ Int_t TCling::AutoParse(const char* cls)
          }
       }
    }
+
+   fHeaderParsingOnDemand = true;
+
    return nHheadersParsed;
 }
 
