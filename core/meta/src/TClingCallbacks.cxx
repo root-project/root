@@ -401,6 +401,10 @@ bool TClingCallbacks::tryFindROOTSpecialInternal(LookupResult &R, Scope *S) {
    // If there is a result abort.
    if (!R.empty())
       return false;
+   const Sema::LookupNameKind LookupKind = R.getLookupKind();
+   if (LookupKind != Sema::LookupOrdinaryName)
+      return false;
+
 
    Sema &SemaR = m_Interpreter->getSema();
    ASTContext& C = SemaR.getASTContext();
