@@ -258,7 +258,7 @@ namespace RooStats {
 
       // kbelasco: The inner-workings of the class really should not be exposed
       // like this in a comment, but it seems to be the only way to give
-      // the user any control over this process, if he desires it
+      // the user any control over this process, if they desire it
       //
       // Set the fraction delta such that
       // topCutoff (a) is considered == bottomCutoff (b) iff

@@ -4053,7 +4053,7 @@ void TClass::IgnoreTObjectStreamer(Bool_t doIgnore)
    TVirtualStreamerInfo *sinfo = GetCurrentStreamerInfo();
    if (sinfo) {
       if (sinfo->IsCompiled()) {
-         // -- Warn the user that what he is doing cannot work.
+         // -- Warn the user that what they are doing cannot work.
          // Note: The reason is that TVirtualStreamerInfo::Build() examines
          // the kIgnoreTObjectStreamer bit and sets the TStreamerElement
          // type for the TObject base class streamer element it creates

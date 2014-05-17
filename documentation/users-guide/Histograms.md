@@ -104,7 +104,7 @@ last bin).
       /* Y-dimension */ 200, -3.0, 1.5);
 ```
 
-When employing his constructor, you will create a histogram with
+When employing this constructor, you will create a histogram with
 constant (fixed) bin width on each axis. For the example above, the
 interval `[0.0, 4.0]` is divided into 100 bins of the same width `w`
 `X = 4.0 - 0.0 100 = 0.04` for the X axis (dimension). Likewise, for

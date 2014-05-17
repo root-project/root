@@ -54,7 +54,7 @@ public:
    /**
 
       The meaning of the vector of parameters is of course defined by the user, 
-      who uses the values of those parameters to calculate his function Value. 
+      who uses the values of those parameters to calculate their function Value. 
       The order and the position of these parameters is strictly the one specified 
       by the user when supplying the starting values for minimization. The starting 
       values must be specified by the user, either via an std::vector<double> or the 

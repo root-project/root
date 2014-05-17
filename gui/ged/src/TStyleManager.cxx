@@ -451,7 +451,7 @@ TStyleManager::TStyleManager(const TGWindow *p) : TGMainFrame(p)
    MapWindow();
 
    //  Ensure the editor will be visible (not out of the screen's range) when
-   // the user will press the 'More' button, if he didn't move the window.
+   // the user will press the 'More' button, if they didn't move the window.
    Int_t x, y;
    UInt_t w, h;
    gVirtualX->GetWindowSize(GetId(), x, y, w, h);
@@ -4405,7 +4405,7 @@ void TStyleManager::DoRealTime(Bool_t b)
 void TStyleManager::DoPreview(Bool_t b)
 {
    //  Slot called when the user click on the preview check button. If b=kTRUE,
-   // the user asks for a preview, otherwise he wants to close it.
+   // the user asks for a preview, otherwise they want to close it.
 
    if (b) {
       fPreviewButton->SetState(kButtonDown, kFALSE);

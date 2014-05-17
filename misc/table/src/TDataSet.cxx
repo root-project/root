@@ -35,7 +35,7 @@
 //  object, the "character" *name* and "character" *title*              //
 //                                                                      //
 //  The service this class does provide is to help the user to build    //
-//  and manage the hierarchy of his/her data but the data itself.       //
+//  and manage the hierarchy of their data but the data itself.         //
 //                                                                      //
 //  So it is not "Container" itself rather the basement (base class)    //
 //  to built the containers.                                            //

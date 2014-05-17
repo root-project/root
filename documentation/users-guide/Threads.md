@@ -235,8 +235,8 @@ objects/collections while it is being executed. The methods
 `TThread::Lock() `and **`TThread::UnLock()`** internally use a global
 `TMutex` instance for locking.
 
-The user may also define his own **`TMutex`** `MyMutex` instance and may
-locally protect his asynchronous actions by calling `MyMutex.Lock()` and
+The user may also define their own **`TMutex`** `MyMutex` instance and may
+locally protect their asynchronous actions by calling `MyMutex.Lock()` and
 `MyMutex.UnLock().`
 
 #### Synchronous Actions: TCondition
@@ -333,8 +333,8 @@ deferred and asynchronous.
 #### Deferred
 
 Set by `TThread::SetCancelDeferred()` (default): When the user knows
-safe places in his code where a thread can be canceled without risk for
-the rest of the system, he can define these points by invoking
+safe places in their code where a thread can be canceled without risk for
+the rest of the system, they can define these points by invoking
 **`TThread`**`::CancelPoint()`. Then, if a thread is canceled, the
 cancellation is deferred up to the call of
 **`TThread`**`::CancelPoint()` and then the thread is canceled safely.
@@ -345,7 +345,7 @@ any call of the `TCondition::Wait()`, **`TCondition`**`::TimedWait()`,
 #### Asynchronous
 
 Set by `TThread::SetCancelAsynchronous()`: If the user is sure that
-his application is cancel safe, he could call:
+their application is cancel safe, they could call:
 
 ``` {.cpp}
    TThread::SetCancelAsynchronous();
@@ -523,7 +523,7 @@ of ROOT.
 
 **Object instantiation:** there is no implicit locking mechanism for
 memory allocation and global ROOT lists. The user has to explicitly
-protect his code when using them.
+protect their code when using them.
 
 ## The Signals of ROOT
 

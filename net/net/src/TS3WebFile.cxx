@@ -205,7 +205,7 @@ TS3WebFile::TS3WebFile(const char* path, Option_t* options)
    // Were there some errors opening this file?
    if (IsZombie() && (accessKey.IsNull() || secretKey.IsNull())) {
       // We could not open the file and we have no authentication information
-      // so inform the user so that he can check.
+      // so inform the user so that they can check.
       Error("TS3WebFile", "could not find authentication info in "\
          "'options' argument and at least one of the environment variables '%s' or '%s' is not set",
          kAccessKeyEnv, kSecretKeyEnv);     

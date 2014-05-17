@@ -1704,8 +1704,8 @@ Int_t TAuthenticate::SshAuth(TString &user)
    // SSH client authentication code.
 
    // No control on credential forwarding in case of SSH authentication;
-   // switched it off on PROOF servers, unless the user knows what (s)he
-   // is doing
+   // switched it off on PROOF servers, unless the user knows what they
+   // are doing
 
    if (gROOT->IsProofServ()) {
       if (!(gEnv->GetValue("ProofServ.UseSSH",0))) {

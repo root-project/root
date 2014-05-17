@@ -73,7 +73,7 @@ namespace Math {
 
       /** 
           Clone a function. 
-          Each derived class must implement his version of the Clone method
+          Each derived class must implement their version of the Clone method
       */
       virtual IBaseFunctionMultiDim * Clone() const = 0;  
 
@@ -142,7 +142,7 @@ namespace Math {
 
       /** 
           Clone a function. 
-          Each derived class will implement his version of the provate DoClone method
+          Each derived class will implement their version of the provate DoClone method
       */
       virtual IBaseFunctionOneDim * Clone() const = 0;  
 

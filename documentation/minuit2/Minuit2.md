@@ -147,8 +147,8 @@ belonging to one of the following types:
 When using the minimal required interface, all variable parameters are
 free and unbound.
 
-The user, in his $\mbox{FCN}$, must of course be able to "see" all
-types of defined parameters, and he therefore has access to what we call
+The user, in their $\mbox{FCN}$, must of course be able to "see" all
+types of defined parameters, and they therefore have access to what we call
 the *external parameter list*, that is, the parameters as he defined
 them. On the other hand, the internal M minimizing routines only want to
 "see" variable parameters without limits, and so they have access only
@@ -230,7 +230,7 @@ in the numerical calculation of the $\mbox{FCN}$ value. The effects
 of non-linearity and numerical roundoff both become more important as
 the external value gets closer to one of the limits (expressed as the
 distance to nearest limit divided by distance between limits). The user
-must therefore be aware of the fact that, for example, if he puts limits
+must therefore be aware of the fact that, for example, if they put limits
 of $(0,10^{10})$ on a parameter, then the values $0.0$ and $1.0$ will be
 indistinguishable to the accuracy of most machines.
 
@@ -312,10 +312,10 @@ decreased by a factor $\sqrt{\beta}$. Additive constants do not change
 the parameter errors, but may imply a different goodness-of-fit
 confidence level.
 
-Assuming that the user knows what the normalization of his
-$\mbox{FCN}$ means, and also that he is interested in parameter
-errors, the user can change the error definition which allows him to
-define what he means by one "error", in terms of the change in the
+Assuming that the user knows what the normalization of their
+$\mbox{FCN}$ means, and also that they are interested in parameter
+errors, the user can change the error definition which allows them to
+define what they means by one "error", in terms of the change in the
 $\mbox{FCN}$ value which should be caused by changing one parameter
 by one "error". If the $\mbox{FCN}$ is the usual chisquare function
 (defined below) and if the user wants the usual one-standard-deviation
@@ -719,7 +719,7 @@ $\mbox{FCN}$).
 
 The meaning of the vector of parameters std::vector$<$double$>$ in the
 argument of FCNBase::operator() are of course defined by the user, who
-uses the values of those parameters to calculate his function value. The
+uses the values of those parameters to calculate their function value. The
 order and the position of these parameters is strictly the one specified
 by the user when supplying the starting values for minimization.
 
@@ -741,8 +741,8 @@ for negative log likelihood, $\mbox{up = 0.5}$.
 ### $\mbox{FCN}$ function with gradient ###
 
 By default first derivatives are calculated numerically by M . In case
-the user wants to supply his own gradient calculator (e.g. analytical
-derivatives), he needs to implement the FCNGradientBase interface.
+the user wants to supply their own gradient calculator (e.g. analytical
+derivatives), they need to implement the FCNGradientBase interface.
 
 
 ![](figures/fcngradientbase.png)
@@ -767,7 +767,7 @@ with the parameters before minimization (fix, release, limits, etc.) is
 not possible then.
 
 Optionally if the user wants to provide starting values for the
-covariance, he has to provide the values in a std::vector$<$double$>$
+covariance, they have to provide the values in a std::vector$<$double$>$
 vector container stored in upper triangular packed storage format (see
 [api:covariance]).
 
@@ -828,15 +828,15 @@ The user must supply to M
 The input parameters can be simply defined via an
 std::vector$<$double$>$, which means that all parameters are variables.
 If the user wants fix a parameter or put limits on it before
-minimization, he has to instantiate a MnUserParameters object and then
+minimization, they have to instantiate a MnUserParameters object and then
 add parameters one by one, giving them a name, value, uncertainty. Once
-all parameters are added to MnUserParameters, he can fix a parameter or
-put limits on another one before handing them over to Minit for
+all parameters are added to MnUserParameters, they can fix a parameter or
+put limits on another one before handing them over to Minuit for
 minimization.
 
 ### What the user can supply ###
 
-Optionally the user can supply his own gradient calculator by
+Optionally the user can supply their own gradient calculator by
 implementing the FCNGradientBase interface or supply a full covariance
 matrix for input if one is available. The covariance matrix can be
 supplied in form of a std::vector$<$double$>$ in packed storage format

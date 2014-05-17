@@ -30,7 +30,7 @@ by the configure script. The platform specifics are described in the
 config/Makefile.<arch> file (the architecture is specified once via the
 configure script). Both these files are included by the main Makefile.
 
-The user can customize and override make definitions by providing his
+The user can customize and override make definitions by providing their
 own MyConfig.mk file and add custom or modified rules via a MyRules.mk
 file. Some options in the config/Makefile.<arch> can be controled via
 the ROOTBUILD environment variable. Typically they all support the debug

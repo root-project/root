@@ -1314,7 +1314,7 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const
 {
 //Returns the value and the name of the parameter #ipar
-//NB: In the calling function he argument name must be set large enough
+//NB: In the calling function the argument name must be set large enough
 
    if (ipar<0 || ipar>fNfunctions) {
       Error("GetParError", "illegal value of parameter");

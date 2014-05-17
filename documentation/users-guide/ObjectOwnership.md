@@ -241,8 +241,8 @@ The `kMustCleanup` bit is set:
 -   When painting a frame for a pad, the frame's `kMustCleanup` is set
     in `TPad::PaintPadFrame`
 
-The user can add his own collection to the collection of clean ups, to
-take advantage of  the automatic garbage collection. For example:
+The user can add their own collection to the collection of clean ups, to
+take advantage of the automatic garbage collection. For example:
 
 ``` {.cpp}
    // create two list

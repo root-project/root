@@ -28,7 +28,7 @@
 //      present now;                                                      //
 //   -  trace propely any change in the order of the data-members         //
 //                                                                        //
-// To enjoy this class one has to derive his/her own custom class:        //
+// To enjoy this class one has to derive one's own custom class:          //
 //                                                                        //
 // St_dst_track_Table.h:                                                  //
 // ---------------------                                                  //

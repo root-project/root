@@ -3206,7 +3206,7 @@ void TMultiDimFit::MakeParameterization()
          continue;
       }
 
-      // If user specified function, assume she/he knows what he's doing
+      // If user specified function, assume they know what they are doing
       if (!fIsUserFunction) {
          // Flag this function as considered
          fFunctionCodes[i] = 2;

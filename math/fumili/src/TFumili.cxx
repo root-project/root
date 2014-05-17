@@ -330,7 +330,7 @@ Int_t TFumili::Eval(Int_t& npar, Double_t *grad, Double_t &fval, Double_t *par, 
    //    grad:    The vector of first derivatives.
    //
    // The meaning of the parameters par is of course defined by the user,
-   // who uses the values of those parameters to calculate his function value.
+   // who uses the values of those parameters to calculate their function value.
    // The starting values must be specified by the user.
    // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
    // Inside FCN user has to define Z-matrix by means TFumili::GetZ

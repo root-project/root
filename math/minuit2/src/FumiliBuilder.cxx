@@ -220,7 +220,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn& fcn, const GradientCalculato
     The first two would mean to duplicate all the functionality already existent,
     which is a very bad practice and Error-prone. The third one is the most
     elegant and effective solution, where the only constraint is that the user
-    must know that he has to pass a subclass of FumiliFCNBase to the FumiliMinimizer 
+    must know that they have to pass a subclass of FumiliFCNBase to the FumiliMinimizer 
     and not just a subclass of FCNBase.
     BTW, the first two solutions would have meant to recreate also a parallel
     structure for MnFcn...

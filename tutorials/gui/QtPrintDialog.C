@@ -30,7 +30,7 @@ void  QtPrintDialog(TVirtualPad *pad = 0) {
 #ifdef __CINT__
   // Load the qt cint dictionary.
   // One is recommended to do that at once somewhere.
-  // For example  from his/her custom rootlogon.C script
+  // For example from one's custom rootlogon.C script
   gSystem->Load("$ROOTSYS/cint/cint/include/qtcint");
 #endif
   TVirtualPad *pd = pad;

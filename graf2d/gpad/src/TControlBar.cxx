@@ -11,9 +11,9 @@
 
 /////////////////////////////////////////////////////////////////////////
 //                                                                     //
-//   ControlBar is fully user configurable tool which provides fast    //
-// access to frequently used operations. User can choose between       //
-// buttons and drawnbuttons (let's say icons) and assign to them his   //
+//   ControlBar is a fully user configurable tool which provides fast  //
+// access to frequently used operations. The user can choose between   //
+// buttons and drawnbuttons (let's say icons) and assign to them their //
 // own actions (let's say ROOT or C++ commands).                       //
 //
 // The macro belows shows an example of controlbar.

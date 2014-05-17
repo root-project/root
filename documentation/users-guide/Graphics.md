@@ -823,7 +823,7 @@ constructor and draws them with their `Draw()` method. Therefore, the
 examples will be very brief. Most graphical objects have line and fill
 attributes (color, width) that will be described in "Graphical objects
 attributes". If the user wants more information, the class names are
-given and he may refer to the online developer documentation. This is
+given and they may refer to the online developer documentation. This is
 especially true for functions and methods that set and get internal
 values of the objects described here. By default 2D graphical objects
 are created in User Coordinates with (0, 0) in the lower left corner.
