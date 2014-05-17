@@ -109,8 +109,6 @@ OBJ: TList	TList	Doubly linked list : 0
       int TArrow::DeclFileLine()
  OBJ: TMethod	operator=	 : 0
       TArrow& TArrow::operator=(const TArrow&)
- OBJ: TMethod	Streamer	 : 0
-      void TLine::Streamer(TBuffer&)
  OBJ: TMethod	TLine	 : 0
       TLine TLine::TLine()
  OBJ: TMethod	TLine	 : 0
@@ -197,6 +195,8 @@ OBJ: TList	TList	Doubly linked list : 0
       TClass* TLine::IsA() const
  OBJ: TMethod	ShowMembers	 : 0
       void TLine::ShowMembers(TMemberInspector& insp) const
+ OBJ: TMethod	Streamer	 : 0
+      void TLine::Streamer(TBuffer&)
  OBJ: TMethod	StreamerNVirtual	 : 0
       void TLine::StreamerNVirtual(TBuffer& ClassDef_StreamerNVirtual_b)
  OBJ: TMethod	DeclFileName	 : 0
