@@ -331,7 +331,8 @@ bool TClingCallbacks::tryAutoloadInternal(llvm::StringRef Name, LookupResult &R,
      // We should try autoload only for special lookup failures. 
      Sema::LookupNameKind kind = R.getLookupKind();
      if (!(kind == Sema::LookupTagName || kind == Sema::LookupOrdinaryName
-           || kind == Sema::LookupNestedNameSpecifierName)) 
+           || kind == Sema::LookupNestedNameSpecifierName
+           || kind == Sema::LookupNamespaceName))
         return false;
          
      fIsAutoloadingRecursively = true;
