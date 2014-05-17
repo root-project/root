@@ -4544,8 +4544,8 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    // Autoload a library based on a missing symbol.
 
    // First see whether the symbol is in the library that we are currently
-   // loading. It will have access to the symbols of the libraries that
-   // triggered its load, thus checking "back()" is sufficient.
+   // loading. It will have access to the symbols of its dependent libraries,
+   // thus checking "back()" is sufficient.
    if (!fRegisterModuleDyLibs.empty()) {
       if (void* addr = dlsym(fRegisterModuleDyLibs.back(),
                              mangled_name.c_str())) {
