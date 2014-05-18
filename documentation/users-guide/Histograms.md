@@ -1853,7 +1853,7 @@ is based on Y = values of data points; N = number of data points.
 -   `0` for no data points
 
 The option ' `i` ' is used for integer Y values with the uncertainty
-of ±0.5, assuming the probability that Y takes any value between Y-0.5
+of $\pm 0.5$, assuming the probability that Y takes any value between Y-0.5
 and Y+0.5 is uniform (the same argument for Y uniformly distributed
 between Y and Y+1). An example is an ADC measurement. The '`G`' option
 is useful, if all Y variables are distributed according to some known
