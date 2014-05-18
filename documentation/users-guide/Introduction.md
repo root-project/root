@@ -149,7 +149,7 @@ build a road and dig a well. To have services like telephone and
 electricity you will need to route the wires to your home. In
 addition, you cannot build some things yourself. For example, you
 cannot build a commercial airport on your patch of land. From a global
-perspective, it would make no sense for everyone to build his or her
+perspective, it would make no sense for everyone to build their
 own airport. You see you will be very busy building the infrastructure
 (or framework) before you can use the phone to communicate with your
 collaborators and have a drink of water at the same time. In software

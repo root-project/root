@@ -473,7 +473,7 @@ int XrdProofdProtocol::Stats(char *buff, int blen, int)
 
    static char statfmt[] = "<stats id=\"xproofd\"><num>%ld</num></stats>";
 
-   // If caller wants only size, give it to him
+   // If caller wants only size, give it to them
    if (!buff)
       return sizeof(statfmt)+16;
 

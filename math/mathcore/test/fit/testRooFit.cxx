@@ -348,7 +348,7 @@ int main() {
       iniPar[2*i+1] = 1;  
    }
 
-   // start counting t he time
+   // start counting the time
    MultiGaussRooPdf multipdf(N);
    RooAbsPdf & pdf = multipdf.getPdf();
 

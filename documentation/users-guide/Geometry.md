@@ -3672,7 +3672,7 @@ TGeoVolume *module1 = TGeoVolume::Import("file.root", "MOD1");
 TGeoVolume *module2 = TGeoVolume::Import("file.root", "MOD2");
 top->AddNode(module1, 1, new TGeoTranslation(0,0,100));
 top->AddNode(module2, 1, new TGeoTranslation(0,0,-100));
-// One should close himself the geometry
+// One should close oneself the geometry
 geom->CloseGeometry();
 ```
 
@@ -3895,7 +3895,7 @@ computed for all possibly overlapping candidates, taking into account
 the overlapping priorities (see also: " Overlapping volumes ").
 
 The global matrix describing the next crossed physical node is
-systematically computed in case the value of t he proposed step is
+systematically computed in case the value of the proposed step is
 negative. In this case, one can subsequently call
 `TGeoManager::ComputeNormalFast()` to get the normal vector to the
 crossed surface, after propagating the current point with the

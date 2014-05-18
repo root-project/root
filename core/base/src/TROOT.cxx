@@ -1057,7 +1057,7 @@ const char *TROOT::FindObjectPathName(const TObject *) const
    // The function returns the first occurence of the object in the list
    // of folders. The returned string points to a static char array in TROOT.
    // If this function is called in a loop or recursively, it is the
-   // user's responsability to copy this string in his area.
+   // user's responsability to copy this string in their area.
 
    Error("FindObjectPathName","Not yet implemented");
    return "??";

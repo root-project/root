@@ -1096,7 +1096,7 @@ Bool_t  TGQt::IsRegistered(QPaintDevice *wd)
 Int_t TGQt::InitWindow(ULong_t window)
 {
    //*-*
-   //*-*  if window == 0 InitWindow creates his own instance of  TQtWindowsObject object
+   //*-*  if window == 0 InitWindow creates its own instance of  TQtWindowsObject object
    //*-*
    //*-*  Create a new windows
    //*-*

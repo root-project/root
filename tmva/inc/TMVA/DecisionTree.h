@@ -242,7 +242,7 @@ namespace TMVA {
       UInt_t     fMaxDepth;      // max depth
       UInt_t     fSigClass;      // class which is treated as signal when building the tree
       static const Int_t  fgDebugLevel = 0;     // debug level determining some printout/control plots etc.
-      Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who he is.
+      Int_t     fTreeID;        // just an ID number given to the tree.. makes debugging easier as tree knows who it is.
 
       Types::EAnalysisType  fAnalysisType;   // kClassification(=0=false) or kRegression(=1=true)
 

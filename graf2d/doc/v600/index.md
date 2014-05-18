@@ -42,7 +42,7 @@ To generate a such file it is enough to do:
 Then, the generated file (<tt>hpx.tex</tt>) can be included in a
 LaTeX document (`simple.tex`) in the following way:
 
-``
+```
 \documentclass{article}
 \usepackage{tikz}
 \usetikzlibrary{patterns}

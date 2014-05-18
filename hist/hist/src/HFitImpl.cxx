@@ -422,7 +422,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          if (lastBCFitter && lastBCFitter->TestBit(TBackCompFitter::kCanDeleteLast) ) 
             delete lastBCFitter; 
       }
-      //N.B=  this might create a memory leak if user does not delete the fitter he creates
+      //N.B=  this might create a memory leak if user does not delete the fitter they create
       TVirtualFitter::SetFitter( bcfitter ); 
 
       // use old-style for printing the results
@@ -656,7 +656,12 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
    }
    if (h1->TestBit(kCanDelete)) return;
    // draw only in case of histograms
-   if (drawFunction && ndim < 3 && h1->InheritsFrom(TH1::Class() ) ) h1->Draw(goption);
+   if (drawFunction && ndim < 3 && h1->InheritsFrom(TH1::Class() ) ) { 
+      // no need to re-draw the histogram if the histogram is already in the pad
+      // in that case the function will be just drawn (if option N is not set) 
+      if (!gPad || (gPad && gPad->GetListOfPrimitives()->FindObject(h1) == NULL ) )
+         h1->Draw(goption);
+   }
    if (gPad) gPad->Modified(); // this is not in TH1 code (needed ??)
    
    return; 

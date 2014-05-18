@@ -1256,7 +1256,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    Log() << kDEBUG << " MIXING ============= " << Endl;
 
    if( mixMode == "ALTERNATE" ){
-      // Inform user if he tries to use alternate mixmode for 
+      // Inform user if they try to use alternate mixmode for 
       // event classes with different number of events, this works but the alternation stops at the last event of the smaller class
       for( UInt_t cls = 1; cls < dsi.GetNClasses(); ++cls ){
          if (tmpEventVector[Types::kTraining].at(cls).size() != tmpEventVector[Types::kTraining].at(0).size()){

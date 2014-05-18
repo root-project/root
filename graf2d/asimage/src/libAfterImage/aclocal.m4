@@ -27,7 +27,7 @@ ifdef([AC_HELP_STRING],
 
 dnl AC_LIB_PREFIX adds to the CPPFLAGS and LDFLAGS the flags that are needed
 dnl to access previously installed libraries. The basic assumption is that
-dnl a user will want packages to use other packages he previously installed
+dnl a user will want packages to use other packages they previously installed
 dnl with the same --prefix option.
 dnl This macro is not needed if only AC_LIB_LINKFLAGS is used to locate
 dnl libraries, but is otherwise very convenient.
@@ -226,7 +226,7 @@ AC_DEFUN([AC_LIB_HAVE_LINKFLAGS],
 
   dnl Add $INC[]NAME to CPPFLAGS before performing the following checks,
   dnl because if the user has installed lib[]Name and not disabled its use
-  dnl via --without-lib[]Name-prefix, he wants to use it.
+  dnl via --without-lib[]Name-prefix, they want to use it.
   ac_save_CPPFLAGS="$CPPFLAGS"
   AC_LIB_APPENDTOVAR([CPPFLAGS], [$INC]NAME)
 

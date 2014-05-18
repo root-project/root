@@ -141,7 +141,7 @@ such that the loop in the previous example can also be written as:
   not the sub-lists for specific trees. Placing entry lists in the current directory
   allows calling them as a part of a TTreeFormula expression, so if the user wants 
   to extract a sublist from a TChain entry list via the GetEntryList() or some other
-  function, he has to add it to the current directory to be able to use it in 
+  function, they have to add it to the current directory to be able to use it in 
   TTreeFormula expressions.
 
 <h4>TEntryList and TEventList</h4>

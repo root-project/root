@@ -927,7 +927,7 @@ int XrdProofdProofServMgr::CheckActiveSessions(bool verify)
       // For backward compatibility we need to check the session version
       bool oldvers = (xps && xps->ROOT() && xps->ROOT()->SrvProtVers() >= 18) ? 0 : 1;
 
-      // If somebody is interested in this session, we give her/him some
+      // If somebody is interested in this session, we give them some
       // more time by skipping the connected clients check this time
       int nc = -1;
       if (!rmsession)

@@ -108,10 +108,12 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
                                    &type, /* intantiateTemplate= */ true );
    if (!decl) {
       std::string buf = TClassEdit::InsertStd(name);
-      decl = lh.findScope(buf,
-                          gDebug > 5 ? cling::LookupHelper::WithDiagnostics
-                          : cling::LookupHelper::NoDiagnostics,
-                          &type, /* intantiateTemplate= */ true );
+      if (buf != name) {
+         decl = lh.findScope(buf,
+                             gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                             : cling::LookupHelper::NoDiagnostics,
+                             &type, /* intantiateTemplate= */ true );
+      }
    }
    if (!decl && type) {
       const TagType *tagtype =type->getAs<TagType>();
@@ -702,9 +704,11 @@ void TClingClassInfo::Init(const char *name)
                         &fType, /* intantiateTemplate= */ true );
    if (!fDecl) {
       std::string buf = TClassEdit::InsertStd(name);
-      fDecl = lh.findScope(buf, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
-                          : cling::LookupHelper::NoDiagnostics,
-                           &fType, /* intantiateTemplate= */ true );
+      if (buf != name) {
+         fDecl = lh.findScope(buf, gDebug > 5 ? cling::LookupHelper::WithDiagnostics
+                              : cling::LookupHelper::NoDiagnostics,
+                              &fType, /* intantiateTemplate= */ true );
+      }
    }
    if (!fDecl && fType) {
       const TagType *tagtype =fType->getAs<TagType>();

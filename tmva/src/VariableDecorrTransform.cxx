@@ -165,7 +165,7 @@ const TMVA::Event* TMVA::VariableDecorrTransform::Transform( const TMVA::Event* 
             << Endl;
 
    Int_t whichMatrix = cls;
-   // if cls (the class chosen by the user) not existing, assume that he wants to have the matrix for all classes together. 
+   // if cls (the class chosen by the user) not existing, assume that they want to have the matrix for all classes together. 
    // EVT this is a workaround to address the reader problem with transforma and EvaluateMVA(std::vector<float/double> ,...) 
    if (cls < 0 || cls >= (int) fDecorrMatrices.size()) whichMatrix = fDecorrMatrices.size()-1;
    //EVT workaround end

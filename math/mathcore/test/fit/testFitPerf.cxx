@@ -489,7 +489,7 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
    std::cout << "\twith function " << func->GetName() << "\n";
 
 
-   // start counting t he time
+   // start counting the time
    TStopwatch w; w.Start(); 
 
    for (int i = 0; i < nfit; ++i) { 
@@ -544,7 +544,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
    std::cout << "\twith function " << func->GetName() << "\n";
 
 
-   // start counting t he time
+   // start counting the time
    TStopwatch w; w.Start(); 
 
    for (int i = 0; i < nfit; ++i) { 
@@ -614,7 +614,7 @@ int  FitUsingRooFit2(TTree * tree) {
    std::cout << "\tFit using RooFit (Likelihood Fit)\n";
 
 
-   // start counting t he time
+   // start counting the time
    TStopwatch w; w.Start(); 
 
    for (int i = 0; i < nfit; ++i) { 

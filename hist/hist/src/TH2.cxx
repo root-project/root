@@ -2188,7 +2188,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
    //   a compatible axis the profile is reset and filled again with the projected contents of the TH2.
    //   In the case of axis incompatibility an error is reported and a NULL pointer is returned.
    //
-   //   NOTE that he Y axis attributes of the TH2 are copied to the X axis of the profile.
+   //   NOTE that the Y axis attributes of the TH2 are copied to the X axis of the profile.
    //
    //   NOTE that the default under- / overflow behavior differs from what ProjectionX
    //   does! Profiles take the bin center into account, so here the under- and overflow

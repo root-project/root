@@ -323,7 +323,7 @@
 //
 //   The GEANT3 option MANY is supported by TGeoVolumeOverlap class. An overlapping
 // volume is in fact a virtual container that does not represent a physical object.
-// It contains a list of nodes that are not his daughters but that must be checked 
+// It contains a list of nodes that are not its daughters but that must be checked 
 // always before the container itself. This list must be defined by users and it 
 // is checked and resolved in a priority order. Note that the feature is non-standard
 // to geometrical modelers and it was introduced just to support conversions of 

@@ -2650,7 +2650,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    //
    //  .X myfunc.C(arg1,arg2)
    //
-   // We allow him to type:
+   // We allow them to type:
    //
    //  .X myfunc.C++(arg1,arg2)
    // or

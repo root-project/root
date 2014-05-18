@@ -161,16 +161,16 @@ ClassImp(TEfficiency)
 //    
 //    //create one-dimensional TEfficiency object with fixed bin size
 //    TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
-//    TRandom3 rand;
+//    TRandom3 rand3;
 // 
 //    bool bPassed;
 //    double x;
 //    for(int i=0; i<10000; ++i)
 //    {
 //       //simulate events with variable under investigation
-//       x = rand.Uniform(10);
+//       x = rand3.Uniform(10);
 //       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand.Rndm() < TMath::Gaus(x,5,4);
+//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
 //       pEff->Fill(bPassed,x);
 //    }
 // 
@@ -339,16 +339,16 @@ ClassImp(TEfficiency)
 // 
 //    //create one-dimensional TEfficiency object with fixed bin size
 //    TEfficiency* pEff = new TEfficiency("eff","different confidence levels;x;#epsilon",20,0,10);
-//    TRandom3 rand;
+//    TRandom3 rand3;
 // 
 //    bool bPassed;
 //    double x;
 //    for(int i=0; i<1000; ++i)
 //    {
 //       //simulate events with variable under investigation
-//       x = rand.Uniform(10);
+//       x = rand3.Uniform(10);
 //       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand.Rndm() < TMath::Gaus(x,5,4);
+//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
 //       pEff->Fill(bPassed,x);
 //    }
 // 
@@ -627,16 +627,16 @@ ClassImp(TEfficiency)
 //    
 //    //create one-dimensional TEfficiency object with fixed bin size
 //    TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
-//    TRandom3 rand;
+//    TRandom3 rand3;
 // 
 //    bool bPassed;
 //    double x;
 //    for(int i=0; i<10000; ++i)
 //    {
 //       //simulate events with variable under investigation
-//       x = rand.Uniform(10);
+//       x = rand3.Uniform(10);
 //       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand.Rndm() < TMath::Gaus(x,5,4);
+//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
 //       pEff->Fill(bPassed,x);
 //    }
 // 

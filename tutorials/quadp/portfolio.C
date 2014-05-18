@@ -48,7 +48,7 @@
 // realize that an early retirement is not possible, given the returns of your stocks .
 // So what now ? ROOT to the rescue ......
 //
-// In 1990 Harry Markowitz was awarded the Noble prize for economics : " his work provided new tools
+// In 1990 Harry Markowitz was awarded the Nobel prize for economics : " his work provided new tools
 // for weighing the risks and rewards of different investments and for valuing corporate stocks and bonds" .
 // In plain English, he developed the tools to balance greed and fear, we want the maximum return 
 // with the minimum amount of risk. Our stock portfolio should be at the "Efficient Frontier",

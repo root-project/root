@@ -2815,7 +2815,8 @@ for (int i = 0; typelist[i] != kNone; ++i) {
 return kNone;
 ```
 
-`Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot, Int_t yroot)- t`his
+`Atom_t HandleDNDposition(Int_t x,Int_t y,Atom_t action,Int_t xroot,
+Int_t yroot)-` this
 method should be used to handle the drag position in widget coordinates
 (`x,y`) or in root coordinates (`xroot,yroot`).
 

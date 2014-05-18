@@ -738,7 +738,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooCmdArg& arg1, const 
   // GlobalObservables(const RooArgSet&) -- Define the set of normalization observables to be used for the constraint terms.
   //                                        If none are specified the constrained parameters are used
   // GlobalObservablesTag(const char* tagName) -- Define the set of normalization observables to be used for the constraint terms by a string attribute
-  //                                              associated with pdf observables that match he given tagName 
+  //                                              associated with pdf observables that match the given tagName 
   // Verbose(Bool_t flag)           -- Constrols RooFit informational messages in likelihood construction
   // CloneData(Bool flag)           -- Use clone of dataset in NLL (default is true)
   // Offset(Bool_t)                  -- Offset likelihood by initial value (so that starting value of FCN in minuit is zero). This

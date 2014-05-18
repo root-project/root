@@ -848,6 +848,12 @@ TCling::TCling(const char *name, const char *title)
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+
+   // Until we can disable autoloading during Sema::CorrectTypo() we have
+   // to disable spell checking.
+   fInterpreter->getCI()->getLangOpts().SpellChecking = false;
+
+
    // We need stream that doesn't close its file descriptor, thus we are not
    // using llvm::outs. Keeping file descriptor open we will be able to use
    // the results in pipes (Savannah #99234).
@@ -1410,7 +1416,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    }
    if (compRes == cling::Interpreter::kSuccess
        && result.isValid()
-       && !result.isVoid(fInterpreter->getCI()->getASTContext()))
+       && !result.isVoid())
    {
       gROOT->SetLineHasBeenProcessed();
       return result.simplisticCastAs<long>();
@@ -2100,7 +2106,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       return 0L;
    }
 
-   if (valRef.isVoid(fInterpreter->getCI()->getASTContext())) {
+   if (valRef.isVoid()) {
       return 0;
    }
 
@@ -2820,7 +2826,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
             // Didn't manage to determine the class version from the AST.
             // Use runtime instead.
             if ((mi.Property() & kIsStatic)
-                && fInterpreter->getCodeGenerator()) {
+                && !fInterpreter->isInSyntaxOnlyMode()) {
                // This better be a static function.
                TClingCallFunc callfunc(fInterpreter, *fNormalizedCtxt);
                callfunc.SetFunc(&mi);
@@ -3116,7 +3122,7 @@ TInterpreter::DeclId_t TCling::GetDataMemberWithValue(const void *ptrvalue) cons
    // Return pointer to cling DeclId for a global variable that is a pointer
    // whose value is 'ptrvalue'.
 
-   llvm::Module* module = fInterpreter->getCodeGenerator()->GetModule();
+   llvm::Module* module = fInterpreter->getLastTransaction()->getModule();
    llvm::ExecutionEngine* EE = fInterpreter->getExecutionEngine();
 
    llvm::Module::global_iterator iter = module->global_begin();
@@ -4477,7 +4483,10 @@ Int_t TCling::AutoParse(const char* cls)
 {
    // Parse the headers relative to the class
 
-   if(!fHeaderParsingOnDemand) return 0;
+   if (!fHeaderParsingOnDemand) return 0;
+
+   // No recursive header parsing on demand; we require headers to be standalone.
+   fHeaderParsingOnDemand = false;
 
    Int_t nHheadersParsed = 0;
    std::size_t normNameHash(fStringHashFunction(cls));
@@ -4529,6 +4538,9 @@ Int_t TCling::AutoParse(const char* cls)
          }
       }
    }
+
+   fHeaderParsingOnDemand = true;
+
    return nHheadersParsed;
 }
 
@@ -4538,8 +4550,8 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    // Autoload a library based on a missing symbol.
 
    // First see whether the symbol is in the library that we are currently
-   // loading. It will have access to the symbols of the libraries that
-   // triggered its load, thus checking "back()" is sufficient.
+   // loading. It will have access to the symbols of its dependent libraries,
+   // thus checking "back()" is sufficient.
    if (!fRegisterModuleDyLibs.empty()) {
       if (void* addr = dlsym(fRegisterModuleDyLibs.back(),
                              mangled_name.c_str())) {

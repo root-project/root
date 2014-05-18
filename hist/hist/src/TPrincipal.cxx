@@ -153,7 +153,7 @@ the behavior of the principal components (<IMG
  WIDTH="31" HEIGHT="30" ALIGN="MIDDLE" BORDER="0"
  SRC="gif/principal_img4.gif"
  ALT="$a_{m_i}$">), thus providing
-to the user all the means of understanding his data.
+to the user all the means of understanding their data.
 
 <P>
 

@@ -775,9 +775,9 @@ namespace llvm {
 
 namespace cling {
    // cling ValuePrinting
-   class ValuePrinterInfo;
+   class Value;
    std::string printValue(const TString* const p, const TString* const u,
-                          const ValuePrinterInfo& VPI);
+                          const Value& V);
 }
 
 #endif

@@ -760,7 +760,7 @@ of the FCN value. The effects of non-linearity and numerical round off
 both become more important as the external value gets closer to one of
 the limits (expressed as the distance to nearest limit divided by
 distance between limits). The user must therefore be aware of the fact
-that, for example, if he puts limits of (0, 1010) on a parameter, then
+that, for example, if they put limits of (0, 1010) on a parameter, then
 the values 0.0 and 1. 0 will be indistinguishable to the accuracy of
 most machines.
 

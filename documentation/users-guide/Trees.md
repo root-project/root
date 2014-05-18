@@ -3657,7 +3657,7 @@ trees chained together in a **`TChain`**. The class definition shows us
 that this tree has one branch and one leaf per data member. The methods
 of `MyClass` are:
 
--   `MyClass(TTree *tree=0) - t`his constructor has an optional tree
+-   `MyClass(TTree *tree=0) -` this constructor has an optional tree
     for a parameter. If you pass a tree, `MyClass` will use it rather
     than the tree from which it was created.
 

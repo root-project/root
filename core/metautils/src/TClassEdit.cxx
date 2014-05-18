@@ -609,7 +609,7 @@ void TClassEdit::GetNormalizedName(std::string &norm_name, const char *name)
    TClassEdit::TSplitType splitname(norm_name.c_str(),(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd | TClassEdit::kDropStlDefault | TClassEdit::kKeepOuterConst));
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
 
-   // Depending on how the user typed his/her code, in particular typedef
+   // Depending on how the user typed their code, in particular typedef
    // declarations, we may end up with an explicit '::' being
    // part of the result string.  For consistency, we must remove it.
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {

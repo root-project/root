@@ -5187,7 +5187,7 @@ void TSessionViewer::ResetSession()
 //______________________________________________________________________________
 void TSessionViewer::DeleteQuery()
 {
-   // Delete query from list tree and ask user if he wants do delete it also
+   // Delete query from list tree and ask user if they want to delete it also
    // from server.
 
    TGListTreeItem *item = fSessionHierarchy->GetSelected();

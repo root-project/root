@@ -781,7 +781,7 @@ Long64_t TTreeSQL::PrepEntry(Long64_t entry)
 //______________________________________________________________________________
 void TTreeSQL::Refresh()
 {
-   //  Refresh contents of this Tree and his branches from the current
+   //  Refresh contents of this Tree and its branches from the current
    //  Tree status in the database
    //  One can call this function in case the Tree on its file is being
    //  updated by another process
