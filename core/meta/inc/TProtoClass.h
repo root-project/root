@@ -53,6 +53,7 @@ private:
    Int_t    fCanSplit; // Whether this class can be split
    Int_t    fStreamerType; // Which streaming method to use
    Long_t   fProperty; // Class properties, see EProperties
+   Long_t   fClassProperty; // Class C++ properties, see EClassProperties
    Long_t   fOffsetStreamer; // Offset to streamer function
 
    TProtoClass(const TProtoClass&) = delete;
@@ -61,7 +62,7 @@ private:
 public:
    TProtoClass():
       fBase(0), fData(0), fPRealData(0), fSizeof(0), fCanSplit(0),
-      fStreamerType(0), fProperty(0),
+      fStreamerType(0), fProperty(0), fClassProperty(0),
       fOffsetStreamer(0)
    {}
 

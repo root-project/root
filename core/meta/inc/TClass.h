@@ -172,6 +172,7 @@ private:
 
            Int_t      fCanSplit;        //!Indicates whether this class can be split or not.
    mutable Long_t     fProperty;        //!Property
+   mutable Long_t     fClassProperty;   //!C++ Property of the class (is abstract, has virtual table, etc.)
 
            Bool_t     fHasRootPcmInfo : 1;      //!Whether info was loaded from a root pcm.
    mutable Bool_t     fCanLoadClassInfo : 1;    //!Indicates whether the ClassInfo is supposed to be available.
@@ -288,6 +289,7 @@ public:
    Bool_t             CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient = kFALSE) const;
    Bool_t             CanSplit() const;
    Bool_t             CanIgnoreTObjectStreamer() { return TestBit(kIgnoreTObjectStreamer);}
+   Long_t             ClassProperty() const;
    TObject           *Clone(const char *newname="") const;
    void               CopyCollectionProxy(const TVirtualCollectionProxy&);
    void               Draw(Option_t *option="");
