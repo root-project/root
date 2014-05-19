@@ -31,6 +31,7 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
       libstolink.Append(what);
       s.ReplaceAll(what,libstolink);
       gSystem->SetMakeSharedLib(s);
+      
    }
 #ifdef __CLING__
    TString r;
@@ -60,20 +61,25 @@ void build(const char *filename,const char *lib = 0, const char *obj = 0)
       TString s = gSystem->GetMakeSharedLib();
       s.ReplaceAll(" $IncludePath",r);
       gSystem->SetMakeSharedLib(s);
+      //fprintf(stderr,"SetMakeSharedLib cmd: %s", gSystem->GetMakeSharedLib());
+      //fprintf(stderr,"getincludepath: %s", gSystem->GetIncludePath());
+      //fprintf(stderr,"getlinkedlibs: %s", gSystem->GetLinkedLibs());
    }
 #endif
-      
+
 #if defined(_WIN32) && !defined(__CYGWIN__)
    TString fname(filename);
    if (filename[0]=='/') {
      // full path name we need to turn it into a windows path
      fname = gSystem->GetFromPipe(TString::Format("cygpath -w %s",filename));
    }
-   fprintf(stderr,"from %s to %s\n",filename,fname.Data());
+   // fprintf(stderr,"from %s to %s\n",filename,fname.Data());
    int result = gSystem->CompileMacro(fname,"kc");
+#elif defined(CMakeEnvironment) && defined(CMakeBuildDir)
+   // fprintf(stderr,"CmakeBuildDir: %s filename: %s", CMakeBuildDir, filename);
+   int result = gSystem->CompileMacro(filename,"kc-", "", CMakeBuildDir);
 #else
    int result = gSystem->CompileMacro(filename,"kc");
 #endif
    if (!result) gApplication->Terminate(1);
 }
-
