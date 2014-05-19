@@ -336,7 +336,12 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
          answ += '>';
       }
    }
-   if (fNestedLocation) answ += fElements[fNestedLocation];
+   if (fNestedLocation) {
+      // Treat X pf A<B>::X
+      fElements[fNestedLocation] = TClassEdit::ShortType(fElements[fNestedLocation].c_str(),mode);
+      answ += fElements[fNestedLocation];
+   }
+   // tail is not a type name, just [2], &, * etc.
    if (tailLoc) answ += fElements[tailLoc];
 }
 

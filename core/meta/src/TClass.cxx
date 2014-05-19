@@ -3369,20 +3369,137 @@ void TClass::GetMenuItems(TList *list)
    }
 }
 
+//______________________________________________________________________________
 Bool_t TClass::HasDictionary()
 {
    // Check whether a class has a dictionary or not.
 
-   return gInterpreter->HasDictionary(this);
+   if (gClassTable->GetDict(fName)) return true;
+
+   return false;
 }
 
-void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
+//______________________________________________________________________________
+void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, bool recurse)
 {
-   // Get the classes that have a missing dictionary.
-   // Recurse over the data members using the flag recurse.
-   // By default is is not recursing on the data members.
+   // Verify the base classes always.
 
-   gInterpreter->GetMissingDictionaries(this, result, recurse);
+   TList* lb = GetListOfBases();
+   if (!lb) return;
+   TIter nextBase(lb);
+   TBaseClass* base = 0;
+   while ((base = (TBaseClass*)nextBase())) {
+      TClass* baseCl = base->Class();
+      if (baseCl) {
+            baseCl->GetMissingDictionariesWithRecursionCheck(result, recurse);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::GetMissingDictionariesForMembers(TCollection& result, bool recurse)
+{
+   // Verify the Data Members.
+
+   TListOfDataMembers* ldm = (TListOfDataMembers*)GetListOfDataMembers();
+   if (!ldm) return ;
+   TIter nextMemb(ldm);
+   TDataMember * dm = 0;
+   while ((dm = (TDataMember*)nextMemb())) {
+      // If it is a built-in data type.
+      TClass* dmTClass = 0;
+      if (dm->GetDataType()) {
+         dmTClass = dm->GetDataType()->Class();
+         // Otherwise get the string representing the type.
+      } else if (dm->GetTypeName()) {
+            dmTClass = TClass::GetClass(dm->GetTypeName());
+      }
+      if (dmTClass) {
+            dmTClass->GetMissingDictionariesWithRecursionCheck(result, recurse);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, bool recurse)
+{
+   // From the second level of recursion onwards it is different state check.
+
+   if (result.FindObject(this)) return;
+
+   static TClassRef sCIString("string");
+   if (this == sCIString) return;
+
+   if (strncmp(fName, "pair<", 5) == 0) return;
+
+   if (!HasDictionary()) {
+      result.Add(this);
+   }
+   //Check whether a custom streamer
+   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+      if (GetCollectionProxy()) {
+         // We need to look at the collection's content
+         // The collection has different kind of elements the check would be required.
+         TClass* t = 0;
+         if ((t = GetCollectionProxy()->GetValueClass())) {
+            if (!t->HasDictionary()) {
+               if (recurse) {
+                  t->GetMissingDictionariesWithRecursionCheck(result, recurse);
+               } else {
+                  result.Add(this);
+               }
+            }
+         }
+      } else {
+         if (recurse) {
+            GetMissingDictionariesForMembers(result, recurse);
+         }
+         GetMissingDictionariesForBaseClasses(result, recurse);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
+{
+   // Get the classes that have a missing dictionary starting from this one.
+   // With recurse = false the classes checked for missing dictionaries are:
+   //                      the class itself, all base classes, direct data members,
+   //                      and for collection proxies the container's
+   //                      elements without iterating over the element's data members;
+   // With recurse = true the classes checked for missing dictionaries are:
+   //                      the class itself, all base classes, recursing on the data members,
+   //                      and for the collection proxies recursiong on the elements of the
+   //                      collection and iterating over the element's data members.
+
+   // Top level recursion it different from the following levels of recursion.
+
+   if (result.FindObject(this)) return;
+
+   static TClassRef sCIString("string");
+   if (this == sCIString) return;
+
+   if (strncmp(fName, "pair<", 5) == 0) return;
+
+   if (!HasDictionary()) {
+      result.Add(this);
+   }
+   //Check whether a custom streamer
+   if (!TestBit(TClass::kHasCustomStreamerMember)) {
+      if (GetCollectionProxy()) {
+         // We need to look at the collection's content
+         // The collection has different kind of elements the check would be required.
+         TClass* t = 0;
+         if ((t = GetCollectionProxy()->GetValueClass())) {
+            if (!t->HasDictionary()) {
+               t->GetMissingDictionariesWithRecursionCheck(result, recurse);
+            }
+         }
+      } else {
+         GetMissingDictionariesForMembers(result, recurse);
+         GetMissingDictionariesForBaseClasses(result, recurse);
+      }
+   }
 }
 
 //______________________________________________________________________________

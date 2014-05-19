@@ -170,8 +170,6 @@ public: // Public Interface
    const char* GetIncludePath();
    virtual const char* GetSTLIncludePath() const;
    TObjArray*  GetRootMapFiles() const { return fRootmapFiles; }
-   Bool_t  HasDictionary(TClass* cl);
-   void    GetMissingDictionaries(TClass* cl, TObjArray& result, bool recurse);
    unsigned long long GetInterpreterStateMarker() const { return fTransactionCount;}
    virtual void Initialize();
    void    InspectMembers(TMemberInspector&, const void* obj, const TClass* cl, Bool_t isTransient);
@@ -503,8 +501,6 @@ private: // Private Utility Functions
 
    bool LoadPCM(TString pcmFileName, const char** headers,
                 void (*triggerFunc)()) const;
-   void GetMissingDictionariesForDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
-   bool InsertMissingDictionaryDecl(const clang::Decl* D, std::set<std::string> &netD, clang::QualType qType, bool recurse);
    void InitRootmapFile(const char *name);
    int  ReadRootmapFile(const char *rootmapfile);
    Bool_t HandleNewTransaction(const cling::Transaction &T);

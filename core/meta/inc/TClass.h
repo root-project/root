@@ -258,6 +258,9 @@ private:
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
    static THashTable        *GetClassTypedefHash();
+   void                      GetMissingDictionariesForBaseClasses(TCollection& result, bool recurse);
+   void                      GetMissingDictionariesForMembers(TCollection& result, bool recurse);
+   void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, bool recurse);
 
 public:
    TClass();
@@ -372,7 +375,7 @@ public:
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const type_info   *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary();
-   void               GetMissingDictionaries(TObjArray& result, bool recurse = false);
+   void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
    Bool_t             InheritsFrom(const TClass *cl) const;
