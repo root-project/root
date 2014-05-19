@@ -84,9 +84,10 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       s1 = "Minuit";
       minim = s1.c_str();
    }
-   if (minimizerType == "cmaes")
+   if (minimizerType.find("cmaes")!=std::string::npos
+       ||minimizerType.find("ipop")!=std::string::npos)
      {
-       s1 = "cmaes";
+       s1 = minimizerType;
        minim = s1.c_str();
      }
 
@@ -150,6 +151,12 @@ ROOT::Math::Minimizer * ROOT::Math::Factory::CreateMinimizer(const std::string &
       min = new TMinuitMinimizer(algoType.c_str());
 #endif
 
+#ifdef HAS_CMAES
+   if (minimizerType.find("cmaes") != std::string::npos
+       || minimizerType.find("ipop") != std::string::npos)
+     min = new ROOT::cmaes::TCMAESMinimizer(algoType.c_str());
+#endif
+   
 #ifdef R__HAS_MATHMORE
    // use GSL minimizer
    if (minimizerType ==  "GSL")

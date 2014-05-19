@@ -86,6 +86,7 @@ void cmaesGausFit() {
   gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
   int n = 1000; 
   testGausFit("cmaes",n);
+  //testGausFit("acmaes",n);
 }
 
 

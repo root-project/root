@@ -180,9 +180,16 @@ void MinimizerOptions::ResetToDefaultOptions() {
    }
    else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad")
       fAlgoType = "BFGS2";
-
+   else if (fMinimType.find("cmaes")!=std::string::npos
+	    || fMinimType.find("ipop")!=std::string::npos)
+     {
+       fAlgoType = fMinimType;
+       fMinimType = "cmaes";
+     }
+   
    delete fExtraOptions;
    fExtraOptions = 0;
+
    // check if extra options exists (copy them if needed)
    if (Minim::gDefaultExtraOptions)
       fExtraOptions = Minim::gDefaultExtraOptions->Clone();
