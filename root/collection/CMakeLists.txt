@@ -1,0 +1,11 @@
+#ROOT_COMPILE_MACRO(runTExMap.C)
+#ROOT_COMPILE_MACRO(runTMap.C)
+#ROOT_COMPILE_MACRO(execHistArray.cxx)
+
+ROOT_ADD_ROOTTEST(root-collection-runtbits  MACRO runtbits.C OUTREF tbits.ref)
+ROOT_ADD_ROOTTEST(root-collection-runTExMap MACRO runTExMap.C+ OUTREF TExMap.ref64)
+ROOT_ADD_ROOTTEST(root-collection-runTMap   MACRO runTMap.C+ OUTREF TMap.ref)
+ROOT_ADD_ROOTTEST(root-collection-runCATTreeClear MACRO runCATTreeClear.C OUTREF CATTreeClear.ref)
+ROOT_ADD_ROOTTEST(root-collection-execMissing MACRO execMissing.C OUTREF execMissing.ref)
+ROOT_ADD_ROOTTEST(root-collection-execTClonesArrayAbsorb.C MACRO execTClonesArrayAbsorb.C OUTREF execTClonesArrayAbsorb.ref)
+ROOT_ADD_ROOTTEST(root-collection-execHistArray MACRO execHistArray.cxx+ OUTREF execHistArray.ref)
