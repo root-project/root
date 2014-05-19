@@ -1,6 +1,6 @@
 #include <TNamed.h>
 #include <TClass.h>
-#include <TObjArray.h>
+#include <THashTable.h>
 #include <TError.h>
 #include <map>
 #include <vector>
@@ -140,7 +140,7 @@ int runGetMissingDictionaries()
    if (myClass->HasDictionary())
       Error("TClass::HasDictionary", "The class %s does not have a dictionary.", "TestClass");
 
-   TObjArray expectedResult;
+   THashTable expectedResult;
    // Hard coded expected results.
    expectedResult.Add(TClass::GetClass("NoDictClass"));
    expectedResult.Add(TClass::GetClass("TestClass"));
@@ -159,16 +159,18 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("BasicTests::TestAll"));
 
    cout<<"No recursion:"<<endl;
-   TObjArray missingDictClassesNoRecursion;
+   THashTable missingDictClassesNoRecursion;
    // Assert GetMissingDictionaries without recursion.
    myClass->GetMissingDictionaries(missingDictClassesNoRecursion, false);
    //missingDictClassesNoRecursion.Print();
    if (!missingDictClassesNoRecursion.IsEmpty()) {
       if (missingDictClassesNoRecursion.GetEntries() == expectedResult.GetEntries()) {
-
-         if (false)
-         {
-      	    Error("TCling::GetMissingDictionaries", "A class with no dictionaries is not in the set.");
+         TIterator* it = expectedResult.MakeIterator();
+         TClass* cl = 0;
+         while ((cl = (TClass*)it->Next())) {
+            if (!missingDictClassesNoRecursion.FindObject(cl)) {
+               Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+            }
          }
       } else {
          Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictioanries does not contain the correct number of elements.");
@@ -181,19 +183,18 @@ int runGetMissingDictionaries()
    // Assert GetMIssingDictionaries with recursion.
    // Hard code expected results with recursion.
    expectedResult.Add(TClass::GetClass("ArrayTry"));
-   expectedResult.Add(TClass::GetClass("Member"));
    expectedResult.Add(TClass::GetClass("NoA"));
    expectedResult.Add(TClass::GetClass("vector<Tmplt<NoDictClass*> >"));
    expectedResult.Add(TClass::GetClass("Tmplt<NoDictClass*>"));
    expectedResult.Add(TClass::GetClass("vector<Member>"));
    expectedResult.Add(TClass::GetClass("Base"));
    expectedResult.Add(TClass::GetClass("vector<Base>"));
-   expectedResult.Add(TClass::GetClass("Inner<double>"));
+   expectedResult.Add(TClass::GetClass("Inner<Double32_t>"));
    expectedResult.Add(TClass::GetClass("TmpParam"));
    expectedResult.Add(TClass::GetClass("TmpTmpParam"));
    expectedResult.Add(TClass::GetClass("Tmplt<TmpTmpParam>"));
    expectedResult.Add(TClass::GetClass("ExtraTmp"));
-   expectedResult.Add(TClass::GetClass("Tmplt<ExtraTmp> >"));
+   expectedResult.Add(TClass::GetClass("Tmplt<ExtraTmp>"));
    expectedResult.Add(TClass::GetClass("Tmplt<Tmplt<ExtraTmp> >"));
    expectedResult.Add(TClass::GetClass("vector<Tmplt<Tmplt<ExtraTmp> > >"));
    expectedResult.Add(TClass::GetClass("vector<NoDictClass*> "));
@@ -202,6 +203,7 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("vector<ExtraTmp> "));
    expectedResult.Add(TClass::GetClass("vector<Tmplt<TmpTmpParam> >"));
    expectedResult.Add(TClass::GetClass("vector<TmpParam>"));
+   expectedResult.Add(TClass::GetClass("vector<Double32_t>"));
    expectedResult.Add(TClass::GetClass("ParamL1"));
    expectedResult.Add(TClass::GetClass("ParamL2"));
    expectedResult.Add(TClass::GetClass("vector<ParamL2*>"));
@@ -209,18 +211,20 @@ int runGetMissingDictionaries()
    expectedResult.Add(TClass::GetClass("BasicTests::NoDict"));
    expectedResult.Add(TClass::GetClass("BasicTests::HasVecDoubleTD32"));
    expectedResult.Add(TClass::GetClass("BasicTests::HasVecDouble32"));
-   expectedResult.Add(TClass::GetClass("map<unsigned short,double>"));
+   expectedResult.Add(TClass::GetClass("map<unsigned short,Double32_t>"));
 
-   TObjArray missingDictClassesRecursion;
-   myClass->GetMissingDictionaries(missingDictClassesRecursion, true);
    cout<<"With recursion:"<<endl;
+   THashTable missingDictClassesRecursion;
+   myClass->GetMissingDictionaries(missingDictClassesRecursion, true);
    //missingDictClassesRecursion.Print();
    if (!missingDictClassesRecursion.IsEmpty()) {
       if (missingDictClassesRecursion.GetEntries() == expectedResult.GetEntries()) {
-
-         if (false)
-         {
-            Error("TCling::GetMissingDictionaries", "A class with no dictionaries is not in the set.");
+         TIterator* it = expectedResult.MakeIterator();
+         TClass* cl = 0;
+         while ((cl = (TClass*)it->Next())) {
+            if (!missingDictClassesRecursion.FindObject(cl)) {
+               Error("TCling::GetMissingDictionaries", "Class %s with no dictionaries is not in the set.", cl->GetName());
+            }
          }
       } else {
          Error("TClass::GetMissingClassDictionaries", "The set of classes with missing dictioanries does not contain the correct number of elements.");
