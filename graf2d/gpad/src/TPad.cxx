@@ -2049,7 +2049,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
          }
 
          // Reset pad parameters and recompute conversion coefficients
-         ResizePad();         
+         ResizePad();
 
          if (pINSIDE) gPad->ShowGuidelines(this, event);
          if (pTop) gPad->ShowGuidelines(this, event, 't', true);
@@ -2135,7 +2135,7 @@ void TPad::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             fWNDC    = Double_t(apx2 - apx1)/Double_t(parentpx2 - parentpx1);
             fHNDC    = Double_t(apy2 - apy1)/Double_t(parentpy2 - parentpy1);
          }
-      
+
          // Reset pad parameters and recompute conversion coefficients
          ResizePad();
 
@@ -2209,7 +2209,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
 
    switch (event) {
 
-   case kButton1Down:      
+   case kButton1Down:
       axisNumber = 1;
       if (!strcmp(axis->GetName(),"xaxis")) {
          axisNumber = 1;
@@ -2251,13 +2251,13 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zoombox = new TBox(AbsPixeltoX(px1old), GetUymin(),
                                   AbsPixeltoX(px2old), GetUymax());
             } else if (axisNumber == 2) {
-               zoombox = new TBox(GetUxmin(), AbsPixeltoY(py1old), 
+               zoombox = new TBox(GetUxmin(), AbsPixeltoY(py1old),
                                   GetUxmax(), AbsPixeltoY(py2old));
-            }          
+            }
             Int_t ci = TColor::GetColor("#7d7dff");
             TColor *zoomcolor = gROOT->GetColor(ci);
             if (!TCanvas::SupportAlpha()) zoombox->SetFillStyle(3002);
-            else                          zoomcolor->SetAlpha(0.5);      
+            else                          zoomcolor->SetAlpha(0.5);
             zoombox->SetFillColor(ci);
             zoombox->Draw();
             gPad->Modified();
@@ -2292,7 +2292,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zoombox->SetY1(AbsPixeltoY(py1old));
                zoombox->SetX2(GetUxmax());
                zoombox->SetY2(AbsPixeltoY(py2old));
-            }          
+            }
             gPad->Modified();
             gPad->Update();
          }
@@ -3023,7 +3023,7 @@ void TPad::PaintBorder(Color_t color, Bool_t tops)
       //with alpha < 1., you'll be able to see the old content.
       if (!gROOT->IsBatch() && gVirtualX->InheritsFrom("TGCocoa") && GetPainter())
          GetPainter()->ClearDrawable();
-      
+
       PaintBox(fX1,fY1,fX2,fY2);
    }
    if (color < 0) color = -color;
@@ -4407,11 +4407,6 @@ void TPad::Print(const char *filenam, Option_t *option)
 
    TString psname, fs1, fs2;
    char *filename;
-   
-   if (!this->InheritsFrom(TCanvas::Class())) {
-      Error("Print", "is working for TCanvas, not for TPad");
-      return;
-   }
 
    // "[" and "]" are special characters for ExpandPathName. When they are at the end
    // of the file name (see help) they must be removed before doing ExpandPathName.
@@ -5577,7 +5572,7 @@ void TPad::DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode)
 {
    // Draw Arrows to indicated equal distances of Objects with given BBoxes.
    // Used by ShowGuidelines
-   
+
    Int_t lineColor = TColor::GetColor(239, 202, 0);
    Int_t x1,x2,y1,y2;
    x1 = x2 = y1 = y2 = 0;
@@ -5614,14 +5609,14 @@ void TPad::DrawDist(Rectangle_t aBBox, Rectangle_t bBBox, char mode)
       else if (aBBox.fX>bBBox.fX)   x1 = x2 = aBBox.fX+TMath::Nint(0.5*(Double_t)(bBBox.fX+bBBox.fWidth-aBBox.fX));
       else                          x1 = x2 = bBBox.fX+TMath::Nint(0.5*(Double_t)(aBBox.fX+aBBox.fWidth-bBBox.fX));
    }
-   
+
    TArrow *A = new TArrow(gPad->PixeltoX(x1), gPad->PixeltoY(y1-gPad->VtoPixel(0)), gPad->PixeltoX(x2), gPad->PixeltoY(y2-gPad->VtoPixel(0)), 0.01, "<|>");
    A->SetBit(kCanDelete);
    A->SetFillColor(lineColor);
    A->SetLineWidth(1);
    A->SetLineColor(lineColor);
    A->Draw();
-   
+
    return;
 }
 
@@ -5637,7 +5632,7 @@ struct dField {
    Int_t fdist;
    char fdir;
 
-      
+
    dField()
       : fa(0), fb(0), fdist(0), fdir(' ')
    {}
@@ -5651,10 +5646,10 @@ struct dField {
 //______________________________________________________________________________
 void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, const bool cling )
 {
-   // Shows lines to indicate if a TAttBBox2D object is alligned to 
-   // the centeror to another object, shows distance arrows if two 
+   // Shows lines to indicate if a TAttBBox2D object is alligned to
+   // the centeror to another object, shows distance arrows if two
    // objects on screen have the same distance to another object
-   // Call from primitive in Execute Event, in ButtonMotion after 
+   // Call from primitive in Execute Event, in ButtonMotion after
    // the new coordinates have been set, to 'stick'
    // once when button is up to delete lines
    //
@@ -5677,7 +5672,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    //    4                    b                         3
 
    // When the object is moved with arrow or when the ShowGuideLines flag
-   // is off we do show guide lines. 
+   // is off we do show guide lines.
    if ((event == kArrowKeyRelease) || (event == kArrowKeyPress) ||
        !gEnv->GetValue("Canvas.ShowGuideLines", 0)) return;
 
@@ -5738,7 +5733,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
       otherDist.clear();
       curDist.clear();
-      
+
       switch (event) {
 
       case kButton1Down:
@@ -5837,7 +5832,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                }
             }
          }
-         // Show equal distances       
+         // Show equal distances
          for (UInt_t i = 0; i<curDist.size(); i++) {
             for (UInt_t j = 0; j<otherDist.size(); j++) {
                if ((curDist[i].fdir == otherDist[j].fdir)&&(otherDist[j].fdir=='x')&&(TMath::Abs(curDist[i].fdist-otherDist[j].fdist)<threshold)) {
@@ -5901,14 +5896,14 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                         BBox = cur->GetBBox();
                      }
 
-                     A = new TArrow(gPad->PixeltoX(aBBox.fX), gPad->PixeltoY(aBBox.fY-dSizeArrow-gPad->VtoPixel(0)), 
+                     A = new TArrow(gPad->PixeltoX(aBBox.fX), gPad->PixeltoY(aBBox.fY-dSizeArrow-gPad->VtoPixel(0)),
                                     gPad->PixeltoX(aBBox.fX+aBBox.fWidth), gPad->PixeltoY(aBBox.fY-dSizeArrow-gPad->VtoPixel(0)), 0.01, "<|>");
                      A->SetBit(kCanDelete);
                      A->SetLineColor(lineColor);
                      A->SetFillColor(lineColor);
                      A->Draw();
 
-                     A = new TArrow(gPad->PixeltoX(BBox.fX), gPad->PixeltoY(BBox.fY-dSizeArrow-gPad->VtoPixel(0)), 
+                     A = new TArrow(gPad->PixeltoX(BBox.fX), gPad->PixeltoY(BBox.fY-dSizeArrow-gPad->VtoPixel(0)),
                                     gPad->PixeltoX(BBox.fX+BBox.fWidth), gPad->PixeltoY(BBox.fY-dSizeArrow-gPad->VtoPixel(0)), 0.01, "<|>");
                      A->SetBit(kCanDelete);
                      A->SetLineColor(lineColor);
@@ -5923,14 +5918,14 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
                         if ((mode == '3')||(mode == '4')) cur->SetBBoxY2(BBox.fY + aBBox.fHeight);
                         BBox = cur->GetBBox();
                      }
-                     A = new TArrow(gPad->PixeltoX(aBBox.fX-dSizeArrow), gPad->PixeltoY(aBBox.fY-gPad->VtoPixel(0)), 
+                     A = new TArrow(gPad->PixeltoX(aBBox.fX-dSizeArrow), gPad->PixeltoY(aBBox.fY-gPad->VtoPixel(0)),
                                     gPad->PixeltoX(aBBox.fX-dSizeArrow), gPad->PixeltoY(aBBox.fY+aBBox.fHeight-gPad->VtoPixel(0)), 0.01, "<|>");
                      A->SetBit(kCanDelete);
                      A->SetLineColor(lineColor);
                      A->SetFillColor(lineColor);
                      A->Draw();
 
-                     A = new TArrow(gPad->PixeltoX(BBox.fX-dSizeArrow), gPad->PixeltoY(BBox.fY-gPad->VtoPixel(0)), 
+                     A = new TArrow(gPad->PixeltoX(BBox.fX-dSizeArrow), gPad->PixeltoY(BBox.fY-gPad->VtoPixel(0)),
                                    gPad->PixeltoX(BBox.fX-dSizeArrow), gPad->PixeltoY(BBox.fY+BBox.fHeight-gPad->VtoPixel(0)), 0.01, "<|>");
                      A->SetBit(kCanDelete);
                      A->SetLineColor(lineColor);
@@ -5942,7 +5937,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
          }
 
          break;
-         
+
       case kButton1Up:
          if (tmpGuideLinePad) {
             // All the arrows and lines in that pad are also deleted because
@@ -6618,7 +6613,7 @@ void TPad::SetBBoxCenter(const TPoint &p)
 
    fXlowNDC = (gPad->PixeltoX(p.GetX()) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
    fYlowNDC = (gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
-   ResizePad();         
+   ResizePad();
 }
 
 
@@ -6628,7 +6623,7 @@ void TPad::SetBBoxCenterX(const Int_t x)
    // Set X coordinate of the center of the Pad
 
    fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-0.5*fWNDC;
-   ResizePad();  
+   ResizePad();
 }
 
 
@@ -6638,7 +6633,7 @@ void TPad::SetBBoxCenterY(const Int_t y)
    // Set Y coordinate of the center of the Pad
 
    fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-0.5*fHNDC;
-   ResizePad(); 
+   ResizePad();
 }
 
 //______________________________________________________________________________
@@ -6649,7 +6644,7 @@ void TPad::SetBBoxX1(const Int_t x)
 
    fXlowNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1());
    fWNDC = fXUpNDC - fXlowNDC;
-   ResizePad(); 
+   ResizePad();
 }
 
 //______________________________________________________________________________
@@ -6659,7 +6654,7 @@ void TPad::SetBBoxX2(const Int_t x)
    // (resize in x direction on right)
 
    fWNDC = (gPad->PixeltoX(x) - gPad->GetX1())/(gPad->GetX2()-gPad->GetX1())-fXlowNDC;
-   ResizePad(); 
+   ResizePad();
 }
 
 //_______________________________________________________________________________
@@ -6668,7 +6663,7 @@ void TPad::SetBBoxY1(const Int_t y)
    // Set top of BoundingBox to a value (resize in y direction on top)
 
    fHNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1())-fYlowNDC;
-   ResizePad(); 
+   ResizePad();
 }
 
 //_______________________________________________________________________________
@@ -6679,6 +6674,6 @@ void TPad::SetBBoxY2(const Int_t y)
 
    fYlowNDC = (gPad->PixeltoY(y-gPad->VtoPixel(0)) - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
    fHNDC = fYUpNDC - fYlowNDC;
-   ResizePad(); 
+   ResizePad();
 }
 
