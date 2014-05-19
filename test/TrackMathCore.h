@@ -1,3 +1,6 @@
+#ifndef INCLUDE_TRACKMATHCORE_H
+#define INCLUDE_TRACKMATHCORE_H
+
 // dummy track class for testing I/o of matric
 
 //#ifdef USE_REFLEX
@@ -356,3 +359,5 @@ struct Dummy {
   VecTrack<TrackD>     v1; 
   VecTrack<TrackErrD> v2; 
 }; 
+
+#endif

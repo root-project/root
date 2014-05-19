@@ -3489,6 +3489,8 @@ void TClass::ResetCaches()
 {
    // To clean out all caches.
 
+   R__ASSERT(!TestBit(kLoading) && "Resetting the caches does not make sense during loading!" );
+
    // Not owning lists, don't call Delete(), but unload
    if (fData)
       fData->Unload();

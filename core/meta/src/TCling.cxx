@@ -4680,7 +4680,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
                TClass::AddClassToDeclIdMap(cci->GetDeclId(), cl);
             }
          }
-      } else {
+      } else if (!cl->TestBit(TClass::kLoading) && !cl->fHasRootPcmInfo) {
          cl->ResetCaches();
          // yes, this is almost a waste of time, but we do need to lookup
          // the 'type' corresponding to the TClass anyway in order to

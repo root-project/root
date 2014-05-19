@@ -1,6 +1,6 @@
 
 using namespace RooFit;
-TestNonCentral(){
+void TestNonCentral(){
 
   RooWorkspace w("w");
   // k <2, must use sum
