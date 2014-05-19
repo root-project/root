@@ -1017,8 +1017,16 @@ bool TCling::LoadPCM(TString pcmFileName,
       if (protoClasses)
          for(auto proto : *protoClasses)
             TClassTable::Add((TProtoClass*)proto);
-      protoClasses->Clear(); // Owner ship was transfered to TClassTable.
+      protoClasses->Clear(); // Ownership was transfered to TClassTable.
       delete protoClasses;
+
+      TObjArray *dataTypes;
+      pcmFile->GetObject("__Typedefs", dataTypes);
+      if (dataTypes)
+      for (auto typedf: *dataTypes)
+         gROOT->GetListOfTypes()->Add(typedf);
+      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+      delete dataTypes;
       delete pcmFile;
 
       gDebug = oldDebug;

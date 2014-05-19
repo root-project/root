@@ -2694,11 +2694,22 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       // Try the name where we strip out the STL default template arguments
       std::string resolvedName;
       splitname.ShortType(resolvedName, TClassEdit::kDropStlDefault);
-      if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      if (resolvedName != name) {
+         cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      } else {
+         // Signal that the resolved name is identical.
+         resolvedName.clear();
+      }
       if (!cl) {
          // Attempt to resolve typedefs
-         resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
-         if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+         TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
+         if (!dataType && !resolvedName.empty()) {
+            dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(resolvedName.c_str());
+         }
+         if (dataType)
+            cl = (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName());
+         //resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
+         //if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       }
       if (!cl) {
          // Try with Long64_t
@@ -2751,12 +2762,9 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
          TDataType *objType = gROOT->GetType(name, kTRUE);
          if (objType) {
-            const char *typdfName = objType->GetTypeName();
-            if (typdfName && strcmp(typdfName, name)) {
-               TString alternateName(typdfName);
-               // TClass::GetClass might get call GetTypeName and thus
-               // re-use the static storage use by GetTypeName!
-               cl = TClass::GetClass(alternateName, load);
+            TString typdfName = objType->GetTypeName();
+            if (typdfName.Length() && typdfName != name) {
+               cl = TClass::GetClass(typdfName, load);
                return cl;
             }
          }

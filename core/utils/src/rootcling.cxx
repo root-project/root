@@ -281,8 +281,12 @@ static void EmitStreamerInfo(const char* normName)
 {
    AddStreamerInfoToROOTFile(normName);
 }
+static void EmitTypedefs(const std::vector<clang::TypedefNameDecl*>& tdvec) {
+   for (const auto td: tdvec)
+      AddTypedefToROOTFile(td->getQualifiedNameAsString().c_str());
+}
 #else
-static bool EmitStreamerInfo(const char*) { return true; }
+static void EmitStreamerInfo(const char*) { }
 #endif
 
 //______________________________________________________________________________
@@ -379,12 +383,12 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
          for(iter = attrMap.begin();iter!=attrMap.end();iter++){
             const std::string& name = iter->first;
             const std::string& value = iter->second;
-            
+
             if (name == propNames::name) continue;
-            
-            /* This test is here since in ROOT5, when using genreflex, 
+
+            /* This test is here since in ROOT5, when using genreflex,
              * for pods, iotype is ignored */
-            
+
             if (name == propNames::iotype &&
                 ( decl.getType()->isArrayType() ||  decl.getType()->isPointerType() ) ){
                const char* msg="Data member \"%s\" is an array or a pointer. "
@@ -393,10 +397,10 @@ void AnnotateFieldDecl(clang::FieldDecl& decl,
                                "which are not pointers or arrays.\n";
                ROOT::TMetaUtils::Error("AnnotateFieldDecl",
                                        msg, varName.c_str(), value.c_str() );
-               continue;      
+               continue;
                 }
-            
-            
+
+
             // These lines are here to use the root pcms. Indeed we need to annotate the AST
             // before persisting the ProtoClasses in the root pcms.
             // BEGIN ROOT PCMS
@@ -795,7 +799,7 @@ void ParseRootMapFileNewFormat(ifstream& file, map<string,string>& autoloads)
 
    // For "class ", "namespace " and "typedef " respectively
    const std::unordered_map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8}};
-  
+
    while (getline(file, line, '\n')) {
       if (line == "{ decls }") {
          while (getline(file, line, '\n')) {
@@ -1314,9 +1318,9 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
-   if (autoLoad)      
+   if (autoLoad)
       dictStream << "#include \"TInterpreter.h\"\n";
-   
+
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
@@ -1362,7 +1366,7 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream& dictStrea
    dictStream << "TClass *" << clsname << "::Class()" << std::endl << "{" << std::endl;
    if (autoLoad){
       dictStream << "   Dictionary();\n";
-   } 
+   }
    else{
       dictStream << "   if (!fgIsA) fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
       dictStream << fullname << "*)0x0)->GetClass();" << std::endl;
@@ -2045,7 +2049,7 @@ void GenerateLinkdef(int *argc, char **argv, int firstInputFile,
    }
 
    code_for_parser += "\n#endif\n";
-   
+
 }
 
 //______________________________________________________________________________
@@ -2173,7 +2177,7 @@ static int GenerateModule(TModuleGenerator& modGen,
 
 
    modGen.WriteRegistrationSource(dictStream,
-                                  inlineInputHeader, 
+                                  inlineInputHeader,
                                   fwdDeclnArgsToKeepString,
                                   headersClassesMapString);
 
@@ -2310,7 +2314,7 @@ void AddPlatformDefines(std::vector<std::string>& clingArgs)
 //______________________________________________________________________________
 void ExtractFileName(const std::string& path, std::string& filename)
 {
-   // Extract the filename from a fullpath 
+   // Extract the filename from a fullpath
    filename = llvm::sys::path::filename (path);
 }
 
@@ -2444,7 +2448,7 @@ void ManipForRootmap(std::string& name)
 
    // * "*const" becomes "*-const"
    ReplaceAll(name,"*const","*-const");
-   
+
    // * "short int" becomes "short"
    ReplaceAll(name,"short int","short");
 
@@ -2509,7 +2513,7 @@ int CreateRootMapFile(const std::string& rootmapFileName,
 
    // The number used to have the same alignment of ROOT5
    const int alignment=49;
-   
+
    // Loop on selected classes and insert them in the rootmap
    std::string thisClassName;
    for (std::list<std::string>::const_iterator classNameIt=classesNames.begin();
@@ -2604,7 +2608,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
             rootmapFile << "namespace " << nsName << std::endl;
          }
       }
-      
+
       // And typedefs. These are used just to trigger the autoload mechanism
       if (!typedefDecls.empty()){
          rootmapFile << "# List of selected typedefs\n";
@@ -2645,14 +2649,14 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
    //   E.g. template <template <typename> class T> class container { };
 
    static const char* paramPackWarning="Template parameter pack found: autoload of variadic templates is not supported yet.\n";
-   
+
    templateArgs="<";
    for (clang::TemplateParameterList::const_iterator prmIt = tmplParamList.begin();
-        prmIt != tmplParamList.end(); prmIt++){      
-      
+        prmIt != tmplParamList.end(); prmIt++){
+
       if (prmIt != tmplParamList.begin())
          templateArgs += ", ";
-      
+
       clang::NamedDecl* nDecl = *prmIt;
       std::string typeName;
 
@@ -2669,7 +2673,7 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
       else if (const clang::NonTypeTemplateParmDecl* nttpd = llvm::dyn_cast<clang::NonTypeTemplateParmDecl>(nDecl)){
          const clang::QualType &theType = nttpd->getType();
          // If this is an enum, use int as it is impossible to fwd declare and
-         // this makes sense since it is not a type...            
+         // this makes sense since it is not a type...
          if (theType.getAsString().find("enum") != std::string::npos){
             std::string astDump;
             llvm::raw_string_ostream ostream(astDump);
@@ -2695,7 +2699,7 @@ int PrepareArgsForFwdDecl(std::string& templateArgs,
             return 1;
          }
       }
-         
+
    templateArgs += typeName;
    }
 
@@ -2711,10 +2715,10 @@ void EncloseInNamespaces(const clang::Decl& decl,
    // definition string.
    // For example, if the definition string is "myClass" which is enclosed by
    // the namespaces ns1 and ns2, one would get:
-   // namespace ns2{ namespace ns1 { class myClass; } }         
-   
+   // namespace ns2{ namespace ns1 { class myClass; } }
+
    // Before everyting
-   
+
    std::list<std::pair<std::string,bool> > enclosingNamespaces;
    ROOT::TMetaUtils::ExtractEnclosingNameSpaces(decl,enclosingNamespaces);
    // Check if we have enclosing namespaces
@@ -2732,16 +2736,16 @@ int ExtractNamespacesDefinition(const clang::RecordDecl& rDecl,
                                 std::string& definitionStr)
 {
    // Extract the namespace definition for rDecl
-   
+
    const clang::RecordDecl* definition = rDecl.getDefinition();
    if (!definition)
       return 1;
    EncloseInNamespaces(*definition, definitionStr);
 
-   
+
    return 0;
 }
-  
+
 //______________________________________________________________________________
 int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
                                     cling::Interpreter& interpreter,
@@ -2749,7 +2753,7 @@ int ExtractDefinitionFromRecordDecl(const clang::RecordDecl& rDecl,
 {
    // Detect if the rDecl is a template instance.
    const clang::ClassTemplateSpecializationDecl* tmplSpecDecl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (&rDecl);
-   if (!tmplSpecDecl){ 
+   if (!tmplSpecDecl){
       return 1;
    }
 
@@ -2772,12 +2776,12 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
 {
 
    // Operate on the template declaration in order to get its forward declaration
-   
+
    const clang::TemplateParameterList *tmplParamList= templDecl.getTemplateParameters();
    if (!tmplParamList){ // Should never happen
       TMetaUtils::Error(0, "Cannot extract template parameter list for %s", templDecl.getNameAsString().c_str());
       return 1;
-   }   
+   }
 
    std::string templateArgs;
 
@@ -2787,20 +2791,20 @@ int ExtractTemplateDefinition(const clang::TemplateDecl& templDecl,
       TMetaUtils::Warning(0, "Problems encountered while preparing arguments for forward declaration of class %s", templDecl.getNameAsString().c_str());
       return retCode;
    }
-      
+
    definitionStr="template "+templateArgs+" class "+templDecl.getNameAsString();
 
    // iterate over the nested namespaces and complete the definition
    if (definition){
 
       definitionStr += " ;";
-      
+
       // Check if we have enclosing namespaces
-      // FIXME: this should be active also for classes         
+      // FIXME: this should be active also for classes
       EncloseInNamespaces(*definition, definitionStr);
    }
 
-   
+
    return 0;
 }
 
@@ -2830,7 +2834,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
    // An unordered_set to keep track of the existing classes.
    // We want to avoid duplicates there as they may hint to a serious corruption
    std::unordered_set<std::string> classesSet;
-   
+
    std::string attrName,attrValue;
    bool isClassSelected;
    // Loop on selected classes and put them in a list
@@ -2839,13 +2843,13 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       isClassSelected = true;
       std::string normalizedName(selClassesIter->GetNormalizedName());
       if (normalizedName.size()!=0 && !classesSet.insert(normalizedName).second){
-         std::cerr << "FATAL: A class with normalized name " << normalizedName 
+         std::cerr << "FATAL: A class with normalized name " << normalizedName
                    << " was already selected. This means that two different instances of"
                    << " clang::RecordDecl had the same name, which is not possible."
                    << " This can be a hint of a serious problem in the class selection."
                    << " In addition, the generated dictionary would not even compile.\n";
          return 1;
-      }         
+      }
       classesList.push_back(normalizedName);
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
@@ -2907,9 +2911,9 @@ int GenerateFullDict(std::ostream& dictStream,
    RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
 
    bool needsCollectionProxy = false;
-   
+
    if (!onepcm) {
-      
+
       //
       // We will loop over all the classes several times.
       // In order we will call
@@ -2965,6 +2969,7 @@ int GenerateFullDict(std::ostream& dictStream,
          }
 
 #ifndef ROOT_STAGE1_BUILD
+         EmitTypedefs(scan.fSelectedTypedefs);
          // Make up for skipping RegisterModule, now that dictionary parsing
          // is done and these headers cannot be selected anymore.
          interp.parseForModule("#include \"TStreamerInfo.h\"\n"
@@ -3067,7 +3072,7 @@ int GenerateFullDict(std::ostream& dictStream,
       // coverity[fun_call_w_exception] - that's just fine.
       ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
    }
-   
+
    return 0;
 }
 
@@ -3109,7 +3114,7 @@ void CreateDictHeader(std::ostream& dictStream, const std::string& main_dictname
    #ifndef R__SOLARIS
    dictStream  << "// Since CINT ignores the std namespace, we need to do so in this file.\n"
                << "namespace std {} using namespace std;\n\n";
-   #endif   
+   #endif
 }
 
 //______________________________________________________________________________
@@ -3192,7 +3197,7 @@ public:
          std::ifstream ifile(tmpName);
          if (!ifile)
             ROOT::TMetaUtils::Error(0, "Cannot find %s!\n", tmpName);
-         
+
          if ( 0 != std::remove( tmpName )){
             ROOT::TMetaUtils::Error(0, "Removing %s!\n", tmpName);
             retval++;
@@ -3200,7 +3205,7 @@ public:
       }
       return retval;
    }
-   
+
    //______________________________________________
    int commit(){
       int retval=0;
@@ -3263,15 +3268,15 @@ void CheckForMinusW(const char* arg,
    // Transform -W statements in diagnostic pragmas for cling reacting on "-Wno-"
    // For example
    // -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-   
+
    const std::string pattern("-Wno-");
-   
+
    std::string localArg(arg);
    if ( localArg.find(pattern) != 0 ) return;
-   
+
    ReplaceAll(localArg,pattern,"#pragma clang diagnostic ignored \"-W");
    localArg+="\"";
-   diagnosticPragmas.push_back(localArg);      
+   diagnosticPragmas.push_back(localArg);
 }
 
 //______________________________________________________________________________
@@ -3279,7 +3284,7 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
                                         cling::Interpreter& interp)
 {
    std::string fwdDecl;
-   std::string initStr("{");   
+   std::string initStr("{");
    auto& fwdDeclnArgsToSkipColl = normCtxt.GetTemplNargsToKeepMap();
    for (auto& strigNargsToKeepPair : fwdDeclnArgsToSkipColl){
       auto& clTemplDecl = *strigNargsToKeepPair.first;
@@ -3287,7 +3292,7 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
                                 interp,
                                 fwdDecl);
       fwdDecl+=" ;";
-      EncloseInNamespaces(clTemplDecl,fwdDecl); 
+      EncloseInNamespaces(clTemplDecl,fwdDecl);
       initStr+="{\""+
                fwdDecl+"\", "
                +std::to_string(strigNargsToKeepPair.second)
@@ -3295,9 +3300,9 @@ std::string GetFwdDeclnArgsToKeepString(const ROOT::TMetaUtils::TNormalizedCtxt&
    }
    if (!fwdDeclnArgsToSkipColl.empty())
       initStr.pop_back();
-   initStr+="}";      
+   initStr+="}";
    return initStr;
-}   
+}
 
 //______________________________________________________________________________
 clang::QualType GetPointeeTypeIfPossible(const clang::QualType& qt)
@@ -3317,29 +3322,29 @@ clang::QualType GetPointeeTypeIfPossible(const clang::QualType& qt)
 std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
                                           const cling::Interpreter& interp,
                                           std::set<const clang::CXXRecordDecl*>& visitedDecls)
-{   
-   // Extract the list of headers necessary for the Decl   
-   std::list<std::string> headers;   
- 
+{
+   // Extract the list of headers necessary for the Decl
+   std::list<std::string> headers;
+
    // Avoid infinite recursion
    if (!visitedDecls.insert(rcd.getCanonicalDecl()).second)
-      return headers;      
-   
+      return headers;
+
    // If this is a template
    if (const clang::ClassTemplateSpecializationDecl* tsd = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(&rcd)){
-        
+
       // Loop on the template args
       for (auto& tArg : tsd->getTemplateArgs().asArray()){
          if (clang::TemplateArgument::ArgKind::Type != tArg.getKind()) continue;
          auto tArgQualType = GetPointeeTypeIfPossible(tArg.getAsType());
-         if (tArgQualType.isNull()) continue;         
+         if (tArgQualType.isNull()) continue;
          if (const clang::CXXRecordDecl* tArgCxxRcd = tArgQualType->getAsCXXRecordDecl()){
             headers.splice(headers.end(), RecordDecl2Headers(*tArgCxxRcd, interp, visitedDecls));
          }
-      }      
-      
+      }
+
       if(!ROOT::TMetaUtils::IsStdClass(rcd) && rcd.hasDefinition()){
-         
+
          // Loop on base classes - with a newer llvm, range based possible
          for (auto baseIt=tsd->bases_begin();baseIt!=tsd->bases_end();baseIt++){
             auto baseQualType = GetPointeeTypeIfPossible(baseIt->getType());
@@ -3347,20 +3352,20 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
             if (const clang::CXXRecordDecl* baseRcdPtr = baseQualType->getAsCXXRecordDecl()){
                headers.splice(headers.end(), RecordDecl2Headers(*baseRcdPtr, interp, visitedDecls));
             }
-         }      
-         
+         }
+
          // Loop on the data members - with a newer llvm, range based possible
          for (auto declIt = tsd->decls_begin(); declIt != tsd->decls_end(); ++declIt) {
             if (const clang::FieldDecl* fieldDecl = llvm::dyn_cast<clang::FieldDecl>(*declIt)){
                auto fieldQualType = GetPointeeTypeIfPossible(fieldDecl->getType());
-               if (fieldQualType.isNull() ) continue ;            
+               if (fieldQualType.isNull() ) continue ;
                if (const clang::CXXRecordDecl* fieldCxxRcd = fieldQualType->getAsCXXRecordDecl()){
                   if (fieldCxxRcd->hasDefinition())
                      headers.splice(headers.end(), RecordDecl2Headers(*fieldCxxRcd, interp, visitedDecls));
                }
             }
          }
-         
+
          // Loop on methods
          for (auto methodIt = tsd->method_begin(); methodIt!=tsd->method_end();++methodIt){
             // Check arguments
@@ -3378,17 +3383,17 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
             if (const clang::CXXRecordDecl* retCxxRcd = retQualType->getAsCXXRecordDecl()){
                if (retCxxRcd->hasDefinition())
                   headers.splice(headers.end(), RecordDecl2Headers(*retCxxRcd, interp, visitedDecls));
-            }         
+            }
          }
       }
-      
+
    } // End template instance
-   
-   std::string header = ROOT::TMetaUtils::GetFileName(rcd, interp);   
+
+   std::string header = ROOT::TMetaUtils::GetFileName(rcd, interp);
    headers.emplace_back(header);
    headers.reverse();
    return headers;
-   
+
 }
 
 //______________________________________________________________________________
@@ -3399,9 +3404,9 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
 {
    std::set<const clang::CXXRecordDecl*> visitedDecls;
    std::unordered_set<std::string> buffer;
-   // Add some manip of headers      
+   // Add some manip of headers
    for (auto& annotatedRcd : annotatedRcds){
-      if (const clang::CXXRecordDecl* cxxRcd = 
+      if (const clang::CXXRecordDecl* cxxRcd =
            llvm::dyn_cast_or_null<clang::CXXRecordDecl>(annotatedRcd.GetRecordDecl())){
          visitedDecls.clear();
          std::list<std::string> headers (RecordDecl2Headers(*cxxRcd,interp,visitedDecls));
@@ -3428,9 +3433,9 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
 const std::string GenerateStringFromHeadersForClasses (const HeadersClassesMap_t& headersClassesMap,
                                                        const std::string& detectedUmbrella)
 {
-   // Generate a string for the dictionary from the headers-classes map. 
+   // Generate a string for the dictionary from the headers-classes map.
    std::string headerName;
-   
+
    if (genreflex::verbose)
       std::cout << "Class-headers Mapping:\n";
    std::string headersClassesMapString="static const char* classesHeaders[]={\n";
@@ -3439,13 +3444,13 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersClassesMap_t
          std::cout << " o " << classHeaders.first << " --> ";
       headersClassesMapString+="\"";
       headersClassesMapString+=classHeaders.first+"\"";
-      for (auto& header : classHeaders.second){         
+      for (auto& header : classHeaders.second){
          headerName = (detectedUmbrella==header) ? "payloadCode" : "\""+header+"\"";
-         headersClassesMapString+=", "+ headerName;   
+         headersClassesMapString+=", "+ headerName;
          if (genreflex::verbose)
             std::cout << ", " << headerName;
       }
-      if (genreflex::verbose)  
+      if (genreflex::verbose)
          std::cout << std::endl;
       headersClassesMapString+=", \"@\",\n";
    }
@@ -3678,7 +3683,7 @@ int RootCling(int argc,
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
    std::list<std::string> diagnosticPragmas;
-   
+
    int nextStart = 0;
    while (ic < argc) {
       if (*argv[ic] == '-' || *argv[ic] == '+') {
@@ -3723,22 +3728,22 @@ int RootCling(int argc,
             interpreteronly = true;
             ic+=1;
             continue;
-         }         
+         }
 
          if (strcmp("-split", argv[ic]) == 0) {
             // Split the dict
             doSplit = true;
             ic+=1;
             continue;
-         }         
+         }
 
          if (strcmp("-noDictSelection", argv[ic]) == 0) {
             // Disable selection
             dictSelection = false;
             ic+=1;
             continue;
-         }            
-         
+         }
+
          if (strcmp("-s", argv[ic]) == 0 && (ic+1) < argc) {
             // Target shared library name
             sharedLibraryPathName = argv[ic+1];
@@ -3752,8 +3757,8 @@ int RootCling(int argc,
             baseModules.push_back(argv[ic+1]);
             ic+=2;
             continue;
-         }                  
-         
+         }
+
          if (strcmp("+P", argv[ic]) == 0 ||
              strcmp("+V", argv[ic]) == 0 ||
              strcmp("+STUB", argv[ic]) == 0) {
@@ -3984,12 +3989,12 @@ int RootCling(int argc,
    string incCurDir = "-I";
    incCurDir += currentDirectory;
    pcmArgs.push_back(incCurDir);
-      
-   TModuleGenerator modGen(interp.getCI(), 
+
+   TModuleGenerator modGen(interp.getCI(),
                            sharedLibraryPathName.c_str());
-   
+
    interp.declare("#pragma clang diagnostic ignored \"-Wdeprecated-declarations\"");
-   
+
    // Add the diagnostic pragmas distilled from the -Wno-xyz
    for (std::list<std::string>::iterator dPrIt = diagnosticPragmas.begin();
         dPrIt != diagnosticPragmas.end(); dPrIt++){
@@ -4074,16 +4079,16 @@ int RootCling(int argc,
          return 1;
       }
    }
-   
+
    // Exclude string not to re-generatre the dictionary
    std::vector<std::pair<std::string,std::string>> namesForExclusion;
    if (!buildingROOT){
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::name,"std::string"));
       namesForExclusion.push_back(std::make_pair(ROOT::TMetaUtils::propNames::pattern,"ROOT::Meta::Selection*"));
    }
-   
+
    SelectionRules selectionRules(interp,normCtxt,namesForExclusion);
-   
+
    std::string extraIncludes;
 
    ROOT::TMetaUtils::RConstructorTypes constructorTypes;
@@ -4092,7 +4097,7 @@ int RootCling(int argc,
    clang::CompilerInstance* CI = interp.getCI();
    if(dictSelection && !onepcm)
       DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
-  
+
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
    if (requestAllSymbols && !isSelXML) {
@@ -4193,7 +4198,7 @@ int RootCling(int argc,
    selectionRules.SearchNames(interp);
 
    int scannerVerbLevel = 0;
-   { 
+   {
      using namespace ROOT::TMetaUtils;
      scannerVerbLevel = (gErrorIgnoreLevel == kInfo || (isGenreflex && gErrorIgnoreLevel != kFatal)) ? 1:0;
    }
@@ -4204,13 +4209,13 @@ int RootCling(int argc,
       scanType = RScanner::EScanType::kOnePCM;
    if (dictSelection)
       scanType = RScanner::EScanType::kTwoPasses;
-   
+
    RScanner scan(selectionRules,
                  scanType,
                  interp,
                  normCtxt,
                  scannerVerbLevel);
-   
+
    // If needed initialize the autoloading hook
    if (liblistPrefix.length()) {
       LoadLibraryMap(liblistPrefix + ".in", gAutoloads);
@@ -4258,7 +4263,7 @@ int RootCling(int argc,
       // Be a little bit makefile friendly and remove the dictionary in case of error.
       // We could add an option -k to keep the file even in case of error.
       exit(1);
-   }   
+   }
 
    //---------------------------------------------------------------------------
    // Write all the necessary #include
@@ -4281,7 +4286,7 @@ int RootCling(int argc,
       InitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
 #endif
    }
-   
+
    int retCode = GenerateFullDict(splitDictStream,
                                   interp,
                                   scan,
@@ -4296,7 +4301,7 @@ int RootCling(int argc,
    }
 
    if (doSplit && splitDictStreamPtr) delete splitDictStreamPtr;
-   
+
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    HeadersClassesMap_t headersClassesMap;
@@ -4305,14 +4310,14 @@ int RootCling(int argc,
       ExtractHeadersForClasses(scan.fSelectedClasses,
                                scan.fSelectedTypedefs,
                                headersClassesMap,
-                               interp);  
-      
+                               interp);
+
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
          if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)){
             detectedUmbrella=arg;
             break;
-         }            
+         }
       }
       const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
 
@@ -4351,11 +4356,11 @@ int RootCling(int argc,
 
 
    // Create rootmap and capabilities files
-   std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(), 
+   std::string rootmapLibName = std::accumulate(rootmapLibNames.begin(),
                                                 rootmapLibNames.end(),
-                                                std::string(), 
+                                                std::string(),
                                                 [](const std::string& a, const std::string& b){return a+" "+b;});
-      
+
    bool rootMapNeeded = !rootmapFileName.empty() || !rootmapLibName.empty();
    bool capaNeeded=!capaFileName.empty();
 
@@ -4367,16 +4372,16 @@ int RootCling(int argc,
                                                    classesNames,
                                                    classesNamesForRootmap,
                                                    classesDefsList,
-                                                   interp);   
+                                                   interp);
    if (0!=retCode) return retCode;
 
    // Create the rootmapfile if needed
-   if (rootMapNeeded){      
-      
+   if (rootMapNeeded){
+
       std::list<std::string> nsNames;
-      
+
       ExtractSelectedNamespaces(scan,nsNames);
-      
+
       AdjustRootMapNames(rootmapFileName,
                          rootmapLibName);
 
@@ -4387,7 +4392,7 @@ int RootCling(int argc,
       tmpCatalog.addFileName(rootmapFileName);
       int rmStatusCode = 0;
       if (useNewRmfFormat){
-         
+
          rmStatusCode = CreateNewRootMapFile(rootmapFileName,
                                              rootmapLibName,
                                              classesDefsList,
@@ -4425,7 +4430,7 @@ int RootCling(int argc,
 }
 
 namespace genreflex{
-   
+
 //______________________________________________________________________________
 bool endsWith(const std::string& theString, const std::string& theSubstring)
 {
@@ -4657,7 +4662,7 @@ int invokeRootCling(const std::string& verbosity,
    // Split dictionaries
       if (doSplit)
          argvVector.push_back(string2charptr("-split"));
-   
+
    // Targetlib
    if (!targetLibName.empty()){
       argvVector.push_back(string2charptr("-s"));
@@ -5001,7 +5006,7 @@ int GenReflex(int argc, char **argv)
         "" , "split",
         option::Arg::None,
         "--split\tSplit the dictionary in two, isolating the part with ClassDef related functions in a separate file\n"},
-       
+
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
@@ -5061,8 +5066,8 @@ int GenReflex(int argc, char **argv)
         STRING ,
         "W" , "" ,
         option::FullArg::Required,
-        ""},        
-        
+        ""},
+
       // Options that rise warnings
       {NOMEMBERTYPEDEFS,
         STRING ,
@@ -5139,9 +5144,9 @@ int GenReflex(int argc, char **argv)
 //    // Warn if a selection file is not present and exit
 //    if (NULL==options[SELECTIONFILENAME].arg){
 //       ROOT::TMetaUtils::Warning(0,"The usage of genreflex without a selection file is not yet supported.\n");
-//       return 1;      
+//       return 1;
 //    }
-   
+
 
    // Set the parameters for the rootmap file. If the libname is not set,
    // it will be set according to the header in invokeRootCling.
@@ -5185,7 +5190,7 @@ int GenReflex(int argc, char **argv)
    bool doSplit = false;
    if (options[SPLIT])
       doSplit=true;
-   
+
    // Add the .so extension to the rootmap lib if not there
    if (!rootmapLibName.empty() && !endsWith(rootmapLibName,gLibraryExtension)){
       rootmapLibName+=gLibraryExtension;
@@ -5209,10 +5214,10 @@ int GenReflex(int argc, char **argv)
    // Includes
    std::vector<std::string> includes;
    extractMultipleOptions(options,INCLUDE, includes);
-   
+
    // Warnings
    std::vector<std::string> warnings;
-   extractMultipleOptions(options, WARNING, warnings);   
+   extractMultipleOptions(options, WARNING, warnings);
 
    // The outputfilename(s)
    // There are two cases:

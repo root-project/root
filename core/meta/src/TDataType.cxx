@@ -30,7 +30,8 @@ ClassImp(TDataType)
 TDataType* TDataType::fgBuiltins[kNumDataTypes] = {0};
 
 //______________________________________________________________________________
-TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
+TDataType::TDataType(TypedefInfo_t *info) : TDictionary(),
+   fTypeNameIdx(-1), fTypeNameLen(0)
 {
    // Default TDataType ctor. TDataTypes are constructed in TROOT via
    // a call to TCling::UpdateListOfTypes().
@@ -52,7 +53,8 @@ TDataType::TDataType(TypedefInfo_t *info) : TDictionary()
 }
 
 //______________________________________________________________________________
-TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental)
+TDataType::TDataType(const char *typenam) : fInfo(0), fProperty(kIsFundamental),
+   fTypeNameIdx(-1), fTypeNameLen(0)
 {
    // Constructor for basic data types, like "char", "unsigned char", etc.
 
@@ -70,8 +72,9 @@ TDataType::TDataType(const TDataType& dt) :
   fSize(dt.fSize),
   fType(dt.fType),
   fProperty(dt.fProperty),
-  fTrueName(dt.fTrueName)
-{ 
+  fTrueName(dt.fTrueName),
+  fTypeNameIdx(dt.fTypeNameIdx), fTypeNameLen(dt.fTypeNameLen)
+{
    //copy constructor
 }
 
@@ -87,7 +90,9 @@ TDataType& TDataType::operator=(const TDataType& dt)
       fType=dt.fType;
       fProperty=dt.fProperty;
       fTrueName=dt.fTrueName;
-   } 
+      fTypeNameIdx=dt.fTypeNameIdx;
+      fTypeNameLen=dt.fTypeNameLen;
+   }
    return *this;
 }
 
@@ -134,16 +139,28 @@ const char *TDataType::GetTypeName(EDataType type)
 }
 
 //______________________________________________________________________________
-const char *TDataType::GetTypeName() const
+TString TDataType::GetTypeName()
 {
    // Get basic type of typedef, e,g.: "class TDirectory*" -> "TDirectory".
    // Result needs to be used or copied immediately.
+   if (fTypeNameLen) {
+     return fTrueName(fTypeNameIdx, fTypeNameLen);
+   }
 
    if (fInfo) {
       (const_cast<TDataType*>(this))->CheckInfo();
-      return gInterpreter->TypeName(fTrueName.Data());
+      TString typeName = gInterpreter->TypeName(fTrueName.Data());
+      fTypeNameIdx = fTrueName.Index(typeName);
+      if (fTypeNameIdx == -1) {
+         Error("GetTypeName", "Cannot find type name %s in true name %s!",
+               typeName.Data(), fTrueName.Data());
+         return fName;
+      }
+      fTypeNameLen = typeName.Length();
+      return fTrueName(fTypeNameIdx, fTypeNameLen);
    } else {
-      return fName.Data();
+      if (fType != kOther_t) return fName.Data();
+      return fTrueName;
    }
 }
 
@@ -156,7 +173,8 @@ const char *TDataType::GetFullTypeName() const
       (const_cast<TDataType*>(this))->CheckInfo();
       return fTrueName;
    } else {
-      return fName.Data();
+     if (fType != kOther_t) return fName;
+     return fTrueName;
    }
 }
 
