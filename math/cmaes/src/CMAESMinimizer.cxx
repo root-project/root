@@ -44,9 +44,27 @@ namespace ROOT
     TCMAESMinimizer::TCMAESMinimizer(const char *type)
       :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
     {
-      //std::string algoname(type);
+      std::string algoname(type);
       // tolower() is not an  std function (Windows)
-      //std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower );
+      std::transform(algoname.begin(), algoname.end(), algoname.begin(), (int(*)(int)) tolower );
+      if (algoname == "cmaes")
+	fMinimizer = CMAES_DEFAULT;
+      else if (algoname == "ipop")
+	fMinimizer = IPOP_CMAES;
+      else if (algoname == "bipop")
+	fMinimizer = BIPOP_CMAES;
+      else if (algoname == "acmaes")
+	fMinimizer = aCMAES;
+      else if (algoname == "aipop")
+	fMinimizer = aIPOP_CMAES;
+      else if (algoname == "abipop")
+	fMinimizer = aBIPOP_CMAES;
+      else if (algoname == "sepcmaes")
+	fMinimizer = sepCMAES;
+      else if (algoname == "sepipop")
+	fMinimizer = sepIPOP_CMAES;
+      else if (algoname == "sepbipop")
+	fMinimizer = sepBIPOP_CMAES;
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
@@ -307,6 +325,7 @@ namespace ROOT
 	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,-1,-1.0,0,gp);
 	  cmaparams._quiet = true;
+	  cmaparams._algo = fMinimizer;
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
 	}
       else

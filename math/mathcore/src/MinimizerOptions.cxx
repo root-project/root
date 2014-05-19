@@ -120,10 +120,17 @@ MinimizerOptions::MinimizerOptions(IOptions * extraOpts):
    else if (fMinimType == "Fumili2") { 
       fMinimType = "Minuit2";
       fAlgoType = "Fumili";
-   }   
+   }
+   else if (fMinimType.find("cmaes")!=std::string::npos
+	    || fMinimType.find("ipop")!=std::string::npos)
+     {
+       fAlgoType = fMinimType;
+       fMinimType = "cmaes";
+     }
    else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad") 
       fAlgoType = "BFGS2";
-
+   
+   
    // check if extra options exists (copy them if needed)
    if (!fExtraOptions) { 
       IOptions * gopts = FindDefault( fMinimType.c_str() );
