@@ -3,6 +3,7 @@ Processing execFindBackPCMNames.C...
 TFile**		classesFindBackPCMNames_rflx_rdict.pcm	
  TFile*		classesFindBackPCMNames_rflx_rdict.pcm	
   KEY: TObjArray	__ProtoClasses;1	An array of objects
+  KEY: TObjArray	__Typedefs;1	An array of objects
   KEY: vector<string>	__AncestorPCMsNames;1	object title
 Ancestor pcms:
 pcm1.pcm
