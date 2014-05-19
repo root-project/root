@@ -317,24 +317,29 @@ namespace ROOT
 	{
 	  return (*fObjFunc)(x);
 	};
-      ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
+
 
       //TODO: x0, sigma0, ...
       if (fWithBounds)
 	{
+	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,-1,-1.0,0,gp);
-	  cmaparams._quiet = true;
 	  cmaparams._algo = fMinimizer;
+	  cmaparams._quiet = true;
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
 	}
       else
 	{
+	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	  CMAParameters<> cmaparams(fDim);
-	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams,pfunc);
+	  cmaparams._algo = fMinimizer;
+	  cmaparams._quiet = true;
+	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
 	}
-      //fCMAsols = cmaes<>([this](const double *x, const int N){ return (*fObjFunc)(x);},cmaparams); //TODO: use bounds as needed.
-      fStatus = fCMAsols._run_status; //TODO: convert so that to match that of Minuit2 ?
+      if (fCMAsols._run_status >= 0)
+	fStatus = 0; //TODO: convert so that to match that of Minuit2 ?
+      else fStatus = 5;
       return fCMAsols._run_status >= 0;
     }
 
