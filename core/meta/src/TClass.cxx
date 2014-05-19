@@ -3434,7 +3434,10 @@ static void GetMissingDictionariesWithRecursionCheck(TObjArray& result, TClass* 
 
    if (result.FindObject(cl)) return;
 
-   if (strcmp(cl->GetName(), "string") == 0) return;
+   static TClassRef sCIString("string");
+   if (cl == sCIString) return;
+
+   if (strncmp(cl->GetName(), "pair<", 5) == 0) return;
 
    if (!cl->HasDictionary()) {
       result.Add(cl);
@@ -3478,7 +3481,10 @@ void TClass::GetMissingDictionaries(TObjArray& result, bool recurse)
 
    if (result.FindObject(this)) return;
 
-   if (strcmp(GetName(), "string") == 0) return;
+   static TClassRef sCIString("string");
+   if (this == sCIString) return;
+
+   if (strncmp(fName, "pair<", 5) == 0) return;
 
    if (!HasDictionary()) {
       result.Add(this);
