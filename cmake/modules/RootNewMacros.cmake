@@ -195,6 +195,14 @@ endmacro()
 #---------------------------------------------------------------------------------------------------
 function(ROOT_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "STAGE1" "MODULE" "LINKDEF;OPTIONS;DEPENDENCIES" ${ARGN})
+  
+
+  #---roottest compability---------------------------------
+  if(CMAKE_ROOTTEST_DICT)
+    set(CMAKE_INSTALL_LIBDIR ${CMAKE_CURRENT_BINARY_DIR})
+    set(libprefix "")
+  endif()
+
   #---Get the list of header files-------------------------
   set(headerfiles)
   foreach(fp ${ARG_UNPARSED_ARGUMENTS})
@@ -279,22 +287,30 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(command rootcling)
     endif()
   endif()
-  
+
   #---call rootcint------------------------------------------
   add_custom_command(OUTPUT ${dictionary}.cxx ${pcm_name} ${rootmap_name}
                      COMMAND ${command} -f  ${dictionary}.cxx ${newargs} ${rootmapargs}
                                         -c ${ARG_OPTIONS} ${definitions} ${includedirs} ${rheaderfiles} ${_linkdef}
                      DEPENDS ${headerfiles} ${_linkdef} ${ROOTCINTDEP})
   get_filename_component(dictname ${dictionary} NAME)
-  add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
-  set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
-  set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
-  if(ARG_STAGE1)
-    install(FILES ${rootmap_name}
-                  DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+
+  #---roottest compability
+  if(CMAKE_ROOTTEST_DICT)
+    add_custom_target(${dictname} ALL DEPENDS ${dictionary}.cxx)
   else()
-    install(FILES ${pcm_name} ${rootmap_name}
-                  DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
+
+    set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_TARGETS ${dictname})
+    set_property(GLOBAL APPEND PROPERTY ROOT_DICTIONARY_FILES ${CMAKE_CURRENT_BINARY_DIR}/${dictionary}.cxx)
+
+    if(ARG_STAGE1)
+      install(FILES ${rootmap_name}
+                    DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    else()
+      install(FILES ${pcm_name} ${rootmap_name}
+                    DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
+    endif()
   endif()
 endfunction()
 
@@ -635,10 +651,11 @@ endmacro()
 #                        [PASSRC code])
 #
 function(ROOT_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG"
+  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
                              "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS;PASSREGEX;FAILREGEX"
-                        ${ARGN})
+                             "COMMAND;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
+                            ${ARGN})
+
   #- Handle COMMAND argument
   list(LENGTH ARG_COMMAND _len)
   if(_len LESS 1)
@@ -648,28 +665,37 @@ function(ROOT_ADD_TEST test)
   else()
     list(GET ARG_COMMAND 0 _prg)
     list(REMOVE_AT ARG_COMMAND 0)
-    if(TARGET ${_prg})
-	  set(_prg "$<TARGET_FILE:${_prg}>")
-	else()
-      if(NOT IS_ABSOLUTE ${_prg})
-        set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})		
-      endif()
-	endif()
-    set(_cmd ${_prg} ${ARG_COMMAND})
-    string(REPLACE ";" "#" _cmd "${_cmd}")
+
+    find_program(_exe ${_prg})
+
+    if(_exe)
+      set(_cmd ${_exe} ${ARG_COMMAND})
+    else()
+      if(TARGET ${_prg})
+	    set(_prg "$<TARGET_FILE:${_prg}>")
+	  else()
+        if(NOT IS_ABSOLUTE ${_prg})
+          set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})		
+        endif()
+	  endif()
+      set(_cmd ${_prg} ${ARG_COMMAND})
+    endif()
+
+    unset(_exe CACHE)
+
+    string(REPLACE ";" "^" _cmd "${_cmd}")
   endif()
 
   set(_command ${CMAKE_COMMAND} -DCMD=${_cmd})
 
   #- Handle PRE and POST commands
   if(ARG_PRECMD)
-    set(_pre ${ARG_PRECMD})
-    string(REPLACE ";" "#" _pre "${_pre}")
+    string(REPLACE ";" "^" _pre "${ARG_PRECMD}")
     set(_command ${_command} -DPRE=${_pre})
   endif()
+
   if(ARG_POSTCMD)
-    set(_post ${ARG_POSTCMD})
-    string(REPLACE ";" "#" _post "${_post}")
+    string(REPLACE ";" "^" _post "${ARG_POSTCMD}")
     set(_command ${_command} -DPOST=${_post})
   endif()
 
@@ -677,13 +703,19 @@ function(ROOT_ADD_TEST test)
   if(ARG_OUTPUT)
     set(_command ${_command} -DOUT=${ARG_OUTPUT})
   endif()
+    
+  if(ARG_CMPOUTPUT)
+    set(_command ${_command} -DCMPOUTPUT=${ARG_CMPOUTPUT})
+  endif()
 
   if(ARG_ERROR)
     set(_command ${_command} -DERR=${ARG_ERROR})
   endif()
   
   if(ARG_WORKING_DIR)
-    set(_command ${_command} -DCWD=${ARG_WORKING_DIR})   
+    set(_command ${_command} -DCWD=${ARG_WORKING_DIR})
+  else()
+    set(_command ${_command} -DCWD=${CMAKE_CURRENT_BINARY_DIR})
   endif()
 
   if(ARG_DEBUG)
@@ -692,6 +724,29 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_PASSRC)
     set(_command ${_command} -DRC=${ARG_PASSRC})
+  endif()
+
+  if(ARG_OUTCNVCMD)
+    string(REPLACE ";" "^" _outcnvcmd "${ARG_OUTCNVCMD}")
+    set(_command ${_command} -DCNVCMD=${_outcnvcmd})
+  endif()
+
+  if(ARG_OUTCNV)
+    string(REPLACE ";" "^" _outcnv "${ARG_OUTCNV}")
+    set(_command ${_command} -DCNV=${_outcnv})
+  endif()
+
+  if(ARG_DIFFCMD)
+    string(REPLACE ";" "^" _diff_cmd "${ARG_DIFFCMD}")
+    set(_command ${_command} -DDIFFCMD=${_diff_cmd})
+  endif()
+
+  if(ARG_CHECKOUT)
+    set(_command ${_command} -DCHECKOUT=true)
+  endif()
+
+  if(ARG_CHECKERR)
+    set(_command ${_command} -DCHECKERR=true)
   endif()
 
   #- Handle ENVIRONMENT argument
@@ -703,11 +758,14 @@ function(ROOT_ADD_TEST test)
 
   #- Locate the test driver
   find_file(ROOT_TEST_DRIVER RootTestDriver.cmake PATHS ${CMAKE_MODULE_PATH})
-  #set(_driver ${CMAKE_SOURCE_DIR}/cmake/modules/RootTestDriver.cmake)
   if(NOT ROOT_TEST_DRIVER)
     message(FATAL_ERROR "ROOT_ADD_TEST: RootTestDriver.cmake not found!")
   endif()
   set(_command ${_command} -P ${ROOT_TEST_DRIVER})
+
+  if(ARG_WILLFAIL)
+    set(test ${test}_WILL_FAIL)
+  endif()
 
   #- Now we can actually add the test
   if(ARG_BUILD)
@@ -753,6 +811,14 @@ function(ROOT_ADD_TEST test)
 
   if(ARG_FAILREGEX)
     set_property(TEST ${test} PROPERTY FAIL_REGULAR_EXPRESSION ${ARG_FAILREGEX})
+  endif()
+
+  if(ARG_WILLFAIL)
+    set_property(TEST ${test} PROPERTY WILL_FAIL true)
+  endif()
+
+  if(ARG_LABELS)
+    set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
 endfunction()

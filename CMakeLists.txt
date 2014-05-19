@@ -37,6 +37,7 @@ include(MacroEnsureVersion)
 #include(CTest)
 if(testing)
   enable_testing()
+  set(ROOTTEST_DIR "${CMAKE_SOURCE_DIR}/roottest")
 endif()
 
 #---Check if the user wants to build the project in the source directory------------------------
@@ -73,6 +74,7 @@ endif()
 if(roofit)
   add_subdirectory(roofit)
 endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 #---Global PCH-----------------------------------------------------------------------------------
@@ -99,8 +101,6 @@ include(PostInstalledSoftware)
 #---Configure and install various files neded later and for clients -----------------------------
 include(RootConfiguration)
 
-#install(EXPORT ${CMAKE_PROJECT_NAME}Exports DESTINATION cmake/modules) 
-
 #---Installation of project-wise artifacts-------------------------------------------------------
 if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DOCDIR})
@@ -122,6 +122,9 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 if(testing)
   include(RootCTest)
+  if(DEFINED INCLUDE_ROOTTEST)
+    add_subdirectory(roottest)
+  endif()
 endif()
 
 #---Packaging-------------------------------------------------------------------------------------
