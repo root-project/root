@@ -1,0 +1,10 @@
+ROOT_COMPILE_MACRO(fileClose.C)
+ROOT_COMPILE_MACRO(testCompile.C)
+
+ROOT_ADD_ROOTTEST(cling-other-fileClose MACRO runfileClose.C OUTREF fileClose.ref)
+ROOT_ADD_ROOTTEST(cling-other-sprintfselect MACRO runsprintfselect.C OUTREF sprintfselect.ref)
+ROOT_ADD_ROOTTEST(cling-other-staticConstTest MACRO staticConst.C OUTREF staticConstTest.ref)
+ROOT_ADD_ROOTTEST(cling-other-StaticDataMember MACRO runStaticDataMember.C)
+ROOT_ADD_ROOTTEST(cling-other-savannah54662 MACRO runsavannah54662.C OUTREF savannah54662.ref)
+ROOT_ADD_ROOTTEST(cling-other-missingXFunc MACRO runmissingXFunc.C OUTREF missingXFunc.ref WILLFAIL)
+ROOT_ADD_ROOTTEST(cling-other-assertBaseMembers MACRO assertBaseMembers.C)

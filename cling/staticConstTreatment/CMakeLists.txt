@@ -1,0 +1,1 @@
+#ROOT_ADD_ROOTTEST(cling-staticConstTreatment-execStaticConst MACRO -e "gSystem->Load(\"libOdin_dictrflx."$(DllSuf)"\") " -e "gSystem->Load(\"libmyClass_dictrflx."$(DllSuf)"\") " OUTREF execStaticConst.ref)
