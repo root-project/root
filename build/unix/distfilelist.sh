@@ -42,7 +42,7 @@ WILDCARDS="LICENSE README bin \
    include lib man config/Makefile.comp config/Makefile.config \
    tutorials geom/gdml/*.py \
    test/*.cxx test/*.h test/Makefile* test/*.rootmap \
-   test/*.C test/*.sh test/dt_Makefile test/*.ref \
+   test/*.C test/*.sh test/dt_Makefile test/*.ref test/*_ref.root \
    test/README test/*.txt test/*.xml \
    test/RootShower/*.h test/RootShower/*.cxx \
    test/RootShower/*.rc test/RootShower/*.ico \

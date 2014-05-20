@@ -72,20 +72,25 @@ namespace cling {
       const CompilationOptions& CO(getTransaction()->getCompilationOpts());
       switch (CO.ValuePrinting) {
       case CompilationOptions::VPDisabled:
-        assert("Don't wait that long. Exit early!");
+        assert(0 && "Don't wait that long. Exit early!");
         break;
       case CompilationOptions::VPEnabled:
         break;
-      case CompilationOptions::VPAuto:
-        if ((int)CS->size() > indexOfLastExpr+1 
+      case CompilationOptions::VPAuto: {
+        CompilationOptions& CO = getTransaction()->getCompilationOpts();
+        // FIXME: Propagate the flag to the nested transactions also, they
+        // must have the same CO as their parents.
+        CO.ValuePrinting = CompilationOptions::VPEnabled;
+        if ((int)CS->size() > indexOfLastExpr+1
             && (*(CS->body_begin() + indexOfLastExpr + 1))
             && isa<NullStmt>(*(CS->body_begin() + indexOfLastExpr + 1))) {
           // If next is NullStmt disable VP is disabled - exit. Signal this in
           // the CO of the transaction.
-          Transaction* T = getTransaction();
-          T->getCompilationOpts().ValuePrinting = CompilationOptions::VPDisabled;
-          return true;
+          CO.ValuePrinting = CompilationOptions::VPDisabled;
         }
+        if (CO.ValuePrinting == CompilationOptions::VPDisabled)
+          return true;
+      }
         break;
       }
 
@@ -115,7 +120,9 @@ namespace cling {
         DC->removeDecl(FD);
       }
     }
-
+    else // if nothing to attach to set the CO's ValuePrinting to disabled.
+      getTransaction()->getCompilationOpts().ValuePrinting
+        = CompilationOptions::VPDisabled;
     return true;
   }
 

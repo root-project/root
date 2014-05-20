@@ -6,7 +6,7 @@ MDFILES=titlepage.md Introduction.md ROOT_as_calculator.md \
 OPTIONS=-s -S -f markdown --toc --chapters --number-sections \
         --bibliography=bibliography.bib
 OPTIONSHTML=-H css/github.css --mathjax
-OPTIONSEPUB=--mathml --epub-cover-image=figures/cover.png
+OPTIONSEPUB=--mathml --epub-cover-image=figures/Cover.png
 OPTIONSPDFA4=--variable=geometry:a4paper -V geometry:margin=1.5cm
 OPTIONSPDFLETTER=--variable=geometry:letterpaper -V geometry:margin=1.5cm
 

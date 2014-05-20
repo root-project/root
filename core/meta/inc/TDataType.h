@@ -45,11 +45,13 @@ enum EDataType {
 class TDataType : public TDictionary {
 
 private:
-   TypedefInfo_t    *fInfo;     //pointer to CINT typedef info
+   TypedefInfo_t    *fInfo;     //!pointer to CINT typedef info
    Int_t             fSize;     //size of type
    EDataType         fType;     //type id
    Long_t            fProperty; //The property information for the (potential) underlying class
-   TString           fTrueName; //True name of the (potential) underlying class 
+   TString           fTrueName; //Qualified name of the (potential) underlying class, e.g. "MyClass*const*"
+   Int_t             fTypeNameIdx; //Start of class name part of the (potential) underlying class in fTrueName
+   Int_t             fTypeNameLen; //Strlen of class name part of the (potential) underlying class in fTrueName
    static TDataType* fgBuiltins[kNumDataTypes]; //Array of builtins
 
    void CheckInfo();
@@ -65,7 +67,7 @@ public:
    virtual       ~TDataType();
    Int_t          Size() const;
    Int_t          GetType() const { return (Int_t)fType; }
-   const char    *GetTypeName() const;
+   TString        GetTypeName();
    const char    *GetFullTypeName() const;
    const char    *AsString(void *buf) const;
    Long_t         Property() const;
@@ -75,8 +77,7 @@ public:
    static EDataType GetType(const type_info &typeinfo);
    static void AddBuiltins(TCollection* types);
 
-   ClassDef(TDataType,0)  //Basic data type descriptor
+   ClassDef(TDataType,2)  //Basic data type descriptor
 };
 
 #endif
-

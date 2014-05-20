@@ -393,10 +393,16 @@ void GetQualifiedName(std::string &qual_name, const clang::Type &type, const cla
 std::string GetQualifiedName(const clang::Type &type, const clang::NamedDecl &forcontext);
 
 //______________________________________________________________________________
-void GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
+void GetQualifiedName(std::string &qual_name, const clang::NamedDecl &nd);
 
 //----
-std::string GetQualifiedName(const clang::NamespaceDecl &nsd);
+std::string GetQualifiedName(const clang::NamedDecl &nd);
+
+// //______________________________________________________________________________
+// void GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
+//
+// //----
+// std::string GetQualifiedName(const clang::NamespaceDecl &nsd);
 
 //______________________________________________________________________________
 void GetQualifiedName(std::string &qual_name, const AnnotatedRecordDecl &annotated);

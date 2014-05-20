@@ -128,7 +128,8 @@
 
 -   The option "9" as been removed. It is not needed anymore since the line compression
     has been implemented in `TPadPainter`.
-
+-   The `BOX` option was handling `TH2::SetMinimum()` differently from
+    the other drawing options. As reported [here](https://sft.its.cern.ch/jira/browse/ROOT-6305).
 
 ### TGraphPainter
 

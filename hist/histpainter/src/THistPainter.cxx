@@ -4664,9 +4664,6 @@ void THistPainter::PaintBoxes(Option_t *)
       } else {
          return;
       }
-   } else {
-      zmin = 0;
-      zmax = TMath::Max(TMath::Abs(zmin),TMath::Abs(zmax));
    }
 
    Double_t zratio, dz = zmax - zmin;
@@ -4693,6 +4690,10 @@ void THistPainter::PaintBoxes(Option_t *)
          xcent = 0.5*xstep;
          z     = Hparam.factor*fH->GetBinContent(bin);
          kZNeg = kFALSE;
+
+         if (z <  zmin) continue; // Can be the case with
+         if (z >  zmax) z = zmax; // option Same
+
          if (z < 0) {
             if (Hoption.Logz) continue;
             z = -z;
@@ -4702,9 +4703,6 @@ void THistPainter::PaintBoxes(Option_t *)
             if (z != 0) z = TMath::Log10(z);
             else        z = zmin;
          }
-
-         if (z <  zmin) continue; // Can be the case with
-         if (z >  zmax) z = zmax; // option Same
 
          if (dz == 0) continue;
          zratio = TMath::Sqrt((z-zmin)/dz);

@@ -1,56 +1,45 @@
-#---------------------------------------------------------------------------------------------------
-# ROOT test driver
-#   Script arguments: 
-#     CMD command to be executed for the test
-#     PRE command to be executed before the test command
-#     POST command to be executed after the test command
-#     OUT file to collect stdout
-#     ERR file to collect stderr
-#     ENV evironment VAR1=Value1;VAR2=Value2
-#     CWD current working directory
-#     DBG debug flag
-#     RC  return code for success
+#-------------------------------------------------------------------------------
+#
+# RootCTestDriver.cmake
+#
+# CTest testdriver. Takes arguments via -DARG.
+#
+# Script arguments:
+#
+#   CMD   Command to be executed for the test.
+#   PRE   Command to be executed before the test command.
+#   POST  Command to be executed after the test command.
+#   OUT   File to collect stdout and stderr.
+#   ENV   Environment VAR1=Value1;VAR2=Value2.
+#   CWD   Current working directory.
+#   DBG   Debug flag.
+#   RC    Return code for success.
+#
+#-------------------------------------------------------------------------------
 
 if(DBG)
   message(STATUS "ENV=${ENV}")
 endif()
 
-#---Massage arguments---------------------------------------------------------------------------------
 if(CMD)
-  string(REPLACE "#" ";" _cmd ${CMD})
+  string(REPLACE "^" ";" _cmd ${CMD})
   if(DBG)
     message(STATUS "testdriver:CMD=${_cmd}")
   endif()
 endif()
 
 if(PRE)
-  string(REPLACE "#" ";" _pre ${PRE})
+  string(REPLACE "^" ";" _pre ${PRE})
   if(DBG)
     message(STATUS "testdriver:PRE=${_pre}")
   endif()
 endif()
 
 if(POST)
-  string(REPLACE "#" ";" _post ${POST})
+  string(REPLACE "^" ";" _post ${POST})
   if(DBG)
     message(STATUS "testdriver:POST=${_post}")
   endif()
-endif()
-
-if(OUT)
-  set(_out OUTPUT_FILE ${OUT})
-  if(DBG)
-    message(STATUS "testdriver:OUT=${OUT}")
-  endif()
-endif()
-
-if(ERR)
-  set(_err ERROR_FILE ${ERR})
-  if(DBG)
-    message(STATUS "testdriver:ERR=${ERR}")
-  endif()
-#else()
-#  set(_err ERROR_VARIABLE _errvar)
 endif()
 
 if(CWD)
@@ -58,6 +47,12 @@ if(CWD)
   if(DBG)
     message(STATUS "testdriver:CWD=${CWD}")
   endif()
+endif()
+
+find_program(diff_cmd diff)
+
+if(DIFFCMD)
+  string(REPLACE "^" ";" diff_cmd ${DIFFCMD})
 endif()
 
 #---Set environment --------------------------------------------------------------------------------
@@ -77,6 +72,7 @@ endif()
 
 #---Execute pre-command-----------------------------------------------------------------------------
 if(PRE)
+  message("execute precommand ${_pre}")
   execute_process(COMMAND ${_pre} ${_cwd} RESULT_VARIABLE _rc)
   if(_rc)
     message(FATAL_ERROR "pre-command error code : ${_rc}")
@@ -85,16 +81,68 @@ endif()
 
 if(CMD)
   #---Execute the actual test ------------------------------------------------------------------------
-  execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
+  if(OUT)
 
-  #---Return error is test returned an error code of write somthing to the stderr---------------------
-  if(DEFINED RC AND (NOT _rc EQUAL RC))
-    message(FATAL_ERROR "error code: ${_rc}")
-  elseif(NOT DEFINED RC AND _rc)
-    message(FATAL_ERROR "error code: ${_rc}")
+    # log stdout
+    if(CHECKOUT)
+      set(_chkout OUTPUT_VARIABLE _outvar)
+    else()
+      set(_chkout "")
+    endif()
+
+    # log stderr
+    if(CHECKERR)
+      set(_chkerr ERROR_VARIABLE _outvar)
+    else()
+      set(_chkerr "")
+    endif()
+
+    message("cmd: ${_cmd} ${_cwd} ${_chkout} ${_chkerr}")
+    execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
+    file(WRITE ${OUT} "${_outvar}")
+
+    if(DEFINED RC AND (NOT _rc EQUAL RC))
+      message(FATAL_ERROR "error code: ${_rc}")
+    elseif(NOT DEFINED RC AND _rc)
+      message(FATAL_ERROR "error code: ${_rc}")
+    endif()
+    
+    if(CNVCMD)
+      set(_outvar, "")
+      string(REPLACE "^" ";" _outcnvcmd "${CNVCMD}^${OUT}")
+      execute_process(COMMAND ${_outcnvcmd} ${_chkout} ${_chkerr} RESULT_VARIABLE _rc)
+      file(WRITE ${OUT} ${_outvar})
+
+      if(DEFINED RC AND (NOT _rc EQUAL RC))
+        message(FATAL_ERROR "error code: ${_rc}")
+      elseif(NOT DEFINED RC AND _rc)
+        message(FATAL_ERROR "error code: ${_rc}")
+      endif()
+    endif()
+
+    if(CNV)
+      set(_outvar, "")
+      string(REPLACE "^" ";" _outcnv "sh;${CNV}")
+      execute_process(COMMAND ${_outcnv} INPUT_FILE "${OUT}" OUTPUT_VARIABLE _outvar RESULT_VARIABLE _rc)
+      file(WRITE ${OUT} "${_outvar}")
+
+      if(DEFINED RC AND (NOT _rc EQUAL RC))
+        message(FATAL_ERROR "error code: ${_rc}")
+      elseif(NOT DEFINED RC AND _rc)
+        message(FATAL_ERROR "error code: ${_rc}")
+      endif()
+    endif()
+  else()
+    execute_process(COMMAND ${_cmd} ${_out} ${_err} ${_cwd} RESULT_VARIABLE _rc)
+
+    if(DEFINED RC AND (NOT _rc EQUAL RC))
+      message(FATAL_ERROR "error code: ${_rc}")
+    elseif(NOT DEFINED RC AND _rc)
+      message(FATAL_ERROR "error code: ${_rc}")
+    endif()
   endif()
-endif()
 
+endif()
 
 #---Execute post-command-----------------------------------------------------------------------------
 if(POST)
@@ -104,8 +152,13 @@ if(POST)
   endif()
 endif()
 
+if(CMPOUTPUT)
+  set(command COMMAND ${diff_cmd} ${OUT} ${CMPOUTPUT})
 
+  message("diff_cmd: ${command} ${OUT} ${CMPOUTPUT}")
+  execute_process(${command} ${OUT} ${CMPOUTPUT} RESULT_VARIABLE _rc)
 
-
-
-
+  if(_rc)
+    message(FATAL_ERROR "compare output error: ${_rc}")
+  endif()
+endif()

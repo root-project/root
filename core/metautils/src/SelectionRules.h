@@ -138,7 +138,7 @@ public:
    inline void GetDeclQualName(clang::Decl* D, std::string& qual_name) const;
 
    // gets the function prototype if the Decl (if it is global function or method)
-   bool GetFunctionPrototype(clang::Decl* D, std::string& prototype) const;
+   bool GetFunctionPrototype(clang::FunctionDecl* F, std::string& prototype) const;
    
    bool IsSelectionXMLFile() const;
    bool IsLinkdefFile() const;

@@ -40,6 +40,7 @@ private:
    struct HasTheSameSizeAsClingValue {
       long double fBiggestElementOfUnion;
       void* fType;
+      void* fInterpreter;
    } fValue;
 
    cling::Value& ToCV() {

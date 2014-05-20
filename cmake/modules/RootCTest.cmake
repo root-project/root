@@ -27,5 +27,13 @@ add_custom_target(move_headers ALL ${CMAKE_COMMAND} -DPREFIX=${CMAKE_BINARY_DIR}
 
 get_property(test_dirs GLOBAL PROPERTY ROOT_TEST_SUBDIRS)
 foreach(d ${test_dirs})
+  list(APPEND test_list ${d})
+endforeach()
+
+if(test_list)
+  list(SORT test_list)
+endif()
+
+foreach(d ${test_list})
   add_subdirectory(${d})
 endforeach()

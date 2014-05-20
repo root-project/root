@@ -329,13 +329,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          return kPattern;
       }
    }
-   
-#if NOT_WORKING_AND_CURRENTLY_NOT_NEEDED
-   std::string proto_name_value;
-   bool has_proto_name_attribute = GetAttributeValue(kProtoNameID, proto_name_value);
-   std::string proto_pattern_value;
-   bool has_proto_pattern_attribute = GetAttributeValue(kProtoPatternID, proto_pattern_value);
-   
+
    // do we have matching against the proto_name (or proto_pattern)  attribute and if yes - select or veto
    // The following selects functions on whether the requested prototype exactly matches the
    // prototype issued by SelectionRules::GetFunctionPrototype which relies on
@@ -350,20 +344,15 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    // the user input string and the clang provided string).
    // Using lookup form cling would be probably be a better choice.
    if (!prototype.empty()) {
-      if (has_proto_name_attribute && 
-          (proto_name_value==prototype)) {
-         
+      if (fHasProtoNameAttribute && fProtoName==prototype) {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
          return kName;
       }
-      if (has_proto_pattern_attribute && 
-          CheckPattern(prototype, proto_pattern_value, fSubPatterns, isLinkdef))  {
+      if (fHasProtoPatternAttribute && CheckPattern(prototype, fProtoPattern, fSubPatterns, isLinkdef))  {
          const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-         return kPattern; 
+         return kPattern;
       }
    }
-}
-#endif
 
    return kNoMatch;
 }
