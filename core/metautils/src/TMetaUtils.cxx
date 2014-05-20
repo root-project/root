@@ -1084,11 +1084,21 @@ std::string ROOT::TMetaUtils::GetQualifiedName(const clang::Type &type, const cl
    return result;
 }
 
+// //______________________________________________________________________________
+// void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &cl)
+// {
+//    GetQualifiedName(qual_name,cl);
+// }
+//
+// //----
+// std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamespaceDecl &cl){
+//    return GetQualifiedName(cl);
+// }
+
 //______________________________________________________________________________
-void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &cl)
+void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
 {
    // This implementation does not rely on GetFullyQualifiedTypeName
-   // It is done for namespaces, no type involved.
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
@@ -1104,11 +1114,12 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
 }
 
 //----
-std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamespaceDecl &cl){
+std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamedDecl &cl){
    std::string result;
    ROOT::TMetaUtils::GetQualifiedName(result, cl);
    return result;
 }
+
 
 //______________________________________________________________________________
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl)
