@@ -79,7 +79,7 @@ set(ENV{MANPATH} "${CMAKE_BINARY_DIR}/man/man1:$ENV{MANPATH}")
 find_package(PythonInterp)
 find_program(python_cmd ${PYTHON_EXECUTABLE})
 
-# Enable and setup CTest. 
+# Enable and setup CTest.
 include(RootNewMacros)
 include(RoottestCTest)
 include(RootCTestMacros)
