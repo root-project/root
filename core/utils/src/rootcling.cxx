@@ -3397,10 +3397,11 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
 }
 
 //______________________________________________________________________________
-void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
-                              const std::vector<clang::TypedefNameDecl*>& tDefDecls,
-                              HeadersClassesMap_t& headersClassesMap,
-                              const cling::Interpreter& interp)
+void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
+                            const RScanner::TypedefColl_t tDefDecls,
+                            const RScanner::FunctionColl_t funcDecls,
+                            HeadersClassesMap_t& headersDeclsMap,
+                            const cling::Interpreter& interp)
 {
    std::set<const clang::CXXRecordDecl*> visitedDecls;
    std::unordered_set<std::string> buffer;
@@ -3413,7 +3414,7 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
          // remove duplicates, also if not subsequent
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
-         headersClassesMap[annotatedRcd.GetNormalizedName()] = headers;
+         headersDeclsMap[annotatedRcd.GetNormalizedName()] = headers;
       }
    }
    // The same for the typedefs:
@@ -3425,8 +3426,13 @@ void ExtractHeadersForClasses(const RScanner::ClassColl_t& annotatedRcds,
          // remove duplicates, also if not subsequent
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
-         headersClassesMap[tDef->getQualifiedNameAsString()] = headers;
+         headersDeclsMap[tDef->getQualifiedNameAsString()] = headers;
       }
+   }
+   // The same for the functions:
+   for (auto& func : funcDecls){
+      std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*func, interp)};
+      headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*func)] = headers;
    }
 }
 //______________________________________________________________________________
@@ -4307,11 +4313,13 @@ int RootCling(int argc,
    HeadersClassesMap_t headersClassesMap;
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
-      ExtractHeadersForClasses(scan.fSelectedClasses,
-                               scan.fSelectedTypedefs,
-                               headersClassesMap,
-                               interp);
 
+      ExtractHeadersForDecls(scan.fSelectedClasses,
+                             scan.fSelectedTypedefs,
+                             scan.fSelectedFunctions,
+                             headersClassesMap,
+                             interp);
+      
       std::string detectedUmbrella;
       for (auto& arg : pcmArgs){
          if (inlineInputHeader && !IsLinkdefFile(arg.c_str()) && IsHeaderName(arg)){
