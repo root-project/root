@@ -1,7 +1,7 @@
 # File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
-# Last: 01/30/14
+# Last: 05/20/14
 
 """STL unit tests for PyROOT package."""
 
@@ -18,7 +18,7 @@ __all__ = [
    'STL4STLLikeClassTestCase',
    'STL5StringHandlingTestCase',
    'STL6IteratorTestCase',
-   'STL7StringStreamTestCase',
+   'STL7StreamTestCase',
 ]
 
 gROOT.LoadMacro( "StlTypes.C+" )
@@ -346,8 +346,8 @@ class STL6IteratorComparisonTestCase( MyTestCase ):
 
       self.__run_tests( m )
 
-### Iterator comparison ======================================================
-class STL7StringStreamTestCase( MyTestCase ):
+### Stream usage =============================================================
+class STL7StreamTestCase( MyTestCase ):
    def test1_PassStringStream( self ):
       """Pass stringstream through ostream&"""
 
