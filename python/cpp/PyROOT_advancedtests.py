@@ -24,6 +24,7 @@ __all__ = [
    'Cpp10StandardExceptions',
    'Cpp11PointerContainers',
    'Cpp12NamespaceLazyFunctions',
+   'Cpp13OverloadedNewDelete',
 ]
 
 gROOT.LoadMacro( "AdvancedCpp.C+" )
@@ -482,6 +483,19 @@ class Cpp12NamespaceLazyFunctions( MyTestCase ):
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_g(''), 42 )
       self.assertEqual( cppyy.gbl.PyCpp12_ns_test2.PyCpp12_g(),   13 )
 
+
+### Usage of custom new/delete functions =====================================
+class Cpp13OverloadedNewDelete( MyTestCase ):
+   def test1StaticData( self ):
+      """Use of custom new/delete"""
+
+      import cppyy, gc
+
+      self.assertEqual( cppyy.gbl.PR_StaticStuff(int).describe(), 'StaticStuff::s_data -> 999')
+      m = cppyy.gbl.PR_CustomNewDeleteClass()
+      self.assertEqual( cppyy.gbl.PR_StaticStuff(int).describe(), 'StaticStuff::s_data -> 123')
+      del m; gc.collect()
+      self.assertEqual( cppyy.gbl.PR_StaticStuff(int).describe(), 'StaticStuff::s_data -> 321')
 
 ## actual test run
 if __name__ == '__main__':

@@ -22,6 +22,7 @@ Access C++ standard exception objects from python ... ok
 Assignment operator on pointers ... ok
 Lazy lookup of late created functions ... ok
 Lazy lookup of late created overloaded functions ... ok
+Use of custom new/delete ... ok
 
 ----------------------------------------------------------------------
 

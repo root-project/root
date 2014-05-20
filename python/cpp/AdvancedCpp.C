@@ -2,9 +2,10 @@
   File: roottest/python/cpp/AdvancedCpp.C
   Author: WLavrijsen@lbl.gov
   Created: 06/04/05
-  Last: 12/16/13
+  Last: 05/20/14
 */
 
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -203,3 +204,38 @@ size_t fillVect( std::vector< PR_ValClass* >& v ) {
    v.push_back(m);
    return v.size();
 }
+
+
+// helpers for custom new/delete
+template <class T>
+class PR_StaticStuff {
+private:
+   static T s_data;
+
+public:
+   static void set(const T& v) {
+      s_data = v;
+   }
+   static std::string describe() {
+      std::ostringstream s;
+      s << "StaticStuff::s_data -> " << s_data;
+      return s.str();
+   }
+};
+
+template <class T> T PR_StaticStuff<T>::s_data = T(999);
+
+struct PR_CustomNewDeleteClass {
+   PR_CustomNewDeleteClass() : m_data(314) {}
+   ~PR_CustomNewDeleteClass() {}
+   static void* operator new(size_t size) {
+      void *p = ::operator new(size);
+      PR_StaticStuff<int>::set(123);
+      return p;
+   }
+   static void operator delete(void* p) {
+      PR_StaticStuff<int>::set(321);
+      ::operator delete(p);
+   }
+   int m_data;
+};
