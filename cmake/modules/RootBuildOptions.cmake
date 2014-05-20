@@ -8,7 +8,7 @@ function(ROOT_BUILD_OPTION name defvalue)
     set(description ${ARGN})
   else()
     set(description " ")
-  endif()    
+  endif()
   option(${name} "${description}" ${defvalue})
   set(root_build_options ${root_build_options} ${name} PARENT_SCOPE )
 endfunction()
@@ -171,12 +171,13 @@ ROOT_BUILD_OPTION(xft ON "Xft support (X11 antialiased fonts)")
 ROOT_BUILD_OPTION(xml ON "XML parser interface")
 ROOT_BUILD_OPTION(x11 ${x11_defvalue} "X11 support")
 ROOT_BUILD_OPTION(xrootd ON "Build xrootd file server and its client (if supported)")
-  
+
 option(fail-on-missing "Fail the configure step if a required external package is missing" OFF)
 option(minimal "Do not automatically search for support libraries" OFF)
 option(gminimal "Do not automatically search for support libraries, but include X11" OFF)
 option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
+option(include_roottest "Include roottest as a subdirectory in root. Needs enabled testing with CTest." OFF)
 
 if(all)
  set(gdml    ON CACHE BOOL "" FORCE)
@@ -198,7 +199,7 @@ endif()
 # use, i.e. don't skip the full RPATH for the build tree
 set(CMAKE_SKIP_BUILD_RPATH  FALSE)
 # when building, don't use the install RPATH already (but later on when installing)
-set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE) 
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 # add the automatically determined parts of the RPATH
 # which point to directories outside the build tree to the install RPATH
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -206,7 +207,7 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # the RPATH to be used when installing---------------------------------------------------------
 if(rpath)
   set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
-  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE) 
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 endif()
 
 #---Avoid creating dependencies to 'non-statndard' header files -------------------------------

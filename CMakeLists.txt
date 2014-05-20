@@ -122,7 +122,7 @@ endif()
 #---Configure Testing using CTest----------------------------------------------------------------
 if(testing)
   include(RootCTest)
-  if(DEFINED INCLUDE_ROOTTEST)
+  if(include_roottest)
     add_subdirectory(roottest)
   endif()
 endif()
