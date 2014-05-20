@@ -320,20 +320,23 @@ namespace ROOT
 
 
       //TODO: x0, sigma0, ...
+      int lambda = -1;
       if (fWithBounds)
 	{
 	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
-	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,-1,-1.0,0,gp);
+	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,lambda,-1.0,0,gp);
 	  cmaparams._algo = fMinimizer;
+	  cmaparams.set_x0(&fInitialX.front());
 	  cmaparams._quiet = true;
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
 	}
       else
 	{
 	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-	  CMAParameters<> cmaparams(fDim);
+	  CMAParameters<> cmaparams(fDim,lambda);
 	  cmaparams._algo = fMinimizer;
+	  cmaparams.set_x0(&fInitialX.front());
 	  cmaparams._quiet = true;
 	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
 	}
