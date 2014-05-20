@@ -797,7 +797,7 @@ $(COREDS): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	$(MAKEDIR)
 	@echo "Generating dictionary $@..."
 	$(ROOTCLINGSTAGE1) -f $@ -s lib/libCore.$(SOEXT) -c $(COREDICTCXXFLAGS) \
-	   $(COREDICTH) $(COREL0)
+	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
 
 $(call pcmname,$(CORELIB)): $(COREDS)
 	$(noop)
@@ -813,7 +813,7 @@ $(COREMAP): $(COREDICTHDEP) $(COREL) $(ROOTCLINGSTAGE1DEP) $(LLVMDEP)
 	@echo "Generating rootmap $@..."
 	$(ROOTCLINGSTAGE1) -r $(COREDS) -s lib/libCore.$(SOEXT) \
 	   $(call rootmapModule, lib/libCore.$(SOEXT)) -c $(COREDICTCXXFLAGS) \
-	   $(COREDICTH) $(COREL0) && touch lib/libCore_rdict.pcm
+	   $(COREDICTH) $(COREL0)
 
 map::   $(ALLMAPS)
 
