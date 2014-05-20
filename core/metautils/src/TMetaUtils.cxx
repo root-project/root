@@ -4155,10 +4155,36 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          if (decl->getKind() == clang::Decl::ClassTemplatePartialSpecialization) {
             const clang::ClassTemplatePartialSpecializationDecl *spec = llvm::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(decl);
 
-            for (unsigned arg = 0; arg < spec->getTemplateArgs().size() && arg <= index; ++arg) {
-               if (!spec->getTemplateArgs().get(arg).isDependent())
-               {
-                 ++index;
+            unsigned int depth = substType->getReplacedParameter()->getDepth();
+
+            const TemplateArgument *instanceArgs = spec->getTemplateArgs().data();
+            unsigned int instanceNArgs = spec->getTemplateArgs().size();
+
+            // Search for the 'right' replacement.
+
+            for(unsigned int A = 0; A < instanceNArgs; ++A) {
+               if (instanceArgs[A].getKind() == clang::TemplateArgument::Type) {
+                  clang::QualType argQualType = instanceArgs[A].getAsType();
+
+                  const clang::TemplateTypeParmType *replacementType;
+
+                  replacementType = llvm::dyn_cast<clang::TemplateTypeParmType>(argQualType);
+
+                  if (!replacementType) {
+                     const clang::SubstTemplateTypeParmType *argType
+                        = llvm::dyn_cast<clang::SubstTemplateTypeParmType>(argQualType);
+                     if (argType) {
+                        clang::QualType replacementQT = argType->getReplacementType();
+                        replacementType = llvm::dyn_cast<clang::TemplateTypeParmType>(replacementQT);
+                     }
+                  }
+                  if (replacementType &&
+                      depth == replacementType->getDepth() &&
+                      index == replacementType->getIndex() )
+                  {
+                     index = A;
+                     break;
+                  }
                }
             }
             replacedCtxt = spec->getSpecializedTemplate();
