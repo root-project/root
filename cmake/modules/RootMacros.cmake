@@ -146,7 +146,7 @@ endfunction()
 function(ROOT_REFLEX_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" ""  ${ARGN})
 
-  include_directories(${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+  include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
   link_directories(${ROOT_LIBRARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -231,7 +231,7 @@ function(ROOT_BUILD_COMPILE_DICT dictname)
   endif()
 
   STRING(REGEX REPLACE " " ";" _flags ${CMAKE_CXX_FLAGS})
-  set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIR}")
+  set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIRS};-I${ROOT_INCLUDE_DIR}")
   set(createobj_cmd  ${CMAKE_CXX_COMPILER} ${_flags} -c ${ARG_BUILDOBJ} -o ${ARG_BUILDOBJ}.o)
 
   string(RANDOM _rdm)
@@ -314,7 +314,7 @@ function(ROOT_BUILD_REFLEX_LIBRARY libname)
   endif()
 
   STRING(REGEX REPLACE " " ";" _flags ${CMAKE_CXX_FLAGS})
-  set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIR}")
+  set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIRS};-I${ROOT_INCLUDE_DIR}")
   set(createobj_cmd  ${CMAKE_CXX_COMPILER} ${_flags} -c ${} -o ${ARG_BUILDOBJ}.o)
   execute_process(COMMAND ${createobj_cmd} ${_cwd} RESULT_VARIABLE rc_code)
 

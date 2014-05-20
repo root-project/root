@@ -16,18 +16,23 @@ project(roottest)
 find_package(ROOT QUIET)
 
 if(NOT ROOT_FOUND)
+
+  # ROOTSYS specified as a cmake -D define?
   if(DEFINED ROOTSYS)
     if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
       set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
+      find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/)
     else()
       message(FATAL_ERROR "Cannot find FindROOT.cmake!")
     endif()
   else()
+    # Try to retrieve the ROOTSYS path from the current environment.
     set(ROOTSYS $ENV{ROOTSYS})
 
     if(DEFINED ROOTSYS)
       if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
         set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
+        find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/)
       else()
         message(FATAL_ERROR "Cannot find FindROOT.cmake!")
       endif()
@@ -36,8 +41,14 @@ if(NOT ROOT_FOUND)
     endif()
   endif()
 
-  get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$ENV{ROOTSYS}/bin" ABSOLUTE)
-  get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$ENV{ROOTSYS}/lib" ABSOLUTE)
+  get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
+  get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
+else()
+  if(NOT DEFINED ROOTSYS)
+    set(ROOTSYS $ENV{ROOTSYS})
+    get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
+    get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
+  endif()
 endif()
 
 # Detect bitness.
