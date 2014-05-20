@@ -35,13 +35,15 @@ if(NOT ROOT_FOUND)
       message(FATAL_ERROR "$ROOTSYS is not set, cannot find ROOT!")
     endif()
   endif()
-endif()
 
-find_program(ROOTCINT_EXECUTABLE rootcint PATHS $ENV{ROOTSYS}/bin)
+  get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$ENV{ROOTSYS}/bin" ABSOLUTE)
+  get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$ENV{ROOTSYS}/lib" ABSOLUTE)
+endif()
 
 # Setup environment.
 set(ROOTTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
-set(ROOTSYS $ENV{ROOTSYS})
+
+set(rootcint_program ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint)
 
 # Set the CMake module path. Here are all the custom CMake modules.
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
@@ -72,9 +74,6 @@ set(ENV{SHLIB_PATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{SHLIB_PATH}")
 set(ENV{LIBPATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{LIBPATH}")
 set(ENV{PYTHONPATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{PYTHONPATH}")
 set(ENV{MANPATH} "${CMAKE_BINARY_DIR}/man/man1:$ENV{MANPATH}")
-
-# set(rootcint_program ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint)
-set(rootcint_program ${ROOTCINT_EXECUTABLE})
 
 # Find python.
 find_package(PythonInterp)

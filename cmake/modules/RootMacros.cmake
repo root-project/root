@@ -132,65 +132,38 @@ function(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set(CMAKE_ROOTTEST_DICT ON)
-  message("generate dictionary ${dictname}")
   
   ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS} MODULE ${dictname} LINKDEF ${ARG_LINKDEF} DEPENDENCIES ${ARG_DEPENDENCIES}) 
 endfunction()
 
 #-------------------------------------------------------------------------------
 #
-# function ROOT_REFLEX_GENERATE_DICTIONARY( <targetname> [SELECTION sel...] [headerfiles...])
+# function ROOT_REFLEX_GENERATE_DICTIONARY( <dictionary> [SELECTION sel...] [headerfiles...])
 #
-# This function generates a reflexion dictionary. 
+# This function generates a reflexion dictionary and creates a shared library. 
 #
 #-------------------------------------------------------------------------------
-function(ROOT_REFLEX_GENERATE_DICTIONARY targetname)
+function(ROOT_REFLEX_GENERATE_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION" ""  ${ARGN})
 
-  #---Get List of header files---------------
-  set(headerfiles)
-  foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files inc/${fp})
-    if(files)
-      foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
-        endif()
-      endforeach()
-    else()
-      set(headerfiles ${headerfiles} ${fp})
-    endif()
-  endforeach()
+  include_directories(${ROOT_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
+  link_directories(${ROOT_LIBRARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
-  #---Get Selection file------------------------------------
-  if(IS_ABSOLUTE ${ARG_SELECTION})
-    set(selectionfile ${ARG_SELECTION})
-  else()
-    set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION})
-  endif()
+  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-  # Add defines to root_cmd, in order to have out-of-source builds
-  # when using the scripts/build.C macro.
-  get_directory_property(DirDefs COMPILE_DEFINITIONS)
+  set(CMAKE_ROOTTEST_DICT ON)
 
-  foreach(d ${DirDefs})
-    list(APPEND GenreflexDefines "-D${d}")
-  endforeach()
+  set(ROOT_genreflex_cmd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex)
 
-  set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  foreach(d ${incdirs})
-   set(include_dirs ${include_dirs} -I${d})
-  endforeach()
+  REFLEX_GENERATE_DICTIONARY(${dictionary} ${ARG_UNPARSED_ARGUMENTS} SELECTION ${ARG_SELECTION})
 
-  set(genreflex_cmd genreflex ${headerfiles} --select=${selectionfile} ${include_dirs} ${GenreflexDefines}) 
-  message("genreflex_cmd: ${genreflex_cmd}")
+  string(REPLACE "/" "-" targetname "${CMAKE_CURRENT_SOURCE_DIR}-${dictionary}")
 
-  set(_cwd WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  add_library(${targetname}-genlib MODULE ${gensrcdict})
 
-  message("-- Add target to generate reflex dictionary ${targetname}")
+  set_property(TARGET ${targetname}-genlib PROPERTY OUTPUT_NAME ${dictionary})
 
-  add_custom_target("${targetname}" ALL COMMAND ${genreflex_cmd} ${_cwd} VERBATIM)
+  target_link_libraries(${targetname}-genlib ${ARG_LIBRARIES} ${ROOT_Reflex_LIBRARY})
 
 endfunction(ROOT_REFLEX_GENERATE_DICTIONARY)
 
@@ -342,7 +315,7 @@ function(ROOT_BUILD_REFLEX_LIBRARY libname)
 
   STRING(REGEX REPLACE " " ";" _flags ${CMAKE_CXX_FLAGS})
   set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIR}")
-  set(createobj_cmd  ${CMAKE_CXX_COMPILER} ${_flags} -c ${ARG_BUILDOBJ} -o ${ARG_BUILDOBJ}.o)
+  set(createobj_cmd  ${CMAKE_CXX_COMPILER} ${_flags} -c ${} -o ${ARG_BUILDOBJ}.o)
   execute_process(COMMAND ${createobj_cmd} ${_cwd} RESULT_VARIABLE rc_code)
 
   if(rc_code)
