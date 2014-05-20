@@ -19,7 +19,7 @@ int check(const char *name, const char *target)
    }
    if (strcmp(((TDataType*)dobj)->GetTypeName(),target) != 0) {
       fprintf(stderr,"Found the wrong TDataType for %s target is %s rather than %s\n",
-              name,((TDataType*)dobj)->GetTypeName(),target);
+              name,((TDataType*)dobj)->GetTypeName().Data(),target);
       return 3;
    }
    return 0;
@@ -41,7 +41,7 @@ int check_target(const char *name, const char *target)
    //}
    if (strcmp(((TDataType*)dobj)->GetTypeName(),target) != 0) {
       fprintf(stderr,"Found the wrong TDataType for %s target is %s rather than %s\n",
-              name,((TDataType*)dobj)->GetTypeName(),target);
+              name,((TDataType*)dobj)->GetTypeName().Data(),target);
       return 3;
    }
    return 0;
@@ -54,7 +54,8 @@ int check_missing(const char *name)
 
    dobj = l->FindObject(name);
    if (dobj) { 
-      fprintf(stderr,"Surpringly found the TDataType for %s typedef to %s\n",name,((TDataType*)dobj)->GetTypeName());
+      fprintf(stderr,"Surpringly found the TDataType for %s typedef to %s\n",
+              name,((TDataType*)dobj)->GetTypeName().Data());
       return 1;
    }
    return 0;
