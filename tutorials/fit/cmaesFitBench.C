@@ -71,10 +71,11 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
       for (Int_t i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
-      histo->Fit(fitFcn,"Q0");
+      //histo->Print("all");
+      histo->Fit(fitFcn,"Q0");  // from TH1.cxx: Q: quiet, 0: do not plot 
    }
 
-   histo->Fit(fitFcn,"EV");
+   histo->Fit(fitFcn,"EV"); // E: use Minos, V: verbose.
    timer.Stop();
 
    (histo->GetFunction("fitFcn"))->SetLineColor(kRed+3);
@@ -123,5 +124,5 @@ void cmaesFitBench(Int_t npass=20) {
    c1->cd(4);
    DoFit("sepcmaes",gPad,npass);
      
-   c1->SaveAs("FitBench.root");
+   //c1->SaveAs("FitBench.root");
 }
