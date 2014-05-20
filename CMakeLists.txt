@@ -40,6 +40,15 @@ if(NOT ROOT_FOUND)
   get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "$ENV{ROOTSYS}/lib" ABSOLUTE)
 endif()
 
+# Detect bitness.
+if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*)
+  set(X86_64 1)
+  message("-- Check for bitness: Found 64 bit architecture.")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
+  set(X86 1)
+  message("-- Check for bitness: Found 32 bit architecture.")
+endif()
+
 # Setup environment.
 set(ROOTTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -57,15 +66,6 @@ ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 # Find GCCXML.
 find_package(GCCXML REQUIRED)
-
-# Detect bitness.
-if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*)
-  set(X86_64 1)
-  message("-- Check for bitness: Found 64 bit architecture.")
-elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
-  set(X86 1)
-  message("-- Check for bitness: Found 32 bit architecture.")
-endif()
 
 set(ENV{PATH} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}:$ENV{PATH}")
 set(ENV{LD_LIBRARY_PATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{LD_LIBRARY_PATH}")

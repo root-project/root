@@ -94,6 +94,16 @@ function(ROOT_ADD_ROOTTEST test)
     set(labels LABELS ${ARG_LABELS})
   endif()
 
+  set(environment ENVIRONMENT
+                  ROOTSYS=${ROOTSYS}
+                  PATH=$ENV{PATH}
+                  LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}
+                  PYTHONPATH=$ENV{PYTHONPATH}
+                  DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}
+                  SHLIB_PATH=$ENV{SHLIB_PATH}
+                  LIBPATH=$ENV{LIBPATH}
+    )
+
   ROOT_ADD_TEST(${test} COMMAND ${command}
                         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${test}.log
                         ${outcnv}
@@ -101,8 +111,8 @@ function(ROOT_ADD_ROOTTEST test)
                         CMPOUTPUT ${OUTREF_PATH}
                         WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                         DIFFCMD sh ${ROOTTEST_DIR}/scripts/custom_diff.sh
-                        ENVIRONMENT ROOTSYS=${ROOTSYS} PATH=$ENV{PATH} LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH} PYTHONPATH=$ENV{PYTHONPATH}
                         TIMEOUT 3600
+                        ${environment}
                         ${build}
                         ${checkstdout}
                         ${checkstderr}
