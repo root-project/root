@@ -1480,14 +1480,17 @@ public:
   TestBasic208(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooUnitTest("FFT Convolution operator p.d.f.",refFile,writeRef,verbose) {} ;
 
   Bool_t isTestAvailable() { 
-
-    TPluginHandler *h;
-    if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
-      if (h->LoadPlugin() == -1) {
-	gROOT->ProcessLine("new TNamed ;") ;
-	return kFALSE;
-      } else {
-	return kTRUE ;
+    // only if ROOT was build with fftw3 enabled
+    TString conffeatures = gROOT->GetConfigFeatures();
+    if(conffeatures.Contains("fftw3")) {
+      TPluginHandler *h;
+      if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualFFT"))) {
+        if (h->LoadPlugin() == -1) {
+          gROOT->ProcessLine("new TNamed ;") ;
+          return kFALSE;
+        } else {
+          return kTRUE ;
+        }
       }
     }
     return kFALSE ;
