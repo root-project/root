@@ -68,11 +68,12 @@ GENVECTORDEP  := $(GENVECTORO:.o=.d) $(GENVECTORDO:.o=.d) $(GENVECTORDO32:.o=.d)
 
 GENVECTORLIB  := $(LPATH)/libGenVector.$(SOEXT)
 GENVECTORMAP  := $(GENVECTORLIB:.$(SOEXT)=.rootmap)
+GENVECTORMAP32:= $(GENVECTORLIB:.$(SOEXT)=32.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(GENVECTORH))
 ALLLIBS      += $(GENVECTORLIB)
-ALLMAPS      += $(GENVECTORMAP)
+ALLMAPS      += $(GENVECTORMAP) $(GENVECTORMAP32)
 
 # include all dependency files
 INCLUDEFILES += $(GENVECTORDEP)
@@ -87,7 +88,7 @@ include/Math/%.h: $(GENVECTORDIRI)/Math/%.h
 		fi)
 		cp $< $@
 
-# build lib genvector: use also obj from math and fit directory 
+# build lib genvector: use also obj from math and fit directory
 $(GENVECTORLIB): $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32) $(ORDER_) $(MAINLIBS)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS)"  \
 		   "$(SOFLAGS)" libGenVector.$(SOEXT) $@     \
@@ -112,7 +113,12 @@ $(GENVECTORMAP):  $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC) $(ROOTCLINGEXE)
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(GENVECTORDS) $(call dictModule,GENVECTOR) -c $(GENVECTORDH1) $(GENVECTORL)
 
-all-$(MODNAME): $(GENVECTORLIB) $(GENVECTORMAP)
+$(GENVECTORMAP32): $(GENVECTORDH1) $(GENVECTORL) $(GENVECTORLINC32) $(ROOTCLINGEXE) $(call pcmdep,GENVECTOR)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCLINGSTAGE2) -r $(GENVECTORDS) $(subst -rmf $(GENVECTORMAP), -rmf $(GENVECTORMAP32),$(call dictModule,GENVECTOR)) -c $(GENVECTORDH1) $(GENVECTORL32)
+
+all-$(MODNAME): $(GENVECTORLIB) $(GENVECTORMAP) $(GENVECTORMAP32)
 
 clean-$(MODNAME):
 		@rm -f $(GENVECTORO) $(GENVECTORDO) $(GENVECTORDO32)
@@ -122,7 +128,7 @@ clean::         clean-$(MODNAME)
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(GENVECTORDEP) $(GENVECTORDS) $(GENVECTORDS32) \
 		   $(GENVECTORDH) $(GENVECTORDH32) \
-		   $(GENVECTORLIB) $(GENVECTORMAP)
+		   $(GENVECTORLIB) $(GENVECTORMAP) $(GENVECTORMAP32)
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@rm -rf $(GENVECTORDIRT)
 else
