@@ -628,7 +628,7 @@ TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
          if (sphereBuffer)
          {
             // We can only draw solid uncut spheres natively at present.
-            // If somebody already passed the raw buffer, he probably wants us to use it.
+            // If somebody already passed the raw buffer, they probably want us to use it.
             if (sphereBuffer->IsSolidUncut() && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw))
             {
                newLogical = new TGLSphere(*sphereBuffer);
@@ -647,7 +647,7 @@ TGLLogicalShape* TGLScenePad::CreateNewLogical(const TBuffer3D& buffer) const
          const TBuffer3DTube * tubeBuffer = dynamic_cast<const TBuffer3DTube *>(&buffer);
          if (tubeBuffer)
          {
-            // If somebody already passed the raw buffer, he probably wants us to use it.
+            // If somebody already passed the raw buffer, they probably want us to use it.
             if (!buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
                newLogical = new TGLCylinder(*tubeBuffer);
             } else {

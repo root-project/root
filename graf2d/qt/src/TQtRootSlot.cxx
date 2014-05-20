@@ -20,8 +20,8 @@
 //
 // It provides a Qt slot to attach the the CINT C++ interpreter 
 // to any Qt signal
-// To execute any C++ statement from the GUI oen should connect 
-// his/her Qt signal with the Qt slot of the global instance of this class
+// To execute any C++ statement from the GUI one should connect 
+// one's Qt signal with the Qt slot of the global instance of this class
 //
 //  connect(GUI object, SIGNAL(const char *editedLine),TQtRootSlot::CintSlot(),SLOT(ProcessLine(const char*)))
 //

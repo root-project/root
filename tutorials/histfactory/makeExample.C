@@ -210,7 +210,7 @@ void makeSimpleExample(){
 
 }
 
-makeExample(){
+void makeExample(){
   makeDataDriven();
   makeShapeSys2DDataset();
   makeShapeSysDataset();

@@ -28,7 +28,7 @@
 TProtoClass::TProtoClass(TClass* cl):
    TNamed(*cl), fBase(cl->GetListOfBases()), fData(cl->GetListOfDataMembers()),
    fSizeof(cl->Size()), fCanSplit(cl->fCanSplit), fStreamerType(cl->fStreamerType),
-   fProperty(cl->fProperty)
+   fProperty(cl->fProperty),fClassProperty(cl->fClassProperty)
 {
    // Initialize a TProtoClass from a TClass.
    fPRealData = new TList();
@@ -98,6 +98,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fSizeof = fSizeof;
    cl->fCanSplit = fCanSplit;
    cl->fProperty = fProperty;
+   cl->fClassProperty = fClassProperty;
    cl->fStreamerType = fStreamerType;
 
    // Update pointers to TClass

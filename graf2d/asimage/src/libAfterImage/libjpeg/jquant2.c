@@ -1171,7 +1171,7 @@ start_pass_2_quant (j_decompress_ptr cinfo, boolean is_pre_scan)
   int i;
 
   /* Only F-S dithering or no dithering is supported. */
-  /* If user asks for ordered dither, give him F-S. */
+  /* If user asks for ordered dither, give them F-S. */
   if (cinfo->dither_mode != JDITHER_NONE)
     cinfo->dither_mode = JDITHER_FS;
 
@@ -1289,7 +1289,7 @@ jinit_2pass_quantizer (j_decompress_ptr cinfo)
     cquantize->sv_colormap = NULL;
 
   /* Only F-S dithering or no dithering is supported. */
-  /* If user asks for ordered dither, give him F-S. */
+  /* If user asks for ordered dither, give them F-S. */
   if (cinfo->dither_mode != JDITHER_NONE)
     cinfo->dither_mode = JDITHER_FS;
 

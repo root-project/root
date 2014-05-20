@@ -446,7 +446,7 @@ static int DGifGetWord(GifFileType *GifFile, int *Word)
 }
 
 /******************************************************************************
-*   Get the image code in compressed form.  his routine can be called if the  *
+*   Get the image code in compressed form.  This routine can be called if the  *
 * information needed to be piped out as is. Obviously this is much faster     *
 * than decoding and encoding again. This routine should be followed by calls  *
 * to DGifGetCodeNext, until NULL block is returned.			      *

@@ -87,7 +87,7 @@ the numerical calculation of the <TT>FCN</TT> value. The effects of
 non-linearity and numerical roundoff both become more important as the
 external value gets closer to one of the limits (expressed as the distance
 to nearest limit divided by distance between limits). The user must
-therefore be aware of the fact that, for example, if he puts limits of
+therefore be aware of the fact that, for example, if they put limits of
 (0,10^10  ) on a parameter, then the values 0.0 and 1. 0 will be
 indistinguishable to the accuracy of most machines.
 <P>
@@ -773,7 +773,7 @@ Int_t TMinuit::Eval(Int_t npar, Double_t *grad, Double_t &fval, Double_t *par, I
 //    grad:    The (optional) vector of first derivatives).
 //
 // The meaning of the parameters par is of course defined by the user,
-// who uses the values of those parameters to calculate his function value.
+// who uses the values of those parameters to calculate their function value.
 // The starting values must be specified by the user.
 // Later values are determined by Minuit as it searches for the minimum
 // or performs whatever analysis is requested by the user.
@@ -3736,7 +3736,7 @@ void TMinuit::mnhelp(TString comd)
       Printf(" such a format that they can be read in again as Minuit");
       Printf(" parameter definitions. If the covariance matrix exists, it is");
       Printf(" also output in such a format. The unit number is by default 7,");
-      Printf(" or that specified by the user in his call to MINTIO or");
+      Printf(" or that specified by the user in their call to MINTIO or");
       Printf(" MNINIT. The user is responsible for opening the file previous");
       Printf(" to issuing the [SAVe] command (except where this can be done");
       Printf(" interactively).");
@@ -3918,7 +3918,7 @@ void TMinuit::mnhelp(TString comd)
       Printf("   SET TITle");
       Printf("    Informs Minuit that the next input line is to be considered");
       Printf("    the (new) title for this task or sub-task.  This is for");
-      Printf("    the convenience of the user in reading his output.");
+      Printf("    the convenience of the user in reading their output.");
 
       Printf(" ");
       Printf("   SET WARnings");

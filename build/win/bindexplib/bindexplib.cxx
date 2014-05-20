@@ -714,7 +714,7 @@ Usage:
       }
       else  {
          /*
-         *  Since WIN32_FIND_DATA has no path information one has to extract it himself.
+         *  Since WIN32_FIND_DATA has no path information one has to extract it oneself.
          */
          TCHAR *filename = argv[arg];
          TCHAR path[2048];

@@ -22,6 +22,7 @@
 
 std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
+std::vector<std::string> gTypedefsToStore;
 std::vector<std::string> gAncestorPCMsNames;
 
 extern "C"
@@ -54,6 +55,12 @@ void AddStreamerInfoToROOTFile(const char* normName)
 }
 
 extern "C"
+void AddTypedefToROOTFile(const char* tdname)
+{
+   gTypedefsToStore.push_back(tdname);
+}
+
+extern "C"
 void AddAncestorPCMROOTFile(const char* pcmName)
 {
    gAncestorPCMsNames.emplace_back(pcmName);
@@ -68,7 +75,7 @@ bool CloseStreamerInfoROOTFile()
    TVirtualStreamerInfo::SetFactory(new TStreamerInfo());
 
    TObjArray protoClasses;
-   for (const auto& normName: gClassesToStore) {
+   for (const auto normName: gClassesToStore) {
       TClass* cl = TClass::GetClass(normName.c_str(), kTRUE /*load*/);
       if (!cl) {
          std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
@@ -85,6 +92,21 @@ bool CloseStreamerInfoROOTFile()
       protoClasses.AddLast(new TProtoClass(cl));
    }
 
+   TObjArray typedefs;
+   for (const auto dtname: gTypedefsToStore) {
+      TDataType* dt = (TDataType*)gROOT->GetListOfTypes()->FindObject(dtname.c_str());
+      if (!dt) {
+         std::cerr << "ERROR in CloseStreamerInfoROOTFile(): cannot find class "
+                   << dtname << '\n';
+         return false;
+      }
+      if (dt->GetType() == -1) {
+         dt->Property(); // Force initialization of the bits and property fields.
+         dt->GetTypeName(); // Force caching of type name.
+         typedefs.AddLast(dt);
+      }
+   }
+
    // Don't use TFile::Open(); we don't need plugins.
    TFile dictFile(gPCMFilename.c_str(), "RECREATE");
    if (dictFile.IsZombie())
@@ -92,6 +114,7 @@ bool CloseStreamerInfoROOTFile()
    // Instead of plugins:
    protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
    protoClasses.Delete();
+   typedefs.Write("__Typedefs", TObject::kSingleKey);
 
    dictFile.WriteObjectAny(&gAncestorPCMsNames, "std::vector<std::string>", "__AncestorPCMsNames");
 

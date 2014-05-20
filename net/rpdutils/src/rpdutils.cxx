@@ -4872,7 +4872,7 @@ int RpdUser(const char *sstr)
 //______________________________________________________________________________
 int RpdGuessClientProt(const char *buf, EMessageTypes kind)
 {
-   // Try a guess of the client protocol from what she/he sent over
+   // Try a guess of the client protocol from what they sent over
    // the net ...
 
    if (gDebug > 2)

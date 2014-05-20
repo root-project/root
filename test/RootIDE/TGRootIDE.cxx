@@ -321,7 +321,7 @@ Bool_t TGDocument::Close()
    Int_t ret;
    if (fModified) {
       // the current active document has been modified
-      // then ask the user if he wants to save it
+      // then ask the user if they want to save it
       TString sfname(GetName());
       new TGMsgBox(gClient->GetRoot(), fTab, "TGRootIDE",
                    Form("%s has been modified. Do you want to save the changes?",

@@ -173,8 +173,8 @@ namespace cling {
 
   Interpreter::CompilationResult
   MetaProcessor::readInputFromFile(llvm::StringRef filename,
-                                 Value* result,
-                                 bool ignoreOutmostBlock /*=false*/) {
+                                   Value* result,
+                                   bool ignoreOutmostBlock /*=false*/) {
 
     {
       // check that it's not binary:
@@ -269,9 +269,10 @@ namespace cling {
     if (topmost)
       m_TopExecutingFile = m_CurrentlyExecutingFile;
     Interpreter::CompilationResult ret;
-    if (process(content.c_str(), ret, result)) {
+    // We don't want to value print the results of a unnamed macro.
+    if (process((content + ";").c_str(), ret, result)) {
       // Input file has to be complete.
-       llvm::errs() 
+       llvm::errs()
           << "Error in cling::MetaProcessor: file "
           << llvm::sys::path::filename(filename)
           << " is incomplete (missing parenthesis or similar)!\n";

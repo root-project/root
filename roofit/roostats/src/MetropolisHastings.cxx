@@ -154,7 +154,7 @@ MarkovChain* MetropolisHastings::ConstructChain()
    Double_t xL = 0.0, xPrimeL = 0.0, a = 0.0;
 
    // ibucur: i think the user should have the possiblity to display all the message
-   //    levels should he/she want to; maybe a setPrintLevel would be appropriate
+   //    levels should they want to; maybe a setPrintLevel would be appropriate
    //    (maybe for the other classes that use this approach as well)?
    RooFit::MsgLevel oldMsgLevel = RooMsgService::instance().globalKillBelow();
    RooMsgService::instance().setGlobalKillBelow(RooFit::PROGRESS);

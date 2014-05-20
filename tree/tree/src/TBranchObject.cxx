@@ -436,7 +436,7 @@ void TBranchObject::SetAddress(void* add)
          } else {
             if (!clobj) {
                // this is a basic type we can handle only if
-               // he has a dimension:
+               // it has a dimension:
                const char* index = dm->GetArrayIndex();
                if (!index[0]) {
                   if (code == 1) {

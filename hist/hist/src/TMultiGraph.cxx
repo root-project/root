@@ -119,23 +119,23 @@ Begin_Macro(source)
 {
    TCanvas *c1 = new TCanvas("c1","c1",600,400);
 
-   Double_t x1[2]  = {2.,4.};
+   Double_t px1[2] = {2.,4.};
    Double_t dx1[2] = {0.1,0.1};
-   Double_t y1[2]  = {2.1,4.0};
+   Double_t py1[2] = {2.1,4.0};
    Double_t dy1[2] = {0.3,0.2};
 
-   Double_t x2[2]  = {3.,5.};
+   Double_t px2[2] = {3.,5.};
    Double_t dx2[2] = {0.1,0.1};
-   Double_t y2[2]  = {3.2,4.8};
+   Double_t py2[2] = {3.2,4.8};
    Double_t dy2[2] = {0.3,0.2};
 
    gStyle->SetOptFit(0001);
 
-   TGraphErrors *g1 = new TGraphErrors(2,x1,y1,dx1,dy1);
+   TGraphErrors *g1 = new TGraphErrors(2,px1,py1,dx1,dy1);
    g1->SetMarkerStyle(21);
    g1->SetMarkerColor(2);
 
-   TGraphErrors *g2 = new TGraphErrors(2,x2,y2,dx2,dy2);
+   TGraphErrors *g2 = new TGraphErrors(2,px2,py2,dx2,dy2);
    g2->SetMarkerStyle(22);
    g2->SetMarkerColor(3);
 
@@ -220,19 +220,19 @@ Begin_Macro(source)
 
    const Int_t size = 10;
 
-   double x[size];
-   double y1[size];
-   double y2[size];
-   double y3[size];
+   double px[size];
+   double py1[size];
+   double py2[size];
+   double py3[size];
 
    for ( int i = 0; i <  size ; ++i ) {
-      x[i] = i;
-      y1[i] = size - i;
-      y2[i] = size - 0.5 * i;
-      y3[i] = size - 0.6 * i;
+      px[i] = i;
+      py1[i] = size - i;
+      py2[i] = size - 0.5 * i;
+      py3[i] = size - 0.6 * i;
    }
 
-   TGraph * gr1 = new TGraph( size, x, y1 );
+   TGraph * gr1 = new TGraph( size, px, py1 );
    gr1->SetName("gr1");
    gr1->SetTitle("graph 1");
    gr1->SetMarkerStyle(21);
@@ -241,7 +241,7 @@ Begin_Macro(source)
    gr1->SetLineWidth(4);
    gr1->SetFillStyle(0);
 
-   TGraph * gr2 = new TGraph( size, x, y2 );
+   TGraph * gr2 = new TGraph( size, px, py2 );
    gr2->SetName("gr2");
    gr2->SetTitle("graph 2");
    gr2->SetMarkerStyle(22);
@@ -251,7 +251,7 @@ Begin_Macro(source)
    gr2->SetLineWidth(4);
    gr2->SetFillStyle(0);
 
-   TGraph * gr3 = new TGraph( size, x, y3 );
+   TGraph * gr3 = new TGraph( size, px, py3 );
    gr3->SetName("gr3");
    gr3->SetTitle("graph 3");
    gr3->SetMarkerStyle(23);

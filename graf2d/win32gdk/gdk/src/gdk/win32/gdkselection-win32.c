@@ -175,7 +175,7 @@ gdk_selection_convert(GdkWindow * requestor,
              g_free(tgt_name)));
 
    if (selection == gdk_clipboard_atom) {
-      /* Converting the CLIPBOARD selection means he wants the
+      /* Converting the CLIPBOARD selection means they want the
        * contents of the clipboard. Get the clipboard data,
        * and store it for later.
        */
@@ -230,7 +230,7 @@ gdk_selection_convert(GdkWindow * requestor,
       SendMessage(GDK_DRAWABLE_XID(requestor), gdk_selection_notify_msg,
                   selection, target);
    } else if (selection == gdk_win32_dropfiles_atom) {
-      /* This means he wants the names of the dropped files.
+      /* This means they want the names of the dropped files.
        * gdk_dropfiles_filter already has stored the text/uri-list
        * data, tempoarily on gdk_root_parent's selection "property".
        */
@@ -326,7 +326,7 @@ gdk_selection_send_notify(guint32 requestor,
     * we thus get a chance to store data in the Windows clipboard.
     * Otherwise, if a gtkeditable does a copy to clipboard several times
     * only the first one actually gets copied to the Windows clipboard,
-    * as only he first one causes a call to gdk_property_change.
+    * as only the first one causes a call to gdk_property_change.
     *
     * Hmm, there is something fishy with this. Cut and paste inside the
     * same app didn't work, the gtkeditable immediately forgot the

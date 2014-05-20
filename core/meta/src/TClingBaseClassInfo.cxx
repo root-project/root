@@ -168,7 +168,7 @@ TClingBaseClassInfo::GenerateBaseOffsetFunction(const TClingClassInfo * fromDeri
 
    // rootcling can trigger this, too, and without CodeGen we cannot use any
    // offset calculation function.
-   if (!fInterp->getCodeGenerator())
+   if (fInterp->isInSyntaxOnlyMode())
       return 0;
 
    // Get the dedcls for the two classes.

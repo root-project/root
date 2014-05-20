@@ -1439,7 +1439,7 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
    Bool_t result = f->WriteBuffer(buffer,nsize);
 #endif
    //f->Flush(); Flushing takes too much time.
-   //            Let user flush the file when he wants.
+   //            Let user flush the file when they want.
    if (gDebug) {
       std::cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
            <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<std::endl;
@@ -1475,7 +1475,7 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
    Bool_t result = f->WriteBuffer(buffer,nsize);
 #endif
    //f->Flush(); Flushing takes too much time.
-   //            Let user flush the file when he wants.
+   //            Let user flush the file when they want.
    if (gDebug) {
       std::cout <<"   TKey Writing "<<nsize<< " bytes at address "<<fSeekKey
       <<" for ID= " <<GetName()<<" Title= "<<GetTitle()<<std::endl;

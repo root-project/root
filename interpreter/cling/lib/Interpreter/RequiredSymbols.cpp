@@ -8,12 +8,10 @@
 //------------------------------------------------------------------------------
 
 #include "cling/Interpreter/Interpreter.h"
-#include "cling/Interpreter/CValuePrinter.h"
+//#include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/DynamicExprInfo.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"
-#include "cling/Interpreter/ValuePrinter.h"
-#include "cling/Interpreter/ValuePrinterInfo.h"
 
 #include "clang/AST/Type.h"
 
@@ -24,10 +22,7 @@ namespace internal {
 void symbol_requester() {
    const char* const argv[] = {"libcling__symbol_requester", 0};
    Interpreter I(1, argv);
-   ValuePrinterInfo VPI(0, 0); // asserts, but we don't call.
-   valuePrinterInternal::printValue_Default(0, VPI);
-   cling_PrintValue(0, 0, 0);
-   valuePrinterInternal::flushToStream(llvm::outs(), "");
+   //cling_PrintValue(0);
    LookupHelper h(0,0);
    h.findType("", LookupHelper::NoDiagnostics);
    h.findScope("", LookupHelper::NoDiagnostics);

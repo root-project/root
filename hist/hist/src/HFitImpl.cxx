@@ -422,7 +422,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          if (lastBCFitter && lastBCFitter->TestBit(TBackCompFitter::kCanDeleteLast) ) 
             delete lastBCFitter; 
       }
-      //N.B=  this might create a memory leak if user does not delete the fitter he creates
+      //N.B=  this might create a memory leak if user does not delete the fitter they create
       TVirtualFitter::SetFitter( bcfitter ); 
 
       // use old-style for printing the results

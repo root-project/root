@@ -1804,7 +1804,7 @@ TBranch* TTree::BranchOld(const char* name, const char* classname, void* addobj,
       if (cl->CanIgnoreTObjectStreamer()) {
          // Skip the TObject base class data members.
          // FIXME: This prevents a user from ever
-         //        using these names himself!
+         //        using these names themself!
          if (!strcmp(dname, "fBits")) {
             continue;
          }

@@ -296,7 +296,7 @@ This need client libraries from
   CVS password: (password is 'cvs')
   $ cvs -d :pserver:cvs@cvs.dcache.org:/cvs co .
 
-Note, there are no known packages of his software. 
+Note, there are no known packages of this software. 
 
 Oracle database access:
 -----------------------

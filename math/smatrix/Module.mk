@@ -42,12 +42,13 @@ SMATRIXDEP  := $(SMATRIXO:.o=.d)  $(SMATRIXDO:.o=.d) $(SMATRIXDO32:.o=.d)
 
 SMATRIXLIB  := $(LPATH)/libSmatrix.$(SOEXT)
 SMATRIXMAP  := $(SMATRIXLIB:.$(SOEXT)=.rootmap)
+SMATRIXMAP32:= $(SMATRIXLIB:.$(SOEXT)=32.rootmap)
 
 # used in the main Makefile
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.h,include/Math/%.h,$(SMATRIXH1))
 ALLHDRS      += $(patsubst $(MODDIRI)/Math/%.icc,include/Math/%.icc,$(SMATRIXH2))
 ALLLIBS      += $(SMATRIXLIB)
-ALLMAPS      += $(SMATRIXMAP)
+ALLMAPS      += $(SMATRIXMAP) $(SMATRIXMAP32)
 
 # include all dependency files
 INCLUDEFILES += $(SMATRIXDEP)
@@ -92,6 +93,11 @@ $(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call 
 		@echo "Generating rootmap $@..."
 		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(call dictModule,SMATRIX) -c $(SMATRIXDH1) $(SMATRIXL)
 
+$(SMATRIXMAP32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
+		$(MAKEDIR)
+		@echo "Generating rootmap $@..."
+		$(ROOTCLINGSTAGE2) -r $(SMATRIXDS) $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c $(SMATRIXDH1) $(SMATRIXL32)
+
 ifneq ($(ICC_MAJOR),)
 # silence warning messages about subscripts being out of range
 $(SMATRIXDO):   CXXFLAGS += -wd175 -I$(SMATRIXDIRI)
@@ -110,7 +116,7 @@ clean::         clean-$(MODNAME)
 
 distclean-$(MODNAME): clean-$(MODNAME)
 		@rm -f $(SMATRIXDEP) $(SMATRIXDS) $(SMATRIXDS32) $(SMATRIXDH) \
-		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP)
+		   $(SMATRIXDH32) $(SMATRIXLIB) $(SMATRIXMAP) $(SMATRIXMAP32)
 		@rm -rf include/Math
 ifneq ($(ROOT_OBJDIR),$(ROOT_SRCDIR))
 		@rm -rf $(SMATRIXDIRT)

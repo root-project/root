@@ -70,7 +70,7 @@
  * as well. Native X fonts look ugly as soon as you try to show any
  * decently sized text. That is supposed to be solved with said Render
  * extensions to XFree86, but as experiense has shown, things aren't as
- * easy as it looks, besides one wants his app to run well under any X
+ * easy as it looks, besides one wants one's app to run well under any X
  * Server. FreeType library provides a solution, but not always
  * available. Another problem is that if you keep all your images on the
  * client side, you want to draw text on client side as well.

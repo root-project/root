@@ -1084,11 +1084,21 @@ std::string ROOT::TMetaUtils::GetQualifiedName(const clang::Type &type, const cl
    return result;
 }
 
+// //______________________________________________________________________________
+// void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &cl)
+// {
+//    GetQualifiedName(qual_name,cl);
+// }
+//
+// //----
+// std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamespaceDecl &cl){
+//    return GetQualifiedName(cl);
+// }
+
 //______________________________________________________________________________
-void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &cl)
+void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::NamedDecl &cl)
 {
    // This implementation does not rely on GetFullyQualifiedTypeName
-   // It is done for namespaces, no type involved.
    llvm::raw_string_ostream stream(qual_name);
    clang::PrintingPolicy policy( cl.getASTContext().getPrintingPolicy() );
    policy.SuppressTagKeyword = true; // Never get the class or struct keyword
@@ -1104,11 +1114,12 @@ void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::Nam
 }
 
 //----
-std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamespaceDecl &cl){
+std::string ROOT::TMetaUtils::GetQualifiedName(const clang::NamedDecl &cl){
    std::string result;
    ROOT::TMetaUtils::GetQualifiedName(result, cl);
    return result;
 }
+
 
 //______________________________________________________________________________
 void ROOT::TMetaUtils::GetQualifiedName(std::string &qual_name, const clang::RecordDecl &recordDecl)
@@ -3583,7 +3594,7 @@ void ROOT::TMetaUtils::GetNormalizedName(std::string &norm_name, const clang::Qu
    splitname.ShortType(norm_name,TClassEdit::kDropStd | TClassEdit::kDropStlDefault );
 
    // The result of this routine is by definition a fully qualified name.  There is an implicit starting '::' at the beginning of the name.
-   // Depending on how the user typed his/her code, in particular typedef declarations, we may end up with an explicit '::' being
+   // Depending on how the user typed their code, in particular typedef declarations, we may end up with an explicit '::' being
    // part of the result string.  For consistency, we must remove it.
    if (norm_name.length()>2 && norm_name[0]==':' && norm_name[1]==':') {
       norm_name.erase(0,2);
@@ -4144,10 +4155,36 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          if (decl->getKind() == clang::Decl::ClassTemplatePartialSpecialization) {
             const clang::ClassTemplatePartialSpecializationDecl *spec = llvm::dyn_cast<clang::ClassTemplatePartialSpecializationDecl>(decl);
 
-            for (unsigned arg = 0; arg < spec->getTemplateArgs().size() && arg <= index; ++arg) {
-               if (!spec->getTemplateArgs().get(arg).isDependent())
-               {
-                 ++index;
+            unsigned int depth = substType->getReplacedParameter()->getDepth();
+
+            const TemplateArgument *instanceArgs = spec->getTemplateArgs().data();
+            unsigned int instanceNArgs = spec->getTemplateArgs().size();
+
+            // Search for the 'right' replacement.
+
+            for(unsigned int A = 0; A < instanceNArgs; ++A) {
+               if (instanceArgs[A].getKind() == clang::TemplateArgument::Type) {
+                  clang::QualType argQualType = instanceArgs[A].getAsType();
+
+                  const clang::TemplateTypeParmType *replacementType;
+
+                  replacementType = llvm::dyn_cast<clang::TemplateTypeParmType>(argQualType);
+
+                  if (!replacementType) {
+                     const clang::SubstTemplateTypeParmType *argType
+                        = llvm::dyn_cast<clang::SubstTemplateTypeParmType>(argQualType);
+                     if (argType) {
+                        clang::QualType replacementQT = argType->getReplacementType();
+                        replacementType = llvm::dyn_cast<clang::TemplateTypeParmType>(replacementQT);
+                     }
+                  }
+                  if (replacementType &&
+                      depth == replacementType->getDepth() &&
+                      index == replacementType->getIndex() )
+                  {
+                     index = A;
+                     break;
+                  }
                }
             }
             replacedCtxt = spec->getSpecializedTemplate();

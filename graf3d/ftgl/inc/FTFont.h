@@ -281,7 +281,7 @@ class FTGL_EXPORT FTFont
         /**
          * PreRender() was called from outside. Do not call it again
          * from Render(), nor call PostRender().
-         * User has to call it himself.
+         * User has to call it themselves.
          */
         bool preRenderCalled;
 

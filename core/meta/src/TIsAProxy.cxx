@@ -115,11 +115,7 @@ TClass* TIsAProxy::operator()(const void *obj)
       fInit = kTRUE;
       if ( !fClass && fType ) fClass = TClass::GetClass(*fType);
       if ( !fClass) return 0;
-      fClass->Property();
-      // Warning("operator()","Requires the use of fClassInfo for %s",fClass->GetName());
-      if ( fClass->GetClassInfo() )  {
-         fVirtual = (gCling->ClassInfo_ClassProperty(fClass->GetClassInfo())&kClassHasVirtual) == kClassHasVirtual;
-      }
+      fVirtual = fClass->ClassProperty() & kClassHasVirtual;
    }
    if ( !obj || !fVirtual )  {
       return fClass;

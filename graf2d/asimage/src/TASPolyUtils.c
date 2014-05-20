@@ -258,7 +258,7 @@ typedef struct _ScanLineListBlock {
  *     the active edge table; otherwise, we increment the
  *     x value to be ready for the next scanline.
  *     The winding number rule is in effect, so we must notify
- *     the caller when the edge has been removed so he
+ *     the caller when the edge has been removed so they
  *     can reorder the Winding Active Edge Table.
  */
 #define EVALUATEEDGEWINDING(pAET, pPrevAET, y, fixWAET) { \

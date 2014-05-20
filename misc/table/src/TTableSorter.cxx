@@ -31,7 +31,7 @@ extern "C" {
 //
 //  - This class DOESN'T change / touch the "host" table  itself
 //    For any TTable object one can create as many different "sorter"
-//    as he/she finds useful for his/her code
+//    as one finds useful for one's code
 //  - Any instance of this class is meaningful as long as the "host" object
 //    "TTable" does exist and is not changed
 //  - Any attempt to access this TTableSorter after the "host" object deleted

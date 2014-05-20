@@ -35,7 +35,7 @@ shows usage of FOAM in compiled mode, which is
 the preferred method.  The integrand function is defined
 now as a Density method from class TFDISTR inheriting from
 abstract class  TFoamIntegrand. User can modify interface to
-integrand function according to his needs but he should
+integrand function according to their needs but they should
 always remember to define Density  method which provides the
 density distribution.
 Enter CINT interpreter and type: 

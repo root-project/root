@@ -72,8 +72,8 @@
 // *                                                                       * //
 // * The application redirects the processing logs to a log file which is  * //
 // * normally deleted at the end of a successful run; if the test fails    * //
-// * the caller is asked if she/he wants to keep the log file; if the      * //
-// * specifies a log file path of her/his choice, the log file is never    * //
+// * the caller is asked if they want to keep the log file; if they        * //
+// * specify a log file path of their choice, the log file is never        * //
 // * deleted.                                                              * //
 // *                                                                       * //
 // * SKIPPED means that the test cannot be run.                            * //

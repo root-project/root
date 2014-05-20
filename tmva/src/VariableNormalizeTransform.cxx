@@ -105,7 +105,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    if (!IsCreated()) Log() << kFATAL << "Transformation not yet created" << Endl;
 
    // if cls (the class chosen by the user) not existing, 
-   // assume that he wants to have the matrix for all classes together. 
+   // assume that they want to have the matrix for all classes together. 
    // if (cls < 0 || cls > GetNClasses()) {
    //       if (GetNClasses() > 1 ) cls = GetNClasses();
    //       else cls = (fMin.size()==1?0:2);

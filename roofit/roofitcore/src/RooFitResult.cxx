@@ -946,7 +946,7 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 //_____________________________________________________________________________
 void RooFitResult::setCovarianceMatrix(TMatrixDSym& V) 
 {
-  // Store externally provided correlation matrix in his RooFitResult ;
+  // Store externally provided correlation matrix in this RooFitResult ;
 
   // Delete any previous matrices
   if (_VM) {

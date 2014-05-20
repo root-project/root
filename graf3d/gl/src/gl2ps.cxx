@@ -943,7 +943,7 @@ static GLboolean gl2psSupportedBlendMode(GLenum sfactor, GLenum dfactor)
 static void gl2psAdaptVertexForBlending(GL2PSvertex *v)
 {
   /* Transforms vertex depending on the actual blending function -
-     currently the vertex v is considered as source vertex and his
+     currently the vertex v is considered as source vertex and its
      alpha value is changed to 1.0 if source blending GL_ONE is
      active. This might be extended in the future */
 
@@ -2795,7 +2795,7 @@ static void gl2psPrintPostScriptHeader(void)
               "      4 index 15 index add 0.5 mul\n" /* b13 = (b1+b3)/2 */
               "      5 copy 5 copy 25 15 roll\n");
 
-  /* at his point, stack = (V3) (V13) (V13) (V13) (V2) (V1) */
+  /* at this point, stack = (V3) (V13) (V13) (V13) (V2) (V1) */
 
   gl2psPrintf("      9 index 30 index add 0.5 mul\n" /* x23 = (x2+x3)/2 */
               "      9 index 30 index add 0.5 mul\n" /* y23 = (y2+y3)/2 */

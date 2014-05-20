@@ -307,8 +307,8 @@ Begin_Html
 
 <a name="F4"></a><h3>D - A general C++ function object (functor) with parameters</h3>
 A TF1 can be created from any C++ class implementing the operator()(double *x, double *p).
-The advantage of the function object is that he can have a state and reference therefore what-ever other object.
-In this way the user can customize his function.
+The advantage of the function object is that it can have a state and reference therefore what-ever other object.
+In this way the user can customize their function.
 <p>Example:
 <div class="code"><pre>
 class  MyFunctionObject {

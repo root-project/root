@@ -55,7 +55,7 @@ public:
       representing the derivative of the pdf. The flag isLogPdf can be used to pass instead of the pdf 
       (and its derivative) the log (and the derivative of the log) of the pdf. 
       By default the distribution has not domain set (it is defined between [-inf,+inf], no mode, no pdf area and no 
-      cdf explicity defined. UnuRan, if needed, can compute some of this quantities, but the user if he knows them can 
+      cdf explicity defined. UnuRan, if needed, can compute some of this quantities, but the user if they know them can 
       set them in order to speed up the algorithm. For example in case of the Cdf, if the user has not set it, a numerical 
       integration algorithm is used to estimate the Cdf from the Pdf. 
       In case an algorithm requires only the Cdf (no Pdf), an empty distribution can be constructed and then the user must 

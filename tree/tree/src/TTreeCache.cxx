@@ -1121,7 +1121,7 @@ void TTreeCache::StopLearningPhase()
 {
    // This is the counterpart of StartLearningPhase() and can be used to stop
    // the learning phase. It's useful when the user knows exactly what branches
-   // he is going to use.
+   // they are going to use.
    // For the moment it's just a call to FillBuffer() since that method
    // will create the buffer lists from the specified branches.
 

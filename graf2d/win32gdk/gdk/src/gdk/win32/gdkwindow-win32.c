@@ -1171,7 +1171,7 @@ gdk_window_set_hints(GdkWindow * window,
          GDK_WINDOW_WIN32DATA(window)->hint_min_height =
              rect.bottom - rect.top;
 
-         /* Also chek if he current size of the window is in bounds. */
+         /* Also check if the current size of the window is in bounds. */
          GetClientRect(GDK_DRAWABLE_XID(window), &rect);
          if (rect.right < min_width && rect.bottom < min_height)
             gdk_window_resize(window, min_width, min_height);
@@ -1243,7 +1243,7 @@ gdk_window_set_geometry_hints(GdkWindow * window,
       GDK_WINDOW_WIN32DATA(window)->hint_min_height =
           rect.bottom - rect.top;
 
-      /* Also check if he current size of the window is in bounds */
+      /* Also check if the current size of the window is in bounds */
       GetClientRect(GDK_DRAWABLE_XID(window), &rect);
       if (rect.right < geometry->min_width
           && rect.bottom < geometry->min_height)
