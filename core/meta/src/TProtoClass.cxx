@@ -102,13 +102,17 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    cl->fStreamerType = fStreamerType;
 
    // Update pointers to TClass
-   for (auto base: *cl->fBase) {
-      ((TBaseClass*)base)->SetClass(cl);
+   if (cl->fBase) {
+      for (auto base: *cl->fBase) {
+         ((TBaseClass*)base)->SetClass(cl);
+      }
    }
-   for (auto dm: *cl->fData) {
-      ((TDataMember*)dm)->SetClass(cl);
+   if (cl->fData) {
+      for (auto dm: *cl->fData) {
+         ((TDataMember*)dm)->SetClass(cl);
+      }
+      ((TListOfDataMembers*)cl->fData)->SetClass(cl);
    }
-   ((TListOfDataMembers*)cl->fData)->SetClass(cl);
 
    TClass* currentRDClass = cl;
    for (TObject* element: *fPRealData) {
