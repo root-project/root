@@ -65,13 +65,4 @@ endif()
 install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-# Add all source files of this subdirectory to the source files
-# neede to build the Core library
-# Variables are only defined in this directory-. Some of the
-# variables are needed in the parent scope so they are exported
-# to the parent scope
-list(APPEND LibCore_SRCS ${ZLIB_SRCS})
-list(APPEND LibCore_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
-
-set(LibCore_SRCS ${LibCore_SRCS} PARENT_SCOPE)
-set(LibCore_INCLUDE_DIRS ${LibCore_INCLUDE} PARENT_SCOPE)
+ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})

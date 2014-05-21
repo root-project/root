@@ -14,7 +14,20 @@ ROOT_EXECUTABLE(rootcling src/LinkdefReader.cxx src/DictSelectionReader.cxx
                           $<TARGET_OBJECTS:Clib>
                           $<TARGET_OBJECTS:MetaUtils> 
                           $<TARGET_OBJECTS:MetaUtilsLLVM>
-                          LIBRARIES RIO ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CMAKE_TINFO_LIBS})
+                          $<TARGET_OBJECTS:RIOObjs>
+                          $<TARGET_OBJECTS:ThreadObjs>
+                          $<TARGET_OBJECTS:Base>
+                          $<TARGET_OBJECTS:Cont>
+                          $<TARGET_OBJECTS:Lzma>
+                          $<TARGET_OBJECTS:Zip>
+                          $<TARGET_OBJECTS:Meta>
+                          $<TARGET_OBJECTS:TextInput>
+                          ${macosx_objects}
+                          ${unix_objects}
+                          ${winnt_objects}
+                          LIBRARIES ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARY} 
+                                    ${CLING_LIBRARIES} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} 
+                                    ${CMAKE_TINFO_LIBS} ${corelinklibs})
 
 add_dependencies(rootcling CLING LLVMRES)
 

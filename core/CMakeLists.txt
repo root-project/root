@@ -44,45 +44,23 @@ endif()
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(base)
-add_subdirectory(utils)
-
-#-------------------------------------------------------------------------------
 
 if(WIN32)
    set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
 elseif(cocoa)
    set(corelinklibs "-framework Cocoa")
 endif()
+add_subdirectory(utils)
 
-foreach(src ${LibCore_SRCS})
-  if(${src} MATCHES "/TInterpreter")
-    set_source_files_properties(${src} COMPILE_FLAGS "${CLING_CXXFLAGS} -I${LLVM_INCLUDE_DIR} -I${CLING_INCLUDE_DIR}")
-  endif()
-endforeach()
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/textinput/src)
-
-ROOT_GENERATE_DICTIONARY(base/G__Core
-                         ${Base_dict_headers}
-                         ${Clib_dict_headers}
-                         ${Cont_dict_headers}
-                         ${Macosx_dict_headers}
-                         ${Unix_dict_headers}
-                         ${Winnt_dict_headers}
-                         ${MetaUtils_dict_headers}
-                         ${Meta_dict_headers}
-                         STAGE1
-                         MODULE Core
-                         OPTIONS ${dict_opts}
-                         LINKDEF base/inc/LinkDef.h)
+#-------------------------------------------------------------------------------
 
 
-
-ROOT_LINKER_LIBRARY(Core ${LibCore_SRCS} base/G__Core.cxx
+ROOT_LINKER_LIBRARY(Core
                     $<TARGET_OBJECTS:Base>
                     $<TARGET_OBJECTS:Clib>
                     $<TARGET_OBJECTS:Cont>
                     $<TARGET_OBJECTS:Lzma>
+                    $<TARGET_OBJECTS:Zip>
                     $<TARGET_OBJECTS:MetaUtils>
                     $<TARGET_OBJECTS:Meta>
                     $<TARGET_OBJECTS:TextInput>
