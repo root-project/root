@@ -2,6 +2,9 @@
 #include "TH2.h"
 #include "TCutG.h"
 #include "TMath.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+
 
 //+ Fitting a 2-D histogram (a variant)
 // This tutorial illustrates :
