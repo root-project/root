@@ -948,6 +948,8 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitVarDecl(clang::VarDecl* D)
 {
+   if (fScanType == EScanType::kOnePCM)
+      return true;
 
    if(fSelectionRules.IsDeclSelected(D)){
       fSelectedVariables.push_back(D);
@@ -959,28 +961,29 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 {
-   DumpDecl(D, "");
-   
-   bool ret = true;
-   
-   if(fSelectionRules.IsDeclSelected(D)){
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-#endif
+   // Nothing to be done here
+   return true;
 
-      // if (fVerboseLevel > 0) {
-//      std::string qual_name;
-//      GetDeclQualName(D,qual_name);
-//      std::cout<<"\tSelected field -> " << qual_name << "\n";
-      // }
-   }
-   else {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-#endif
-   }
-   
-   return ret;
+//    bool ret = true;
+//
+//    if(fSelectionRules.IsDeclSelected(D)){
+// #ifdef SELECTION_DEBUG
+//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
+// #endif
+//
+//       // if (fVerboseLevel > 0) {
+// //      std::string qual_name;
+// //      GetDeclQualName(D,qual_name);
+// //      std::cout<<"\tSelected field -> " << qual_name << "\n";
+//       // }
+//    }
+//    else {
+// #ifdef SELECTION_DEBUG
+//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
+// #endif
+//    }
+//
+//    return ret;
 }
 
 //______________________________________________________________________________
