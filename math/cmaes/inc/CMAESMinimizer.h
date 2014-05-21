@@ -88,7 +88,7 @@ namespace ROOT
       /// set upper/lower limited variable (override if minimizer supports them )
       virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */); 
       /// set fixed variable (override if minimizer supports them )
-      //virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
+      virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);  
       /// set variable
       virtual bool SetVariableValue(unsigned int ivar, double val);
       // set variable values
@@ -155,8 +155,7 @@ namespace ROOT
       virtual unsigned int NFree() const { return fFreeDim; }  
       
       /// minimizer provides error and error matrix
-      //TODO: true.
-      virtual bool ProvidesError() const { return false; } 
+      virtual bool ProvidesError() const { return true; } 
       
       /// return errors at the minimum
       virtual const double* Errors() const; 
