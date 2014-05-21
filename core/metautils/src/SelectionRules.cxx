@@ -460,7 +460,7 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       return false;
    }
 
-   const std::array<std::string,2> quals={{"*","&"}};
+   const std::vector<std::string> quals={"*","&"};
 
    prototype = "";
    // iterate through all the function parameters
