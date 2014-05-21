@@ -9704,7 +9704,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
    static TPoint rect1[5];//store vertices of the polyline (rectangle), initialsed 0 by default
    static TPoint rect2[5];// second rectangle when slice thickness > 1 bin thickness
 
-   Double_t value1=0, value2=0; //bin values cooresponding to the lower and upper bins of the slice
    Double_t uxmin = gPad->GetUxmin();
    Double_t uxmax = gPad->GetUxmax();
    Double_t uymin = gPad->GetUymin();
@@ -10083,7 +10082,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[0] = xaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[2] = zaxis->GetBinCenter(binz);
-            value1=xx[2]; // for screen display
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10106,7 +10104,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[0] = xaxis->GetXmin();
                xx[1] = yaxis->GetXmax();
                xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               value2=xx[2];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10156,7 +10153,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[0] = xaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[2] = zaxis->GetBinCenter(binz);
-            value1=xx[2]; // for screen display
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10179,7 +10175,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[0] = xaxis->GetXmin();
                xx[1] = yaxis->GetXmax();
                xx[2] = zaxis->GetBinCenter(binz+nbins-1);
-               value2=xx[2];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10228,7 +10223,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[0] = xaxis->GetXmin();
             xx[2] = zaxis->GetXmax();
             xx[1] = yaxis->GetBinCenter(biny);
-            value1=xx[1];
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10251,7 +10245,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[0] = xaxis->GetXmin();
                xx[2] = zaxis->GetXmax();
                xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               value2=xx[1];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10300,7 +10293,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[0] = xaxis->GetXmin();
             xx[2] = zaxis->GetXmax();
             xx[1] = yaxis->GetBinCenter(biny);
-            value1=xx[1];
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10323,7 +10315,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[0] = xaxis->GetXmin();
                xx[2] = zaxis->GetXmax();
                xx[1] = yaxis->GetBinCenter(biny+nbins-1);
-               value2=xx[1];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10372,7 +10363,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[2] = zaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[0] = xaxis->GetBinCenter(binx);
-            value1=xx[0];
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10395,7 +10385,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[2] = zaxis->GetXmin();
                xx[1] = yaxis->GetXmax();
                xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               value2=xx[0];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10444,7 +10433,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
             xx[2] = zaxis->GetXmin();
             xx[1] = yaxis->GetXmax();
             xx[0] = xaxis->GetBinCenter(binx);
-            value1=xx[0];
             view->WCtoNDC(xx,u);
             rect1[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
             rect1[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
@@ -10467,7 +10455,6 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
                xx[2] = zaxis->GetXmin();
                xx[1] = yaxis->GetXmax();
                xx[0] = xaxis->GetBinCenter(binx+nbins-1);
-               value2=xx[0];
                view->WCtoNDC(xx,u);
                rect2[0].SetX(pxmin + Int_t((u[0]-uxmin)*cx));
                rect2[0].SetY(pymin + Int_t((u[1]-uymin)*cy));
