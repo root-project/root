@@ -333,7 +333,7 @@ void TStreamerInfo::Build()
       const char* dmName = dm->GetName();
       const char* dmTitle = dm->GetTitle();
       const char* dmType = dm->GetTypeName();
-      const char* dmFull = dm->GetFullTypeName();
+      const char* dmFull = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
       Bool_t dmIsPtr = dm->IsaPointer();
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
