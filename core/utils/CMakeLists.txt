@@ -76,8 +76,7 @@ foreach(file  Interpreter/DynamicExprInfo.h
               Interpreter/InvocationOptions.h
               Interpreter/RuntimeException.h
               Interpreter/RuntimeUniverse.h
-              Interpreter/Value.h
-              Interpreter/ValuePrinter.h)
+              Interpreter/Value.h)
   get_filename_component(path ${file} PATH)
   list(APPEND files_to_copy COMMAND cmake -E copy ${clinginclude}/cling/${file} ${CMAKE_BINARY_DIR}/etc/cling/${file})
   install(FILES ${clinginclude}/cling/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/${path})
