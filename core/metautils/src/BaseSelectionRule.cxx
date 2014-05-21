@@ -34,47 +34,44 @@
 #endif
 #include <sys/stat.h>
 
+// Discontinue
+// static const char *R__GetDeclSourceFileName(const clang::Decl* D)
+// {
+//    clang::ASTContext& ctx = D->getASTContext();
+//    clang::SourceManager& SM = ctx.getSourceManager();
+//    clang::SourceLocation SL = D->getLocation();
+//    // If the class decl is the result of a macpo expansion, take the location
+//    // where the macro is "invoked" i.e. expanded at (ExpansionLoc), not the
+//    // spelling location (where the delc's tokens come from).
+//    if (SL.isMacroID())
+//       SL = SM.getExpansionLoc(SL);
+//
+//    if (SL.isValid() && SL.isFileID()) {
+//       clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
+//       return PLoc.getFilename();
+//    }
+//    else {
+//       return "invalid";
+//    }
+// }
+//
+// #if MATCH_ON_INSTANTIATION_LOCATION
+// static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializationDecl *tmpltDecl)
+// {
+//    clang::SourceLocation SL = tmpltDecl->getPointOfInstantiation();
+//    clang::ASTContext& ctx = tmpltDecl->getASTContext();
+//    clang::SourceManager& SM = ctx.getSourceManager();
+//
+//    if (SL.isValid() && SL.isFileID()) {
+//       clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
+//       return PLoc.getFilename();
+//    }
+//    else {
+//       return "invalid";
+//    }
+// }
+// #endif
 
-static const char *R__GetDeclSourceFileName(const clang::Decl* D)
-{
-   clang::ASTContext& ctx = D->getASTContext();
-   clang::SourceManager& SM = ctx.getSourceManager();
-   clang::SourceLocation SL = D->getLocation();
-   // If the class decl is the result of a macpo expansion, take the location
-   // where the macro is "invoked" i.e. expanded at (ExpansionLoc), not the
-   // spelling location (where the delc's tokens come from).
-   if (SL.isMacroID())
-      SL = SM.getExpansionLoc(SL);
-
-   if (SL.isValid() && SL.isFileID()) {
-      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
-      return PLoc.getFilename();
-   }
-   else {
-      return "invalid";
-   }   
-}
-
-#if MATCH_ON_INSTANTIATION_LOCATION
-static const char *R__GetDeclSourceFileName(const clang::ClassTemplateSpecializationDecl *tmpltDecl)
-{
-   clang::SourceLocation SL = tmpltDecl->getPointOfInstantiation();
-   clang::ASTContext& ctx = tmpltDecl->getASTContext();
-   clang::SourceManager& SM = ctx.getSourceManager();
-
-   if (SL.isValid() && SL.isFileID()) {
-      clang::PresumedLoc PLoc = SM.getPresumedLoc(SL);
-      return PLoc.getFilename();
-   }
-   else {
-      return "invalid";
-   }   
-}
-#endif
-
-/******************************************************************
- * R__matchfilename(srcfilename,filename)
- ******************************************************************/
 static bool R__match_filename(const char *srcname,const char *filename)
 {
    if (srcname==0) {
@@ -84,6 +81,10 @@ static bool R__match_filename(const char *srcname,const char *filename)
       return true;
    }
    
+   return llvm::sys::fs::equivalent(srcname,filename);
+
+/* discontinue old strategy in favour of llvm sys fs
+
 #ifdef G__WIN32
    G__FastAllocString i1name(_MAX_PATH);
    G__FastAllocString fullfile(_MAX_PATH);
@@ -103,7 +104,7 @@ static bool R__match_filename(const char *srcname,const char *filename)
       return true;
    }
 #endif
-   return false;
+   return false;*/
 }
 
 const clang::CXXRecordDecl *R__ScopeSearch(const char *name, const cling::Interpreter &gInterp, const clang::Type** resultType = 0);
@@ -186,7 +187,7 @@ void BaseSelectionRule::PrintAttributes(int level) const
 { 
    PrintAttributes(std::cout, level);
 }
-
+#include <unistd.h>
 BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *decl, 
                                                        const std::string& name, 
                                                        const std::string& prototype,
@@ -258,13 +259,13 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
    const std::string& file_pattern_value = fFilePattern;
 
    if ((fHasFileNameAttribute||fHasFilePatternAttribute)) {
-      const char *file_name = R__GetDeclSourceFileName(decl);
+//      const char *file_name = R__GetDeclSourceFileName(decl);
+      std::string file_name_str = ROOT::TMetaUtils::GetFileName(*decl, *fInterp);
+      const char *file_name=file_name_str.c_str();
       bool hasFileMatch = ((fHasFileNameAttribute &&
            //FIXME It would be much better to cache the rule stat result and compare to the clang::FileEntry
-           (R__match_filename(file_name_value.c_str(),file_name))) 
-          ||
-          (fHasFilePatternAttribute &&
-           CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
+           (R__match_filename(file_name_value.c_str(),file_name))) ||
+           (fHasFilePatternAttribute && CheckPattern(file_name, file_pattern_value, fFileSubPatterns, isLinkdef)));
 
 #if MATCH_ON_INSTANTIATION_LOCATION
       if (!hasFileMatch) {
@@ -299,13 +300,13 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
             return kNoMatch;
          }
          if (fHasPatternAttribute) {
-         if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
-            const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-            return kFile;
-         }
+            if (CheckPattern(name, pattern_value, fSubPatterns, isLinkdef)) {
+               const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
+               return kPattern;
+            }
          } else {
             const_cast<BaseSelectionRule*>(this)->SetMatchFound(true);
-            return kFile;
+            return kName;
          }
       }
       
@@ -329,6 +330,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
          return kPattern;
       }
    }
+
 
    // do we have matching against the proto_name (or proto_pattern)  attribute and if yes - select or veto
    // The following selects functions on whether the requested prototype exactly matches the

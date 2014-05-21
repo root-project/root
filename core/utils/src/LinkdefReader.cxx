@@ -245,6 +245,10 @@ bool LinkdefReader::AddRule(std::string ruletype,
          fSelectionRules->SetHasFileNameRule(true);
          
          // add selection rules for everything
+
+         if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
+            identifier = identifier.substr(1,identifier.length()-2);
+         }
          
          VariableSelectionRule vsr(fCount++, fInterp);
          vsr.SetAttributeValue("pattern","*");
@@ -270,9 +274,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          ClassSelectionRule csr(fCount++, fInterp), csr2(fCount++, fInterp);
          csr.SetAttributeValue("pattern","*");
          csr2.SetAttributeValue("pattern","*::*");
-         if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
-            identifier = identifier.substr(1,identifier.length()-2);
-         }
+
          csr.SetAttributeValue("file_name",identifier);
          csr2.SetAttributeValue("file_name",identifier);
          if (linkOn) {

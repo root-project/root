@@ -948,32 +948,12 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitVarDecl(clang::VarDecl* D)
 {
-   DumpDecl(D, "");
-   
-   bool ret = true;
-   
-//    if(fSelectionRules.IsDeclSelected(D)){
-// #ifdef SELECTION_DEBUG
-//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-// #endif
-//
-//       if (fVerboseLevel > 0) {
-//          std::string var_name;
-//          var_name = D->getQualifiedNameAsString();
-//          std::cout<<"\tSelected variable -> " << var_name << "\n";
-//       }
-//    }
-//    else {
-// #ifdef SELECTION_DEBUG
-//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-// #endif
-//    }
-   
+
    if(fSelectionRules.IsDeclSelected(D)){
       fSelectedVariables.push_back(D);
    }
 
-   return ret;
+   return true;
 }
 
 //______________________________________________________________________________
@@ -1011,41 +991,12 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 
    if(clang::FunctionDecl::TemplatedKind::TK_FunctionTemplate == D->getTemplatedKind())
       return true;
-
-   DumpDecl(D, "");
-   
-   bool ret = true;
    
    if(fSelectionRules.IsDeclSelected(D)){
       fSelectedFunctions.push_back(D);
-
-//       if (fVerboseLevel > 0) {
-//          // std::string func_name = D->getQualifiedNameAsString() + FuncParameterList(D);
-//          std::string name;
-//          clang::DeclContext * ctx = D->getDeclContext();
-//          clang::Decl* parent = dyn_cast<clang::Decl> (ctx);
-//          if (!parent) {
-//             ShowError("in VisitFunctionDecl, could not cast parent context to parent Decl","");
-//             return false;
-//          }
-//          if ((fSelectionRules.IsSelectionXMLFile() && ctx->isRecord()) || (fSelectionRules.IsLinkdefFile() && ctx->isRecord() && fSelectionRules.IsDeclSelected(parent))) {
-//             //if (ctx->isRecord() && fSelectionRules.IsDeclSelected(parent)){ // Do I need the second part? - Yes - Optimization for Linkdef?
-//
-//             name = D->getNameAsString();
-//          }
-//          else{
-//             name = D->getQualifiedNameAsString();
-//          }
-//          std::cout<<"\tSelected function -> " << name << "\n";
-//          if (fVerboseLevel > 3) {
-//             std::string params = FuncParameters(D);
-//             std::cout<<"\n\tParams are "<<params;
-//          }
-//       }
-      
    }
    
-   return ret;
+   return true;
 }
 
 //______________________________________________________________________________

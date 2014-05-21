@@ -341,10 +341,10 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclQualName(D, qual_name);
 
-   if (!IsLinkdefFile())
-      return IsVarSelected(D, qual_name);
-   else
+   if (IsLinkdefFile())
       return IsLinkdefVarSelected(D, qual_name);
+   else
+      return IsVarSelected(D, qual_name);
 
 }
  
@@ -919,31 +919,27 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, cons
 const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const
 {
 
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
 
-   it = fVariableSelectionRules.begin();
-   it_end = fVariableSelectionRules.end();
-   
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
    
    std::string name_value;
    std::string pattern_value;
-   for(; it != it_end; ++it) {
+   for(auto& selRule: fVariableSelectionRules) {
       BaseSelectionRule::EMatchType match 
-         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
+         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
-         if (it->GetSelected() == BaseSelectionRule::kYes) {
+         if (selRule.GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
             if (IsLinkdefFile()){
                if (match == BaseSelectionRule::kName) {
-                  explicit_selector = &(*it);
+                  explicit_selector = &selRule;
                } else if (match == BaseSelectionRule::kPattern) {
-                  if (it->GetAttributeValue("pattern", pattern_value)) {
+                  if (selRule.GetAttributeValue("pattern", pattern_value)) {
+                     explicit_selector=&selRule;
                      // NOTE: Weird ... This is a strange definition of explicit.
-                     if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+                     //if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = selRule;
                   }
                }
             }
@@ -951,7 +947,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
          else {
             if (!IsLinkdefFile()) return 0;
             else {
-               if (it->GetAttributeValue("pattern", pattern_value)) {
+               if (selRule.GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else 
                      return 0;
@@ -992,9 +988,8 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
    
    std::string pattern_value;
    for(auto& selRule : fFunctionSelectionRules) {
-//       std::cout << "Trying to match prototype " << prototype << std::endl;
       BaseSelectionRule::EMatchType match 
-         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, IsLinkdefFile());
+         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (selRule.GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
@@ -1003,8 +998,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
                   explicit_selector = &selRule;
                } else if (match == BaseSelectionRule::kPattern) {
                   if (selRule.GetAttributeValue("pattern", pattern_value)) {
+                     explicit_selector = &selRule;
                      // NOTE: Weird ... This is a strange definition of explicit.
-                     if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &selRule;
+                     //if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &selRule;
                   }
                }
             }
