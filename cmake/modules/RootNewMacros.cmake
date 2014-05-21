@@ -433,6 +433,9 @@ function(ROOT_OBJECT_LIBRARY library)
   include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/inc)
   include_directories(AFTER ${CMAKE_BINARY_DIR}/include)
   add_library( ${library} OBJECT ${lib_srcs})
+  if(lib_srcs MATCHES "(^|/)(G__[^.]*)[.]cxx.*")
+     add_dependencies(${library} ${CMAKE_MATCH_2})
+  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
