@@ -48,12 +48,12 @@ public:
   inline static bool Dsinv(MatrixRep& rhs) {
 
     /* Local variables */
-    static int i, j, k, l;
-    static T s31, s32;
-    static int jm1, jp1;
+    int i, j, k, l;
+    T s31, s32;
+    int jm1, jp1;
 
     /* Parameter adjustments */
-    static int arrayOffset = -1*(idim + 1);
+    const int arrayOffset = -1*(idim + 1);
 
 
     /* Function Body */

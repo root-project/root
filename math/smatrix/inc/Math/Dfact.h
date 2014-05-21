@@ -66,13 +66,13 @@ static bool Dfact(MatRepStd<T,n,idim>& rhs, T& det) {
   //typename MatrixRep::value_type* a = rhs.Array();
 
   /* Local variables */
-  static unsigned int nxch, i, j, k, l;
+  unsigned int nxch, i, j, k, l;
   //static typename MatrixRep::value_type p, q, tf;
-  static T p, q, tf;
+  T p, q, tf;
   
   /* Parameter adjustments */
   //  a -= idim + 1;
-  static int arrayOffset = - int(idim+1);
+  const int arrayOffset = - int(idim+1);
   /* Function Body */
   
   // fact.inc
