@@ -115,18 +115,20 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    }
 
    TClass* currentRDClass = cl;
-   for (TObject* element: *fPRealData) {
-      if (element->IsA() == TObjString::Class()) {
-         currentRDClass = TClass::GetClass(element->GetName());
-         if (!currentRDClass) {
-            Error("TProtoClass::FillTClass()", "Cannot find TClass for %s; skipping its members.",
-                  element->GetName());
-         }
-      } else {
-         if (!currentRDClass) continue;
-         TProtoRealData* prd = (TProtoRealData*)element;
-         if (TRealData* rd = prd->CreateRealData(currentRDClass)) {
-            cl->fRealData->AddLast(rd);
+   if (fPRealData) {
+      for (TObject* element: *fPRealData) {
+         if (element->IsA() == TObjString::Class()) {
+            currentRDClass = TClass::GetClass(element->GetName());
+            if (!currentRDClass) {
+               Error("TProtoClass::FillTClass()", "Cannot find TClass for %s; skipping its members.",
+                     element->GetName());
+            }
+         } else {
+            if (!currentRDClass) continue;
+            TProtoRealData* prd = (TProtoRealData*)element;
+            if (TRealData* rd = prd->CreateRealData(currentRDClass)) {
+               cl->fRealData->AddLast(rd);
+            }
          }
       }
    }
