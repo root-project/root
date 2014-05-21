@@ -1004,6 +1004,10 @@ bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 {
    if (fScanType == EScanType::kOnePCM)
       return true;
+
+   if(clang::FunctionDecl::TemplatedKind::TK_FunctionTemplate == D->getTemplatedKind())
+      return true;
+
    DumpDecl(D, "");
    
    bool ret = true;

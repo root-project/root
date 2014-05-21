@@ -306,8 +306,23 @@ bool LinkdefReader::AddRule(std::string ruletype,
             else {
                int pos = identifier.find("(*)"); //rootcint generates error here but I decided to implement that pattern
                if (pos > -1) fsr.SetAttributeValue("proto_pattern", identifier);
-               else 
+               else {
+                  // No multiline
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"\\\n","",true);
+                  // Types: We do not do IO of functions, so it is safe to
+                  // put in some heuristics
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"ULong_t","unsigned long");
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"Long_t","long");
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"Int_t","int");
+                  // Remove space after/before the commas if any
+                  ROOT::TMetaUtils::ReplaceAll(identifier,", ",",",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier," ,",",",true);
+                  // Remove any space before/after the ( as well
+                  ROOT::TMetaUtils::ReplaceAll(identifier," (","(",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"( ","(",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier," )",")",true);
                   fsr.SetAttributeValue("proto_name", identifier);
+               }
             }
             fSelectionRules->AddFunctionSelectionRule(fsr);
             

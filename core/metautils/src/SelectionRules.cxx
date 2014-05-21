@@ -375,8 +375,10 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) 
    // Implement a simple matching for functions
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclQualName(D, qual_name);
-   auto fsl = IsLinkdefFile() ? IsLinkdefFunSelected(D, qual_name) : IsFunSelected(D, qual_name);
-   return fsl;
+   if (IsLinkdefFile())
+      return IsLinkdefFunSelected(D, qual_name);
+   else
+      return IsFunSelected(D, qual_name);
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
@@ -467,7 +469,7 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       return false;
    }
 
-//    const std::array<char,2> quals={'*','&'};
+   const std::array<std::string,2> quals={{"*","&"}};
 
    prototype = "";
    // iterate through all the function parameters
@@ -479,18 +481,21 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       if (prototype != "")
          prototype += ",";
 
-      type = P->getType().getAsString();
+      //type = P->getType().getAsString();
+      ROOT::TMetaUtils::GetNormalizedName(type,P->getType(),fInterp,fNormCtxt);
 
       // We need to get rid of the "class " string if present
-      auto pos = type.find("class ");
-      if (pos != std::string::npos)
-         type.replace( pos, 6, "" );
+      ROOT::TMetaUtils::ReplaceAll(type,"class ", "");
+      // We need to get rid of the "restrict " string if present
+      ROOT::TMetaUtils::ReplaceAll(type,"restrict", "");
 
       // pointers are returned in the form "int *" and I need them in the form "int*"
       // same for &
-      pos = type.find(" ");
-      if (pos != std::string::npos)
-         type.replace( pos, 1, "" );
+      for (auto& qual : quals){
+        auto pos = type.find(" "+qual);
+        if (pos != std::string::npos)
+           type.replace( pos, 2, qual );
+        }
 //          for (auto& qual : quals){
 //             if (type.at(type.length()-1) == qual && type.at(type.length()-2) == ' ') {
 //                type.at(type.length()-2) = qual;
@@ -1565,34 +1570,42 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
    }
 #endif
 
-   for(const auto& selRule: fFunctionSelectionRules) {
-      if (!selRule.GetMatchFound() && !GetHasFileNameRule()) {
-         // Here the slow methods can be used
-         std::string name;
-         if (selRule.GetAttributeValue("proto_pattern", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("proto_name", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("pattern", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("name", name)) {
-            // keept it
-         } else {
-            name.clear();
-         }
-         // Make it soft, no error - just warnings
-         std::cout<<"Warning - unused function rule: "<<name<<std::endl;
-//          if (IsSelectionXMLFile()){
-//             std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
+"Warnings concerning non matching selection rules are suppressed. An action is to be taken.\n");
+#endif
+#endif
+//    for(const auto& selRule: fFunctionSelectionRules) {
+//       if (!selRule.GetMatchFound() && !GetHasFileNameRule()) {
+//          // Here the slow methods can be used
+//          std::string name;
+//          if (selRule.GetAttributeValue("proto_pattern", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("proto_name", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("pattern", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("name", name)) {
+//             // keept it
+//          } else {
+//             name.clear();
 //          }
-//          else {
-//             std::cout<<"Error - unused function rule: "<<name<<std::endl;
+//          // Make it soft, no error - just warnings
+//          std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+// //          if (IsSelectionXMLFile()){
+// //             std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+// //          }
+// //          else {
+// //             std::cout<<"Error - unused function rule: "<<name<<std::endl;
+// //          }
+//          if (name.length() == 0) {
+//             selRule.PrintAttributes(std::cout,3);
 //          }
-         if (name.length() == 0) {
-            selRule.PrintAttributes(std::cout,3);
-         }
-      }
-   }
+//       }
+//
+//    }
+
 
 #if Enums_rules_becomes_useful_for_rootcling
    if (!fEnumSelectionRules.empty()) {
