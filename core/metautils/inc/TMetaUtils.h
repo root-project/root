@@ -398,12 +398,6 @@ void GetQualifiedName(std::string &qual_name, const clang::NamedDecl &nd);
 //----
 std::string GetQualifiedName(const clang::NamedDecl &nd);
 
-// //______________________________________________________________________________
-// void GetQualifiedName(std::string &qual_name, const clang::NamespaceDecl &nsd);
-//
-// //----
-// std::string GetQualifiedName(const clang::NamespaceDecl &nsd);
-
 //______________________________________________________________________________
 void GetQualifiedName(std::string &qual_name, const AnnotatedRecordDecl &annotated);
 
@@ -640,6 +634,9 @@ ROOT::ESTLType STLKind(const llvm::StringRef type);
 //______________________________________________________________________________
 // Set the toolchain and the include paths for relocatability
 void SetPathsForRelocatability(std::vector<std::string>& clingArgs);
+
+//______________________________________________________________________________
+void ReplaceAll(std::string& str, const std::string& from, const std::string& to, bool recurse=false);
 
 // Functions for the printouts -------------------------------------------------
 

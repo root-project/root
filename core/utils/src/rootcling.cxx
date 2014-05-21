@@ -748,18 +748,6 @@ void CheckClassNameForRootMap(const std::string& classname, map<string,string>& 
 }
 
 //______________________________________________________________________________
-void ReplaceAll(std::string& str, const std::string& from, const std::string& to)
-{
-   if(from.empty())
-      return;
-   size_t start_pos = 0;
-   while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-      str.replace(start_pos, from.length(), to);
-      start_pos += to.length();
-   }
-}
-
-//______________________________________________________________________________
 void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
 {
    // Parse the rootmap and add entries to the autoload map
@@ -772,8 +760,8 @@ void ParseRootMapFile(ifstream& file, map<string,string>& autoloads)
       int pos = line.find(":",8);
       classname = line.substr(8,pos-8);
 
-      ReplaceAll (classname, "@@", "::");
-      ReplaceAll (classname, "-", " ");
+      ROOT::TMetaUtils::ReplaceAll (classname, "@@", "::");
+      ROOT::TMetaUtils::ReplaceAll (classname, "-", " ");
 
       getline(file,line,'\n');
       while( line[0]==' ' ) line.replace(0,1,"");
@@ -2433,6 +2421,7 @@ void ManipForRootmap(std::string& name)
    // * " " becomes ""
    // * ">>" becomes ">->" except for "operator>>"
 
+   using namespace ROOT::TMetaUtils;
 
    // * "::" becomes "@@"
    ReplaceAll(name,"::","@@");
@@ -2473,7 +2462,7 @@ void ManipForRootmap(std::string& name)
       ReplaceAll(name,">>",">->");
    }
    ReplaceAll(name,"operator>->","operator>>");
-
+   
 }
 
 //______________________________________________________________________________
@@ -3274,7 +3263,7 @@ void CheckForMinusW(const char* arg,
    std::string localArg(arg);
    if ( localArg.find(pattern) != 0 ) return;
 
-   ReplaceAll(localArg,pattern,"#pragma clang diagnostic ignored \"-W");
+   ROOT::TMetaUtils::ReplaceAll(localArg,pattern,"#pragma clang diagnostic ignored \"-W");
    localArg+="\"";
    diagnosticPragmas.push_back(localArg);
 }
