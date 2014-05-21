@@ -2971,6 +2971,7 @@ int GenerateFullDict(std::ostream& dictStream,
                                "#include \"TListOfDataMembers.h\"\n"
                                "#include \"TDataMember.h\"\n"
                                "#include \"TDictAttributeMap.h\"\n"
+                               "#include \"TMessageHandler.h\"\n"
                                );
          if (!CloseStreamerInfoROOTFile()) {
             return 1;
