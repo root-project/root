@@ -146,21 +146,23 @@ void TAttAxis::SaveAttributes(ostream &out, const char *name, const char *subnam
 
 
 //______________________________________________________________________________
-void TAttAxis::SetAxisColor(Color_t color)
+void TAttAxis::SetAxisColor(Color_t color, Float_t alpha)
 {
    // Set color of the line axis and tick marks
 
-   fAxisColor = color;
+   if (alpha<1.) fAxisColor = TColor::GetColorTransparent(color, alpha);
+   else          fAxisColor = color;
    if (gPad) gPad->Modified();
 }
 
 
 //______________________________________________________________________________
-void TAttAxis::SetLabelColor(Color_t color)
+void TAttAxis::SetLabelColor(Color_t color, Float_t alpha)
 {
    // Set color of labels
 
-   fLabelColor = color;
+   if (alpha<1.) fLabelColor = TColor::GetColorTransparent(color, alpha);
+   else          fLabelColor = color;
    if (gPad) gPad->Modified();
 }
 

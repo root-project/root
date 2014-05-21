@@ -101,7 +101,7 @@ Begin_Macro(source)
    }
    return Ls;
 }
-End_Macro 
+End_Macro
 
 Begin_Html
 Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
@@ -276,4 +276,13 @@ void TAttLine::SetLineAttributes()
    // Invoke the DialogCanvas Line attributes.
 
    TVirtualPadEditor::UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
+}
+
+
+//______________________________________________________________________________
+void TAttLine::SetLineColor(Color_t lcolor, Float_t lalpha)
+{
+   // Set a transparent line color.
+
+   fLineColor = TColor::GetColorTransparent(lcolor, lalpha);
 }

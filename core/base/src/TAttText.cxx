@@ -353,6 +353,15 @@ void TAttText::SetTextAttributes()
 
 
 //______________________________________________________________________________
+void TAttText::SetTextColor(Color_t tcolor, Float_t talpha)
+{
+   // Set a transparent marker color.
+
+   fTextColor = TColor::GetColorTransparent(tcolor, talpha);
+}
+
+
+//______________________________________________________________________________
 void TAttText::SetTextSizePixels(Int_t npixels)
 {
    // Set the text size in pixels.
