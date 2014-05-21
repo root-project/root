@@ -70,9 +70,8 @@ namespace {
    // Set the value of the C++ datum held.
       const int errret = -1;
 
-   // filter const objects and enums to prevent changing their values
-      if ( ( pyprop->fProperty & kIsConstant ) ||
-           ( ! ( ~pyprop->fProperty & ( kIsEnum | kIsStatic ) ) ) ) {
+   // filter const objects to prevent changing their values
+      if ( ( pyprop->fProperty & kIsConstant ) ) {
          PyErr_SetString( PyExc_TypeError, "assignment to const data not allowed" );
          return errret;
       }
@@ -220,9 +219,10 @@ void PyROOT::PropertyProxy::Set( TGlobal* gbl )
    std::string fullType = gbl->GetFullTypeName();
    if ( fullType == "void*" ) // actually treated as address to void*
       fullType = "void**";
-   if ( (int)gbl->GetArrayDim() != 0 ) {
+   else if ( (int)gbl->GetArrayDim() != 0 )
       fullType.append( "*" );
-   }
+   else if ( gbl->Property() & kIsEnum )
+      fullType = "UInt_t";
    fConverter = CreateConverter( fullType, gbl->GetMaxIndex( 0 ) );
 
    fEnclosingScope = 0;            // no enclosure (global scope)

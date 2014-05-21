@@ -19,6 +19,7 @@
 // ROOT
 #include "TROOT.h"
 #include "TClass.h"
+#include "TInterpreter.h"
 #include "TObject.h"
 
 #include "TBufferFile.h"
@@ -118,7 +119,13 @@ namespace {
          if ( object != 0 )
             return BindRootObject( object, object->IsA() );
 
-      // 5th attempt: check macro's (debatable, but this worked in CINT)
+      // 5th attempt: global enum (pretend int, TODO: is fine for C++98, not in C++11)
+         if ( gInterpreter->ClassInfo_IsEnum( name.c_str() ) ) {
+            Py_INCREF( &PyInt_Type );
+            return (PyObject*)&PyInt_Type;
+         }
+
+      // 6th attempt: check macro's (debatable, but this worked in CINT)
          if ( macro_ok ) {
             PyErr_Clear();
             std::ostringstream ismacro;
