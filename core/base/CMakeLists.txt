@@ -5,6 +5,8 @@
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 
 include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
+include_directories(${CMAKE_SOURCE_DIR}/gui/gui/inc)
+include_directories(${CMAKE_SOURCE_DIR}/io/io/inc)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../textinput/src)
 
 ROOT_GENERATE_DICTIONARY(G__Core
