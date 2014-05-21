@@ -19,6 +19,7 @@
 
 // Standard
 #include <limits.h>
+#include <stddef.h>      // for ptrdiff_t
 #include <string.h>
 #include <utility>
 #include <sstream>
@@ -676,7 +677,11 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg(
 PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
 {
 // nothing sensible can be done, just return <address> as pylong
-   return PyLong_FromLong( (Long_t)address );
+   if ( ! address || *(ptrdiff_t*)address == 0 ) {
+      Py_INCREF( gNullPtrObject );
+      return gNullPtrObject;
+   }
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
 }
 
 //____________________________________________________________________________

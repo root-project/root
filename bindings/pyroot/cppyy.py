@@ -148,8 +148,9 @@ makeNamespace = Namespace
 def makeClass( name ) :
    return _backend.MakeRootClass( name )
   
-def addressOf( obj ) :
+def addressOf( obj ) :                  # Cintex-style
    return _backend.AddressOf( obj )[0]
+addressof = _backend.addressof          # cppyy-style
        
 def getAllClasses() :
    TClassTable = makeClass( 'TClassTable' )

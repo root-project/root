@@ -57,6 +57,81 @@
 #endif
 
 //- data -----------------------------------------------------------------------
+static PyObject* nullptr_repr( PyObject* )
+{
+   return PyString_FromString( "nullptr" );
+}
+
+static void nullptr_dealloc( PyObject* )
+{
+   Py_FatalError( "deallocating nullptr" );
+}
+
+static int nullptr_nonzero( PyObject* )
+{
+   return 0;
+}
+
+static PyNumberMethods nullptr_as_number = {
+   0, 0, 0,
+#if PY_VERSION_HEX < 0x03000000
+   0,
+#endif
+   0, 0, 0, 0, 0, 0,
+   (inquiry)nullptr_nonzero,          // tp_nonzero (nb_bool in p3)
+   0, 0, 0, 0, 0, 0,
+#if PY_VERSION_HEX < 0x03000000
+   0,                                 // nb_coerce
+#endif
+   0, 0, 0,
+#if PY_VERSION_HEX < 0x03000000
+   0, 0,
+#endif
+   0, 0, 0,
+#if PY_VERSION_HEX < 0x03000000
+   0,                                 // nb_inplace_divide
+#endif
+   0, 0, 0, 0, 0, 0, 0
+#if PY_VERSION_HEX >= 0x02020000
+   , 0                                // nb_floor_divide
+#if PY_VERSION_HEX < 0x03000000
+   , 0                                // nb_true_divide
+#else
+   , 0                                // nb_true_divide
+#endif
+   , 0, 0
+#endif
+#if PY_VERSION_HEX >= 0x02050000
+   , 0                                // nb_index
+#endif
+   };
+
+static PyTypeObject PyNullPtr_t_Type = {
+   PyVarObject_HEAD_INIT( &PyType_Type, 0 )
+   "nullptr_t",        // tp_name
+   sizeof(PyObject),   // tp_basicsize
+   0,                  // tp_itemsize
+   nullptr_dealloc,    // tp_dealloc (never called)
+   0, 0, 0, 0,
+   nullptr_repr,       // tp_repr
+   &nullptr_as_number, // tp_as_number
+   0, 0,
+   (hashfunc)_Py_HashPointer, // tp_hash
+   0, 0, 0, 0, 0, Py_TPFLAGS_DEFAULT, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+#if PY_VERSION_HEX >= 0x02030000
+   , 0                 // tp_del
+#endif
+#if PY_VERSION_HEX >= 0x02060000
+   , 0                 // tp_version_tag
+#endif
+};
+
+PyObject _PyROOT_NullPtrStruct = {
+  _PyObject_EXTRA_INIT
+  1, &PyNullPtr_t_Type
+};
+
 namespace PyROOT {
    PyObject* gRootModule = 0;
    PyObject* gNullPtrObject = 0;
@@ -310,7 +385,25 @@ namespace {
       void* addr = GetObjectProxyAddress( dummy, args );
       if ( addr )
          return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)addr, 1 );
+      if ( ! addr && PyTuple_Size( args ) ) {
+         Utility::GetBuffer( PyTuple_GetItem( args, 0 ), '*', 1, addr, kFALSE );
+         if ( addr )
+            return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)&addr, 1 );
+      }
+      return 0;
+   }
 
+   PyObject* addressof( PyObject* dummy, PyObject* args )
+   {
+   // Return object proxy address as a value (cppyy-style), or the same for an array.
+      void* addr = GetObjectProxyAddress( dummy, args );
+      if ( addr )
+         return PyLong_FromLong( *(Long_t*)addr );
+      else if ( PyTuple_Size( args ) ) {
+         PyErr_Clear();
+         Utility::GetBuffer( PyTuple_GetItem( args, 0 ), '*', 1, addr, kFALSE );
+         if ( addr ) return PyLong_FromLong( (Long_t)addr );
+      }
       return 0;
    }
 
@@ -369,12 +462,16 @@ namespace {
          PyErr_Clear();
 
          addr = PyLong_AsVoidPtr( pyaddr );
-
          if ( PyErr_Occurred() ) {
             PyErr_Clear();
-            PyErr_SetString( PyExc_TypeError,
-               "BindObject requires a CObject or long integer as first argument" );
-            return 0;
+
+         // last chance, perhaps it's a buffer/array (return from void*)
+            int buflen = Utility::GetBuffer( PyTuple_GetItem( args, 0 ), '*', 1, addr, kFALSE );
+            if ( ! addr || ! buflen ) {
+               PyErr_SetString( PyExc_TypeError,
+                  "BindObject requires a CObject or long integer as first argument" );
+               return 0;
+            }
          }
       }
 
@@ -520,6 +617,8 @@ static PyMethodDef gPyROOTMethods[] = {
      METH_NOARGS, (char*) "PyROOT internal function" },
    { (char*) "AddressOf", (PyCFunction)AddressOf,
      METH_VARARGS, (char*) "Retrieve address of held object in a buffer" },
+   { (char*) "addressof", (PyCFunction)addressof,
+     METH_VARARGS, (char*) "Retrieve address of held object as a value" },
    { (char*) "AsCObject", (PyCFunction)AsCObject,
      METH_VARARGS, (char*) "Retrieve held object in a CObject" },
    { (char*) "BindObject", (PyCFunction)BindObject,
@@ -643,8 +742,12 @@ extern "C" void initlibPyROOT()
    if ( ! Utility::InitProxy( gRootModule, &TTupleOfInstances_Type, "InstancesArray" ) )
       PYROOT_INIT_ERROR;
 
+   if ( ! Utility::InitProxy( gRootModule, &PyNullPtr_t_Type, "nullptr_t" ) )
+      PYROOT_INIT_ERROR;
+
 // inject identifiable nullptr
-   gNullPtrObject = PyROOT_PyCapsule_New( NULL, NULL, NULL );
+   gNullPtrObject = (PyObject*)&_PyROOT_NullPtrStruct;
+   Py_INCREF( gNullPtrObject );
    PyModule_AddObject( gRootModule, (char*)"nullptr", gNullPtrObject );
 
 // policy labels
