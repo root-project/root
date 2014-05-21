@@ -58,8 +58,8 @@ bool Dfactir(Matrix& rhs, typename Matrix::value_type& det, unsigned int* ir)
   typename Matrix::value_type* a = rhs.Array();
 
   /* Local variables */
-  static unsigned int nxch, i, j, k, l;
-  static typename Matrix::value_type p, q, tf;
+  unsigned int nxch, i, j, k, l;
+  typename Matrix::value_type p, q, tf;
   
   /* Parameter adjustments */
   a -= idim + 1;

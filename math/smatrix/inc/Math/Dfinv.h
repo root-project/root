@@ -54,9 +54,9 @@ bool Dfinv(Matrix& rhs, unsigned int* ir) {
   typename Matrix::value_type* a = rhs.Array();
 
   /* Local variables */
-  static unsigned int nxch, i, j, k, m, ij;
-  static unsigned int im2, nm1, nmi;
-  static typename Matrix::value_type s31, s34, ti;
+  unsigned int nxch, i, j, k, m, ij;
+  unsigned int im2, nm1, nmi;
+  typename Matrix::value_type s31, s34, ti;
   
   /* Parameter adjustments */
   a -= idim + 1;
