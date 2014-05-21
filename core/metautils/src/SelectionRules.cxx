@@ -338,23 +338,14 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
 {  
-   // Currently rootcling does not need any information about variable outside
-   // of a class.
-   // NOTE: In CINT the #pragma link C++ global
-   // was also used to affect the dictionary for enumeration constant
-   // if you reactivate this section, you may want to consider also 
-   // add support for clang::EnumConstantDecl (here and in Scanner.cxx)
-   return 0;
-#if 0
-   std::string str_name;   // name of the Decl
-   std::string qual_name;  // fully qualified name of the Decl   
-   GetDeclName(D, str_name, qual_name);
+   std::string qual_name;  // fully qualified name of the Decl
+   GetDeclQualName(D, qual_name);
 
    if (!IsLinkdefFile())
       return IsVarSelected(D, qual_name);
    else
       return IsLinkdefVarSelected(D, qual_name);
-#endif
+
 }
  
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* /* D */) const
@@ -1542,7 +1533,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
-#if Variable_rules_becomes_useful_for_rootcling
+
    if (!fVariableSelectionRules.empty()) {
       for(std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin(); 
           it != fVariableSelectionRules.end(); ++it) {
@@ -1554,21 +1545,15 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                // keept it
             } else {
                name.clear();
-            }            
-            
-            if (IsSelectionXMLFile()){
-               std::cout<<"Warning - unused variable rule: "<<name<<std::endl;
             }
-            else {
-               std::cout<<"Error - unused variable rule: "<<name<<std::endl;
-            }
+            std::cout<<"Warning - unused variable rule: "<<name<<std::endl;
             if (name.length() == 0) {
                it->PrintAttributes(std::cout,3);
             }
          }
       }
    }
-#endif
+
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)

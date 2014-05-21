@@ -252,7 +252,7 @@ bool buildingROOT = false;
 template <typename T> struct IsPointer { enum { kVal = 0 }; };
 
 // Maybe too ugly? let's see how it performs.
-using HeadersClassesMap_t=std::map<std::string, std::list<std::string>>;
+using HeadersDeclsMap_t=std::map<std::string, std::list<std::string>>;
 
 using namespace ROOT;
 using namespace TClassEdit;
@@ -2538,7 +2538,7 @@ int CreateNewRootMapFile(const std::string& rootmapFileName,
                          const std::list<std::string>& classesNames,
                          const std::list<std::string>& nsNames,
                          const std::vector<clang::TypedefNameDecl*>& typedefDecls,
-                         const HeadersClassesMap_t& headersClassesMap)
+                         const HeadersDeclsMap_t& headersClassesMap)
 {
    // Generate a rootmap file in the new format, like
    // { decls }
@@ -3389,7 +3389,8 @@ std::list<std::string> RecordDecl2Headers(const clang::CXXRecordDecl& rcd,
 void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
                             const RScanner::TypedefColl_t tDefDecls,
                             const RScanner::FunctionColl_t funcDecls,
-                            HeadersClassesMap_t& headersDeclsMap,
+                            const RScanner::VariableColl_t varDecls,
+                            HeadersDeclsMap_t& headersDeclsMap,
                             const cling::Interpreter& interp)
 {
    std::set<const clang::CXXRecordDecl*> visitedDecls;
@@ -3423,9 +3424,15 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
       std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*func, interp)};
       headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*func)] = headers;
    }
+
+   // The same for the variables:
+   for (auto& var : varDecls){
+      std::list<std::string> headers = {ROOT::TMetaUtils::GetFileName(*var, interp)};
+      headersDeclsMap[ROOT::TMetaUtils::GetQualifiedName(*var)] = headers;
+   }
 }
 //______________________________________________________________________________
-const std::string GenerateStringFromHeadersForClasses (const HeadersClassesMap_t& headersClassesMap,
+const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& headersClassesMap,
                                                        const std::string& detectedUmbrella)
 {
    // Generate a string for the dictionary from the headers-classes map.
@@ -4299,13 +4306,14 @@ int RootCling(int argc,
 
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
-   HeadersClassesMap_t headersClassesMap;
+   HeadersDeclsMap_t headersClassesMap;
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
 
       ExtractHeadersForDecls(scan.fSelectedClasses,
                              scan.fSelectedTypedefs,
                              scan.fSelectedFunctions,
+                             scan.fSelectedVariables,
                              headersClassesMap,
                              interp);
       

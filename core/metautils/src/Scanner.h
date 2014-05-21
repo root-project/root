@@ -64,6 +64,7 @@ public:
    typedef std::vector<ROOT::TMetaUtils::AnnotatedRecordDecl>   ClassColl_t;
    typedef std::vector<clang::TypedefNameDecl*> TypedefColl_t;
    typedef std::vector<clang::FunctionDecl*> FunctionColl_t;
+   typedef std::vector<clang::VarDecl*> VariableColl_t;
    typedef void (*DeclCallback)(const char *type);
    
    enum class EScanType : char {kNormal, kTwoPasses, kOnePCM};
@@ -117,7 +118,8 @@ public:
    NamespaceColl_t fSelectedNamespaces;
    TypedefColl_t   fSelectedTypedefs;
    FunctionColl_t  fSelectedFunctions;
-   
+   VariableColl_t  fSelectedVariables;
+
    virtual ~ RScanner ();
       
 private:

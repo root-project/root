@@ -952,23 +952,27 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
    
    bool ret = true;
    
-   if(fSelectionRules.IsDeclSelected(D)){
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
-#endif
-
-      if (fVerboseLevel > 0) {
-         std::string var_name;      
-         var_name = D->getQualifiedNameAsString();
-         std::cout<<"\tSelected variable -> " << var_name << "\n";
-      }
-   }
-   else {
-#ifdef SELECTION_DEBUG
-      if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
-#endif
-   }
+//    if(fSelectionRules.IsDeclSelected(D)){
+// #ifdef SELECTION_DEBUG
+//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> true";
+// #endif
+//
+//       if (fVerboseLevel > 0) {
+//          std::string var_name;
+//          var_name = D->getQualifiedNameAsString();
+//          std::cout<<"\tSelected variable -> " << var_name << "\n";
+//       }
+//    }
+//    else {
+// #ifdef SELECTION_DEBUG
+//       if (fVerboseLevel > 3) std::cout<<"\n\tSelected -> false";
+// #endif
+//    }
    
+   if(fSelectionRules.IsDeclSelected(D)){
+      fSelectedVariables.push_back(D);
+   }
+
    return ret;
 }
 
