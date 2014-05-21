@@ -28,6 +28,7 @@ The following people have contributed to this new version:
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
+ Timur Pocheptsov, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Paul Russo, FNAL, \
  Joerg Stelzer, DESY/Atlas, TMVA, \
