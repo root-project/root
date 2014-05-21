@@ -6183,8 +6183,8 @@ void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
       R__LOCKGUARD(gInterpreterMutex);
       Int_t slot = info->GetClassVersion();
       if (fStreamerInfo->GetSize() > (slot-fStreamerInfo->LowerBound())
-          && fStreamerInfo->At(slot) == 0
-          && fStreamerInfo->At(slot) == info) {
+          && fStreamerInfo->At(slot) != 0
+          && fStreamerInfo->At(slot) != info) {
          Error("RegisterStreamerInfo",
                "Register StreamerInfo for %s on non-empty slot (%d).",
                GetName(),slot);
