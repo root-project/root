@@ -1014,19 +1014,21 @@ bool TCling::LoadPCM(TString pcmFileName,
       TFile *pcmFile = new TFile(pcmFileName,"READ");
       TObjArray *protoClasses;
       pcmFile->GetObject("__ProtoClasses", protoClasses);
-      if (protoClasses)
+      if (protoClasses) {
          for(auto proto : *protoClasses)
             TClassTable::Add((TProtoClass*)proto);
-      protoClasses->Clear(); // Ownership was transfered to TClassTable.
-      delete protoClasses;
+         protoClasses->Clear(); // Ownership was transfered to TClassTable.
+         delete protoClasses;
+      }
 
       TObjArray *dataTypes;
       pcmFile->GetObject("__Typedefs", dataTypes);
-      if (dataTypes)
-      for (auto typedf: *dataTypes)
-         gROOT->GetListOfTypes()->Add(typedf);
-      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
-      delete dataTypes;
+      if (dataTypes) {
+         for (auto typedf: *dataTypes)
+            gROOT->GetListOfTypes()->Add(typedf);
+         dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+         delete dataTypes;
+      }
       delete pcmFile;
 
       gDebug = oldDebug;

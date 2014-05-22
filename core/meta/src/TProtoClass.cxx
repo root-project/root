@@ -137,7 +137,7 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
 
    fBase = 0;
    fData = 0;
-   fPRealData->Delete();
+   if (fPRealData) fPRealData->Delete();
    delete fPRealData;
    fPRealData = 0;
 
