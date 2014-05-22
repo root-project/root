@@ -37,10 +37,6 @@ USERFUNCSRC      = testUserFunc.$(SrcSuf)
 USERFUNC         = testUserFunc$(ExeSuf)
 
 
-GRAPHOBJ       = testGraph.$(ObjSuf)
-GRAPHSRC       = testGraph.$(SrcSuf)
-GRAPH          = testGraph$(ExeSuf)
-
 MINIMIZEOBJ      = testMinimize.$(ObjSuf)
 MINIMIZESRC      = testMinimize.$(SrcSuf)
 MINIMIZE         = testMinimize$(ExeSuf)
@@ -58,9 +54,9 @@ GAUSFITSRC      = testUnbinGausFit.$(SrcSuf)
 GAUSFIT         = testUnbinGausFit$(ExeSuf)
 
 
-OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ) $(NDIMFITOBJ) $(GAUSFITOBJ)
+OBJS          = $(USERFUNCOBJ)  $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ) $(NDIMFITOBJ) $(GAUSFITOBJ)
 
-PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER) $(NDIMFIT) $(GAUSFIT)
+PROGRAMS      = $(USERFUNC)  $(MINIMIZE) $(NEWMINIMIZER) $(NDIMFIT) $(GAUSFIT)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -68,10 +64,6 @@ PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER) $(NDIMFIT) $(G
 all:            $(PROGRAMS)
 
 $(USERFUNC):    $(USERFUNCOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
-$(GRAPH): 	$(GRAPHOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
