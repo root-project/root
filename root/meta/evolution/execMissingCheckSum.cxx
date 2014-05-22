@@ -27,21 +27,34 @@ struct WithLongLong {
    unsigned long long mIndex;
 };
 
+#include "cmsCond01.h"
+
+#ifdef __ROOTCLING__
+#pragma link C++ class L1GtCondition+;
+#endif
+
+void DropStreamerInfo(const char *name) {
+
+   TClass *cl = TClass::GetClass(name);
+   if (!cl) printf("Error: could not find class %s\n",name);
+   else ((TObjArray*)cl->GetStreamerInfos())->RemoveAt(1);
+}
+
+void CheckFile(const char *filename, const char *objname, const char *objtype)
+{
+   TFile *f = new TFile(filename);
+   if (!f->Get(objname)) printf("Error: could not read the object (1): %s %s in %s\n",objname,objtype,filename);
+   DropStreamerInfo(objtype);
+   if (!f->Get(objname)) printf("Error: could not read the object (2): %s %s in %s\n",objname,objtype,filename);
+
+   delete f;
+}
+
 void execMissingCheckSum()
 {
-   TFile *f = new TFile("missingCheckSum.root");
-   if (!f->Get("obj")) printf("Error: could not read the object (1)\n");
-   ((TObjArray*)TClass::GetClass("MyClass")->GetStreamerInfos())->RemoveAt(1);
-   if (!f->Get("obj")) printf("Error: could not read the object (2)\n");
-   
-   f = new TFile("missingCheckSum2.root");
-   f->Get("timeParam");
-  ((TObjArray*)TClass::GetClass("HcalFlagHFDigiTimeParam")->GetStreamerInfos())->RemoveAt(1);
-   f->Get("timeParam");
-
-   f->Get("withLL");
-   ((TObjArray*)TClass::GetClass("WithLongLong")->GetStreamerInfos())->RemoveAt(1);
-   f->Get("withLL");
-
+   CheckFile("missingCheckSum.root","obj","MyClass");
+   CheckFile("missingCheckSum2.root","timeParam","HcalFlagHFDigiTimeParam");
+   CheckFile("missingCheckSum2.root","withLL","WithLongLong");
+   CheckFile("checksumReflexEnum_v5.root","cond","L1GtCondition");
 }
 
