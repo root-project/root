@@ -191,6 +191,7 @@ Bool_t TFastCgi::Create(const char *args)
 
    return kTRUE;
 #else
+   (void)args;
    Error("Create", "ROOT compiled without fastcgi support");
    return kFALSE;
 #endif
