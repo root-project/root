@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+   <head>
+      <title>Read hsimple.root</title>
+      <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+      <link rel="stylesheet" type="text/css" href="style/jquery-ui.css" />
+      <link rel="stylesheet" type="text/css" href="style/JSRootInterface.css" />
+      <script type="text/javascript" src="scripts/JSRootInterface.js"></script>
+
+   <script type='text/javascript'>
+      var gcnt = 0;
+   
+      function loadFile() {
+         var inp = document.getElementById("urlToLoad");
+         
+         if (inp==null) {
+            setTimeout(loadFile, 100);
+            return;
+         }
+         
+         if (inp.value=="") {
+            inp.value = "files/hsimple.root";
+            ReadFile();
+            setTimeout(loadFile, 100);
+            return;
+         }
+         
+         if ((gFile == null) || (gcnt++<5)) {
+            setTimeout(loadFile, 100);
+            return;
+         }
+         
+         showObject('hpx',1);
+      }
+   
+      function localGuiInit() {
+         var pos = document.URL.lastIndexOf("/"); 
+         source_dir = document.URL.substr(0, pos+1);
+         BuildSimpleGUI();
+         
+         setTimeout(loadFile, 100);
+      }
+   </script>
+      
+   </head>
+
+   <body onload="localGuiInit()">
+   <div id="simpleGUI" files="files/ct.root;files/can2.root;files/exclusion.root;files/fillrandom.root;files/glbox.root;files/graph.root;files/hsimple.root;files/legends.root;files/rf107.root;files/stacks.root;files/zdemo.root;files/go4.root"></div>
+
+   </body>
+
+</html>
