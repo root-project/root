@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+   <head>
+      <title>Read a ROOT file in Javascript (Demonstration)</title>
+      <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+      <link rel="stylesheet" type="text/css" href="http://root.cern.ch/js/style/JSRootInterface.css" />
+      <script type="text/javascript" src="http://root.cern.ch/js/scripts/JSRootInterface.js"></script>
+   </head>
+
+   <body>
+      <div id='main' class='column'>
+      <h1><font face='Verdana' size='4'>Read a ROOT file with Javascript</font></h1>
+      <p><b>Select a ROOT file to read, or enter a url (*): </b><br/>
+      <small><sub>*: Other URLs might not work because of cross site scripting protection, see e.g. <a href="https://developer.mozilla.org/en/http_access_control">developer.mozilla.org/http_access_control</a> on how to avoid it.</sub></small></p>
+      <form name="ex">
+         <div style='margin-left:10px;'>
+            <input type="text" name="state" value="" size="30" id="urlToLoad"/><br/>
+            <select name="s" size="1"
+               onchange="document.ex.state.value = document.ex.s.options[document.ex.s.selectedIndex].value;document.ex.s.selectedIndex=0;document.ex.s.value=''">
+               <option value = " " selected = "selected">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</option>
+               <option value = "files/ct.root">ct.root</option>
+               <option value = "files/exclusion.root">exclusion.root</option>
+               <option value = "files/fillrandom.root">fillrandom.root</option>
+               <option value = "files/glbox.root">glbox.root</option>
+               <option value = "files/graph.root">graph.root</option>
+               <option value = "files/hsimple.root">hsimple.root</option>
+               <option value = "files/legends.root">legends.root</option>
+               <option value = "files/rf107.root">rf107.root</option>
+               <option value = "files/stacks.root">stacks.root</option>
+               <option value = "files/zdemo.root">zdemo.root</option>
+            </select>
+         </div>
+         <input style='padding:2px; margin-left:10px; margin-top:5px;'
+               onclick='ReadFile()' type='button' title='Read the Selected File' value='Load'/>
+         <input style='padding:2px; margin-left:10px;'
+               onclick='ResetUI()' type='button' title='Clear All' value='Reset'/>
+      </form>
+
+      <br/>
+      <div id='status'></div>
+      </div>
+
+      <div id='reportHolder' class='column'>
+         <div id='report'> </div>
+      </div>
+
+   </body>
+
+</html>
+
+

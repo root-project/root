@@ -332,6 +332,7 @@ set(buildroofit ${value${roofit}})
 set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
 set(buildgdml ${value${gdml}})
+set(buildhttp ${value${http}})
 set(buildtable ${value${table}})
 set(buildtmva ${value${tmva}})
 

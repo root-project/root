@@ -39,3 +39,7 @@ endif()
 if(netxng)
    add_subdirectory(netxng)
 endif()
+
+if(http)
+   add_subdirectory(http)
+endif()
