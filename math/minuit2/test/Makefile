@@ -34,18 +34,9 @@ USERFUNCOBJ      = testUserFunc.$(ObjSuf)
 USERFUNCSRC      = testUserFunc.$(SrcSuf)
 USERFUNC         = testUserFunc$(ExeSuf)
 
-
-GRAPHOBJ       = testGraph.$(ObjSuf)
-GRAPHSRC       = testGraph.$(SrcSuf)
-GRAPH          = testGraph$(ExeSuf)
-
-MINIMIZEOBJ      = testMinimize.$(ObjSuf)
-MINIMIZESRC      = testMinimize.$(SrcSuf)
-MINIMIZE         = testMinimize$(ExeSuf)
-
-NEWMINIMIZEROBJ      = testNewMinimizer.$(ObjSuf)
-NEWMINIMIZERSRC      = testNewMinimizer.$(SrcSuf)
-NEWMINIMIZER         = testNewMinimizer$(ExeSuf)
+MINIMIZEROBJ      = testMinimizer.$(ObjSuf)
+MINIMIZERSRC      = testMinimizer.$(SrcSuf)
+MINIMIZER         = testMinimizer$(ExeSuf)
 
 NDIMFITOBJ      = testNdimFit.$(ObjSuf)
 NDIMFITSRC      = testNdimFit.$(SrcSuf)
@@ -56,9 +47,9 @@ GAUSFITSRC      = testUnbinGausFit.$(SrcSuf)
 GAUSFIT         = testUnbinGausFit$(ExeSuf)
 
 
-OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ) $(MINIMIZEOBJ) $(NEWMINIMIZEROBJ) $(NDIMFITOBJ) $(GAUSFITOBJ)
+OBJS          = $(USERFUNCOBJ)  $(GRAPHOBJ)  $(MINIMIZEROBJ) $(NDIMFITOBJ) $(GAUSFITOBJ)
 
-PROGRAMS      = $(USERFUNC)  $(GRAPH) $(MINIMIZE) $(NEWMINIMIZER) $(NDIMFIT) $(GAUSFIT)
+PROGRAMS      = $(USERFUNC)  $(GRAPH)  $(MINIMIZER) $(NDIMFIT) $(GAUSFIT)
 
 .SUFFIXES: .$(SrcSuf) .$(ObjSuf) $(ExeSuf)
 
@@ -69,15 +60,7 @@ $(USERFUNC):    $(USERFUNCOBJ)
 		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
 		@echo "$@ done"
 
-$(GRAPH): 	$(GRAPHOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
-$(MINIMIZE): 	$(MINIMIZEOBJ)
-		$(LD) $(LDFLAGS) $^ $(LIBS) $(EXTRALIBS) $(OutPutOpt)$@
-		@echo "$@ done"
-
-$(NEWMINIMIZER): 	$(NEWMINIMIZEROBJ)
+$(MINIMIZER): 	$(MINIMIZEROBJ)
 ifeq ($(PLATFORM),win32)
 		$(LD) $(LDFLAGS) $^ $(LIBS)  "$(ROOTSYS)/lib/libMinuit2.lib" $(OutPutOpt)$@
 else
