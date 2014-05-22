@@ -245,9 +245,10 @@ void TAttFill::SetFillAttributes()
 
 
 //______________________________________________________________________________
-void TAttFill::SetFillColor(Color_t fcolor, Float_t falpha)
+void TAttFill::SetFillColorAlpha(Color_t fcolor, Float_t falpha)
 {
-   // Set a transparent fill color.
+   // Set a transparent fill color. falpha defines the percentage of
+   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
 
    fFillColor = TColor::GetColorTransparent(fcolor, falpha);
 }

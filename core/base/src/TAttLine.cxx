@@ -280,9 +280,10 @@ void TAttLine::SetLineAttributes()
 
 
 //______________________________________________________________________________
-void TAttLine::SetLineColor(Color_t lcolor, Float_t lalpha)
+void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
 {
-   // Set a transparent line color.
+   // Set a transparent line color. lalpha defines the percentage of
+   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
 
    fLineColor = TColor::GetColorTransparent(lcolor, lalpha);
 }

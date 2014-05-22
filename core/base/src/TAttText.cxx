@@ -353,9 +353,10 @@ void TAttText::SetTextAttributes()
 
 
 //______________________________________________________________________________
-void TAttText::SetTextColor(Color_t tcolor, Float_t talpha)
+void TAttText::SetTextColorAlpha(Color_t tcolor, Float_t talpha)
 {
-   // Set a transparent marker color.
+   // Set a transparent marker color. talpha defines the percentage of
+   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
 
    fTextColor = TColor::GetColorTransparent(tcolor, talpha);
 }

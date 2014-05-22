@@ -52,7 +52,7 @@ public:
    virtual void     SaveLineAttributes(ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
    virtual void     SetLineAttributes(); // *MENU*
    virtual void     SetLineColor(Color_t lcolor) { fLineColor = lcolor;}
-   virtual void     SetLineColor(Color_t lcolor, Float_t lalpha);
+   virtual void     SetLineColorAlpha(Color_t lcolor, Float_t lalpha);
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;}
    virtual void     SetLineWidth(Width_t lwidth) { fLineWidth = lwidth;}
 
