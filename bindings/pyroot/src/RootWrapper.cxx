@@ -105,11 +105,20 @@ namespace {
 
    void AddPropertyToClass( PyObject* pyclass, TObject* prop, Bool_t isEnum, Bool_t isStatic ) {
       PyROOT::PropertyProxy* property = 0;
+      TGlobal *g = dynamic_cast<TGlobal*>(prop);
+      if (g) {
+         property = PyROOT::PropertyProxy_New( g );
+      } else {
+         TDataMember *d = dynamic_cast<TDataMember*>(prop);
+         if (!d) {
+            PyErr_Format( PyExc_SystemError, "Variable is neither a TGlobal nor a TDataMember: %s", prop->GetName() );
+            return;
+         }
+         property = PyROOT::PropertyProxy_New( d );
+      }
       if ( isEnum ) {
-         property = PyROOT::PropertyProxy_New( (TGlobal*)prop );
          property->fProperty |= kIsConstant;      // ensures non-writable
-      } else
-         property = PyROOT::PropertyProxy_New( (TDataMember*)prop );
+      }
 
    // allow access at the instance level
       PyObject_SetAttrString( pyclass,
