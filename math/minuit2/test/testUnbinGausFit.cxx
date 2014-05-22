@@ -39,7 +39,7 @@ const std::string branchType = "x[1]/D";
 const int NPoints = 100000;
 double truePar[NPar]; 
 double iniPar[NPar]; 
-const int nfit = 1;
+//const int nfit = 1;
 const int strategy = 0;
 
 double gausnorm(const double *x, const double *p) { 

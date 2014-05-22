@@ -23,6 +23,8 @@
 #include <iterator>
 #include <cassert>
 
+int verbose = 0; 
+
 double fitFunc( double *x , double * p) { 
 
   double A = p[0];
@@ -34,7 +36,7 @@ double fitFunc( double *x , double * p) {
 
 
 void makePoints(Int_t n, std::vector<double> &  x, std::vector<double> & y, std::vector<double> & e)
-{
+{ 
   Int_t i;
   TRandom3 r;
 
@@ -74,16 +76,21 @@ void doFit(int n,const char * fitter)
    TF1 *f = new TF1("f2",fitFunc, -2, 2, 3);
 
    printf("fitting with %s",fitter);
+
+   // should change test to use Minimizer interface
    TVirtualFitter::SetDefaultFitter(fitter);
 
 
-   int npass = 100; 
+   int npass = (verbose) ? 1 : 100; 
    TStopwatch timer;
    timer.Start();
    for (int i = 0; i < npass; ++i) { 
      f->SetParameters(initPar);
      //f->FixParameter(1,2.);
-     gre3->Fit(f,"q");
+     if (verbose) 
+        gre3->Fit(f,"v");
+     else 
+        gre3->Fit(f,"q");
    }
    timer.Stop();
    printf("%s,: RT=%7.3f s, Cpu=%7.3f s\n",fitter,timer.RealTime(),timer.CpuTime());
@@ -123,7 +130,7 @@ void doFit(int n,const char * fitter)
 
 }
 
-void testGraph(int n = 500) { 
+void testGraphFit(int n = 500) { 
   TCanvas *myc = new TCanvas("myc", "Fitting 3 TGraphErrors with linear functions");
   myc->Divide(1,2);
   myc->SetFillColor(42);
@@ -143,13 +150,37 @@ void testGraph(int n = 500) {
 #ifndef __CINT__
 int main(int argc, char **argv)
 {
-   if (argc > 1) { 
-      TApplication theApp("App", &argc, argv);
-      testGraph(500);
-      theApp.Run();
-   } 
-   else 
-      testGraph(500);
+
+   bool showGraphics = false; 
+
+   // Parse command line arguments                                                                                                                                                                     
+   for (Int_t i = 1 ;  i < argc ; i++) {
+      std::string arg = argv[i] ;
+
+     if (arg == "-v") {
+         std::cout << "Running in verbose mode" << std::endl;
+         verbose = 1;
+         showGraphics = true; 
+      }
+
+      if (arg == "-g") {
+         std::cout << "Running showing the graphics" << std::endl;
+         showGraphics = true;
+      }
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   testGraphFit(500);
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
 
    return 0;
 }
