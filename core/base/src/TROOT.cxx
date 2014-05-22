@@ -1401,8 +1401,6 @@ TCollection *TROOT::GetListOfGlobals(Bool_t load)
                                             (TGlobalMappedFunction::GlobalFunc_t)&TVirtualX::Instance));
       fGlobals->Add(new TGlobalMappedFunction("gDirectory", "TDirectory*",
                                             (TGlobalMappedFunction::GlobalFunc_t)&TDirectory::CurrentDirectory));
-      fGlobals->Add(new TGlobalMappedFunction("gGLManager", "TTGLManager*",
-                                              (TGlobalMappedFunction::GlobalFunc_t)&TGLManager::Instance));
       fGlobals->AddAll(&TGlobalMappedFunction::GetEarlyRegisteredGlobals());
       TGlobalMappedFunction::GetEarlyRegisteredGlobals().Clear();
    }
