@@ -16,10 +16,6 @@ set(TestSource
     testIntegration.cxx
     testRootFinder.cxx
     kDTreeTest.cxx
-    fit/testFit.cxx )
-
-
-set(TestSourceGraphics
     binarySearchTime.cxx
     stdsort.cxx
     testSpecFuncErf.cxx
@@ -27,10 +23,12 @@ set(TestSourceGraphics
     testSpecFuncBeta.cxx
     testSpecFuncBetaI.cxx
     testIntegrationMultiDim.cxx
+    fit/testFit.cxx 	
+    fit/testGraphFit.cxx 
     fit/SparseDataComparer.cxx
     fit/SparseFit4.cxx 
-    fit/SparseFit3.cxx 
-    fit/testGraphFit.cxx )
+    fit/SparseFit3.cxx )
+
 
 if(ROOT_roofit_FOUND)
   list(APPEND TestSource fit/testRooFit.cxx)
@@ -48,16 +46,10 @@ if(ROOT_minuit2_FOUND)
 endif()
 
 
-#---For the non-graphics tests build and defined them---------------
+#---Build and add all the defined test in the list---------------
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
   ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname}) 
 endforeach()
 
-#---For the graphics tests we only build them-----------------------
-foreach(file ${TestSourceGraphics})
-  get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
-#  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname}) 
-endforeach()
