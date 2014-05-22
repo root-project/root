@@ -187,13 +187,20 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
   #---roottest compability---------------------------------
   if(CMAKE_ROOTTEST_DICT)
     string(REPLACE "/" "-" targetname "${CMAKE_CURRENT_SOURCE_DIR}-${dictionary}")
+    
+    # Target onepcm is only available, if roottest is built within root.
+    if(TARGET onepcm)
+      add_custom_target(${targetname} ALL DEPENDS ${gensrcdict} onepcm)
+    else()
+      add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
+    endif()
   else()
     set(targetname "${dictionary}Gen")
+    # Creating this target at ALL level enables the possibility to generate dictionaries (genreflex step)
+    # well before the dependent libraries of the dictionary are build
+    add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
   endif()
 
-  # Creating this target at ALL level enables the possibility to generate dictionaries (genreflex step)
-  # well before the dependent libraries of the dictionary are build
-  add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
 endmacro()
 
 #---------------------------------------------------------------------------------------------------
