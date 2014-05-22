@@ -35,7 +35,7 @@ static int begin_request_handler(struct mg_connection *conn)
 
    if (!serv->ExecuteHttp(&arg) || arg.Is404()) {
       arg.FillHttpHeader(hdr);
-      mg_printf(conn, hdr.Data());
+      mg_printf(conn, "%s", hdr.Data());
       return 1;
    }
 
@@ -45,7 +45,7 @@ static int begin_request_handler(struct mg_connection *conn)
    }
 
    arg.FillHttpHeader(hdr);
-   mg_printf(conn, hdr.Data());
+   mg_printf(conn, "%s", hdr.Data());
 
    if (arg.GetContentLength() > 0)
       mg_write(conn, arg.GetContent(), (size_t) arg.GetContentLength());
