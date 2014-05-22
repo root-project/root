@@ -18,6 +18,7 @@ set(TestSource
     kDTreeTest.cxx
     fit/testFit.cxx )
 
+
 set(TestSourceGraphics
     binarySearchTime.cxx
     stdsort.cxx
@@ -28,7 +29,8 @@ set(TestSourceGraphics
     testIntegrationMultiDim.cxx
     fit/SparseDataComparer.cxx
     fit/SparseFit4.cxx 
-    fit/SparseFit3.cxx )
+    fit/SparseFit3.cxx 
+    fit/testGraphFit.cxx )
 
 if(ROOT_roofit_FOUND)
   list(APPEND TestSource fit/testRooFit.cxx)
@@ -50,11 +52,12 @@ endif()
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
-  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname})
+  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname}) 
 endforeach()
 
 #---For the graphics tests we only build them-----------------------
 foreach(file ${TestSourceGraphics})
   get_filename_component(testname ${file} NAME_WE)
   ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${Libraries})
+#  ROOT_ADD_TEST(mathcore-${testname} COMMAND ${testname}) 
 endforeach()
