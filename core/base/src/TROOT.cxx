@@ -113,10 +113,6 @@
 #include "TListOfFunctions.h"
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
-#include "TGClient.h"
-#include "X3DBuffer.h"
-#include "TFile.h"
-#include "TVirtualGL.h"
 
 #include <string>
 namespace std {} using namespace std;

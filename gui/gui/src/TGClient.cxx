@@ -55,7 +55,9 @@ static TGClient *gClientGlobal = 0;
 namespace {
 static struct AddPseudoGlobals {
 AddPseudoGlobals() {
-  gROOT->GetListOfGlobals()->Add(new TGlobalMappedFunction("gClient", "TGClient*",
+   // User "gCling" as synonym for "libCore static initialization has happened".
+   // This code here must not trigger it.
+   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gClient", "TGClient*",
                                  (TGlobalMappedFunction::GlobalFunc_t)&TGClient::Instance));
 }
 } gAddPseudoGlobals;
