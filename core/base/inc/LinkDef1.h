@@ -45,7 +45,9 @@
 #pragma link C++ enum ELineStyle;
 #pragma link C++ enum EMarkerStyle;
 
-#pragma link C++ global gROOT;
+// This is not a global anymore but a function
+// gROOT is a preprocessor macro #define gROOT (ROOT::GetROOT()
+// #pragma link C++ global gROOT;
 #pragma link C++ global gEnv;
 #pragma link C++ global gSystem;
 #pragma link C++ global gPluginMgr;
@@ -124,6 +126,10 @@
 #pragma link C++ function operator<=(const TDatime&,const TDatime&);
 #pragma link C++ function operator>(const TDatime&,const TDatime&);
 #pragma link C++ function operator>=(const TDatime&,const TDatime&);
+// New representation of the pragma below
+// #pragma link C++ global gROOT;
+// a preprocessor statement transformed gROOT in a function call, ROOT::GetROOT().
+#pragma link C++ function ROOT::GetROOT();
 
 #pragma link C++ nestedtypedef;
 #pragma link C++ namespace ROOT;
