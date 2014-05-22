@@ -3540,6 +3540,11 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    TVirtualStreamerInfo *info;
    TList tobedeleted;
 
+   // Since we are in the process of replacing a TClass by a TClass
+   // coming from a dictionary, there is no point in loading any
+   // libraries during this search.
+   Bool_t autoload = gInterpreter->SetClassAutoloading(kFALSE);
+
    TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
 
    if ( strchr( corename.Data(), '<' ) == 0 ) {
@@ -3580,6 +3585,8 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
       delete acl;
    }
    gInterpreter->UnRegisterTClassUpdate(this);
+
+   gInterpreter->SetClassAutoloading(autoload);
 }
 
 //______________________________________________________________________________
