@@ -2712,13 +2712,21 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          }
          if (dataType)
             cl = (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName());
-         //resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
-         //if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       }
       if (!cl) {
          // Try with Long64_t
          resolvedName = TClassEdit::GetLong64_Name(resolvedName);
          if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      }
+
+      if (!cl) {
+         // Try after autoparsing the template.
+         std::string::size_type posLess = resolvedName.find('<');
+         if (posLess != std::string::npos) {
+            if (gCling->AutoParse(resolvedName.substr(0, posLess).c_str())) {
+               return TClass::GetClass(resolvedName.c_str(), load, silent);
+            }
+         }
       }
    }
 
