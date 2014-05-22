@@ -350,6 +350,13 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          TCling__UpdateClassInfo(TD);
       } else if (const NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
          TCling__UpdateClassInfo(NSD);
+         // Update possible nested classes / namespaces:
+         for (auto nestedI = NSD->decls_begin(), nestedE = NSD->decls_end();
+              nestedI != nestedE; ++nestedI) {
+            if (isa<clang::RecordDecl>(*nestedI) || isa<clang::NamespaceDecl>(*nestedI)) {
+               TCling::HandleNewDecl(*nestedI, isDeserialized, modifiedTClasses);
+            }
+         }
       }
 
       // While classes are read completely (except for function template instances,
