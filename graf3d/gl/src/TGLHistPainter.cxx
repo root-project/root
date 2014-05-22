@@ -722,11 +722,11 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
 }
 
 //______________________________________________________________________________
-void TGLHistPainter::SetShowProjection(const char *, Int_t)
+void TGLHistPainter::SetShowProjection(const char *option, Int_t nbins)
 {
    // Set show projection.
 
-   Warning("SetShowProjection", "Not yet implemented for GL canvases.");
+   if (fDefaultPainter.get()) fDefaultPainter->SetShowProjection(option, nbins);
 }
 
 //______________________________________________________________________________
