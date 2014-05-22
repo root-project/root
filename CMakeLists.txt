@@ -86,6 +86,11 @@ set(ENV{LIBPATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{LIBPATH}")
 set(ENV{PYTHONPATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{PYTHONPATH}")
 set(ENV{MANPATH} "${CMAKE_BINARY_DIR}/man/man1:$ENV{MANPATH}")
 
+# Set of libraries that are used as standard dependencies. Dependencies needed
+# so make -j does not fail when compiling macros, but the libraries do not exist
+# yet.
+set(ROOTTEST_LIB_DEPENDS Core RIO Net Hist Gpad Tree Rint Matrix Mathcore)
+
 # Find python.
 find_package(PythonInterp)
 find_program(python_cmd ${PYTHON_EXECUTABLE})

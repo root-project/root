@@ -2,68 +2,17 @@
 #
 #  RootMacros.cmake
 #
-#  Macros and definitions regarding ROOT components. 
+#  Macros and definitions regarding ROOT components.
 #
 #-------------------------------------------------------------------------------
 
-# Wrap some platform dependencies.
-set(lib lib)
-set(bin bin)
-if(WIN32)
-  set(ssuffix .bat)
-  set(scomment rem)
-  set(libprefix lib)
-  set(ld_library_path PATH)
-  set(libsuffix .dll)
-  set(runtimedir ${CMAKE_INSTALL_BINDIR})
-elseif(APPLE)
-  set(ld_library_path DYLD_LIBRARY_PATH)
-  set(ssuffix .csh)
-  set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so)
-  set(runtimedir ${CMAKE_INSTALL_LIBDIR})
-else()
-  set(ld_library_path LD_LIBRARY_PATH)
-  set(ssuffix .csh)
-  set(scomment \#)
-  set(libprefix lib)
-  set(libsuffix .so) 
-  set(runtimedir ${CMAKE_INSTALL_LIBDIR})
-endif()
-
-if(soversion)
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      VERSION ${ROOT_VERSION}
-      SOVERSION ${ROOT_MAJOR_VERSION}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix} )
-else()
-  set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-      SUFFIX ${libsuffix}
-      PREFIX ${libprefix}
-      IMPORT_PREFIX ${libprefix} )
-endif()
-
-if(APPLE)
-  if(gnuinstall)
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "${CMAKE_INSTALL_FULL_LIBDIR}"
-         BUILD_WITH_INSTALL_RPATH ON)
-  else()
-    set(ROOT_LIBRARY_PROPERTIES ${ROOT_LIBRARY_PROPERTIES}
-         INSTALL_NAME_DIR "@rpath"
-         BUILD_WITH_INSTALL_RPATH ON)
-  endif()
-endif()
-
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 #
 # macro ROOT_CHECK_OUT_OF_SOURCE_BUILD
 #
 # Ensures that the project is built out-of-source.
 #
-#------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------
 macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
  string(COMPARE EQUAL ${ROOTTEST_DIR} ${CMAKE_BINARY_DIR} insource)
   if(insource)
@@ -77,7 +26,7 @@ macro(ROOT_CHECK_OUT_OF_SOURCE_BUILD)
                          "directory. You have also to delete the directory "
                          "CMakeFiles and the file CMakeCache.txt in the source "
                          "directory. Otherwise cmake will complain even if you "
-                         "run it from an out-of-source directory.") 
+                         "run it from an out-of-source directory.")
   endif()
 endmacro()
 
@@ -90,7 +39,7 @@ endmacro()
 #
 #-------------------------------------------------------------------------------
 function(ROOT_COMPILE_MACRO filename)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB;TARGETNAME;DEPENDS" ""  ${ARGN}) 
+  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB;TARGETNAME;DEPENDS" ""  ${ARGN})
 
   # Add defines to root_cmd, in order to have out-of-source builds
   # when using the scripts/build.C macro.
@@ -104,8 +53,8 @@ function(ROOT_COMPILE_MACRO filename)
         -e "#define CMakeEnvironment"
         -e "#define CMakeBuildDir \"${CMAKE_CURRENT_BINARY_DIR}\""
         ${RootExeDefines})
-  
-  set(root_cmd root.exe ${RootClingDefines} -q -l -b) 
+
+  set(root_cmd root.exe ${RootClingDefines} -q -l -b)
 
   set(_cwd WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -124,6 +73,8 @@ function(ROOT_COMPILE_MACRO filename)
 
   add_custom_target("${srcpath}-${filename}-compile-macro" ALL COMMAND ${command} ${_cwd} ${deps} VERBATIM)
 
+  add_dependencies("${srcpath}-${filename}-compile-macro" ${ROOTTEST_LIB_DEPENDS})
+
 endfunction(ROOT_COMPILE_MACRO)
 
 function(ROOTTEST_GENERATE_DICTIONARY dictname)
@@ -132,15 +83,15 @@ function(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set(CMAKE_ROOTTEST_DICT ON)
-  
-  ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS} MODULE ${dictname} LINKDEF ${ARG_LINKDEF} DEPENDENCIES ${ARG_DEPENDENCIES}) 
+
+  ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS} MODULE ${dictname} LINKDEF ${ARG_LINKDEF} DEPENDENCIES ${ARG_DEPENDENCIES})
 endfunction()
 
 #-------------------------------------------------------------------------------
 #
 # function ROOT_REFLEX_GENERATE_DICTIONARY( <dictionary> [SELECTION sel...] [headerfiles...])
 #
-# This function generates a reflexion dictionary and creates a shared library. 
+# This function generates a reflexion dictionary and creates a shared library.
 #
 #-------------------------------------------------------------------------------
 function(ROOT_REFLEX_GENERATE_DICTIONARY dictionary)
@@ -163,6 +114,8 @@ function(ROOT_REFLEX_GENERATE_DICTIONARY dictionary)
 
   set_property(TARGET ${targetname}-genlib PROPERTY OUTPUT_NAME ${dictionary})
 
+  add_dependencies(${targetname}-genlib ${ROOTTEST_LIB_DEPENDS})
+
   target_link_libraries(${targetname}-genlib ${ARG_LIBRARIES} ${ROOT_Reflex_LIBRARY})
 
 endfunction(ROOT_REFLEX_GENERATE_DICTIONARY)
@@ -175,7 +128,7 @@ endfunction(ROOT_REFLEX_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 function(ROOT_BUILD_DICT dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "FILES" ${ARGN}) 
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "FILES" ${ARGN})
 
   foreach(f ${ARG_FILES})
     get_filename_component(realpath ${f} REALPATH)
@@ -186,6 +139,8 @@ function(ROOT_BUILD_DICT dictname)
 
   message("-- Add target to build simple dictionary: ${dictname}")
   add_custom_target("${dictname}-build-dict" ALL COMMAND ${command} ${_cwd} VERBATIM)
+
+  add_dependencies("${dictname}-build-dict" ${ROOTTEST_LIB_DEPENDS})
 
 endfunction()
 
@@ -198,7 +153,7 @@ endfunction()
 #
 #-------------------------------------------------------------------------------
 function(ROOT_BUILD_COMPILE_DICT dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FILES" ${ARGN}) 
+  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" "FILES" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -207,7 +162,7 @@ function(ROOT_BUILD_COMPILE_DICT dictname)
   endforeach()
 
   # Setup root.exe command for batch mode.
-  set(root_cmd root.exe ${RootExeDefines} -q -l -b) 
+  set(root_cmd root.exe ${RootExeDefines} -q -l -b)
 
   set(_cwd WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -247,92 +202,9 @@ function(ROOT_BUILD_COMPILE_DICT dictname)
     COMMAND ${command}
     COMMAND mv ${_tmp}_C${libsuffix} ${dictname}${libsuffix}
     ${_cwd})
-    
+
   string(REPLACE "/" "-" srcpath "${CMAKE_CURRENT_SOURCE_DIR}")
   message("-- Add target ${dictname}-build-dict-sl")
   add_custom_target(${srcpath}-${dictname}-dict ALL DEPENDS ${dictname}${libsuffix})
 
-endfunction()
-
-function(ROOT_BUILD_REFLEX_LIBRARY libname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "BUILDOBJ;BUILDLIB" ${ARGN})
-
-  #---Get List of header files---------------
-  set(headerfiles)
-  foreach(fp ${ARG_UNPARSED_ARGUMENTS})
-    file(GLOB files inc/${fp})
-    if(files)
-      foreach(f ${files})
-        if(NOT f MATCHES LinkDef)
-          set(headerfiles ${headerfiles} ${f})
-        endif()
-      endforeach()
-    else()
-      set(headerfiles ${headerfiles} ${fp})
-    endif()
-  endforeach()
-
-  #---Get Selection file------------------------------------
-  if(IS_ABSOLUTE ${ARG_SELECTION})
-    set(selectionfile ${ARG_SELECTION})
-  else()
-    set(selectionfile ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_SELECTION})
-  endif()
-
-  # Add defines to root_cmd, in order to have out-of-source builds
-  # when using the scripts/build.C macro.
-  get_directory_property(DirDefs COMPILE_DEFINITIONS)
-
-  foreach(d ${DirDefs})
-    list(APPEND GenreflexDefines "-D${d}")
-  endforeach()
-
-  set(include_dirs -I${CMAKE_CURRENT_SOURCE_DIR})
-  get_directory_property(incdirs INCLUDE_DIRECTORIES)
-  foreach(d ${incdirs})
-   set(include_dirs ${include_dirs} -I${d})
-  endforeach()
-
-  set(genreflex_cmd genreflex ${headerfiles} --select=${selectionfile} ${include_dirs} ${GenreflexDefines}) 
-
-  set(_cwd WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-
-  message("-- Add target to generate reflex dictionary ${filename}")
-  execute_process(COMMAND ${genreflex_cmd} ${_cwd} RESULT_VARIABLE rc_code)
-
-  if(rc_code)
-    message(FATAL_ERROR "error code: ${rc_code}")
-  endif()
-
-  # Setup root.exe command for batch mode.
-  set(root_cmd root.exe ${ReflexDefines} -q -l -b) 
-
-  execute_process(COMMAND ${command} ${_cwd} RESULT_VARIABLE rc_code)
-
-  if(rc_code)
-    message(FATAL_ERROR "error code: ${rc_code}")
-  endif()
-
-  STRING(REGEX REPLACE " " ";" _flags ${CMAKE_CXX_FLAGS})
-  set(_flags ${_flags} "-std=c++11;-I${ROOT_INCLUDE_DIRS};-I${ROOT_INCLUDE_DIR}")
-  set(createobj_cmd  ${CMAKE_CXX_COMPILER} ${_flags} -c ${} -o ${ARG_BUILDOBJ}.o)
-  execute_process(COMMAND ${createobj_cmd} ${_cwd} RESULT_VARIABLE rc_code)
-
-  if(rc_code)
-    message(FATAL_ERROR "error code: ${rc_code}")
-  endif()
-
-  string(RANDOM _rdm)
-  set(_tmp "tmp${_rdm}")
-  execute_process(COMMAND touch ${_tmp}.C ${_cwd})
-
-  set(command ${root_cmd} ${ROOTTEST_DIR}/scripts/build.C\(\"${_tmp}.C\",\"${_buildlib}\",\"${ARG_BUILDOBJ}.o\"\) ${_cwd})
-
-  execute_process(COMMAND ${command} ${_cwd} RESULT_VARIABLE rc_code)
-  execute_process(COMMAND mv ${_tmp}_C${libsuffix} ${dictname}${libsuffix} ${_cwd})
-
-  if(rc_code)
-    message(FATAL_ERROR "error code: ${rc_code}")
-  endif()
-    
 endfunction()
