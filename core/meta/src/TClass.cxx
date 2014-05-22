@@ -5584,7 +5584,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
 
          if ( prop&kIsStatic)             continue;
          name = tdm->GetName(); il = name.Length();
-         if ( (code > kNoEnum) && prop&kIsEnum) id = id*3 + 1;
+         if ( (code > kNoEnum) && code != kReflex && code != kReflexNoComment && prop&kIsEnum)
+            id = id*3 + 1;
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
@@ -5594,8 +5595,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
             if (TClassEdit::IsSTLCont(type))
                type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
             if (code == kReflex || code == kReflexNoComment) {
-               type.ReplaceAll("ULong64_t","unsigned long long");
-               type.ReplaceAll("Long64_t","long long");
+               if (prop&kIsEnum) {
+                  type = "int";
+               } else {
+                  type.ReplaceAll("ULong64_t","unsigned long long");
+                  type.ReplaceAll("Long64_t","long long");
+               }
             }
          } else {
             type = tdm->GetFullTypeName();
