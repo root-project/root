@@ -6633,8 +6633,8 @@ if test ! "x$enable_http" = "xno"; then
     result "yes"
     check_header "fcgiapp.h" "$fastcgiincdir" \
         ${finkdir:+$finkdir/include/fastcgi} \
-        /usr/local/include \
-        /usr/local/include/fastcgi /usr/local/fastcgi /usr/local/fastcgi/include \
+        /usr/local/include /usr/local/include/fastcgi \
+        /usr/local/fastcgi /usr/local/fastcgi/include \
         /opt/fastcgi /opt/fastcgi/include \
         /usr/include /usr/include/fastcgi /usr/fastcgi /usr/fastcgi/include
     fastcgiinc=$found_hdr
