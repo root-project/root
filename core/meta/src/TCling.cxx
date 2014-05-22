@@ -1419,9 +1419,8 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    if (result.isValid())
       RegisterTemporary(result);
    if (indent) {
-      Error("ProcessLine", "Ignoring invalid input.");
-      fMetaProcessor->cancelContinuation();
-      gROOT->SetLineHasBeenProcessed();
+      if (error)
+         *error = kProcessing;
       return 0;
    }
    if (error) {
@@ -2190,9 +2189,11 @@ void TCling::RecursiveRemove(TObject* obj)
 //______________________________________________________________________________
 void TCling::Reset()
 {
+   // Pressing Ctrl+C should forward here. In the case where we have had
+   // continuation requested we must reset it.
+   fMetaProcessor->cancelContinuation();
    // Reset the Cling state to the state saved by the last call to
    // TCling::SaveContext().
-
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gInterpreterMutex);

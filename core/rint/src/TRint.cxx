@@ -94,9 +94,14 @@ Bool_t TInterruptHandler::Notify()
    gMmallocDesc = 0;
 
    Break("TInterruptHandler::Notify", "keyboard interrupt");
-   Getlinem(kInit, "Root > ");
+   if (TROOT::Initialized()) {
+      Getlinem(kInit, "Root > ");
+      gCling->Reset();
+#ifndef WIN32
    if (gException)
       Throw(GetSignal());
+#endif
+   }
 
    return kTRUE;
 }
