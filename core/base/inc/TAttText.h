@@ -55,6 +55,7 @@ public:
    virtual void     SetTextAlign(Short_t align=11) { fTextAlign = align;}
    virtual void     SetTextAngle(Float_t tangle=0) { fTextAngle = tangle;}  // *MENU*
    virtual void     SetTextColor(Color_t tcolor=1) { fTextColor = tcolor;}
+   virtual void     SetTextColorAlpha(Color_t tcolor, Float_t talpha);
    virtual void     SetTextFont(Font_t tfont=62) { fTextFont = tfont;}
    virtual void     SetTextSize(Float_t tsize=1) { fTextSize = tsize;}
    virtual void     SetTextSizePixels(Int_t npixels);

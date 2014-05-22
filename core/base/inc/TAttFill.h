@@ -48,6 +48,7 @@ public:
    virtual void     SaveFillAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1001);
    virtual void     SetFillAttributes(); // *MENU*
    virtual void     SetFillColor(Color_t fcolor) { fFillColor = fcolor; }
+   virtual void     SetFillColorAlpha(Color_t fcolor, Float_t falpha);
    virtual void     SetFillStyle(Style_t fstyle) { fFillStyle = fstyle; }
 
    ClassDef(TAttFill,1)  //Fill area attributes

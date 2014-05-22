@@ -244,3 +244,13 @@ void TAttMarker::SetMarkerAttributes()
 
    TVirtualPadEditor::UpdateMarkerAttributes(fMarkerColor,fMarkerStyle,fMarkerSize);
 }
+
+
+//______________________________________________________________________________
+void TAttMarker::SetMarkerColorAlpha(Color_t mcolor, Float_t malpha)
+{
+   // Set a transparent marker color. malpha defines the percentage of
+   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
+
+   fMarkerColor = TColor::GetColorTransparent(mcolor, malpha);
+}
