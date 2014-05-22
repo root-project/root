@@ -1022,8 +1022,25 @@ bool TCling::LoadPCM(TString pcmFileName,
       TObjArray *protoClasses;
       pcmFile->GetObject("__ProtoClasses", protoClasses);
       if (protoClasses) {
-         for(auto proto : *protoClasses)
+         for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
+            if (TClass* existingCl
+                = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
+               // We have an existing TClass object. It might be emulated
+               // or interpreted; we now have more information available.
+               // Make that available.
+               if (existingCl->GetState() != TClass::kHasTClassInit) {
+                  VoidFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+                  if (!dict) {
+                     ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s",
+                             proto->GetName());
+                  } else {
+                     // This will replace the existing TClass.
+                     (*dict)();
+                  }
+               }
+            }
+         }
          protoClasses->Clear(); // Ownership was transfered to TClassTable.
          delete protoClasses;
       }
@@ -1145,11 +1162,21 @@ void TCling::RegisterModule(const char* modulename,
    //     "myClass", payloadCode, "@",
    //    nullptr};
    if (fHeaderParsingOnDemand){
-      size_t theHash;
       std::string temp;
       for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
          temp=*classesHeader;
-         theHash = fStringHashFunction(*classesHeader);
+
+         size_t theTemplateHash = 0;
+         bool addTemplate = false;
+         size_t posTemplate = temp.find('<');
+         if (posTemplate != std::string::npos) {
+            // Add an entry for the template itself.
+            std::string templateName = temp.substr(0, posTemplate);
+            theTemplateHash = fStringHashFunction(templateName);
+            addTemplate = true;
+         }
+
+         size_t theHash = fStringHashFunction(*classesHeader);
          classesHeader++;
          for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
             // This is done in order to distinguish headers from files and from the payloadCode
@@ -1157,6 +1184,12 @@ void TCling::RegisterModule(const char* modulename,
                fPayloads.insert(theHash);
             }
             fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
+            if (addTemplate) {
+               if (fClassesHeadersMap.find(theTemplateHash) == fClassesHeadersMap.end()) {
+                  fClassesHeadersMap[theTemplateHash].push_back(*classesHeader_inner);
+               }
+               addTemplate = false;
+            }
          }
       }
    }
