@@ -18,11 +18,23 @@
 
 #include "TVirtualGL.h"
 #include "TROOT.h"
+#include "TGlobal.h"
 
 
 ClassImp(TGLManager)
 
 TGLManager * (*gPtr2GLManager)() = 0;
+
+namespace {
+static struct AddPseudoGlobals {
+AddPseudoGlobals() {
+  // User "gCling" as synonym for "libCore static initialization has happened".
+   // This code here must not trigger it.
+   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gGLManager", "TVirtualGL*",
+                                 (TGlobalMappedFunction::GlobalFunc_t)&gGLManager));
+}
+} gAddPseudoGlobals;
+}
 
 //____________________________________________________________________________
 TGLManager::TGLManager() : TNamed("gGLManager", "")
