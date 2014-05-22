@@ -66,6 +66,11 @@ void MnUserParameters::Release(unsigned int n) {
    fTransformation.Release(n);
 }
 
+void MnUserParameters::RemoveLimits(unsigned int n) {
+   // remove limits for parameter n
+   fTransformation.RemoveLimits(n);
+}
+
 void MnUserParameters::SetValue(unsigned int n, double val) {
    // set value for parameter n
    fTransformation.SetValue(n, val);
@@ -91,10 +96,11 @@ void MnUserParameters::SetLowerLimit(unsigned int n, double low) {
    fTransformation.SetLowerLimit(n, low);
 }
 
-void MnUserParameters::RemoveLimits(unsigned int n) {
-   // remove limits for parameter n
-   fTransformation.RemoveLimits(n);
+void MnUserParameters::SetName(unsigned int n, const std::string & name) {
+   // set name for parameter n
+   fTransformation.SetName(n, name);
 }
+
 
 double MnUserParameters::Value(unsigned int n) const {
    // get value for parameter n

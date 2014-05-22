@@ -106,6 +106,8 @@ public:
    double Error() const {return fError;}
 
    //interaction
+   void SetName(const std::string &name) { fName = name;  }
+
    void SetValue(double val) {fValue = val;}
    void SetError(double err) {fError = err;}
    void SetLimits(double low, double up) {
