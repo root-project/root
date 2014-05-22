@@ -13,17 +13,20 @@
 #include <TGraph.h>
 #include <TLegend.h>
 #include <TAxis.h>
+//#include <TSystem.h>
 
 using namespace std;
 
-const int npass = 100000;
+const int npass0 = 200000;
 const int maxint = 20;
-const int minsize = 20;
-const int maxsize = 500;
-const int increment = 10;
-const int arraysize = (maxsize-minsize)/10 + 1;
+const int minsize = 10;
+const int maxsize = 100000;
+const int increment = 2;
+const int arraysize = 20;
 
-bool showGraphics = true;
+bool showGraphics = false;
+bool verbose = false; 
+//std::string plotFile;
 
 template<typename T> 
 struct Compare { 
@@ -37,11 +40,15 @@ struct Compare {
    const T * fData; 
 };
 
-template <typename T> void testSort(const int n, double* tTMath, double* tStd)
+template <typename T> bool testSort(const int n, double* tTMath, double* tStd)
 {
+
+   std::cout << "Testing Sort of array - size n = " << n <<  "\t(Time / call in microsec.) " << std::endl;
+
    vector<T> k(n);
 
    vector<T> index(n);
+   vector<T> index2(n);
    TStopwatch t; 
 
    TRandom2 r( time( 0 ) );
@@ -50,29 +57,38 @@ template <typename T> void testSort(const int n, double* tTMath, double* tStd)
 //      cout << k[i] << ' ' << endl;
    }
 
+   //int npass = npass0/std::log10(10*n/minsize);
+   int npass = npass0/(n/minsize);
+
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
 //    for(Int_t i = 0; i < n; i++) { index[i] = i; }
       TMath::Sort(n,&k[0],&index[0],kTRUE);  
    }
    t.Stop(); 
-   *tTMath = t.RealTime();
-   cout << "\nTMath Sort\n";
-   cout << "TMath::Sort time :\t\t " << t.RealTime() << endl;
+   *tTMath = t.RealTime()/npass*1.E6;
+   cout << "TMath::Sort time :\t\t " << *tTMath << endl;
 
-   cout << "\nSort using indices" << endl;
   
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
-      for(Int_t i = 0; i < n; i++) { index[i] = i; }
-      std::sort(&index[0],&index[n], Compare<T>(&k[0]) );
+      for(Int_t i = 0; i < n; i++) { index2[i] = i; }
+      std::sort(&index2[0],&index2[0]+n, Compare<T>(&k[0]) );
    }
    t.Stop(); 
-   *tStd = t.RealTime();
-   std::cout << "std::sort using indices:\t " << t.RealTime() << std::endl;
+   *tStd = t.RealTime()/npass*1.E6;
+   std::cout << "std::sort time (using indices):\t " << *tStd << std::endl;
+
+   // test results 
+   bool ok = true; 
+   for(Int_t i = 0; i < n && ok; i++) { 
+      ok &= (index[i] == index2[i]);
+      if (!ok) Error("test sort","Different values found at i= %d - index1 = %d - index2 = %d",i,index[i],index2[i]);
+   }
+   return ok; 
 }
 
-void stdsort() 
+bool stdsort() 
 {
    vector<double> tM( arraysize );
    vector<double> tS( arraysize );
@@ -80,27 +96,34 @@ void stdsort()
 
    //cout << (maxsize-minsize)/10 + 1 << endl;
 
-   for ( int i = minsize; i <= maxsize; i += increment)
+   bool ok = true; 
+   int j = 0; int i = minsize; 
+   while ( i <= maxsize && j < arraysize) 
    {
-      testSort<Int_t>(i, &tM[(i-minsize)/10], &tS[(i-minsize)/10]);
-      index[(i-minsize)/10] = i;
+      ok &= testSort<Int_t>(i, &tM[j], &tS[j]);
+      index[j] = i; 
+      j++;
+      i *= increment;
    }
+   int ntest = j; 
 
-   for ( int i = minsize; i <= maxsize; i += increment)
-      cout << tM[(i-minsize)/10] << ' ' << tS[(i-minsize)/10] << endl;
+   if (verbose) { 
+      cout << " TMATH - time  ---  std time " << std::endl;
+      for ( int i = 0; i < ntest; ++i) { 
+         cout << " size = " << index[i] << " :  " << tM[i] << ' ' << tS[i] << endl;
+      }
+   }
 
    if ( showGraphics )
    {
       TCanvas* c1 = new TCanvas("c1", "Comparision of Sorting Time", 600, 400);
-      TH2F* hpx = new TH2F("hpx", "Comparision of Sorting Time", arraysize, minsize, maxsize, arraysize, 0,tM[arraysize-1]);
-      hpx->SetStats(kFALSE);
-      hpx->Draw();
       
-      TGraph* gM = new TGraph(arraysize, &index[0], &tM[0]);
+      TGraph* gM = new TGraph(ntest, &index[0], &tM[0]);
       gM->SetLineColor(2);
       gM->SetLineWidth(3);
+      gM->SetMarkerStyle(20);
       gM->SetTitle("TMath::Sort()");
-      gM->Draw("SAME");
+      gM->Draw("ALP");
       
       TGraph* gS = new TGraph(arraysize, &index[0], &tS[0]);
       gS->SetLineColor(3);
@@ -113,36 +136,50 @@ void stdsort()
       legend->AddEntry(gS, "std::sort()");
       legend->Draw();
       
+      TH1 * hpx = gM->GetHistogram();
       hpx->GetXaxis()->SetTitle("Array Size");
       hpx->GetYaxis()->SetTitle("Time");
+      hpx->SetTitle("Comparison of Sorting Time");
       
       
       c1->Show();
+ 
    }
 
+   return ok; 
 }
 
 int main(int argc, char **argv)
 {
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
-   }
 
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;
-   if ( showGraphics )
+   if ( showGraphics ) { 
       theApp = new TApplication("App",&argc,argv);
+//      plotFile = std::string(gSystem->TempDirectory())+std::string("/test-stdsort.pdf");
+   }
 
-   stdsort();
+
+   bool ok = stdsort();
 
    if ( showGraphics )
    {
@@ -151,5 +188,5 @@ int main(int argc, char **argv)
       theApp = 0;
    }
 
-   return 0;
+   return (ok) ? 0 : 1; 
 }

@@ -30,7 +30,12 @@
 #include "TLegend.h"
 #include "TH1.h"
 
-bool showGraphics = true;
+bool showGraphics = false;
+bool verbose = false; 
+
+using namespace std;
+
+int NMAX = 6; //maximum dimension
 
 Double_t Sum( const double* x, const double *p)
 {
@@ -59,8 +64,8 @@ Double_t SimpleFun( const double* x, const double *p)
 
 double integral_num(unsigned int dim, double* a, double* b, double* p)
 {
-  std::cout << "" << std::endl;
-  std::cout << "testing IntegratorMultiDim class.." << std::endl;
+
+  if (verbose) std::cout << "\nTesting IntegratorMultiDim class.." << std::endl;
   //std::cout << p[0] << std::endl;dimensionality
 
   TStopwatch timer; 
@@ -73,12 +78,14 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   ig1.Integral(a, b);
   timer.Stop();
 
-  std::cout.precision(12);
-  std::cout << "result:  \t";
-  std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
-  std::cout << "Number of function evaluations: " << ig1.NEval() << std::endl;
-  std::cout << "Time using IntegratorMultiDim: \t" << timer.RealTime() << std::endl; 
-  std::cout << "------------------------------------" << std::endl;
+  if (verbose) {
+     std::cout.precision(12);
+     std::cout << "result:  \t";
+     std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
+     std::cout << "Number of function evaluations: " << ig1.NEval() << std::endl;
+     std::cout << "Time using IntegratorMultiDim: \t" << timer.RealTime() << std::endl; 
+     std::cout << "------------------------------------" << std::endl;
+  }
   return timer.RealTime();
 }
 
@@ -91,7 +98,7 @@ double integral_TF1(unsigned int dim, double* a, double* b, double* p)
 {
 
   double timeTF1;
-  std::cout << "\ntesting TF1::IntegralMultiple.." << std::endl;
+  if (verbose) std::cout << "\ntesting TF1::IntegralMultiple.." << std::endl;
 
   TStopwatch timer; 
   //timer.Start();
@@ -117,12 +124,14 @@ double integral_TF1(unsigned int dim, double* a, double* b, double* p)
 //   std::cout << "\n------------------------------------" << std::endl;
 //   std::cout << "\t MISER.. \n" << std::endl;
 
-  std::cout.precision(12);
-  std::cout << "result:  \t";
-  std::cout << result << "\t" << "error: \t" << error << std::endl;
-  std::cout << "Number of function evaluations: " << iter << std::endl;
-  std::cout << "Time using TF1::IntegralMultiple : \t" << timer.RealTime() << std::endl; 
-  std::cout << "------------------------------------" << std::endl;
+  if (verbose) {
+     std::cout.precision(12);
+     std::cout << "result:  \t";
+     std::cout << result << "\t" << "error: \t" << error << std::endl;
+     std::cout << "Number of function evaluations: " << iter << std::endl;
+     std::cout << "Time using TF1::IntegralMultiple : \t" << timer.RealTime() << std::endl; 
+     std::cout << "------------------------------------" << std::endl;
+  }
 
   timeTF1 = timer.RealTime();
 
@@ -132,68 +141,86 @@ double integral_TF1(unsigned int dim, double* a, double* b, double* p)
 void performance()
 {
   //dimensionality
-  unsigned int Nmax = 9;
+  unsigned int Nmax = NMAX;
   unsigned int size = Nmax-1; 
   TH1D *num_performance = new TH1D("cubature", "", size, 1.5, Nmax+.5);
   TH1D *TF1_performance = new TH1D("montecarlo", "", size, 1.5, Nmax+.5);
 
    num_performance->SetBinContent(1, 0.0);
    TF1_performance->SetBinContent(1,0.0);
-   for(unsigned int N = 2; N <=Nmax; N++)//dim
-  {
-    std::cout<< "*********************************************" << std::endl;
-    std::cout<< "Number of dimensions: "<< N << std::endl;
-    //integration limits
-    double * a = new double[N]; 
-    double * b = new double[N];
-    double p[1];  
-    p[0] = N;
-    for (unsigned int i=0; i < N; i++)
-    { 
-	a[i] = -1.;//-TMath::Pi();
-	b[i] = 1;//TMath::Pi();
-    }
-    num_performance->SetBinContent(N-1, integral_num(N, a, b, p));
-    TF1_performance->SetBinContent(N-1,integral_TF1(N, a, b, p));
+   std::cout << "Testing multidim integration performances for various dimensions\n";
+   for(unsigned int N = 2; N <=Nmax; N++)//dim      
+   {
+      if (verbose)  { 
+         std::cout<< "*********************************************" << std::endl;
+         std::cout<< "Number of dimensions: "<< N << std::endl;
+      }
+      else { 
+         std::cout << "\tdim="<< N << std::endl;
+      }
+      //integration limits
+      double * a = new double[N]; 
+      double * b = new double[N];
+      double p[1];  
+      p[0] = N;
+      for (unsigned int i=0; i < N; i++)
+      { 
+         a[i] = -1.;//-TMath::Pi();
+         b[i] = 1;//TMath::Pi();
+      }
+      num_performance->SetBinContent(N-1, integral_num(N, a, b, p));
+      TF1_performance->SetBinContent(N-1,integral_TF1(N, a, b, p));
    }
 
-   num_performance->SetBarWidth(0.45);
-   num_performance->SetBarOffset(0.05);
-   num_performance->SetFillColor(49);
-   num_performance->SetStats(0);
-   //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
-   num_performance->GetXaxis()->SetTitle("number of dimensions");
-   num_performance->GetYaxis()->SetTitle("time [s]");
-   num_performance->SetTitle("comparison of performance");
-   TH1 *h1 = num_performance->DrawCopy("bar2");
-   TF1_performance->SetBarWidth(0.40);
-   TF1_performance->SetBarOffset(0.5);
-   TF1_performance->SetFillColor(kRed);
-   TH1 *h2 =  TF1_performance->DrawCopy("bar2,same");
+   if (showGraphics) { 
+      num_performance->SetBarWidth(0.45);
+      num_performance->SetBarOffset(0.05);
+      num_performance->SetFillColor(49);
+      num_performance->SetStats(0);
+      //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
+      num_performance->GetXaxis()->SetTitle("number of dimensions");
+      num_performance->GetYaxis()->SetTitle("time [s]");
+      num_performance->SetTitle("comparison of performance");
+      TH1 *h1 = num_performance->DrawCopy("bar2");
+      TF1_performance->SetBarWidth(0.40);
+      TF1_performance->SetBarOffset(0.5);
+      TF1_performance->SetFillColor(kRed);
+      TH1 *h2 =  TF1_performance->DrawCopy("bar2,same");
 
-   TLegend *legend = new TLegend(0.25,0.65,0.55,0.82);
-   legend->AddEntry(h1,"AdaptiveIntegratorMultiDim","f");
-   legend->AddEntry(h2,"TF1::IntegralMultiple()","f");
-   legend->Draw();
+      TLegend *legend = new TLegend(0.25,0.65,0.55,0.82);
+      legend->AddEntry(h1,"AdaptiveIntegratorMultiDim","f");
+      legend->AddEntry(h2,"TF1::IntegralMultiple()","f");
+      legend->Draw();
+
+      gPad->Update();
+   }
+   std::cout << "Test Timing results\n";
+   std::cout << "N dim \t Adaptive time \t\t TF1 time \n"; 
    for (unsigned int i=1; i<=size; i++)
-     std::cout << i << " " << num_performance->GetBinContent(i) << "\t" << TF1_performance->GetBinContent(i)<<std::endl;
+      std::cout << i+1 << " " << num_performance->GetBinContent(i) << "\t" << TF1_performance->GetBinContent(i)<<std::endl;
+   
 }
-
 
 int main(int argc, char **argv)
 {
-   if ( argc > 1 && argc != 2 )
-   {
-      std::cerr << "Usage: " << argv[0] << " [-ng]\n";
-      std::cerr << "  where:\n";
-      std::cerr << "     -ng : no graphics mode";
-      std::cerr << std::endl;
-      exit(1);
-   }
-
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;

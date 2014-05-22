@@ -16,7 +16,7 @@
 
 using namespace std;
 
-const int npass0 = 1000000;
+const int npass0 = 200000;
 const int maxint = 100;//20;
 const int minsize = 10;//20;
 const int maxsize = 1000000;//500;
@@ -96,9 +96,9 @@ bool binarySearchTime()
    int ntest = j; 
 
    if (verbose) { 
-      for ( int i = 0; i < ntest; ++j) { 
-         cout << " TMATH - time  ---  std time " << std::endl;
-         cout << tM[j] << ' ' << tS[j] << endl;
+      cout << " TMATH - time  ---  std time " << std::endl;
+      for ( int i = 0; i < ntest; ++i) { 
+         cout << " size = " << index[i] << " :  " << tM[i] << ' ' << tS[i] << endl;
       }
    }
 
@@ -143,24 +143,25 @@ bool binarySearchTime()
 
 int main(int argc, char **argv)
 {
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -g : graphics mode\n";
-      cerr << "     -v : verbose  mode";
-      cerr << endl;
-      exit(1);
-   }
 
-   if ( argc == 2 && strcmp( argv[1], "-g") == 0 ) 
-   {
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
       showGraphics = true;
-   }
-   if ( argc == 2 && strcmp( argv[1], "-v") == 0 ) 
-   {
+     }
+     if (arg == "-v") { 
       showGraphics = true;
       verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;
