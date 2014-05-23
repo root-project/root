@@ -11,9 +11,9 @@ set(TestMathMoreSource
       testChebyshev.cxx
      testPermute.cxx
      testDerivation.cxx
-     testIntegration.cxx
-     testIntegrationMultiDim.cxx    
-     testRootFinder.cxx			      
+     testGSLIntegration.cxx
+     testMCIntegration.cxx    
+     testGSLRootFinder.cxx			      
      testMinimization1D.cxx
      testInterpolation.cxx
      testRandom.cxx
