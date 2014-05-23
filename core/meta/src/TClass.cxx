@@ -2704,7 +2704,10 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (!cl) {
          // Attempt to resolve typedefs
          TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
-         if (!dataType && !resolvedName.empty()) {
+         if (resolvedName.empty()) {
+            // Make it available to Long64_t resolution below.
+            resolvedName = name;
+         } else if (!dataType) {
             dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(resolvedName.c_str());
          }
          if (dataType)
