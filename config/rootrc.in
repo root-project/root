@@ -138,6 +138,8 @@ Canvas.SavePrecision:       7
 # Set the default TStyle
 # Predefined styles are: Plain, Bold, Video, Pub, Classic, Modern.
 Canvas.Style:               Modern
+# Default file format to be used in the Canvas "Save As" dialog
+Canvas.SaveAsDefaultType    pdf
 
 # Printer settings.
 #WinNT.*.Print.Command:      AcroRd32.exe
