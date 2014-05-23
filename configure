@@ -7435,6 +7435,7 @@ sed -e "s|@srcdir@|$ac_srcdir|"                 \
     -e "s|@buildhdfs@|$enable_hdfs|"            \
     -e "s|@buildhttp@|$enable_http|"            \
     -e "s|@usefastcgi@|$use_fastcgi|"           \
+    -e "s|@fastcgiincdir@|$fastcgiincdir|"      \
     -e "s|@buildalien@|$enable_alien|"          \
     -e "s|@buildasimage@|$enable_asimage|"      \
     -e "s|@buildpythia6@|$enable_pythia6|"      \

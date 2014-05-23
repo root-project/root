@@ -34,7 +34,7 @@ HTTPDEP      := $(HTTPO:.o=.d) $(HTTPDO:.o=.d)
 HTTPLIB      := $(LPATH)/libRHTTP.$(SOEXT)
 HTTPMAP      := $(HTTPLIB:.$(SOEXT)=.rootmap)
 
-HTTPCXXFLAGS := $(HTTPINCDIR:%=-I%) $(FASTCGIFLAGS)
+HTTPCXXFLAGS := $(HTTPINCDIR:%=-I%) $(FASTCGIINCDIR:%=-I%) $(FASTCGIFLAGS)
 
 # used in the main Makefile
 ALLHDRS     += $(patsubst $(MODDIRI)/%.h,include/%.h,$(HTTPH))
