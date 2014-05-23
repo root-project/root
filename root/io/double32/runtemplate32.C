@@ -1,4 +1,5 @@
 #include "runtemplate32.h"
+#include "longExample.h"
 
 #ifdef __MAKECINT__
 #pragma link C++ class WithDouble+;
@@ -24,12 +25,16 @@ int runtemplate32 ()
    gROOT->GetClass("Contains")->GetStreamerInfo()->ls();
    gROOT->GetClass("Contains")->GetListOfRealData()->ls();
 
-   
    TRealData *r = (TRealData*)gROOT->GetClass("Contains")->GetListOfRealData()->At(1);
    cout << "The following should be a Double32_t: " << r->GetDataMember()->GetTypeName() << endl;
+
    TFile *f = new TFile("double32.root","RECREATE");
    Contains *c = new Contains;
    f->WriteObject(c,"myobj");
    delete f;
+
+   TClass *cl = TClass::GetClass("m02<Double32_t>");
+   cl->GetStreamerInfo()->ls("noaddr");
+   
    return 0;
 }
