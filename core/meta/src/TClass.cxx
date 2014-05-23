@@ -2661,7 +2661,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!name || !name[0]) return 0;
    R__LOCKGUARD(gInterpreterMutex);
-   if (!gROOT->GetListOfClasses())    return 0;
+   if (!gROOT->GetListOfClasses())  return 0;
+   if (strstr(name, "<anonymous>")) return 0;
 
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
