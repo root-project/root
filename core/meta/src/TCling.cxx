@@ -4373,7 +4373,7 @@ Int_t TCling::AutoParse(const char* cls)
             if (cRes != cling::Interpreter::kSuccess){
                Error("AutoParse","Error parsing payload code for class %s.", cls);
             }
-         } else {
+         } else if (!IsLoaded(hName)) {
             if (gDebug > 0) {
                Info("AutoParse",
                   "Parsing single header %s", hName);
