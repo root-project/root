@@ -50,7 +50,8 @@ TCanvas* multipalette() {
    TCanvas *c3  = new TCanvas("c3","C3",0,0,600,400);
    c3->Divide(2,1);
    TF2 *f3 = new TF2("f3","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
-
+   f3->SetLineWidth(1);
+   f3->SetLineColor(kBlack);
 
    c3->cd(1);
    f3->Draw("surf1"); 

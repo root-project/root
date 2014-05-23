@@ -113,6 +113,23 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
+
+<h4>Color transparency</h4>
+<tt>SetTextColorAlpha()</tt>, allows to set a transparent color.
+In the following example the text color of the text <tt>text</tt>
+is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+itself remains fully opaque. 
+<p>
+<pre>
+text->SetTextColorAlpha(kBlue, 0.35);
+</pre>
+<p>  
+The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
+in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+
+
+
 <a name="T4"></a><h3>Text Size</h3>
 If the text precision (see next paragraph) is smaller than 3, the text
 size (<tt>textsize</tt>) is a fraction of the current pad size. Therefore the

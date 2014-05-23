@@ -54,6 +54,22 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
+
+<h4>Color transparency</h4>
+<tt>SetMarkerColorAlpha()</tt>, allows to set a transparent color.
+In the following example the marker color of the histogram <tt>histo</tt>
+is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+itself remains fully opaque. 
+<p>
+<pre>
+histo->SetMarkerColorAlpha(kBlue, 0.35);
+</pre>
+<p>  
+The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
+in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+
+
 <a name="M2"></a><h3>Marker style</h3>
 The Marker style defines the markers' shape.
 The marker style of any class inheriting from <tt>TAttMarker</tt> can

@@ -202,6 +202,8 @@ Begin_Macro(source)
    Int_t nb=50;
    TColor::CreateGradientColorTable(Number,Length,Red,Green,Blue,nb);
    f2->SetContour(nb);
+   f2->SetLineWidth(1);
+   f2->SetLineColor(kBlack);
    f2->Draw("surf1z");
    return c2;
 }
@@ -246,20 +248,46 @@ To make a graphics object transparent it is enough to set its color to a
 transparent one. The color transparency is defined via its alpha component. The
 alpha value varies from <tt>0.</tt> (fully transparent) to <tt>1.</tt> (fully
 opaque). To set the alpha value of an existing color it is enough to do:
+<p>
 <pre>
    TColor *col26 = gROOT->GetColor(26);
    col26->SetAlpha(0.01);
 </pre>
+<p>
 A new color can be created transparent the following way:
+<p>
 <pre>
    Int_t ci = 1756;
    TColor *color = new TColor(ci, 0.1, 0.2, 0.3, "", 0.5); // alpha = 0.5
 </pre>
+<p>
 An example of tranparency usage with parallel coordinates can be found
-in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>. Right now the
-transparency is implemented only for PDF output, SVG output, and for gif,
-jpg and png outputs.
-
+in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>.
+<p>
+To ease the creation of a transparent color the static method 
+<tt>GetColorTransparent(Int_t color, Float_t a)</tt> is provided.
+In the following example the <tt>trans_red</tt> color index point to
+a red color 30% transparent. The alpha value of the color index
+<tt>kRed</tt> is not modified.
+<p>
+<pre>
+   Int_t trans_red = GetColorTransparent(kRed, 0.3);
+</pre>
+<p>
+This function is also used in the methods 
+<tt>SetFillColorAlpha()</tt>, <tt>SetLineColorAlpha()</tt>,
+<tt>SetMarkerColorAlpha()</tt> and <tt>SetTextColorAlpha()</tt>.
+In the following example the fill color of the histogram <tt>histo</tt>
+is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+itself remains fully opaque.
+<p>
+<pre>
+   histo->SetFillColorAlpha(kBlue, 0.35);
+</pre>
+<p>
+The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
+in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
 End_Html */
 
 

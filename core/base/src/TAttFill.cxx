@@ -52,6 +52,21 @@ Begin_Macro(source)
 End_Macro
 
 Begin_Html
+
+<h4>Color transparency</h4>
+<tt>SetFillColorAlpha()</tt>, allows to set a transparent color.
+In the following example the fill color of the histogram <tt>histo</tt>
+is set to blue with a transparency of 35%. The color <tt>kBlue</tt>
+itself remains fully opaque.
+<p>
+<pre>
+histo->SetFillColorAlpha(kBlue, 0.35);
+</pre>
+<p>
+The transparency is available on all platforms when the <tt>flagOpenGL.CanvasPreferGL</tt> is set to <tt>1</tt>
+in <tt>$ROOTSYS/etc/system.rootrc</tt>, or on Mac with the Cocoa backend. On the file output
+it is visible with PDF, PNG, Gif, JPEG, SVG ... but not PostScript.
+
 <h4>The ROOT Color Wheel.</h4>
 The wheel contains the recommended 216 colors to be used in web applications.
 The colors in the Color Wheel are created by TColor::CreateColorWheel.
@@ -102,7 +117,9 @@ method <tt>GetFillStyle</tt>.
    <li>  4000 to 4100 the window is 100% transparent to 100% opaque. </li>
 </ul>
       The pad transparency is visible in binary outputs files like gif, jpg, png etc ..
-      but not in vector graphics output files like PS, PDF and SVG.
+      but not in vector graphics output files like PS, PDF and SVG. This convention
+      (fill style > 4000) is kept for backward compatibility. It is better to use
+      the color transparency instead.
 </ul>
 
 pattern_number can have any value from 1 to 25 (see table), or any
