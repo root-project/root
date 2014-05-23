@@ -839,6 +839,16 @@ Bool_t TRootCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
                         static Int_t typeidx = 0;
                         static Bool_t overwr = kFALSE;
                         TGFileInfo fi;
+                        TString defaultType = gEnv->GetValue("Canvas.SaveAsDefaultType", ".pdf");
+                        if (typeidx == 0) {
+                           for (int i=1;gSaveAsTypes[i];i+=2) {
+                              TString ftype = gSaveAsTypes[i];
+                              if (ftype.EndsWith(defaultType.Data())) {
+                                 typeidx = i-1;
+                                 break;
+                              }
+                           }
+                        }
                         fi.fFileTypes   = gSaveAsTypes;
                         fi.fIniDir      = StrDup(dir);
                         fi.fFileTypeIdx = typeidx;
