@@ -424,8 +424,11 @@ void TClingLookupHelper::GetPartiallyDesugaredName(std::string &nameLong)
    clang::QualType t = lh.findType(nameLong, ToLHDS(WantDiags()));
    if (!t.isNull()) {
       clang::QualType dest = cling::utils::Transform::GetPartiallyDesugaredType(fInterpreter->getCI()->getASTContext(), t, fNormalizedCtxt->GetConfig(), true /* fully qualify */);
-      if (!dest.isNull() && (dest != t))
+      if (!dest.isNull() && (dest != t)) {
+         // getAsStringInternal() appends.
+         nameLong.clear();
          dest.getAsStringInternal(nameLong, fInterpreter->getCI()->getASTContext().getPrintingPolicy());
+      }
    }
 }
 
@@ -470,6 +473,8 @@ bool TClingLookupHelper::GetPartiallyDesugaredNameWithScopeHandling(const std::s
          // The scope suppression is required for getting rid of the anonymous part of the name of a class defined in an anonymous namespace.
          // This gives us more control vs not using the clang::ElaboratedType and relying on the Policy.SuppressUnwrittenScope which would
          // strip both the anonymous and the inline namespace names (and we probably do not want the later to be suppressed).
+         // getAsStringInternal() appends.
+         result.clear();
          dest.getAsStringInternal(result, policy);
          // Strip the std::
          if (strncmp(result.c_str(), "std::", 5) == 0) {
@@ -4385,6 +4390,24 @@ void ROOT::TMetaUtils::SetPathsForRelocatability(std::vector<std::string>& cling
       while (std::getline(envInclPathsStream, inclPath, ':')) {
          clingArgs.push_back("-I");
          clingArgs.push_back(inclPath);
+      }
+   }
+}
+
+//______________________________________________________________________________
+void ROOT::TMetaUtils::ReplaceAll(std::string& str, const std::string& from, const std::string& to,bool recurse)
+{
+   if(from.empty())
+      return;
+   size_t start_pos = 0;
+   bool changed=true;
+   while (changed){
+      changed=false;
+      start_pos = 0;
+      while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+         str.replace(start_pos, from.length(), to);
+         start_pos += to.length();
+         if (recurse) changed = true;
       }
    }
 }

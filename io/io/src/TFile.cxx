@@ -117,6 +117,7 @@
 #include "TSchemaRule.h"
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
+#include "TGlobal.h"
 
 using std::sqrt;
 
@@ -138,7 +139,17 @@ const Int_t kBEGIN = 100;
 ClassImp(TFile)
 
 //*-*x17 macros/layout_file
-
+// Needed to add the "fake" global gFile to the list of globals.
+namespace {
+static struct AddPseudoGlobals {
+AddPseudoGlobals() {
+   // User "gCling" as synonym for "libCore static initialization has happened".
+   // This code here must not trigger it.
+   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gFile", "TFile*",
+                                 (TGlobalMappedFunction::GlobalFunc_t)&TFile::CurrentFile));
+}
+} gAddPseudoGlobals;
+}
 //______________________________________________________________________________
 TFile::TFile() : TDirectoryFile(), fInfoCache(0)
 {

@@ -2,11 +2,28 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
-set(Base_dict_headers ${headers} PARENT_SCOPE)
+ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h)
 
 include_directories(${CMAKE_SOURCE_DIR}/graf3d/g3d/inc)
-ROOT_OBJECT_LIBRARY(Base *.cxx)
+include_directories(${CMAKE_SOURCE_DIR}/gui/gui/inc)
+include_directories(${CMAKE_SOURCE_DIR}/io/io/inc)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../textinput/src)
+
+ROOT_GENERATE_DICTIONARY(G__Core
+                         ${Base_dict_headers}
+                         ${Clib_dict_headers}
+                         ${Cont_dict_headers}
+                         ${Macosx_dict_headers}
+                         ${Unix_dict_headers}
+                         ${Winnt_dict_headers}
+                         ${MetaUtils_dict_headers}
+                         ${Meta_dict_headers}
+                         STAGE1
+                         MODULE Core
+                         OPTIONS ${dict_opts}
+                         LINKDEF LinkDef.h)
+                         
+ROOT_OBJECT_LIBRARY(Base G__Core.cxx *.cxx)
 
 if(builtin_pcre)
   add_dependencies(Base PCRE)

@@ -14,7 +14,11 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ global kDefaultScrollBarWidth;
+// kDefaultScrollBarWidth is not a global but an enum constant.
+// Removing it from the list of selected globals until enum matching
+// is not implemented
+//#pragma link C++ global kDefaultScrollBarWidth;
+//------
 #pragma link C++ global kNone;
 #pragma link C++ global kCopyFromParent;
 #pragma link C++ global kParentRelative;

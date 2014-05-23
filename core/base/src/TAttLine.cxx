@@ -64,7 +64,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *Lw = new TCanvas("Lw","test",500,200);
-   TText t;
+   TText  t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
@@ -89,7 +89,7 @@ End_Html
 Begin_Macro(source)
 {
    TCanvas *Ls = new TCanvas("Ls","test",500,200);
-   TText t;
+   TText  t;
    t.SetTextAlign(32);
    t.SetTextSize(0.08);
    Int_t i=1;
@@ -101,7 +101,7 @@ Begin_Macro(source)
    }
    return Ls;
 }
-End_Macro 
+End_Macro
 
 Begin_Html
 Additional line styles can be defined using <tt>TStyle::SetLineStyleString</tt>.
@@ -276,4 +276,14 @@ void TAttLine::SetLineAttributes()
    // Invoke the DialogCanvas Line attributes.
 
    TVirtualPadEditor::UpdateLineAttributes(fLineColor,fLineStyle,fLineWidth);
+}
+
+
+//______________________________________________________________________________
+void TAttLine::SetLineColorAlpha(Color_t lcolor, Float_t lalpha)
+{
+   // Set a transparent line color. lalpha defines the percentage of
+   // the color opacity from 0. (fully transparent) to 1. (fully opaque).
+
+   fLineColor = TColor::GetColorTransparent(lcolor, lalpha);
 }

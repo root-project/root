@@ -81,7 +81,7 @@
 #pragma link C++ function operator==(const TRef&,const TRef&);
 #pragma link C++ function operator!=(const TRef&,const TRef&);
 
-#pragma link C++ function ConnectCINT(TQObject*,char*,char*);
+#pragma link C++ function ConnectCINT(TQObject*,const char*,const char*);
 
 #pragma link C++ function R_ISDIR(Int_t);
 #pragma link C++ function R_ISCHR(Int_t);

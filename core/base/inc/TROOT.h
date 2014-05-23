@@ -58,6 +58,7 @@ class TListOfEnums;
 class TListOfFunctions;
 class TListOfFunctionTemplates;
 class TFunctionTemplate;
+class TGlobalMappedFunction;
 
 R__EXTERN TVirtualMutex *gROOTMutex;
 

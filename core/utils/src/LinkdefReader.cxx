@@ -245,6 +245,10 @@ bool LinkdefReader::AddRule(std::string ruletype,
          fSelectionRules->SetHasFileNameRule(true);
          
          // add selection rules for everything
+
+         if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
+            identifier = identifier.substr(1,identifier.length()-2);
+         }
          
          VariableSelectionRule vsr(fCount++, fInterp);
          vsr.SetAttributeValue("pattern","*");
@@ -270,9 +274,7 @@ bool LinkdefReader::AddRule(std::string ruletype,
          ClassSelectionRule csr(fCount++, fInterp), csr2(fCount++, fInterp);
          csr.SetAttributeValue("pattern","*");
          csr2.SetAttributeValue("pattern","*::*");
-         if (identifier.length() && identifier[0]=='"' && identifier[identifier.length()-1]=='"') {
-            identifier = identifier.substr(1,identifier.length()-2);
-         }
+
          csr.SetAttributeValue("file_name",identifier);
          csr2.SetAttributeValue("file_name",identifier);
          if (linkOn) {
@@ -306,8 +308,23 @@ bool LinkdefReader::AddRule(std::string ruletype,
             else {
                int pos = identifier.find("(*)"); //rootcint generates error here but I decided to implement that pattern
                if (pos > -1) fsr.SetAttributeValue("proto_pattern", identifier);
-               else 
+               else {
+                  // No multiline
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"\\\n","",true);
+                  // Types: We do not do IO of functions, so it is safe to
+                  // put in some heuristics
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"ULong_t","unsigned long");
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"Long_t","long");
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"Int_t","int");
+                  // Remove space after/before the commas if any
+                  ROOT::TMetaUtils::ReplaceAll(identifier,", ",",",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier," ,",",",true);
+                  // Remove any space before/after the ( as well
+                  ROOT::TMetaUtils::ReplaceAll(identifier," (","(",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier,"( ","(",true);
+                  ROOT::TMetaUtils::ReplaceAll(identifier," )",")",true);
                   fsr.SetAttributeValue("proto_name", identifier);
+               }
             }
             fSelectionRules->AddFunctionSelectionRule(fsr);
             

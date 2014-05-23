@@ -1,0 +1,37 @@
+This is modified version of JSRootIO,
+original version was downloaded from
+https://root.cern.ch/svn/root/trunk/js
+
+At its current state code is very differ from original
+project of Bertrand, but provides very similar functionality.
+Main motivation for changes - fix different errors,
+make JavaScript code more flexible and be able use it in online environment.
+
+
+March 2014:
+1. Introduce JSROOTIO.TBuffer class, which plays similar role
+   as TBuffer in native ROOT I/O. Simplifies I/O logic,
+   reduce duplication of code in many places, fix errors.
+   Main advantage - one could try to keep code synchronous with C++.
+2. Avoid objects cloning when object referenced several times.
+3. Treat special case (collection, arrays) in one place.
+   This is major advantage, while any new classes can be implemented once.
+4. Object representation, produced by JSRootIO is similar to
+   objects, produced by TBufferJSON class. By this one can exchange
+   I/O engine and use same JavaSctript graphic for display.
+5. More clear functions to display different elements of the file.
+   In the future functions should be fully separated from I/O part
+   and organized in similar way as online part.
+6. Eliminate usage of gFile pointer in the I/O part.
+7. Provide TBufferJSON::JsonWriteMember method. It allows to stream any
+   selected data member of the class. Supported are:
+   basic data types, arrays of basic data types, TString, TArray classes.
+   Also any object as data member can be streamed.
+8. TRootSniffer do not creates sublevels for base classes
+
+
+To do:
+1. Redraw of canvas do not work at all.
+2. That to do with histogram infobox - it can be generated only in ROOT after Draw
+3. In JSROOTIO.R__unzip buffers bigger than 16 MB (0xfffffff) are not
+   treated correctly. In TKey.cxx, lines 259-275, big raw buffer cutted on blocks of 16MB.

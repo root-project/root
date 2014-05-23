@@ -47,7 +47,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
 }
 
 TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
-                                     const clang::TypedefDecl *TdefD)
+                                     const clang::TypedefNameDecl *TdefD)
    : fInterp(interp), fFirstTime(true), fDescend(false), fDecl(TdefD), 
      fTitle("")
 {
@@ -164,7 +164,7 @@ int TClingTypedefInfo::InternalNext()
          }
       }
       // Return if this decl is a typedef.
-      if (llvm::isa<clang::TypedefDecl>(*fIter)) {
+      if (llvm::isa<clang::TypedefNameDecl>(*fIter)) {
          fDecl = *fIter;
          return 1;
       }
@@ -193,7 +193,7 @@ long TClingTypedefInfo::Property() const
    }
    long property = 0L;
    property |= kIsTypedef;
-   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType qt = td->getUnderlyingType().getCanonicalType();
    if (qt.isConstQualified()) {
       property |= kIsConstant;
@@ -239,7 +239,7 @@ int TClingTypedefInfo::Size() const
       return 1;
    }
    clang::ASTContext &context = fDecl->getASTContext();
-   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType qt = td->getUnderlyingType();
    if (qt->isDependentType()) {
       // The underlying type is dependent on a template parameter,
@@ -269,7 +269,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    // Note: This must be static because we return a pointer to the internals.
    static std::string truename;
    truename.clear();
-   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    clang::QualType underlyingType = td->getUnderlyingType();
    if (underlyingType->isBooleanType()) {
       return "bool";
@@ -289,8 +289,8 @@ const char *TClingTypedefInfo::Name() const
    }
    // Note: This must be static because we return a pointer to the internals.
    static std::string fullname;
-   fullname.clear();   
-   const clang::TypedefDecl *td = llvm::dyn_cast<clang::TypedefDecl>(fDecl);
+   fullname.clear();
+   const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
    const clang::ASTContext &ctxt = fDecl->getASTContext();
    ROOT::TMetaUtils::GetFullyQualifiedTypeName(fullname,ctxt.getTypedefType(td),*fInterp);
    return fullname.c_str();

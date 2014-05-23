@@ -47,9 +47,21 @@
 #include "TGFrame.h"
 #include "TGIdleHandler.h"
 #include "TError.h"
+#include "TGlobal.h"
 
 // Global pointer to the TGClient object
 static TGClient *gClientGlobal = 0;
+
+namespace {
+static struct AddPseudoGlobals {
+AddPseudoGlobals() {
+   // User "gCling" as synonym for "libCore static initialization has happened".
+   // This code here must not trigger it.
+   TGlobalMappedFunction::Add(new TGlobalMappedFunction("gClient", "TGClient*",
+                                 (TGlobalMappedFunction::GlobalFunc_t)&TGClient::Instance));
+}
+} gAddPseudoGlobals;
+}
 
 // Initialize gClient in case libGui is loaded in batch mode
 void TriggerDictionaryInitialization_libGui();

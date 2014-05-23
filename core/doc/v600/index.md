@@ -224,7 +224,27 @@ of the `TDataType` describing a typedef.
 ``` {.cpp}
     object->SetTextAlign(kHAlignLeft+kVAlignTop);
 ```
+-   New method `SetTextColorAlpha(ci, alpha)` to set the color index
+    `ci` with a transparency percentage.
 
 ### TAttFill
 
-- Provide symbolic values for different styles.
+-   Provide symbolic values for different styles.
+-   New method `SetFillColorAlpha(ci, alpha)` to set the color index
+    `ci` with a transparency percentage.
+    
+### TAttMarker
+
+-   New method `SetMarkerColorAlpha(ci, alpha)` to set the color index
+    `ci` with a transparency percentage.
+    
+### TAttLine
+
+-   New method `SetLineColorAlpha(ci, alpha)` to set the color index
+    `ci` with a transparency percentage.
+    
+### TAttAxis
+
+-   `SetLabelColor` and `SetLabelColor` have an optional parameter 
+    `alpha` allowing to change the transparency of the axis labels and
+     axis body.

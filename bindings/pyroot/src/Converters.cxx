@@ -19,6 +19,7 @@
 
 // Standard
 #include <limits.h>
+#include <stddef.h>      // for ptrdiff_t
 #include <string.h>
 #include <utility>
 #include <sstream>
@@ -676,7 +677,11 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg(
 PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
 {
 // nothing sensible can be done, just return <address> as pylong
-   return PyLong_FromLong( (Long_t)address );
+   if ( ! address || *(ptrdiff_t*)address == 0 ) {
+      Py_INCREF( gNullPtrObject );
+      return gNullPtrObject;
+   }
+   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)*(ptrdiff_t**)address, 1 );
 }
 
 //____________________________________________________________________________
@@ -826,16 +831,7 @@ Bool_t PyROOT::TRootObjectConverter::SetArg(
    }
 
    ObjectProxy* pyobj = (ObjectProxy*)pyobject;
-// CLING WORKAROUND: std::basic_ostream<char> and std::basic_ostream<char, char_traits<char> >
-// carry different TClass'es and therefore are not seen as bases of std::stringstream (ROOT-6020)
-//
-// Original code:
-// if ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
-   if ( pyobj->ObjectIsA() && fClass.GetClass() && pyobj->ObjectIsA()->GetClassInfo() &&
-        ( pyobj->ObjectIsA() == fClass.GetClass() ||
-          gInterpreter->ClassInfo_IsBase(
-             pyobj->ObjectIsA()->GetClassInfo(), fClass.GetClass()->GetName()) ) ) {
-// -- END CLING WORKAROUND
+   if ( pyobj->ObjectIsA() && pyobj->ObjectIsA()->GetBaseClass( fClass.GetClass() ) ) {
    // depending on memory policy, some objects need releasing when passed into functions
       if ( ! KeepControl() && user != Utility::kStrict )
          ((ObjectProxy*)pyobject)->Release();

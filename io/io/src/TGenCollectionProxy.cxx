@@ -452,7 +452,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
                      fKind = (EDataType)kBOOL_t;
                   }
                   fSize = gCling->TypeInfo_Size(ti);
-                  R__ASSERT((fKind>0 && fKind<0x16) || (fKind==-1&&(prop&kIsPointer)) );
+                  R__ASSERT((fKind>0 && fKind<0x17) || (fKind==-1&&(prop&kIsPointer)) );
                }
             }
             else if ( prop&kIsEnum ) {

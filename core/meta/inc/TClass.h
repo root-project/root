@@ -401,7 +401,7 @@ public:
    void               RegisterStreamerInfo(TVirtualStreamerInfo *info);
    void               RemoveRef(TClassRef *ref);
    void               RemoveStreamerInfo(Int_t slot);
-   void               ReplaceWith(TClass *newcl, Bool_t recurse = kTRUE) const;
+   void               ReplaceWith(TClass *newcl) const;
    void               ResetCaches();
    void               ResetClassInfo(Long_t tagnum);
    void               ResetClassInfo();

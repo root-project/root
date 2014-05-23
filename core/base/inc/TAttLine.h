@@ -35,7 +35,7 @@ protected:
    Color_t    fLineColor;           //line color
    Style_t    fLineStyle;           //line style
    Width_t    fLineWidth;           //line width
-   
+
 public:
 
    TAttLine();
@@ -52,6 +52,7 @@ public:
    virtual void     SaveLineAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t widdef=1);
    virtual void     SetLineAttributes(); // *MENU*
    virtual void     SetLineColor(Color_t lcolor) { fLineColor = lcolor;}
+   virtual void     SetLineColorAlpha(Color_t lcolor, Float_t lalpha);
    virtual void     SetLineStyle(Style_t lstyle) { fLineStyle = lstyle;}
    virtual void     SetLineWidth(Width_t lwidth) { fLineWidth = lwidth;}
 

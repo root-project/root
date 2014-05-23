@@ -338,23 +338,14 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::EnumDecl *D) cons
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::VarDecl* D) const
 {  
-   // Currently rootcling does not need any information about variable outside
-   // of a class.
-   // NOTE: In CINT the #pragma link C++ global
-   // was also used to affect the dictionary for enumeration constant
-   // if you reactivate this section, you may want to consider also 
-   // add support for clang::EnumConstantDecl (here and in Scanner.cxx)
-   return 0;
-#if 0
-   std::string str_name;   // name of the Decl
-   std::string qual_name;  // fully qualified name of the Decl   
-   GetDeclName(D, str_name, qual_name);
+   std::string qual_name;  // fully qualified name of the Decl
+   GetDeclQualName(D, qual_name);
 
-   if (!IsLinkdefFile())
-      return IsVarSelected(D, qual_name);
-   else
+   if (IsLinkdefFile())
       return IsLinkdefVarSelected(D, qual_name);
-#endif
+   else
+      return IsVarSelected(D, qual_name);
+
 }
  
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FieldDecl* /* D */) const
@@ -375,8 +366,10 @@ const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::FunctionDecl* D) 
    // Implement a simple matching for functions
    std::string qual_name;  // fully qualified name of the Decl
    GetDeclQualName(D, qual_name);
-   auto fsl = IsLinkdefFile() ? IsLinkdefFunSelected(D, qual_name) : IsFunSelected(D, qual_name);
-   return fsl;
+   if (IsLinkdefFile())
+      return IsLinkdefFunSelected(D, qual_name);
+   else
+      return IsFunSelected(D, qual_name);
 }
 
 const BaseSelectionRule *SelectionRules::IsDeclSelected(clang::Decl *D) const
@@ -467,7 +460,7 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       return false;
    }
 
-//    const std::array<char,2> quals={'*','&'};
+   const std::vector<std::string> quals={"*","&"};
 
    prototype = "";
    // iterate through all the function parameters
@@ -479,18 +472,21 @@ bool SelectionRules::GetFunctionPrototype(clang::FunctionDecl* F, std::string& p
       if (prototype != "")
          prototype += ",";
 
-      type = P->getType().getAsString();
+      //type = P->getType().getAsString();
+      ROOT::TMetaUtils::GetNormalizedName(type,P->getType(),fInterp,fNormCtxt);
 
       // We need to get rid of the "class " string if present
-      auto pos = type.find("class ");
-      if (pos != std::string::npos)
-         type.replace( pos, 6, "" );
+      ROOT::TMetaUtils::ReplaceAll(type,"class ", "");
+      // We need to get rid of the "restrict " string if present
+      ROOT::TMetaUtils::ReplaceAll(type,"restrict", "");
 
       // pointers are returned in the form "int *" and I need them in the form "int*"
       // same for &
-      pos = type.find(" ");
-      if (pos != std::string::npos)
-         type.replace( pos, 1, "" );
+      for (auto& qual : quals){
+        auto pos = type.find(" "+qual);
+        if (pos != std::string::npos)
+           type.replace( pos, 2, qual );
+        }
 //          for (auto& qual : quals){
 //             if (type.at(type.length()-1) == qual && type.at(type.length()-2) == ' ') {
 //                type.at(type.length()-2) = qual;
@@ -923,31 +919,27 @@ const BaseSelectionRule *SelectionRules::IsEnumSelected(clang::EnumDecl* D, cons
 const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D, const std::string& qual_name) const
 {
 
-   std::list<VariableSelectionRule>::const_iterator it;
-   std::list<VariableSelectionRule>::const_iterator it_end;
 
-   it = fVariableSelectionRules.begin();
-   it_end = fVariableSelectionRules.end();
-   
    const BaseSelectionRule *selector = 0;
    int fImplNo = 0;
    const BaseSelectionRule *explicit_selector = 0;
    
    std::string name_value;
    std::string pattern_value;
-   for(; it != it_end; ++it) {
+   for(auto& selRule: fVariableSelectionRules) {
       BaseSelectionRule::EMatchType match 
-         = it->Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
+         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, "", false);
       if (match != BaseSelectionRule::kNoMatch) {
-         if (it->GetSelected() == BaseSelectionRule::kYes) {
+         if (selRule.GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
             if (IsLinkdefFile()){
                if (match == BaseSelectionRule::kName) {
-                  explicit_selector = &(*it);
+                  explicit_selector = &selRule;
                } else if (match == BaseSelectionRule::kPattern) {
-                  if (it->GetAttributeValue("pattern", pattern_value)) {
+                  if (selRule.GetAttributeValue("pattern", pattern_value)) {
+                     explicit_selector=&selRule;
                      // NOTE: Weird ... This is a strange definition of explicit.
-                     if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &(*it);
+                     //if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = selRule;
                   }
                }
             }
@@ -955,7 +947,7 @@ const BaseSelectionRule *SelectionRules::IsLinkdefVarSelected(clang::VarDecl* D,
          else {
             if (!IsLinkdefFile()) return 0;
             else {
-               if (it->GetAttributeValue("pattern", pattern_value)) {
+               if (selRule.GetAttributeValue("pattern", pattern_value)) {
                   if (pattern_value == "*" || pattern_value == "*::*") ++fImplNo;
                   else 
                      return 0;
@@ -996,9 +988,8 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
    
    std::string pattern_value;
    for(auto& selRule : fFunctionSelectionRules) {
-//       std::cout << "Trying to match prototype " << prototype << std::endl;
       BaseSelectionRule::EMatchType match 
-         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, IsLinkdefFile());
+         = selRule.Match(llvm::dyn_cast<clang::NamedDecl>(D), qual_name, prototype, false);
       if (match != BaseSelectionRule::kNoMatch) {
          if (selRule.GetSelected() == BaseSelectionRule::kYes) {
             // explicit rules are with stronger priority in rootcint
@@ -1007,8 +998,9 @@ const BaseSelectionRule *SelectionRules::IsLinkdefFunSelected(clang::FunctionDec
                   explicit_selector = &selRule;
                } else if (match == BaseSelectionRule::kPattern) {
                   if (selRule.GetAttributeValue("pattern", pattern_value)) {
+                     explicit_selector = &selRule;
                      // NOTE: Weird ... This is a strange definition of explicit.
-                     if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &selRule;
+                     //if (pattern_value != "*" && pattern_value != "*::*") explicit_selector = &selRule;
                   }
                }
             }
@@ -1537,7 +1529,7 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
          }
       }
    }
-#if Variable_rules_becomes_useful_for_rootcling
+
    if (!fVariableSelectionRules.empty()) {
       for(std::list<VariableSelectionRule>::const_iterator it = fVariableSelectionRules.begin(); 
           it != fVariableSelectionRules.end(); ++it) {
@@ -1549,50 +1541,52 @@ bool SelectionRules::AreAllSelectionRulesUsed() const {
                // keept it
             } else {
                name.clear();
-            }            
-            
-            if (IsSelectionXMLFile()){
-               std::cout<<"Warning - unused variable rule: "<<name<<std::endl;
             }
-            else {
-               std::cout<<"Error - unused variable rule: "<<name<<std::endl;
-            }
+            std::cout<<"Warning - unused variable rule: "<<name<<std::endl;
             if (name.length() == 0) {
                it->PrintAttributes(std::cout,3);
             }
          }
       }
    }
-#endif
 
-   for(const auto& selRule: fFunctionSelectionRules) {
-      if (!selRule.GetMatchFound() && !GetHasFileNameRule()) {
-         // Here the slow methods can be used
-         std::string name;
-         if (selRule.GetAttributeValue("proto_pattern", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("proto_name", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("pattern", name)) {
-            // keep it
-         } else if (selRule.GetAttributeValue("name", name)) {
-            // keept it
-         } else {
-            name.clear();
-         }
-         // Make it soft, no error - just warnings
-         std::cout<<"Warning - unused function rule: "<<name<<std::endl;
-//          if (IsSelectionXMLFile()){
-//             std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+
+#if defined(R__MUST_REVISIT)
+#if R__MUST_REVISIT(6,2)
+ROOT::TMetaUtils::Warning("SelectionRules::AreAllSelectionRulesUsed",
+"Warnings concerning non matching selection rules are suppressed. An action is to be taken.\n");
+#endif
+#endif
+//    for(const auto& selRule: fFunctionSelectionRules) {
+//       if (!selRule.GetMatchFound() && !GetHasFileNameRule()) {
+//          // Here the slow methods can be used
+//          std::string name;
+//          if (selRule.GetAttributeValue("proto_pattern", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("proto_name", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("pattern", name)) {
+//             // keep it
+//          } else if (selRule.GetAttributeValue("name", name)) {
+//             // keept it
+//          } else {
+//             name.clear();
 //          }
-//          else {
-//             std::cout<<"Error - unused function rule: "<<name<<std::endl;
+//          // Make it soft, no error - just warnings
+//          std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+// //          if (IsSelectionXMLFile()){
+// //             std::cout<<"Warning - unused function rule: "<<name<<std::endl;
+// //          }
+// //          else {
+// //             std::cout<<"Error - unused function rule: "<<name<<std::endl;
+// //          }
+//          if (name.length() == 0) {
+//             selRule.PrintAttributes(std::cout,3);
 //          }
-         if (name.length() == 0) {
-            selRule.PrintAttributes(std::cout,3);
-         }
-      }
-   }
+//       }
+//
+//    }
+
 
 #if Enums_rules_becomes_useful_for_rootcling
    if (!fEnumSelectionRules.empty()) {

@@ -48,7 +48,8 @@ public:
    virtual void     ResetAttMarker(Option_t *toption="");
    virtual void     SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef=1, Int_t stydef=1, Int_t sizdef=1);
    virtual void     SetMarkerAttributes();  // *MENU*
-   virtual void     SetMarkerColor(Color_t tcolor=1) { fMarkerColor = tcolor;}
+   virtual void     SetMarkerColor(Color_t mcolor=1) { fMarkerColor = mcolor;}
+   virtual void     SetMarkerColorAlpha(Color_t mcolor, Float_t malpha);
    virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;}
    virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
 

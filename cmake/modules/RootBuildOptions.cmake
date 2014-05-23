@@ -128,6 +128,7 @@ ROOT_BUILD_OPTION(glite ON "gLite support, requires libglite-api-wrapper v.3 fro
 ROOT_BUILD_OPTION(globus OFF "Globus authentication support, requires Globus toolkit")
 ROOT_BUILD_OPTION(gsl_shared OFF "Enable linking against shared libraries for GSL (default no)")
 ROOT_BUILD_OPTION(hdfs ON "HDFS support; requires libhdfs from HDFS >= 0.19.1")
+ROOT_BUILD_OPTION(http OFF "HTTP Server support")
 ROOT_BUILD_OPTION(krb5 ON "Kerberos5 support, requires Kerberos libs")
 ROOT_BUILD_OPTION(ldap ON "LDAP support, requires (Open)LDAP libs")
 ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)")
@@ -183,6 +184,7 @@ option(include_roottest "Include roottest as a subdirectory in root. Needs enabl
 
 if(all)
  set(gdml    ON CACHE BOOL "" FORCE)
+ set(http    ON CACHE BOOL "" FORCE)
  #set(geocad  ON CACHE BOOL "" FORCE)  #not supported yet
  set(qt      ON CACHE BOOL "" FORCE)
  set(qtgsi   ON CACHE BOOL "" FORCE)

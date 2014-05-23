@@ -12,9 +12,10 @@ ROOT_USE_PACKAGE(math/mathcore)
 
 ROOT_GENERATE_DICTIONARY(G__IO *.h STAGE1 MODULE ${libname} LINKDEF LinkDef.h)
 
-
-ROOT_LINKER_LIBRARY(${libname} *.cxx G__IO.cxx LIBRARIES ${CMAKE_DL_LIBS}
-                                               DEPENDENCIES Core Thread)
+ROOT_OBJECT_LIBRARY(RIOObjs G__IO.cxx  *.cxx)
+ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:RIOObjs>
+                               LIBRARIES ${CMAKE_DL_LIBS}
+                               DEPENDENCIES Core Thread)
 ROOT_INSTALL_HEADERS()
 
 #--- Extra rules ----------------------------------------------------------

@@ -37,6 +37,7 @@ enum EDataType {
    kVoid_t   = 20,
 
    kDataTypeAliasUnsigned_t = 21,
+   kDataTypeAliasSignedChar_t = 22,
    // could add "long int" etc
    kNumDataTypes
 };

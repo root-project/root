@@ -28,6 +28,8 @@
 #include "TDataMember.h"
 #include "TBaseClass.h"
 #include "TClassEdit.h"
+#include "TEnum.h"
+#include "TEnumConstant.h"
 #include "TInterpreter.h"
 #include "TGlobal.h"
 #include "DllImport.h"
@@ -99,6 +101,24 @@ namespace {
    {
    // Get the address of a data member (used for enums)
       return mb->GetOffsetCint();
+   }
+
+   template<class T>
+   void AddPropertyToClass( PyObject* pyclass, T* prop, Bool_t isEnum, Bool_t isStatic ) {
+      PyROOT::PropertyProxy* property = PyROOT::PropertyProxy_New( prop );
+      if ( isEnum )
+         property->fProperty |= kIsConstant;      // ensures non-writable
+
+   // allow access at the instance level
+      PyObject_SetAttrString( pyclass,
+         const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+
+   // allow access at the class level (always add after setting instance level)
+      if ( isStatic ) {
+         PyObject_SetAttrString( (PyObject*)Py_TYPE(pyclass),
+            const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+      }
+      Py_DECREF( property );
    }
 
 } // unnamed namespace
@@ -343,6 +363,7 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
          for ( Callables_t::iterator cit = imd->second.begin(); cit != imd->second.end(); ++cit )
             ((TemplateProxy*)attr)->AddOverload( *cit );
       } else {
+         if ( ! attr ) PyErr_Clear();
       // normal case, add a new method
          MethodProxy* method = MethodProxy_New( imd->first, imd->second );
          PyObject_SetAttrString(
@@ -351,6 +372,18 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
       }
 
       Py_XDECREF( attr );     // could have be found in base class or non-existent
+   }
+
+// collect enums; this must happen before data members, so that we can check on their existence
+   TList* enums = ((TClass*)klass.Id())->GetListOfEnums();
+   TIter ienum( enums );
+   TEnum* e = 0;
+   while ( (e = (TEnum*)ienum.Next()) ) {
+      const TSeqCollection* seq = e->GetConstants();
+      for ( Int_t i = 0; i < seq->GetSize(); i++ ) {
+         TEnumConstant* ec = (TEnumConstant*)seq->At( i );
+         AddPropertyToClass( pyclass, ec, kTRUE, kTRUE );
+      }
    }
 
 // collect data members
@@ -362,31 +395,32 @@ int PyROOT::BuildRootClassDict( const TScopeAdapter& klass, PyObject* pyclass ) 
       if ( ! mb.IsPublic() )
          continue;
 
-   // enums (static enums are the defined values, non-static are data members, i.e. properties)
-   // TODO: this leaves static enum variables to be read-only
+   // enum datamembers (this in conjunction with previously collected enums above)
       if ( mb.TypeOf().IsEnum() && mb.IsStatic() ) {
+      // some implementation-specific data members have no address: ignore them
          if ( ! GetDataMemberAddress( mb ) )
-            continue;                   // happens for implementation-specific data
-         PyObject* val = PyInt_FromLong( *((Int_t*)GetDataMemberAddress( mb ) ) );
-         PyObject_SetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()), val );
-         Py_DECREF( val );
+            continue;
 
-   // properties (aka public data members)
-      } else {
-         PropertyProxy* property = PropertyProxy_New( mb );
-
-      // allow access at the instance level
-         PyObject_SetAttrString( pyclass,
-            const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
-
-         if ( mb.IsStatic() ) {
-         // allow access at the class level (always add after setting instance level)
-            PyObject_SetAttrString( (PyObject*)Py_TYPE(pyclass),
-               const_cast< char* >( property->GetName().c_str() ), (PyObject*)property );
+      // two options: this is a static variable, or it is the enum value, the latter
+      // already exists, so check for it and move on if set
+         PyObject* eset = PyObject_GetAttrString( pyclass, const_cast<char*>(mb.Name().c_str()) );
+         if ( eset ) {
+            Py_DECREF( eset );
+            continue;
          }
 
-         Py_DECREF( property );
+         PyErr_Clear();
+
+      // it could still be that this is an anonymous enum, which is not in the list
+      // provided by the class
+         if ( strstr( ((TDataMember*)mb)->GetFullTypeName(), "<anonymous>" ) != 0 ) {
+            AddPropertyToClass( pyclass, (TDataMember*)mb, kTRUE, kTRUE );
+            continue;
+         }
       }
+
+   // properties (aka public (static) data members)
+      AddPropertyToClass( pyclass, (TDataMember*)mb, kFALSE, mb.IsStatic() );
    }
 
 // restore custom __getattr__

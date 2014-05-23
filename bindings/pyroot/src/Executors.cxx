@@ -23,7 +23,10 @@
 
 
 //- data ______________________________________________________________________
-PyROOT::ExecFactories_t PyROOT::gExecFactories;
+namespace PyROOT {
+   ExecFactories_t gExecFactories;
+   R__EXTERN PyObject* gNullPtrObject;
+}
 
 
 //- helpers -------------------------------------------------------------------
@@ -255,7 +258,12 @@ PyObject* PyROOT::TCStringExecutor::Execute( CallFunc_t* func, void* self, Bool_
 PyObject* PyROOT::TVoidArrayExecutor::Execute( CallFunc_t* func, void* self, Bool_t release_gil )
 {
 // execute <func> with argument <self>, construct python long return value
-   return BufFac_t::Instance()->PyBuffer_FromMemory( (Long_t*)PRCallFuncExecInt( func, self, release_gil ), 1 );
+   Long_t* result = (Long_t*)PRCallFuncExecInt( func, self, release_gil );
+   if ( ! result ) {
+      Py_INCREF( gNullPtrObject );
+      return gNullPtrObject;
+   }
+   return BufFac_t::Instance()->PyBuffer_FromMemory( result, 1 );
 }
 
 //____________________________________________________________________________

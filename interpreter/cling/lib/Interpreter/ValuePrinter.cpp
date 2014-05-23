@@ -7,7 +7,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "cling/Interpreter/ValuePrinter.h"
+#include "cling/Interpreter/Value.h"
 
 #include "cling/Interpreter/CValuePrinter.h"
 #include "cling/Interpreter/Interpreter.h"
@@ -381,16 +381,24 @@ namespace valuePrinterInternal {
   }
 
   void printType_Default(llvm::raw_ostream& o, const Value& V) {
-    o << "(";
-    o << V.getType().getAsString();
-    o << ") ";
-  }
+    using namespace clang;
+    QualType QT = V.getType().getNonReferenceType();
+    std::string ValueTyStr;
+    if (const TypedefType* TDTy = dyn_cast<TypedefType>(QT))
+      ValueTyStr = TDTy->getDecl()->getQualifiedNameAsString();
+    else if (const TagType* TTy = dyn_cast<TagType>(QT))
+      ValueTyStr = TTy->getDecl()->getQualifiedNameAsString();
 
-  void flushToStream(llvm::raw_ostream& o, const std::string& s) {
-    // We want to keep stdout and o in sync if o is different from stdout.
-    fflush(stdout);
-    o << s;
-    o.flush();
+    if (ValueTyStr.empty())
+      ValueTyStr = QT.getAsString();
+    else if (QT.hasQualifiers())
+      ValueTyStr = QT.getQualifiers().getAsString() + " " + ValueTyStr;
+
+    o << "(";
+    o << ValueTyStr;
+    if (V.getType()->isReferenceType())
+      o << " &";
+    o << ") ";
   }
 } // end namespace valuePrinterInternal
 } // end namespace cling

@@ -3529,7 +3529,7 @@ void TClass::RemoveRef(TClassRef *ref)
 }
 
 //______________________________________________________________________________
-void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
+void TClass::ReplaceWith(TClass *newcl) const
 {
    // Inform the other objects to replace this object by the new TClass (newcl)
 
@@ -3540,28 +3540,13 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    TVirtualStreamerInfo *info;
    TList tobedeleted;
 
-   TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
-
-   if ( strchr( corename.Data(), '<' ) == 0 ) {
-      // not a template, let's skip
-      recurse = kFALSE;
-   }
+   // Since we are in the process of replacing a TClass by a TClass
+   // coming from a dictionary, there is no point in loading any
+   // libraries during this search.
+   Bool_t autoload = gInterpreter->SetClassAutoloading(kFALSE);
 
    while ((acl = (TClass*)nextClass())) {
       if (acl == newcl) continue;
-
-      if (recurse && acl!=this) {
-
-         TString aclCorename( TClassEdit::ResolveTypedef(acl->GetName()) );
-
-         if (aclCorename == corename) {
-
-            // 'acl' represents the same class as 'newcl' (and this object)
-
-            acl->ReplaceWith(newcl, kFALSE);
-            tobedeleted.Add(acl);
-         }
-      }
 
       TIter nextInfo(acl->GetStreamerInfos());
       while ((info = (TVirtualStreamerInfo*)nextInfo())) {
@@ -3580,6 +3565,8 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
       delete acl;
    }
    gInterpreter->UnRegisterTClassUpdate(this);
+
+   gInterpreter->SetClassAutoloading(autoload);
 }
 
 //______________________________________________________________________________
@@ -5584,7 +5571,8 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
 
          if ( prop&kIsStatic)             continue;
          name = tdm->GetName(); il = name.Length();
-         if ( (code > kNoEnum) && prop&kIsEnum) id = id*3 + 1;
+         if ( (code > kNoEnum) && code != kReflex && code != kReflexNoComment && prop&kIsEnum)
+            id = id*3 + 1;
 
          int i;
          for (i=0; i<il; i++) id = id*3+name[i];
@@ -5594,8 +5582,12 @@ UInt_t TClass::GetCheckSum(ECheckSum code) const
             if (TClassEdit::IsSTLCont(type))
                type = TClassEdit::ShortType( type, TClassEdit::kDropStlDefault );
             if (code == kReflex || code == kReflexNoComment) {
-               type.ReplaceAll("ULong64_t","unsigned long long");
-               type.ReplaceAll("Long64_t","long long");
+               if (prop&kIsEnum) {
+                  type = "int";
+               } else {
+                  type.ReplaceAll("ULong64_t","unsigned long long");
+                  type.ReplaceAll("Long64_t","long long");
+               }
             }
          } else {
             type = tdm->GetFullTypeName();
@@ -6178,8 +6170,8 @@ void TClass::RegisterStreamerInfo(TVirtualStreamerInfo *info)
       R__LOCKGUARD(gInterpreterMutex);
       Int_t slot = info->GetClassVersion();
       if (fStreamerInfo->GetSize() > (slot-fStreamerInfo->LowerBound())
-          && fStreamerInfo->At(slot) == 0
-          && fStreamerInfo->At(slot) == info) {
+          && fStreamerInfo->At(slot) != 0
+          && fStreamerInfo->At(slot) != info) {
          Error("RegisterStreamerInfo",
                "Register StreamerInfo for %s on non-empty slot (%d).",
                GetName(),slot);

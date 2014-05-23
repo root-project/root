@@ -34,11 +34,15 @@
 #pragma link C++ enum TGNumberFormat::EStepSize;
 #pragma link C++ enum TGGroupFrame::ETitlePos;
 
-#pragma link C++ global gClient;
+
 
 #pragma link C++ function MK_MSG;
 #pragma link C++ function GET_MSG;
 #pragma link C++ function GET_SUBMSG;
+// This replaces the old
+// #pragma link C++ global gClient;
+// after the fix for ROOT-6106
+// #pragma link C++ function TGClient::Instance;
 
 #pragma link C++ class TGObject;
 #pragma link C++ class TGClient;

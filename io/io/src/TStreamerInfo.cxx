@@ -333,7 +333,7 @@ void TStreamerInfo::Build()
       const char* dmName = dm->GetName();
       const char* dmTitle = dm->GetTitle();
       const char* dmType = dm->GetTypeName();
-      const char* dmFull = dm->GetFullTypeName();
+      const char* dmFull = dm->GetTrueTypeName(); // Used to be GetFullTypeName ...
       Bool_t dmIsPtr = dm->IsaPointer();
       TDataMember* dmCounter = 0;
       if (dmIsPtr) {
@@ -1345,17 +1345,38 @@ namespace {
       return kFALSE;
    }
 
-   TClass *FindAlternate(TClass *context, const std::string &name)
+   TClass *FindAlternate(TClass *context, const std::string &i_name, std::string& newName)
    {
       // Return a class whose has the name as oldClass and can be found
       // within the scope of the class 'context'.
+
+      // First strip any 'const ' prefix or trailing '*'.
+      std::string name(i_name);
+      newName.clear();
+      if (name.compare(0,6,"const ")==0) {
+         newName = "const ";
+         name.erase(0,6);
+      }
+      std::string suffix;
+      UInt_t nstars = 0;
+      while(name[name.length()-nstars-1]=='*') {
+         ++nstars;
+         suffix.append("*");
+      }
+      if (nstars) {
+         name.erase(name.length()-nstars,nstars);
+      }
 
       std::string alternate(context->GetName());
       alternate.append("::");
       alternate.append(name);
 
       TClass *altcl = TClass::GetClass(alternate.c_str(),/*load=*/ false,true);
-      if (altcl) return altcl;
+      if (altcl) {
+         newName.append(altcl->GetName());
+         newName.append(suffix);
+         return altcl;
+      }
 
       size_t ctxt_cursor = strlen(context->GetName());
       for (size_t level = 0; ctxt_cursor != 0; --ctxt_cursor) {
@@ -1370,11 +1391,14 @@ namespace {
                alternate.append(name);
                altcl = TClass::GetClass(alternate.c_str(),/*load=*/ false,true);
                if (altcl) {
+                  newName.append(altcl->GetName());
+                  newName.append(suffix);
                   return altcl;
                }
             }
          }
       }
+      newName.clear();
       return 0;
    }
 
@@ -1432,11 +1456,13 @@ namespace {
 
             TClass *firstAltCl = firstOldCl;
             TClass *secondAltCl = secondOldCl;
+            std::string firstNewName;
+            std::string secondNewName;
             if (firstNewCl && !HasScope(inside[1])) {
-               firstAltCl = FindAlternate(context, inside[1]);
+               firstAltCl = FindAlternate(context, inside[1], firstNewName);
             }
             if (secondNewCl && !HasScope(inside[2])) {
-               secondAltCl = FindAlternate(context, inside[2]);
+               secondAltCl = FindAlternate(context, inside[2], secondNewName);
             }
             if ((firstNewCl && firstAltCl != firstOldCl) ||
                 (secondNewCl && secondAltCl != secondOldCl) ) {
@@ -1444,9 +1470,9 @@ namespace {
                // Need to produce new name.
                std::string alternate = inside[0];
                alternate.append("<");
-               alternate.append(firstAltCl ? firstAltCl->GetName() : inside[1]);
+               alternate.append(firstAltCl ? firstNewName : inside[1]);
                alternate.append(",");
-               alternate.append(secondAltCl? secondAltCl->GetName(): inside[2]);
+               alternate.append(secondAltCl? secondNewName : inside[2]);
                // We are intentionally dropping any further arguments,
                // they would be using the wrong typename and would also be
                // somewhat superflous since this is for the old layout.
@@ -1477,12 +1503,13 @@ namespace {
          }
 
          // Now let's if we can find this missing type.
-         TClass *altcl = FindAlternate(context, inside[1]);
+         std::string newName;
+         TClass *altcl = FindAlternate(context, inside[1], newName);
 
          if (altcl) {
             std::string alternate = inside[0];
             alternate.append("<");
-            alternate.append(altcl->GetName());
+            alternate.append(newName);
             // We are intentionally dropping any further arguments,
             // they would be using the wrong typename and would also be
             // somewhat superflous since this is for the old layout.

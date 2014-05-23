@@ -139,6 +139,15 @@ namespace {
                      attr = (PyObject*)TemplateProxy_New( name, pyclass );
                }
 
+            // enums types requested as type (rather than the constants)
+               if ( ! attr && klass &&
+                    ((TClass*)klass.Id())->GetListOfEnums()->FindObject( name.c_str() ) ) {
+               // special case; enum types; for now, pretend int
+               // TODO: although fine for C++98, this isn't correct in C++11
+                  Py_INCREF( &PyInt_Type );
+                  attr = (PyObject*)&PyInt_Type;
+               }
+
                if ( attr ) {
                   PyObject_SetAttr( pyclass, pyname, attr );
                   Py_DECREF( attr );
@@ -146,7 +155,7 @@ namespace {
                }
             }
 
-            if ( ! attr ) {
+            if ( ! attr && ! PyRootType_Check( pyclass ) /* at global or module-level only */ ) {
                PyErr_Clear();
             // get class name to look up CINT tag info ...
                attr = GetRootGlobalFromString( name /*, tag */ );

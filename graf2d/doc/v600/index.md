@@ -193,5 +193,5 @@ file `simple.pdf`.
 
 ### TPave
 
--   Implement `SetX1()` etc ... for `TPav`e and inherited classes to make sure the 
+-   Implement `SetX1()` etc ... for `TPave` and inherited classes to make sure the 
     NDC coordinates are also defined.

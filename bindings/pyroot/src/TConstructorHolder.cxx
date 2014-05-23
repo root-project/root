@@ -82,24 +82,6 @@ PyObject* PyROOT::TConstructorHolder::operator()(
 // perform the call, 0 makes the other side allocate the memory
    Long_t address = (Long_t)this->Execute( 0, release_gil );
 
-// CLING WORKAROUND --
-// Due to #100389, the constructor may not be a valid method. This happens if
-// there is no (default) contructor, so just return a right-size bit of memory.
-   if ( ! address ) {
-      if ( PyErr_Occurred() ) PyErr_Print();
-      // CLING WORKAROUND --
-      // Theoretically, #100389 is fixed, but there are subtle ways that this
-      // still fails. For whatever reason (TBD) simply calling the method again
-      // has a high success rate
-      address = (Long_t)this->Execute( 0, release_gil );
-      // -- END (NESTED) CLING WORKAROUND
-      if ( ! address ) {
-         if ( PyErr_Occurred() ) PyErr_Print();
-         address = (Long_t)klass->New();
-      }
-   }
-// -- END CLING WORKAROUND
- 
 // done with filtered args
    Py_DECREF( args );
 
