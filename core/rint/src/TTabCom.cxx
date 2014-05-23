@@ -908,21 +908,16 @@ TString TTabCom::DetermineClass(const char varName[])
    }
    IfDebug(std::cerr << (char) c << std::flush);
 
-   // in case of success, "class TClassName*)0x12345" remains,
+   // in case of success, "class TClassName*)0x12345" remains or TClassName 0x[0-9][a-f]+
+   // in case of objects
    // since the opening '(' was removed.
-   file1 >> type;               // ignore "class"
 
-   // non-class type ==> failure
-   if (type == "const")
+   if (type == "const" || type == "class") {
       file1 >> type;
-
-   if (type != "class" && type != "struct") {
-      type = "";                // empty return string indicates failure.
-      goto cleanup;             //* RETURN *//
+      // ignore ' '
+      c = file1.get();
+      IfDebug(std::cerr << (char) c << std::flush);
    }
-   // ignore ' '
-   c = file1.get();
-   IfDebug(std::cerr << (char) c << std::flush);
 
    // this is what we want
    type.ReadToDelim(file1, ')');
@@ -2297,7 +2292,8 @@ void TTabCom::InitPatterns()
    SetPattern(kCXX_ScopeMember,
               "[_a-zA-Z][_a-zA-Z0-9]* *:: *[_a-zA-Z0-9]*$");
    SetPattern(kCXX_DirectMember,
-              "[_a-zA-Z][_a-zA-Z0-9()]* *\\. *[_a-zA-Z0-9()]*$");  // frodo
+              "[_a-zA-Z][_a-zA-Z0-9()]* *\\. *[_a-zA-Z0-9()]*$");  //
+
    SetPattern(kCXX_IndirectMember,
               "[_a-zA-Z][_a-zA-Z0-9()]* *-> *[_a-zA-Z0-9()]*$");    // frodo
 
@@ -2550,10 +2546,10 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
 
    // frodo: I shouldn't have to do this, but for some reason now I have to
    //        otherwise the varptr->[TAB] won't work    :(
-   if (fVarIsPointer)
+   if (fVarIsPointer || className[className.Length() - 1] == '&')
       className[className.Length()-1] = 0;
 
-   //
+   // frodo case '.' dealt with in the previous if statement?!
    // frodo: I wasn't able to put the automatic "." to "->" replacing working
    //        so I just commented out.
    //
