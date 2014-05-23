@@ -126,7 +126,7 @@ if(testing)
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/roottest)
     elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../roottest ${CMAKE_CURRENT_BINARY_DIR}/roottest
+      add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../roottest ${CMAKE_CURRENT_BINARY_DIR}/roottest)
     else()
       message(FATAL_ERROR "Could not find roottest directory!")
     endif()
