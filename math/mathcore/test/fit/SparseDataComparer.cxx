@@ -16,11 +16,12 @@
 
 using namespace std;
 
-const bool __DRAW__ = 1;
 
 double minRange[3] = { -5., -5., -5.};
 double maxRange[3] = {  5.,  5.,  5.};
 int       nbins[3] = {10 , 10 , 100 };
+
+bool showGraphics = false; 
 
 ostream& operator << (ostream& out, ROOT::Fit::BinData& bd)
 {
@@ -115,7 +116,7 @@ void OneDimension()
 {
    TH1D* h = new TH1D("h1", "h1-title", nbins[0], minRange[0], maxRange[0]);
    h->FillRandom("gaus", 40);
-   h->Draw();
+
 
    ROOT::Fit::BinData bd;
    ROOT::Fit::FillData(bd, h);
@@ -131,9 +132,20 @@ void OneDimension()
 
    cout << bd2 << endl;
 
-   cout << " equals : " << (bd == bd2) << endl;
+   cout << " equals : ";
+   bool ok = (bd == bd2); 
 
-   h->Draw();
+   cout << "One Dimension test ............\t";
+   if (ok)
+      cout << "OK\n";
+   else 
+      cout << "FAILED\n";
+
+
+   if (showGraphics) {
+      h->Draw();
+      gPad->Update();
+   }
 }
 
 double gaus2D(double *x, double *p)
@@ -154,7 +166,6 @@ void TwoDimensions()
    f2->SetParameters(initialPars);
 
    h->FillRandom("gaus2D",20);
-   h->Draw("lego2");
 
    ROOT::Fit::BinData bd;
    ROOT::Fit::FillData(bd, h);
@@ -171,14 +182,48 @@ void TwoDimensions()
 
    cout << bd2 << endl;
 
-   cout << " equals : " << (bd == bd2) << endl;
+   cout << " equals : ";
+   bool ok = (bd == bd2); 
+
+   if (showGraphics) {
+      new TCanvas(); 
+      h->Draw("lego2");
+      gPad->Update();
+   }
+
+   cout << "Two Dimension test............\t";
+   if (ok)
+      cout << "OK\n";
+   else 
+      cout << "FAILED\n";
 }
 
 int main(int argc, char** argv)
 {
+
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      //verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
+   }
+
    TApplication* theApp = 0;
 
-   if ( __DRAW__ )
+   if (showGraphics)
       theApp = new TApplication("App",&argc,argv);
 
    cout << "\nONE DIMENSION" << endl;
@@ -186,7 +231,7 @@ int main(int argc, char** argv)
    cout << "\nTWO DIMENSIONS" << endl;
    TwoDimensions();
   
-   if ( __DRAW__ ) {
+   if (showGraphics) {
       theApp->Run();
       delete theApp;
       theApp = 0;

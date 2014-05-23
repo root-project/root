@@ -20,8 +20,8 @@ const double MAX = +2.5;
 const double INCREMENT = 0.01;
 const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT) + 1;
 
-bool showGraphics = true;
-
+bool showGraphics = false;
+bool verbose = false; 
 using namespace std;
 
 TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
@@ -59,12 +59,13 @@ int testSpecFuncBeta()
       unsigned int index = 0;
       for ( double i = MIN; i < MAX; i += INCREMENT )
       {
-//          cout << "i:"; cout.width(5); cout << i 
-//                     << " index: "; cout.width(5); cout << index 
-//                     << " TMath::Beta(p,b): "; cout.width(10); cout << TMath::Beta(i,b)
-//                     << " ROOT::Math::beta(p,b): "; cout.width(10); cout << ROOT::Math::beta(i,b)
-//                     << endl;
-         
+         if (verbose) { 
+            cout << "i:"; cout.width(5); cout << i 
+                 << " index: "; cout.width(5); cout << index 
+                 << " TMath::Beta(p,b): "; cout.width(10); cout << TMath::Beta(i,b)
+                 << " ROOT::Math::beta(p,b): "; cout.width(10); cout << ROOT::Math::beta(i,b)
+                 << endl;
+         }         
          x[index] = i;
          yb[index] = TMath::Beta(i,b);
          ymb[index] = ROOT::Math::beta(i,b);
@@ -102,18 +103,24 @@ int testSpecFuncBeta()
 
 int main(int argc, char **argv) 
 {
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
-   }
-
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;

@@ -16,20 +16,22 @@
 
 using namespace std;
 
-const int npass = 100000;
+const int npass0 = 200000;
 const int maxint = 100;//20;
-const int minsize = 1000;//20;
-const int maxsize = 1500;//500;
-const int increment = 10;
-const int arraysize = (maxsize-minsize)/10 + 1;
+const int minsize = 10;//20;
+const int maxsize = 1000000;//500;
+const int increment = 10;  // increment factor (multiplicative)
+const int arraysize = std::log10(maxsize/minsize)+1;
 
-bool showGraphics = true;
+bool showGraphics = false;
+bool verbose = false; 
 
-template <typename T> void testBinarySearch(const int n, double* tTMath, double* tStd)
+template <typename T> bool testBinarySearch(const int n, double* tTMath, double* tStd)
 {
+   std::cout << "Testing size n = " << n <<  "\t(Time / call in microsec.) " << std::endl;
+
    vector<T> k(n);
    TStopwatch t; 
-
    TRandom2 r( time( 0 ) );
    for ( Int_t i = 0; i < n; i++) {
       k[i] = (T) r.Integer( maxint ); 
@@ -37,37 +39,44 @@ template <typename T> void testBinarySearch(const int n, double* tTMath, double*
 
    std::sort(k.begin(), k.end());
 
-   int s = 0; 
+   int npass = npass0/std::log10(10*n/minsize);
+
+   int s1 = 0; 
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
       for ( T elem = 0; elem < maxint; ++elem ) {
          Long_t index = TMath::BinarySearch((Long_t) n, &k[0], elem);
-         s += index; 
+         s1 += index; 
       }
    }
    t.Stop(); 
-   *tTMath = t.RealTime();
-   cout << "TMath::BinarySearch time :\t " << t.RealTime() << endl;
-   cout << "sum " << s << endl;
+   *tTMath = t.RealTime()/npass*1.E6;
+   cout << "TMath::BinarySearch time :\t " << *tTMath << endl;
+//   cout << "sum " << s1 << endl;
 
-   s = 0;
+   int s2 = 0;
    t.Start(); 
    for (int j = 0; j < npass; ++j) { 
       for ( T elem = 0; elem < maxint; ++elem ) {
          T* pind;
          pind = std::lower_bound(&k[0], &k[n], elem);
          Long_t index2 = ((*pind == elem)? (pind - &k[0]): ( pind - &k[0] - 1));
-         s+= index2;
+         s2+= index2;
       }
    }
    t.Stop(); 
-   *tStd = t.RealTime();
-   std::cout << "std::binary_search time:\t " << t.RealTime() << '\n' << std::endl;
-   cout << "sum " << s << endl;
+   *tStd = t.RealTime()/double(npass)*1.E6;
+   std::cout << "std::binary_search time:\t " << *tStd << '\n' << std::endl;
+//   cout << "sum " << s2 << endl;
+   if (s1 != s2) {
+      Error("testBinarySearch","Different results obtained for size n = %d  - s1 = %d s2 = %d",n,s1,s2);
+      return false;
+   }
+   return true;
 
 }
 
-void binarySearchTime()
+bool binarySearchTime()
 {
    vector<double> tM( arraysize );
    vector<double> tS( arraysize );
@@ -75,31 +84,40 @@ void binarySearchTime()
 
    //cout << (maxsize-minsize)/10 + 1 << endl;
 
-   for ( int i = minsize; i <= maxsize; i += increment)
+   bool ok = true; 
+   int j = 0; int i = minsize; 
+   while ( i <= maxsize) 
    {
-      testBinarySearch<Double_t>(i, &tM[(i-minsize)/10], &tS[(i-minsize)/10]);
-      index[(i-minsize)/10] = i;
+      ok &= testBinarySearch<Double_t>(i, &tM[j], &tS[j]);
+      index[j] = i; 
+      j++;
+      i *= increment;
    }
+   int ntest = j; 
 
-   for ( int i = minsize; i <= maxsize; i += increment)
-      cout << tM[(i-minsize)/10] << ' ' << tS[(i-minsize)/10] << endl;
+   if (verbose) { 
+      cout << " TMATH - time  ---  std time " << std::endl;
+      for ( int i = 0; i < ntest; ++i) { 
+         cout << " size = " << index[i] << " :  " << tM[i] << ' ' << tS[i] << endl;
+      }
+   }
 
    if ( showGraphics )
    {
       TCanvas* c1 = new TCanvas("c1", "Comparision of Searching Time", 600, 400);
-      TH2F* hpx = new TH2F("hpx", "Comparision of Searching Time", arraysize, minsize, maxsize, arraysize, 0.25,tM[arraysize-1]+0.25);
-      hpx->SetStats(kFALSE);
-      hpx->Draw();
-      
+      c1->SetLogx(true);
+
       TGraph* gM = new TGraph(arraysize, &index[0], &tM[0]);
       gM->SetLineColor(2);
       gM->SetLineWidth(3);
+      gM->SetMarkerStyle(20);
       gM->SetTitle("TMath::BinarySearch()");
-      gM->Draw("SAME");
+      gM->Draw("ALP");
       
       TGraph* gS = new TGraph(arraysize, &index[0], &tS[0]);
       gS->SetLineColor(3);
       gS->SetLineWidth(3);
+      gS->SetMarkerStyle(20);
       gS->SetTitle("std::binary_search()");
       gS->Draw("SAME");
       
@@ -108,30 +126,42 @@ void binarySearchTime()
       legend->AddEntry(gS, "std::binary_search()");
       legend->Draw();
       
-      hpx->GetXaxis()->SetTitle("Array Size");
-      hpx->GetYaxis()->SetTitle("Time");
+      gM->SetTitle("Comparision of Searching Time");
+      gM->GetXaxis()->SetTitle("Array Size");
+      gM->GetYaxis()->SetTitle("Time");
       
       
       c1->Show();
    }
 
-   cout << "Test done!" << endl;
+   if (ok) 
+      cout << "Test done!" << endl;
+   else 
+      cout << "Error: Test Failed!" << endl;
+   return ok;
 }
 
 int main(int argc, char **argv)
 {
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
-   }
 
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;
@@ -139,8 +169,7 @@ int main(int argc, char **argv)
       theApp = new TApplication("App",&argc,argv);
 
 
-   binarySearchTime();
-   cout << argc << endl;
+   bool ok = binarySearchTime();
 
    if ( showGraphics )
    {
@@ -149,5 +178,5 @@ int main(int argc, char **argv)
       theApp = 0;
    }
 
-   return 0;
+   return (ok) ? 0 : 1; 
 }

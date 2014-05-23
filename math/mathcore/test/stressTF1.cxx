@@ -195,11 +195,11 @@ int TestIntegral(TF1* f1)
    for ( double i = XMIN; i < XMAX; i += 1.5 )   
    {
       w.Start(kTRUE);
-      for ( int j = 0; j < REP; ++j )
+      for ( int j = 0; j < REP/10; ++j )
          x = f1->Integral(0, i);
       w.Stop();
       integral = - TMath::Cos(i) + 1;
-      status += PrintStatus("Integral", x, integral, w.RealTime()/ TNORM );
+      status += PrintStatus("Integral", x, integral, w.RealTime()/ TNORM *10);
       totalTime += w.RealTime();
    }
 

@@ -12,7 +12,7 @@
 #include "TH1.h"
 #include "TF1.h"
 #include "TRandom3.h"
-#include "TVirtualFitter.h"
+#include "Math/MinimizerOptions.h"
 #include "TMath.h"
 
 #include <iostream>
@@ -29,7 +29,7 @@ void testUserFunc(std::string type="Minuit2", int n = 1000) {
   gRandom = new TRandom3();
 
 
-  TVirtualFitter::SetDefaultFitter(type.c_str() );
+  ROOT::Math::MinimizerOptions::SetDefaultMinimizer(type.c_str() );
 
   
 
