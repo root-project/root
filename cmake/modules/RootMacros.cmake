@@ -32,6 +32,28 @@ endmacro()
 
 #-------------------------------------------------------------------------------
 #
+# function ROOTTEEST_TARGETNAME_FROM_FILE( <resultvar> <filename>
+#
+# Construct a target name for a given file <filename> and store its name into
+# <resultvar>. The target name is of the form:
+#
+#   roottest-<directorypath>-<filename_WE> 
+#
+#-------------------------------------------------------------------------------
+function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
+  get_filename_component(realfp ${filename} REALPATH)
+  get_filename_component(filename_we ${filename} NAME_WE)
+
+  string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp}) 
+  string(REPLACE "${filename}"     "" relativepath ${relativepath})
+
+  string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
+  set(${resultvar} "roottest${targetname}" PARENT_SCOPE)
+
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
 # function ROOT_COMPILE_MACRO( <filename> [BUILDOBJ object] [BUILDLIB lib] )
 #
 # This function compiles and loads a shared library containing
@@ -63,28 +85,37 @@ function(ROOT_COMPILE_MACRO filename)
   set(command ${root_cmd}
               ${ROOTTEST_DIR}/scripts/build.C\(\"${realfp}\",\"${ARG_BUILDLIB}\",\"${ARG_BUILDOBJ}\"\) ${_cwd})
 
-  message("-- Add target to compile macro ${filename}")
-
   if(ARG_DEPENDS)
     set(deps ${ARG_DEPENDS})
   endif()
 
-  string(REPLACE "/" "-" srcpath "${CMAKE_CURRENT_SOURCE_DIR}")
+  ROOTTEST_TARGETNAME_FROM_FILE(targetname ${filename})
 
-  add_custom_target("${srcpath}-${filename}-compile-macro" ALL COMMAND ${command} ${_cwd} ${deps} VERBATIM)
+  set(targetname "${targetname}-compile-macro")
 
-  add_dependencies("${srcpath}-${filename}-compile-macro" ${ROOTTEST_LIB_DEPENDS})
+  add_custom_target(${targetname} COMMAND ${command} ${_cwd} ${deps} VERBATIM)
+
+  add_dependencies(${targetname} ${ROOTTEST_LIB_DEPENDS})
 
 endfunction(ROOT_COMPILE_MACRO)
 
+#-------------------------------------------------------------------------------
+#
+# function ROOTTEST_GENERATE_DICTIONARY(<dictname> [LINKDEF linkdef]
+#                                                  [DEPENDS deps]
+#                                                  [files ...]      )
+#
+# This function generates a dictionary <dictname> from the provided <files>.
+#
+#-------------------------------------------------------------------------------
 function(ROOTTEST_GENERATE_DICTIONARY dictname)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LINKDEF;DEPENDENCIES" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LINKDEF;DEPENDS" ${ARGN})
 
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set(CMAKE_ROOTTEST_DICT ON)
 
-  ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS} MODULE ${dictname} LINKDEF ${ARG_LINKDEF} DEPENDENCIES ${ARG_DEPENDENCIES})
+  ROOT_GENERATE_DICTIONARY(${dictname} ${ARG_UNPARSED_ARGUMENTS} MODULE ${dictname} LINKDEF ${ARG_LINKDEF} DEPENDENCIES ${ARG_DEPENDS})
 endfunction()
 
 #-------------------------------------------------------------------------------
@@ -108,15 +139,21 @@ function(ROOT_REFLEX_GENERATE_DICTIONARY dictionary)
 
   REFLEX_GENERATE_DICTIONARY(${dictionary} ${ARG_UNPARSED_ARGUMENTS} SELECTION ${ARG_SELECTION})
 
-  string(REPLACE "/" "-" targetname "${CMAKE_CURRENT_SOURCE_DIR}-${dictionary}")
+  ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
 
-  add_library(${targetname}-genlib MODULE ${gensrcdict})
+  # targetname_dictgen is the targetname constructed by the REFLEX_GENERATE_DICTIONARY
+  # macro and is used as a dependency.
+  set(targetname_dictgen ${targetname}-dictgen)
 
-  set_property(TARGET ${targetname}-genlib PROPERTY OUTPUT_NAME ${dictionary})
+  set(targetname ${targetname}-genreflex)
 
-  add_dependencies(${targetname}-genlib ${ROOTTEST_LIB_DEPENDS})
+  add_library(${targetname} MODULE ${gensrcdict})
 
-  target_link_libraries(${targetname}-genlib ${ARG_LIBRARIES} ${ROOT_Reflex_LIBRARY})
+  set_property(TARGET ${targetname} PROPERTY OUTPUT_NAME ${dictionary})
+
+  add_dependencies(${targetname} ${ROOTTEST_LIB_DEPENDS} ${targetname_dictgen})
+
+  target_link_libraries(${targetname} ${ARG_LIBRARIES} ${ROOT_Reflex_LIBRARY})
 
 endfunction(ROOT_REFLEX_GENERATE_DICTIONARY)
 
@@ -137,10 +174,13 @@ function(ROOT_BUILD_DICT dictname)
 
   set(command ${rootcint_program} -f ${dictname} -c ${buildfiles})
 
-  message("-- Add target to build simple dictionary: ${dictname}")
-  add_custom_target("${dictname}-build-dict" ALL COMMAND ${command} ${_cwd} VERBATIM)
+  ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictname})
 
-  add_dependencies("${dictname}-build-dict" ${ROOTTEST_LIB_DEPENDS})
+  set(targetname "${targetname}-build-dict")
+
+  add_custom_target(${targetname} COMMAND ${command} ${_cwd} VERBATIM)
+
+  add_dependencies(${targetname} ${ROOTTEST_LIB_DEPENDS})
 
 endfunction()
 
@@ -204,7 +244,6 @@ function(ROOT_BUILD_COMPILE_DICT dictname)
     ${_cwd})
 
   string(REPLACE "/" "-" srcpath "${CMAKE_CURRENT_SOURCE_DIR}")
-  message("-- Add target ${dictname}-build-dict-sl")
   add_custom_target(${srcpath}-${dictname}-dict ALL DEPENDS ${dictname}${libsuffix})
 
 endfunction()
