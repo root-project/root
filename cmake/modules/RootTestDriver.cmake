@@ -97,6 +97,7 @@ if(CMD)
     endif()
 
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
+    message("${_outvar}")
     file(WRITE ${OUT} "${_outvar}")
 
     if(DEFINED RC AND (NOT _rc EQUAL RC))
