@@ -53,7 +53,7 @@ public:
    virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;}
    virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
 
-   ClassDef(TAttMarker,3);  //Marker attributes
+   ClassDef(TAttMarker,2);  //Marker attributes
 };
 
    enum EMarkerStyle {kDot=1, kPlus, kStar, kCircle=4, kMultiply=5,
