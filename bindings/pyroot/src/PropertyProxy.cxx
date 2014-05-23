@@ -198,7 +198,8 @@ void PyROOT::PropertyProxy::Set( TDataMember* dm )
    std::string fullType = dm->GetFullTypeName();
    if ( (int)dm->GetArrayDim() != 0 || ( ! dm->IsBasic() && dm->IsaPointer() ) ) {
       fullType.append( "*" );
-   }
+   } else if ( dm->Property() & kIsEnum )
+      fullType = "UInt_t";
    fConverter = CreateConverter( fullType, dm->GetMaxIndex( 0 ) );
 
    if ( dm->GetClass() )

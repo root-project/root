@@ -103,22 +103,11 @@ namespace {
       return mb->GetOffsetCint();
    }
 
-   void AddPropertyToClass( PyObject* pyclass, TObject* prop, Bool_t isEnum, Bool_t isStatic ) {
-      PyROOT::PropertyProxy* property = 0;
-      TGlobal *g = dynamic_cast<TGlobal*>(prop);
-      if (g) {
-         property = PyROOT::PropertyProxy_New( g );
-      } else {
-         TDataMember *d = dynamic_cast<TDataMember*>(prop);
-         if (!d) {
-            PyErr_Format( PyExc_SystemError, "Variable is neither a TGlobal nor a TDataMember: %s", prop->GetName() );
-            return;
-         }
-         property = PyROOT::PropertyProxy_New( d );
-      }
-      if ( isEnum ) {
+   template<class T>
+   void AddPropertyToClass( PyObject* pyclass, T* prop, Bool_t isEnum, Bool_t isStatic ) {
+      PyROOT::PropertyProxy* property = PyROOT::PropertyProxy_New( prop );
+      if ( isEnum )
          property->fProperty |= kIsConstant;      // ensures non-writable
-      }
 
    // allow access at the instance level
       PyObject_SetAttrString( pyclass,
