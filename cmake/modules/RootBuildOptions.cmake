@@ -178,7 +178,7 @@ option(minimal "Do not automatically search for support libraries" OFF)
 option(gminimal "Do not automatically search for support libraries, but include X11" OFF)
 option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
-option(include_roottest "Include roottest as a subdirectory in root. Needs enabled testing with CTest." OFF)
+option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
 
 if(all)
  set(gdml    ON CACHE BOOL "" FORCE)
