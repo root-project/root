@@ -7,6 +7,14 @@
 // #pragma link C++ class MyVector<double>+;
 #endif
 
+#include "TClass.h"
+#include "TStreamerInfo.h"
+#include "TROOT.h"
+#include "TRealData.h"
+#include "Riostream.h"
+#include "TDataMember.h"
+#include "TFile.h"
+
 int runtemplate32 ()
 {
    gROOT->ProcessLine(".L other.C+");
