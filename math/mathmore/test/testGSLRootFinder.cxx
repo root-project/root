@@ -24,7 +24,7 @@ const int iterTest = 10000;
 int myfuncCalls = 0;
 
 const double absTol = 1E-3; 
-const double relTol = 1E-6; 
+//const double relTol = 1E-6; 
 
 double myfunc ( double x) {
   myfuncCalls += 1;
@@ -76,7 +76,7 @@ int printStats( RF * r, int returnCode, TStopwatch& timer ) {
 }
 
 
-int testRootFinder() {
+int testGSLRootFinder() {
 
   int returnCode;
   int status = 0;
@@ -176,7 +176,7 @@ int main() {
 
   int status = 0;
 
-  status += testRootFinder();
+  status += testGSLRootFinder();
 
   return status;
 }

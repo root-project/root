@@ -355,7 +355,6 @@ void testMore() {
 
    
    //TestTimeGF(f3); 
-   typedef double( * FreeFunc ) (double ); 
    ROOT::Math::WrappedFunction<> f5(freeFunction1D);
    TestTime(f5);
 
@@ -372,6 +371,7 @@ void testMore() {
    ROOT::Math::WrappedFunction<std::binder1st<std::mem_fun1_t<double, F1D, double> > >  f6a((std::bind1st(std::mem_fun(&F1D::Eval), &fobj)));
    TestTime(f6a);
 
+   //typedef double( * FreeFunc ) (double ); 
    //ROOT::Math::WrappedMemFunction<F1D,FreeFunc>  f6b(&fobj, &F1D::Eval, );
    
 //    typedef double (F1D::*MemFun)(double); 
