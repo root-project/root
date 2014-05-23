@@ -3529,7 +3529,7 @@ void TClass::RemoveRef(TClassRef *ref)
 }
 
 //______________________________________________________________________________
-void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
+void TClass::ReplaceWith(TClass *newcl) const
 {
    // Inform the other objects to replace this object by the new TClass (newcl)
 
@@ -3545,29 +3545,8 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
    // libraries during this search.
    Bool_t autoload = gInterpreter->SetClassAutoloading(kFALSE);
 
-   TString corename( TClassEdit::ResolveTypedef(newcl->GetName()) );
-
-   if ( strchr( corename.Data(), '<' ) == 0 ) {
-      // not a template, let's skip
-      recurse = kFALSE;
-   }
-
    while ((acl = (TClass*)nextClass())) {
       if (acl == newcl) continue;
-
-      if (recurse && acl!=this) {
-
-         TString aclCorename( TClassEdit::ResolveTypedef(acl->GetName()) );
-
-         if (aclCorename == corename) {
-
-            Fatal("ReplaceWith","There should not be any classes with an alias %s vs %s (%s).",newcl->GetName(),acl->GetName(),corename.Data());
-            // 'acl' represents the same class as 'newcl' (and this object)
-
-            acl->ReplaceWith(newcl, kFALSE);
-            tobedeleted.Add(acl);
-         }
-      }
 
       TIter nextInfo(acl->GetStreamerInfos());
       while ((info = (TVirtualStreamerInfo*)nextInfo())) {
