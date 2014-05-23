@@ -17,7 +17,7 @@
 
 #include <cmath>
 
-bool showGraphics = true;
+bool showGraphics = false;
 
 TGraph *grorig = 0;
 
@@ -68,10 +68,13 @@ void testInterpolation() {
       yorig[i] = y[i];
    } 
 
-   TCanvas *c1 = new TCanvas("c1","Original (red), Linear (upper left), Polynomial (upper right), Spline , Spline periodic, Akima (lower left) and Akima Periodic (lower right) Interpolation",10,10,1000,800);
-   c1->Divide(2,3);
-   c1->cd(1);
-
+   TCanvas *c1 = 0; 
+   if (showGraphics) { 
+      c1 = new TCanvas("c1","Original (red), Linear (upper left), Polynomial (upper right), Spline , Spline periodic, Akima (lower left) and Akima Periodic (lower right) Interpolation",10,10,1000,800);
+      c1->Divide(2,3);
+      c1->cd(1);
+   }
+   
    grorig = new TGraph(n+1,xorig,yorig);
    grorig->SetMarkerColor(kRed);
    grorig->SetMarkerStyle(20);
@@ -84,39 +87,47 @@ void testInterpolation() {
    interpolate(itp1);
 
 
-   c1->cd(2);
-   grorig->Draw("AP"); 
+   if (showGraphics) { 
+      c1->cd(2);
+      grorig->Draw("AP"); 
+   }
 
    ROOT::Math::Interpolator itp2(x, y, ROOT::Math::Interpolation::kPOLYNOMIAL); 
    interpolate(itp2);
 
 
-   c1->cd(3);
-   grorig->Draw("AP"); 
+   if (showGraphics) { 
+      c1->cd(3);
+      grorig->Draw("AP"); 
+   }
 
    //std::cout << "Cubic Spline Interpolation: " << std::endl;
    ROOT::Math::Interpolator itp3( 2*x.size(), ROOT::Math::Interpolation::kCSPLINE); 
    itp3.SetData(x.size(), &x[0], &y[0]);
    interpolate(itp3);
 
-   c1->cd(4);
-   grorig->Draw("AP"); 
+   if (showGraphics) { 
+      c1->cd(4);
+      grorig->Draw("AP"); 
+   }
 
    //std::cout << "Akima  Interpolation: " << std::endl;
    ROOT::Math::Interpolator itp4(x, y, ROOT::Math::Interpolation::kAKIMA); 
    interpolate(itp4);
 
-   c1->cd(5);
-   grorig->Draw("AP"); 
+   if (showGraphics) { 
+      c1->cd(5);
+      grorig->Draw("AP"); 
+   }
 
    //std::cout << "Cubic Spline Periodic Interpolation: " << std::endl;
    ROOT::Math::Interpolator itp5(x, y, ROOT::Math::Interpolation::kCSPLINE_PERIODIC); 
    interpolate(itp5);
 
-
-
-   c1->cd(6);
-   grorig->Draw("AP"); 
+   if (showGraphics) { 
+      c1->cd(6);
+      grorig->Draw("AP"); 
+   }
 
    //std::cout << "Akima Periodic Interpolation: " << std::endl;
    ROOT::Math::Interpolator itp6(x, y, ROOT::Math::Interpolation::kAKIMA_PERIODIC); 
@@ -139,18 +150,24 @@ int main(int argc, char **argv)
    using std::cout;
    using std::endl;
 
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
-   }
-
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      //verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    TApplication* theApp = 0;

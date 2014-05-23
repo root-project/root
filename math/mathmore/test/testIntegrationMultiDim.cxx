@@ -23,6 +23,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <iomanip>
 
 #include "Math/Integrator.h"
 #include "Math/Functor.h"
@@ -44,9 +45,16 @@
 #include "TCanvas.h"
 //#include "TLegend.h"
 
-bool showGraphics = true;
+bool showGraphics = false;
+bool verbose = false;
+int NMAX = 6; // maximum dimension used 
 
-const int n = 3; //default dimensionality
+
+using std::cout; 
+using std::endl;
+using std::cerr; 
+
+//const int n = 3; //default dimensionality
 
 Double_t Sum( const double* x, const double *p)
 {
@@ -85,10 +93,9 @@ Double_t SingularFun( const double* x, const double *p)
   //
   // ################################################################
 
-double integral_num(unsigned int dim, double* a, double* b, double* p)
+double integral_num(unsigned int dim, double* a, double* b, double* p, double & value, double & error)
 {
-  std::cout << "" << std::endl;
-  std::cout << "testing IntegratorMultiDim class.." << std::endl;
+  if (verbose) std::cout << "\nTesting IntegratorMultiDim class.." << std::endl;
   //std::cout << p[0] << std::endl;dimensionality
 
   TStopwatch timer; 
@@ -102,12 +109,17 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   ig1.SetFunction(funptr1); 
   ig1.Integral(a, b);
   timer.Stop();
-  std::cout.precision(12);
-  std::cout << "result:  \t";
-  std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
-  std::cout << "Number of function evaluations: " << ig1.NEval() << std::endl;
-  std::cout << "Time using IntegratorMultiDim: \t" << timer.RealTime() << std::endl; 
-  std::cout << "------------------------------------" << std::endl;
+  if (verbose) { 
+     std::cout.precision(12);
+     std::cout << "result:  \t";
+     std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
+     std::cout << "Number of function evaluations: " << ig1.NEval() << std::endl;
+     std::cout << "Time using IntegratorMultiDim: \t" << timer.RealTime() << std::endl; 
+     std::cout << "------------------------------------" << std::endl;
+  }
+  else { std::cout << " . "; }
+  value = ig1.Result(); 
+  error = ig1.Error();
   return timer.RealTime();
 }
 
@@ -116,14 +128,18 @@ double integral_num(unsigned int dim, double* a, double* b, double* p)
   //      testing MCIntegrator class 
   //
   // ################################################################
-double integral_MC(unsigned int dim, double* a, double* b, double* p)
+std::vector<double> integral_MC(unsigned int dim, double* a, double* b, double* p, double * value, double * error)
 {
 
   double timeVegas;
-  std::cout << "" << std::endl; 
-  std::cout << "testing GSLMCIntegrator class.." << std::endl;
-  std::cout << "\t VEGAS.. " << std::endl;
-  std::cout << "" << std::endl;
+  double timeMiser; 
+  double timePlain;
+  if (verbose) { 
+     std::cout << "\nTesting GSLMCIntegrator class.." << std::endl;
+     std::cout << "\t VEGAS.. " << std::endl;
+     std::cout << "" << std::endl;
+  }
+  else { std::cout << "."; }
 
   TStopwatch timer; 
   //timer.Start();
@@ -141,20 +157,27 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
 
   ig1.Integral(a, b); 
   timer.Stop();
-  std::cout << "result: \t";
-  std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
-  std::cout << "sigma: \t" << ig1.Sigma();
-  std::cout << "\t" << "chi2: \t" << ig1.ChiSqr() << std::endl;
-  std::cout << std::endl;
-  std::cout << "Time using GSLMCIntegrator::VEGAS :\t" << timer.RealTime() << std::endl; 
-  //std::cout << "Number of function evaluations: " << ig1.Eval() << std::endl;
-   //ig2_param.iterations = 1000; 
-  std::cout << "" <<std::endl;
-   std::cout << "------------------------------------" << std::endl;
-  std::cout << "\t MISER.. " << std::endl;
-  std::cout << "" << std::endl;
   timeVegas = timer.RealTime();
+  value[0] = ig1.Result(); 
+  error[0] = ig1.Error();
 
+  if (verbose) { 
+     std::cout << "result: \t";
+     std::cout << ig1.Result() << "\t" << "error: \t" << ig1.Error() << std::endl;
+     std::cout << "sigma: \t" << ig1.Sigma();
+     std::cout << "\t" << "chi2: \t" << ig1.ChiSqr() << std::endl;
+     std::cout << std::endl;
+     std::cout << "Time using GSLMCIntegrator::VEGAS :\t" << timer.RealTime() << std::endl; 
+     //std::cout << "Number of function evaluations: " << ig1.Eval() << std::endl;
+     //ig2_param.iterations = 1000; 
+     std::cout << "" <<std::endl;
+     std::cout << "------------------------------------" << std::endl;
+     std::cout << "\t MISER.. " << std::endl;
+     std::cout << "" << std::endl;
+  }
+  else { std::cout << "."; }
+
+     
   timer.Start();
   ROOT::Math::GSLMCIntegrator ig2(ROOT::Math::MCIntegration::kMISER);
  
@@ -169,41 +192,65 @@ double integral_MC(unsigned int dim, double* a, double* b, double* p)
   //ig2.SetParameters(par);
   ig2.Integral(a, b);  
   timer.Stop();
-  std::cout << "result: \t";
-  std::cout << ig2.Result() << "\t" << "error: \t" << ig2.Error() << std::endl;
+  timeMiser = timer.RealTime(); 
+  value[1] = ig2.Result(); 
+  error[1] = ig2.Error();
+  if (verbose) { 
+     std::cout << "result: \t";
+     std::cout << ig2.Result() << "\t" << "error: \t" << ig2.Error() << std::endl;
    
-  std::cout << "Time using GSLMCIntegrator::MISER :\t" << timer.RealTime() << std::endl; 
-  std::cout << "" << std::endl;
-  std::cout << "------------------------------------" << std::endl;
-  std::cout << "\t PLAIN.. " << std::endl;
+     std::cout << "Time using GSLMCIntegrator::MISER :\t" << timer.RealTime() << std::endl; 
+     std::cout << "" << std::endl;
+     std::cout << "------------------------------------" << std::endl;
+     std::cout << "\t PLAIN.. " << std::endl;
+  }
+  else { std::cout << "."; }
+
   timer.Start();
-  std::cout << "" << std::endl;
+
   ROOT::Math::GSLMCIntegrator ig3(ROOT::Math::MCIntegration::kPLAIN);
   ig3.SetFunction(funptr);
   ig3.Integral(a, b);
   timer.Stop();
-  std::cout << "result: \t";
-  std::cout << ig3.Result() << "\t" << "error: \t" << ig3.Error() << std::endl;
-  std::cout << "Time using GSLMCIntegrator::PLAIN :\t" << timer.RealTime() << std::endl; 
- std::cout << "" << std::endl;  
- 
- return timeVegas;
+  timePlain = timer.RealTime();
+  value[2] = ig3.Result(); 
+  error[2] = ig3.Error();
+
+  if (verbose) { 
+     std::cout << "" << std::endl;
+     std::cout << "result: \t";
+     std::cout << ig3.Result() << "\t" << "error: \t" << ig3.Error() << std::endl;
+     std::cout << "Time using GSLMCIntegrator::PLAIN :\t" << timer.RealTime() << std::endl; 
+     std::cout << "" << std::endl;  
+  }
+  std::vector<double> result(3); 
+  result[0] = timeVegas; result[1] = timeMiser; result[2] = timePlain;
+  return result;
 }
 
-void performance()
+bool performance()
 {
   //dimensionality
-  unsigned int Nmax = 9;
+  unsigned int Nmax = NMAX;
   unsigned int size = Nmax-1; 
+  bool ok = true; 
+
   TH1D *num_performance = new TH1D("cubature", "", size, 1.5, Nmax+.5);
-  TH1D *Vegas_performance = new TH1D("montecarlo", "", size, 1.5, Nmax+.5);
+  TH1D *Vegas_performance = new TH1D("VegasMC", "", size, 1.5, Nmax+.5);
+  TH1D *Miser_performance = new TH1D("MiserMC", "", size, 1.5, Nmax+.5);
+  TH1D *Plain_performance = new TH1D("PlainMC", "", size, 1.5, Nmax+.5);
 
    num_performance->SetBinContent(1, 0.0);
    Vegas_performance->SetBinContent(1,0.0);
    for(unsigned int N = 2; N <=Nmax; N++)//dim
   {
-    std::cout<< "*********************************************" << std::endl;
-    std::cout<< "Number of dimensions: "<< N << std::endl;
+     if (verbose) { 
+        std::cout<< "*********************************************" << std::endl;
+        std::cout<< "Number of dimensions: "<< N << std::endl;
+     }
+     else { 
+        std::cout << "\n\tdim="<< N << " : ";
+     }
   //integration limits
     double * a = new double[N]; 
     double * b = new double[N];
@@ -215,9 +262,29 @@ void performance()
 	b[i] = 1;//TMath::Pi();
     }
     //x[N] = N;
-    num_performance->SetBinContent(N-1, integral_num(N, a, b, p));
-    Vegas_performance->SetBinContent(N-1,integral_MC(N, a, b, p));
+    double val0, err0; 
+    double valMC[3], errMC[3];
+    double timeNumInt = integral_num(N, a, b, p, val0, err0);
+    std::vector<double> timeMCInt = integral_MC(N, a, b, p, valMC, errMC);
+
+    // set the histograms
+    num_performance->SetBinContent(N-1, timeNumInt);
+    Vegas_performance->SetBinContent(N-1, timeMCInt[0]);
+    Miser_performance->SetBinContent(N-1, timeMCInt[1]);
+    Plain_performance->SetBinContent(N-1, timeMCInt[2]);
+
+    // test the values 
+    for (int j = 0; j < 3; ++j) {
+       if (TMath::Abs(val0-valMC[j] ) > 5 * std::sqrt( err0*err0 + errMC[j]*errMC[j] ) ) {
+          Error("testMCIntegration","Result is not consistent for dim %d between adaptive and MC %d ",N,j);
+          ok = false; 
+       }
+    }
+
    }
+
+           
+
 
    if ( showGraphics )
    {
@@ -225,28 +292,48 @@ void performance()
       TCanvas * c1 = new TCanvas(); 
       c1->SetFillColor(kYellow-10);
 
-      num_performance->SetBarWidth(0.45);
-      num_performance->SetBarOffset(0.05);
-      num_performance->SetFillColor(49);
+      num_performance->SetBarWidth(0.23);
+      num_performance->SetBarOffset(0.04);
+      num_performance->SetFillColor(kRed+3);
       num_performance->SetStats(0);
       //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
       num_performance->GetXaxis()->SetTitle("number of dimensions");
       num_performance->GetYaxis()->SetTitle("time [s]");
       num_performance->SetTitle("comparison of performance");
-      TH1 *h1 = num_performance->DrawCopy("bar2");
-      Vegas_performance->SetBarWidth(0.40);
-      Vegas_performance->SetBarOffset(0.5);
+      TH1 *h1 = num_performance->DrawCopy("bar");
+      Vegas_performance->SetBarWidth(0.23);
+      Vegas_performance->SetBarOffset(0.27);
       Vegas_performance->SetFillColor(kRed);
-      TH1 *h2 =  Vegas_performance->DrawCopy("bar2,same");
+      TH1 *h2 =  Vegas_performance->DrawCopy("bar,same");
+      Miser_performance->SetBarWidth(0.23);
+      Miser_performance->SetBarOffset(0.50);
+      Miser_performance->SetFillColor(kRed-7);
+      TH1 *h3 =  Miser_performance->DrawCopy("bar,same");
+      Plain_performance->SetBarWidth(0.23);
+      Plain_performance->SetBarOffset(0.73);
+      Plain_performance->SetFillColor(kRed-10);
+      TH1 *h4 =  Plain_performance->DrawCopy("bar,same");
       
       TLegend *legend = new TLegend(0.25,0.65,0.55,0.82);
       legend->AddEntry(h1,"Cubature","f");
       legend->AddEntry(h2,"MC Vegas","f");
+      legend->AddEntry(h3,"MC Miser","f");
+      legend->AddEntry(h4,"MC Plain","f");
       legend->Draw();
+      gPad->SetLogy(true);
+      gPad->Update();
    }
 
-   for (unsigned int i=1; i<=size; i++)
-     std::cout << i << " " << num_performance->GetBinContent(i) << "\t" << Vegas_performance->GetBinContent(i)<<std::endl;
+   std::cout << "\nTest Timing results\n";
+   std::cout << "   N dim   \t     Adaptive    MC Vegas    MC Miser    MC Plain \n"; 
+   for (unsigned int i=1; i<=size; i++) {
+      std::cout.width(8);
+      std::cout.precision(6);
+      std::cout << i+1;      
+      std::cout << "\t " << std::setw(12) << num_performance->GetBinContent(i) << std::setw(12)       << Vegas_performance->GetBinContent(i) 
+                << std::setw(12) << Miser_performance->GetBinContent(i)   << std::setw(12) << Plain_performance->GetBinContent(i) << std::endl;
+   }
+   return ok;
 }
 
 
@@ -254,30 +341,33 @@ int main(int argc, char **argv)
 {
    int status = 0;
 
-   using std::cerr;
-   using std::cout;
-   using std::endl;
-
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cout << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cout << "  where:\n";
+        cout << "     -g : graphics mode\n";
+        cout << "     -v : verbose  mode";
+        cout << endl;
+        return -1; 
+     }
    }
 
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
-   }
 
    TApplication* theApp = 0;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
-   performance();
+   status = performance() ? 0 : 1;
 
    if ( showGraphics )
    {

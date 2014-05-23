@@ -24,7 +24,7 @@
 #include "TCanvas.h"
 #include "TApplication.h"
 
-bool showGraphics = true;
+bool showGraphics = false;
 
 using namespace ROOT::Math; 
 
@@ -451,32 +451,40 @@ int main(int argc, char **argv)
    using std::endl;
    using std::cerr;
 
-   if ( argc > 1 && argc != 2 )
-   {
-      cerr << "Usage: " << argv[0] << " [-ng]\n";
-      cerr << "  where:\n";
-      cerr << "     -ng : no graphics mode";
-      cerr << endl;
-      exit(1);
-   }
+   bool verbose = false; 
 
-   if ( argc == 2 && strcmp( argv[1], "-ng") == 0 ) 
-   {
-      showGraphics = false;
+  // Parse command line arguments 
+  for (Int_t i=1 ;  i<argc ; i++) {
+     std::string arg = argv[i] ;
+     if (arg == "-g") { 
+      showGraphics = true;
+     }
+     if (arg == "-v") { 
+      showGraphics = true;
+      verbose = true;
+     }
+     if (arg == "-h") { 
+        cerr << "Usage: " << argv[0] << " [-g] [-v]\n";
+        cerr << "  where:\n";
+        cerr << "     -g : graphics mode\n";
+        cerr << "     -v : verbose  mode";
+        cerr << endl;
+        return -1; 
+     }
    }
 
    if ( showGraphics )
    {
       TApplication* theApp = 0;
       theApp = new TApplication("App",&argc,argv);
-      simanTSP(true);
       theApp->Run();
+      simanTSP(verbose);
       delete theApp;
       theApp = 0;
    }
    else
    {
-      simanTSP(false);
+      simanTSP(verbose);
    }
 
    // to check that the result is correct
