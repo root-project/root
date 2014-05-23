@@ -211,9 +211,9 @@ class TestClassDATATYPES:
         c.set_ldouble_cr(0.902); assert round(c.m_ldouble     - 0.902, 24) == 0
 
         # enum types
-        c.m_enum = CppyyTestData.kSomething; assert c.get_enum() == c.kSomething
-        c.set_enum(CppyyTestData.kLots);     assert c.m_enum     == c.kLots
-        c.set_enum_cr(CppyyTestData.kLots ); assert c.m_enum     == c.kLots
+        c.m_enum = CppyyTestData.kSomething;   assert c.get_enum() == c.kSomething
+        c.set_enum(CppyyTestData.kLots);       assert c.m_enum     == c.kLots
+        c.set_enum_cr(CppyyTestData.kNothing); assert c.m_enum     == c.kNothing
 
         # arrays; there will be pointer copies, so destroy the current ones
         c.destroy_arrays()
@@ -417,11 +417,13 @@ class TestClassDATATYPES:
         CppyyTestData.s_ldouble                  =  math.pi
         assert c.s_ldouble                      ==  math.pi
 
-        if not FIXCLING:
-            c.s_enum                     = CppyyTestData.kSomething
-            assert CppyyTestData.s_enum == CppyyTestData.kBanana
-            CppyyTestData.s_enum         = CppyyTestData.kCitrus
-            assert c.s_enum             == CppyyTestData.kCitrus
+        # enum types
+        assert raises(AttributeError, getattr, CppyyTestData, 'kBanana')
+        assert raises(TypeError,      setattr, CppyyTestData, 'kLots',   42)
+        c.s_enum                     = CppyyTestData.kLots
+        assert CppyyTestData.s_enum == CppyyTestData.kLots
+        CppyyTestData.s_enum         = CppyyTestData.kNothing
+        assert c.s_enum             == CppyyTestData.kNothing
 
         c.__destruct__()
 
@@ -469,16 +471,10 @@ class TestClassDATATYPES:
 
         gbl.set_global_int(32)
         assert gbl.get_global_int() == 32
-        # TODO: this failes b/c it's a property of the internal libPyROOT
-        # module, not of cppyy.gbl
-        if not PYTEST_MIGRATION:
-            assert gbl.g_int == 32
+        assert gbl.g_int == 32
 
         gbl.g_int = 22
-        # TODO: this failes b/c it's a property of the internal libPyROOT
-        # module, not of cppyy.gbl
-        if not PYTEST_MIGRATION:
-            assert gbl.get_global_int() == 22
+        assert gbl.get_global_int() == 22
         assert gbl.g_int == 22
 
     def test10_global_ptr(self):
@@ -526,16 +522,14 @@ class TestClassDATATYPES:
         assert isinstance(c, CppyyTestData)
 
         # test that the enum is accessible as a type
-        if not PYTEST_MIGRATION:
-            assert CppyyTestData.EWhat
+        assert CppyyTestData.EWhat
 
         assert CppyyTestData.kNothing   ==   6
         assert CppyyTestData.kSomething == 111
         assert CppyyTestData.kLots      ==  42
 
-        if not PYTEST_MIGRATION:
-            assert CppyyTestData.EWhat(CppyyTestData.kNothing) == CppyyTestData.kNothing
-            assert CppyyTestData.EWhat(6) == CppyyTestData.kNothing
+        assert CppyyTestData.EWhat(CppyyTestData.kNothing) == CppyyTestData.kNothing
+        assert CppyyTestData.EWhat(6) == CppyyTestData.kNothing
         # TODO: only allow instantiations with correct values (C++11)
 
         assert c.get_enum() == CppyyTestData.kNothing
@@ -549,22 +543,20 @@ class TestClassDATATYPES:
         assert c.get_enum() == CppyyTestData.kLots
         assert c.m_enum == CppyyTestData.kLots
 
-        if not PYTEST_MIGRATION:
-            assert c.s_enum == CppyyTestData.s_enum
-            assert c.s_enum == CppyyTestData.kNothing
-            assert CppyyTestData.s_enum == CppyyTestData.kNothing
+        assert c.s_enum == CppyyTestData.s_enum
+        assert c.s_enum == CppyyTestData.kNothing
+        assert CppyyTestData.s_enum == CppyyTestData.kNothing
 
-            c.s_enum = CppyyTestData.kSomething
-            assert c.s_enum == CppyyTestData.s_enum
-            assert c.s_enum == CppyyTestData.kSomething
-            assert CppyyTestData.s_enum == CppyyTestData.kSomething
+        c.s_enum = CppyyTestData.kSomething
+        assert c.s_enum == CppyyTestData.s_enum
+        assert c.s_enum == CppyyTestData.kSomething
+        assert CppyyTestData.s_enum == CppyyTestData.kSomething
 
         # global enums
-        if not PYTEST_MIGRATION:
-            assert gbl.EFruit         # test type accessible
-            assert gbl.kApple  == 78
-            assert gbl.kBanana == 29
-            assert gbl.kCitrus == 34
+        assert gbl.EFruit          # test type accessible
+        assert gbl.kApple  == 78
+        assert gbl.kBanana == 29
+        assert gbl.kCitrus == 34
 
     def test12_string_passing(self):
         """Passing/returning of a const char*"""
@@ -798,8 +790,6 @@ class TestClassDATATYPES:
 
         c = CppyyTestData()
 
-        if PYTEST_MIGRATION:
-            return
         assert not cppyy.gbl.nullptr
 
         assert c.s_voidp                is cppyy.gbl.nullptr
@@ -821,9 +811,16 @@ class TestClassDATATYPES:
         def address_equality_test(a, b):
             assert cppyy.addressof(a) == cppyy.addressof(b)
             b2 = cppyy.bind_object(a, CppyyTestData)
-            assert b is b2    # memory regulator recycles
+            b.m_int = 888
+            assert b.m_int == 888
+            assert b == b2 and b.m_int == b2.m_int
+            # TODO: in PyROOT, non-TObjects are not mem-regulated
+            #assert b is b2    # memory regulator recycles
             b3 = cppyy.bind_object(cppyy.addressof(a), CppyyTestData)
-            assert b is b3    # likewise
+            assert b3.m_int == 888
+            assert b == b3 and b.m_int == b3.m_int
+            # TODO: in PyROOT, non-TObjects are not mem-regulated
+            #assert b is b3    # likewise
 
         address_equality_test(c.m_voidp, c2)
         address_equality_test(c.get_voidp(), c2)
