@@ -2875,8 +2875,9 @@ void TCling::CreateListOfBaseClasses(TClass *cl) const
    if (cl->fBase) {
       return;
    }
-   TClingClassInfo tci(fInterpreter, cl->GetName());
-   TClingBaseClassInfo t(fInterpreter, &tci);
+   TClingClassInfo *tci = (TClingClassInfo *)cl->GetClassInfo();
+   if (!tci) return;
+   TClingBaseClassInfo t(fInterpreter, tci);
    // This is put here since TClingBaseClassInfo can trigger a
    // TClass::ResetCaches, which deallocates cl->fBase
    cl->fBase = new TList;
@@ -4883,7 +4884,8 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          return;
       }
       clang::QualType type( td->getTypeForDecl(), 0 );
-      ROOT::TMetaUtils::GetFullyQualifiedTypeName(name,type,*fInterpreter);
+
+      ROOT::TMetaUtils::GetNormalizedName(name, type, *fInterpreter, *fNormalizedCtxt);
    } else {
       name = ND->getNameAsString();
    }
