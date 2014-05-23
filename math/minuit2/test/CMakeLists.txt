@@ -5,7 +5,7 @@ include(${ROOT_USE_FILE})
 include_directories(${ROOT_INCLUDE_DIRS})
 
 set(TestSource
-      testMinimizer.cxx 
+      testNewMinimizer.cxx 
 )
 
 set(TestSourceMnTutorial
