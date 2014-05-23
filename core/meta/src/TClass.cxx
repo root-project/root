@@ -3561,6 +3561,7 @@ void TClass::ReplaceWith(TClass *newcl, Bool_t recurse) const
 
          if (aclCorename == corename) {
 
+            Fatal("ReplaceWith","There should not be any classes with an alias %s vs %s (%s).",newcl->GetName(),acl->GetName(),corename.Data());
             // 'acl' represents the same class as 'newcl' (and this object)
 
             acl->ReplaceWith(newcl, kFALSE);
