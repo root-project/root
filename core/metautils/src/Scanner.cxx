@@ -948,7 +948,8 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
 //______________________________________________________________________________
 bool RScanner::VisitVarDecl(clang::VarDecl* D)
 {
-   if (fScanType == EScanType::kOnePCM)
+   if (!D->hasGlobalStorage() ||
+       fScanType == EScanType::kOnePCM)
       return true;
 
    if(fSelectionRules.IsDeclSelected(D)){

@@ -15,8 +15,6 @@
 
 #pragma link C++ namespace TMath;
 
-#pragma link C++ global ROOT_TMath;
-
 #pragma link C++ class TComplex+;
 
 #pragma link C++ function operator*(Double_t, const TComplex&);
