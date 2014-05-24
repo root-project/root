@@ -17,6 +17,9 @@ int execbasic()
    class2MemberProp["m_i"].push_back("property1");
    class2MemberProp["m_i"].push_back("property2");
    printClassInfo("class2",emptyProp,true,class2MemberProp);
+   if (gSystem->Getenv("HEADER_PARSING_ON_DEMAND")) {
+      gROOT->ProcessLine("#include \"class3.h\"");
+   }
    printClassInfo("class3");
    printClassInfo("class3_1");
    printClassInfo("class3_2");
