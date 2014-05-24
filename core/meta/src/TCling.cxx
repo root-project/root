@@ -1037,6 +1037,9 @@ bool TCling::LoadPCM(TString pcmFileName,
                   } else {
                      // This will replace the existing TClass.
                      (*dict)();
+                     TClass *ncl = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName());
+                     if (ncl) ncl->PostLoadCheck();
+
                   }
                }
             }
