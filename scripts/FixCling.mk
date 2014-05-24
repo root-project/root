@@ -29,6 +29,8 @@ CALLROOTEXE += -e "\#define ClingWorkAroundMultipleInclude"
 # AutoParsing issues
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseUsingNamespace"
 CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseRecurse"
+CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseDeclaration"
+CALLROOTEXE += -e "\#define ClingWorkAroundAutoParseTooPrecise"
 
 #CALLROOTEXE += -e "\#define ClingWorkAroundCallfuncAndReturnByValue"
 # Features needed for the tutorials
@@ -119,6 +121,8 @@ ClingWorkAroundProxyConfusion = yes            # See https://sft.its.cern.ch/jir
 
 ClingWorkAroundAutoParseUsingNamespace = yes   # See https://sft.its.cern.ch/jira/browse/ROOT-6317
 ClingWorkAroundAutoParseRecurse = yes          # See https://sft.its.cern.ch/jira/browse/ROOT-6319
+ClingWorkAroundAutoParseDeclaration = yes      # See https://sft.its.cern.ch/jira/browse/ROOT-6320
+ClingWorkAroundAutoParseTooPrecise = yes       # See https://sft.its.cern.ch/jira/browse/ROOT-6321
 
 ifneq ($(ClingReinstateRedeclarationAllowed)-$(ClingWorkAroundMissingImplicitAuto),yes-)
 ClingWorkAroundSavePrimitive = yes             # stressGraphics use of SavePrimitive currently requires at least implicit auto and allowing redeclaration
