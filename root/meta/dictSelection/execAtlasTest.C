@@ -11,7 +11,13 @@ int execAtlasTest(){
    // Load the atlas lib and check some names
    if (0!=gSystem->Load("libAtlasTest_dictrflx.so"))
       std::cerr << "Error loading dictionary library.\n";
-   
+
+#ifdef ClingWorkAroundAutoParseRecurse
+   gInterpreter->AutoParse("Atlas::ClassA");
+   gInterpreter->AutoParse("Atlas::ClassB");
+   gInterpreter->AutoParse("Atlas::ClassC");
+#endif
+
    printNames("Atlas::ClassA<Atlas::ClassB, float>");
    printNames("Atlas::ClassA<Atlas::ClassC, int>");
    
