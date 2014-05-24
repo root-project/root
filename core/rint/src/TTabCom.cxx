@@ -2595,6 +2595,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          // 3. inform the user.
          std::cerr << std::endl << dblquote(varName) <<
             " is of pointer type. Use this operator: ->" << std::endl;
+         return 0;
    }
 
    if (context == kCXX_IndirectMember || context == kCXX_IndirectProto) {
@@ -2640,6 +2641,7 @@ TClass *TTabCom::MakeClassFromVarName(const char varName[],
          // 3. inform the user.
          std::cerr << std::endl << dblquote(varName) <<
              " is not of pointer type. Use this operator: ." << std::endl;
+         return 0;
       }
    }
 
