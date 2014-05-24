@@ -1097,6 +1097,10 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
+   // Make sure we do not set off autoloading or autoparsing during the
+   // module registration!
+   Int_t oldAutoloadValue = SetClassAutoloading(false);
+
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
    for (const char** inclPath = includePaths; *inclPath; ++inclPath) {
@@ -1290,6 +1294,8 @@ void TCling::RegisterModule(const char* modulename,
       fRegisterModuleDyLibs.pop_back();
       dlclose(dyLibHandle);
    }
+
+   SetClassAutoloading(oldAutoloadValue);
 }
 
 //______________________________________________________________________________
