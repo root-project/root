@@ -35,7 +35,6 @@ Class category: foreign.
  * Version: -1
  o Members (0):
 --- End Class classAutoselected
-ERROR: The information about classAutoExcluded is not in TClass!
 
 --- Class classWithAttributes
 Class category: foreign.
@@ -212,7 +211,6 @@ classTemplateVanilla<char> --> classTemplateVanilla<char>
 classTransientMember --> classTransientMember
 classTestAutoselect --> classTestAutoselect
 classAutoselected --> classAutoselected
-classAutoExcluded --> classAutoExcluded
 classWithAttributes --> classWithAttributes
 classAutoselectedFromTemplateElaborate1 --> classAutoselectedFromTemplateElaborate1
 classAutoselectedFromTemplateElaborate2 --> classAutoselectedFromTemplateElaborate2
