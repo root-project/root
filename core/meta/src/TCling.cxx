@@ -4398,6 +4398,35 @@ Int_t TCling::AutoLoad(const char* cls)
 }
 
 //______________________________________________________________________________
+static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
+                                                           Bool_t header,
+                                                           cling::Interpreter *interpreter)
+{
+   // Parse the payload or header.
+
+   std::string code = "#define __ROOTCLING__ 1\n"
+      "#undef ClassDef\n"
+      "#define ClassDef(name,id) \\\n"
+      "_ClassDef_(name,id) \\\n"
+      "static int DeclFileLine() { return __LINE__; }\n";
+   if (!header) {
+      // This is the complete header file content and not the
+      // name of a header.
+      code += what;
+
+   } else {
+      code += ("#include \"");
+      code += what;
+      code += "\"\n";
+   }
+   code += ("#ifdef __ROOTCLING__\n"
+            "#undef __ROOTCLING__\n"
+            + gInterpreterClassDef +
+            "#endif");
+   return interpreter->parseForModule(code);
+}
+
+//______________________________________________________________________________
 Int_t TCling::AutoParse(const char* cls)
 {
    // Parse the headers relative to the class
@@ -4410,31 +4439,29 @@ Int_t TCling::AutoParse(const char* cls)
    Int_t nHheadersParsed = 0;
    std::size_t normNameHash(fStringHashFunction(cls));
    // If the class was not looked up
-   if (fLookedUpClasses.insert(normNameHash).second){
+   if (fLookedUpClasses.insert(normNameHash).second) {
       const std::vector<const char*>& hNamesPtrs = fClassesHeadersMap[normNameHash];
       for (auto& hName : hNamesPtrs){
-         if (0!=fPayloads.count(normNameHash)){
+         if (0 != fPayloads.count(normNameHash)) {
             if (gDebug > 0) {
                Info("AutoParse",
                   "Parsing full payload for %s", cls);
             }
-            auto cRes = fInterpreter->parseForModule(hName);
+            auto cRes = ExecAutoParse(hName,kFALSE,fInterpreter);
             if (cRes != cling::Interpreter::kSuccess){
-               Error("AutoParse","Error parsing payload code for class %s.", cls);
+               if (hName[0]=='\n')
+                  Error("AutoParse","Error parsing payload code for class %s with content:\n%s", cls, hName);
             }
          } else if (!IsLoaded(hName)) {
             if (gDebug > 0) {
                Info("AutoParse",
                   "Parsing single header %s", hName);
             }
-            std::string includeLine("#include \"");
-            includeLine+=hName;
-            includeLine+="\"";
-            auto cRes = fInterpreter->parseForModule(includeLine.c_str());
+            auto cRes = ExecAutoParse(hName,kTRUE,fInterpreter);
             if (cRes != cling::Interpreter::kSuccess){
                Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
             }
-         }
+        }
          nHheadersParsed++;
       }
    }
