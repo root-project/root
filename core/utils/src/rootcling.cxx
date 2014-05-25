@@ -2840,6 +2840,12 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          return 1;
       }
       classesList.push_back(normalizedName);
+      // Allow to autoload with the name of the class as it was specified in the 
+      // selection xml or linkdef
+      const char* reqName(selClassesIter->GetRequestedName());
+      if (reqName!=nullptr && reqName != normalizedName){
+         classesListForRootmap.push_back(reqName);
+      }
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
       // Get always the containing namespace, put it in the list if not there
