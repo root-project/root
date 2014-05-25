@@ -39,7 +39,7 @@ template <typename T> bool testBinarySearch(const int n, double* tTMath, double*
 
    std::sort(k.begin(), k.end());
 
-   int npass = npass0/std::log10(10*n/minsize);
+   int npass = npass0/std::log10(double(10*n/minsize));
 
    int s1 = 0; 
    t.Start(); 
