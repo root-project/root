@@ -1022,8 +1022,28 @@ bool TCling::LoadPCM(TString pcmFileName,
       TObjArray *protoClasses;
       pcmFile->GetObject("__ProtoClasses", protoClasses);
       if (protoClasses) {
-         for(auto proto : *protoClasses)
+         for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
+            if (TClass* existingCl
+                = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
+               // We have an existing TClass object. It might be emulated
+               // or interpreted; we now have more information available.
+               // Make that available.
+               if (existingCl->GetState() != TClass::kHasTClassInit) {
+                  VoidFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+                  if (!dict) {
+                     ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s",
+                             proto->GetName());
+                  } else {
+                     // This will replace the existing TClass.
+                     (*dict)();
+                     TClass *ncl = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName());
+                     if (ncl) ncl->PostLoadCheck();
+
+                  }
+               }
+            }
+         }
          protoClasses->Clear(); // Ownership was transfered to TClassTable.
          delete protoClasses;
       }
@@ -1076,6 +1096,17 @@ void TCling::RegisterModule(const char* modulename,
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
+
+
+   // Make sure we relookup symbols that were search for before we loaded
+   // their autoparse information.  We could be more subtil and remove only
+   // the failed one or only the one in this module, but for now this is
+   // better than nothing.
+   fLookedUpClasses.clear();
+
+   // Make sure we do not set off autoloading or autoparsing during the
+   // module registration!
+   Int_t oldAutoloadValue = SetClassAutoloading(false);
 
    TString pcmFileName(ROOT::TMetaUtils::GetModuleFileName(modulename).c_str());
 
@@ -1145,18 +1176,34 @@ void TCling::RegisterModule(const char* modulename,
    //     "myClass", payloadCode, "@",
    //    nullptr};
    if (fHeaderParsingOnDemand){
-      size_t theHash;
       std::string temp;
       for (const char** classesHeader = classesHeaders; *classesHeader; ++classesHeader) {
          temp=*classesHeader;
-         theHash = fStringHashFunction(*classesHeader);
+
+         size_t theTemplateHash = 0;
+         bool addTemplate = false;
+         size_t posTemplate = temp.find('<');
+         if (posTemplate != std::string::npos) {
+            // Add an entry for the template itself.
+            std::string templateName = temp.substr(0, posTemplate);
+            theTemplateHash = fStringHashFunction(templateName);
+            addTemplate = true;
+         }
+         size_t theHash = fStringHashFunction(*classesHeader);
          classesHeader++;
          for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
             // This is done in order to distinguish headers from files and from the payloadCode
             if (payloadCode == *classesHeader_inner ){
                fPayloads.insert(theHash);
+               if (addTemplate) fPayloads.insert(theTemplateHash);
             }
             fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
+            if (addTemplate) {
+               if (fClassesHeadersMap.find(theTemplateHash) == fClassesHeadersMap.end()) {
+                  fClassesHeadersMap[theTemplateHash].push_back(*classesHeader_inner);
+               }
+               addTemplate = false;
+            }
          }
       }
    }
@@ -1254,6 +1301,8 @@ void TCling::RegisterModule(const char* modulename,
       fRegisterModuleDyLibs.pop_back();
       dlclose(dyLibHandle);
    }
+
+   SetClassAutoloading(oldAutoloadValue);
 }
 
 //______________________________________________________________________________
@@ -1419,9 +1468,8 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
    if (result.isValid())
       RegisterTemporary(result);
    if (indent) {
-      Error("ProcessLine", "Ignoring invalid input.");
-      fMetaProcessor->cancelContinuation();
-      gROOT->SetLineHasBeenProcessed();
+      if (error)
+         *error = kProcessing;
       return 0;
    }
    if (error) {
@@ -2190,9 +2238,11 @@ void TCling::RecursiveRemove(TObject* obj)
 //______________________________________________________________________________
 void TCling::Reset()
 {
+   // Pressing Ctrl+C should forward here. In the case where we have had
+   // continuation requested we must reset it.
+   fMetaProcessor->cancelContinuation();
    // Reset the Cling state to the state saved by the last call to
    // TCling::SaveContext().
-
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
    R__LOCKGUARD(gInterpreterMutex);
@@ -4348,6 +4398,35 @@ Int_t TCling::AutoLoad(const char* cls)
 }
 
 //______________________________________________________________________________
+static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
+                                                           Bool_t header,
+                                                           cling::Interpreter *interpreter)
+{
+   // Parse the payload or header.
+
+   std::string code = "#define __ROOTCLING__ 1\n"
+      "#undef ClassDef\n"
+      "#define ClassDef(name,id) \\\n"
+      "_ClassDef_(name,id) \\\n"
+      "static int DeclFileLine() { return __LINE__; }\n";
+   if (!header) {
+      // This is the complete header file content and not the
+      // name of a header.
+      code += what;
+
+   } else {
+      code += ("#include \"");
+      code += what;
+      code += "\"\n";
+   }
+   code += ("#ifdef __ROOTCLING__\n"
+            "#undef __ROOTCLING__\n"
+            + gInterpreterClassDef +
+            "#endif");
+   return interpreter->parseForModule(code);
+}
+
+//______________________________________________________________________________
 Int_t TCling::AutoParse(const char* cls)
 {
    // Parse the headers relative to the class
@@ -4360,31 +4439,29 @@ Int_t TCling::AutoParse(const char* cls)
    Int_t nHheadersParsed = 0;
    std::size_t normNameHash(fStringHashFunction(cls));
    // If the class was not looked up
-   if (fLookedUpClasses.insert(normNameHash).second){
+   if (fLookedUpClasses.insert(normNameHash).second) {
       const std::vector<const char*>& hNamesPtrs = fClassesHeadersMap[normNameHash];
       for (auto& hName : hNamesPtrs){
-         if (0!=fPayloads.count(normNameHash)){
+         if (0 != fPayloads.count(normNameHash)) {
             if (gDebug > 0) {
                Info("AutoParse",
                   "Parsing full payload for %s", cls);
             }
-            auto cRes = fInterpreter->parseForModule(hName);
+            auto cRes = ExecAutoParse(hName,kFALSE,fInterpreter);
             if (cRes != cling::Interpreter::kSuccess){
-               Error("AutoParse","Error parsing payload code for class %s.", cls);
+               if (hName[0]=='\n')
+                  Error("AutoParse","Error parsing payload code for class %s with content:\n%s", cls, hName);
             }
-         } else {
+         } else if (!IsLoaded(hName)) {
             if (gDebug > 0) {
                Info("AutoParse",
                   "Parsing single header %s", hName);
             }
-            std::string includeLine("#include \"");
-            includeLine+=hName;
-            includeLine+="\"";
-            auto cRes = fInterpreter->parseForModule(includeLine.c_str());
+            auto cRes = ExecAutoParse(hName,kTRUE,fInterpreter);
             if (cRes != cling::Interpreter::kSuccess){
                Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
             }
-         }
+        }
          nHheadersParsed++;
       }
    }
@@ -4533,7 +4610,7 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
    int storedAutoloading = SetClassAutoloading(false);
    // FIXME: There can be more than one TClass for a single decl.
    // for example vector<double> and vector<Double32_t>
-   TClass* cl = TClass::GetClassOrAlias(name.c_str());
+   TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name.c_str());
    if (cl && GetModTClasses().find(cl) == GetModTClasses().end()) {
       TClingClassInfo* cci = ((TClingClassInfo*)cl->fClassInfo);
       if (cci) {

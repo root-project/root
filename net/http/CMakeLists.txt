@@ -31,6 +31,10 @@ find_library(FASTCGI_LIBRARY NAMES fcgi PATHS
   DOC "Specify the FastCGI library here."
 )
 
+if(FASTCGI_INCLUDE_DIR AND FASTCGI_LIBRARY)
+include_directories(${FASTCGI_INCLUDE_DIR})
+endif()
+
 if(NOT FASTCGI_INCLUDE_DIR OR NOT FASTCGI_LIBRARY)
 set(FASTCGI_LIBRARY "")
 add_definitions(-DHTTP_WITHOUT_FASTCGI)

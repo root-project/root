@@ -72,7 +72,6 @@ endif()
 
 #---Execute pre-command-----------------------------------------------------------------------------
 if(PRE)
-  message("execute precommand ${_pre}")
   execute_process(COMMAND ${_pre} ${_cwd} RESULT_VARIABLE _rc)
   if(_rc)
     message(FATAL_ERROR "pre-command error code : ${_rc}")
@@ -97,8 +96,8 @@ if(CMD)
       set(_chkerr "")
     endif()
 
-    message("cmd: ${_cmd} ${_cwd} ${_chkout} ${_chkerr}")
     execute_process(COMMAND ${_cmd} ${_chkout} ${_chkerr} WORKING_DIRECTORY ${CWD} RESULT_VARIABLE _rc)
+    message("${_outvar}")
     file(WRITE ${OUT} "${_outvar}")
 
     if(DEFINED RC AND (NOT _rc EQUAL RC))
@@ -155,7 +154,6 @@ endif()
 if(CMPOUTPUT)
   set(command COMMAND ${diff_cmd} ${OUT} ${CMPOUTPUT})
 
-  message("diff_cmd: ${command} ${OUT} ${CMPOUTPUT}")
   execute_process(${command} ${OUT} ${CMPOUTPUT} RESULT_VARIABLE _rc)
 
   if(_rc)

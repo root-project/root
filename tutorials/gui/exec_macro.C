@@ -47,7 +47,7 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
       const TObject* winGetParent = win->GetParent();
       Bool_t winIsMapped = kFALSE;
       if (winGetParent == gClient->GetDefaultRoot())
-         winIsMapped = win->IsMapped();
+         winIsMapped = kTRUE;//win->IsMapped();
       if (winIsMapped && win->InheritsFrom(clGMainFrame)) {
          win->MapRaised();
          if (save) {

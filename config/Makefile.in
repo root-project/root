@@ -414,6 +414,7 @@ AFDSMGRDAPMON  := @afdsmgrdapmon@
 
 BUILDHTTP      := @buildhttp@
 USEFASCGI      := @usefastcgi@
+FASTCGIINCDIR  := @fastcgiincdir@
 ifeq ($(USEFASCGI), no)
 FASTCGIFLAGS   := -DHTTP_WITHOUT_FASTCGI
 endif

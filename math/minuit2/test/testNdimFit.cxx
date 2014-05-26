@@ -42,7 +42,7 @@ const int NPoints = 100000;
 
 double truePar[2*N]; 
 double iniPar[2*N]; 
-const int nfit = 1;
+//const int nfit = 1;
 const int strategy = 0;
 
 double gausnorm(const double *x, const double *p) { 

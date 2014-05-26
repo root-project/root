@@ -72,7 +72,7 @@ void httpserver(const char* jobname = "job1", Long64_t maxcnt = 0)
          if (i == kUPDATE) hpx->Draw();
          c1->Modified();
          c1->Update();
-         hfile->Write();
+         if (i == kUPDATE) hfile->Write();
 
          if (gSystem->ProcessEvents()) break;
       }

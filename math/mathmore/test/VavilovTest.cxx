@@ -48,7 +48,7 @@
 #include <sstream>
 
 #ifndef roundl
-#define roundl(x) (long double)((long long)((x == 0) ? 0.0 : ((x) + ((x) > 0) ? 0.5 : -0.5)))
+#define roundl(x) (long double)((long long)((x == 0) ? 0.0 : ( (x) + ( ((x) > 0) ? 0.5 : -0.5) )))
 #endif
 
 namespace ROOT {

@@ -2661,7 +2661,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!name || !name[0]) return 0;
    R__LOCKGUARD(gInterpreterMutex);
-   if (!gROOT->GetListOfClasses())    return 0;
+   if (!gROOT->GetListOfClasses())  return 0;
+   if (strstr(name, "<anonymous>")) return 0;
 
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
@@ -2703,18 +2704,29 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       if (!cl) {
          // Attempt to resolve typedefs
          TDataType* dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(name);
-         if (!dataType && !resolvedName.empty()) {
+         if (resolvedName.empty()) {
+            // Make it available to Long64_t resolution below.
+            resolvedName = name;
+         } else if (!dataType) {
             dataType = (TDataType*)gROOT->GetListOfTypes()->FindObject(resolvedName.c_str());
          }
          if (dataType)
             cl = (TClass*)gROOT->GetListOfClasses()->FindObject(dataType->GetFullTypeName());
-         //resolvedName = TClassEdit::ResolveTypedef(resolvedName.c_str(),kTRUE);
-         //if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
       }
       if (!cl) {
          // Try with Long64_t
          resolvedName = TClassEdit::GetLong64_Name(resolvedName);
          if (resolvedName != name) cl = (TClass*)gROOT->GetListOfClasses()->FindObject(resolvedName.c_str());
+      }
+
+      if (!cl) {
+         // Try after autoparsing the template.
+         std::string::size_type posLess = resolvedName.find('<');
+         if (posLess != std::string::npos) {
+            if (gCling->AutoParse(resolvedName.substr(0, posLess).c_str())) {
+               return TClass::GetClass(resolvedName.c_str(), load, silent);
+            }
+         }
       }
    }
 

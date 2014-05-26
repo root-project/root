@@ -2840,6 +2840,9 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
          return 1;
       }
       classesList.push_back(normalizedName);
+      // Allow to autoload with the name of the class as it was specified in the 
+      // selection xml or linkdef
+      const char* reqName(selClassesIter->GetRequestedName());
       const clang::RecordDecl* rDecl = selClassesIter->GetRecordDecl();
 
       // Get always the containing namespace, put it in the list if not there
@@ -2867,6 +2870,9 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       }
       if (isClassSelected){
           classesListForRootmap.push_back(normalizedName);
+          if (reqName!=nullptr && reqName != normalizedName){
+             classesListForRootmap.push_back(reqName);
+          }
       }
    }
    classesListForRootmap.sort();
@@ -3977,12 +3983,12 @@ int RootCling(int argc,
    if (multiDict){
 
       std::string newName=llvm::sys::path::parent_path(sharedLibraryPathName).str();
-      //newName+=gPathSeparator;
+      newName+=gPathSeparator;
       newName+=llvm::sys::path::stem(sharedLibraryPathName);
       newName+="_";
       newName+=llvm::sys::path::stem(dictpathname);
       newName+=llvm::sys::path::extension(sharedLibraryPathName);
-      std::cout << "New name is " << newName << std::endl;
+      //std::cout << "New name is " << newName << std::endl;
       sharedLibraryPathName=newName;
    }
 

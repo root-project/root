@@ -351,6 +351,13 @@ void MnUserTransformation::RemoveLimits(unsigned int n) {
    fParameters[n].RemoveLimits();
 }
 
+void MnUserTransformation::SetName(unsigned int n, const std::string & name) {
+   // set name for parameter n (external index)
+   assert(n < fParameters.size()); 
+   fParameters[n].SetName(name);
+}
+
+
 double MnUserTransformation::Value(unsigned int n) const {
    // get value for parameter n (external index)
    assert(n < fParameters.size()); 

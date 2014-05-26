@@ -2,16 +2,6 @@ GOAL:
 
   Provide http interface to arbitrary ROOT application
 
-COMPILATION:
-
-  Checkout code in directory where ROOT was compiled:
-     [shell] cd $ROOTSYS/net
-     [shell] svn co https://subversion.gsi.de/dabc/http http
-
-  Add "MODULES += net/http" to the end of $ROOTSYS/Makefile
-
-  Run 'make' in $ROOTSYS
-
 USAGE:
 
   At any place of the code create http server:
@@ -28,13 +18,13 @@ USAGE:
 
   Once server running, just open in any browser page: http://yourhost:8080
 
-  Example macro: https://subversion.gsi.de/dabc/http/hsimple.C
+  Example macro: $ROOTSYS/tutorials/http/httpserver.C
 
 
 FAST CGI:
 
    Instead of running http server, one could use fast cgi interface
-   to nomral web server like Apache or lighttpd or any other.
+   to normal web server like Apache or lighttpd or any other.
    When creating server, one could specify:
 
      root [0] serv = new THttpServer("fastcgi:9000");

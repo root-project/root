@@ -94,9 +94,14 @@ Bool_t TInterruptHandler::Notify()
    gMmallocDesc = 0;
 
    Break("TInterruptHandler::Notify", "keyboard interrupt");
-   Getlinem(kInit, "Root > ");
+   if (TROOT::Initialized()) {
+      Getlinem(kInit, "Root > ");
+      gCling->Reset();
+#ifndef WIN32
    if (gException)
       Throw(GetSignal());
+#endif
+   }
 
    return kTRUE;
 }
@@ -698,9 +703,17 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
    // Calls ProcessLine() possibly prepending a #line directive for
    // better diagnostics. Must be called after fNcmd has been increased for
    // the next line.
+   Int_t err;
+   if (!error)
+      error = &err;
    if (line && line[0] != '.') {
       TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
-      return ProcessLine(lineWithNr + line, kFALSE, error);
+      int res = ProcessLine(lineWithNr + line, kFALSE, error);
+      if (*error == TInterpreter::kProcessing)
+         SetPrompt("root [%d] ? ");
+      else
+         SetPrompt("root [%d] ");
+      return res;
    }
    return ProcessLine(line, kFALSE, error);
 }

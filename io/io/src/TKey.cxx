@@ -801,7 +801,9 @@ TObject *TKey::ReadObj()
          delete [] fBuffer;
       } else {
          delete [] fBuffer;
-         delete pobj;
+         // Even-though we have a TObject, if the class is emulated the virtual
+         // table may not be 'right', so let's go via the TClass.
+         cl->Destructor(pobj);
          pobj = 0;
          tobj = 0;
          goto CLEAR;
@@ -926,7 +928,9 @@ TObject *TKey::ReadObjWithBuffer(char *bufferRead)
       if (nout) {
          tobj->Streamer(*fBufferRef); //does not work with example 2 above
       } else {
-         delete pobj;
+         // Even-though we have a TObject, if the class is emulated the virtual
+         // table may not be 'right', so let's go via the TClass.
+         cl->Destructor(pobj);
          pobj = 0;
          tobj = 0;
          goto CLEAR;

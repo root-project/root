@@ -3,11 +3,6 @@
 
 #ifdef __CINT__
 
-// define header gurad symbols to avoid CINT re-including the file 
-#pragma link C++ global ROOT_Math_SpecFuncMathMore;
-#pragma link C++ global ROOT_Math_PdfFuncMathMore;
-#pragma link C++ global ROOT_Math_QuantFuncMathMore;
-
 // special functions
 
 #pragma link C++ function ROOT::Math::assoc_laguerre(unsigned,double,double);
