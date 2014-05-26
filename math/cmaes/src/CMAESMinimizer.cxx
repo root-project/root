@@ -324,13 +324,14 @@ namespace ROOT
 	};
 
 
-      //TODO: sigma0, ...
+      double sigma0 = *std::max_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
       if (fWithBounds)
 	{
+	  Info("CMAESMinimizer","Minimizing with bounds");
 	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
-	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,&fInitialX.front(),-1.0,lambda,0,gp);
+	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0,lambda,0,gp);
 	  cmaparams._algo = fMinimizer;
 	  cmaparams._quiet = true;
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
@@ -338,7 +339,7 @@ namespace ROOT
       else
 	{
 	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
-	  CMAParameters<> cmaparams(fDim,&fInitialX.front(),-1.0,lambda);
+	  CMAParameters<> cmaparams(fDim,&fInitialX.front(),sigma0,lambda);
 	  cmaparams._algo = fMinimizer;
 	  cmaparams._quiet = true;
 	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
