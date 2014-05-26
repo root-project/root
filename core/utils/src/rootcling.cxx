@@ -3983,12 +3983,12 @@ int RootCling(int argc,
    if (multiDict){
 
       std::string newName=llvm::sys::path::parent_path(sharedLibraryPathName).str();
-      //newName+=gPathSeparator;
+      newName+=gPathSeparator;
       newName+=llvm::sys::path::stem(sharedLibraryPathName);
       newName+="_";
       newName+=llvm::sys::path::stem(dictpathname);
       newName+=llvm::sys::path::extension(sharedLibraryPathName);
-      std::cout << "New name is " << newName << std::endl;
+      //std::cout << "New name is " << newName << std::endl;
       sharedLibraryPathName=newName;
    }
 
