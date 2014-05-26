@@ -7019,11 +7019,7 @@ rm -f lib/libRXML* bin/libRXML* etc/system.rootmap \
  bin/cmsd bin/xprep bin/xrd bin/xrdcp bin/xrdgsiproxy bin/xrdpwdadmin \
  bin/xrdsssadmin bin/xrdstagetool bin/xrootd lib/libXrd* \
  bin/drop_from_path bin/genreflex bin/genreflex.bat bin/genreflex-rootcint \
- bin/genreflex-rootcint.bat lib/libcomplexDict.rootmap \
- lib/libdequeDict.rootmap lib/liblistDict.rootmap lib/libmap2Dict.rootmap \
- lib/libmapDict.rootmap lib/libmultimap2Dict.rootmap \
- lib/libmultimapDict.rootmap lib/libmultisetDict.rootmap \
- lib/libsetDict.rootmap lib/libvalarrayDict.rootmap lib/libvectorDict.rootmap \
+ bin/genreflex-rootcint.bat \
  include/TListOfTypes.h lib/*_RootCling.rootmap bin/rlibmap
 
 # if previous build was in non-c++11 mode, run "make maintainer-clean" first
