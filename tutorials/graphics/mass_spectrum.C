@@ -12,7 +12,7 @@
 void mass_spectrum()
 {
    TCanvas *C = new TCanvas("C","C",800,500);
-
+   
    hline (0.10,0.25);
    hline (0.10,0.80);
    hline (0.30,0.90);
@@ -111,7 +111,7 @@ void hline (Double_t x, Double_t y)
 
 void arrow (Double_t x1, Double_t y1, Double_t x2, Double_t y2, Int_t ls)
 {
-   arr = new TArrow(x1,y1,x2,y2,0.025,"|>");
+   TArrow *arr = new TArrow(x1,y1,x2,y2,0.025,"|>");
    arr->SetFillColor(1);
    arr->SetFillStyle(1001);
    arr->SetLineStyle(ls);
