@@ -118,7 +118,7 @@ TEveBoxSet* boxset_freebox(Int_t num=100, Bool_t registerSet=kTRUE)
    q->SetPalette(pal);
    q->Reset(TEveBoxSet::kBT_FreeBox, kFALSE, 64);
 
-#define RND_BOX(x) r.Uniform(-(x), (x))
+#define RND_BOX(x) (Float_t)r.Uniform(-(x), (x))
 
    Float_t verts[24];
    for (Int_t i=0; i<num; ++i) {
