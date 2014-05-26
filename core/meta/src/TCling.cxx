@@ -350,13 +350,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          TCling__UpdateClassInfo(TD);
       } else if (const NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
          TCling__UpdateClassInfo(NSD);
-         // Update possible nested classes / namespaces:
-         for (auto nestedI = NSD->decls_begin(), nestedE = NSD->decls_end();
-              nestedI != nestedE; ++nestedI) {
-            if (isa<clang::RecordDecl>(*nestedI) || isa<clang::NamespaceDecl>(*nestedI)) {
-               TCling::HandleNewDecl(*nestedI, isDeserialized, modifiedTClasses);
-            }
-         }
       }
 
       // While classes are read completely (except for function template instances,
@@ -4698,7 +4691,8 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
       const clang::Decl* WrapperFD = T.getWrapperFD();
       for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
-         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl
+             && I->m_Call != cling::Transaction::kCCIHandleTagDeclDefinition)
             continue;
 
          for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),
