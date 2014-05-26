@@ -9,7 +9,6 @@ MODDIRS      := $(MODDIR)/src
 MODDIRI      := $(MODDIR)/include
 VCBUILDDIR   := $(call stripsrc,$(MODDIRS))
 
-
 ifeq ($(PLATFORM),win32)
 VCLIBVC      := $(LPATH)/libVc.lib
 else
@@ -24,11 +23,11 @@ ALLLIBS      += $(VCLIBVC)
 ##### local rules #####
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
-include/%: $(MODDIRI)/%
+include/Vc/%: $(MODDIRI)/Vc/%
 	@(if [ ! -d "include/Vc" ]; then    \
 	   mkdir -p include/Vc;             \
 	fi)
-	cp -r $< $@
+	cp -R $< $@
 
 escapeflag = $(subst ~,_,$(subst /,_,$(subst :,_,$(subst =,_,$(subst .,_,$(subst -,_,$(1)))))))
 
