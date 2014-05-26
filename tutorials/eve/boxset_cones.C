@@ -38,7 +38,7 @@ TEveBoxSet* boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
     cones->DigitValue(r.Uniform(0, 500));
 
     // draw axis line 30% longer than cone height
-    TEveVector end = pos + dir*1.3;
+    TEveVector end = pos + dir*1.3f;
     lines->AddLine(pos.fX, pos.fY, pos.fZ, end.fX, end.fY, end.fZ);
   }
 
@@ -96,7 +96,7 @@ elliptic_boxset_cones(Float_t x=0, Float_t y=0, Float_t z=0,
                       r.Uniform(20, 255), r.Uniform(20, 255));
 
     // draw axis line 30% longer than cone height
-    TEveVector end = pos + dir*1.3;
+    TEveVector end = pos + dir*1.3f;
     lines->AddLine(pos.fX, pos.fY, pos.fZ, end.fX, end.fY, end.fZ);
   }
 
