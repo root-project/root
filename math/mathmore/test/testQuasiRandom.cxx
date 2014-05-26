@@ -11,6 +11,8 @@
 
 using namespace ROOT::Math;
 
+bool showGraphics = false; 
+
 int testQuasiRandom() { 
 
    const int n = 10000;
@@ -27,42 +29,40 @@ int testQuasiRandom() {
    // generate n sequences
 
    double x[2];
-   for (unsigned int i = 0; i < n; ++i)  { 
+   for (int i = 0; i < n; ++i)  { 
       r0.RndmArray(2,x);
       h0->Fill(x[0],x[1]);      
    }
 
 
-   for (unsigned int i = 0; i < n; ++i)  { 
+   for (int i = 0; i < n; ++i)  { 
       r1.Next(x); 
       h1->Fill(x[0],x[1]);      
    }
 
    double vx[2*n];
    r2.RndmArray(n,vx);
-   for (unsigned int i = 0; i < n; ++i)  {
+   for (int i = 0; i < n; ++i)  {
       h2->Fill(vx[2*i],vx[2*i+1]);      
    }
 
+   if (showGraphics) { 
 
-   TCanvas * c1 = new TCanvas("c1","Random sequence",600,1200); 
-   c1->Divide(1,3);
+      TCanvas * c1 = new TCanvas("c1","Random sequence",600,1200); 
+      c1->Divide(1,3);
+      
+      c1->cd(1);      
+      h0->Draw("COLZ");
+      
+      c1->cd(2);
+      // check uniformity 
+      h1->Draw("COLZ");
 
-   c1->cd(1);
-
-   h0->Draw("COLZ");
+      c1->cd(3);
+      h2->Draw("COLZ");
    
-   c1->cd(2);
-
-
-   // check uniformity 
-   h1->Draw("COLZ");
-
-   c1->cd(3);
-
-   h2->Draw("COLZ");
-
-   gPad->Update();
+      gPad->Update();
+   }
 
 
    // test number of empty bins
@@ -96,14 +96,32 @@ int main(int argc, char **argv)
    std::cout << " TEST QUASI-RANDOM generators "<< std::endl;
    std::cout << "***************************************************\n\n"; 
 
-   int iret = 0;
-   if (argc > 1) { 
-      TApplication theApp("App",&argc,argv);
-      iret = testQuasiRandom();
-      theApp.Run();
-   } 
-   else 
-      iret = testQuasiRandom();
+   // Parse command line arguments 
+   for (Int_t i=1 ;  i<argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-g") { 
+         showGraphics = true;
+      }
+      if (arg == "-h") { 
+         std::cout << "Usage: " << argv[0] << " [-g] [-v]\n";
+         std::cout << "  where:\n";
+         std::cout << "     -g : graphics mode\n";
+         std::cout << std::endl;
+         return -1; 
+      }
+   }
+
+   TApplication* theApp = 0;
+   if ( showGraphics )
+      theApp = new TApplication("App",&argc,argv);
+
+   int iret = testQuasiRandom();
+
+   if ( showGraphics )
+   {
+      theApp->Run();
+      delete theApp;
+   }
 
    if (iret != 0) std::cerr << "TEST QUASI-RANDOM FAILED " << std::endl; 
 
