@@ -3397,6 +3397,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
                             const RScanner::TypedefColl_t tDefDecls,
                             const RScanner::FunctionColl_t funcDecls,
                             const RScanner::VariableColl_t varDecls,
+                            HeadersDeclsMap_t& headersClassesMap,
                             HeadersDeclsMap_t& headersDeclsMap,
                             const cling::Interpreter& interp)
 {
@@ -3414,6 +3415,9 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
          headersDeclsMap[annotatedRcd.GetNormalizedName()] = headers;
       }
    }
+
+   headersClassesMap = headersDeclsMap;
+
    // The same for the typedefs:
    for (auto& tDef : tDefDecls){
       if (clang::CXXRecordDecl* cxxRcd=tDef->getUnderlyingType()->getAsCXXRecordDecl()){
@@ -4314,6 +4318,7 @@ int RootCling(int argc,
    // Now we have done all our looping and thus all the possible
    // annotation, let's write the pcms.
    HeadersDeclsMap_t headersClassesMap;
+   HeadersDeclsMap_t headersDeclsMap;
    if (!ignoreExistingDict){
       const std::string fwdDeclnArgsToKeepString (GetFwdDeclnArgsToKeepString(normCtxt,interp));
 
@@ -4322,6 +4327,7 @@ int RootCling(int argc,
                              scan.fSelectedFunctions,
                              scan.fSelectedVariables,
                              headersClassesMap,
+                             headersDeclsMap,
                              interp);
       
       std::string detectedUmbrella;
@@ -4331,7 +4337,7 @@ int RootCling(int argc,
             break;
          }
       }
-      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersClassesMap,detectedUmbrella);
+      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,detectedUmbrella);
 
       GenerateModule(modGen,
                      CI,
