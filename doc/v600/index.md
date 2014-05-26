@@ -22,6 +22,7 @@ The following people have contributed to this new version:
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
  Kyle Cranmer, NYU, RooStats,\
+ Anders Eie, NTNU,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/Alice,\
  Wim Lavrijsen, LBNL, PyRoot,\
