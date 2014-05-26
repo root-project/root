@@ -21,7 +21,7 @@ const int maxint = 100;//20;
 const int minsize = 10;//20;
 const int maxsize = 1000000;//500;
 const int increment = 10;  // increment factor (multiplicative)
-const int arraysize = std::log10(maxsize/minsize)+1;
+const int arraysize = int(std::log10(double(maxsize/minsize)))+1;
 
 bool showGraphics = false;
 bool verbose = false; 
