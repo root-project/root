@@ -41,6 +41,8 @@ void graph2derrorsfit()
    fit2->SetTitle("Minuit fit result on the Graph2DErrors points");
    fit2->SetMaximum(zmax);
    gStyle->SetHistTopMargin(0); 
+   fit2->SetLineColor(1);
+   fit2->SetLineWidth(1);
    fit2->Draw("surf1");
    dte->Draw("same p0");
 }
