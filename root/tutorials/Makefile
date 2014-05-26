@@ -61,7 +61,8 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   math/testUnfold4 \
   fit/minuit2FitBench \
   fit/minuit2FitBench2D \
-  roostats/%
+  roostats/% \
+  http/%
 
 TUTORIALSTESTS_NEEDS_MINUIT2 := fit/fit2dHist fit/fit2dHist \
 fit/fitCircle fit/minuit2FitBench2D fit/minuit2FitBench2D \
