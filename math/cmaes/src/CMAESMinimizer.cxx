@@ -25,6 +25,8 @@
 #include "Math/Error.h"
 #include "Fit/ParameterSettings.h"
 
+#include "errstats.h" // libcmaes extras.
+
 #ifdef USE_ROOT_ERROR
 #include "TROOT.h"
 #endif
@@ -91,6 +93,7 @@ namespace ROOT
       fVariablesType.clear();
       fInitialX.clear();
       fInitialSigma.clear();
+      fFixedVariables.clear();
       fNames.clear();
       fGlobalCC.clear();
       fValues.clear();
@@ -195,7 +198,7 @@ namespace ROOT
 
     bool TCMAESMinimizer::SetFixedVariable(unsigned int ivar, const std::string &name, double val)
     {
-      //TODO.
+      fFixedVariables.insert(std::pair<int,double>(ivar,val));
     }
     
     bool TCMAESMinimizer::SetVariableValue(unsigned int ivar, double val )
@@ -307,6 +310,7 @@ namespace ROOT
 	return false;
       }
       if (fDim > fInitialX.size()) {
+	std::cout << "fDim=" << fDim << " / fInitialX size=" << fInitialX.size() << std::endl;
 	MATH_ERROR_MSG("TCMAESMinimizer::Minimize","Dimension larger than initial X size's");
 	return false;
       }
@@ -323,9 +327,18 @@ namespace ROOT
 	  return (*fObjFunc)(x);
 	};
 
-
+      
       double sigma0 = *std::max_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
+
+      if (gDebug > 0)
+	{
+	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0 << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << std::endl;
+	  std::cout << "x0=";
+	  std::copy(fInitialX.begin(),fInitialX.end(),std::ostream_iterator<double>(std::cout," "));
+	  std::cout << std::endl;
+	}
+
       if (fWithBounds)
 	{
 	  Info("CMAESMinimizer","Minimizing with bounds");
@@ -333,17 +346,32 @@ namespace ROOT
 	  GenoPheno<pwqBoundStrategy> gp(&fLBounds.front(),&fUBounds.front(),fDim);
 	  CMAParameters<GenoPheno<pwqBoundStrategy>> cmaparams(fDim,&fInitialX.front(),sigma0,lambda,0,gp);
 	  cmaparams._algo = fMinimizer;
-	  cmaparams._quiet = true;
+	  if (gDebug > 0)
+	    cmaparams._quiet = false;
+	  else cmaparams._quiet = true;
+	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
+	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
+	  cmaparams.set_ftolerance(fTol);
+	  cmaparams.set_automaxiter(false);
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
+	  fCMAparamsb = cmaparams;
 	}
       else
 	{
 	  //ProgressFunc<CMAParameters<>,CMASolutions> pfunc = [](const CMAParameters<> &cmaparams, const CMASolutions &cmasols) { return 0; };
 	  CMAParameters<> cmaparams(fDim,&fInitialX.front(),sigma0,lambda);
 	  cmaparams._algo = fMinimizer;
-	  cmaparams._quiet = true;
+	  if (gDebug > 0)
+	    cmaparams._quiet = false;
+	  else cmaparams._quiet = true;
+	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
+	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
+	  cmaparams.set_ftolerance(fTol);
+	  cmaparams.set_automaxiter(false);
 	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
+	  fCMAparams = cmaparams;
 	}
+      Info("CMAESMinimizer","optimization status=%i",fCMAsols._run_status);
       if (fCMAsols._run_status >= 0)
 	fStatus = 0; //TODO: convert so that to match that of Minuit2 ?
       else fStatus = 5;
@@ -417,8 +445,29 @@ namespace ROOT
 
     bool TCMAESMinimizer::GetMinosError(unsigned int i, double &errLow, double &errUp, int j)
     {
-      //TODO.
-      return false;
+      FitFunc ffit = [this](const double *x, const int N)
+	{
+	  return (*fObjFunc)(x);
+	};
+      
+      // runopt is a flag which specifies if only lower or upper error needs to be run. TODO: support for one bound only in libcmaes ?
+      int samplesize = 10;
+      if (gDebug > 0)
+	std::cerr << "Computing 'Minos' confidence interval with profile likelihood on parameter " << i << " / samplesize=" << samplesize << " / with_bounds=" << fWithBounds << std::endl;
+      pli le;
+      if (!fWithBounds)
+	{
+	  fCMAparams.set_automaxiter(true);
+	  le = errstats<>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize);
+	}
+      else
+	{
+	  fCMAparamsb.set_automaxiter(true);
+	  le = errstats<GenoPheno<pwqBoundStrategy>>::profile_likelihood(ffit,fCMAparamsb,fCMAsols,i,false,samplesize);
+	}
+      errLow = le._errmin;
+      errUp = le._errmax;
+      return true;
     }
 
     bool TCMAESMinimizer::Scan(unsigned int i, unsigned int &nstep, double *x, double *y, double xmin, double xmax)
