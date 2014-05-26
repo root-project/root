@@ -4358,12 +4358,12 @@ Int_t TCling::AutoLoad(const char* cls)
          if (gROOT->LoadClass(cls, deplib) == 0) {
             if (gDebug > 0) {
                Info("TCling::AutoLoad",
-                    "loaded dependent library %s for class %s", deplib, cls);
+                    "loaded dependent library %s for %s", deplib, cls);
             }
          }
          else {
             Error("TCling::AutoLoad",
-                  "failure loading dependent library %s for class %s",
+                  "failure loading dependent library %s for %s",
                   deplib, cls);
          }
       }
@@ -4372,13 +4372,13 @@ Int_t TCling::AutoLoad(const char* cls)
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0) {
                Info("TCling::AutoLoad",
-                    "loaded library %s for class %s", lib, cls);
+                    "loaded library %s for %s", lib, cls);
             }
             status = 1;
          }
          else {
             Error("TCling::AutoLoad",
-                  "failure loading library %s for class %s", lib, cls);
+                  "failure loading library %s for %s", lib, cls);
          }
       }
       delete tokens;
