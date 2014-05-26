@@ -29,8 +29,7 @@ void fitslicesy() {
    TCanvas *c1 = new TCanvas("c1","c1",700,500);
    c1->SetFillColor(42);
    c1->Divide(2,1);
-   c1->cd(1);
-   TPad *left = (TPad*)gPad;
+   TPad *left = c1->cd(1);
    left->Divide(1,2);
 
 // Draw 2-d original histogram
@@ -49,8 +48,7 @@ void fitslicesy() {
    left->cd(2);
    gPad->SetFillColor(33);
    hpxpy_0->Draw();
-   c1->cd(2);
-   TPad *right = (TPad*)gPad;
+   TPad *right = c1->cd(2);;
    right->Divide(1,2);
    right->cd(1);
    gPad->SetTopMargin(0.12);
