@@ -2870,7 +2870,7 @@ int  ExtractSelectedClassesAndTemplateDefs(RScanner& scan,
       }
       if (isClassSelected){
           classesListForRootmap.push_back(normalizedName);
-          if (reqName!=nullptr && reqName != normalizedName){
+          if (reqName!=nullptr && 0!=strcmp(reqName,"") && reqName != normalizedName){
              classesListForRootmap.push_back(reqName);
           }
       }
