@@ -97,15 +97,33 @@ cint/cint/src/loadfile_tmp.cxx
 /core/utils/src/RStl_tmp.cxx
 /core/utils/src/RConversionRuleParser_tmp.cxx
 
-# /docbook/primer/
-/docbook/primer/primer.tex
-/docbook/primer/primer.html
-/docbook/primer/primer.pdf
-/docbook/primer/primer.epub
+# /documentation/primer/
+/documentation/primer/ROOTPrimer.tex
+/documentation/primer/ROOTPrimer.html
+/documentation/primer/ROOTPrimer.pdf
+/documentation/primer/ROOTPrimer.epub
+/documentation/primer/ROOTPrimerLetter.pdf
 
-# /docbook/users-guide/
-/docbook/users-guide/ROOTUsersGuide.html
-/docbook/users-guide/ROOTUsersGuide.pdf
+# /documentation/HttpServer/
+/documentation/HttpServer/HttpServer.tex
+/documentation/HttpServer/HttpServer.html
+/documentation/HttpServer/HttpServer.pdf
+/documentation/HttpServer/HttpServer.epub
+/documentation/HttpServer/HttpServerLetter.pdf
+
+# /documentation/minuit2/
+/documentation/minuit2/Minuit2.tex
+/documentation/minuit2/Minuit2.html
+/documentation/minuit2/Minuit2.pdf
+/documentation/minuit2/Minuit2.epub
+/documentation/minuit2/Minuit2Letter.pdf
+
+# /documentation/spectrum/
+/documentation/spectrum/Spectrum.tex
+/documentation/spectrum/Spectrum.html
+/documentation/spectrum/Spectrum.pdf
+/documentation/spectrum/Spectrum.epub
+/documentation/spectrum/SpectrumLetter.pdf
 
 # /etc/
 /etc/system.rootrc
