@@ -26,7 +26,7 @@ void graphpolar()
 
    TGraphPolar * grP = new TGraphPolar(1000,x,y);
    grP->SetLineColor(2);
-   grP->SetLineWidth(0.2);
+   grP->SetLineWidth(2);
    grP->SetFillStyle(3012);
    grP->SetFillColor(2);
    grP->Draw("AFL");
