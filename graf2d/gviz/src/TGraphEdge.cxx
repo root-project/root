@@ -15,6 +15,8 @@
 #include "TGraphEdge.h"
 #include "TGraphNode.h"  
 
+#include <gvc.h>
+
 ClassImp(TGraphEdge)
 
 //______________________________________________________________________________
