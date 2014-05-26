@@ -23,6 +23,8 @@
 #include <iostream>
 #include <string>
 
+bool libloaded = false;
+
 void testGausFit( std::string type = "cmaes", int n = 1000) { 
 
   gRandom = new TRandom3();
@@ -81,9 +83,13 @@ void testGausFit( std::string type = "cmaes", int n = 1000) {
 
 }
 
-void cmaesGausFit() { 
-  gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
-  gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
+void cmaesGausFit() {
+  if (!libloaded)
+    {
+      gSystem->Load("/usr/lib/x86_64-linux-gnu/libglog.so");
+      gSystem->Load("/usr/lib/x86_64-linux-gnu/libgflags.so");
+      libloaded = true;
+    }
   int n = 1000; 
   testGausFit("cmaes",n);
   //testGausFit("acmaes",n);
