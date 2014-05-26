@@ -41,9 +41,8 @@ clean-$(MODNAME):
 	$(noop)
 
 clean:: clean-$(MODNAME)
-	$(noop)
 
 distclean-$(MODNAME): clean-$(MODNAME)
-	$(noop)
+	@rm -rf include/vdt
 
 distclean:: distclean-$(MODNAME)
