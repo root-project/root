@@ -4383,10 +4383,13 @@ Int_t TCling::AutoLoad(const char* cls)
       }
       delete tokens;
    }
-      
-   AutoParse(cls);
-   
-   SetClassAutoloading(oldvalue);         
+
+   if (!status) {
+      if (AutoParse(cls))
+         status = 1;
+   }
+
+   SetClassAutoloading(oldvalue);
    return status;
 }
 
