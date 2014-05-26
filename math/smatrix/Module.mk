@@ -86,7 +86,7 @@ $(SMATRIXDS):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call p
 $(SMATRIXDS32): $(SMATRIXDH1) $(SMATRIXL32) $(SMATRIXLINC) $(ROOTCLINGEXE)
 		$(MAKEDIR)
 		@echo "Generating dictionary $@..."
-		$(ROOTCLINGSTAGE2) -f $@ -c $(SMATRIXDH1) $(SMATRIXL32) && cp math/smatrix/src/G__Smatrix32_rdict.pcm $(LPATH)/
+		$(ROOTCLINGSTAGE2) -f $@ -multiDict $(subst -rmf $(SMATRIXMAP), -rmf $(SMATRIXMAP32),$(call dictModule,SMATRIX)) -c $(SMATRIXDH1) $(SMATRIXL32)
 
 $(SMATRIXMAP):  $(SMATRIXDH1) $(SMATRIXL) $(SMATRIXLINC) $(ROOTCLINGEXE) $(call pcmdep,SMATRIX)
 		$(MAKEDIR)
