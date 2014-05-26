@@ -2,7 +2,7 @@
 // interactive graphical editing operations. The initial graphics setup 
 // was created using the following root commands: 
 /*
-     t = new TRecorder();
+     TRecorder *t = new TRecorder();
      t->Start("graphedit_playback.root");
      gStyle->SetPalette(1);
      TCanvas *c2 = new TCanvas("c2","c2",0,0,700,500);
@@ -93,7 +93,7 @@ Int_t file_size(const char *filename)
 
 void graph_edit_playback()
 {
-   r = new TRecorder();
+   TRecorder *r = new TRecorder();
    r->Replay("http://root.cern.ch/files/graphedit_playback.root");
 
    // wait for the recorder to finish the replay
