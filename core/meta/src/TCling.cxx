@@ -1189,13 +1189,13 @@ void TCling::RegisterModule(const char* modulename,
             theTemplateHash = fStringHashFunction(templateName);
             addTemplate = true;
          }
-
          size_t theHash = fStringHashFunction(*classesHeader);
          classesHeader++;
          for (const char** classesHeader_inner = classesHeader; 0!=strcmp(*classesHeader_inner,"@"); ++classesHeader_inner,++classesHeader){
             // This is done in order to distinguish headers from files and from the payloadCode
             if (payloadCode == *classesHeader_inner ){
                fPayloads.insert(theHash);
+               if (addTemplate) fPayloads.insert(theTemplateHash);
             }
             fClassesHeadersMap[theHash].push_back(*classesHeader_inner);
             if (addTemplate) {
