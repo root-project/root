@@ -226,7 +226,6 @@ namespace ROOT
 	 status = 5    : any other failure 
 	 
       */
-      //TODO
       virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0); 
       
       /**
@@ -302,7 +301,10 @@ namespace ROOT
       std::vector<double> fInitialX;
       std::vector<std::string> fNames; // Names of the variables.
       std::vector<double> fInitialSigma; // User-set Initial step-size for each variables.
+      std::map<int,double> fFixedVariables; // fixed variables and values.
       CMASolutions fCMAsols;
+      CMAParameters<> fCMAparams; // params no bounds.
+      CMAParameters<GenoPheno<pwqBoundStrategy>> fCMAparamsb; // params with bounds.
       mutable std::vector<double> fGlobalCC; // vector of global correlation coefficients.
       mutable std::vector<double> fValues; // X values.
       mutable std::vector<double> fErrors; // X errors.
