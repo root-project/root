@@ -1097,6 +1097,13 @@ void TCling::RegisterModule(const char* modulename,
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
    if (fromRootCling) return;
 
+
+   // Make sure we relookup symbols that were search for before we loaded
+   // their autoparse information.  We could be more subtil and remove only
+   // the failed one or only the one in this module, but for now this is
+   // better than nothing.
+   fLookedUpClasses.clear();
+
    // Make sure we do not set off autoloading or autoparsing during the
    // module registration!
    Int_t oldAutoloadValue = SetClassAutoloading(false);
