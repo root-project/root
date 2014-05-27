@@ -1017,6 +1017,8 @@ bool TCling::LoadPCM(TString pcmFileName,
       if (protoClasses) {
          for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
+         }
+         for (auto proto : *protoClasses) {
             if (TClass* existingCl
                 = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
                // We have an existing TClass object. It might be emulated
