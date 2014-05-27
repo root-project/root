@@ -2438,6 +2438,10 @@ void TStreamerInfo::Compile()
          }
          fNdata++;
       }
+      // The test 'fMethod[keep] == 0' fails to detect a variable size array
+      // if the counter happens to have an offset of zero, so let's explicitly
+      // prevent for here.
+      if (element->HasCounter()) keep = -1;
       previous = element;
    }
 

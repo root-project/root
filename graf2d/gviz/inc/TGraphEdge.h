@@ -20,8 +20,9 @@
 #include "TAttLine.h"
 #endif
 
-#include <gvc.h>
-class TGraphNode;
+struct Agraph_t;
+struct Agedge_t;
+class  TGraphNode;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

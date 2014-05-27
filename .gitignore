@@ -87,25 +87,33 @@ etc/allDict.h
 /core/utils/src/RStl_tmp.cxx
 /core/utils/src/RConversionRuleParser_tmp.cxx
 
-# /docbook/primer/
-/docbook/primer/ROOTPrimer.tex
-/docbook/primer/ROOTPrimer.html
-/docbook/primer/ROOTPrimer.pdf
-/docbook/primer/ROOTPrimerLetter.pdf
-/docbook/primer/ROOTPrimer.epub
+# /documentation/primer/
+/documentation/primer/ROOTPrimer.tex
+/documentation/primer/ROOTPrimer.html
+/documentation/primer/ROOTPrimer.pdf
+/documentation/primer/ROOTPrimerLetter.pdf
+/documentation/primer/ROOTPrimer.epub
 
-# /docbook/users-guide/
-/docbook/users-guide/ROOTUsersGuide.html
-/docbook/users-guide/ROOTUsersGuide.epub
-/docbook/users-guide/ROOTUsersGuide*.pdf
-/docbook/users-guide/ROOTUsersGuide*.aux
-/docbook/users-guide/ROOTUsersGuide*.idx
-/docbook/users-guide/ROOTUsersGuide*.ilg
-/docbook/users-guide/ROOTUsersGuide*.ind
-/docbook/users-guide/ROOTUsersGuide*.log
-/docbook/users-guide/ROOTUsersGuide*.out
-/docbook/users-guide/ROOTUsersGuide*.tex
-/docbook/users-guide/ROOTUsersGuide*.toc
+# /documentation/HttpServer/
+/documentation/HttpServer/HttpServer.tex
+/documentation/HttpServer/HttpServer.html
+/documentation/HttpServer/HttpServer.pdf
+/documentation/HttpServer/HttpServer.epub
+/documentation/HttpServer/HttpServerLetter.pdf
+
+# /documentation/minuit2/
+/documentation/minuit2/Minuit2.tex
+/documentation/minuit2/Minuit2.html
+/documentation/minuit2/Minuit2.pdf
+/documentation/minuit2/Minuit2.epub
+/documentation/minuit2/Minuit2Letter.pdf
+
+# /documentation/spectrum/
+/documentation/spectrum/Spectrum.tex
+/documentation/spectrum/Spectrum.html
+/documentation/spectrum/Spectrum.pdf
+/documentation/spectrum/Spectrum.epub
+/documentation/spectrum/SpectrumLetter.pdf
 
 # /etc/
 /etc/system.rootrc

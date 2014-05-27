@@ -29,8 +29,7 @@ void fitslicesy() {
    TCanvas *c1 = new TCanvas("c1","c1",700,500);
    c1->SetFillColor(42);
    c1->Divide(2,1);
-   c1->cd(1);
-   TPad *left = (TPad*)gPad;
+   TPad *left = (TPad*)c1->cd(1);;
    left->Divide(1,2);
 
 // Draw 2-d original histogram
@@ -49,8 +48,7 @@ void fitslicesy() {
    left->cd(2);
    gPad->SetFillColor(33);
    hpxpy_0->Draw();
-   c1->cd(2);
-   TPad *right = (TPad*)gPad;
+   TPad *right = (TPad*)c1->cd(2);
    right->Divide(1,2);
    right->cd(1);
    gPad->SetTopMargin(0.12);
@@ -67,12 +65,12 @@ void fitslicesy() {
    hpxpy_2->Draw();
 
 //attributes
-   hpxpy_0->SetLineColor(kYellow);
-   hpxpy_1->SetLineColor(kYellow);
-   hpxpy_2->SetLineColor(kYellow);
-   hpxpy_0->SetMarkerColor(kRed);
-   hpxpy_1->SetMarkerColor(kRed);
-   hpxpy_2->SetMarkerColor(kRed);
+   hpxpy_0->SetLineColor(5);
+   hpxpy_1->SetLineColor(5);
+   hpxpy_2->SetLineColor(5);
+   hpxpy_0->SetMarkerColor(2);
+   hpxpy_1->SetMarkerColor(2);
+   hpxpy_2->SetMarkerColor(2);
    hpxpy_0->SetMarkerStyle(21);
    hpxpy_1->SetMarkerStyle(21);
    hpxpy_2->SetMarkerStyle(21);

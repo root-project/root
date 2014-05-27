@@ -32,6 +32,8 @@ void surfaces() {
    pad2->SetTheta(25);
    pad2->SetPhi(-110);
    pad2->SetLogz();
+   f2->SetLineWidth(1);
+   f2->SetLineColor(5);
    f2->Draw("surf1");
    
    //add axis titles. The titles are set on the intermediate

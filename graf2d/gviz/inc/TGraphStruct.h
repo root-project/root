@@ -25,7 +25,8 @@
 #include "TList.h"
 #endif
 
-#include <gvc.h>
+struct Agraph_t;
+struct GVC_s;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

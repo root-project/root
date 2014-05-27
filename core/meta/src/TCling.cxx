@@ -350,13 +350,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          TCling__UpdateClassInfo(TD);
       } else if (const NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(D)) {
          TCling__UpdateClassInfo(NSD);
-         // Update possible nested classes / namespaces:
-         for (auto nestedI = NSD->decls_begin(), nestedE = NSD->decls_end();
-              nestedI != nestedE; ++nestedI) {
-            if (isa<clang::RecordDecl>(*nestedI) || isa<clang::NamespaceDecl>(*nestedI)) {
-               TCling::HandleNewDecl(*nestedI, isDeserialized, modifiedTClasses);
-            }
-         }
       }
 
       // While classes are read completely (except for function template instances,
@@ -898,7 +891,7 @@ TCling::TCling(const char *name, const char *title)
 
    ResetAll();
 #ifndef R__WIN32
-   optind = 1;  // make sure getopt() works in the main program
+   //optind = 1;  // make sure getopt() works in the main program
 #endif // R__WIN32
 
    if (!fromRootCling) {
@@ -1024,6 +1017,8 @@ bool TCling::LoadPCM(TString pcmFileName,
       if (protoClasses) {
          for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
+         }
+         for (auto proto : *protoClasses) {
             if (TClass* existingCl
                 = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
                // We have an existing TClass object. It might be emulated
@@ -4365,12 +4360,12 @@ Int_t TCling::AutoLoad(const char* cls)
          if (gROOT->LoadClass(cls, deplib) == 0) {
             if (gDebug > 0) {
                Info("TCling::AutoLoad",
-                    "loaded dependent library %s for class %s", deplib, cls);
+                    "loaded dependent library %s for %s", deplib, cls);
             }
          }
          else {
             Error("TCling::AutoLoad",
-                  "failure loading dependent library %s for class %s",
+                  "failure loading dependent library %s for %s",
                   deplib, cls);
          }
       }
@@ -4379,21 +4374,24 @@ Int_t TCling::AutoLoad(const char* cls)
          if (gROOT->LoadClass(cls, lib) == 0) {
             if (gDebug > 0) {
                Info("TCling::AutoLoad",
-                    "loaded library %s for class %s", lib, cls);
+                    "loaded library %s for %s", lib, cls);
             }
             status = 1;
          }
          else {
             Error("TCling::AutoLoad",
-                  "failure loading library %s for class %s", lib, cls);
+                  "failure loading library %s for %s", lib, cls);
          }
       }
       delete tokens;
    }
-      
-   AutoParse(cls);
-   
-   SetClassAutoloading(oldvalue);         
+
+   if (!status) {
+      if (AutoParse(cls))
+         status = 1;
+   }
+
+   SetClassAutoloading(oldvalue);
    return status;
 }
 
@@ -4698,7 +4696,8 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
       const clang::Decl* WrapperFD = T.getWrapperFD();
       for (cling::Transaction::const_iterator I = T.decls_begin(), E = T.decls_end();
           I != E; ++I) {
-         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl)
+         if (I->m_Call != cling::Transaction::kCCIHandleTopLevelDecl
+             && I->m_Call != cling::Transaction::kCCIHandleTagDeclDefinition)
             continue;
 
          for (DeclGroupRef::const_iterator DI = I->m_DGR.begin(),

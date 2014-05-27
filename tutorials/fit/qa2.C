@@ -8,19 +8,19 @@ void qa2() {
    // A function (any dimension) or a formula may reference
    // an already defined formula
    //
-   form1 = new TFormula("form1","abs(sin(x)/x)");
-   sqroot = new TF1("sqroot","x*gaus(0) + [3]*form1",0,10);
+   TFormula *form1 = new TFormula("form1","abs(sin(x)/x)");
+   TF1 *sqroot = new TF1("sqroot","x*gaus(0) + [3]*form1",0,10);
    sqroot->SetParameters(10,4,1,20);
 
    //
    // Create a one dimensional histogram (one float per bin)
    // and fill it following the distribution in function sqroot.
    //
-   h1f = new TH1F("h1f","Test random numbers",200,0,10);
+   TH1F *h1f = new TH1F("h1f","Test random numbers",200,0,10);
    h1f->SetFillColor(45);
    h1f->FillRandom("sqroot",100000);
    h1f->Draw();
-   lfunction = new TPaveLabel(5,39,9.8,46,"The sqroot function");
+   TPaveLabel *lfunction = new TPaveLabel(5,39,9.8,46,"The sqroot function");
    lfunction->SetFillColor(41);
 
    c1->SetGridx();

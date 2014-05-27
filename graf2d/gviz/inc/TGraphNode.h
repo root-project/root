@@ -28,7 +28,8 @@
 #include "TAttLine.h"
 #endif
 
-#include <gvc.h>
+struct Agraph_t;
+struct Agnode_t;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

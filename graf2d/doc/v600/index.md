@@ -77,13 +77,11 @@ file `simple.pdf`.
 
 ### TCanvas and TPad
 
--   'TPad::SaveAs' produces named macros in .C files.
+-   `TPad::SaveAs` produces named macros in .C files.
 -   Change the way the string input is done in the Pad toolbar for text
     and Pave Label. It doesn't use anymore the `TGX11` function `RequestString`. 
     Now the text appears directly as it will show and it is possible to
     enter several text string. The input is not block in the `RequestString` event loop.
--   `TPad::Print()` really works on `TCanvas` only. A protection has been added
-    in case it is called on a pure `TPad`.
 -   The toolbar methods now work without XOR mode (useful for OpenGL()).
 
 ### TGaxis and TAxis

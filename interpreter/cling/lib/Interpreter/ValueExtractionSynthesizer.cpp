@@ -173,6 +173,23 @@ namespace cling {
     }
   }
 
+// Helper function for the SynthesizeSVRInit
+namespace {
+  static bool availableCopyConstructor(QualType QT, clang::Sema* S) {
+    // Check the the existance of the copy constructor the tha placement new will use.
+    if (CXXRecordDecl* RD = QT->getAsCXXRecordDecl()) {
+      // If it has a trivial copy constructor it is accessible and it is callable.
+      if(RD->hasTrivialCopyConstructor()) return true;
+      // Lookup the copy canstructor and check its accessiblity.
+      if (CXXConstructorDecl* CD = S->LookupCopyingConstructor(RD, QT.getCVRQualifiers())) {
+        if (CD ->getAccess() == clang::AccessSpecifier::AS_public) return true;
+      }
+      return false;
+    }
+    return true;
+  }
+}
+
   Expr* ValueExtractionSynthesizer::SynthesizeSVRInit(Expr* E) {
     if (!m_gClingVD)
       FindAndCacheRuntimeDecls();
@@ -230,14 +247,28 @@ namespace cling {
       // previous settings to void.
       // We need to synthesize setValueNoAlloc(...), E, because we still need
       // to run E.
+
+      // FIXME: Suboptimal: this discards the already created AST nodes.
+      QualType vpQT = m_Context->VoidPtrTy;
+      QualType vQT = m_Context->VoidTy;
+      Expr* vpQTVP
+        = utils::Synthesize::CStyleCastPtrExpr(m_Sema, vpQT,
+                                               (uint64_t)vQT.getAsOpaquePtr());
+      CallArgs[2] = vpQTVP;
+
+
       Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedNoAlloc,
                                    locStart, CallArgs, locEnd);
+
       if (E)
         Call = m_Sema->CreateBuiltinBinOp(locStart, BO_Comma, Call.take(), E);
 
     }
     else if (desugaredTy->isRecordType() || desugaredTy->isConstantArrayType()){
       // 2) object types :
+      // check existance of copy constructor before call
+      if (!availableCopyConstructor(desugaredTy, m_Sema))
+        return E;
       // call new (setValueWithAlloc(gCling, &SVR, ETy)) (E)
       Call = m_Sema->ActOnCallExpr(/*Scope*/0, m_UnresolvedWithAlloc,
                                    locStart, CallArgs, locEnd);

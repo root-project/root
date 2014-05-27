@@ -2,6 +2,7 @@
 //Author: Rene Brun
 void labels2()
 {
+   Int_t i;
    const Int_t nx = 12;
    const Int_t ny = 20;
    const char *month[nx]  = {"January","February","March","April",
@@ -17,7 +18,7 @@ void labels2()
    c1->SetLeftMargin(0.15);
    c1->SetBottomMargin(0.15);
    TH2F *h = new TH2F("h","test",nx,0,nx,ny,0,ny);
-   for (Int_t i=0;i<5000;i++) {
+   for (i=0;i<5000;i++) {
       h->Fill(gRandom->Gaus(0.5*nx,0.2*nx), 
          gRandom->Gaus(0.5*ny,0.2*ny));
    }
