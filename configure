@@ -1639,7 +1639,7 @@ enable/disable options, prefix with either --enable- or --disable-
   gviz               Graphs visualization support, requires graphviz
   gdml               GDML writer and reader
   geocad             ROOT-CAD Interface
-  gfal               GFAL support, requires libgfal
+  gfal               GFAL support, requires libgfal or libgfal2
   globus             Globus authentication support, requires Globus toolkit
   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   gsl-shared         Enable linking against shared libraries for GSL (default no)
@@ -1728,7 +1728,7 @@ with options, prefix with --with-, enables corresponding support
   gfal-incdir        GFAL support, location of gfal_api.h
   srm-ifce-incdir    GFAL support, location of gfal_srm_ifce_types.h
   glib2-incdir       GFAL support, location of glib-2.0 headers
-  gfal-libdir        GFAL support, location of libgfal
+  gfal-libdir        GFAL support, location of libgfal or libgfal2
   glew-incdir        GLEW support, location of glew.h
   glew-libdir        GLEW support, location of libGLEW
   gsl-incdir         GSL support, location of gsl/gsl_version.h
@@ -3861,10 +3861,17 @@ if test ! "x$enable_gfal" = "xno"; then
     gfalinc=$found_hdr
     gfalincdir=$found_dir
 
-    check_library "libgfal" "$enable_shared" "$gfallibdir" \
-        $GFAL ${GFAL:+$GFAL/lib} \
-        /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
-        /usr/local/gfal/lib
+    if grep -q "GFAL2" $gfalincdir/gfal_api.h ; then
+        check_library "libgfal2" "$enable_shared" "$gfallibdir" \
+            $GFAL ${GFAL:+$GFAL/lib} \
+            /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
+            /usr/local/gfal2/lib
+    else
+        check_library "libgfal" "$enable_shared" "$gfallibdir" \
+            $GFAL ${GFAL:+$GFAL/lib} \
+            /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+            /usr/local/gfal/lib
+    fi
     gfallib=$found_lib
     gfallibdir=$found_dir
 

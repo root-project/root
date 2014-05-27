@@ -60,13 +60,24 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TGFALFile.h"
 #include "TROOT.h"
 #include "TUrl.h"
 
 extern "C" {
 #include <gfal_api.h>
 }
+
+// GFAL2 doesn't use special names for 64 bit versions
+#ifdef _GFAL2_API_
+#define gfal_lseek64   gfal_lseek
+#define gfal_open64    gfal_open
+#define gfal_readdir64 gfal_readdir
+#define gfal_stat64    gfal_stat
+#define dirent64       dirent
+#define stat64         stat
+#endif
+
+#include "TGFALFile.h"
 
 ClassImp(TGFALFile)
 ClassImp(TGFALSystem)
