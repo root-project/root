@@ -60,6 +60,7 @@ ROOT_LINKER_LIBRARY(TMVA *.cxx G__TMVA1.cxx G__TMVA2.cxx G__TMVA3.cxx G__TMVA4.c
                     DEPENDENCIES RIO Hist Tree MLP Minuit XMLIO)
 
 install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
+                            COMPONENT headers
                             PATTERN ".svn" EXCLUDE
                             REGEX "LinkDef" EXCLUDE )
 #if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
