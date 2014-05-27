@@ -74,7 +74,7 @@ public: // member functions
    const TSeqCollection* GetListOfCppDirectives();
    const TSeqCollection* GetListOfFilesInPath( const char path[] );
    const TSeqCollection* GetListOfEnvVars();
-   const TSeqCollection* GetListOfGlobalFunctions();
+   TCollection* GetListOfGlobalFunctions();
    const TSeqCollection* GetListOfGlobals();
    const TSeqCollection* GetListOfPragmas();
    const TSeqCollection* GetListOfSysIncFiles();
@@ -219,7 +219,6 @@ private: // data members
    TSeqCollection* fpEnvVars;
    TSeqCollection* fpFiles;
    TSeqCollection* fpGlobals;
-   TSeqCollection* fpGlobalFuncs;
    TSeqCollection* fpPragmas;
    TSeqCollection* fpSysIncFiles;
    TSeqCollection* fpUsers;
