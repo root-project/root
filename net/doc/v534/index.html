@@ -69,3 +69,31 @@ Limitations:
 The TAS3File class will be removed and should not have been used directly by
 users anyway as it was only accessed via the plugin manager in TFile::Open().
 </p>
+
+<h3>New HTTP Server package</h3>
+
+<p>A new HTTP Server package has been introduced. The idea behind such server is to provide direct access to the data from a running ROOT application. Any object can be streamed when requested and delivered to the browser.</p>
+
+<h4>Starting the HTTP server</h4>
+
+<p>To start the http server, at any time  create instance
+of the <b><code>THttpServer</code></b> class like:</p>
+
+<code>serv = new THttpServer("http:8080");</code>
+
+<p>This will start civetweb-based http server on port 8080.
+Then, one should be able to open address "http://localhost:8080"
+in any modern browser and browse objects created in application. By default, the server can access files, canvases and histograms via gROOT. All such objects can be displayed with JSRootIO graphics.</p> 
+
+<p>At any time one could register other objects with the command:</p>
+
+<code>
+TGraph* gr = new TGraph(10);</br>
+gr->SetName("gr1");</br>
+serv->Register("graphs/subfolder", gr);
+</code>
+
+<p>If the object content is changing in the application, like for example histograms being continuously filled, one could enable the monitoring flag in the browser, then the object view will be regularly updated.</p>
+
+
+
