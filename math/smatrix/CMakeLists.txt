@@ -17,7 +17,7 @@ ROOT_GENERATE_DICTIONARY(G__${libname}32  Math/SMatrix.h     Math/SVector.h
                                           Math/SMatrixDfwd.h Math/SMatrixFfwd.h
                                           Math/SMatrix.h     Math/SVector.h
                                           Math/SMatrixDfwd.h Math/SMatrixFfwd.h
-                                          MODULE ${libname}32
+                                          MULTIDICT MODULE ${libname}
                                           LINKDEF LinkDefD32.h)                                          
 
 ROOT_LINKER_LIBRARY(${libname} G__${libname}.cxx G__${libname}32.cxx LIBRARIES Core)
