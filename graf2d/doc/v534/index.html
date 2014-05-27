@@ -3,7 +3,15 @@
 <a name="graf2d"></a> 
 <h3>2D Graphics Libraries</h3>
 
-<h4>TPDF</h4>
+<h4>TASImage</h4>
+<ul>
+<li>In some cases dashed lines with a line width greater than &quot;1&quot; were not drawn.</li>
+<li>The <code>TLatex</code> symbol <code>#tilde</code>, was misplaced.</li>
+<li>In <code>TASImage::DrawtText</code>, <code>TTF::SetTextSize</code> was called with a 
+rounded value (to pixel). This cause some misplacements of character in TLatex formulae.</li>
+</ul>
+
+<h4>TPDF and TPostScript</h4>
 <ul>
    <li>
       The table of content entries were not correct if there was and extra option
@@ -34,6 +42,8 @@
       An example of tranparency usage with parallel coordinates can be found
       in <tt>$ROOTSYS/tutorials/tree/parallelcoordtrans.C</tt>
    </li>
+   <li>Parenthesis can be used in PDF and PS file names.</li>
+   <li>In PDF files, italic greek characters were not correct for non null text angle.</li>
 </ul>
 
 <h4>TSVG</h4>
@@ -41,6 +51,40 @@
    <li>
       Implement the transparency in SVG files (cf TPDF).
    </li>
+   <li>Some markers did not show in Google-Chrome.</li>
+</ul>
+
+<h4>TImageDump</h4>
+<ul>
+<li>Fix a <code>TBox</code> clipping issue.</li>
+</ul>
+
+<h4>TMathText</h4>
+<ul>
+<li>TMathText's purpose is to write mathematical equations, exactly as TeX would do it. 
+The syntax is the same as the TeX's one. Author: Yue Shi Lai (MIT))<br /> Example:</li>
+</ul>
+<pre>    {
+    {
+       TMathText l;
+       l.SetTextAlign(23);
+       l.SetTextSize(0.06);
+       l.DrawMathText(0.50, 1.000, "\\prod_{j\\ge0} \\left(\\sum_{k\\ge0} a_{jk}z^k\\right) = \\sum_{n\\ge0} z^n \\left(\\sum_{k_0,k_1,\\ldots\\ge0\\atop k_0+k_1+\\cdots=n} a_{0k_0}a_{1k_1} \\cdots \\right)");
+       l.DrawMathText(0.50, 0.800, "W_{\\delta_1\\rho_1\\sigma_2}^{3\\beta} = U_{\\delta_1\\rho_1\\sigma_2}^{3\\beta} + {1\\over 8\\pi^2} \\int_{\\alpha_1}^{\\alpha_2} d\\alpha_2^\\prime \\left[ {U_{\\delta_1\\rho_1}^{2\\beta} - \\alpha_2^\\prime U_{\\rho_1\\sigma_2}^{1\\beta} \\over U_{\\rho_1\\sigma_2}^{0\\beta}} \\right]");
+       l.DrawMathText(0.50, 0.600, "d\\Gamma = {1\\over 2m_A} \\left( \\prod_f {d^3p_f\\over (2\\pi)^3} {1\\over 2E_f} \\right) \\left| \\mathscr{M} \\left(m_A - \\left\\{p_f\\right\\} \\right) \\right|^2 (2\\pi)^4 \\delta^{(4)} \\left(p_A - \\sum p_f \\right)");
+       l.DrawMathText(0.50, 0.425, "4\\mathrm{Re}\\left\\{{2\\over 1-\\Delta\\alpha} \\chi(s) \\left[ \\^{g}_\\nu^e \\^{g}_\\nu^f (1 + \\cos^2\\theta) + \\^{g}_a^e \\^{g}_a^f \\cos\\theta \\right] \\right\\}");
+       l.DrawMathText(0.50, 0.330, "p(n) = {1\\over\\pi\\sqrt{2}} \\sum_{k = 1}^\\infty \\sqrt{k} A_k(n) {d\\over dn} {\\sinh \\left\\{ {\\pi\\over k} \\sqrt{2\\over 3} \\sqrt{n - {1\\over 24}} \\right\\} \\over \\sqrt{n - {1\\over 24}}}");
+       l.DrawMathText(0.13, 0.150, "{(\\ell+1)C_{\\ell}^{TE} \\over 2\\pi}");
+       l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
+       l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
+    }
+</pre>
+<div class="figure">
+<img src="mathtext.png" title="TMathText example" alt="TMathText example" /><p class="caption">TMathText example</p>
+</div>
+<ul>
+<li>Implement <code>\\frac</code> using <code>\\over</code>.</li>
+<li>Treat <code>\\mbox</code> as <code>\\hbox</code> to improve the compatibility with TTexDump.</li>
 </ul>
 
 <h4>TLegend</h4>
@@ -55,16 +99,62 @@
       The text attributes were not properly initialized by the default 
       constructor.
    </li>
+<li>The line attribute of objects in the legend were not taken into account with the 
+option &quot;e&quot;.</li>
+<li>In case of automatic computation of the legend items' size, the text size was wrong 
+if the font precision was set to 3.</li>
+<li>Improve the spacing between lines. Due to the way the vertical text centring is done 
+(bounding based) the spacing between lines may appeared irregular in some cases.</li>
+<li>The error bar in the legend (option &quot;E&quot;) didn't have the line attributes 
+when drawn alone (without option &quot;L&quot;).</li>
 </ul>
+
+
+<h4>TPie</h4>
+<ul>
+<li>New drawing option &quot;SC&quot; to draw the labels with the slices' colors.</li>
+</ul>
+
+<h4>TLine</h4>
+<ul>
+<li>Add <code>SetNDC</code>.</li>
+</ul>
+
+
+<h4>TPave</h4>
+<ul>
+<li>Implement <code>SetX1()</code> etc ... for <code>TPave</code> and inherited classes to make sure the 
+NDC coordinates are also defined.</li>
+</ul>
+
 
 <h4>TLatex</h4>
 <ul>
-   <li>
-      Implement <tt>#mp</tt>.
-   </li>
+<li>The class <code>TMathText</code> is a TeX math formulae interpreter. It uses plain 
+TeX syntax and uses &quot;\&quot; as control instead of &quot;#&quot;. If a piece of 
+text containing &quot;\&quot; is given to <code>TLatex</code> then <code>TMathText</code> 
+is automatically invoked. Therefore, as histograms' titles, axis titles, labels etc ... are 
+drawn using <code>TLatex</code>, the <code>TMathText</code> syntax can be used for them also.</li>
+<li>Fix a very old bug (in <code>TTF.cxx</code> since the beginning). With the following code 
+the spaces between &quot;text&quot; and #lambda were ignored.</li>
+</ul>
+<pre>
+       TLatex t; t.DrawLatex( 0.1,0.1,"text   #Lambda" )
+</pre>
+<ul>
+<li>Implement <code>#backslash</code>.</li>
+<li>Implement <code>DrawLatexNDC</code>.</li>
+<li>Implement <code>#minus</code> and <code>#plus</code> typographically better than the standard 
+<code>&quot;-&quot;</code> and <code>&quot;+&quot;</code>.</li>
+<li>Make sure all greek and math symbols are printed correctly by <code>TTexDump</code>.</li>
+<li>Implement dummy operators <code>#mbox</code> and <code>#hbox</code> to improve the compatibility 
+between <code>TLatex</code>, <code>TMathText</code> and <code>TTexDump</code>.</li>
+<li>Some operators like <code>#minus</code>, <code>#plus</code>, <code>#mp</code>, <code>#hbar</code> 
+etc ... ignored the color defined by the operator <code>#color</code>.</li>
+<li>With the Cocoa backend on Mac the text string were a bit too large compared to the TTF rendering.</li>
 </ul>
 
-<h4>TPad</h4>
+<h4>TCanvas and TPad</h4>
 <ul>
    <li>
       New method DivideSquare a canvas in to  n sub-pads. The number of sub-pads
@@ -88,7 +178,13 @@
       interactive mode. The generation of gif, png and jpeg files from the 
       graphics window in interactive mode is kept for OpenGL canvases.
    </li>
+<li>Change the way the string input is done in the Pad toolbar for text and Pave Label.
+It doesn't use anymore the <code>TGX11</code> function <code>RequestString</code>. Now the 
+text appears directly as it will show and it is possible to enter several text string. 
+The input is not block in the <code>RequestString</code> event loop.</li>
+<li>The toolbar methods now work without XOR mode (useful for OpenGL()).</li>
 </ul>
+
 
 <h4>TGaxis and TAxis</h4>
 <ul>
@@ -98,6 +194,61 @@
       zone to an other in a ROOT file are correct too. A new example test have
       been introduced to test the time axis (timeonaxis3.C)
    </li>
+   <li>In some case the format use to build the axis labels was incorrect. (cf: Jira report ROOT-5635).</li>
+<li>New static function to change the position of the &quot;power of 10&quot; near the axis. 
+A static function is used instead of data members in <code>TAxis</code> in order to keep the 
+<code>TAxis</code> class small. Adding two floating point numbers in that class (in fact in <code>TAttAxis</code>) 
+would have a none negligible effect on the Root files' sizes as there is at least two axis per histogram 
+and that there is often 1000th histograms in a single file. So we choose to follow the same mechanism as 
+for the <code>SetMaxDigits</code> static method. The new function is: <code>SetExponentOffset</code>. 
+Example: 
+<pre>
+...
+   TGaxis::SetMaxDigits(2);
+   TGaxis::SetExponentOffset(-0.01, 0.01, "y"); // X and Y offset for Y axis
+   TGaxis::SetExponentOffset(-0.05, 0.01, "x"); // Y and Y offset for X axis
+...
+   hist->Draw();
+</pre>
+<li><code>TGaxis::SetMaxDigits()</code> was not acitve on standalone <code>TGaxis</code>.</li>
+
+
+</ul>
+
+<h4>New class TTeXDump: Graphics interface to TeX</h4>
+<p>This class allow to generate <code>PGF/TikZ</code> vector graphics output which 
+can be included in TeX and LaTeX documents.</p>
+<p><code>PGF</code> is a TeX macro package for generating graphics. It is platform and 
+format-independent and works together with the most important TeX backend drivers, 
+including pdftex and dvips. It comes with a user-friedly syntax layer called <code>TikZ</code>.</p>
+<p>To generate a such file it is enough to do:</p>
+<pre><code>   gStyle-&gt;SetPaperSize(10.,10.);
+   hpx-&gt;Draw();
+   gPad-&gt;Print(&quot;hpx.tex&quot;);</code></pre>
+<p>Then, the generated file (<tt>hpx.tex</tt>) can be included in a LaTeX document 
+(<code>simple.tex</code>) in the following way:</p>
+<pre><code>\documentclass{article}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\title{A simple LaTeX example}
+\date{July 2013}
+\begin{document}
+\maketitle
+The following image as been generated using the TTeXDump class:
+\par
+\input{hpx.tex}
+\end{document}</code></pre>
+<p>Note the two directive needed at the top of the LaTeX file:</p>
+<pre><code>\usepackage{tikz}
+\usetikzlibrary{patterns}</code></pre>
+<p>Then including the picture in the document is done with the 
+<code>\input</code> directive.</p>
+<p>The command <code>pdflatex simple.tex</code> will generate the corresponding 
+pdf file <code>simple.pdf</code>.</p>
+
+<h4>X11 fonts</h4>
+<ul>
+<li>A coverity fix in <code>Rotated.cxx</code> had a side effect on rotated text drawn with X11 fonts.</li>
 </ul>
 
 <h4>New graphical back-end for MacOSX</h4>
