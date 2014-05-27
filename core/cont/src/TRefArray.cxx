@@ -523,6 +523,7 @@ void TRefArray::Streamer(TBuffer &R__b)
             if ((i > 0 && i%10 == 0) || (i == nobjects-1)) printf("\n");
          }
       }
+      memset(&fUIDs[fLast+1], 0, (fSize - fLast - 1)*sizeof(fUIDs[0]));
       Changed();
       R__b.CheckByteCount(R__s, R__c,TRefArray::IsA());
    } else {
