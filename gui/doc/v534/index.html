@@ -71,4 +71,34 @@
 <li>Fixed several resource leaks (including GDI &amp; USER objects)</li>
 </ul>
 
+<h4>Attributes editors</h4>
+<ul>
+<li>The transparency sliders change the transparency only for the currently edited object.</li>
+</ul>
+
+<h4>Object editing on canvas</h4>
+<ul>
+<li>The &quot;move opaque&quot; way to edit object on canvas, has been extended to all kind of objects.</li>
+<li>When in move opaque mode, a canvas can show guide lines to place object relatively to each other. 
+A new resource in <code>etc/system.rootrc</code> allows to turn the feature on or off: <code>Canvas.ShowGuideLines</code>.</li>
+<li>For a fine adjustment at the pixel level, the arrow keys can be used to move object on pad.</li>
+<li>The zoom on axis and on 2D histogram has be improved. A shaded area is shown instead on simple 
+lines. Also it is possible to zoom a 2D histogram with a shaded rectangle.</li>
+</ul>
+
+<h4>Saving Files</h4>
+<ul>
+<li>When saving files from a canvas, the default file type is now .pdf instead of .ps, since 
+pdf is probably becoming more popular than ps.</li>
+<li>In the &quot;File Save Dialog&quot;, there is now a default file name and its extension 
+(if a specific one is selected), and the name is highlighted, so when the user types something,
+only the file name is changed.</li>
+</ul>
+
+<h4>ROOT browser and pad editor</h4>
+<ul>
+<li>The Pad Editor is now embedded in the left tab of the browser instead of inside the canvas itself,
+so the layout of the canvas remains untouched when opening the editor.</li>
+</ul>
+
 
