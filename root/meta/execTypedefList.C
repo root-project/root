@@ -103,8 +103,17 @@ int check_file(const char *filename, int expected_count)
    return res;
 }
 
+
+
 int execTypedefList() {
    int res;
+
+   // Just in case we have a small pch.
+   const char *whatToLoad [] = { "TPainter3dAlgorithms", "TGHtml", "TLego", "TAuthenticate", "TGFileBrowser", "TFitEditor", "TProofDraw", "TChainIndex", "TF1", "TGeoBoolNode", "TShape", "TXMLEngine" };
+   for(unsigned int i = 0 ; i < sizeof(whatToLoad) / sizeof(const char*); ++i) {
+      gInterpreter->AutoLoad(whatToLoad[i]);
+      gInterpreter->AutoParse(whatToLoad[i]);
+   }
 
    res = check("int","int"); if (res) return res;
    res = check("Int_t","int"); if (res) return res;
@@ -125,7 +134,7 @@ int execTypedefList() {
    // res = check_target("std::list<std::string>::const_iterator","list<string>::const_iterator"); if (res) return res;
 
    res = check_file("typelist.v5.txt",350); if (res) return res;
-   res = check_file("typelist.v6.txt",1530); if (res) return res;
+   res = check_file("typelist.v6.txt",1529); if (res) return res;
 
    return 0;
 }

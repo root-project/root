@@ -811,7 +811,6 @@ pair<TDSetElement*,TString>::second_type
 pair<ROOT::TSchemaType,basic_string<char> >::first_type
 pair<ROOT::TSchemaType,basic_string<char> >::second_type
 Pattern_t
-PDG_t
 pid_t
 Pixel_t
 Pixmap_t
