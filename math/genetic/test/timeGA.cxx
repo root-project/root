@@ -34,7 +34,7 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
 double par0[8] = { 1, 0.05, 10 , 2, 0.5 , 10 , 7 , 1. }; 
 const int ndata = 10000; 
 const double gAbsTolerance = 0.1; 
-const int gVerbose = 0; 
+int gVerbose = 0; 
 
 using std::cout;
 using std::endl;
@@ -54,7 +54,9 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    min->SetTolerance(gAbsTolerance);
    min->SetPrintLevel(gVerbose);
    min->SetFunction(chi2Func); 
-   min->SetParameters(100, 300);
+   ROOT::Math::GeneticMinimizerParameters params; // construct with default values
+   params.fNsteps = 100;  // increset number of steps top 100 (default is 40)
+   min->SetParameters(params);
 
 
    // initial values of the function
@@ -121,6 +123,25 @@ int GAMinTutorial()
 
 int main(int argc, char **argv)
 {
+  // Parse command line arguments 
+   for (Int_t i=1 ;  i<argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-v") { 
+         gVerbose = 1;
+      }
+      if (arg == "-vv") { 
+         gVerbose = 3;
+      }
+      if (arg == "-h") { 
+         std::cout << "Usage: " << argv[0] << " [-v] [-vv]\n";
+         std::cout << "  where:\n";
+         std::cout << "     -v  : verbose mode\n";
+         std::cout << "     -vv : very verbose mode\n";
+         std::cout << std::endl;
+         return -1; 
+      }
+   }
+
    int status = GAMinTutorial();
 
    return status;
