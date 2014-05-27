@@ -423,11 +423,13 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       TString classname;
       while (const auto key = next()) {
          classname = key->GetName();
+         // This is not needed with the new rootmap format
          classname.ReplaceAll("@@", "::");
          classname.ReplaceAll(" ", "-");
-         // Remove Library.
-         if(classname.BeginsWith("Library."))
+         if (classname.BeginsWith("Library."))
             classname.Remove(0, 7);
+
+         if (!classname.EndsWith(".h"))
             fpClasses->Add(new TObjString(classname));
          }
       }
