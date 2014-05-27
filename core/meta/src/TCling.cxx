@@ -1740,17 +1740,29 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                iNBase, clname);
          continue;
       }
+      TClass* baseCl=nullptr;
       std::string sBaseName;
-      llvm::raw_string_ostream stream(sBaseName);
-      baseDecl->getNameForDiagnostic(stream, printPol, true /*fqi*/);
-      stream.flush();
-      TClass* baseCl = TClass::GetClass(sBaseName.c_str());
-      if (!baseCl) {
-         Error("InspectMembers",
-               "Cannot find TClass for base %s while inspecting class %s",
-               sBaseName.c_str(), clname);
-         continue;
+      // Try with the DeclId
+      std::vector<TClass*> foundClasses;
+      TClass::GetClass(static_cast<DeclId_t>(baseDecl), foundClasses);
+      if (foundClasses.size()==1){
+         baseCl=foundClasses[0];
+      } else {
+         // Try with the normalised Name, as a fallback
+         if (!baseCl){
+            ROOT::TMetaUtils::GetNormalizedName(sBaseName,
+                                                baseQT,
+                                                *fInterpreter,
+                                                *fNormalizedCtxt);
+            baseCl = TClass::GetClass(sBaseName.c_str());
+         }
       }
+
+      if (!baseCl){
+         Error("InspectMembers",
+               "Cannot find TClass for base class %s", baseDecl->getNameAsString().c_str() );
+      }
+
       int64_t baseOffset;
       if (iBase->isVirtual()) {
          if (insp.GetObjectValidity() == TMemberInspector::kNoObjectGiven) {
