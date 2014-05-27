@@ -38,6 +38,4 @@ The following people have contributed to this new version:
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
  Yue Shi Lai, MIT, \
- Philippe Gras, CEA Saclay, \
- Julian Sitarek, IFAE,
 
