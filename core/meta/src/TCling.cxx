@@ -1018,6 +1018,12 @@ bool TCling::LoadPCM(TString pcmFileName,
          for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
          }
+         // Now that all TClass-es know how to set them up we can update
+         // existing TClasses, which might cause the creation of e.g. TBaseClass
+         // objects which in turn requires the creation of TClasses, that could
+         // come from the PCH, but maybe later in the loop. Instead of resolving
+         // a dependency graph the addition to the TClassTable above allows us
+         // to create these dependent TClasses as needed below.
          for (auto proto : *protoClasses) {
             if (TClass* existingCl
                 = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
