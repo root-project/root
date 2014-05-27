@@ -59,3 +59,12 @@ refarray.log: refarray_full.log
 
 refarray: refarray.log
 	$(TestDiff)
+  
+
+execWriteRefArrayCompress_cxx.$(DllSuf): RefArrayCompress_cc.$(DllSuf)
+
+execWriteRefArrayCompress_cxx.$(DllSuf): CALLROOTEXEBUILD += -e '.L RefArrayCompress.cc+'
+
+execRefArrayCompress.log: execWriteRefArrayCompress.success
+
+
