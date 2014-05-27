@@ -81,8 +81,9 @@ public:
 
 GeneticMinimizerParameters::GeneticMinimizerParameters() 
 { 
-   // constructor of parameters with default values
-   fNsteps   = 40;
+   // constructor of parameters with default values (use 100 is max iterations is not defined)
+   int defmaxiter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
+   fNsteps   =  (defmaxiter > 0) ?  defmaxiter : 100; 
    fPopSize  =300;
    fCycles   = 3;
    fSC_steps =10;
@@ -93,10 +94,12 @@ GeneticMinimizerParameters::GeneticMinimizerParameters()
 
 }
 
-   GeneticMinimizer::GeneticMinimizer(int ): 
-      fFitness(0), 
-      fMinValue(0),
-      fParameters(GeneticMinimizerParameters() )
+// genetic minimizer class 
+
+GeneticMinimizer::GeneticMinimizer(int ): 
+   fFitness(0), 
+   fMinValue(0),
+   fParameters(GeneticMinimizerParameters() )
 {
 
    // check with default minimizer options
@@ -106,6 +109,10 @@ GeneticMinimizerParameters::GeneticMinimizerParameters()
       opt.SetExtraOptions(*geneticOpt);
       this->SetOptions(opt);
    } 
+
+   // set the parameters 
+   SetTolerance(0.1 * fParameters.fConvCrit); 
+   SetMaxIterations( fParameters.fNsteps); 
  }
 
 GeneticMinimizer::~GeneticMinimizer()
@@ -171,6 +178,9 @@ bool GeneticMinimizer::SetFixedVariable(unsigned int par, const std::string& nam
 void GeneticMinimizer::SetParameters(const GeneticMinimizerParameters & params )
 {
    fParameters  = params; 
+   // set also the one defined in Minimizer
+   SetTolerance( 0.1 * fParameters.fConvCrit);
+   SetMaxIterations( fParameters.fNsteps );
 }
 
 ROOT::Math::MinimizerOptions GeneticMinimizer::Options() const { 
@@ -183,7 +193,7 @@ void  GeneticMinimizer::GetGeneticOptions(ROOT::Math::MinimizerOptions & opt) co
    // get  the genetic options of the class and return them in the MinimizerOptions class
    opt.SetTolerance(fParameters.fConvCrit/10); // use a factor of 10 to have default as Minuit
    opt.SetPrintLevel(PrintLevel() );   
-   opt.SetMaxFunctionCalls(MaxIterations());  // this is different than nsteps
+   opt.SetMaxIterations(fParameters.fNsteps);  
    // use fixed or dammy value for the other options
    opt.SetMinimizerType("Genetic");
    opt.SetMaxFunctionCalls(0);
@@ -230,12 +240,11 @@ void GeneticMinimizer::SetOptions(const ROOT::Math::MinimizerOptions & opt)
    geneticOpt->GetValue("ConvCrit",fParameters.fConvCrit);
 
    // use same of options in base class
-   int maxiter = MaxIterations();
-   if ( maxiter > 0 &&  maxiter < fParameters.fNsteps )    {
-      Warning("GeneticMinimizer::SetOptions", "max iterations smaller than Steps - set equal to steps %d",fParameters.fNsteps); 
-      SetMaxIterations(fParameters.fNsteps);
+   int maxiter = opt.MaxIterations();
+   if (maxiter > 0 && fParameters.fNsteps > 0 && maxiter !=  fParameters.fNsteps  )    {
+      Warning("GeneticMinimizer::SetOptions", "max iterations value given different than  than Steps - set equal to Steps %d",fParameters.fNsteps); 
    }
-
+   if (fParameters.fNsteps > 0) SetMaxIterations(fParameters.fNsteps);      
 
 }
 
@@ -247,11 +256,15 @@ bool GeneticMinimizer::Minimize()
       return false; 
    }
 
+   // sync parameters 
+   if (MaxIterations() > 0) fParameters.fNsteps = MaxIterations(); 
+   if (Tolerance() > 0) fParameters.fConvCrit = 10* Tolerance();
+
    TMVA::GeneticAlgorithm mg( *fFitness, fParameters.fPopSize, fRanges );
 
    if (PrintLevel() > 0) { 
-      Info("GeneticMinimizer::Minimize","Start iterating - max iterations = %d , conv criteria (tolerance) = %e ",
-           MaxIterations() ,  fParameters.fConvCrit );
+      std::cout << "GeneticMinimizer::Minimize  - Start iterating - max iterations = " <<  MaxIterations()  
+                << " conv criteria (tolerance) =  "   << fParameters.fConvCrit << std::endl;
    }
    
    fStatus = 0;
