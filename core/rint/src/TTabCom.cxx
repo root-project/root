@@ -438,7 +438,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       // Display the namespaces in the file.
       gCling->ProcessLine(".namespace");
       // Unredirect.
-      gCling->ProcessLine(".> \n");
+      gCling->ProcessLine(".>");
 
       // open the file
       std::ifstream file1(outf);
