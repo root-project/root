@@ -458,7 +458,7 @@ namespace ROOT
       if (!fWithBounds)
 	{
 	  fCMAparams.set_automaxiter(true);
-	  le = errstats<>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize);
+	  le = errstats<>::profile_likelihood(ffit,fCMAparams,fCMAsols,i,false,samplesize,fUp);
 	}
       else
 	{
