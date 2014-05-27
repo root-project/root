@@ -358,7 +358,10 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       //  of enums has been update to be active list]
       if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
          if (NCtx->getIdentifier()) {
-            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
+            // No need to laod the class: if there is something to update then
+            // it must already exist.
+            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str(),
+                                          false /*load*/);
             if (cl) {
                modifiedTClasses.insert(cl);
             }
