@@ -468,22 +468,13 @@ void TRint::PrintLogo(Bool_t lite)
       Int_t iday   = idatqq%100;
       Int_t imonth = (idatqq/100)%100;
       Int_t iyear  = (idatqq/10000);
-      char *version_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
+      TString version_date = TString::Format("%d %s %4d",iday,months[imonth-1],iyear);
 
-      Printf("  *******************************************");
-      Printf("  *                                         *");
-      Printf("  *        W E L C O M E  to  R O O T       *");
-      Printf("  *                                         *");
-      Printf("  *   Version%10s %17s   *", root_version, version_date);
-      Printf("  *                                         *");
-      Printf("  *  You are welcome to visit our web site  *");
-      Printf("  *          http://root.cern.ch            *");
-      Printf("  *                                         *");
-      Printf("  * !!! THIS IS A PREPRODUCTION VERSION !!! *");
-      Printf("  * Please use 5.34 for any real work until *");
-      Printf("  * ROOT 6 is released.                     *");
-      Printf("  *                                         *");
-      Printf("  *******************************************\n");
+      Printf("\n  | Welcome to ROOT %7s, %s |", root_version, version_date.Data());
+      Printf("  | http://root.cern.ch     - see README/%s |",
+             TString(' ', version_date.Length() - 12).Data());
+      Printf("  | (c) 2014, The ROOT Team - see LICENSE%s |\n",
+             TString(' ', version_date.Length() - 12).Data());
    }
 
    Printf("ROOT %s (%s@%s, %s on %s)", root_version, gROOT->GetGitBranch(),
