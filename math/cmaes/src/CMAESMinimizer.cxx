@@ -330,10 +330,11 @@ namespace ROOT
       
       double sigma0 = *std::max_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
-
+      int maxiter = fMaxIter > 0 ? fMaxIter : -1;
+      
       if (gDebug > 0)
 	{
-	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0 << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << std::endl;
+	  std::cout << "Running CMA-ES with dim=" << fDim << " / sigma0=" << sigma0 << " / lambda=" << lambda << " / fTol=" << fTol << " / with_bounds=" << fWithBounds << " / maxiter=" << maxiter << " / maxfevals=" << fMaxCalls << std::endl;
 	  std::cout << "x0=";
 	  std::copy(fInitialX.begin(),fInitialX.end(),std::ostream_iterator<double>(std::cout," "));
 	  std::cout << std::endl;
@@ -353,6 +354,8 @@ namespace ROOT
 	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
 	  cmaparams.set_ftolerance(fTol);
 	  cmaparams.set_automaxiter(false);
+	  cmaparams.set_max_iter(maxiter);
+	  cmaparams.set_max_fevals(fMaxCalls);
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
 	  fCMAparamsb = cmaparams;
 	}
@@ -368,6 +371,8 @@ namespace ROOT
 	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
 	  cmaparams.set_ftolerance(fTol);
 	  cmaparams.set_automaxiter(false);
+	  cmaparams.set_max_iter(maxiter);
+	  cmaparams.set_max_fevals(fMaxCalls);
 	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
 	  fCMAparams = cmaparams;
 	}
