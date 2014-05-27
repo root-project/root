@@ -74,17 +74,17 @@ TGraphEdge::~TGraphEdge()
 
 
 //______________________________________________________________________________
-void TGraphEdge::CreateGVEdge(Agraph_t *gv)
+void TGraphEdge::CreateGVEdge(fAgraph_t *gv)
 {
    // Create the GraphViz edge into the GraphViz data structure gv.           
 
    if (gv) {
-      Agnode_t *n1 = fNode1->GetGVNode();
-      Agnode_t *n2 = fNode2->GetGVNode();
+      Agnode_t *n1 = (Agnode_t*)fNode1->GetGVNode();
+      Agnode_t *n2 = (Agnode_t*)fNode2->GetGVNode();
 #ifdef WITH_CGRAPH
-      fGVEdge = agedge(gv, n1, n2, NULL, 1);
+      fGVEdge = (fAgedge_t*)agedge((Agraph_t *)gv, n1, n2, NULL, 1);
 #else
-      fGVEdge = agedge(gv, n1, n2);
+      fGVEdge = (fAgedge_t*)agedge((Agraph_t *)gv, n1, n2);
 #endif
    } else {
       Error("CreateGVEdge","Invalid graphviz graph");
@@ -145,14 +145,14 @@ void TGraphEdge::Layout()
    if (fY) delete [] fY; fY = 0;
    if (fN) delete [] fN; fN = 0;
 
-   Int_t np = ED_spl(fGVEdge)->size;
+   Int_t np = ED_spl((Agedge_t*)fGVEdge)->size;
    fN       = new Int_t[np+1];
    fN[0]    = np;
    Int_t nb = 0;
 
    // Compute the total size of the splines arrays
    for (i=0; i<np; i++) {
-      bz      = ED_spl(fGVEdge)->list[i];
+      bz      = ED_spl((Agedge_t*)fGVEdge)->list[i];
       fN[i+1] = bz.size;
       nb      = nb+fN[i+1];
    }
@@ -164,7 +164,7 @@ void TGraphEdge::Layout()
    // Fill the vectors with the splines' points.
    Int_t k=0;
    for (i=0; i<np; i++) {
-      bz    = ED_spl(fGVEdge)->list[i];
+      bz    = ED_spl((Agedge_t*)fGVEdge)->list[i];
       fArrX =  bz.ep.x;
       fArrY =  bz.ep.y;
       for (j=0; j<fN[i+1]; j++) {

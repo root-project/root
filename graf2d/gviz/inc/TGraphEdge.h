@@ -20,8 +20,9 @@
 #include "TAttLine.h"
 #endif
 
-struct Agraph_t;
-struct Agedge_t;
+struct fAgraph_t;
+struct fAgedge_t;
+
 class  TGraphNode;
 
 //////////////////////////////////////////////////////////////////////////
@@ -37,9 +38,10 @@ class TGraphEdge: public TObject, public TAttLine {
 
 protected:
 
+
    TGraphNode *fNode1;  // First node
    TGraphNode *fNode2;  // Second node
-   Agedge_t   *fGVEdge; // Graphviz edge
+   fAgedge_t  *fGVEdge; // Graphviz edge
    Double_t   *fX;      // X edge points (GV)
    Double_t   *fY;      // X edge points (GV)
    Int_t      *fN;      // number of edge points (GV)
@@ -49,25 +51,24 @@ protected:
    Double_t    fArrY;   // Arrow Y position
 
 public:
-
    TGraphEdge();
    TGraphEdge(TGraphNode *n1, TGraphNode *n2);
    virtual ~TGraphEdge();
 
-   void           CreateGVEdge(Agraph_t *gv);
+   void           CreateGVEdge(fAgraph_t *gv);
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   void           SetGVEdge(Agedge_t *gve) {fGVEdge = gve;}
-   Agedge_t      *GetGVEdge() {return fGVEdge;}
+   void           SetGVEdge(fAgedge_t *gve) {fGVEdge = gve;}
+   fAgedge_t     *GetGVEdge() {return fGVEdge;}
    TGraphNode    *GetNode1() {return fNode1;}
    TGraphNode    *GetNode2() {return fNode2;}
    void           Layout();            
    virtual void   Paint(Option_t *option="");
-   virtual void   SavePrimitive(ostream &, Option_t *);
-   void           SaveAttributes(ostream &, const char*);                  
+   virtual void   SavePrimitive(std::ostream &, Option_t *);
+   void           SaveAttributes(std::ostream &, const char*);
 
 
-   ClassDef(TGraphEdge,1)  //Graph edge class
+   ClassDef(TGraphEdge,2)  //Graph edge class
 };
 
 #endif
