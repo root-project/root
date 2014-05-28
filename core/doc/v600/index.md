@@ -197,6 +197,10 @@ of the `TDataType` describing a typedef.
 -   Simplify `Setenv` coding.
 -   Implement `Unsetenv` using the system function `unsetenv`.
 
+### TMacOSXSystem
+
+-   The file descriptors' management improved/fixed.
+
 ### TColor
 
 -   5 new predefined palettes with 255 colors are available vis
