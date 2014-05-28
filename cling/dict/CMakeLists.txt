@@ -1,8 +1,24 @@
-#ROOT_COMPILE_MACRO(rundefaultargs.C)
-#ROOT_COMPILE_MACRO(runalgebra.C)
+ROOTTEST_ADD_TEST(roottest-cling-dict-rundefaultargs-interpreted
+                  MACRO rundefaultargs.C
+                  OUTREF defaultargs_interpreted.ref
+                  LABELS roottest regression cling)
 
-ROOT_ADD_ROOTTEST(cling-dict-defaultargs-interpreted MACRO rundefaultargs.C OUTREF defaultargs_interpreted.ref )
-ROOT_ADD_ROOTTEST(cling-dict-defaultargs-compiled MACRO rundefaultargs.C+ OUTREF defaultargs_compiled.ref )
-ROOT_ADD_ROOTTEST(cling-dict-templateAutodict MACRO runtemplateAutodict.C OUTREF templateAutodict.ref )
-ROOT_ADD_ROOTTEST(cling-dict-operators MACRO runoperators.C OUTREF operators.ref )
-ROOT_ADD_ROOTTEST(cling-dict-algebra MACRO runalgebra.C+ OUTREF algebra.ref )
+ROOTTEST_ADD_TEST(roottest-cling-dict-rundefaultargs-compiled
+                  MACRO rundefaultargs.C+
+                  OUTREF defaultargs_compiled.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-dict-runtemplateAutodict
+                  MACRO runtemplateAutodict.C
+                  OUTREF templateAutodict.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-dict-runoperators
+                  MACRO runoperators.C
+                  OUTREF operators.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-dict-runalgebra
+                  MACRO runalgebra.C+
+                  OUTREF algebra.ref
+                  LABELS roottest regression cling)

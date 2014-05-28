@@ -10,6 +10,5 @@
 
 set(CTEST_CUSTOM_TESTS_IGNORE
     ${CTEST_CUSTOM_TESTS_IGNORE}
-    cling-parsing-semicolon
-    cling-operator-ConversionOp
+    roottest-cling-parsing-semicolon
 )

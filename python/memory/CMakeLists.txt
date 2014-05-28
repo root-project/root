@@ -1,3 +1,3 @@
 if(ROOT_python_FOUND)
-  ROOT_ADD_ROOTTEST(python-memory MACRO PyROOT_memorytests.py)
+  ROOTTEST_ADD_TEST(python-memory MACRO PyROOT_memorytests.py)
 endif()

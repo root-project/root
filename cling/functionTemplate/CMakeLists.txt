@@ -5,11 +5,30 @@ add_definitions(
   -DClingWorkAroundMissingSmartInclude
 )
 
-ROOT_COMPILE_MACRO(t.h)
-ROOT_COMPILE_MACRO(MyClassReferenceUse.C)
+ROOTTEST_COMPILE_MACRO(t.h)
 
-ROOT_ADD_ROOTTEST(cling-functionTemplate-cintrun MACRO cintrun.C
-                               OUTREF cintrun.ref-cling)
+ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-cintrun
+                  MACRO cintrun.C
+                  OUTREF cintrun.ref-cling
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
 
-ROOT_ADD_ROOTTEST(cling-functionTemplate-referenceuse MACRO runreferenceUse.C
-                               OUTREF referenceUse.ref)
+ROOTTEST_COMPILE_MACRO(MyClassReferenceUse.C)
+
+ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-runreferenceuse
+                  MACRO runreferenceUse.C
+                  OUTREF referenceUse.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testcint
+                  MACRO testcint.py
+                  OUTREF pythoncintrun.ref
+                  OUTCNVCMD grep -v "just a comment"
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testreflex
+                  MACRO testreflex.py
+                  OUTREF pythonreflexrun.ref
+                  OUTCNVCMD grep -v "just a comment"
+                  LABELS roottest regression cling)

@@ -4,18 +4,46 @@ add_definitions(
   -DClingWorkAroundUnloadingIOSTREAM
 )
 
-ROOT_COMPILE_MACRO(longlong.C)
-ROOT_COMPILE_MACRO(Singleton.h)
+ROOTTEST_COMPILE_MACRO(longlong.C)
+ROOTTEST_ADD_TEST(roottest-cling-template-longlong
+                  MACRO runlonglong.C
+                  OUTREF longlong.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
 
-#ROOT_BUILD_DICT(masterDict.C FILES master.h masterLinkDef.h)
-#ROOT_BUILD_DICT(slaveDict.C FILES slave.h slaveLinkDef.h)
-#ROOT_BUILD_DICT(forwardDict.C FILES forward.C linkdef.h)
-#ROOT_BUILD_DICT(constructorDict.C FILES constructor.hh linkdef.h)
-#ROOT_BUILD_DICT(typenameTestDict.C FILES typenameTest.C linkdef.h)
 
-ROOT_ADD_ROOTTEST(cling-template-templateSingleton MACRO runtemplateSingleton.C OUTREF templateSingleton.ref)
-ROOT_ADD_ROOTTEST(cling-template-longlong MACRO runlonglong.C OUTREF longlong.ref)
-ROOT_ADD_ROOTTEST(cling-template-usingtemplate MACRO runusingtemplate.C OUTREF usingtemplate.ref)
-ROOT_ADD_ROOTTEST(cling-template-operator1-interpreted MACRO smalltest.C)
-ROOT_ADD_ROOTTEST(cling-template-operator1-compiled MACRO smalltest.C+)
-ROOT_ADD_ROOTTEST(cling-template-templatefriend MACRO runtemplatefriend.C OUTREF templatefriend.ref)
+ROOTTEST_COMPILE_MACRO(Singleton.h)
+ROOTTEST_ADD_TEST(roottest-cling-template-templateSingleton
+                  MACRO runtemplateSingleton.C
+                  OUTREF templateSingleton.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
+ROOTTEST_GENERATE_DICTIONARY(masterDict       LINKDEF master.h masterLinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(slaveDict        LINKDEF slave.h slaveLinkDef.h)
+ROOTTEST_GENERATE_DICTIONARY(forwardDict      LINKDEF forward.C linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(constructorDict  LINKDEF constructor.hh linkdef.h)
+ROOTTEST_GENERATE_DICTIONARY(typenameTestDict LINKDEF typenameTest.C linkdef.h)
+
+ROOTTEST_COMPILE_MACRO(usingtemplate.C)
+
+ROOTTEST_ADD_TEST(roottest-cling-template-runusingtemplate
+                  MACRO runusingtemplate.C
+                  OUTREF usingtemplate.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
+ROOTTEST_COMPILE_MACRO(templatefriend.cxx)
+ROOTTEST_ADD_TEST(roottest-cling-template-runtemplatefriend
+                  MACRO runtemplatefriend.C
+                  OUTREF templatefriend.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-template-smalltest-interpreted
+                  MACRO smalltest.C
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-template-smalltest-compiled
+                  MACRO smalltest.C+
+                  LABELS roottest regression cling)

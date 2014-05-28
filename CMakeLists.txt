@@ -12,6 +12,21 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 # Set the name of the project.
 project(roottest)
 
+# Check, if roottest is built out of source.
+string(COMPARE EQUAL ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} insource)
+if(insource)
+  file(REMOVE_RECURSE ${CMAKE_SOURCE_DIR}/Testing)
+  file(REMOVE ${CMAKE_SOURCE_DIR}/DartConfiguration.tcl)
+  message(FATAL_ERROR "roottest should be installed as an out of source build, "
+                      "to keep the source directory clean. Please create a "
+                      "extra build directory and run the command 'cmake "
+                      "<path_to_source_dir>' in this newly created directory. "
+                      "You have also to delete the directory CMakeFiles and "
+                      "the file CMakeCache.txt in the source directory. "
+                      "Otherwise cmake will complain even if you run it from "
+                      "an out-of-source directory.")
+endif()
+
 # Find ROOT.
 find_package(ROOT QUIET)
 
@@ -71,9 +86,6 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 # Include custom CMake modules.
 include(CheckCompiler)
 include(RootCTestMacros)
-
-# Check, if roottest is built out of source.
-ROOT_CHECK_OUT_OF_SOURCE_BUILD()
 
 # Find GCCXML.
 find_package(GCCXML REQUIRED)

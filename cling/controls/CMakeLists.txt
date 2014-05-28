@@ -1,2 +1,5 @@
-ROOT_ADD_ROOTTEST(cling-controls MACRO runLoopbreak.C OUTREF Loopbreak.ref)
+ROOTTEST_ADD_TEST(roottest-cling-controls-runLoopbrea
+                  MACRO runLoopbreak.C
+                  OUTREF Loopbreak.ref
+                  LABELS roottest regression cling)
 

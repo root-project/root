@@ -1,3 +1,15 @@
-ROOT_ADD_ROOTTEST(cling-bytecode-complex MACRO  runcomplex.C OUTREF complex.ref)
-ROOT_ADD_ROOTTEST(cling-bytecode-henry MACRO  runhenry.C OUTREF henry.ref)
-ROOT_ADD_ROOTTEST(cling-bytecode-arrayhist MACRO  runarrayhist.C OUTREF arrayhist.ref WILLFAIL)
+ROOTTEST_ADD_TEST(roottest-cling-bytecode-runarrayhist
+                  MACRO runarrayhist.C
+                  OUTREF arrayhist.ref
+                  WILLFAIL
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-bytecode-runcomplex
+                  MACRO runcomplex.C
+                  OUTREF complex.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-bytecode-runhenry
+                  MACRO runhenry.C
+                  OUTREF henry.ref
+                  LABELS roottest regression cling)

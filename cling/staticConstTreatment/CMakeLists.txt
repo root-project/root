@@ -1,1 +1,14 @@
-#ROOT_ADD_ROOTTEST(cling-staticConstTreatment-execStaticConst MACRO -e "gSystem->Load(\"libOdin_dictrflx."$(DllSuf)"\") " -e "gSystem->Load(\"libmyClass_dictrflx."$(DllSuf)"\") " OUTREF execStaticConst.ref)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(myClass myClass.h SELECTION myClass_selection.xml)
+
+set(dependencies ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(Odin Odin.h SELECTION Odin_selection.xml)
+
+set(dependencies ${dependencies} ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_ADD_TEST(roottest-cling-staticConstTreatment-execStaticConst
+                  MACRO execStaticConst.C
+                  OUTREF execStaticConst.ref
+                  DEPENDS ${dependencies}
+                  WILLFAIL
+                  LABELS roottest regression cling)

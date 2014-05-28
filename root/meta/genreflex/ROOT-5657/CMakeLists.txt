@@ -1,3 +1,4 @@
-ROOT_REFLEX_GENERATE_DICTIONARY(classes_dictrflx classes.h SELECTION classes_selection.xml)
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(classes classes.h SELECTION classes_selection.xml)
 
-ROOT_ADD_ROOTTEST(root-meta-genreflex-ROOT-5657-execloadLib MACRO execloadLib.C OUTREF execloadLib.ref)
+ROOTTEST_ADD_TEST(root-meta-genreflex-ROOT-5657-execloadLib MACRO execloadLib.C
+                  OUTREF execloadLib.ref DEPENDS ${GENERATE_REFLEX_TEST})

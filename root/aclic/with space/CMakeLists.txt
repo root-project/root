@@ -1,1 +1,1 @@
-ROOT_ADD_ROOTTEST(root-aclic-withspace-runload MACRO runload.C OUTREF load.ref)
+ROOTTEST_ADD_TEST(root-aclic-withspace-runload MACRO runload.C OUTREF load.ref)

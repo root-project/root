@@ -1,10 +1,38 @@
-ROOT_COMPILE_MACRO(fileClose.C)
-ROOT_COMPILE_MACRO(testCompile.C)
+ROOTTEST_COMPILE_MACRO(fileClose.C)
 
-ROOT_ADD_ROOTTEST(cling-other-fileClose MACRO runfileClose.C OUTREF fileClose.ref)
-ROOT_ADD_ROOTTEST(cling-other-sprintfselect MACRO runsprintfselect.C OUTREF sprintfselect.ref)
-ROOT_ADD_ROOTTEST(cling-other-staticConstTest MACRO staticConst.C OUTREF staticConstTest.ref)
-ROOT_ADD_ROOTTEST(cling-other-StaticDataMember MACRO runStaticDataMember.C)
-ROOT_ADD_ROOTTEST(cling-other-savannah54662 MACRO runsavannah54662.C OUTREF savannah54662.ref)
-ROOT_ADD_ROOTTEST(cling-other-missingXFunc MACRO runmissingXFunc.C OUTREF missingXFunc.ref WILLFAIL)
-ROOT_ADD_ROOTTEST(cling-other-assertBaseMembers MACRO assertBaseMembers.C)
+ROOTTEST_ADD_TEST(roottest-cling-other-runfileClose
+                  MACRO runfileClose.C
+                  OUTREF fileClose.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
+ROOTTEST_COMPILE_MACRO(testCompile.C)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-runsprintfselect
+                  MACRO runsprintfselect.C
+                  OUTREF sprintfselect.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-staticConstTest
+                  MACRO staticConst.C
+                  OUTREF staticConstTest.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-runStaticDataMember
+                  MACRO runStaticDataMember.C
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-runsavannah54662
+                  MACRO runsavannah54662.C
+                  OUTREF savannah54662.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-runmissingXFunc
+                  MACRO runmissingXFunc.C
+                  OUTREF missingXFunc.ref
+                  WILLFAIL
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-other-assertBaseMembers
+                  MACRO assertBaseMembers.C
+                  LABELS roottest regression cling)

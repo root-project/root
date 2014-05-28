@@ -1,4 +1,14 @@
-#ROOT_COMPILE_MACRO(runvbase.C)
+ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-interpreted
+                  MACRO runvbase.C
+                  OUTREF vbase-i.ref
+                  LABELS roottest regression cling)
 
-ROOT_ADD_ROOTTEST(cling-offset-vbase-interpreted MACRO runvbase.C OUTREF vbase-i.ref)
-ROOT_ADD_ROOTTEST(cling-offset-vbase-compiled MACRO runvbase.C+ OUTREF vbase-c.ref)
+ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-compiled
+                  MACRO runvbase.C+
+                  OUTREF vbase-c.ref
+                  LABELS roottest regression cling)
+
+ROOTTEST_ADD_TEST(roottest-cling-offset-rootlogon
+                  MACRO rootlogon.C
+                  WILLFAIL
+                  LABELS roottest regression cling)
