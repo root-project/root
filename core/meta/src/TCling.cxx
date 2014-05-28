@@ -1501,9 +1501,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 //______________________________________________________________________________
 void TCling::PrintIntro()
 {
-   // Print cling introduction and help message.
-
-   Printf("cling C/C++ Interpreter: type .? for help.");
+   // No-op; see TRint instead.
 }
 
 //______________________________________________________________________________

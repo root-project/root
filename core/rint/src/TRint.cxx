@@ -39,6 +39,7 @@
 #include "TTabCom.h"
 #include "TError.h"
 #include <stdlib.h>
+#include <algorithm>
 
 #include "Getline.h"
 
@@ -458,8 +459,6 @@ void TRint::PrintLogo(Bool_t lite)
 {
    // Print the ROOT logo on standard output.
 
-   const char *root_version = gROOT->GetVersion();
-
    if (!lite) {
       static const char *months[] = {"January","February","March","April","May",
                                      "June","July","August","September","October",
@@ -470,19 +469,39 @@ void TRint::PrintLogo(Bool_t lite)
       Int_t iyear  = (idatqq/10000);
       TString version_date = TString::Format("%d %s %4d",iday,months[imonth-1],iyear);
 
-      Printf("\n  | Welcome to ROOT %7s, %s |", root_version, version_date.Data());
-      Printf("  | http://root.cern.ch     - see README/%s |",
-             TString(' ', version_date.Length() - 12).Data());
-      Printf("  | (c) 2014, The ROOT Team - see LICENSE%s |\n",
-             TString(' ', version_date.Length() - 12).Data());
+      // Fancy formatting: the content of lines are format strings; their %s is
+      // replaced by spaces needed to make all lines as long as the longest line.
+      std::vector<TString> lines;
+      // Here, %%s results in %s after TString::Format():
+      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+                                         gROOT->GetVersion()));
+      lines.emplace_back(TString::Format("Built for %s%%s(c) 2014, The ROOT Team", gSystem->GetBuildArch()));
+      if (strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
+         // If branch and commit are identical - e.g. "v5-34-18" - then we have
+         // a release build. Else specify the git hash this build was made from.
+         lines.emplace_back(TString::Format("From %s@%s, %s%%s",
+                                            gROOT->GetGitBranch(),
+                                            gROOT->GetGitCommit(), gROOT->GetGitDate()));
+      }
+      lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'%s"));
+
+      // Find the longest line and its length:
+      auto itLongest = std::max_element(lines.begin(), lines.end(),
+                                        [](const TString& left, const TString& right) {
+                                           return left.Length() < right.Length(); });
+      Ssiz_t lenLongest = itLongest->Length();
+
+
+      Printf("");
+      for (const auto& line: lines) {
+         // Print the line, expanded with the necessary spaces at %s, and
+         // surrounded by some ASCII art.
+         Printf("  | %s |",
+                TString::Format(line.Data(),
+                                TString(' ', lenLongest - line.Length()).Data()).Data());
+      }
+      Printf("");
    }
-
-   Printf("ROOT %s (%s@%s, %s on %s)", root_version, gROOT->GetGitBranch(),
-          gROOT->GetGitCommit(), gROOT->GetGitDate(),
-          gSystem->GetBuildArch());
-
-   if (!lite)
-      gCling->PrintIntro();
 
 #ifdef R__UNIX
    // Popdown X logo, only if started with -splash option
