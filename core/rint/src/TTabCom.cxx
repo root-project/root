@@ -431,7 +431,6 @@ const TSeqCollection *TTabCom::GetListOfClasses()
 
          if (!classname.EndsWith(".h"))
             fpClasses->Add(new TObjString(classname));
-         }
       }
       // Iterate over the ClassTable.
       Int_t totalNumberOfClasses = gClassTable->Classes();
@@ -443,6 +442,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
          const char *cname = gClassTable->Next();
          if (!fpClasses->FindObject(cname)) {
             fpClasses->Add(new TObjString(cname));
+         }
       }
    }
 
