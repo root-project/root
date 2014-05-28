@@ -54,7 +54,7 @@ allowed (but `*templt*` is not).
 
 #### Namespace prefix of template parameters
 Given `namespace N { class A; template <typename T> class B;}`, the name
-`N::B<N::A>` is no longer "shortened" to `N::B<A:`. This affects the forward
+`N::B<N::A>` is no longer "shortened" to `N::B<A>`. This affects the forward
 and backward compatibility of files.
 
 #### Implicit dynamic up-casts

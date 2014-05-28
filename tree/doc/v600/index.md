@@ -4,7 +4,8 @@
 
 ROOT offers a new class `TTreeReader` that gives simple, safe and fast access to the content of a `TTree`.
 Using it is trivial:
-```
+
+``` {.cpp}
 #include "TFile.h"
 #include "TH1F.h"
 #include "TTreeReader.h"

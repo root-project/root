@@ -37,5 +37,6 @@ The following people have contributed to this new version:
  Eckhard von Toerne, University Bonn, ATLAS, TMVA, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Yue Shi Lai, MIT, \
+ Yue Shi Lai, MIT
+
 
