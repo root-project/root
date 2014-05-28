@@ -501,8 +501,7 @@ void TRint::PrintLogo(Bool_t lite)
                 TString::Format(line.Data(),
                                 TString(' ', lenLongest - line.Length()).Data()).Data());
       }
-      Printf("   %s", TString('-', lenLongest).Data());
-      Printf("");
+      Printf("   %s\n", TString('-', lenLongest).Data());
    }
 
 #ifdef R__UNIX
