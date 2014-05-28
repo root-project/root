@@ -24,8 +24,9 @@ $ cd $ROOTSYS/tutorials
 $ root
    ------------------------------------------------------------
   | Welcome to ROOT 6.00/00                http://root.cern.ch |
-  | From 30 May 2014                                           |
-  | Built for linuxx8664gcc            (c) 2014, The ROOT Team |
+  |                               (c) 1995-2014, The ROOT Team |
+  | Built for linuxx8664gcc                                    |
+  | From tag v6-00-00, 30 May 2014                             |
   | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
    ------------------------------------------------------------
 

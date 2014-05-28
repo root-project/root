@@ -466,6 +466,8 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
                                          gROOT->GetVersion()));
+      lines.emplace_back(TString::Format("%%s(c) 1995-2014, The ROOT Team"));
+      lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
                                         "June","July","August","September","October",
@@ -475,7 +477,9 @@ void TRint::PrintLogo(Bool_t lite)
          Int_t imonth = (idatqq/100)%100;
          Int_t iyear  = (idatqq/10000);
 
-         lines.emplace_back(TString::Format("From %d %s %4d%%s",iday,months[imonth-1],iyear));
+         lines.emplace_back(TString::Format("From tag %s, %d %s %4d%%s",
+                                            gROOT->GetGitBranch(),
+                                            iday,months[imonth-1],iyear));
       } else {
          // If branch and commit are identical - e.g. "v5-34-18" - then we have
          // a release build. Else specify the git hash this build was made from.
@@ -483,7 +487,6 @@ void TRint::PrintLogo(Bool_t lite)
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit(), gROOT->GetGitDate()));
       }
-      lines.emplace_back(TString::Format("Built for %s%%s(c) 2014, The ROOT Team", gSystem->GetBuildArch()));
       lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:
