@@ -69,9 +69,9 @@ May sure you are not going to pick the obsolete version.
 % gmake install
 ```
 
-#### Qt Main C++ Classes CINT Dictionary
+#### Qt Main C++ Classes Cling Dictionary
 
-The ROOT CINT dictionary allows to call the Qt main classes directly
+The ROOT Cling dictionary allows to call the Qt main classes directly
 from the ROOT command prompt is an optional component and it is not
 created during the "Qt-layer installation". To build / re-build the Qt
 main classes ROOT dictionary one can invoke the make
@@ -266,7 +266,7 @@ qmake include file, namely, `$ROOTSYS/include/rootcint.pri `with one
 extra line in the project file (as the example above has revealed). The
 include file defines all necessary components one needs to compile and
 link the healthy Qt application against of the ROOT shared libraries. It
-contains the qmake rules to create the ROOT/CINT dictionary from the
+contains the qmake rules to create the ROOT/Cling dictionary from the
 list of the provided header files.
 
 For example, we may convert the stand-alone Qt-based ROOT application
@@ -366,7 +366,7 @@ include("$(ROOTSYS)/include/rootcint.pri")
 ```
 
 At this point, you are ready to produce the class-shared library with
-the ROOT/CINT dictionary by invoking two shell commands (as above):
+the ROOT/Cling dictionary by invoking two shell commands (as above):
 
 ``` {.cpp}
 qmake MyQButton.pro
@@ -452,7 +452,7 @@ root[] pnt.drawPixmap(0,0,*pix);
 is to display the Qt "Setup Printer" dialog and use QPrinter object to
 print the current **`TPad`** image to the selected printer. To use the
 more complex Qt-related code one is advised to apply "ACLiC - Automatic
-Compiler of Libraries for CINT" (see CINT the C++ Interpreter). For
+Compiler of Libraries for Cling" (see Cling the C++ Interpreter). For
 example:
 
 ``` {.cpp}

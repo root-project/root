@@ -42,7 +42,7 @@ Bool_t b = obj->InheritsFrom("TLine");
 Bool_t b = obj->InheritsFrom(TLine::Class());
 ```
 
-ROOT and `CINT` rely on reflection and the class dictionary to identify
+ROOT and `Cling` rely on reflection and the class dictionary to identify
 the type of a variable at run time. With **`TObject`** inheritance come
 some methods that use Introspection to help you see the data in the
 object or class. For instance:
@@ -385,7 +385,7 @@ MyClass(TRootIoCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
-## rootcint: The CINT Dictionary Generator
+## rootcint: The Cling Dictionary Generator
 
 
 In the following example, we walk through the steps necessary to
@@ -611,7 +611,7 @@ void SClass::Print() const {
 
 You can add a class without using the `ClassDef` and `ClassImp` macros;
 however, you will be limited. Specifically the object I/O features of
-ROOT will not be available to you for these classes. See "CINT the C++
+ROOT will not be available to you for these classes. See "Cling the C++
 Interpreter". The `ShowMembers` and `Streamer` method, as well as the
 `>>` operator overloads, are implemented only if you use `ClassDef` and
 `ClassImp`. See `$ROOTSYS/include/Rtypes.h` for the definition of
@@ -723,7 +723,7 @@ it is needed (and thus never instantiated by the compiler).
 
 #### Other Useful Pragma Statements
 
-The complete list of pragma statements currently supported by CINT is:
+The complete list of pragma statements currently supported by Cling is:
 
 ``` {.cpp}
 #pragma link [C|C++|off] all [class|function|global|typedef];
@@ -751,7 +751,7 @@ example:
 ```
 
 This will request the dictionary for all the class whose name start with
-`'MyClass'` and are already known to CINT (class templates need to have
+`'MyClass'` and are already known to Cling (class templates need to have
 already been instantiated to be considered).
 
 ``` {.cpp}
@@ -760,7 +760,7 @@ already been instantiated to be considered).
 
 This pragma statement turns on or off the dictionary generation for all
 classes, structures, namespaces, global variables, global functions and
-typedefs seen so far by CINT. Example:
+typedefs seen so far by Cling. Example:
 
 ``` {.cpp}
 // some C++ header definition
@@ -902,12 +902,12 @@ The pragma statements are:
 #endif
 ```
 
-Until CINT version 5.15.60, in order to generate dictionary for a member
+Until Cling version 5.15.60, in order to generate dictionary for a member
 function, not only the member function but also the class itself has to
 be turned on for the linkage. There was an inconvenience when generating
 dictionary for template member function afterwards.
 
-From CINT v.5.15.61, a new behavior is introduced. If link for a member
+From Cling v.5.15.61, a new behavior is introduced. If link for a member
 function is specified, dictionary is generated even if link to the
 belonging class is off. For example, if you originally have A.h as
 follows:
@@ -1055,7 +1055,7 @@ This statements controls default link mode for
 ```
 
 By turning default 'on', all language constructs in given header files
-will be included in generated CINT dictionary (interface method source
+will be included in generated Cling dictionary (interface method source
 file). If default is set to 'off', nothing will be included in the
 generated dictionary. The next statement explicitly set linkage to each
 item:
@@ -1065,9 +1065,9 @@ item:
 ```
 
 This pragma statement must be given before `cint/rootcint` reads any
-C/C++ definitions from header files. For pure CINT, default is on. For
+C/C++ definitions from header files. For pure Cling, default is on. For
 ROOT, including `$ROOTSYSDIR/bin/cint`, default is off. This feature was
-added from CINT v.5.15.57. Before this version, you had to use
+added from Cling v.5.15.57. Before this version, you had to use
 explicitly in the ROOT `LinkDef.h` file the next statement:
 
 ``` {.cpp}

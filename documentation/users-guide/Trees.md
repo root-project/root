@@ -1999,9 +1999,9 @@ experiment with the **`TTree::Draw`** method, so let's create a pointer to it:
 root[] TTree *MyTree = T
 ```
 
-CINT allows us to get simply the object by using it. Here we define a
+Cling allows us to get simply the object by using it. Here we define a
 pointer to a **`TTree`** object and assign it the value of "`T`", the
-**`TTree`** in the file. CINT looks for an object named "`T`" in the
+**`TTree`** in the file. Cling looks for an object named "`T`" in the
 current ROOT file and returns it (this assumes that "T" has not
 previously been used to declare a variable or function).
 
@@ -3586,7 +3586,7 @@ root[] T->MakeClass("MyClass")
 Files: MyClass.h and MyClass.C generated from Tree: T
 ```
 
-CINT informs us that it has created two files. `MyClass.`h contains the
+Cling informs us that it has created two files. `MyClass.`h contains the
 class definition and `MyClass.C` contains the `MyClass::Loop()` method.
 `MyClass` has more methods than just `Loop()`. The other methods are a
 constructor, a destructor, `GetEntry()`, `LoadTree()`, `Notify()`,

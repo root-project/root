@@ -17,8 +17,8 @@ has generated an impressive amount of data, around 10 Terabytes per
 run. This rate provided the ideal environment to develop and test the
 next generation data analysis.
 
-One cannot mention ROOT without mentioning CINT, its C++ interpreter.
-CINT was created by Masa Goto in Japan. It is an independent product,
+One cannot mention ROOT without mentioning Cling, its C++ interpreter.
+Cling was created by Masa Goto in Japan. It is an independent product,
 which ROOT is using for the command line and script processor.
 
 ROOT was, and still is, developed in the "Bazaar style", a term from
@@ -313,19 +313,13 @@ The `bin` directory contains several executables.
 |               | CINTdebugger                                               |
 +---------------+------------------------------------------------------------+
 | `rootcint`    | is the utility ROOT uses to create a class dictionary for  |
-|               | CINT                                                       |
+|               | Cling                                                       |
 +---------------+------------------------------------------------------------+
 | `rmkdepend`   | a modified version of `makedepend` that is used by the     |
 |               | ROOT build system                                          |
 +---------------+------------------------------------------------------------+
 | `root-config` | a script returning the needed compile flags and libraries  |
 |               | for projects that compile and link with ROOT               |
-+---------------+------------------------------------------------------------+
-| `cint`        | the C++ interpreter executable that is independent of ROOT |
-+---------------+------------------------------------------------------------+
-| `makecint`    | the pure CINT version of `rootcint`, used to generate a    |
-|               | dictionary; It is used by some of CINT install scripts to  |
-|               | generate dictionaries for external system libraries        |
 +---------------+------------------------------------------------------------+
 | `proofd`      | a small daemon used to authenticate a user of ROOT         |
 |               | parallel processing capability (PROOF)                     |
@@ -349,7 +343,7 @@ marked with a \* are only installed when the options specified them.
 
 -   `libAsImage` is the image manipulation library
 
--   `libCint` is the C++ interpreter (CINT)
+-   `libCling` is the C++ interpreter (Cling)
 
 -   `libCore` is the Base classes
 
@@ -420,7 +414,7 @@ marked with a \* are only installed when the options specified them.
 
 -   \*`libRGL` is the interface to OpenGL.
 
--   `libReflex` is the runtime type database library used by CINT
+-   `libReflex` is the runtime type database library used by Cling
 
 -   `libRint` is the interactive interface to ROOT (provides command
     prompt)
@@ -457,13 +451,12 @@ up of base classes, container classes, meta information classes,
 operating system specific classes, and the ZIP algorithm used for
 compression of the ROOT files.
 
-The CINT library (`libCint.so`) is also needed in all ROOT
-applications, and even by `libCore`. It can be used independently of
-`libCore`, in case you only need the C++ interpreter and not ROOT. A
-program referencing only **`TObject`** only needs `libCore` and
-`libCint`. To add the ability to read and write ROOT objects one also
-has to load libRIO. As one would expect, none of that depends on
-graphics or the GUI.
+The Cling library (`libCling.so`) is also needed in all ROOT
+applications, and even by `libCore`. A
+program referencing only **`TObject`** only needs `libCore`;
+`libCling` will be opened automatically. To add the ability to read and write
+ROOT objects one also has to load `libRIO`. As one would expect, none of that
+depends on graphics or the GUI.
 
 Library dependencies have different consequences; depending on whether
 you try to build a binary, or you just try to access a class that is
@@ -483,7 +476,7 @@ library names change you will not need to change your Makefile.
 
 A batch program that does not have a graphic display, which creates,
 fills, and saves histograms and trees, only needs to link the core
-libraries (`libCore`, `libCint`, `libRIO`), `libHist` and `libTree`.
+libraries (`libCore`, `libRIO`), `libHist` and `libTree`.
 If ROOT needs access to other libraries, it loads them dynamically.
 For example, if the **`TreeViewer`** is used, `libTreePlayer` and all
 libraries `libTreePlayer` depends on are loaded also. The dependent
@@ -519,7 +512,7 @@ contains many plugin definitions, or by calls to
 
 #### Library Autoloading
 
-When using a class in CINT, e.g. in an interpreted source file, ROOT
+When using a class in Cling, e.g. in an interpreted source file, ROOT
 will automatically load the library that defines this class. On
 start-up, ROOT parses all files ending on `.rootmap` rootmap that are
 in one of the `$LD_LIBRARY_PATH` (or `$DYLD_LIBRARY_PATH` for `MacOS`,

@@ -337,7 +337,7 @@ something like:
 root[] my_objptr.Solve();
 ```
 
-Although this is a permitted by the CINT shortcuts, it is one that you
+Although this is a permitted by the Cling shortcuts, it is one that you
 are *strongly* advised not to follow! As we have seen, heap objects
 have to be accessed via pointers, whereas stack objects can be
 accessed directly. They can also be accessed via pointers:
@@ -381,7 +381,7 @@ root[] my_objptr = 0;
 ```
 
 You should see the print out from its destructor. Setting the pointer
-to zero afterwards is not strictly necessary (and CINT does it
+to zero afterwards is not strictly necessary (and Cling does it
 automatically), but the object is no more accessible, and any attempt
 to use the pointer again will, as has already been stated, cause
 grief. So much for heap objects, but how are stack objects deleted? In
@@ -393,7 +393,7 @@ futile to do something like:
 root[] {  Quad my_object(1.,2.,-3.); }
 ```
 
-CINT does not follow this rule; if you type in the above line, you
+Cling does not follow this rule; if you type in the above line, you
 will not see the destructor message. As explained in the Script
 lesson, you can load in compound statements, which would be a bit
 pointless if everything disappeared as soon as it was loaded! Instead,
@@ -422,10 +422,10 @@ the stack. This command will fail.
 root[] my_objptr->Solve();
 ```
 
-CINT no longer knows what `my_objptr` is. This is a great example of a
+Cling no longer knows what `my_objptr` is. This is a great example of a
 memory leak; the heap object exists but we have lost our way to access
 it. In general, this is not a problem. If any object will outlive the
 compound statement in which it was created then a more permanent
 pointer will point to it, which frequently is part of another heap
 object. See Resetting the Interpreter Environment in the chapter
-"CINT the C++ Interpreter".
+"Cling the C++ Interpreter".
