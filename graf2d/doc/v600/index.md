@@ -224,3 +224,12 @@ file `simple.pdf`.
 
    ![Gradient example](mixgrad.png "TPie with a radial fill + a linear gradient fill as a background")
 
+### TGCocoa and TGQuartz
+
+-   Correct font metrics for greek and math symbols are implemented now.
+-   Added support for linear and radial color gradients (see the notes above).
+-   "GL-in-pad" implemented for Cocoa backend.
+-   Keyboard event handling is more "X11-like" now.
+-   Multi-display setup is supported now.
+-   Transparent pads (colors with alpha value) are supported natively now.
+
