@@ -13,4 +13,4 @@
   (only a simple radial color gradient),
   see also the notes about TLinearGradient and TRadialGradient classes.
 - "GL in Pad" and gl hist painters were updated to support Retina displays
-  (OS X).
+  (OS X + Cocoa).
