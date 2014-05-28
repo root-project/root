@@ -113,11 +113,13 @@ The following interfaces are not yet available:
 
 They might be re-implemented in a later version.
 
-### rootcling
+### rootcling, rootcint and genreflex
 
-rootcling is the successor to rootcint and genreflex. It is used to
-implement backward compatibility wrappers for both of them with the
-following *backward incompatibilities.*
+rootcling is the successor to rootcint and it preserves its old commandline
+arguments and provides more (see help). The executable rootcint still exists
+but it is just a redirection to rootcling.
+The following *backward incompatibilities* are present between rootcint in
+version 5 and rootcling in version 6:
 
 -   rootcling does not support multiline \#pragma without a line
     continuation as rootcint did (rootcint support \#pragma link with a
@@ -144,6 +146,11 @@ macro: *\_\_ROOTCLING\_\_* is now defined during the parsing. The macros
 *\_\_CINT\_\_* and *\_\_MAKECINT\_\_* are defined only when looking for
 `#pragma` statement.
 
+The genreflex executable is still available, it preserves the same command
+line options as in version 5 and provides new ones (see help). It is important
+to note that it is not anymore a python script interfaced to GCCXML but rather
+a wrapper around rootcling.
+
 *Warning*
 
 It is important to note that during the parsing of the header files,
@@ -163,6 +170,29 @@ and for genreflex
       <field name="m_calculated" transient="true" />
    </class>
 ```
+
+or
+
+``` {.cpp}
+   <class name="edm::Particle" >
+      <field name="m_calculated" persistent="false" />
+   </class>
+
+```
+
+This new set of executables are responsible also for the generation of pcm
+files. These are crucial for the functioning of ROOT and must reside in the
+same directory of the libraries which contain the compiled dictionaries.
+
+### rlibmap
+The tools used to generate rootmap files are rootcling and genreflex.
+The rlibmap tool was discontinued.
+
+### Rootmapfiles
+
+To enhance the set of functionalities offered by ROOT and its new interpreter,
+the format of the rootmaps evolved.
+
 
 ### TROOT
 
