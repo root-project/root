@@ -1,5 +1,6 @@
 #include "Math/Polynomial.h"
 #include "Math/Functor.h"
+#include "Math/Error.h"
 #include <iostream>
 
 
@@ -36,7 +37,6 @@ double exactIntegral ( const std::vector<double> & par, double a, double b) {
 }
 
 double singularFunction(double x) { 
-   return 1./x;
    if (x >= 0) 
       return 1./sqrt(x);
    else 
@@ -72,16 +72,17 @@ int testIntegration() {
   ig.SetFunction(func);
 
 
-  double value = ig.Integral( 0, 3); 
+  double value = ig.Integral( 0, 3);
   // or ig.Integral(*f, 0, 10); if new function 
 
   std::cout.precision(20);
 
   std::cout << "Adaptive singular integration:" << std::endl;
-  std::cout << "Return code " << ig.Status() << std::endl; 
+  status &= ig.Status(); 
+  if (status) std::cout << "Error - Return code " << ig.Status() << std::endl; 
   std::cout << "Result      " << value << " +/- " << ig.Error() << std::endl << std::endl; 
-  status += fabs(exactresult-value) > ERRORLIMIT;
-
+  status &= fabs(exactresult-value) > ERRORLIMIT;
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Adaptive integration failed on a polynomial function");
   
   // integrate again ADAPTIve, with different rule 
   ROOT::Math::GSLIntegrator ig2(ROOT::Math::Integration::kADAPTIVE, ROOT::Math::Integration::kGAUSS61, 0.001, 0.01, 100 );
@@ -90,9 +91,11 @@ int testIntegration() {
   // or ig2.Integral(*f, 0, 10); if different function
 
   std::cout << "Adaptive Gauss61 integration:" << std::endl;
-  std::cout << "Return code " << ig2.Status() << std::endl; 
+  status &= ig.Status(); 
+  if (status) std::cout << "Error - Return code " << ig.Status() << std::endl;
   std::cout << "Result      " << value << " +/- " << ig2.Error() << std::endl << std::endl; 
-  status += fabs(exactresult-value) > ERRORLIMIT;
+  status &= fabs(exactresult-value) > ERRORLIMIT;
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Adaptive GAUSS61 integration failed on a polynomial function");
 
   
   std::cout << "Testing SetFunction member function" << std::endl;
@@ -104,11 +107,12 @@ int testIntegration() {
   ig3.SetFunction(func2);
   std::cout << "Result      " << ig3.Integral( 0, 3) << " +/- " << ig3.Error() << std::endl; 
   status += fabs(exactresult-ig3.Integral( 0, 3)) > ERRORLIMIT;
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Default Adaptive integration failed on a polynomial function");
 
   // test error 
   //typedef double ( * FreeFunc ) ( double);
 
-  std::cout << "Testing a singular function: 1/sqrt(x)" << std::endl;
+  std::cout << "\nTesting a singular function: 1/sqrt(x)" << std::endl;
   //ROOT::Math::WrappedFunction<FreeFunc> wf(&singularFunction); 
   ROOT::Math::Functor1D wf(&singularFunction);
   
@@ -117,21 +121,31 @@ int testIntegration() {
   if (ig.Status() != 0) 
      std::cout << "Error integrating a singular function " << std::endl; 
   else 
-     std::cout << "Result:(0,1]      " << r << " +/- " << ig.Error() << std::endl; 
+     std::cout << "Result:(0,1] = " << r << " +/- " << ig.Error() << " (should be 2) " << std::endl; 
+  status &= ig.Status(); 
+  status &= fabs(ig.Result() - 2.0) > ERRORLIMIT; 
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Singular Adaptive integration failed on 1./sqrt(x)");
   
   double singularPts[3] = {-1,0,1};
   std::vector<double> sp(singularPts, singularPts+3);
   double r2 = ig.Integral(sp); 
+  status &= ig.Status(); 
   if (ig.Status() != 0) 
      std::cout << "Error integrating a singular function using vector of points" << std::endl; 
   else 
-     std::cout << "Result:[-1,1]      " << r2 << " +/- " << ig.Error() << std::endl; 
+     std::cout << "Result:[-1,1] = " << r2 << " +/- " << ig.Error() << " (should be 4) " << std::endl; 
+  status &= fabs(ig.Result() - 4.0) > ERRORLIMIT; 
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Adaptive integration with singular points failed on 1./sqrt(x)");
 
 
   std::vector<double> sp2(2); 
   sp2[0] = -1.; sp2[1] = -0.5; 
   double r3 = ig.Integral(sp2); 
-  std::cout << "Result on [-1,-0.5] = " << r3 << std::endl;
+  std::cout << "Result on [-1,-0.5] = " << r3  << " +/- " << ig.Error() << " (should be 0.5857) " << std::endl; 
+  status &= ig.Status(); 
+  status &= fabs(ig.Result() - (2.-2*sqrt(0.5))) > ERRORLIMIT; 
+  if (status) MATH_ERROR_MSG("testGSLIntegration","Adaptive integration with singular points 2 failed on 1./sqrt(x)");
+  
 
   return status;
 }
