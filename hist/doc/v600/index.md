@@ -1,3 +1,4 @@
+
 ## Histogram Libraries
 
 ### THistPainter
@@ -64,6 +65,7 @@
     ```
 -   `TH1` was drawn improperly in "Logx" mode if "X" axis starts at 
     negative values. The following macro illustrades this problem.
+    
     ``` {.cpp}
     {
        TCanvas *c1 = new TCanvas("c1", "c1",0,0,1200,700);
