@@ -7,6 +7,8 @@
 // 2. Display the assebly as:
 //    root show_extract.C("csg.root")
 
+#include "TGeoManager.h"
+
 //____________________________________________________________________________
 void csgdemo ()
 {

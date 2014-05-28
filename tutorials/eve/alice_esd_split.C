@@ -39,7 +39,7 @@
   is created in the aliesd/ directory and can be loaded dynamically
   into the ROOT session.
 
-  See alice_esd_loadlib().
+  See the run_alice_esd.C macro.
   
 
   2. Creation of simple GUI for event navigation.
@@ -79,6 +79,12 @@
      visual attributes.
 
 */
+#ifndef __RUN_ALICE_ESD__
+void alice_esd_split()
+{
+   Error("alice_esd_split", "Must be called from run_alice_esd.C(kTRUE)...");
+}
+#else
 
 
 R__EXTERN TEveProjectionManager *gRPhiMgr;
@@ -92,7 +98,6 @@ class AliESDfriend;
 class AliESDtrack;
 class AliExternalTrackParam;
 
-Bool_t     alice_esd_loadlib(const char* file, const char* project);
 void       make_gui();
 void       load_event();
 void       update_projections();
@@ -143,12 +148,6 @@ void alice_esd_split(Bool_t auto_size=kFALSE)
    // 5. Load first event.
 
    TFile::SetCacheFileDir(".");
-
-   if (!alice_esd_loadlib(esd_file_name, "aliesd"))
-   {
-      Error("alice_esd", "Can not load project libraries.");
-      return;
-   }
 
    printf("*** Opening ESD ***\n");
    esd_file = TFile::Open(esd_file_name, "CACHEREAD");
@@ -234,25 +233,6 @@ void alice_esd_split(Bool_t auto_size=kFALSE)
 }
 
 //______________________________________________________________________________
-Bool_t alice_esd_loadlib(const char* file, const char* project)
-{
-   // Make sure that shared library created from the auto-generated project
-   // files exists and load it.
-
-   TString lib(Form("%s/%s.%s", project, project, gSystem->GetSoExt()));
-
-   if (gSystem->AccessPathName(lib, kReadPermission)) {
-      TFile* f = TFile::Open(file, "CACHEREAD");
-      if (f == 0)
-         return kFALSE;
-      f->MakeProject(project, "*", "++");
-      f->Close();
-      delete f;
-   }
-   return gSystem->Load(lib) >= 0;
-}
-
-//______________________________________________________________________________
 void load_event()
 {
    // Load event specified in global esd_event_id.
@@ -271,7 +251,7 @@ void load_event()
    alice_esd_read();
 
    gEve->Redraw3D(kFALSE, kTRUE);
-   gTextEntry->SetTextColor(0x000000);
+   gTextEntry->SetTextColor((Pixel_t)0x000000);
    gTextEntry->SetText(Form("Event %d loaded",esd_event_id));
    gROOT->ProcessLine("SplitGLView::UpdateSummary()");
 }
@@ -533,3 +513,5 @@ Double_t trackGetP(AliExternalTrackParam* tp)
 
    return TMath::Sqrt(1.+ tp->fP[3]*tp->fP[3])/TMath::Abs(tp->fP[4]);
 }
+
+#endif

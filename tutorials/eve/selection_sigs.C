@@ -27,11 +27,11 @@ public:
    // ----------------------------------------------------------------
    void Added(TEveElement* el)
    {
-      printf("%s Added 0x%lx '%s'\n", fPrefix.Data(), el, el ? el->GetElementName() : "");
+      printf("%s Added 0x%lx '%s'\n", fPrefix.Data(), (ULong_t)el, el ? el->GetElementName() : "");
    }
    void Removed(TEveElement* el)
    {
-      printf("%s Removed 0x%lx '%s'\n", fPrefix.Data(), el, el ? el->GetElementName() : "");
+      printf("%s Removed 0x%lx '%s'\n", fPrefix.Data(), (ULong_t)el, el ? el->GetElementName() : "");
    }
    void Cleared()
    {
