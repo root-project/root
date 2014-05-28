@@ -2514,6 +2514,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (cl->fState != TClass::kHasTClassInit) {
       if (cl->fClassInfo) {
          cl->fState = TClass::kInterpreted;
+         cl->ResetBit(TClass::kIsEmulation);
       } else {
 //         if (TClassEdit::IsSTLCont(cl->GetName()) {
 //            There will be an emulated collection proxy, is that the same?
@@ -4653,6 +4654,12 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          // the 'type' corresponding to the TClass anyway in order to
          // preserve the opaque typedefs (Double32_t)
          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
+         // We now need to update the state and bits.
+         if (cl->fState != TClass::kHasTClassInit) {
+            // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
+            cl->fState = TClass::kInterpreted;
+            cl->ResetBit(TClass::kIsEmulation);
+         }
          TClass::AddClassToDeclIdMap(((TClingClassInfo*)(cl->fClassInfo))->GetDeclId(), cl);
       }
    }
