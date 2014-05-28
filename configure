@@ -3861,7 +3861,7 @@ if test ! "x$enable_gfal" = "xno"; then
     gfalinc=$found_hdr
     gfalincdir=$found_dir
 
-    if grep -q "GFAL2" $gfalincdir/gfal_api.h ; then
+    if test ! "x$gfalincdir" = "x" && grep GFAL2 $gfalincdir/gfal_api.h > /dev/null 2>&1 ; then
         check_library "libgfal2" "$enable_shared" "$gfallibdir" \
             $GFAL ${GFAL:+$GFAL/lib} \
             /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
