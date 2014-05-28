@@ -460,30 +460,31 @@ void TRint::PrintLogo(Bool_t lite)
    // Print the ROOT logo on standard output.
 
    if (!lite) {
-      static const char *months[] = {"January","February","March","April","May",
-                                     "June","July","August","September","October",
-                                     "November","December"};
-      Int_t idatqq = gROOT->GetVersionDate();
-      Int_t iday   = idatqq%100;
-      Int_t imonth = (idatqq/100)%100;
-      Int_t iyear  = (idatqq/10000);
-      TString version_date = TString::Format("%d %s %4d",iday,months[imonth-1],iyear);
-
       // Fancy formatting: the content of lines are format strings; their %s is
       // replaced by spaces needed to make all lines as long as the longest line.
       std::vector<TString> lines;
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("Built for %s%%s(c) 2014, The ROOT Team", gSystem->GetBuildArch()));
-      if (strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
+      if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
+         static const char *months[] = {"January","February","March","April","May",
+                                        "June","July","August","September","October",
+                                        "November","December"};
+         Int_t idatqq = gROOT->GetVersionDate();
+         Int_t iday   = idatqq%100;
+         Int_t imonth = (idatqq/100)%100;
+         Int_t iyear  = (idatqq/10000);
+
+         lines.emplace_back(TString::Format("From %d %s %4d%%s",iday,months[imonth-1],iyear));
+      } else {
          // If branch and commit are identical - e.g. "v5-34-18" - then we have
          // a release build. Else specify the git hash this build was made from.
          lines.emplace_back(TString::Format("From %s@%s, %s%%s",
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit(), gROOT->GetGitDate()));
       }
-      lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'%s"));
+      lines.emplace_back(TString::Format("Built for %s%%s(c) 2014, The ROOT Team", gSystem->GetBuildArch()));
+      lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:
       auto itLongest = std::max_element(lines.begin(), lines.end(),
@@ -492,7 +493,7 @@ void TRint::PrintLogo(Bool_t lite)
       Ssiz_t lenLongest = itLongest->Length();
 
 
-      Printf("");
+      Printf("   %s", TString('-', lenLongest).Data());
       for (const auto& line: lines) {
          // Print the line, expanded with the necessary spaces at %s, and
          // surrounded by some ASCII art.
@@ -500,6 +501,7 @@ void TRint::PrintLogo(Bool_t lite)
                 TString::Format(line.Data(),
                                 TString(' ', lenLongest - line.Length()).Data()).Data());
       }
+      Printf("   %s", TString('-', lenLongest).Data());
       Printf("");
    }
 
