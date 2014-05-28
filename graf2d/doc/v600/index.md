@@ -104,6 +104,7 @@ file `simple.pdf`.
     So we choose to follow the same mechanism as for the `SetMaxDigits`
     static method. The new function is: `SetExponentOffset`.
     Example:
+    
 ``` {.cpp}
 ...
    TGaxis::SetMaxDigits(2);
@@ -111,7 +112,8 @@ file `simple.pdf`.
    TGaxis::SetExponentOffset(-0.05, 0.01, "x"); // Y and Y offset for X axis
 ...
    hist->Draw();
-```    
+```   
+ 
 -   `TGaxis::SetMaxDigits()` was not acitve on standalone `TGaxis`.
     
 ### TLegend
