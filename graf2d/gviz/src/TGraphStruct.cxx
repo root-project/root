@@ -227,9 +227,9 @@ Int_t TGraphStruct::Layout()
       agclose((Agraph_t*)fGVGraph);
    }
 #ifdef WITH_CGRAPH
-   fGVGraph = (fAgraph_t*)agopen((char*)"GVGraph", Agdirected, 0);
+   fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", Agdirected, 0);
 #else
-   fGVGraph = (fAgraph_t*)agopen((char*)"GVGraph", AGDIGRAPH);
+   fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", AGDIGRAPH);
 #endif
 
    // Put the GV nodes into the GV graph

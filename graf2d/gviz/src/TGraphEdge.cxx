@@ -74,7 +74,7 @@ TGraphEdge::~TGraphEdge()
 
 
 //______________________________________________________________________________
-void TGraphEdge::CreateGVEdge(fAgraph_t *gv)
+void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
 {
    // Create the GraphViz edge into the GraphViz data structure gv.           
 
@@ -82,9 +82,9 @@ void TGraphEdge::CreateGVEdge(fAgraph_t *gv)
       Agnode_t *n1 = (Agnode_t*)fNode1->GetGVNode();
       Agnode_t *n2 = (Agnode_t*)fNode2->GetGVNode();
 #ifdef WITH_CGRAPH
-      fGVEdge = (fAgedge_t*)agedge((Agraph_t *)gv, n1, n2, NULL, 1);
+      fGVEdge = (GVizAgedge_t*)agedge((Agraph_t *)gv, n1, n2, NULL, 1);
 #else
-      fGVEdge = (fAgedge_t*)agedge((Agraph_t *)gv, n1, n2);
+      fGVEdge = (GVizAgedge_t*)agedge((Agraph_t *)gv, n1, n2);
 #endif
    } else {
       Error("CreateGVEdge","Invalid graphviz graph");
