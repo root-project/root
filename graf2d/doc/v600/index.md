@@ -195,3 +195,29 @@ file `simple.pdf`.
 
 -   Implement `SetX1()` etc ... for `TPave` and inherited classes to make sure the 
     NDC coordinates are also defined.
+
+### TLinearGradient and TRadialGradient
+
+-   Two new classes to support color gradient: `TLinearGradient` and `TRadialGradient`.
+    Both classes inherit from `TColor` and can be used the same way as ROOT's 
+    standard colors in `TAttFill` (`SetFillColor(newColorIndex)`).
+    Gradient fill can be created using either RGBA values directly, or from
+    color indices (colors from the ROOT's color table).
+-   TRadialGradient supports a simple radial gradient (center + radius)
+    and an "extended" radial gradient (starting/ending points + two radii).
+-   The new gradient fill option is available either with OpenGL ("gl-in-pad") 
+    or with a Cocoa backend (OS X only).
+-   Please note, at the moment, a color gradient can not be saved
+    in a ROOT file or a pdf/ps file. It can be saved as an image (png/jpg etc.).
+-   There are several demos in the tutorials/cocoa and tutorials/gl sub-directories 
+    explaining how to use these new classes: 
+    * grad.C 
+    * grad2.C
+    * radialgradients.C.
+
+   ![TRadialGradient example](ellipses.png "TEllipse objects with a radial gradient fill")
+
+   ![TLinearGradient example](lingrad.png "Two histograms with a linear gradient fill and transparency")
+
+   ![Gradient example](mixgrad.png "TPie with a radial fill + a linear gradient fill as a background")
+
