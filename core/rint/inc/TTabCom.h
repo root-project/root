@@ -214,7 +214,6 @@ private: // member functions
 
 private: // data members
    TSeqCollection* fpClasses;
-   TSeqCollection* fpNamespaces;  // Contains the names of namespaces registered in CINT.
    TSeqCollection* fpDirectives;
    TSeqCollection* fpEnvVars;
    TSeqCollection* fpFiles;

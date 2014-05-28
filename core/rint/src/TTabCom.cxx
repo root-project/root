@@ -173,7 +173,6 @@ TTabCom::TTabCom()
    fpDirectives = 0;
    fpPragmas = 0;
    fpClasses = 0;
-   fpNamespaces = 0;
    fpUsers = 0;
    fBuf = 0;
    fpLoc = 0;
@@ -217,13 +216,6 @@ void TTabCom::ClearClasses()
       fpClasses = 0;
    }
 
-   // Since the namespace array is filled at the same time as fpClasses we
-   // delete it at the same time.
-   if (fpNamespaces) {
-      fpNamespaces->Delete(0);
-      delete fpNamespaces;
-      fpNamespaces = 0;
-   }
 }
 
 //______________________________________________________________________________
@@ -1714,89 +1706,42 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          // Make sure autoloading happens (if it can).
          delete TryMakeClassFromClassName(namesp);
 
-         // Sometimes, eg on startup of ROOT fpNamespaces might be 0,
-         // so create and fill the array.
-         if (!fpNamespaces)
-            RehashClasses();
+         TContainer *pList = new TContainer;
+         // Add all classes to pList that contain the prefix, i.e. are in the
+         // specified namespace.
+         const TSeqCollection *tmp = GetListOfClasses();
+         if (!tmp) break;
 
-         // Try find the namesp string in the list of namespaces. If its found then
-         // we need to treat the different prefices a little differently:
-         TObjString objstr(namesp);
-         TObjString *foundstr = 0;
-         if (fpNamespaces)
-            foundstr = (TObjString *)fpNamespaces->FindObject(&objstr);
-         if (foundstr) {
-            TContainer *pList = new TContainer;
-
-            // Add all classes to pList that contain the prefix, i.e. are in the
-            // specified namespace.
-            const TSeqCollection *tmp = GetListOfClasses();
-            if (!tmp) break;
-
-            Int_t i;
-            for (i = 0; i < tmp->GetSize(); i++) {
-               TString astr = ((TObjString *) tmp->At(i))->String();
-               TString rxp = "^";
-               rxp += prefix;
-               if (astr.Contains(TRegexp(rxp))) {
-                  astr.Remove(0, prefix.Length());
-                  TString s = astr("^[^: ]*");
-                  TObjString *ostr = new TObjString(s);
-                  if (!pList->Contains(ostr))
-                     pList->Add(ostr);
-                  else
-                     delete ostr;
-               }
+         Int_t i;
+         for (i = 0; i < tmp->GetSize(); i++) {
+            TString astr = ((TObjString *) tmp->At(i))->String();
+            TString rxp = "^";
+            rxp += prefix;
+            if (astr.Contains(TRegexp(rxp))) {
+               astr.Remove(0, prefix.Length());
+               TString s = astr("^[^: ]*");
+               TObjString *ostr = new TObjString(s);
+               if (!pList->Contains(ostr))
+                  pList->Add(ostr);
+               else
+                  delete ostr;
             }
-
-            // Add all the sub-namespaces in the specified namespace.
-            for (i = 0; i < fpNamespaces->GetSize(); i++) {
-               TString astr =
-                   ((TObjString *) fpNamespaces->At(i))->String();
-               TString rxp = "^";
-               rxp += prefix;
-               if (astr.Contains(TRegexp(rxp))) {
-                  astr.Remove(0, prefix.Length());
-                  TString s = astr("^[^: ]*");
-                  TObjString *ostr = new TObjString(s);
-                  if (!pList->Contains(ostr))
-                     pList->Add(ostr);
-                  else
-                     delete ostr;
-               }
-            }
-
-            // If a class with the same name as the Namespace name exists then
-            // add it to the pList. (I don't think the C++ spec allows for this
-            // but do this anyway, cant harm).
-            pClass = TryMakeClassFromClassName(preprefix + name);
-            if (pClass) {
-               pList->AddAll(pClass->GetListOfAllPublicMethods());
-               pList->AddAll(pClass->GetListOfAllPublicDataMembers());
-            }
-
-            pos = Complete("[^: ]*$", pList, "", out);
-
-            delete pList;
-            if (pClass)
-               delete pClass;
-         } else {
-            pClass = MakeClassFromClassName(preprefix + name);
-            if (!pClass) {
-               pos = -2;
-               break;
-            }
-
-            TContainer *pList = new TContainer;
-
-            pList->AddAll(pClass->GetListOfAllPublicMethods());
-            pList->AddAll(pClass->GetListOfAllPublicDataMembers());
-
-            pos = Complete("[^: ]*$", pList, "(", out);
-
-            delete pList;
-            delete pClass;
          }
+
+         // If a class with the same name as the Namespace name exists then
+         // add it to the pList. (I don't think the C++ spec allows for this
+         // but do this anyway, cant harm).
+         pClass = TryMakeClassFromClassName(preprefix + name);
+         if (pClass) {
+            pList->AddAll(pClass->GetListOfAllPublicMethods(true));
+            pList->AddAll(pClass->GetListOfAllPublicDataMembers(true));
+         }
+
+         pos = Complete("[^: ]*$", pList, "", out);
+
+         delete pList;
+         if (pClass)
+            delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -2091,7 +2036,6 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          const TSeqCollection *pL2 = GetListOfClasses();
          if (pL2) pList->AddAll(pL2);
 
-         if (fpNamespaces) pList->AddAll(fpNamespaces); //rdm
          //
          const TSeqCollection *pC1 = GetListOfGlobals();
          if (pC1) pList->AddAll(pC1);
