@@ -59,23 +59,29 @@ and backward compatibility of files.
 
 #### Implicit dynamic up-casts
 CINT would perforam automatic upcasts to derived classes under certain contexts:
+
 ``` {.cpp}
-TH1* h1 = hpx
-TH1F* h1f = h1;
+   TH1* h1 = hpx
+   TH1F* h1f = h1;
 ```
+
 Cling does not allow this anymore. We might add this feature later if demand exists (ROOT-4802).
 
 #### Using symbols that are only available at runtime: load libFoo; foo()
 CINT was processing macros line by line; cling compiles code.
-When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, cling will in some cases report an unresolved symbol:
+When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, 
+cling will in some cases report an unresolved symbol:
+
 ``` {.cpp}
-#include "Event.h"
-void dynload() {
-   gSystem->Load("libEvent");
+   #include "Event.h"
+   void dynload() {
+      gSystem->Load("libEvent");
    new Event();
-}
+   }
 ```
-You will currently have to provide a rootmap file for libEvent (which also requires include guards for Event.h). This might get fixed in a later version (ROOT-4691).
+
+You will currently have to provide a rootmap file for libEvent (which also requires include 
+guards for Event.h). This might get fixed in a later version (ROOT-4691).
 
 #### Using identifiers that are only available at runtime: gROOT->LoadMacro("foo.h"); foo()
 CINT was processing macros line by line; cling compiles code.
@@ -145,10 +151,13 @@ rootcint no longer defines *\_\_CINT\_\_* and genreflex no longer defines
 *\_\_GCCXML\_\_*.  This means in particular that data members that where
 made transient by hiding them from rootcint or genreflex now *must* be 
 *explicitly* marked as transient.  For rootcint or rootcling use:
+
 ``` {.cpp}
    sometype datamember; //! The exclamation mark signals the transientness
 ```
+
 and for genreflex
+
 ``` {.cpp}
    <class name="edm::Particle" >
       <field name="m_calculated" transient="true" />
@@ -160,9 +169,11 @@ and for genreflex
 The list returned by `GetListOfTypes` is no longer filled when the dictionary
 are loaded but instead are filled on demand, when the user explicitly (directly
 or indirectly) request each typedef.  In particular this means that
+
 ``` {.cpp}
    gROOT->GetListOfTypes()->ls(); // or Print()
 ```
+
 no longer prints the list of all available typedef but instead list only the
 typedefs that have been previously accessed throught the list (plus the builtins
 types).
@@ -216,14 +227,18 @@ of the `TDataType` describing a typedef.
 ### TAttText
 
 -   Mnemonic constants are available:
+
 ``` {.cpp}
     kHAlignLeft   = 10, kHAlignCenter = 20, kHAlignRight = 30,
     kVAlignBottom = 1,  kVAlignCenter = 2,  kVAlignTop   = 3
 ```
+
     They allow to write:
+
 ``` {.cpp}
     object->SetTextAlign(kHAlignLeft+kVAlignTop);
 ```
+
 -   New method `SetTextColorAlpha(ci, alpha)` to set the color index
     `ci` with a transparency percentage.
 
