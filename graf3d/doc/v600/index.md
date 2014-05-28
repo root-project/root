@@ -9,3 +9,6 @@
   default. The default value for this flag is 0 (no OpenGL).
 - Fix size issues with the FTGL text.
 - Make `TMathText` work with FTGL
+- Linear and radial color gradients are implemented for "GL in Pad"
+  (only a simple radial color gradient),
+  see also the notes about TLinearGradient and TRadialGradient classes.
