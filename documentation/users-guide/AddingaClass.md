@@ -764,7 +764,7 @@ typedefs seen so far by Cling. Example:
 
 ``` {.cpp}
 // some C++ header definition
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 // turns off dictionary generation for all
 #pragma link off all class;
 #pragma link off all function;
@@ -802,7 +802,7 @@ identical. Example:
 
 ``` {.cpp}
 // some C++ header definition
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all class;
 #pragma link C++ class A;
 #pragma link C++ class B;
@@ -825,7 +825,7 @@ Example:
 
 ``` {.cpp}
 // some C/C++ header definition
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all global;
 #pragma link off all typedef;
 #pragma link C++ global a;
@@ -844,7 +844,7 @@ Example:
 
 ``` {.cpp}
 // some C/C++ header definition
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all global;
 #pragma link off all typedef;
 #pragma link C++ global a;
@@ -892,7 +892,7 @@ class A {
 The pragma statements are:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all functions;
 #pragma link C++ function f;
 #pragma link C++ function g(int,double);
@@ -923,7 +923,7 @@ template<class T> class A {
 And generate dictionary for that:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class A<int>;
 #endif
 ```
@@ -944,7 +944,7 @@ You can generate dictionary for the newly instantiated template member
 function only.
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off defined_in A.h;
 #pragma link C++ function A<int>::f(B&);
 #endif
@@ -960,7 +960,7 @@ functions in all classes.
 Example:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all methods;
 #endif
 ```
@@ -977,7 +977,7 @@ At this moment, there should be no needs to use those statements.
 Example:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all_function   A;
 #pragma link off all_datamember A;
 #endif
@@ -1001,7 +1001,7 @@ Example:
 
 // file2.h
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link off all globals;
@@ -1041,7 +1041,7 @@ namespace ns {
 The pragma statements are:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ defined_in ns;
 #pragma link C++ nestedclass;
 #endif
@@ -1077,7 +1077,7 @@ explicitly in the ROOT `LinkDef.h` file the next statement:
 From 5.15.57, you can omit them. Example:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link default off;
 #endif
 
@@ -1091,7 +1091,7 @@ class B {
    double e;
 };
 
-#ifdef __MAKECINT__
+#ifdef __MAKECLING__
 #pragma link C++ class A;      // only class A is linked, not B
 #endif
 ```

@@ -579,7 +579,7 @@ the Cling limitations, you can use the C preprocessor symbols defined
 for Cling and `rootcling`.
 
 The preprocessor symbol `__CLING__` is defined for both ROOT and
-`rootcling`. The symbol `__MAKECLING__` (and `__MAKECINT__` for backward
+`rootcling`. The symbol `__MAKECLING__` (and `__MAKECLING__` for backward
 compatibility) is only defined in `rootcling`.
 
 Use `!defined(__CLING__) || defined(__MAKECLING__)` to bracket code that
