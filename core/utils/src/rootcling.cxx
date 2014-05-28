@@ -4108,8 +4108,11 @@ int RootCling(int argc,
 
    // Select using DictSelection
    clang::CompilerInstance* CI = interp.getCI();
+   const unsigned int selRulesInitialSize=selectionRules.Size();
    if(dictSelection && !onepcm)
       DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
+
+   bool dictSelRulesPresent = selectionRules.Size()>selRulesInitialSize;
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
@@ -4248,6 +4251,7 @@ int RootCling(int argc,
 
    if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
        !onepcm &&
+       !dictSelRulesPresent &&
        !selectionRules.AreAllSelectionRulesUsed()){
       ROOT::TMetaUtils::Warning(0,"Not all selection rules are used!\n");
    }
