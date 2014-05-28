@@ -60,15 +60,15 @@ TGraphNode::~TGraphNode()
 
 
 //______________________________________________________________________________
-void TGraphNode::CreateGVNode(fAgraph_t *gv)
+void TGraphNode::CreateGVNode(GVizAgraph_t *gv)
 {
    // Create the GraphViz node into the GraphViz data structure gv.
 
    if (gv) {
 #ifdef WITH_CGRAPH
-      fGVNode = (fAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName(), 1);
+      fGVNode = (GVizAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName(), 1);
 #else
-      fGVNode = (fAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName());
+      fGVNode = (GVizAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName());
 #endif
    } else {
       Error("CreateGVNode","Invalid graphviz graph");

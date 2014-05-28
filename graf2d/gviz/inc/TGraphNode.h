@@ -28,8 +28,8 @@
 #include "TAttLine.h"
 #endif
 
-struct fAgraph_t;
-struct fAgnode_t;
+struct GVizAgraph_t;
+struct GVizAgnode_t;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -46,11 +46,11 @@ protected:
 
 
 
-   fAgnode_t *fGVNode; // Graphviz node
-   Double_t fX;        // Node's center X coordinate
-   Double_t fY;        // Node's center Y coordinate
-   Double_t fH;        // Node height
-   Double_t fW;        // Node width
+   GVizAgnode_t *fGVNode; // Graphviz node
+   Double_t fX;           // Node's center X coordinate
+   Double_t fY;           // Node's center Y coordinate
+   Double_t fH;           // Node height
+   Double_t fW;           // Node width
 
 public:
 
@@ -58,12 +58,12 @@ public:
    TGraphNode(const char *name, const char *title="");
    virtual ~TGraphNode();
 
-   void           CreateGVNode(fAgraph_t *gv);
+   void           CreateGVNode(GVizAgraph_t *gv);
    virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);   
    virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   void           SetGVNode(fAgnode_t *gvn) {fGVNode = gvn;}  
+   void           SetGVNode(GVizAgnode_t *gvn) {fGVNode = gvn;}  
    virtual void   SetTextAngle(Float_t) {;}
-   fAgnode_t     *GetGVNode() {return fGVNode;}
+   GVizAgnode_t  *GetGVNode() {return fGVNode;}
    void           Layout();
    virtual void   Paint(Option_t *option="");   
    virtual void   SavePrimitive(std::ostream &, Option_t *);
