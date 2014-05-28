@@ -16,8 +16,8 @@ Start up a ROOT session by typing `root` at the system prompt.
 ``` {.cpp}
 $ root
    ------------------------------------------------------------
-  | Welcome to ROOT 5.99/06                http://root.cern.ch |
-  | From 3 April 2014                                          |
+  | Welcome to ROOT 6.00/00                http://root.cern.ch |
+  | From 30 May 2014                                           |
   | Built for linuxx8664gcc            (c) 2014, The ROOT Team |
   | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
    ------------------------------------------------------------

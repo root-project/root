@@ -20,25 +20,16 @@ it is being filled, and creates a ROOT file used by the other examples.
 To execute it type:
 
 ``` {.cpp}
-> cd $ROOTSYS/tutorials
-> root
-*******************************************
-*                                         *
-*        W E L C O M E  to  R O O T       *
-*                                         *
-*   Version   5.16/00      27 June 2006   *
-*                                         *
-*  You are welcome to visit our Web site  *
-*          http://root.cern.ch            *
-*                                         *
-*******************************************
-FreeType Engine v2.1.9 used to render TrueType fonts.
-Compiled on 28 June 2007 for linux with thread support.
+$ cd $ROOTSYS/tutorials
+$ root
+   ------------------------------------------------------------
+  | Welcome to ROOT 6.00/00                http://root.cern.ch |
+  | From 30 May 2014                                           |
+  | Built for linuxx8664gcc            (c) 2014, The ROOT Team |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
+   ------------------------------------------------------------
 
-Cling/ROOT C/C++ Interpreter version 5.16.21, June 22, 2007
-Type ? for help. Commands must be C++ statements.
-Enclose multiple statements between { }.
-root[0] .x hsimple.C
+root [0] .x hsimple.C
 ```
 
 Now execute `demos.C`, which brings up the button bar shown on the left.

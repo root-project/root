@@ -84,23 +84,14 @@ and the `MANPATH`. To run the program just type: `root`.
 
 
 ```
-% root
-  *******************************************
-  *                                         *
-  *        W E L C O M E  to  R O O T       *
-  *                                         *
-  *   Version   5.34/07     26 April 2013   *
-  *                                         *
-  *  You are welcome to visit our Web site  *
-  *          http://root.cern.ch            *
-  *                                         *
-  *******************************************
+$ root
+ ------------------------------------------------------------
+| Welcome to ROOT 6.00/00                http://root.cern.ch |
+| From 30 May 2014                                           |
+| Built for linuxx8664gcc            (c) 2014, The ROOT Team |
+| Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
+ ------------------------------------------------------------
 
-ROOT 5.34/07 (v5-34-07@c1f030b, May 13 2013, 16:42:38 on macosx64)
-
-Cling/ROOT C/C++ Interpreter version 5.18.00, July 2, 2010
-Type ? for help. Commands must be C++ statements.
-Enclose multiple statements between { }.
 root [0]
 ```
 
