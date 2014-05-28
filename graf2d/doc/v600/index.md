@@ -83,6 +83,9 @@ file `simple.pdf`.
     Now the text appears directly as it will show and it is possible to
     enter several text string. The input is not block in the `RequestString` event loop.
 -   The toolbar methods now work without XOR mode (useful for OpenGL()).
+-   A new "vertex compression" algorithm added to deal with complex histograms
+    (thousands/millions of bins - polygons with thousands/millions of vertices) -
+    optimization/fix for X11 crashes.
 
 ### TGaxis and TAxis
 
