@@ -507,7 +507,7 @@ two ways. The simplest way is to add at the end of script (i.e. after
 the symbols have been defined) something like:
 
 ``` {.cpp}
-#if defined(__MAKECLING__)
+#if defined(__ROOTCLING__)
 #pragma link C++ class MyOtherClass;
 #endif
 ```
@@ -579,10 +579,10 @@ the Cling limitations, you can use the C preprocessor symbols defined
 for Cling and `rootcling`.
 
 The preprocessor symbol `__CLING__` is defined for both ROOT and
-`rootcling`. The symbol `__MAKECLING__` (and `__MAKECLING__` for backward
+`rootcling`. The symbol `__ROOTCLING__` (and `__ROOTCLING__` for backward
 compatibility) is only defined in `rootcling`.
 
-Use `!defined(__CLING__) || defined(__MAKECLING__)` to bracket code that
+Use `!defined(__CLING__) || defined(__ROOTCLING__)` to bracket code that
 needs to be seen by the compiler and `rootcling`, but will be invisible
 to the interpreter.
 
@@ -610,7 +610,7 @@ not visible. If you add the following preprocessor statements:
 ``` {.cpp}
 #if !defined(__CLING__)
 int gArray[] = { 2, 3, 4};
-#elif defined(__MAKECLING__)
+#elif defined(__ROOTCLING__)
 int gArray[];
 #endif
 ```
