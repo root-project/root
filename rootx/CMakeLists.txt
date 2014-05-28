@@ -12,6 +12,9 @@ elseif(cocoa)
   add_custom_target(root ALL 
                     COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root.exe ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root)
   add_dependencies(root root.exe)
+  set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root)
   install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root
           DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+
 endif()
+

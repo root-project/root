@@ -90,6 +90,7 @@ add_custom_target(IOSENUM_H
    COMMAND cmake -E copy ${CMAKE_CURRENT_BINARY_DIR}/iosenum.h  ${HEADER_OUTPUT_PATH}/iosenum.h
    DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/iosenum.h 
 )
+set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES ${HEADER_OUTPUT_PATH}/iosenum.h)
 install(FILES ${HEADER_OUTPUT_PATH}/iosenum.h DESTINATION ${CMAKE_INSTALL_CINTINCDIR}/cint/include)
 
 set_target_properties(IOSENUM_H PROPERTIES FOLDER Builtins)
