@@ -1,11 +1,11 @@
+
 ## Platform Support
 
 Temporarily for version 6.00/00, ROOT has a reduced set of supported
 platforms. Most notably Windows is not supported until at least 6.02.
 6.00/00 supports only
 
--   Linux 32bit and 64 bit, i32 and x86-64 and x32 (see below). Likely
-    also PPC 32 and 64 bit but that is untested, please report.
+-   Linux 32bit and 64 bit, i32 and x86-64 and x32 (see below).
 -   MacOS on Intel CPUs.
 
 More platforms are expected to be available later; the lack of support
