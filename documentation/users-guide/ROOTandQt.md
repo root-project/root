@@ -277,7 +277,7 @@ four simple files.
 1. Class dictionary definition file `LinkDef.h`:
 
 ``` {.cpp}
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
@@ -456,7 +456,7 @@ Compiler of Libraries for Cling" (see Cling the C++ Interpreter). For
 example:
 
 ``` {.cpp}
-#ifndef __CINT__
+#ifndef __CLING__
 #  include <qfiledialog.h>
 #  include <qstringlist.h>
 #  include <qstring.h>

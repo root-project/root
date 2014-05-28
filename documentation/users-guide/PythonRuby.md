@@ -206,8 +206,6 @@ Once configured, you continue the build process the normal way:
 
 `$ make`
 
-`$ make cintdlls`
-
 `$ make install`
 
 After some time, a library called `libPyROOT.so` (or `libPyROOT.dll`, on
@@ -288,12 +286,6 @@ section contains a description on working with your own classes (see
 "Using Your Own Classes").
 
 #### Access to STL Classes
-
-Before STL classes can be used, you have to make sure that the Cling
-extension dlls are build (the "`cintdlls`" make target). Note that they
-do not compile on as many platforms as ROOT itself. Further, if you want
-to use template instantiations of STL classes with any of your own
-classes, make sure that a dictionary is available, e.g. by using ACLiC.
 
 The STL classes live in the ROOT.std namespace (or, if you prefer to get
 them from there, in the ROOT module directly, but doing so makes the

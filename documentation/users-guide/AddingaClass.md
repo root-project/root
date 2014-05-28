@@ -299,7 +299,7 @@ public:
 ``` {.cpp}
 // A LinkDef.h file with all the explicit template instances
 // that will be needed at link time
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class MyClass1<float>+;
 #pragma link C++ class MyClass1<double>+;
@@ -629,7 +629,7 @@ Int_t     fTempValue; //! temporary state value
 generate the method interface stubs.
 
 ``` {.cpp}
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class SClass;
 #endif
 ```
@@ -1047,8 +1047,7 @@ The pragma statements are:
 #endif
 ```
 
-This statements controls default link mode for
-`makecint(cint -c-1|-c-2)` and `rootcling`.
+This statements controls default link mode for `rootcling`.
 
 ``` {.cpp}
 #pragma link default [on|off]
@@ -1064,17 +1063,8 @@ item:
 #pragma link [C|C++|off] [class|function|global]
 ```
 
-This pragma statement must be given before `cint/rootcling` reads any
-C/C++ definitions from header files. For pure Cling, default is on. For
-ROOT, including `$ROOTSYSDIR/bin/cint`, default is off. This feature was
-added from Cling v.5.15.57. Before this version, you had to use
-explicitly in the ROOT `LinkDef.h` file the next statement:
-
-``` {.cpp}
-#pragma link off [class|function|global];
-```
-
-From 5.15.57, you can omit them. Example:
+This pragma statement must be given before `rootcling` reads any
+C/C++ definitions from header files. Example:
 
 ``` {.cpp}
 #ifdef __MAKECLING__
@@ -1137,14 +1127,14 @@ class ABC : public TObject {
       Float_t a, b, c, p;
       ABC() : a(0), b(0), c(0), p(0){};
 
-// Define the class for the cint dictionary
+// Define the class for the dictionary
    ClassDef (ABC,1)
 };
 
 // Call the ClassImp macro to give the ABC class RTTI and
 // full I/O capabilities.
 
-#if !defined(__CINT__)
+#if !defined(__CLING__)
 ClassImp(ABC);
 #endif
 ```
