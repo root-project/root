@@ -74,7 +74,7 @@ We see these source files:
 |                   | `Event.cxx`, `EventCint.cxx` and `Event.h`. An example |
 |                   | of a procedure to link this program is in              |
 |                   | `bind_Event`. Note that the `Makefile` invokes the     |
-|                   | `rootcint` utility to generate the Cling interface      |
+|                   | `rootcling` utility to generate the Cling interface      |
 |                   | `EventCint.cxx`                                        |
 +-------------------+--------------------------------------------------------+
 | `Event.cxx`       | Implementation for classes Event and Track             |

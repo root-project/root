@@ -183,10 +183,10 @@ interpreter what are the methods of the **`TAxis`** and which ones are
 set for being displayed in a context menu.
 
 Now, how does the interpreter know this? Remember, when you build a
-class that you want to use in the ROOT environment, you use `rootcint`
+class that you want to use in the ROOT environment, you use `rootcling`
 that builds the so-called stub functions and the dictionary. These
 functions and the dictionary contain the knowledge of the used classes.
-To do this, `rootcint` parses all the header files. ROOT has defined
+To do this, `rootcling` parses all the header files. ROOT has defined
 some special syntax to inform Cling of certain things, this is done in
 the comments so that the code still compiles with a C++ compiler.
 

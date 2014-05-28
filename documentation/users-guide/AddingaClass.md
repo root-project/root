@@ -352,7 +352,7 @@ if (!fTrack) fTrack = new TList;
 ```
 
 The constructor actually called by the ROOT I/O can be customized by
-using the rootcint pragma:
+using the rootcling pragma:
 
 ``` {.cpp}
 #pragma link C++ ioctortype UserClass;
@@ -385,7 +385,7 @@ MyClass(TRootIoCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
-## rootcint: The Cling Dictionary Generator
+## rootcling: The Cling Dictionary Generator
 
 
 In the following example, we walk through the steps necessary to
@@ -492,14 +492,14 @@ ClassImp(TTrack)
 ...
 ```
 
-Now using `rootcint` we can generate the dictionary file.
+Now using `rootcling` we can generate the dictionary file.
 
-Make sure you use a unique filename, because `rootcint` appends it to
+Make sure you use a unique filename, because `rootcling` appends it to
 the name of static function `(G__cpp_reset_tabableeventdict()`
 and` G__set_cpp_environmenteventdict ()`).
 
 ``` {.cpp}
-rootcint eventdict.cxx -c TEvent.h TTrack.h
+rootcling eventdict.cxx -c TEvent.h TTrack.h
 ```
 
 Looking in the file `eventdict.cxx` we can see, besides the many member
@@ -539,8 +539,8 @@ need manual intervention. Cut and paste the generated `Streamer()` from
 the `eventdict.cxx` into the class' source file and modify as needed
 (e.g. add counter for array of basic types) and disable the generation
 of the `Streamer()` when using the `LinkDef.h` file for next execution
-of `rootcint`. In case you do not want to read or write this class (no
-I/O) you can tell `rootcint` to generate a dummy `Streamer() `by
+of `rootcling`. In case you do not want to read or write this class (no
+I/O) you can tell `rootcling` to generate a dummy `Streamer() `by
 changing this line in the source file:
 
 ``` {.cpp}
@@ -553,14 +553,14 @@ If you want to prevent the generation of `Streamer()`, see the section
 ### Dictionaries for STL
 
 
-Usually, headers are passed to rootcint at the command line. To generate
+Usually, headers are passed to rootcling at the command line. To generate
 a dictionary for a class from the STL, e.g.
 
 **std::vector\<MyClass\>**, you would normally pass the header defining
 **MyClass** and **std::vector**. The latter is a compiler specific
-header and cannot be passed to rootcint directly. Instead, create a
+header and cannot be passed to rootcling directly. Instead, create a
 little header file that includes both headers, and pass that to
-rootcint.
+rootcling.
 
 Often ROOT knows where **MyClass** and the templated class (e.g. vector)
 are defined, for example because the files got **\#included**. Knowing
@@ -625,7 +625,7 @@ Int_t     fTempValue; //! temporary state value
 ### The LinkDef.h File
 
 
-**Step 3:** The `LinkDef.h` file tells `rootcint` for which classes to
+**Step 3:** The `LinkDef.h` file tells `rootcling` for which classes to
 generate the method interface stubs.
 
 ``` {.cpp}
@@ -636,7 +636,7 @@ generate the method interface stubs.
 
 Three options can trail the class name:
 
--   `-` : tells `rootcint` **not** to generate the `Streamer` method for
+-   `-` : tells `rootcling` **not** to generate the `Streamer` method for
     this class. This is necessary for those classes that need a
     customized `Streamer` method.
 
@@ -644,7 +644,7 @@ Three options can trail the class name:
 #pragma link C++ class SClass-;  // no streamer
 ```
 
--   **`!`** : tells `rootcint` **not** to generate the
+-   **`!`** : tells `rootcling` **not** to generate the
     `operator>>(`**`TBuffer`** `&b,MyClass *&obj)` method for this
     class. This is necessary to be able to write pointers to objects of
     classes not inheriting from **`TObject`**.
@@ -655,7 +655,7 @@ Three options can trail the class name:
 #pragma link C++ class SClass-!; // no streamer, no >> operator
 ```
 
--   **+** : in ROOT version 1 and 2 tells `rootcint` to generate a
+-   **+** : in ROOT version 1 and 2 tells `rootcling` to generate a
     `Streamer` with extra byte count information. This adds an integer
     to each object in the output buffer, but it allows for powerful
     error correction in case a `Streamer` method is out of sync with
@@ -663,7 +663,7 @@ Three options can trail the class name:
     `-` and `!` options.
 
 IMPORTANT NOTE: In ROOT Version 3 and later, a "+" after the class name
-tells `rootcint` to use the new I/O system. The byte count check is
+tells `rootcling` to use the new I/O system. The byte count check is
 always added. The new I/O system has many advantages including support
 automatic schema evolution, full support for STL collections and better
 run-time performance. We strongly recommend using it.
@@ -673,7 +673,7 @@ run-time performance. We strongly recommend using it.
 ```
 
 For information on `Streamers` see "Input/Output". To get help on
-`rootcint` type on the UNIX command line: **`rootcint -h`**
+`rootcling` type on the UNIX command line: **`rootcling -h`**
 
 #### The Order Matters
 
@@ -711,14 +711,14 @@ And not vice versa:
 ...
 ```
 
-In this case, `rootcint` generates `Norm::Streamer()` that makes
-reference to `Tmpl<int>::Streamer()`. Then `rootcint` gets to process
+In this case, `rootcling` generates `Norm::Streamer()` that makes
+reference to `Tmpl<int>::Streamer()`. Then `rootcling` gets to process
 `Tmpl<int>` and generates a specialized `Tmpl<int>::Streamer()`
 function. The problem is, when the compiler finds the first
 `Tmpl<int>::Streamer()`, it will instantiate it. However, later in the
-file it finds the specialized version that `rootcint` generated. This
+file it finds the specialized version that `rootcling` generated. This
 causes the error. However, if the `Linkdef.h` order is reversed then
-`rootcint` can generate the specialized `Tmpl<int>::Streamer()` before
+`rootcling` can generate the specialized `Tmpl<int>::Streamer()` before
 it is needed (and thus never instantiated by the compiler).
 
 #### Other Useful Pragma Statements
@@ -1048,7 +1048,7 @@ The pragma statements are:
 ```
 
 This statements controls default link mode for
-`makecint(cint -c-1|-c-2)` and `rootcint`.
+`makecint(cint -c-1|-c-2)` and `rootcling`.
 
 ``` {.cpp}
 #pragma link default [on|off]
@@ -1064,7 +1064,7 @@ item:
 #pragma link [C|C++|off] [class|function|global]
 ```
 
-This pragma statement must be given before `cint/rootcint` reads any
+This pragma statement must be given before `cint/rootcling` reads any
 C/C++ definitions from header files. For pure Cling, default is on. For
 ROOT, including `$ROOTSYSDIR/bin/cint`, default is off. This feature was
 added from Cling v.5.15.57. Before this version, you had to use
@@ -1099,8 +1099,8 @@ class B {
 ##### Compilation
 
 **Step 4:** Compile the class using the `Makefile. `In the `Makefile`
-call `rootcint` to make the dictionary for the class. Call it
-`SClassDict.cxx`. The `rootcint` utility generates the methods
+call `rootcling` to make the dictionary for the class. Call it
+`SClassDict.cxx`. The `rootcling` utility generates the methods
 `Streamer`, **`TBuffer`** &operator\>\>() and `ShowMembers `for ROOT
 classes.
 
@@ -1117,7 +1117,7 @@ root[] TFile *f = new TFile("Afile.root","UPDATE");
 root[] sc->Write();
 ```
 
-For more information on `rootcint` see the `$ROOTSYS/test` directory
+For more information on `rootcling` see the `$ROOTSYS/test` directory
 `Makefile`, `Event.cxx`, and `Event.h` for an example, or follow this
 link: <http://root.cern.ch/root/RootCintMan.html>
 

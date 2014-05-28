@@ -312,7 +312,7 @@ The `bin` directory contains several executables.
 |               | such as `gdb`, you will need to run `root.exe` directly    |
 |               | CINTdebugger                                               |
 +---------------+------------------------------------------------------------+
-| `rootcint`    | is the utility ROOT uses to create a class dictionary for  |
+| `rootcling`    | is the utility ROOT uses to create a class dictionary for  |
 |               | Cling                                                       |
 +---------------+------------------------------------------------------------+
 | `rmkdepend`   | a modified version of `makedepend` that is used by the     |
