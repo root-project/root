@@ -147,9 +147,20 @@ macro: *\_\_ROOTCLING\_\_* is now defined during the parsing. The macros
 `#pragma` statement.
 
 The genreflex executable is still available, it preserves the same command
-line options as in version 5 and provides new ones (see help). It is important
-to note that it is not anymore a python script interfaced to GCCXML but rather
-a wrapper around rootcling.
+line options as in version 5 and provides new ones. Old selection XML files 
+are transparently usable by the new implementation. On the other hand some 
+of the new functionalities can be hardly backported to version 5. See 
+genreflex help for all the details about commandline switches and selection 
+files. It is important to note that it is not anymore a python script 
+interfaced to GCCXML but rather a wrapper around rootcling.
+
+In order to specify the classes selection, three methods are available:
+
+1)   Selection XML file. This file can be read by both genreflex and rootcling.
+2)   LinkDef file. This file can be read by rootcling.
+3)   Selection namespace (also called *dictselection*). Available both for 
+     rootcling and genreflex. See the documentation of the 
+     `ROOT::Meta::Selection` namespace for all the details.
 
 *Warning*
 
@@ -185,13 +196,47 @@ files. These are crucial for the functioning of ROOT and must reside in the
 same directory of the libraries which contain the compiled dictionaries.
 
 ### rlibmap
-The tools used to generate rootmap files are rootcling and genreflex.
-The rlibmap tool was discontinued.
 
-### Rootmapfiles
+The tools used to generate rootmap files are rootcling and genreflex. The 
+rlibmap tool is not present any more in ROOT starting from release 6.00.00.
+
+### Rootmap files
 
 To enhance the set of functionalities offered by ROOT and its new interpreter,
-the format of the rootmaps evolved.
+the format of the rootmaps evolved. Rootmap in the old format cannot be 
+produced anymore but only read. The new rootmaps can be still be concatenated.
+A rootmap file now contains:
+
+-   One (or more) section for forward declarations. These are real C++ 
+    forward declarations of templates and namespaces. This is needed for cling
+    to be able to parse templates' instantiations and for some autoloading
+    functionalities.
+-   One (or more) libraries sections. These sections describe the ensamble of 
+    the autoload keys related to one or more shared libraries. An autoload key 
+    can be a class name, a namespace name, a typedef or alias or a header file name.
+-   Single line comments, which start with a "#" character.
+
+At ROOT startup, a check is performed on autoload keys. If the same key (which is not a template instantiation) refers to two different libraries (or sets of libraries) a warning is issued.
+A typical Rootmap file look like:
+``` {.cpp}
+{ decls }
+fwd declaration 1;
+fwd declaration 2;
+[...]
+fwd declaration N;
+
+[ libraryName1 libraryName2 ... ]
+class className1
+class className2
+...
+typedef typedefName1
+typedef typedefName2
+...
+header headerName1
+header headerName2
+...
+
+```
 
 
 ### TROOT
