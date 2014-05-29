@@ -387,6 +387,13 @@ MyClass();   // Or a constructor with all its arguments defaulted.
 
 ## rootcling: The Cling Dictionary Generator
 
+A way in which dictionaries can be generated is via the `rootcling` 
+utility. This tool generates takes as input a set of headers and 
+generates in output the dictionary C++ code and a `pcm` file.
+This latter file is fundamental for the correct functioning of the 
+dictionary at runtime. It should be located in the directory where 
+the shared library is installed in which the compiled dictionary 
+resides.
 
 In the following example, we walk through the steps necessary to
 generate a dictionary, I/O, and inspect member functions. Let's start
@@ -1108,16 +1115,17 @@ link: <http://root.cern.ch/root/RootCintMan.html>
 
 ## genreflex: A Comfortable Interface to rootcling
 
-ROOT5 supported both `Cint` and `Reflex` dictionaries. The tool to create
+Version 5 supported both `Cint` and `Reflex` dictionaries. The tool to create
 `Reflex` dictionaries was a Python script called `genreflex` and was very 
 successful in the user community.
-Even if ROOT6 has only one type of dictionaries, `cling` dictionaries,
+Even if version 6 has only one type of dictionaries, `cling` dictionaries,
 a re-implementation of `genreflex` is provided.
 More precisely, in ROOT6, `genreflex` is nothing but a wrapper around 
 `rootcling`, which offers an identical CLI and behaviour to the old Python
 tool.
 The input to `genreflex` is a C++ header file, a set of switches and a 
-*selection XML file*.
+*selection XML file*. The output, as for `rootcling`, is a C++ dictionary 
+source and a `pcm` files.
 An exhaustive documentation of the CLI switches of `genreflex` can be 
 inspected with the `genreflex --help` command.
 
