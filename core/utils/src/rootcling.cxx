@@ -3513,7 +3513,13 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
 bool IsHeaderName(const std::string& filename)
 {
    return llvm::sys::path::extension(filename) ==".h" ||
-          llvm::sys::path::extension(filename) == ".hpp";
+          llvm::sys::path::extension(filename) ==".hh" || 
+          llvm::sys::path::extension(filename) ==".hpp" || 
+          llvm::sys::path::extension(filename) ==".H" ||
+          llvm::sys::path::extension(filename) ==".h++" ||
+          llvm::sys::path::extension(filename) =="hxx" ||
+          llvm::sys::path::extension(filename) =="Hxx" ||
+          llvm::sys::path::extension(filename) =="HXX";
 }
 
 //______________________________________________________________________________
