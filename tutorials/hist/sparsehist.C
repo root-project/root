@@ -43,6 +43,10 @@
 #include "TStyle.h"
 #include "TSystem.h"
 
+#ifndef INT_MAX
+#define INT_MAX std::numeric_limits<int>::max()
+#endif
+
 class TTimeHists {
 public:
    enum EHist { kHist, kSparse, kNumHist };
