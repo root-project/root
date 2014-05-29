@@ -14,6 +14,7 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Dario Berzano, CERN/SFT,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Cristina Cristescu, CERN/SFT,\
