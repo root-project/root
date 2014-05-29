@@ -729,6 +729,10 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
          SetPrompt("root [%d] ");
       return res;
    }
+   if (line && line[0] == '.' && line[1] == '@') {
+      ProcessLine(line, kFALSE, error);
+      SetPrompt("root [%d] ");
+   }
    return ProcessLine(line, kFALSE, error);
 }
 
