@@ -161,3 +161,5 @@ void printTreeSummary(TTree *t)
       cout << "  It's branch \"" << br->GetName() << "\" takes " << sizeOnDisk(br,true) << " bytes on disk\n";
    }
 }
+
+void printSizes() {}

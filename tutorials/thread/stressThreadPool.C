@@ -45,7 +45,7 @@ ostream &operator<< (ostream &_stream, const TTestTask &_task)
 }
 
 //=============================================================================
-void stressThreadPool(size_t _numThreads, bool _needDbg = false)
+void stressThreadPool(size_t _numThreads = 5, bool _needDbg = false)
 {
    size_t numTasks(_numThreads * g_multTasks);
    TThreadPool<TTestTask, EProc> threadPool(_numThreads, _needDbg);

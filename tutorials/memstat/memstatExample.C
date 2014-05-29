@@ -60,7 +60,7 @@ Double_t *V1, *V2, *V3, *V4;
 
 void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
 
-void memstat(double update=0.01, const char* fname="*") {
+void memstatExample(double update=0.01, const char* fname="*") {
    // Open the memstat data file, then call TTree::Draw to precompute
    // the arrays of positions and nbytes per entry.
    // update is the time interval in the data file  in seconds after which
