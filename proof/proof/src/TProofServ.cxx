@@ -6339,7 +6339,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    Int_t dot = srcname.Last('.');
    if (dot != kNPOS) {
       srcname.Remove(dot);
-      srcname += ".*";
+      srcname += "*";
    } else {
       assertfile = kTRUE;
    }
@@ -6512,7 +6512,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
       gSystem->Exec(TString::Format("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
       // If needed, remove from the cache any existing binary related to 'name'
       if (dot != kNPOS) {
-         binname += ".*";
+         binname += "*";
          PDB(kCache,1)
             Info("CopyToCache", "opt = 0: removing binaries '%s'", binname.Data());
          gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
@@ -6521,7 +6521,6 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    } else if (opt == 1) {
       // If needed, copy to the cache any existing binary related to 'name'.
       if (dot != kNPOS) {
-         binname += ".";
          void *dirp = gSystem->OpenDirectory(".");
          if (dirp) {
             const char *e = 0;
