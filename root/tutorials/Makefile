@@ -56,6 +56,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   sql/% \
   tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
   roostats/rs401d_FeldmanCousins \
+  roofit/rf104_classfactory \
   histfactory/ModifyInterpolation \
   tree/copytree2 tree/copytree3 tree/copytree \
   math/testUnfold4 \
