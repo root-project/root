@@ -29,6 +29,12 @@ distro](http://dev.gentoo.org/~vapier/x32/stage3-amd64-x32-20120605.tar.xz)
 built in x32); once they are, building and running x86-64 and x32
 side-by-side will be possible.
 
+## Build System
+ROOT 6.00/00 can be built either using the classic "./configure;make" method or using CMake.
+The CMake system has been completed for this version and should be functionally equivalent
+to the classic one. The [detailed instructions](http://root.cern.ch/drupal/content/building-root-cmake) are available. 
+In upcoming releases the classic method will slowly be deprecated in favor of the CMake one. 
+
 ## Core Libraries
 
 ### Cling vs CINT

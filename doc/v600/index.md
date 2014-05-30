@@ -26,6 +26,7 @@ The following people have contributed to this new version:
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
  Anna-Pia Lohfink,\
+ Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
