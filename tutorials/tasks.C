@@ -7,14 +7,17 @@
 //   -setting a breakpoint in one or more tasks
 //   -enabling/disabling one task, etc
 //Author: Rene Brun
+#ifndef __RUN_TASKS__
+
+void tasks()
+{
+   Error("tasks", "Must be called from run_tasks.C...");
+}
+
+#else
       
 void tasks()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("tasks.C","");
-   dir.ReplaceAll("/./","/");
-   gROOT->LoadMacro(dir +"MyTasks.cxx+");
-   
    TTask *run      = new MyRun("run","Process one run");
    TTask *event    = new MyEvent("event","Process one event");
    TTask *geomInit = new MyGeomInit("geomInit","Geometry Initialisation");
@@ -44,3 +47,5 @@ void tasks()
    gROOT->GetListOfBrowsables()->Add(run);
    new TBrowser;
 }
+
+#endif
