@@ -91,7 +91,7 @@ GeneticMinimizerParameters::GeneticMinimizerParameters()
    fSC_factor=0.95;
    fConvCrit =10.0 * ROOT::Math::MinimizerOptions::DefaultTolerance(); // default is 0.001
    if (fConvCrit <=0 ) fConvCrit = 0.001; 
-
+   fSeed=0;  // random seed
 }
 
 // genetic minimizer class 
@@ -210,6 +210,7 @@ void  GeneticMinimizer::GetGeneticOptions(ROOT::Math::MinimizerOptions & opt) co
    geneticOpt.SetValue("SC_rate",fParameters.fSC_rate);
    geneticOpt.SetValue("SC_factor",fParameters.fSC_factor);
    geneticOpt.SetValue("ConvCrit",fParameters.fConvCrit);
+   geneticOpt.SetValue("RandomSeed",fParameters.fSeed);
 
    opt.SetExtraOptions(geneticOpt);   
 }
@@ -238,6 +239,7 @@ void GeneticMinimizer::SetOptions(const ROOT::Math::MinimizerOptions & opt)
    geneticOpt->GetValue("SC_rate",fParameters.fSC_rate);
    geneticOpt->GetValue("SC_factor",fParameters.fSC_factor);
    geneticOpt->GetValue("ConvCrit",fParameters.fConvCrit);
+   geneticOpt->GetValue("RandomSeed",fParameters.fSeed);
 
    // use same of options in base class
    int maxiter = opt.MaxIterations();
@@ -260,7 +262,7 @@ bool GeneticMinimizer::Minimize()
    if (MaxIterations() > 0) fParameters.fNsteps = MaxIterations(); 
    if (Tolerance() > 0) fParameters.fConvCrit = 10* Tolerance();
 
-   TMVA::GeneticAlgorithm mg( *fFitness, fParameters.fPopSize, fRanges );
+   TMVA::GeneticAlgorithm mg( *fFitness, fParameters.fPopSize, fRanges, fParameters.fSeed );
 
    if (PrintLevel() > 0) { 
       std::cout << "GeneticMinimizer::Minimize  - Start iterating - max iterations = " <<  MaxIterations()  

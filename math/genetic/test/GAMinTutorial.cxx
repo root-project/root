@@ -53,6 +53,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
       return -1;
    }
 
+
    // Set the parameters for the minimization.
    min->SetMaxFunctionCalls(1000000);
    min->SetMaxIterations(100000);
@@ -62,6 +63,8 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    ROOT::Math::GeneticMinimizerParameters params; // construct with default values
    params.fNsteps = 100;  // increset number of steps top 100 (default is 40)
    params.fPopSize = 200;  // increset number of steps top 100 (default is 40)
+   params.fSeed = 111;     // use a fixed seed 
+
    min->SetParameters(params);
 
 

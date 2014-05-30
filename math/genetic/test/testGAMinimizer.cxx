@@ -98,6 +98,7 @@ int testGAMinimizer(int verbose = 0) {
    gaRosenBrock.SetLimitedVariable(1, "y", 0, 0, -5, +5);
    gaRosenBrock.SetPrintLevel(verbose);
    gaRosenBrock.SetMaxIterations(500);  // need a large number ot be sure
+   gaRosenBrock.SetRandomSeed(111);
    gaRosenBrock.Minimize();
    const double * xmin = gaRosenBrock.X(); 
    cout << "RosenBrock min: " << gaRosenBrock.MinValue() << " x = [" << xmin[0] << "] [" << xmin[1] << "]" << endl;
