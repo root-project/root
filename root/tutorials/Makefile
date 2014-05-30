@@ -21,12 +21,8 @@ CLEAN_TARGETS += $(ALL_LIBRARIES) $(TUTORIALSLOGS) $(TUTORIALSSTUBS) \
 # because we need it before we can include Rules.mk.
 FIXCLING=yes
 
-ifeq ($(FAST)$(FIXCLING),)
+ifeq ($(FAST),)
 TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
-else
-ifeq ($(FAST)-$(FIXCLING),-no)
-TEST_TARGETS += $(TUTORIALSTESTS) $(TUTORIALSTESTS_CC)
-endif
 endif
 
 # don't run these, they will fail and need to be fixed.
