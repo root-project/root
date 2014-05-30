@@ -301,8 +301,9 @@ Double_t TTimeHists::Check(EHist hist)
 
 
 void sparsehist() {
-// exclude this macro also for CLING , it crashes  
-#if defined(__CINT__)  || defined (__CLING__)
+// Exclude this macro also for Cling as this script requires exception support
+// which is not supported in Cling as of v6.00/00.
+#if defined (__CLING__)
    printf("Please run this script in compiled mode by running \".x sparsehist.C+\"\n");
    return;
 #endif
