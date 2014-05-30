@@ -35,3 +35,5 @@ load: load.log
 
 alias: alias.clog
 	$(TestDiff)
+
+execScanFail.log: CUTpad1pad2.C  CUTpad1tof.C 
