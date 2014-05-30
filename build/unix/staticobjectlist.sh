@@ -12,7 +12,7 @@ if [ "$1" = "-d" ]; then
    dictonly="yes"
 fi
 
-excl="main proof/proofd proof/clarens proof/peac net/rootd net/xrootd rootx \
+excl="main proof/proofd net/rootd net/xrootd rootx \
       montecarlo/pythia6 montecarlo/pythia8 sql/mysql sql/pgsql sql/sqlite \
       sql/sapdb io/rfio hist/hbook core/newdelete misc/table core/utils \
       net/srputils net/krb5auth net/globusauth io/chirp io/dcache net/alien \
@@ -23,7 +23,8 @@ excl="main proof/proofd proof/clarens proof/peac net/rootd net/xrootd rootx \
       net/rpdutils math/mathmore math/minuit2 io/gfal net/monalisa \
       proof/proofx math/fftw gui/qtgsi sql/odbc io/castor math/unuran \
       geom/gdml montecarlo/g4root graf2d/gviz graf3d/gviz3d graf3d/eve \
-      net/glite misc/minicern misc/memstat net/bonjour graf2d/fitsio"
+      net/glite misc/minicern misc/memstat net/bonjour graf2d/fitsio \
+      net/davix net/netxng net/http"
 
 objs=""
 gobjs=""

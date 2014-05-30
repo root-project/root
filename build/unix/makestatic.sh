@@ -31,6 +31,11 @@ if [ $PLATFORM = "alpha" ] && [ $CXX = "cxx" ]; then
    dummyo=R__dummy.o
 fi
 
+# If linking with Cocoa framework, then don't use XLIBS
+if echo $EXTRALIBS | grep ' Cocoa' > /dev/null 2>& 1 ; then
+    XLIBS=
+fi
+
 echo "Making $ROOTAEXE..."
 echo $LD $LDFLAGS -o $ROOTAEXE main/src/rmain.o $dummyo $gobjs $ROOTALIB \
    $XLIBS $SYSLIBS $EXTRALIBS

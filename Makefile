@@ -544,6 +544,9 @@ endif
 ifeq ($(XFTLIB),yes)
 STATICEXTRALIBS += -lXft
 endif
+ifeq ($(BUILDCOCOA),yes)
+STATICEXTRALIBS += -framework Cocoa -framework OpenGL
+endif
 
 ##### libCore #####
 
