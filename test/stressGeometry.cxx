@@ -226,6 +226,7 @@ void WriteRef(Int_t kexp);
 void InspectRef(const char *exp="alice", Int_t vers=3);
 
 void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
+   TGeoManager::SetVerboseLevel(0);
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
    
@@ -313,7 +314,7 @@ void ReadRef(Int_t kexp) {
       fprintf(stderr,"Reference file %s not found ! Skipping.\n", fname.Data());
       return;
    }   
-   fprintf(stderr,"Reference file %s found\n", fname.Data());
+   // fprintf(stderr,"Reference file %s found\n", fname.Data());
    fname = TString::Format("%s_diff.root", exps[kexp]);
    TFile fdiff(fname,"RECREATE");
    TTree *TD = new TTree("TD","TGeo stress diff");
