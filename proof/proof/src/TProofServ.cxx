@@ -5704,9 +5704,14 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
             // We need to change the name of the function to avoid problems when we load more packages
             TString setup, setupfn;
-            setup.Form("SETUP_%d_%x", gSystem->GetPid(), package.Hash());
+            setup.Form("SETUP_ganis_%d_%x", gSystem->GetPid(), package.Hash());
             // Remove special characters
-            setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
+            const char *tmpDir = gSystem->TempDirectory();
+            if (tmpDir[strlen(tmpDir)-1] == '/') {
+               setupfn.Form("%s%s.C", tmpDir, setup.Data());
+            } else {
+               setupfn.Form("%s/%s.C", tmpDir, setup.Data());
+            }
             TMacro setupmc("PROOF-INF/SETUP.C");
             TObjString *setupline = setupmc.GetLineWith("SETUP(");
             if (setupline) {
