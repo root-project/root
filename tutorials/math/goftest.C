@@ -21,6 +21,9 @@
 #include "TRandom3.h"
 #include "Math/DistFunc.h"
 
+// need to use Functor1D
+double landau(double x) { return ROOT::Math::landau_pdf(x); }
+
 void goftest() {
 
    // ------------------------------------------------------------------------
@@ -222,7 +225,7 @@ void goftest() {
    /*-------------------------------------------------------*/
    
    /* a) User input PDF */
-   ROOT::Math::Functor1D f(&TMath::Landau);
+   ROOT::Math::Functor1D f(&landau);
    double min = 3*TMath::MinElement(nEvents3, sample3);
    double max = 3*TMath::MaxElement(nEvents3, sample3);
    ROOT::Math::GoFTest* goftest_3a = new ROOT::Math::GoFTest(nEvents3, sample3, f,  ROOT::Math::GoFTest::kPDF, min,max);  // need to specify am interval

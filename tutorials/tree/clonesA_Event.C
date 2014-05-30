@@ -6,6 +6,17 @@
 //to run this example, do:
 // root > .x clonesA_Event.C
 
+#ifndef CLONESA_EVENT_SECOND_RUN
+
+void clonesA_Event() {
+   gROOT->ProcessLine(".L clonesA_Event.cxx+");
+#define CLONESA_EVENT_SECOND_RUN yes
+   gROOT->ProcessLine("#include \"clonesA_Event.C\"");
+   gROOT->ProcessLine("clonesA_Event(true)");
+}
+
+#else 
+
 void clonesA_Event_w()
 {
 // protect against old ROOT versions
@@ -58,8 +69,12 @@ void clonesA_Event_r()
    delete hfile;
 }
  
-void clonesA_Event() {
-   gROOT->ProcessLine(".L clonesA_Event.cxx+");  // compile shared lib
+void clonesA_Event(bool /*secondrun*/) {
+   // Embedding this load inside the first run of the script is not yet
+   // supported in v6
+   //   gROOT->ProcessLine(".L clonesA_Event.cxx+");  // compile shared lib
    clonesA_Event_w();                            // write the tree
    clonesA_Event_r();                            // read back the tree
 }
+
+#endif

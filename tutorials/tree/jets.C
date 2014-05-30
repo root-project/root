@@ -8,17 +8,17 @@
 //
 //Author: Rene Brun
 
+#ifdef JETS_SECOND_RUN
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TRandom.h"
 #include "TROOT.h"
 #include "TSystem.h"
-#ifdef __CINT__
-#else
 #include "JetEvent.h"
-#endif
 #include "Riostream.h"
-    
+
+
 void write(Int_t nev=100) {
    //write nev Jet events
    TFile f("JetEvent.root","recreate");
@@ -75,10 +75,25 @@ void pileup(Int_t nev=200) {
   }
 }
 
-void jets(Int_t nev=100, Int_t npileup=200) {
-   gSystem->Load("libPhysics");
-   gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
+void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun = true) {
+   // Embedding these loads inside the first run of the script is not yet
+   // supported in v6
+   // gSystem->Load("libPhysics");
+   // gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
    write(nev);
    read();
    pileup(npileup);
 }
+
+#else 
+
+//void jets(Int_t nev=100, Int_t npileup=200, Bool_t secondrun);
+void jets(Int_t nev=100, Int_t npileup=200) {
+   gSystem->Load("libPhysics");
+   gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
+   gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
+   gROOT->ProcessLine("#include \"jets.C\" ");
+   gROOT->ProcessLine("jets(100,200,true)");
+}
+
+#endif

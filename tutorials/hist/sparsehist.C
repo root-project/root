@@ -301,7 +301,8 @@ Double_t TTimeHists::Check(EHist hist)
 
 
 void sparsehist() {
-#ifdef __CINT__
+// exclude this macro also for CLING , it crashes  
+#if defined(__CINT__)  || defined (__CLING__)
    printf("Please run this script in compiled mode by running \".x sparsehist.C+\"\n");
    return;
 #endif
@@ -329,13 +330,13 @@ void sparsehist() {
       for (Int_t bins = 10; bins <= 100; bins += 10) {
          TTimeHists timer(dim, bins, /*num*/ 1000);
          timer.Run();
-         for (int h = 0; h < TTimeHists::kNumHist; ++h)
+         for (int h = 0; h < TTimeHists::kNumHist; ++h) {
             for (int t = 0; t < TTimeHists::kNumTime; ++t) {
                Double_t time = timer.GetTime((TTimeHists::EHist)h, (TTimeHists::ETime)t);
                if (time >= 0.)
                   htime[h][t]->Fill(dim, bins, time);
             }
-
+         }
          hsparse_mem->Fill(dim, bins, timer.GetSparse()->GetSparseFractionMem());
          hsparse_bins->Fill(dim, bins, timer.GetSparse()->GetSparseFractionBins());
 

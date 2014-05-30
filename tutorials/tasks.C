@@ -11,12 +11,21 @@
 
 void tasks()
 {
-   Error("tasks", "Must be called from run_tasks.C...");
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   dir.ReplaceAll("tasks.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir +"MyTasks.cxx+");
+
+   gROOT->ProcessLine("#define __RUN_TASKS__ 1");
+   gROOT->ProcessLine("#include \"tasks.C\"");
+   gROOT->ProcessLine("runtasks()");
+   gROOT->ProcessLine("#undef __RUN_TASKS__");
 }
 
 #else
       
-void tasks()
+void runtasks()
+//void tasks()
 {
    TTask *run      = new MyRun("run","Process one run");
    TTask *event    = new MyEvent("event","Process one event");
