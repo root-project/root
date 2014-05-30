@@ -1,11 +1,11 @@
-% ROOT Version 5.99/06 Release Notes
-% November 2013
+% ROOT Version 6.00/00 Release Notes
+% May 2014
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.00/00 has been released on May 30, 2014. It introduces its new
-C++ interpreter cling, replacing CINT that has served ROOT well for many years.
+ROOT version 6.00/00 has been released on May 30, 2014. It introduces the new
+Cling C++11 interpreter, replacing CINT that has served ROOT well for many years.
 
 For more information, see:
 
