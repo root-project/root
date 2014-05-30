@@ -36,6 +36,8 @@ struct GeneticMinimizerParameters {
    Int_t fSC_rate;
    Double_t fSC_factor;
    Double_t fConvCrit;
+   Int_t fSeed; 
+   
 
    // constructor with default value
    GeneticMinimizerParameters(); 
@@ -81,6 +83,10 @@ public:
    virtual double CovMatrix(unsigned int i, unsigned int j) const;  
 
    void SetParameters(const GeneticMinimizerParameters & params );
+
+   void SetRandomSeed(int seed) { fParameters.fSeed = seed; }
+
+   const GeneticMinimizerParameters & MinimizerParameters() const { return fParameters; }
 
    virtual ROOT::Math::MinimizerOptions Options() const; 
 
