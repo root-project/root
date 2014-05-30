@@ -5,24 +5,28 @@ Temporarily for version 6.00/00, ROOT has a reduced set of supported
 platforms. Most notably Windows is not supported until at least 6.02.
 6.00/00 supports only
 
--   Linux 32bit and 64 bit, i32 and x86-64 and x32 (see below).
--   MacOS on Intel CPUs.
+-   Linux 32 bit and 64 bit, i32 and x86-64 and x32 (see below).
+-   OSX 64 bit on x86-64.
 
 More platforms are expected to be available later; the lack of support
-stems from cling not being ported to these platforms yet.
+stems from Cling and Clang/LLVM not being ported to these platforms yet.
+
+To aleviate the pain for Windows users who want to try ROOT 6 we provide [a recipe](http://root.cern.ch/drupal/content/...) on how to run ROOT 6 in a VM on Windows.
+
+Building ROOT also requires a C++11 compatible compiler, so one needs to either have installed gcc >= 4.8 or Clang >= 3.4. On most lecagy platforms these newer compilers are available via a special install. See [the build prerequisites](http://root.cern.ch/drupal/content/build-prerequisites) page.
 
 Despite that, an additional platform as been added: the [x32
 psAPI](https://sites.google.com/site/x32abi/), called linuxx32gcc. It is
 a regular x86-64 ABI but with shorter pointers (4 bytes instead of 8).
 This reduces the addressable memory per process to 4GB - but that is
 usally sufficient. The advantages are reduced memory consumption (due to
-the smaller pointers) and increased performance compared to 32bit
-applications due to the availability of the 64bit instructions. The
-clang developers mailing list archive [contains a good
-comparison.](http://clang-developers.42468.n3.nabble.com/Re-PATCH-add-x32-psABI-support-td4024297.html)
+the smaller pointers) and increased performance compared to 32 bit
+applications due to the availability of the 64 bit instructions. The
+Clang developers mailing list archive [contains a good
+comparison](http://clang-developers.42468.n3.nabble.com/Re-PATCH-add-x32-psABI-support-td4024297.html).
 
 To build and run binaries compiled in x32, toolchain support is needed.
-That is available in the in binutils (2.22), GCC (4.7), glibc (2.16),
+That is available in the in binutils (2.22), GCC (4.8), glibc (2.16),
 Linux kernel (3.4) and even GDB (7.5). These versions are not available
 in regular distributions yet (except for [this beta Gentoo
 distro](http://dev.gentoo.org/~vapier/x32/stage3-amd64-x32-20120605.tar.xz)
@@ -64,34 +68,34 @@ Given `namespace N { class A; template <typename T> class B;}`, the name
 and backward compatibility of files.
 
 #### Implicit dynamic up-casts
-CINT would perforam automatic upcasts to derived classes under certain contexts:
+CINT would perform automatic upcasts to derived classes under certain contexts:
 
 ``` {.cpp}
    TH1* h1 = hpx
    TH1F* h1f = h1;
 ```
 
-Cling does not allow this anymore. We might add this feature later if demand exists (ROOT-4802).
+Cling does not allow this anymore. We might add this feature later if demand exists ([ROOT-4802](https://sft.its.cern.ch/jira/browse/ROOT-4802)).
 
 #### Using symbols that are only available at runtime: load libFoo; foo()
-CINT was processing macros line by line; cling compiles code.
+CINT was processing macros line by line; Cling compiles code.
 When calling a function (or in general using a symbol) that is provided by a library loaded at runtime, 
-cling will in some cases report an unresolved symbol:
+Cling will in some cases report an unresolved symbol:
 
 ``` {.cpp}
    #include "Event.h"
    void dynload() {
       gSystem->Load("libEvent");
-   new Event();
+      new Event();
    }
 ```
 
 You will currently have to provide a rootmap file for libEvent (which also requires include 
-guards for Event.h). This might get fixed in a later version (ROOT-4691).
+guards for Event.h). This might get fixed in a later version ([ROOT-4691](https://sft.its.cern.ch/jira/browse/ROOT-4691)).
 
 #### Using identifiers that are only available at runtime: gROOT->LoadMacro("foo.h"); foo()
-CINT was processing macros line by line; cling compiles code.
-During this compilation, cling will not see identifiers provided by `gROOT->LoadMacro()`.
+CINT was processing macros line by line; Cling compiles code.
+During this compilation, Cling will not see identifiers provided by `gROOT->LoadMacro()`.
 While this will covered by dynamic scopes, they are currently too limited to handle this.
 Please `#include` the header instead.
 
@@ -214,7 +218,7 @@ produced anymore but only read. The new rootmaps can be still be concatenated.
 A rootmap file now contains:
 
 -   One (or more) section for forward declarations. These are real C++ 
-    forward declarations of templates and namespaces. This is needed for cling
+    forward declarations of templates and namespaces. This is needed for Cling
     to be able to parse templates' instantiations and for some autoloading
     functionalities.
 -   One (or more) libraries sections. These sections describe the ensamble of 
@@ -313,16 +317,16 @@ of the `TDataType` describing a typedef.
 
 -   Mnemonic constants are available:
 
-``` {.cpp}
+    ``` {.cpp}
     kHAlignLeft   = 10, kHAlignCenter = 20, kHAlignRight = 30,
     kVAlignBottom = 1,  kVAlignCenter = 2,  kVAlignTop   = 3
-```
+    ```
 
     They allow to write:
 
-``` {.cpp}
+    ``` {.cpp}
     object->SetTextAlign(kHAlignLeft+kVAlignTop);
-```
+    ```
 
 -   New method `SetTextColorAlpha(ci, alpha)` to set the color index
     `ci` with a transparency percentage.
