@@ -286,7 +286,7 @@ void TTreeFormula::Init(const char*name, const char* expression)
 
    // Create a list of uniques branches to load.
    for(k=0; k<fNcodes ; k++) {
-      TLeaf *leaf = k <= fLeaves.GetEntries() ? (TLeaf*)fLeaves.UncheckedAt(k) : 0;
+      TLeaf *leaf = k <= fLeaves.GetLast() ? (TLeaf*)fLeaves.UncheckedAt(k) : 0;
       TBranch *branch = 0;
       if (leaf) {
          branch = leaf->GetBranch();
