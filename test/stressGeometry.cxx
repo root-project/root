@@ -106,7 +106,7 @@ const char *exps[NG] = {"aleph",
                         "star", 
                         "sld",   
                         "cms",   
-                        "alice2",
+                        "alice3",
                         "babar2", 
                         "belle",
                         "atlas" 
@@ -140,7 +140,7 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //star
                              3, //sld
                              3, //cms
-                             3, //alice2
+                             4, //alice3
                              3, //babar2
                              3, //belle
                              4}; //atlas
@@ -255,6 +255,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          gGeoManager = 0;
       }   
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
+      if (!gGeoManager) return;
          
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
       
