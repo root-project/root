@@ -47,6 +47,8 @@ private :
    Int_t              fQ;              // right/left-handed (+/- 1) - "charge"
    TGeoHMatrix       *fMatrix;         // transformation of local helix frame to MARS   
  
+   TGeoHelix(const TGeoHelix&);             // Not implemented
+   TGeoHelix &operator=(const TGeoHelix&);  // Not implemented
 public:
    enum EGeoHelixTypes {
       kHelixNeedUpdate =   BIT(16),
