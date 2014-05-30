@@ -188,7 +188,7 @@ void pythia_next_event()
    TClonesArray        &MC      = * (TClonesArray*) P.GetListOfParticles();
    for (Int_t i = 0; i < 7; ++i)
    {
-      TMCParticle& p = * MC[nh+i];
+      TMCParticle& p = (TMCParticle&)*MC[nh+i];
       TParticle pb(p.GetKF(), p.GetKS(), 0, 0,
                    p.GetFirstChild()-nh-1, p.GetLastChild()-nh-1,
                    p.GetPx(), p.GetPy(), p.GetPz(), p.GetEnergy(),
