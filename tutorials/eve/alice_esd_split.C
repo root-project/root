@@ -79,13 +79,35 @@
      visual attributes.
 
 */
-#ifndef __RUN_ALICE_ESD__
+#ifndef __RUN_ALICE_ESD_SPLIT__
+
 void alice_esd_split()
 {
-   Error("alice_esd_split", "Must be called from run_alice_esd.C(kTRUE)...");
-}
-#else
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   dir.ReplaceAll("alice_esd_split.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir +"SplitGLView.C+");
+   const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+   TFile::SetCacheFileDir(".");
+   TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
 
+   if (gSystem->AccessPathName(lib, kReadPermission)) {
+      TFile* f = TFile::Open(esd_file_name, "CACHEREAD");
+      if (f == 0) return;
+      TTree *tree = (TTree*) f->Get("esdTree");
+      tree->SetBranchStatus ("ESDfriend*", 1);
+      f->MakeProject("aliesd", "*", "++");
+      f->Close();
+      delete f;
+   }
+   gSystem->Load(lib);
+   gROOT->ProcessLine("#define __RUN_ALICE_ESD_SPLIT__ 1");
+   gROOT->ProcessLine("#include \"alice_esd_split.C\"");
+   gROOT->ProcessLine("run_alice_esd_split()");
+   gROOT->ProcessLine("#undef __RUN_ALICE_ESD_SPLIT__");
+}
+
+#else
 
 R__EXTERN TEveProjectionManager *gRPhiMgr;
 R__EXTERN TEveProjectionManager *gRhoZMgr;
@@ -137,7 +159,7 @@ TGHProgressBar *gProgress;
 /******************************************************************************/
 
 //______________________________________________________________________________
-void alice_esd_split(Bool_t auto_size=kFALSE)
+void run_alice_esd_split(Bool_t auto_size=kFALSE)
 {
    // Main function, initializes the application.
    //

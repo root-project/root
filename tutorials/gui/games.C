@@ -2,9 +2,6 @@
 
 void games()
 {
-   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
-   dir.ReplaceAll("games.C","");
-   dir.ReplaceAll("/./","/");
    gSystem->Load("libGui");
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    Int_t st1 = gSystem->Load("$(ROOTSYS)/test/Aclock");

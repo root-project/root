@@ -79,10 +79,33 @@
 
 */
 #ifndef __RUN_ALICE_ESD__
+
 void alice_esd()
 {
-   Error("alice_esd", "Must be called from run_alice_esd.C...");
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   dir.ReplaceAll("alice_esd.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir +"MultiView.C+");
+   const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+   TFile::SetCacheFileDir(".");
+   TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
+
+   if (gSystem->AccessPathName(lib, kReadPermission)) {
+      TFile* f = TFile::Open(esd_file_name, "CACHEREAD");
+      if (f == 0) return;
+      TTree *tree = (TTree*) f->Get("esdTree");
+      tree->SetBranchStatus ("ESDfriend*", 1);
+      f->MakeProject("aliesd", "*", "++");
+      f->Close();
+      delete f;
+   }
+   gSystem->Load(lib);
+   gROOT->ProcessLine("#define __RUN_ALICE_ESD__ 1");
+   gROOT->ProcessLine("#include \"alice_esd.C\"");
+   gROOT->ProcessLine("run_alice_esd()");
+   gROOT->ProcessLine("#undef __RUN_ALICE_ESD__");
 }
+
 #else
 
 #include "alice_esd_html_summary.C"
@@ -147,7 +170,7 @@ MultiView* gMultiView = 0;
 /******************************************************************************/
 
 //______________________________________________________________________________
-void alice_esd()
+void run_alice_esd()
 {
    // Main function, initializes the application.
    //
