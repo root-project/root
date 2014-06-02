@@ -871,11 +871,20 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    if (!strncmp(line, ".license", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/LICENSE");
+#else
       return PrintFile("$(ROOTSYS)/LICENSE");
+#endif
    }
 
    if (!strncmp(line, ".credits", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/CREDITS");
+#else
       return PrintFile("$(ROOTSYS)/README/CREDITS");
+#endif
+     
    }
 
    if (!strncmp(line, ".pwd", 4)) {
