@@ -4163,14 +4163,14 @@ Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
 const UChar_t *TGLLevelPalette::GetColour(Double_t z)const
 {
    //Get color.
-    if (z - fZRange.first < 0)
-        z = fZRange.first;
-    else if (fZRange.second < z)
-        z = fZRange.second;
+   if (z - fZRange.first < 0)
+      z = fZRange.first;
+   else if (fZRange.second < z)
+      z = fZRange.second;
 
    UInt_t ind = UInt_t((z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize);
    if (ind >= fPaletteSize)
-       ind = fPaletteSize - 1;
+      ind = fPaletteSize - 1;
 
    return &fTexels[ind * 4];
 }
