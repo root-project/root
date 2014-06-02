@@ -3883,6 +3883,8 @@ int RootCling(int argc,
 
 #ifndef ROOT_STAGE1_BUILD
    // Pass the interpreter arguments to TCling's interpreter:
+   clingArgsC.push_back("-resource-dir");
+   clingArgsC.push_back(resourceDir.c_str());
    clingArgsC.push_back(0); // signal end of array
    const char**& extraArgs = *TROOT__GetExtraInterpreterArgs();
    extraArgs = &clingArgsC[1]; // skip binary name

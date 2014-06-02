@@ -827,15 +827,21 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+   std::string llvmResourceDir = ROOT::TMetaUtils::GetLLVMResourceDir(false);
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
         extraArgs && *extraArgs; ++extraArgs) {
+      if (!strcmp(*extraArgs, "-resource-dir")) {
+         // Take the next arg as the llvm resource directory.
+         llvmResourceDir = *(++extraArgs);
+      } else {
          interpArgs.push_back(*extraArgs);
+      }
    }
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
+                                         llvmResourceDir.c_str());
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
