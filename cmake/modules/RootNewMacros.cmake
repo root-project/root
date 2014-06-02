@@ -551,11 +551,12 @@ function(ROOT_GENERATE_ROOTMAP library)
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
-#---ROOT_INSTALL_HEADERS([dir1 dir2 ...])
+#---ROOT_INSTALL_HEADERS([dir1 dir2 ...] OPTIONS [options])
 #---------------------------------------------------------------------------------------------------
 function(ROOT_INSTALL_HEADERS)
-  if( ARGN )
-    set(dirs ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "OPTIONS" ${ARGN})
+  if( ARG_UNPARSED_ARGUMENTS )
+    set(dirs ${ARG_UNPARSED_ARGUMENTS})
   else()
     set(dirs inc/)
   endif()
@@ -563,7 +564,8 @@ function(ROOT_INSTALL_HEADERS)
     install(DIRECTORY ${d} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
                            COMPONENT headers
                            PATTERN ".svn" EXCLUDE
-                           REGEX "LinkDef" EXCLUDE )
+                           REGEX "LinkDef" EXCLUDE
+                           ${ARG_OPTIONS})
     set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/${d})
   endforeach()
 endfunction()
