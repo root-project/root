@@ -184,7 +184,8 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   set(targetname_libgen ${dictname}libgen)
 
-  add_library(${targetname_libgen} MODULE ${dictname}.cxx)
+  add_library(${targetname_libgen} MODULE EXCLUDE_FROM_ALL ${dictname}.cxx)
+  target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
   set_property(TARGET ${targetname_libgen} PROPERTY OUTPUT_NAME ${dictname})
@@ -211,7 +212,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" ""  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" "LIBRARIES"  ${ARGN})
 
   include_directories(${ROOT_INCLUDE_DIRS}
                       ${ROOT_INCLUDE_DIR}
@@ -247,7 +248,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   target_link_libraries(${targetname_libgen}
                         ${ARG_LIBRARIES}
-                        ${ROOT_Reflex_LIBRARY})
+                        ${ROOT_LIBRARIES})
 
   set(GENERATE_REFLEX_TEST ${targetname_libgen}-build)
 
