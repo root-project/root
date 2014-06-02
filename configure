@@ -1582,7 +1582,7 @@ FIRST argument one of the architecures given at the end of this message.
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
-   --etcdir        Config installation dir   (/etc/root)
+   --etcdir        Config installation dir   (<prefix>/etc/root)
    --fontdir       Font installation dir     (<datadir>/fonts)
    --iconpath      Icon installation dir     (<datadir>/icons)
    --incdir        Header installation dir   (<prefix>/include/root)
@@ -7108,7 +7108,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$bindir" = "x";       then bindir=$prefix/bin; fi
     if test "x$libdir" = "x";       then libdir=$prefix/lib/root; fi
     if test "x$incdir" = "x";       then incdir=$prefix/include/root; fi
-    if test "x$etcdir" = "x";       then etcdir=/etc/root; fi
+    if test "x$etcdir" = "x";       then etcdir=$prefix/etc/root; fi
     if test "x$mandir" = "x";       then mandir=$prefix/share/man/man1; fi
     if test "x$datadir" = "x";      then datadir=$prefix/share/root; fi
     if test "x$macrodir" = "x";     then macrodir=$datadir/macros; fi

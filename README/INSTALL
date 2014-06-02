@@ -300,7 +300,7 @@ Here's the complete list:
   Header installation directory. All the header (declaration) files
   for the ROOT classes will be installed into this directory. This
   should be parallel to libdir, for consistency.
-* etcdir (/etc/root)
+* etcdir (<prefix>/etc/root)
   Configuration files installation directory. The system-wide
   system.rootrc and root.mimes will be installed into this directory.
 * mandir (<prefix>/share/man/man1)
