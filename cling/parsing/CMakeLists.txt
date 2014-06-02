@@ -40,7 +40,8 @@ ROOTTEST_ADD_TEST(roottest-cling-parsing-runTTestClass
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-parsing-semicolon
-                  MACRO "semicolon.C(\"abc ; xyz\")"
+                  MACRO semicolon.C
+                  MACROARG "abc ; xyz"
                   OUTREF semicolon.ref
                   LABELS roottest regression cling)
 

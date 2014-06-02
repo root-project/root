@@ -1,0 +1,10 @@
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(One One.h SELECTION One_selection.xml)
+set(depends ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_GENERATE_REFLEX_DICTIONARY(Two Two.h SELECTION Two_selection.xml)
+set(depends ${depends} ${GENERATE_REFLEX_TEST})
+
+ROOTTEST_ADD_TEST(roottest-root-meta-ROOT-5694-execLoadLibs
+                  MACRO execLoadLibs.C
+                  OUTREF execLoadLibs.ref
+                  DEPENDS ${depends})

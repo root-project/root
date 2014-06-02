@@ -9,7 +9,9 @@
 include(RootMacros)
 
 function(ROOTTEST_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;USEBUILDC;WILLFAIL" "MACRO;OUTREF;OUTCNV;PASSRC" "OUTCNVCMD;DEPENDS;LABELS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
+                            "MACRO;OUTREF;OUTCNV;PASSRC;MACROARG"
+                            "OUTCNVCMD;DEPENDS;LABELS" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -17,13 +19,24 @@ function(ROOTTEST_ADD_TEST test)
     list(APPEND RootExeDefines "-e;#define ${d}")
   endforeach()
 
-  set(root_cmd root.exe ${RootExeDefines} -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\",true)" -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")" -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")" -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")" -q -l -b) 
+  set(root_cmd root.exe ${RootExeDefines}
+               -e "gSystem->SetBuildDir(\"${CMAKE_CURRENT_BINARY_DIR}\",true)"
+               -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
+               -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
+               -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
+               -q -l -b) 
 
   set(root_buildcmd root.exe ${RootExeDefines} -q -l -b)
 
   # Reference output given?
   if(ARG_OUTREF)
     get_filename_component(OUTREF_PATH ${ARG_OUTREF} REALPATH)
+
+    if(DEFINED X86_64 AND EXISTS ${OUTREF_PATH}64)
+      set(OUTREF_PATH ${OUTREF_PATH}64)
+    elseif(DEFINED X86 AND EXISTS ${OUTREF_PATH}32)
+      set(OUTREF_PATH ${OUTREF_PATH}32)
+    endif()
   else()
     set(OUTREF_PATH, "")
   endif()
@@ -51,8 +64,13 @@ function(ROOTTEST_ADD_TEST test)
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
-    set(command ${root_cmd} ${realfp})
 
+    if(DEFINED ARG_MACROARG)
+      set(realfp "${realfp}(${ARG_MACROARG})") 
+    endif()
+
+    set(command ${root_cmd} ${realfp})
+    
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(pycmd ${ARG_MACRO} REALPATH)
@@ -69,6 +87,7 @@ function(ROOTTEST_ADD_TEST test)
   endif()
 
   if(ARG_OUTCNV)
+    get_filename_component(OUTCNV ${ARG_OUTCNV} REALPATH)
     set(outcnv OUTCNV ${OUTCNV})
   endif()
 
@@ -87,6 +106,10 @@ function(ROOTTEST_ADD_TEST test)
   if(ARG_PASSRC)
     set(passrc PASSRC ${ARG_PASSRC})
   endif()
+
+  if(ARG_DEPENDS)
+    set(depends ${ARG_DEPENDS})
+  endif(ARG_DEPENDS)
 
   set(environment ENVIRONMENT
                   ROOTSYS=${ROOTSYS}
