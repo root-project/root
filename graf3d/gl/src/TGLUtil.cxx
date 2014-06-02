@@ -4136,12 +4136,12 @@ Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
 {
    //Get tex coordinate
    if (!fContours) {
-       if (z - fZRange.first < 0)
-           z = fZRange.first;
-       else if (fZRange.second < z)
-           z = fZRange.second;
+      if (z - fZRange.first < 0)
+         z = fZRange.first;
+      else if (fZRange.second < z)
+         z = fZRange.second;
 
-       return (z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize / (fTexels.size() / 4);
+      return (z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize / (fTexels.size() / 4);
    }
    /*
    //This part is wrong. To be fixed.
