@@ -33,6 +33,7 @@
 #if defined(__APPLE__)
 # include <AvailabilityMacros.h>
 #endif
+#include <mutex>
 
 #if defined(__APPLE__) && defined(MAC_OS_X_VERSION_10_7)
 namespace __cxxabiv1 {
@@ -47,6 +48,7 @@ __dynamic_cast(const void* __src_ptr, // Starting object.
 }
 #endif
 
+static std::mutex gPathsToBaseLock;
 
 //-------------------------------------------------------------------------------
 Reflex::Class::Class(const char* typ,
@@ -518,6 +520,7 @@ Reflex::Class::NewBases() const {
 const std::vector<Reflex::OffsetFunction>&
 Reflex::Class::PathToBase(const Scope& bas) const {
 //-------------------------------------------------------------------------------
+   std::lock_guard<std::mutex> guard(gPathsToBaseLock);
 // Return a vector of offset functions from the current class to the base class.
    const BasePath_t* pathToBase = fPathsToBase[bas.Id()];
 
