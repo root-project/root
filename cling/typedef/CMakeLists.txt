@@ -6,11 +6,10 @@ ROOTTEST_ADD_TEST(roottest-cling-typedef-runptrptr
                   OUTCNVCMD grep ptrptr.C
                   LABELS roottest regression cling)
 
-ROOTTEST_COMPILE_MACRO(testclass.h)
 ROOTTEST_ADD_TEST(roottest-cling-typedef-testclass
                   MACRO -e "gSystem->Load(\"testclass_h\")"
                   OUTREF typedefAndScope.ref
-                  DEPENDS ${COMPILE_MACRO_TEST}
+                  DEPENDS testclass.h
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-typedef-assertTypedefIter

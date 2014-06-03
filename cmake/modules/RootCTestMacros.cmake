@@ -10,8 +10,8 @@ include(RootMacros)
 
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
-                            "MACRO;OUTREF;OUTCNV;PASSRC;MACROARG"
-                            "OUTCNVCMD;DEPENDS;LABELS" ${ARGN})
+                            "OUTREF;OUTCNV;PASSRC;MACROARG"
+                            "MACRO;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -45,11 +45,6 @@ function(ROOTTEST_ADD_TEST test)
     get_filename_component(OUTCNV ${ARG_OUTCNV} REALPATH)
   endif()
 
-  # Test has dependencies?
-  if(ARG_DEPENDS)
-    set(depends ${ARG_DEPENDS})
-  endif(ARG_DEPENDS)
-
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
@@ -58,6 +53,10 @@ function(ROOTTEST_ADD_TEST test)
     ROOTTEST_COMPILE_MACRO(${compile_name})
 
     set(depends ${depends} ${COMPILE_MACRO_TEST})
+
+    if(DEFINED ARG_MACROARG)
+      set(realfp "${realfp}(${ARG_MACROARG})") 
+    endif()
 
     set(command ${root_cmd} "${realfp}+")
 
@@ -75,6 +74,9 @@ function(ROOTTEST_ADD_TEST test)
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(pycmd ${ARG_MACRO} REALPATH)
     set(command ${python_cmd} ${pycmd})
+
+  elseif(DEFINED ARG_MACRO)
+    set(command ${root_cmd} ${ARG_MACRO})
   endif()
 
   # Check for assert prefix -- only log stderr.
@@ -86,29 +88,51 @@ function(ROOTTEST_ADD_TEST test)
     set(checkstderr CHECKERR)
   endif()
 
+  # Get the real path to the output conversion script.
   if(ARG_OUTCNV)
     get_filename_component(OUTCNV ${ARG_OUTCNV} REALPATH)
     set(outcnv OUTCNV ${OUTCNV})
   endif()
 
+  # Setup the output conversion command.
   if(ARG_OUTCNVCMD)
     set(outcnvcmd OUTCNVCMD ${ARG_OUTCNVCMD})
   endif()
 
+  # Mark the test as known to fail.
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
   endif()
 
+  # Add labels to the test.
   if(ARG_LABELS)
     set(labels LABELS ${ARG_LABELS})
   endif()
 
+  # Test will pass for a custom return value.
   if(ARG_PASSRC)
     set(passrc PASSRC ${ARG_PASSRC})
   endif()
 
+  if(ARG_OPTS)
+    set(command ${command} ${ARG_OPTS})
+  endif()
+
+  # Add dependencies. If the test depends on a macro file, the macro
+  # will be compiled and the dependencies are set accordingly.
   if(ARG_DEPENDS)
-    set(depends ${ARG_DEPENDS})
+    foreach(dep ${ARG_DEPENDS})
+      list(APPEND deplist ${dep})
+
+      if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
+        ROOTTEST_COMPILE_MACRO(${dep})
+
+        set(depends ${depends} ${COMPILE_MACRO_TEST})
+        
+        list(REMOVE_ITEM deplist ${dep})
+      endif()
+    endforeach()
+    set(depends ${depends} ${deplist})
   endif(ARG_DEPENDS)
 
   set(environment ENVIRONMENT

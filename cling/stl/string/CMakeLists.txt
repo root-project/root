@@ -5,11 +5,9 @@ ROOTTEST_ADD_TEST(roottest-cling-stl-string-runcint
                   MACRO runcint.C
                   LABELS roottest regression cling)
 
-ROOTTEST_COMPILE_MACRO(t01.C)
-
 ROOTTEST_ADD_TEST(roottest-cling-stl-string-stringPassingText
                   MACRO run.C
                   OUTREF passing.ref
-                  DEPENDS ${COMPILE_MACRO_TEST}
+                  DEPENDS t01.C
                   LABELS roottest regression cling)
 

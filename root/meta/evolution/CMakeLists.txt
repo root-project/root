@@ -4,41 +4,35 @@ add_definitions(
   -DClingWorkAroundMissingDynamicScope
 )
 
-ROOTTEST_COMPILE_MACRO(data1.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data1
                   MACRO writefile.C
                   MACROARG 1
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data1.C)
 
-ROOTTEST_COMPILE_MACRO(data2.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data2
                   MACRO writefile.C
                   MACROARG 2
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data2.C)
 
-ROOTTEST_COMPILE_MACRO(data3.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data3
                   MACRO writefile.C
                   MACROARG 3
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data3.C)
 
-ROOTTEST_COMPILE_MACRO(data4.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data4
                   MACRO writefile.C
                   MACROARG 4
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data4.C)
 
-ROOTTEST_COMPILE_MACRO(data5.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data5
                   MACRO writefile.C
                   MACROARG 5
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data5.C)
 
-ROOTTEST_COMPILE_MACRO(data6.C)
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data6
                   MACRO writefile.C
                   MACROARG 6
-                  DEPENDS ${COMPILE_MACRO_TEST})
+                  DEPENDS data6.C)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-checkWarn0
                   MACRO checkWarn.C

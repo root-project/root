@@ -60,27 +60,42 @@ function(ROOTTEST_ADD_AUTOMACROS)
   file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/exec*.cxx)
   list(APPEND automacros ${macros})
 
-  foreach(am ${automacros}) 
-    get_filename_component(filename ${am} NAME) 
-    get_filename_component(refname  ${am} NAME_WE) 
-    set(refname ${refname}.ref)
+  foreach(dep ${ARG_DEPENDS})
+    list(APPEND deplist ${dep})
 
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${refname})
-      set(outref OUTREF ${refname})
+    if(${dep} MATCHES "[.]C" OR ${dep} MATCHES "[.]cxx" OR ${dep} MATCHES "[.]h")
+      ROOTTEST_COMPILE_MACRO(${dep})
+      set(add_auto_depends ${add_auto_depends} ${COMPILE_MACRO_TEST})
+      
+      list(REMOVE_ITEM deplist ${dep})
+    endif()
+  endforeach()
+  set(add_auto_depends ${add_auto_depends} ${deplist})
+
+  foreach(am ${automacros}) 
+    get_filename_component(auto_macro_filename ${am} NAME)
+    get_filename_component(auto_macro_refname  ${am} NAME_WE)
+    set(auto_macro_refname ${auto_macro_refname}.ref)
+
+    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${auto_macro_refname})
+      set(outref OUTREF ${auto_macro_refname})
     else()
       set(outref "")
     endif()
 
-    set(depends "")
+    ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
+   
     if(ARG_DEPENDS)
-      set(depends DEPENDS ${ARG_DEPENDS})
-    endif()
+      ROOTTEST_ADD_TEST(${targetname}-auto
+                        MACRO ${auto_macro_filename}
+                        ${outref}
+                        DEPENDS ${add_auto_depends})
 
-    ROOTTEST_TARGETNAME_FROM_FILE(targetname ${filename})
-    ROOTTEST_ADD_TEST(${targetname}-auto
-                      MACRO ${filename}
-                      ${outref}
-                      ${depends})
+    else()
+      ROOTTEST_ADD_TEST(${targetname}-auto
+                        MACRO ${auto_macro_filename}
+                        ${outref})
+    endif()
   endforeach()
 
 endfunction(ROOTTEST_ADD_AUTOMACROS)
@@ -121,9 +136,9 @@ macro(ROOTTEST_COMPILE_MACRO filename)
 
   set(BuildScriptArg \(\"${realfp}\",\"${ARG_BUILDLIB}\",\"${ARG_BUILDOBJ}\"\))
 
-  set(command ${root_compile_macro}
-              ${BuildScriptFile}${BuildScriptArg}
-              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set(compile_macro_command ${root_compile_macro}
+                            ${BuildScriptFile}${BuildScriptArg}
+                            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   
   if(ARG_DEPENDS)
     set(deps ${ARG_DEPENDS})
@@ -134,7 +149,7 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set(compile_target ${COMPILE_MACRO_TEST}-compile-macro)
 
   add_custom_target(${compile_target}
-                    COMMAND ${command}
+                    COMMAND ${compile_macro_command}
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     VERBATIM)
 

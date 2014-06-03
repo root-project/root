@@ -1,9 +1,7 @@
-ROOTTEST_COMPILE_MACRO(TheClass.h)
-
 ROOTTEST_ADD_TEST(roottest-cling-function-runoverloadResolution
                   MACRO runoverloadResolution.C
                   OUTREF overloadResolution.ref
-                  DEPENDS ${COMPILE_MACRO_TEST}
+                  DEPENDS TheClass.h
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-function-rundefaultParams

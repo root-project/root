@@ -1,9 +1,7 @@
-ROOTTEST_COMPILE_MACRO(fileClose.C)
-
 ROOTTEST_ADD_TEST(roottest-cling-other-runfileClose
                   MACRO runfileClose.C
                   OUTREF fileClose.ref
-                  DEPENDS ${COMPILE_MACRO_TEST}
+                  DEPENDS fileClose.C
                   LABELS roottest regression cling)
 
 ROOTTEST_COMPILE_MACRO(testCompile.C)
