@@ -629,6 +629,7 @@ void TLegend::PaintPrimitives()
    Double_t boxwidth = margin;
    Double_t boxw = boxwidth*0.35;
    Double_t yspace = (y2-y1)/nRows;
+   Double_t yspace2 = yspace/2.;
    Double_t textsize = GetTextSize();
    Bool_t autosize = kFALSE;
    Double_t save_textsize = textsize;
@@ -763,18 +764,25 @@ void TLegend::PaintPrimitives()
       if (halign == 3) x = x2 - entrymargin/10.;
       Int_t valign = entry->GetTextAlign()%10;
 
-      // The vertical alignment "centered" is treated in a special to
-      // ensure a better spacing between lines.
-      if (valign == 2) entry->SetTextAlign(10*halign+1);
+      if (valign == 1) y = ytext - (1. - fEntrySeparation)* yspace2;
+      if (valign == 3) y = ytext + (1. - fEntrySeparation)* yspace2;
 
-      if (valign == 1) y = ytext - (1. - fEntrySeparation)* yspace/2.;
-      if (valign == 2) y = ytext - (1. - fEntrySeparation)* yspace/4.;
-      if (valign == 3) y = ytext + (1. - fEntrySeparation)* yspace/2.;
+      // The vertical alignment "centered" is treated in a special way
+      // to ensure a better spacing between lines.
+      if (valign == 2) {
+         if (yspace2 < textsize) {
+            entry->SetTextAlign(10*halign+1);
+            y = ytext - (1. - fEntrySeparation)* yspace2/2.;
+         } else {
+            y = ytext;
+         }
+      }
 
       TLatex entrytex( x, y, entry->GetLabel() );
       entrytex.SetNDC();
       entry->TAttText::Copy(entrytex);
       entrytex.Paint();
+
       // reset attributes back to their original values
       entry->SetTextAlign(talign);
       entry->SetTextAngle(tangle);
