@@ -10,7 +10,7 @@ include(RootMacros)
 
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
-                            "OUTREF;OUTCNV;PASSRC;MACROARG"
+                            "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
                             "MACRO;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
@@ -135,22 +135,32 @@ function(ROOTTEST_ADD_TEST test)
     set(depends ${depends} ${deplist})
   endif(ARG_DEPENDS)
 
+  if(CMAKE_SYSTEM_NAME MATCHES Linux)
+    set(LIBRARYPATH LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH})
+  elseif(APPLE)
+    set(LIBRARYPATH DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH})
+  else()
+    set(LIBRARYPATH "") 
+  endif()
+
   set(environment ENVIRONMENT
                   ROOTSYS=${ROOTSYS}
-                  PATH=$ENV{PATH}
-                  LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH}
                   PYTHONPATH=$ENV{PYTHONPATH}
-                  DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH}
-                  SHLIB_PATH=$ENV{SHLIB_PATH}
-                  LIBPATH=$ENV{LIBPATH}
-  )
+                  PATH=$ENV{PATH}
+                  ${LIBRARYPATH})
+
+  if(ARG_WORKING_DIR)
+    set(test_working_dir ${ARG_WORKING_DIR})
+  else()
+    set(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR}) 
+  endif()
 
   ROOT_ADD_TEST(${test} COMMAND ${command}
                         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${test}.log
                         ${outcnv}
                         ${outcnvcmd}
                         CMPOUTPUT ${OUTREF_PATH}
-                        WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+                        WORKING_DIR ${test_working_dir}
                         DIFFCMD sh ${ROOTTEST_DIR}/scripts/custom_diff.sh
                         TIMEOUT 3600
                         ${environment}

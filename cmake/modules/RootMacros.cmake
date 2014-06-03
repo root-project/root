@@ -227,7 +227,7 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" "LIBRARIES"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" "LIBRARIES;OPTIONS"  ${ARGN})
 
   include_directories(${ROOT_INCLUDE_DIRS}
                       ${ROOT_INCLUDE_DIR}
@@ -249,8 +249,13 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   # REFLEX_GENERATE_DICTIONARY macro and is used as a dependency.
   set(targetname_dictgen ${targetname}-dictgen)
 
+  if(ARG_OPTIONS)
+    set(reflex_pass_options OPTIONS ${ARG_OPTIONS})
+  endif()
+
   REFLEX_GENERATE_DICTIONARY(${dictionary} ${ARG_UNPARSED_ARGUMENTS}
-                             SELECTION ${ARG_SELECTION})
+                             SELECTION ${ARG_SELECTION}
+                             ${reflex_pass_options})
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${gensrcdict})
 
