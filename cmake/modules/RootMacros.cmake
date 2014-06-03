@@ -199,7 +199,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
 
   set(targetname_libgen ${dictname}libgen)
 
-  add_library(${targetname_libgen} MODULE EXCLUDE_FROM_ALL ${dictname}.cxx)
+  add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${dictname}.cxx)
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
@@ -252,7 +252,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   REFLEX_GENERATE_DICTIONARY(${dictionary} ${ARG_UNPARSED_ARGUMENTS}
                              SELECTION ${ARG_SELECTION})
 
-  add_library(${targetname_libgen} MODULE ${gensrcdict})
+  add_library(${targetname_libgen} EXCLUDE_FROM_ALL MODULE ${gensrcdict})
 
   set_property(TARGET ${targetname_libgen}
               PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
