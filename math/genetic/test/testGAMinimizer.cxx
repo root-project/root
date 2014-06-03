@@ -27,7 +27,7 @@ public :
 
    inline double DoEval (const double * x) const { 
       fNCalls++;
-      //std::cout << "called!" << std::endl;
+      //cout << "called!" << endl;
       const Double_t xx = x[0];
       const Double_t yy = x[1];
       const Double_t tmp1 = yy-xx*xx;
@@ -69,42 +69,90 @@ public:
    }
 };
 
-int testGAMinimizer() {
+int testGAMinimizer(int verbose = 0) {
    int status = 0;
 
-   ROOT::Math::GeneticMinimizer gaParabole;
+   if (verbose) { 
+      cout << "****************************************************\n";
+      cout << "Parabola Function Minimization \n";
+   }
+   ROOT::Math::GeneticMinimizer gaParabole(2);
    Parabole parabole;
    gaParabole.SetFunction(parabole);
    gaParabole.SetLimitedVariable(0, "x", 0, 0, -5, +5);
+   gaParabole.SetPrintLevel(verbose);
    gaParabole.Minimize();
-   std::cout << "Parabole min:" << gaParabole.MinValue() << std::endl;
+   cout << "Parabole min:" << gaParabole.MinValue() << "  x = [" << gaParabole.X()[0] << "]" << endl;
+   bool ok =  (std::abs(gaParabole.MinValue() ) < 1.E-3 );
+   if (!ok) Error("testGAMinimizer","Test failed for parabola");
+   status |= !ok; 
 
+   if (verbose) { 
+      cout << "****************************************************\n";
+      cout << "Rosenbrock Function Minimization \n";
+   }
    ROOT::Math::GeneticMinimizer gaRosenBrock;
    RosenBrockFunction RosenBrock;
    gaRosenBrock.SetFunction(RosenBrock);
    gaRosenBrock.SetLimitedVariable(0, "x", 0, 0, -5, +5);
-   gaRosenBrock.SetLimitedVariable(0, "x", 0, 0, -5, +5);
+   gaRosenBrock.SetLimitedVariable(1, "y", 0, 0, -5, +5);
+   gaRosenBrock.SetPrintLevel(verbose);
+   gaRosenBrock.SetMaxIterations(500);  // need a large number ot be sure
+   gaRosenBrock.SetRandomSeed(111);
    gaRosenBrock.Minimize();
    const double * xmin = gaRosenBrock.X(); 
-   std::cout << "RosenBrock min: [" << xmin[0] << "] [" << xmin[1] << "]" << std::endl;
+   cout << "RosenBrock min: " << gaRosenBrock.MinValue() << " x = [" << xmin[0] << "] [" << xmin[1] << "]" << endl;
+   ok =  (std::abs(gaRosenBrock.MinValue() ) < 5.E-2 ); // relax tolerance for Rosenbrock
+   if (!ok) Error("testGAMinimizer","Test failed for RosenBrock");
+   status |= !ok; 
 
+   if (verbose) { 
+      cout << "****************************************************\n";
+      cout << "MultiMinima Function Minimization \n";
+   }
    ROOT::Math::GeneticMinimizer gaMultiMin;
    MultiMin multimin;
    gaMultiMin.SetFunction(multimin);
    gaMultiMin.SetLimitedVariable(0, "x", 0, 0, -5, +5);
+   gaMultiMin.SetPrintLevel(verbose);
    gaMultiMin.Minimize();
-   std::cout << "MultiMin min:" << gaMultiMin.MinValue() << std::endl;
+   cout << "MultiMin min:" << gaMultiMin.MinValue() << "  x = [" << gaMultiMin.X()[0] << "]" << endl;
+   ok =  (std::abs(gaMultiMin.MinValue() + 0.8982) < 1.E-3 );
+   if (!ok) Error("testGAMinimizer","Test failed for MultiMin");
+   status |= !ok; 
 
-   std::cout << "Done!" << std::endl;
+   if (status) cout << "Test Failed !" << endl;
+   else cout << "Done!" << endl;
 
    return status;
 }
 
-int main()
+int main(int argc, char **argv)
 {
    int status = 0;
+   int verbose = 0;
 
-   status = testGAMinimizer();
+  // Parse command line arguments 
+   for (Int_t i=1 ;  i<argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-v") { 
+         verbose = 1;
+      }
+      if (arg == "-vv") { 
+         verbose = 3;
+      }
+      if (arg == "-h") { 
+         std::cout << "Usage: " << argv[0] << " [-v] [-vv]\n";
+         std::cout << "  where:\n";
+         std::cout << "     -v  : verbose mode\n";
+         std::cout << "     -vv : very verbose mode\n";
+         std::cout << std::endl;
+         return -1; 
+      }
+   }
+
+
+   status = testGAMinimizer(verbose);
 
    return status;
 }

@@ -282,7 +282,7 @@ void tasks() {
 
 Note that the first line loads the class definitions in `MyTasks.cxx`
 with ACLiC. ACLiC builds a shared library and adds the classes to the
-CINT dictionary. See "Adding a Class with ACLiC".
+Cling dictionary. See "Adding a Class with ACLiC".
 
 To execute a **`TTask`**, you call the `ExecuteTask` method.
 `ExecuteTask` will recursively call:

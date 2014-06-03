@@ -83,6 +83,9 @@ file `simple.pdf`.
     Now the text appears directly as it will show and it is possible to
     enter several text string. The input is not block in the `RequestString` event loop.
 -   The toolbar methods now work without XOR mode (useful for OpenGL()).
+-   A new "vertex compression" algorithm added to deal with complex histograms
+    (thousands/millions of bins - polygons with thousands/millions of vertices) -
+    optimization/fix for X11 crashes.
 
 ### TGaxis and TAxis
 
@@ -104,6 +107,7 @@ file `simple.pdf`.
     So we choose to follow the same mechanism as for the `SetMaxDigits`
     static method. The new function is: `SetExponentOffset`.
     Example:
+    
 ``` {.cpp}
 ...
    TGaxis::SetMaxDigits(2);
@@ -111,7 +115,8 @@ file `simple.pdf`.
    TGaxis::SetExponentOffset(-0.05, 0.01, "x"); // Y and Y offset for X axis
 ...
    hist->Draw();
-```    
+```   
+ 
 -   `TGaxis::SetMaxDigits()` was not acitve on standalone `TGaxis`.
     
 ### TLegend
@@ -193,3 +198,38 @@ file `simple.pdf`.
 
 -   Implement `SetX1()` etc ... for `TPave` and inherited classes to make sure the 
     NDC coordinates are also defined.
+
+### TLinearGradient and TRadialGradient
+
+-   Two new classes to support color gradient: `TLinearGradient` and `TRadialGradient`.
+    Both classes inherit from `TColor` and can be used the same way as ROOT's 
+    standard colors in `TAttFill` (`SetFillColor(newColorIndex)`).
+    Gradient fill can be created using either RGBA values directly, or from
+    color indices (colors from the ROOT's color table).
+-   TRadialGradient supports a simple radial gradient (center + radius)
+    and an "extended" radial gradient (starting/ending points + two radii).
+-   The new gradient fill option is available either with OpenGL ("gl-in-pad") 
+    or with a Cocoa backend (OS X only).
+-   Please note, at the moment, a color gradient can not be saved
+    in a ROOT file or a pdf/ps file. It can be saved as an image (png/jpg etc.).
+-   There are several demos in the tutorials/cocoa and tutorials/gl sub-directories 
+    explaining how to use these new classes: 
+    * grad.C 
+    * grad2.C
+    * radialgradients.C.
+
+   ![TRadialGradient example](ellipses.png "TEllipse objects with a radial gradient fill")
+
+   ![TLinearGradient example](lingrad.png "Two histograms with a linear gradient fill and transparency")
+
+   ![Gradient example](mixgrad.png "TPie with a radial fill + a linear gradient fill as a background")
+
+### TGCocoa and TGQuartz
+
+-   Correct font metrics for greek and math symbols are implemented now.
+-   Added support for linear and radial color gradients (see the notes above).
+-   "GL-in-pad" implemented for Cocoa backend.
+-   Keyboard event handling is more "X11-like" now.
+-   Multi-display setup is supported now.
+-   Transparent pads (colors with alpha value) are supported natively now.
+

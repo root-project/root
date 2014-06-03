@@ -77,8 +77,8 @@ TGraphStruct::~TGraphStruct()
 {
    // Graph Structure default destructor.
 
-   gvFreeLayout(fGVC,fGVGraph);
-   agclose(fGVGraph);
+   gvFreeLayout(fGVC,(Agraph_t*)fGVGraph);
+   agclose((Agraph_t*)fGVGraph);
    gvFreeContext(fGVC);
 
    if (fNodes) delete fNodes;
@@ -157,7 +157,7 @@ void TGraphStruct::DumpAsDotFile(const char *filename)
    FILE  *file;
    file=fopen(filename,"wt");
    if (file) {
-      agwrite(fGVGraph, file);
+      agwrite((Agraph_t*)fGVGraph, file);
       fclose(file);
    }
 }
@@ -175,8 +175,8 @@ void TGraphStruct::Draw(Option_t *option)
 
    // Get the bounding box
    if (gPad) {
-      gPad->Range(GD_bb(fGVGraph).LL.x-fMargin, GD_bb(fGVGraph).LL.y-fMargin,
-                  GD_bb(fGVGraph).UR.x+fMargin, GD_bb(fGVGraph).UR.y+fMargin);
+      gPad->Range(GD_bb((Agraph_t*)fGVGraph).LL.x-fMargin, GD_bb((Agraph_t*)fGVGraph).LL.y-fMargin,
+                  GD_bb((Agraph_t*)fGVGraph).UR.x+fMargin, GD_bb((Agraph_t*)fGVGraph).UR.y+fMargin);
    }
 
    AppendPad(option);
@@ -223,13 +223,13 @@ Int_t TGraphStruct::Layout()
 
    // Create the graph.
    if (fGVGraph) {
-      gvFreeLayout(fGVC,fGVGraph);
-      agclose(fGVGraph);
+      gvFreeLayout(fGVC,(Agraph_t*)fGVGraph);
+      agclose((Agraph_t*)fGVGraph);
    }
 #ifdef WITH_CGRAPH
-   fGVGraph = agopen((char*)"GVGraph", Agdirected, 0);
+   fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", Agdirected, 0);
 #else
-   fGVGraph = agopen((char*)"GVGraph", AGDIGRAPH);
+   fGVGraph = (GVizAgraph_t*)agopen((char*)"GVGraph", AGDIGRAPH);
 #endif
 
    // Put the GV nodes into the GV graph
@@ -253,7 +253,7 @@ Int_t TGraphStruct::Layout()
    }
 
    // Layout the graph
-   int ierr = gvLayout(fGVC, fGVGraph, (char*)"dot");
+   int ierr = gvLayout(fGVC, (Agraph_t*)fGVGraph, (char*)"dot");
    if (ierr) return ierr;
 
    // Layout the nodes

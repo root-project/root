@@ -4045,6 +4045,12 @@ Bool_t TGLLevelPalette::GeneratePalette(UInt_t paletteSize, const Rgl::Range_t &
    if (!(zRange.second - zRange.first))
       return kFALSE;
 
+   if (!paletteSize) {
+       Error("TGLLevelPaletter::GeneratePalette",
+             "Invalid palette size, must be a positive number");
+       return kFALSE;
+   }
+
    if (check && paletteSize > UInt_t(fMaxPaletteSize)) {
       Error("TGLLevelPalette::GeneratePalette",
             "Number of contours %d is too big for GL 1D texture, try to reduce it to %d",
@@ -4129,9 +4135,14 @@ Int_t TGLLevelPalette::GetPaletteSize()const
 Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
 {
    //Get tex coordinate
-   if (!fContours)
-      return (z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize / (fTexels.size() / 4);
+   if (!fContours) {
+      if (z - fZRange.first < 0)
+         z = fZRange.first;
+      else if (fZRange.second < z)
+         z = fZRange.second;
 
+      return (z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize / (fTexels.size() / 4);
+   }
    /*
    //This part is wrong. To be fixed.
    std::vector<Double_t>::size_type i = 0, e = fContours->size();
@@ -4152,7 +4163,15 @@ Double_t TGLLevelPalette::GetTexCoord(Double_t z)const
 const UChar_t *TGLLevelPalette::GetColour(Double_t z)const
 {
    //Get color.
-   const Int_t ind = Int_t((z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize);
+   if (z - fZRange.first < 0)
+      z = fZRange.first;
+   else if (fZRange.second < z)
+      z = fZRange.second;
+
+   UInt_t ind = UInt_t((z - fZRange.first) / (fZRange.second - fZRange.first) * fPaletteSize);
+   if (ind >= fPaletteSize)
+      ind = fPaletteSize - 1;
+
    return &fTexels[ind * 4];
 }
 

@@ -13,15 +13,13 @@ extern "C" {
 }
 
 const char *shortHelp =
-"Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] "
-"[-rml rootMapLibrary] [-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
+"Usage: rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
 "file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n";
 
 // Write the help as a big string to have only one version of the documentation
 const char *rootClingHelp =
-"                                                                            \n"
-"This program generates the Cling dictionaries needed in order to            \n"
-"get access to your classes via the interpreter.                             \n"
+"This program generates the dictionaries needed for performing I/O of        \n"
+"classes.                                                                    \n"
 "In addition rootcling can generate the Streamer(),                          \n"
 "TBuffer &operator>>() and ShowMembers() methods for ROOT classes,           \n"
 "i.e. classes using the ClassDef and ClassImp macros.                        \n"
@@ -32,9 +30,8 @@ const char *rootClingHelp =
 "                                                                            \n"
 "or                                                                          \n"
 "                                                                            \n"
-"rootcling [-v][-v0-4] [-f] [out.cxx] [-rmf rootMapFile] [-rml rootMapLib] "
-"[-cap capabilitiesFile] [-s sharedLibrary] [-m pcmfile] "
-"file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]                            \n"
+" rootcling [-v][-v0-4] [-f] [out.cxx] [opts] "
+"file1.h[+][-][!] file2.h[+][-][!] ...[LinkDef.h]\n"
 "                                                                            \n"
 "The difference between the two is that in the first case only the           \n"
 "Streamer() and ShowMembers() methods are generated while in the             \n"
@@ -152,7 +149,47 @@ const char *rootClingHelp =
 "   MyClass(UserClass2*);                                                    \n"
 "   MyClass(TRootIOCtor*);                                                   \n"
 "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
-"                                                                           \n";
+"                                                                            \n"
+"Synopsis of the options:                                                    \n"
+"                                                                            \n"
+" -cap\tCapabilities File                                                    \n"
+"   Specify the output capabilities filename. Used in presence of the Seal   \n"
+"   plugin manager.                                                          \n"
+"                                                                            \n"
+" -rmf\tRootmap file name                                                    \n"
+"  Name of the rootmap file. In order to be picked up by ROOT it must have   \n"
+"  .rootmap extension.                                                       \n"
+"                                                                            \n"
+" -rml\tRootmap library name                                                 \n"
+"  Specify the name of the library which contains the autoload keys. This    \n"
+"  switch can be specified multiple times to autoload several libraries in   \n"
+"  presence of a particular key.                                             \n"
+"                                                                            \n"
+" -split\tSplit the dictionary                                               \n"
+"  Split the dictionary in two, putting the ClassDef functions in a separate \n"
+"  file.                                                                     \n"
+"                                                                            \n"
+" -s\tTarget library name                                                    \n"
+"  The flag -s must be followed by the name of the library that will         \n"
+"  contain the object file corresponding to the dictionary produced by       \n"
+"  this invocation of rootcling.                                             \n"
+"  The name takes priority over the one specified for the rootmapfile.       \n"
+"  The name influences the name of the created pcm:                          \n"
+"   1) If it is not specified, the pcm is called libINPUTHEADER_rdict.pcm    \n"
+"   2) If it is specified, the pcm is called libTARGETLIBRARY_rdict.pcm      \n"
+"      Any \"liblib\" occurence is transformed in the expected \"lib\".      \n"
+"   3) If this is specified in conjunction with --multiDict, the output is   \n"
+"      libTARGETLIBRARY_DICTIONARY_rdict.pcm                                 \n"
+"                                                                            \n"
+" -multiDict\tEnable support for multiple pcms in one library                \n"
+"  Needsa the -s flag. See its documentation.                                \n"
+"                                                                            \n"
+" -inlineInputHeader\tAdd the argument header to the code of the dictionary  \n"
+"  This allows the header to be inlined within the dictionary.               \n"
+"  It works only when one header is specified.                               \n"
+"                                                                            \n"
+" -interpreteronly\tNo IO information in the dictionary                      \n";
+
 
 #include "RConfigure.h"
 #include "RConfig.h"
@@ -3476,7 +3513,13 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
 bool IsHeaderName(const std::string& filename)
 {
    return llvm::sys::path::extension(filename) ==".h" ||
-          llvm::sys::path::extension(filename) == ".hpp";
+          llvm::sys::path::extension(filename) ==".hh" || 
+          llvm::sys::path::extension(filename) ==".hpp" || 
+          llvm::sys::path::extension(filename) ==".H" ||
+          llvm::sys::path::extension(filename) ==".h++" ||
+          llvm::sys::path::extension(filename) =="hxx" ||
+          llvm::sys::path::extension(filename) =="Hxx" ||
+          llvm::sys::path::extension(filename) =="HXX";
 }
 
 //______________________________________________________________________________
@@ -3840,6 +3883,8 @@ int RootCling(int argc,
 
 #ifndef ROOT_STAGE1_BUILD
    // Pass the interpreter arguments to TCling's interpreter:
+   clingArgsC.push_back("-resource-dir");
+   clingArgsC.push_back(resourceDir.c_str());
    clingArgsC.push_back(0); // signal end of array
    const char**& extraArgs = *TROOT__GetExtraInterpreterArgs();
    extraArgs = &clingArgsC[1]; // skip binary name
@@ -4108,8 +4153,11 @@ int RootCling(int argc,
 
    // Select using DictSelection
    clang::CompilerInstance* CI = interp.getCI();
+   const unsigned int selRulesInitialSize=selectionRules.Size();
    if(dictSelection && !onepcm)
       DictSelectionReader dictSelReader (selectionRules,CI->getASTContext());
+
+   bool dictSelRulesPresent = selectionRules.Size()>selRulesInitialSize;
 
    bool isSelXML = IsSelectionXml(linkdefFilename.c_str());
 
@@ -4248,6 +4296,7 @@ int RootCling(int argc,
 
    if (ROOT::TMetaUtils::gErrorIgnoreLevel != ROOT::TMetaUtils::kFatal &&
        !onepcm &&
+       !dictSelRulesPresent &&
        !selectionRules.AreAllSelectionRulesUsed()){
       ROOT::TMetaUtils::Warning(0,"Not all selection rules are used!\n");
    }
@@ -4903,23 +4952,34 @@ int GenReflex(int argc, char **argv)
 
    // Some long help strings
    const char* genreflexUsage =
-   "Generates dictionary source and pcm file starting from the old genreflex syntax\n"
-   "Usage: genreflex headerfile1.h [ ... headerfileN.h] [opts] [preproc. opts]\n\n"
+   "Generates dictionary sources and related ROOT pcm starting from an header.\n"
+   "Usage: genreflex headerfile.h [opts] [preproc. opts]\n\n"
    "Options:\n";
 
    const char* selectionFilenameUsage=
-   "-s, --selection_file \tSelection filename\n"
+   "-s, --selection_file\tSelection filename\n"
    "      Class selection file to specify for which classes the dictionary\n"
-   "      will be generated\n"
-   "      Format (XML):\n"
+   "      will be generated. The final set can be crafted with exclusion and\n"
+   "      exclusion rules.\n"
+   "      Properties can be specified. Some have special meaning:\n"
+   "      - name [string] name of the entity to select with an exact matching\n"
+   "      - pattern [string] name with wildcards (*) to select entities\n"
+   "      - file_name/file_pattern [string]: as name/pattern but referring to\n"
+   "        file where the C++ entities reside and not to C++ entities themselves.\n"
+   "      - transient/persistent [string: true/false] The fields to which they are\n"
+   "        applied will not be persistified if requested.\n"
+   "      - comment [string]: what you could write in code after an inline comment\n"
+   "        without \"//\". For example comment=\"!\" or \"||\".\n"
+   "      Example XML:\n"
    "        <lcgdict>\n"
    "        [<selection>]\n"
    "          <class [name=\"classname\"] [pattern=\"wildname\"]\n"
    "                 [file_name=\"filename\"] [file_pattern=\"wildname\"]\n"
-   "                 [id=\"xxxx\"] [type=\"vector\"]/>\n"
+   "                 [id=\"xxxx\"] />\n"
    "          <class name=\"classname\" >\n"
    "            <field name=\"m_transient\" transient=\"true\"/>\n"
-   "            <field name=\"m_anothertransient\" transient=\"true\"/>\n"
+   "            <field name=\"m_anothertransient\" persistent=\"false\"/>\n"
+   "            <field name=\"m_anothertransient\" comment=\"||\"/>\n"
    "            <properties prop1=\"value1\" [prop2=\"value2\"]/>\n"
    "          </class>\n"
    "          <function [name=\"funcname\"] [pattern=\"wildname\"] />\n"
@@ -4931,16 +4991,20 @@ int GenReflex(int argc, char **argv)
    "            <method name=\"unwanted\" />\n"
    "          </class>\n"
    "        ...\n"
-   "        </lcgdict>\n";
+   "        </lcgdict>\n"
+   "\n"
+   "      If no selection file is specified, the class with the filename without\n"
+   "      extension will be selected, i.e. myClass.h as argument without any\n"
+   "      selection xml comes with an implicit selection rule for class \"myClass\".\n";
 
    const char* outputFilenameUsage=
-   "-o, --output \tOutput filename\n"
+   "-o, --output\tOutput filename\n"
    "      Output file name. If an existing directory is specified instead of a file,\n"
    "      then a filename will be build using the name of the input file and will\n"
-   "      be placed in the given directory. <headerfile>_rflx.cpp \n";
+   "      be placed in the given directory. <headerfile>_rflx.cpp.\n";
 
    const char* targetLib=
-   "-l, --library \t Target library\n"
+   "-l, --library\tTarget library\n"
    "      The flag -l must be followed by the name of the library that will\n"
    "      contain the object file corresponding to the dictionary produced by\n"
    "      this invocation of genreflex.\n"
@@ -4953,12 +5017,26 @@ int GenReflex(int argc, char **argv)
    "          libTARGETLIBRARY_DICTIONARY_rdict.pcm\n";
 
    const char* rootmapUsage=
-   "--rootmap  \tGenerate the rootmap file to be used by ROOT.\n"
-   "      This file lists the names of all classes for which the reflection\n"
-   "      information is provided.";
+   "--rootmap\tGenerate the rootmap file to be used by ROOT.\n"
+   "      This file lists the autoload keys. For example classes for which the\n"
+   "      reflection information is provided.\n"
+   "      The format of the rootmap is the following:\n"
+   "        - Forward declarations section\n"
+   "        - Libraries sections\n"
+   "      Rootmaps can be concatenated together, for example with the cat util.\n"
+   "      In order for ROOT to pick up the information in the rootmaps, they\n"
+   "      have to be located in the library path and have the .rootmap extension.\n"
+   "      An example rootmap file could be:\n"
+   "      { decl }\n"
+   "      template <class T> class A;\n"
+   "      [ libMyLib.so ]\n"
+   "      class A<double>\n"
+   "      class B\n"
+   "      typedef C\n"
+   "      header H.h\n";
 
    const char* rootmapLibUsage=
-   "--rootmap-lib  \tLibrary name for the rootmap file.\n";
+   "--rootmap-lib\tLibrary name for the rootmap file.\n";
 
    // The Descriptor
    const option::Descriptor genreflexUsageDescriptor[] =
@@ -4985,9 +5063,9 @@ int GenReflex(int argc, char **argv)
         NOTYPE ,
         "" , "multiDict" ,
         option::FullArg::None,
-        "--multiDict\t Support for many dictionaries in one library\n"
-        "      Form correct pcm names if multiple dictionaries will be in the same \n"
-        "      library (needs target library specify)\n"},
+        "--multiDict\tSupport for many dictionaries in one library\n"
+        "      Form correct pcm names if multiple dictionaries will be in the same\n"
+        "      library (needs target library switch. See its documentation).\n"},
 
       {SELECTIONFILENAME,
         STRING ,
@@ -5011,55 +5089,53 @@ int GenReflex(int argc, char **argv)
         STRING ,
         "c" , "capabilities" ,
         option::FullArg::Required,
-        "-c, --capabilities\t Name of the output capabilities file\n"},
+        "-c, --capabilities\tName of the output capabilities file\n"},
 
       {INTERPRETERONLY,
         NOTYPE,
         "" , "interpreteronly",
         option::Arg::None,
-        "--interpreteronly\tGenerate minimal dictionary required for interactivity (no I/O)\n"},
+        "--interpreteronly\tDo not generate I/O related information.\n"
+        "      Generate minimal dictionary required for interactivity.\n"},
 
       {SPLIT,
         NOTYPE,
         "" , "split",
         option::Arg::None,
-        "--split\tSplit the dictionary in two, isolating the part with ClassDef related functions in a separate file\n"},
+        "--split\tSplit the dictionary\n"
+        "      Split in two the dictionary, isolating the part with\n"
+        "      ClassDef related functions in a separate file.\n"},
 
       {PCMFILENAME,
         STRING ,
         "m" , "" ,
         option::FullArg::Required,
-        "-m \tPcm file loaded before any header (option can be repeated)\n"},
+        "-m \tPcm file loaded before any header (option can be repeated).\n"},
 
-      {DEEP,
+      {DEEP,  // Not active. Will be removed for 6.2
         NOTYPE ,
         "" , "deep",
         option::Arg::None,
-        "--deep  \tGenerate dictionaries for all dependent classes (ignored).\n"},
-
-      {OLDRMFFORMAT,
-        NOTYPE ,
-        "" , "oldRmfFormat",
-        option::Arg::None,
         ""},
+        //"--deep\tGenerate dictionaries for all dependent classes (ignored).\n"
 
       {DEBUG,
         NOTYPE ,
         "" , "debug",
         option::Arg::None,
-        "--debug  \tPrint debug information.\n"},
+        "--debug\tPrint debug information.\n"},
 
       {QUIET,
         NOTYPE ,
         "" , "quiet",
         option::Arg::None,
-        "--quiet  \tPrint no information at all.\n"},
+        "--quiet\tPrint no information at all.\n"},
 
       {HELP,
         NOTYPE,
         "h" , "help",
         option::Arg::None,
-        "--help   \tPrint usage and exit.\n"},
+        "--help\tPrint usage and exit.\n"},
 
       // Left intentionally empty not to be shown in the help, like in the first genreflex
       {INCLUDE,
@@ -5086,17 +5162,22 @@ int GenReflex(int argc, char **argv)
         option::FullArg::Required,
         ""},
 
-      // Options that rise warnings
-      {NOMEMBERTYPEDEFS,
+      {NOMEMBERTYPEDEFS, // Option which is not meant for the user: deprecated
         STRING ,
         "" , "no_membertypedefs" ,
         option::FullArg::None,
         ""},
 
-      {NOTEMPLATETYPEDEFS,
+      {NOTEMPLATETYPEDEFS, // Option which is not meant for the user: deprecated
         STRING ,
         "" , "no_templatetypedefs" ,
         option::FullArg::None,
+        ""},
+
+      {OLDRMFFORMAT, // Option which is not meant for the user: deprecated
+        NOTYPE ,
+        "" , "oldRmfFormat",
+        option::Arg::None,
         ""},
 
         {0,0,0,0,0,0}

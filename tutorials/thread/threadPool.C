@@ -40,7 +40,7 @@ private:
 };
 
 //=============================================================================
-void threadPool(size_t _numThreads, bool _needDbg = false)
+void threadPool(size_t _numThreads = 10, bool _needDbg = false)
 {
    cout << "ThreadPool: starting..." << endl;
    // number of tasks to process

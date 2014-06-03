@@ -1586,7 +1586,7 @@ FIRST argument one of the architecures given at the end of this message.
    --datadir       Data installation dir     (<prefix>/share/root)
    --docdir        Documentation             (<prefix>/share/doc/root)
    --elispdir      Where to put Emacs Lisp   (<prefix>/share/emacs/site-lisp)
-   --etcdir        Config installation dir   (/etc/root)
+   --etcdir        Config installation dir   (<prefix>/etc/root)
    --fontdir       Font installation dir     (<datadir>/fonts)
    --iconpath      Icon installation dir     (<datadir>/icons)
    --incdir        Header installation dir   (<prefix>/include/root)
@@ -1643,7 +1643,7 @@ enable/disable options, prefix with either --enable- or --disable-
   gviz               Graphs visualization support, requires graphviz
   gdml               GDML writer and reader
   geocad             ROOT-CAD Interface
-  gfal               GFAL support, requires libgfal
+  gfal               GFAL support, requires libgfal or libgfal2
   globus             Globus authentication support, requires Globus toolkit
   glite              gLite support, requires libglite-api-wrapper v.3 from GSI (https://subversion.gsi.de/trac/dgrid/wiki)
   gsl-shared         Enable linking against shared libraries for GSL (default no)
@@ -1733,7 +1733,7 @@ with options, prefix with --with-, enables corresponding support
   gfal-incdir        GFAL support, location of gfal_api.h
   srm-ifce-incdir    GFAL support, location of gfal_srm_ifce_types.h
   glib2-incdir       GFAL support, location of glib-2.0 headers
-  gfal-libdir        GFAL support, location of libgfal
+  gfal-libdir        GFAL support, location of libgfal or libgfal2
   glew-incdir        GLEW support, location of glew.h
   glew-libdir        GLEW support, location of libGLEW
   gsl-incdir         GSL support, location of gsl/gsl_version.h
@@ -1812,6 +1812,7 @@ with compiler options, prefix with --with-, overrides default value
                      of clang/LLVM in case not the default gcc is used)
   clang              use clang compiler instead of gcc (mutual exclusive with
                      the cc, cxx and ld options)
+  python             alternative python interpreter to be used
 
 cross compiling options, currently only used when building for ios and iossim
 
@@ -2189,6 +2190,7 @@ if test $# -gt 0 ; then
       --with-hostcc=*)         hostcc=$optarg        ;;
       --with-hostcxx=*)        hostcxx=$optarg       ;;
       --with-hostld=*)         hostld=$optarg        ;;
+      --with-python=*)         pythonexe=$optarg     ;;
       ################################################################
       #
       # Enable/disable to turn on/off third party software linkage and
@@ -2642,6 +2644,36 @@ if test "x$enable_builtin_llvm" = "x" || \
     else
         result "$llvmconfig"
     fi
+fi
+
+######################################################################
+#
+### echo %%% Check for Python version (required by LLVM/Clang)
+#
+message "Checking for Python version >= 2.5"
+
+if test "x$pythonexe" = "x"; then
+  pythonexe=`$cwhich python 2> /dev/null`
+else
+  if test ! -x "$pythonexe" ; then
+    result "Python specified with --with-python $with-python is not usable"
+    exit 1
+  fi
+fi
+
+pythonvers=`$pythonexe -c 'import sys; sys.stdout.write(sys.version[:3])'`
+pythonvers_major=`echo $pythonvers | cut -d'.' -f1`
+pythonvers_minor=`echo $pythonvers | cut -d'.' -f2`
+
+if test  "$pythonvers_major" -gt "2" || \
+   (test "$pythonvers_major" -eq "2" && \
+   test "$pythonvers_minor" -ge "5") ; then
+  result yes
+else
+  result "no"
+  result "`basename $0`: Python >= 2.5 MUST be installed"
+  result "See http://root.cern.ch/drupal/content/build-prerequisites"
+  exit 1
 fi
 
 ######################################################################
@@ -3866,10 +3898,17 @@ if test ! "x$enable_gfal" = "xno"; then
     gfalinc=$found_hdr
     gfalincdir=$found_dir
 
-    check_library "libgfal" "$enable_shared" "$gfallibdir" \
-        $GFAL ${GFAL:+$GFAL/lib} \
-        /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
-        /usr/local/gfal/lib
+    if test ! "x$gfalincdir" = "x" && grep GFAL2 $gfalincdir/gfal_api.h > /dev/null 2>&1 ; then
+        check_library "libgfal2" "$enable_shared" "$gfallibdir" \
+            $GFAL ${GFAL:+$GFAL/lib} \
+            /opt/lcg/lib /opt/gfal2/lib /usr/local/lcg/lib \
+            /usr/local/gfal2/lib
+    else
+        check_library "libgfal" "$enable_shared" "$gfallibdir" \
+            $GFAL ${GFAL:+$GFAL/lib} \
+            /opt/lcg/lib /opt/gfal/lib /usr/local/lcg/lib \
+            /usr/local/gfal/lib
+    fi
     gfallib=$found_lib
     gfallibdir=$found_dir
 
@@ -4720,15 +4759,13 @@ if test ! "x$enable_python" = "xno" ; then
 fi
 if test ! "x$enable_python" = "xno" ; then
     # Check for Python include and library
-    mypython=`$cwhich python 2> /dev/null`
-    if test ! "x$mypython" = "x" && test -x "$mypython" ; then
-       pythonvers=`python -c 'import sys; sys.stdout.write(sys.version[:3])'`
-       pythonsysincdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/include/python" + sys.version[:3])'`
-       #pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib/python" + sys.version[:3])'`
-       pythonsyslibdir=`python -c 'import sys; sys.stdout.write(sys.prefix + "/lib")'`
+    if test ! "x$pythonexe" = "x" && test -x "$pythonexe" ; then
+       pythonvers=`$pythonexe -c 'import sys; sys.stdout.write(sys.version[:3])'`
+       pythonsysincdir=`$pythonexe -c 'import sys; sys.stdout.write(sys.prefix + "/include/python" + sys.version[:3])'`
+       pythonsyslibdir=`$pythonexe -c 'import sys; sys.stdout.write(sys.prefix + "/lib")'`
        pythonsyslibdir2=
        if test "x$platform" = "xmacosx"; then
-          pythonsyslibdir2=`python -c 'import sys; sys.stdout.write(sys.prefix)'`
+          pythonsyslibdir2=`$pythonexe -c 'import sys; sys.stdout.write(sys.prefix)'`
        fi
     fi
     check_header "Python.h" "$pythonincdir" \
@@ -4738,8 +4775,8 @@ if test ! "x$enable_python" = "xno" ; then
     pythonincdir=$found_dir
     pysuffix=""
     if test "x$platform" = "xwin32"; then
-       if test ! "x$mypython" = "x" && test -x "$mypython" ; then
-          pythonvers=`python -c 'import sys; sys.stdout.write(sys.version[:3].replace(".",""))' | tr -d '\r'`
+       if test ! "x$pythonexe" = "x" && test -x "$pythonexe" ; then
+          pythonvers=`$pythonexe -c 'import sys; sys.stdout.write(sys.version[:3].replace(".",""))' | tr -d '\r'`
           if test ! "x$pythonincdir" = "x" ; then
              pythonincdir=`cygpath -m $pythonincdir`
           fi
@@ -7089,7 +7126,7 @@ if test ! "x$haveconfig" = "x" ; then
     if test "x$bindir" = "x";       then bindir=$prefix/bin; fi
     if test "x$libdir" = "x";       then libdir=$prefix/lib/root; fi
     if test "x$incdir" = "x";       then incdir=$prefix/include/root; fi
-    if test "x$etcdir" = "x";       then etcdir=/etc/root; fi
+    if test "x$etcdir" = "x";       then etcdir=$prefix/etc/root; fi
     if test "x$mandir" = "x";       then mandir=$prefix/share/man/man1; fi
     if test "x$datadir" = "x";      then datadir=$prefix/share/root; fi
     if test "x$macrodir" = "x";     then macrodir=$datadir/macros; fi

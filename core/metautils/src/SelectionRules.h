@@ -118,6 +118,12 @@ public:
    const BaseSelectionRule *IsMemberSelected(clang::Decl* D, const std::string& str_name) const;
    const BaseSelectionRule *IsLinkdefMethodSelected(clang::Decl* D, const std::string& qual_name) const;
    
+   // Return the number of rules
+    unsigned int Size() const{return fClassSelectionRules.size()+
+                                     fFunctionSelectionRules.size()+
+                                     fVariableSelectionRules.size()+
+                                     fEnumSelectionRules.size();};
+
    // returns true if the parent is class or struct
    bool IsParentClass(clang::Decl* D) const;
    

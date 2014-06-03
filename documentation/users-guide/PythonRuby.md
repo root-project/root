@@ -7,7 +7,7 @@ interactive interpreter. Its interoperability with other programming
 languages, both for extending Python as well as embedding it, is
 excellent and many existing third-party applications and libraries have
 therefore so-called "Python bindings." PyROOT provides Python bindings
-for ROOT: it enables cross-calls from ROOT/CINT into Python and vice
+for ROOT: it enables cross-calls from ROOT/Cling into Python and vice
 versa, the intermingling of the two interpreters, and the transport of
 user-level objects from one interpreter to the other. PyROOT enables
 access from ROOT to any application or library that itself has Python
@@ -24,11 +24,11 @@ practically every library and application these days comes with Python
 bindings (and if not, they can be easily written or generated).
 
 `PyROOT`, a Python extension module, provides the bindings for the ROOT
-class library in a generic way using the CINT dictionary. This way, it
+class library in a generic way using the Cling dictionary. This way, it
 allows the use of any ROOT classes from the Python interpreter, and thus
 the "glue-ing" of ROOT libraries with any non-ROOT library or
 applications that provide Python bindings. Further, `PyROOT` can be
-loaded into the CINT interpreter to allow (as of now still rudimentary)
+loaded into the Cling interpreter to allow (as of now still rudimentary)
 access to Python classes. The best way to understand the benefits of
 `PyROOT` is through a few examples.
 
@@ -103,11 +103,11 @@ c1.Update()
 
 ### Access to Python from ROOT
 
-Access to Python objects from CINT is not completely fleshed out.
+Access to Python objects from Cling is not completely fleshed out.
 Currently, ROOT objects and built-in types can cross the boundary
 between the two interpreters, but other objects are much more
 restricted. For example, for a Python object to cross, it has to be a
-class instance, and its class has to be known to CINT first (i.e. the
+class instance, and its class has to be known to Cling first (i.e. the
 class has to cross first, before the instance can). All other
 cross-coding is based on strings that are run on the Python interpreter
 and vise-versa.
@@ -206,8 +206,6 @@ Once configured, you continue the build process the normal way:
 
 `$ make`
 
-`$ make cintdlls`
-
 `$ make install`
 
 After some time, a library called `libPyROOT.so` (or `libPyROOT.dll`, on
@@ -289,12 +287,6 @@ section contains a description on working with your own classes (see
 
 #### Access to STL Classes
 
-Before STL classes can be used, you have to make sure that the CINT
-extension dlls are build (the "`cintdlls`" make target). Note that they
-do not compile on as many platforms as ROOT itself. Further, if you want
-to use template instantiations of STL classes with any of your own
-classes, make sure that a dictionary is available, e.g. by using ACLiC.
-
 The STL classes live in the ROOT.std namespace (or, if you prefer to get
 them from there, in the ROOT module directly, but doing so makes the
 code less clear, of course). Be careful in their use, because Python
@@ -324,7 +316,7 @@ The parameters to the template instantiation can either be an actual
 type or value (as is used here, "int"), or a string representation of
 the parameters (e.g. "'double'"), or a mixture of both (e.g. "'TCanvas,
 0'" or "'double', 0" ). The "std::vector\<int\>" class is one of the
-classes builtin by default into the CINT extension dlls. You will get a
+classes builtin by default into the Cling extension dlls. You will get a
 non-functional class (instances of which can still be passed around to
 C++) if the corresponding dictionary doesn't exist.
 
@@ -357,7 +349,7 @@ True
 ```
 
 It is also possible to create globals interactively, either by executing
-a CINT macro, or by a call to `gROOT.ProcessLine()`. These globals are
+a Cling macro, or by a call to `gROOT.ProcessLine()`. These globals are
 made available in the same way: either use them directly after creation
 in 'from ROOT import \*' more, or get them from the ROOT namespace after
 an 'import ROOT'.
@@ -393,7 +385,7 @@ import \*'.
 
 #### Access to Python
 
-The access to Python from CINT goes through the **`TPython`** class, or
+The access to Python from Cling goes through the **`TPython`** class, or
 directly if a Python object or class has crossed the border. The
 **`TPython`** class, which looks approximately like this:
 
@@ -420,7 +412,7 @@ public:
 
 `LoadMacro(const char* name)` - the argument is a name of a Python file
 that is to be executed (`'execfile'`), after which any new classes are
-automatically made available to CINT. Since it is non-selective, use
+automatically made available to Cling. Since it is non-selective, use
 with care.
 
 `ExecScript(const char* name,int argc=0,const char** argv=0)` - the
@@ -443,7 +435,7 @@ different type), whereas builtin types will be cast implicitly, if
 possible, to the type of the local variable to which they are assigned.
 
 `Bind(TObject* obj,const char* label)` - transfer a ROOT object from the
-CINT to the Python interpreter, where it will be referenced with a
+Cling to the Python interpreter, where it will be referenced with a
 variable called "`label`".
 
 `Prompt()` - Transfer the interactive prompt to Python.
@@ -467,7 +459,7 @@ class MyPyClass:
         return what
 ```
 
-This module can now be loaded into a CINT session, the class used to
+This module can now be loaded into a Cling session, the class used to
 instantiate objects, and their member functions called for showing how
 different types can cross:
 
@@ -487,7 +479,7 @@ available, such that it can be used directly. Otherwise, a
 
 #### Callbacks
 
-The simplest way of setting a callback to Python from CINT, e.g. for a
+The simplest way of setting a callback to Python from Cling, e.g. for a
 button, is by providing the execution string. See for example
 `tutorials/pyroot/demo.py` that comes with the ROOT installation:
 
@@ -499,19 +491,19 @@ bar.AddButton('browser',r'TPython::Exec("b = Tbrowser()");','Start the ROOT brow
 # [..]
 ```
 
-Here, the callback is a string that will be interpreted by CINT to call
+Here, the callback is a string that will be interpreted by Cling to call
 `TPython::Exec()`, which will, in turn, interpret and execute the string
 given to it. Note the use of raw strings (the '`r`' in front of the
 second argument string), in order to remove the need of escaping the
 backslashes.
 
-#### CINT Commands
+#### Cling Commands
 
 In interactive mode, the Python exception hook is used to mimic some of
-the CINT commands available. These are: `.q`, **`.!`**, **`.x`**,
+the Cling commands available. These are: `.q`, **`.!`**, **`.x`**,
 **`.L`**, **`.cd`**, **`.ls`**, **`.pwd`**, **`.?`** and **`.help`**.
 Note that **`.x`** translates to Python '`execfile()`' and thus accepts
-only Python files, not CINT macros.
+only Python files, not Cling macros.
 
 ### Memory Handling
 
@@ -587,7 +579,7 @@ the memory.
 ### Performance
 
 The performance of `PyROOT` when programming with ROOT in Python is
-similar to that of CINT. Differences occur mainly because of differences
+similar to that of Cling. Differences occur mainly because of differences
 in the respective languages: C++ is much harder to parse, but once
 parsed, it is much easier to optimize. Consequently, individual calls to
 ROOT are typically faster from `PyROOT`, whereas loops are typically
@@ -946,10 +938,10 @@ print(m.GetValue())
 
 Ruby ROOT is a Ruby extension module that allows the user to interact
 with any ROOT class from the Ruby scripting language. The Ruby module
-resolves ROOT Classes and Methods at run-time using the CINT API, so
+resolves ROOT Classes and Methods at run-time using the Cling API, so
 there is no need for wrapping specific Classes to be used in Ruby. The
 Ruby module, also, contains a **`TRuby`** class to execute Ruby
-statements via CINT and export C++ Objects to Ruby objects,
+statements via Cling and export C++ Objects to Ruby objects,
 interactively.
 
 ### Building and Installing the Ruby Module
@@ -1023,7 +1015,7 @@ run them you need to execute the command:
 
 `ruby demo.rb`
 
-#### Invoking the Ruby Module from CINT Interpreter
+#### Invoking the Ruby Module from Cling Interpreter
 
 A ROOT user can run any Ruby command and eventually to run` IRB`, the
 Interactive Ruby Shell. The commands to execute are:

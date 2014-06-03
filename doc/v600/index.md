@@ -1,14 +1,11 @@
-% ROOT Version 5.99/06 Release Notes
-% November 2013
+% ROOT Version 6.00/00 Release Notes
+% May 2014
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 5.34/00 has been released on May 30, 2012. In case you
-are upgrading from an old version, please read the releases notes of
-version 5.28, 5,30 and version 5.32 in addition to these notes.
-
-The release of version 6.00 is scheduled for May 30, 2014.
+ROOT version 6.00/00 has been released on May 30, 2014. It introduces the new
+Cling C++11 interpreter, replacing CINT that has served ROOT well for many years.
 
 For more information, see:
 
@@ -17,7 +14,9 @@ For more information, see:
 The following people have contributed to this new version:
 
  Bertrand Bellenot, CERN/SFT,\
+ Dario Berzano, CERN/SFT,\
  Rene Brun, CERN/SFT,\
+ Ioan Gabriel Bucur, CERN/SFT \
  Philippe Canal, FNAL,\
  Cristina Cristescu, CERN/SFT,\
  Olivier Couet, CERN/SFT,\
@@ -28,6 +27,7 @@ The following people have contributed to this new version:
  Wim Lavrijsen, LBNL, PyRoot,\
  Sergey Linev, GSI, http,\
  Anna-Pia Lohfink,\
+ Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
  Danilo Piparo, CERN/SFT,\
@@ -40,7 +40,6 @@ The following people have contributed to this new version:
  Eckhard von Toerne, University Bonn, ATLAS, TMVA, \
  Vassil Vassilev, CERN/SFT \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Yue Shi Lai, MIT, \
- Philippe Gras, CEA Saclay, \
- Julian Sitarek, IFAE,
+ Yue Shi Lai, MIT
+
 

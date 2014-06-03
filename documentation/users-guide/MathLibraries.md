@@ -395,7 +395,7 @@ are:
 
 A detailed description for all `MathCore` classes is available in the
 [online reference documentation](online reference documentation). The
-`MathCore` library presented in the ROOT distribution contains the CINT
+`MathCore` library presented in the ROOT distribution contains the Cling
 dictionary for I/O and interactive usage. For the template classes, the
 dictionary is provided for some of the possible types, such as those
 based on double and Double32\_t. For the I/O or interactive use of other
@@ -1390,7 +1390,7 @@ Building `MathMore` requires a version of GSL larger or equal 1.8. The
 source code of `MathMore` is distributed under the GNU General Public
 License.
 
-`MathMore` (and its ROOT CINT dictionary) can be built within ROOT
+`MathMore` (and its ROOT Cling dictionary) can be built within ROOT
 whenever a GSL library is found in the system. The GSL library and
 header file location can be specified in the ROOT configure script, by
 doing:
@@ -1718,7 +1718,7 @@ vectors for objects of arbitrary type. This class has 2 template
 parameters, which define at compile time, its properties: 1) type of the
 contained elements (for example *float* or *double*); 2) size of the
 vector. The use of this dictionary is mandatory if one want to use
-`Smatrix` in CINT and with I/O.
+`Smatrix` in Cling and with I/O.
 
 #### Creating a Vector
 
@@ -2130,7 +2130,7 @@ the `Print` method or the `<<` operator:
    std::cout << m << std::endl;
 ```
 
-In the ROOT distribution, the CINT dictionary is generated for `SMatrix`
+In the ROOT distribution, the Cling dictionary is generated for `SMatrix`
 and `SVector` for for **`Double_t`**, **`Float_t`** and **`Double32_t`**
 up to dimension 7. This allows the possibility to store them in a ROOT
 file.

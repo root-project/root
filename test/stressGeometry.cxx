@@ -106,7 +106,7 @@ const char *exps[NG] = {"aleph",
                         "star", 
                         "sld",   
                         "cms",   
-                        "alice2",
+                        "alice3",
                         "babar2", 
                         "belle",
                         "atlas" 
@@ -140,7 +140,7 @@ const Int_t versions[NG] =  {4, //aleph
                              3, //star
                              3, //sld
                              3, //cms
-                             3, //alice2
+                             4, //alice3
                              3, //babar2
                              3, //belle
                              4}; //atlas
@@ -226,6 +226,7 @@ void WriteRef(Int_t kexp);
 void InspectRef(const char *exp="alice", Int_t vers=3);
 
 void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
+   TGeoManager::SetVerboseLevel(0);
    gen_ref = generate_ref;
    gErrorIgnoreLevel = 10;
    
@@ -255,6 +256,7 @@ void stressGeometry(const char *exp="*", Bool_t generate_ref=kFALSE) {
          gGeoManager = 0;
       }   
       TGeoManager::Import(Form("http://root.cern.ch/files/%s",fname.Data()));
+      if (!gGeoManager) return;
          
       fname = TString::Format("files/%s_ref_%d.root", exps[i],versions[i]);
       
@@ -312,7 +314,7 @@ void ReadRef(Int_t kexp) {
       fprintf(stderr,"Reference file %s not found ! Skipping.\n", fname.Data());
       return;
    }   
-   fprintf(stderr,"Reference file %s found\n", fname.Data());
+   // fprintf(stderr,"Reference file %s found\n", fname.Data());
    fname = TString::Format("%s_diff.root", exps[kexp]);
    TFile fdiff(fname,"RECREATE");
    TTree *TD = new TTree("TD","TGeo stress diff");

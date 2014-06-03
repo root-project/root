@@ -1,12 +1,8 @@
+#ifndef __RUN_GAMES__
+
 void games()
 {
-   // This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT. 
-   // Thanks to the clever usage of TTimer objects it looks like they are all
-   // executing in parallel (emulation of multi-threading).
-   // It uses the small classes generated in $ROOTSYS/test/Hello,
-   // Aclock, Tetris
-   //Author: Valeriy Onuchin
-   
+   gSystem->Load("libGui");
    Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    Int_t st1 = gSystem->Load("$(ROOTSYS)/test/Aclock");
    if (st1 == -1) {
@@ -38,11 +34,30 @@ void games()
       }
       st3 = gSystem->Load("$(ROOTSYS)/test/Tetris");
    }
-
    if (st1 || st2 || st3) {
       printf("ERROR: one of the shared libs in $ROOTSYS/test didn't load properly\n");
       return;
    }
+   gROOT->ProcessLine("#define __RUN_GAMES__ 1");
+   gROOT->ProcessLine("#include \"games.C\"");
+   gROOT->ProcessLine("rungames()");
+   gROOT->ProcessLine("#undef __RUN_GAMES__");
+}
+
+#else
+
+class Hello;
+class Aclock;
+class Tetris;
+
+void rungames()
+{
+   // This macro runs three "games" that each nicely illustrate the graphics capabilities of ROOT. 
+   // Thanks to the clever usage of TTimer objects it looks like they are all
+   // executing in parallel (emulation of multi-threading).
+   // It uses the small classes generated in $ROOTSYS/test/Hello,
+   // Aclock, Tetris
+   //Author: Valeriy Onuchin
 
    // run the dancing Hello World
    Hello *hello = new Hello();
@@ -53,3 +68,5 @@ void games()
    // run the Tetris game
    Tetris *tetris = new Tetris();
 }
+
+#endif

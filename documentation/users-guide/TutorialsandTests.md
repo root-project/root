@@ -20,25 +20,17 @@ it is being filled, and creates a ROOT file used by the other examples.
 To execute it type:
 
 ``` {.cpp}
-> cd $ROOTSYS/tutorials
-> root
-*******************************************
-*                                         *
-*        W E L C O M E  to  R O O T       *
-*                                         *
-*   Version   5.16/00      27 June 2006   *
-*                                         *
-*  You are welcome to visit our Web site  *
-*          http://root.cern.ch            *
-*                                         *
-*******************************************
-FreeType Engine v2.1.9 used to render TrueType fonts.
-Compiled on 28 June 2007 for linux with thread support.
+$ cd $ROOTSYS/tutorials
+$ root
+   ------------------------------------------------------------
+  | Welcome to ROOT 6.00/00                http://root.cern.ch |
+  |                               (c) 1995-2014, The ROOT Team |
+  | Built for linuxx8664gcc                                    |
+  | From tag v6-00-00, 30 May 2014                             |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
+   ------------------------------------------------------------
 
-CINT/ROOT C/C++ Interpreter version 5.16.21, June 22, 2007
-Type ? for help. Commands must be C++ statements.
-Enclose multiple statements between { }.
-root[0] .x hsimple.C
+root [0] .x hsimple.C
 ```
 
 Now execute `demos.C`, which brings up the button bar shown on the left.
@@ -74,7 +66,7 @@ We see these source files:
 |                   | `Event.cxx`, `EventCint.cxx` and `Event.h`. An example |
 |                   | of a procedure to link this program is in              |
 |                   | `bind_Event`. Note that the `Makefile` invokes the     |
-|                   | `rootcint` utility to generate the CINT interface      |
+|                   | `rootcling` utility to generate the Cling interface      |
 |                   | `EventCint.cxx`                                        |
 +-------------------+--------------------------------------------------------+
 | `Event.cxx`       | Implementation for classes Event and Track             |
@@ -356,7 +348,7 @@ sixteen tests covering the following capabilities of the ROOT framework.
 
 -   Divert Tree branches to separate files
 
--   CINT test (3 nested loops) with `LHCb` trigger
+-   Cling test (3 nested loops) with `LHCb` trigger
 
 The program stress takes one argument, the number of events to process.
 The default is 1000 events. Be aware that executing stress with 1000
@@ -414,7 +406,7 @@ Test 12 : Compare histograms of test 9 and 11................... OK
 Test 13 : Test merging files of a chain......................... OK
 Test 14 : Check correct rebuilt of Event.root in test 13........ OK
 Test 15 : Divert Tree branches to separate files................ OK
-Test 16 : CINT test (3 nested loops) with LHCb trigger.......... OK
+Test 16 : Cling test (3 nested loops) with LHCb trigger.......... OK
 ******************************************************************
 *  IRIX64 fnpat1 6.5 01221553 IP27
 ******************************************************************

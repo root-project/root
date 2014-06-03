@@ -95,7 +95,7 @@ of the function `sin(x)/x` will be drawn in randomly chosen interval in
 the canvas window, if you click on Exit - you close the application.
 This example shows the basic concepts for almost any GUI-application in
 ROOT and it is important to understand how it is constructed. The
-example program is written as a named script. See "CINT the C++
+example program is written as a named script. See "Cling the C++
 Interpreter". Remember that the named script can be executed via
 
 ``` {.cpp}
@@ -363,7 +363,7 @@ fMain->MapWindow();
 
 The line in between has an important mission - to execute all layout
 specifications for the widgets before the top-level window itself is
-shown on the screen. We can run the named script via the CINT
+shown on the screen. We can run the named script via the Cling
 interpreter with the command:
 
 ``` {.cpp}
@@ -434,7 +434,7 @@ containing the line:
 We compile the example:
 
 ``` {.cpp}
-rootcint -f ex2aDict.cxx -c example2a.h ex2aLinkDef.h
+rootcling -f ex2aDict.cxx -c example2a.h ex2aLinkDef.h
 g++ -o example2a example2a.cxx ex2aDict.cxx `root-config --cflags --glibs`
 ```
 
@@ -1171,7 +1171,7 @@ To use signals and slot you need something that brings them together.
 The class **`TQObject`** has several methods creating sender-receiver
 connections. Some of them are static and can be called without having an
 instance of the class. The ROOT implementation of signals and slots
-allows connections to any known CINT object. The class name parameter in
+allows connections to any known Cling object. The class name parameter in
 the `Connect()` methods must be a class with a dictionary (interpreted
 classes have an implicit dictionary).
 
@@ -1266,7 +1266,7 @@ The rules for using signals/slots mechanism in a standalone executable
 program do not differ from what was described previously. Let's remind
 that
 
--   a slot can be any class method with a generated CINT dictionary
+-   a slot can be any class method with a generated Cling dictionary
 
 -   a slot can be a function with a dictionary
 
@@ -2561,7 +2561,7 @@ for an application environment with common ‘look and feel'. The
 object-oriented, event-driven programming model supports the modern
 signals/slots communication mechanism. It handles user interface actions
 and allows total independence of interacting objects and classes. This
-mechanism uses the ROOT dictionary information and the CINT the C++
+mechanism uses the ROOT dictionary information and the Cling the C++
 Interpreter to connect signals to slots methods.
 
 Therefore, all necessary elements for an object-oriented editor design

@@ -60,15 +60,15 @@ TGraphNode::~TGraphNode()
 
 
 //______________________________________________________________________________
-void TGraphNode::CreateGVNode(Agraph_t *gv)
+void TGraphNode::CreateGVNode(GVizAgraph_t *gv)
 {
    // Create the GraphViz node into the GraphViz data structure gv.
 
    if (gv) {
 #ifdef WITH_CGRAPH
-      fGVNode = agnode(gv, (char *)GetName(), 1);
+      fGVNode = (GVizAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName(), 1);
 #else
-      fGVNode = agnode(gv, (char *)GetName());
+      fGVNode = (GVizAgnode_t*)agnode((Agraph_t*)gv, (char *)GetName());
 #endif
    } else {
       Error("CreateGVNode","Invalid graphviz graph");
@@ -113,15 +113,15 @@ void TGraphNode::Layout()
    // has been performed.
 
 #ifdef ND_coord
-   fX = ND_coord(fGVNode).x;
-   fY = ND_coord(fGVNode).y;
+   fX = ND_coord((Agnode_t*)fGVNode).x;
+   fY = ND_coord((Agnode_t*)fGVNode).y;
 #endif
 #ifdef ND_coord_i
-   fX = ND_coord_i(fGVNode).x;
-   fY = ND_coord_i(fGVNode).y;
+   fX = ND_coord_i((Agnode_t*)fGVNode).x;
+   fY = ND_coord_i((Agnode_t*)fGVNode).y;
 #endif
-   fW = ND_width(fGVNode)*36;
-   fH = ND_height(fGVNode)*36;
+   fW = ND_width((Agnode_t*)fGVNode)*36;
+   fH = ND_height((Agnode_t*)fGVNode)*36;
 }
 
 
@@ -135,7 +135,7 @@ void TGraphNode::Paint(Option_t *)
    text.SetTextAlign(22);
 
    // Draw the node shape as an ellipse
-   // ND_shape(fGVNode)->name gives the type of shape.
+   // ND_shape((Agnode_t*)fGVNode)->name gives the type of shape.
    ellipse.SetFillStyle(GetFillStyle());
    ellipse.SetFillColor(GetFillColor());
    ellipse.SetLineColor(GetLineColor());

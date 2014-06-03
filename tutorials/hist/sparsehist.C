@@ -43,6 +43,10 @@
 #include "TStyle.h"
 #include "TSystem.h"
 
+#ifndef INT_MAX
+#define INT_MAX std::numeric_limits<int>::max()
+#endif
+
 class TTimeHists {
 public:
    enum EHist { kHist, kSparse, kNumHist };
@@ -297,7 +301,9 @@ Double_t TTimeHists::Check(EHist hist)
 
 
 void sparsehist() {
-#ifdef __CINT__
+// Exclude this macro also for Cling as this script requires exception support
+// which is not supported in Cling as of v6.00/00.
+#if defined (__CLING__)
    printf("Please run this script in compiled mode by running \".x sparsehist.C+\"\n");
    return;
 #endif
@@ -325,13 +331,13 @@ void sparsehist() {
       for (Int_t bins = 10; bins <= 100; bins += 10) {
          TTimeHists timer(dim, bins, /*num*/ 1000);
          timer.Run();
-         for (int h = 0; h < TTimeHists::kNumHist; ++h)
+         for (int h = 0; h < TTimeHists::kNumHist; ++h) {
             for (int t = 0; t < TTimeHists::kNumTime; ++t) {
                Double_t time = timer.GetTime((TTimeHists::EHist)h, (TTimeHists::ETime)t);
                if (time >= 0.)
                   htime[h][t]->Fill(dim, bins, time);
             }
-
+         }
          hsparse_mem->Fill(dim, bins, timer.GetSparse()->GetSparseFractionMem());
          hsparse_bins->Fill(dim, bins, timer.GetSparse()->GetSparseFractionBins());
 

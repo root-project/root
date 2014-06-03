@@ -211,7 +211,7 @@ precision.
 ### TThread in More Details
 
 
-CINT is not thread safe yet, and it will block the execution of the
+Cling is not thread safe yet, and it will block the execution of the
 threads until it has finished executing.
 
 #### Asynchronous Actions

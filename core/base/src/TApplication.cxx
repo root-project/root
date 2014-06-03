@@ -807,12 +807,28 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    return 1;
 }
 
+namespace {
+   static int PrintFile(const char* filename) {
+      TString sFileName(filename);
+      gSystem->ExpandPathName(sFileName);
+      if (gSystem->AccessPathName(sFileName)) {
+         Error("ProcessLine()", "Cannot find file %s", filename);
+         return 1;
+      }
+      std::ifstream instr(sFileName);
+      TString content;
+      content.ReadFile(instr);
+      Printf("%s", content.Data());
+      return 0;
+   }
+}
+
 //______________________________________________________________________________
 Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
    // Process a single command line, either a C++ statement or an interpreter
    // command starting with a ".".
-   // Return the return value of the command casted to a long.
+   // Return the return value of the command cast to a long.
 
    if (!line || !*line) return 0;
 
@@ -840,9 +856,35 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
       return 0;
    }
 
-   if (!strncmp(line, "?", 1)) {
+   if (!strncmp(line, "?", 1) || !strncmp(line, ".help", 5)) {
       Help(line);
       return 1;
+   }
+
+   if (!strncmp(line, ".demo", 5)) {
+      if (gROOT->IsBatch()) {
+         Error("ProcessLine", "Cannot show demos in batch mode!");
+         return 1;
+      }
+      ProcessLine(".x $(ROOTSYS)/tutorials/demos.C");
+      return 0;
+   }
+
+   if (!strncmp(line, ".license", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/LICENSE");
+#else
+      return PrintFile("$(ROOTSYS)/LICENSE");
+#endif
+   }
+
+   if (!strncmp(line, ".credits", 8)) {
+#ifdef ROOTDOCDIR
+      return PrintFile(ROOTDOCDIR "/CREDITS");
+#else
+      return PrintFile("$(ROOTSYS)/README/CREDITS");
+#endif
+     
    }
 
    if (!strncmp(line, ".pwd", 4)) {

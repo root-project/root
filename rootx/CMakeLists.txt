@@ -9,9 +9,6 @@ if(x11)
   ROOT_EXECUTABLE(root *.cxx  ${CMAKE_SOURCE_DIR}/core/clib/src/strlcpy.c
                   LIBRARIES ${X11_LIBRARIES} ${X11_Xpm_LIB} ${X11_Xft_LIB} ${X11_Xext_LIB})
 elseif(cocoa)
-  add_custom_target(root ALL 
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root.exe ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root)
-  add_dependencies(root root.exe)
-  install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root
-          DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT applications)
+  ROOT_EXECUTABLE(root rootx.cxx rootxx-cocoa.mm LIBRARIES "-framework Cocoa")
 endif()
+

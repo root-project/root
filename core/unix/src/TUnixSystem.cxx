@@ -4439,6 +4439,12 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 
    static TString dynpath;
    static Bool_t initialized = kFALSE;
+   if (!initialized) {
+      // force one time initialization of gROOT before we start
+      // (otherwise it might be done as a side effect of gEnv->GetValue and
+      // TROOT's initialization will call this routine).
+      gROOT;
+   }
 
    if (newpath) {
       dynpath = newpath;

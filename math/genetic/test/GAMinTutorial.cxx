@@ -15,6 +15,7 @@
 #include "TLegend.h"
 #include "TCanvas.h"
 #include "TStyle.h"
+#include "TStopwatch.h"
 
 //#define DEBUG
 
@@ -37,7 +38,8 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
 double par0[8] = { 1, 0.05, 10 , 2, 0.5 , 10 , 7 , 1. }; 
 const int ndata = 10000; 
 const double gAbsTolerance = 0.1; 
-const int gVerbose = 0; 
+int gVerbose = 0; 
+bool showGraphics = false;
 
 using std::cout;
 using std::endl;
@@ -47,9 +49,10 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    // minimize the function
    ROOT::Math::GeneticMinimizer* min = new ROOT::Math::GeneticMinimizer();
    if (min == 0) { 
-      std::cout << "Error creating minimizer " << std::endl;
+      cout << "Error creating minimizer " << endl;
       return -1;
    }
+
 
    // Set the parameters for the minimization.
    min->SetMaxFunctionCalls(1000000);
@@ -57,7 +60,13 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
    min->SetTolerance(gAbsTolerance);
    min->SetPrintLevel(gVerbose);
    min->SetFunction(chi2Func); 
-   min->SetParameters(100, 300);
+   ROOT::Math::GeneticMinimizerParameters params; // construct with default values
+   params.fNsteps = 100;  // increset number of steps top 100 (default is 40)
+   params.fPopSize = 200;  // increset number of steps top 100 (default is 40)
+   params.fSeed = 111;     // use a fixed seed 
+
+   min->SetParameters(params);
+
 
 
    // initial values of the function
@@ -68,7 +77,7 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i) { 
 #ifdef DEBUG
-      std::cout << "set variable " << i << " to value " << x0[i] << std::endl;
+      cout << "set variable " << i << " to value " << x0[i] << endl;
 #endif
       if ( i == 3 || i == 6 )
           min->SetLimitedVariable(i,"x" + ROOT::Math::Util::ToString(i),x0[i], 0.1,2,8);
@@ -79,10 +88,19 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 
    // minimize
    if ( !min->Minimize() ) return 1;
-   min->MinValue(); 
+   double minval  = min->MinValue(); 
 
    // show the results
-   std::cout << "Min values by GeneticMinimizer: " << min->X()[3] << "  " << min->X()[6] << std::endl;
+   cout << "--------------------------------------" << endl;
+   cout << "GeneticMinimizer(" << xm1 << "," << xm2 << ") : ";
+   cout << "chi2  min value  = " << minval; 
+   cout << " minimum values m1 = " << min->X()[3] << " m2 = " << min->X()[6] << endl;
+   if (gVerbose) {
+      std::cout << "All Fit parameters : ";
+      for (unsigned int i = 0; i < chi2Func.NDim(); ++i)
+         cout << "x(" << i << ") = " << min->X()[i] << " ";
+      cout << endl;
+   }
    xm1 = min->X()[3];
    xm2 = min->X()[6];
 
@@ -90,13 +108,16 @@ int GAMinimize(ROOT::Math::IMultiGenFunction& chi2Func, double& xm1, double& xm2
 }
 
 
-const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, double xm2) { 
+const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double &xm1, double &xm2) { 
 
    // minimize the function
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer("Minuit2", "Migrad");
    if (min == 0) { 
-      std::cout << "Error creating minimizer " << std::endl;
-      exit(-1);
+      min = ROOT::Math::Factory::CreateMinimizer("Minuit", "Migrad");
+      if (min == 0) { 
+         cout << "Error creating minimizer " << endl;
+         exit(-1);
+      }
    }
 
    // Set the minimizer options
@@ -114,7 +135,7 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, 
 
    for (unsigned int i = 0; i < chi2Func.NDim(); ++i) { 
 #ifdef DEBUG
-      std::cout << "set variable " << i << " to value " << x0[i] << std::endl;
+      cout << "set variable " << i << " to value " << x0[i] << endl;
 #endif
       min->SetVariable(i,"x" + ROOT::Math::Util::ToString(i),x0[i], 0.1);
    }
@@ -124,13 +145,18 @@ const double* Min2Minimize(ROOT::Math::IMultiGenFunction& chi2Func, double xm1, 
    double minval = min->MinValue(); 
 
    // show the results
-   std::cout << "--------------------------------------" << std::endl;
-   std::cout << "Minuit2Minimizer(" << xm1 << "," << xm2 << ")" << std::endl;
-   std::cout << "chi2  min value " << minval << std::endl; 
-   std::cout << " x minimum values " << min->X()[3] << "  " << min->X()[6] << std::endl;
-   for (unsigned int i = 0; i < chi2Func.NDim(); ++i)
-      std::cout << min->X()[i] << " ";
-   std::cout << std::endl;
+   cout << "--------------------------------------" << endl;
+   cout << "Minuit2Minimizer(" << xm1 << "," << xm2 << ") : ";
+   cout << "chi2  min value  = " << minval; 
+   cout << " minimum values - m1 = " << min->X()[3] << " m2 = " << min->X()[6] << endl;
+   if (gVerbose) {
+      std::cout << "All Fit parameters : ";
+      for (unsigned int i = 0; i < chi2Func.NDim(); ++i)
+         cout << "x(" << i << ") = " << min->X()[i] << " ";
+      cout << endl;
+   }
+   xm1 = min->X()[3];
+   xm2 = min->X()[6];
 
    return min->X();
 }
@@ -149,11 +175,6 @@ int GAMinTutorial()
    for (int i = 0; i < ndata; ++i) { 
       h1->Fill(fitFunc->GetRandom() ); 
    } 
-   
-   h1->Draw(); 
-   gPad->SetFillColor(kYellow-10);
-   h1->SetFillColor(kYellow-5);
-   gStyle->SetOptStat(0);
 
    // perform the fit 
    ROOT::Fit::BinData d; 
@@ -164,27 +185,54 @@ int GAMinTutorial()
    ROOT::Fit::Chi2FCN<ROOT::Math::IMultiGenFunction> chi2Func(d,f); 
 
    // Minimizer a first time with Minuit2
-   const double* xmin1 = Min2Minimize(chi2Func, 0, 0);
+   TStopwatch t; 
+   t.Start(); 
+   const double* xmin1 = Min2Minimize(chi2Func, x1, x2);
+   t.Stop(); 
+   cout << "Minuit2 minimization Time :\t " << t.RealTime() << endl;
+
+
    fitFunc->SetParameters(&xmin1[0]);
    fitFunc->SetLineColor(kBlue+3);
    TF1 * fitFunc0 = new TF1; 
    fitFunc->Copy(*fitFunc0);
-   fitFunc0->Draw("same");
+
+   if (showGraphics) { 
+      h1->Draw(); 
+      gPad->SetFillColor(kYellow-10);
+      h1->SetFillColor(kYellow-5);
+      gStyle->SetOptStat(0);
+      fitFunc0->Draw("same");
+   }
+
+
 
    // Look for an approximation with a Genetic Algorithm
+   t.Start();
    GAMinimize(chi2Func, x1,x2);
+   t.Stop();
+   cout << "Genetic minimization Time :\t " << t.RealTime() << endl;
+
 
    // Minimize a second time with Minuit2 
+   t.Start();
    const double* xmin2 = Min2Minimize(chi2Func, x1, x2);
-   fitFunc->SetParameters(&xmin2[0]);
-   fitFunc->SetLineColor(kRed+3);
-   fitFunc->DrawCopy("same");
+   t.Stop(); 
+   cout << "Second Minuit2 minimization Time :\t " << t.RealTime() << endl;
 
-   TLegend* legend = new TLegend(0.61,0.72,0.86,0.86);
-   legend->AddEntry(h1, "Histogram Data","F");
-   legend->AddEntry(fitFunc0, "Minuit only minimization");
-   legend->AddEntry(fitFunc, "Minuit+Genetic minimization");
-   legend->Draw();
+   fitFunc->SetParameters(&xmin2[0]);
+   if (showGraphics) { 
+      fitFunc->SetLineColor(kRed+3);
+      fitFunc->DrawCopy("same");
+      
+      TLegend* legend = new TLegend(0.61,0.72,0.86,0.86);
+      legend->AddEntry(h1, "Histogram Data","F");
+      legend->AddEntry(fitFunc0, "Minuit only minimization");
+      legend->AddEntry(fitFunc, "Minuit+Genetic minimization");
+      legend->Draw();
+
+      gPad->Update();
+   }
 
    return 0; 
    // Min2Minimize will exit with a different value if there is any
@@ -193,14 +241,39 @@ int GAMinTutorial()
 
 int main(int argc, char **argv)
 {
-   TApplication* theApp = new TApplication("App",&argc,argv);
+  // Parse command line arguments 
+   for (Int_t i=1 ;  i<argc ; i++) {
+      std::string arg = argv[i] ;
+      if (arg == "-g") { 
+         showGraphics = true;
+      }
+      if (arg == "-v") { 
+         gVerbose = 1;
+      }
+      if (arg == "-vv") { 
+         gVerbose = 3;
+      }
+      if (arg == "-h") { 
+         std::cout << "Usage: " << argv[0] << " [-g] [-v]\n";
+         std::cout << "  where:\n";
+         std::cout << "     -g : graphics mode\n";
+         std::cout << "     -v  : verbose mode\n";
+         std::cout << "     -vv : very verbose mode\n";
+         std::cout << std::endl;
+         return -1; 
+      }
+   }
+   TApplication* theApp = 0; 
+   if (showGraphics) 
+      theApp = new TApplication("App",&argc,argv);
 
    int status = GAMinTutorial();
 
-   theApp->Run();
-
-   delete theApp;
-   theApp = 0;
+   if (showGraphics) { 
+      theApp->Run();
+      delete theApp;
+      theApp = 0;
+   }
 
    return status;
 }

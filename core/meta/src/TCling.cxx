@@ -358,7 +358,14 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
       //  of enums has been update to be active list]
       if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
          if (NCtx->getIdentifier()) {
-            TClass* cl = TClass::GetClass(NCtx->getNameAsString().c_str());
+            // No need to load the TClass: if there is something to update then
+            // it must already exist.
+            std::string NCtxName;
+            PrintingPolicy Policy(NCtx->getASTContext().getPrintingPolicy());
+            llvm::raw_string_ostream stream(NCtxName);
+            NCtx->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
+
+            TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(NCtxName.c_str());
             if (cl) {
                modifiedTClasses.insert(cl);
             }
@@ -820,15 +827,21 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
+   std::string llvmResourceDir = ROOT::TMetaUtils::GetLLVMResourceDir(false);
    // Add statically injected extra arguments, usually coming from rootcling.
    for (const char** extraArgs = TROOT::GetExtraInterpreterArgs();
         extraArgs && *extraArgs; ++extraArgs) {
+      if (!strcmp(*extraArgs, "-resource-dir")) {
+         // Take the next arg as the llvm resource directory.
+         llvmResourceDir = *(++extraArgs);
+      } else {
          interpArgs.push_back(*extraArgs);
+      }
    }
 
    fInterpreter = new cling::Interpreter(interpArgs.size(),
                                          &(interpArgs[0]),
-                                         ROOT::TMetaUtils::GetLLVMResourceDir(false).c_str());
+                                         llvmResourceDir.c_str());
 
    if (!fromRootCling) {
       fInterpreter->installLazyFunctionCreator(llvmLazyFunctionCreator);
@@ -1018,6 +1031,12 @@ bool TCling::LoadPCM(TString pcmFileName,
          for (auto proto : *protoClasses) {
             TClassTable::Add((TProtoClass*)proto);
          }
+         // Now that all TClass-es know how to set them up we can update
+         // existing TClasses, which might cause the creation of e.g. TBaseClass
+         // objects which in turn requires the creation of TClasses, that could
+         // come from the PCH, but maybe later in the loop. Instead of resolving
+         // a dependency graph the addition to the TClassTable above allows us
+         // to create these dependent TClasses as needed below.
          for (auto proto : *protoClasses) {
             if (TClass* existingCl
                 = (TClass*)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
@@ -1488,9 +1507,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
 //______________________________________________________________________________
 void TCling::PrintIntro()
 {
-   // Print cling introduction and help message.
-
-   Printf("cling C/C++ Interpreter: type .? for help.");
+   // No-op; see TRint instead.
 }
 
 //______________________________________________________________________________
@@ -1731,17 +1748,29 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
                iNBase, clname);
          continue;
       }
+      TClass* baseCl=nullptr;
       std::string sBaseName;
-      llvm::raw_string_ostream stream(sBaseName);
-      baseDecl->getNameForDiagnostic(stream, printPol, true /*fqi*/);
-      stream.flush();
-      TClass* baseCl = TClass::GetClass(sBaseName.c_str());
-      if (!baseCl) {
-         Error("InspectMembers",
-               "Cannot find TClass for base %s while inspecting class %s",
-               sBaseName.c_str(), clname);
-         continue;
+      // Try with the DeclId
+      std::vector<TClass*> foundClasses;
+      TClass::GetClass(static_cast<DeclId_t>(baseDecl), foundClasses);
+      if (foundClasses.size()==1){
+         baseCl=foundClasses[0];
+      } else {
+         // Try with the normalised Name, as a fallback
+         if (!baseCl){
+            ROOT::TMetaUtils::GetNormalizedName(sBaseName,
+                                                baseQT,
+                                                *fInterpreter,
+                                                *fNormalizedCtxt);
+            baseCl = TClass::GetClass(sBaseName.c_str());
+         }
       }
+
+      if (!baseCl){
+         Error("InspectMembers",
+               "Cannot find TClass for base class %s", baseDecl->getNameAsString().c_str() );
+      }
+
       int64_t baseOffset;
       if (iBase->isVirtual()) {
          if (insp.GetObjectValidity() == TMemberInspector::kNoObjectGiven) {
@@ -2491,6 +2520,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (cl->fState != TClass::kHasTClassInit) {
       if (cl->fClassInfo) {
          cl->fState = TClass::kInterpreted;
+         cl->ResetBit(TClass::kIsEmulation);
       } else {
 //         if (TClassEdit::IsSTLCont(cl->GetName()) {
 //            There will be an emulated collection proxy, is that the same?
@@ -4630,6 +4660,12 @@ void TCling::UpdateClassInfoWithDecl(const void* vTD)
          // the 'type' corresponding to the TClass anyway in order to
          // preserve the opaque typedefs (Double32_t)
          cl->fClassInfo = (ClassInfo_t *)new TClingClassInfo(fInterpreter, cl->GetName());
+         // We now need to update the state and bits.
+         if (cl->fState != TClass::kHasTClassInit) {
+            // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
+            cl->fState = TClass::kInterpreted;
+            cl->ResetBit(TClass::kIsEmulation);
+         }
          TClass::AddClassToDeclIdMap(((TClingClassInfo*)(cl->fClassInfo))->GetDeclId(), cl);
       }
    }

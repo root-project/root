@@ -267,13 +267,14 @@ void TGeoNavigator::BuildCache(Bool_t /*dummy*/, Bool_t nodeid)
 {
 // Builds the cache for physical nodes and global matrices.
    static Bool_t first = kTRUE;
+   Int_t verbose = TGeoManager::GetVerboseLevel();
    Int_t nlevel = fGeometry->GetMaxLevel();
    if (nlevel<=0) nlevel = 100;
    if (!fCache) {
       if (nlevel==100) {
-         if (first) Info("BuildCache","--- Maximum geometry depth set to 100");
+         if (first && verbose>0) Info("BuildCache","--- Maximum geometry depth set to 100");
       } else {
-         if (first) Info("BuildCache","--- Maximum geometry depth is %i", nlevel);   
+         if (first && verbose>0) Info("BuildCache","--- Maximum geometry depth is %i", nlevel);   
       }   
       // build cache
       fCache = new TGeoNodeCache(fGeometry->GetTopNode(), nodeid, nlevel+1);

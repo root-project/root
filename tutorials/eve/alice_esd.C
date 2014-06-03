@@ -38,7 +38,7 @@
   is created in the aliesd/ directory and can be loaded dynamically
   into the ROOT session.
 
-  See alice_esd_loadlib().
+  See the run_alice_esd.C macro.
   
 
   2. Creation of simple GUI for event navigation.
@@ -78,8 +78,37 @@
      visual attributes.
 
 */
+#ifndef __RUN_ALICE_ESD__
 
+void alice_esd()
+{
+   TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   dir.ReplaceAll("alice_esd.C","");
+   dir.ReplaceAll("/./","/");
+   gROOT->LoadMacro(dir +"MultiView.C+");
+   const char* esd_file_name = "http://root.cern.ch/files/alice_ESDs.root";
+   TFile::SetCacheFileDir(".");
+   TString lib(Form("aliesd/aliesd.%s", gSystem->GetSoExt()));
 
+   if (gSystem->AccessPathName(lib, kReadPermission)) {
+      TFile* f = TFile::Open(esd_file_name, "CACHEREAD");
+      if (f == 0) return;
+      TTree *tree = (TTree*) f->Get("esdTree");
+      tree->SetBranchStatus ("ESDfriend*", 1);
+      f->MakeProject("aliesd", "*", "++");
+      f->Close();
+      delete f;
+   }
+   gSystem->Load(lib);
+   gROOT->ProcessLine("#define __RUN_ALICE_ESD__ 1");
+   gROOT->ProcessLine("#include \"alice_esd.C\"");
+   gROOT->ProcessLine("run_alice_esd()");
+   gROOT->ProcessLine("#undef __RUN_ALICE_ESD__");
+}
+
+#else
+
+#include "alice_esd_html_summary.C"
 
 // Forward declarations.
 
@@ -88,7 +117,6 @@ class AliESDfriend;
 class AliESDtrack;
 class AliExternalTrackParam;
 
-Bool_t     alice_esd_loadlib(const char* file, const char* project);
 void       make_gui();
 void       load_event();
 
@@ -142,7 +170,7 @@ MultiView* gMultiView = 0;
 /******************************************************************************/
 
 //______________________________________________________________________________
-void alice_esd()
+void run_alice_esd()
 {
    // Main function, initializes the application.
    //
@@ -155,19 +183,7 @@ void alice_esd()
 
    const TString weh("alice_esd()");
 
-   if (gROOT->LoadMacro("MultiView.C+") != 0)
-   {
-      Error(weh, "Failed loading MultiView.C in compiled mode.");
-      return;
-   }
-
    TFile::SetCacheFileDir(".");
-
-   if (!alice_esd_loadlib("aliesd"))
-   {
-      Error("alice_esd", "Can not load project libraries.");
-      return;
-   }
 
    printf("*** Opening ESD ***\n");
    esd_file = TFile::Open(esd_file_name, "CACHEREAD");
@@ -253,7 +269,6 @@ void alice_esd()
    // HTML summary view
    //===================
 
-   gROOT->LoadMacro("alice_esd_html_summary.C");
    fgHtmlSummary = new HtmlSummary("Alice Event Display Summary Table");
    slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
    fgHtml = new TGHtml(0, 100, 100);
@@ -272,28 +287,6 @@ void alice_esd()
    load_event();
 
    gEve->Redraw3D(kTRUE); // Reset camera after the first event has been shown.
-}
-
-//______________________________________________________________________________
-Bool_t alice_esd_loadlib(const char* project)
-{
-   // Make sure that shared library created from the auto-generated project
-   // files exists and load it.
-
-   TString lib(Form("%s/%s.%s", project, project, gSystem->GetSoExt()));
-
-   if (gSystem->AccessPathName(lib, kReadPermission)) {
-      TFile* f = TFile::Open(esd_file_name, "CACHEREAD");
-      if (f == 0)
-         return kFALSE;
-      TFile *f2 = TFile::Open(esd_friends_file_name, "CACHEREAD");
-      TTree *tree = (TTree*) f->Get("esdTree");
-      tree->SetBranchStatus ("ESDfriend*", 1);
-      f->MakeProject(project, "*", "++");
-      f->Close();
-      delete f;
-   }
-   return gSystem->Load(lib) >= 0;
 }
 
 //______________________________________________________________________________
@@ -542,3 +535,6 @@ Double_t trackGetP(AliExternalTrackParam* tp)
 
    return TMath::Sqrt(1.+ tp->fP[3]*tp->fP[3])/TMath::Abs(tp->fP[4]);
 }
+
+#endif
+

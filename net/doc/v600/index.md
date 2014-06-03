@@ -67,11 +67,11 @@ in any modern browser and browse objects created in application. By default, the
 
 At any time one could register other objects with the command:
 
-    ``` {.cpp}
+``` {.cpp}
     TGraph* gr = new TGraph(10);
     gr->SetName("gr1");
     serv->Register("graphs/subfolder", gr);
-    ```
+```
 
 If the object content is changing in the application, like for example histograms being continuously filled, one could enable the monitoring flag in the browser, then the object view will be regularly updated.
 

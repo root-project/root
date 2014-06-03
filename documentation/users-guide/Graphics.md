@@ -176,18 +176,18 @@ menu.
 virtual void  SetLineAttributes(); // *MENU*
 ```
 
-Nothing else is needed, since CINT knows the classes and their methods.
+Nothing else is needed, since Cling knows the classes and their methods.
 It takes advantage of that to create the context menu on the fly when
 the object is clicking on. If you click on an axis, ROOT will ask the
 interpreter what are the methods of the **`TAxis`** and which ones are
 set for being displayed in a context menu.
 
 Now, how does the interpreter know this? Remember, when you build a
-class that you want to use in the ROOT environment, you use `rootcint`
+class that you want to use in the ROOT environment, you use `rootcling`
 that builds the so-called stub functions and the dictionary. These
 functions and the dictionary contain the knowledge of the used classes.
-To do this, `rootcint` parses all the header files. ROOT has defined
-some special syntax to inform CINT of certain things, this is done in
+To do this, `rootcling` parses all the header files. ROOT has defined
+some special syntax to inform Cling of certain things, this is done in
 the comments so that the code still compiles with a C++ compiler.
 
 For example, you have a class with a `Draw()` method, which will display
@@ -643,7 +643,7 @@ root[] pad1->Divide(3,2)
 If `pad1` is a pad then, it will divide the pad into 3 columns of 2
 sub-pads. The generated sub-pads get names `pad1_i` where the index
 `i=1` to `nxm` (in our case `pad1_1`, `pad1_2`...`pad1_6)`. The names
-`pad1_1 `etc... correspond to new variables in CINT, so you may use them
+`pad1_1 `etc... correspond to new variables in Cling, so you may use them
 as soon as the executed method was `pad->Divide()`. However, in a
 compiled program, one has to access these objects. Remember that a pad
 contains other objects and that these objects may themselves be pads. So

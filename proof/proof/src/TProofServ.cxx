@@ -5704,9 +5704,14 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
          if (!gSystem->AccessPathName("PROOF-INF/SETUP.C")) {
             // We need to change the name of the function to avoid problems when we load more packages
             TString setup, setupfn;
-            setup.Form("SETUP_%d_%x", gSystem->GetPid(), package.Hash());
+            setup.Form("SETUP_ganis_%d_%x", gSystem->GetPid(), package.Hash());
             // Remove special characters
-            setupfn.Form("%s/%s.C", gSystem->TempDirectory(), setup.Data());
+            const char *tmpDir = gSystem->TempDirectory();
+            if (tmpDir[strlen(tmpDir)-1] == '/') {
+               setupfn.Form("%s%s.C", tmpDir, setup.Data());
+            } else {
+               setupfn.Form("%s/%s.C", tmpDir, setup.Data());
+            }
             TMacro setupmc("PROOF-INF/SETUP.C");
             TObjString *setupline = setupmc.GetLineWith("SETUP(");
             if (setupline) {
@@ -6339,7 +6344,7 @@ Int_t TProofServ::CopyFromCache(const char *macro, Bool_t cpbin)
    Int_t dot = srcname.Last('.');
    if (dot != kNPOS) {
       srcname.Remove(dot);
-      srcname += ".*";
+      srcname += "*";
    } else {
       assertfile = kTRUE;
    }
@@ -6512,7 +6517,7 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
       gSystem->Exec(TString::Format("%s %s %s", kCP, name.Data(), fCacheDir.Data()));
       // If needed, remove from the cache any existing binary related to 'name'
       if (dot != kNPOS) {
-         binname += ".*";
+         binname += "*";
          PDB(kCache,1)
             Info("CopyToCache", "opt = 0: removing binaries '%s'", binname.Data());
          gSystem->Exec(TString::Format("%s %s/%s", kRM, fCacheDir.Data(), binname.Data()));
@@ -6521,7 +6526,6 @@ Int_t TProofServ::CopyToCache(const char *macro, Int_t opt)
    } else if (opt == 1) {
       // If needed, copy to the cache any existing binary related to 'name'.
       if (dot != kNPOS) {
-         binname += ".";
          void *dirp = gSystem->OpenDirectory(".");
          if (dirp) {
             const char *e = 0;

@@ -117,6 +117,7 @@ namespace cling {
       *resultValue = Value();
     return isLCommand(actionResult)
       || isXCommand(actionResult, resultValue)
+      || isAtCommand()
       || isqCommand() || isUCommand(actionResult) || isICommand()
       || isOCommand() || israwInputCommand() || isprintDebugCommand()
       || isdynamicExtensionsCommand() || ishelpCommand() || isfileExCommand()
@@ -285,7 +286,9 @@ namespace cling {
   }
 
   bool MetaParser::isICommand() {
-    if (getCurTok().is(tok::ident) && getCurTok().getIdent().equals("I")) {
+    if (getCurTok().is(tok::ident) &&
+        (   getCurTok().getIdent().equals("I")
+         || getCurTok().getIdent().equals("include"))) {
       consumeAnyStringToken(tok::eof);
       llvm::StringRef path;
       if (getCurTok().is(tok::raw_ident))
@@ -328,6 +331,17 @@ namespace cling {
       }
     }
 
+    return false;
+  }
+
+  bool MetaParser::isAtCommand() {
+    if (getCurTok().is(tok::at) // && getCurTok().getIdent().equals("@")
+        ) {
+      consumeToken();
+      skipWhitespace();
+      m_Actions->actOnAtCommand();
+      return true;
+    }
     return false;
   }
 

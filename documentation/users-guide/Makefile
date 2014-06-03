@@ -1,5 +1,5 @@
 MDFILES=ROOTUsersGuide.md Preface.md Introduction.md GettingStarted.md \
-	Histograms.md Graphs.md FittingHistograms.md ALittleC++.md CINT.md \
+	Histograms.md Graphs.md FittingHistograms.md ALittleC++.md Cling.md \
 	ObjectOwnership.md Graphics.md FoldersTasks.md InputOutput.md \
 	Trees.md MathLibraries.md LinearAlgebra.md AddingaClass.md \
 	CollectionClasses.md PhysicsVectors.md Geometry.md PythonRuby.md \

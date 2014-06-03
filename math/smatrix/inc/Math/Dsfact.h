@@ -77,11 +77,11 @@ static bool Dsfact(MatRepStd<T,n,idim>& rhs, T& det) {
 #endif
 
   /* Local variables */
-  static unsigned int i, j, l;
+  unsigned int i, j, l;
 
   /* Parameter adjustments */
   //  a -= idim + 1;
-  static int arrayOffset = -(idim+1);
+  const int arrayOffset = -(idim+1);
   /* sfactd.inc */
   det = 1.;
   for (j = 1; j <= n; ++j) {

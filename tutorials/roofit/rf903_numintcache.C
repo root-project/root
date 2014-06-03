@@ -47,13 +47,17 @@ void rf903_numintcache(Int_t mode=0)
 
     // Show plot of cached integral values
     RooDataHist* hhcache = (RooDataHist*) w->expensiveObjectCache().getObj(1) ;
+    if (hhcache) { 
 
-    new TCanvas("rf903_numintcache","rf903_numintcache",600,600) ;
-    hhcache->createHistogram("a")->Draw() ;
+       new TCanvas("rf903_numintcache","rf903_numintcache",600,600) ;
+       hhcache->createHistogram("a")->Draw() ;
     
-    return ;
+    }
+    else { 
+       Error("rf903_numintcache","Cached histogram is not existing in workspace");
+    }
+       return ;
   }
-
 
   // U s e   p . d . f .   f r o m   w o r k s p a c e   f o r   g e n e r a t i o n   a n d   f i t t i n g 
   // -----------------------------------------------------------------------------------
@@ -109,7 +113,9 @@ RooWorkspace* getWorkspace(Int_t mode)
     // two dimensions numerically. In this specific case the integral value for
     // all values of parameter 'a' are stored in a histogram and available for use 
     // in subsequent fitting and plotting operations (interpolation is applied)
-    w->pdf("model")->setNormValueCaching(3) ;
+
+    // w->pdf("model")->setNormValueCaching(3) ;
+    w->pdf("model")->setStringAttribute("CACHEPARMINT","x:y:z");
     
     // Evaluate p.d.f. once to trigger filling of cache
     RooArgSet normSet(*w->var("x"),*w->var("y"),*w->var("z")) ;

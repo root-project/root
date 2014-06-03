@@ -38,8 +38,12 @@ void rf509_wsinteractive()
   // C r e a t e  a n d   f i l l   w o r k s p a c e
   // ------------------------------------------------
 
-  // Create a workspace named 'w' that exports its contents to 
+  // Create a workspace named 'w'
+  // With CINT w could exports its contents to 
   // a same-name C++ namespace in CINT 'namespace w'.
+  // but this does not work anymore in CLING. 
+  // so this tutorial is an example on how to 
+  // change the code
   RooWorkspace* w = new RooWorkspace("w",kTRUE) ;
 
   // Fill workspace with p.d.f. and data in a separate function
@@ -48,23 +52,44 @@ void rf509_wsinteractive()
   // Print workspace contents
   w->Print() ;
 
-  // U s e   w o r k s p a c e   c o n t e n t s   t h r o u g h   C I N T   C + +   n a m e s p a c e
-  // -------------------------------------------------------------------------------------------------
+  // this does not work anymore with CLING 
+  // use normal workspace functionality 
 
-  // Use the name space prefix operator to access the workspace contents
-  RooDataSet* d = w::model.generate(w::x,1000) ;
-  RooFitResult* r = w::model.fitTo(*d) ;
+ 
+  // U s e   w o r k s p a c e   c o n t e n t s   
+  // ----------------------------------------------
 
-  RooPlot* frame = w::x.frame() ;
+
+  // Old syntax to use the name space prefix operator to access the workspace contents
+  //
+  //RooDataSet* d = w::model.generate(w::x,1000) ;
+  //RooFitResult* r = w::model.fitTo(*d) ;
+
+  // use normal workspace methods
+  RooAbsPdf * model = w->pdf("model");
+  RooRealVar * x = w->var("x");
+
+  RooDataSet* d = model->generate(*x,1000) ;
+  RooFitResult* r = model->fitTo(*d) ;
+
+  // old syntax to access the variable x
+  // RooPlot* frame = w::x.frame() ;
+
+  RooPlot* frame = x->frame() ;
   d->plotOn(frame) ;
 
-
+  // OLD syntax to ommit x::
   // NB: The 'w::' prefix can be omitted if namespace w is imported in local namespace
   // in the usual C++ way
-  using namespace w;
-  model.plotOn(frame) ;
-  model.plotOn(frame,Components(bkg),LineStyle(kDashed)) ;
+  //
+  // using namespace w;
+  // model.plotOn(frame) ;
+  // model.plotOn(frame,Components(bkg),LineStyle(kDashed)) ;
 
+  // new correct syntax 
+  RooAbsPdf *bkg = w->pdf("bkg");
+  model->plotOn(frame);
+  model->plotOn(frame,Components(*bkg),LineStyle(kDashed)) ;
 
   // Draw the frame on the canvas
   new TCanvas("rf509_wsinteractive","rf509_wsinteractive",600,600) ;

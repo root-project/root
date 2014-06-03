@@ -68,7 +68,7 @@ endif()
 
 if(NOT DEFINED CMAKE_INSTALL_SYSCONFDIR)
   if(gnuinstall)
-    set(CMAKE_INSTALL_SYSCONFDIR "/etc/root" CACHE PATH "read-only single-machine data (/etc/root)")
+    set(CMAKE_INSTALL_SYSCONFDIR "etc/root" CACHE PATH "read-only single-machine data (etc/root)")
   else()
     set(CMAKE_INSTALL_SYSCONFDIR "etc" CACHE PATH "read-only single-machine data (etc)")
   endif()

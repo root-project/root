@@ -74,7 +74,7 @@ public: // member functions
    const TSeqCollection* GetListOfCppDirectives();
    const TSeqCollection* GetListOfFilesInPath( const char path[] );
    const TSeqCollection* GetListOfEnvVars();
-   const TSeqCollection* GetListOfGlobalFunctions();
+   TCollection* GetListOfGlobalFunctions();
    const TSeqCollection* GetListOfGlobals();
    const TSeqCollection* GetListOfPragmas();
    const TSeqCollection* GetListOfSysIncFiles();
@@ -214,12 +214,10 @@ private: // member functions
 
 private: // data members
    TSeqCollection* fpClasses;
-   TSeqCollection* fpNamespaces;  // Contains the names of namespaces registered in CINT.
    TSeqCollection* fpDirectives;
    TSeqCollection* fpEnvVars;
    TSeqCollection* fpFiles;
    TSeqCollection* fpGlobals;
-   TSeqCollection* fpGlobalFuncs;
    TSeqCollection* fpPragmas;
    TSeqCollection* fpSysIncFiles;
    TSeqCollection* fpUsers;

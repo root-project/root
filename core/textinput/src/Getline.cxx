@@ -11,6 +11,7 @@
 
 #include "Getline.h"
 
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include "textinput/TextInput.h"
@@ -58,6 +59,7 @@ namespace {
          while (std::getline(sstr, compLine)) {
             displayCompletions.push_back(compLine);
          }
+         std::sort(displayCompletions.begin(), displayCompletions.end());
 
          size_t lenLineBuf = strlen(fLineBuf);
          if (posFirstChange == (size_t) -2) {

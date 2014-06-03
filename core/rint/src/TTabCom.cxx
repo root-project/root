@@ -127,6 +127,7 @@
 #include "RConfigure.h"
 #include "TTabCom.h"
 #include "TClass.h"
+#include "TClassTable.h"
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TMethod.h"
@@ -135,6 +136,7 @@
 #include "TError.h"
 #include "TGlobal.h"
 #include "TList.h"
+#include "THashList.h"
 #include "Getline.h"
 #include "TFunction.h"
 #include "TMethodArg.h"
@@ -170,9 +172,7 @@ TTabCom::TTabCom()
    // Default constructor.
    fpDirectives = 0;
    fpPragmas = 0;
-   fpGlobalFuncs = 0;
    fpClasses = 0;
-   fpNamespaces = 0;
    fpUsers = 0;
    fBuf = 0;
    fpLoc = 0;
@@ -216,13 +216,6 @@ void TTabCom::ClearClasses()
       fpClasses = 0;
    }
 
-   // Since the namespace array is filled at the same time as fpClasses we
-   // delete it at the same time.
-   if (fpNamespaces) {
-      fpNamespaces->Delete(0);
-      delete fpNamespaces;
-      fpNamespaces = 0;
-   }
 }
 
 //______________________________________________________________________________
@@ -263,11 +256,7 @@ void TTabCom::ClearFiles()
 void TTabCom::ClearGlobalFunctions()
 {
    // Forget all global functions seen so far.
-   if (!fpGlobalFuncs)
-      return;
-   fpGlobalFuncs->Delete(0);
-   delete fpGlobalFuncs;
-   fpGlobalFuncs = 0;
+   // Not needed anymore. Use gROOT->GetListOfGlobalFunctions()
 }
 
 //______________________________________________________________________________
@@ -362,7 +351,6 @@ void TTabCom::RehashFiles()
 void TTabCom::RehashGlobalFunctions()
 {
    // Reload global functions.
-   ClearGlobalFunctions();
    GetListOfGlobalFunctions();
 }
 
@@ -420,86 +408,34 @@ const TSeqCollection *TTabCom::GetListOfClasses()
 {
    // Return the list of classes.
    if (!fpClasses) {
-      // generate a text list of classes on disk
-
-      const char* dir = gSystem->TempDirectory();
-      if (!dir) return 0;
-      // The timestamp should be enough as the tab completion is an interactive feature.
-      TString outf = dir;
-      unsigned long currentTime = gSystem->Now();
-      outf += "/.TTabCom-";
-      outf += currentTime;
-      // Redirect to the specified file name.
-      std::string buf = ".> ";
-      buf += outf;
-      gCling->ProcessLine(buf.c_str());
-      // Display the classes in the file.
-      gCling->ProcessLine(".class ");
-      // Display the namespaces in the file.
-      gCling->ProcessLine(".namespace");
-      // Unredirect.
-      gCling->ProcessLine(".>");
-
-      // open the file
-      std::ifstream file1(outf);
-      if (!file1) {
-         Error("TTabCom::GetListOfClasses", "could not open file \"%s\"",
-               outf.Data());
-         gSystem->Unlink(outf);
-         return 0;
-      }
-      // skip the first 2 lines (which are just header info)
-      file1.ignore(32000, '\n');
-      file1.ignore(32000, '\n');
-
-      // parse file, add to list
       fpClasses = new TContainer;
-      fpNamespaces = new TContainer;
-      TString line;
-      while (file1) {
-         line = "";
-         line.ReadLine(file1, kFALSE);  // kFALSE ==> don't skip whitespace
-         line = line(23, 32000);
-// old way...
-//             if (line.Index("class") >= 0)
-//                  line = line(6, 32000);
-//             else if (line.Index("enum") >= 0)
-//                  line = line(5, 32000);
-//             else if (line.Index("(unknown)") >= 0)
-//                  line = line(10, 32000);
-//             line = line("[^ ]*");
-// new way...
-         int index;
-         Bool_t isanamespace = kFALSE;  // Flag used to check if we found a namespace name.
-         if (0);
-         else if ((index = line.Index(" class ")) >= 0)
-            line = line(index + 8, 32000);
-         else if ((index = line.Index(" namespace ")) >= 0) {
-            line = line(index + 12, 32000);
-            isanamespace = kTRUE;
-         } else if ((index = line.Index(" struct ")) >= 0)
-            line = line(index + 9, 32000);
-         else if ((index = line.Index(" enum ")) >= 0)
-            line = line(index + 7, 32000);
-         else if ((index = line.Index(" (unknown) ")) >= 0)
-            line = line(index + 12, 32000);
-         // 2 changes: 1. use spaces ^         ^          2. use offset ^^^^^ in case of long
-         //               to reduce probablility that        filename which overflows
-         //               these keywords will occur in       its field.
-         //               filename or classname.
-         //line = line("[^ ]*");
+      // Iterate over the table from the map file.
+      THashList* entries = gInterpreter->GetMapfile()->GetTable();
+      TIter next(entries);
+      TString classname;
+      while (const auto key = next()) {
+         classname = key->GetName();
+         // This is not needed with the new rootmap format
+         classname.ReplaceAll("@@", "::");
+         classname.ReplaceAll(" ", "-");
+         if (classname.BeginsWith("Library."))
+            classname.Remove(0, 7);
 
-         // If we find namespace names then add them to the fpNamespaces array and
-         // not the classes array.
-         if (isanamespace)
-            fpNamespaces->Add(new TObjString(line));
-         else
-            fpClasses->Add(new TObjString(line));
+         if (!classname.EndsWith(".h"))
+            fpClasses->Add(new TObjString(classname));
       }
-
-      // done with this file
-      file1.close();
-      gSystem->Unlink(outf);
+      // Iterate over the ClassTable.
+      Int_t totalNumberOfClasses = gClassTable->Classes();
+      // start from begining
+      gClassTable->Init();
+      // iterate over classes
+      for (Int_t i = 0; i < totalNumberOfClasses; i++) {
+         // get class name
+         const char *cname = gClassTable->Next();
+         if (!fpClasses->FindObject(cname)) {
+            fpClasses->Add(new TObjString(cname));
+         }
+      }
    }
 
    return fpClasses;
@@ -610,41 +546,10 @@ const TSeqCollection *TTabCom::GetListOfGlobals()
 }
 
 //______________________________________________________________________________
-const TSeqCollection *TTabCom::GetListOfGlobalFunctions()
+TCollection *TTabCom::GetListOfGlobalFunctions()
 {
    // Return the list of global functions.
-   if (!fpGlobalFuncs) {
-
-      fpGlobalFuncs = new TContainer;
-
-      MethodInfo_t *a;
-      int last = 0;
-      int nglob = 0;
-
-      // find the number of global functions
-      MethodInfo_t *t = gCling->MethodInfo_Factory();
-      while (gCling->MethodInfo_Next(t))
-         nglob++;
-
-      for (int i = 0; i < nglob; i++) {
-         a = gCling->MethodInfo_Factory();
-         gCling->MethodInfo_Next(a);             // initial positioning
-
-         for (int j = 0; j < last; j++)
-            gCling->MethodInfo_Next(a);
-
-         // if name cannot be obtained no use to put in list
-         if (gCling->MethodInfo_IsValid(a) && gCling->MethodInfo_Name(a)) {
-            fpGlobalFuncs->Add(new TFunction(a));
-         } else
-            gCling->MethodInfo_Delete(a);
-
-         last++;
-      }
-      gCling->MethodInfo_Delete(t);
-   }
-
-   return fpGlobalFuncs;
+   return gROOT->GetListOfGlobalFunctions(true);
 }
 
 //______________________________________________________________________________
@@ -1801,89 +1706,42 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          // Make sure autoloading happens (if it can).
          delete TryMakeClassFromClassName(namesp);
 
-         // Sometimes, eg on startup of ROOT fpNamespaces might be 0,
-         // so create and fill the array.
-         if (!fpNamespaces)
-            RehashClasses();
+         TContainer *pList = new TContainer;
+         // Add all classes to pList that contain the prefix, i.e. are in the
+         // specified namespace.
+         const TSeqCollection *tmp = GetListOfClasses();
+         if (!tmp) break;
 
-         // Try find the namesp string in the list of namespaces. If its found then
-         // we need to treat the different prefices a little differently:
-         TObjString objstr(namesp);
-         TObjString *foundstr = 0;
-         if (fpNamespaces)
-            foundstr = (TObjString *)fpNamespaces->FindObject(&objstr);
-         if (foundstr) {
-            TContainer *pList = new TContainer;
-
-            // Add all classes to pList that contain the prefix, i.e. are in the
-            // specified namespace.
-            const TSeqCollection *tmp = GetListOfClasses();
-            if (!tmp) break;
-
-            Int_t i;
-            for (i = 0; i < tmp->GetSize(); i++) {
-               TString astr = ((TObjString *) tmp->At(i))->String();
-               TString rxp = "^";
-               rxp += prefix;
-               if (astr.Contains(TRegexp(rxp))) {
-                  astr.Remove(0, prefix.Length());
-                  TString s = astr("^[^: ]*");
-                  TObjString *ostr = new TObjString(s);
-                  if (!pList->Contains(ostr))
-                     pList->Add(ostr);
-                  else
-                     delete ostr;
-               }
+         Int_t i;
+         for (i = 0; i < tmp->GetSize(); i++) {
+            TString astr = ((TObjString *) tmp->At(i))->String();
+            TString rxp = "^";
+            rxp += prefix;
+            if (astr.Contains(TRegexp(rxp))) {
+               astr.Remove(0, prefix.Length());
+               TString s = astr("^[^: ]*");
+               TObjString *ostr = new TObjString(s);
+               if (!pList->Contains(ostr))
+                  pList->Add(ostr);
+               else
+                  delete ostr;
             }
-
-            // Add all the sub-namespaces in the specified namespace.
-            for (i = 0; i < fpNamespaces->GetSize(); i++) {
-               TString astr =
-                   ((TObjString *) fpNamespaces->At(i))->String();
-               TString rxp = "^";
-               rxp += prefix;
-               if (astr.Contains(TRegexp(rxp))) {
-                  astr.Remove(0, prefix.Length());
-                  TString s = astr("^[^: ]*");
-                  TObjString *ostr = new TObjString(s);
-                  if (!pList->Contains(ostr))
-                     pList->Add(ostr);
-                  else
-                     delete ostr;
-               }
-            }
-
-            // If a class with the same name as the Namespace name exists then
-            // add it to the pList. (I don't think the C++ spec allows for this
-            // but do this anyway, cant harm).
-            pClass = TryMakeClassFromClassName(preprefix + name);
-            if (pClass) {
-               pList->AddAll(pClass->GetListOfAllPublicMethods());
-               pList->AddAll(pClass->GetListOfAllPublicDataMembers());
-            }
-
-            pos = Complete("[^: ]*$", pList, "", out);
-
-            delete pList;
-            if (pClass)
-               delete pClass;
-         } else {
-            pClass = MakeClassFromClassName(preprefix + name);
-            if (!pClass) {
-               pos = -2;
-               break;
-            }
-
-            TContainer *pList = new TContainer;
-
-            pList->AddAll(pClass->GetListOfAllPublicMethods());
-            pList->AddAll(pClass->GetListOfAllPublicDataMembers());
-
-            pos = Complete("[^: ]*$", pList, "(", out);
-
-            delete pList;
-            delete pClass;
          }
+
+         // If a class with the same name as the Namespace name exists then
+         // add it to the pList. (I don't think the C++ spec allows for this
+         // but do this anyway, cant harm).
+         pClass = TryMakeClassFromClassName(preprefix + name);
+         if (pClass) {
+            pList->AddAll(pClass->GetListOfAllPublicMethods(true));
+            pList->AddAll(pClass->GetListOfAllPublicDataMembers(true));
+         }
+
+         pos = Complete("[^: ]*$", pList, "", out);
+
+         delete pList;
+         if (pClass)
+            delete pClass;
 
          if (context != original_context)
             pos = -2;
@@ -2178,12 +2036,11 @@ Int_t TTabCom::Hook(char *buf, int *pLoc, std::ostream& out)
          const TSeqCollection *pL2 = GetListOfClasses();
          if (pL2) pList->AddAll(pL2);
 
-         if (fpNamespaces) pList->AddAll(fpNamespaces); //rdm
          //
          const TSeqCollection *pC1 = GetListOfGlobals();
          if (pC1) pList->AddAll(pC1);
          //
-         const TSeqCollection *pC3 = GetListOfGlobalFunctions();
+         TCollection *pC3 = GetListOfGlobalFunctions();
          if (pC3) pList->AddAll(pC3);
 
          pos = Complete("[_a-zA-Z][_a-zA-Z0-9]*$", pList, "", out);

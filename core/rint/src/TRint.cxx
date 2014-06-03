@@ -39,6 +39,7 @@
 #include "TTabCom.h"
 #include "TError.h"
 #include <stdlib.h>
+#include <algorithm>
 
 #include "Getline.h"
 
@@ -458,40 +459,53 @@ void TRint::PrintLogo(Bool_t lite)
 {
    // Print the ROOT logo on standard output.
 
-   const char *root_version = gROOT->GetVersion();
-
    if (!lite) {
-      static const char *months[] = {"January","February","March","April","May",
-                                     "June","July","August","September","October",
-                                     "November","December"};
-      Int_t idatqq = gROOT->GetVersionDate();
-      Int_t iday   = idatqq%100;
-      Int_t imonth = (idatqq/100)%100;
-      Int_t iyear  = (idatqq/10000);
-      char *version_date = Form("%d %s %4d",iday,months[imonth-1],iyear);
+      // Fancy formatting: the content of lines are format strings; their %s is
+      // replaced by spaces needed to make all lines as long as the longest line.
+      std::vector<TString> lines;
+      // Here, %%s results in %s after TString::Format():
+      lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+                                         gROOT->GetVersion()));
+      lines.emplace_back(TString::Format("%%s(c) 1995-2014, The ROOT Team"));
+      lines.emplace_back(TString::Format("Built for %s%%s", gSystem->GetBuildArch()));
+      if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
+         static const char *months[] = {"January","February","March","April","May",
+                                        "June","July","August","September","October",
+                                        "November","December"};
+         Int_t idatqq = gROOT->GetVersionDate();
+         Int_t iday   = idatqq%100;
+         Int_t imonth = (idatqq/100)%100;
+         Int_t iyear  = (idatqq/10000);
 
-      Printf("  *******************************************");
-      Printf("  *                                         *");
-      Printf("  *        W E L C O M E  to  R O O T       *");
-      Printf("  *                                         *");
-      Printf("  *   Version%10s %17s   *", root_version, version_date);
-      Printf("  *                                         *");
-      Printf("  *  You are welcome to visit our web site  *");
-      Printf("  *          http://root.cern.ch            *");
-      Printf("  *                                         *");
-      Printf("  * !!! THIS IS A PREPRODUCTION VERSION !!! *");
-      Printf("  * Please use 5.34 for any real work until *");
-      Printf("  * ROOT 6 is released.                     *");
-      Printf("  *                                         *");
-      Printf("  *******************************************\n");
+         lines.emplace_back(TString::Format("From tag %s, %d %s %4d%%s",
+                                            gROOT->GetGitBranch(),
+                                            iday,months[imonth-1],iyear));
+      } else {
+         // If branch and commit are identical - e.g. "v5-34-18" - then we have
+         // a release build. Else specify the git hash this build was made from.
+         lines.emplace_back(TString::Format("From %s@%s, %s%%s",
+                                            gROOT->GetGitBranch(),
+                                            gROOT->GetGitCommit(), gROOT->GetGitDate()));
+      }
+      lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
+
+      // Find the longest line and its length:
+      auto itLongest = std::max_element(lines.begin(), lines.end(),
+                                        [](const TString& left, const TString& right) {
+                                           return left.Length() < right.Length(); });
+      Ssiz_t lenLongest = itLongest->Length();
+
+
+      Printf("   %s", TString('-', lenLongest).Data());
+      for (const auto& line: lines) {
+         // Print the line, expanded with the necessary spaces at %s, and
+         // surrounded by some ASCII art.
+         Printf("  | %s |",
+                TString::Format(line.Data(),
+                                TString(' ', lenLongest - line.Length()).Data()).Data());
+      }
+      Printf("   %s\n", TString('-', lenLongest).Data());
    }
-
-   Printf("ROOT %s (%s@%s, %s on %s)", root_version, gROOT->GetGitBranch(),
-          gROOT->GetGitCommit(), gROOT->GetGitDate(),
-          gSystem->GetBuildArch());
-
-   if (!lite)
-      gCling->PrintIntro();
 
 #ifdef R__UNIX
    // Popdown X logo, only if started with -splash option
@@ -714,6 +728,10 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
       else
          SetPrompt("root [%d] ");
       return res;
+   }
+   if (line && line[0] == '.' && line[1] == '@') {
+      ProcessLine(line, kFALSE, error);
+      SetPrompt("root [%d] ");
    }
    return ProcessLine(line, kFALSE, error);
 }

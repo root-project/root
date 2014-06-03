@@ -42,7 +42,7 @@ Bool_t b = obj->InheritsFrom("TLine");
 Bool_t b = obj->InheritsFrom(TLine::Class());
 ```
 
-ROOT and `CINT` rely on reflection and the class dictionary to identify
+ROOT and `Cling` rely on reflection and the class dictionary to identify
 the type of a variable at run time. With **`TObject`** inheritance come
 some methods that use Introspection to help you see the data in the
 object or class. For instance:
@@ -299,7 +299,7 @@ public:
 ``` {.cpp}
 // A LinkDef.h file with all the explicit template instances
 // that will be needed at link time
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ class MyClass1<float>+;
 #pragma link C++ class MyClass1<double>+;
@@ -352,7 +352,7 @@ if (!fTrack) fTrack = new TList;
 ```
 
 The constructor actually called by the ROOT I/O can be customized by
-using the rootcint pragma:
+using the rootcling pragma:
 
 ``` {.cpp}
 #pragma link C++ ioctortype UserClass;
@@ -385,8 +385,15 @@ MyClass(TRootIoCtor*);
 MyClass();   // Or a constructor with all its arguments defaulted.
 ```
 
-## rootcint: The CINT Dictionary Generator
+## rootcling: The Cling Dictionary Generator
 
+A way in which dictionaries can be generated is via the `rootcling` 
+utility. This tool generates takes as input a set of headers and 
+generates in output the dictionary C++ code and a `pcm` file.
+This latter file is fundamental for the correct functioning of the 
+dictionary at runtime. It should be located in the directory where 
+the shared library is installed in which the compiled dictionary 
+resides.
 
 In the following example, we walk through the steps necessary to
 generate a dictionary, I/O, and inspect member functions. Let's start
@@ -492,19 +499,14 @@ ClassImp(TTrack)
 ...
 ```
 
-Now using `rootcint` we can generate the dictionary file.
-
-Make sure you use a unique filename, because `rootcint` appends it to
-the name of static function `(G__cpp_reset_tabableeventdict()`
-and` G__set_cpp_environmenteventdict ()`).
+Now using `rootcling` we can generate the dictionary file.
 
 ``` {.cpp}
-rootcint eventdict.cxx -c TEvent.h TTrack.h
+rootcling eventdict.cxx -c TEvent.h TTrack.h
 ```
 
-Looking in the file `eventdict.cxx` we can see, besides the many member
-function calling stubs (used internally by the interpreter),
-the` Streamer()` and` ShowMembers() `methods for the two classes.
+Looking in the file `eventdict.cxx` we can see, the` Streamer()` 
+and` ShowMembers() `methods for the two classes.
 `Streamer()` is used to stream an object to/from a **`TBuffer`** and
 `ShowMembers()` is used by the `Dump()` and `Inspect()` methods of
 **`TObject`**. Here is the `TEvent::Streamer` method:
@@ -539,8 +541,8 @@ need manual intervention. Cut and paste the generated `Streamer()` from
 the `eventdict.cxx` into the class' source file and modify as needed
 (e.g. add counter for array of basic types) and disable the generation
 of the `Streamer()` when using the `LinkDef.h` file for next execution
-of `rootcint`. In case you do not want to read or write this class (no
-I/O) you can tell `rootcint` to generate a dummy `Streamer() `by
+of `rootcling`. In case you do not want to read or write this class (no
+I/O) you can tell `rootcling` to generate a dummy `Streamer() `by
 changing this line in the source file:
 
 ``` {.cpp}
@@ -553,14 +555,14 @@ If you want to prevent the generation of `Streamer()`, see the section
 ### Dictionaries for STL
 
 
-Usually, headers are passed to rootcint at the command line. To generate
+Usually, headers are passed to rootcling at the command line. To generate
 a dictionary for a class from the STL, e.g.
 
 **std::vector\<MyClass\>**, you would normally pass the header defining
 **MyClass** and **std::vector**. The latter is a compiler specific
-header and cannot be passed to rootcint directly. Instead, create a
+header and cannot be passed to rootcling directly. Instead, create a
 little header file that includes both headers, and pass that to
-rootcint.
+rootcling.
 
 Often ROOT knows where **MyClass** and the templated class (e.g. vector)
 are defined, for example because the files got **\#included**. Knowing
@@ -611,7 +613,7 @@ void SClass::Print() const {
 
 You can add a class without using the `ClassDef` and `ClassImp` macros;
 however, you will be limited. Specifically the object I/O features of
-ROOT will not be available to you for these classes. See "CINT the C++
+ROOT will not be available to you for these classes. See "Cling the C++
 Interpreter". The `ShowMembers` and `Streamer` method, as well as the
 `>>` operator overloads, are implemented only if you use `ClassDef` and
 `ClassImp`. See `$ROOTSYS/include/Rtypes.h` for the definition of
@@ -625,18 +627,18 @@ Int_t     fTempValue; //! temporary state value
 ### The LinkDef.h File
 
 
-**Step 3:** The `LinkDef.h` file tells `rootcint` for which classes to
-generate the method interface stubs.
+**Step 3:** The `LinkDef.h` file tells `rootcling` which classes should 
+be added to the dictionary.
 
 ``` {.cpp}
-#ifdef __CINT__
+#ifdef __CLING__
 #pragma link C++ class SClass;
 #endif
 ```
 
 Three options can trail the class name:
 
--   `-` : tells `rootcint` **not** to generate the `Streamer` method for
+-   `-` : tells `rootcling` **not** to generate the `Streamer` method for
     this class. This is necessary for those classes that need a
     customized `Streamer` method.
 
@@ -644,7 +646,7 @@ Three options can trail the class name:
 #pragma link C++ class SClass-;  // no streamer
 ```
 
--   **`!`** : tells `rootcint` **not** to generate the
+-   **`!`** : tells `rootcling` **not** to generate the
     `operator>>(`**`TBuffer`** `&b,MyClass *&obj)` method for this
     class. This is necessary to be able to write pointers to objects of
     classes not inheriting from **`TObject`**.
@@ -655,7 +657,7 @@ Three options can trail the class name:
 #pragma link C++ class SClass-!; // no streamer, no >> operator
 ```
 
--   **+** : in ROOT version 1 and 2 tells `rootcint` to generate a
+-   **+** : in ROOT version 1 and 2 tells `rootcling` to generate a
     `Streamer` with extra byte count information. This adds an integer
     to each object in the output buffer, but it allows for powerful
     error correction in case a `Streamer` method is out of sync with
@@ -663,7 +665,7 @@ Three options can trail the class name:
     `-` and `!` options.
 
 IMPORTANT NOTE: In ROOT Version 3 and later, a "+" after the class name
-tells `rootcint` to use the new I/O system. The byte count check is
+tells `rootcling` to use the new I/O system. The byte count check is
 always added. The new I/O system has many advantages including support
 automatic schema evolution, full support for STL collections and better
 run-time performance. We strongly recommend using it.
@@ -673,7 +675,7 @@ run-time performance. We strongly recommend using it.
 ```
 
 For information on `Streamers` see "Input/Output". To get help on
-`rootcint` type on the UNIX command line: **`rootcint -h`**
+`rootcling` type on the UNIX command line: **`rootcling -h`**
 
 #### The Order Matters
 
@@ -711,19 +713,19 @@ And not vice versa:
 ...
 ```
 
-In this case, `rootcint` generates `Norm::Streamer()` that makes
-reference to `Tmpl<int>::Streamer()`. Then `rootcint` gets to process
+In this case, `rootcling` generates `Norm::Streamer()` that makes
+reference to `Tmpl<int>::Streamer()`. Then `rootcling` gets to process
 `Tmpl<int>` and generates a specialized `Tmpl<int>::Streamer()`
 function. The problem is, when the compiler finds the first
 `Tmpl<int>::Streamer()`, it will instantiate it. However, later in the
-file it finds the specialized version that `rootcint` generated. This
+file it finds the specialized version that `rootcling` generated. This
 causes the error. However, if the `Linkdef.h` order is reversed then
-`rootcint` can generate the specialized `Tmpl<int>::Streamer()` before
+`rootcling` can generate the specialized `Tmpl<int>::Streamer()` before
 it is needed (and thus never instantiated by the compiler).
 
 #### Other Useful Pragma Statements
 
-The complete list of pragma statements currently supported by CINT is:
+The complete list of pragma statements currently supported by Cling is:
 
 ``` {.cpp}
 #pragma link [C|C++|off] all [class|function|global|typedef];
@@ -751,7 +753,7 @@ example:
 ```
 
 This will request the dictionary for all the class whose name start with
-`'MyClass'` and are already known to CINT (class templates need to have
+`'MyClass'` and are already known to Cling (class templates need to have
 already been instantiated to be considered).
 
 ``` {.cpp}
@@ -760,11 +762,11 @@ already been instantiated to be considered).
 
 This pragma statement turns on or off the dictionary generation for all
 classes, structures, namespaces, global variables, global functions and
-typedefs seen so far by CINT. Example:
+typedefs seen so far by Cling. Example:
 
 ``` {.cpp}
 // some C++ header definition
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 // turns off dictionary generation for all
 #pragma link off all class;
 #pragma link off all function;
@@ -802,7 +804,7 @@ identical. Example:
 
 ``` {.cpp}
 // some C++ header definition
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all class;
 #pragma link C++ class A;
 #pragma link C++ class B;
@@ -825,7 +827,7 @@ Example:
 
 ``` {.cpp}
 // some C/C++ header definition
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all global;
 #pragma link off all typedef;
 #pragma link C++ global a;
@@ -844,7 +846,7 @@ Example:
 
 ``` {.cpp}
 // some C/C++ header definition
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all global;
 #pragma link off all typedef;
 #pragma link C++ global a;
@@ -892,7 +894,7 @@ class A {
 The pragma statements are:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all functions;
 #pragma link C++ function f;
 #pragma link C++ function g(int,double);
@@ -902,12 +904,12 @@ The pragma statements are:
 #endif
 ```
 
-Until CINT version 5.15.60, in order to generate dictionary for a member
+Until Cling version 5.15.60, in order to generate dictionary for a member
 function, not only the member function but also the class itself has to
 be turned on for the linkage. There was an inconvenience when generating
 dictionary for template member function afterwards.
 
-From CINT v.5.15.61, a new behavior is introduced. If link for a member
+From Cling v.5.15.61, a new behavior is introduced. If link for a member
 function is specified, dictionary is generated even if link to the
 belonging class is off. For example, if you originally have A.h as
 follows:
@@ -923,7 +925,7 @@ template<class T> class A {
 And generate dictionary for that:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class A<int>;
 #endif
 ```
@@ -944,7 +946,7 @@ You can generate dictionary for the newly instantiated template member
 function only.
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off defined_in A.h;
 #pragma link C++ function A<int>::f(B&);
 #endif
@@ -960,7 +962,7 @@ functions in all classes.
 Example:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all methods;
 #endif
 ```
@@ -977,7 +979,7 @@ At this moment, there should be no needs to use those statements.
 Example:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all_function   A;
 #pragma link off all_datamember A;
 #endif
@@ -1001,7 +1003,7 @@ Example:
 
 // file2.h
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link off all classes;
 #pragma link off all functions;
 #pragma link off all globals;
@@ -1041,21 +1043,20 @@ namespace ns {
 The pragma statements are:
 
 ``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ defined_in ns;
 #pragma link C++ nestedclass;
 #endif
 ```
 
-This statements controls default link mode for
-`makecint(cint -c-1|-c-2)` and `rootcint`.
+This statements controls default link mode for `rootcling`.
 
 ``` {.cpp}
 #pragma link default [on|off]
 ```
 
 By turning default 'on', all language constructs in given header files
-will be included in generated CINT dictionary (interface method source
+will be included in generated Cling dictionary (interface method source
 file). If default is set to 'off', nothing will be included in the
 generated dictionary. The next statement explicitly set linkage to each
 item:
@@ -1064,20 +1065,11 @@ item:
 #pragma link [C|C++|off] [class|function|global]
 ```
 
-This pragma statement must be given before `cint/rootcint` reads any
-C/C++ definitions from header files. For pure CINT, default is on. For
-ROOT, including `$ROOTSYSDIR/bin/cint`, default is off. This feature was
-added from CINT v.5.15.57. Before this version, you had to use
-explicitly in the ROOT `LinkDef.h` file the next statement:
+This pragma statement must be given before `rootcling` reads any
+C/C++ definitions from header files. Example:
 
 ``` {.cpp}
-#pragma link off [class|function|global];
-```
-
-From 5.15.57, you can omit them. Example:
-
-``` {.cpp}
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link default off;
 #endif
 
@@ -1091,7 +1083,7 @@ class B {
    double e;
 };
 
-#ifdef __MAKECINT__
+#ifdef __ROOTCLING__
 #pragma link C++ class A;      // only class A is linked, not B
 #endif
 ```
@@ -1099,8 +1091,8 @@ class B {
 ##### Compilation
 
 **Step 4:** Compile the class using the `Makefile. `In the `Makefile`
-call `rootcint` to make the dictionary for the class. Call it
-`SClassDict.cxx`. The `rootcint` utility generates the methods
+call `rootcling` to make the dictionary for the class. Call it
+`SClassDict.cxx`. The `rootcling` utility generates the methods
 `Streamer`, **`TBuffer`** &operator\>\>() and `ShowMembers `for ROOT
 classes.
 
@@ -1117,9 +1109,50 @@ root[] TFile *f = new TFile("Afile.root","UPDATE");
 root[] sc->Write();
 ```
 
-For more information on `rootcint` see the `$ROOTSYS/test` directory
+For more information on `rootcling` see the `$ROOTSYS/test` directory
 `Makefile`, `Event.cxx`, and `Event.h` for an example, or follow this
 link: <http://root.cern.ch/root/RootCintMan.html>
+
+## genreflex: A Comfortable Interface to rootcling
+
+Version 5 supported both `Cint` and `Reflex` dictionaries. The tool to create
+`Reflex` dictionaries was a Python script called `genreflex` and was very 
+successful in the user community.
+Even if version 6 has only one type of dictionaries, `cling` dictionaries,
+a re-implementation of `genreflex` is provided.
+More precisely, in ROOT6, `genreflex` is nothing but a wrapper around 
+`rootcling`, which offers an identical CLI and behaviour to the old Python
+tool.
+The input to `genreflex` is a C++ header file, a set of switches and a 
+*selection XML file*. The output, as for `rootcling`, is a C++ dictionary 
+source and a `pcm` files.
+An exhaustive documentation of the CLI switches of `genreflex` can be 
+inspected with the `genreflex --help` command.
+
+The entity corresponding to the `LinkDef` file for `genreflex` is the 
+*selection XML file*, also called *selection XML* or simply *selection file*.
+A *selection XML file* allows to describe a list of classes for which 
+the dictionaries are to be created. In addition, it allows to specify 
+properties of classes or data members, without the need to add comments in 
+the source code. This is of primary importance when dictionaries must be 
+created for classes residing in code which cannot be modified.
+For a complete description of the structure of the *selection XML files* 
+and the way in which attributes can be set, refer to the `genreflex --help`
+command.
+
+It is important to observe that *selection XML files* can be used in presence
+of `rootcling` invocations instead of `LinkDef` files.
+
+### The `ROOT::Meta::Selection` namespace
+
+Not only `LinkDef` and `selection` files allow to select the classes for which 
+the dictionaries must be created: a third method is available. This is 
+represented by the `ROOT::Meta::Selection` namespace. The idea behind this 
+technique is that all the classes which are located in this special namespace 
+are automatically selected for dictionary generation. All the properties and 
+annotations allowed by `LinkDef` and `selection XML` files are possible. 
+For a detailed documentation of the features of the `ROOT::Meta::Selection` 
+namespace, refer to its online documentation.
 
 ## Adding a Class with ACLiC
 
@@ -1137,14 +1170,14 @@ class ABC : public TObject {
       Float_t a, b, c, p;
       ABC() : a(0), b(0), c(0), p(0){};
 
-// Define the class for the cint dictionary
+// Define the class for the dictionary
    ClassDef (ABC,1)
 };
 
 // Call the ClassImp macro to give the ABC class RTTI and
 // full I/O capabilities.
 
-#if !defined(__CINT__)
+#if !defined(__CLING__)
 ClassImp(ABC);
 #endif
 ```

@@ -84,28 +84,20 @@ and the `MANPATH`. To run the program just type: `root`.
 
 
 ```
-% root
-  *******************************************
-  *                                         *
-  *        W E L C O M E  to  R O O T       *
-  *                                         *
-  *   Version   5.34/07     26 April 2013   *
-  *                                         *
-  *  You are welcome to visit our Web site  *
-  *          http://root.cern.ch            *
-  *                                         *
-  *******************************************
+$ root
+   ------------------------------------------------------------
+  | Welcome to ROOT 6.00/00                http://root.cern.ch |
+  |                               (c) 1995-2014, The ROOT Team |
+  | Built for linuxx8664gcc                                    |
+  | From tag v6-00-00, 30 May 2014                             |
+  | Try '.help', '.demo', '.license', '.credits', '.quit'/'.q' |
+   ------------------------------------------------------------
 
-ROOT 5.34/07 (v5-34-07@c1f030b, May 13 2013, 16:42:38 on macosx64)
-
-CINT/ROOT C/C++ Interpreter version 5.18.00, July 2, 2010
-Type ? for help. Commands must be C++ statements.
-Enclose multiple statements between { }.
 root [0]
 ```
 
 To start ROOT you can type `root` at the system prompt. This starts up
-CINT, the ROOT command line C/C++ interpreter, and it gives you the
+Cling, the ROOT command line C/C++ interpreter, and it gives you the
 ROOT prompt (`root[0]`).
 
 It is possible to launch ROOT with some command line options, as shown
@@ -168,7 +160,7 @@ root -b -q 'myMacro.C("text")' > myMacro.log
 
 You can build a shared library with ACLiC and then use this shared
 library on the command line for a quicker execution (i.e. the compiled
-speed rather than the interpreted speed). See also "CINT the C++
+speed rather than the interpreted speed). See also "Cling the C++
 Interpreter".
 
 ```
@@ -707,7 +699,7 @@ root[] MyC_3->cd()
 
 -   Third pad will be selected since you called `TPad::cd()` for the
     object `MyC_3`. ROOT will find the pad that was named` MyC_3 `when
-    you typed it on the command line (see ROOT/CINT Extensions to
+    you typed it on the command line (see ROOT/Cling Extensions to
     C++).
 
 ### Saving the Canvas
@@ -757,10 +749,10 @@ is available in the canvas toolbar (activated via View menu/Toolbar).
 We have briefly touched on how to use the command line. There are
 different types of commands.
 
-1. CINT commands start with "`.`"
+1. Cling commands start with "`.`"
 
 ``` {.cpp}
-root[] .?  //this command will list all the CINT commands
+root[] .?  //this command will list all the Cling commands
 root[] .L <filename>  //load [filename]
 root[] .x <filename>  //load and execute [filename]
 ```
@@ -803,11 +795,11 @@ It is more convenient to edit a script than the command line, and if
 your multi line commands are getting unmanageable, you may want to
 start with a script instead.
 
-### CINT Extensions
+### Cling Extensions
 
 
-We should say that some things are not standard C++. The CINT
-interpreter has several extensions. See "ROOT/CINT Extensions to C++".
+We should say that some things are not standard C++. The Cling
+interpreter has several extensions. See "ROOT/Cling Extensions to C++".
 
 ### Helpful Hints for Command Line Typing
 
