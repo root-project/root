@@ -489,8 +489,6 @@ ifeq ($(PLATFORM),ios)
    POSTBIN       += staticlib
 endif
 
-POSTBIN       += etc/allDict.cxx.pch
-
 MAKEDEP        = $(RMKDEP)
 MAKELIB        = $(ROOT_SRCDIR)/build/unix/makelib.sh $(MKLIBOPTIONS)
 MAKEDIST      := $(ROOT_SRCDIR)/build/unix/makedist.sh
@@ -517,6 +515,9 @@ endif
 COMPILEDATA   = include/compiledata.h
 ROOTRC        = etc/system.rootrc
 ROOTMAP       = etc/system.rootmap
+ROOTPCH       = etc/allDict.cxx.pch
+
+POSTBIN       += $(ROOTPCH)
 
 ##### Extra libs needed for "static" target #####
 
@@ -1048,9 +1049,9 @@ version: $(ROOTEXE)
 
 staticlib: $(ROOTALIB)
 
-static: $(ROOTA)
+static: $(ROOTA) $(ROOTPCH)
 
-$(ROOTA) $(PROOFSERVA): $(ROOTALIB) $(MAKESTATIC) $(STATICOBJLIST)
+$(ROOTA) $(PROOFSERVA): $(ROOTALIB) $(MAKESTATIC) $(STATICOBJLIST) $(ROOTEXEO) $(PROOFSERVO)
 	@$(MAKESTATIC) $(PLATFORM) "$(CXX)" "$(CC)" "$(LD)" "$(LDFLAGS)" \
 	   "$(XLIBS)" "$(SYSLIBS)" "$(STATICEXTRALIBS)" $(STATICOBJLIST)
 
@@ -1066,7 +1067,7 @@ changelog:
 releasenotes:
 	@$(MAKERELNOTES)
 
-etc/allDict.cxx.pch: $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
+$(ROOTPCH): $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
 	@$(MAKEONEPCM) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH)
 
 ifeq ($(BUILDX11),yes)
