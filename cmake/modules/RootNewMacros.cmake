@@ -190,12 +190,7 @@ macro(REFLEX_GENERATE_DICTIONARY dictionary)
 
     set(targetname "${targetname}-dictgen")
 
-    # Target onepcm is only available, if roottest is built within root.
-    if(TARGET onepcm)
-      add_custom_target(${targetname} ALL DEPENDS ${gensrcdict} onepcm)
-    else()
-      add_custom_target(${targetname} ALL DEPENDS ${gensrcdict})
-    endif()
+    add_custom_target(${targetname} DEPENDS ${gensrcdict} ${ROOT_LIBRARIES})
   else()
     set(targetname "${dictionary}-dictgen")
     # Creating this target at ALL level enables the possibility to generate dictionaries (genreflex step)
@@ -321,7 +316,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   #---roottest compability
   if(CMAKE_ROOTTEST_DICT)
-    add_custom_target(${dictname} ALL DEPENDS ${dictionary}.cxx)
+    add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
   else()
     add_custom_target(${dictname} DEPENDS ${dictionary}.cxx)
 
