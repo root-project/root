@@ -8,6 +8,19 @@
 
 #-------------------------------------------------------------------------------
 #
+#  function ROOTTEST_SET_TESTOWNER(owner)
+#
+#  Specify the owner of the tests in the current directory. Note, that the owner
+#  can be specified for each test individually, as well.
+#
+#-------------------------------------------------------------------------------
+function(ROOTTEST_SET_TESTOWNER owner)
+  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+               PROPERTY ROOTTEST_TEST_OWNER ${owner})
+endfunction(ROOTTEST_SET_TESTOWNER)
+
+#-------------------------------------------------------------------------------
+#
 # function ROOTTEEST_TARGETNAME_FROM_FILE(<resultvar> <filename>)
 #
 # Construct a target name for a given file <filename> and store its name into

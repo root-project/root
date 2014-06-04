@@ -11,7 +11,7 @@ include(RootMacros)
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
                             "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "MACRO;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
+                            "TESTOWNER;MACRO;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -105,8 +105,22 @@ function(ROOTTEST_ADD_TEST test)
   endif()
 
   # Add labels to the test.
+  get_property(testowner DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                         PROPERTY ROOTTEST_TEST_OWNER)
+
+  if(ARG_TESTOWNER)
+    set(testowner ${ARG_TESTOWNER})
+  endif()
+
   if(ARG_LABELS)
     set(labels LABELS ${ARG_LABELS})
+    if(testowner)
+      set(labels ${labels} ${testowner}) 
+    endif()
+  else()
+    if(testowner)
+      set(labels LABELS ${testowner}) 
+    endif()
   endif()
 
   # Test will pass for a custom return value.
