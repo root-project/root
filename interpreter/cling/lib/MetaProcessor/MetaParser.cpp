@@ -116,7 +116,7 @@ namespace cling {
     if (resultValue)
       *resultValue = Value();
     return isLCommand(actionResult)
-      || isXCommand(actionResult, resultValue)
+      || isXCommand(actionResult, resultValue) ||isTCommand(actionResult)
       || isAtCommand()
       || isqCommand() || isUCommand(actionResult) || isICommand()
       || isOCommand() || israwInputCommand() || isprintDebugCommand()
@@ -138,6 +138,27 @@ namespace cling {
       if (getCurTok().is(tok::raw_ident)) {
         result = true;
         actionResult = m_Actions->actOnLCommand(getCurTok().getIdent());
+        consumeToken();
+        if (getCurTok().is(tok::comment)) {
+          consumeAnyStringToken(tok::eof);
+          m_Actions->actOnComment(getCurTok().getIdent());
+        }
+      }
+    }
+    // TODO: Some fine grained diagnostics
+    return result;
+  }
+
+  // T := 'T' FilePath Comment
+  // FilePath := AnyString
+  // AnyString := .*^('\t' Comment)
+  bool MetaParser::isTCommand(MetaSema::ActionResult& actionResult) {
+    bool result = false;
+    if (getCurTok().is(tok::ident) && getCurTok().getIdent().equals("T")) {
+      consumeAnyStringToken(tok::comment);
+      if (getCurTok().is(tok::raw_ident)) {
+        result = true;
+        actionResult = m_Actions->actOnTCommand(getCurTok().getIdent());
         consumeToken();
         if (getCurTok().is(tok::comment)) {
           consumeAnyStringToken(tok::eof);
