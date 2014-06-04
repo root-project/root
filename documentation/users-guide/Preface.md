@@ -29,9 +29,10 @@ developed. Over the last five years, many of our "customers" became
 co-developers. Here we would like to thank our main co-developers and
 contributors:
 
-**Masaharu Goto** wrote the Cling C++ interpreter that became an
-essential part of ROOT. Despite being 8 time zones ahead of us, we
-have the feeling he has been sitting in the room next door since 1995.
+**Masaharu Goto** wrote the C++ interpreter CINT that was an
+essential part of ROOT before ROOT 6. Despite being 8 time zones ahead
+of us, we have the feeling he has been sitting in the room next door
+since 1995.
 
 **Andrei** and **Mihaela Gheata** (Alice collaboration) are co-authors
 of the ROOT geometry classes and Virtual Monte-Carlo. They have been
