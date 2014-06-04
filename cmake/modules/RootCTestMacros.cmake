@@ -11,7 +11,7 @@ include(RootMacros)
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
                             "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "MACRO;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
+                            "MACRO;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -114,8 +114,19 @@ function(ROOTTEST_ADD_TEST test)
     set(passrc PASSRC ${ARG_PASSRC})
   endif()
 
+  # Pass options to the command.
   if(ARG_OPTS)
     set(command ${command} ${ARG_OPTS})
+  endif()
+
+  # Execute a custom command before executing the test.
+  if(ARG_PRECMD)
+    set(precmd PRECMD ${ARG_PRECMD})
+  endif()
+
+  # Execute a custom command after executing the test.
+  if(ARG_POSTCMD)
+    set(postcmd POSTCMD ${ARG_PRECMD})
   endif()
 
   # Add dependencies. If the test depends on a macro file, the macro
