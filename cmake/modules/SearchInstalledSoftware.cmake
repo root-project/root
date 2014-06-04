@@ -733,6 +733,7 @@ if(cling)
   set(CLING_LIBRARIES ${BINARY_DIR}/lib/libclingInterpreter.a
                       ${BINARY_DIR}/lib/libclingMetaProcessor.a
                       ${BINARY_DIR}/lib/libclingUtils.a
+                      ${BINARY_DIR}/lib/libclingCtagsExtension.a
                       ${LLVM_LIBRARIES})
   #--Additional flags obtained from llvm-config --cxxflags
   set(CLING_CXXFLAGS "-fvisibility-inlines-hidden -fno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -Wno-long-long -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS")
