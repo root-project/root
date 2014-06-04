@@ -76,7 +76,10 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
 endif()
 
 # Setup environment.
-set(ROOTTEST_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
+# Resolve symbolic links for the ROOTTEST_DIR variable.
+get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
+message("ROOTTEST_DIR: ${ROOTTEST_DIR}")
 
 set(rootcint_program ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint)
 

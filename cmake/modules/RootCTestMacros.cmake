@@ -30,7 +30,7 @@ function(ROOTTEST_ADD_TEST test)
 
   # Reference output given?
   if(ARG_OUTREF)
-    get_filename_component(OUTREF_PATH ${ARG_OUTREF} REALPATH)
+    get_filename_component(OUTREF_PATH ${ARG_OUTREF} ABSOLUTE)
 
     if(DEFINED X86_64 AND EXISTS ${OUTREF_PATH}64)
       set(OUTREF_PATH ${OUTREF_PATH}64)
@@ -42,13 +42,13 @@ function(ROOTTEST_ADD_TEST test)
   endif()
 
   if(ARG_OUTCNV)
-    get_filename_component(OUTCNV ${ARG_OUTCNV} REALPATH)
+    get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
   endif()
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
     string(REPLACE "+" "" compile_name "${ARG_MACRO}")
-    get_filename_component(realfp ${compile_name} REALPATH)
+    get_filename_component(realfp ${compile_name} ABSOLUTE)
 
     ROOTTEST_COMPILE_MACRO(${compile_name})
 
@@ -62,7 +62,7 @@ function(ROOTTEST_ADD_TEST test)
 
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
-    get_filename_component(realfp ${ARG_MACRO} REALPATH)
+    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
 
     if(DEFINED ARG_MACROARG)
       set(realfp "${realfp}(${ARG_MACROARG})") 
@@ -72,7 +72,7 @@ function(ROOTTEST_ADD_TEST test)
     
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
-    get_filename_component(pycmd ${ARG_MACRO} REALPATH)
+    get_filename_component(pycmd ${ARG_MACRO} ABSOLUTE)
     set(command ${python_cmd} ${pycmd})
 
   elseif(DEFINED ARG_MACRO)
@@ -90,7 +90,7 @@ function(ROOTTEST_ADD_TEST test)
 
   # Get the real path to the output conversion script.
   if(ARG_OUTCNV)
-    get_filename_component(OUTCNV ${ARG_OUTCNV} REALPATH)
+    get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
     set(outcnv OUTCNV ${OUTCNV})
   endif()
 

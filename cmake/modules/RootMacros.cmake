@@ -18,10 +18,10 @@
 #-------------------------------------------------------------------------------
 function(ROOTTEST_TARGETNAME_FROM_FILE resultvar filename)
 
-  get_filename_component(realfp ${filename} REALPATH)
+  get_filename_component(realfp ${filename} ABSOLUTE)
   get_filename_component(filename_we ${filename} NAME_WE)
 
-  string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp}) 
+  string(REPLACE "${ROOTTEST_DIR}" "" relativepath ${realfp})
   string(REPLACE "${filename}"     "" relativepath ${relativepath})
 
   string(REPLACE "/" "-" targetname ${relativepath}${filename_we})
