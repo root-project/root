@@ -55,8 +55,8 @@ class myButton(QPushButton):
         QPushButton.__init__(self,label,master)
         self.setFont( QFont('Times',18,QFont.Bold))
 
-def browse(self):
-    self.b = ROOT.TBrowser()
+    def browse(self):
+        self.b = ROOT.TBrowser()
 
 bb = myButton('browser',box)
 QObject.connect( bb,SIGNAL('clicked()'),bb.browse)
