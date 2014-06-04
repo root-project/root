@@ -48,21 +48,3 @@ add_definitions(
 #  -DClingWorkAroundUnloadingIOSTREAM 
 #  -DClingWorkAroundUnloadingVTABLES 
 )
-
-# Scan all directories to look for tests by searching for CMakeLists.txt files.
-set(path_list "")
-
-file(GLOB_RECURSE files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} CMakeLists.txt)
-foreach(file ${files})
-  get_filename_component(path ${file} PATH)
-  if(path)
-    list(APPEND path_list ${path})
-  endif()
-endforeach()
-
-list(SORT path_list)
-
-foreach(path ${path_list})
-  add_subdirectory(${path})
-endforeach()
-

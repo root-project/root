@@ -48,3 +48,5 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD32
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
                   MACRO execReadTmplt.cxx+
                   OUTREF execReadTmplt.ref)
+
+ROOTTEST_FIND_TESTDIRS()

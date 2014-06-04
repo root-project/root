@@ -22,3 +22,5 @@ ROOTTEST_ADD_TEST(roottest-cling-dict-runalgebra
                   MACRO runalgebra.C+
                   OUTREF algebra.ref
                   LABELS roottest regression cling)
+
+ROOTTEST_FIND_TESTDIRS()

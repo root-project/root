@@ -79,7 +79,6 @@ endif()
 
 # Resolve symbolic links for the ROOTTEST_DIR variable.
 get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
-message("ROOTTEST_DIR: ${ROOTTEST_DIR}")
 
 set(rootcint_program ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootcint)
 
@@ -118,3 +117,6 @@ find_program(python_cmd ${PYTHON_EXECUTABLE})
 include(RootNewMacros)
 include(RoottestCTest)
 include(RootCTestMacros)
+
+message("-- Scanning subdirectories for tests...")
+ROOTTEST_FIND_TESTDIRS()

@@ -8,6 +8,37 @@
 
 #-------------------------------------------------------------------------------
 #
+#  function ROOTTEST_FIND_TESTDIRS( )
+#
+#  Scans all subdirectories for CMakeLists.txt files. Each subdirectory that
+#  contains a CMakeLists.txt file is then added as a subdirectory. 
+#-------------------------------------------------------------------------------
+function(ROOTTEST_FIND_TESTDIRS )
+
+  set(dirs "")
+
+  set(curdir ${CMAKE_CURRENT_SOURCE_DIR})
+
+  file(GLOB found ${curdir} ${curdir}/*)
+
+  foreach(f ${found})
+    if(IS_DIRECTORY ${f})
+      if(EXISTS "${f}/CMakeLists.txt" AND NOT ${f} STREQUAL ${curdir})
+        list(APPEND dirs ${f})
+      endif()
+    endif()
+  endforeach()
+
+  list(SORT dirs)
+
+  foreach(d ${dirs})
+    add_subdirectory(${d})
+  endforeach()
+
+endfunction()
+
+#-------------------------------------------------------------------------------
+#
 #  function ROOTTEST_SET_TESTOWNER(owner)
 #
 #  Specify the owner of the tests in the current directory. Note, that the owner
