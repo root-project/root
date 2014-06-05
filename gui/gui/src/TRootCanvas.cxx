@@ -695,7 +695,10 @@ void TRootCanvas::ReallyDelete()
    gPad = 0;        // hide gPad from CINT
    gInterpreter->DeleteGlobal(fCanvas);
    gPad = savepad;  // restore gPad for ROOT
-   delete fCanvas;  // will in turn delete this object
+   if (fCanvas->IsOnHeap())
+      delete fCanvas; // will in turn delete this object
+   else
+      fCanvas->Destructor(); // will in turn delete this object
 }
 
 //______________________________________________________________________________

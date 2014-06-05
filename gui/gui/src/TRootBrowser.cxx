@@ -874,7 +874,10 @@ void TRootBrowser::ReallyDelete()
    // Really delete the browser and the this GUI.
 
    gInterpreter->DeleteGlobal(fBrowser);
-   delete fBrowser;    // will in turn delete this object
+   if (fBrowser->IsOnHeap())
+      delete fBrowser; // will in turn delete this object
+   else
+      fBrowser->Destructor(); // will in turn delete this object
 }
 
 //______________________________________________________________________________
