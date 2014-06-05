@@ -8,10 +8,7 @@
 
 include(RootMacros)
 
-function(ROOTTEST_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
-                            "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "TESTOWNER;MACRO;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
+macro(ROOTTEST_SETUP_MACROTEST)
 
   get_directory_property(DirDefs COMPILE_DEFINITIONS)
 
@@ -27,23 +24,6 @@ function(ROOTTEST_ADD_TEST test)
                -q -l -b) 
 
   set(root_buildcmd root.exe ${RootExeDefines} -q -l -b)
-
-  # Reference output given?
-  if(ARG_OUTREF)
-    get_filename_component(OUTREF_PATH ${ARG_OUTREF} ABSOLUTE)
-
-    if(DEFINED X86_64 AND EXISTS ${OUTREF_PATH}64)
-      set(OUTREF_PATH ${OUTREF_PATH}64)
-    elseif(DEFINED X86 AND EXISTS ${OUTREF_PATH}32)
-      set(OUTREF_PATH ${OUTREF_PATH}32)
-    endif()
-  else()
-    set(OUTREF_PATH, "")
-  endif()
-
-  if(ARG_OUTCNV)
-    get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
-  endif()
 
   # Compile macro, then add to CTest.
   if(ARG_MACRO MATCHES "[.]C\\+" OR ARG_MACRO MATCHES "[.]cxx\\+")
@@ -88,6 +68,55 @@ function(ROOTTEST_ADD_TEST test)
     set(checkstderr CHECKERR)
   endif()
 
+endmacro(ROOTTEST_SETUP_MACROTEST)
+
+macro(ROOTTEST_SETUP_EXECTEST)
+
+  find_program(realexec ${ARG_EXEC}
+               HINTS $ENV{PATH}
+               PATH ${CMAKE_CURRENT_BINARY_DIR})
+  
+  set(command ${realexec})
+
+  message("command: ${command}")
+
+  set(checkstdout CHECKOUT)
+  set(checkstderr CHECKERR)
+
+endmacro(ROOTTEST_SETUP_EXECTEST)
+
+function(ROOTTEST_ADD_TEST test)
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
+                            "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
+                            "TESTOWNER;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
+
+  # Setup macro test.
+  if(ARG_MACRO)
+   ROOTTEST_SETUP_MACROTEST()
+  endif()
+
+  # Setup executable test.
+  if(ARG_EXEC)
+    ROOTTEST_SETUP_EXECTEST()
+  endif()
+
+  # Reference output given?
+  if(ARG_OUTREF)
+    get_filename_component(OUTREF_PATH ${ARG_OUTREF} ABSOLUTE)
+
+    if(DEFINED X86_64 AND EXISTS ${OUTREF_PATH}64)
+      set(OUTREF_PATH ${OUTREF_PATH}64)
+    elseif(DEFINED X86 AND EXISTS ${OUTREF_PATH}32)
+      set(OUTREF_PATH ${OUTREF_PATH}32)
+    endif()
+  else()
+    set(OUTREF_PATH, "")
+  endif()
+
+  if(ARG_OUTCNV)
+    get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
+  endif()
+
   # Get the real path to the output conversion script.
   if(ARG_OUTCNV)
     get_filename_component(OUTCNV ${ARG_OUTCNV} ABSOLUTE)
@@ -104,7 +133,7 @@ function(ROOTTEST_ADD_TEST test)
     set(willfail WILLFAIL)
   endif()
 
-  # Add labels to the test.
+  # Add ownership and test labels.
   get_property(testowner DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                          PROPERTY ROOTTEST_TEST_OWNER)
 
