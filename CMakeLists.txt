@@ -76,6 +76,9 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
 endif()
 
 # Setup environment.
+set(ROOTTEST_ENV_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+set(ROOTTEST_ENV_PYTHONPATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set(ROOTTEST_ENV_LIBRARYPATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 # Resolve symbolic links for the ROOTTEST_DIR variable.
 get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
@@ -91,18 +94,6 @@ include(RootCTestMacros)
 
 # Find GCCXML.
 find_package(GCCXML REQUIRED)
-
-if(WIN32)
-  set(ENV{PATH} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY};$ENV{PATH}")
-endif()
-
-if(CMAKE_SYSTEM_NAME MATCHES Linux)
-  set(ENV{LD_LIBRARY_PATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{LD_LIBRARY_PATH}")
-elseif(APPLE)
-  set(ENV{DYLD_LIBRARY_PATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{DYLD_LIBRARY_PATH}")
-endif()
-
-set(ENV{PYTHONPATH} "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{PYTHONPATH}")
 
 # Set of libraries that are used as standard dependencies. Dependencies needed
 # so make -j does not fail when compiling macros, but the libraries do not exist

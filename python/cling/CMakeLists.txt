@@ -1,5 +1,5 @@
 if(ROOT_python_FOUND)
-  ROOTTEST_ADD_TEST(python-cint-api MACRO runPyAPITest.C OUTREF PyAPITest.ref)
-  ROOTTEST_ADD_TEST(python-cint-class MACRO runPyClassTest.C OUTREF PyClassTest.ref)
-  ROOTTEST_ADD_TEST(python-cint-cint MACRO PyROOT_cinttests.py)
+  ROOTTEST_ADD_TEST(python-cling-api MACRO runPyAPITest.C OUTREF PyAPITest.ref)
+  ROOTTEST_ADD_TEST(python-cling-class MACRO runPyClassTest.C OUTREF PyClassTest.ref)
+  ROOTTEST_ADD_TEST(python-cling-cling MACRO PyROOT_clingtests.py)
 endif()

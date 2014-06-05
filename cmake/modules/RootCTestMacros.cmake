@@ -189,19 +189,15 @@ function(ROOTTEST_ADD_TEST test)
     set(depends ${depends} ${deplist})
   endif(ARG_DEPENDS)
 
-  if(CMAKE_SYSTEM_NAME MATCHES Linux)
-    set(LIBRARYPATH LD_LIBRARY_PATH=$ENV{LD_LIBRARY_PATH})
-  elseif(APPLE)
-    set(LIBRARYPATH DYLD_LIBRARY_PATH=$ENV{DYLD_LIBRARY_PATH})
-  else()
-    set(LIBRARYPATH "") 
-  endif()
+  string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
+  string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
+  string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
 
   set(environment ENVIRONMENT
                   ROOTSYS=${ROOTSYS}
-                  PYTHONPATH=$ENV{PYTHONPATH}
-                  PATH=$ENV{PATH}
-                  ${LIBRARYPATH})
+                  PATH=${_path}:$ENV{PATH}
+                  PYTHONPATH=${_pythonpath}:$ENV{PYTHONPATH}
+                  ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}} )
 
   if(ARG_WORKING_DIR)
     set(test_working_dir ${ARG_WORKING_DIR})
@@ -225,6 +221,8 @@ function(ROOTTEST_ADD_TEST test)
                         ${compile_macros}
                         ${labels}
                         ${passrc}
+                        ${precmd}
+                        ${postcmd}
                         DEPENDS ${depends})
 
 endfunction(ROOTTEST_ADD_TEST)
