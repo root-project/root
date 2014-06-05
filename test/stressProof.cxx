@@ -14,7 +14,7 @@
 // *                                                                       * //
 // * To run interactively:                                                 * //
 // * $ root                                                                * //
-// * root[] .include $ROOTSYS/tutorials                                    * //
+// * root[] .I $ROOTSYS/tutorials                                          * //
 // * root[] .L stressProof.cxx+                                            * //
 // * root[] stressProof(master, tests, wrks, verbose, logfile, dyn, \      * //
 // *                    dyn, skipds, h1src, eventsrc, dryrun)              * //
