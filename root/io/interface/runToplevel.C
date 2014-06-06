@@ -29,8 +29,13 @@ result &= ReadToplevel();
 gROOT->ProcessLine(".U Toplevel.C");
 gROOT->ProcessLine(".L Toplevel.C+");
 
+#ifdef ClingWorkAroundMissingDynamicScope
+gROOT->ProcessLine("result &= WriteToplevel();"
+                   "result &= ReadToplevel();");
+#else
 result &= WriteToplevel();
 result &= ReadToplevel();
+#endif // ClingWorkAroundMissingDynamicScope
 #endif
 
 #ifdef ClingWorkAroundMissingDynamicScope
