@@ -3392,7 +3392,7 @@ Bool_t TClass::HasDictionary()
 }
 
 //______________________________________________________________________________
-void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, bool recurse)
+void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse)
 {
    // Verify the base classes always.
 
@@ -3403,13 +3403,13 @@ void TClass::GetMissingDictionariesForBaseClasses(TCollection& result, bool recu
    while ((base = (TBaseClass*)nextBase())) {
       TClass* baseCl = base->Class();
       if (baseCl) {
-            baseCl->GetMissingDictionariesWithRecursionCheck(result, recurse);
+            baseCl->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
       }
    }
 }
 
 //______________________________________________________________________________
-void TClass::GetMissingDictionariesForMembers(TCollection& result, bool recurse)
+void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse)
 {
    // Verify the Data Members.
 
@@ -3427,17 +3427,17 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, bool recurse)
             dmTClass = TClass::GetClass(dm->GetTypeName());
       }
       if (dmTClass) {
-            dmTClass->GetMissingDictionariesWithRecursionCheck(result, recurse);
+            dmTClass->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
       }
    }
 }
 
 //______________________________________________________________________________
-void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, bool recurse)
+void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse)
 {
    // From the second level of recursion onwards it is different state check.
 
-   if (result.FindObject(this)) return;
+   if (result.FindObject(this) || visited.FindObject(this)) return;
 
    static TClassRef sCIString("string");
    if (this == sCIString) return;
@@ -3447,6 +3447,8 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, bool 
    if (!HasDictionary()) {
       result.Add(this);
    }
+
+   visited.Add(this);
    //Check whether a custom streamer
    if (!TestBit(TClass::kHasCustomStreamerMember)) {
       if (GetCollectionProxy()) {
@@ -3456,7 +3458,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, bool 
          if ((t = GetCollectionProxy()->GetValueClass())) {
             if (!t->HasDictionary()) {
                if (recurse) {
-                  t->GetMissingDictionariesWithRecursionCheck(result, recurse);
+                  t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
                } else {
                   result.Add(this);
                }
@@ -3464,9 +3466,9 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, bool 
          }
       } else {
          if (recurse) {
-            GetMissingDictionariesForMembers(result, recurse);
+            GetMissingDictionariesForMembers(result, visited, recurse);
          }
-         GetMissingDictionariesForBaseClasses(result, recurse);
+         GetMissingDictionariesForBaseClasses(result, visited, recurse);
       }
    }
 }
@@ -3493,9 +3495,14 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
 
    if (strncmp(fName, "pair<", 5) == 0) return;
 
+   THashTable visitedClasses;
+
    if (!HasDictionary()) {
       result.Add(this);
    }
+
+   visitedClasses.Add(this);
+
    //Check whether a custom streamer
    if (!TestBit(TClass::kHasCustomStreamerMember)) {
       if (GetCollectionProxy()) {
@@ -3504,12 +3511,12 @@ void TClass::GetMissingDictionaries(THashTable& result, bool recurse)
          TClass* t = 0;
          if ((t = GetCollectionProxy()->GetValueClass())) {
             if (!t->HasDictionary()) {
-               t->GetMissingDictionariesWithRecursionCheck(result, recurse);
+               t->GetMissingDictionariesWithRecursionCheck(result, visitedClasses, recurse);
             }
          }
       } else {
-         GetMissingDictionariesForMembers(result, recurse);
-         GetMissingDictionariesForBaseClasses(result, recurse);
+         GetMissingDictionariesForMembers(result, visitedClasses, recurse);
+         GetMissingDictionariesForBaseClasses(result, visitedClasses, recurse);
       }
    }
 }
