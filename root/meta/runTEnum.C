@@ -57,11 +57,11 @@ int runTEnum()
    }
    // Assert that the constant is not in the list of globals
    if (gROOT->GetListOfGlobals()->FindObject("TString::kIgnoreCase")) {
-      Error("GetListOfGlobals", "The following enum constant should not be in the list of globals: %s", caseCompareEnum);
+      Error("GetListOfGlobals", "The following enum constant should not be in the list of globals: TString::kIgnoreCase");
    }
    // Assert that the constant is not in the list of globals, not even with unscoped name
    if (gROOT->GetListOfGlobals()->FindObject("kIgnoreCase")) {
-      Error("GetListOfGlobals", "The following enum constant name should not be in the list of globals: %s", caseCompareEnum);
+      Error("GetListOfGlobals", "The following enum constant name should not be in the list of globals: kIgnoreCase");
    }
    
    // Find Existing TEnums in the TEnums list.
