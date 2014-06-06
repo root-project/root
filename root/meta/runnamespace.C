@@ -20,7 +20,11 @@ gROOT->GetClass("MySpace")->GetListOfMethods()->FindObject("funcInNS")->Print();
 gROOT->GetListOfGlobalFunctions()->FindObject("globalFunc")->Print();
 gROOT->GetListOfGlobalFunctions()->FindObject("globalFuncInline")->Print();
 
+#ifdef ClingWorkAroundMissingDynamicScope
+ gROOT->ProcessLine("storeACl();");
+#else
  storeACl();
+#endif
 
 
  // Tests for the ROOT/Meta side of ROOT-6079, ROOT-6094:
