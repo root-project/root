@@ -1,3 +1,5 @@
+TCanvas* bench = 0;
+
 void bexec(TString &dir,const char *macro)
 {
    if (gROOT->IsBatch()) printf("Processing benchmark: %s%s\n",dir.Data(),macro);
