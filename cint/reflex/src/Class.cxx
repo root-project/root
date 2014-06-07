@@ -48,7 +48,7 @@ __dynamic_cast(const void* __src_ptr, // Starting object.
 }
 #endif
 
-static std::mutex gPathsToBaseLock;
+static std::recursive_mutex gPathsToBaseLock;
 
 //-------------------------------------------------------------------------------
 Reflex::Class::Class(const char* typ,
@@ -520,7 +520,7 @@ Reflex::Class::NewBases() const {
 const std::vector<Reflex::OffsetFunction>&
 Reflex::Class::PathToBase(const Scope& bas) const {
 //-------------------------------------------------------------------------------
-   std::lock_guard<std::mutex> guard(gPathsToBaseLock);
+   std::lock_guard<std::recursive_mutex> guard(gPathsToBaseLock);
 // Return a vector of offset functions from the current class to the base class.
    const BasePath_t* pathToBase = fPathsToBase[bas.Id()];
 
