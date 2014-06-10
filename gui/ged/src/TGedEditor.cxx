@@ -641,10 +641,10 @@ void TGedEditor::ConfigureGedFrames(Bool_t objChanged)
    while ((el = (TGFrameElement *) next())) {
       if ((el->fFrame)->InheritsFrom(TGedFrame::Class())) {
          if (objChanged) {
-         el->fFrame->MapSubwindows();
-         ((TGedFrame *)(el->fFrame))->SetModel(fModel);
-         el->fFrame->Layout();
-         el->fFrame->MapWindow();
+            el->fFrame->MapSubwindows();
+            ((TGedFrame *)(el->fFrame))->SetModel(fModel);
+            el->fFrame->Layout();
+            el->fFrame->MapWindow();
          } else {
             ((TGedFrame *)(el->fFrame))->SetModel(fModel);
          }

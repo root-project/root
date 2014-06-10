@@ -177,6 +177,8 @@ void TPadEditor::SetModel(TObject* obj)
 {
    // Pick up the used fill attributes.
 
+   if (!obj || !obj->InheritsFrom("TPad"))
+      return;
    fPadPointer = (TPad *)obj;
    fAvoidSignal = kTRUE;
    Bool_t on;
