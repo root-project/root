@@ -41,636 +41,639 @@ const Double_t kDefWeight = 1;
 ClassImp(TEfficiency)
 
 //______________________________________________________________________________
-// Begin_Html <center><h2>TEfficiency - a class to handle efficiency
-// histograms</h2></center>
-// <ol style="list-style-type: upper-roman;">
-// <li><a href="#over">Overview</a></li>
-// <li><a href="#create">Creating a TEfficiency object</a></li>
-// <li><a href="#fill">Fill in events</a></li>
-// <li><a href="#stat">Statistic options</a></li>
-// <ol><li><a href="#compare">Coverage probabilities for different methods</a></li></ol>
-// <li><a href="#cm">Merging and combining TEfficiency objects</a></li>
-//  <ol>
-//   <li><a href="#merge">When should I use merging?</a></li>
-//   <li><a href="#comb">When should I use combining?</a></li>
-//  </ol>
-// <li><a href="#other">Further operations</a>
-//  <ol>
-//   <li><a href="#histo">Information about the internal histograms</a></li>
-//   <li><a href="#fit">Fitting</a></li>
-//   <li><a href="#draw">Draw a TEfficiency object</a></li>
-//  </ol>
-// <li><a href="#class">TEfficiency class</a></li>
-// </ol>
-//
-// <h3><a name="over">I. Overview</a></h3>
-// This class handles the calculation of efficiencies and their uncertainties. It
-// provides several statistical methods for calculating frequentist and bayesian
-// confidence intervals as well as a function for combining several efficiencies.
-// <br />
-// Efficiencies have a lot of applications and meanings but in principle they can
-// be described by the fraction of good/passed events k out of sample containing
-// N events. One is usually interested in the dependency of the efficiency on other
-// (binned) variables. The number of passed and total events is therefore stored
-// internally in two histograms (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> and
-// <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fPassedHistogram">fPassedHistogram</a>). Then the
-// efficiency as well as its upper and lower error an be calculated for each bin
-// individually.<br />
-// As the efficiency can be regarded as a parameter of a binomial distribution, the
-// number of pass ed and total events must always be integer numbers. Therefore a
-// filling with weights is not possible however you can assign a global weight to each
-// TEfficiency object (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>). It is necessary to create one TEfficiency object
-// for each weight if you investigate a process involving different weights. This
-// procedure needs more effort but enables you to re-use the filled object in cases
-// where you want to change one or more weights. This would not be possible if all
-// events with different weights were filled in the same histogram.
-// 
-// <h3><a name="create">II. Creating a TEfficiency object</a></h3>
-// If you start a new analysis, it is highly recommended to use the TEfficiency class
-// from the beginning. You can then use one of the constructors for fixed or
-// variable bin size and your desired dimension. These constructors append the
-// created TEfficiency object to the current directory. So it will be written
-// automatically to a file during the next <a href="http://root.cern.ch/root/html/TFile.html#TFile:Write">TFile::Write</a> command.
-// <div class="code"><pre>
-// <b>Example:</b>
-//create a twodimensional TEfficiency object with
-//- name = "eff"
-//- title = "my efficiency"
-//- axistitles: x, y and LaTeX formated epsilon as label for Z axis
-//- 10 bins with constant bin width (= 1) along X axis starting at 0 (lower edge
-//  from first bin) upto 10 (upper edge of last bin)
-//- 20 bins with constant bin width (= 0.5) along Y axis starting at -5 (lower
-//  edge from first bin) upto 5 (upper edge of last bin)
-// TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
-// </pre></div><div class="clear" />
-// If you already have two histograms filled with the number of passed and total
-// events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
-// to construct the TEfficiency object. The histograms "passed" and "total" have
-// to fullfill the conditions  mentioned in <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:CheckConsistency">CheckConsistency</a>, otherwise the construction will fail.
-// As the histograms already exist, the new TEfficiency is by default <b>not</b> attached
-// to the current directory to avoid duplication of data. If you want to store the
-// new object anyway, you can either write it directly by calling <a href="http://root.cern.ch/root/html/TObject.html#TObject:Write">Write</a> or attach it to a directory using <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetDirectory">SetDirectory</a>.
-// This also applies for TEfficiency objects created by the copy constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%8">TEfficiency(const TEfficiency& rEff)</a>.
-// <div class="code">
-// <pre>
-// <b>Example 1:</b>
-// TEfficiency* pEff = 0;
-// TFile* pFile = new TFile("myfile.root","recreate");
-// 
-// //h_pass and h_total are valid and consistent histograms
-// if(TEfficiency::CheckConsistency(h_pass,h_total))
-// {
-//   pEff = new TEfficiency(h_pass,h_total);
-//   // this will write the TEfficiency object to "myfile.root"
-//   // AND pEff will be attached to the current directory
-//   pEff->Write();
-// }
-// 
-// <b>Example 2:</b>
-// TEfficiency* pEff = 0;
-// TFile* pFile = new TFile("myfile.root","recreate");
-// 
-// //h_pass and h_total are valid and consistent histograms
-// if(TEfficiency::CheckConsistency(h_pass,h_total))
-// {
-//   pEff = new TEfficiency(h_pass,h_total);
-//   //this will attach the TEfficiency object to the current directory
-//   pEff->SetDirectory(gDirectory);
-//   //now all objects in gDirectory will be written to "myfile.root"
-//   pFile->Write();
-// }
-// </pre>
-// </div><div class="clear" />
-// In the case that you already have two filled histograms and you only want to
-// plot them as a graph, you should rather use <a href="http://root.cern.ch/root/html/TGraphAsymmErrors.html#TGraphAsymmErrors:TGraphAsymmErrors%8">TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)</a>
-// to create a graph object.
-//    
-// <h3><a name="fill">III. Filling with events</a></h3>
-//    You can fill the TEfficiency object by calling the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fill">Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)</a> method.
-//    The boolean flag "bPassed" indicates whether the current event is a good
-//    (both histograms are filled) or not (only <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> is filled).
-//    The variables x,y and z determine the bin which is filled. For lower
-//    dimensions the z- or even the y-value may be omitted.
-//    End_Html
-//    Begin_Macro(source)
-// {
-//    //canvas only needed for this documentation
-//    TCanvas* c1 = new TCanvas("example","",600,400);
-//    c1->SetFillStyle(1001);
-//    c1->SetFillColor(kWhite);
-//    
-//    //create one-dimensional TEfficiency object with fixed bin size
-//    TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
-//    TRandom3 rand3;
-// 
-//    bool bPassed;
-//    double x;
-//    for(int i=0; i<10000; ++i)
-//    {
-//       //simulate events with variable under investigation
-//       x = rand3.Uniform(10);
-//       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
-//       pEff->Fill(bPassed,x);
-//    }
-// 
-//    pEff->Draw("AP");
-// 
-//    //only for this documentation
-//    return c1;
-// }
-//    End_Macro
-//    Begin_Html
-//    You can also set the number of passed or total events for a bin directly by
-//    using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedEvents">SetPassedEvents</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalEvents">SetTotalEvents</a> method.
-//    
-// <h3><a name="stat">IV. Statistic options</a></h3>
-//    The calculation of the estimated efficiency depends on the chosen statistic
-//    option. Let k denotes the number of passed events and N the number of total
-//    events.<br />
-//    <b>Frequentist methods</b><br />
-//    The expectation value of the number of passed events is given by the true
-//    efficiency times the total number of events. One can estimate the efficiency
-//    by replacing the expected number of passed events by the observed number of
-//    passed events. End_Html
-//    Begin_Latex
-// #LT k #GT = #epsilon #times N    #Rightarrow    #hat{#varepsilon} = #frac{k}{N}
-//    End_Latex
-//    Begin_Html
-//    <b>Bayesian methods</b><br />
-//    In bayesian statistics a likelihood-function (how probable is it to get the
-//    observed data assuming a true efficiency) and a prior probability (what is the
-//    probability that a certain true efficiency is actually realised) are used to
-//    determine a posterior probability by using Bayes theorem. At the moment, only
-//    beta distributions (have 2 free parameters) are supported as prior
-//    probabilities.
-//    End_Html
-//    Begin_Latex(separator='=',align='rl')
-//       P(#epsilon | k ; N) = #frac{1}{norm} #times P(k | #epsilon ; N) #times Prior(#epsilon)
-//       P(k | #epsilon ; N) = Binomial(N,k) #times #epsilon^{k} #times (1 - #epsilon)^{N - k} ... binomial distribution
-//       Prior(#epsilon) = #frac{1}{B(#alpha,#beta)} #times #epsilon ^{#alpha - 1} #times (1 - #epsilon)^{#beta - 1} #equiv Beta(#epsilon; #alpha,#beta)
-// #Rightarrow P(#epsilon | k ; N) = #frac{1}{norm'} #times #epsilon^{k + #alpha - 1} #times (1 - #epsilon)^{N - k + #beta - 1} #equiv Beta(#epsilon; k + #alpha, N - k + #beta)
-//    End_Latex
-//    Begin_Html
-//    By default the expectation value of this posterior distribution is used as estimator for the efficiency:
-//    End_Html
-//    Begin_Latex
-// #hat{#varepsilon} = #frac{k + #alpha}{N + #alpha + #beta}
-//    End_Latex
-//    Begin_Html  
-//    Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling SetBit(kPosteriorMode) or 
-//    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPosteriorMode">SetPosteriorMode</a>. In this case the estimated efficiency is:
-//    End_Html
-//    Begin_Latex
-// #hat{#varepsilon} = #frac{k + #alpha -1}{N + #alpha + #beta - 2}
-//    End_Latex
-//    Begin_Html  
-//    In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist estimate (the maximum likelihood value). 
-//   
-// The statistic options also specifiy which confidence interval is used for calculating
-// the uncertainties of the efficiency. The following properties define the error
-// calculation:
-// <ul>
-// <li><b>fConfLevel:</b> desired confidence level: 0 < fConfLevel < 1 (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetConfidenceLevel">GetConfidenceLevel</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetConfidenceLevel">SetConfidenceLevel</a>)</li>
-// <li><b>fStatisticOption:</b> defines which method is used to calculate the boundaries of the confidence interval (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetStatisticOption">SetStatisticOption</a>)</li>
-// <li><b>fBeta_alpha, fBeta_beta:</b> parameters for the prior distribution which is only used in the bayesian case (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaAlpha">GetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaBeta">GetBetaBeta</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaAlpha">SetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaBeta">SetBetaBeta</a>)</li>
-// <li><b>kIsBayesian:</b> flag whether bayesian statistics are used or not (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesBayesianStat">UsesBayesianStat</a>)</li>
-// <li><b>kShortestInterval:</b> flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesShortestInterval">UsesShortestInterval</a>). Normally shortest interval should be used in combination with the mode (see <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesPosteriorMode">UsesPosteriorMode</a>)</li>
-// <li><b>fWeight:</b> global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetWeight">GetWeight</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>)</li>
-// </ul>
-//    In the following table the implemented confidence intervals are listed
-//    with their corresponding statistic option. For more details on the calculation,
-//    please have a look at the the mentioned functions.<br /><br />
-// <table align="center" border="1" cellpadding="5" rules="rows" vspace="10">
-//    <caption align="bottom">implemented confidence intervals and their options</caption>
-//    <tr>
-//    <th>name</th><th>statistic option</th><th>function</th><th>kIsBayesian</th><th>parameters</th>
-//    </tr>
-//    <tr>
-//    <td>Clopper-Pearson</td><td>kFCP</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:ClopperPearson">ClopperPearson</a>
-//    </td>
-//    <td>false</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-//    </td>
-//    </tr>
-//    <tr>
-//    <td>normal approximation</td><td>kFNormal</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Normal">Normal</a>
-//    </td>
-//    <td>false</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-//    </td>
-//    </tr>
-//    <tr>
-//    <td>Wilson</td><td>kFWilson</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Wilson">Wilson</a>
-//    </td>
-//    <td>false</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-//    </td>
-//    </tr>
-//    <tr>
-//    <td>Agresti-Coull</td><td>kFAC</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:AgrestiCoull">AgrestiCoull</a>
-//    </td>
-//    <td>false</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-//    </td>
-//    </tr>
-//    <tr>
-//    <td>Feldman-Cousins</td><td>kFFC</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:FeldmanCousins">FeldmanCousins</a>
-//    </td>
-//    <td>false</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
-//    </td>
-//    </tr>
-//    <tr>
-//    <td>Jeffrey</td><td>kBJeffrey</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-//    </td>
-//    <td>true</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 0.5</li><li>fBeta_beta = 0.5</li></ul>
-//    </td>
-//    </tr>
-//    <td>Uniform prior</td><td>kBUniform</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-//    </td>
-//    <td>true</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 1</li><li>fBeta_beta = 1</li></ul>
-//    </td>
-//    </tr>
-//    <td>custom prior</td><td>kBBayesian</td>
-//    <td>
-//     <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
-//    </td>
-//    <td>true</td>
-//    <td>
-//      <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha</li><li>fBeta_beta</li></ul>
-//    </td>
-//    </tr>
-//    </table>
-//    <br />
-//    The following example demonstrates the effect of different statistic options and
-//    confidence levels.
-//    End_Html
-//    Begin_Macro(source)
-// {
-//    //canvas only needed for the documentation
-//    TCanvas* c1 = new TCanvas("c1","",600,400);
-//    c1->Divide(2);
-//    c1->SetFillStyle(1001);
-//    c1->SetFillColor(kWhite);
-// 
-//    //create one-dimensional TEfficiency object with fixed bin size
-//    TEfficiency* pEff = new TEfficiency("eff","different confidence levels;x;#epsilon",20,0,10);
-//    TRandom3 rand3;
-// 
-//    bool bPassed;
-//    double x;
-//    for(int i=0; i<1000; ++i)
-//    {
-//       //simulate events with variable under investigation
-//       x = rand3.Uniform(10);
-//       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
-//       pEff->Fill(bPassed,x);
-//    }
-// 
-//    //set style attributes
-//    pEff->SetFillStyle(3004);
-//    pEff->SetFillColor(kRed);
-// 
-//    //copy current TEfficiency object and set new confidence level
-//    TEfficiency* pCopy = new TEfficiency(*pEff);
-//    pCopy->SetConfidenceLevel(0.90);
-// 
-//    //set style attributes
-//    pCopy->SetFillStyle(3005);
-//    pCopy->SetFillColor(kBlue);
-// 
-//    c1->cd(1);
-//  
-//    //add legend
-//    TLegend* leg1 = new TLegend(0.3,0.1,0.7,0.5);
-//    leg1->AddEntry(pEff,"95%","F");
-//    leg1->AddEntry(pCopy,"68.3%","F");
-//    
-//    pEff->Draw("A4");
-//    pCopy->Draw("same4");
-//    leg1->Draw("same");
-// 
-//    //use same confidence level but different statistic methods
-//    TEfficiency* pEff2 = new TEfficiency(*pEff);
-//    TEfficiency* pCopy2 = new TEfficiency(*pEff);
-//    
-//    pEff2->SetStatisticOption(TEfficiency::kFNormal);
-//    pCopy2->SetStatisticOption(TEfficiency::kFAC);
-// 
-//    pEff2->SetTitle("different statistic options;x;#epsilon");
-// 
-//    //set style attributes
-//    pCopy2->SetFillStyle(3005);
-//    pCopy2->SetFillColor(kBlue);
-// 
-//    c1->cd(2);
-//  
-//    //add legend
-//    TLegend* leg2 = new TLegend(0.3,0.1,0.7,0.5);
-//    leg2->AddEntry(pEff2,"kFNormal","F");
-//    leg2->AddEntry(pCopy2,"kFAC","F");
-//    
-//    pEff2->Draw("a4");
-//    pCopy2->Draw("same4");
-//    leg2->Draw("same");
-// 
-//    //only for this documentation
-//    c1->cd(0);
-//    return c1;
-// }
-//    End_Macro
-//    Begin_Html
-//    The prior probability of the efficiency in bayesian statistics can be given
-//    in terms of a beta distribution. The beta distribution has to positive shape
-//    parameters. The resulting priors for different combinations of these shape
-//    parameters are shown in the plot below.
-//    End_Html
-//    Begin_Macro(source)
-//    {
-//       //canvas only needed for the documentation
-//       TCanvas* c1 = new TCanvas("c1","",600,400);
-//       c1->SetFillStyle(1001);
-//       c1->SetFillColor(kWhite);
-// 
-//       //create different beta distributions
-//       TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
-//       f1->SetLineColor(kBlue);
-//       TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
-//       f2->SetLineColor(kRed);
-//       TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
-//       f3->SetLineColor(kGreen+3);
-//       f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
-//       TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
-//       f4->SetLineColor(kViolet);
-// 
-//       //add legend
-//       TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
-//       leg->SetFillColor(kWhite);
-//       leg->SetFillStyle(1001);
-//       leg->AddEntry(f1,"a=1, b=1","L");
-//       leg->AddEntry(f2,"a=0.5, b=0.5","L");
-//       leg->AddEntry(f3,"a=1, b=5","L");
-//       leg->AddEntry(f4,"a=4, b=3","L");
-//       
-//       f3->Draw();
-//       f1->Draw("same");
-//       f2->Draw("Same");
-//       f4->Draw("same");
-//       leg->Draw("same");
-// 
-//       //only for this documentation
-//       return c1;
-//    }
-//    End_Macro      
-//    Begin_Html
-//
-//    <h4><a name="compare">IV.1 Coverage probabilities for different methods</a></h4>
-//    The following pictures illustrate the actual coverage probability for the
-//    different values of the true efficiency and the total number of events when a
-//    confidence level of 95% is desired.
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/normal95.gif" alt="normal approximation" width="600" height="400" /></p>
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/wilson95.gif" alt="wilson" width="600" height="400" /></p>
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/ac95.gif" alt="agresti coull" width="600" height="400" /></p>
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/cp95.gif" alt="clopper pearson" width="600" height="400" /></p>
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/uni95.gif" alt="uniform prior" width="600" height="400" /></p>
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/jeffrey95.gif" alt="jeffrey prior" width="600" height="400" /></p>
-//
-//    The average (over all possible true efficiencies) coverage probability for
-//    different number of total events is shown in the next picture.
-//    <p><img src="http://root.cern.ch/drupal/sites/default/files/images/av_cov.png" alt="average coverage" width="600" height="400" /></p>
-//    <h3><a name="cm">V. Merging and combining TEfficiency objects</a></h3>
-//    In many applications the efficiency should be calculated for an inhomogenous
-//    sample in the sense that it contains events with different weights. In order
-//    to be able to determine the correct overall efficiency, it is necessary to
-//    use for each subsample (= all events with the same weight) a different
-//    TEfficiency object. After finsihing your analysis you can then construct the
-//    overall efficiency with its uncertainty.<br />
-//    This procedure has the advantage that you can change the weight of one
-//    subsample easily without rerunning the whole analysis. On the other hand more
-//    efford is needed to handle several TEfficiency objects instead of one
-//    histogram. In the case of many different or even continuously distributed
-//    weights this approach becomes cumbersome. One possibility to overcome this
-//    problem is the usage of binned weights.<br /><br />
-//    <b>Example</b><br />
-//    In high particle physics weights arises from the fact that you want to
-//    normalise your results to a certain reference value. A very common formula for
-//    calculating weights is End_Html
-//    Begin_Latex(separator='-')
-//    w = #frac{#sigma L}{N_{gen} #epsilon_{trig}} - #sigma ... cross section
-//    - L ... luminosity
-//    - N_{gen} ... number of generated events
-//    - #epsilon_{trig} ... (known) trigger efficiency
-//    End_Latex
-//    Begin_Html
-//    The reason for different weights can therefore be:<ul>
-//    <li>different processes</li>
-//    <li>other integrated luminosity</li>
-//    <li>varying trigger efficiency</li>
-//    <li>different sample sizes</li>
-//    <li>...</li>
-//    <li>or even combination of them</li>
-//    </ul>
-//    Depending on the actual meaning of different weights in your case, you
-//    should either merge or combine them to get the overall efficiency.
-// 						      
-//    <h4><a name="merge">V.1 When should I use merging?</a></h4>
-//    If the weights are artificial and do not represent real alternative hypotheses,
-//    you should merge the different TEfficiency objects. That means especially for
-//    the bayesian case that the prior probability should be the same for all merged
-//    TEfficiency objects. The merging can be done by invoking one of the following
-//    operations:
-//    <ul>
-//    <li> <b>eff1</b>.<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Add">Add</a>(eff2)</li>
-//    <li> <b>eff1</b> <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:operator+=">+=</a> eff2</li>
-//    <li> <b>eff</b> = eff1 + eff2</li>
-//    </ul>
-//    The result of the merging is stored in the TEfficiency object which is marked
-//    bold above. The contents of the internal histograms of both TEfficiency
-//    objects are added and a new weight is assigned. The statistic options are not
-//    changed.
-//    End_Html
-//    Begin_Latex #frac{1}{w_{new}} = #frac{1}{w_{1}} + #frac{1}{w_{2}}End_Latex
-//    Begin_Html
-//    <b>Example:</b><br />
-//    If you use two samples with different numbers of generated events for the same
-//    process and you want to normalise both to the same integrated luminosity and
-//    trigger efficiency, the different weights then arise just from the fact that
-//    you have different numbers of events. The TEfficiency objects should be merged
-//    because the samples do not represent true alternatives. You expect the same
-//    result as if you would have a big sample with all events in it.
-//    End_Html
-//    Begin_Latex
-//    w_{1} = #frac{#sigma L}{#epsilon N_{1}}, w_{2} = #frac{#sigma L}{#epsilon N_{2}} #Rightarrow w_{new} = #frac{#sigma L}{#epsilon (N_{1} + N_{2})} = #frac{1}{#frac{1}{w_{1}} + #frac{1}{w_{2}}}
-//    End_Latex							     
-//    Begin_Html							     
-// 			  
-//    <h4><a name="comb">V.2 When should I use combining?</a></h4>
-// You should combine TEfficiency objects whenever the weights represent
-// alternatives processes for the efficiency. As the combination of two TEfficiency
-// objects is not always consistent with the representation by two internal
-// histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
-// is returned which shows the estimated combined efficiency and its uncertainty
-// for each bin. At the moment the combination method <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Combine">Combine </a>only supports combination of 1-dimensional efficiencies in a bayesian approach.<br />
-// For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics is used. No frequentists methods are presently 
-// supported for computing the combined efficiency and its confidence interval.
-// In the case of the Bayesian statistics a combined posterior is constructed taking into account the weight of each TEfficiency object. The same prior is used 
-// for all the TEfficiency objects.
-// End_Html
-// Begin_Latex
-// P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #Pi( #epsilon )  
-// L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
-// #Pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
-// The resulting combined posterior is 
-// P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)  
-// #hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
-// confidence level = 1 - #alpha
-// #frac{#alpha}{2} = #int_{0}^{#epsilon_{low}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines lower boundary
-// 1- #frac{#alpha}{2} = #int_{0}^{#epsilon_{up}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines upper boundary
-// End_Latex
-// Begin_Html
-// <b>Example:</b><br />
-// If you use cuts to select electrons which can originate from two different
-// processes, you can determine the selection efficiency for each process. The
-// overall selection efficiency is then the combined efficiency. The weights to be used in the 
-// combination should be the probability that an
-// electron comes from the corresponding process.
-// End_Html
-// Begin_Latex
-// p_{1} = #frac{#sigma_{1}}{#sigma_{1} + #sigma_{2}} = #frac{N_{1}w_{1}}{N_{1}w_{1} + N_{2}w_{2}}
-// p_{2} = #frac{#sigma_{2}}{#sigma_{1} + #sigma_{2}} = #frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
-// End_Latex
-// Begin_Html
-// <h3><a name="other">VI. Further operations</a></h3>
-// 
-// <h4><a name="histo">VI.1 Information about the internal histograms</a></h4>
-// The methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetPassedHistogram">GetPassedHistogram</a> and <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetTotalHistogram">GetTotalHistogram</a>
-// return a constant pointer to the internal histograms. They can be used to
-// obtain information about the internal histograms (e.g. the binning, number of passed / total events in a bin, mean values...).
-// One can obtain a clone of the internal histograms by calling <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyPassedHisto">GetCopyPassedHisto</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyTotalHisto">GetCopyTotalHisto</a>.
-// The returned histograms are completely independent from the current
-// TEfficiency object. By default, they are not attached to a directory to
-// avoid the duplication of data and the user is responsible for deleting them.
-// <div class="code">
-// <pre>
-// <b>Example:</b>
-// //open a root file which contains a TEfficiency object
-// TFile* pFile = new TFile("myfile.root","update");
-// 
-// //get TEfficiency object with name "my_eff"
-// TEfficiency* pEff = (TEfficiency*)pFile->Get("my_eff");
-// 
-// //get clone of total histogram
-// TH1* clone = pEff->GetCopyTotalHisto();
-// 
-// //change clone...
-// //save changes of clone directly
-// clone->Write();
-// //or append it to the current directoy and write the file
-// //clone->SetDirectory(gDirectory);
-// //pFile->Wrtie();
-// 
-// //delete histogram object
-// delete clone;
-// clone = 0;
-// </pre>
-// </div><div class="clear" />
-// It is also possible to set the internal total or passed histogram by using the
-// methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedHistogram">SetPassedHistogram</a> or
-// <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalHistogram">SetTotalHistogram</a>.
-// In order to ensure the validity of the TEfficiency object, the consistency of the
-// new histogram and the stored histogram is checked. It sometimes might be
-// impossible to change the histograms in a consistent way. Therefore one can force
-// the replacement by passing the option "f". Then the user has to ensure that the
-// other internal histogram is replaced as well and that the TEfficiency object is
-// in a valid state.
-// 
-//    <h4><a name="fit">VI.2 Fitting</a></h4>
-//    The efficiency can be fitted using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fit">Fit</a> function which uses internally the <a href="http://root.cern.ch/root/html/TBinomialEfficiencyFitter.html#TBinomialEfficiencyFitter:Fit">TBinomialEfficiencyFitter::Fit</a> method.
-//    As this method is using a maximum-likelihood-fit, it is necessary to initialise
-//    the given fit function with reasonable start values.
-//    The resulting fit function is attached to the list of associated functions and
-//    will be drawn automatically during the next <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> command.
-//    The list of associated function can be modified by using the pointer returned
-//    by <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetListOfFunctions">GetListOfFunctions</a>.
-//    End_Html
-//    Begin_Macro(source)
-// {
-//    //canvas only needed for this documentation
-//    TCanvas* c1 = new TCanvas("example","",600,400);
-//    c1->SetFillStyle(1001);
-//    c1->SetFillColor(kWhite);
-//    
-//    //create one-dimensional TEfficiency object with fixed bin size
-//    TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
-//    TRandom3 rand3;
-// 
-//    bool bPassed;
-//    double x;
-//    for(int i=0; i<10000; ++i)
-//    {
-//       //simulate events with variable under investigation
-//       x = rand3.Uniform(10);
-//       //check selection: bPassed = DoesEventPassSelection(x)
-//       bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
-//       pEff->Fill(bPassed,x);
-//    }
-// 
-//    //create a function for fitting and do the fit
-//    TF1* f1 = new TF1("f1","gaus",0,10);
-//    f1->SetParameters(1,5,2);
-//    pEff->Fit(f1);
-// 
-//    //create a threshold function
-//    TF1* f2 = new TF1("thres","0.8",0,10);
-//    f2->SetLineColor(kRed);
-//    //add it to the list of functions
-//    //use add first because the parameters of the last function will be displayed
-//    pEff->GetListOfFunctions()->AddFirst(f2);
-//    
-//    pEff->Draw("AP");
-// 
-//    //only for this documentation
-//    return c1;
-// }
-//    End_Macro
-//    Begin_Html
-//    
-//    <h4><a name="draw">VI.3 Draw a TEfficiency object</a></h4>
-//    A TEfficiency object can be drawn by calling the usual <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> method.
-//    At the moment drawing is only supported for 1- and 2-dimensional TEfficiency
-//    objects. In the 1-dimensional case you can use the same options as for the <br />
-//    <a href="http://root.cern.ch/root/html/TGraph.html#TGraph:Draw">TGraphAsymmErrors::Draw</a> 
-//    method. For 2-dimensional TEfficiency objects you can pass the same options as
-//    for a <a href="http://root.cern.ch/root/html/TH1.html#TH1:Draw">TH2::Draw</a> object.
-// 
-//    <h3 style="margin-bottom:-3em;"><a name="class">VII. TEfficiency class</a></h3>
-//    
-//End_Html
+/***************************************************************************** 
+Begin_Html 
+<center><h2>TEfficiency - a class to handle efficiency
+histograms</h2></center>
+<ol style="list-style-type: upper-roman;">
+<li><a href="#over">Overview</a></li>
+<li><a href="#create">Creating a TEfficiency object</a></li>
+<li><a href="#fill">Fill in events</a></li>
+<li><a href="#stat">Statistic options</a></li>
+<ol><li><a href="#compare">Coverage probabilities for different methods</a></li></ol>
+<li><a href="#cm">Merging and combining TEfficiency objects</a></li>
+ <ol>
+  <li><a href="#merge">When should I use merging?</a></li>
+  <li><a href="#comb">When should I use combining?</a></li>
+ </ol>
+<li><a href="#other">Further operations</a>
+ <ol>
+  <li><a href="#histo">Information about the internal histograms</a></li>
+  <li><a href="#fit">Fitting</a></li>
+  <li><a href="#draw">Draw a TEfficiency object</a></li>
+ </ol>
+<li><a href="#class">TEfficiency class</a></li>
+</ol>
+
+<h3><a name="over">I. Overview</a></h3>
+This class handles the calculation of efficiencies and their uncertainties. It
+provides several statistical methods for calculating frequentist and bayesian
+confidence intervals as well as a function for combining several efficiencies.
+<br />
+Efficiencies have a lot of applications and meanings but in principle they can
+be described by the fraction of good/passed events k out of sample containing
+N events. One is usually interested in the dependency of the efficiency on other
+(binned) variables. The number of passed and total events is therefore stored
+internally in two histograms (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> and
+<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fPassedHistogram">fPassedHistogram</a>). Then the
+efficiency as well as its upper and lower error an be calculated for each bin
+individually.<br />
+As the efficiency can be regarded as a parameter of a binomial distribution, the
+number of pass ed and total events must always be integer numbers. Therefore a
+filling with weights is not possible however you can assign a global weight to each
+TEfficiency object (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>). It is necessary to create one TEfficiency object
+for each weight if you investigate a process involving different weights. This
+procedure needs more effort but enables you to re-use the filled object in cases
+where you want to change one or more weights. This would not be possible if all
+events with different weights were filled in the same histogram.
+
+<h3><a name="create">II. Creating a TEfficiency object</a></h3>
+If you start a new analysis, it is highly recommended to use the TEfficiency class
+from the beginning. You can then use one of the constructors for fixed or
+variable bin size and your desired dimension. These constructors append the
+created TEfficiency object to the current directory. So it will be written
+automatically to a file during the next <a href="http://root.cern.ch/root/html/TFile.html#TFile:Write">TFile::Write</a> command.
+<div class="code"><pre>
+<b>Example:</b>
+create a twodimensional TEfficiency object with
+- name = "eff"
+- title = "my efficiency"
+- axistitles: x, y and LaTeX formated epsilon as label for Z axis
+- 10 bins with constant bin width (= 1) along X axis starting at 0 (lower edge
+ from first bin) upto 10 (upper edge of last bin)
+- 20 bins with constant bin width (= 0.5) along Y axis starting at -5 (lower
+ edge from first bin) upto 5 (upper edge of last bin)
+TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;y;#epsilon",10,0,10,20,-5,5);
+</pre></div><div class="clear" />
+If you already have two histograms filled with the number of passed and total
+events, you will use the constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%1">TEfficiency(const TH1& passed,const TH1& total)</a>
+to construct the TEfficiency object. The histograms "passed" and "total" have
+to fullfill the conditions  mentioned in <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:CheckConsistency">CheckConsistency</a>, otherwise the construction will fail.
+As the histograms already exist, the new TEfficiency is by default <b>not</b> attached
+to the current directory to avoid duplication of data. If you want to store the
+new object anyway, you can either write it directly by calling <a href="http://root.cern.ch/root/html/TObject.html#TObject:Write">Write</a> or attach it to a directory using <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetDirectory">SetDirectory</a>.
+This also applies for TEfficiency objects created by the copy constructor <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:TEfficiency%8">TEfficiency(const TEfficiency& rEff)</a>.
+<div class="code">
+<pre>
+<b>Example 1:</b>
+TEfficiency* pEff = 0;
+TFile* pFile = new TFile("myfile.root","recreate");
+
+//h_pass and h_total are valid and consistent histograms
+if(TEfficiency::CheckConsistency(h_pass,h_total))
+{
+  pEff = new TEfficiency(h_pass,h_total);
+  // this will write the TEfficiency object to "myfile.root"
+  // AND pEff will be attached to the current directory
+  pEff->Write();
+}
+
+<b>Example 2:</b>
+TEfficiency* pEff = 0;
+TFile* pFile = new TFile("myfile.root","recreate");
+
+//h_pass and h_total are valid and consistent histograms
+if(TEfficiency::CheckConsistency(h_pass,h_total))
+{
+  pEff = new TEfficiency(h_pass,h_total);
+  //this will attach the TEfficiency object to the current directory
+  pEff->SetDirectory(gDirectory);
+  //now all objects in gDirectory will be written to "myfile.root"
+  pFile->Write();
+}
+</pre>
+</div><div class="clear" />
+In the case that you already have two filled histograms and you only want to
+plot them as a graph, you should rather use <a href="http://root.cern.ch/root/html/TGraphAsymmErrors.html#TGraphAsymmErrors:TGraphAsymmErrors%8">TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)</a>
+to create a graph object.
+   
+<h3><a name="fill">III. Filling with events</a></h3>
+   You can fill the TEfficiency object by calling the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fill">Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z)</a> method.
+   The boolean flag "bPassed" indicates whether the current event is a good
+   (both histograms are filled) or not (only <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:fTotalHistogram">fTotalHistogram</a> is filled).
+   The variables x,y and z determine the bin which is filled. For lower
+   dimensions the z- or even the y-value may be omitted.
+   End_Html
+   Begin_Macro(source)
+{
+   //canvas only needed for this documentation
+   TCanvas* c1 = new TCanvas("example","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
+   
+   //create one-dimensional TEfficiency object with fixed bin size
+   TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
+   TRandom3 rand3;
+
+   bool bPassed;
+   double x;
+   for(int i=0; i<10000; ++i)
+   {
+      //simulate events with variable under investigation
+      x = rand3.Uniform(10);
+      //check selection: bPassed = DoesEventPassSelection(x)
+      bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+      pEff->Fill(bPassed,x);
+   }
+
+   pEff->Draw("AP");
+
+   //only for this documentation
+   return c1;
+}
+   End_Macro
+   Begin_Html
+   You can also set the number of passed or total events for a bin directly by
+   using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedEvents">SetPassedEvents</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalEvents">SetTotalEvents</a> method.
+   
+<h3><a name="stat">IV. Statistic options</a></h3>
+   The calculation of the estimated efficiency depends on the chosen statistic
+   option. Let k denotes the number of passed events and N the number of total
+   events.<br />
+   <b>Frequentist methods</b><br />
+   The expectation value of the number of passed events is given by the true
+   efficiency times the total number of events. One can estimate the efficiency
+   by replacing the expected number of passed events by the observed number of
+   passed events. End_Html
+   Begin_Latex
+#LT k #GT = #epsilon #times N    #Rightarrow    #hat{#varepsilon} = #frac{k}{N}
+   End_Latex
+   Begin_Html
+   <b>Bayesian methods</b><br />
+   In bayesian statistics a likelihood-function (how probable is it to get the
+   observed data assuming a true efficiency) and a prior probability (what is the
+   probability that a certain true efficiency is actually realised) are used to
+   determine a posterior probability by using Bayes theorem. At the moment, only
+   beta distributions (have 2 free parameters) are supported as prior
+   probabilities.
+   End_Html
+   Begin_Latex(separator='=',align='rl')
+      P(#epsilon | k ; N) = #frac{1}{norm} #times P(k | #epsilon ; N) #times Prior(#epsilon)
+      P(k | #epsilon ; N) = Binomial(N,k) #times #epsilon^{k} #times (1 - #epsilon)^{N - k} ... binomial distribution
+      Prior(#epsilon) = #frac{1}{B(#alpha,#beta)} #times #epsilon ^{#alpha - 1} #times (1 - #epsilon)^{#beta - 1} #equiv Beta(#epsilon; #alpha,#beta)
+#Rightarrow P(#epsilon | k ; N) = #frac{1}{norm'} #times #epsilon^{k + #alpha - 1} #times (1 - #epsilon)^{N - k + #beta - 1} #equiv Beta(#epsilon; k + #alpha, N - k + #beta)
+   End_Latex
+   Begin_Html
+   By default the expectation value of this posterior distribution is used as estimator for the efficiency:
+   End_Html
+   Begin_Latex
+#hat{#varepsilon} = #frac{k + #alpha}{N + #alpha + #beta}
+   End_Latex
+   Begin_Html  
+   Optionally the mode can also be used as value for the estimated efficiency. This can be done by calling SetBit(kPosteriorMode) or 
+   <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPosteriorMode">SetPosteriorMode</a>. In this case the estimated efficiency is:
+   End_Html
+   Begin_Latex
+#hat{#varepsilon} = #frac{k + #alpha -1}{N + #alpha + #beta - 2}
+   End_Latex
+   Begin_Html  
+   In the case of a uniform prior distribution, B(x,1,1), the posterior mode is k/n, equivalent to the frequentist estimate (the maximum likelihood value). 
+  
+The statistic options also specifiy which confidence interval is used for calculating
+the uncertainties of the efficiency. The following properties define the error
+calculation:
+<ul>
+<li><b>fConfLevel:</b> desired confidence level: 0 < fConfLevel < 1 (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetConfidenceLevel">GetConfidenceLevel</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetConfidenceLevel">SetConfidenceLevel</a>)</li>
+<li><b>fStatisticOption:</b> defines which method is used to calculate the boundaries of the confidence interval (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetStatisticOption">SetStatisticOption</a>)</li>
+<li><b>fBeta_alpha, fBeta_beta:</b> parameters for the prior distribution which is only used in the bayesian case (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaAlpha">GetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetBetaBeta">GetBetaBeta</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaAlpha">SetBetaAlpha</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetBetaBeta">SetBetaBeta</a>)</li>
+<li><b>kIsBayesian:</b> flag whether bayesian statistics are used or not (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesBayesianStat">UsesBayesianStat</a>)</li>
+<li><b>kShortestInterval:</b> flag whether shortest interval (instead of central one) are used in case of Bayesian statistics  (<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesShortestInterval">UsesShortestInterval</a>). Normally shortest interval should be used in combination with the mode (see <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:UsesPosteriorMode">UsesPosteriorMode</a>)</li>
+<li><b>fWeight:</b> global weight for this TEfficiency object which is used during combining or merging with other TEfficiency objects(<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetWeight">GetWeight</a> / <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetWeight">SetWeight</a>)</li>
+</ul>
+   In the following table the implemented confidence intervals are listed
+   with their corresponding statistic option. For more details on the calculation,
+   please have a look at the the mentioned functions.<br /><br />
+<table align="center" border="1" cellpadding="5" rules="rows" vspace="10">
+   <caption align="bottom">implemented confidence intervals and their options</caption>
+   <tr>
+   <th>name</th><th>statistic option</th><th>function</th><th>kIsBayesian</th><th>parameters</th>
+   </tr>
+   <tr>
+   <td>Clopper-Pearson</td><td>kFCP</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:ClopperPearson">ClopperPearson</a>
+   </td>
+   <td>false</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+   </td>
+   </tr>
+   <tr>
+   <td>normal approximation</td><td>kFNormal</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Normal">Normal</a>
+   </td>
+   <td>false</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+   </td>
+   </tr>
+   <tr>
+   <td>Wilson</td><td>kFWilson</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Wilson">Wilson</a>
+   </td>
+   <td>false</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+   </td>
+   </tr>
+   <tr>
+   <td>Agresti-Coull</td><td>kFAC</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:AgrestiCoull">AgrestiCoull</a>
+   </td>
+   <td>false</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+   </td>
+   </tr>
+   <tr>
+   <td>Feldman-Cousins</td><td>kFFC</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:FeldmanCousins">FeldmanCousins</a>
+   </td>
+   <td>false</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li></ul>
+   </td>
+   </tr>
+   <tr>
+   <td>Jeffrey</td><td>kBJeffrey</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
+   </td>
+   <td>true</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 0.5</li><li>fBeta_beta = 0.5</li></ul>
+   </td>
+   </tr>
+   <td>Uniform prior</td><td>kBUniform</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
+   </td>
+   <td>true</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha = 1</li><li>fBeta_beta = 1</li></ul>
+   </td>
+   </tr>
+   <td>custom prior</td><td>kBBayesian</td>
+   <td>
+    <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Bayesian">Bayesian</a>
+   </td>
+   <td>true</td>
+   <td>
+     <ul><li>total events</li><li>passed events</li><li>confidence level</li><li>fBeta_alpha</li><li>fBeta_beta</li></ul>
+   </td>
+   </tr>
+   </table>
+   <br />
+   The following example demonstrates the effect of different statistic options and
+   confidence levels.
+   End_Html
+   Begin_Macro(source)
+{
+   //canvas only needed for the documentation
+   TCanvas* c1 = new TCanvas("c1","",600,400);
+   c1->Divide(2);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
+
+   //create one-dimensional TEfficiency object with fixed bin size
+   TEfficiency* pEff = new TEfficiency("eff","different confidence levels;x;#epsilon",20,0,10);
+   TRandom3 rand3;
+
+   bool bPassed;
+   double x;
+   for(int i=0; i<1000; ++i)
+   {
+      //simulate events with variable under investigation
+      x = rand3.Uniform(10);
+      //check selection: bPassed = DoesEventPassSelection(x)
+      bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+      pEff->Fill(bPassed,x);
+   }
+
+   //set style attributes
+   pEff->SetFillStyle(3004);
+   pEff->SetFillColor(kRed);
+
+   //copy current TEfficiency object and set new confidence level
+   TEfficiency* pCopy = new TEfficiency(*pEff);
+   pCopy->SetConfidenceLevel(0.90);
+
+   //set style attributes
+   pCopy->SetFillStyle(3005);
+   pCopy->SetFillColor(kBlue);
+
+   c1->cd(1);
+ 
+   //add legend
+   TLegend* leg1 = new TLegend(0.3,0.1,0.7,0.5);
+   leg1->AddEntry(pEff,"95%","F");
+   leg1->AddEntry(pCopy,"68.3%","F");
+   
+   pEff->Draw("A4");
+   pCopy->Draw("same4");
+   leg1->Draw("same");
+
+   //use same confidence level but different statistic methods
+   TEfficiency* pEff2 = new TEfficiency(*pEff);
+   TEfficiency* pCopy2 = new TEfficiency(*pEff);
+   
+   pEff2->SetStatisticOption(TEfficiency::kFNormal);
+   pCopy2->SetStatisticOption(TEfficiency::kFAC);
+
+   pEff2->SetTitle("different statistic options;x;#epsilon");
+
+   //set style attributes
+   pCopy2->SetFillStyle(3005);
+   pCopy2->SetFillColor(kBlue);
+
+   c1->cd(2);
+ 
+   //add legend
+   TLegend* leg2 = new TLegend(0.3,0.1,0.7,0.5);
+   leg2->AddEntry(pEff2,"kFNormal","F");
+   leg2->AddEntry(pCopy2,"kFAC","F");
+   
+   pEff2->Draw("a4");
+   pCopy2->Draw("same4");
+   leg2->Draw("same");
+
+   //only for this documentation
+   c1->cd(0);
+   return c1;
+}
+   End_Macro
+   Begin_Html
+   The prior probability of the efficiency in bayesian statistics can be given
+   in terms of a beta distribution. The beta distribution has to positive shape
+   parameters. The resulting priors for different combinations of these shape
+   parameters are shown in the plot below.
+   End_Html
+   Begin_Macro(source)
+   {
+      //canvas only needed for the documentation
+      TCanvas* c1 = new TCanvas("c1","",600,400);
+      c1->SetFillStyle(1001);
+      c1->SetFillColor(kWhite);
+
+      //create different beta distributions
+      TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
+      f1->SetLineColor(kBlue);
+      TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
+      f2->SetLineColor(kRed);
+      TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
+      f3->SetLineColor(kGreen+3);
+      f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
+      TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
+      f4->SetLineColor(kViolet);
+
+      //add legend
+      TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
+      leg->SetFillColor(kWhite);
+      leg->SetFillStyle(1001);
+      leg->AddEntry(f1,"a=1, b=1","L");
+      leg->AddEntry(f2,"a=0.5, b=0.5","L");
+      leg->AddEntry(f3,"a=1, b=5","L");
+      leg->AddEntry(f4,"a=4, b=3","L");
+      
+      f3->Draw();
+      f1->Draw("same");
+      f2->Draw("Same");
+      f4->Draw("same");
+      leg->Draw("same");
+
+      //only for this documentation
+      return c1;
+   }
+   End_Macro      
+   Begin_Html
+
+   <h4><a name="compare">IV.1 Coverage probabilities for different methods</a></h4>
+   The following pictures illustrate the actual coverage probability for the
+   different values of the true efficiency and the total number of events when a
+   confidence level of 95% is desired.
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/normal95.gif" alt="normal approximation" width="600" height="400" /></p>
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/wilson95.gif" alt="wilson" width="600" height="400" /></p>
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/ac95.gif" alt="agresti coull" width="600" height="400" /></p>
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/cp95.gif" alt="clopper pearson" width="600" height="400" /></p>
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/uni95.gif" alt="uniform prior" width="600" height="400" /></p>
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/jeffrey95.gif" alt="jeffrey prior" width="600" height="400" /></p>
+
+   The average (over all possible true efficiencies) coverage probability for
+   different number of total events is shown in the next picture.
+   <p><img src="http://root.cern.ch/drupal/sites/default/files/images/av_cov.png" alt="average coverage" width="600" height="400" /></p>
+   <h3><a name="cm">V. Merging and combining TEfficiency objects</a></h3>
+   In many applications the efficiency should be calculated for an inhomogenous
+   sample in the sense that it contains events with different weights. In order
+   to be able to determine the correct overall efficiency, it is necessary to
+   use for each subsample (= all events with the same weight) a different
+   TEfficiency object. After finsihing your analysis you can then construct the
+   overall efficiency with its uncertainty.<br />
+   This procedure has the advantage that you can change the weight of one
+   subsample easily without rerunning the whole analysis. On the other hand more
+   efford is needed to handle several TEfficiency objects instead of one
+   histogram. In the case of many different or even continuously distributed
+   weights this approach becomes cumbersome. One possibility to overcome this
+   problem is the usage of binned weights.<br /><br />
+   <b>Example</b><br />
+   In high particle physics weights arises from the fact that you want to
+   normalise your results to a certain reference value. A very common formula for
+   calculating weights is End_Html
+   Begin_Latex(separator='-')
+   w = #frac{#sigma L}{N_{gen} #epsilon_{trig}} - #sigma ... cross section
+   - L ... luminosity
+   - N_{gen} ... number of generated events
+   - #epsilon_{trig} ... (known) trigger efficiency
+   End_Latex
+   Begin_Html
+   The reason for different weights can therefore be:<ul>
+   <li>different processes</li>
+   <li>other integrated luminosity</li>
+   <li>varying trigger efficiency</li>
+   <li>different sample sizes</li>
+   <li>...</li>
+   <li>or even combination of them</li>
+   </ul>
+   Depending on the actual meaning of different weights in your case, you
+   should either merge or combine them to get the overall efficiency.
+						      
+   <h4><a name="merge">V.1 When should I use merging?</a></h4>
+   If the weights are artificial and do not represent real alternative hypotheses,
+   you should merge the different TEfficiency objects. That means especially for
+   the bayesian case that the prior probability should be the same for all merged
+   TEfficiency objects. The merging can be done by invoking one of the following
+   operations:
+   <ul>
+   <li> <b>eff1</b>.<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Add">Add</a>(eff2)</li>
+   <li> <b>eff1</b> <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:operator+=">+=</a> eff2</li>
+   <li> <b>eff</b> = eff1 + eff2</li>
+   </ul>
+   The result of the merging is stored in the TEfficiency object which is marked
+   bold above. The contents of the internal histograms of both TEfficiency
+   objects are added and a new weight is assigned. The statistic options are not
+   changed.
+   End_Html
+   Begin_Latex #frac{1}{w_{new}} = #frac{1}{w_{1}} + #frac{1}{w_{2}}End_Latex
+   Begin_Html
+   <b>Example:</b><br />
+   If you use two samples with different numbers of generated events for the same
+   process and you want to normalise both to the same integrated luminosity and
+   trigger efficiency, the different weights then arise just from the fact that
+   you have different numbers of events. The TEfficiency objects should be merged
+   because the samples do not represent true alternatives. You expect the same
+   result as if you would have a big sample with all events in it.
+   End_Html
+   Begin_Latex
+   w_{1} = #frac{#sigma L}{#epsilon N_{1}}, w_{2} = #frac{#sigma L}{#epsilon N_{2}} #Rightarrow w_{new} = #frac{#sigma L}{#epsilon (N_{1} + N_{2})} = #frac{1}{#frac{1}{w_{1}} + #frac{1}{w_{2}}}
+   End_Latex							     
+   Begin_Html							     
+			  
+   <h4><a name="comb">V.2 When should I use combining?</a></h4>
+You should combine TEfficiency objects whenever the weights represent
+alternatives processes for the efficiency. As the combination of two TEfficiency
+objects is not always consistent with the representation by two internal
+histograms, the result is not stored in a TEfficiency object but a TGraphAsymmErrors
+is returned which shows the estimated combined efficiency and its uncertainty
+for each bin. At the moment the combination method <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Combine">Combine </a>only supports combination of 1-dimensional efficiencies in a bayesian approach.<br />
+For calculating the combined efficiency and its uncertainty for each bin only Bayesian statistics is used. No frequentists methods are presently 
+supported for computing the combined efficiency and its confidence interval.
+In the case of the Bayesian statistics a combined posterior is constructed taking into account the weight of each TEfficiency object. The same prior is used 
+for all the TEfficiency objects.
+End_Html
+Begin_Latex
+P_{comb}(#epsilon | {w_{i}}, {k_{i}} , {N_{i}}) = #frac{1}{norm} #prod_{i}{L(k_{i} | N_{i}, #epsilon)}^{w_{i}} #Pi( #epsilon )  
+L(k_{i} | N_{i}, #epsilon) is the likelihood function for the sample i ( a Binomial distribution) 
+#Pi( #epsilon) is the prior, a beta distribution B(#epsilon, #alpha, #beta).
+The resulting combined posterior is 
+P_{comb}(#epsilon |{w_{i}}; {k_{i}}; {N_{i}}) = B(#epsilon, #sum_{i}{ w_{i} k_{i}} + #alpha, #sum_{i}{ w_{i}(n_{i}-k_{i})}+#beta)  
+#hat{#varepsilon} = #int_{0}^{1} #epsilon #times P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon
+confidence level = 1 - #alpha
+#frac{#alpha}{2} = #int_{0}^{#epsilon_{low}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines lower boundary
+1- #frac{#alpha}{2} = #int_{0}^{#epsilon_{up}} P_{comb}(#epsilon | {k_{i}} , {N_{i}}) d#epsilon ... defines upper boundary
+End_Latex
+Begin_Html
+<b>Example:</b><br />
+If you use cuts to select electrons which can originate from two different
+processes, you can determine the selection efficiency for each process. The
+overall selection efficiency is then the combined efficiency. The weights to be used in the 
+combination should be the probability that an
+electron comes from the corresponding process.
+End_Html
+Begin_Latex
+p_{1} = #frac{#sigma_{1}}{#sigma_{1} + #sigma_{2}} = #frac{N_{1}w_{1}}{N_{1}w_{1} + N_{2}w_{2}}
+p_{2} = #frac{#sigma_{2}}{#sigma_{1} + #sigma_{2}} = #frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
+End_Latex
+Begin_Html
+<h3><a name="other">VI. Further operations</a></h3>
+
+<h4><a name="histo">VI.1 Information about the internal histograms</a></h4>
+The methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetPassedHistogram">GetPassedHistogram</a> and <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetTotalHistogram">GetTotalHistogram</a>
+return a constant pointer to the internal histograms. They can be used to
+obtain information about the internal histograms (e.g. the binning, number of passed / total events in a bin, mean values...).
+One can obtain a clone of the internal histograms by calling <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyPassedHisto">GetCopyPassedHisto</a> or <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetCopyTotalHisto">GetCopyTotalHisto</a>.
+The returned histograms are completely independent from the current
+TEfficiency object. By default, they are not attached to a directory to
+avoid the duplication of data and the user is responsible for deleting them.
+<div class="code">
+<pre>
+<b>Example:</b>
+//open a root file which contains a TEfficiency object
+TFile* pFile = new TFile("myfile.root","update");
+
+//get TEfficiency object with name "my_eff"
+TEfficiency* pEff = (TEfficiency*)pFile->Get("my_eff");
+
+//get clone of total histogram
+TH1* clone = pEff->GetCopyTotalHisto();
+
+//change clone...
+//save changes of clone directly
+clone->Write();
+//or append it to the current directoy and write the file
+//clone->SetDirectory(gDirectory);
+//pFile->Wrtie();
+
+//delete histogram object
+delete clone;
+clone = 0;
+</pre>
+</div><div class="clear" />
+It is also possible to set the internal total or passed histogram by using the
+methods <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetPassedHistogram">SetPassedHistogram</a> or
+<a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:SetTotalHistogram">SetTotalHistogram</a>.
+In order to ensure the validity of the TEfficiency object, the consistency of the
+new histogram and the stored histogram is checked. It sometimes might be
+impossible to change the histograms in a consistent way. Therefore one can force
+the replacement by passing the option "f". Then the user has to ensure that the
+other internal histogram is replaced as well and that the TEfficiency object is
+in a valid state.
+
+   <h4><a name="fit">VI.2 Fitting</a></h4>
+   The efficiency can be fitted using the <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Fit">Fit</a> function which uses internally the <a href="http://root.cern.ch/root/html/TBinomialEfficiencyFitter.html#TBinomialEfficiencyFitter:Fit">TBinomialEfficiencyFitter::Fit</a> method.
+   As this method is using a maximum-likelihood-fit, it is necessary to initialise
+   the given fit function with reasonable start values.
+   The resulting fit function is attached to the list of associated functions and
+   will be drawn automatically during the next <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> command.
+   The list of associated function can be modified by using the pointer returned
+   by <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:GetListOfFunctions">GetListOfFunctions</a>.
+   End_Html
+   Begin_Macro(source)
+{
+   //canvas only needed for this documentation
+   TCanvas* c1 = new TCanvas("example","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
+   
+   //create one-dimensional TEfficiency object with fixed bin size
+   TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
+   TRandom3 rand3;
+
+   bool bPassed;
+   double x;
+   for(int i=0; i<10000; ++i)
+   {
+      //simulate events with variable under investigation
+      x = rand3.Uniform(10);
+      //check selection: bPassed = DoesEventPassSelection(x)
+      bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+      pEff->Fill(bPassed,x);
+   }
+
+   //create a function for fitting and do the fit
+   TF1* f1 = new TF1("f1","gaus",0,10);
+   f1->SetParameters(1,5,2);
+   pEff->Fit(f1);
+
+   //create a threshold function
+   TF1* f2 = new TF1("thres","0.8",0,10);
+   f2->SetLineColor(kRed);
+   //add it to the list of functions
+   //use add first because the parameters of the last function will be displayed
+   pEff->GetListOfFunctions()->AddFirst(f2);
+   
+   pEff->Draw("AP");
+
+   //only for this documentation
+   return c1;
+}
+   End_Macro
+   Begin_Html
+   
+   <h4><a name="draw">VI.3 Draw a TEfficiency object</a></h4>
+   A TEfficiency object can be drawn by calling the usual <a href="http://root.cern.ch/root/html/TEfficiency.html#TEfficiency:Draw">Draw</a> method.
+   At the moment drawing is only supported for 1- and 2-dimensional TEfficiency
+   objects. In the 1-dimensional case you can use the same options as for the <br />
+   <a href="http://root.cern.ch/root/html/TGraph.html#TGraph:Draw">TGraphAsymmErrors::Draw</a> 
+   method. For 2-dimensional TEfficiency objects you can pass the same options as
+   for a <a href="http://root.cern.ch/root/html/TH1.html#TH1:Draw">TH2::Draw</a> object.
+
+   <h3 style="margin-bottom:-3em;"><a name="class">VII. TEfficiency class</a></h3>
+   
+End_Html
+********************************************************************************/
 //______________________________________________________________________________
 
 //______________________________________________________________________________
