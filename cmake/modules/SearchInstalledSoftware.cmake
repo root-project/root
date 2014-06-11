@@ -721,18 +721,18 @@ endif()
 
 #---Check for vc and its compatibility-----------------------------------------------
 if(vc)
-  if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.5)
       message(STATUS "VC requires GCC version >= 4.5; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
-  elseif (CMAKE_CXX_COMPILER_ID STREQUAL Clang)
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.0)
       message(STATUS "VC requires Clang version >= 4.0; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
-  elseif (CMAKE_CXX_COMPILER_ID STREQUAL MSVC)
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 1600)  # equivalent to MSVC 2010
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 16.0)  # equivalent to MSVC 2010
       message(STATUS "VC requires MSVC version >= 2010; switching OFF 'vc' option")
       set(vc OFF CACHE BOOL "" FORCE)
     endif()
