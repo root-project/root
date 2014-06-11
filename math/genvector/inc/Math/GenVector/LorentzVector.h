@@ -183,7 +183,11 @@ namespace ROOT {
 //        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
 // #endif
        template< class IT >
+#ifndef NDEBUG 
        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end  ) {
+#else  
+       LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
+#endif
           IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
           assert (++begin==end);
           SetCoordinates (*a,*b,*c,*d);
