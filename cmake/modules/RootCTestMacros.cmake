@@ -78,8 +78,6 @@ macro(ROOTTEST_SETUP_EXECTEST)
   
   set(command ${realexec})
 
-  message("command: ${command}")
-
   set(checkstdout CHECKOUT)
   set(checkstderr CHECKERR)
 
