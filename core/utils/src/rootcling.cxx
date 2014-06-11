@@ -186,7 +186,6 @@ const char *rootClingHelp =
 "                                                                            \n"
 " -inlineInputHeader\tAdd the argument header to the code of the dictionary  \n"
 "  This allows the header to be inlined within the dictionary.               \n"
-"  It works only when one header is specified.                               \n"
 "                                                                            \n"
 " -interpreteronly\tNo IO information in the dictionary                      \n";
 
@@ -3450,6 +3449,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersDeclsMap[annotatedRcd.GetNormalizedName()] = headers;
+         headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
       }
    }
 
@@ -3481,7 +3481,8 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
 }
 //______________________________________________________________________________
 const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& headersClassesMap,
-                                                       const std::string& detectedUmbrella)
+                                                       const std::string& detectedUmbrella,
+                                                       bool payLoadOnly=false)
 {
    // Generate a string for the dictionary from the headers-classes map.
    std::string headerName;
@@ -3495,10 +3496,12 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
       headersClassesMapString+="\"";
       headersClassesMapString+=classHeaders.first+"\"";
       for (auto& header : classHeaders.second){
-         headerName = (detectedUmbrella==header) ? "payloadCode" : "\""+header+"\"";
+         headerName = (detectedUmbrella==header || payLoadOnly) ? "payloadCode" : "\""+header+"\"";
          headersClassesMapString+=", "+ headerName;
          if (genreflex::verbose)
             std::cout << ", " << headerName;
+         if (payLoadOnly)
+            break;
       }
       if (genreflex::verbose)
          std::cout << std::endl;
@@ -3821,12 +3824,14 @@ int RootCling(int argc,
             // Ignore CINT arguments.
             continue;
          }
+
          if (strcmp("-inlineInputHeader", argv[ic]) == 0 ) {
             // inline the input header
             inlineInputHeader = true;
             ic+=1;
             continue;
          }
+
          if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
             // filter out undesirable options
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
@@ -4248,10 +4253,9 @@ int RootCling(int argc,
                  << "#include \"TSchemaHelper.h\"\n\n";
 
       std::list<std::string> includes;
-      std::list<std::string>::iterator it;
       GetRuleIncludes( includes );
-      for( it = includes.begin(); it != includes.end(); ++it ){
-         dictStream << "#include <" << *it << ">" << std::endl;
+      for(auto& incFile : includes){
+         dictStream << "#include <" << incFile << ">" << std::endl;
       }
       dictStream << std::endl;
    }
@@ -4302,23 +4306,21 @@ int RootCling(int argc,
    }
 
 
-// SELECTION LOOP
+   // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
-   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
-   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter)
+   for(auto const & annRcd : scan.fSelectedClasses)
    {
-      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer",interp)) {
-         if (iter->RequestNoInputOperator()) {
-            int version = ROOT::TMetaUtils::GetClassVersion(*iter, interp);
+      if (ROOT::TMetaUtils::ClassInfo__HasMethod(annRcd,"Streamer",interp)) {
+         if (annRcd.RequestNoInputOperator()) {
+            int version = ROOT::TMetaUtils::GetClassVersion(annRcd, interp);
             if (version!=0) {
                // Only Check for input operator is the object is I/O has
                // been requested.
-               has_input_error |= CheckInputOperator(*iter,interp);
+               has_input_error |= CheckInputOperator(annRcd,interp);
             }
          }
       }
-      has_input_error |= !CheckClassDef(**iter, interp);
+      has_input_error |= !CheckClassDef(*annRcd, interp);
    }
 
    if (has_input_error) {
@@ -4386,7 +4388,9 @@ int RootCling(int argc,
             break;
          }
       }
-      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,detectedUmbrella);
+      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
+                                                                                      detectedUmbrella,
+                                                                                      true);
 
       GenerateModule(modGen,
                      CI,
@@ -4409,14 +4413,12 @@ int RootCling(int argc,
          outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
          // Add explicit delimiter
          outputfile << "# Now the list of classes\n";
-// SELECTION LOOP
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
+         // SELECTION LOOP
+         for(auto const & annRcd : scan.fSelectedClasses)
          {
             // Shouldn't it be GetLong64_Name( cl_input.GetNormalizedName() )
             // or maybe we should be normalizing to turn directly all long long into Long64_t
-            outputfile << iter->GetNormalizedName() << endl;
+            outputfile << annRcd.GetNormalizedName() << endl;
          }
       }
    }
