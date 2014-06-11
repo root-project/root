@@ -159,38 +159,6 @@ namespace ROOT {
        }
 
        /**
-          Set internal data based on an array of 4 Scalar numbers
-       */
-       LorentzVector<CoordSystem>& SetCoordinates( const Scalar src[] ) { 
-          fCoordinates.SetCoordinates(src);  
-          return *this;
-       }
-
-       /**
-          Set internal data based on 4 Scalar numbers
-       */
-       LorentzVector<CoordSystem>& SetCoordinates( Scalar a, Scalar b, Scalar c, Scalar d ) {
-          fCoordinates.SetCoordinates(a, b, c, d);  
-          return *this;
-       }
-
-       /**
-          Set internal data based on 4 Scalars at *begin to *end
-       */
-//#ifdef NDEBUG 
-          //this does not compile in CINT
-//        template< class IT >
-//        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /* end */  ) {
-// #endif
-       template< class IT >
-       LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end  ) {
-          IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
-          assert (++begin==end);
-          SetCoordinates (*a,*b,*c,*d);
-          return *this;
-       }
-
-       /**
           get internal data into 4 Scalar numbers
        */
        void GetCoordinates( Scalar& a, Scalar& b, Scalar& c, Scalar & d ) const
@@ -228,6 +196,45 @@ namespace ROOT {
           *begin++ = c; 
           *begin   = d; 
        }
+
+       /**
+          Set internal data based on an array of 4 Scalar numbers
+       */
+       LorentzVector<CoordSystem>& SetCoordinates( const Scalar src[] ) { 
+          fCoordinates.SetCoordinates(src);  
+          return *this;
+       }
+
+       /**
+          Set internal data based on 4 Scalar numbers
+       */
+       LorentzVector<CoordSystem>& SetCoordinates( Scalar a, Scalar b, Scalar c, Scalar d ) {
+          fCoordinates.SetCoordinates(a, b, c, d);  
+          return *this;
+       }
+
+       /**
+          Set internal data based on 4 Scalars at *begin to *end
+       */
+//    Here it is needed to re-implement all the function for CINT , otherwise dictionary generation will fail 
+//    for unknown reasons if we do as for GetCoordinates (fortunatly we will remove this in ROOT 6!)
+#ifdef NDEBUG
+        template< class IT >
+        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT /*end*/   ) {
+          IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
+          assert (++begin==end);
+          SetCoordinates (*a,*b,*c,*d);
+          return *this;
+       }
+#else
+        template< class IT >
+        LorentzVector<CoordSystem>& SetCoordinates( IT begin, IT end   ) {
+          IT a = begin; IT b = ++begin; IT c = ++begin; IT d = ++begin;
+          assert (++begin==end);
+          SetCoordinates (*a,*b,*c,*d);
+          return *this;
+       }
+#endif
 
        /**
           set the values of the vector from the cartesian components (x,y,z,t)
