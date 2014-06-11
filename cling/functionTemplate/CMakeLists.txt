@@ -19,6 +19,7 @@ ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-runreferenceuse
 
 ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testcint
                   MACRO testcint.py
+                  PRECMD root -b -q -l -e .L\ t.h+
                   OUTREF pythoncintrun.ref
                   OUTCNVCMD grep -v "just a comment"
                   LABELS roottest regression cling)
