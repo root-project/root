@@ -1,26 +1,26 @@
-TCanvas* bench = 0;
+TCanvas* bench1 = 0;
 
 void bexec(TString &dir,const char *macro)
 {
    if (gROOT->IsBatch()) printf("Processing benchmark: %s%s\n",dir.Data(),macro);
-   TPaveText *summary = (TPaveText*)bench->GetPrimitive("TPave");
+   TPaveText *summary = (TPaveText*)bench1->GetPrimitive("TPave");
    TText *tmacro = summary->GetLineWith(macro);
    if (tmacro) tmacro->SetTextColor(4);
-   bench->Modified(); bench->Update();
+   bench1->Modified(); bench1->Update();
 
    gROOT->Macro(Form("%s%s",dir.Data(),macro));
 
-   TPaveText *summary2 = (TPaveText*)bench->GetPrimitive("TPave");
+   TPaveText *summary2 = (TPaveText*)bench1->GetPrimitive("TPave");
    TText *tmacro2 = summary2->GetLineWith(macro);
    if (tmacro2) tmacro2->SetTextColor(2);
-   bench->Modified(); bench->Update();
+   bench1->Modified(); bench1->Update();
 }
 
 void benchmarks() {
    TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("benchmarks.C","");
    dir.ReplaceAll("/./","/");
-   bench = new TCanvas("bench","Benchmarks Summary",-1000,50,200,500);
+   bench1 = new TCanvas("bench1","Benchmarks Summary",-1000,50,200,500);
    TPaveText *summary = new TPaveText(0,0,1,1);
    summary->SetTextAlign(12);
    summary->SetTextSize(0.08);
