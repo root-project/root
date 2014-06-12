@@ -24,8 +24,10 @@ ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testcint
                   OUTCNVCMD grep -v "just a comment"
                   LABELS roottest regression cling)
 
-ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testreflex
-                  MACRO testreflex.py
-                  OUTREF pythonreflexrun.ref
-                  OUTCNVCMD grep -v "just a comment"
-                  LABELS roottest regression cling)
+if(ROOT_Cint_LIBRARY)
+  ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-testreflex
+                    MACRO testreflex.py
+                    OUTREF pythonreflexrun.ref
+                    OUTCNVCMD grep -v "just a comment"
+                    LABELS roottest regression cling)
+endif()
