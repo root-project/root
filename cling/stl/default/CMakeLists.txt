@@ -6,6 +6,6 @@ ROOTTEST_ADD_TEST(roottest-cling-stl-default-defaultArgTest
 
 ROOTTEST_ADD_TEST(roottest-cling-stl-default-VectorSort
                   MACRO VectorSort.C
-                  OUTREF VectorSort.ref
+                  #OUTREF VectorSort.ref
                   OUTCNV VectorSort_convert.sh
                   LABELS roottest regression cling)
