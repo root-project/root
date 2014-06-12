@@ -36,7 +36,6 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execSharedPtr
                   MACRO execSharedPtr.C
                   OUTREF execSharedPtr.ref)
 
-
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD
                   MACRO execTmpltD.cxx+
                   OUTREF execTmpltD.ref)
@@ -47,6 +46,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD32
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
                   MACRO execReadTmplt.cxx+
-                  OUTREF execReadTmplt.ref)
+                  OUTREF execReadTmplt.ref
+                  DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD32)
 
 ROOTTEST_FIND_TESTDIRS()
