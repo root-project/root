@@ -222,12 +222,6 @@ endmacro(ROOTTEST_COMPILE_MACRO)
 macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LINKDEF;DEPENDS" ${ARGN})
 
-  include_directories(${ROOT_INCLUDE_DIRS}
-                      ${ROOT_INCLUDE_DIR}
-                      ${CMAKE_CURRENT_SOURCE_DIR})
-
-  link_directories(${ROOT_LIBRARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
   set(CMAKE_ROOTTEST_DICT ON)
@@ -247,7 +241,12 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   target_link_libraries(${targetname_libgen} ${ROOT_LIBRARIES})
 
   set_target_properties(${targetname_libgen} PROPERTIES PREFIX "")
-  set_property(TARGET ${targetname_libgen} PROPERTY OUTPUT_NAME ${dictname})
+
+  set_property(TARGET ${targetname_libgen}
+               PROPERTY OUTPUT_NAME ${dictname})
+
+  set_property(TARGET ${targetname_libgen}
+               APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
   add_dependencies(${targetname_libgen} ${ROOTTEST_LIB_DEPENDS} ${dictname})
   
@@ -272,12 +271,6 @@ endmacro(ROOTTEST_GENERATE_DICTIONARY)
 #-------------------------------------------------------------------------------
 macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
   CMAKE_PARSE_ARGUMENTS(ARG "" "SELECTION;ROOTMAPNAME" "LIBRARIES;OPTIONS"  ${ARGN})
-
-  include_directories(${ROOT_INCLUDE_DIRS}
-                      ${ROOT_INCLUDE_DIR}
-                      ${CMAKE_CURRENT_SOURCE_DIR})
-
-  link_directories(${ROOT_LIBRARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
   set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -314,6 +307,9 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                         ${ARG_LIBRARIES}
                         ${ROOT_LIBRARIES})
 
+  set_property(TARGET ${targetname_libgen}
+               APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
+
   set(GENERATE_REFLEX_TEST ${targetname_libgen}-build)
 
   add_test(NAME ${GENERATE_REFLEX_TEST}
@@ -326,12 +322,6 @@ endmacro(ROOTTEST_GENERATE_REFLEX_DICTIONARY)
 macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES;COMPILE_FLAGS;DEPENDS" ${ARGN})
 
-  include_directories(${ROOT_INCLUDE_DIRS}
-                      ${ROOT_INCLUDE_DIR}
-                      ${CMAKE_CURRENT_SOURCE_DIR})
-
-  link_directories(${ROOT_LIBRARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
-
   set(exec_sources)
   foreach(exec_src_file ${ARGN})
     get_filename_component(exec_src_file ${exec_src_file} ABSOLUTE)
@@ -342,7 +332,10 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   
   add_executable(${executable} EXCLUDE_FROM_ALL ${exec_sources})
   set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
- 
+
+  set_property(TARGET ${executable}
+               APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
+
   if(ARG_DEPENDS)
     add_dependencies(${executable} ${ARG_DEPENDS})
   endif()

@@ -104,6 +104,10 @@ set(ROOTTEST_LIB_DEPENDS Core RIO Net Hist Gpad Tree Rint Matrix Mathcore)
 find_package(PythonInterp)
 find_program(python_cmd ${PYTHON_EXECUTABLE})
 
+# Setup standard includes / links.
+include_directories(${ROOT_INCLUDE_DIRS} ${ROOT_INCLUDE_DIR})
+link_directories(${ROOT_LIBRARY_DIR})
+
 # Enable and setup CTest.
 include(RootNewMacros)
 include(RoottestCTest)
