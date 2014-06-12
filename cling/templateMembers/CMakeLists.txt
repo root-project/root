@@ -10,6 +10,7 @@ ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runoperatorEqual
                   MACRO runoperatorEqual.C
                   OUTREF operatorEqual.ref
                   OUTCNVCMD grep -v FILE
+                  OUTCNV runoperatorEqual_convert.sh
                   DEPENDS operatorEqual.C
                   LABELS roottest regression cling)
 
