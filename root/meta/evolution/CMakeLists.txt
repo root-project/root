@@ -92,7 +92,8 @@ ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execBaseClass_v1
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execBaseClass_v2
                   MACRO execBaseClass_v2.cxx+
-                  OUTREF execBaseClass_v2.ref)
+                  OUTREF execBaseClass_v2.ref
+                  DEPENDS roottest-root-meta-evolution-execBaseClass_v1 )
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execReadOldCSC
                   MACRO execReadOldCSC.C
