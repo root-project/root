@@ -1195,7 +1195,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
          break;
       }
 
-      dictStream << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
+      dictStream << "         int R__n=int(R__stl.size());" << std::endl
                     << "         R__b << R__n;" << std::endl
                     << "         if(R__n) {" << std::endl;
 
