@@ -241,6 +241,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   foreach( d ${incdirs})
    set(includedirs ${includedirs} -I${d})
   endforeach()
+  list(REMOVE_DUPLICATES includedirs)
   #---Get the list of definitions---------------------------
   get_directory_property(defs COMPILE_DEFINITIONS)
   foreach( d ${defs})
