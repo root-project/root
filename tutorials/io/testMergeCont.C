@@ -28,7 +28,15 @@ void testMergeCont()
 TSeqCollection *GetCollection()
 {
    TObject *obj;
+#ifndef ClingWorkAroundMissingDynamicScope
+# define ClingWorkAroundMissingDynamicScope
+#endif
+#ifdef ClingWorkAroundMissingDynamicScope
+   f = (TFile*)gROOT->ProcessLine("hsimple(1);");
+#else
    f = hsimple(1);
+#endif
+
    gROOT->cd();
    TList *l0 = new TList();
    TList *l01 = new TList();
