@@ -373,7 +373,7 @@ TGeoManager::TGeoManager()
       fNtracks = 0;
       fNpdg = 0;
       fPdgNames = 0;
-      memset(fPdgId, 0, 256*sizeof(Int_t));
+      memset(fPdgId, 0, 1024*sizeof(Int_t));
       fCurrentTrack = 0;
       fCurrentVolume = 0;
       fTopVolume = 0;
@@ -470,7 +470,7 @@ void TGeoManager::Init()
    fNtracks = 0;
    fNpdg = 0;
    fPdgNames = 0;
-   memset(fPdgId, 0, 256*sizeof(Int_t));
+   memset(fPdgId, 0, 1024*sizeof(Int_t));
    fCurrentTrack = 0;
    fCurrentVolume = 0;
    fTopVolume = 0;
@@ -572,7 +572,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fMultiThread(kFALSE)
 {
    //copy constructor
-   for(Int_t i=0; i<256; i++)
+   for(Int_t i=0; i<1024; i++)
       fPdgId[i]=gm.fPdgId[i];
    if (!fgThreadId) fgThreadId = new TGeoManager::ThreadsMap_t;
    ClearThreadsMap();
@@ -600,7 +600,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fMaxVisNodes=gm.fMaxVisNodes;
       fCurrentTrack=gm.fCurrentTrack;
       fNpdg=gm.fNpdg;
-      for(Int_t i=0; i<256; i++)
+      for(Int_t i=0; i<1024; i++)
          fPdgId[i]=gm.fPdgId[i];
       fClosed=gm.fClosed;
       fLoopVolumes=gm.fLoopVolumes;
@@ -1834,11 +1834,11 @@ void TGeoManager::SetPdgName(Int_t pdg, const char *name)
 // Set a name for a particle having a given pdg.
    if (!pdg) return;
    if (!fPdgNames) {
-      fPdgNames = new TObjArray(256);
+      fPdgNames = new TObjArray(1024);
    }
    if (!strcmp(name, GetPdgName(pdg))) return;
    // store pdg name
-   if (fNpdg>255) {
+   if (fNpdg>1023) {
       Warning("SetPdgName", "No more than 256 different pdg codes allowed");
       return;
    }
