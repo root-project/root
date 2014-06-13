@@ -770,7 +770,9 @@ void TLegend::PaintPrimitives()
       // The vertical alignment "centered" is treated in a special way
       // to ensure a better spacing between lines.
       if (valign == 2) {
-         if (yspace2 < textsize) {
+         Float_t tsizepad = textsize;
+         if (tfont%10 == 3) tsizepad = (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(textsize))/(gPad->GetY2() - gPad->GetY1());
+         if (yspace2 < tsizepad) {
             entry->SetTextAlign(10*halign+1);
             y = ytext - (1. - fEntrySeparation)* yspace2/2.;
          } else {
