@@ -1,5 +1,6 @@
 // @(#)root/utils:$Id$
 // Author: Axel Naumann, 2-13-07-02
+// Author: Danilo Piparo, 2013, 2014
 
 /*************************************************************************
  * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
@@ -98,11 +99,10 @@ void TModuleGenerator::ConvertToCppString(std::string& text) const{
    // \n -> \\n"\n" (new line, ",new line, ")
    fromToPatterns.push_back(std::make_pair("\n","\\n\"\n\""));
    
-   for (strPairs::iterator fromToIter=fromToPatterns.begin();
-        fromToIter!=fromToPatterns.end();fromToIter++){
+   for (auto const & fromTo : fromToPatterns){
       size_t start_pos = 0;
-      const std::string& from = fromToIter->first;
-      const std::string& to = fromToIter->second;
+      const std::string& from = fromTo.first;
+      const std::string& to = fromTo.second;
       while((start_pos = text.find(from, start_pos)) != std::string::npos) {
          text.replace(start_pos, from.length(), to);
          start_pos += to.length();
@@ -236,15 +236,14 @@ std::ostream& TModuleGenerator::WritePPDefines(std::ostream& out) const
    // #ifndef FOO
    // # define FOO=bar
    // #endif
-   for (StringPairVec_t::const_iterator i = fCompD.begin(),
-           e = fCompD.end(); i != e; ++i) {
-      std::string cppname(i->first);
+   for (auto const & strPair : fCompD) {
+      std::string cppname(strPair.first);
       size_t pos = cppname.find('(');
       if (pos != std::string::npos) cppname.erase(pos);
       out << "#ifndef " << cppname << "\n"
-         "  #define " << i->first;
-      if (!i->second.empty()) {
-         out << " " << i->second;
+         "  #define " << strPair.first;
+      if (!strPair.second.empty()) {
+         out << " " << strPair.second;
       }
       out << "\n"
          "#endif\n";
@@ -259,10 +258,9 @@ std::ostream& TModuleGenerator::WritePPUndefines(std::ostream& out) const
    // #ifdef FOO
    // # undef FOO
    // #endif
-   for (std::vector<std::string>::const_iterator i = fCompU.begin(),
-           e = fCompU.end(); i != e; ++i) {
-      out << "#ifdef " << *i << "\n"
-         "  #undef " << *i << "\n"
+   for (auto const & undef : fCompU) {
+      out << "#ifdef " << undef << "\n"
+         "  #undef " << undef << "\n"
          "#endif\n";
    }
    out << std::endl;
@@ -274,9 +272,8 @@ std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
    // Write
    // #include "header1.h"
    // #include "header2.h"
-   for (std::vector<std::string>::const_iterator i = fHeaders.begin(),
-           e = fHeaders.end(); i != e; ++i) {
-      out << "#include \"" << *i << "\"\n";
+   for (auto const & incl : fHeaders) {
+      out << "#include \"" << incl << "\"\n";
    }
    out << std::endl;
    return out;
@@ -285,24 +282,22 @@ std::ostream& TModuleGenerator::WritePPIncludes(std::ostream& out) const
 std::ostream& TModuleGenerator::WriteStringVec(const std::vector<std::string>& vec,
                                       std::ostream& out) const
 {
-   for (std::vector<std::string>::const_iterator i = vec.begin(),
-           e = vec.end(); i != e; ++i) {
-      out << "\"" << *i << "\",\n";
+   for (auto const & theStr : vec) {
+      out << "\"" << theStr << "\",\n";
    }
    out << "0" << std::endl;
    return out;
 }
 
 std::ostream& TModuleGenerator::WriteStringPairVec(const StringPairVec_t& vec,
-                                          std::ostream& out) const
+                                                   std::ostream& out) const
 {
-   for (StringPairVec_t::const_iterator i = vec.begin(),
-           e = vec.end(); i != e; ++i) {
-      out << "\"" << i->first;
-      if (!i->second.empty()) {
+   for (auto const & strPair : vec) {
+      out << "\"" << strPair.first;
+      if (!strPair.second.empty()) {
          out << "=";
          // Need to escape the embedded quotes.
-         for (const char *c = i->second.c_str(); *c != '\0'; ++c) {
+         for (const char *c = strPair.second.c_str(); *c != '\0'; ++c) {
             if ( *c == '"' ) {
                out << "\\\"";
             } else {
@@ -341,27 +336,32 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream& out,
    payloadCode += definesAndUndefines.str();
    
    // If necessary, inline the headers
-   std::string inlinedHeader;
+   std::string inlinedHeaders;
    if (inlineHeaders){
-      for (std::vector<std::string>::const_iterator hdrNameIt=fHeaders.begin();
-           hdrNameIt!=fHeaders.end();hdrNameIt++){
-         std::ifstream headerFile(hdrNameIt->c_str());
+      for (auto& hdrName : fHeaders){
+         std::ifstream headerFile(hdrName.c_str());
          const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
                                             std::istreambuf_iterator<char>());
-         inlinedHeader += headerFileAsStr;
+         inlinedHeaders += headerFileAsStr;
       }
-      // Recover old genreflex behaviour, i.e. do not print warnings due to glitches
-      // in the headers at runtime. This is not synonym of ignoring warnings as they
-      // will be printed at dictionary generation time.
-      // In order to do this we leverage the diagnostic pragmas and, since there is no
-      // way to express as a pragma the option "-Wno-deprecated" the
-      // _BACKWARD_BACKWARD_WARNING_H macro, used to avoid to go through
-      // backward/backward_warning.h.
-      payloadCode+="#define _BACKWARD_BACKWARD_WARNING_H\n"+
-         inlinedHeader+"\n"
-         "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
+
+   } else{
+      // Now, if not, just #include them in the payload
+      for (auto& hdrName : fHeaders){
+         inlinedHeaders += "#include \""+hdrName+"\"\n";
+      }
    }
 
+   // Recover old genreflex behaviour, i.e. do not print warnings due to glitches
+   // in the headers at runtime. This is not synonym of ignoring warnings as they
+   // will be printed at dictionary generation time.
+   // In order to do this we leverage the diagnostic pragmas and, since there is no
+   // way to express as a pragma the option "-Wno-deprecated" the
+   // _BACKWARD_BACKWARD_WARNING_H macro, used to avoid to go through
+   // backward/backward_warning.h.
+   payloadCode+="#define _BACKWARD_BACKWARD_WARNING_H\n"+
+      inlinedHeaders+"\n"
+      "#undef  _BACKWARD_BACKWARD_WARNING_H\n";
 
    // Make it usable as string
    ConvertToCppString(payloadCode);

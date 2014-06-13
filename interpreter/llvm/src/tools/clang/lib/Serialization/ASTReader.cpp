@@ -908,7 +908,9 @@ resolveFileThroughHeaderSearch(Preprocessor& PP, StringRef Filename) {
         = HdrSearch.LookupFile(trailingPart, SourceLocation(), true/*isAngled*/,
                                0/*FromDir*/, FoundDir,
                                ArrayRef<const FileEntry*>() /*Includers*/,
-                               0/*Searchpath*/, 0/*RelPath*/, 0/*SuggModule*/);
+                               0/*Searchpath*/, 0/*RelPath*/, 0/*SuggModule*/,
+                               false /*SkipCache*/, false /*OpenFile*/,
+                               true /*CacheFailure*/);
       if (FE)
         return FE->getName();
    }

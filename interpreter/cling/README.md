@@ -1,14 +1,24 @@
+```
+                         ______  __      ____  _   __  ______
+                        / ____/ / /     /  _/ / | / / / ____/
+                       / /     / /      / /  /  |/ / / / __  
+                      / /___  / /___  _/ /  / /|  / / /_/ /  
+                      \____/ /_____/ /___/ /_/ |_/  \____/   
+                                                         
+```
 
-          _  _  _      _         _  _  _   _           _      _  _  _
-       _ (_)(_)(_) _  (_)       (_)(_)(_) (_) _       (_)  _ (_)(_)(_) _
-      (_)         (_) (_)          (_)    (_)(_)_     (_) (_)         (_)
-      (_)             (_)          (_)    (_)  (_)_   (_) (_)    _  _  _
-      (_)             (_)          (_)    (_)    (_)_ (_) (_)   (_)(_)(_)
-      (_)          _  (_)          (_)    (_)      (_)(_) (_)         (_)
-      (_) _  _  _ (_) (_) _  _   _ (_) _  (_)         (_) (_) _  _  _ (_)
-         (_)(_)(_)    (_)(_)(_) (_)(_)(_) (_)         (_)    (_)(_)(_)(_)
+##DESCRIPTION  
+Cling is an interactive C++ interpreter, built on top of Clang and LLVM compiler infrastructure. Cling realizes the read-print-evaluate-loop concept, in order to leverage rapid application development. Implemented as a small extension to LLVM and Clang, the interpreter reuses their strengths such as the praised concise and expressive compiler diagnostics.  
 
---------------------------------------------------------------------------------
+### Further information & demos  
+  Please note that some of the resources are rather old and most of the stated limitations are outdated.  
+  * https://github.com/vgvassilev/cling/tree/master/www/docs/talks  
+  * http://blog.coldflake.com/posts/2012-08-09-On-the-fly-C++.html  
+  * http://solarianprogrammer.com/2012/08/14/cling-cpp-11-interpreter/  
+  * https://www.youtube.com/watch?v=f9Xfh8pv3Fs  
+  * https://www.youtube.com/watch?v=BrjV1ZgYbbA  
+  * https://www.youtube.com/watch?v=wZZdDhf2wDw  
+  * https://www.youtube.com/watch?v=eoIuqLNvzFs  
 
 ##INSTALLATION  
 ###Binaries  
@@ -71,3 +81,9 @@ packages and subversion[4] and git[5] to get the source code.
 ##DEVELOPERS' CORNER:  
    We have doxygen documentation of cling's code at:
 http://cling.web.cern.ch/cling/doxygen/
+###CONTRIBUTIONS  
+  Every contribution is very welcome. It is considered as a donation and its copyright and any other related 
+rights become exclusive ownership of the person merged the code or in any other case the main developers.  
+  In order for a contribution to be accepted it has to obey the previously 
+established rules for contribution acceptance in cling's work flow and rules.  
+

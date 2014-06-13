@@ -2041,6 +2041,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
    if (strstr(text1,"\\")) {
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
+      tm.SetTextFont(GetTextFont());
       tm.PaintMathText(x, y, angle, size, text1);
       if (saveps) gVirtualPS = saveps;
       return;

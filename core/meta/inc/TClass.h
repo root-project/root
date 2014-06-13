@@ -258,9 +258,9 @@ private:
 protected:
    TVirtualStreamerInfo     *FindStreamerInfo(TObjArray* arr, UInt_t checksum) const;
    static THashTable        *GetClassTypedefHash();
-   void                      GetMissingDictionariesForBaseClasses(TCollection& result, bool recurse);
-   void                      GetMissingDictionariesForMembers(TCollection& result, bool recurse);
-   void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, bool recurse);
+   void                      GetMissingDictionariesForBaseClasses(TCollection& result, TCollection& visited, bool recurse);
+   void                      GetMissingDictionariesForMembers(TCollection& result, TCollection& visited, bool recurse);
+   void                      GetMissingDictionariesWithRecursionCheck(TCollection& result, TCollection& visited, bool recurse);
 
 public:
    TClass();

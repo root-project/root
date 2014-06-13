@@ -1,3 +1,3 @@
 {
-   printf("\nThis is the end of ROOT -- Goodbye\n\n");
+   printf("\nTaking a break from ROOT? Hope to see you back!\n\n");
 }

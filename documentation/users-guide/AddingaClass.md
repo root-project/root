@@ -395,6 +395,14 @@ dictionary at runtime. It should be located in the directory where
 the shared library is installed in which the compiled dictionary 
 resides.
 
+NOTA BENE: the dictionaries that will be used within the same project
+must have unique names. In other words, compiled object files relative
+to dictionary source files cannot reside in the same library or in
+two libraries loaded by the same application if the original source
+files have the same name.
+This loose limitation is imposed by the registration mechanism ROOT
+has in place to keep track of dynamically loaded libraries.
+
 In the following example, we walk through the steps necessary to
 generate a dictionary, I/O, and inspect member functions. Let's start
 with a **`TEvent`** class, which contains a collection of **`TTracks`**.

@@ -105,6 +105,7 @@ private: // Data Members
    std::map<size_t,std::vector<const char*>> fClassesHeadersMap; // Map of classes hashes and headers associated
    std::set<size_t> fLookedUpClasses; // Set of classes for which headers were looked up already
    std::set<size_t> fPayloads; // Set of payloads
+   std::set<const char*> fParsedPayloadsAddresses; // Set of payloads which were parsed
    std::hash<std::string> fStringHashFunction; // A simple hashing function   
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.

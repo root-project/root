@@ -11,6 +11,8 @@
 
 #include "cling/Interpreter/Value.h"
 
+#include "clang/Basic/Diagnostic.h"
+
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
@@ -59,8 +61,9 @@ std::vector<IncrementalExecutor::LazyFunctionCreatorFunc_t>
   IncrementalExecutor::m_lazyFuncCreator;
 
 // Keep in source: OwningPtr<ExecutionEngine> needs #include ExecutionEngine
-IncrementalExecutor::IncrementalExecutor(llvm::Module* m)
-{
+  IncrementalExecutor::IncrementalExecutor(llvm::Module* m,
+                                           clang::DiagnosticsEngine& diags)
+    : m_Diags(diags) {
   assert(m && "llvm::Module must not be null!");
   m_AtExitFuncs.reserve(256);
 
@@ -104,9 +107,6 @@ IncrementalExecutor::IncrementalExecutor(llvm::Module* m)
   builder.setTargetOptions(TargetOpts);
 
   m_engine.reset(builder.create());
-  if (!m_engine)
-     llvm::errs() << "cling::IncrementalExecutor::IncrementalExecutor(): "
-                  << errMsg;
   assert(m_engine && "Cannot create module!");
 
   // install lazy function creators
@@ -179,8 +179,8 @@ void* IncrementalExecutor::HandleMissingFunction(const std::string& mangled_name
 {
   // Not found in the map, add the symbol in the list of unresolved symbols
   if (m_unresolvedSymbols.insert(mangled_name).second) {
-    llvm::errs() << "IncrementalExecutor: use of undefined symbol '"
-                 << mangled_name << "'!\n";
+    //llvm::errs() << "IncrementalExecutor: use of undefined symbol '"
+    //             << mangled_name << "'!\n";
   }
 
   // Avoid "ISO C++ forbids casting between pointer-to-function and
@@ -265,6 +265,13 @@ IncrementalExecutor::executeFunction(llvm::StringRef funcname,
     llvm::SmallVector<llvm::Function*, 128> funcsToFree;
     for (std::set<std::string>::const_iterator i = m_unresolvedSymbols.begin(),
            e = m_unresolvedSymbols.end(); i != e; ++i) {
+      // FIXME: This causes a lot of test failures, for some reason it causes
+      // the call to HandleMissingFunction to be elided.
+      unsigned diagID = m_Diags.getCustomDiagID(clang::DiagnosticsEngine::Error,
+                                                "%0 unresolved while jitting %1");
+      (void)diagID;
+      //m_Diags.Report(diagID) << *i << funcname; // TODO: demangle the names.
+
       llvm::errs() << "IncrementalExecutor::executeFunction: symbol '" << *i
                    << "' unresolved while linking function '" << funcname
                    << "'!\n";

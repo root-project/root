@@ -176,7 +176,7 @@ In order to specify the classes selection, three methods are available:
 
 It is important to note that during the parsing of the header files,
 rootcint no longer defines *\_\_CINT\_\_* and genreflex no longer defines
-*\_\_GCCXML\_\_*.  This means in particular that data members that where
+*\_\_GCCXML\_\_*.  This means in particular that data members that were
 made transient by hiding them from rootcint or genreflex now *must* be 
 *explicitly* marked as transient.  For rootcint or rootcling use:
 

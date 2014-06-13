@@ -543,7 +543,7 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
       return false;
 
    const Transaction* T = getInterpreter()->getCurrentTransaction();
-   if (!T)
+   if (!T || !T->getWrapperFD())
       return false;
    const cling::CompilationOptions& COpts = T->getCompilationOpts();
    if (!COpts.DynamicScoping)
@@ -564,12 +564,11 @@ bool TClingCallbacks::shouldResolveAtRuntime(LookupResult& R, Scope* S) {
    //if (R.getSema().PP.LookAhead(0).getKind() == tok::less)
       // TODO: check for . or -> in the cached token stream
    //   return false;
-   
+
    for (Scope* DepScope = S; DepScope; DepScope = DepScope->getParent()) {
       if (DeclContext* Ctx = static_cast<DeclContext*>(DepScope->getEntity())) {
-         if (!Ctx->isDependentContext())
-            // For now we support only the prompt.
-            if (isa<FunctionDecl>(Ctx))
+         // For now we support only the prompt.
+         if (dyn_cast<FunctionDecl>(Ctx) == T->getWrapperFD())
                return true;
       }
    }

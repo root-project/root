@@ -90,6 +90,7 @@ public:
    void          RemoveCheckBox(TObject *obj);
 
    virtual void  Create(TObject *obj = 0);      // Create this Browser
+   virtual void  Destructor();
    void          BrowseObject(TObject *obj)    { fImp->BrowseObj(obj); }
    void          ExecuteDefaultAction(TObject *obj);
    TBrowserImp  *GetBrowserImp() const         { return fImp; }

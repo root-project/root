@@ -16,9 +16,10 @@
 #include "qlabel.h"
 #include "qpainter.h"
 #if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-# include "qmenu.h"
+# ifndef QT3_SUPPORT
+#  define QT3_SUPPORT
+# endif
 # include "q3popupmenu.h"
-typedef Q3PopupMenu QPopupMenu;
 #else
 # include "qpopupmenu.h"
 #endif

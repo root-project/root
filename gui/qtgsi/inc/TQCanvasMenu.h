@@ -22,23 +22,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
 #include "qobject.h"
-# if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 3
-#ifdef __CLING__
-#ifndef QT3_SUPPORT_CONSTRUCTOR
-#define QT3_SUPPORT_CONSTRUCTOR explicit
-#endif
-#endif
-#  include <q3popupmenu.h>
-typedef Q3PopupMenu QPopupMenu;
-# else 
-class QPopupMenu;
-# endif
-#else
-class QPopupMenu;
-#endif
-
 
 #ifndef ROOT_TList
 #include "TList.h"
@@ -49,11 +33,18 @@ class TObject;
 class TMethodArg;
 class TQRootDialog;
 
-class QObject;
+#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
+class Q3PopupMenu;
+typedef Q3PopupMenu QPopupMenu;
+#else
+class QPopupMenu;
+#endif
+
 class QAction;
 class QMouseEvent;
-class QResizeEvent;
+class QObject;
 class QPaintEvent;
+class QResizeEvent;
 class QWidget;
 
 class TQCanvasMenu : public QObject {

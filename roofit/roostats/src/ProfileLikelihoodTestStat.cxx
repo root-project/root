@@ -35,10 +35,6 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
         // can do depending on type: 
         // type  = 0 standard evaluation, type = 1 find only unconditional NLL minimum, type = 2 conditional MLL
 
-       if (!&data) {
-	 cout << "problem with data" << endl;
-	 return 0 ;
-       }
        if( fDetailedOutputEnabled && fDetailedOutput ) {
 	       delete fDetailedOutput;
 	       fDetailedOutput = 0;

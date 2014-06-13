@@ -243,6 +243,14 @@ TBrowser::~TBrowser()
 {
    // Delete the browser.
 
+   Destructor();
+}
+
+//______________________________________________________________________________
+void TBrowser::Destructor()
+{
+   // Actual browser destructor.
+
    fImp->CloseTabs();
    R__LOCKGUARD2(gROOTMutex);
    gROOT->GetListOfBrowsers()->Remove(this);

@@ -22,12 +22,12 @@ while ! [ "x$1" = "x" ]; do
     shift
 done
 
-for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx | grep -v core/metautils/src/G__std_`; do
+for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v /G__Cling.cxx  | grep -v core/metautils/src/G__std_`; do
     dirname=`dirname $dict`                   # to get foo/src
     dirname=`echo $dirname | sed 's,/src$,,'` # to get foo
     awk 'BEGIN{START=-1} /includePaths\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/",/,"",$0); sub(/^"/,"-I",$0); print $0 } }' $dict >> cppflags.txt
     echo "// $dict" >> all.h
-    awk 'BEGIN{START=-1} /payloadCode =/, /^;$/ { if (START==-1) START=NR; else if ($1 != ";") { code=substr($0,2); sub(/\\n"/,"",code); print code } }' $dict >> all.h
+#     awk 'BEGIN{START=-1} /payloadCode =/, /^;$/ { if (START==-1) START=NR; else if ($1 != ";") { code=substr($0,2); sub(/\\n"/,"",code); print code } }' $dict >> all.h
     awk 'BEGIN{START=-1} /headers\[\] = {/, /^0$/ { if (START==-1) START=NR; else if ($0 != "0") { sub(/,/,"",$0); print "#include",$0 } }' $dict >> all.h
 
     if ! test "$dirname" = "`echo $dirname| sed 's,/qt,,'`"; then

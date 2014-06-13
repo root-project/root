@@ -5824,7 +5824,7 @@ Int_t TProofServ::HandleCache(TMessage *mess, TString *slb)
             gSystem->AddIncludePath(TString("-I") + package);
 
             // add package to list of include directories to be searched by CINT
-            gROOT->ProcessLine(TString(".include ") + package);
+            gROOT->ProcessLine(TString(".I ") + package);
 
             // if successful add to list and propagate to slaves
             TPair *pck = (optls && optls->GetSize() > 0) ? new TPair(new TObjString(package), optls->Clone())

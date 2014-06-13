@@ -8416,7 +8416,7 @@ Int_t TProof::LoadPackageOnClient(const char *pack, TList *loadopts)
          gSystem->AddIncludePath(TString("-I") + pdir);
 
          // add package directory to list of include directories to be searched by CINT
-         gROOT->ProcessLine(TString(".include ") + pdir);
+         gROOT->ProcessLine(TString(".I ") + pdir);
 
          fEnabledPackagesOnClient->Add(new TObjString(pack));
          PDB(kPackage, 1)

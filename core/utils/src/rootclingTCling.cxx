@@ -89,6 +89,7 @@ bool CloseStreamerInfoROOTFile()
       if (cl->GetCollectionProxy())
          continue;
       cl->Property(); // Force initialization of the bits and property fields.
+
       protoClasses.AddLast(new TProtoClass(cl));
    }
 

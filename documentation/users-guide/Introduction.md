@@ -17,10 +17,6 @@ has generated an impressive amount of data, around 10 Terabytes per
 run. This rate provided the ideal environment to develop and test the
 next generation data analysis.
 
-One cannot mention ROOT without mentioning Cling, its C++ interpreter.
-Cling was created by Masa Goto in Japan. It is an independent product,
-which ROOT is using for the command line and script processor.
-
 ROOT was, and still is, developed in the "Bazaar style", a term from
 the book "The Cathedral and the Bazaar" by Eric S. Raymond. It means a
 liberal, informal development style that heavily relies on the diverse

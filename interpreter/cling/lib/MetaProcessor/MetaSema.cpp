@@ -28,6 +28,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/GenericValue.h"
+#include "llvm/Support/Casting.h"
 
 
 #include "clang/Lex/Preprocessor.h"
@@ -68,6 +69,10 @@ namespace cling {
        return AR_Success;
     }
     return AR_Failure;
+  }
+
+  MetaSema::ActionResult MetaSema::actOnTCommand(llvm::StringRef file) {
+      return AR_Failure;
   }
 
   MetaSema::ActionResult MetaSema::actOnRedirectCommand(llvm::StringRef file,

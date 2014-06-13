@@ -29,12 +29,6 @@
 
 #include "RooFit.h"
 
-#if ROOT_VERSION_CODE <= ROOT_VERSION(5,19,04)
-#ifndef nullptr
-#define nullptr 0
-#endif
-#endif
-
 #include "RooAbsCategoryLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooMultiCatIter.h"
@@ -239,9 +233,6 @@ bool RooMultiCatIter::operator!=(const TIterator &aIter) const
   // same set of input categories and are not at the
   // same sequential position
 
-   if (nullptr == &aIter)
-      return false;
-   
    if ((aIter.IsA() == RooMultiCatIter::Class())) {
       const RooMultiCatIter &iter(dynamic_cast<const RooMultiCatIter &>(aIter));
       return (_curItem != iter._curItem);

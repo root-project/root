@@ -150,6 +150,9 @@ const char *rootClingHelp =
 "   MyClass(TRootIOCtor*);                                                   \n"
 "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
 "                                                                            \n"
+"NOTA BENE: the dictionaries that will be used within the same project must  \n"
+"have unique names.                                                          \n"
+"                                                                            \n"
 "Synopsis of the options:                                                    \n"
 "                                                                            \n"
 " -cap\tCapabilities File                                                    \n"
@@ -186,7 +189,6 @@ const char *rootClingHelp =
 "                                                                            \n"
 " -inlineInputHeader\tAdd the argument header to the code of the dictionary  \n"
 "  This allows the header to be inlined within the dictionary.               \n"
-"  It works only when one header is specified.                               \n"
 "                                                                            \n"
 " -interpreteronly\tNo IO information in the dictionary                      \n";
 
@@ -1196,7 +1198,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
          break;
       }
 
-      dictStream << "         int R__n=(&R__stl) ? int(R__stl.size()) : 0;" << std::endl
+      dictStream << "         int R__n=int(R__stl.size());" << std::endl
                     << "         R__b << R__n;" << std::endl
                     << "         if(R__n) {" << std::endl;
 
@@ -2925,186 +2927,177 @@ void ExtractSelectedNamespaces(RScanner& scan, std::list<std::string>& nsList){
    }
 }
 
+//_____________________________________________________________________________
+void AnnotateAllDeclsForPCH(cling::Interpreter& interp,
+                            RScanner& scan,
+                            SelectionRules& selectionRules)
+{
+   // We need annotations even in the PCH: // !, // || etc.
+   for(auto const & selClass : scan.fSelectedClasses){
+      // Very important: here we decide if we want to attach attributes to the decl.
+      if (clang::CXXRecordDecl* CXXRD =
+         llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(selClass.GetRecordDecl()))){
+         AnnotateDecl(*CXXRD,selectionRules,interp,false);
+         }
+   }
+}
+
+//______________________________________________________________________________
+int CheckClassesForInterpreterOnlyDicts(cling::Interpreter& interp,
+                                        RScanner& scan)
+{
+     for(auto const & selClass : scan.fSelectedClasses){
+      if (!selClass.GetRecordDecl()->isCompleteDefinition() || selClass.RequestOnlyTClass()) {
+         continue;
+      }
+      const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
+      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass,"Class_Name",interp)) {
+         ROOT::TMetaUtils::Error("CheckClassesForInterpreterOnlyDicts",
+                                 "Interactivity only dictionaries are not supported for classes with ClassDef\n");
+         return 1;
+      }
+   }
+   return 0;
+}
+
 //______________________________________________________________________________
 int GenerateFullDict(std::ostream& dictStream,
                      cling::Interpreter& interp,
                      RScanner& scan,
                      SelectionRules& selectionRules,
                      const ROOT::TMetaUtils::RConstructorTypes& ctorTypes,
-                     bool onepcm,
-                     bool interpreteronly,
                      bool isSplit,
                      bool isGenreflex)
 {
 
    ROOT::TMetaUtils::TNormalizedCtxt normCtxt(interp.getLookupHelper());
 
-   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
-   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
-
    bool needsCollectionProxy = false;
 
-   if (!onepcm) {
+   //
+   // We will loop over all the classes several times.
+   // In order we will call
+   //
+   //     WriteClassInit (code to create the TGenericClassInfo)
+   //     check for constructor and operator input
+   //     WriteClassFunctions (declared in ClassDef)
+   //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
+   //
 
-      //
-      // We will loop over all the classes several times.
-      // In order we will call
-      //
-      //     WriteClassInit (code to create the TGenericClassInfo)
-      //     check for constructor and operator input
-      //     WriteClassFunctions (declared in ClassDef)
-      //     WriteClassCode (Streamer,ShowMembers,Auxiliary functions)
-      //
 
-      if (!interpreteronly){
-         //
-         // Loop over all classes and create Streamer() & Showmembers() methods
-         //
+   //
+   // Loop over all classes and create Streamer() & Showmembers() methods
+   //
 
-         // SELECTION LOOP
-         RScanner::NamespaceColl_t::const_iterator ns_iter = scan.fSelectedNamespaces.begin();
-         RScanner::NamespaceColl_t::const_iterator ns_end = scan.fSelectedNamespaces.end();
-         for( ; ns_iter != ns_end; ++ns_iter) {
-            WriteNamespaceInit(*ns_iter, interp, dictStream);
+   // SELECTION LOOP
+   for(auto const & ns : scan.fSelectedNamespaces) {
+      WriteNamespaceInit(ns, interp, dictStream);
+   }
+
+   for(auto const & selClass : scan.fSelectedClasses)
+   {
+      if (!selClass.GetRecordDecl()->isCompleteDefinition()) {
+         ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::GetQualifiedName(selClass).c_str());
+         continue;
+      }
+      if (selClass.RequestOnlyTClass()) {
+         // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* selClass.GetRecordDecl()).c_str());
+         // For now delay those for later.
+         continue;
+      }
+
+      // Very important: here we decide if we want to attach attributes to the decl.
+
+      if (clang::CXXRecordDecl* CXXRD =
+         llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(selClass.GetRecordDecl()))){
+         AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
          }
 
-         for( ; iter != end; ++iter)
-         {
-            if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-               ROOT::TMetaUtils::Error(0,"A dictionary has been requested for %s but there is no declaration!\n",ROOT::TMetaUtils::GetQualifiedName(* iter).c_str());
-               continue;
-            }
-            if (iter->RequestOnlyTClass()) {
-               // fprintf(stderr,"rootcling: Skipping class %s\n",R__GetQualifiedName(* iter->GetRecordDecl()).c_str());
-               // For now delay those for later.
-               continue;
-            }
+      const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
 
-            // Very important: here we decide if we want to attach attributes to the decl.
-            if (clang::CXXRecordDecl* CXXRD =
-               llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-               AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-               }
-
-               const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-
-            if (CRD) {
-               ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", iter->GetNormalizedName() );
-               if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
-                  // coverity[fun_call_w_exception] - that's just fine.
-                  RStl::Instance().GenerateTClassFor( iter->GetNormalizedName(), CRD, interp, normCtxt);
-               } else {
-                  EmitStreamerInfo(iter->GetNormalizedName());
-                  ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
-               }
-            }
+      if (CRD) {
+         ROOT::TMetaUtils::Info(0,"Generating code for class %s\n", selClass.GetNormalizedName() );
+         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */) ) {
+            // Register the collections
+            // coverity[fun_call_w_exception] - that's just fine.
+            RStl::Instance().GenerateTClassFor( selClass.GetNormalizedName(), CRD, interp, normCtxt);
+         } else {
+            EmitStreamerInfo(selClass.GetNormalizedName());
+            ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
          }
+      }
+   }
 
 #ifndef ROOT_STAGE1_BUILD
-         EmitTypedefs(scan.fSelectedTypedefs);
-         // Make up for skipping RegisterModule, now that dictionary parsing
-         // is done and these headers cannot be selected anymore.
-         interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                               "#include \"TFile.h\"\n"
-                               "#include \"TObjArray.h\"\n"
-                               "#include \"TVirtualArray.h\"\n"
-                               "#include \"TStreamerElement.h\"\n"
-                               "#include \"TProtoClass.h\"\n"
-                               "#include \"TBaseClass.h\"\n"
-                               "#include \"TListOfDataMembers.h\"\n"
-                               "#include \"TDataMember.h\"\n"
-                               "#include \"TDictAttributeMap.h\"\n"
-                               "#include \"TMessageHandler.h\"\n"
-                               );
-         if (!CloseStreamerInfoROOTFile()) {
-            return 1;
-         }
+   EmitTypedefs(scan.fSelectedTypedefs);
+   // Make up for skipping RegisterModule, now that dictionary parsing
+   // is done and these headers cannot be selected anymore.
+   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                           "#include \"TFile.h\"\n"
+                           "#include \"TObjArray.h\"\n"
+                           "#include \"TVirtualArray.h\"\n"
+                           "#include \"TStreamerElement.h\"\n"
+                           "#include \"TProtoClass.h\"\n"
+                           "#include \"TBaseClass.h\"\n"
+                           "#include \"TListOfDataMembers.h\"\n"
+                           "#include \"TDataMember.h\"\n"
+                           "#include \"TDictAttributeMap.h\"\n"
+                           "#include \"TMessageHandler.h\"\n"
+                           );
+   if (!CloseStreamerInfoROOTFile()) {
+      return 1;
+   }
 #endif
+
+   //
+   // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
+   // first to allow template specialisation to occur before template
+   // instantiation (STK)
+   //
+   // SELECTION LOOP
+   for(auto const & selClass : scan.fSelectedClasses){
+
+      if (!selClass.GetRecordDecl()->isCompleteDefinition() || selClass.RequestOnlyTClass()) {
+         // For now delay those for later.
+         continue;
       }
-
-      //
-      // Write all TBuffer &operator>>(...), Class_Name(), Dictionary(), etc.
-      // first to allow template specialisation to occur before template
-      // instantiation (STK)
-      //
-      // SELECTION LOOP
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter)
-      {
-         if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-            continue;
-         }
-         if (iter->RequestOnlyTClass()) {
-            // For now delay those for later.
-            continue;
-         }
-         const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-         if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Class_Name",interp)) {
-            if (!interpreteronly){
-               WriteClassFunctions(cxxdecl,dictStream,isSplit);
-            } else {
-               ROOT::TMetaUtils::Error("GenerateFullDict",
-                                       "Interactivity only dictionaries are not supported for classes with ClassDef\n");
-               return 1;
-            }
-         }
-      }
-
-      // LINKDEF SELECTION LOOP
-      // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
-      // STL class which is done via RStl::Instance().WriteClassInit(0);
-      // and the ClassInit
-      if (!interpreteronly){
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
-         {
-            if (!iter->GetRecordDecl()->isCompleteDefinition()) {
-               continue;
-            }
-            if (!iter->RequestOnlyTClass()) {
-               continue;
-            }
-
-            const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(iter->GetRecordDecl());
-
-            if (!ROOT::TMetaUtils::IsSTLContainer(*iter)) {
-               ROOT::TMetaUtils::WriteClassInit(dictStream, *iter, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
-            }
-         }
-         // Loop to write all the ClassCode
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
-         {
-            ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
-                                             *iter,
-                                             interp,
-                                             normCtxt,
-                                             dictStream,
-                                             ctorTypes,
-                                             isGenreflex);
-         }
-      }
-   } else {
-      // We need annotations even in the PCH
-      iter = scan.fSelectedClasses.begin();
-      end = scan.fSelectedClasses.end();
-      for( ; iter != end; ++iter)
-      {
-         // Very important: here we decide if we want to attach attributes to the decl.
-         if (clang::CXXRecordDecl* CXXRD =
-            llvm::dyn_cast<clang::CXXRecordDecl>(const_cast<clang::RecordDecl*>(iter->GetRecordDecl()))){
-            AnnotateDecl(*CXXRD,selectionRules,interp,isGenreflex);
-            }
+      const clang::CXXRecordDecl* cxxdecl = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
+      if (cxxdecl && ROOT::TMetaUtils::ClassInfo__HasMethod(selClass,"Class_Name",interp)) {
+         WriteClassFunctions(cxxdecl,dictStream,isSplit);
       }
    }
 
-   if (!interpreteronly) {
-      // coverity[fun_call_w_exception] - that's just fine.
-      ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
+   // LINKDEF SELECTION LOOP
+   // Loop to get the shadow class for the class marker 'RequestOnlyTClass' (but not the
+   // STL class which is done via RStl::Instance().WriteClassInit(0);
+   // and the ClassInit
+
+   for(auto const & selClass : scan.fSelectedClasses)
+   {
+      if (!selClass.GetRecordDecl()->isCompleteDefinition() || !selClass.RequestOnlyTClass()) {
+         continue;
+      }
+
+      const clang::CXXRecordDecl* CRD = llvm::dyn_cast<clang::CXXRecordDecl>(selClass.GetRecordDecl());
+
+      if (!ROOT::TMetaUtils::IsSTLContainer(selClass)) {
+         ROOT::TMetaUtils::WriteClassInit(dictStream, selClass, CRD, interp, normCtxt, ctorTypes, needsCollectionProxy);
+      }
    }
+   // Loop to write all the ClassCode
+   for(auto const & selClass : scan.fSelectedClasses){
+      ROOT::TMetaUtils::WriteClassCode(&CallWriteStreamer,
+                                       selClass,
+                                       interp,
+                                       normCtxt,
+                                       dictStream,
+                                       ctorTypes,
+                                       isGenreflex);
+   }
+
+   // Loop on the registered collections internally
+   // coverity[fun_call_w_exception] - that's just fine.
+   ROOT::RStl::Instance().WriteClassInit(dictStream, interp, normCtxt, ctorTypes, needsCollectionProxy);
 
    return 0;
 }
@@ -3450,6 +3443,7 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
          buffer.clear();
          headers.remove_if([&buffer](const std::string& s) {return !buffer.insert(s).second;});
          headersDeclsMap[annotatedRcd.GetNormalizedName()] = headers;
+         headersDeclsMap[annotatedRcd.GetRequestedName()] = headers;
       }
    }
 
@@ -3481,7 +3475,8 @@ void ExtractHeadersForDecls(const RScanner::ClassColl_t& annotatedRcds,
 }
 //______________________________________________________________________________
 const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& headersClassesMap,
-                                                       const std::string& detectedUmbrella)
+                                                       const std::string& detectedUmbrella,
+                                                       bool payLoadOnly=false)
 {
    // Generate a string for the dictionary from the headers-classes map.
    std::string headerName;
@@ -3495,10 +3490,12 @@ const std::string GenerateStringFromHeadersForClasses (const HeadersDeclsMap_t& 
       headersClassesMapString+="\"";
       headersClassesMapString+=classHeaders.first+"\"";
       for (auto& header : classHeaders.second){
-         headerName = (detectedUmbrella==header) ? "payloadCode" : "\""+header+"\"";
+         headerName = (detectedUmbrella==header || payLoadOnly) ? "payloadCode" : "\""+header+"\"";
          headersClassesMapString+=", "+ headerName;
          if (genreflex::verbose)
             std::cout << ", " << headerName;
+         if (payLoadOnly)
+            break;
       }
       if (genreflex::verbose)
          std::cout << std::endl;
@@ -3821,12 +3818,14 @@ int RootCling(int argc,
             // Ignore CINT arguments.
             continue;
          }
+
          if (strcmp("-inlineInputHeader", argv[ic]) == 0 ) {
             // inline the input header
             inlineInputHeader = true;
             ic+=1;
             continue;
          }
+
          if (strcmp("-pipe", argv[ic])!=0 && strcmp("-pthread", argv[ic])!=0) {
             // filter out undesirable options
             if (strcmp("-fPIC", argv[ic]) && strcmp("-fpic", argv[ic])
@@ -4248,10 +4247,9 @@ int RootCling(int argc,
                  << "#include \"TSchemaHelper.h\"\n\n";
 
       std::list<std::string> includes;
-      std::list<std::string>::iterator it;
       GetRuleIncludes( includes );
-      for( it = includes.begin(); it != includes.end(); ++it ){
-         dictStream << "#include <" << *it << ">" << std::endl;
+      for(auto& incFile : includes){
+         dictStream << "#include <" << incFile << ">" << std::endl;
       }
       dictStream << std::endl;
    }
@@ -4302,23 +4300,21 @@ int RootCling(int argc,
    }
 
 
-// SELECTION LOOP
+   // SELECTION LOOP
    // Check for error in the class layout before doing anything else.
-   RScanner::ClassColl_t::const_iterator iter = scan.fSelectedClasses.begin();
-   RScanner::ClassColl_t::const_iterator end = scan.fSelectedClasses.end();
-   for( ; iter != end; ++iter)
+   for(auto const & annRcd : scan.fSelectedClasses)
    {
-      if (ROOT::TMetaUtils::ClassInfo__HasMethod(*iter,"Streamer",interp)) {
-         if (iter->RequestNoInputOperator()) {
-            int version = ROOT::TMetaUtils::GetClassVersion(*iter, interp);
+      if (ROOT::TMetaUtils::ClassInfo__HasMethod(annRcd,"Streamer",interp)) {
+         if (annRcd.RequestNoInputOperator()) {
+            int version = ROOT::TMetaUtils::GetClassVersion(annRcd, interp);
             if (version!=0) {
                // Only Check for input operator is the object is I/O has
                // been requested.
-               has_input_error |= CheckInputOperator(*iter,interp);
+               has_input_error |= CheckInputOperator(annRcd,interp);
             }
          }
       }
-      has_input_error |= !CheckClassDef(**iter, interp);
+      has_input_error |= !CheckClassDef(*annRcd, interp);
    }
 
    if (has_input_error) {
@@ -4349,15 +4345,23 @@ int RootCling(int argc,
 #endif
    }
 
-   int retCode = GenerateFullDict(splitDictStream,
-                                  interp,
-                                  scan,
-                                  selectionRules,
-                                  constructorTypes,
-                                  onepcm,
-                                  interpreteronly,
-                                  doSplit,
-                                  isGenreflex);
+   int retCode(0);
+   if (onepcm){
+      AnnotateAllDeclsForPCH(interp,scan,selectionRules);
+   }
+   else if (interpreteronly){
+      retCode = CheckClassesForInterpreterOnlyDicts(interp,scan);
+   }
+   else{
+      retCode= GenerateFullDict(splitDictStream,
+                                interp,
+                                scan,
+                                selectionRules,
+                                constructorTypes,
+                                doSplit,
+                                isGenreflex);
+   }
+
    if (retCode!=0){
       return retCode;
    }
@@ -4386,7 +4390,9 @@ int RootCling(int argc,
             break;
          }
       }
-      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,detectedUmbrella);
+      const std::string headersClassesMapString = GenerateStringFromHeadersForClasses(headersDeclsMap,
+                                                                                      detectedUmbrella,
+                                                                                      true);
 
       GenerateModule(modGen,
                      CI,
@@ -4409,14 +4415,12 @@ int RootCling(int argc,
          outputfile << gLibsNeeded.substr(0, endStr+1) << endl;
          // Add explicit delimiter
          outputfile << "# Now the list of classes\n";
-// SELECTION LOOP
-         iter = scan.fSelectedClasses.begin();
-         end = scan.fSelectedClasses.end();
-         for( ; iter != end; ++iter)
+         // SELECTION LOOP
+         for(auto const & annRcd : scan.fSelectedClasses)
          {
             // Shouldn't it be GetLong64_Name( cl_input.GetNormalizedName() )
             // or maybe we should be normalizing to turn directly all long long into Long64_t
-            outputfile << iter->GetNormalizedName() << endl;
+            outputfile << annRcd.GetNormalizedName() << endl;
          }
       }
    }
@@ -5001,7 +5005,10 @@ int GenReflex(int argc, char **argv)
    "-o, --output\tOutput filename\n"
    "      Output file name. If an existing directory is specified instead of a file,\n"
    "      then a filename will be build using the name of the input file and will\n"
-   "      be placed in the given directory. <headerfile>_rflx.cpp.\n";
+   "      be placed in the given directory. <headerfile>_rflx.cpp.\n"
+   "      NOTA BENE: the dictionaries that will be used within the same project must\n"
+   "      have unique names.\n";
+
 
    const char* targetLib=
    "-l, --library\tTarget library\n"

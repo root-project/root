@@ -451,10 +451,14 @@ extern "C" void DestroyInterpreter(TInterpreter *interp)
 // Load library containing specified class. Returns 0 in case of error
 // and 1 in case if success.
 extern "C" int TCling__AutoLoadCallback(const char* className)
-{   
+{
    return ((TCling*)gCling)->AutoLoad(className);
 }
 
+extern "C" int TCling__AutoParseCallback(const char* className)
+{
+   return ((TCling*)gCling)->AutoParse(className);
+}
 // // Returns 0 for failure 1 for success
 // extern "C" int TCling__IsAutoLoadNamespaceCandidate(const char* name)
 // {
@@ -1244,13 +1248,6 @@ void TCling::RegisterModule(const char* modulename,
    bool oldValue = false;
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
-
-   for (const char** hdr = headers; *hdr; ++hdr) {
-      if (gDebug > 5) {
-         ::Info("TCling::RegisterModule", "   #including %s...", *hdr);
-      }
-      code += TString::Format("#include \"%s\"\n", *hdr);
-   }
 
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
@@ -4375,7 +4372,7 @@ Int_t TCling::AutoLoad(const char* cls)
    if (fAutoLoadCallBack) {
       int success = (*(AutoLoadCallBack_t)fAutoLoadCallBack)(cls);
       if (success) {
-         AutoParse(cls);
+//          AutoParse(cls);
          SetClassAutoloading(oldvalue);
          return success;
       }
@@ -4416,10 +4413,10 @@ Int_t TCling::AutoLoad(const char* cls)
       delete tokens;
    }
 
-   if (!status) {
-      if (AutoParse(cls))
-         status = 1;
-   }
+//    if (!status) {
+//       if (AutoParse(cls))
+//          status = 1;
+//    }
 
    SetClassAutoloading(oldvalue);
    return status;
@@ -4461,6 +4458,12 @@ Int_t TCling::AutoParse(const char* cls)
 
    if (!fHeaderParsingOnDemand) return 0;
 
+   // The catalogue of headers is in the dictionary
+   AutoLoad(cls);
+
+   // Prevent the recursion when the library dictionary are loaded.
+   Int_t oldvalue = SetClassAutoloading(false);
+
    // No recursive header parsing on demand; we require headers to be standalone.
    fHeaderParsingOnDemand = false;
 
@@ -4470,6 +4473,7 @@ Int_t TCling::AutoParse(const char* cls)
    if (fLookedUpClasses.insert(normNameHash).second) {
       const std::vector<const char*>& hNamesPtrs = fClassesHeadersMap[normNameHash];
       for (auto& hName : hNamesPtrs){
+         if (fParsedPayloadsAddresses.count(hName) == 1 ) continue;
          if (0 != fPayloads.count(normNameHash)) {
             if (gDebug > 0) {
                Info("AutoParse",
@@ -4479,6 +4483,9 @@ Int_t TCling::AutoParse(const char* cls)
             if (cRes != cling::Interpreter::kSuccess){
                if (hName[0]=='\n')
                   Error("AutoParse","Error parsing payload code for class %s with content:\n%s", cls, hName);
+            } else {
+               fParsedPayloadsAddresses.insert(hName);
+               nHheadersParsed++;
             }
          } else if (!IsLoaded(hName)) {
             if (gDebug > 0) {
@@ -4488,9 +4495,10 @@ Int_t TCling::AutoParse(const char* cls)
             auto cRes = ExecAutoParse(hName,kTRUE,fInterpreter);
             if (cRes != cling::Interpreter::kSuccess){
                Error("AutoParse","Error parsing headerfile %s for class %s.", hName, cls);
+            } else {
+               nHheadersParsed++;
             }
         }
-         nHheadersParsed++;
       }
    }
 
@@ -4514,6 +4522,8 @@ Int_t TCling::AutoParse(const char* cls)
    }
 
    fHeaderParsingOnDemand = true;
+
+   SetClassAutoloading(oldvalue);
 
    return nHheadersParsed;
 }
