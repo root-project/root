@@ -28,7 +28,7 @@ if(insource)
 endif()
 
 # Find ROOT.
-find_package(ROOT QUIET)
+find_package(ROOT QUIET COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
 
 if(NOT ROOT_FOUND)
 
@@ -36,7 +36,9 @@ if(NOT ROOT_FOUND)
   if(DEFINED ROOTSYS)
     if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
       set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
-      find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/)
+      find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/
+                   COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+
     else()
       message(FATAL_ERROR "Cannot find FindROOT.cmake!")
     endif()
@@ -47,7 +49,8 @@ if(NOT ROOT_FOUND)
     if(DEFINED ROOTSYS)
       if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
         set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
-        find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/)
+        find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/
+                     COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
       else()
         message(FATAL_ERROR "Cannot find FindROOT.cmake!")
       endif()
@@ -95,11 +98,6 @@ include(RootCTestMacros)
 # Find GCCXML.
 find_package(GCCXML REQUIRED)
 
-# Set of libraries that are used as standard dependencies. Dependencies needed
-# so make -j does not fail when compiling macros, but the libraries do not exist
-# yet.
-set(ROOTTEST_LIB_DEPENDS Core RIO Net Hist Gpad Tree Rint Matrix Mathcore)
-
 # Find python.
 find_package(PythonInterp)
 find_program(python_cmd ${PYTHON_EXECUTABLE})
@@ -115,3 +113,5 @@ include(RootCTestMacros)
 
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_FIND_TESTDIRS()
+
+message("ROOT LIBS: ${ROOT_LIBRARIES}")
