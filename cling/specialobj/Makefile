@@ -21,5 +21,12 @@ stlProxies.log: tmp.root AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  calib_h.$(D
 
 stlProxies: stlProxies.log
 	$(TestDiff)
-f02: f02.log
+
+f02.log: runf02.C
+	$(CMDECHO) $(CALLROOTEXE) -b -l -q $^ > $@ 2>&1 || handleError.sh --result=$$? --log=$@ --test=$@
+
+f02.log.filtered: f02.log
+	$(CMDECHO) sed 's,input_line_[^:]*,input_line_FILTERED,g' $^ > $@
+
+f02: f02.log.filtered
 	$(TestDiff)

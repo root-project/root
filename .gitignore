@@ -75,6 +75,7 @@ AutoDict_*.cxx
 # /cling/specialobj/
 /cling/specialobj/assertGPad.ref
 /cling/specialobj/tmp.root
+/cling/specialobj/f02.log.filtered
 
 # /cling/stl/default
 /cling/stl/default/*Dict.*
