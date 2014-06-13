@@ -1,5 +1,5 @@
 CLEAN_TARGETS += *.log problem.root $(ALL_LIBRARIES) tmp.root
-TEST_TARGETS += stlProxies argtwice
+TEST_TARGETS += stlProxies argtwice f02
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
 	export ROOTTEST_HOME := $(shell expr $(CURDIR) : '\(.*/roottest/\)')
@@ -20,4 +20,6 @@ T0Result_h.$(DllSuf): T0Result.h AthIndex_h.$(DllSuf)
 stlProxies.log: tmp.root AthIndex_h.$(DllSuf)  T0Result_h.$(DllSuf)  calib_h.$(DllSuf)
 
 stlProxies: stlProxies.log
+	$(TestDiff)
+f02: f02.log
 	$(TestDiff)
