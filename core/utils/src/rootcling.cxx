@@ -4351,6 +4351,11 @@ int RootCling(int argc,
    }
    else if (interpreteronly){
       retCode = CheckClassesForInterpreterOnlyDicts(interp,scan);
+      // generate an empty pcm nevertheless for consistency
+      // Negate as true is 1 and true is returned in case of success.
+#ifndef ROOT_STAGE1_BUILD
+      retCode += !CloseStreamerInfoROOTFile();
+#endif
    }
    else{
       retCode= GenerateFullDict(splitDictStream,
