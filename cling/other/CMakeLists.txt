@@ -6,6 +6,12 @@ ROOTTEST_ADD_TEST(roottest-cling-other-runfileClose
 
 ROOTTEST_COMPILE_MACRO(testCompile.C)
 
+ROOTTEST_ADD_TEST(roottest-cling-other-runsavannah54662
+                  MACRO runsavannah54662.C
+                  OUTREF savannah54662.ref
+                  DEPENDS ${COMPILE_MACRO_TEST}
+                  LABELS roottest regression cling)
+
 ROOTTEST_ADD_TEST(roottest-cling-other-runsprintfselect
                   MACRO runsprintfselect.C
                   OUTREF sprintfselect.ref
@@ -18,11 +24,6 @@ ROOTTEST_ADD_TEST(roottest-cling-other-staticConstTest
 
 ROOTTEST_ADD_TEST(roottest-cling-other-runStaticDataMember
                   MACRO runStaticDataMember.C
-                  LABELS roottest regression cling)
-
-ROOTTEST_ADD_TEST(roottest-cling-other-runsavannah54662
-                  MACRO runsavannah54662.C
-                  OUTREF savannah54662.ref
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-other-runmissingXFunc
