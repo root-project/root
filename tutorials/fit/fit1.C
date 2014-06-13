@@ -31,15 +31,24 @@ void fit1() {
    fill->ls();
 
    //
-   // Get object "sqroot" from the file. Undefined objects are searched
-   // for using gROOT->FindObject("xxx"), e.g.:
-   // TF1 *sqroot = (TF1*) gROOT.FindObject("sqroot")
+   // Get object "sqroot" from the file.
    //
+   TF1 *sqroot = static_cast<TF1*>(fill->GetObjectChecked("sqroot","TF1"));
+   if (!sqroot){
+      Error("","Cannot find object sqroot of type TF1\n");
+      return;
+   }
+
    sqroot->Print();
 
    //
    // Now fit histogram h1f with the function sqroot
    //
+   TH1F* h1f = static_cast<TH1F*>(fill->GetObjectChecked("h1f","TH1F"));
+   if (!h1f){
+      Error("","Cannot find object h1f of type TH1F\n");
+      return;
+   }
    h1f->SetFillColor(45);
    h1f->Fit("sqroot");
 
