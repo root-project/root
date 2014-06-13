@@ -198,13 +198,15 @@ function(ROOTTEST_ADD_TEST test)
                   ${ld_library_path}=${_librarypath}:$ENV{${ld_library_path}} )
 
   if(ARG_WORKING_DIR)
-    set(test_working_dir ${ARG_WORKING_DIR})
+    get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
   else()
-    set(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR}) 
+    get_filename_component(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
   endif()
 
+  get_filename_component(logdir "${CMAKE_CURRENT_BINARY_DIR}/${test}.log" ABSOLUTE)
+
   ROOT_ADD_TEST(${test} COMMAND ${command}
-                        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${test}.log
+                        OUTPUT ${logdir}
                         ${outcnv}
                         ${outcnvcmd}
                         CMPOUTPUT ${OUTREF_PATH}
