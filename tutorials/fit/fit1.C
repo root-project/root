@@ -33,7 +33,8 @@ void fit1() {
    //
    // Get object "sqroot" from the file.
    //
-   TF1 *sqroot = static_cast<TF1*>(fill->GetObjectChecked("sqroot","TF1"));
+   TF1 *sqroot = nullptr;
+   fill->GetObject("sqroot",sqroot);
    if (!sqroot){
       Error("","Cannot find object sqroot of type TF1\n");
       return;
@@ -44,7 +45,8 @@ void fit1() {
    //
    // Now fit histogram h1f with the function sqroot
    //
-   TH1F* h1f = static_cast<TH1F*>(fill->GetObjectChecked("h1f","TH1F"));
+   TH1F* h1f = nullptr;
+   fill->GetObject("h1f",h1f);
    if (!h1f){
       Error("","Cannot find object h1f of type TH1F\n");
       return;
