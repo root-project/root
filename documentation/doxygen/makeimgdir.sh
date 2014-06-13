@@ -3,7 +3,7 @@ imgdir=`grep "^IMAGE_PATH" Doxyfile | sed -e "s/^.*= //"`
 
 if [ ! -d "$imgdir" ]
 then
-   mkdir $imgdir
+   mkdir -p $imgdir
 fi
 
 echo $imgdir
