@@ -150,6 +150,9 @@ const char *rootClingHelp =
 "   MyClass(TRootIOCtor*);                                                   \n"
 "   MyClass(); // Or a constructor with all its arguments defaulted.         \n"
 "                                                                            \n"
+"NOTA BENE: the dictionaries that will be used within the same project must  \n"
+"have unique names.                                                          \n"
+"                                                                            \n"
 "Synopsis of the options:                                                    \n"
 "                                                                            \n"
 " -cap\tCapabilities File                                                    \n"
@@ -5002,7 +5005,9 @@ int GenReflex(int argc, char **argv)
    "-o, --output\tOutput filename\n"
    "      Output file name. If an existing directory is specified instead of a file,\n"
    "      then a filename will be build using the name of the input file and will\n"
-   "      be placed in the given directory. <headerfile>_rflx.cpp.\n";
+   "      be placed in the given directory. <headerfile>_rflx.cpp.\n"
+   "      NOTA BENE: the dictionaries that will be used within the same project must\n"
+   "      have unique names.\n"
 
    const char* targetLib=
    "-l, --library\tTarget library\n"
