@@ -28,19 +28,11 @@ else()
   include_directories(${ROOT_INCLUDE_DIRS}/../tutorials)
 endif()
 
-macro(ROOT_ADD_MACRO macrofile)
-  get_filename_component(name ${macrofile} NAME_WE)
-  ROOT_ADD_TEST(macro-${name} COMMAND ${ROOT_root_CMD} -b -q ${macrofile} PASSRC 1 FAILREGEX Error)
-endmacro()
-
 #---environment-------------------------------------------------------------------------------
 ROOT_ADD_TEST(show-environment COMMAND ${CMAKE_COMMAND} -E environment)
 
 #---hworld------------------------------------------------------------------------------------
 ROOT_EXECUTABLE(hworld hworld.cxx LIBRARIES Gpad)
-
-#---Defines some of the tutorials as tests----------------------------------------------------
-ROOT_ADD_MACRO(${ROOT_SOURCE_DIR}/tutorials/hsimple.C)
 
 #---event-------------------------------------------------------------------------------------
 ROOT_GENERATE_DICTIONARY(EventDict ${CMAKE_CURRENT_SOURCE_DIR}/Event.h MODULE Event LINKDEF EventLinkDef.h)

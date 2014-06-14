@@ -19,9 +19,11 @@ void FITS_tutorial5()
       //printf("Press ENTER to start..."); getchar();
       //printf("\n");
    }
-    
+  
+   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+
    //Open the table
-   TFITSHDU *hdu = new TFITSHDU("sample4.fits[1]");
+   TFITSHDU *hdu = new TFITSHDU(dir+"/sample4.fits[1]");
    if (hdu == 0) {
       printf("ERROR: could not access the HDU\n"); return;
    }
