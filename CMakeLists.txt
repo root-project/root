@@ -75,6 +75,7 @@ if(roofit)
   add_subdirectory(roofit)
 endif()
 ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 include(PostInstalledSoftware)
 

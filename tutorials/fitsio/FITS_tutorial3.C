@@ -15,11 +15,12 @@ void FITS_tutorial3()
    
    // Open extensions 1 to 5 from file
    //printf("Press ENTER to see a canvas with all images within the file:"); getchar();
-   
+   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+  
    TCanvas *c = new TCanvas("c1", "FITS tutorial #1", 800, 700);
    c->Divide(2,3);
    for (int i=1; i <= 5; i++) {
-      TFITSHDU *hdu = new TFITSHDU("sample3.fits", i);
+      TFITSHDU *hdu = new TFITSHDU(dir+"/sample3.fits", i);
       if (hdu == 0) {
          printf("ERROR: could not access the HDU\n"); return;
       }
