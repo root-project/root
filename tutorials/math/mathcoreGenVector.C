@@ -18,31 +18,27 @@
 #include "TVectorD.h"
 #include "TMath.h"
 
-
-#ifndef __CINT__
 #include "Math/Point3D.h"
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
-#include "Math/Rotation3D.h"
-#include "Math/EulerAngles.h"
-#include "Math/AxisAngle.h"
-#include "Math/Quaternion.h"
-#include "Math/RotationX.h"
-#include "Math/RotationY.h"
-#include "Math/RotationZ.h"
-#include "Math/RotationZYX.h"
-#include "Math/LorentzRotation.h"
-#include "Math/Boost.h"
-#include "Math/BoostX.h"
-#include "Math/BoostY.h"
-#include "Math/BoostZ.h"
-#include "Math/Transform3D.h"
-#include "Math/Plane3D.h"
-#include "Math/VectorUtil.h"
+#include "Math/GenVector/Rotation3D.h"
+#include "Math/GenVector/EulerAngles.h"
+#include "Math/GenVector/AxisAngle.h"
+#include "Math/GenVector/Quaternion.h"
+#include "Math/GenVector/RotationX.h"
+#include "Math/GenVector/RotationY.h"
+#include "Math/GenVector/RotationZ.h"
+#include "Math/GenVector/RotationZYX.h"
+#include "Math/GenVector/LorentzRotation.h"
+#include "Math/GenVector/Boost.h"
+#include "Math/GenVector/BoostX.h"
+#include "Math/GenVector/BoostY.h"
+#include "Math/GenVector/BoostZ.h"
+#include "Math/GenVector/Transform3D.h"
+#include "Math/GenVector/Plane3D.h"
+#include "Math/GenVector/VectorUtil.h"
 
 using namespace ROOT::Math;
-
-#endif
 
 int ntest = 0; 
 int nfail = 0; 
