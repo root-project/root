@@ -26,7 +26,7 @@ using namespace HistFactory;
 void example() {
 
 
-  std::string InputFile = "./data/example.root";
+  std::string InputFile = "./example.root";
   // in case the file is not found
   TFile * ifile = TFile::Open(InputFile.c_str());
   if (!ifile) { 
