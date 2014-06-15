@@ -137,6 +137,7 @@ set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
 set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
 set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
+set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 
 #---Loop over all tutorials and define the corresponding test---------
 
