@@ -15,7 +15,7 @@ endif()
 function(ROOT_ADD_TUTORIAL macrofile rc)
   string(REPLACE ".C" "" name ${macrofile})
   string(REPLACE "/" "-" name ${name})
-  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile} 
+  ROOT_ADD_TEST(tutorial-${name} COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${macrofile}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" LABELS tutorial)
 endfunction()
 
@@ -141,7 +141,7 @@ set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 
 #---Loop over all tutorials and define the corresponding test---------
 
-ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
+ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
                 PASSRC 1 FAILREGEX "Error in" "error:" LABELS tutorial)
 foreach(t ${tutorials})
   list(FIND returncode_1 ${t} index)
