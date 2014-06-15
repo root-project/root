@@ -8,7 +8,7 @@ find_package(ROOT REQUIRED)
 include(${ROOT_USE_FILE})
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
-  set(ROOT_root_CMD ${ROOT_BINARY_DIR}/root)
+  set(ROOT_root_CMD ${ROOT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/root)
 endif()
 
 #---Definition of the helper function--------------------------------
