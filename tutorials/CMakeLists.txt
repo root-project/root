@@ -129,6 +129,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
                  graphs/exclusiongraph.C graphs/multigraph.C
                  graphs/multipalette.C 
                  hist/ContourList.C hist/hstack.C 
+                 hist/h2proj.C hist/hbars.C
                  hist/th2polyBoxes.C
                  io/fildir.C 
                  math/chi2test.C )
