@@ -153,8 +153,8 @@ foreach(t ${tutorials})
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
   ROOT_ADD_TEST(tutorial-${tname} 
-                COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
-                PASSRC ${rc} FAILREGEX "Error in" "error:" 
+                COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${name}-depends})
 endforeach()
