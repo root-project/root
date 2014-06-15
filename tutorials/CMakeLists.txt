@@ -53,7 +53,8 @@ endif()
 if(NOT ROOT_fftw3_FOUND)
   set(fftw3_veto roofit/rf208_convolution.C
                  roofit/rf210_angularconv.C
-                 roofit/rf211_paramconv.C)
+                 roofit/rf211_paramconv.C
+                 roofit/rf512_wsfactory_oper.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
@@ -118,6 +119,7 @@ message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons"
 
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 
+#---Special return code------------------------------------------------
 set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
                  graphics/archi.C graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
@@ -130,6 +132,11 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
                  hist/th2polyBoxes.C
                  io/fildir.C 
                  math/chi2test.C )
+#---Dependencies------------------------------------------------------
+set(math-testUnfold5d-depends tutorial-math-testUnfold5c)
+set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
+set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
+set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 
 #---Loop over all tutorials and define the corresponding test---------
 
@@ -148,7 +155,7 @@ foreach(t ${tutorials})
                 COMMAND ${ROOT_root_CMD} -b -l -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" 
                 LABELS tutorial
-                DEPENDS tutorial-hsimple )
+                DEPENDS tutorial-hsimple ${${name}-depends})
 endforeach()
 
 

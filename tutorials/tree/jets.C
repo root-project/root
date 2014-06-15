@@ -92,7 +92,7 @@ void jets(Int_t nev=100, Int_t npileup=200) {
    gSystem->Load("libPhysics");
    gROOT->ProcessLine(".L $ROOTSYS/tutorials/tree/JetEvent.cxx+");
    gROOT->ProcessLine("#define JETS_SECOND_RUN yes");
-   gROOT->ProcessLine("#include \"jets.C\" ");
+   gROOT->ProcessLine(TString("#include \"")+gInterpreter->GetCurrentMacroName()+"\" ");
    gROOT->ProcessLine("jets(100,200,true)");
 }
 
