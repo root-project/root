@@ -8,10 +8,12 @@ find_package(ROOT REQUIRED)
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
-  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
-                   ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
-                   ROOTSYS=${CMAKE_BINARY_DIR}
-                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  if(NOT WIN32)  # Ignore environment on Windows for the time being
+    set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                     ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                     ROOTSYS=${CMAKE_BINARY_DIR}
+                     PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
+  endif()
 endif()
 
 #---Definition of the helper function--------------------------------
