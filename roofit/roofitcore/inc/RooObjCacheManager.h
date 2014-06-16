@@ -34,7 +34,7 @@ class RooObjCacheManager : public RooCacheManager<RooAbsCacheElement> {
 
 public:
 
-  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=10, Bool_t clearCacheOnServerRedirect=kTRUE) ;
+  RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=10, Bool_t clearCacheOnServerRedirect=kTRUE, Bool_t allowOptimize=kFALSE) ;
   RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner=0) ;
   virtual ~RooObjCacheManager() ;
   
@@ -56,13 +56,14 @@ public:
 protected:
 
   Bool_t _clearOnRedirect ;
+  Bool_t _allowOptimize ; 
   Bool_t _optCacheModeSeen  ;              //! 
 
   RooArgSet* _optCacheObservables ;        //! current optCacheObservables 
 
   static Bool_t _clearObsList ; // Clear obslist on sterilize?
   
-  ClassDef(RooObjCacheManager,2) // Cache manager for generic caches that contain RooAbsArg objects
+  ClassDef(RooObjCacheManager,3) // Cache manager for generic caches that contain RooAbsArg objects
 } ;
 
 

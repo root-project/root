@@ -140,6 +140,7 @@ void RooLinearVar::setVal(Double_t value)
 
   // Invert formula 'value = offset + slope*var'
   ((RooRealVar&)_var.arg()).setVal((value - _offset) / _slope) ;
+
 }
 
 

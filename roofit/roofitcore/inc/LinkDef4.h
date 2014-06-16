@@ -55,11 +55,15 @@
 #pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
 #pragma link C++ class std::pair<int,RooLinkedListElem*>+ ;
 #pragma link C++ class RooUnitTest+ ;
+//#pragma link C++ class RooHistFunc2- ;
 #ifndef __ROOFIT_NOROOMINIMIZER
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooMinimizerFcn+ ;
 #endif
+#pragma link C++ class RooAbsMoment+ ;
 #pragma link C++ class RooMoment+ ;
+#pragma link C++ class RooFirstMoment+ ;
+#pragma link C++ class RooSecondMoment+ ;
 #pragma link C++ class RooStudyManager+ ;
 #pragma link C++ class RooStudyPackage+ ;
 #pragma link C++ class RooAbsStudy+ ;

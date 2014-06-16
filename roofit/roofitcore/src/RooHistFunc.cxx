@@ -453,11 +453,39 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
       hobs=harg ; 
     }
   }
+
+  // cout << "RooHistFunc::bb(" << GetName() << ") histObs = " << _histObsList << endl ;
+  // cout << "RooHistFunc::bb(" << GetName() << ") pdfObs = " << _depList << endl ;
+
+  RooAbsRealLValue* transform(0) ;
   if (!hobs) {
-    cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << endl ;
-    return 0 ;
+
+    // Considering alternate: input observable is histogram observable and pdf observable is transformation in terms of it
+    RooAbsArg* pobs(0) ;
+    _histObsIter->Reset() ;
+    _pdfObsIter->Reset() ;
+    while((harg=(RooAbsArg*)_histObsIter->Next())) {
+      parg = (RooAbsArg*)_pdfObsIter->Next() ;
+      if (string(harg->GetName())==obs.GetName()) {
+	pobs=parg ; 
+	hobs=harg ;
+      }
+    }
+
+    // Not found, or check that matching pdf observable is an l-value dependent on histogram observable fails
+    if (!hobs || !(pobs->dependsOn(obs) && dynamic_cast<RooAbsRealLValue*>(pobs))) {
+      cout << "RooHistFunc::binBoundaries(" << GetName() << ") obs = " << obs.GetName() << " hobs is not found, returning null" << endl ;
+      return 0 ;
+    }
+
+    // Now we are in business - we are in a situation where the pdf observable LV(x), mapping to a histogram observable x
+    // We can return bin boundaries by mapping the histogram boundaties through the inverse of the LV(x) transformation
+    transform = dynamic_cast<RooAbsRealLValue*>(pobs) ;
   }
 
+
+  // cout << "hobs = " << hobs->GetName() << endl ;
+  // cout << "transform = " << (transform?transform->GetName():"<none>") << endl ;
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* xtmp = _dataHist->get()->find(hobs->GetName()) ;
@@ -482,7 +510,15 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   // right of the bin boundaries
   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
     if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]) ;
+      
+      Double_t boundary = boundaries[i] ;
+      if (transform) {
+	transform->setVal(boundary) ;
+	//cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << endl ;
+	hint->push_back(obs.getVal()) ;
+      } else {	
+	hint->push_back(boundary) ;
+      }
     }
   }
 

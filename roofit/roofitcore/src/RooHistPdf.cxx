@@ -300,6 +300,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
   // First make list of pdf observables to histogram observables
   // and select only those for which the integral is over the full range
+
   RooFIter it = _pdfObsList.fwdIterator();
   RooFIter jt = _histObsList.fwdIterator();
   Int_t code = 0, frcode = 0, n = 0;
@@ -321,7 +322,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
   // Disable partial analytical integrals if interpolation is used, and we
   // integrate over sub-ranges, but leave them enabled when we integrate over
   // the full range of one or several variables
-  if (_intOrder > 0 && !(code & 1)) {
+  if (_intOrder > 1 && !(code & 1)) {
     analVars.removeAll();
     return 0;
   }
