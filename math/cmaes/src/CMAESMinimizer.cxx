@@ -337,7 +337,7 @@ namespace ROOT
 
       //TODO: gradient function.
       
-      double sigma0 = *std::max_element(fInitialSigma.begin(),fInitialSigma.end());
+      double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
       int maxiter = fMaxIter > 0 ? fMaxIter : -1;
       int maxfevals = 100*fMaxCalls; // CMA-ES requires much more calls than Minuit.
