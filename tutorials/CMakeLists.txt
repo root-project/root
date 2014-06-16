@@ -88,7 +88,8 @@ set(extra_veto
   proof/*.C
   pythia/*.C
   sql/*.C
-  tree/hsimpleProxy.C tree/tree0.C tree/tree2a.C tree/tree4.C
+  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
+  tree/tree0.C tree/tree2a.C tree/tree4.C
   roostats/rs401d_FeldmanCousins.C
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
