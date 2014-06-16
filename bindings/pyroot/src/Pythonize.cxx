@@ -747,6 +747,23 @@ namespace {
       return index;
    }
 
+//- TObjArray behavior ---------------------------------------------------------
+   PyObject* TObjArrayLen( PyObject* self )
+   {
+   // GetSize on a TObjArray returns its capacity, not size in use
+      PyObject* size = CallPyObjMethod( self, "GetLast" );
+      if ( ! size )
+         return 0;
+
+      long lsize = PyLong_AsLong( size );
+      if ( lsize == -1 && PyErr_Occurred() )
+         return 0;
+
+      Py_DECREF( size );
+      return PyInt_FromLong( lsize + 1 );
+   }
+
+
 //- TClonesArray behavior ------------------------------------------------------
    PyObject* TClonesArraySetItem( ObjectProxy* self, PyObject* args )
    {
@@ -1268,7 +1285,11 @@ namespace PyROOT {      // workaround for Intel icc on Linux
          } else {
          // value types
             TConverter* pcnv = CreateConverter( leaf->GetTypeName() );
-            PyObject* value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
+            PyObject* value = 0;
+            if ( TClass::GetClass( leaf->GetTypeName() ) )
+               value = pcnv->FromMemory( (void*)*(char**)leaf->GetValuePointer() );
+            else
+               value = pcnv->FromMemory( (void*)leaf->GetValuePointer() );
             delete pcnv;
 
             return value;
@@ -2141,6 +2162,10 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
       Utility::AddToClass( pyclass, "index", (PyCFunction) TSeqCollectionIndex, METH_O );
 
       return kTRUE;
+   }
+
+   if ( name == "TObjArray" ) {
+      Utility::AddToClass( pyclass, "__len__", (PyCFunction) TObjArrayLen, METH_NOARGS );
    }
 
    if ( name == "TClonesArray" ) {
