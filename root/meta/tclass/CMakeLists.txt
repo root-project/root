@@ -1,7 +1,3 @@
-add_definitions(
--DClingWorkAroundTClassUpdateDouble32
-)
-
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-RunMyClass
                   MACRO RunMyClass.C+) 
 

@@ -1,9 +1,3 @@
-add_definitions(
-  -DClingWorkAroundAutoParseTooPrecise
-  -DClingWorkAroundAutoParseDeclaration
-  -DClingWorkAroundMissingDynamicScope
-)
-
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-data1
                   MACRO writefile.C
                   MACROARG 1

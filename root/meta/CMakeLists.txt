@@ -1,8 +1,3 @@
-add_definitions(
-  -DClingWorkAroundAutoParseUsingNamespace
-  -DClingWorkAroundMissingDynamicScope
-)
-
 ROOTTEST_GENERATE_EXECUTABLE(loadernotapp loadernotapp.cxx LIBRARIES Hist)
 ROOTTEST_ADD_TEST(roottest-root-meta-loadernotapp
                   EXEC loadernotapp

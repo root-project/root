@@ -1,8 +1,3 @@
-add_definitions(
-    -DClingWorkAroundMissingDynamicScope
-    -DClingWorkAroundMissingSmartInclude
-)
-
 ROOTTEST_ADD_TEST(roottest-cling-parsing-runlessThan
                   MACRO runlessThan.C
                   OUTREF lessThan.ref

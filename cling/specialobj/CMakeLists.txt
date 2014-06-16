@@ -1,6 +1,3 @@
-# Add define to fix tests.
-add_definitions(-DClingWorkAroundMissingDynamicScope)
-
 ROOTTEST_ADD_TEST(roottest-cling-specialobj-assertGPad
                   MACRO assertGPad.C
                   OUTREF assertGPad.ref

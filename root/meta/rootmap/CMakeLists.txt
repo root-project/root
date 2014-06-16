@@ -1,7 +1,3 @@
-add_definitions(
-  -DClingWorkAroundMissingAutoLoadingForTemplates
-)
-
 ROOTTEST_ADD_TEST(roottest-root-meta-rootmap-runspaces
                   MACRO runspaces.C
                   OUTREF spaces.ref

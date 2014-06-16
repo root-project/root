@@ -19,32 +19,21 @@ enable_testing()
 # Copy the CTestCustom.cmake file into the build directory.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 
-# Set global defines.
+# Cling workaround defines.
+# Set of macros to avoid using features not yet implemented by cling.
+
 add_definitions(
-#  -DClingWorkAroundJITandInline
-#  -DClingWorkAroundNoPrivateClassIO 
-#  -DClingWorkAroundTClassUpdateDouble32 
-#  -DClingWorkAroundMissingDynamicScope 
-#  -DClingWorkAroundUnnamedInclude 
-#  -DClingWorkAroundStripDefaultArg 
-#  -DClingWorkAroundPrintfIssues 
-#  -DClingWorkAroundLackOfModule 
-#  -DClingWorkAroundProxyConfusion 
-#  -DClingWorkAroundScriptClassDef 
-#  -DClingWorkAroundMultipleInclude 
-#  -DClingWorkAroundExtraParensWithImplicitAuto 
-#  -DClingWorkAroundNoPrivateClassIO 
-#  -DClingWorkAroundBrokenRecovery 
-#  -DClingWorkAroundBrokenUnnamedReturn 
-#  -DClingWorkAroundUnnamedDetection 
-#  -DClingWorkAroundUnnamedInclude 
-#  -DClingWorkAroundJITfullSymbolResolution 
-#  -DClingWorkAroundDeletedSourceFile 
-#  -DClingWorkAroundValuePrinterNotFullyQualified 
-#  -DClingWorkAroundNoDotNamespace 
-#  -DClingWorkAroundNoDotInclude 
-#  -DClingWorkAroundNoDotOptimization 
-#  -DClingWorkAroundUnnamedIncorrectFileLoc 
-#  -DClingWorkAroundUnloadingIOSTREAM 
-#  -DClingWorkAroundUnloadingVTABLES 
+  -DClingWorkAroundMissingDynamicScope 
+  -DClingWorkAroundUnloadingIOSTREAM
+  -DClingWorkAroundUnnamedInclude
+  -DClingWorkAroundMissingSmartInclude
+  -DClingWorkAroundNoDotInclude
+  -DClingWorkAroundMissingAutoLoadingForTemplates
+  -DClingWorkAroundAutoParseUsingNamespace
+  -DClingWorkAroundTClassUpdateDouble32
+  -DClingWorkAroundAutoParseTooPrecise
+  -DClingWorkAroundAutoParseDeclaration  
+  -DClingWorkAroundMissingUnloading
+  -DClingWorkAroundJITandInline
+  -DClingWorkAroundBrokenUnnamedReturn
 )

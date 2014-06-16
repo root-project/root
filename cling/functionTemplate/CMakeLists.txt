@@ -1,10 +1,3 @@
-# Add defines to fix tests.
-add_definitions(
-  -DClingWorkAroundMissingDynamicScope
-  -DClingWorkAroundUnnamedInclude
-  -DClingWorkAroundMissingSmartInclude
-)
-
 ROOTTEST_ADD_TEST(roottest-cling-functionTemplate-cintrun
                   MACRO cintrun.C
                   OUTREF cintrun.ref-cling

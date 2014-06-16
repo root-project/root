@@ -1,5 +1,3 @@
-add_definitions(-DClingWorkAroundMissingDynamicScope)
-
 ROOTTEST_ADD_TEST(roottest-cling-templateMembers-runduplicate
                   MACRO runduplicate.C
                   OUTREF duplicate.ref

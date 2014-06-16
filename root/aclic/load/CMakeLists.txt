@@ -1,6 +1,3 @@
-# Add defines.
-add_definitions(-DClingWorkAroundUnloadingIOSTREAM)
-
 ROOTTEST_ADD_TEST(roottest-root-aclic-load-autoload
                   MACRO execautoload.C
                   OUTREF execautoload.ref

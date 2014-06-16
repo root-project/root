@@ -1,9 +1,3 @@
-# Add defines to fix tests.
-add_definitions(
-  -DClingWorkAroundMissingDynamicScope
-  -DClingWorkAroundUnloadingIOSTREAM
-)
-
 ROOTTEST_ADD_TEST(roottest-cling-template-longlong
                   MACRO runlonglong.C
                   OUTREF longlong.ref
