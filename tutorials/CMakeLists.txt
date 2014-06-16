@@ -52,7 +52,8 @@ if(NOT ROOT_fftw3_FOUND)
   set(fftw3_veto roofit/rf208_convolution.C
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
-                 roofit/rf512_wsfactory_oper.C)
+                 roofit/rf512_wsfactory_oper.C
+                 fft/FFT.C)
 endif()
 
 if(NOT GRAPHVIZ_FOUND)
@@ -78,10 +79,8 @@ set(extra_veto
   rootalias.C
   rootlogon.C
   rootlogoff.C
-  fft/FFT.C
   fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
   foam/*.C
-#  graphs/graphstruct.C
   html/*.C
   math/Bessel.C math/LegendreAssoc.C math/Legendre.C
   math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
