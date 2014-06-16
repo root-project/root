@@ -49,6 +49,7 @@ TCanvas *fit2a(const char *fitter="cmaes") {
   ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
   //ROOT::Math::IOptions *opts = ROOT::Math::MinimizerOptions::FindDefault(fitter);
   //opts.SetIntValue("lambda",100);
+  opts.SetNamedValue("fplot","fit2a.dat");
   
    TCanvas *c = new TCanvas();
    gStyle->SetOptStat(kTRUE); 
