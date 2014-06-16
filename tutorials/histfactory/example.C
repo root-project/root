@@ -26,12 +26,17 @@ using namespace HistFactory;
 void example() {
 
 
-  std::string InputFile = ".data/example.root";
+  std::string InputFile = "./data/example.root";
   // in case the file is not found
   TFile * ifile = TFile::Open(InputFile.c_str());
   if (!ifile) { 
      std::cout << "Input file is not found - run prepareHistFactory script " << std::endl;
      gROOT->ProcessLine(".! prepareHistFactory .");
+     ifile = TFile::Open(InputFile.c_str());
+     if (!ifile) {
+        std::cout << "Still no " << InputFile << ", giving up.\n";
+        exit(1);
+     }
   }
 
   // Create the measurement

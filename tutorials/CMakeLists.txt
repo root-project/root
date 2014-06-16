@@ -5,10 +5,13 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(tutorials)
 find_package(ROOT REQUIRED)
 
-include(${ROOT_USE_FILE})
 
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
-  set(ROOT_root_CMD ${ROOT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/root)
+  set(ROOT_root_CMD root.exe)
+  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                   ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                   ROOTSYS=${CMAKE_BINARY_DIR}
+                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
 endif()
 
 #---Definition of the helper function--------------------------------
@@ -54,7 +57,12 @@ if(NOT ROOT_fftw3_FOUND)
   set(fftw3_veto roofit/rf208_convolution.C
                  roofit/rf210_angularconv.C
                  roofit/rf211_paramconv.C
-                 roofit/rf512_wsfactory_oper.C)
+                 roofit/rf512_wsfactory_oper.C
+                 fft/FFT.C)
+endif()
+
+if(NOT GRAPHVIZ_FOUND)
+  set(gviz_veto graphs/graphstruct.C)
 endif()
 
 #---These ones requires a display to run-----------------------------
@@ -76,10 +84,8 @@ set(extra_veto
   rootalias.C
   rootlogon.C
   rootlogoff.C
-  fft/FFT.C
   fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
   foam/*.C
-  graphs/graphstruct.C
   html/*.C
   math/Bessel.C math/LegendreAssoc.C math/Legendre.C
   math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
@@ -88,7 +94,8 @@ set(extra_veto
   proof/*.C
   pythia/*.C
   sql/*.C
-  tree/hsimpleProxy.C tree/tree0.C tree/tree2a.C tree/tree4.C
+  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
+  tree/tree0.C tree/tree2a.C tree/tree4.C
   roostats/rs401d_FeldmanCousins.C
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
@@ -108,7 +115,8 @@ set(all_veto hsimple.C
              ${xml_veto}
              ${fitsio_veto}
              ${mathmore_veto}
-             ${fftw3_veto})
+             ${fftw3_veto}
+             ${gviz_veto})
              
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
@@ -139,7 +147,7 @@ set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
 set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
-
+set(histfactory-example-depends tutorial-histfactory-makeExample)
 #---Loop over all tutorials and define the corresponding test---------
 
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
@@ -157,7 +165,8 @@ foreach(t ${tutorials})
                 COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
-                DEPENDS tutorial-hsimple ${${name}-depends})
+                DEPENDS tutorial-hsimple ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ})
 endforeach()
 
 

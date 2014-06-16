@@ -603,22 +603,21 @@ function(ROOT_ADD_TEST test)
     list(GET ARG_COMMAND 0 _prg)
     list(REMOVE_AT ARG_COMMAND 0)
 
-    find_program(_exe ${_prg})
-
-    if(_exe)
-      set(_cmd ${_exe} ${ARG_COMMAND})
-    else()
-      if(TARGET ${_prg})
-	    set(_prg "$<TARGET_FILE:${_prg}>")
-	  else()
-        if(NOT IS_ABSOLUTE ${_prg})
-          set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})
-        endif()
-	  endif()
+    if(TARGET ${_prg})                                 # if command is a target, get the actual executable
+      set(_prg "$<TARGET_FILE:${_prg}>")
       set(_cmd ${_prg} ${ARG_COMMAND})
+    else()
+      find_program(_exe ${_prg})
+      if(_exe)                                         # if the command is found in the system, use it
+        set(_cmd ${_exe} ${ARG_COMMAND})
+      elseif(NOT IS_ABSOLUTE ${_prg})                  # if not absolute, assume is found in current binary dir
+        set(_prg ${CMAKE_CURRENT_BINARY_DIR}/${_prg})
+        set(_cmd ${_prg} ${ARG_COMMAND})
+      else()                                           # take as it is
+        set(_cmd ${_prg} ${ARG_COMMAND})
+      endif()
+      unset(_exe CACHE)
     endif()
-
-    unset(_exe CACHE)
 
     string(REPLACE ";" "^" _cmd "${_cmd}")
   endif()
