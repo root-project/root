@@ -222,7 +222,7 @@ int fit2dHist(int option=1) {
   }
   else {     
     // fit independently
-    TVirtualFitter::SetDefaultFitter("ipop");
+    TVirtualFitter::SetDefaultFitter("cmaes");
     h1->Fit(func);
     h2->Fit(func);
   }	     
