@@ -55,6 +55,10 @@ if(NOT ROOT_fftw3_FOUND)
                  roofit/rf512_wsfactory_oper.C)
 endif()
 
+if(NOT GRAPHVIZ_FOUND)
+  set(gviz_veto graphs/graphstruct.C)
+endif()
+
 #---These ones requires a display to run-----------------------------
 set(gui_veto fit/fitpanel_playback.C
              cocoa/*.C
@@ -77,7 +81,7 @@ set(extra_veto
   fft/FFT.C
   fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
   foam/*.C
-  graphs/graphstruct.C
+#  graphs/graphstruct.C
   html/*.C
   math/Bessel.C math/LegendreAssoc.C math/Legendre.C
   math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
@@ -107,7 +111,8 @@ set(all_veto hsimple.C
              ${xml_veto}
              ${fitsio_veto}
              ${mathmore_veto}
-             ${fftw3_veto})
+             ${fftw3_veto}
+             ${gviz_veto})
              
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
