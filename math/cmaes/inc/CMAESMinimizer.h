@@ -76,7 +76,7 @@ namespace ROOT
       virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func); 
       
       /// set gradient the function to minimize
-      //virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
+      virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func); 
       
       /// set free variable 
       virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step); 
@@ -295,6 +295,7 @@ namespace ROOT
       unsigned int fFreeDim = 0; // Number of free dimensions.
       int fMinimizer = CMAES_DEFAULT; // minimizer algo.
       const ROOT::Math::IMultiGenFunction *fObjFunc = nullptr;
+      const ROOT::Math::IMultiGradFunction *fObjFuncGrad = nullptr;
       std::vector<double> fLBounds; // Lower bounds of variables
       std::vector<double> fUBounds; // Upper bounds of variables
       std::vector<int> fVariablesType; // 0 for free variable, 1 for fixed variable, 2 for lower bounded, 3 for upper bounded, 4 for lower and upper bounded.
@@ -309,6 +310,7 @@ namespace ROOT
       mutable std::vector<double> fValues; // X values.
       mutable std::vector<double> fErrors; // X errors.
       bool fWithBounds = false; // whether using box-type constraints as required by parameters.
+      bool fWithGradient = false; // whether to use gradient information when available.
     };
     
   }  // end namespace cmaes
