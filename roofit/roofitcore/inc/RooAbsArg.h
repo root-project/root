@@ -508,6 +508,7 @@ public:
   friend class RooObjectFactory ;
   friend class RooHistPdf ;
   friend class RooHistFunc ;
+  friend class RooHistFunc2 ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   void registerProxy(RooListProxy& proxy) ;
@@ -552,8 +553,13 @@ public:
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
   Bool_t _deleteWatch ; //! Delete watch flag 
 
-  static Bool_t inhibitDirty() ;
-  
+  Bool_t inhibitDirty() const ;
+ 
+ public:
+  void setLocalNoDirtyInhibit(Bool_t flag) const { _localNoInhibitDirty = flag ; }
+  Bool_t localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
+ protected:
+
   // Value and Shape dirty state bits
   void setValueDirty(const RooAbsArg* source) const ; 
   void setShapeDirty(const RooAbsArg* source) const ; 
@@ -573,6 +579,8 @@ public:
 
   mutable TNamed* _namePtr ; //! Do not persist. Pointer to global instance of string that matches object named
   Bool_t _isConstant ; //! Cached isConstant status 
+
+  mutable Bool_t _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
 
 /*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */

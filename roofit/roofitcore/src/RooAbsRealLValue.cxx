@@ -97,7 +97,7 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   // Double_t range = getMax() - getMin() ; // ok for +/-INIFINITY
   Double_t clippedValue(value);
   Bool_t isInRange(kTRUE) ;
-
+  
   const RooAbsBinning& binning = getBinning(rangeName) ;
   Double_t min = binning.lowBound() ;
   Double_t max = binning.highBound() ;
@@ -122,6 +122,7 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   } 
 
   if (clippedValPtr) *clippedValPtr=clippedValue ;
+
   return isInRange ;
 }
 

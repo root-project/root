@@ -364,6 +364,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 	RooFactoryWSTool::as_DOUBLE(i) ;
 	cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;	
       } else if (RooCintUtils::isEnum(ti->c_str())) {	  	  
+
 	string qualvalue ;
 	if (_args[i].find(Form("%s::",className)) != string::npos) {		    
 	  qualvalue = _args[i].c_str() ;
@@ -1701,8 +1702,10 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
   
   // If given object is not of {,,,} form, interpret given string as name of defined set
   if (arg[0]!='{') {
+    // cout << "asSet(arg='" << arg << "') parsing as defined set" << endl ;
     const RooArgSet* defSet = ws().set(arg) ;
     if (defSet) {
+      // cout << "found defined set: " << *defSet << endl ;
       s.add(*defSet) ;
       return s ;
     }

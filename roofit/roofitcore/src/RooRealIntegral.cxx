@@ -197,7 +197,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   if (_facList.getSize()>0) {
     oocxcoutI(&function,Integration) << function.GetName() << ": Factorizing obserables are " << _facList << endl ;
   }
-    
+
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * B) Check if list of dependents can be re-expressed in       *
@@ -284,10 +284,15 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 //   cout << "end exclLVServers = " << exclLVServers << endl ;
      
   // Replace exclusive lvalue branch servers with lvalue branches
-  if (exclLVServers.getSize()>0) {
+  // WVE Don't do this for binned distributions - deal with this using numeric integration with transformed bin boundaroes
+  if (exclLVServers.getSize()>0 && !function.isBinnedDistribution(exclLVBranches)) {
 //     cout << "activating LVservers " << exclLVServers << " for use in integration " << endl ;
     intDepList.remove(exclLVServers) ;
     intDepList.add(exclLVBranches) ;
+
+    //cout << "intDepList removing exclLVServers " << exclLVServers << endl ;
+    //cout << "intDepList adding exclLVBranches " << exclLVBranches << endl ;
+
   }
 
      
@@ -314,12 +319,12 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * D) Make list of servers that can be integrated analytically *
   //      Add all parameters/dependents as value/shape servers     *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-  
+
   sIter = function.serverIterator() ;
   while((arg=(RooAbsArg*)sIter->Next())) {
 
     //cout << "considering server" << arg->GetName() << endl ;
-
+    
     // Dependent or parameter?
     if (!arg->dependsOnValue(intDepList)) {
 
@@ -387,10 +392,13 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
     Bool_t depOK(kFALSE) ;
     // Check for integratable AbsRealLValue
+
+    //cout << "checking server " << arg->IsA()->GetName() << "::" << arg->GetName() << endl ;
+
     if (arg->isDerived()) {
       RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
       RooAbsCategoryLValue *catArgLV = dynamic_cast<RooAbsCategoryLValue*>(arg) ;
-//        cout << "realArgLV = " << realArgLV << " intDepList = " << intDepList << endl ;
+      //cout << "realArgLV = " << realArgLV << " intDepList = " << intDepList << endl ;
       if ((realArgLV && intDepList.find(realArgLV->GetName()) && (realArgLV->isJacobianOK(intDepList)!=0)) || catArgLV) {	
 
  	//cout  << " arg " << arg->GetName() << " is derived LValue with valid jacobian" << endl ;
@@ -413,7 +421,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 	}      	
 	// coverity[DEADCODE]
 	if (!overlapOK) depOK=kFALSE ;      
-
+	
  	//cout << "overlap check returns OK=" << (depOK?"T":"F") << endl ;
 
 	delete sIter2 ;
@@ -463,6 +471,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
 
   RooArgSet numIntDepList ;
 
+
   // Loop over actually analytically integrated dependents
   TIterator* aiIter = _anaList.createIterator() ;
   while ((arg=(RooAbsArg*)aiIter->Next())) {    
@@ -488,9 +497,22 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
   delete aiIter ;
 
+  
+  // If nothing was integrated analytically, swap back LVbranches for LVservers for subsequent numeric integration
+  if (_anaList.getSize()==0) {    
+    if (exclLVServers.getSize()>0) {
+      //cout << "NUMINT phase analList is empty. exclLVServers = " << exclLVServers << endl ;
+      intDepList.remove(exclLVBranches) ;      
+      intDepList.add(exclLVServers) ;
+     }            
+  }
+  //cout << "NUMINT intDepList = " << intDepList << endl ;
+
   // Loop again over function servers to add remaining numeric integrations
   sIter->Reset() ;
   while((arg=(RooAbsArg*)sIter->Next())) {
+
+    //cout << "processing server for numeric integration " << arg->IsA()->GetName() << "::" << arg->GetName() << endl ;
 
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
@@ -499,20 +521,25 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       if (dynamic_cast<RooAbsLValue*>(arg) && arg->isDerived() && intDepList.contains(*arg)) {
 	numIntDepList.add(*arg,kTRUE) ;	
       } else {
-	
+
+	// WVE this will only get the observables, but not l-value transformations
 	// Expand server in final dependents 
 	RooArgSet *argDeps = arg->getObservables(&intDepList) ;
 
-	// Add final dependents, that are not forcibly integrated analytically, 
-	// to numerical integration list      
-	TIterator* iter = argDeps->createIterator() ;
-	RooAbsArg* dep ;
-	while((dep=(RooAbsArg*)iter->Next())) {
-	  if (!_anaList.find(dep->GetName())) {
-	    numIntDepList.add(*dep,kTRUE) ;
-	  }
-	}      
-	delete iter ;
+	if (argDeps->getSize()>0) {
+
+	  // Add final dependents, that are not forcibly integrated analytically, 
+	  // to numerical integration list      
+	  TIterator* iter = argDeps->createIterator() ;
+	  RooAbsArg* dep ;
+	  while((dep=(RooAbsArg*)iter->Next())) {
+	    if (!_anaList.find(dep->GetName())) {
+	      numIntDepList.add(*dep,kTRUE) ;
+	    }
+	  }      
+	  delete iter ;
+
+	}
 	delete argDeps ; 
       }
 
@@ -700,7 +727,8 @@ Bool_t RooRealIntegral::initNumIntegrator() const
   }
 
   // Create appropriate numeric integrator using factory
-  _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig) ;
+  Bool_t isBinned = _function.arg().isBinnedDistribution(_intList) ;
+  _numIntEngine = RooNumIntFactory::instance().createIntegrator(*_numIntegrand,*_iconfig,0,isBinned) ;
 
   if(0 == _numIntEngine || !_numIntEngine->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrator." << endl;

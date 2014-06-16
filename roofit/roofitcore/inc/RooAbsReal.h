@@ -37,7 +37,7 @@ class RooFunctor ;
 class RooGenFunction ;
 class RooMultiGenFunction ;
 class RooFitResult ;
-class RooMoment ;
+class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
 
@@ -291,13 +291,13 @@ public:
   RooDerivative* derivative(RooRealVar& obs, Int_t order=1, Double_t eps=0.001) ;
   RooDerivative* derivative(RooRealVar& obs, const RooArgSet& normSet, Int_t order, Double_t eps=0.001) ; 
 
-  RooMoment* moment(RooRealVar& obs, Int_t order, Bool_t central, Bool_t takeRoot) ;
-  RooMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs) ;
+  RooAbsMoment* moment(RooRealVar& obs, Int_t order, Bool_t central, Bool_t takeRoot) ;
+  RooAbsMoment* moment(RooRealVar& obs, const RooArgSet& normObs, Int_t order, Bool_t central, Bool_t takeRoot, Bool_t intNormObs) ;
 
-  RooMoment* mean(RooRealVar& obs) { return moment(obs,1,kFALSE,kFALSE) ; }
-  RooMoment* mean(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,1,kFALSE,kFALSE,kTRUE) ; }
-  RooMoment* sigma(RooRealVar& obs) { return moment(obs,2,kTRUE,kTRUE) ; }
-  RooMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,kTRUE,kTRUE,kTRUE) ; }
+  RooAbsMoment* mean(RooRealVar& obs) { return moment(obs,1,kFALSE,kFALSE) ; }
+  RooAbsMoment* mean(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,1,kFALSE,kFALSE,kTRUE) ; }
+  RooAbsMoment* sigma(RooRealVar& obs) { return moment(obs,2,kTRUE,kTRUE) ; }
+  RooAbsMoment* sigma(RooRealVar& obs, const RooArgSet& nset) { return moment(obs,nset,2,kTRUE,kTRUE,kTRUE) ; }
 
   Double_t findRoot(RooRealVar& x, Double_t xmin, Double_t xmax, Double_t yval) ;
 

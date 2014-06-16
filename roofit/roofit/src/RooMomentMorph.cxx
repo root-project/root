@@ -45,9 +45,9 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
                            const RooArgList& varList,
                            const RooArgList& pdfList,
                            const TVectorD& mrefpoints,
-                           const Setting& setting) :
+                           Setting setting) :
   RooAbsPdf(name,title), 
-  _cacheMgr(this,10),
+  _cacheMgr(this,10,kTRUE,kTRUE),
   m("m","m",this,_m),
   _varList("varList","List of variables",this),
   _pdfList("pdfList","List of pdfs",this),
@@ -96,9 +96,9 @@ RooMomentMorph::RooMomentMorph(const char *name, const char *title,
                            const RooArgList& varList,
                            const RooArgList& pdfList,
                            const RooArgList& mrefList,
-                           const Setting& setting) :
+                           Setting setting) :
   RooAbsPdf(name,title), 
-  _cacheMgr(this,10),
+  _cacheMgr(this,10,kTRUE,kTRUE),
   m("m","m",this,_m),
   _varList("varList","List of variables",this),
   _pdfList("pdfList","List of pdfs",this),
@@ -247,7 +247,10 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
   RooArgList coefList2("coefList2");
   for (Int_t i=0; i<2*nPdf; ++i) {
     std::string fracName = Form("frac_%d",i);
-    fracl.add(*new RooRealVar(fracName.c_str(),fracName.c_str(),1.)); // to be set later 
+
+    RooRealVar* frac = new RooRealVar(fracName.c_str(),fracName.c_str(),1.) ;
+
+    fracl.add(*frac); // to be set later 
     if (i<nPdf) coefList.add(*(RooRealVar*)(fracl.at(i))) ;
     else coefList2.add(*(RooRealVar*)(fracl.at(i))) ;
     ownedComps.add(*(RooRealVar*)(fracl.at(i))) ;
@@ -265,56 +268,16 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
 	std::string meanName = Form("%s_mean_%d_%d",GetName(),i,j);
 	std::string sigmaName = Form("%s_sigma_%d_%d",GetName(),i,j);      
 	
-	RooAbsPdf* thisPdf = (RooAbsPdf*)_pdfList.at(i);
+        RooAbsMoment* mom = nVar==1 ? 
+	  ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j)) :
+	  ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j),varList) ;
+
+	mom->setLocalNoDirtyInhibit(kTRUE) ;
+	mom->mean()->setLocalNoDirtyInhibit(kTRUE) ;
+
+	sigmarv[ij(i,j)] = mom ;
+	meanrv[ij(i,j)]  = mom->mean() ;
 	
-	// fast calculation of mean and RMS for RooHistPdfs
-	if (thisPdf->IsA()->InheritsFrom("RooHistPdf") && nVar>1) {
-	  
-	  RooRealVar& var_j = (RooRealVar&)*varList.at(j);
-	  
-	  RooArgList notJ(_varList);
-	  notJ.remove(var_j);
-	  
-	  //Make a ROOT histogram from the RooHistPdf
-	  RooCmdArg zVarArg=RooCmdArg::none();
-	  if (nVar==3) zVarArg=RooFit::ZVar(*(RooRealVar*)notJ.at(1)); 
-	  
-	  TH1 * hist = thisPdf->createHistogram("testProjection", var_j, 
-						RooFit::YVar(*(RooRealVar*)notJ.at(0)),
-						zVarArg);	
-	  
-	  //Read out the mean and sigma (RMS is historical name)
-	  double histmean  = hist->GetMean(1); // 1 gives mean along x-axis
-	  double histsigma = hist->GetRMS(1);
-	  
-	  delete hist;
-	  
-	  sigmarv[ij(i,j)] = new RooRealVar(sigmaName.c_str(),sigmaName.c_str(), histsigma);
-	  meanrv [ij(i,j)] = new RooRealVar(meanName.c_str(), meanName.c_str(), histmean);
-	  
-	}
-	else {
-	  
-	  if (nVar>1) {
-	    
-	    //Create an integral over all observables except the j-th positioned one (and any variables in nset)
-	    RooArgSet * notJ = new RooArgSet( varList, "notJ" );
-	    RooRealVar& var_j = (RooRealVar&)*varList.at(j);
-	    notJ->remove( var_j );
-	    
-	    RooAbsReal * intTest = thisPdf->createIntegral( *notJ );
-	    
-	    //Get the mean and sigma with respect to the j-th observable
-	    sigmarv[ij(i,j)] = intTest->sigma( var_j );
-	    meanrv [ij(i,j)] = intTest->mean ( var_j );		  
-	  }
-	  else {
-	    RooMoment* mom = ((RooAbsPdf*)_pdfList.at(i))->sigma((RooRealVar&)*varList.at(j)) ;
-	    
-	    sigmarv[ij(i,j)] = mom ;
-	    meanrv[ij(i,j)]  = mom->mean() ;
-	  }
-	}
 	ownedComps.add(*sigmarv[ij(i,j)]) ;      
       }
     }
@@ -333,6 +296,7 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
       mypos[j] = new RooAddition(myposName.c_str(),myposName.c_str(),meanList,coefList2);
       ownedComps.add(RooArgSet(*myrms[j],*mypos[j])) ;
     }
+
     // construction of unit pdfs
     _pdfItr->Reset();
     RooAbsPdf* pdf;
@@ -357,8 +321,13 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
 	var = (RooRealVar*)(_varItr->Next());
 	std::string transVarName = Form("%s_transVar_%d_%d",GetName(),i,j);
 	//transVar[ij(i,j)] = new RooFormulaVar(transVarName.c_str(),transVarName.c_str(),"@0*@1+@2",RooArgList(*var,*slope[ij(i,j)],*offs[ij(i,j)]));
-	transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offs[ij(i,j)]);
-	
+
+	transVar[ij(i,j)] = new RooLinearVar(transVarName.c_str(),transVarName.c_str(),*var,*slope[ij(i,j)],*offs[ij(i,j)]);		
+
+	// *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
+	// This will prevent the likelihood optimizers from erroneously declaring terms constant
+	transVar[ij(i,j)]->addServer((RooAbsArg&)m.arg()) ;
+
 	ownedComps.add(*transVar[ij(i,j)]) ;
 	cust.replaceArg(*var,*transVar[ij(i,j)]);
       }
@@ -366,21 +335,21 @@ RooMomentMorph::CacheElem* RooMomentMorph::getCache(const RooArgSet* /*nset*/) c
       transPdfList.add(*transPdf[i]);
       ownedComps.add(*transPdf[i]) ;
     }
-    // sum pdf
-    
-    
+    // sum pdf      
     theSumPdf = new RooAddPdf(sumpdfName.c_str(),sumpdfName.c_str(),transPdfList,coefList);
   }
   else {
     theSumPdf = new RooAddPdf(sumpdfName.c_str(),sumpdfName.c_str(),_pdfList,coefList);
   }
 
+  // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
+  // This will prevent the likelihood optimizers from erroneously declaring terms constant
+  theSumPdf->addServer((RooAbsArg&)m.arg()) ;
   theSumPdf->addOwnedComponents(ownedComps) ;
 
   // change tracker for fraction parameters
   std::string trackerName = Form("%s_frac_tracker",GetName()) ;
   RooChangeTracker* tracker = new RooChangeTracker(trackerName.c_str(),trackerName.c_str(),m.arg(),kTRUE) ;
-
 
   // Store it in the cache
   cache = new CacheElem(*theSumPdf,*tracker,fracl) ;
