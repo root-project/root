@@ -5,8 +5,13 @@ cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 project(tutorials)
 find_package(ROOT REQUIRED)
 
+
 if(DEFINED ROOT_SOURCE_DIR)  # Testing using the binary tree
   set(ROOT_root_CMD root.exe)
+  set(ROOT_environ PATH=${CMAKE_BINARY_DIR}/bin:$ENV{PATH}
+                   ${ld_library_path}=${CMAKE_BINARY_DIR}/lib:$ENV{${ld_library_path}}
+                   ROOTSYS=${CMAKE_BINARY_DIR}
+                   PYTHONPATH=${CMAKE_BINARY_DIR}/lib:$ENV{PYTHONPATH})
 endif()
 
 #---Definition of the helper function--------------------------------
@@ -159,7 +164,8 @@ foreach(t ${tutorials})
                 COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
-                DEPENDS tutorial-hsimple ${${name}-depends})
+                DEPENDS tutorial-hsimple ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ})
 endforeach()
 
 
