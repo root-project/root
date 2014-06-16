@@ -2960,6 +2960,30 @@ int CheckClassesForInterpreterOnlyDicts(cling::Interpreter& interp,
    return 0;
 }
 
+//_____________________________________________________________________________
+#ifndef ROOT_STAGE1_BUILD
+int FinalizeStreamerInfoWriting(cling::Interpreter& interp)
+{
+   // Make up for skipping RegisterModule, now that dictionary parsing
+   // is done and these headers cannot be selected anymore.
+   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+                         "#include \"TFile.h\"\n"
+                         "#include \"TObjArray.h\"\n"
+                         "#include \"TVirtualArray.h\"\n"
+                         "#include \"TStreamerElement.h\"\n"
+                         "#include \"TProtoClass.h\"\n"
+                         "#include \"TBaseClass.h\"\n"
+                         "#include \"TListOfDataMembers.h\"\n"
+                         "#include \"TDataMember.h\"\n"
+                         "#include \"TDictAttributeMap.h\"\n"
+                         "#include \"TMessageHandler.h\"\n"
+                           );
+   if (!CloseStreamerInfoROOTFile()) {
+      return 1;
+   }
+   return 0;
+}
+#endif
 //______________________________________________________________________________
 int GenerateFullDict(std::ostream& dictStream,
                      cling::Interpreter& interp,
@@ -3032,21 +3056,8 @@ int GenerateFullDict(std::ostream& dictStream,
    EmitTypedefs(scan.fSelectedTypedefs);
    // Make up for skipping RegisterModule, now that dictionary parsing
    // is done and these headers cannot be selected anymore.
-   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
-                           "#include \"TFile.h\"\n"
-                           "#include \"TObjArray.h\"\n"
-                           "#include \"TVirtualArray.h\"\n"
-                           "#include \"TStreamerElement.h\"\n"
-                           "#include \"TProtoClass.h\"\n"
-                           "#include \"TBaseClass.h\"\n"
-                           "#include \"TListOfDataMembers.h\"\n"
-                           "#include \"TDataMember.h\"\n"
-                           "#include \"TDictAttributeMap.h\"\n"
-                           "#include \"TMessageHandler.h\"\n"
-                           );
-   if (!CloseStreamerInfoROOTFile()) {
-      return 1;
-   }
+   int finRetCode = FinalizeStreamerInfoWriting(interp);
+   if (finRetCode != 0) return finRetCode;
 #endif
 
    //
@@ -4351,6 +4362,11 @@ int RootCling(int argc,
    }
    else if (interpreteronly){
       retCode = CheckClassesForInterpreterOnlyDicts(interp,scan);
+      // generate an empty pcm nevertheless for consistency
+      // Negate as true is 1 and true is returned in case of success.
+#ifndef ROOT_STAGE1_BUILD
+      retCode +=  FinalizeStreamerInfoWriting(interp);
+#endif
    }
    else{
       retCode= GenerateFullDict(splitDictStream,

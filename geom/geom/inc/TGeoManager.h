@@ -71,7 +71,7 @@ private :
    Int_t                 fMaxVisNodes;      // maximum number of visible nodes
    TVirtualGeoTrack     *fCurrentTrack;     //! current track
    Int_t                 fNpdg;             // number of different pdg's stored
-   Int_t                 fPdgId[256];       // pdg conversion table
+   Int_t                 fPdgId[1024];      // pdg conversion table
    Bool_t                fClosed;           //! flag that geometry is closed
    Bool_t                fLoopVolumes;      //! flag volume lists loop
    Bool_t                fStreamVoxels;     // flag to allow voxelization I/O
@@ -542,7 +542,7 @@ public:
    Bool_t                 PopPoint(Int_t index) {return GetCurrentNavigator()->PopPoint(index);}
    void                   PopDummy(Int_t ipop=9999) {return GetCurrentNavigator()->PopDummy(ipop);}
 
-   ClassDef(TGeoManager, 12)          // geometry manager
+   ClassDef(TGeoManager, 13)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

@@ -3,7 +3,7 @@ outdir=`grep "^OUTPUT_DIRECTORY" Doxyfile | sed -e "s/^.*= //"`
 
 if [ ! -d "$outdir" ]
 then
-   mkdir $outdir
+   mkdir -p $outdir
 fi
 
 echo $outdir
