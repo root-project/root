@@ -22,7 +22,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR}
 # Cling workaround support.
 
 # Set CLING_VERSION analog to the existing make build system.
-set(CLING_VERSION 5)
+set(CLING_VERSION cling)
 
 # Cling workaround defines.
 # Set of macros to avoid using features not yet implemented by cling.
