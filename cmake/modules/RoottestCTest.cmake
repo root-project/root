@@ -37,3 +37,19 @@ add_definitions(
   -DClingWorkAroundJITandInline
   -DClingWorkAroundBrokenUnnamedReturn
 )
+
+# Variables to be used in CMakeLists.txt files.
+
+set(ClingWorkAroundMissingDynamicScope              TRUE)
+set(ClingWorkAroundUnloadingIOSTREAM                TRUE)
+set(ClingWorkAroundUnnamedInclude                   TRUE)
+set(ClingWorkAroundMissingSmartInclude              TRUE)
+set(ClingWorkAroundNoDotInclude                     TRUE)
+set(ClingWorkAroundMissingAutoLoadingForTemplates   TRUE)
+set(ClingWorkAroundAutoParseUsingNamespace          TRUE)
+set(ClingWorkAroundTClassUpdateDouble32             TRUE)
+set(ClingWorkAroundAutoParseTooPrecise              TRUE)
+set(ClingWorkAroundAutoParseDeclaration             TRUE)
+set(ClingWorkAroundMissingUnloading                 TRUE)
+set(ClingWorkAroundJITandInline                     TRUE)
+set(ClingWorkAroundBrokenUnnamedReturn              TRUE)
