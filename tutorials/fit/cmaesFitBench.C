@@ -57,6 +57,9 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    //   timer.Start();
    TVirtualFitter::SetDefaultFitter(fitter);
    //ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
+   ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
+   opts.SetIntValue("lambda",100);
+
    pad->SetGrid();
    pad->SetLogy();
    fitFcn->SetParameters(1,1,1,6,.03,1);
