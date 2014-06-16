@@ -56,6 +56,12 @@ struct GlobalChi2 {
 
 void combinedFit() { 
 
+#if defined(__CINT__) && !defined(__MAKECINT__) 
+   cout << "ERROR: This tutorial can run only using ACliC, you must run it by doing: " << endl;
+   cout << "\t .x $ROOTSYS/tutorials/fit/combinedFit.C+" << endl;
+   return;
+#endif 
+
   TH1D * hB = new TH1D("hB","histo B",100,0,100);
   TH1D * hSB = new TH1D("hSB","histo S+B",100, 0,100);
 

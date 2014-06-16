@@ -275,6 +275,13 @@ TVectorD OptimalInvest(Double_t riskFactor,TVectorD r,TMatrixDSym Covar)
 //---------------------------------------------------------------------------
 void portfolio()
 {
+
+#if defined(__CINT__) && !defined(__MAKECINT__) 
+   cout << "ERROR: This tutorial can run only using ACliC, you must run it by doing: " << endl;
+   cout << "\t .x $ROOTSYS/tutorials/quadp/portfolio.C+" << endl;
+   return;
+#endif 
+
   const Int_t sDay = 20000809;
   const Int_t eDay = 20040602;
 
