@@ -1,6 +1,6 @@
 ROOTTEST_ADD_TEST(roottest-root-hist-formula-assertTernary MACRO assertTernary.C OUTREF assertTernary.ref)
 ROOTTEST_ADD_TEST(roottest-root-hist-formula-execGetExp MACRO execGetExp.C OUTREF execGetExp.ref)
-ROOTTEST_ADD_TEST(roottest-root-hist-formula-runconstargs MACRO runconstargs.C+ OUTREF constargs.ref)
+ROOTTEST_ADD_TEST(roottest-root-hist-formula-runconstargs MACRO runconstargs.C+ TEST_OUTREF_CINTSPECIFIC OUTREF constargs.ref)
 ROOTTEST_ADD_TEST(roottest-root-hist-formula-runformio MACRO runformio.C)
 ROOTTEST_ADD_TEST(roottest-root-hist-formula-runrecurse MACRO runrecurse.C OUTREF recurse.ref)
 ROOTTEST_ADD_TEST(roottest-root-hist-formula-runstring MACRO runstring.C OUTREF string.ref)
