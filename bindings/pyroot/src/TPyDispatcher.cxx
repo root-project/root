@@ -12,8 +12,6 @@
 // Standard
 #include <stdarg.h>
 
-#include <iostream>
-
 
 //______________________________________________________________________________
 //                         Python callback dispatcher
@@ -114,8 +112,6 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
       PyErr_Print();
       return 0;
    }
-
-   std::cout << " HERE: " << clname << " " << obj << " " << format << " " << std::endl;
 
    PyObject* args = 0;
 
