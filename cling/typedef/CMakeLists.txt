@@ -2,6 +2,7 @@ ROOTTEST_COMPILE_MACRO(vclass.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-typedef-runptrptr
                   MACRO runptrptr.C
+                  TEST_OUTREF_CINTSPECIFIC
                   OUTREF ptrptr.ref
                   OUTCNVCMD grep ptrptr.C
                   LABELS roottest regression cling)

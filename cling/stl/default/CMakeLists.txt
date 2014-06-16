@@ -4,8 +4,15 @@ ROOTTEST_ADD_TEST(roottest-cling-stl-default-defaultArgTest
                   MACRO build.C
                   LABELS roottest regression cling)
 
+if(ClingWorkAroundJITandInline)
+  set(testcint TEST_OUTREF_CINTSPECIFIC) 
+else()
+  set(testcint "")
+endif()
+
 ROOTTEST_ADD_TEST(roottest-cling-stl-default-VectorSort
                   MACRO VectorSort.C
-                  #OUTREF VectorSort.ref
+                  ${testcint}
+                  OUTREF VectorSort.ref
                   OUTCNV VectorSort_convert.sh
                   LABELS roottest regression cling)
