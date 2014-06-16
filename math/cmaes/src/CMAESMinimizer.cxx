@@ -35,6 +35,9 @@ using namespace libcmaes;
 
 namespace ROOT
 {
+  // registers a default empty set of extra options.
+  //ROOT::Math::IOptions &defIOptions = ROOT::Math::MinimizerOptions::Default("cmaes");
+  
   namespace cmaes
   {
 
@@ -67,6 +70,8 @@ namespace ROOT
 	fMinimizer = sepIPOP_CMAES;
       else if (algoname == "sepbipop")
 	fMinimizer = sepBIPOP_CMAES;
+
+      
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
@@ -318,7 +323,10 @@ namespace ROOT
 	MATH_WARN_MSG("TCMAESMinimizer::Minimize","Dimension smaller than initial X size's");
       }
 
-      //ROOT::Math::IOptions *cmaesOpt = ROOT::Math::MinimizerOptions::FindDefault("cmaes"); //TODO.
+      ROOT::Math::IOptions *cmaesOpt = ROOT::Math::MinimizerOptions::FindDefault("cmaes");
+      std::cerr << "cmaesOpt ptr: " << cmaesOpt << std::endl;
+      if (cmaesOpt)
+	cmaesOpt->Print(std::cout);
       
       //TODO: phenotype / genotype.
 
@@ -327,11 +335,26 @@ namespace ROOT
 	  return (*fObjFunc)(x);
 	};
 
+      //TODO: gradient function.
       
       double sigma0 = *std::max_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
       int maxiter = fMaxIter > 0 ? fMaxIter : -1;
       int maxfevals = 100*fMaxCalls; // CMA-ES requires much more calls than Minuit.
+      int noisy = 0;
+      int nrestarts = -1;
+      double ftarget = -1.0;
+      std::string fplot;
+      
+      //TODO: set hyper-parameters according to IOptions object.
+      if (cmaesOpt)
+	{
+	  cmaesOpt->GetValue("lambda",lambda);
+	  cmaesOpt->GetValue("noisy",noisy);
+	  cmaesOpt->GetValue("restarts",nrestarts);
+	  cmaesOpt->GetValue("ftarget",ftarget);
+	  cmaesOpt->GetValue("fplot",fplot);
+	}
       
       if (gDebug > 0)
 	{
@@ -354,9 +377,15 @@ namespace ROOT
 	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
 	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
 	  cmaparams.set_ftolerance(fTol);
-	  cmaparams.set_automaxiter(false);
 	  cmaparams.set_max_iter(maxiter);
 	  cmaparams.set_max_fevals(maxfevals);
+	  if (noisy > 0)
+	    cmaparams.set_noisy();
+	  if (nrestarts > 0)
+	    cmaparams.set_restarts(nrestarts);
+	  if (ftarget > 0.0)
+	    cmaparams.set_ftarget(ftarget);
+	  cmaparams._fplot = fplot;
 	  fCMAsols = libcmaes::cmaes<GenoPheno<pwqBoundStrategy>>(ffit,cmaparams);
 	  fCMAparamsb = cmaparams;
 	}
@@ -371,9 +400,15 @@ namespace ROOT
 	  for (auto mit=fFixedVariables.begin();mit!=fFixedVariables.end();mit++)
 	    cmaparams.set_fixed_p((*mit).first,(*mit).second);
 	  cmaparams.set_ftolerance(fTol);
-	  cmaparams.set_automaxiter(false);
 	  cmaparams.set_max_iter(maxiter);
 	  cmaparams.set_max_fevals(maxfevals);
+	  if (noisy > 0)
+	    cmaparams.set_noisy();
+	  if (nrestarts > 0)
+	    cmaparams.set_restarts(nrestarts);
+	  if (ftarget > 0.0)
+	    cmaparams.set_ftarget(ftarget);
+	  cmaparams._fplot = fplot;
 	  fCMAsols = libcmaes::cmaes<>(ffit,cmaparams);
 	  fCMAparams = cmaparams;
 	}
