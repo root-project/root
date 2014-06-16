@@ -45,6 +45,10 @@ TCanvas *fit2a(const char *fitter="cmaes") {
     }
 
   TVirtualFitter::SetDefaultFitter(fitter);
+
+  ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
+  //ROOT::Math::IOptions *opts = ROOT::Math::MinimizerOptions::FindDefault(fitter);
+  //opts.SetIntValue("lambda",100);
   
    TCanvas *c = new TCanvas();
    gStyle->SetOptStat(kTRUE); 
