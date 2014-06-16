@@ -1,7 +1,7 @@
 # File: roottest/python/ttree/PyROOT_ttreetests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/13/06
-# Last: 09/30/10
+# Last: 06/16/14
 
 """TTree reading/writing unit tests for PyROOT package."""
 
@@ -22,6 +22,7 @@ gROOT.LoadMacro( "TTreeTypes.C+" )
 class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
    N, M = 5, 10
    fname, tname, ttitle = 'test.root', 'test', 'test tree'
+   testnames = ['aap', 'noot', 'mies', 'zus', 'jet']
 
    def test01WriteStdVector( self ):
       """Test writing of a single branched TTree with an std::vector<double>"""
@@ -193,6 +194,37 @@ class TTree1ReadWriteSimpleObjectsTestCase( MyTestCase ):
 
       for i in xrange(len(vals)):
          self.assertEqual( vals[i], t.t0[i] )
+
+      f.Close()
+
+   def test11WriteTObjArray( self ):
+      """Test writing of a TObjArray"""
+
+      f = TFile( self.fname, 'RECREATE' )
+      t = TTree( self.tname, self.ttitle )
+      o = TObjArray()
+      t.Branch( 'mydata', o )
+
+      nameds = [ TNamed( name, name ) for name in self.testnames ]
+      for name in nameds:
+         o.Add( name )
+      self.assertEqual( len(o), len(self.testnames) )
+
+      t.Fill()
+
+      f.Write()
+      f.Close()
+
+   def test12ReadBuiltinArray( self ):
+      """Test reading of a TObjArray"""
+
+      f = TFile( self.fname )
+      t = f.Get( self.tname )
+
+      t.GetEntry( 0 )
+      self.assertEqual( len(t.mydata), len(self.testnames) )
+      for i in xrange(len(t.mydata)):
+         self.assertEqual( t.mydata[i].GetName(), self.testnames[i] )
 
       f.Close()
 
