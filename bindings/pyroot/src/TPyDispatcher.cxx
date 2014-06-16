@@ -3,9 +3,10 @@
 // Bindings
 #include "PyROOT.h"
 #include "TPyDispatcher.h"
-#include "TPython.h"
+#include "RootWrapper.h"
 
 // ROOT
+#include "TClass.h"
 #include "TObject.h"
 
 // Standard
@@ -108,7 +109,7 @@ PyObject* TPyDispatcher::DispatchVA( const char* format, ... )
 //____________________________________________________________________________
 PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char* format, ... )
 {
-   PyObject* pyobj = TPython::ObjectProxy_FromVoidPtr( obj, clname );
+   PyObject* pyobj = PyROOT::BindRootObject( obj, TClass::GetClass( clname ), kFALSE /* isRef */ );
    if ( ! pyobj ) {
       PyErr_Print();
       return 0;
@@ -167,8 +168,8 @@ PyObject* TPyDispatcher::DispatchVA1( const char* clname, void* obj, const char*
 PyObject* TPyDispatcher::Dispatch( TPad* selpad, TObject* selected, Int_t event )
 {
    PyObject* args = PyTuple_New( 3 );
-   PyTuple_SET_ITEM( args, 0, TPython::ObjectProxy_FromVoidPtr( selpad, "TPad" ) );
-   PyTuple_SET_ITEM( args, 1, TPython::ObjectProxy_FromVoidPtr( selected, "TObject" ) );
+   PyTuple_SET_ITEM( args, 0, PyROOT::BindRootObject( selpad, TClass::GetClass( "TPad" ) ) );
+   PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( selected, TClass::GetClass( "TObject" ) ) );
    PyTuple_SET_ITEM( args, 2, PyInt_FromLong( event ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
@@ -189,7 +190,7 @@ PyObject* TPyDispatcher::Dispatch( Int_t event, Int_t x, Int_t y, TObject* selec
    PyTuple_SET_ITEM( args, 0, PyInt_FromLong( event ) );
    PyTuple_SET_ITEM( args, 1, PyInt_FromLong( x ) );
    PyTuple_SET_ITEM( args, 2, PyInt_FromLong( y ) );
-   PyTuple_SET_ITEM( args, 3, TPython::ObjectProxy_FromVoidPtr( selected, "TObject" ) );
+   PyTuple_SET_ITEM( args, 3, PyROOT::BindRootObject( selected, TClass::GetClass( "TObject" ) ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
    Py_XDECREF( args );
@@ -206,8 +207,8 @@ PyObject* TPyDispatcher::Dispatch( Int_t event, Int_t x, Int_t y, TObject* selec
 PyObject* TPyDispatcher::Dispatch( TVirtualPad* pad, TObject* obj, Int_t event )
 {
    PyObject* args = PyTuple_New( 3 );
-   PyTuple_SET_ITEM( args, 0, TPython::ObjectProxy_FromVoidPtr( pad, "TVirtualPad" ) );
-   PyTuple_SET_ITEM( args, 1, TPython::ObjectProxy_FromVoidPtr( obj, "TObject" ) );
+   PyTuple_SET_ITEM( args, 0, PyROOT::BindRootObject( pad, TClass::GetClass( "TVirtualPad" ) ) );
+   PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( obj, TClass::GetClass( "TObject" ) ) );
    PyTuple_SET_ITEM( args, 2, PyInt_FromLong( event ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
@@ -225,8 +226,8 @@ PyObject* TPyDispatcher::Dispatch( TVirtualPad* pad, TObject* obj, Int_t event )
 PyObject* TPyDispatcher::Dispatch( TGListTreeItem* item, TDNDData* data )
 {
    PyObject* args = PyTuple_New( 2 );
-   PyTuple_SET_ITEM( args, 0, TPython::ObjectProxy_FromVoidPtr( item, "TGListTreeItem" ) );
-   PyTuple_SET_ITEM( args, 1, TPython::ObjectProxy_FromVoidPtr( data, "TDNDData" ) );
+   PyTuple_SET_ITEM( args, 0, PyROOT::BindRootObject( item, TClass::GetClass( "TGListTreeItem" ) ) );
+   PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( data, TClass::GetClass( "TDNDData" ) ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
    Py_XDECREF( args );
@@ -244,7 +245,7 @@ PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
 {
    PyObject* args = PyTuple_New( 2 );
    PyTuple_SET_ITEM( args, 0, PyString_FromString( name ) );
-   PyTuple_SET_ITEM( args, 1, TPython::ObjectProxy_FromVoidPtr( (void*)attr, "TList" ) );
+   PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( (void*)attr, TClass::GetClass( "TList" ) ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
    Py_XDECREF( args );
@@ -261,8 +262,8 @@ PyObject* TPyDispatcher::Dispatch( const char* name, const TList* attr )
 PyObject* TPyDispatcher::Dispatch( TSlave* slave, TProofProgressInfo* pi )
 {
    PyObject* args = PyTuple_New( 2 );
-   PyTuple_SET_ITEM( args, 0, TPython::ObjectProxy_FromVoidPtr( slave, "TSlave" ) );
-   PyTuple_SET_ITEM( args, 1, TPython::ObjectProxy_FromVoidPtr( pi, "TProofProgressInfo" ) );
+   PyTuple_SET_ITEM( args, 0, PyROOT::BindRootObject( slave, TClass::GetClass( "TSlave" ) ) );
+   PyTuple_SET_ITEM( args, 1, PyROOT::BindRootObject( pi, TClass::GetClass( "TProofProgressInfo" ) ) );
 
    PyObject* result = PyObject_CallObject( fCallable, args );
    Py_XDECREF( args );
