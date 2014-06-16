@@ -79,7 +79,6 @@
 #include "RooMoment.h"
 #include "RooFirstMoment.h"
 #include "RooSecondMoment.h"
-#include "RooBinnedMoment.h"
 #include "RooBrentRootFinder.h"
 #include "RooVectorDataStore.h"
 #include "RooCachedReal.h"
@@ -4144,13 +4143,9 @@ RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, Int_t order, Bool_t central, B
   // true, the central moment is given <(x-<x>)^2>
   string name=Form("%s_MOMENT_%d%s_%s",GetName(),order,(central?"C":""),obs.GetName()) ;
   string title=Form("%sMoment of order %d of %s w.r.t %s ",(central?"Central ":""),order,GetName(),obs.GetName()) ;  
-  if (isBinnedDistribution(obs) && 0) {
-    return new RooBinnedMoment(name.c_str(),title.c_str(),*this,obs,order,central,takeRoot) ;
-  } else {
-    if (order==1) return new RooFirstMoment(name.c_str(),title.c_str(),*this,obs) ;
-    if (order==2) return new RooSecondMoment(name.c_str(),title.c_str(),*this,obs,central,takeRoot) ;
-    return new RooMoment(name.c_str(),title.c_str(),*this,obs,order,central,takeRoot) ;
-  }
+  if (order==1) return new RooFirstMoment(name.c_str(),title.c_str(),*this,obs) ;
+  if (order==2) return new RooSecondMoment(name.c_str(),title.c_str(),*this,obs,central,takeRoot) ;
+  return new RooMoment(name.c_str(),title.c_str(),*this,obs,order,central,takeRoot) ;
 }
 
 
@@ -4162,13 +4157,10 @@ RooAbsMoment* RooAbsReal::moment(RooRealVar& obs, const RooArgSet& normObs, Int_
   // all normalization observables is returned.
   string name=Form("%s_MOMENT_%d%s_%s",GetName(),order,(central?"C":""),obs.GetName()) ;
   string title=Form("%sMoment of order %d of %s w.r.t %s ",(central?"Central ":""),order,GetName(),obs.GetName()) ;
-  if (isBinnedDistribution(obs) && 0) {
-    return new RooBinnedMoment(name.c_str(),title.c_str(),*this,obs,normObs,order,central,takeRoot,intNormObs) ;
-  } else {
-    if (order==1) return new RooFirstMoment(name.c_str(),title.c_str(),*this,obs,normObs,intNormObs) ;
-    if (order==2) return new RooSecondMoment(name.c_str(),title.c_str(),*this,obs,normObs,central,takeRoot,intNormObs) ;
-    return new RooMoment(name.c_str(),title.c_str(),*this,obs,normObs,order,central,takeRoot,intNormObs) ;
-  }
+
+  if (order==1) return new RooFirstMoment(name.c_str(),title.c_str(),*this,obs,normObs,intNormObs) ;
+  if (order==2) return new RooSecondMoment(name.c_str(),title.c_str(),*this,obs,normObs,central,takeRoot,intNormObs) ;
+  return new RooMoment(name.c_str(),title.c_str(),*this,obs,normObs,order,central,takeRoot,intNormObs) ;
 }
 
 
