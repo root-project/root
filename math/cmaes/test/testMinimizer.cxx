@@ -27,7 +27,7 @@ int gNCall = 0;
 int gNCall2 = 0;
 int gNmin = 1000; 
 int gVerbose = 0; 
-bool useGradient = false; 
+bool useGradient = true; 
 
 bool minos = true; 
 

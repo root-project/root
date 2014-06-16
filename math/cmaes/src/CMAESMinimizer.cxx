@@ -42,12 +42,12 @@ namespace ROOT
   {
 
     TCMAESMinimizer::TCMAESMinimizer()
-      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false),fWithGradient(false)
     {
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const char *type)
-      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false),fWithGradient(false)
     {
       std::string algoname(type);
       // tolower() is not an  std function (Windows)
@@ -75,7 +75,7 @@ namespace ROOT
     }
 
     TCMAESMinimizer::TCMAESMinimizer(const TCMAESMinimizer &m)
-      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false)
+      :Minimizer(),fDim(0),fFreeDim(0),fWithBounds(false),fWithGradient(false)
     {
     }
 
@@ -109,6 +109,14 @@ namespace ROOT
     {
       fObjFunc = &fun;
       fDim = fun.NDim();
+    }
+
+    void TCMAESMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction &fun)
+    {
+      SetFunction(static_cast<const ::ROOT::Math::IMultiGenFunction &> (fun));
+      fObjFuncGrad = &fun;
+      //fDim = fun.NDim();
+      fWithGradient = true;
     }
     
     bool TCMAESMinimizer::SetVariable(unsigned int ivar, const std::string & name, double val, double step)
@@ -335,7 +343,18 @@ namespace ROOT
 	  return (*fObjFunc)(x);
 	};
 
-      //TODO: gradient function.
+      // gradient function.
+      std::cout << "fWithGradient=" << fWithGradient << std::endl;
+      GradFunc gfit = nullptr;
+      if (fWithGradient)
+	{
+	  gfit = [this](const double *x, const int N)
+	    {
+	      dVec grad(N);
+	      fObjFuncGrad->Gradient(x,grad.data());
+	      return grad;
+	    };
+	}
       
       double sigma0 = *std::min_element(fInitialSigma.begin(),fInitialSigma.end());
       int lambda = -1;
