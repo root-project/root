@@ -84,7 +84,7 @@ macro(ROOTTEST_SETUP_EXECTEST)
 endmacro(ROOTTEST_SETUP_EXECTEST)
 
 function(ROOTTEST_ADD_TEST test)
-  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
+  CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;TEST_OUTREF_CINTSPECIFIC"
                             "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
                             "TESTOWNER;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
 
@@ -102,13 +102,30 @@ function(ROOTTEST_ADD_TEST test)
   if(ARG_OUTREF)
     get_filename_component(OUTREF_PATH ${ARG_OUTREF} ABSOLUTE)
 
-    if(DEFINED X86_64 AND EXISTS ${OUTREF_PATH}64)
-      set(OUTREF_PATH ${OUTREF_PATH}64)
-    elseif(DEFINED X86 AND EXISTS ${OUTREF_PATH}32)
-      set(OUTREF_PATH ${OUTREF_PATH}32)
+    if(DEFINED X86_64)
+      set(ROOTBITS 64)
+    elseif(DEFINED X86)
+      set(ROOTBITS 32)
+    else()
+      set(ROOTBITS "")
     endif()
+
+    if(ARG_TEST_OUTREF_CINTSPECIFIC)
+      if(EXISTS ${OUTREF_PATH}${ROOTBITS}-${CINT_VERSION})
+        set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS}-${CINT_VERSION})
+      elseif(EXISTS ${OUTREF_PATH}-${CINT_VERSION})
+        set(OUTREF_PATH ${OUTREF_PATH}-${CINT_VERSION})
+      elseif(EXISTS ${OUTREF_PATH}${ROOTBITS})
+        set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS})
+      endif() 
+    else()
+      if(EXISTS ${OUTREF_PATH}${ROOTBITS})
+        set(OUTREF_PATH ${OUTREF_PATH}${ROOTBITS})
+      endif()
+    endif()
+
   else()
-    set(OUTREF_PATH, "")
+    set(OUTREF_PATH "")
   endif()
 
   if(ARG_OUTCNV)

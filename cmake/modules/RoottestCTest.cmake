@@ -19,6 +19,11 @@ enable_testing()
 # Copy the CTestCustom.cmake file into the build directory.
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 
+# Cling workaround support.
+
+# Set CLING_VERSION analog to the existing make build system.
+set(CLING_VERSION 5)
+
 # Cling workaround defines.
 # Set of macros to avoid using features not yet implemented by cling.
 
