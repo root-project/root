@@ -185,6 +185,10 @@ protected:
   std::vector<const RooAbsBinning*> _lvbins ; //! List of used binnings associated with lvalues
   mutable std::vector<std::vector<Double_t> > _binbounds; //! list of bin bounds per dimension
 
+  mutable Int_t _cache_sum_valid ; //! Is cache sum valid
+  mutable Double_t _cache_sum ; //! Cache for sum of entries ;
+
+
 private:
 
   ClassDef(RooDataHist,4) // Binned data set

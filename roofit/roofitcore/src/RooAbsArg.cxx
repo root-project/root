@@ -39,6 +39,8 @@
 #include "TVirtualStreamerInfo.h"
 // #include "TGraphStruct.h"
 
+#include "RooSecondMoment.h"
+
 #include "RooMsgService.h"
 #include "RooAbsArg.h"
 #include "RooArgSet.h"
@@ -76,7 +78,7 @@ ClassImp(RooAbsArg)
 
 Bool_t RooAbsArg::_verboseDirty(kFALSE) ;
 Bool_t RooAbsArg::_inhibitDirty(kFALSE) ;
-Bool_t RooAbsArg::inhibitDirty() { return _inhibitDirty ; }
+Bool_t RooAbsArg::inhibitDirty() const { return _inhibitDirty && !_localNoInhibitDirty; }
 
 std::map<RooAbsArg*,TRefArray*> RooAbsArg::_ioEvoList ;
 std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
@@ -92,7 +94,8 @@ RooAbsArg::RooAbsArg() :
   _prohibitServerRedirect(kFALSE),
   _eocache(0),
   _namePtr(0),
-  _isConstant(kFALSE)
+  _isConstant(kFALSE),
+  _localNoInhibitDirty(kFALSE)
 {
   // Default constructor
 
@@ -115,7 +118,8 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
   _prohibitServerRedirect(kFALSE),
   _eocache(0),
   _namePtr(0),
-  _isConstant(kFALSE)
+  _isConstant(kFALSE),
+  _localNoInhibitDirty(kFALSE)
 {
   // Create an object with the specified name and descriptive title.
   // The newly created object has no clients or servers and has its
@@ -141,7 +145,8 @@ RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
     _prohibitServerRedirect(kFALSE),
     _eocache(other._eocache),
     _namePtr(other._namePtr),
-    _isConstant(other._isConstant)
+    _isConstant(other._isConstant),
+    _localNoInhibitDirty(other._localNoInhibitDirty)
 {
   // Copy constructor transfers all boolean and string properties of the original
   // object. Transient properties and client-server links are not copied
@@ -1665,6 +1670,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
     }
   }
   delete paramSet ;
+
 
   if (getAttribute("NeverConstant")) {
     canOpt = kFALSE ;

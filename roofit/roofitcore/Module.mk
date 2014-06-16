@@ -94,7 +94,8 @@ ROOFITCOREH4   := RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAvera
                   RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h \
                   RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h \
                   RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h \
-		  RooRangeBoolean.h RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h
+		  RooRangeBoolean.h RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h \
+                  RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h
 
 ROOFITCOREH1   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH1))
 ROOFITCOREH2   := $(patsubst %,$(MODDIRI)/%,$(ROOFITCOREH2))

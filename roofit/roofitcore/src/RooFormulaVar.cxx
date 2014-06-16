@@ -199,6 +199,43 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 }
 
 
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  RooFIter iter = _actualVars.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
+    if (binb) {
+      return binb ;
+    }
+  }
+  
+  return 0 ;  
+}
+
+
+
+//_____________________________________________________________________________
+std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+{
+  // Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+  RooFIter iter = _actualVars.fwdIterator() ;
+  RooAbsReal* func ;
+  while((func=(RooAbsReal*)iter.next())) {
+    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
+    if (hint) {
+      return hint ;
+    }
+  }
+  
+  return 0 ;
+}
+
+
+
 //_____________________________________________________________________________
 Double_t RooFormulaVar::defaultErrorLevel() const 
 {

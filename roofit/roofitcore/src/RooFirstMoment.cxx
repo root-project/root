@@ -17,7 +17,7 @@
 //////////////////////////////////////////////////////////////////////////////
 //
 // BEGIN_HTML
-// RooMoment represents the first, second, or third order derivative
+// RooFirstMoment represents the first, second, or third order derivative
 // of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 // derivator class.
 // END_HTML
@@ -31,7 +31,7 @@
 #include <math.h>
 #include <string>
 
-#include "RooMoment.h"
+#include "RooFirstMoment.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
@@ -39,21 +39,21 @@
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 #include "RooFunctor.h"
-#include "RooFormulaVar.h"
 #include "RooGlobalFunc.h"
 #include "RooConstVar.h"
 #include "RooRealIntegral.h"
 #include "RooNumIntConfig.h"
+#include "RooProduct.h"
 #include <string>
 using namespace std ;
 
 
-ClassImp(RooMoment)
+ClassImp(RooFirstMoment)
 ;
 
 
 //_____________________________________________________________________________
-RooMoment::RooMoment() 
+RooFirstMoment::RooFirstMoment() 
 {
   // Default constructor
 }
@@ -61,8 +61,8 @@ RooMoment::RooMoment()
 
 
 //_____________________________________________________________________________
-RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t centr, Bool_t takeRoot) :
-  RooAbsMoment(name, title,func,x,orderIn,takeRoot),
+RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x) :
+  RooAbsMoment(name, title,func,x,1,kFALSE),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
@@ -71,20 +71,8 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   
   string pname=Form("%s_product",name) ;
 
-  RooFormulaVar* XF ;
-  if (centr) {
-    string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
-    XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
-    addOwnedComponents(*mom1) ;
-    _mean.setArg(*mom1) ;
-  } else {
-    string formula=Form("pow(@0,%d)*@1",_order) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
-    XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  }
+  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
+  XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
     XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
@@ -102,41 +90,32 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 }
 
 //_____________________________________________________________________________
-RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
-		     Int_t orderIn, Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
-  RooAbsMoment(name, title,func,x,orderIn,takeRoot),
+RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t intNSet) :
+  RooAbsMoment(name, title,func,x,1,kFALSE),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
-
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   _nset.add(nset) ;
 
   string pname=Form("%s_product",name) ;
-  RooFormulaVar* XF ;
-  if (centr) {
-    string formula=Form("pow((@0-@1),%d)*@2",_order) ;
-    string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x,nset) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgList(x,*mom1,func)) ;
-    XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
-    addOwnedComponents(*mom1) ;
-    _mean.setArg(*mom1) ;
-  } else {
-    string formula=Form("pow(@0,%d)*@1",_order) ;
-    XF = new RooFormulaVar(pname.c_str(),formula.c_str(),RooArgSet(x,func)) ;
-    XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  }
+
+  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
+  XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
     XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
   }
 
+  if (intNSet && _nset.getSize()>0 && func.isBinnedDistribution(_nset)) {
+    XF->specialIntegratorConfig(kTRUE)->method2D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(kTRUE)->methodND().setLabel("RooBinIntegrator");
+  }
+
   RooArgSet intSet(x) ;
   if (intNSet) intSet.add(_nset,kTRUE) ;
-
   RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(intSet,&_nset) ;
   RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(intSet,&_nset) ;
   intXF->setCacheNumeric(kTRUE) ;
@@ -151,7 +130,7 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
 
 //_____________________________________________________________________________
-RooMoment::RooMoment(const RooMoment& other, const char* name) :
+RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
   RooAbsMoment(other, name), 
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
@@ -162,7 +141,7 @@ RooMoment::RooMoment(const RooMoment& other, const char* name) :
 
 
 //_____________________________________________________________________________
-RooMoment::~RooMoment() 
+RooFirstMoment::~RooFirstMoment() 
 {
   // Destructor
 }
@@ -170,12 +149,12 @@ RooMoment::~RooMoment()
 
 
 //_____________________________________________________________________________
-Double_t RooMoment::evaluate() const 
+Double_t RooFirstMoment::evaluate() const 
 {
   // Calculate value  
   Double_t ratio = _ixf / _if ;
-  Double_t ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
-  return ret ;
+  //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
+  return ratio ;
 }
 
 
