@@ -47,6 +47,7 @@
 #include "RooMinuit.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
+#include "RooMsgService.h"
 
 #include "RooStats/BernsteinCorrection.h"
 
@@ -77,8 +78,11 @@ void rs_bernsteinCorrection(){
 
   RooWorkspace* wks = new RooWorkspace("myWorksspace");
 
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   wks->import(*data, Rename("data"));
   wks->import(nominal);
+
 
   // The tolerance sets the probability to add an unnecessary term.
   // lower tolerance will add fewer terms, while higher tolerance
@@ -88,6 +92,7 @@ void rs_bernsteinCorrection(){
   Int_t degree = bernsteinCorrection.ImportCorrectedPdf(wks,"nominal","x","data");
 
   cout << " Correction based on Bernstein Poly of degree " << degree << endl;
+
 
   RooPlot* frame = x.frame();
   data->plotOn(frame);

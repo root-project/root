@@ -151,9 +151,9 @@ Int_t BernsteinCorrection::ImportCorrectedPdf(RooWorkspace* wks,
 
     if(!keepGoing){
       // terminate loop, import corrected PDF
-      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+      //RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
       wks->import(*corrected);
-      RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
+      //RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
     } else { 
       // memory management
       delete corrected;
