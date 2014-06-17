@@ -34,7 +34,7 @@ TStopwatch timer;
 void billw(Int_t compress) {
    //write N histograms as keys
    timer.Start();
-   TFile f("/tmp/bill.root","recreate","bill benchmark with keys",compress);
+   TFile f("bill.root","recreate","bill benchmark with keys",compress);
    TH1F h("h","h",1000,-3,3);
    h.FillRandom("gaus",50000);
    
@@ -52,7 +52,7 @@ void billw(Int_t compress) {
 void billr(Int_t compress) {
    //read N histograms from keys
    timer.Start();
-   TFile f("/tmp/bill.root");
+   TFile f("bill.root");
    TIter next(f.GetListOfKeys());
    TH1F *h;
    TH1::AddDirectory(kFALSE);
@@ -72,7 +72,7 @@ void billr(Int_t compress) {
 void billtw(Int_t compress) {
    //write N histograms to a Tree
    timer.Start();
-   TFile f("/tmp/billt.root","recreate","bill benchmark with trees",compress);
+   TFile f("billt.root","recreate","bill benchmark with trees",compress);
    TH1F *h = new TH1F("h","h",1000,-3,3);
    h->FillRandom("gaus",50000);
    TTree *T = new TTree("T","test bill");
@@ -93,7 +93,7 @@ void billtw(Int_t compress) {
 void billtr(Int_t compress) {
    //read N histograms from a tree
    timer.Start();
-   TFile f("/tmp/billt.root");
+   TFile f("billt.root");
    TH1F *h = 0;
    TTree *T = (TTree*)f.Get("T");
    T->SetBranchAddress("event",&h);
@@ -116,8 +116,8 @@ void bill() {
       billtw(compress);
       billtr(compress);
    }
-   gSystem->Unlink("/tmp/bill.root");
-   gSystem->Unlink("/tmp/billt.root");
+   gSystem->Unlink("bill.root");
+   gSystem->Unlink("billt.root");
    totaltimer.Stop();
    Double_t rtime = totaltimer.RealTime();
    Double_t ctime = totaltimer.CpuTime();

@@ -59,7 +59,8 @@ void clonesA_Event_r()
 }
  
 void clonesA_Event() {
-   gROOT->ProcessLine(".L clonesA_Event.cxx+");  // compile shared lib
+   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   gROOT->ProcessLine(TString(".L ")+dir+"/clonesA_Event.cxx+");  // compile shared lib
    clonesA_Event_w();                            // write the tree
    clonesA_Event_r();                            // read back the tree
 }

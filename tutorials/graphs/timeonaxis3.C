@@ -8,8 +8,8 @@
 {
    // timeonaxis3.C has to be run in compiled mode on Windows.
    // the following code does it.
-
-   gSystem->CompileMacro("timeonaxis3.C");
+   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   gSystem->CompileMacro(dir+"/timeonaxis3.C");
    timeonaxis3();
 }
 #else

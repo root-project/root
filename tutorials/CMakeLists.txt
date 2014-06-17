@@ -44,7 +44,8 @@ if(NOT ROOT_unuran_FOUND)
 endif()
 
 if(NOT ROOT_xml_FOUND)
-  set(xml_veto  xml/*.C)
+  set(xml_veto  xml/*.C
+                histfactory/*.C)   # histfactory requires xml
 endif()
 
 if(NOT ROOT_fitsio_FOUND)
@@ -83,25 +84,39 @@ set(gui_veto fit/fitpanel_playback.C
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
-  rootalias.C
-  rootlogon.C
-  rootlogoff.C
-  fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
+  rootalias.C          # Helper macro
+  rootlogon.C          # Helper macro
+  rootlogoff.C         # Helper macro
+  rootmarks.C          # Instrumentation. Not a standalone tutorial
+  memstat/memstat.C    # Instrumentation. Not a standalone tutorial
+  fit/fit1_C.C  
+  fit/TwoHistoFit2D.C 
+  fit/line3Dfit.C 
+  fit/MDF.C
   foam/*.C
   html/*.C
-  math/Bessel.C math/LegendreAssoc.C math/Legendre.C
-  math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
-  math/testUnfold2.C math/pca.C
+  math/Bessel.C 
+  math/LegendreAssoc.C 
+  math/Legendre.C
+  math/mathmoreIntegration.C 
+  math/normalDist.C 
+  math/tStudent.C
+  math/testUnfold2.C 
+  math/pca.C
   net/*.C
   proof/*.C
   pythia/*.C
   sql/*.C
-  tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C tree/tree2a.C tree/tree4.C
+  tree/hsimpleProxy.C   # A driver uses this macro which cannot be executed directly
+  tree/tree0.C 
+  tree/tree2a.C 
+  tree/tree4.C
   roostats/rs401d_FeldmanCousins.C
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C tree/copytree3.C tree/copytree.C
+  tree/copytree2.C 
+  tree/copytree3.C 
+  tree/copytree.C
   math/testUnfold4.C
   fit/minuit2FitBench.C
   fit/minuit2FitBench2D.C
@@ -141,6 +156,7 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
                  hist/ContourList.C hist/hstack.C 
                  hist/h2proj.C hist/hbars.C
                  hist/th2polyBoxes.C
+                 tree/h1analysis.C
                  io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
