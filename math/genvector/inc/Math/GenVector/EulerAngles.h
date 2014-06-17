@@ -151,7 +151,7 @@ public:
 #ifndef NDEBUG
    void SetComponents(IT begin, IT end) {
 #else
-   void SetComponents(IT begin, IT end) {
+   void SetComponents(IT begin, IT ) {
 #endif
       fPhi   = *begin++;
       fTheta = *begin++;
