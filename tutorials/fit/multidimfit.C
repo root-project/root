@@ -14,6 +14,7 @@
 #include "TVectorD.h"
 #include "TMath.h"
 
+
 //____________________________________________________________________
 void makeData(Double_t* x, Double_t& d, Double_t& e) 
 {
@@ -29,12 +30,13 @@ void makeData(Double_t* x, Double_t& d, Double_t& e)
 }
 
 //____________________________________________________________________
-int CompareResults(TMultiDimFit *fit)
+int CompareResults(TMultiDimFit *fit, bool doFit)
 { 
    //Compare results with reference run
-   
-   // the right coefficients
-  double GoodCoeffs[] = {
+ 
+
+   // the right coefficients (before fit) 
+  double GoodCoeffsNoFit[] = {
   -4.37056,
   43.1468,
   13.432,
@@ -56,6 +58,31 @@ int CompareResults(TMultiDimFit *fit)
   2.83819,
   -3.48855,
   -3.97612
+};
+
+   // the right coefficients (after fit) 
+  double GoodCoeffs[] = {
+     -4.399,  
+     43.15,
+     13.41,
+     13.49,
+     13.4,
+     13.23,
+     13.34,
+     13.29,
+     4.523,
+     4.659,
+     4.948,
+     -4.026,
+     -4.045,
+     -3.939,
+     4.421,
+     -4.006,
+     4.626,
+     4.378,
+     3.516,
+     -4.111,
+     -3.823,    
 };
 
 // Good Powers
@@ -91,7 +118,12 @@ int CompareResults(TMultiDimFit *fit)
   const TVectorD *coeffs = fit->GetCoefficients();
   int k = 0;
   for (Int_t i=0;i<nc;i++) {
-     if (TMath::Abs((*coeffs)[i] - GoodCoeffs[i]) > 5e-5) return 2;
+     if (doFit) {
+        if (!TMath::AreEqualRel((*coeffs)[i],GoodCoeffs[i],1e-3)) return 2;
+     }
+     else {
+        if (TMath::Abs((*coeffs)[i] - GoodCoeffsNoFit[i]) > 5e-5) return 2;
+     }
      for (Int_t j=0;j<nv;j++) {
         if (powers[pindex[i]*nv+j] != GoodPower[k]) return 3;
         k++;
@@ -100,15 +132,21 @@ int CompareResults(TMultiDimFit *fit)
   
   // now test the result of the generated function
   gROOT->ProcessLine(".L MDF.C");
-  Double_t x[]    = {5,5,5,5};
-  Double_t refMDF = 43.98;
-  Double_t rMDF   = MDF(x);
+ 
+  Double_t refMDF = (doFit) ? 43.95 : 43.98;
+  // this does not work in CLing since the function is not defined 
+  //Double_t x[]    = {5,5,5,5};
+  //Double_t rMDF   = MDF(x);
+  //LM:  need to return the address of the result since it is casted to a long (this should not be in a tutorial !)
+  Long_t iret = gROOT->ProcessLine(" Double_t x[] = {5,5,5,5}; double result=MDF(x); &result;");
+  Double_t rMDF = * ( (Double_t*)iret);
+  //printf("%f\n",rMDF);
   if (TMath::Abs(rMDF -refMDF) > 1e-2) return 4;
   return 0;     
 }
 
 //____________________________________________________________________
-Int_t multidimfit() 
+Int_t multidimfit(bool doFit = true) 
 {
 
   cout << "*************************************************" << endl; 
@@ -148,6 +186,8 @@ Int_t multidimfit()
   
   // Print out the start parameters
   fit->Print("p");
+
+  printf("======================================\n");
 
   // Create training sample 
   Int_t i;
@@ -203,10 +243,11 @@ Int_t multidimfit()
   //delete gRandom;
 
   // Test the parameterizatio and coefficents using the test sample. 
-  fit->Fit();
+  if (doFit) 
+     fit->Fit("M");
 
   // Print result 
-  fit->Print("fc");
+  fit->Print("fc v");
 
   // Write code to file 
   fit->MakeCode();
@@ -217,7 +258,7 @@ Int_t multidimfit()
   delete output;
   
   // Compare results with reference run
-  Int_t compare = CompareResults(fit);
+  Int_t compare = CompareResults(fit, doFit);
   if (!compare) {
      printf("\nmultidimfit ..............................................  OK\n");
   } else {
