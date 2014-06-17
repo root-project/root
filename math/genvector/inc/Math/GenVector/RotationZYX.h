@@ -131,7 +131,11 @@ public:
       defining the beginning and end of an array of three Scalars.
    */
    template<class IT>
+#ifndef NDEBUG
    void SetComponents(IT begin, IT end) {
+#else
+   void SetComponents(IT begin, IT ) {
+#endif
       fPhi   = *begin++;
       fTheta = *begin++;
       fPsi   = *begin++;
@@ -144,7 +148,11 @@ public:
       and another to the end of the desired data (4 past start).
    */
    template<class IT>
+#ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
+#else
+   void GetComponents(IT begin, IT ) const {
+#endif
       *begin++ = fPhi;
       *begin++ = fTheta;
       *begin++ = fPsi;

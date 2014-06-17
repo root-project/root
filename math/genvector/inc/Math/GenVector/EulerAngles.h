@@ -161,7 +161,11 @@ public:
       and another to the end of the desired data (4 past start).
    */
    template<class IT>
+#ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
+#else
+   void GetComponents(IT begin, IT ) const {
+#endif
       *begin++ = fPhi;
       *begin++ = fTheta;
       *begin++ = fPsi;
