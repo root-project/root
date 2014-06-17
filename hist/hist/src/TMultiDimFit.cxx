@@ -2372,6 +2372,7 @@ void TMultiDimFit::Fit(Option_t *option)
 
    TString opt(option);
    opt.ToLower();
+   if (opt.IsNull()) opt="m";
 
    if (!opt.Contains("m"))
       MakeChi2();
@@ -2387,7 +2388,7 @@ void TMultiDimFit::Fit(Option_t *option)
 
    fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
    if (!fFitter) { 
-      Error("Fit", "Vannot create Fitter");
+      Error("Fit", "Cannot create Fitter");
       delete [] x; 
       return;
    }
