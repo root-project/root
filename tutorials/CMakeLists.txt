@@ -146,7 +146,8 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/event.C graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/exclusiongraph.C graphs/multigraph.C
-                 graphs/multipalette.C 
+                 graphs/multipalette.C
+                 graphs/graphstruct.C
                  hist/ContourList.C hist/hstack.C 
                  hist/h2proj.C hist/hbars.C
                  hist/th2polyBoxes.C
@@ -160,6 +161,11 @@ set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
+
+#--With ACLiC---------------------------------------------------------
+set(fit-combinedFit-aclic +)
+set(fit-TwoHistoFit2D-aclic +)
+
 #---Loop over all tutorials and define the corresponding test---------
 
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
@@ -174,7 +180,7 @@ foreach(t ${tutorials})
   string(REPLACE ".C" "" tname ${t})
   string(REPLACE "/" "-" tname ${tname})
   ROOT_ADD_TEST(tutorial-${tname} 
-                COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/${t}${${tname}-aclic}
                 PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
                 LABELS tutorial
                 DEPENDS tutorial-hsimple ${${tname}-depends}

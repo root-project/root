@@ -98,7 +98,8 @@
 {
    Info("portfolio.C",
         "Has to be run in compiled mode ... doing this for you.");
-   gSystem->CompileMacro("portfolio.C");
+   TString dir = gSystem->DirName(gInterpreter->GetCurrentMacroName());
+   gSystem->CompileMacro(dir+"/portfolio.C");
    portfolio();
 }
 #else
