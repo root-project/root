@@ -50,7 +50,7 @@ TUTORIALSTESTS_VETO := htmlex  rootalias \
   proof/% \
   pythia/% \
   sql/% \
-  tree/hsimpleProxy tree/tree0 tree/tree2a tree/tree4 \
+  tree/hsimpleProxy tree/h1analysisProxy tree/tree0 tree/tree2a tree/tree4 \
   roostats/rs401d_FeldmanCousins \
   roofit/rf104_classfactory \
   histfactory/ModifyInterpolation \
