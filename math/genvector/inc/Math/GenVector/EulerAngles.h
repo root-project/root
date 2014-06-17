@@ -148,7 +148,11 @@ public:
       defining the beginning and end of an array of three Scalars.
    */
    template<class IT>
+#ifndef NDEBUG
    void SetComponents(IT begin, IT end) {
+#else
+   void SetComponents(IT begin, IT end) {
+#endif
       fPhi   = *begin++;
       fTheta = *begin++;
       fPsi   = *begin++;

@@ -252,7 +252,11 @@ public:
      the desired data, and another to the end (16 past start).
    */
   template<class IT>
+#ifndef NDEBUG
   void SetComponents(IT begin, IT end) {
+#else
+  void SetComponents(IT begin, IT ) {
+#endif
      for (int i = 0; i <16; ++i) { 
         fM[i] = *begin;
         ++begin; 

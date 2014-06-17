@@ -128,7 +128,7 @@ public:
 #ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
 #else
-   void GetComponents(IT begin, IT end) const {
+   void GetComponents(IT begin, IT ) const {
 #endif
       *begin++ = fU;
       *begin++ = fI;
