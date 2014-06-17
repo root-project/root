@@ -13,10 +13,10 @@
 
 void normalDist() { 
 
-#ifdef __CINT__
-   gSystem->Load("libMathCore");
-   gSystem->Load("libMathMore");
-#endif
+// #ifdef __CINT__
+//    gSystem->Load("libMathCore");
+//    gSystem->Load("libMathMore");
+// #endif
 
    TF1 *pdfunc  = new TF1("pdf","ROOT::Math::normal_pdf(x, [0],[1])",-5,5);
    TF1 *cdfunc  = new TF1("cdf","ROOT::Math::normal_cdf(x, [0],[1])",-5,5);
