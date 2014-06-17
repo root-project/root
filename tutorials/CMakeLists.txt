@@ -53,7 +53,14 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto math/quasirandom.C math/exampleMultiRoot.C)
+  set(mathmore_veto 
+      math/quasirandom.C 
+      math/exampleMultiRoot.C
+      math/Bessel.C
+      math/LegendreAssoc.C
+      math/Legendre.C
+      math/mathmoreIntegration.C
+      math/tStudent.C)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
@@ -74,7 +81,8 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C hist/exec2.C
+             hist/exec1.C 
+             hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
@@ -89,38 +97,22 @@ set(extra_veto
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
   memstat/memstat.C    # Instrumentation. Not a standalone tutorial
-  fit/fit1_C.C  
-  fit/TwoHistoFit2D.C 
-  fit/line3Dfit.C 
-  fit/MDF.C
   foam/*.C
   html/*.C
-  math/Bessel.C 
-  math/LegendreAssoc.C 
-  math/Legendre.C
-  math/mathmoreIntegration.C 
-  math/normalDist.C 
-  math/tStudent.C
-  math/testUnfold2.C 
-  math/pca.C
   net/*.C
   proof/*.C
   pythia/*.C
   sql/*.C
-  tree/hsimpleProxy.C   # A driver uses this macro which cannot be executed directly
+  tree/hsimpleProxy.C  # A driver uses this macro which cannot be executed directly
   tree/tree0.C 
   tree/tree2a.C 
   tree/tree4.C
-  roostats/rs401d_FeldmanCousins.C
+  roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
   tree/copytree2.C 
   tree/copytree3.C 
   tree/copytree.C
-  math/testUnfold4.C
-  fit/minuit2FitBench.C
-  fit/minuit2FitBench2D.C
-  roostats/*.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -145,7 +137,7 @@ message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons"
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
+set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/archi.C graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
