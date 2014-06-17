@@ -60,7 +60,8 @@ if(NOT ROOT_mathmore_FOUND)
       math/LegendreAssoc.C
       math/Legendre.C
       math/mathmoreIntegration.C
-      math/tStudent.C)
+      math/tStudent.C
+      math/normalDist.C)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)

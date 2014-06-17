@@ -60,16 +60,18 @@ void StandardBayesianMCMCDemo(const char* infile = "",
   else
     filename = infile;
   // Check if example input file exists
-  TFile *file = TFile::Open(filename);
+  
+  TFile *file;
+  bool bfile = gSystem->AccessPathName(filename);
 
   // if input file was specified byt not found, quit
-  if(!file && strcmp(infile,"")){
+  if(bfile && strcmp(infile,"")){
     cout <<"file not found" << endl;
     return;
   } 
 
   // if default file not found, try to create it
-  if(!file ){
+  if(bfile ){
     // Normally this would be run on the command line
     cout <<"will run standard hist2workspace example"<<endl;
     gROOT->ProcessLine(".! prepareHistFactory .");
