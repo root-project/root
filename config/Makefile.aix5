@@ -5,7 +5,7 @@
 PLATFORM      = aix5
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O -qmaxmem=-1
+OPTFLAGS      = -O -qmaxmem=-1 -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =

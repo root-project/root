@@ -32,6 +32,8 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooBernstein)
@@ -58,7 +60,7 @@ RooBernstein::RooBernstein(const char* name, const char* title,
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooBernstein::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
@@ -138,7 +140,7 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   Double_t xmin = _x.min(rangeName); Double_t xmax = _x.max(rangeName);
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
   Double_t norm(0) ;

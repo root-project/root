@@ -32,6 +32,8 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
+#include "TError.h"
+
 #if defined(__my_func__)
 #undef __my_func__
 #endif
@@ -66,7 +68,7 @@ RooChebychev::RooChebychev(const char* name, const char* title,
 	std::cerr << "RooChebychev::ctor(" << GetName() <<
 	    ") ERROR: coefficient " << coef->GetName() <<
 	    " is not of type RooAbsReal" << std::endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
@@ -110,7 +112,7 @@ Double_t RooChebychev::evaluate() const
   default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
 	       __LINE__ << "): Higher order Chebychev polynomials currently "
 	       "unimplemented." << std::endl;
-	   assert(false);
+	   R__ASSERT(false);
   }
   return sum;
 }
@@ -127,7 +129,7 @@ Int_t RooChebychev::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 //_____________________________________________________________________________
 Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(1 == code);
+  R__ASSERT(1 == code);
 
   // the full range of the function is mapped to the normalised [-1, 1] range
   const Double_t xminfull(_x.min()), xmaxfull(_x.max());
@@ -138,8 +140,8 @@ Double_t RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) con
 
   // check to see if integral of a subrange is requested
   if (rangeName && 0 != rangeName[0]) {
-    assert(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
-    assert(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
+    R__ASSERT(xminfull <= _x.min(rangeName) && _x.min(rangeName) <= xmaxfull);
+    R__ASSERT(xminfull <= _x.max(rangeName) && _x.max(rangeName) <= xmaxfull);
     minScaled = -1. + 2. * (_x.min(rangeName) - xminfull) / fullRange;
     maxScaled = +1. - 2. * (xmaxfull - _x.max(rangeName)) / fullRange;
   }
@@ -166,7 +168,7 @@ Double_t RooChebychev::evalAnaInt(const Double_t x) const
     default: std::cerr << "In " << __my_func__ << " (" << __FILE__ << ", line " <<
 	     __LINE__ << "): Higher order Chebychev polynomials currently "
 		 "unimplemented." << std::endl;
-	     assert(false);
+	     R__ASSERT(false);
   }
   return sum;
 }

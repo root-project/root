@@ -29,6 +29,8 @@
 #include "RooNumIntConfig.h"
 #include "RooRealVar.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooJeffreysPrior)
@@ -190,7 +192,7 @@ Int_t RooJeffreysPrior::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet&
 //_____________________________________________________________________________
 Double_t RooJeffreysPrior::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
 {
-  assert(code==1 );
+  R__ASSERT(code==1 );
   //cout << "evaluating analytic integral" << endl;
   return 1.;
 }

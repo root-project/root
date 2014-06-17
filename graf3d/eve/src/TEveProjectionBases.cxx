@@ -213,7 +213,7 @@ void TEveProjected::UnRefProjectable(TEveProjectable* assumed_parent, bool notif
 
    static const TEveException eH("TEveProjected::UnRefProjectable ");
 
-   assert(fProjectable == assumed_parent);
+   R__ASSERT(fProjectable == assumed_parent);
 
    if (notifyParent) fProjectable->RemoveProjected(this);
    fProjectable = 0;

@@ -49,6 +49,8 @@
 
 #include "RooMsgService.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooNonCentralChiSquare) 
@@ -201,7 +203,7 @@ Int_t RooNonCentralChiSquare::getAnalyticalIntegral(RooArgSet& allVars, RooArgSe
 //_____________________________________________________________________________
 Double_t RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-   assert(code==1 );
+   R__ASSERT(code==1 );
    //  cout << "evaluating analytic integral" << endl;
    Double_t xmin = x.min(rangeName); 
    Double_t xmax = x.max(rangeName);

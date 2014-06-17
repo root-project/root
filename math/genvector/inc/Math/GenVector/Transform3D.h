@@ -323,7 +323,11 @@ public:
       and another to the end of the desired data (12 past start).
    */
    template<class IT>
+#ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
+#else
+   void GetComponents(IT begin, IT ) const {
+#endif
       for (int i = 0; i <12; ++i) { 
          *begin = fM[i];
          ++begin;  

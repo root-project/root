@@ -5,7 +5,7 @@
 PLATFORM      = ios
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O2
+OPTFLAGS      = -O2 -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =

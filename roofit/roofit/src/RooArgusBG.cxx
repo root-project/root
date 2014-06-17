@@ -33,6 +33,8 @@
 #include "RooMath.h"
 #include "TMath.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooArgusBG)
@@ -102,7 +104,7 @@ Int_t RooArgusBG::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 //_____________________________________________________________________________
 Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  assert(code==1);
+  R__ASSERT(code==1);
   // Formula for integration over m when p=0.5
   static const Double_t pi = atan2(0.0,-1.0);
   Double_t min = (m.min(rangeName) < m0) ? m.min(rangeName) : m0;

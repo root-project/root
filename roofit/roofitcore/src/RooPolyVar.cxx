@@ -41,6 +41,8 @@
 #include "RooMsgService.h"
 #include "TMath.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooPolyVar)
@@ -168,7 +170,7 @@ Double_t RooPolyVar::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // Calculate and return analytical integral over x
 
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
 
   Double_t sum(0) ;
 

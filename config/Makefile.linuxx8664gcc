@@ -6,7 +6,7 @@ PLATFORM      = linux
 
 DEBUGFLAGS    = -g
 #DEBUGFLAGS    = -gstabs
-OPTFLAGS      = -O2
+OPTFLAGS      = -O2 -DNDEBUG
 # Optional compiler options for gcc >= 3.4.0
 #OPTFLAGS      = -O3 -march=opteron
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))

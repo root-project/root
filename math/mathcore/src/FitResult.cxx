@@ -580,7 +580,9 @@ void FitResult::GetConfidenceIntervals(unsigned int n, unsigned int stride1, uns
    for (unsigned int ipoint = 0; ipoint < n; ++ipoint) { 
 
       for (unsigned int kdim = 0; kdim < ndim; ++kdim) { 
+#ifndef NDEBUG
          unsigned int i = ipoint * stride1 + kdim * stride2; 
+#endif
          assert(i < ndim*n); 
          xpoint[kdim] = x[ipoint * stride1 + kdim * stride2]; 
       }

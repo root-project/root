@@ -5,7 +5,7 @@
 PLATFORM      = macosx
 
 DEBUGFLAGS    = -g
-OPTFLAGS      = -O
+OPTFLAGS      = -O -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         = -O0

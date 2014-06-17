@@ -259,7 +259,11 @@ public:
       the desired data, and another to the end (9 past start).
    */
    template<class IT>
+#ifndef NDEBUG
    void SetComponents(IT begin, IT end) {
+#else
+   void SetComponents(IT begin, IT ) {
+#endif
       for (int i = 0; i <9; ++i) { 
          fM[i] = *begin;
          ++begin;  
@@ -272,8 +276,11 @@ public:
       and another to the end of the desired data (9 past start).
    */
    template<class IT>
-
+#ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
+#else
+   void GetComponents(IT begin, IT ) const {
+#endif
       for (int i = 0; i <9; ++i) { 
          *begin = fM[i];
          ++begin; 

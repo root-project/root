@@ -52,6 +52,8 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 
+#include "TError.h"
+
 using namespace std;
 
 ClassImp(RooParametricStepFunction)
@@ -82,7 +84,7 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName() 
 	   << " is not of type RooAbsReal" << endl ;
-      assert(0) ;
+      R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
   }
@@ -130,7 +132,7 @@ Int_t RooParametricStepFunction::getAnalyticalIntegral(RooArgSet& allVars, RooAr
 //_____________________________________________________________________________
 Double_t RooParametricStepFunction::analyticalIntegral(Int_t code, const char* rangeName) const 
 {
-  assert(code==1) ;
+  R__ASSERT(code==1) ;
   
   // Case without range is trivial: p.d.f is by construction normalized 
   if (!rangeName) {

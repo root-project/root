@@ -5,7 +5,7 @@
 PLATFORM      = lynxos
 
 DEBUGFLAGS    = -g
-OPTFLAGS      =
+OPTFLAGS      = -DNDEBUG
 ifeq (debug,$(findstring debug,$(ROOTBUILD)))
 OPT           = $(DEBUGFLAGS)
 NOOPT         =

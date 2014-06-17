@@ -265,7 +265,11 @@ public:
      and another to the end of the desired data (16 past start).
    */
   template<class IT>
+#ifndef NDEBUG
   void GetComponents(IT begin, IT end) const {
+#else
+  void GetComponents(IT begin, IT ) const {
+#endif
      for (int i = 0; i <16; ++i) { 
         *begin = fM[i];
         ++begin;  
