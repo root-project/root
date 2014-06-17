@@ -347,26 +347,39 @@ void TClassEdit::TSplitType::ShortType(std::string &answ, int mode)
 
 
 //______________________________________________________________________________
-ROOT::ESTLType TClassEdit::STLKind(const char *type)
+ROOT::ESTLType TClassEdit::STLKind(const char *type, size_t len)
 {
-//      Converts STL container name to number. vector -> 1, etc..
+   // Converts STL container name to number. vector -> 1, etc..
+   // If len is greater than 0, only look at that many characters in the string.
 
    unsigned char offset = 0;
    if (strncmp(type,"const ",6)==0) { offset += 6; }
    offset += StdLen(type,offset);
 
-   static const char *stls[] =                  //container names
-   {"any","vector","list","deque","map","multimap","set","multiset","bitset",0};
+   //container names
+   static const char *stls[] =
+      { "any", "vector", "list", "deque", "map", "multimap", "set", "multiset", "bitset", 0};
+   static const size_t stllen[] =
+      { 3, 6, 4, 5, 3, 8, 3, 8, 6, 0};
    static const ROOT::ESTLType values[] =
-   {  ROOT::kNotSTL, ROOT::kSTLvector,
-      ROOT::kSTLlist, ROOT::kSTLdeque,
-      ROOT::kSTLmap, ROOT::kSTLmultimap,
-      ROOT::kSTLset, ROOT::kSTLmultiset,
-      ROOT::kSTLbitset, ROOT::kNotSTL
-   };
+      {  ROOT::kNotSTL, ROOT::kSTLvector,
+         ROOT::kSTLlist, ROOT::kSTLdeque,
+         ROOT::kSTLmap, ROOT::kSTLmultimap,
+         ROOT::kSTLset, ROOT::kSTLmultiset,
+         ROOT::kSTLbitset, ROOT::kNotSTL
+      };
 
-//              kind of stl container
-   for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return values[k];}
+   // kind of stl container
+   if (len) {
+      len -= offset;
+      for(int k=1;stls[k];k++) {
+         if (len == stllen[k]) {
+            if (strncmp(type+offset,stls[k],len)==0) return values[k];
+         }
+      }         
+   } else {
+      for(int k=1;stls[k];k++) {if (strcmp(type+offset,stls[k])==0) return values[k];}
+   }
    return ROOT::kNotSTL;
 }
 
@@ -990,7 +1003,21 @@ bool TClassEdit::IsSTLBitset(const char *classname)
 }
 
 //______________________________________________________________________________
-int TClassEdit::IsSTLCont(const char *type,int testAlloc)
+ROOT::ESTLType TClassEdit::IsSTLCont(const char *type)
+{
+   //  type     : type name: vector<list<classA,allocator>,allocator>
+   //  result:    0          : not stl container
+   //             code of container 1=vector,2=list,3=deque,4=map
+   //                     5=multimap,6=set,7=multiset
+
+   const char *pos = strchr(type,'<');
+   if (pos==0) return ROOT::kNotSTL;
+
+   return STLKind(type,pos-type);
+}
+
+//______________________________________________________________________________
+int TClassEdit::IsSTLCont(const char *type, int testAlloc)
 {
    //  type     : type name: vector<list<classA,allocator>,allocator>
    //  testAlloc: if true, we test allocator, if it is not default result is negative
