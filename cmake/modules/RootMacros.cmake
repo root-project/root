@@ -197,7 +197,9 @@ macro(ROOTTEST_COMPILE_MACRO filename)
                     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                     VERBATIM)
 
-  add_dependencies(${compile_target} ${ROOT_LIBRARIES} ${deps})
+  if(ARG_DEPENDS)
+    add_dependencies(${compile_target} ${deps})
+  endif()
 
   set(COMPILE_MACRO_TEST ${COMPILE_MACRO_TEST}-build)
 
@@ -248,7 +250,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set_property(TARGET ${targetname_libgen}
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
-  add_dependencies(${targetname_libgen} ${ROOT_LIBRARIES} ${dictname})
+  add_dependencies(${targetname_libgen} ${dictname})
   
   add_test(NAME ${GENERATE_DICTIONARY_TEST}
            COMMAND make -C ${CMAKE_CURRENT_BINARY_DIR}
@@ -300,7 +302,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
               PROPERTY OUTPUT_NAME ${dictionary}_dictrflx)
 
   add_dependencies(${targetname_libgen}
-                   ${ROOT_LIBRARIES}
+   #                ${ROOT_LIBRARIES}
                    ${targetname_dictgen})
 
   target_link_libraries(${targetname_libgen}
