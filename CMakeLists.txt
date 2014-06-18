@@ -27,46 +27,44 @@ if(insource)
                       "an out-of-source directory.")
 endif()
 
-# Find ROOT.
-find_package(ROOT QUIET COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+# Check, if ROOTSYS is set.
+if(NOT DEFINED ROOTSYS)
+  set(ROOTSYS $ENV{ROOTSYS})
 
-if(NOT ROOT_FOUND)
+  if(NOT DEFINED ROOTSYS)
+    message(FATAL_ERROR "ROOTSYS is not set!")
+  endif()
+endif()
 
-  # ROOTSYS specified as a cmake -D define?
-  if(DEFINED ROOTSYS)
+# If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
+# If ROOT_SOURCE_DIR is not set, search for an installation.
+if(DEFINED ROOT_SOURCE_DIR)
+
+  if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+    get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
+  endif()
+
+  if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+    get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
+  endif()
+
+  set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+else()
+  find_package(ROOT QUIET COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+
+  if(NOT ROOT_FOUND)
     if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
       set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
       find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/
                    COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
-
     else()
-      message(FATAL_ERROR "Cannot find FindROOT.cmake!")
-    endif()
-  else()
-    # Try to retrieve the ROOTSYS path from the current environment.
-    set(ROOTSYS $ENV{ROOTSYS})
-
-    if(DEFINED ROOTSYS)
-      if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
-        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
-        find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/
-                     COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
-      else()
         message(FATAL_ERROR "Cannot find FindROOT.cmake!")
-      endif()
-    else()
-      message(FATAL_ERROR "$ROOTSYS is not set, cannot find ROOT!")
     endif()
   endif()
 
   get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
   get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
-else()
-  if(NOT DEFINED ROOTSYS)
-    set(ROOTSYS $ENV{ROOTSYS})
-    get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
-    get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
-  endif()
+
 endif()
 
 # Detect bitness.
