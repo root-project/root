@@ -52,4 +52,17 @@ namespace ROOT {
 } // end namespace ROOT
 
 
+// make a fake class to auto-load functions from MathMore
+
+namespace ROOT { 
+   namespace Math { 
+      
+      struct MathMoreLibrary { 
+         
+         // adding this method with force the auto-loading of the library
+         static void Load(); 
+      };
+   }
+}
+
 #endif  // ROOT_Math_PdfFuncMathMore

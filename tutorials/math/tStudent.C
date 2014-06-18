@@ -12,15 +12,15 @@
 #include "TSystem.h"
 #include "TLegend.h"
 #include "TLegendEntry.h"
-#ifndef __CINT__
 #include "Math/DistFunc.h"
-#endif
 
 
 void tStudent()
 {
 
-   gSystem->Load("libMathMore");
+   //gSystem->Load("libMathMore");
+   // this is the way to force load of MathMore in Cling
+   ROOT::Math::MathMoreLibrary::Load();
 
    int n=100;
    double a=-5.;
