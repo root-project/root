@@ -653,7 +653,7 @@ const char *GetExePath()
 #ifdef __APPLE__
       exepath = _dyld_get_image_name(0);
 #endif
-#ifdef __linux
+#if defined(__linux) || defined(__linux__)
       char linkname[PATH_MAX];  // /proc/<pid>/exe
       char buf[PATH_MAX];     // exe path name
       pid_t pid;
