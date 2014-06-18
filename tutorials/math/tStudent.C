@@ -20,7 +20,6 @@
 void tStudent()
 {
 
-   gSystem->Load("libMathCore");
    gSystem->Load("libMathMore");
 
    int n=100;
