@@ -16,15 +16,16 @@
 #include <TCanvas.h>
 #include <TF2.h>
 #include <TH1.h>
-#include <TVirtualFitter.h>
+#include <Math/Functor.h>
 #include <TPolyLine3D.h>
 #include <Math/Vector3D.h>
+#include <Fit/Fitter.h>
 
 using namespace ROOT::Math;
 
 
 // define the parameteric line equation 
-void line(double t, double *p, double &x, double &y, double &z) { 
+void line(double t, const double *p, double &x, double &y, double &z) {
    // a parameteric line is define from 6 parameters but 4 are independent
    // x0,y0,z0,z1,y1,z1 which are the coordinates of two points on the line
    // can choose z0 = 0 if line not parallel to x-y plane and z1 = 1; 
@@ -34,7 +35,7 @@ void line(double t, double *p, double &x, double &y, double &z) {
 } 
 
 // calculate distance line-point 
-double distance2(double x,double y,double z, double *p) { 
+double distance2(double x,double y,double z, const double *p) {
    // distance line point is D= | (xp-x0) cross  ux | 
    // where ux is direction of line and x0 is a point in the line (like t = 0) 
    XYZVector xp(x,y,z); 
@@ -47,33 +48,42 @@ double distance2(double x,double y,double z, double *p) {
 bool first = true; 
 
 
-// function to be minimized 
-void SumDistance2(int &, double *, double & sum, double * par, int ) { 
-   // the TGraph must be a global variable
-   TGraph2D * gr = dynamic_cast<TGraph2D*>( (TVirtualFitter::GetFitter())->GetObjectFit() );
-   assert(gr != 0);
-   double * x = gr->GetX();
-   double * y = gr->GetY();
-   double * z = gr->GetZ();
-   int npoints = gr->GetN();
-   sum = 0;
-   for (int i  = 0; i < npoints; ++i) { 
-      double d = distance2(x[i],y[i],z[i],par); 
-      sum += d;
+// function Object to be minimized
+struct SumDistance2 {
+   // the TGraph is a data member of the object
+   TGraph2D * fGraph;
+   
+   SumDistance2(TGraph2D * g) : fGraph(g) {}
+   
+   // implementation of the function to be minimized
+   double operator() (const double * par) {
+      
+      assert(fGraph    != 0);
+      double * x = fGraph->GetX();
+      double * y = fGraph->GetY();
+      double * z = fGraph->GetZ();
+      int npoints = fGraph->GetN();
+      double sum = 0;
+      for (int i  = 0; i < npoints; ++i) {
+         double d = distance2(x[i],y[i],z[i],par);
+         sum += d;
 #ifdef DEBUG
-      if (first) std::cout << "point " << i << "\t" 
-                           << x[i] << "\t" 
-                           << y[i] << "\t" 
-                           << z[i] << "\t" 
-                           << std::sqrt(d) << std::endl; 
+         if (first) std::cout << "point " << i << "\t"
+            << x[i] << "\t"
+            << y[i] << "\t"
+            << z[i] << "\t"
+            << std::sqrt(d) << std::endl;
 #endif
+      }
+      if (first)
+         std::cout << "Total Initial distance square = " << sum << std::endl;
+      first = false;
+      return sum;
    }
-   if (first) 
-      std::cout << "Total sum2 = " << sum << std::endl;
-   first = false;
-}
+   
+};
 
-void line3Dfit()
+Int_t line3Dfit()
 {
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
@@ -107,36 +117,39 @@ void line3Dfit()
    }
    // fit the graph now 
    
-   TVirtualFitter *min = TVirtualFitter::Fitter(0,4);
-   min->SetObjectFit(gr);
-   min->SetFCN(SumDistance2);
+   ROOT::Fit::Fitter  fitter;
    
-  
-   Double_t arglist[10];
-   arglist[0] = 3;
-   min->ExecuteCommand("SET PRINT",arglist,1);
-  
+   
+   // make the functor objet
+   SumDistance2 sdist(gr);
+#ifdef __CINT__
+   ROOT::Math::Functor fcn(&sdist,4,"SumDistance2");
+#else
+   ROOT::Math::Functor fcn(sdist,4);
+#endif
+   // set the function and the initial parameter values
    double pStart[4] = {1,1,1,1};
-   min->SetParameter(0,"x0",pStart[0],0.01,0,0);
-   min->SetParameter(1,"Ax",pStart[1],0.01,0,0);
-   min->SetParameter(2,"y0",pStart[2],0.01,0,0);
-   min->SetParameter(3,"Ay",pStart[3],0.01,0,0);
-    
-   arglist[0] = 1000; // number of function calls 
-   arglist[1] = 0.001; // tolerance 
-   min->ExecuteCommand("MIGRAD",arglist,2);
+   fitter.SetFCN(fcn,pStart);
+   // set step sizes different than default ones (0.3 times parameter values)
+   for (int i = 0; i < 4; ++i) fitter.Config().ParSettings(i).SetStepSize(0.01);
+  
+   bool ok = fitter.FitFCN();
+   if (!ok) {
+      Error("line3Dfit","Line3D Fit failed");
+      return 1;
+   }
+   
+   const ROOT::Fit::FitResult & result = fitter.Result();
+   
+   std::cout << "Total final distance square " << result.MinFcnValue() << std::endl;
+   result.Print(std::cout);
+   
 
-  //if (minos) min->ExecuteCommand("MINOS",arglist,0);
-   int nvpar,nparx; 
-   double amin,edm, errdef;
-   min->GetStats(amin,edm,errdef,nvpar,nparx);
-   min->PrintResults(1,amin);
    gr->Draw("p0");
 
    // get fit parameters
-   double parFit[4];
-   for (int i = 0; i <4; ++i) 
-      parFit[i] = min->GetParameter(i);
+   const double * parFit = result.GetParams();
+
    
    // draw the fitted line
    int n = 1000;
@@ -162,9 +175,9 @@ void line3Dfit()
    }
    l0->SetLineColor(kBlue);
    l0->Draw("same");
-   
+   return 0;
 }
 
 int main() { 
-   line3Dfit();
+   return line3Dfit();
 }
