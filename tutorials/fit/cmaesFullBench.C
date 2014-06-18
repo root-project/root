@@ -60,10 +60,14 @@ public:
 	else ++_ifails;
 	_fdiff.push_back(fdiff);
 	_cputime_diff.push_back(_cputime.at(i)-stats._cputime.at(i));
+	_cputime_ratio.push_back(_cputime.at(i)/stats._cputime.at(i));
 	_budget_diff.push_back(_budget.at(i)-stats._budget.at(i));
+	_budget_ratio.push_back(_budget.at(i)/stats._budget.at(i));
       }
     _cputime_diff_avg = std::accumulate(_cputime_diff.begin(),_cputime_diff.end(),0.0) / static_cast<double>(_cputime_diff.size());
+    _cputime_ratio_avg = std::accumulate(_cputime_ratio.begin(),_cputime_ratio.end(),0.0) / static_cast<double>(_cputime_ratio.size());
     _budget_diff_avg = std::accumulate(_budget_diff.begin(),_budget_diff.end(),0.0) / static_cast<double>(_budget_diff.size());
+        _budget_ratio_avg = std::accumulate(_budget_ratio.begin(),_budget_ratio.end(),0.0) / static_cast<double>(_budget_ratio.size());
   }
 
   std::ostream& print(std::ostream &out) const
@@ -74,10 +78,10 @@ public:
 
   std::ostream& print_diff(std::ostream &out) const
   {
-    out << _name << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / budget_diff_avg=" << _budget_diff_avg << std::endl;
+    out << _name << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / cpu_ratio_avg=" << _cputime_ratio_avg << " / budget_diff_avg=" << _budget_diff_avg << " / budget_ratio_avg=" << _budget_ratio_avg << std::endl;
     for (size_t i=0;i<_fdiff.size();i++)
       {
-	out << "#" << i << " - " << _name << ": " << "fdiff=" << _fdiff.at(i) << " / cputime_diff=" << _cputime_diff.at(i) << " / budget_diff=" << _budget_diff.at(i) << std::endl;
+	out << "#" << i << " - " << _name << ": " << "fdiff=" << _fdiff.at(i) << " / cputime_diff=" << _cputime_diff.at(i) << " / cputime_ratio=" << _cputime_ratio.at(i) << " / budget_diff=" << _budget_diff.at(i) << " / budget_ratio=" << _budget_ratio.at(i) << std::endl;
       }
     return out;
   }
@@ -96,9 +100,13 @@ public:
   int _found = 0;
   std::vector<double> _fdiff;
   std::vector<double> _cputime_diff;
+  std::vector<double> _cputime_ratio;
   std::vector<double> _budget_diff;
+  std::vector<double> _budget_ratio;
   double _cputime_diff_avg = 0.0;
+  double _cputime_ratio_avg = 1.0;
   double _budget_diff_avg = 0.0;
+  double _budget_ratio_avg = 1.0;
   int _isuccs = 0;
   int _ifails = 0;
 };
