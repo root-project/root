@@ -14,7 +14,7 @@
 #include "TStopwatch.h"
 #include "TSystem.h"
 #include "TRandom3.h"
-#include "TVirtualFitter.h"
+#include "Math/MinimizerOptions.h"
 #include "TPaveLabel.h"
 #include "TStyle.h"
 #include "TMath.h"
@@ -43,7 +43,7 @@ Double_t fitFunction(Double_t *x, Double_t *par) {
   return background(x,par) + lorentzianPeak(x,&par[3]);
 }
 
-void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {   
+bool DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    printf("\n*********************************************************************************\n");
    printf("\t %s \n",fitter);
    printf("*********************************************************************************\n");
@@ -51,26 +51,37 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    gRandom = new TRandom3();
    TStopwatch timer;
    //   timer.Start();
-   TVirtualFitter::SetDefaultFitter(fitter);
-   //ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(fitter);
    pad->SetGrid();
    pad->SetLogy();
    fitFcn->SetParameters(1,1,1,6,.03,1);
    fitFcn->Update();
    std::string title = std::string(fitter) + " fit bench";
    histo = new TH1D(fitter,title.c_str(),200,0,3);
-         
+
+   TString fitterType(fitter);
+   
    timer.Start();
+   bool ok = true;
+   // fill histogram many times
+   // every time increase its statistics and re-use previous fitted
+   // parameter values as starting point
    for (Int_t pass=0;pass<npass;pass++) {
       if (pass%100 == 0) printf("pass : %d\n",pass);
-      fitFcn->SetParameters(1,1,1,6,.03,1);
+      else printf(".");
+      if (pass == 0)fitFcn->SetParameters(1,1,1,6,.03,1);
       for (Int_t i=0;i<5000;i++) {
          histo->Fill(fitFcn->GetRandom());
       }
-      histo->Fit(fitFcn,"Q0");
+      int iret = histo->Fit(fitFcn,"Q0");
+      ok &= (iret == 0);
+      if (iret!=0) Error("DoFit","Fit pass %d failed !",pass);
    }
-
-   histo->Fit(fitFcn,"EV");
+   // do last fit computing Minos Errors (except for Fumili)
+   if (!fitterType.Contains("Fumili"))  // Fumili does not implement Error options (MINOS)
+      histo->Fit(fitFcn,"E");
+   else
+      histo->Fit(fitFcn,"");
    timer.Stop();
 
    (histo->GetFunction("fitFcn"))->SetLineColor(kRed+3);
@@ -84,9 +95,10 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    p->SetTextColor(kRed+3);
    p->SetFillColor(kYellow-8);
    pad->Update();
+   return ok;
 }
 
-void minuit2FitBench(Int_t npass=20) {
+int minuit2FitBench(Int_t npass=20) {
    TH1::AddDirectory(kFALSE);
    TCanvas *c1 = new TCanvas("FitBench","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
@@ -96,22 +108,24 @@ void minuit2FitBench(Int_t npass=20) {
    fitFcn->SetNpx(200);
    gStyle->SetOptFit();
    gStyle->SetStatY(0.6);
-    
+   
+   bool ok = true;
    //with Minuit
    c1->cd(1);
-   DoFit("Minuit",gPad,npass);
+   ok &= DoFit("Minuit",gPad,npass);
    
    //with Fumili
    c1->cd(2);
-   DoFit("Fumili",gPad,npass);
+   ok &= DoFit("Fumili",gPad,npass);
 
    //with Minuit2
    c1->cd(3);
-   DoFit("Minuit2",gPad,npass);
+   ok &= DoFit("Minuit2",gPad,npass);
    
    //with Fumili2
    c1->cd(4);
-   DoFit("Fumili2",gPad,npass);
+   ok &= DoFit("Fumili2",gPad,npass);
    
    c1->SaveAs("FitBench.root");
+   return (ok) ? 0 : 1;
 }
