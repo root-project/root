@@ -8,8 +8,8 @@ TARFILE=root_v$ROOTVERS.$TYPE.tar
 # generate etc/gitinfo.txt
 build/unix/gitinfo.sh
 
-git archive -v -o ../$TARFILE --prefix=root/ master
-#git archive -v -o ../$TARFILE --prefix=root/ $CURVERS
+#git archive -v -o ../$TARFILE --prefix=root/ master
+git archive -v -o ../$TARFILE --prefix=root/ $CURVERS
 
 mkdir -p etc/root/etc
 cp etc/gitinfo.txt etc/root/etc/
