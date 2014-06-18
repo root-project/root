@@ -102,7 +102,7 @@ namespace ROOT
       /// set the limits of an already existing variable 
       virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper); 
       /// fix an existing variable
-      //virtual bool FixVariable(unsigned int ivar);
+      virtual bool FixVariable(unsigned int ivar);
       /// release an existing variable
       //virtual bool ReleaseVariable(unsigned int ivar);
       /// query if an existing variable is fixed (i.e. considered constant in the minimization)
