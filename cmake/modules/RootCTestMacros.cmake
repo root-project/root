@@ -74,7 +74,8 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
   find_program(realexec ${ARG_EXEC}
                HINTS $ENV{PATH}
-               PATH ${CMAKE_CURRENT_BINARY_DIR})
+               PATH ${CMAKE_CURRENT_BINARY_DIR}
+               PATH ${CMAKE_CURRENT_SOURCE_DIR})
   
   set(command ${realexec})
 
