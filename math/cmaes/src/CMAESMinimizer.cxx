@@ -211,6 +211,7 @@ namespace ROOT
 
     bool TCMAESMinimizer::SetFixedVariable(unsigned int ivar, const std::string &name, double val)
     {
+      SetVariable(ivar,name,val,0.0);
       fFixedVariables.insert(std::pair<int,double>(ivar,val));
     }
     
@@ -280,6 +281,11 @@ namespace ROOT
       return true;
     }
 
+    bool TCMAESMinimizer::FixVariable(unsigned int ivar)
+    {
+      fFixedVariables.insert(std::pair<int,double>(ivar,fInitialX.at(ivar))); // XXX: sets initial variable.
+    }
+    
     bool TCMAESMinimizer::GetVariableSettings(unsigned int ivar, ROOT::Fit::ParameterSettings &varObj) const
     {
       if (ivar >= fInitialX.size())
@@ -332,7 +338,7 @@ namespace ROOT
       }
 
       ROOT::Math::IOptions *cmaesOpt = ROOT::Math::MinimizerOptions::FindDefault("cmaes");
-      std::cerr << "cmaesOpt ptr: " << cmaesOpt << std::endl;
+      //std::cerr << "cmaesOpt ptr: " << cmaesOpt << std::endl;
       if (cmaesOpt)
 	cmaesOpt->Print(std::cout);
       
