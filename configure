@@ -6228,6 +6228,9 @@ if test "x$enable_vc" = "xyes"; then
     case $arch in
 	macos*)
 	    ;;
+	linuxppc*)
+	    enable_vc="no"
+	    ;;
 	*)
 	    as=`${altcxx} -print-prog-name=as`
             as_version=`${as} --version|head -n1|sed -e 's/^.*)//' -e 's/^.* \([0-9]\+\.[0-9]\+\.[0-9]\+\).*$/\1/'|awk -F. '{print ($1*1000+$2)*1000+$3}'`
