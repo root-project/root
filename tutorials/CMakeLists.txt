@@ -164,7 +164,9 @@ set(histfactory-example-depends tutorial-histfactory-makeExample)
 
 #--With ACLiC---------------------------------------------------------
 set(fit-combinedFit-aclic +)
+set(fit-line3Dfit-aclic +) 
 set(fit-TwoHistoFit2D-aclic +)
+set(math-testUnfold4-aclic +)
 
 #---Loop over all tutorials and define the corresponding test---------
 
