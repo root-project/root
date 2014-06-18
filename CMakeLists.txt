@@ -39,33 +39,18 @@ endif()
 # If ROOT_SOURCE_DIR is set, roottest is built as part of the root build.
 # If ROOT_SOURCE_DIR is not set, search for an installation.
 if(DEFINED ROOT_SOURCE_DIR)
-
-  if(NOT DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-    get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
-  endif()
-
-  if(NOT DEFINED CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-    get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
-  endif()
-
+  get_filename_component(ROOT_INCLUDE_DIR "${ROOTSYS}/include" ABSOLUTE)
+  set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
   set(ROOT_LIBRARIES Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
+
 else()
-  find_package(ROOT QUIET COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
 
-  if(NOT ROOT_FOUND)
-    if(EXISTS "${ROOTSYS}/etc/cmake/FindROOT.cmake")
-      set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${ROOTSYS}/etc/cmake)
-      find_package(ROOT PATHS ${ROOTSYS}/etc/cmake/
-                   COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore)
-    else()
-        message(FATAL_ERROR "Cannot find FindROOT.cmake!")
-    endif()
-  endif()
-
-  get_filename_component(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${ROOTSYS}/bin" ABSOLUTE)
-  get_filename_component(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${ROOTSYS}/lib" ABSOLUTE)
-
+  find_package(ROOT REQUIRED COMPONENTS Core RIO Net Hist Gpad Tree Rint Matrix MathCore
+                             HINTS ${ROOTSYS}/etc/cmake)
 endif()
+
+get_filename_component(ROOT_BINARY_DIR  "${ROOTSYS}/bin" ABSOLUTE)
+get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
 # Detect bitness.
 if(CMAKE_SYSTEM_PROCESSOR MATCHES amd64.*|x86_64.*)
@@ -77,9 +62,9 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES i686.*|i386.*|x86.*)
 endif()
 
 # Setup environment.
-set(ROOTTEST_ENV_PATH ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-set(ROOTTEST_ENV_PYTHONPATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-set(ROOTTEST_ENV_LIBRARYPATH ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set(ROOTTEST_ENV_PATH ${ROOT_BINARY_DIR})
+set(ROOTTEST_ENV_PYTHONPATH ${ROOT_LIBRARY_DIR})
+set(ROOTTEST_ENV_LIBRARYPATH ${ROOT_LIBRARY_DIR})
 
 # Resolve symbolic links for the ROOTTEST_DIR variable.
 get_filename_component(ROOTTEST_DIR ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
@@ -111,5 +96,3 @@ include(RootCTestMacros)
 
 message("-- Scanning subdirectories for tests...")
 ROOTTEST_FIND_TESTDIRS()
-
-message("ROOT LIBS: ${ROOT_LIBRARIES}")
