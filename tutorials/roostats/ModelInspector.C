@@ -35,6 +35,7 @@
 #include "TGLayout.h"
 #include "TF1.h"
 #include "TMath.h"
+#include "TSystem.h"
 #include "TCanvas.h"
 #include "TGTextEntry.h"
 #include "TGLabel.h"
@@ -516,6 +517,10 @@ void ModelInspector(const char* infile = "",
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
+#ifdef _WIN32
+         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
+         return;
+#endif
          // Normally this would be run on the command line
          cout <<"will run standard hist2workspace example"<<endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
