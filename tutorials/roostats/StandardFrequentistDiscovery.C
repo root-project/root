@@ -77,7 +77,7 @@ double StandardFrequentistDiscovery(
    ////////////////////////////////////////////////////////////
    const char* filename = "";
    if (!strcmp(infile,"")) {
-      filename = "results/example_combined_GaussExample_model.root";
+      filename = "results/example_channel1_GammaExample_model.root";
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
