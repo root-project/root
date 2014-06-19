@@ -1,3 +1,16 @@
+#include "TCanvas.h"
+#include "TFrame.h"
+#include "TBenchmark.h"
+#include "TString.h"
+#include "TF1.h"
+#include "TH1.h"
+#include "TFile.h"
+#include "TROOT.h"
+#include "TError.h"
+#include "TInterpreter.h"
+#include "TSystem.h"
+#include "TPaveText.h"
+
 void fit1() {
    //Simple fitting example (1-d histogram with an interpreted function)
    //To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
@@ -18,37 +31,38 @@ void fit1() {
    TString dir = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
    dir.ReplaceAll("fit1.C","");
    dir.ReplaceAll("/./","/");
-   TFile *fill = TFile::Open("fillrandom.root");
-   if (!fill) {
+   TFile *file = TFile::Open("fillrandom.root");
+   if (!file) {
       gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C",dir.Data()));
-      fill = TFile::Open("fillrandom.root");
-      if (!fill) return;
+      file = TFile::Open("fillrandom.root");
+      if (!file) return;
    }
       
    //
    // The function "ls()" lists the directory contents of this file
    //
-   fill->ls();
+   file->ls();
 
    //
-   // Get object "sqroot" from the file.
+   // Get object "sqroot" from the file. Undefined objects are searched
+   // for using gROOT->FindObject("xxx"), e.g.:
+   // TF1 *sqroot = (TF1*) gROOT.FindObject("sqroot")
    //
-   TF1 *sqroot = nullptr;
-   fill->GetObject("sqroot",sqroot);
+   TF1 * sqroot = 0;
+   file->GetObject("sqroot",sqroot);
    if (!sqroot){
-      Error("","Cannot find object sqroot of type TF1\n");
+      Error("fit1.C","Cannot find object sqroot of type TF1\n");
       return;
    }
-
    sqroot->Print();
 
    //
-   // Now fit histogram h1f with the function sqroot
+   // Now get and fit histogram h1f with the function sqroot
    //
-   TH1F* h1f = nullptr;
-   fill->GetObject("h1f",h1f);
+   TH1F* h1f = 0;
+   file->GetObject("h1f",h1f);
    if (!h1f){
-      Error("","Cannot find object h1f of type TH1F\n");
+      Error("fit1.C","Cannot find object h1f of type TH1F\n");
       return;
    }
    h1f->SetFillColor(45);
@@ -57,10 +71,10 @@ void fit1() {
    // We now annotate the picture by creating a PaveText object
    // and displaying the list of commands in this macro
    //
-   auto fitlabel = new TPaveText(0.6,0.3,0.9,0.80,"NDC");
+   TPaveText * fitlabel = new TPaveText(0.6,0.3,0.9,0.80,"NDC");
    fitlabel->SetTextAlign(12);
    fitlabel->SetFillColor(42);
-   fitlabel->ReadFile(Form("%sfit1_C.C",dir.Data()));
+   fitlabel->ReadFile(Form("%sfit1_C.txt",dir.Data()));
    fitlabel->Draw();
    c1->Update();
    gBenchmark->Show("fit1");
