@@ -12,6 +12,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
+// force compilation with ACLIC for an unknown error in RooStats::GetAsTTree in CINT
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   TString macroFileName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   gSystem->CompileMacro(macroFileName, "k");
+   rs101_limitexample();
+}
+#else
+
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
 #endif
@@ -119,7 +128,7 @@ void rs101_limitexample()
   FeldmanCousins fc(*data, modelConfig);
   fc.UseAdaptiveSampling(true);
   fc.FluctuateNumDataEntries(false); // number counting analysis: dataset always has 1 entry with N events observed
-  fc.SetNBins(100); // number of points to test per parameter
+  fc.SetNBins(30); // number of points to test per parameter
   fc.SetTestSize(.05);
   //  fc.SaveBeltToFile(true); // optional
   ConfInterval* fcint = NULL;
@@ -222,3 +231,6 @@ void rs101_limitexample()
   t.Stop();
   t.Print();
 }
+#endif
+
+

@@ -1,12 +1,6 @@
 //Example of first few Legendre Polynomials
 //Draws a graph
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("Legendre.C", "k");
-   Legendre();
-}
-#else
 
 #include "TMath.h"
 #include "TF1.h"
@@ -56,6 +50,6 @@ void Legendre()
 
 }
 
-#endif
+
 
 

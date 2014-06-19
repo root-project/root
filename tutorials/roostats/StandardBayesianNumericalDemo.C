@@ -117,6 +117,29 @@ void StandardBayesianNumericalDemo(const char* infile = "",
     cout << "data or ModelConfig was not found" <<endl;
     return;
   }
+   
+  // do first a fit to the model to get an idea of poi values
+   RooAbsPdf * model = mc->GetPdf();
+   RooFitResult * fitres = model->fitTo(*data, RooFit::PrintLevel(-1), RooFit::Save(1));
+   fitres->Print();
+   
+   RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
+   double poiMin = poi->getVal()-100*poi->getError();
+   double poiMax = poi->getVal()+100*poi->getError();
+   poi->setMin( TMath::Max(poiMin, poi->getMin() ) );
+   poi->setMax( TMath::Min(poiMax, poi->getMax() ) );
+   
+   // set also the nuisance parameters limits
+   RooArgList nuisParams(*mc->GetNuisanceParameters());
+   for (int i = 0; i < nuisParams.getSize(); ++i) {
+      RooRealVar & v = (RooRealVar & ) nuisParams[i];
+      v.setMin(TMath::Max(v.getVal()-10*v.getError(), v.getMin() ) );+
+      v.setMax(TMath::Min(v.getVal()+10*v.getError(), v.getMax() ) );
+   }
+   
+   if (maxPOI != -999 &&  maxPOI > poi->getMin())
+      poi->setMax(maxPOI);
+   
 
   /////////////////////////////////////////////
   // create and use the BayesianCalculator
@@ -149,7 +172,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
      bayesianCalc.SetNumIters(nToys); // set number of ietrations (i.e. number of toys for MC integrations)
   }
 
-  // in case of toyMC make a nnuisance pdf
+  // in case of toyMC make a nuisance pdf
   if (integrationType.Contains("TOYMC") ) { 
     RooAbsPdf * nuisPdf = RooStats::MakeNuisancePdf(*mc, "nuisance_pdf");
     cout << "using TOYMC integration: make nuisance pdf from the model " << std::endl;
@@ -162,10 +185,7 @@ void StandardBayesianNumericalDemo(const char* infile = "",
   if (scanPosterior)   
      bayesianCalc.SetScanOfPosterior(nScanPoints);
 
-  RooRealVar* poi = (RooRealVar*) mc->GetParametersOfInterest()->first();
-  if (maxPOI != -999 &&  maxPOI > poi->getMin())
-    poi->setMax(maxPOI);
-
+ 
 
   SimpleInterval* interval = bayesianCalc.GetInterval();
 

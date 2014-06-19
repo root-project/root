@@ -28,7 +28,16 @@
 //  - a button to make the log likelihood plots
 //  - a dialog to open the desired file
 //  - ability to see teh signal and background contributions?
-//   
+//
+
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   TString macroFileName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   gSystem->CompileMacro(macroFileName, "k");
+   ModelInspector();
+}
+#else
+
    
 #include "TGButton.h"
 #include "TRootEmbeddedCanvas.h"
@@ -570,3 +579,4 @@ void ModelInspector(const char* infile = "",
   new ModelInspectorGUI(w,mc,data);
 }
 
+#endif

@@ -6,6 +6,14 @@
 // generation of a 2D distribution with unuran and Foam
 //_____________________________________________________________________________
 
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+   TString macroFileName = gSystem->UnixPathName(gInterpreter->GetCurrentMacroName());
+   gSystem->CompileMacro(macroFileName, "k");
+   unuranFoamTest();
+}
+#else
+
 #include "TH2.h"
 #include "TF2.h"
 #include "TSystem.h"
@@ -29,7 +37,7 @@ Double_t sqr(Double_t x){return x*x;};
 //_____________________________________________________________________________
 
 
-Double_t Camel2(Int_t nDim, Double_t *Xarg){
+Double_t Camel2(Int_t, Double_t *Xarg){
 // 2-dimensional distribution for Foam, normalized to one (within 1e-5)
   Double_t x=Xarg[0];
   Double_t y=Xarg[1];
@@ -187,3 +195,5 @@ Int_t unuranFoamTest(){
 
   return 0;
 }  
+
+#endif

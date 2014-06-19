@@ -10,12 +10,6 @@
 //
 // Author: Magdalena Slawinska
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
-{
-   gSystem->CompileMacro("LegendreAssoc.C", "k");
-   LegendreAssoc();
-}
-#else
 
 #include "TMath.h"
 #include "TF1.h"
@@ -122,5 +116,4 @@ void LegendreAssoc()
   
 }
 
-#endif
 
