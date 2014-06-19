@@ -63,7 +63,7 @@ public:
 	else ++_ifails;
 	_fdiff.push_back(fdiff);
 	_cputime_diff.push_back(_cputime.at(i)-stats._cputime.at(i));
-	_cputime_ratio.push_back(_cputime.at(i)/stats._cputime.at(i));
+	_cputime_ratio.push_back((_cputime.at(i)+1)/(stats._cputime.at(i)+1));
 	_budget_diff.push_back(_budget.at(i)-stats._budget.at(i));
 	_budget_ratio.push_back(_budget.at(i)/stats._budget.at(i));
       }
@@ -381,23 +381,12 @@ public:
 	//opts.SetIntValue("lambda",100);
 	//opts.SetNamedValue("fplot","fit2a.dat");
 	
-	const Int_t npar = 15;
-	Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
-	TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
-	f2->SetParameters(f2params);
-	
 	//Fit h2 with original function f2
-	Float_t ratio = 4*_nentries/100000;
-	f2params[ 0] *= ratio;
-	f2params[ 5] *= ratio;
-	f2params[10] *= ratio;
-	f2->SetParameters(f2params);
 	TStopwatch timer;
 	timer.Start();
 	TFitResultPtr r = _h2->Fit("f2","SN0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
-	delete f2;
 	expstats stats("fit2a");
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	return stats;
@@ -406,8 +395,7 @@ public:
 
   ~fit2a_e()
   {
-    if (_h2)
-      delete _h2;
+    Cleanup();
   }
   
   static Double_t g2(Double_t *x, Double_t *par) {
@@ -426,8 +414,17 @@ public:
 
   virtual void Setup()
   {
+    const Int_t npar = 15;
+    Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
+    _f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
+    _f2->SetParameters(f2params);
     _h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
     _h2->FillRandom("f2",_nentries);
+    Float_t ratio = 4*_nentries/100000;
+    f2params[ 0] *= ratio;
+    f2params[ 5] *= ratio;
+    f2params[10] *= ratio;
+    _f2->SetParameters(f2params);
   }
 
   virtual void Cleanup()
@@ -435,9 +432,13 @@ public:
     if (_h2)
       delete _h2;
     _h2 = nullptr;
+    if (_f2)
+      delete _f2;
+    _f2 = nullptr;
   }
 
   int _nentries = 100000;
+  TF2 *_f2 = nullptr;
   TH2F *_h2 = nullptr;
 };
 fit2a_e gfit2a;
@@ -864,7 +865,7 @@ public:
 };
 fit2_e gfit2;
 
-void run_experiments()
+void run_experiments(const int &n=1)
 {
   std::vector<expstats> acmaes_stats;
   std::vector<expstats> minuit2_stats;
@@ -880,11 +881,13 @@ void run_experiments()
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
   while(mit!=mexperiments.end())
   {
-    //dynamic_cast<TBackCompFitter*>(TVirtualFitter::GetFitter())->GetMinimizer()->Clear();
-    (*mit).second->Setup();
-    acmaes_stats.push_back((*mit).second->_ef("acmaes"));
-    minuit2_stats.push_back((*mit).second->_ef("Minuit2"));
-    (*mit).second->Cleanup();
+    for (int i=0;i<n;i++)
+    {
+      (*mit).second->Setup();
+      acmaes_stats.push_back((*mit).second->_ef("acmaes"));
+      minuit2_stats.push_back((*mit).second->_ef("Minuit2"));
+      (*mit).second->Cleanup();
+    }
     ++mit;
   }
   
