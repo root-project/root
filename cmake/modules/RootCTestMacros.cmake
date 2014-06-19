@@ -86,7 +86,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;TEST_OUTREF_CINTSPECIFIC"
                             "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "TESTOWNER;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;DEPENDS;OPTS;LABELS" ${ARGN})
+                            "TESTOWNER;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
 
   # Setup macro test.
   if(ARG_MACRO)
@@ -204,6 +204,14 @@ function(ROOTTEST_ADD_TEST test)
     set(depends ${depends} ${deplist})
   endif(ARG_DEPENDS)
 
+  if(ARG_FAILREGEX)
+    set(failregex FAILREGEX ${ARG_FAILREGEX})
+  endif()
+
+  if(ARG_PASSREGEX)
+    set(passregex PASSREGEX ${ARG_PASSREGEX})
+  endif()
+
   string(REPLACE ";" ":" _path "${ROOTTEST_ENV_PATH}")
   string(REPLACE ";" ":" _pythonpath "${ROOTTEST_ENV_PYTHONPATH}")
   string(REPLACE ";" ":" _librarypath "${ROOTTEST_ENV_LIBRARYPATH}")
@@ -240,6 +248,8 @@ function(ROOTTEST_ADD_TEST test)
                         ${passrc}
                         ${precmd}
                         ${postcmd}
+                        ${failregex}
+                        ${passregex}
                         DEPENDS ${depends})
 
 endfunction(ROOTTEST_ADD_TEST)
