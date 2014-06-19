@@ -566,100 +566,151 @@ public:
 };
 fit2dhist_e gfit2dhist;
 
-/*ExpFunc experiment_fit2dhist_indep = [](const std::string &fitter)
+/*- combined_fit -*/
+class combined_fit_e : public experiment
 {
-  expstats stats("fit2dhist");
-  int nbx1 = 50;
-  int nby1 = 50;
-  int nbx2 = 50;
-  int nby2 = 50;
-  double xlow1 = 0.; 
-  double ylow1 = 0.; 
-  double xup1 = 10.; 
-  double yup1 = 10.; 
-  double xlow2 = 5.; 
-  double ylow2 = 5.; 
-  double xup2 = 20.; 
-  double yup2 = 20.; 
-
-  TH2D *h1 = new TH2D("h1","core",nbx1,xlow1,xup1,nby1,ylow1,yup1);
-  TH2D *h2 = new TH2D("h2","tails",nbx2,xlow2,xup2,nby2,ylow2,yup2);
-
-  double iniParams[10] = { 100, 6., 2., 7., 3, 100, 12., 3., 11., 2. };
-  // create fit function
-  TF2 * func = new TF2("func",my2Dfunc,xlow2,xup2,ylow2,yup2, 10);
-  func->SetParameters(iniParams);
-
-  // fill Histos
-  int n1 = 1000000;
-  int n2 = 1000000; 
-  FillHisto2(h1,n1,iniParams);
-  FillHisto2(h2,n2,iniParams);
-
-  // scale histograms to same heights (for fitting)
-  double dx1 = (xup1-xlow1)/double(nbx1); 
-  double dy1 = (yup1-ylow1)/double(nby1);
-  double dx2 = (xup2-xlow2)/double(nbx2);
-  double dy2 = (yup2-ylow2)/double(nby2);
-  // scale histo 2 to scale of 1 
-  h2->Sumw2();
-  h2->Scale(  ( double(n1) * dx1 * dy1 )  / ( double(n2) * dx2 * dy2 ) );
-
-  TStopwatch timer;
-  timer.Start();
-  TVirtualFitter::SetDefaultFitter(fitter.c_str());
-  TFitResultPtr r1 = h1->Fit(func,"S0");
-  timer.Stop();
-  Double_t cputime1 = timer.CpuTime();
-  TStopwatch timer2;
-  timer2.Start();
-  TFitResultPtr r2 = h2->Fit(func,"S0");
-  timer2.Stop();
-  Double_t cputime2 = timer2.CpuTime();
-  
-  stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
-  stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
-  delete h1;
-  delete h2;
-  return stats; 
-  };*/
-
-// definition of shared parameter
-// background function 
-int iparB[2] = { 0,      // exp amplitude in B histo
-                 2    // exp common parameter 
-};
-
-// signal + background function 
-int iparSB[5] = { 1, // exp amplitude in S+B histo
-                  2, // exp common parameter
-                  3, // gaussian amplitude
-                  4, // gaussian mean
-                  5  // gaussian sigma
-};
-
-struct GlobalChi2 { 
-   GlobalChi2(  ROOT::Math::IMultiGenFunction & f1,  
-                ROOT::Math::IMultiGenFunction & f2) : 
+public:
+  struct GlobalChi2 { 
+    GlobalChi2(  ROOT::Math::IMultiGenFunction & f1,  
+		 ROOT::Math::IMultiGenFunction & f2) : 
       fChi2_1(&f1), fChi2_2(&f2) {}
+      
+      // parameter vector is first background (in common 1 and 2) 
+      // and then is signal (only in 2)
+      double operator() (const double *par) const {
+	int iparB[2] = {0,2};
+	int iparSB[5] = {1,2,3,4,5};
+	double p1[2];
+	for (int i = 0; i < 2; ++i) p1[i] = par[iparB[i] ];
+	
+	double p2[5]; 
+	for (int i = 0; i < 5; ++i) p2[i] = par[iparSB[i] ];
+	
+	return (*fChi2_1)(p1) + (*fChi2_2)(p2);
+      } 
+      
+    const  ROOT::Math::IMultiGenFunction * fChi2_1;
+    const  ROOT::Math::IMultiGenFunction * fChi2_2;
+  };
+  
+  combined_fit_e()
+    :experiment("combined_fit")
+  {
+    _ef = [this](const std::string &fitter)
+      {
+	expstats stats("combined");
 
-   // parameter vector is first background (in common 1 and 2) 
-   // and then is signal (only in 2)
-   double operator() (const double *par) const {
-      double p1[2];
-      for (int i = 0; i < 2; ++i) p1[i] = par[iparB[i] ];
+	// perform now global fit
+	TF1 * fSB = new TF1("fSB","expo + gaus(2)",0,100);
+	
+	ROOT::Math::WrappedMultiTF1 wfB(*_fB,1);
+	ROOT::Math::WrappedMultiTF1 wfSB(*fSB,1);
+	
+	ROOT::Fit::DataOptions opt; 
+	ROOT::Fit::DataRange rangeB; 
+	// set the data range
+	rangeB.SetRange(10,90);
+	ROOT::Fit::BinData dataB(opt,rangeB); 
+	ROOT::Fit::FillData(dataB, _hB);
+	
+	ROOT::Fit::DataRange rangeSB; 
+	rangeSB.SetRange(10,50);
+	ROOT::Fit::BinData dataSB(opt,rangeSB); 
+	ROOT::Fit::FillData(dataSB, _hSB);
+	
+	ROOT::Fit::Chi2Function chi2_B(dataB, wfB);
+	ROOT::Fit::Chi2Function chi2_SB(dataSB, wfSB);
+	
+	GlobalChi2 globalChi2(chi2_B, chi2_SB);
+	
+	ROOT::Fit::Fitter rfitter;
+	
+	const int Npar = 6; 
+	double par0[Npar] = { 5,5,-0.1,100, 30,10};
+	
+	// create before the parameter settings in order to fix or set range on them
+	rfitter.Config().SetParamsSettings(6,par0);
+	// fix 5-th parameter  
+	rfitter.Config().ParSettings(4).Fix();
+	// set limits on the third and 4-th parameter
+	rfitter.Config().ParSettings(2).SetLimits(-10,-1.E-4);
+	rfitter.Config().ParSettings(3).SetLimits(0,10000);
+	rfitter.Config().ParSettings(3).SetStepSize(5);
+	
+	rfitter.Config().MinimizerOptions().SetPrintLevel(0);
+	if (fitter == "Minuit2")
+	  rfitter.Config().SetMinimizer("Minuit2","Migrad"); 
+	else if (fitter.find("cmaes")!=std::string::npos)
+	  rfitter.Config().SetMinimizer("cmaes","acmaes");
+	
+	// fit FCN function directly 
+	// (specify optionally data size and flag to indicate that is a chi2 fit)
+	TStopwatch timer;
+	timer.Start();
+	rfitter.FitFCN(6,globalChi2,0,dataB.Size()+dataSB.Size(),true);
+	timer.Stop();
+	Double_t cputime = timer.CpuTime();
+	ROOT::Fit::FitResult r = rfitter.Result();
+	//result.Print(std::cout);
+	
+	delete fSB;
+	
+	stats.add_exp(r.Status()==0,r.MinFcnValue(),r.Parameters(),cputime,r.NCalls());
+	return stats;
+      };
+  }
 
-      double p2[5]; 
-      for (int i = 0; i < 5; ++i) p2[i] = par[iparSB[i] ];
+  ~combined_fit_e()
+  {
+    Cleanup();
+  }
 
-      return (*fChi2_1)(p1) + (*fChi2_2)(p2);
-   } 
+  // definition of shared parameter
+  // background function 
+  /*constexpr static int iparB[2] = { 0,      // exp amplitude in B histo
+			 2    // exp common parameter 
+			 };*/
+  
+  // signal + background function 
+  /*constexpr static int iparSB[5] = { 1, // exp amplitude in S+B histo
+			  2, // exp common parameter
+			  3, // gaussian amplitude
+			  4, // gaussian mean
+			  5  // gaussian sigma
+			  };*/
+  virtual void Setup()
+  {
+    _hB = new TH1D("hB","histo B",100,0,100);
+    _hSB = new TH1D("hSB","histo S+B",100, 0,100);
+    _fB = new TF1("fB","expo",0,100);
+    _fB->SetParameters(1,-0.05);
+    _hB->FillRandom("fB");
+    _fS = new TF1("fS","gaus",0,100);
+    _fS->SetParameters(1,30,5);
+    _hSB->FillRandom("fB",2000);
+    _hSB->FillRandom("fS",1000);
+  }
 
-   const  ROOT::Math::IMultiGenFunction * fChi2_1;
-   const  ROOT::Math::IMultiGenFunction * fChi2_2;
+  virtual void Cleanup()
+  {
+    if (_hB)
+      delete _hB;
+    if (_hSB)
+      delete _hSB;
+    if (_fB)
+      delete _fB;
+    if (_fS)
+      delete _fS;
+  }
+
+  TH1D *_hB = nullptr;
+  TH1D *_hSB = nullptr;
+  TF1 *_fB = nullptr;
+  TF1 *_fS = nullptr;
 };
+combined_fit_e gcombined_fit;
 
-ExpFunc experiment_combined = [](const std::string &fitter)
+/*ExpFunc experiment_combined = [](const std::string &fitter)
 {
   expstats stats("combined");
 
@@ -738,7 +789,7 @@ ExpFunc experiment_combined = [](const std::string &fitter)
 
   stats.add_exp(r.Status()==0,r.MinFcnValue(),r.Parameters(),cputime,r.NCalls());
   return stats;
-};
+  };*/
 
 ExpFunc experiment_example3D = [](const std::string &fitter)
 {
@@ -877,6 +928,7 @@ void run_experiments()
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
+  mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
   while(mit!=mexperiments.end())
   {
