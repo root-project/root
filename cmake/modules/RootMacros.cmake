@@ -274,7 +274,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
 
   set(CMAKE_ROOTTEST_DICT ON)
 
-  set(ROOT_genreflex_cmd ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/genreflex)
+  set(ROOT_genreflex_cmd ${ROOT_BINARY_DIR}/genreflex)
 
   ROOTTEST_TARGETNAME_FROM_FILE(targetname ${dictionary})
 
