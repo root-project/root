@@ -92,6 +92,7 @@ namespace ROOT
     void TCMAESMinimizer::Clear()
     {
       fCMAsols = CMASolutions();
+      fCMAparams = CMAParameters<>();
       fDim = 0; fFreeDim = 0;
       fLBounds.clear();
       fUBounds.clear();
