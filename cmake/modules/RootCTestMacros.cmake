@@ -44,9 +44,11 @@ macro(ROOTTEST_SETUP_MACROTEST)
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
     if(DEFINED ARG_MACROARG)
       set(realfp "${ARG_MACRO}(${ARG_MACROARG})") 
+    else()
+      set(realfp "${ARG_MACRO}") 
     endif()
 
-    set(command ${root_cmd} ${ARG_MACRO})
+    set(command ${root_cmd} ${realfp})
     
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
