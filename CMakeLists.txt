@@ -37,7 +37,6 @@ include(MacroEnsureVersion)
 #include(CTest)
 if(testing)
   enable_testing()
-  set(ROOTTEST_DIR "${CMAKE_SOURCE_DIR}/roottest")
 endif()
 
 #---Check if the user wants to build the project in the source directory------------------------
