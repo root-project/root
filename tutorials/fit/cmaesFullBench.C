@@ -288,190 +288,285 @@ public:
 };
 lorentz_fit_e glorentz_fit;
 
-/*ExpFunc experiment_lorentz_fit = [](const std::string &fitter)
+/*- gauss2D_fit -*/
+class gauss2D_fit_e : public experiment
 {
-  std::string ename = "lorentz_fit";
-  expstats stats(ename);
-  int npass = 20;
-  gRandom = new TRandom3();
-  TVirtualFitter::SetDefaultFitter(fitter.c_str());
-  //ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
-  ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default("cmaes");
-  opts.SetIntValue("lambda",500);
+public:
+  gauss2D_fit_e()
+    :experiment("gauss2D_fit")
+  {
+    _ef = [this](const std::string &fitter)
+      {
+	std::string ename = "gauss2D_fit";
+	int npass = 0;
+	int n = 100000;
+	TStopwatch timer;
+	TVirtualFitter::SetDefaultFitter(fitter.c_str());
+	TF2 *fitFcn = new TF2("fitFcn",gauss2D_fit_e::fitFunction2,-10,10,-10,10,5);
+	fitFcn->SetParameters(100,0,0,2,7);
+	fitFcn->Update();
+	timer.Start();
+	TFitResultPtr r = _histo->Fit("fitFcn","S0");
+	timer.Stop();
+	Double_t cputime = timer.CpuTime();
+	printf("%s : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),timer.RealTime(),cputime);
+	delete fitFcn;
+	expstats stats(ename);
+	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
+	std::cout << "gauss2D_fit stats: " << stats << std::endl;
+	return stats;
+      };
+  }
+
+  ~gauss2D_fit_e()
+  {
+    if (_histo)
+      delete _histo;
+  }
   
-  TF1 *fitFcn = new TF1("fitFcn",fitFunction,0,3,6);
-  fitFcn->SetNpx(200);
-  fitFcn->SetParameters(1,1,1,6,.03,1);
-  fitFcn->Update();
-  std::string title = fitter + " fit bench";
-  TH1 *histo = new TH1D(fitter.c_str(),title.c_str(),200,0,3);
-  for (Int_t pass=0;pass<npass;pass++) {
-    TStopwatch timer;
-    if (pass%100 == 0) printf("pass : %d\n",pass);
-    fitFcn->SetParameters(1,1,1,6,.03,1);
-    for (Int_t i=0;i<5000;i++) {
-      histo->Fill(fitFcn->GetRandom());
+  // Quadratic background function
+  static Double_t gaus2D(Double_t *x, Double_t *par) {
+    double t1 =   x[0] - par[1];
+    double t2 =   x[1] - par[2];
+    return par[0]* exp( - 0.5 * (  t1*t1/( par[3]*par[3]) + t2*t2  /( par[4]*par[4] )  ) ) ;    
+  }
+
+  // Sum of background and peak function
+  static Double_t fitFunction2(Double_t *x, Double_t *par) {
+    return gaus2D(x,par);
+  }
+
+  static void fillHisto(int n,
+			TH2D *histo)
+  { 
+    gRandom = new TRandom3();
+    for (int i = 0; i < n; ++i) { 
+      double x = gRandom->Gaus(2,3);
+      double y = gRandom->Gaus(-1,4);
+      histo->Fill(x,y,1.);
     }
-    //histo->Print("all");
-    timer.Start();
-    TFitResultPtr r = histo->Fit(fitFcn,"QS0");  // from TH1.cxx: Q: quiet, 0: do not plot 
-    timer.Stop();
-    Double_t cputime = timer.CpuTime();
-    stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
   }
-  TStopwatch timer;
-  timer.Start();
-  TFitResultPtr r = histo->Fit(fitFcn,"QS0"); // E: use Minos
-  timer.Stop();
-  opts.SetIntValue("lambda",-1);
-  double cputime = timer.CpuTime();
-  stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
-  printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),npass,timer.RealTime(),cputime);
-  delete fitFcn;
-  delete histo;
-  std::cout << "lorentz_fit stats: " << stats << std::endl;
-  return stats;
-  };*/
 
-// Quadratic background function
-Double_t gaus2D(Double_t *x, Double_t *par) {
-   double t1 =   x[0] - par[1];
-   double t2 =   x[1] - par[2];
-   return par[0]* exp( - 0.5 * (  t1*t1/( par[3]*par[3]) + t2*t2  /( par[4]*par[4] )  ) ) ;    
-}
-
-// Sum of background and peak function
-Double_t fitFunction2(Double_t *x, Double_t *par) {
-  return gaus2D(x,par);
-}
-
-void fillHisto(int n,
-	       TH2D *histo)
-{ 
-  gRandom = new TRandom3();
-  for (int i = 0; i < n; ++i) { 
-    double x = gRandom->Gaus(2,3);
-    double y = gRandom->Gaus(-1,4);
-    histo->Fill(x,y,1.);
+  virtual void Setup()
+  {
+    _histo = new TH2D("h2","2D Gauss",100,-10,10,100,-10,10);
+    fillHisto(_n,_histo);
   }
-}
 
-ExpFunc experiment_gauss2D_fit = [](const std::string &fitter)
-{
-  std::string ename = "gauss2D_fit";
-  int npass = 0;
-  int n = 100000;
-  TStopwatch timer;
-  TVirtualFitter::SetDefaultFitter(fitter.c_str());
-  TF2 *fitFcn = new TF2("fitFcn",fitFunction2,-10,10,-10,10,5);
-  fitFcn->SetParameters(100,0,0,2,7);
-  fitFcn->Update();
-  TH2D *histo = new TH2D("h2","2D Gauss",100,-10,10,100,-10,10);
-  fillHisto(n,histo);
-  timer.Start();
-  TFitResultPtr r = histo->Fit("fitFcn","S0");
-  timer.Stop();
-  Double_t cputime = timer.CpuTime();
-  printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),npass,timer.RealTime(),cputime);
-  delete fitFcn;
-  delete histo;
-  expstats stats(ename);
-  stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
-  std::cout << "gauss2D_fit stats: " << stats << std::endl;
-  return stats;
+  virtual void Cleanup()
+  {
+    if (_histo)
+      delete _histo;
+    _histo = nullptr;
+  }
+
+  int _n = 100000;
+  TH2D *_histo = nullptr;
 };
-
-Double_t g2(Double_t *x, Double_t *par) {
-   Double_t r1 = Double_t((x[0]-par[1])/par[2]);
-   Double_t r2 = Double_t((x[1]-par[3])/par[4]);
-   return par[0]*TMath::Exp(-0.5*(r1*r1+r2*r2));
-}   
-Double_t fun2(Double_t *x, Double_t *par) {
-   Double_t *p1 = &par[0];
-   Double_t *p2 = &par[5];
-   Double_t *p3 = &par[10];
-   Double_t result = g2(x,p1) + g2(x,p2) + g2(x,p3);
-   return result;
-}
-
-ExpFunc experiment_fit2a = [](const std::string &fitter)
+gauss2D_fit_e ggauss2D_fit;
+  
+/*- fit2a -*/
+class fit2a_e : public experiment
 {
-  TVirtualFitter::SetDefaultFitter(fitter.c_str());
+public:
+  fit2a_e()
+    :experiment("fit2a")
+  {
+    _ef = [this](const std::string &fitter)
+      {
+	TVirtualFitter::SetDefaultFitter(fitter.c_str());
+	
+	//ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
+	//ROOT::Math::IOptions *opts = ROOT::Math::MinimizerOptions::FindDefault(fitter);
+	//opts.SetIntValue("lambda",100);
+	//opts.SetNamedValue("fplot","fit2a.dat");
+	
+	const Int_t npar = 15;
+	Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
+	TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
+	f2->SetParameters(f2params);
+	
+	//Fit h2 with original function f2
+	Float_t ratio = 4*_nentries/100000;
+	f2params[ 0] *= ratio;
+	f2params[ 5] *= ratio;
+	f2params[10] *= ratio;
+	f2->SetParameters(f2params);
+	TStopwatch timer;
+	timer.Start();
+	TFitResultPtr r = _h2->Fit("f2","SN0");
+	timer.Stop();
+	Double_t cputime = timer.CpuTime();
+	delete f2;
+	expstats stats("fit2a");
+	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
+	return stats;
+      };
+  }
 
-  //ROOT::Math::IOptions &opts = ROOT::Math::MinimizerOptions::Default(fitter);
-  //ROOT::Math::IOptions *opts = ROOT::Math::MinimizerOptions::FindDefault(fitter);
-  //opts.SetIntValue("lambda",100);
-  //opts.SetNamedValue("fplot","fit2a.dat");
+  ~fit2a_e()
+  {
+    if (_h2)
+      delete _h2;
+  }
   
-  const Int_t npar = 15;
-  Double_t f2params[npar] = {100,-3,3,-3,3,160,0,0.8,0,0.9,40,4,0.7,4,0.7};
-  TF2 *f2 = new TF2("f2",fun2,-10,10,-10,10, npar);
-  f2->SetParameters(f2params);
+  static Double_t g2(Double_t *x, Double_t *par) {
+    Double_t r1 = Double_t((x[0]-par[1])/par[2]);
+    Double_t r2 = Double_t((x[1]-par[3])/par[4]);
+    return par[0]*TMath::Exp(-0.5*(r1*r1+r2*r2));
+  }
   
-  //Create an histogram and fill it randomly with f2
-  TH2F *h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
-  Int_t nentries = 100000;
-  h2->FillRandom("f2",nentries);
-  //Fit h2 with original function f2
-  Float_t ratio = 4*nentries/100000;
-  f2params[ 0] *= ratio;
-  f2params[ 5] *= ratio;
-  f2params[10] *= ratio;
-  f2->SetParameters(f2params);
-  TStopwatch timer;
-  timer.Start();
-  TFitResultPtr r = h2->Fit("f2","SN0");
-  timer.Stop();
-  Double_t cputime = timer.CpuTime();
-  delete f2;
-  delete h2;  
-  expstats stats("fit2a");
-  stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
-  return stats;
+  static Double_t fun2(Double_t *x, Double_t *par) {
+    Double_t *p1 = &par[0];
+    Double_t *p2 = &par[5];
+    Double_t *p3 = &par[10];
+    Double_t result = g2(x,p1) + g2(x,p2) + g2(x,p3);
+    return result;
+  }
+
+  virtual void Setup()
+  {
+    _h2 = new TH2F("h2","From f2",40,-10,10,40,-10,10);
+    _h2->FillRandom("f2",_nentries);
+  }
+
+  virtual void Cleanup()
+  {
+    if (_h2)
+      delete _h2;
+    _h2 = nullptr;
+  }
+
+  int _nentries = 100000;
+  TH2F *_h2 = nullptr;
 };
+fit2a_e gfit2a;
 
-double gauss2D(double *x, double *par) {
-   double z1 = double((x[0]-par[1])/par[2]);
-   double z2 = double((x[1]-par[3])/par[4]);
-   return par[0]*exp(-0.5*(z1*z1+z2*z2));
-}   
-double my2Dfunc(double *x, double *par) {
-   return gauss2D(x,&par[0]) + gauss2D(x,&par[5]);
-}
+/*- fit2dhist -*/
+class fit2dhist_e : public experiment
+{
+public:
+  fit2dhist_e()
+    :experiment("fit2dhist")
+  {
+    _ef = [this](const std::string &fitter)
+      {
+	expstats stats("fit2dhist");
+	TStopwatch timer;
+	timer.Start();
+	TVirtualFitter::SetDefaultFitter(fitter.c_str());
+	TFitResultPtr r1 = _h1->Fit(_func,"S0");
+	timer.Stop();
+	Double_t cputime1 = timer.CpuTime();
+	TStopwatch timer2;
+	timer2.Start();
+	TFitResultPtr r2 = _h2->Fit(_func,"S0");
+	timer2.Stop();
+	Double_t cputime2 = timer2.CpuTime();
+	
+	stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
+	stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
+	return stats; 
+      };
+  }
 
-void FillHisto2(TH2D * h, int n, double * p)
-{ 
-  const double mx1 = p[1]; 
-  const double my1 = p[3]; 
-  const double sx1 = p[2]; 
-  const double sy1 = p[4]; 
-  const double mx2 = p[6]; 
-  const double my2 = p[8]; 
-  const double sx2 = p[7]; 
-  const double sy2 = p[9]; 
-  //const double w1 = p[0]*sx1*sy1/(p[5]*sx2*sy2); 
-  const double w1 = 0.5; 
-  TRandom3 rndm;
+  ~fit2dhist_e()
+  {
+    Cleanup();
+  }
+
+  static double gauss2D(double *x, double *par) {
+    double z1 = double((x[0]-par[1])/par[2]);
+    double z2 = double((x[1]-par[3])/par[4]);
+    return par[0]*exp(-0.5*(z1*z1+z2*z2));
+  }
   
-  double x, y; 
-  for (int i = 0; i < n; ++i) {
-    // generate randoms with larger gaussians
-    rndm.Rannor(x,y);
+  static double my2Dfunc(double *x, double *par) {
+    return gauss2D(x,&par[0]) + gauss2D(x,&par[5]);
+  }
 
-    double r = rndm.Rndm(1);
-    if (r < w1) { 
-      x = x*sx1 + mx1; 
-      y = y*sy1 + my1; 
+  static void FillHisto2(TH2D * h, int n, double * p)
+  { 
+    const double mx1 = p[1]; 
+    const double my1 = p[3]; 
+    const double sx1 = p[2]; 
+    const double sy1 = p[4]; 
+    const double mx2 = p[6]; 
+    const double my2 = p[8]; 
+    const double sx2 = p[7]; 
+    const double sy2 = p[9]; 
+    //const double w1 = p[0]*sx1*sy1/(p[5]*sx2*sy2); 
+    const double w1 = 0.5; 
+    TRandom3 rndm;
+    
+    double x, y; 
+    for (int i = 0; i < n; ++i) {
+      // generate randoms with larger gaussians
+      rndm.Rannor(x,y);
+      
+      double r = rndm.Rndm(1);
+      if (r < w1) { 
+	x = x*sx1 + mx1; 
+	y = y*sy1 + my1; 
+      }
+      else { 
+	x = x*sx2 + mx2; 
+	y = y*sy2 + my2; 
+      }      
+      h->Fill(x,y);     
     }
-    else { 
-      x = x*sx2 + mx2; 
-      y = y*sy2 + my2; 
-    }      
-    h->Fill(x,y);     
   }
-}
 
-ExpFunc experiment_fit2dhist_indep = [](const std::string &fitter)
+  void Setup()
+  {
+    int nbx1 = 50;
+    int nby1 = 50;
+    int nbx2 = 50;
+    int nby2 = 50;
+    double xlow1 = 0.; 
+    double ylow1 = 0.; 
+    double xup1 = 10.; 
+    double yup1 = 10.; 
+    double xlow2 = 5.; 
+    double ylow2 = 5.; 
+    double xup2 = 20.; 
+    double yup2 = 20.; 
+    _h1 = new TH2D("h1","core",nbx1,xlow1,xup1,nby1,ylow1,yup1);
+    _h2 = new TH2D("h2","tails",nbx2,xlow2,xup2,nby2,ylow2,yup2);
+    double iniParams[10] = { 100, 6., 2., 7., 3, 100, 12., 3., 11., 2. };
+    _func = new TF2("func",fit2dhist_e::my2Dfunc,xlow2,xup2,ylow2,yup2, 10);
+    _func->SetParameters(iniParams);
+    int n1 = 1000000;
+    int n2 = 1000000; 
+    FillHisto2(_h1,n1,iniParams);
+    FillHisto2(_h2,n2,iniParams);
+    // scale histograms to same heights (for fitting)
+    double dx1 = (xup1-xlow1)/double(nbx1); 
+    double dy1 = (yup1-ylow1)/double(nby1);
+    double dx2 = (xup2-xlow2)/double(nbx2);
+    double dy2 = (yup2-ylow2)/double(nby2);
+    // scale histo 2 to scale of 1 
+    _h2->Sumw2();
+    _h2->Scale(  ( double(n1) * dx1 * dy1 )  / ( double(n2) * dx2 * dy2 ) );
+  }
+
+  void Cleanup()
+  {
+    if (_h1)
+      delete _h1;
+    if (_h2)
+      delete _h2;
+    if (_func)
+      delete _func;
+  }
+
+  TH2D *_h1 = nullptr;
+  TH2D *_h2 = nullptr;
+  TF2 *_func = nullptr;
+};
+fit2dhist_e gfit2dhist;
+
+/*ExpFunc experiment_fit2dhist_indep = [](const std::string &fitter)
 {
   expstats stats("fit2dhist");
   int nbx1 = 50;
@@ -527,7 +622,7 @@ ExpFunc experiment_fit2dhist_indep = [](const std::string &fitter)
   delete h1;
   delete h2;
   return stats; 
-};
+  };*/
 
 // definition of shared parameter
 // background function 
@@ -779,6 +874,9 @@ void run_experiments()
   mexperiments.insert(std::pair<std::string,experiment*>(ggauss_fit._name,&ggauss_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(glorentz_fit._name,&glorentz_fit));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2._name,&gfit2));
+  mexperiments.insert(std::pair<std::string,experiment*>(ggauss2D_fit._name,&ggauss2D_fit));
+  mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
+  mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
   while(mit!=mexperiments.end())
   {
