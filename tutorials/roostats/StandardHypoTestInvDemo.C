@@ -39,6 +39,7 @@
 #include "TCanvas.h"
 #include "TLine.h"
 #include "TROOT.h"
+#include "TSystem.h"
 
 #include "RooStats/AsymptoticCalculator.h"
 #include "RooStats/HybridCalculator.h"
@@ -323,41 +324,33 @@ StandardHypoTestInvDemo(const char * infile = 0,
   
   
    TString fileName(infile);
-   if (fileName.IsNull()) { 
-      fileName = "results/example_combined_GaussExample_model.root";
-      std::cout << "Use standard file generated with HistFactory : " << fileName << std::endl;
+   if (fileName.IsNull()) {
+      filename = "results/example_combined_GaussExample_model.root";
+      bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
+      // if file does not exists generate with histfactory
+      if (!fileExist) {
+         // Normally this would be run on the command line
+         cout <<"will run standard hist2workspace example"<<endl;
+         gROOT->ProcessLine(".! prepareHistFactory .");
+         gROOT->ProcessLine(".! hist2workspace config/example.xml");
+         cout <<"\n\n---------------------"<<endl;
+         cout <<"Done creating example input"<<endl;
+         cout <<"---------------------\n\n"<<endl;
+      }
+      
    }
-  
-   // open file and check if input file exists
-   TFile * file = TFile::Open(fileName); 
-  
-   // if input file was specified but not found, quit
-   if(!file && !TString(infile).IsNull()){
-      cout <<"file " << fileName << " not found" << endl;
-      return;
-   } 
-  
-   // if default file not found, try to create it
+   else
+      filename = infile;
+   
+   // Try to open the file
+   TFile *file = TFile::Open(filename);
+   
+   // if input file was specified byt not found, quit
    if(!file ){
-      // Normally this would be run on the command line
-      cout <<"will run standard hist2workspace example"<<endl;
-      gROOT->ProcessLine(".! prepareHistFactory .");
-      gROOT->ProcessLine(".! hist2workspace config/example.xml");
-      cout <<"\n\n---------------------"<<endl;
-      cout <<"Done creating example input"<<endl;
-      cout <<"---------------------\n\n"<<endl;
-    
-      // now try to access the file again
-      file = TFile::Open(fileName);
-    
-   }
-  
-   if(!file){
-      // if it is still not there, then we can't continue
-      cout << "Not able to run hist2workspace to create example input" <<endl;
+      cout <<"StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
    }
-  
+
 
 
    HypoTestInvTool calc;
@@ -480,8 +473,13 @@ RooStats::HypoTestInvTool::AnalyzeResult( HypoTestInverterResult * r,
       }
 
       // get (if existing) rebuilt UL distribution
-      TFile * fileULDist = TFile::Open("RULDist.root"); 
-      TObject * ulDist = (fileULDist) ? fileULDist->Get("RULDist") : 0;  
+      TString uldistFile = "RULDist.root";
+      TObject * ulDist = 0;
+      bool existULDist = !gSystem->AccessPathName(uldistFile);
+      if (existULDist) {
+         TFile * fileULDist = TFile::Open(uldistFile);
+         if (fileULDist) ulDist= fileULDist->Get("RULDist");
+      }
 
       TFile * fileOut = new TFile(mResultFileName,"RECREATE");
       r->Write();
