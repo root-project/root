@@ -42,18 +42,15 @@ macro(ROOTTEST_SETUP_MACROTEST)
 
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
-    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
-
     if(DEFINED ARG_MACROARG)
-      set(realfp "${realfp}(${ARG_MACROARG})") 
+      set(realfp "${ARG_MACRO}(${ARG_MACROARG})") 
     endif()
 
-    set(command ${root_cmd} ${realfp})
+    set(command ${root_cmd} ${ARG_MACRO})
     
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
-    get_filename_component(pycmd ${ARG_MACRO} ABSOLUTE)
-    set(command ${python_cmd} ${pycmd})
+    set(command ${python_cmd} ${ARG_MACRO})
 
   elseif(DEFINED ARG_MACRO)
     set(command ${root_cmd} ${ARG_MACRO})
