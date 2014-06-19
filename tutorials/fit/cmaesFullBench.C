@@ -710,148 +710,95 @@ public:
 };
 combined_fit_e gcombined_fit;
 
-/*ExpFunc experiment_combined = [](const std::string &fitter)
+/*- ex3d -*/
+class ex3d_e : public experiment
 {
-  expstats stats("combined");
-
-  TH1D * hB = new TH1D("hB","histo B",100,0,100);
-  TH1D * hSB = new TH1D("hSB","histo S+B",100, 0,100);
-
-  TF1 * fB = new TF1("fB","expo",0,100);
-  fB->SetParameters(1,-0.05);
-  hB->FillRandom("fB");
-
-  TF1 * fS = new TF1("fS","gaus",0,100);
-  fS->SetParameters(1,30,5);
-
-  hSB->FillRandom("fB",2000);
-  hSB->FillRandom("fS",1000);
-
-  // perform now global fit
-  
-  TF1 * fSB = new TF1("fSB","expo + gaus(2)",0,100);
-
-  ROOT::Math::WrappedMultiTF1 wfB(*fB,1);
-  ROOT::Math::WrappedMultiTF1 wfSB(*fSB,1);
-
-  ROOT::Fit::DataOptions opt; 
-  ROOT::Fit::DataRange rangeB; 
-  // set the data range
-  rangeB.SetRange(10,90);
-  ROOT::Fit::BinData dataB(opt,rangeB); 
-  ROOT::Fit::FillData(dataB, hB);
-
-  ROOT::Fit::DataRange rangeSB; 
-  rangeSB.SetRange(10,50);
-  ROOT::Fit::BinData dataSB(opt,rangeSB); 
-  ROOT::Fit::FillData(dataSB, hSB);
-
-  ROOT::Fit::Chi2Function chi2_B(dataB, wfB);
-  ROOT::Fit::Chi2Function chi2_SB(dataSB, wfSB);
-
-  GlobalChi2 globalChi2(chi2_B, chi2_SB);
-
-  ROOT::Fit::Fitter rfitter;
-
-  const int Npar = 6; 
-  double par0[Npar] = { 5,5,-0.1,100, 30,10};
-
-  // create before the parameter settings in order to fix or set range on them
-  rfitter.Config().SetParamsSettings(6,par0);
-  // fix 5-th parameter  
-  rfitter.Config().ParSettings(4).Fix();
-  // set limits on the third and 4-th parameter
-  rfitter.Config().ParSettings(2).SetLimits(-10,-1.E-4);
-  rfitter.Config().ParSettings(3).SetLimits(0,10000);
-  rfitter.Config().ParSettings(3).SetStepSize(5);
-
-  rfitter.Config().MinimizerOptions().SetPrintLevel(0);
-  if (fitter == "Minuit2")
-    rfitter.Config().SetMinimizer("Minuit2","Migrad"); 
-  else if (fitter.find("cmaes")!=std::string::npos)
-    rfitter.Config().SetMinimizer("cmaes","acmaes");
-  
-  // fit FCN function directly 
-  // (specify optionally data size and flag to indicate that is a chi2 fit)
-  TStopwatch timer;
-  timer.Start();
-  rfitter.FitFCN(6,globalChi2,0,dataB.Size()+dataSB.Size(),true);
-  timer.Stop();
-  Double_t cputime = timer.CpuTime();
-  ROOT::Fit::FitResult r = rfitter.Result();
-  //result.Print(std::cout);
-
-  delete hB;
-  delete hSB;
-  delete fB;
-  delete fS;
-  delete fSB;
-
-  stats.add_exp(r.Status()==0,r.MinFcnValue(),r.Parameters(),cputime,r.NCalls());
-  return stats;
-  };*/
-
-ExpFunc experiment_example3D = [](const std::string &fitter)
-{
-  expstats stats("example3D");
-  const int n = 1000; 
-  double x[n], y[n], z[n], v[n]; 
-  double ev = 0.1;
-  
-  // generate the data
-  TRandom2 r; 
-  for (int i = 0; i < n; ++i) { 
-    x[i] = r.Uniform(0,10);
-    y[i] = r.Uniform(0,10);
-    z[i] = r.Uniform(0,10); 
-    v[i] = sin(x[i] ) + cos(y[i]) + z[i] + r.Gaus(0,ev);         
+public:
+  ex3d_e()
+    :experiment("ex3d")
+  {
+    _ef = [this](const std::string &fitter)
+      {
+	expstats stats("example3D");
+	double ev = 0.1;
+	
+	// create a 3d binned data structure
+	ROOT::Fit::BinData data(_n,3); 
+	double xx[3];
+	for(int i = 0; i < _n; ++i) {
+	  xx[0] = _x[i]; 
+	  xx[1] = _y[i]; 
+	  xx[2] = _z[i]; 
+	  // add the 3d-data coordinate, the predictor value (v[i])  and its errors
+	  data.Add(xx, _v[i], ev); 
+	}
+	
+	TF3 * f3 = new TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10);
+	f3->SetParameters(2,2,2);
+	ROOT::Fit::Fitter rfitter;
+	if (fitter.find("cmaes")!=std::string::npos)
+	  rfitter.Config().SetMinimizer("cmaes","acmaes");
+	// wrapped the TF1 in a IParamMultiFunction interface for the Fitter class
+	ROOT::Math::WrappedMultiTF1 wf(*f3,3);
+	rfitter.SetFunction(wf); 
+	TStopwatch timer;
+	timer.Start();
+	bool ret = rfitter.Fit(data);
+	timer.Stop();
+	Double_t cputime = timer.CpuTime();
+	const ROOT::Fit::FitResult & res = rfitter.Result(); 
+	if (ret) { 
+	  // print result (should be around 1) 
+	  res.Print(std::cout);
+	  // copy all fit result info (values, chi2, etc..) in TF3
+	  f3->SetFitResult(res);
+	  // test fit p-value (chi2 probability)
+	  double prob = res.Prob();
+	  if (prob < 1.E-2) 
+	    Error("exampleFit3D","Bad data fit - fit p-value is %f",prob);
+	  else
+	    std::cout << "Good fit : p-value  = " << prob << std::endl;
+	}
+	else Error("exampleFit3D","3D fit failed");
+	
+	stats.add_exp(res.Status()==0,res.MinFcnValue(),res.Parameters(),cputime,res.NCalls());
+	delete f3;
+	return stats;
+      };
   }
-  
-  // create a 3d binned data structure
-  ROOT::Fit::BinData data(n,3); 
-  double xx[3];
-  for(int i = 0; i < n; ++i) {
-    xx[0] = x[i]; 
-    xx[1] = y[i]; 
-    xx[2] = z[i]; 
-    // add the 3d-data coordinate, the predictor value (v[i])  and its errors
-    data.Add(xx, v[i], ev); 
-  }
-  
-  TF3 * f3 = new TF3("f3","[0] * sin(x) + [1] * cos(y) + [2] * z",0,10,0,10,0,10);
-  f3->SetParameters(2,2,2);
-  ROOT::Fit::Fitter rfitter;
-  if (fitter.find("cmaes")!=std::string::npos)
-    rfitter.Config().SetMinimizer("cmaes","acmaes");
-  // wrapped the TF1 in a IParamMultiFunction interface for teh Fitter class
-  ROOT::Math::WrappedMultiTF1 wf(*f3,3);
-  rfitter.SetFunction(wf); 
-  TStopwatch timer;
-  timer.Start();
-  bool ret = rfitter.Fit(data);
-  timer.Stop();
-  Double_t cputime = timer.CpuTime();
-  const ROOT::Fit::FitResult & res = rfitter.Result(); 
-  if (ret) { 
-    // print result (should be around 1) 
-    res.Print(std::cout);
-    // copy all fit result info (values, chi2, etc..) in TF3
-    f3->SetFitResult(res);
-    // test fit p-value (chi2 probability)
-    double prob = res.Prob();
-    if (prob < 1.E-2) 
-      Error("exampleFit3D","Bad data fit - fit p-value is %f",prob);
-    else
-      std::cout << "Good fit : p-value  = " << prob << std::endl;
-    
-  }
-  else Error("exampleFit3D","3D fit failed");
 
-  stats.add_exp(res.Status()==0,res.MinFcnValue(),res.Parameters(),cputime,res.NCalls());
-  delete f3;
-  return stats;
+  ~ex3d_e()
+  {
+  }
+
+  virtual void Setup()
+  {
+    double ev = 0.1;
+    TRandom2 r; 
+    for (int i = 0; i < _n; ++i) { 
+      _x.push_back(r.Uniform(0,10));
+      _y.push_back(r.Uniform(0,10));
+      _z.push_back(r.Uniform(0,10)); 
+      _v.push_back(sin(_x[i] ) + cos(_y[i]) + _z[i] + r.Gaus(0,ev));         
+    }
+  }
+
+  virtual void Cleanup()
+  {
+    _x.clear();
+    _y.clear();
+    _z.clear();
+    _v.clear();
+  }
+
+  int _n = 1000;
+  std::vector<double> _x;
+  std::vector<double> _y;
+  std::vector<double> _z;
+  std::vector<double> _v;
 };
-
+ex3d_e gex3d;
+  
 /*- fit2 -*/
 class fit2_e : public experiment
 {
@@ -929,6 +876,7 @@ void run_experiments()
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2a._name,&gfit2a));
   mexperiments.insert(std::pair<std::string,experiment*>(gfit2dhist._name,&gfit2dhist));
   mexperiments.insert(std::pair<std::string,experiment*>(gcombined_fit._name,&gcombined_fit));
+  mexperiments.insert(std::pair<std::string,experiment*>(gex3d._name,&gex3d));
   std::map<std::string,experiment*>::iterator mit = mexperiments.begin();
   while(mit!=mexperiments.end())
   {
