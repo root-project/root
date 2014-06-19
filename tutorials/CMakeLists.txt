@@ -128,7 +128,7 @@ message(STATUS "${veto}/${total} tutorials have been vetoed for various reasons"
 list(REMOVE_ITEM tutorials ${tutorials_veto})
 
 #---Special return code------------------------------------------------
-set(returncode_1 fit/fit2a.C fit/graph2dfit.C fit/multidimfit.C
+set(returncode_1 fit/fit2a.C fit/graph2dfit.C 
                  graphics/archi.C graphics/arrow.C
                  graphics/crown.C graphics/diamond.C
                  graphics/earth.C graphics/ellipse.C
