@@ -23,8 +23,9 @@
 class expstats
 {
 public:
-  expstats(const std::string &name):
-    _name(name) {}
+  expstats(const std::string &name,
+	   const int &dim):
+    _name(name),_dim(dim) {}
   ~expstats() {}
 
   void add_exp(const bool &succ,
@@ -36,12 +37,23 @@ public:
     if (succ)
       ++_succs;
     else ++_fails;
+    _vsuccs.push_back(succ);
     _fmin.push_back(fmin);
     _x.push_back(x);
     _cputime.push_back(cputime);
     _cpu_avg = std::accumulate(_cputime.begin(),_cputime.end(),0.0) / static_cast<double>(_cputime.size());
+    _cpu_std = stddev(_cputime,_cpu_avg);
     _budget.push_back(budget);
     _budget_avg = std::accumulate(_budget.begin(),_budget.end(),0.0) / static_cast<double>(_budget.size());
+    _budget_std = stddev(_budget,_budget_avg);
+  }
+
+  void merge(const expstats &stats)
+  {
+    for (size_t i=0;i<stats._fmin.size();i++)
+      {
+	add_exp(stats._vsuccs.at(i),stats._fmin.at(i),stats._x.at(i),stats._cputime.at(i),stats._budget.at(i));
+      }
   }
   
   void diff(const expstats &stats)
@@ -70,18 +82,27 @@ public:
     _cputime_diff_avg = std::accumulate(_cputime_diff.begin(),_cputime_diff.end(),0.0) / static_cast<double>(_cputime_diff.size());
     _cputime_ratio_avg = std::accumulate(_cputime_ratio.begin(),_cputime_ratio.end(),0.0) / static_cast<double>(_cputime_ratio.size());
     _budget_diff_avg = std::accumulate(_budget_diff.begin(),_budget_diff.end(),0.0) / static_cast<double>(_budget_diff.size());
-        _budget_ratio_avg = std::accumulate(_budget_ratio.begin(),_budget_ratio.end(),0.0) / static_cast<double>(_budget_ratio.size());
+    _budget_ratio_avg = std::accumulate(_budget_ratio.begin(),_budget_ratio.end(),0.0) / static_cast<double>(_budget_ratio.size());
   }
 
+  template <typename T> double stddev(const std::vector<T> &v, const double &avg)
+  {
+    double var = 0.0;
+    for (size_t i=0;i<v.size();i++)
+      var += (v.at(i)-avg)*(v.at(i)-avg);
+    var /= static_cast<double>(v.size());
+    return sqrt(var);
+  }
+  
   std::ostream& print(std::ostream &out) const
   {
-    out << _name << " / succs=" << _succs << " / fails=" << _fails << " / cpu_avg=" << _cpu_avg << " / budget_avg=" << _budget_avg << std::endl;
+    out << _name << " / dim=" << _dim << " / succs=" << _succs << " / fails=" << _fails << " / cpu_avg=" << _cpu_avg << " / budget_avg=" << _budget_avg << std::endl;
     return out;
   }
 
   std::ostream& print_diff(std::ostream &out) const
   {
-    out << _name << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / cpu_ratio_avg=" << _cputime_ratio_avg << " / budget_diff_avg=" << _budget_diff_avg << " / budget_ratio_avg=" << _budget_ratio_avg << std::endl;
+    out << _name << " / dim=" << _dim << " / found=" << _found << "/" << _fdiff.size() << " / isuccs=" << _isuccs << " / ifails=" << _ifails << " / cpu_diff_avg=" << _cputime_diff_avg << " / cpu_ratio_avg=" << _cputime_ratio_avg << " / budget_diff_avg=" << _budget_diff_avg << " / budget_ratio_avg=" << _budget_ratio_avg << std::endl;
     for (size_t i=0;i<_fdiff.size();i++)
       {
 	out << "#" << i << " - " << _name << ": " << "fdiff=" << _fdiff.at(i) << " / cputime_diff=" << _cputime_diff.at(i) << " / cputime_ratio=" << _cputime_ratio.at(i) << " / budget_diff=" << _budget_diff.at(i) << " / budget_ratio=" << _budget_ratio.at(i) << std::endl;
@@ -89,15 +110,29 @@ public:
     return out;
   }
 
+  void print_avg_to_file() const
+  {
+    static std::string sep = "\t";
+    static std::string ext = ".dat";
+    std::ofstream fout(_name+ext,std::ofstream::out|std::ofstream::app);
+    fout << "#dim\tsuccs\tfails\tcpu_avg\tcpu_std\tbudget_avg\tbudget_std\tbest_fmin\n";
+    fout << _dim << sep << _succs << sep << _fails << sep << _cpu_avg << sep << _cpu_std << sep << _budget_avg << sep << _budget_std << sep << _isuccs << std::endl;
+    fout.close();
+  }
+  
   std::string _name;
+  int _dim = 0;
   int _fails = 0;
   int _succs = 0;
+  std::vector<bool> _vsuccs;
   std::vector<double> _fmin;
   std::vector<std::vector<double>> _x;
   std::vector<double> _cputime;
   double _cpu_avg = 0.0;
+  double _cpu_std = 0.0;
   std::vector<int> _budget;
   double _budget_avg = 0.0;
+  double _budget_std = 0.0;
 
   // diff
   int _found = 0;
@@ -172,7 +207,7 @@ public:
 	delete h1;
 	delete h1bis;
 	
-	expstats stats(ename);
+	expstats stats(ename,r1->NTotalParameters());
 	stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
 	stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
 	std::cout << "gaus_fit stats: " << stats << std::endl;
@@ -207,7 +242,7 @@ public:
     _ef = [this](const std::string &fitter)
       {
 	std::string ename = "lorentz_fit";
-	expstats stats(ename);
+	expstats stats(ename,6);
 	TVirtualFitter::SetDefaultFitter(fitter.c_str());
 	//ROOT::Fit::FitConfig::SetDefaultMinimizer(fitter);
 	
@@ -311,7 +346,7 @@ public:
 	Double_t cputime = timer.CpuTime();
 	printf("%s : RT=%7.3f s, Cpu=%7.3f s\n",fitter.c_str(),timer.RealTime(),cputime);
 	delete fitFcn;
-	expstats stats(ename);
+	expstats stats(ename,r->NTotalParameters());
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	std::cout << "gauss2D_fit stats: " << stats << std::endl;
 	return stats;
@@ -387,7 +422,7 @@ public:
 	TFitResultPtr r = _h2->Fit("f2","SN0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
-	expstats stats("fit2a");
+	expstats stats("fit2a",r->NTotalParameters());
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	return stats;
       };
@@ -452,7 +487,6 @@ public:
   {
     _ef = [this](const std::string &fitter)
       {
-	expstats stats("fit2dhist");
 	TStopwatch timer;
 	timer.Start();
 	TVirtualFitter::SetDefaultFitter(fitter.c_str());
@@ -464,7 +498,7 @@ public:
 	TFitResultPtr r2 = _h2->Fit(_func,"S0");
 	timer2.Stop();
 	Double_t cputime2 = timer2.CpuTime();
-	
+	expstats stats("fit2dhist",r1->NTotalParameters());
 	stats.add_exp(r1->Status()==0,r1->MinFcnValue(),r1->Parameters(),cputime1,r1->NCalls());
 	stats.add_exp(r2->Status()==0,r2->MinFcnValue(),r2->Parameters(),cputime2,r2->NCalls());
 	return stats; 
@@ -599,8 +633,6 @@ public:
   {
     _ef = [this](const std::string &fitter)
       {
-	expstats stats("combined");
-
 	// perform now global fit
 	TF1 * fSB = new TF1("fSB","expo + gaus(2)",0,100);
 	
@@ -655,7 +687,7 @@ public:
 	//result.Print(std::cout);
 	
 	delete fSB;
-	
+	expstats stats("combined",r.NTotalParameters());
 	stats.add_exp(r.Status()==0,r.MinFcnValue(),r.Parameters(),cputime,r.NCalls());
 	return stats;
       };
@@ -720,7 +752,6 @@ public:
   {
     _ef = [this](const std::string &fitter)
       {
-	expstats stats("example3D");
 	double ev = 0.1;
 	
 	// create a 3d binned data structure
@@ -761,7 +792,7 @@ public:
 	    std::cout << "Good fit : p-value  = " << prob << std::endl;
 	}
 	else Error("exampleFit3D","3D fit failed");
-	
+	expstats stats("example3D",res.NTotalParameters());
 	stats.add_exp(res.Status()==0,res.MinFcnValue(),res.Parameters(),cputime,res.NCalls());
 	delete f3;
 	return stats;
@@ -811,15 +842,14 @@ public:
     f2 = new TF2("f2",fit2_e::fun22,-10,10,-10,10, _npar);
     _ef = [this](const std::string &fitter)
       {
-	expstats stats("fit2");
-	TVirtualFitter::SetDefaultFitter(fitter.c_str());
-	
+	TVirtualFitter::SetDefaultFitter(fitter.c_str());	
 	//Fit h2 with original function f2
 	TStopwatch timer;
 	timer.Start();
 	TFitResultPtr r = _h2->Fit("f2","S0");
 	timer.Stop();
 	Double_t cputime = timer.CpuTime();
+	expstats stats("fit2",r->NTotalParameters());
 	stats.add_exp(r->Status()==0,r->MinFcnValue(),r->Parameters(),cputime,r->NCalls());
 	return stats;
       };
@@ -884,8 +914,16 @@ void run_experiments(const int &n=1)
     for (int i=0;i<n;i++)
     {
       (*mit).second->Setup();
-      acmaes_stats.push_back((*mit).second->_ef("acmaes"));
-      minuit2_stats.push_back((*mit).second->_ef("Minuit2"));
+      if (i == 0)
+	{
+	  acmaes_stats.push_back((*mit).second->_ef("acmaes"));
+	  minuit2_stats.push_back((*mit).second->_ef("Minuit2"));
+	}
+      else
+	{
+	  acmaes_stats.back().merge((*mit).second->_ef("acmaes"));
+	  minuit2_stats.back().merge((*mit).second->_ef("Minuit2"));
+	}
       (*mit).second->Cleanup();
     }
     ++mit;
@@ -895,5 +933,7 @@ void run_experiments(const int &n=1)
     {
       acmaes_stats.at(i).diff(minuit2_stats.at(i));
       acmaes_stats.at(i).print_diff(std::cout);
+      acmaes_stats.at(i).print_avg_to_file();
+      minuit2_stats.at(i).print_avg_to_file();
     }
 }
