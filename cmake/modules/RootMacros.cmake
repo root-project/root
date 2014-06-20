@@ -127,13 +127,13 @@ function(ROOTTEST_ADD_AUTOMACROS)
       set(outref "")
     endif()
 
-    foreach(wf ${WILLFAIL})
-      if(${wf} STREQUAL ${targetname})
-        set(arg_wf WILLFAIL) 
+    ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
+
+    foreach(wf ${ARG_WILLFAIL})
+      if(${wf} STREQUAL ${targetname}-auto)
+        set(arg_wf WILLFAIL)
       endif()
     endforeach()
-
-    ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
 
     if(ARG_COPY_TO_BUILDDIR)
       set(copy_to_builddir COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR})
@@ -143,15 +143,15 @@ function(ROOTTEST_ADD_AUTOMACROS)
       ROOTTEST_ADD_TEST(${targetname}-auto
                         MACRO ${auto_macro_filename}
                         ${outref}
-                        ${arg_wf}
                         ${copy_to_builddir}
+                        ${arg_wf}
                         DEPENDS ${add_auto_depends})
 
     else()
       ROOTTEST_ADD_TEST(${targetname}-auto
-                        ${arg_wf}
-                        ${copy_to_builddir}
                         MACRO ${auto_macro_filename}
+                        ${copy_to_builddir}
+                        ${arg_wf}
                         ${outref})
     endif()
   endforeach()
