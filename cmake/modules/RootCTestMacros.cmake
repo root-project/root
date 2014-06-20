@@ -75,7 +75,12 @@ macro(ROOTTEST_SETUP_EXECTEST)
                HINTS $ENV{PATH}
                PATH ${CMAKE_CURRENT_BINARY_DIR}
                PATH ${CMAKE_CURRENT_SOURCE_DIR})
-  
+
+  # If no program was found, take it as is.
+  if(NOT ${realexec})
+    set(realexec ${ARG_MACRO})
+  endif()
+
   set(command ${realexec})
 
   set(checkstdout CHECKOUT)
@@ -234,7 +239,6 @@ function(ROOTTEST_ADD_TEST test)
   if(ARG_WORKING_DIR)
     get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
   else()
-    #get_filename_component(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
     get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
   endif()
 
