@@ -1909,7 +1909,14 @@ void TBranchElement::InitInfo()
       TClass* targetClass = 0;
       if( fTargetClass.GetClassName()[0] ) {
          targetClass = fTargetClass;
-         if( !targetClass ) {
+         if (!targetClass && GetCollectionProxy()) {
+            // We are in the case where the branch holds a custom collection
+            // proxy but the dictionary is not loaded, calling
+            // GetCollectionProxy had the side effect of creating the TClass
+            // corresponding to this emulated collection.
+            targetClass = fTargetClass;
+         }
+         if ( !targetClass ) {
             Error( "InitInfo", "The target class dictionary is not present!" );
             return;
          }
