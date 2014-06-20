@@ -84,7 +84,7 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_AUTOMACROS)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL" ${ARGN})
 
   file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/run*.C)
   list(APPEND automacros ${macros})
@@ -127,16 +127,24 @@ function(ROOTTEST_ADD_AUTOMACROS)
       set(outref "")
     endif()
 
+    foreach(wf ${WILLFAIL})
+      if(${wf} STREQUAL ${targetname})
+        set(arg_wf WILLFAIL) 
+      endif()
+    endforeach()
+
     ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
    
     if(ARG_DEPENDS)
       ROOTTEST_ADD_TEST(${targetname}-auto
                         MACRO ${auto_macro_filename}
                         ${outref}
+                        ${arg_wf}
                         DEPENDS ${add_auto_depends})
 
     else()
       ROOTTEST_ADD_TEST(${targetname}-auto
+                        ${arg_wf}
                         MACRO ${auto_macro_filename}
                         ${outref})
     endif()
