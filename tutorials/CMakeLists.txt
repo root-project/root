@@ -99,7 +99,6 @@ set(extra_veto
   rootlogoff.C         # Helper macro
   rootmarks.C          # Instrumentation. Not a standalone tutorial
   memstat/memstat.C    # Instrumentation. Not a standalone tutorial
-  foam/*.C
   html/*.C
   net/*.C
   proof/*.C
@@ -178,6 +177,7 @@ set(fit-TwoHistoFit2D-aclic +)
 set(math-testUnfold4-aclic +)
 set(io-double32-aclic +)
 set(tree-hvector-aclic +)
+set(math-testrandom-aclic +)
 
 #---Loop over all tutorials and define the corresponding test---------
 
