@@ -693,7 +693,7 @@ endmacro()
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR"
                              "TIMEOUT;BUILD;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC"
-                             "COMMAND;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
+                             "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;CMPOUTPUT;FAILREGEX;LABELS"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -793,6 +793,12 @@ function(ROOT_ADD_TEST test)
     string(REPLACE ";" "#" _env "${ARG_ENVIRONMENT}")
     string(REPLACE "=" "@" _env "${_env}")
     set(_command ${_command} -DENV=${_env})
+  endif()
+
+  #- Copy files to the build directory.
+  if(ARG_COPY_TO_BUILDDIR)
+    string(REPLACE ";" "^" _copy_files "${ARG_COPY_TO_BUILDDIR}")
+    set(_command ${_command} -DCOPY=${_copy_files})
   endif()
 
   #- Locate the test driver
