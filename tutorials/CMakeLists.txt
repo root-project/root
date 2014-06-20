@@ -84,12 +84,7 @@ set(extra_veto
   rootalias.C
   rootlogon.C
   rootlogoff.C
-  fit/fit1_C.C  fit/TwoHistoFit2D.C fit/line3Dfit.C fit/MDF.C
-  foam/*.C
   html/*.C
-  math/Bessel.C math/LegendreAssoc.C math/Legendre.C
-  math/mathmoreIntegration.C math/normalDist.C math/tStudent.C
-  math/testUnfold2.C math/pca.C
   net/*.C
   proof/*.C
   pythia/*.C
@@ -100,10 +95,6 @@ set(extra_veto
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
   tree/copytree2.C tree/copytree3.C tree/copytree.C
-  math/testUnfold4.C
-  fit/minuit2FitBench.C
-  fit/minuit2FitBench2D.C
-  roostats/*.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -146,6 +137,13 @@ set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
 set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
+#--many roostats tutorials depending on having creating the file first with histfactory 
+foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
+               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
+  set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
+endforeach()
 
 #---Loop over all tutorials and define the corresponding test---------
 
