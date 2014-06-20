@@ -61,7 +61,7 @@
 #   define NEED_STRCASECMP
 #endif
 
-#ifdef __linux
+#if defined(__linux) || defined(__linux__)
 #   ifndef linux
 #      define linux
 #   endif

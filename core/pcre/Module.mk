@@ -127,6 +127,9 @@ else
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			PCRE_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxppcgcc" ]; then \
+			PCRE_CFLAGS="-m32"; \
+		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			PCRECC="cc"; \
 			PCRE_CFLAGS="+DD64 -Ae"; \

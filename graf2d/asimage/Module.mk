@@ -148,6 +148,9 @@ else
 		if [ "$(ARCH)" = "linuxppc64gcc" ]; then \
 			ACC="$$ACC -m64"; \
 		fi; \
+		if [ "$(ARCH)" = "linuxppcgcc" ]; then \
+		        ACC="$$ACC -m32"; \
+		fi; \
 		if [ "$(ARCH)" = "linux" ]; then \
 			ACC="$$ACC -m32"; \
 		fi; \
