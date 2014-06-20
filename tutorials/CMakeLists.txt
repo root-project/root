@@ -87,6 +87,7 @@ set(gui_veto fit/fitpanel_playback.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
+             roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C)
 
@@ -161,12 +162,13 @@ set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
+set(io-readCode-depends tutorial-io-importCode)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
-              StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo 
-              OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands )
-                set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
+               StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo
+               OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands)
+  set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
 endforeach()
 
 #--With ACLiC---------------------------------------------------------
@@ -174,6 +176,8 @@ set(fit-combinedFit-aclic +)
 set(fit-line3Dfit-aclic +) 
 set(fit-TwoHistoFit2D-aclic +)
 set(math-testUnfold4-aclic +)
+set(io-double32-aclic +)
+set(tree-hvector-aclic +)
 
 #---Loop over all tutorials and define the corresponding test---------
 

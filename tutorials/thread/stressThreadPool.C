@@ -2,6 +2,13 @@
 // root [0] .L stressThreadPool.C++
 // root [1] stressThreadPool(10)   10 = numThreads
 
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+  gROOT->ProcessLine(TString(".L ")+gInterpreter->GetCurrentMacroName()+"+");
+  stressThreadPool(10);
+}
+#else
+
 // STD
 #include <iostream>
 #include <iterator>
@@ -86,3 +93,5 @@ void stressThreadPool(size_t _numThreads, bool _needDbg = false)
 
    cout << "ThreadPool: simple test - "<< (testOK? "OK": "Failed") << endl;
 }
+#endif
+

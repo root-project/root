@@ -2,6 +2,13 @@
 // root [0] .L threadPool.C++
 // root [1] threadPool(10)  10 = numThreads
 
+#if defined(__CINT__) && !defined(__MAKECINT__)
+{
+  gROOT->ProcessLine(TString(".L ")+gInterpreter->GetCurrentMacroName()+"+");
+  threadPool(10);
+}
+#else
+
 // STD
 #include <iostream>
 #include <iterator>
@@ -68,4 +75,4 @@ void threadPool(size_t _numThreads, bool _needDbg = false)
    threadPool.Stop(true);
    cout << "ThreadPool: done" << endl;
 }
-
+#endif
