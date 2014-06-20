@@ -1,7 +1,7 @@
 #
 # To see the output of this macro, click begin_html <a href="gif/fit1.gif">here</a>. end_html
 #
-
+from os import path
 from ROOT import TCanvas, TFile, TPaveText
 from ROOT import gROOT, gBenchmark
 
@@ -45,7 +45,7 @@ h1f.Fit( 'sqroot' )
 fitlabel = TPaveText( 0.6, 0.3, 0.9, 0.80, 'NDC' )
 fitlabel.SetTextAlign( 12 )
 fitlabel.SetFillColor( 42 )
-fitlabel.ReadFile( 'fit1_py.py' )
+fitlabel.ReadFile(path.join(path.dirname(__file__),'fit1_py.py'))
 fitlabel.Draw()
 c1.Update()
 gBenchmark.Show( 'fit1' )

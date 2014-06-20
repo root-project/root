@@ -42,7 +42,8 @@ if(NOT ROOT_unuran_FOUND)
 endif()
 
 if(NOT ROOT_xml_FOUND)
-  set(xml_veto  xml/*.C)
+  set(xml_veto  xml/*.C
+                histfactory/*.C)   # histfactory requires xml
 endif()
 
 if(NOT ROOT_fitsio_FOUND)
@@ -50,7 +51,15 @@ if(NOT ROOT_fitsio_FOUND)
 endif()
 
 if(NOT ROOT_mathmore_FOUND)
-  set(mathmore_veto math/quasirandom.C math/exampleMultiRoot.C)
+  set(mathmore_veto 
+      math/quasirandom.C 
+      math/exampleMultiRoot.C
+      math/Bessel.C
+      math/LegendreAssoc.C
+      math/Legendre.C
+      math/mathmoreIntegration.C
+      math/tStudent.C
+      math/normalDist.C)
 endif()
 
 if(NOT ROOT_fftw3_FOUND)
@@ -71,30 +80,38 @@ set(gui_veto fit/fitpanel_playback.C
              geom/*.C
              gl/*.C
              gui/*.C
-             hist/exec1.C hist/exec2.C
+             hist/exec1.C 
+             hist/exec2.C
              image/*.C
              graphics/psview.C graphics/gtime.C
              graphics/graph_edit_playback.C
+             roostats/ModelInspector.C
              tree/tvdemo.C
              eve/*.C)
 
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
-  rootalias.C
-  rootlogon.C
-  rootlogoff.C
+  rootalias.C          # Helper macro
+  rootlogon.C          # Helper macro
+  rootlogoff.C         # Helper macro
+  rootmarks.C          # Instrumentation. Not a standalone tutorial
+  memstat/memstat.C    # Instrumentation. Not a standalone tutorial
   html/*.C
   net/*.C
   proof/*.C
   pythia/*.C
   sql/*.C
   tree/hsimpleProxy.C # A driver uses this macro which cannot be executed directly
-  tree/tree0.C tree/tree2a.C tree/tree4.C
-  roostats/rs401d_FeldmanCousins.C
+  tree/tree0.C 
+  tree/tree2a.C 
+  tree/tree4.C
+  roostats/rs401d_FeldmanCousins.C  # Takes too much time
   roofit/rf104_classfactory.C
   histfactory/ModifyInterpolation.C
-  tree/copytree2.C tree/copytree3.C tree/copytree.C
+  tree/copytree2.C 
+  tree/copytree3.C 
+  tree/copytree.C
   http/*.C)
   
 set(all_veto hsimple.C
@@ -126,9 +143,12 @@ set(returncode_1 fit/fit2a.C fit/graph2dfit.C
                  graphics/event.C graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
                  graphs/exclusiongraph.C graphs/multigraph.C
-                 graphs/multipalette.C 
+                 graphs/multipalette.C
+                 graphs/graphstruct.C
                  hist/ContourList.C hist/hstack.C 
+                 hist/h2proj.C hist/hbars.C
                  hist/th2polyBoxes.C
+                 tree/h1analysis.C
                  io/fildir.C 
                  math/chi2test.C )
 #---Dependencies------------------------------------------------------
@@ -137,6 +157,8 @@ set(math-testUnfold5c-depends tutorial-math-testUnfold5b)
 set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
+set(histfactory-example-depends tutorial-histfactory-makeExample)
+set(io-readCode-depends tutorial-io-importCode)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
@@ -165,6 +187,41 @@ foreach(t ${tutorials})
                 DEPENDS tutorial-hsimple ${${tname}-depends}
                 ENVIRONMENT ${ROOT_environ})
 endforeach()
+
+
+#---Python tutorials-----------------------------------------------------
+if(ROOT_python_FOUND)
+  find_package(PythonInterp REQUIRED)
+
+  file(GLOB pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/*.py)
+  set(pyveto pyroot/demo.py         # requires GUI
+             pyroot/fit1_py.py      # not a tutorial
+             pyroot/gui_ex.py       # requires GUI
+             pyroot/mrt.py          # not really a tutorial
+             pyroot/na49geomfile.py # ????
+             pyroot/na49visible.py  # ????
+             pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
+             pyroot/qtexample.py    # requires GUI/Qt
+             )
+  list(REMOVE_ITEM pytutorials ${pyveto})
+
+  #---Python tutorials dependencies--------------------------------------
+  set(pyroot-hsimple-depends tutorial-hsimple)
+  set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
+  set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+
+  foreach(t ${pytutorials})
+    string(REPLACE ".py" "" tname ${t})
+    string(REPLACE "/" "-" tname ${tname})
+    ROOT_ADD_TEST(tutorial-${tname}
+                COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/${t} -b
+                PASSRC ${rc} FAILREGEX "Error in" "error:" "segmentation violation"
+                LABELS tutorial
+                DEPENDS ${${tname}-depends}
+                ENVIRONMENT ${ROOT_environ})
+  endforeach()
+endif()
+
 
 
                    

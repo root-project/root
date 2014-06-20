@@ -28,12 +28,12 @@ void example() {
 
   std::string InputFile = "./data/example.root";
   // in case the file is not found
-  TFile * ifile = TFile::Open(InputFile.c_str());
-  if (!ifile) { 
+  bool bfile = gSystem->AccessPathName(InputFile.c_str());
+  if (bfile) {
      std::cout << "Input file is not found - run prepareHistFactory script " << std::endl;
      gROOT->ProcessLine(".! prepareHistFactory .");
-     ifile = TFile::Open(InputFile.c_str());
-     if (!ifile) {
+     bfile = gSystem->AccessPathName(InputFile.c_str());
+     if (bfile) {
         std::cout << "Still no " << InputFile << ", giving up.\n";
         exit(1);
      }
