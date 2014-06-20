@@ -84,7 +84,7 @@ endfunction(ROOTTEST_TARGETNAME_FROM_FILE)
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_AUTOMACROS)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "DEPENDS;WILLFAIL;COPY_TO_BUILDDIR" ${ARGN})
 
   file(GLOB macros ${CMAKE_CURRENT_SOURCE_DIR}/run*.C)
   list(APPEND automacros ${macros})
@@ -134,17 +134,23 @@ function(ROOTTEST_ADD_AUTOMACROS)
     endforeach()
 
     ROOTTEST_TARGETNAME_FROM_FILE(targetname ${auto_macro_filename})
+
+    if(ARG_COPY_TO_BUILDDIR)
+      set(copy_to_builddir COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR})
+    endif()
    
     if(ARG_DEPENDS)
       ROOTTEST_ADD_TEST(${targetname}-auto
                         MACRO ${auto_macro_filename}
                         ${outref}
                         ${arg_wf}
+                        ${copy_to_builddir}
                         DEPENDS ${add_auto_depends})
 
     else()
       ROOTTEST_ADD_TEST(${targetname}-auto
                         ${arg_wf}
+                        ${copy_to_builddir}
                         MACRO ${auto_macro_filename}
                         ${outref})
     endif()
@@ -178,11 +184,14 @@ macro(ROOTTEST_COMPILE_MACRO filename)
   set(RootMacroBuildDefines
         -e "#define CMakeEnvironment"
         -e "#define CMakeBuildDir \"${CMAKE_CURRENT_BINARY_DIR}\""
+        -e "gSystem->AddDynamicPath(\"${CMAKE_CURRENT_BINARY_DIR}\")"
+        -e "gROOT->SetMacroPath(\"${CMAKE_CURRENT_SOURCE_DIR}\")"
+        -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_BINARY_DIR}\")"
         ${RootMacroDirDefines})
 
   set(root_compile_macro root.exe ${RootMacroBuildDefines} -q -l -b)
 
-  get_filename_component(realfp ${filename} REALPATH)
+  get_filename_component(realfp ${filename} ABSOLUTE)
   
   set(BuildScriptFile ${ROOTTEST_DIR}/scripts/build.C)
 
