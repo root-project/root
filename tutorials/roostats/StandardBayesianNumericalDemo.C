@@ -46,7 +46,7 @@ TString integrationType = "";  // integration Type (default is adaptive (numeric
                                //  "VEGAS" , "MISER", or "PLAIN"  (these are all possible MC integration) 
 int nToys = 10000;             // number of toys used for the MC integrations - for Vegas should be probably set to an higher value 
 bool scanPosterior = false;    // flag to compute interval by scanning posterior (it is more robust but maybe less precise) 
-int nScanPoints = 50;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting)
+int nScanPoints = 20;          // number of points for scanning the posterior (if scanPosterior = false it is used only for plotting)
 int intervalType = 1;          // type of interval (0 is shortest, 1 central, 2 upper limit) 
 double   maxPOI = -999;        // force a different value of POI for doing the scan (default is given value)
 

@@ -118,7 +118,7 @@ This results in thresholds that become very large.
 using namespace RooFit;
 using namespace RooStats;
 
-
+bool useProof = false;
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -131,9 +131,9 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
   double confidenceLevel=0.95;
   // degrade/improve number of pseudo-experiments used to define the confidence belt.  
   // value of 1 corresponds to default number of toys in the tail, which is 50/(1-confidenceLevel)
-  double additionalToysFac = 1.;  
-  int nPointsToScan = 30; // number of steps in the parameter of interest 
-  int nToyMC = 500; // number of toys used to define the expected limit and band
+  double additionalToysFac = 0.5;  
+  int nPointsToScan = 20; // number of steps in the parameter of interest 
+  int nToyMC = 200; // number of toys used to define the expected limit and band
 
   /////////////////////////////////////////////////////////////
   // First part is just to access a user-defined file 
@@ -251,13 +251,15 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // in your $ROOTSYS/roofit/roostats/inc directory,
   // add the additional line to the LinkDef.h file,
   // and recompile root.
-  ProofConfig pc(*w, 4, "workers=4",false); 
-  if(mc->GetGlobalObservables()){
-    cout << "will use global observables for unconditional ensemble"<<endl;
-    mc->GetGlobalObservables()->Print();
-    toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+  if (useProof) {
+     ProofConfig pc(*w, 4, "workers=4",false); 
+     if(mc->GetGlobalObservables()){
+        cout << "will use global observables for unconditional ensemble"<<endl;
+        mc->GetGlobalObservables()->Print();
+        toymcsampler->SetGlobalObservables(*mc->GetGlobalObservables());
+     }
+     toymcsampler->SetProofConfig(&pc);	// enable proof
   }
-  toymcsampler->SetProofConfig(&pc);	// enable proof
 
 
   // Now get the interval
@@ -293,7 +295,7 @@ void TwoSidedFrequentistUpperLimitWithBands(const char* infile = "",
   // For FeldmanCousins, the lower cut off is always 0
   for(Int_t i=0; i<parameterScan->numEntries(); ++i){
     tmpPoint = (RooArgSet*) parameterScan->get(i)->clone("temp");
-    cout <<"get threshold"<<endl;
+    //cout <<"get threshold"<<endl;
     double arMax = belt->GetAcceptanceRegionMax(*tmpPoint);
     double poiVal = tmpPoint->getRealValue(firstPOI->GetName()) ;
     histOfThresholds->Fill(poiVal,arMax);
