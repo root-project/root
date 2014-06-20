@@ -150,6 +150,10 @@ else
 			FREECC="$$FREECC -m64"; \
 			FREE_CFLAGS="-m64"; \
 		fi; \
+	        if [ $(ARCH) = "linuxppcgcc" ]; then \
+	               FREECC="$$FREECC -m32"; \
+	               FREE_CFLAGS="-m32"; \
+	        fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			FREECC="cc"; \
 			FREE_CFLAGS="+DD64 -Ae +W863"; \

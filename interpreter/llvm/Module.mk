@@ -139,6 +139,9 @@ $(LLVMDEPO): $(LLVMDEPS)
 		if [ $(ARCH) = "linuxppc64gcc" ]; then \
 			LLVM_CFLAGS="-m64"; \
 		fi; \
+		if [ $(ARCH) = "linuxppcgcc" ]; then \
+			LLVM_CFLAGS="-m32"; \
+		fi; \
 		if [ $(ARCH) = "hpuxia64acc" ]; then \
 			LLVMCC="cc"; \
 			LLVMCXX="aCC"; \
