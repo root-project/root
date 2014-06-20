@@ -218,6 +218,7 @@ if(ROOT_python_FOUND)
   list(REMOVE_ITEM pytutorials ${pyveto})
 
   #---Python tutorials dependencies--------------------------------------
+  set(pyroot-hsimple-depends tutorial-hsimple)
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
 
