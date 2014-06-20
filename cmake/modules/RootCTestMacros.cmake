@@ -42,17 +42,17 @@ macro(ROOTTEST_SETUP_MACROTEST)
 
   # Add interpreted macro to CTest.
   elseif(ARG_MACRO MATCHES "[.]C" OR ARG_MACRO MATCHES "[.]cxx")
+    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
     if(DEFINED ARG_MACROARG)
-      set(realfp "${ARG_MACRO}(${ARG_MACROARG})") 
-    else()
-      set(realfp "${ARG_MACRO}") 
+      set(realfp "${realf}(${ARG_MACROARG})") 
     endif()
 
     set(command ${root_cmd} ${realfp})
     
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
-    set(command ${python_cmd} ${ARG_MACRO})
+    get_filename_component(realfp ${ARG_MACRO} ABSOLUTE)
+    set(command ${python_cmd} ${realfp})
 
   elseif(DEFINED ARG_MACRO)
     set(command ${root_cmd} ${ARG_MACRO})
@@ -86,7 +86,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;TEST_OUTREF_CINTSPECIFIC"
                             "OUTREF;OUTCNV;PASSRC;MACROARG;WORKING_DIR"
-                            "TESTOWNER;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS" ${ARGN})
 
   # Setup macro test.
   if(ARG_MACRO)
@@ -182,6 +182,15 @@ function(ROOTTEST_ADD_TEST test)
     set(precmd PRECMD ${ARG_PRECMD})
   endif()
 
+  # Copy files into the build directory first.
+  if(ARG_COPY_TO_BUILDDIR)
+    foreach(copyfile ${ARG_COPY_TO_BUILDDIR})
+      get_filename_component(absfilep ${copyfile} ABSOLUTE)
+      set(copy_files ${copy_files} ${absfilep})
+    endforeach()
+    set(copy_to_builddir COPY_TO_BUILDDIR ${copy_files})
+  endif()
+
   # Execute a custom command after executing the test.
   if(ARG_POSTCMD)
     set(postcmd POSTCMD ${ARG_PRECMD})
@@ -225,7 +234,8 @@ function(ROOTTEST_ADD_TEST test)
   if(ARG_WORKING_DIR)
     get_filename_component(test_working_dir ${ARG_WORKING_DIR} ABSOLUTE)
   else()
-    get_filename_component(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
+    #get_filename_component(test_working_dir ${CMAKE_CURRENT_SOURCE_DIR} ABSOLUTE)
+    get_filename_component(test_working_dir ${CMAKE_CURRENT_BINARY_DIR} ABSOLUTE)
   endif()
 
   get_filename_component(logdir "${CMAKE_CURRENT_BINARY_DIR}/${test}.log" ABSOLUTE)
@@ -250,6 +260,7 @@ function(ROOTTEST_ADD_TEST test)
                         ${postcmd}
                         ${failregex}
                         ${passregex}
+                        ${copy_to_builddir}
                         DEPENDS ${depends})
 
 endfunction(ROOTTEST_ADD_TEST)
