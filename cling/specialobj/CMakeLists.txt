@@ -11,7 +11,10 @@ ROOTTEST_ADD_TEST(roottest-cling-specialobj-stlwrite
                   DEPENDS ${COMPILE_MACRO_TEST}
                   LABELS roottest regression cling)
 
-ROOTTEST_COMPILE_MACRO(T0Result.h BUILDLIB AthIndex_h${libsuffix})
+ROOTTEST_COMPILE_MACRO(T0Result.h
+                       BUILDLIB AthIndex_h${libsuffix}
+                       DEPENDS ${COMPILE_MACRO_TEST})
+
 set(depends ${depends} ${COMPILE_MACRO_TEST})
 
 ROOTTEST_COMPILE_MACRO(calib.h)
