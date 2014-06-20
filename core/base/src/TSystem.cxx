@@ -3611,7 +3611,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (!compilationResult) {
             ::Info("ACLiC","The compiler has not found any problem with your macro.\n"
             "\tProbably your macro uses something rootcint can't parse.\n"
-            "\tCheck http://root.cern.ch/viewvc/trunk/cint/doc/limitati.txt for Cint's limitations.");
+            "\tCheck http://root.cern.ch/viewvc/branches/v5-34-00-patches/cint/doc/limitati.txt for Cint's limitations.");
             TString objfile=expFileName;
             Ssiz_t len=objfile.Length();
             objfile.Replace(len-extension.Length(), len, GetObjExt());
