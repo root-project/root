@@ -161,6 +161,13 @@ set(math-testUnfold5b-depends tutorial-math-testUnfold5a)
 set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
+#--many roostats tutorials depending on having creating the file first with histfactory 
+foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
+               StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
+              StandardHypoTestInvDemo StandardProfileInspectorDemo StandardTestStatDistributionDemo 
+              OneSidedFrequentistUpperLimitWithBands TwoSidedFrequentistUpperLimitWithBands )
+                set(roostats-${tname}-depends tutorial-roostats-StandardProfileLikelihoodDemo)
+endforeach()
 
 #--With ACLiC---------------------------------------------------------
 set(fit-combinedFit-aclic +)
