@@ -25,6 +25,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execProperties
                   OUTREF execProperties.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execState
+                  COPY_TO_BUILDDIR tc_state.root libState.cxx
                   MACRO execState.C
                   OUTREF execState.ref
                   DEPENDS libState.cxx)
@@ -42,6 +43,7 @@ ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execTmpltD32
                   OUTREF execTmpltD32.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-tclass-execReadTmplt
+                  COPY_TO_BUILDDIR tmplt.h
                   MACRO execReadTmplt.cxx+
                   OUTREF execReadTmplt.ref
                   DEPPENDS roottest-root-meta-tclass-execTmpltD32 roottest-root-meta-tclass-execTmpltD32)

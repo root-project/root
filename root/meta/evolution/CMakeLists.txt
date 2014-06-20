@@ -90,14 +90,17 @@ ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execBaseClass_v2
                   DEPENDS roottest-root-meta-evolution-execBaseClass_v1 )
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execReadOldCSC
+                  COPY_TO_BUILDDIR cscdstarmb.root
                   MACRO execReadOldCSC.C
                   OUTREF execReadOldCSC.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execCheckSum
+                  COPY_TO_BUILDDIR checksum_v53418.root checksum_v5.root checksum_v6.root
                   MACRO execCheckSum.cxx+
                   OUTREF execCheckSum.ref)
 
 ROOTTEST_ADD_TEST(roottest-root-meta-evolution-execMissingCheckSum
+                  COPY_TO_BUILDDIR missingCheckSum.root missingCheckSum2.root checksumReflexEnum_v5.root 
                   MACRO execMissingCheckSum.cxx+
                   OUTREF execMissingCheckSum.ref)
 

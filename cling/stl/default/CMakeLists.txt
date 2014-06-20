@@ -1,6 +1,7 @@
 ROOTTEST_GENERATE_DICTIONARY(dict LINKDEF mylist.C LinkDef.h)
 
 ROOTTEST_ADD_TEST(roottest-cling-stl-default-defaultArgTest
+                  COPY_TO_BUILDDIR mylist.C
                   MACRO build.C
                   LABELS roottest regression cling)
 

@@ -10,6 +10,7 @@ ROOTTEST_ADD_TEST(roottest-cling-bytecode-runcomplex
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(roottest-cling-bytecode-runhenry
+                  COPY_TO_BUILDDIR henry.dat
                   MACRO runhenry.C
                   OUTREF henry.ref
                   LABELS roottest regression cling)

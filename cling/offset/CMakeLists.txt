@@ -10,5 +10,4 @@ ROOTTEST_ADD_TEST(roottest-cling-offset-vbase-compiled
 
 ROOTTEST_ADD_TEST(roottest-cling-offset-rootlogon
                   MACRO rootlogon.C
-                  WILLFAIL
                   LABELS roottest regression cling)
