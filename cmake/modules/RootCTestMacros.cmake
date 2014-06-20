@@ -77,8 +77,8 @@ macro(ROOTTEST_SETUP_EXECTEST)
                PATH ${CMAKE_CURRENT_SOURCE_DIR})
 
   # If no program was found, take it as is.
-  if(NOT ${realexec})
-    set(realexec ${ARG_MACRO})
+  if(NOT realexec)
+    set(realexec ${ARG_EXEC})
   endif()
 
   set(command ${realexec})
