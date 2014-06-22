@@ -65,6 +65,12 @@ void CopyFile(const char *fname) {
    target->cd();
 }  
 void copyFiles() {
+   //prepare files to be copied
+   if(gSystem->AccessPathName("tot100.root")) {
+      gSystem->CopyFile("hsimple.root", "tot100.root");
+      gSystem->CopyFile("hsimple.root", "hs1.root");
+      gSystem->CopyFile("hsimple.root", "hs2.root");
+   }
    //main function copying 4 files as subdirectories of a new file
    TFile *f = new TFile("result.root","recreate");
    CopyFile("tot100.root");

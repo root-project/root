@@ -162,6 +162,7 @@ set(xml-xmlreadfile-depends tutorial-xml-xmlnewfile)
 set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
+set(fit-fit1-depends tutorial-hist-fillrandom)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
@@ -214,6 +215,7 @@ if(ROOT_python_FOUND)
              pyroot/na49visible.py  # ????
              pyroot/parse_CSV_file_with_TTree_ReadStream.py # not a tutorial
              pyroot/qtexample.py    # requires GUI/Qt
+             pyroot/numberEntry.py  # requires GUI
              )
   list(REMOVE_ITEM pytutorials ${pyveto})
 
@@ -221,6 +223,7 @@ if(ROOT_python_FOUND)
   set(pyroot-hsimple-depends tutorial-hsimple)
   set(pyroot-ntuple1-depends tutorial-pyroot-hsimple)
   set(pyroot-benchmarks-depends tutorial-pyroot-hsimple)
+  set(pyroot-fit1-depends tutorial-pyroot-fillrandom)
 
   foreach(t ${pytutorials})
     string(REPLACE ".py" "" tname ${t})

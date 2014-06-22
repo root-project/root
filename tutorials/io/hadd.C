@@ -39,6 +39,12 @@ void MergeRootfile( TDirectory *target, TList *sourcelist );
 
 
 void hadd() {
+   // Prepare the files to be merged
+   if(gSystem->AccessPathName("hsimple1.root")) {
+     gSystem->CopyFile("hsimple.root", "hsimple1.root");
+     gSystem->CopyFile("hsimple.root", "hsimple2.root");
+   }
+
    // in an interactive ROOT session, edit the file names
    // Target and FileList, then
    // root > .L hadd.C
