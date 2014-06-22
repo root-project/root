@@ -163,6 +163,7 @@ set(roofit-rf503_wspaceread-depends tutorial-roofit-rf502_wspacewrite)
 set(histfactory-example-depends tutorial-histfactory-makeExample)
 set(io-readCode-depends tutorial-io-importCode)
 set(fit-fit1-depends tutorial-hist-fillrandom)
+set(foam-foam_demopers tutorial-foam-foam_demo)
 #--many roostats tutorials depending on having creating the file first with histfactory 
 foreach(tname  ModelInspector OneSidedFrequentistUpperLimitWithBands StandardBayesianMCMCDemo StandardBayesianNumericalDemo
                StandardFeldmanCousinsDemo  StandardFrequentistDiscovery StandardHistFactoryPlotsWithCategories StandardHypoTestDemo 
