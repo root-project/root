@@ -8,7 +8,7 @@ ROOT.gROOT.Reset();
 c1 = ROOT.TCanvas( 'c1', 'Geometry Shapes', 200, 10, 700, 500 )
 
 # delete previous geometry objects in case this script is reexecuted
-if hasattr(ROOT, 'gGeometry'):
+if hasattr(ROOT, 'gGeometry') and ROOT.gGeometry:
    ROOT.gGeometry.GetListOfNodes().Delete()
    ROOT.gGeometry.GetListOfShapes().Delete()
 
