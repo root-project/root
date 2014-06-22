@@ -63,6 +63,8 @@ install(DIRECTORY inc/TMVA/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/TMVA
                             COMPONENT headers
                             PATTERN ".svn" EXCLUDE
                             REGEX "LinkDef" EXCLUDE )
+set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
+
 #if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
 #  install(DIRECTORY test DESTINATION ${CMAKE_INSTALL_DOCDIR}/tmva PATTERN ".svn" EXCLUDE)
 #endif()
