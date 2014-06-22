@@ -2158,48 +2158,38 @@ Int_t TTable::SetfN(Long_t len)
 #undef StreamElelement
 #endif
 
-#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type): \
-   if (evolutionOn) {							\
-   if (nextCol->fDimensions) {					\
-     _NAME2_(type,_t) *readPtrV = new _NAME2_(type,_t)[nextCol->fSize/sizeof(_NAME2_(type,_t))]; \
-     R__b.ReadFastArray(readPtrV,nextCol->fSize/sizeof(_NAME2_(type,_t))); \
-     if (nextCol->fOffset != UInt_t(-1)) {				\
-       UInt_t x[3];							\
-       _NAME2_(type,_t) *writePtrV = (_NAME2_(type,_t) *)(row+currentDescriptor->Offset(colCounter)); \
-       memset(writePtrV, 0, currentDescriptor->ColumnSize(colCounter)); \
-       for (UInt_t i = 0; i < nextCol->fSize/sizeof(_NAME2_(type,_t)); i++) { \
-         UInt_t ii = i;						\
-         for (Int_t d = nextCol->fDimensions-1; d >=0; d--) {	\
-           x[d] = ii% nextCol->fIndexArray[d]; ii /= nextCol->fIndexArray[d]; \
-         }								\
-         Int_t j = -1;						\
-         for (UInt_t d = 0; d < currentDescriptor->Dimensions(colCounter); d++) { \
-           if (x[d] >= currentDescriptor->IndexArray(colCounter)[d]) {j = -1; break;} \
-           if (d == 0) j = x[d];					\
-           else        j = currentDescriptor->IndexArray(colCounter)[d]*j + x[d]; \
-         }								\
-         if (j >= 0) writePtrV[j] = readPtrV[i];			\
-       }								\
-     }								\
-     delete [] readPtrV;						\
-     readPtrV = 0;							\
-   } else {								\
-     _NAME2_(type,_t) skipBuffer;					\
-     _NAME2_(type,_t) *readPtr = (_NAME2_(type,_t) *)(row+nextCol->fOffset);	\
-     if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer; R__b >> *readPtr; \
-   }									\
- } else { if (nextCol->fDimensions) {				\
-     R__b.ReadFastArray ((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t))); \
-   } else R__b >> *(_NAME2_(type,_t) *)(row+nextCol->fOffset);	\
- }									\
- break;
+#define StreamElementIn(type)  case TTableDescriptor::_NAME2_(k,type):        \
+if (evolutionOn) {                                  \
+    if (nextCol->fDimensions)  {                    \
+      if (nextCol->fOffset != UInt_t(-1)) {         \
+         R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));   \
+      } else {                                        \
+          _NAME2_(type,_t) *readPtrV = new _NAME2_(type,_t)[nextCol->fSize/sizeof(_NAME2_(type,_t))];              \
+          R__b.ReadFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
+          delete [] readPtrV;                       \
+          readPtrV = 0;                             \
+      }                                             \
+    }                                               \
+    else  {                                         \
+      _NAME2_(type,_t) skipBuffer;                  \
+      _NAME2_(type,_t) *readPtr =  (_NAME2_(type,_t) *)(row+nextCol->fOffset); \
+      if (nextCol->fOffset == UInt_t(-1)) readPtr = &skipBuffer;               \
+      R__b >> *readPtr;                             \
+    }                                               \
+} else {                                            \
+  if (nextCol->fDimensions)  {                      \
+    R__b.ReadFastArray  ((_NAME2_(type,_t) *)(row+nextCol->fOffset),nextCol->fSize/sizeof(_NAME2_(type,_t)));  \
+  } else                                                       \
+    R__b >> *(_NAME2_(type,_t) *)(row+nextCol->fOffset);       \
+}                                                              \
+break
 
 #define StreamElementOut(type) case TTableDescriptor::_NAME2_(k,type):    \
- if (nextCol->fDimensions)                                    \
-    R__b.WriteFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
- else                                                         \
-    R__b << *(_NAME2_(type,_t) *)(row+nextCol->fOffset);      \
- break
+if (nextCol->fDimensions)                                    \
+   R__b.WriteFastArray((_NAME2_(type,_t) *)(row+nextCol->fOffset), nextCol->fSize/sizeof(_NAME2_(type,_t))); \
+else                                                         \
+   R__b << *(_NAME2_(type,_t) *)(row+nextCol->fOffset);      \
+break
 
 //______________________________________________________________________________
 TTableDescriptor  *TTable::GetRowDescriptors() const
