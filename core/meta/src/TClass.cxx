@@ -3428,6 +3428,10 @@ void TClass::GetMissingDictionariesForMembers(TCollection& result, TCollection& 
    TIter nextMemb(ldm);
    TDataMember * dm = 0;
    while ((dm = (TDataMember*)nextMemb())) {
+      // If it is a transient
+      if(!dm->IsPersistent()) {
+        continue;
+      }
       // If it is a built-in data type.
       TClass* dmTClass = 0;
       if (dm->GetDataType()) {
@@ -3467,11 +3471,7 @@ void TClass::GetMissingDictionariesWithRecursionCheck(TCollection& result, TColl
          TClass* t = 0;
          if ((t = GetCollectionProxy()->GetValueClass())) {
             if (!t->HasDictionary()) {
-               if (recurse) {
-                  t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
-               } else {
-                  result.Add(this);
-               }
+               t->GetMissingDictionariesWithRecursionCheck(result, visited, recurse);
             }
          }
       } else {
