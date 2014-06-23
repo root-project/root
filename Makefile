@@ -118,6 +118,9 @@ SYSTEMDO      = $(UNIXDO)
 endif
 endif
 
+ifeq ($(BUILDCOCOA),yes)
+MODULES += core/macosx
+endif
 # utils/rootcling depends on system; must come after:
 MODULES += core/utils
 
@@ -133,7 +136,6 @@ endif
 ifeq ($(BUILDCOCOA),yes)
 MODULES      += graf2d/quartz
 MODULES      += graf2d/cocoa
-MODULES      += core/macosx
 MODULES      += rootx
 SYSTEMDH     += $(MACOSXH1)
 SYSTEMDICTH   = -DSYSTEM_TYPE_macosx $(SYSTEMDH)
